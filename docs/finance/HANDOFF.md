@@ -4,24 +4,28 @@
 **Branch:** `cursor/finance-operations`  
 **Worktree:** `.worktrees/finance-operations`  
 **Packaging:** Option A — exclusive docs + list stubs + Power Apps stubs + offline tests  
-**Status:** **IN PROGRESS** — WO2 package complete offline; not yet declaring READY FOR INTEGRATION (parent index append + Master PM go-ahead still needed)
+**Status:** **READY FOR INTEGRATION**
 
 ## Deliverables
 
 | Deliverable | Path |
 |-------------|------|
 | Architecture / Requirements / Data map | `docs/finance/` |
-| Shared merge recommendations | `docs/finance/SHARED_FILE_RECOMMENDATIONS.md` |
+| Shared merge recommendations (index append) | `docs/finance/SHARED_FILE_RECOMMENDATIONS.md` |
 | Owner gates (later) | `docs/finance/OWNER_ACTION_GUIDE.md` |
 | Exclusive list stubs | `HVCG_FinanceARSnapshots`, `HVCG_FinanceCashReceipts`, `HVCG_FinancePaymentPlans` (+ `HVCG_FinanceEXCLUSIVE_README.md`) |
 | Power Apps stubs | `src/power-apps/finance/` (`scrFinance*`, `BUILD.md`, `FinanceNamedFormulas.fx`) |
-| Module status | `PROJECT_STATUS.md` (Finance) |
+| Module status | `PROJECT_STATUS.md` → **READY FOR INTEGRATION** |
 | Resume cue | `NEXT_SESSION.md` |
 | Offline smoke | `tests/unit/test_finance_operations.py`, `tests/finance/test_finance_package.py` |
 
 ## What was NOT duplicated
 
 Invoices / Collections / Budgets / Expenses already exist as shared SoR lists — stubs were **not** recreated as `HVCG_FinanceInvoices` etc.
+
+## Index policy (ownership redesign)
+
+Finance agent **does not** edit `lists/_index.json`. Exact parent append-only rows for the three exclusive lists are documented in `SHARED_FILE_RECOMMENDATIONS.md`. Merge can proceed without waiting for index edits from this branch.
 
 ## Offline validation
 
@@ -42,14 +46,13 @@ Expected: `PASS finance operations package checks`.
 - Existing non-`HVCG_Finance*` list schema bodies  
 - Production  
 
-## Parent integrator next steps
+## Parent / integration next steps
 
-1. Offline PASS on this branch.  
-2. Append three exclusive lists to `lists/_index.json` per `SHARED_FILE_RECOMMENDATIONS.md`.  
-3. Append formula comment / tokens from `FinanceNamedFormulas.fx`; link README `scrFinance` → `src/power-apps/finance/BUILD.md`.  
-4. After append + review → status can move to **READY FOR INTEGRATION**.  
-5. Owner Maker later: OA-FIN gates (not this sprint).
+1. Offline PASS confirmed on this branch.  
+2. Apply append-only items in `SHARED_FILE_RECOMMENDATIONS.md` (especially the three `lists/_index.json` entries + predeploy test hook + formula comment).  
+3. Merge `cursor/finance-operations` when Master PM schedules.  
+4. Owner Maker later: OA-FIN gates (not required for this handoff).
 
 ## Resume cue
 
-Ready for parent index append review. Optional next: exclusive `finance-views.json` still without editing locked view index.
+Package is READY FOR INTEGRATION. Integration owns index append + merge packet.

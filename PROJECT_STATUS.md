@@ -1,63 +1,60 @@
 # PROJECT STATUS — Finance Operations
 
 ## Overall Status
-**IN PROGRESS** — WO2 exclusive package advanced: `HVCG_Finance*` net-new list stubs + `src/power-apps/finance/` screen stubs + extended offline smoke **PASS**. Closer to READY FOR INTEGRATION, but **not yet READY** until parent appends exclusive lists to locked `lists/_index.json` and Master PM accepts merge packet. CRM / deploy engines untouched.
+**READY FOR INTEGRATION** — Exclusive Finance Ops package complete offline (docs, `HVCG_Finance*` stubs, Power Apps finance screens, tests PASS). Index append for exclusive lists is documented parent-only in `docs/finance/SHARED_FILE_RECOMMENDATIONS.md` — Finance agent did **not** edit `lists/_index.json`. No CRM / deploy engine / Production work.
 
 ## Current Task
-Finance WO2 (bus `5614acee`): exclusive list stubs, Power Apps finance screens, docs/handoff update, offline tests, heartbeat + INFO.
+WO3: Declare READY via SHARED_FILE_RECOMMENDATIONS; heartbeat READY; HANDOFF to integration + master-pm.
 
 ## Current Phase
-Exclusive Finance Ops packaging (Option A). Shared indexes locked; recommendations only.
+Handoff to integration (Option A exclusive packaging).
 
 ## Active Process
 | Field | Value |
 |-------|--------|
-| **Name** | Finance WO2 exclusive stubs + screens |
-| **Command** | `python3 tests/unit/test_finance_operations.py` |
+| **Name** | Finance WO3 READY declaration |
+| **Command** | Offline package complete; bus HANDOFF |
 | **Branch / worktree** | `cursor/finance-operations` / `.worktrees/finance-operations` |
-| **Expected output** | Offline PASS; tip commit on finance branch |
+| **Expected output** | Status READY FOR INTEGRATION; handoff message to integration + master-pm |
 
 ## Last Completed Milestone
-- ACK WO2 `5614acee-a569-412f-8935-6b0f35b577c4`
-- Added exclusive stubs: `HVCG_FinanceARSnapshots`, `HVCG_FinanceCashReceipts`, `HVCG_FinancePaymentPlans` (no SoR duplicates)
-- Added `src/power-apps/finance/` screens + `BUILD.md` + `FinanceNamedFormulas.fx`
-- Extended offline tests; PASS
-- Docs HANDOFF / DATA_MAP / SHARED_FILE_RECOMMENDATIONS updated
+- WO1 docs package  
+- WO2 exclusive stubs + Power Apps screens (`dbcb948` / tip was `cdb5f5b`)  
+- WO3: explicit parent `_index.json` append blocks in SHARED_FILE_RECOMMENDATIONS; READY FOR INTEGRATION declared without editing locked index
 
 ## Next Step
-1. Parent: append three exclusive lists to `lists/_index.json` + formula README pointers.  
-2. After parent accept → move status to **READY FOR INTEGRATION**.  
-3. Optional: exclusive `finance-views.json` stubs.  
-4. Maker OA-FIN later — do not interrupt CRM.
+1. Integration: apply `SHARED_FILE_RECOMMENDATIONS.md` append-only (three Finance exclusive list rows + test/README/formula pointers).  
+2. Master PM: schedule merge of `cursor/finance-operations`.  
+3. Maker OA-FIN later — do not interrupt CRM.
 
 ## Recent Progress
-- WO1 docs package (`151faf1` / tip was `bbae62b`) accepted as scaffold.  
-- WO2 fills app + net-new list gaps (AR snapshots, cash receipts, payment plans).
+- ACK WO3 `2950e7f5-2026-4e2c-8c33-f1a4335525c3`  
+- Documented exact JSON entries for `HVCG_FinanceARSnapshots`, `HVCG_FinanceCashReceipts`, `HVCG_FinancePaymentPlans`  
+- Status → READY FOR INTEGRATION
 
 ## Validation Status
 | Area | Status |
 |------|--------|
 | Docs package | Present |
-| Exclusive `HVCG_Finance*` stubs | **3** present (not indexed yet) |
-| Power Apps finance stubs | Present under `src/power-apps/finance/` |
+| Exclusive `HVCG_Finance*` stubs | **3** present (index = parent append at integration) |
+| Power Apps finance stubs | Present |
 | Offline smoke | **PASS** |
-| Shared indexes | **Untouched** |
-| Maker / live | Deferred |
-| Prod | Not ready |
+| Shared indexes | **Untouched** by Finance agent |
+| Integration readiness | **READY FOR INTEGRATION** |
+| Maker / live / Prod | Deferred |
 
 ## Blockers
-- Parent must append exclusive list stubs to locked index before provisioning.  
-- Not blocking docs/app stub progress.
+- None for offline handoff. Parent index append is an integration merge step, not a Finance blocker.
 
 ## Environment
 - Worktree: `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/finance-operations`
 - Agent id: `finance`
 
 ## Estimated Completion
-Offline WO2: this session. READY FOR INTEGRATION: after parent index append + Master PM ACK.
+Offline package: **complete**. Live Maker apply: deferred (owner gates).
 
 ## Last Updated
-2026-07-15 ~15:40 PT (local)
+2026-07-15 ~15:37 PT (local)
 
 ## Commit hash (this status milestone)
-dbcb9487d811137ab73a10407147a853715e2a8d
+(pending WO3 commit)

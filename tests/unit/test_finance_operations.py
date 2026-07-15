@@ -132,9 +132,28 @@ def main() -> int:
             fail(f"FinanceNamedFormulas.fx missing {token}")
 
     handoff = (ROOT / "docs/finance/HANDOFF.md").read_text(encoding="utf-8")
-    for needle in ("HVCG_FinanceARSnapshots", "src/power-apps/finance", "exclusive"):
+    for needle in (
+        "HVCG_FinanceARSnapshots",
+        "src/power-apps/finance",
+        "exclusive",
+        "READY FOR INTEGRATION",
+    ):
         if needle not in handoff:
             fail(f"HANDOFF.md missing mention of {needle}")
+
+    shared = (ROOT / "docs/finance/SHARED_FILE_RECOMMENDATIONS.md").read_text(encoding="utf-8")
+    for needle in (
+        "HVCG_FinanceARSnapshots",
+        "HVCG_FinanceCashReceipts",
+        "HVCG_FinancePaymentPlans",
+        "lists/_index.json",
+        '"columnCount": 14',
+        '"columnCount": 11',
+        '"columnCount": 13',
+        "Parent append-only",
+    ):
+        if needle not in shared:
+            fail(f"SHARED_FILE_RECOMMENDATIONS.md missing {needle}")
 
     locked = [
         "src/power-automate/flows/_index.json",
