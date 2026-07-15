@@ -57,4 +57,4 @@ Offline package: **complete**. Live Maker apply: deferred (owner gates).
 2026-07-15 ~15:37 PT (local)
 
 ## Commit hash (this status milestone)
-(pending WO3 commit)
+798d66326d0350d6a5aa07e9f155e585d772df84
