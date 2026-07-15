@@ -21,7 +21,7 @@ Offline validation of module artifacts: schemas referenced by views/KPIs, JSON i
 | ECC-03 | KPI docs reference Pipeline, MRR, AR, Capital, Decisions | Pass |
 | ECC-04 | Semantic model JSON facts/dimensions resolve to known lists | Pass |
 | ECC-05 | `measures.dax` contains Pipeline Value, MRR, Outstanding AR, Capital Pipeline, Executive Queue Count / Executive Open Decisions | Pass |
-| ECC-06 | `ExecutiveNamedFormulas.fx` defines `nfExecMRR`, `nfExecPipelineWeighted`, `nfExecDecisionQueue` | Pass |
+| ECC-06 | `NamedFormulas.executive.fx` defines `nfExecMRR`, `nfExecPipelineValue`, `nfExecDecisionQueue` (aliases also in `ExecutiveNamedFormulas.fx`) | Pass |
 | ECC-07 | Required docs exist (Architecture, Data Map, KPIs, Screens, PBI, Copilot, Handoff, Test Plan) | Pass |
 | ECC-08 | Component + layout specs exist under `src/power-apps/executive/` | Pass |
 | ECC-09 | Sample KPI fixture validates arithmetic helpers | Pass |

@@ -28,7 +28,9 @@ When integrating, a **parent merge agent** may apply the following. This branch 
 
 | Overlap | Recommendation |
 |---------|----------------|
-| Accidental `portal(schema)` commit briefly landed on this branch history | Keep Client Portal / Data Rooms on `cursor/client-portal-data-rooms` only. ECC branch must remain portal-free (reset locally if contaminated). |
+| Accidental portal flow stubs appeared as untracked files in this worktree (`HVCG_Portal*`, `HVCG_DataRoom*`) | **Deleted from ECC worktree.** Keep Client Portal / Data Rooms exclusively on `cursor/client-portal-data-rooms`. |
+| Ops Hub briefly hosted `docs/executive/*` in an early mixed commit on `cursor/operations-hub` | Parent integrator: ensure Ops Hub branch does not own Executive docs; ECC branch is SoR for `docs/executive/`. |
 | Ops Hub views / list schema edits | Stay on `cursor/operations-hub`. Do not edit Ops lists from ECC. |
 | Finance Ops packaging | Stay on `cursor/finance-operations`. ECC **reads** finance lists for KPIs; does not own finance migrations. |
-| Soft-conflict `tests/Invoke-HVCGPreDeploymentTests.ps1` | Parent integrator appends: `python3 tests/executive/test_executive_command_center.py` (or unit mirror). |
+| Soft-conflict `tests/Invoke-HVCGPreDeploymentTests.ps1` | Parent integrator appends: `python3 tests/executive/run_offline_tests.py`. |
+| AI governance / work queues (`cursor/ai-governance-work-queues`) | Do not merge AI list schema patches into ECC; ECC only consumes approved AI outputs via exclusions (never show raw drafts on scrHomeExec). |
