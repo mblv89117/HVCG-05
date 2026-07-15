@@ -1,6 +1,6 @@
 {
   "title": "HVCG_Subscriptions",
-  "description": "Ops \u2014 Subscriptions",
+  "description": "Ops — Subscriptions",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -90,6 +90,73 @@
         "Past Due"
       ],
       "default": "Active"
+    },
+    {
+      "internalName": "CancellationNoticeDays",
+      "displayName": "CancellationNoticeDays",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Notice period before cancel",
+      "default": 30
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresApproval",
+      "displayName": "RequiresApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Require renewal approval",
+      "default": true
+    },
+    {
+      "internalName": "CostCenter",
+      "displayName": "CostCenter",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastRenewalAlertDate",
+      "displayName": "LastRenewalAlertDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RenewalStatus",
+      "displayName": "RenewalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NotDue",
+        "Upcoming",
+        "Due",
+        "Overdue",
+        "Renewed",
+        "Cancelled"
+      ],
+      "default": "NotDue"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
     }
   ]
 }

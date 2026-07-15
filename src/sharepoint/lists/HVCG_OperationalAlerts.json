@@ -1,6 +1,6 @@
 {
   "title": "HVCG_OperationalAlerts",
-  "description": "Platform \u2014 Operational monitoring alerts",
+  "description": "Platform — Operational monitoring alerts",
   "template": "genericList",
   "columns": [
     {
@@ -38,7 +38,15 @@
         "BackupFailure",
         "UpgradeFailure",
         "HealthCheckFailure",
-        "Other"
+        "Other",
+        "SubscriptionRenewalDue",
+        "VendorContractExpiring",
+        "SoftwareRenewalDue",
+        "RecurringExpenseDue",
+        "PolicyReviewOverdue",
+        "UnownedOpsRecord",
+        "OpsApprovalOverdue",
+        "InternalProjectBlocked"
       ]
     },
     {
@@ -139,6 +147,14 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Assigned responder"
     }
   ]
 }

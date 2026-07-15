@@ -1,6 +1,6 @@
 {
   "title": "HVCG_SoftwareInventory",
-  "description": "Ops \u2014 Software inventory",
+  "description": "Ops — Software inventory",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -113,6 +113,55 @@
         "Evaluating"
       ],
       "default": "Active"
+    },
+    {
+      "internalName": "BusinessOwnerEmail",
+      "displayName": "BusinessOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Business owner for renewals"
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastRenewalAlertDate",
+      "displayName": "LastRenewalAlertDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RenewalStatus",
+      "displayName": "RenewalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NotDue",
+        "Upcoming",
+        "Due",
+        "Overdue",
+        "Renewed",
+        "Cancelled"
+      ],
+      "default": "NotDue"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
     }
   ]
 }

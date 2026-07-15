@@ -1,6 +1,6 @@
 {
   "title": "HVCG_InternalProjects",
-  "description": "Ops \u2014 Internal HVCG projects (non-client)",
+  "description": "Ops — Internal HVCG projects (non-client)",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -76,6 +76,54 @@
       "type": "Note",
       "required": false,
       "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    {
+      "internalName": "BudgetAmount",
+      "displayName": "BudgetAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PercentComplete",
+      "displayName": "PercentComplete",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
       "description": ""
     }
   ]

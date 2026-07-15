@@ -48,7 +48,14 @@
         "ExternalShare",
         "ClientCommunication",
         "ExecutiveDecision",
-        "Other"
+        "Other",
+        "VendorContract",
+        "SubscriptionRenewal",
+        "RecurringExpense",
+        "PolicyPublish",
+        "SoftwarePurchase",
+        "InternalProject",
+        "TrainingPublish"
       ]
     },
     {
@@ -97,6 +104,39 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "RequesterEmail",
+      "displayName": "RequesterEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Spend-related approvals"
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
     }
-  ]
+  ],
+  "domain": "Platform"
 }

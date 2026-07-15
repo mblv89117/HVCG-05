@@ -1,6 +1,6 @@
 {
   "title": "HVCG_SalesScripts",
-  "description": "Ops \u2014 Sales scripts",
+  "description": "Ops — Sales scripts",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -73,6 +73,22 @@
       "type": "Note",
       "required": false,
       "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastReviewed",
+      "displayName": "LastReviewed",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
       "description": ""
     }
   ]

@@ -1,6 +1,6 @@
 {
   "title": "HVCG_RecurringExpenses",
-  "description": "Ops \u2014 Recurring internal expenses",
+  "description": "Ops — Recurring internal expenses",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -90,6 +90,54 @@
         "Ended"
       ],
       "default": "Active"
+    },
+    {
+      "internalName": "RequiresApproval",
+      "displayName": "RequiresApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "ApprovalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NotRequired",
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      "default": "NotRequired"
+    },
+    {
+      "internalName": "LastAlertDate",
+      "displayName": "LastAlertDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
     }
   ]
 }

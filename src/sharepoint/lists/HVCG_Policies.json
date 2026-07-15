@@ -1,6 +1,6 @@
 {
   "title": "HVCG_Policies",
-  "description": "Ops \u2014 Internal policies",
+  "description": "Ops — Internal policies",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -82,6 +82,39 @@
       "type": "Note",
       "required": false,
       "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Policy publish approver"
+    },
+    {
+      "internalName": "LastReviewAlertDate",
+      "displayName": "LastReviewAlertDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VersionLabel",
+      "displayName": "VersionLabel",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": "1.0"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
       "description": ""
     }
   ]

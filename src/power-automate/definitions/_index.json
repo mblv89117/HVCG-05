@@ -1,17 +1,50 @@
 {
-  "count": 15,
+  "count": 20,
   "flows": [
-    { "name": "HVCG_ClientOnboarding", "path": "src/power-automate/definitions/HVCG_ClientOnboarding.definition.json" },
-    { "name": "HVCG_MissingDocumentReminders", "path": "src/power-automate/definitions/HVCG_MissingDocumentReminders.definition.json" },
-    { "name": "HVCG_OverdueTaskEscalation", "path": "src/power-automate/definitions/HVCG_OverdueTaskEscalation.definition.json" },
-    { "name": "HVCG_RenewalReminders", "path": "src/power-automate/definitions/HVCG_RenewalReminders.definition.json" },
-    { "name": "HVCG_UpdateProjectHealth", "path": "src/power-automate/definitions/HVCG_UpdateProjectHealth.definition.json" },
-    { "name": "HVCG_WeeklyStatusSummary", "path": "src/power-automate/definitions/HVCG_WeeklyStatusSummary.definition.json" },
-    { "name": "HVCG_CreateProjectFromTemplate", "path": "src/power-automate/definitions/HVCG_CreateProjectFromTemplate.definition.json" },
-    { "name": "HVCG_CreateClientWorkspace", "path": "src/power-automate/definitions/HVCG_CreateClientWorkspace.definition.json" },
-    { "name": "HVCG_CreateDocumentRequests", "path": "src/power-automate/definitions/HVCG_CreateDocumentRequests.definition.json" },
-    { "name": "HVCG_DeliverableApproval", "path": "src/power-automate/definitions/HVCG_DeliverableApproval.definition.json" },
-    { "name": "HVCG_ExecutiveDecisionEscalation", "path": "src/power-automate/definitions/HVCG_ExecutiveDecisionEscalation.definition.json" },
+    {
+      "name": "HVCG_ClientOnboarding",
+      "path": "src/power-automate/definitions/HVCG_ClientOnboarding.definition.json"
+    },
+    {
+      "name": "HVCG_MissingDocumentReminders",
+      "path": "src/power-automate/definitions/HVCG_MissingDocumentReminders.definition.json"
+    },
+    {
+      "name": "HVCG_OverdueTaskEscalation",
+      "path": "src/power-automate/definitions/HVCG_OverdueTaskEscalation.definition.json"
+    },
+    {
+      "name": "HVCG_RenewalReminders",
+      "path": "src/power-automate/definitions/HVCG_RenewalReminders.definition.json"
+    },
+    {
+      "name": "HVCG_UpdateProjectHealth",
+      "path": "src/power-automate/definitions/HVCG_UpdateProjectHealth.definition.json"
+    },
+    {
+      "name": "HVCG_WeeklyStatusSummary",
+      "path": "src/power-automate/definitions/HVCG_WeeklyStatusSummary.definition.json"
+    },
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "path": "src/power-automate/definitions/HVCG_CreateProjectFromTemplate.definition.json"
+    },
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "path": "src/power-automate/definitions/HVCG_CreateClientWorkspace.definition.json"
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "path": "src/power-automate/definitions/HVCG_CreateDocumentRequests.definition.json"
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "path": "src/power-automate/definitions/HVCG_DeliverableApproval.definition.json"
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "path": "src/power-automate/definitions/HVCG_ExecutiveDecisionEscalation.definition.json"
+    },
     {
       "name": "HVCG_LeadQualifiedCreateOpportunity",
       "path": "src/power-automate/definitions/HVCG_LeadQualifiedCreateOpportunity.definition.json",
@@ -38,6 +71,41 @@
       "path": "src/power-automate/definitions/HVCG_CapitalFundingStatusNotify.definition.json",
       "module": "OpportunityCRM",
       "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpsRenewalAlerts",
+      "path": "src/power-automate/definitions/HVCG_OpsRenewalAlerts.definition.json",
+      "module": "OperationsHub",
+      "packageVersion": "1.0.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpsExpenseApproval",
+      "path": "src/power-automate/definitions/HVCG_OpsExpenseApproval.definition.json",
+      "module": "OperationsHub",
+      "packageVersion": "1.0.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpsPolicyReviewReminders",
+      "path": "src/power-automate/definitions/HVCG_OpsPolicyReviewReminders.definition.json",
+      "module": "OperationsHub",
+      "packageVersion": "1.0.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpsWeeklyDigest",
+      "path": "src/power-automate/definitions/HVCG_OpsWeeklyDigest.definition.json",
+      "module": "OperationsHub",
+      "packageVersion": "1.0.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpsApprovalRouter",
+      "path": "src/power-automate/definitions/HVCG_OpsApprovalRouter.definition.json",
+      "module": "OperationsHub",
+      "packageVersion": "1.0.0",
       "defaultState": "Off"
     }
   ]

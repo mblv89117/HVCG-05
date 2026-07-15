@@ -1,6 +1,6 @@
 {
   "title": "HVCG_TrainingCatalog",
-  "description": "Ops \u2014 Training materials catalog",
+  "description": "Ops — Training materials catalog",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -71,6 +71,39 @@
       "type": "Note",
       "required": false,
       "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "LastReviewed",
+      "displayName": "LastReviewed",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CompletionRequired",
+      "displayName": "CompletionRequired",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
       "description": ""
     }
   ]

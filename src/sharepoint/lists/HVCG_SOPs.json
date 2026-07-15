@@ -114,6 +114,31 @@
       "indexed": false,
       "description": "",
       "default": "1.0"
+    },
+    {
+      "internalName": "NextReviewDate",
+      "displayName": "NextReviewDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
     }
-  ]
+  ],
+  "domain": "Ops"
 }

@@ -1,6 +1,6 @@
 {
   "title": "HVCG_Vendors",
-  "description": "Ops \u2014 Vendor management",
+  "description": "Ops — Vendor management",
   "template": "genericList",
   "domain": "Ops",
   "columns": [
@@ -100,6 +100,56 @@
       "type": "Note",
       "required": false,
       "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Contract / spend approver"
+    },
+    {
+      "internalName": "RenewalReminderDays",
+      "displayName": "RenewalReminderDays",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Days before ContractEndDate to alert",
+      "default": 60
+    },
+    {
+      "internalName": "LastRenewalAlertDate",
+      "displayName": "LastRenewalAlertDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RenewalStatus",
+      "displayName": "RenewalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NotDue",
+        "Upcoming",
+        "Due",
+        "Overdue",
+        "Renewed",
+        "Cancelled"
+      ],
+      "default": "NotDue"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
       "description": ""
     }
   ]
