@@ -1,36 +1,33 @@
 # Next Session
 
-**Generated:** 2026-07-15 (~10:33 PT)  
-**Mode:** Opportunity CRM **live Dev Repair ACTIVE** — leave running; next monitor ~11:05 PT
+**Generated:** 2026-07-15 (~10:35 PT)  
+**Mode:** Opportunity CRM **Dev SharePoint Repair SUCCESS** — **Maker OA WAITING FOR APPROVAL**
 
 ## Current project status
 
 - **Product:** HVCG OS **v1.1.0**
 - **Branch:** `cursor/v1.1.0-intelligence-ai-ops`
-- **CRM tip:** `8635397` — Opportunity CRM parallel workstreams merged
-- **Docs tip (pre-this-session):** `9d77c2f`
+- **CRM tip:** `8635397`
 - **Infrastructure engines:** Frozen
+- **Repair:** terminal **573342** finished — `exit_code: 0`, `REPAIR_EXIT:0`, `HasDrift: False`, **1170** fields / **82** lists
+- **Offline tests:** `Invoke-HVCGPreDeploymentTests.ps1` **PASS** (`PREDEPLOY_EXIT:0`)
 
 ## Live Dev SharePoint
 
-- **ACTIVE:** `pwsh` pid **12090** (parent **12084**), terminal **573342**
-- **Command:** `Repair-HVCGOSSharePointSchema.ps1 -Environment development` (tee → `deployment/reports/checkpoints/repair-opportunity-crm-live.log`)
-- **Started:** 2026-07-15 09:24:13 PT
-- **Last STEP:** `Validating SharePoint schema vs repo (post-repair)...` @ 10:20:06
-- Prior OK: views created; pre-seed schema **1170** fields / `HasDrift: False`
-- **caffeinate:** pid **74204** already running
-- **Next monitor due:** ~**2026-07-15 11:05 PT**
+- Site: `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev`
+- Report: `deployment/reports/HVCG-Dev-Deploy-20260715-103353.json` (`Success: True`)
+- Schema: `deployment/reports/schema/schema-validation-20260715-103353.json` (also `schema-validation-latest.json`)
+- Seed: 28 `Seed:*` creates; Errors []
+- Pre-CRM backup: `backups/development/20260715-092137`
 
-## After repair exits
+## Immediate next step
 
-1. Attest `REPAIR_EXIT:0` + final `hasDrift: false`
-2. Optional quick predeploy tests
-3. Maker OA remains **WAITING FOR APPROVAL** — do not import flows / publish / activate Teams without user approval
-4. No Production
+**Maker OA — WAITING FOR APPROVAL.** Do **not** import flows, publish canvas, or activate Teams until the user explicitly approves. Guide: `docs/crm/OWNER_ACTION_GUIDE.md`.
 
 ## Do not
 
-- Kill/interrupt healthy Repair
-- Start concurrent Repair
+- Import/publish/activate Power Platform without approval
 - Modify frozen deployment engines
+- Start Production
 - Commit `.worktrees/` or secrets
+- Treat mock schema unit-test output as live compliance (restore from dated `…103353` artifact if overwritten)

@@ -4,3 +4,11 @@
 [2026-07-15T10:33:58-0700] BACKUP term=573341 COMPLETED earlier BACKUP_LIVE_EXIT=0 path=backups/development/20260715-092137
 [2026-07-15T10:33:58-0700] ACTION leave repair running; update PROJECT_STATUS/HANDOFF/NEXT_SESSION; commit+push status milestone; schedule next monitor ~11:05 PT
 [2026-07-15T10:33:58-0700] GATES no Production; Maker flow import/publish/Teams require user approval after attest
+[2026-07-15T10:35:02-0700] CLASSIFY repair terminal=573342 → COMPLETED SUCCESS exit_code=0 REPAIR_EXIT=0
+[2026-07-15T10:35:02-0700] EVIDENCE HasDrift=False IsCompliant=True OkCount=1170 ListsChecked=82 phase=post-repair site=HVCG-CommandCenter-Dev
+[2026-07-15T10:35:02-0700] EVIDENCE report=deployment/reports/HVCG-Dev-Deploy-20260715-103353.json Success=True Errors=[] SeedCreates=28 Skipped=1195
+[2026-07-15T10:35:02-0700] EVIDENCE CRM: list HVCG_OpportunityActivities; fields/lookups/views (Open/Qualified Leads, Commit Forecast, Capital Handoffs Ready, Recent Activities)
+[2026-07-15T10:35:02-0700] TESTS Invoke-HVCGPreDeploymentTests.ps1 PREDEPLOY_EXIT=0 (includes opportunity CRM module/lifecycle/migration/acceptance Offline + seed/lookup/schema unit)
+[2026-07-15T10:35:02-0700] NOTE restored schema-validation-latest.json from schema-validation-20260715-103353.json after offline unit overwrite
+[2026-07-15T10:35:02-0700] NEXT Maker OA WAITING FOR APPROVAL — no flow import / publish / Teams; no Production; NOTIFY_USER=none
+[2026-07-15T10:35:02-0700] ACTION update PROJECT_STATUS/HANDOFF/NEXT_SESSION; commit+push verified milestone
