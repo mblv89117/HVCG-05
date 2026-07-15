@@ -1,0 +1,39 @@
+{
+  "environmentVariables": [
+    {
+      "schemaName": "hvcg_CommandCenterSiteUrl",
+      "displayName": "Command Center Site URL",
+      "defaultValue": "https://REQUIRED.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+    },
+    {
+      "schemaName": "hvcg_ClientsSiteUrl",
+      "displayName": "Clients Hub Site URL",
+      "defaultValue": "https://REQUIRED.sharepoint.com/sites/HVCG-Clients-Dev"
+    },
+    {
+      "schemaName": "hvcg_KnowledgeSiteUrl",
+      "displayName": "Knowledge Center Site URL",
+      "defaultValue": "https://REQUIRED.sharepoint.com/sites/HVCG-Knowledge-Dev"
+    },
+    {
+      "schemaName": "hvcg_ExecutiveEmail",
+      "displayName": "Executive UPN/Email",
+      "defaultValue": "REQUIRED"
+    },
+    {
+      "schemaName": "hvcg_OpsEmail",
+      "displayName": "Operations Notification Email",
+      "defaultValue": "REQUIRED"
+    },
+    {
+      "schemaName": "hvcg_EnableClientEmails",
+      "displayName": "Enable Client Emails",
+      "defaultValue": "false"
+    },
+    {
+      "schemaName": "hvcg_ProductVersion",
+      "displayName": "HVCG OS Product Version",
+      "defaultValue": "1.1.0"
+    }
+  ]
+}

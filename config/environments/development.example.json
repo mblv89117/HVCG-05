@@ -1,0 +1,102 @@
+{
+  "$schemaComment": "Copy to development.json and fill REQUIRED values. Never commit secrets.",
+  "environment": "development",
+  "label": "HVCG Development",
+  "region": "NAM",
+  "timeZone": "America/Los_Angeles",
+  "locale": "en-US",
+  "currency": "USD",
+  "tenant": {
+    "domain": "REQUIRED_SET_ME.onmicrosoft.com",
+    "tenantId": "REQUIRED_SET_ME_GUID_OR_LEAVE_AND_RESOLVE_AT_RUNTIME",
+    "sharePointAdminUrl": "https://REQUIRED_SET_ME-admin.sharepoint.com",
+    "sharePointRoot": "https://REQUIRED_SET_ME.sharepoint.com"
+  },
+  "sites": {
+    "commandCenter": {
+      "title": "HVCG Project Command Center - DEV",
+      "alias": "HVCG-CommandCenter-Dev",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-CommandCenter-Dev",
+      "template": "STS#3",
+      "isHub": true
+    },
+    "knowledgeCenter": {
+      "title": "HVCG Knowledge Center - DEV",
+      "alias": "HVCG-Knowledge-Dev",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-Knowledge-Dev",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "clientsHub": {
+      "title": "HVCG Clients Hub - DEV",
+      "alias": "HVCG-Clients-Dev",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-Clients-Dev",
+      "template": "STS#3",
+      "isHub": false,
+      "note": "Client document libraries (no external users in DEV)"
+    },
+    "secureDataRooms": {
+      "enabled": false,
+      "title": "HVCG Secure Data Rooms - DEV",
+      "alias": "HVCG-DataRooms-Dev",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-DataRooms-Dev",
+      "note": "Deferred in V1 unless enabled=true"
+    }
+  },
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Development",
+    "environmentId": "OPTIONAL_RESOLVE_AT_RUNTIME",
+    "solutionUniqueName": "HVCGCommandCenterDev",
+    "solutionDisplayName": "HVCG Command Center DEV"
+  },
+  "identities": {
+    "executiveUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "operationsManagerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "serviceAccountUpn": "OPTIONAL_CREATE_LATER@REQUIRED_SET_ME",
+    "notificationMailbox": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "siteOwnerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME"
+  },
+  "groups": {
+    "prefix": "HVCG-DEV-",
+    "roleGroups": [
+      "HVCG-DEV-Role-Owner",
+      "HVCG-DEV-Role-Administrator",
+      "HVCG-DEV-Role-OperationsManager",
+      "HVCG-DEV-Role-ProjectManager",
+      "HVCG-DEV-Role-CapitalAdvisor",
+      "HVCG-DEV-Role-FinancialAnalyst",
+      "HVCG-DEV-Role-OperationsAssistant",
+      "HVCG-DEV-Role-Contractor",
+      "HVCG-DEV-Role-ExternalProfessional",
+      "HVCG-DEV-Role-ReadOnlyReviewer"
+    ],
+    "addDeployingUserToRoles": [
+      "HVCG-DEV-Role-Owner",
+      "HVCG-DEV-Role-Administrator",
+      "HVCG-DEV-Role-OperationsManager"
+    ]
+  },
+  "security": {
+    "externalSharingOnDevSites": "Disabled",
+    "allowAnonymousLinks": false,
+    "grantClientOrExternalAccessInDev": false,
+    "breakInheritanceOnClientLibraries": true
+  },
+  "deployment": {
+    "seedSampleData": true,
+    "uploadProjectTemplates": true,
+    "createSampleClientWorkspace": true,
+    "sampleClientCode": "SRM01",
+    "provisionPowerPlatformSolution": true,
+    "failOnNonCriticalErrors": false
+  },
+  "requiredFields": [
+    "tenant.domain",
+    "tenant.sharePointRoot",
+    "identities.executiveUpn",
+    "identities.siteOwnerUpn",
+    "identities.notificationMailbox"
+  ],
+  "configSchemaVersion": "1.0.0",
+  "productVersion": "1.0.0"
+}

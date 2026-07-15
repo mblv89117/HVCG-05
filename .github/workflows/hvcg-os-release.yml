@@ -1,0 +1,124 @@
+name: HVCG OS Release
+
+on:
+  push:
+    branches: [main, release/*]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment gate'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - test
+          - production
+      targetVersion:
+        description: 'Semantic version to validate/pack'
+        required: true
+        default: '1.1.0'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Pre-release validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Schema & package validation
+        run: python tests/validate_predeployment.py
+      - name: Unit schema test
+        run: python tests/unit/test_schemas.py
+      - name: Intelligence / AI / backup packaging tests
+        run: python tests/intelligence/test_intelligence_ai_backup.py
+      - name: Verify VERSION matches version.json
+        run: |
+          V=$(tr -d '\n' < VERSION)
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          v = Path("VERSION").read_text().strip()
+          meta = json.loads(Path("version.json").read_text())
+          assert meta["version"] == v, (meta["version"], v)
+          assert Path(f"releases/v{v}/notes/RELEASE_NOTES.md").exists()
+          assert Path("releases/migrations/20260714_001_baseline_v1_0_0.json").exists()
+          assert Path("releases/migrations/20260714_002_intelligence_ai_backup_v1_1_0.json").exists()
+          assert Path("releases/v1.0.0/notes/RELEASE_NOTES.md").exists()  # immutability
+          print("version gate OK", v)
+          PY
+      - name: Pack release snapshot
+        run: python deployment/install/New-HVCGSchemaSnapshot.py --version "$(tr -d '\n' < VERSION)" --repo "$GITHUB_WORKSPACE"
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hvcg-os-release-snapshot
+          path: |
+            releases/v*/artifacts/**
+            releases/v*/checksums/**
+            VERSION
+            version.json
+
+  # Tenant deploy jobs require secrets + runner with network to M365.
+  # They are manual gates so CI never mutates production without approval.
+  deploy-dev:
+    name: Deploy Development (manual)
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'development'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y powershell
+      - name: Notice
+        run: |
+          echo "Interactive M365 auth is required. Run on a secure admin workstation:"
+          echo "  pwsh -File ./deployment/install/Install-HVCGOS.ps1 -Environment development"
+          echo "Then:"
+          echo "  pwsh -File ./deployment/health/Test-HVCGOSHealth.ps1 -Environment development"
+          echo "  pwsh -File ./deployment/health/Test-HVCGOSPostDeploy.ps1 -Environment development"
+
+  promote-test:
+    name: Promote to Test (manual)
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'test'
+    runs-on: ubuntu-latest
+    environment: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Promotion checklist
+        run: |
+          echo "1. pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment test -TargetVersion ${{ inputs.targetVersion }}"
+          echo "2. pac solution import --path ./releases/v${{ inputs.targetVersion }}/artifacts/HVCGOS_managed_${{ inputs.targetVersion }}.zip"
+          echo "3. pwsh -File ./deployment/health/Test-HVCGOSHealth.ps1 -Environment test"
+          echo "4. pwsh -File ./deployment/health/Test-HVCGOSPostDeploy.ps1 -Environment test"
+          echo "5. Record UAT sign-off before production"
+
+  promote-production:
+    name: Promote to Production (manual + approval)
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Production promotion checklist
+        run: |
+          echo "REQUIRED: GitHub Environment 'production' reviewer approval"
+          echo "1. Confirm Test post-deploy PASS for ${{ inputs.targetVersion }}"
+          echo "2. Export SharePoint backup/snapshot"
+          echo "3. pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment production -TargetVersion ${{ inputs.targetVersion }}"
+          echo "4. pac solution import managed zip (same artifact as Test)"
+          echo "5. Health + post-deploy validation"
+          echo "6. Soft rollback available: deployment/rollback/Rollback-HVCGOS.ps1 -Force"

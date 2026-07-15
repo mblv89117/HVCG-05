@@ -1,0 +1,68 @@
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pfx
+*.pem
+*.key
+secrets/
+credentials/
+config/environments/development.json
+config/environments/production.json
+config/environments/test.json
+config/environments/*.local.json
+deployment/reports/*.json
+!deployment/reports/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# Node / tooling
+node_modules/
+npm-debug.log*
+dist/
+build/
+coverage/
+.turbo/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Power Platform / PnP
+*.msapp.bak
+ConnectionReferences.local.json
+*.pacignore.local
+
+# Azure
+local.settings.json
+.azure/
+
+# Temporary / logs
+*.log
+tmp/
+temp/
+.cache/
+
+# Sample exports with real client data (never commit)
+sample-data/production/
+exports/production/
+
+# Local backups (may contain tenant exports — never commit)
+backups/
+
+# Operational health reports (regenerated)
+deployment/reports/health/
+!deployment/reports/health/.gitkeep

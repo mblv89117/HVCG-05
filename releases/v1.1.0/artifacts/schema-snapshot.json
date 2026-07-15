@@ -1,0 +1,660 @@
+{
+  "version": "1.1.0",
+  "capturedAt": "2026-07-15T00:32:06.102502+00:00",
+  "listCount": 81,
+  "lists": [
+    {
+      "name": "HVCG_Clients",
+      "columnCount": 52,
+      "path": "src/sharepoint/lists/HVCG_Clients.json"
+    },
+    {
+      "name": "HVCG_Contacts",
+      "columnCount": 12,
+      "path": "src/sharepoint/lists/HVCG_Contacts.json"
+    },
+    {
+      "name": "HVCG_ReferralPartners",
+      "columnCount": 13,
+      "path": "src/sharepoint/lists/HVCG_ReferralPartners.json"
+    },
+    {
+      "name": "HVCG_Leads",
+      "columnCount": 22,
+      "path": "src/sharepoint/lists/HVCG_Leads.json"
+    },
+    {
+      "name": "HVCG_Referrals",
+      "columnCount": 13,
+      "path": "src/sharepoint/lists/HVCG_Referrals.json"
+    },
+    {
+      "name": "HVCG_Opportunities",
+      "columnCount": 27,
+      "path": "src/sharepoint/lists/HVCG_Opportunities.json"
+    },
+    {
+      "name": "HVCG_DiscoveryCalls",
+      "columnCount": 13,
+      "path": "src/sharepoint/lists/HVCG_DiscoveryCalls.json"
+    },
+    {
+      "name": "HVCG_Proposals",
+      "columnCount": 16,
+      "path": "src/sharepoint/lists/HVCG_Proposals.json"
+    },
+    {
+      "name": "HVCG_WinLossAnalyses",
+      "columnCount": 11,
+      "path": "src/sharepoint/lists/HVCG_WinLossAnalyses.json"
+    },
+    {
+      "name": "HVCG_Engagements",
+      "columnCount": 27,
+      "path": "src/sharepoint/lists/HVCG_Engagements.json"
+    },
+    {
+      "name": "HVCG_Projects",
+      "columnCount": 23,
+      "path": "src/sharepoint/lists/HVCG_Projects.json"
+    },
+    {
+      "name": "HVCG_Workstreams",
+      "columnCount": 7,
+      "path": "src/sharepoint/lists/HVCG_Workstreams.json"
+    },
+    {
+      "name": "HVCG_Milestones",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_Milestones.json"
+    },
+    {
+      "name": "HVCG_Tasks",
+      "columnCount": 33,
+      "path": "src/sharepoint/lists/HVCG_Tasks.json"
+    },
+    {
+      "name": "HVCG_DocumentRequests",
+      "columnCount": 32,
+      "path": "src/sharepoint/lists/HVCG_DocumentRequests.json"
+    },
+    {
+      "name": "HVCG_Deliverables",
+      "columnCount": 24,
+      "path": "src/sharepoint/lists/HVCG_Deliverables.json"
+    },
+    {
+      "name": "HVCG_Meetings",
+      "columnCount": 26,
+      "path": "src/sharepoint/lists/HVCG_Meetings.json"
+    },
+    {
+      "name": "HVCG_Communications",
+      "columnCount": 13,
+      "path": "src/sharepoint/lists/HVCG_Communications.json"
+    },
+    {
+      "name": "HVCG_Decisions",
+      "columnCount": 20,
+      "path": "src/sharepoint/lists/HVCG_Decisions.json"
+    },
+    {
+      "name": "HVCG_Risks",
+      "columnCount": 12,
+      "path": "src/sharepoint/lists/HVCG_Risks.json"
+    },
+    {
+      "name": "HVCG_Issues",
+      "columnCount": 12,
+      "path": "src/sharepoint/lists/HVCG_Issues.json"
+    },
+    {
+      "name": "HVCG_ChangeRequests",
+      "columnCount": 14,
+      "path": "src/sharepoint/lists/HVCG_ChangeRequests.json"
+    },
+    {
+      "name": "HVCG_Assumptions",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_Assumptions.json"
+    },
+    {
+      "name": "HVCG_Dependencies",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_Dependencies.json"
+    },
+    {
+      "name": "HVCG_Approvals",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_Approvals.json"
+    },
+    {
+      "name": "HVCG_CapitalSources",
+      "columnCount": 13,
+      "path": "src/sharepoint/lists/HVCG_CapitalSources.json"
+    },
+    {
+      "name": "HVCG_Lenders",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_Lenders.json"
+    },
+    {
+      "name": "HVCG_Investors",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_Investors.json"
+    },
+    {
+      "name": "HVCG_CapitalOpportunities",
+      "columnCount": 18,
+      "path": "src/sharepoint/lists/HVCG_CapitalOpportunities.json"
+    },
+    {
+      "name": "HVCG_FundingMilestones",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_FundingMilestones.json"
+    },
+    {
+      "name": "HVCG_InvestorOutreach",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_InvestorOutreach.json"
+    },
+    {
+      "name": "HVCG_LenderOutreach",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_LenderOutreach.json"
+    },
+    {
+      "name": "HVCG_Invoices",
+      "columnCount": 15,
+      "path": "src/sharepoint/lists/HVCG_Invoices.json"
+    },
+    {
+      "name": "HVCG_FinancialMilestones",
+      "columnCount": 23,
+      "path": "src/sharepoint/lists/HVCG_FinancialMilestones.json"
+    },
+    {
+      "name": "HVCG_CollectionsActivities",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_CollectionsActivities.json"
+    },
+    {
+      "name": "HVCG_Budgets",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_Budgets.json"
+    },
+    {
+      "name": "HVCG_ExpenseApprovals",
+      "columnCount": 14,
+      "path": "src/sharepoint/lists/HVCG_ExpenseApprovals.json"
+    },
+    {
+      "name": "HVCG_RevenueForecastLines",
+      "columnCount": 11,
+      "path": "src/sharepoint/lists/HVCG_RevenueForecastLines.json"
+    },
+    {
+      "name": "HVCG_TeamMembers",
+      "columnCount": 11,
+      "path": "src/sharepoint/lists/HVCG_TeamMembers.json"
+    },
+    {
+      "name": "HVCG_TimeEntries",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_TimeEntries.json"
+    },
+    {
+      "name": "HVCG_Templates",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_Templates.json"
+    },
+    {
+      "name": "HVCG_SOPs",
+      "columnCount": 11,
+      "path": "src/sharepoint/lists/HVCG_SOPs.json"
+    },
+    {
+      "name": "HVCG_Policies",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_Policies.json"
+    },
+    {
+      "name": "HVCG_Vendors",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_Vendors.json"
+    },
+    {
+      "name": "HVCG_SoftwareInventory",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_SoftwareInventory.json"
+    },
+    {
+      "name": "HVCG_Subscriptions",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_Subscriptions.json"
+    },
+    {
+      "name": "HVCG_RecurringExpenses",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_RecurringExpenses.json"
+    },
+    {
+      "name": "HVCG_InternalProjects",
+      "columnCount": 7,
+      "path": "src/sharepoint/lists/HVCG_InternalProjects.json"
+    },
+    {
+      "name": "HVCG_MeetingPlaybooks",
+      "columnCount": 7,
+      "path": "src/sharepoint/lists/HVCG_MeetingPlaybooks.json"
+    },
+    {
+      "name": "HVCG_SalesScripts",
+      "columnCount": 7,
+      "path": "src/sharepoint/lists/HVCG_SalesScripts.json"
+    },
+    {
+      "name": "HVCG_TrainingCatalog",
+      "columnCount": 7,
+      "path": "src/sharepoint/lists/HVCG_TrainingCatalog.json"
+    },
+    {
+      "name": "HVCG_PortalAccess",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_PortalAccess.json"
+    },
+    {
+      "name": "HVCG_PortalMessages",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_PortalMessages.json"
+    },
+    {
+      "name": "HVCG_PortalDeliverableLinks",
+      "columnCount": 6,
+      "path": "src/sharepoint/lists/HVCG_PortalDeliverableLinks.json"
+    },
+    {
+      "name": "HVCG_AI_Tasks",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_Tasks.json"
+    },
+    {
+      "name": "HVCG_AI_Reviews",
+      "columnCount": 22,
+      "path": "src/sharepoint/lists/HVCG_AI_Reviews.json"
+    },
+    {
+      "name": "HVCG_AI_GeneratedDocuments",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_GeneratedDocuments.json"
+    },
+    {
+      "name": "HVCG_AI_SuggestedActions",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_SuggestedActions.json"
+    },
+    {
+      "name": "HVCG_AI_DraftEmails",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_DraftEmails.json"
+    },
+    {
+      "name": "HVCG_AI_MeetingSummaries",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_MeetingSummaries.json"
+    },
+    {
+      "name": "HVCG_AI_SOPDrafts",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_SOPDrafts.json"
+    },
+    {
+      "name": "HVCG_AI_QualityReviews",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_QualityReviews.json"
+    },
+    {
+      "name": "HVCG_AI_Escalations",
+      "columnCount": 22,
+      "path": "src/sharepoint/lists/HVCG_AI_Escalations.json"
+    },
+    {
+      "name": "HVCG_AI_KnowledgeExtraction",
+      "columnCount": 19,
+      "path": "src/sharepoint/lists/HVCG_AI_KnowledgeExtraction.json"
+    },
+    {
+      "name": "HVCG_Relationships",
+      "columnCount": 25,
+      "path": "src/sharepoint/lists/HVCG_Relationships.json"
+    },
+    {
+      "name": "HVCG_AIWorkers",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_AIWorkers.json"
+    },
+    {
+      "name": "HVCG_AIPrompts",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_AIPrompts.json"
+    },
+    {
+      "name": "HVCG_AIToolRegistry",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_AIToolRegistry.json"
+    },
+    {
+      "name": "HVCG_AIContext",
+      "columnCount": 13,
+      "path": "src/sharepoint/lists/HVCG_AIContext.json"
+    },
+    {
+      "name": "HVCG_AIJobs",
+      "columnCount": 34,
+      "path": "src/sharepoint/lists/HVCG_AIJobs.json"
+    },
+    {
+      "name": "HVCG_AIJobSteps",
+      "columnCount": 11,
+      "path": "src/sharepoint/lists/HVCG_AIJobSteps.json"
+    },
+    {
+      "name": "HVCG_AIOutputs",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_AIOutputs.json"
+    },
+    {
+      "name": "HVCG_AIApprovals",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_AIApprovals.json"
+    },
+    {
+      "name": "HVCG_AIFeedback",
+      "columnCount": 7,
+      "path": "src/sharepoint/lists/HVCG_AIFeedback.json"
+    },
+    {
+      "name": "HVCG_AIAuditLog",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_AIAuditLog.json"
+    },
+    {
+      "name": "HVCG_AICostTracking",
+      "columnCount": 11,
+      "path": "src/sharepoint/lists/HVCG_AICostTracking.json"
+    },
+    {
+      "name": "HVCG_OperationalAlerts",
+      "columnCount": 12,
+      "path": "src/sharepoint/lists/HVCG_OperationalAlerts.json"
+    },
+    {
+      "name": "HVCG_SystemInfo",
+      "columnCount": 9,
+      "path": "src/sharepoint/lists/HVCG_SystemInfo.json"
+    },
+    {
+      "name": "HVCG_AutomationLogs",
+      "columnCount": 10,
+      "path": "src/sharepoint/lists/HVCG_AutomationLogs.json"
+    },
+    {
+      "name": "HVCG_Notifications",
+      "columnCount": 8,
+      "path": "src/sharepoint/lists/HVCG_Notifications.json"
+    },
+    {
+      "name": "HVCG_AuditEvents",
+      "columnCount": 6,
+      "path": "src/sharepoint/lists/HVCG_AuditEvents.json"
+    }
+  ],
+  "templates": {
+    "count": 21,
+    "templates": [
+      {
+        "templateKey": "general-client-onboarding",
+        "title": "General Client Onboarding",
+        "tasks": 12,
+        "docs": 8,
+        "deliverables": 1,
+        "path": "templates/projects/general-client-onboarding.json"
+      },
+      {
+        "templateKey": "enterprise-value-assessment",
+        "title": "Enterprise Value Assessment",
+        "tasks": 8,
+        "docs": 4,
+        "deliverables": 2,
+        "path": "templates/projects/enterprise-value-assessment.json"
+      },
+      {
+        "templateKey": "capital-readiness-assessment",
+        "title": "Capital Readiness Assessment",
+        "tasks": 6,
+        "docs": 4,
+        "deliverables": 1,
+        "path": "templates/projects/capital-readiness-assessment.json"
+      },
+      {
+        "templateKey": "debt-capital-raise",
+        "title": "Debt Capital Raise",
+        "tasks": 8,
+        "docs": 7,
+        "deliverables": 2,
+        "path": "templates/projects/debt-capital-raise.json"
+      },
+      {
+        "templateKey": "equity-capital-raise",
+        "title": "Equity Capital Raise",
+        "tasks": 8,
+        "docs": 7,
+        "deliverables": 3,
+        "path": "templates/projects/equity-capital-raise.json"
+      },
+      {
+        "templateKey": "sba-loan-package",
+        "title": "SBA Loan Package",
+        "tasks": 8,
+        "docs": 7,
+        "deliverables": 1,
+        "path": "templates/projects/sba-loan-package.json"
+      },
+      {
+        "templateKey": "commercial-real-estate-financing",
+        "title": "Commercial Real Estate Financing",
+        "tasks": 8,
+        "docs": 8,
+        "deliverables": 2,
+        "path": "templates/projects/commercial-real-estate-financing.json"
+      },
+      {
+        "templateKey": "private-credit-package",
+        "title": "Private Credit Package",
+        "tasks": 8,
+        "docs": 6,
+        "deliverables": 2,
+        "path": "templates/projects/private-credit-package.json"
+      },
+      {
+        "templateKey": "fractional-cfo-engagement",
+        "title": "Fractional CFO Engagement",
+        "tasks": 6,
+        "docs": 3,
+        "deliverables": 2,
+        "path": "templates/projects/fractional-cfo-engagement.json"
+      },
+      {
+        "templateKey": "cash-flow-forecasting",
+        "title": "Cash-Flow Forecasting",
+        "tasks": 5,
+        "docs": 4,
+        "deliverables": 1,
+        "path": "templates/projects/cash-flow-forecasting.json"
+      },
+      {
+        "templateKey": "financial-model-development",
+        "title": "Financial Model Development",
+        "tasks": 5,
+        "docs": 2,
+        "deliverables": 1,
+        "path": "templates/projects/financial-model-development.json"
+      },
+      {
+        "templateKey": "investor-presentation",
+        "title": "Investor Presentation",
+        "tasks": 5,
+        "docs": 2,
+        "deliverables": 1,
+        "path": "templates/projects/investor-presentation.json"
+      },
+      {
+        "templateKey": "lender-package",
+        "title": "Lender Package",
+        "tasks": 4,
+        "docs": 4,
+        "deliverables": 1,
+        "path": "templates/projects/lender-package.json"
+      },
+      {
+        "templateKey": "business-launch",
+        "title": "Business Launch",
+        "tasks": 6,
+        "docs": 2,
+        "deliverables": 2,
+        "path": "templates/projects/business-launch.json"
+      },
+      {
+        "templateKey": "operational-improvement",
+        "title": "Operational Improvement",
+        "tasks": 5,
+        "docs": 1,
+        "deliverables": 2,
+        "path": "templates/projects/operational-improvement.json"
+      },
+      {
+        "templateKey": "data-room-preparation",
+        "title": "Data-Room Preparation",
+        "tasks": 5,
+        "docs": 1,
+        "deliverables": 1,
+        "path": "templates/projects/data-room-preparation.json"
+      },
+      {
+        "templateKey": "retainer-renewal",
+        "title": "Retainer Renewal",
+        "tasks": 5,
+        "docs": 1,
+        "deliverables": 1,
+        "path": "templates/projects/retainer-renewal.json"
+      },
+      {
+        "templateKey": "engagement-closeout",
+        "title": "Engagement Closeout",
+        "tasks": 6,
+        "docs": 1,
+        "deliverables": 1,
+        "path": "templates/projects/engagement-closeout.json"
+      },
+      {
+        "templateKey": "equipment-financing",
+        "title": "Equipment Financing",
+        "tasks": 5,
+        "docs": 3,
+        "deliverables": 1,
+        "path": "templates/projects/equipment-financing.json"
+      },
+      {
+        "templateKey": "working-capital",
+        "title": "Working Capital Facility",
+        "tasks": 4,
+        "docs": 3,
+        "deliverables": 2,
+        "path": "templates/projects/working-capital.json"
+      },
+      {
+        "templateKey": "investor-outreach",
+        "title": "Investor Outreach Campaign",
+        "tasks": 5,
+        "docs": 2,
+        "deliverables": 1,
+        "path": "templates/projects/investor-outreach.json"
+      }
+    ]
+  },
+  "flows": {
+    "count": 11,
+    "flows": [
+      {
+        "name": "HVCG_ClientOnboarding",
+        "path": "src/power-automate/definitions/HVCG_ClientOnboarding.definition.json"
+      },
+      {
+        "name": "HVCG_MissingDocumentReminders",
+        "path": "src/power-automate/definitions/HVCG_MissingDocumentReminders.definition.json"
+      },
+      {
+        "name": "HVCG_OverdueTaskEscalation",
+        "path": "src/power-automate/definitions/HVCG_OverdueTaskEscalation.definition.json"
+      },
+      {
+        "name": "HVCG_RenewalReminders",
+        "path": "src/power-automate/definitions/HVCG_RenewalReminders.definition.json"
+      },
+      {
+        "name": "HVCG_UpdateProjectHealth",
+        "path": "src/power-automate/definitions/HVCG_UpdateProjectHealth.definition.json"
+      },
+      {
+        "name": "HVCG_WeeklyStatusSummary",
+        "path": "src/power-automate/definitions/HVCG_WeeklyStatusSummary.definition.json"
+      },
+      {
+        "name": "HVCG_CreateProjectFromTemplate",
+        "path": "src/power-automate/definitions/HVCG_CreateProjectFromTemplate.definition.json"
+      },
+      {
+        "name": "HVCG_CreateClientWorkspace",
+        "path": "src/power-automate/definitions/HVCG_CreateClientWorkspace.definition.json"
+      },
+      {
+        "name": "HVCG_CreateDocumentRequests",
+        "path": "src/power-automate/definitions/HVCG_CreateDocumentRequests.definition.json"
+      },
+      {
+        "name": "HVCG_DeliverableApproval",
+        "path": "src/power-automate/definitions/HVCG_DeliverableApproval.definition.json"
+      },
+      {
+        "name": "HVCG_ExecutiveDecisionEscalation",
+        "path": "src/power-automate/definitions/HVCG_ExecutiveDecisionEscalation.definition.json"
+      }
+    ]
+  },
+  "productVersion": {
+    "product": "HVCG OS",
+    "version": "1.1.0",
+    "semver": {
+      "major": 1,
+      "minor": 1,
+      "patch": 0
+    },
+    "schemaVersion": "1.1.0",
+    "configSchemaVersion": "1.0.0",
+    "powerPlatformSolutionVersion": "1.1.0.0",
+    "minUpgradeFrom": "1.0.0",
+    "releaseDate": "2026-07-14",
+    "previousRelease": "1.0.0",
+    "compatibility": {
+      "sharePointLists": "additive-migrations-only-for-1.x",
+      "customerData": "preserved-on-upgrade",
+      "breakingChanges": "none-in-1.1.0"
+    },
+    "featuresAdded": [
+      "HVCG_Relationships intelligence layer",
+      "AI orchestration foundation",
+      "Backup and restore",
+      "Operational monitoring"
+    ]
+  }
+}

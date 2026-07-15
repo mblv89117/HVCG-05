@@ -1,0 +1,71 @@
+{
+  "title": "HVCG_AIFeedback",
+  "description": "AI \u2014 Human feedback / corrections",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "JobId",
+      "displayName": "JobId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_AIJobs"
+    },
+    {
+      "internalName": "FeedbackType",
+      "displayName": "FeedbackType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Correction",
+        "Quality",
+        "Safety",
+        "Usefulness",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Rating",
+      "displayName": "Rating",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Comments",
+      "displayName": "Comments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SubmittedByEmail",
+      "displayName": "SubmittedByEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "SubmittedDate",
+      "displayName": "SubmittedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

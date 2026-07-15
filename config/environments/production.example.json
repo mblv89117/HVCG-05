@@ -1,0 +1,98 @@
+{
+  "$schemaComment": "Copy to production.json ONLY after Dev UAT. Fill REQUIRED values. Never commit secrets or production client data.",
+  "environment": "production",
+  "label": "HVCG Production",
+  "region": "NAM",
+  "timeZone": "America/Los_Angeles",
+  "locale": "en-US",
+  "currency": "USD",
+  "tenant": {
+    "domain": "REQUIRED_SET_ME.onmicrosoft.com",
+    "tenantId": "REQUIRED_SET_ME_GUID_OR_LEAVE_AND_RESOLVE_AT_RUNTIME",
+    "sharePointAdminUrl": "https://REQUIRED_SET_ME-admin.sharepoint.com",
+    "sharePointRoot": "https://REQUIRED_SET_ME.sharepoint.com"
+  },
+  "sites": {
+    "commandCenter": {
+      "title": "HVCG Project Command Center",
+      "alias": "HVCG-CommandCenter",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-CommandCenter",
+      "template": "STS#3",
+      "isHub": true
+    },
+    "knowledgeCenter": {
+      "title": "HVCG Knowledge Center",
+      "alias": "HVCG-Knowledge",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-Knowledge",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "clientsHub": {
+      "title": "HVCG Clients Hub",
+      "alias": "HVCG-Clients",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-Clients",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "secureDataRooms": {
+      "enabled": false,
+      "title": "HVCG Secure Data Rooms",
+      "alias": "HVCG-DataRooms",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-DataRooms"
+    }
+  },
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Production",
+    "environmentId": "REQUIRED_SET_ME_AFTER_ENV_CREATED",
+    "solutionUniqueName": "HVCGCommandCenter",
+    "solutionDisplayName": "HVCG Command Center"
+  },
+  "identities": {
+    "executiveUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "operationsManagerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "serviceAccountUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "notificationMailbox": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "siteOwnerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME"
+  },
+  "groups": {
+    "prefix": "HVCG-",
+    "roleGroups": [
+      "HVCG-Role-Owner",
+      "HVCG-Role-Administrator",
+      "HVCG-Role-OperationsManager",
+      "HVCG-Role-ProjectManager",
+      "HVCG-Role-CapitalAdvisor",
+      "HVCG-Role-FinancialAnalyst",
+      "HVCG-Role-OperationsAssistant",
+      "HVCG-Role-Contractor",
+      "HVCG-Role-ExternalProfessional",
+      "HVCG-Role-ReadOnlyReviewer"
+    ],
+    "addDeployingUserToRoles": []
+  },
+  "security": {
+    "externalSharingOnDevSites": "ExistingGuestsOnly",
+    "allowAnonymousLinks": false,
+    "grantClientOrExternalAccessInDev": false,
+    "breakInheritanceOnClientLibraries": true,
+    "clientsSiteSharingCapability": "ExistingExternalUserSharingOnly"
+  },
+  "deployment": {
+    "seedSampleData": false,
+    "uploadProjectTemplates": true,
+    "createSampleClientWorkspace": false,
+    "provisionPowerPlatformSolution": true,
+    "failOnNonCriticalErrors": true,
+    "requiresExplicitGoLiveApproval": true
+  },
+  "requiredFields": [
+    "tenant.domain",
+    "tenant.sharePointRoot",
+    "identities.executiveUpn",
+    "identities.siteOwnerUpn",
+    "identities.serviceAccountUpn",
+    "identities.notificationMailbox"
+  ],
+  "configSchemaVersion": "1.0.0",
+  "productVersion": "1.0.0"
+}

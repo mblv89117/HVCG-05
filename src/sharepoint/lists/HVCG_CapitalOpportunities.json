@@ -1,0 +1,180 @@
+{
+  "title": "HVCG_CapitalOpportunities",
+  "description": "Capital \u2014 Debt/equity/SBA/CRE/etc. capital raises",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "CapitalType",
+      "displayName": "CapitalType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Debt",
+        "Equity",
+        "SBA",
+        "Commercial Real Estate",
+        "Private Credit",
+        "Equipment Financing",
+        "Working Capital",
+        "Hybrid",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "TargetAmount",
+      "displayName": "TargetAmount",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FundingStatus",
+      "displayName": "FundingStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Identified",
+        "Packaging",
+        "Outreach",
+        "Underwriting",
+        "Term Sheet",
+        "Due Diligence",
+        "Committed",
+        "Closed",
+        "Declined",
+        "On Hold"
+      ],
+      "default": "Identified"
+    },
+    {
+      "internalName": "FundingProbability",
+      "displayName": "FundingProbability",
+      "type": "Number",
+      "required": false,
+      "indexed": true,
+      "description": "0-100"
+    },
+    {
+      "internalName": "ExpectedCloseDate",
+      "displayName": "ExpectedCloseDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ActualCloseDate",
+      "displayName": "ActualCloseDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "UseOfProceeds",
+      "displayName": "UseOfProceeds",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "WeightedValue",
+      "displayName": "WeightedValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

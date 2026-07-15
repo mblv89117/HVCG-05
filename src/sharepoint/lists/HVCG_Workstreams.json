@@ -1,0 +1,73 @@
+{
+  "title": "HVCG_Workstreams",
+  "description": "Workstream instances on projects",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "WorkstreamKey",
+      "displayName": "WorkstreamKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Not Started",
+        "In Progress",
+        "Blocked",
+        "On Hold",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Not Started"
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Sequence",
+      "displayName": "Sequence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

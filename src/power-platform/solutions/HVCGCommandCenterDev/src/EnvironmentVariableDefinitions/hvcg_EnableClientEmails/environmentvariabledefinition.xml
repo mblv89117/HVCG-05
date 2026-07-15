@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<environmentvariabledefinition schemaname="hvcg_EnableClientEmails">
+  <displayname default="Enable Client Emails">
+    <label description="Enable Client Emails" languagecode="1033" />
+  </displayname>
+  <description default="Enable Client Emails">
+    <label description="Enable Client Emails" languagecode="1033" />
+  </description>
+  <type>100000000</type>
+  <isrequired>0</isrequired>
+  <defaultvalue>false</defaultvalue>
+</environmentvariabledefinition>

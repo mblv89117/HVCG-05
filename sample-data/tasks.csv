@@ -1,0 +1,4 @@
+Title,ClientCode,TaskStatus,Priority,OwnerEmail,DueDate,IsOverdue
+QC lender package draft,SRM01,In Progress,High,analyst@hvcg.example,2026-07-17,
+Bank statement follow-up,SRM01,Waiting on Client,Critical,ops.assistant@hvcg.example,2026-07-12,True
+Resolve past-due retainer discussion,HVD01,Blocked,Critical,manny@hvcg.example,2026-07-15,

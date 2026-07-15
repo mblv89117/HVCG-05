@@ -1,0 +1,225 @@
+{
+  "name": "HVCG_ClientOnboarding",
+  "displayName": "HVCG_ClientOnboarding",
+  "description": "Automated client onboarding when ClientStage becomes Active Client",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "When_an_item_is_created_or_modified": {
+        "type": "OpenApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Clients"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
+        }
+      }
+    },
+    "actions": {
+      "Log_Start": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Started",
+            "item/FlowName": "@workflow()?['name']",
+            "item/Status": "Started"
+          }
+        },
+        "runAfter": {}
+      },
+      "Condition_ActiveClient": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "equals": [
+                "@triggerOutputs()?['body/ClientStage']",
+                "Active Client"
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Validate_Required": {
+            "type": "If",
+            "expression": {
+              "and": [
+                {
+                  "not": [
+                    {
+                      "equals": [
+                        "@triggerOutputs()?['body/ClientCode']",
+                        null
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "not": [
+                    {
+                      "equals": [
+                        "@triggerOutputs()?['body/ClientCode']",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "actions": {
+              "Create_Idempotent_Engagement": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                    "table": "HVCG_Engagements",
+                    "item/Title": "@{triggerOutputs()?['body/Title']} - Engagement",
+                    "item/ClientCode": "@triggerOutputs()?['body/ClientCode']",
+                    "item/EngagementStatus": "Active",
+                    "item/HVCG_IdempotencyKey": "@{concat('eng|', triggerOutputs()?['body/ClientCode'], '|active')}"
+                  }
+                },
+                "runAfter": {}
+              },
+              "Child_CreateWorkspace_Note": {
+                "type": "Compose",
+                "inputs": "Call child flow HVCG_CreateClientWorkspace with ClientCode",
+                "runAfter": {
+                  "Create_Idempotent_Engagement": [
+                    "Succeeded",
+                    "Failed",
+                    "Skipped",
+                    "TimedOut"
+                  ]
+                }
+              },
+              "Child_CreateProject_Note": {
+                "type": "Compose",
+                "inputs": "Call child flow HVCG_CreateProjectFromTemplate templateKey=general-client-onboarding",
+                "runAfter": {
+                  "Child_CreateWorkspace_Note": [
+                    "Succeeded"
+                  ]
+                }
+              },
+              "Log_Success": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                    "table": "HVCG_AutomationLogs",
+                    "item/Title": "Onboarding succeeded",
+                    "item/FlowName": "HVCG_ClientOnboarding",
+                    "item/Status": "Succeeded",
+                    "item/ClientCode": "@triggerOutputs()?['body/ClientCode']"
+                  }
+                },
+                "runAfter": {
+                  "Child_CreateProject_Note": [
+                    "Succeeded"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "actions": {
+                "Log_Validation_Failed": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_AutomationLogs",
+                      "item/Title": "Onboarding validation failed",
+                      "item/FlowName": "HVCG_ClientOnboarding",
+                      "item/Status": "Failed"
+                    }
+                  },
+                  "runAfter": {}
+                }
+              }
+            },
+            "runAfter": {}
+          }
+        },
+        "runAfter": {
+          "Log_Start": [
+            "Succeeded"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  },
+  "connectionReferences": {
+    "shared_sharepointonline": {
+      "runtimeSource": "embedded",
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
+      },
+      "api": {
+        "name": "shared_sharepointonline"
+      }
+    },
+    "shared_office365": {
+      "runtimeSource": "embedded",
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedoffice365"
+      },
+      "api": {
+        "name": "shared_office365"
+      }
+    }
+  },
+  "environmentVariables": [
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_ExecutiveEmail",
+    "hvcg_OpsEmail",
+    "hvcg_EnableClientEmails"
+  ],
+  "acceptanceCriteria": [
+    "Flow appears in solution or My flows",
+    "Connection references resolved",
+    "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
+    "Idempotent re-run does not duplicate business records"
+  ]
+}

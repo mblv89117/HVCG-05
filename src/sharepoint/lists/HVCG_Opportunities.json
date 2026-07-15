@@ -1,0 +1,267 @@
+{
+  "title": "HVCG_Opportunities",
+  "description": "Pipeline opportunities",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "LeadId",
+      "displayName": "LeadId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Leads"
+    },
+    {
+      "internalName": "Stage",
+      "displayName": "Stage",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Discovery",
+        "Assessment",
+        "Proposal",
+        "Negotiation",
+        "Won",
+        "Lost"
+      ]
+    },
+    {
+      "internalName": "ProposalAmount",
+      "displayName": "ProposalAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Probability",
+      "displayName": "Probability",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "0-100"
+    },
+    {
+      "internalName": "WeightedValue",
+      "displayName": "WeightedValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExpectedCloseDate",
+      "displayName": "ExpectedCloseDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ServicePackage",
+      "displayName": "ServicePackage",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "OpportunityType",
+      "displayName": "OpportunityType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Advisory Engagement",
+        "Capital Raise",
+        "Assessment",
+        "Retainer",
+        "Success Fee",
+        "Hybrid",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ReferralPartnerId",
+      "displayName": "ReferralPartnerId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_ReferralPartners"
+    },
+    {
+      "internalName": "ProposalId",
+      "displayName": "ProposalId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Proposals"
+    },
+    {
+      "internalName": "WinLossStatus",
+      "displayName": "WinLossStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Open",
+        "Won",
+        "Lost",
+        "Abandoned"
+      ],
+      "default": "Open"
+    },
+    {
+      "internalName": "LostReason",
+      "displayName": "LostReason",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Price",
+        "Timing",
+        "Competitor",
+        "Fit",
+        "Capacity",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "WonDate",
+      "displayName": "WonDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LostDate",
+      "displayName": "LostDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Competitor",
+      "displayName": "Competitor",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DiscoveryCallId",
+      "displayName": "DiscoveryCallId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_DiscoveryCalls"
+    },
+    {
+      "internalName": "ForecastCategory",
+      "displayName": "ForecastCategory",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pipeline",
+        "Best Case",
+        "Commit",
+        "Closed"
+      ]
+    },
+    {
+      "internalName": "MRRImpact",
+      "displayName": "MRRImpact",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SetupFeeImpact",
+      "displayName": "SetupFeeImpact",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SuccessFeeImpact",
+      "displayName": "SuccessFeeImpact",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientLifetimeValueEstimate",
+      "displayName": "ClientLifetimeValueEstimate",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SalesOwnerEmail",
+      "displayName": "SalesOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

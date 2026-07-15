@@ -1,0 +1,21 @@
+{
+  "solutionUniqueName": "HVCGOS",
+  "displayName": "HVCG OS",
+  "version": "1.1.0.0",
+  "managed": true,
+  "artifactNamePattern": "HVCGOS_managed_{version}.zip",
+  "description": "Managed solution for Test and Production (v1.1.0). Built from Dev unmanaged via pac solution pack/export.",
+  "buildInstructions": [
+    "1. Complete SharePoint install/upgrade to 1.1.0 in target env first (data plane)",
+    "2. In Dev: pac solution export --name HVCGOS --managed false --path ./src/power-platform/exports/HVCGOS_unmanaged_1.1.0.zip",
+    "3. pac solution pack from source OR clone as managed: pac solution export --managed true",
+    "4. Copy managed zip to releases/v1.1.0/artifacts/ (do not overwrite releases/v1.0.0/)",
+    "5. Test: pac solution import --path releases/v1.1.0/artifacts/HVCGOS_managed_1.1.0.zip",
+    "6. Prod: same managed zip after Test approval"
+  ],
+  "neverInclude": [
+    "Customer SharePoint list items",
+    "Connection credentials",
+    "Environment-specific secrets"
+  ]
+}

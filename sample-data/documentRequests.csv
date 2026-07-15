@@ -1,0 +1,4 @@
+Title,ClientCode,DocumentCategory,RequestStatus,IsCritical,FolderTarget
+Last 3 years financial statements,SRM01,Historical Financials,Accepted,True,03 - Historical Financials
+Last 3 months bank statements,SRM01,Bank Statements,Reminded,True,06 - Bank Statements
+Accounting export access,HVD01,Current Financials,Requested,True,

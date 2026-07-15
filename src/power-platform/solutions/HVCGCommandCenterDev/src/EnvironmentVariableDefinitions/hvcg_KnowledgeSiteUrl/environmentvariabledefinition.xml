@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<environmentvariabledefinition schemaname="hvcg_KnowledgeSiteUrl">
+  <displayname default="Knowledge Center Site URL">
+    <label description="Knowledge Center Site URL" languagecode="1033" />
+  </displayname>
+  <description default="Knowledge Center Site URL">
+    <label description="Knowledge Center Site URL" languagecode="1033" />
+  </description>
+  <type>100000000</type>
+  <isrequired>0</isrequired>
+  <defaultvalue>https://REQUIRED.sharepoint.com/sites/HVCG-Knowledge-Dev</defaultvalue>
+</environmentvariabledefinition>

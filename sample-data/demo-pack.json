@@ -1,0 +1,314 @@
+{
+  "generated": "2026-07-14",
+  "disclaimer": "Synthetic data only. Do not use real TINs or bank data.",
+  "teamMembers": [
+    {
+      "Title": "Manny Barela",
+      "Email": "manny@hvcg.example",
+      "PrimaryRole": "Owner",
+      "CapacityHoursPerWeek": 40
+    },
+    {
+      "Title": "Ops Assistant",
+      "Email": "ops.assistant@hvcg.example",
+      "PrimaryRole": "OperationsAssistant",
+      "CapacityHoursPerWeek": 40
+    },
+    {
+      "Title": "Project Manager",
+      "Email": "pm@hvcg.example",
+      "PrimaryRole": "ProjectManager",
+      "CapacityHoursPerWeek": 40
+    },
+    {
+      "Title": "Financial Analyst",
+      "Email": "analyst@hvcg.example",
+      "PrimaryRole": "FinancialAnalyst",
+      "CapacityHoursPerWeek": 40
+    }
+  ],
+  "clients": [
+    {
+      "Title": "Summit Ridge Manufacturing LLC",
+      "ClientCode": "SRM01",
+      "DBA": "Summit Ridge",
+      "Industry": "Manufacturing",
+      "EntityType": "LLC",
+      "StateOfFormation": "CA",
+      "ClientStage": "Active Client",
+      "EngagementTypePrimary": "Capital Advisory",
+      "RelationshipOwnerEmail": "manny@hvcg.example",
+      "ProjectManagerEmail": "pm@hvcg.example",
+      "ServicePackage": "Debt Capital Raise",
+      "MonthlyRetainer": 5000,
+      "SetupFee": 7500,
+      "SuccessFeePercent": 1.5,
+      "EngagementStartDate": "2026-06-24",
+      "RenewalDate": "2026-09-22",
+      "PaymentStatus": "Paid",
+      "RiskLevel": "Medium",
+      "OverallHealth": "Yellow",
+      "CapitalNeed": true,
+      "CapitalType": "Debt",
+      "TargetAmount": 2500000,
+      "CurrentRevenue": 8200000,
+      "IsActive": true,
+      "RequiresExecutiveAttention": false
+    },
+    {
+      "Title": "Harbor View Dental Group LLC",
+      "ClientCode": "HVD01",
+      "Industry": "Healthcare",
+      "EntityType": "LLC",
+      "StateOfFormation": "AZ",
+      "ClientStage": "Active Client",
+      "EngagementTypePrimary": "Fractional CFO",
+      "RelationshipOwnerEmail": "manny@hvcg.example",
+      "ProjectManagerEmail": "pm@hvcg.example",
+      "ServicePackage": "Fractional CFO",
+      "MonthlyRetainer": 4500,
+      "SetupFee": 3000,
+      "PaymentStatus": "Past Due",
+      "RiskLevel": "High",
+      "OverallHealth": "Red",
+      "CapitalNeed": false,
+      "RenewalDate": "2026-08-08",
+      "IsActive": true,
+      "RequiresExecutiveAttention": true,
+      "InternalNotes": "Payment past due 18 days; work continues \u2014 executive visibility."
+    },
+    {
+      "Title": "Cascadia Logistics Inc",
+      "ClientCode": "CLX01",
+      "Industry": "Logistics",
+      "EntityType": "Corp",
+      "ClientStage": "Proposal",
+      "EngagementTypePrimary": "Assessment",
+      "RelationshipOwnerEmail": "manny@hvcg.example",
+      "ProjectManagerEmail": "pm@hvcg.example",
+      "ServicePackage": "Enterprise Value Assessment",
+      "PaymentStatus": "Not Invoiced",
+      "RiskLevel": "Low",
+      "OverallHealth": "Green",
+      "IsActive": true,
+      "RequiresExecutiveAttention": false
+    }
+  ],
+  "contacts": [
+    {
+      "Title": "Jordan Lee",
+      "ClientCode": "SRM01",
+      "Email": "jordan.lee@summitridge.example",
+      "IsPrimary": true,
+      "IsDecisionMaker": true
+    },
+    {
+      "Title": "Sam Patel",
+      "ClientCode": "HVD01",
+      "Email": "sam.patel@harborview.example",
+      "IsPrimary": true,
+      "IsBillingContact": true
+    }
+  ],
+  "engagements": [
+    {
+      "Title": "SRM Debt Raise 2026",
+      "ClientCode": "SRM01",
+      "EngagementType": "Capital Advisory",
+      "EngagementStatus": "Active",
+      "TemplateKey": "debt-capital-raise",
+      "EngagementHealth": "Yellow",
+      "MonthlyRetainer": 5000,
+      "SetupFee": 7500,
+      "EngagementValue": 45000
+    },
+    {
+      "Title": "HVD Fractional CFO",
+      "ClientCode": "HVD01",
+      "EngagementType": "Fractional CFO",
+      "EngagementStatus": "Active",
+      "TemplateKey": "fractional-cfo-engagement",
+      "EngagementHealth": "Red",
+      "MonthlyRetainer": 4500
+    }
+  ],
+  "projects": [
+    {
+      "Title": "SRM Debt Capital Raise",
+      "ClientCode": "SRM01",
+      "ProjectTemplateKey": "debt-capital-raise",
+      "ProjectStatus": "In Progress",
+      "ProjectHealth": "Yellow",
+      "ProjectOwnerEmail": "pm@hvcg.example",
+      "PercentComplete": 35
+    },
+    {
+      "Title": "HVD Fractional CFO Mobilize",
+      "ClientCode": "HVD01",
+      "ProjectTemplateKey": "fractional-cfo-engagement",
+      "ProjectStatus": "Blocked",
+      "ProjectHealth": "Red",
+      "ProjectOwnerEmail": "pm@hvcg.example",
+      "PercentComplete": 20,
+      "RequiresExecutiveAttention": true,
+      "Blockers": "Past-due retainer; accounting access delayed"
+    }
+  ],
+  "documentRequests": [
+    {
+      "Title": "Last 3 years financial statements",
+      "ClientCode": "SRM01",
+      "DocumentCategory": "Historical Financials",
+      "RequestStatus": "Accepted",
+      "IsCritical": true,
+      "FolderTarget": "03 - Historical Financials"
+    },
+    {
+      "Title": "Last 3 months bank statements",
+      "ClientCode": "SRM01",
+      "DocumentCategory": "Bank Statements",
+      "RequestStatus": "Reminded",
+      "IsCritical": true,
+      "ReminderCount": 2,
+      "FolderTarget": "06 - Bank Statements"
+    },
+    {
+      "Title": "Accounting export access",
+      "ClientCode": "HVD01",
+      "DocumentCategory": "Current Financials",
+      "RequestStatus": "Requested",
+      "IsCritical": true,
+      "EscalationStatus": "PM"
+    }
+  ],
+  "tasks": [
+    {
+      "Title": "QC lender package draft",
+      "ClientCode": "SRM01",
+      "TaskStatus": "In Progress",
+      "Priority": "High",
+      "OwnerEmail": "analyst@hvcg.example",
+      "DueDate": "2026-07-17"
+    },
+    {
+      "Title": "Bank statement follow-up",
+      "ClientCode": "SRM01",
+      "TaskStatus": "Waiting on Client",
+      "Priority": "Critical",
+      "OwnerEmail": "ops.assistant@hvcg.example",
+      "DueDate": "2026-07-12",
+      "IsOverdue": true
+    },
+    {
+      "Title": "Resolve past-due retainer discussion",
+      "ClientCode": "HVD01",
+      "TaskStatus": "Blocked",
+      "Priority": "Critical",
+      "OwnerEmail": "manny@hvcg.example",
+      "DueDate": "2026-07-15",
+      "RequiresExecutive": true
+    }
+  ],
+  "deliverables": [
+    {
+      "Title": "SRM Lender package v0.3",
+      "ClientCode": "SRM01",
+      "DeliverableType": "Lender Package",
+      "DeliverableStatus": "Internal Review",
+      "RequiresExecutiveApproval": true,
+      "OwnerEmail": "analyst@hvcg.example"
+    },
+    {
+      "Title": "HVD KPI dashboard v1",
+      "ClientCode": "HVD01",
+      "DeliverableType": "KPI Dashboard",
+      "DeliverableStatus": "Blocked",
+      "OwnerEmail": "analyst@hvcg.example"
+    }
+  ],
+  "decisions": [
+    {
+      "Title": "Continue HVD work while retainer past due?",
+      "ClientCode": "HVD01",
+      "DecisionStatus": "Pending Decision",
+      "RequiresExecutiveAttention": true,
+      "EscalationReason": "PaymentMateriallyOverdue",
+      "DecisionMakerEmail": "manny@hvcg.example",
+      "Deadline": "2026-07-16",
+      "Recommendation": "Pause non-critical work after final notice unless payment confirmation received."
+    }
+  ],
+  "financialMilestones": [
+    {
+      "Title": "SRM Setup fee",
+      "ClientCode": "SRM01",
+      "MilestoneType": "Setup Fee",
+      "Amount": 7500,
+      "PaymentStatus": "Paid",
+      "DueDate": "2026-06-29"
+    },
+    {
+      "Title": "SRM July retainer",
+      "ClientCode": "SRM01",
+      "MilestoneType": "Monthly Retainer",
+      "Amount": 5000,
+      "PaymentStatus": "Paid",
+      "DueDate": "2026-07-09"
+    },
+    {
+      "Title": "HVD June retainer",
+      "ClientCode": "HVD01",
+      "MilestoneType": "Monthly Retainer",
+      "Amount": 4500,
+      "PaymentStatus": "Past Due",
+      "IsPastDue": true,
+      "RevenueAtRisk": true,
+      "WorkContinuingWithoutPayment": true,
+      "DueDate": "2026-06-26"
+    },
+    {
+      "Title": "SRM Success fee estimate",
+      "ClientCode": "SRM01",
+      "MilestoneType": "Success Fee Estimated",
+      "Amount": 37500,
+      "PaymentStatus": "Not Invoiced",
+      "Probability": 40
+    }
+  ],
+  "demoPath": [
+    "1. Import team members and clients (stage Active for SRM/HVD).",
+    "2. Run workspace script for SRM01 and HVD01 in Dev.",
+    "3. Instantiate debt-capital-raise for SRM01 and fractional-cfo for HVD01.",
+    "4. Observe missing doc reminder candidates and executive decision on HVD.",
+    "5. Open ops vs executive views in app specs with this data shape."
+  ],
+  "referralPartners": [
+    {
+      "Title": "Desert Peak CPA",
+      "PartnerType": "CPA",
+      "Email": "partner@desertpeak.example",
+      "PartnerStatus": "Active"
+    }
+  ],
+  "capitalOpportunities": [
+    {
+      "Title": "SRM Senior Debt 2.5M",
+      "ClientCode": "SRM01",
+      "CapitalType": "Debt",
+      "TargetAmount": 2500000,
+      "FundingStatus": "Packaging",
+      "FundingProbability": 45,
+      "ExpectedCloseDate": "2026-10-15"
+    }
+  ],
+  "invoices": [
+    {
+      "Title": "HVD-2026-06",
+      "ClientCode": "HVD01",
+      "Amount": 4500,
+      "AmountCollected": 0,
+      "InvoiceStatus": "Past Due",
+      "InvoiceType": "Retainer"
+    }
+  ]
+}

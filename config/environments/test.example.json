@@ -1,0 +1,99 @@
+{
+  "$schemaComment": "Copy to test.json and replace REQUIRED values. Never commit secrets. Pipeline stage between Dev and Prod.",
+  "environment": "test",
+  "configSchemaVersion": "1.0.0",
+  "productVersion": "1.0.0",
+  "label": "HVCG OS Test",
+  "region": "NAM",
+  "timeZone": "America/Los_Angeles",
+  "locale": "en-US",
+  "currency": "USD",
+  "tenant": {
+    "domain": "REQUIRED_SET_ME.onmicrosoft.com",
+    "tenantId": "REQUIRED_SET_ME_GUID_OR_LEAVE_AND_RESOLVE_AT_RUNTIME",
+    "sharePointAdminUrl": "https://REQUIRED_SET_ME-admin.sharepoint.com",
+    "sharePointRoot": "https://REQUIRED_SET_ME.sharepoint.com"
+  },
+  "sites": {
+    "commandCenter": {
+      "title": "HVCG Project Command Center - TEST",
+      "alias": "HVCG-CommandCenter-Test",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-CommandCenter-Test",
+      "template": "STS#3",
+      "isHub": true
+    },
+    "knowledgeCenter": {
+      "title": "HVCG Knowledge Center - TEST",
+      "alias": "HVCG-Knowledge-Test",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-Knowledge-Test",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "clientsHub": {
+      "title": "HVCG Clients Hub - TEST",
+      "alias": "HVCG-Clients-Test",
+      "url": "https://REQUIRED_SET_ME.sharepoint.com/sites/HVCG-Clients-Test",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "secureDataRooms": {
+      "enabled": false
+    }
+  },
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Test",
+    "environmentId": "REQUIRED_SET_ME",
+    "solutionUniqueName": "HVCGOS",
+    "solutionDisplayName": "HVCG OS",
+    "importManaged": true
+  },
+  "identities": {
+    "executiveUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "operationsManagerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "serviceAccountUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "notificationMailbox": "REQUIRED_SET_ME@REQUIRED_SET_ME",
+    "siteOwnerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME"
+  },
+  "groups": {
+    "prefix": "HVCG-TEST-",
+    "roleGroups": [
+      "HVCG-TEST-Role-Owner",
+      "HVCG-TEST-Role-Administrator",
+      "HVCG-TEST-Role-OperationsManager",
+      "HVCG-TEST-Role-ProjectManager",
+      "HVCG-TEST-Role-CapitalAdvisor",
+      "HVCG-TEST-Role-FinancialAnalyst",
+      "HVCG-TEST-Role-OperationsAssistant",
+      "HVCG-TEST-Role-Contractor",
+      "HVCG-TEST-Role-ExternalProfessional",
+      "HVCG-TEST-Role-ReadOnlyReviewer"
+    ],
+    "addDeployingUserToRoles": [
+      "HVCG-TEST-Role-Owner",
+      "HVCG-TEST-Role-Administrator",
+      "HVCG-TEST-Role-OperationsManager"
+    ]
+  },
+  "security": {
+    "externalSharingOnDevSites": "Disabled",
+    "allowAnonymousLinks": false,
+    "grantClientOrExternalAccessInDev": false,
+    "breakInheritanceOnClientLibraries": true
+  },
+  "deployment": {
+    "seedSampleData": true,
+    "uploadProjectTemplates": true,
+    "createSampleClientWorkspace": true,
+    "sampleClientCode": "SRM01",
+    "provisionPowerPlatformSolution": true,
+    "failOnNonCriticalErrors": true,
+    "importManagedSolution": true
+  },
+  "requiredFields": [
+    "tenant.domain",
+    "tenant.sharePointRoot",
+    "identities.executiveUpn",
+    "identities.siteOwnerUpn",
+    "identities.notificationMailbox"
+  ]
+}

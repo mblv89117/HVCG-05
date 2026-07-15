@@ -1,0 +1,91 @@
+# HVCG OS — Azure DevOps release pipeline (Dev → Test → Production)
+# Mirror of GitHub workflow for tenants using Azure DevOps.
+
+trigger:
+  branches:
+    include:
+      - main
+      - release/*
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  productVersion: $[ replace(variables['Build.SourceBranchName'], 'v', '') ]
+
+stages:
+  - stage: Validate
+    displayName: Validate package
+    jobs:
+      - job: SchemaTests
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+          - script: |
+              python tests/validate_predeployment.py
+              python tests/unit/test_schemas.py
+              python tests/intelligence/test_intelligence_ai_backup.py
+              python deployment/install/New-HVCGSchemaSnapshot.py --version "$(cat VERSION | tr -d '\n')" --repo "$(Build.SourcesDirectory)"
+            displayName: Run validators + snapshot
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: 'releases'
+              ArtifactName: 'hvcg-os-releases'
+
+  - stage: Dev
+    displayName: Development gate
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - deployment: DeployDev
+        environment: HVCG-OS-Development
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    echo "Run on admin workstation with M365 auth:"
+                    echo "pwsh -File ./deployment/install/Install-HVCGOS.ps1 -Environment development"
+                    echo "pwsh -File ./deployment/health/Test-HVCGOSHealth.ps1 -Environment development"
+                  displayName: Dev deploy instructions
+
+  - stage: Test
+    displayName: Test promotion
+    dependsOn: Dev
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - deployment: DeployTest
+        environment: HVCG-OS-Test
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    echo "pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment test -TargetVersion $(cat VERSION)"
+                    echo "pac solution import --path releases/v$(cat VERSION)/artifacts/HVCGOS_managed_$(cat VERSION).zip"
+                    echo "pwsh -File ./deployment/health/Test-HVCGOSPostDeploy.ps1 -Environment test"
+                  displayName: Test promote instructions
+
+  - stage: Production
+    displayName: Production promotion
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - deployment: DeployProd
+        environment: HVCG-OS-Production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    echo "APPROVAL required on HVCG-OS-Production environment"
+                    echo "Backup SharePoint first"
+                    echo "pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment production -TargetVersion $(cat VERSION)"
+                    echo "Import same managed solution zip as Test"
+                    echo "Validate health + post-deploy"
+                  displayName: Production promote instructions

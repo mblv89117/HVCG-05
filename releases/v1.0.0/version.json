@@ -1,0 +1,19 @@
+{
+  "product": "HVCG OS",
+  "version": "1.0.0",
+  "semver": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "schemaVersion": "1.0.0",
+  "configSchemaVersion": "1.0.0",
+  "powerPlatformSolutionVersion": "1.0.0.0",
+  "minUpgradeFrom": "0.0.0",
+  "releaseDate": "2026-07-14",
+  "compatibility": {
+    "sharePointLists": "additive-migrations-only-for-1.x",
+    "customerData": "preserved-on-upgrade",
+    "breakingChanges": "only-on-major-2.0.0-with-migration-guide"
+  }
+}

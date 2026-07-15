@@ -1,0 +1,31 @@
+{
+  "solutionUniqueName": "HVCGCommandCenterDev",
+  "version": "1.0.0.0",
+  "managed": false,
+  "components": {
+    "environmentVariables": [
+      "hvcg_CommandCenterSiteUrl",
+      "hvcg_ClientsSiteUrl",
+      "hvcg_KnowledgeSiteUrl",
+      "hvcg_ExecutiveEmail",
+      "hvcg_OpsEmail",
+      "hvcg_EnableClientEmails"
+    ],
+    "connectionReferences": [
+      "hvcg_sharedsharepointonline",
+      "hvcg_sharedoffice365",
+      "hvcg_sharedteams",
+      "hvcg_sharedapprovals"
+    ],
+    "flows": "see Workflows/*.json and ../../power-automate/flows",
+    "canvasApp": "Canvas app must be authored against SharePoint lists after list provision; build sheet included"
+  },
+  "importOrder": [
+    "1. Provision SharePoint lists (Deploy-HVCGDevelopment.ps1)",
+    "2. pac auth create",
+    "3. Set environment variable values",
+    "4. Create connections as deploying user",
+    "5. Import/create flows from Workflows definitions",
+    "6. Build canvas app per build sheet OR import when .msapp produced"
+  ]
+}

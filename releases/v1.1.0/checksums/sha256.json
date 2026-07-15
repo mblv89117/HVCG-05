@@ -1,0 +1,16 @@
+{
+  "VERSION": "1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8",
+  "version.json": "1de1e00c2f1816dd89ea5b7942b1f432ab0a068a27e4d81dc5c9d1fafc9e37a8",
+  "src/sharepoint/lists/_index.json": "ecabd758d3aefc9491b5bcf74c98efd43bf30a3f4836dbfd8fd5a0bd9ed9a200",
+  "templates/projects/_index.json": "57231f55178b0fed7caa54584a3009862d26747a1a70fcc7b58dea0c0e7cdf3d",
+  "config/hvcg.config.json": "5b5320a7927b99b9cefb2a69054972657b983393235e5e6049bf45af9bb14702",
+  "releases/migrations/20260714_001_baseline_v1_0_0.json": "6923c005c0a25d81382e4de9e0d6951b8ab22b993573b88d2faa53407222dfea",
+  "releases/migrations/20260714_002_intelligence_ai_backup_v1_1_0.json": "5e83360ede953214c30f543488d1bbbcd3ebd9f87fa3dfbfbc9c91a995bb39e2",
+  "releases/migrations/diffs/v1.0.0_to_v1.1.0.json": "480e4ad24f5c0e941b9424f72aba74fc90241250e44946e4c193925dd4cd878a",
+  "deployment/install/Install-HVCGOS.ps1": "350db0f290b30a01723862a5d1430a3f46a33e80d33522e53b5f1fffbd9ccfb9",
+  "deployment/upgrade/Upgrade-HVCGOS.ps1": "37310d56063f9ef429614a57bd47d3fd49df485c8159516840c50cc20eb9dfe4",
+  "deployment/rollback/Rollback-HVCGOS.ps1": "4fd6e70253fde9df14ea9d7f17fad7c2bc58f69c4bc11c133617f29f2a03605e",
+  "deployment/backup/Backup-HVCGOS.ps1": "81b8faea9b8cf7921e989002f9347ce6fddb19dd6ce2958b04e17d34aeb9044a",
+  "deployment/restore/Restore-HVCGOS.ps1": "791704ac796a0d3bf6e164ae9e2d328c1b7d3640003afa6484da90e07dc8c7fa",
+  "deployment/health/Invoke-HVCGOSOperationalHealth.ps1": "e2fb7206bea054b7a598bdbe60785b4fcf128e4529d3c842d764d2255fe7c685"
+}

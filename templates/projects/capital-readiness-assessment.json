@@ -1,0 +1,213 @@
+{
+  "templateKey": "capital-readiness-assessment",
+  "title": "Capital Readiness Assessment",
+  "templateType": "Project",
+  "defaultDurationDays": 25,
+  "workstreams": [
+    "Capital readiness",
+    "Financial document collection",
+    "Financial analysis"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Intake",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Gap Analysis",
+      "seq": 3
+    },
+    {
+      "key": "p3",
+      "name": "Roadmap",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "Readout",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Diligence intake done",
+      "offsetDays": 8,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Readiness scorecard",
+      "offsetDays": 18,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Roadmap delivered",
+      "offsetDays": 25,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Define capital objective",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Debt/equity amount, use of proceeds.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Collect readiness checklist docs",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "OperationsAssistant",
+      "description": "Standard capital checklist.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Score readiness dimensions",
+      "phase": "p2",
+      "offsetDays": 12,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Financials, reporting, collateral, narrative.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Identify gaps and owners",
+      "phase": "p2",
+      "offsetDays": 15,
+      "defaultRole": "ProjectManager",
+      "description": "Client vs HVCG actions.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Draft capital readiness report",
+      "phase": "p3",
+      "offsetDays": 20,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Scorecard + roadmap.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 6,
+      "isCritical": true
+    },
+    {
+      "key": "t6",
+      "title": "Client readout",
+      "phase": "p4",
+      "offsetDays": 25,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Agree next engagement path.",
+      "dependsOn": [
+        "t5"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Financial package",
+      "documentCategory": "Historical Financials",
+      "folderTarget": "03 - Historical Financials",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Financial package"
+    },
+    {
+      "key": "d2",
+      "title": "Bank statements",
+      "documentCategory": "Bank Statements",
+      "folderTarget": "06 - Bank Statements",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Bank statements"
+    },
+    {
+      "key": "d3",
+      "title": "Debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Debt schedule"
+    },
+    {
+      "key": "d4",
+      "title": "Business description / deck draft",
+      "documentCategory": "Other",
+      "folderTarget": "18 - Presentations",
+      "dueOffsetDays": 10,
+      "isCritical": false,
+      "description": "Please provide: Business description / deck draft"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Capital readiness report",
+      "deliverableType": "Capital Readiness Report",
+      "draftOffsetDays": 18,
+      "finalOffsetDays": 25,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Client seeks raise before readiness",
+      "likelihood": "Medium",
+      "impact": "High",
+      "mitigation": "Recommend remediation workstreams"
+    }
+  ],
+  "qualityControlChecks": [
+    "Scorecard evidence linked",
+    "Roadmap dated"
+  ],
+  "automationTriggers": [
+    "Document reminders",
+    "Completion updates health"
+  ],
+  "clientResponsibilities": [
+    "Full disclosure of liabilities",
+    "Honest timeline"
+  ],
+  "internalResponsibilities": [
+    "Clear go/no-go for raise"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

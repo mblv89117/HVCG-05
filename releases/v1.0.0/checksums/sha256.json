@@ -1,0 +1,11 @@
+{
+  "VERSION": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+  "version.json": "01a4bbcb816c78ce76059f1d0eea3078fa2624400864802dca31052a7e0e3a26",
+  "src/sharepoint/lists/_index.json": "b78cfa32ceeb95657959170d9bec009a52da67a2ae23a87776a6ca485d09c9d4",
+  "templates/projects/_index.json": "57231f55178b0fed7caa54584a3009862d26747a1a70fcc7b58dea0c0e7cdf3d",
+  "config/hvcg.config.json": "5b5320a7927b99b9cefb2a69054972657b983393235e5e6049bf45af9bb14702",
+  "releases/migrations/20260714_001_baseline_v1_0_0.json": "6923c005c0a25d81382e4de9e0d6951b8ab22b993573b88d2faa53407222dfea",
+  "deployment/install/Install-HVCGOS.ps1": "027a2851d365eabf0d614e706be525a955c9317e8c9dc46cebbacf1e5de372ac",
+  "deployment/upgrade/Upgrade-HVCGOS.ps1": "674aadb1c23994f28af3b6d8f9eaa9f13e494f4918bb4860558a4589a8c5ce9e",
+  "deployment/rollback/Rollback-HVCGOS.ps1": "4fd6e70253fde9df14ea9d7f17fad7c2bc58f69c4bc11c133617f29f2a03605e"
+}

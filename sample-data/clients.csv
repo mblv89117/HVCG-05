@@ -1,0 +1,4 @@
+Title,ClientCode,DBA,Industry,EntityType,StateOfFormation,ClientStage,EngagementTypePrimary,RelationshipOwnerEmail,ProjectManagerEmail,ServicePackage,MonthlyRetainer,SetupFee,SuccessFeePercent,EngagementStartDate,RenewalDate,PaymentStatus,RiskLevel,OverallHealth,CapitalNeed,CapitalType,TargetAmount,CurrentRevenue,IsActive,RequiresExecutiveAttention
+Summit Ridge Manufacturing LLC,SRM01,Summit Ridge,Manufacturing,LLC,CA,Active Client,Capital Advisory,manny@hvcg.example,pm@hvcg.example,Debt Capital Raise,5000,7500,1.5,2026-06-24,2026-09-22,Paid,Medium,Yellow,True,Debt,2500000,8200000,True,False
+Harbor View Dental Group LLC,HVD01,,Healthcare,LLC,AZ,Active Client,Fractional CFO,manny@hvcg.example,pm@hvcg.example,Fractional CFO,4500,3000,,,2026-08-08,Past Due,High,Red,False,,,,True,True
+Cascadia Logistics Inc,CLX01,,Logistics,Corp,,Proposal,Assessment,manny@hvcg.example,pm@hvcg.example,Enterprise Value Assessment,,,,,,Not Invoiced,Low,Green,,,,,True,False

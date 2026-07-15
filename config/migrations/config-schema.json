@@ -1,0 +1,24 @@
+{
+  "configSchemaVersion": "1.0.0",
+  "requiredSections": [
+    "environment",
+    "tenant",
+    "sites",
+    "identities",
+    "groups",
+    "security",
+    "deployment"
+  ],
+  "migrations": [
+    {
+      "from": "0.0.0",
+      "to": "1.0.0",
+      "steps": [
+        "Ensure environment key",
+        "Ensure sites.commandCenter/knowledgeCenter/clientsHub",
+        "Ensure requiredFields array",
+        "Set configSchemaVersion=1.0.0"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "solutionUniqueName": "HVCGOS",
+  "displayName": "HVCG OS",
+  "version": "1.1.0.0",
+  "managed": false,
+  "publisher": {
+    "uniqueName": "HVCG",
+    "prefix": "hvcg",
+    "optionValuePrefix": 88000
+  },
+  "description": "Unmanaged development solution for HVCG OS v1.1.0 — environment variables, connection references, flows. SharePoint lists remain provisioned via Install/Upgrade scripts (data platform).",
+  "components": {
+    "environmentVariables": [
+      "hvcg_CommandCenterSiteUrl",
+      "hvcg_ClientsSiteUrl",
+      "hvcg_KnowledgeSiteUrl",
+      "hvcg_ExecutiveEmail",
+      "hvcg_OpsEmail",
+      "hvcg_EnableClientEmails",
+      "hvcg_ProductVersion"
+    ],
+    "connectionReferences": [
+      "hvcg_sharedsharepointonline",
+      "hvcg_sharedoffice365",
+      "hvcg_sharedteams",
+      "hvcg_sharedapprovals"
+    ],
+    "workflows": "src/power-automate/definitions",
+    "canvasApps": "Author then pac canvas pack — export into this solution before managing"
+  },
+  "layering": {
+    "sharePointData": "NOT inside Dataverse solution — upgraded via releases/migrations to preserve customer data",
+    "powerPlatform": "Unmanaged in Dev → export managed for Test/Prod"
+  },
+  "promotion": {
+    "dev": "Import unmanaged or author components",
+    "test": "Import managed zip from releases/vX.Y.Z/artifacts/HVCGOS_managed_X.Y.Z.zip",
+    "production": "Import same managed zip after Test sign-off"
+  }
+}

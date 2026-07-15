@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.25001.00000" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="HVCG" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SolutionManifest>
+    <UniqueName>HVCGCommandCenterDev</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="HVCG Command Center DEV" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="HVCG Project Management Development solution - SharePoint-connected canvas app, flows, env vars, connection references." languagecode="1033" />
+    </Descriptions>
+    <Version>1.0.0.0</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>HVCG</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="High Value Capital Group" languagecode="1033" />
+      </LocalizedNames>
+      <Description description="HVCG" languagecode="1033" />
+      <EMailAddress>ops@highvaluecapitalgroup.example</EMailAddress>
+      <SupportingWebsiteUrl></SupportingWebsiteUrl>
+      <CustomizationPrefix>hvcg</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>88000</CustomizationOptionValuePrefix>
+    </Publisher>
+    <RootComponents>
+      <!-- Populated as components are authored; SharePoint apps use connection refs + env vars -->
+    </RootComponents>
+    <MissingDependencies />
+  </SolutionManifest>
+</ImportExportXml>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<environmentvariabledefinition schemaname="hvcg_OpsEmail">
+  <displayname default="Operations Notification Email">
+    <label description="Operations Notification Email" languagecode="1033" />
+  </displayname>
+  <description default="Operations Notification Email">
+    <label description="Operations Notification Email" languagecode="1033" />
+  </description>
+  <type>100000000</type>
+  <isrequired>0</isrequired>
+  <defaultvalue>REQUIRED</defaultvalue>
+</environmentvariabledefinition>
