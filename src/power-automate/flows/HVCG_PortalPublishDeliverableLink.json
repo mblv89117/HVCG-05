@@ -1,0 +1,72 @@
+{
+  "flowName": "HVCG_PortalPublishDeliverableLink",
+  "displayName": "HVCG_PortalPublishDeliverableLink",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "defaultState": "Off",
+  "description": "Upsert PortalDeliverableLinks when Deliverables.PortalVisible becomes true. No email or share links.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Deliverables",
+    "condition": "PortalVisible changes to true"
+  },
+  "connections": [
+    "SharePoint"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_PortalDeliverableLinks",
+    "pattern": "portal-del-link|{DeliverableId}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "forbidden": [
+      "Create anonymous or organization-wide share links",
+      "Invite external users",
+      "Set Clients.PortalEnabled"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetDeliverable"
+    },
+    {
+      "id": 3,
+      "action": "UpsertPortalDeliverableLink"
+    },
+    {
+      "id": 4,
+      "action": "CreatePortalAuditLog",
+      "params": {
+        "EventType": "DeliverableLinkPublished"
+      }
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL"
+  ]
+}

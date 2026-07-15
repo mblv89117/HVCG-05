@@ -1,7 +1,9 @@
 # Shared file merge recommendations (Portal module)
 
-**Branch:** `cursor/executive-command-center`  
+**Branch:** `cursor/client-portal-data-rooms` (exclusive)  
 **Module:** ClientPortalDataRooms  
+
+> **Overlap note:** `cursor/executive-command-center` is owned by the Executive Command Center Option A package. Portal commits pushed there were removed as “contamination.” Do not place portal artifacts on the ECC branch; merge from this branch only.
 
 This module **does not modify** shared indexes, root permissions, deployment, auth, environment JSON, or CRM flows. Integrators should apply the following merges when safe.
 
@@ -59,6 +61,7 @@ Document only — keep:
 "secureDataRooms": { "enabled": false }
 ```
 
-### 6. Conflict with `docs/executive/**` on this branch
+### 6. Branch ownership
 
-Another stream is writing Executive Command Center docs on `cursor/executive-command-center`. Portal artifacts stay under `docs/portal/**` and `src/**/portal/**` to avoid collision.
+Portal exclusive branch: `cursor/client-portal-data-rooms`.  
+Do not add portal paths to `cursor/executive-command-center` (Executive Option A exclusive).

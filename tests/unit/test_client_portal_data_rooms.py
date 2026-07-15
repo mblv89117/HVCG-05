@@ -163,6 +163,68 @@ def main() -> int:
             if sdr.get("enabled") is True:
                 fail(f"{env}.example.json secureDataRooms.enabled must remain false")
 
+    flow_mod = ROOT / "src/power-automate/flows/portal/_module_index.json"
+    if not flow_mod.exists():
+        fail("Missing portal flow module index")
+    else:
+        fi = load(flow_mod)
+        names = {f["flowName"] for f in fi.get("flows", [])}
+        expected_flows = {
+            "HVCG_PortalPublishStatusUpdate",
+            "HVCG_PortalPublishDeliverableLink",
+            "HVCG_DataRoomProvisionStub",
+            "HVCG_PortalAccessChangedAudit",
+            "HVCG_PortalClientNotificationStub",
+        }
+        for fn in expected_flows:
+            if fn not in names:
+                fail(f"Portal flow index missing {fn}")
+            fp = ROOT / f"src/power-automate/flows/{fn}.json"
+            dp = ROOT / f"src/power-automate/definitions/{fn}.definition.json"
+            if not fp.exists():
+                fail(f"Missing flow {fp}")
+            else:
+                meta = load(fp)
+                if meta.get("defaultState") != "Off":
+                    fail(f"{fn} defaultState must be Off")
+                if meta.get("module") != "ClientPortalDataRooms":
+                    fail(f"{fn} module must be ClientPortalDataRooms")
+                forbidden = meta.get("outboundPolicy", {}).get("forbidden", [])
+                if fn == "HVCG_DataRoomProvisionStub" and not any(
+                    "guest" in x.lower() or "invite" in x.lower() for x in forbidden
+                ):
+                    fail("DataRoomProvisionStub must forbid guest invites")
+            if not dp.exists():
+                fail(f"Missing definition {dp}")
+            else:
+                definition = load(dp)
+                if definition.get("defaultState") != "Off":
+                    fail(f"{fn} definition defaultState must be Off")
+
+    for doc in [
+        "docs/portal/CLIENT_PORTAL_ARCHITECTURE.md",
+        "docs/portal/FLOW_PACKAGE_MATRIX.md",
+        "docs/portal/CLIENT_NOTIFICATION_SPEC.md",
+        "docs/portal/SHARED_FILE_RECOMMENDATIONS.md",
+        "docs/portal/SECURITY_REVIEW.md",
+        "docs/portal/HANDOFF.md",
+        "docs/portal/IMPLEMENTATION.md",
+        "docs/portal/TEST_PLAN.md",
+        "src/power-apps/screens/scrPortalAdmin.md",
+        "src/power-apps/screens/scrDataRooms.md",
+        "src/power-apps/formulas/PortalNamedFormulas.fx",
+        "sample-data/portal/demo-portal-pack.json",
+    ]:
+        if not (ROOT / doc).exists():
+            fail(f"Missing deliverable {doc}")
+
+    demo = load(ROOT / "sample-data/portal/demo-portal-pack.json")
+    for room in demo.get("dataRooms", []):
+        if room.get("ExternalAccessAllowed") is not False:
+            fail("demo dataRooms must keep ExternalAccessAllowed false")
+        if room.get("ExternalSharingMode") != "Disabled":
+            fail("demo dataRooms must keep ExternalSharingMode Disabled")
+
     print_results()
     return 1 if errors else 0
 

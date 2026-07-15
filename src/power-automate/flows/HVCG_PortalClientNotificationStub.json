@@ -1,0 +1,61 @@
+{
+  "flowName": "HVCG_PortalClientNotificationStub",
+  "displayName": "HVCG_PortalClientNotificationStub",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "defaultState": "Off",
+  "description": "Client notification stub \u2014 no-op outbound when HVCG_PORTAL_ENABLE_CLIENT_NOTIFY is false.",
+  "trigger": {
+    "type": "ManualOrChild",
+    "inputs": [
+      "ClientCode",
+      "NotificationKind",
+      "RelatedItemId"
+    ]
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_PORTAL_ENABLE_CLIENT_NOTIFY",
+    "recipientMode": "blockedByDefault",
+    "forbidden": [
+      "Any client send while flag false",
+      "Guest user invitation"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "Condition",
+      "params": {
+        "whenFalse": "NotificationBlocked"
+      }
+    },
+    {
+      "id": 3,
+      "action": "LogSuccess"
+    }
+  ],
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "environmentVariables": [
+    "HVCG_PORTAL_ENABLE_CLIENT_NOTIFY",
+    "HVCG_OPS_EMAIL",
+    "HVCG_SITE_URL"
+  ]
+}

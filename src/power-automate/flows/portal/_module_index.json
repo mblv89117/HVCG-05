@@ -1,0 +1,38 @@
+{
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "note": "Module-local flow index. Merge into shared flows/_index.json per docs/portal/SHARED_FILE_RECOMMENDATIONS.md",
+  "defaultState": "Off",
+  "flows": [
+    {
+      "flowName": "HVCG_PortalPublishStatusUpdate",
+      "path": "src/power-automate/flows/HVCG_PortalPublishStatusUpdate.json",
+      "definition": "src/power-automate/definitions/HVCG_PortalPublishStatusUpdate.definition.json",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_PortalPublishDeliverableLink",
+      "path": "src/power-automate/flows/HVCG_PortalPublishDeliverableLink.json",
+      "definition": "src/power-automate/definitions/HVCG_PortalPublishDeliverableLink.definition.json",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_DataRoomProvisionStub",
+      "path": "src/power-automate/flows/HVCG_DataRoomProvisionStub.json",
+      "definition": "src/power-automate/definitions/HVCG_DataRoomProvisionStub.definition.json",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_PortalAccessChangedAudit",
+      "path": "src/power-automate/flows/HVCG_PortalAccessChangedAudit.json",
+      "definition": "src/power-automate/definitions/HVCG_PortalAccessChangedAudit.definition.json",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_PortalClientNotificationStub",
+      "path": "src/power-automate/flows/HVCG_PortalClientNotificationStub.json",
+      "definition": "src/power-automate/definitions/HVCG_PortalClientNotificationStub.definition.json",
+      "defaultState": "Off"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Product:** HVCG OS  
 **Module:** ClientPortalDataRooms  
-**Branch:** `cursor/executive-command-center`  
+**Branch:** `cursor/client-portal-data-rooms` (exclusive; ECC branch reserved for Executive package)  
 **Status:** Repo-ready / Dev-gated — **external access disabled by default**  
 **Environment target:** Development only (no Production deploy from this package)
 

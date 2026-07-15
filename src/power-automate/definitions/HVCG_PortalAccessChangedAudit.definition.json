@@ -1,0 +1,82 @@
+{
+  "name": "HVCG_PortalAccessChangedAudit",
+  "displayName": "HVCG_PortalAccessChangedAudit",
+  "description": "Audit access changes; block invite attempts.",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "defaultState": "Off",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Button",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "ClientCode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "ClientCode"
+            ]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Log_Start": {
+        "type": "Compose",
+        "inputs": "Started",
+        "runAfter": {}
+      },
+      "Compose_Inputs": {
+        "type": "Compose",
+        "inputs": {
+          "note": "Audit access changes; block invite attempts.",
+          "buildSheet": "src/power-automate/flows/HVCG_PortalAccessChangedAudit.json",
+          "externalAccess": "disabled_by_default"
+        },
+        "runAfter": {
+          "Log_Start": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Log_Success": {
+        "type": "Compose",
+        "inputs": "Succeeded scaffold \u2014 Off by default; no external invites",
+        "runAfter": {
+          "Compose_Inputs": [
+            "Succeeded"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  },
+  "connectionReferences": {
+    "shared_sharepointonline": {
+      "runtimeSource": "embedded",
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
+      },
+      "api": {
+        "name": "shared_sharepointonline"
+      }
+    }
+  }
+}

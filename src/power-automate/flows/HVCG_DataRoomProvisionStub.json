@@ -1,0 +1,84 @@
+{
+  "flowName": "HVCG_DataRoomProvisionStub",
+  "displayName": "HVCG_DataRoomProvisionStub",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "defaultState": "Off",
+  "description": "Register HVCG_DataRooms from template with ExternalSharingMode=Disabled. No guests.",
+  "trigger": {
+    "type": "ManualOrChild",
+    "inputs": [
+      "ClientCode",
+      "ClientListItemId",
+      "TemplateKey",
+      "RoomKey",
+      "ProjectId"
+    ]
+  },
+  "connections": [
+    "SharePoint"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_DataRooms",
+    "pattern": "dataroom|{ClientCode}|{TemplateKey}|{RoomKey}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "forbidden": [
+      "Enable sites.secureDataRooms",
+      "Set ExternalAccessAllowed=true",
+      "Invite guests / set InviteSent",
+      "Modify tenant sharing policy"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "LoadTemplate"
+    },
+    {
+      "id": 3,
+      "action": "CreateDataRoomItem",
+      "params": {
+        "ExternalSharingMode": "Disabled",
+        "ExternalAccessAllowed": false,
+        "PortalEnabled": false
+      }
+    },
+    {
+      "id": 4,
+      "action": "CreatePortalAuditLog",
+      "params": {
+        "EventType": "DataRoomCreated"
+      }
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 2,
+    "retryDelaySeconds": 30
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL"
+  ]
+}

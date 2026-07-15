@@ -1,0 +1,42 @@
+{
+  "demoClientCode": "DEMO01",
+  "notes": "Sample portal/data-room rows \u2014 all external gates false",
+  "dataRooms": [
+    {
+      "Title": "DEMO01 Diligence Room",
+      "ClientCode": "DEMO01",
+      "RoomType": "Diligence",
+      "TemplateKey": "diligence-standard",
+      "Status": "Staging",
+      "ExternalSharingMode": "Disabled",
+      "ExternalAccessAllowed": false,
+      "PortalEnabled": false,
+      "AnonymousLinksBlocked": true,
+      "HVCG_IdempotencyKey": "dataroom|DEMO01|diligence-standard|main"
+    }
+  ],
+  "statusUpdates": [
+    {
+      "Title": "Kickoff complete",
+      "ClientCode": "DEMO01",
+      "StatusCategory": "Progress",
+      "Body": "We completed kickoff and are preparing the document checklist.",
+      "IsPublished": false,
+      "PortalVisible": false,
+      "NotifyClient": false,
+      "NotificationStatus": "NotRequested"
+    }
+  ],
+  "participants": [
+    {
+      "Title": "PM Planner Row",
+      "ClientCode": "DEMO01",
+      "ParticipantEmail": "pm@example.com",
+      "ParticipantType": "Staff",
+      "AccessLevel": "Contribute",
+      "Status": "Planned",
+      "ExternalInviteAllowed": false,
+      "InviteSent": false
+    }
+  ]
+}

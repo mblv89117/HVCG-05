@@ -1,0 +1,65 @@
+{
+  "flowName": "HVCG_PortalAccessChangedAudit",
+  "displayName": "HVCG_PortalAccessChangedAudit",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "defaultState": "Off",
+  "description": "Audit access changes; block invite attempts.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "lists": [
+      "HVCG_PortalAccess",
+      "HVCG_DataRoomParticipants"
+    ]
+  },
+  "connections": [
+    "SharePoint"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "forbidden": [
+      "Send invites",
+      "Create sharing links",
+      "Invite guests"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "Condition",
+      "params": {
+        "if": "InviteSent or ExternalInviteAllowed",
+        "then": "ExternalInviteBlocked"
+      }
+    },
+    {
+      "id": 3,
+      "action": "CreatePortalAuditLog"
+    },
+    {
+      "id": 4,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 2,
+    "retryDelaySeconds": 30
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL"
+  ]
+}

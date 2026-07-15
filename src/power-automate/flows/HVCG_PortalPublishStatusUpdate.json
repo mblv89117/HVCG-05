@@ -1,0 +1,100 @@
+{
+  "flowName": "HVCG_PortalPublishStatusUpdate",
+  "displayName": "HVCG_PortalPublishStatusUpdate",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "defaultState": "Off",
+  "description": "When a PortalStatusUpdate is marked published, stamp PublishedDate, write PortalAuditLog, and queue staff-only notification. Never sends client email while HVCG_PORTAL_ENABLE_CLIENT_NOTIFY is false.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_PortalStatusUpdates",
+    "condition": "IsPublished changes to true"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_PortalAuditLog",
+    "pattern": "portal-status-pub|{StatusUpdateId}|{Modified}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "teamsEnabledByDefault": false,
+    "featureFlag": "HVCG_PORTAL_ENABLE_CLIENT_NOTIFY",
+    "recipientMode": "staffOnlyUnlessFlag",
+    "forbidden": [
+      "Client email while feature flag false",
+      "Guest invites",
+      "Anonymous share links",
+      "Production activation without owner approval"
+    ]
+  },
+  "humanApproval": [
+    "Keep flow Off until portal schema repair shows lists present"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "Condition",
+      "params": {
+        "equals": [
+          "IsPublished",
+          true
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "action": "GetClient"
+    },
+    {
+      "id": 4,
+      "action": "PatchStatusUpdate"
+    },
+    {
+      "id": 5,
+      "action": "CreatePortalAuditLog",
+      "params": {
+        "EventType": "StatusUpdatePublished"
+      }
+    },
+    {
+      "id": 6,
+      "action": "Condition",
+      "params": {
+        "ifFlagFalse": "NotificationStatus=BlockedExternal"
+      }
+    },
+    {
+      "id": 7,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_PORTAL_ENABLE_CLIENT_NOTIFY",
+    "HVCG_OPS_EMAIL"
+  ]
+}
