@@ -113,4 +113,4 @@ pwsh -File ./deployment/backup/Backup-HVCGOS.ps1 -Environment development
 
 ## Commit hashes
 - CRM merge: `8635397`
-- This handoff commit: _(filled after commit)_
+- This handoff commit: bf27010
