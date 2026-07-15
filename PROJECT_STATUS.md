@@ -80,4 +80,4 @@ Blocked on owner device-code (~minutes). After auth, Maker rebuild of 4 flows + 
 2026-07-15 ~11:05 PT (local)
 
 ## Commit hash (this status milestone)
-6247444400026d158d3e041850d9688ad06287f1
+224fb7c (224fb7c12b414c53aed7807d4f3a859190d16ccf); activity tip 6f54126
