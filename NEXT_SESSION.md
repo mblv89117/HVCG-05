@@ -30,9 +30,11 @@
 
 ## Next recommended task
 
-### A. Integration — COMPLETE
+### A. Integration — CRM workers COMPLETE; cross-module MERGES HELD
 
 Parent merged all six `agent/crm-*` workers, resolved soft conflicts, ran full suite (**PASS**), and wrote `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`.
+
+Cross-module READY queue (executive + agent-comms) has **offline merge packets** only — see `docs/integration/`. **No merges until owner D-003.** Agent Comms blocked by CRM dirty MAIN segregation. Soft ownership: `docs/crm/PARALLEL_AGENT_MAP.md` only.
 
 ### B. Owner apply (sequential) — ready when you are
 

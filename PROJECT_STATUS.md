@@ -7,6 +7,18 @@
 **Tag:** `v1.1.0-dev-sharepoint-baseline`  
 **Overall status:** **Opportunity CRM repo-integration complete** — Dev infrastructure frozen; all six parallel workstreams merged; live Dev tenant CRM schema **pending owner repair**
 
+## Integration / Release role (this branch)
+
+| Item | Status |
+|------|--------|
+| Stance | **HOLDING MERGES** — no merge/deploy/Prod without owner **D-003** |
+| Soft CRM docs ownership | `docs/crm/PARALLEL_AGENT_MAP.md` only (do not rewrite acceptance during live smoke) |
+| Executive packet | Offline draft — `docs/integration/MERGE_PACKET_EXECUTIVE.md` (awaiting D-003) |
+| Agent Comms packet | Offline draft — `docs/integration/MERGE_PACKET_AGENT_COMMS.md` (blocked by CRM dirty MAIN contamination until segregate) |
+| Client Portal packet | Offline draft — `docs/integration/MERGE_PACKET_CLIENT_PORTAL.md` (READY tip `6998a7f`; hold) |
+| Handoff | `docs/integration/HANDOFF.md` |
+| Tip | `8635397` CRM parallel merge complete |
+
 ## Verdict
 
 HVCG OS **v1.1.0** Development SharePoint infrastructure remains complete and frozen on `HVCG-CommandCenter-Dev`:

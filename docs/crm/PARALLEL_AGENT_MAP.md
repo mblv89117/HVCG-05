@@ -27,7 +27,7 @@
 | 4 | Teams & Copilot | `agent/crm-teams-copilot` | `docs/crm/TEAMS_COPILOT_READINESS.md`, `docs/crm/COPILOT_OPPORTUNITY.md`, `docs/crm/TEAMS_NOTIFICATION_SPEC.md` |
 | 5 | Testing & QA | `agent/crm-testing-qa` | `tests/unit/test_opportunity_lifecycle.py`, `tests/crm/*`, `scripts/Test-HVCGOpportunityCrmAcceptance.ps1`, `docs/crm/SMOKE_TEST_CHECKLIST.md`; append-only checks in `tests/Invoke-HVCGPreDeploymentTests.ps1` for agent-5 tests only |
 | 6 | Docs & Owner Actions | `agent/crm-docs-owner` | `docs/crm/OWNER_ACTION_GUIDE.md`, `docs/crm/ACCEPTANCE_REPORT.md`, `docs/crm/OPPORTUNITY_MANAGEMENT.md` (status/apply sections only), `PROJECT_STATUS.md`, `NEXT_SESSION.md` |
-| P | Parent Integration | `agent/crm-integration` | **`docs/crm/PARALLEL_AGENT_MAP.md`** (this file); merge coordination; `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` |
+| P | Parent Integration | `agent/crm-integration` | **`docs/crm/PARALLEL_AGENT_MAP.md`** (this file — soft ownership among `docs/crm/` during live smoke); merge coordination; do **not** rewrite CRM acceptance during Maker OA/smoke |
 
 ### Soft conflicts (merge carefully)
 
@@ -133,3 +133,4 @@ Parent then merges into `agent/crm-integration`, runs the full test suite, and p
 |------|--------|
 | 2026-07-15 | Parent authoritative map (`c31b25d`); docs-owner alternate map deferred on merge |
 | 2026-07-15 | All six workers passed; integration merge + full suite PASS; consolidated acceptance written |
+| 2026-07-15 | Soft ownership clarified: Integration owns this map only under `docs/crm/` during live smoke; cross-module merge packets in `docs/integration/` (D-003 held) |
