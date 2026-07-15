@@ -11,9 +11,33 @@
     { "flowName": "HVCG_ExecutiveDecisionEscalation", "path": "src/power-automate/flows/HVCG_ExecutiveDecisionEscalation.json" },
     { "flowName": "HVCG_WeeklyStatusSummary", "path": "src/power-automate/flows/HVCG_WeeklyStatusSummary.json" },
     { "flowName": "HVCG_UpdateProjectHealth", "path": "src/power-automate/flows/HVCG_UpdateProjectHealth.json" },
-    { "flowName": "HVCG_LeadQualifiedCreateOpportunity", "path": "src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json" },
-    { "flowName": "HVCG_OpportunityWonCloseout", "path": "src/power-automate/flows/HVCG_OpportunityWonCloseout.json" },
-    { "flowName": "HVCG_OpportunityStageChangedNotify", "path": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json" },
-    { "flowName": "HVCG_CapitalFundingStatusNotify", "path": "src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json" }
+    {
+      "flowName": "HVCG_LeadQualifiedCreateOpportunity",
+      "path": "src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_OpportunityWonCloseout",
+      "path": "src/power-automate/flows/HVCG_OpportunityWonCloseout.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_OpportunityStageChangedNotify",
+      "path": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "flowName": "HVCG_CapitalFundingStatusNotify",
+      "path": "src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    }
   ]
 }

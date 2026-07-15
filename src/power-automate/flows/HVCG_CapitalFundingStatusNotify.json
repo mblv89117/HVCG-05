@@ -1,14 +1,27 @@
 {
   "flowName": "HVCG_CapitalFundingStatusNotify",
   "displayName": "HVCG_CapitalFundingStatusNotify",
-  "description": "When capital FundingStatus reaches Term Sheet, Due Diligence, Committed, Closed, or Declined — activity log, bridge update on sales opp, Teams capital channel post.",
+  "module": "OpportunityCRM",
+  "packageVersion": "1.1.0",
+  "defaultState": "Off",
+  "description": "When capital FundingStatus reaches Term Sheet, Due Diligence, Committed, Closed, or Declined \u2014 activity log, bridge update on sales opp, optional Teams capital test channel post.",
   "trigger": {
     "type": "SharePointItemModified",
     "list": "HVCG_CapitalOpportunities",
-    "condition": "FundingStatus changed"
+    "condition": "FundingStatus changed",
+    "triggerWindow": "If FundingStatus unchanged vs previous, LogSkipped"
   },
-  "connections": ["SharePoint", "Teams"],
+  "connections": [
+    "SharePoint",
+    "Teams"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Teams": "hvcg_sharedteams"
+  },
   "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_OpportunityActivities",
     "pattern": "cap-status|{CapitalOpportunityId}|{FundingStatus}|{Modified}",
     "onDuplicate": "SkippedDuplicate"
   },
@@ -18,18 +31,42 @@
     "onSuccess": true,
     "onFailure": true
   },
+  "outboundPolicy": {
+    "teamsEnabledByDefault": false,
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+    "recipientMode": "testOnly",
+    "testRecipientEnv": "HVCG_CRM_TEST_RECIPIENT",
+    "forbidden": [
+      "Company-wide Teams channels",
+      "Client or partner email",
+      "Production environment activation without owner approval"
+    ],
+    "notes": "Executive email env is documented for future alerts; outboundSend remains false."
+  },
+  "humanApproval": [
+    "Keep Off until capital bridge schema validated",
+    "Bind capital test channel only"
+  ],
   "steps": [
-    { "id": 1, "action": "LogStart" },
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
     {
       "id": 2,
       "action": "CreateOpportunityActivity",
       "params": {
+        "list": "HVCG_OpportunityActivities",
         "ActivityType": "FundingUpdate",
-        "Title": "FundingStatus → @{FundingStatus}",
+        "Title": "FundingStatus \u2192 @{FundingStatus}",
+        "ActivityDate": "@{utcNow}",
         "OpportunityId": "@{OpportunityId}",
         "ClientId": "@{ClientId}",
+        "PriorStage": "@{triggerOutputs previous FundingStatus}",
         "NewStage": "@{FundingStatus}",
-        "OwnerEmail": "@{OwnerEmail}"
+        "OwnerEmail": "@{OwnerEmail}",
+        "HVCG_IdempotencyKey": "cap-status|@{ID}|@{FundingStatus}|@{Modified}"
       }
     },
     {
@@ -37,27 +74,40 @@
       "action": "UpdateLinkedOpportunity",
       "params": {
         "when": "OpportunityId not empty",
+        "list": "HVCG_Opportunities",
         "map": {
-          "Closed": { "CapitalHandoffStatus": "Funded" },
-          "Declined": { "CapitalHandoffStatus": "Declined" },
-          "Due Diligence": { "CapitalHandoffStatus": "InFunding" },
-          "Term Sheet": { "CapitalHandoffStatus": "InFunding" },
-          "Committed": { "CapitalHandoffStatus": "InFunding" }
-        }
+          "Term Sheet": {
+            "CapitalHandoffStatus": "InFunding"
+          },
+          "Due Diligence": {
+            "CapitalHandoffStatus": "InFunding"
+          },
+          "Committed": {
+            "CapitalHandoffStatus": "InFunding"
+          },
+          "Closed": {
+            "CapitalHandoffStatus": "Funded"
+          },
+          "Declined": {
+            "CapitalHandoffStatus": "Declined"
+          }
+        },
+        "notes": "Identified|Packaging|Outreach|Underwriting|On Hold do not change CapitalHandoffStatus"
       }
     },
     {
       "id": 4,
       "action": "Condition_Notify",
       "params": {
-        "when": "FundingStatus in ['Term Sheet','Due Diligence','Committed','Closed','Declined']"
+        "when": "FundingStatus in ['Term Sheet','Due Diligence','Committed','Closed','Declined'] AND HVCG_CRM_ENABLE_TEAMS_NOTIFY eq true"
       },
       "then": [
         {
           "action": "TeamsPostMessage",
           "params": {
             "channelEnv": "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
-            "message": "Capital book **@{Title}** ({ClientCode}) → **@{FundingStatus}** (${TargetAmount})."
+            "groupEnv": "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
+            "message": "Capital book **@{Title}** ({ClientCode}) \u2192 **@{FundingStatus}** (${TargetAmount})."
           }
         }
       ]
@@ -65,24 +115,82 @@
     {
       "id": 5,
       "action": "CreateAuditEvent",
-      "params": { "eventType": "CapitalFundingStatusChanged" }
+      "params": {
+        "eventType": "CapitalFundingStatusChanged"
+      }
     },
-    { "id": 6, "action": "LogSuccess" }
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
   ],
   "errorHandling": {
     "notifyGroup": "HVCG-Role-CapitalAdvisor",
+    "notifyEmailEnv": "HVCG_CRM_TEST_RECIPIENT",
     "maxRetries": 3,
-    "retryDelaySeconds": 60
+    "retryDelaySeconds": 60,
+    "outlookSend": false
   },
   "environmentVariables": [
     "HVCG_SITE_URL",
     "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
-    "HVCG_EXECUTIVE_EMAIL"
+    "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_CRM_TEST_RECIPIENT",
+    "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
   ],
+  "listsTouched": {
+    "reads": [
+      "HVCG_CapitalOpportunities"
+    ],
+    "writes": [
+      "HVCG_OpportunityActivities",
+      "HVCG_Opportunities",
+      "HVCG_AutomationLogs",
+      "HVCG_AuditEvents"
+    ]
+  },
+  "validFundingStatuses": [
+    "Identified",
+    "Packaging",
+    "Outreach",
+    "Underwriting",
+    "Term Sheet",
+    "Due Diligence",
+    "Committed",
+    "Closed",
+    "Declined",
+    "On Hold"
+  ],
+  "capitalHandoffBridge": {
+    "InFunding": [
+      "Term Sheet",
+      "Due Diligence",
+      "Committed"
+    ],
+    "Funded": [
+      "Closed"
+    ],
+    "Declined": [
+      "Declined"
+    ]
+  },
   "teamsIntegration": {
-    "purpose": "Capital desk + executive visibility through diligence to closed funding"
+    "purpose": "Capital desk + executive visibility through diligence to closed funding",
+    "enabledByDefault": false
   },
   "copilotReadiness": {
-    "lists": ["HVCG_CapitalOpportunities", "HVCG_OpportunityActivities", "HVCG_Opportunities"]
-  }
+    "lists": [
+      "HVCG_CapitalOpportunities",
+      "HVCG_OpportunityActivities",
+      "HVCG_Opportunities"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Flow Off after import",
+    "FundingStatus change writes FundingUpdate activity",
+    "Linked Opportunity CapitalHandoffStatus updates per bridge map",
+    "Teams notify only for Term Sheet|Due Diligence|Committed|Closed|Declined when flag enabled",
+    "Idempotent activity key prevents duplicates for same status+Modified"
+  ]
 }
