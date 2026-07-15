@@ -1,116 +1,93 @@
 # PROJECT HANDOFF — HVCG OS (resume without chat history)
 
 ## Purpose
-HVCG Project Management System (HVCG OS) v1.1.0 — Opportunity CRM module applied on Development SharePoint; next phase is Maker-gated Power Platform activation (approval required). Agents continue under frozen-infra / no-Production / no flow-import-without-approval rules.
+HVCG OS v1.1.0 Opportunity CRM: Dev SharePoint schema apply is done; continue only after Maker approval for Power Platform packaging/activation. No Production.
 
 ## Architecture (brief)
-- SharePoint lists/schema (PnP.PowerShell) as system of record for CRM + ops data
-- Power Apps canvas + Power Automate flows (Maker import/publish — **approval gate**)
-- Deployment scripts under `deployment/` with modules `HVCG.Deployment` / `HVCG.Release`
-- Schema source of truth in repo; `Repair-HVCGOSSharePointSchema.ps1` idempotent align to Dev
+SharePoint lists (PnP) + Power Apps/Automate (Maker) + deployment modules under `deployment/`.
 
 ## Repo / branch
 - Remote: `https://github.com/mblv89117/HVCG-05.git`
-- Branch: `cursor/v1.1.0-intelligence-ai-ops` (tracks origin)
-- CRM integration merge: `8635397`
+- Branch: `cursor/v1.1.0-intelligence-ai-ops`
+- CRM merge: `8635397`
 - Workspace: `/Volumes/MacMiniPro2TB/HVCG Project Management System`
 
 ## Environment
-- Target: **development** only this phase
+- **development** only for live apply completed
 - Site: `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev`
-- Tag: `v1.1.0-dev-sharepoint-baseline` (pre-CRM freeze)
-- Production: **do not start**
+- Production: forbidden until OA-CRM-11 + approval
 
 ## Auth approach
-- Microsoft Graph interactive + PnP Interactive + Entra app ClientId (used successfully for completed repair)
-- Do not commit secrets / `.env` / credentials
+Graph interactive + PnP Interactive/ClientId (used successfully during repair).
 
 ## Completed components
-- Opportunity CRM repo package (six parallel workstreams) merged
-- **Live Dev Repair COMPLETED** (term 573342): `REPAIR_EXIT:0`, `Success: True`, final schema `hasDrift: false`, **1170** fields / **82** lists
-- CRM list `HVCG_OpportunityActivities`; Opportunity/Capital CRM fields + lookups; CRM views provisioned
-- Dev seed gate: **28** `Seed:*` creates; Errors []; Skipped 1195 (idempotent)
-- Offline predeploy + CRM acceptance **PASS** (`PREDEPLOY_EXIT:0`)
+- Repo CRM package + offline predeploy/CRM tests
+- Live Dev repair **COMPLETED** (`REPAIR_EXIT:0`, Success=True)
+- Post-repair schema: hasDrift=false, okCount=1170, listsChecked=82, phase=post-repair
+- Dated attest: `deployment/reports/schema/schema-validation-20260715-103353.json`
+- Deploy report: `deployment/reports/HVCG-Dev-Deploy-20260715-103353.json`
+- Tee log: `deployment/reports/checkpoints/repair-opportunity-crm-live.log`
+- Pre-CRM backup: `backups/development/20260715-092137` (exit 0)
 
 ## Repair / build phase
-- **IDLE / COMPLETE** — no live repair PID expected
-- Evidence: tee `deployment/reports/checkpoints/repair-opportunity-crm-live.log`; report `deployment/reports/HVCG-Dev-Deploy-20260715-103353.json`; schema `deployment/reports/schema/schema-validation-20260715-103353.json`
-- Pre-CRM Full backup: `backups/development/20260715-092137` (`BACKUP_LIVE_EXIT:0`)
+- **COMPLETED** — terminal **573342**, was pid **12090**, ended ~10:33:53 PT / UTC 17:33:53
+- Do **not** start another repair unless new confirmed drift
 
 ## Deploy state
-- SharePoint Dev: CRM schema applied and compliant
-- Power Platform: **no** flow import / app publish / Teams activation executed
-- Status: **WAITING FOR APPROVAL** for Maker OA
+- SharePoint Dev schema aligned
+- Power Platform: **WAITING FOR APPROVAL** (no flow import / canvas publish / Teams done)
+- No Production
 
 ## Last checkpoint
-Repair finished success; offline tests attested; docs updated for Maker gate.
+Repair finished success=True; offline predeploy PASS @ ~10:37 PT; `schema-validation-latest.json` restored from post-repair dated snapshot after unit-test pollution.
 
 ## Exact next steps
-1. **Next Step = Maker OA WAITING FOR APPROVAL** — ask user before any Maker action.
-2. After approval: `docs/crm/OWNER_ACTION_GUIDE.md` (import → bind → activate → publish → Teams). No Production.
-3. If SharePoint drift returns later: one idempotent `Repair-HVCGOSSharePointSchema.ps1 -Environment development` (no concurrent second repair).
-4. Do not modify frozen deployment engines.
+1. **Stop for user approval** on Maker OA (OA-CRM-05…10).
+2. After approval only: connections → import four CRM flows → test/activate → publish apps → live acceptance notes.
+3. Do not promote Production until OA-CRM-11.
+4. Next autonomous monitor: only if user/parent re-delegates for Maker-approved work or new defects — no 30-min repair poll needed.
 
 ## Known issues
-- `Test-HVCGSchemaValidation.ps1` (via predeploy) overwrites `schema-validation-latest.json` with mock data — restore from dated live artifact (`…103353`) after offline suite if needed.
-- Module unapproved-verb WARNING spam on import — ignore.
-- Global `*.log` gitignore — activity log tracked via force-add under `deployment/reports/AGENT_ACTIVITY.log`.
+- `Invoke-HVCGPreDeploymentTests.ps1` schema drift unit test overwrites `schema-validation-latest.json` — use dated `schema-validation-20260715-103353.json` for live attest (latest restored afterward this session).
+- Seed STEP has few SUCCESS lines after pre-seed OK; post-repair gate still clean.
 
 ## Failed approaches
-- Starting overlapping Repair while another live instance is healthy — forbidden.
-- Treating schema-validation quiet windows (~13–14 min) as stalls — incorrect.
+- Concurrent second SharePoint repair while healthy — forbidden.
+- Treating validation silence as stall — invalid.
 
 ## Dependencies / tools
-- PowerShell 7 (`pwsh`), PnP.PowerShell 3.3.0, Microsoft.Graph 2.38.1
-- `gh` / git for status milestones (no force push)
+pwsh 7.6.3, PnP.PowerShell 3.3.0, Microsoft.Graph 2.38.1, python3
 
 ## Permissions
-- Repair auth already completed for this Dev apply
-- Git push of docs status milestones OK
-- Flow import / publish / Teams / Production require **user approval**
+Git push of docs OK. Maker import/publish/Teams and Production require explicit user approval.
 
 ## Important commands
 ```powershell
-# Idempotent Dev repair (only if drift / dead prior run)
+# Offline verify (safe)
+pwsh -NoProfile -File ./tests/Invoke-HVCGPreDeploymentTests.ps1
+
+# Idempotent repair ONLY if dead+needed
 pwsh -NoProfile -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development
-
-# Offline predeploy (safe)
-pwsh -File ./tests/Invoke-HVCGPreDeploymentTests.ps1
-
-# Health / backup
-pwsh -File ./deployment/health/Test-HVCGOSHealth.ps1 -Environment development
-pwsh -File ./deployment/backup/Backup-HVCGOS.ps1 -Environment development
 ```
 
 ## Testing / deploy / rollback
-- Test: offline predeploy **PASS** post-repair
-- Deploy: Maker OA per OWNER_ACTION_GUIDE only after approval
-- Rollback: pre-CRM backup `backups/development/20260715-092137`; repair is additive/idempotent; do not delete SP lists via agents
+- Tests: offline predeploy PASS this session
+- Deploy: Maker per OWNER_ACTION_GUIDE after approval
+- Rollback reference: `backups/development/20260715-092137`
 
 ## Recent files
-- `PROJECT_STATUS.md`, `PROJECT_HANDOFF.md`, `NEXT_SESSION.md`
-- `deployment/reports/AGENT_ACTIVITY.log`
-- `deployment/reports/checkpoints/repair-opportunity-crm-live.log`
-- `deployment/reports/HVCG-Dev-Deploy-20260715-103353.json`
-- `deployment/reports/schema/schema-validation-20260715-103353.json`
-- `docs/crm/*`
+`PROJECT_STATUS.md`, `PROJECT_HANDOFF.md`, `NEXT_SESSION.md`, `deployment/reports/AGENT_ACTIVITY.log`, repair tee log, schema-validation-20260715-103353.json, HVCG-Dev-Deploy-20260715-103353.json
 
 ## Must-not-modify areas
-- Deployment engines (`deployment/lib/*` provisioning) unless confirmed defect
-- Production environment / promote
-- Concurrent second SharePoint repair while healthy
-- Flow import / publish without user approval
-- `.worktrees/`, secrets, force push, amend, git config
+Frozen deployment engines; Production; `.worktrees/`; secrets; force push.
 
 ## Decisions made
-- Repair success attested; Maker remains gated
-- Restored live schema-validation-latest from post-repair artifact after offline unit overwrite
-- Status docs committed as milestones for handoff
+Leave Maker gated; restore post-repair schema latest pointer; commit status after COMPLETED.
 
 ## Decisions required (user)
-- Approve Maker OA (flow import / canvas publish / Teams)
-- Production timing (OA-CRM-11) — later
+Approve Maker OA (flow import / publish / Teams) when ready.
 
 ## Commit hashes
 - CRM merge: `8635397`
-- This handoff commit: bf27010
+- Prior ACTIVE status: `60d5ed3` / tip before COMPLETED docs: `4be0b61`
+- This COMPLETED handoff: _pending after push_

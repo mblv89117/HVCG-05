@@ -12,3 +12,9 @@
 [2026-07-15T10:35:02-0700] NOTE restored schema-validation-latest.json from schema-validation-20260715-103353.json after offline unit overwrite
 [2026-07-15T10:35:02-0700] NEXT Maker OA WAITING FOR APPROVAL — no flow import / publish / Teams; no Production; NOTIFY_USER=none
 [2026-07-15T10:35:02-0700] ACTION update PROJECT_STATUS/HANDOFF/NEXT_SESSION; commit+push verified milestone
+[2026-07-15T10:38:28-0700] CLASSIFY repair terminal=573342 → COMPLETED REPAIR_EXIT=0 exit_code=0 ended_at=2026-07-15T17:33:53.949Z
+[2026-07-15T10:38:28-0700] ATTEST post-repair hasDrift=false isCompliant=true okCount=1170 listsChecked=82 Success=True Errors=0 Created=28; dated schema schema-validation-20260715-103353.json
+[2026-07-15T10:38:28-0700] NOTE offline schema unit-test polluted schema-validation-latest.json (phase=unit-test); restored from dated post-repair snapshot
+[2026-07-15T10:38:28-0700] PREDEPLOY Invoke-HVCGPreDeploymentTests.ps1 RESULT=PASS (includes CRM offline acceptance)
+[2026-07-15T10:38:28-0700] GATE Maker flow import/publish/Teams WAITING FOR APPROVAL; no Production; no second repair
+[2026-07-15T10:38:28-0700] ACTION updated PROJECT_STATUS/HANDOFF/NEXT_SESSION; commit+push COMPLETED milestone
