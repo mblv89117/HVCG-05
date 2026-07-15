@@ -118,4 +118,4 @@ pwsh -File ./deployment/backup/Backup-HVCGOS.ps1 -Environment development
 ## Commit hashes
 - CRM merge: `8635397`
 - Prior status: `9d77c2f`
-- This handoff commit: _pending after push_
+- This handoff commit: 60d5ed3

@@ -78,4 +78,4 @@ Post-repair validation likely finishes within ~0–15 min of 10:33 PT (prior cyc
 2026-07-15 10:33 PT (local)
 
 ## Commit hash (this status milestone)
-_Pending — filled after push._
+60d5ed3_
