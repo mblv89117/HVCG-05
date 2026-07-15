@@ -1,10 +1,20 @@
 {
   "name": "HVCG_CapitalFundingStatusNotify",
   "displayName": "HVCG_CapitalFundingStatusNotify",
-  "description": "Capital FundingStatus change → activity, sales bridge, Teams",
+  "description": "Capital FundingStatus change → activity, sales bridge, gated Teams (CRM package 1.1.0)",
+  "defaultState": "Off",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
+    "parameters": {
+      "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+      "$connections": { "defaultValue": {}, "type": "Object" },
+      "hvcg_CommandCenterSiteUrl": { "type": "String" },
+      "hvcg_TeamsCapitalChannelId": { "type": "String", "defaultValue": "" },
+      "hvcg_TeamsCapitalChannelGroupId": { "type": "String", "defaultValue": "" },
+      "hvcg_CrmEnableTeamsNotify": { "type": "Bool", "defaultValue": false },
+      "hvcg_CrmTestRecipient": { "type": "String", "defaultValue": "" }
+    },
     "triggers": {
       "When_capital_opp_modified": {
         "type": "OpenApiConnectionWebhook",
@@ -17,11 +27,30 @@
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_CapitalOpportunities"
-          }
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
         }
       }
     },
     "actions": {
+      "Log_Start": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Started",
+            "item/FlowName": "HVCG_CapitalFundingStatusNotify",
+            "item/Status": "Started"
+          }
+        },
+        "runAfter": {}
+      },
       "Log_Funding_Activity": {
         "type": "OpenApiConnection",
         "inputs": {
@@ -33,13 +62,108 @@
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_OpportunityActivities",
-            "item/Title": "Funding update",
+            "item/Title": "FundingStatus → @{triggerOutputs()?['body/FundingStatus']}",
             "item/ActivityType": "FundingUpdate",
-            "item/NewStage": "@triggerOutputs()?['body/FundingStatus']"
+            "item/NewStage": "@triggerOutputs()?['body/FundingStatus']",
+            "item/OwnerEmail": "@triggerOutputs()?['body/OwnerEmail']",
+            "item/ActivityDate": "@utcNow()",
+            "item/HVCG_IdempotencyKey": "cap-status|@{triggerOutputs()?['body/ID']}|@{triggerOutputs()?['body/FundingStatus']}|@{triggerOutputs()?['body/Modified']}"
           }
         },
-        "runAfter": {}
+        "runAfter": { "Log_Start": ["Succeeded"] }
+      },
+      "Update_Linked_Opportunity_Bridge": {
+        "type": "Compose",
+        "inputs": "If OpportunityId set: map FundingStatus→CapitalHandoffStatus (Term Sheet|Due Diligence|Committed→InFunding; Closed→Funded; Declined→Declined). Leave early statuses unchanged.",
+        "runAfter": { "Log_Funding_Activity": ["Succeeded"] }
+      },
+      "Condition_Notify_Material_Status": {
+        "type": "If",
+        "expression": {
+          "and": [{ "equals": ["@parameters('hvcg_CrmEnableTeamsNotify')", true] }]
+        },
+        "actions": {
+          "Compose_Status_Filter": {
+            "type": "Compose",
+            "inputs": "Only post when FundingStatus in Term Sheet|Due Diligence|Committed|Closed|Declined"
+          },
+          "Post_Capital_Test_Channel": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_teams",
+                "operationId": "PostMessageToChannel",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+              },
+              "parameters": {
+                "poster": "Flow bot",
+                "location": "Channel",
+                "body/recipient/groupId": "@parameters('hvcg_TeamsCapitalChannelGroupId')",
+                "body/recipient/channelId": "@parameters('hvcg_TeamsCapitalChannelId')",
+                "body/messageBody": "Capital FundingStatus changed (test channel only)."
+              }
+            },
+            "runAfter": { "Compose_Status_Filter": ["Succeeded"] }
+          }
+        },
+        "runAfter": { "Update_Linked_Opportunity_Bridge": ["Succeeded"] }
+      },
+      "Log_Success": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Succeeded",
+            "item/FlowName": "HVCG_CapitalFundingStatusNotify",
+            "item/Status": "Succeeded"
+          }
+        },
+        "runAfter": { "Condition_Notify_Material_Status": ["Succeeded", "Skipped", "TimedOut"] }
       }
+    },
+    "outputs": {}
+  },
+  "connectionReferences": {
+    "shared_sharepointonline": {
+      "runtimeSource": "embedded",
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedsharepointonline" },
+      "api": { "name": "shared_sharepointonline" }
+    },
+    "shared_teams": {
+      "runtimeSource": "embedded",
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedteams" },
+      "api": { "name": "shared_teams" }
     }
-  }
+  },
+  "environmentVariables": [
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_TeamsCapitalChannelId",
+    "hvcg_TeamsCapitalChannelGroupId",
+    "hvcg_ExecutiveEmail",
+    "hvcg_CrmTestRecipient",
+    "hvcg_CrmEnableTeamsNotify"
+  ],
+  "outboundPolicy": {
+    "teamsEnabledByDefault": false,
+    "emailEnabledByDefault": false,
+    "recipientMode": "testOnly"
+  },
+  "buildSheet": "src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json",
+  "capitalHandoffBridge": {
+    "InFunding": ["Term Sheet", "Due Diligence", "Committed"],
+    "Funded": ["Closed"],
+    "Declined": ["Declined"]
+  },
+  "acceptanceCriteria": [
+    "Imported Off; SharePoint + Teams refs resolve",
+    "FundingUpdate activity written with idempotency key",
+    "Linked Opportunity bridge statuses update per map",
+    "Teams only when flag true on capital test channel"
+  ]
 }

@@ -12,9 +12,33 @@
     { "name": "HVCG_CreateDocumentRequests", "path": "src/power-automate/definitions/HVCG_CreateDocumentRequests.definition.json" },
     { "name": "HVCG_DeliverableApproval", "path": "src/power-automate/definitions/HVCG_DeliverableApproval.definition.json" },
     { "name": "HVCG_ExecutiveDecisionEscalation", "path": "src/power-automate/definitions/HVCG_ExecutiveDecisionEscalation.definition.json" },
-    { "name": "HVCG_LeadQualifiedCreateOpportunity", "path": "src/power-automate/definitions/HVCG_LeadQualifiedCreateOpportunity.definition.json" },
-    { "name": "HVCG_OpportunityWonCloseout", "path": "src/power-automate/definitions/HVCG_OpportunityWonCloseout.definition.json" },
-    { "name": "HVCG_OpportunityStageChangedNotify", "path": "src/power-automate/definitions/HVCG_OpportunityStageChangedNotify.definition.json" },
-    { "name": "HVCG_CapitalFundingStatusNotify", "path": "src/power-automate/definitions/HVCG_CapitalFundingStatusNotify.definition.json" }
+    {
+      "name": "HVCG_LeadQualifiedCreateOpportunity",
+      "path": "src/power-automate/definitions/HVCG_LeadQualifiedCreateOpportunity.definition.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpportunityWonCloseout",
+      "path": "src/power-automate/definitions/HVCG_OpportunityWonCloseout.definition.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_OpportunityStageChangedNotify",
+      "path": "src/power-automate/definitions/HVCG_OpportunityStageChangedNotify.definition.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    },
+    {
+      "name": "HVCG_CapitalFundingStatusNotify",
+      "path": "src/power-automate/definitions/HVCG_CapitalFundingStatusNotify.definition.json",
+      "module": "OpportunityCRM",
+      "packageVersion": "1.1.0",
+      "defaultState": "Off"
+    }
   ]
 }

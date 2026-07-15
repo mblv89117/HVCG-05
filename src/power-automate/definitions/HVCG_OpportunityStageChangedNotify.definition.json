@@ -1,10 +1,19 @@
 {
   "name": "HVCG_OpportunityStageChangedNotify",
   "displayName": "HVCG_OpportunityStageChangedNotify",
-  "description": "Teams + activity log on opportunity Stage change",
+  "description": "Activity log + gated Teams notify on opportunity Stage change (CRM package 1.1.0)",
+  "defaultState": "Off",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
+    "parameters": {
+      "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+      "$connections": { "defaultValue": {}, "type": "Object" },
+      "hvcg_CommandCenterSiteUrl": { "type": "String" },
+      "hvcg_TeamsCrmChannelId": { "type": "String", "defaultValue": "" },
+      "hvcg_TeamsCrmChannelGroupId": { "type": "String", "defaultValue": "" },
+      "hvcg_CrmEnableTeamsNotify": { "type": "Bool", "defaultValue": false }
+    },
     "triggers": {
       "When_opportunity_modified": {
         "type": "OpenApiConnectionWebhook",
@@ -17,12 +26,31 @@
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_Opportunities"
-          }
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
         }
       }
     },
     "actions": {
-      "Post_Activity_And_Teams": {
+      "Log_Start": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Started",
+            "item/FlowName": "HVCG_OpportunityStageChangedNotify",
+            "item/Status": "Started"
+          }
+        },
+        "runAfter": {}
+      },
+      "Create_Stage_Activity": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
@@ -33,13 +61,102 @@
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_OpportunityActivities",
-            "item/Title": "Stage change",
+            "item/Title": "Stage → @{triggerOutputs()?['body/Stage']}",
             "item/ActivityType": "StageChange",
-            "item/NewStage": "@triggerOutputs()?['body/Stage']"
+            "item/NewStage": "@triggerOutputs()?['body/Stage']",
+            "item/OwnerEmail": "@triggerOutputs()?['body/SalesOwnerEmail']",
+            "item/ActivityDate": "@utcNow()",
+            "item/HVCG_IdempotencyKey": "opp-stage|@{triggerOutputs()?['body/ID']}|@{triggerOutputs()?['body/Stage']}|@{triggerOutputs()?['body/Modified']}"
           }
         },
-        "runAfter": {}
+        "runAfter": { "Log_Start": ["Succeeded"] }
+      },
+      "Patch_CopilotSummary": {
+        "type": "Compose",
+        "inputs": "Patch Opportunity CopilotSummary: Stage {Stage}; probability {Probability}; next action {NextActionDate}",
+        "runAfter": { "Create_Stage_Activity": ["Succeeded"] }
+      },
+      "Condition_Notify_Late_Stages": {
+        "type": "If",
+        "expression": {
+          "and": [{ "equals": ["@parameters('hvcg_CrmEnableTeamsNotify')", true] }]
+        },
+        "actions": {
+          "Compose_Stage_Filter": {
+            "type": "Compose",
+            "inputs": "Only post when Stage in Proposal|Negotiation|Won|Lost — implement with nested If/Switch in Maker"
+          },
+          "Post_Teams_Test_Only": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_teams",
+                "operationId": "PostMessageToChannel",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+              },
+              "parameters": {
+                "poster": "Flow bot",
+                "location": "Channel",
+                "body/recipient/groupId": "@parameters('hvcg_TeamsCrmChannelGroupId')",
+                "body/recipient/channelId": "@parameters('hvcg_TeamsCrmChannelId')",
+                "body/messageBody": "Opportunity stage changed (test channel only)."
+              }
+            },
+            "runAfter": { "Compose_Stage_Filter": ["Succeeded"] }
+          }
+        },
+        "runAfter": { "Patch_CopilotSummary": ["Succeeded"] }
+      },
+      "Log_Success": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Succeeded",
+            "item/FlowName": "HVCG_OpportunityStageChangedNotify",
+            "item/Status": "Succeeded"
+          }
+        },
+        "runAfter": { "Condition_Notify_Late_Stages": ["Succeeded", "Skipped", "TimedOut"] }
       }
+    },
+    "outputs": {}
+  },
+  "connectionReferences": {
+    "shared_sharepointonline": {
+      "runtimeSource": "embedded",
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedsharepointonline" },
+      "api": { "name": "shared_sharepointonline" }
+    },
+    "shared_teams": {
+      "runtimeSource": "embedded",
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedteams" },
+      "api": { "name": "shared_teams" }
     }
-  }
+  },
+  "environmentVariables": [
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_TeamsCrmChannelId",
+    "hvcg_TeamsCrmChannelGroupId",
+    "hvcg_CrmTestRecipient",
+    "hvcg_CrmEnableTeamsNotify"
+  ],
+  "outboundPolicy": {
+    "teamsEnabledByDefault": false,
+    "emailEnabledByDefault": false,
+    "recipientMode": "testOnly"
+  },
+  "buildSheet": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json",
+  "validStages": ["Discovery", "Assessment", "Proposal", "Negotiation", "Won", "Lost"],
+  "acceptanceCriteria": [
+    "Imported Off; SharePoint + Teams connection refs resolve",
+    "Stage change writes OpportunityActivities StageChange row",
+    "Teams skipped unless flag true and Stage in notify set"
+  ]
 }

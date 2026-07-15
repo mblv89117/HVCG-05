@@ -1,15 +1,27 @@
 {
   "flowName": "HVCG_OpportunityStageChangedNotify",
   "displayName": "HVCG_OpportunityStageChangedNotify",
-  "description": "Log stage changes to OpportunityActivities and notify the CRM Teams channel for meaningful stage moves.",
+  "module": "OpportunityCRM",
+  "packageVersion": "1.1.0",
+  "defaultState": "Off",
+  "description": "Log stage changes to OpportunityActivities and optionally notify the CRM Teams test channel for meaningful stage moves.",
   "trigger": {
     "type": "SharePointItemModified",
     "list": "HVCG_Opportunities",
-    "condition": "Stage column changed"
+    "condition": "Stage column changed",
+    "triggerWindow": "Use triggerOutputs previous Stage when available; if Stage unchanged vs previous, LogSkipped"
   },
-  "connections": ["SharePoint", "Teams"],
+  "connections": [
+    "SharePoint",
+    "Teams"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Teams": "hvcg_sharedteams"
+  },
   "idempotency": {
     "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_OpportunityActivities",
     "pattern": "opp-stage|{OpportunityId}|{NewStage}|{Modified}",
     "onDuplicate": "SkippedDuplicate"
   },
@@ -19,30 +31,55 @@
     "onSuccess": true,
     "onFailure": true
   },
+  "outboundPolicy": {
+    "teamsEnabledByDefault": false,
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+    "recipientMode": "testOnly",
+    "testRecipientEnv": "HVCG_CRM_TEST_RECIPIENT",
+    "forbidden": [
+      "Company-wide Teams channels",
+      "Client or partner email",
+      "Production environment activation without owner approval"
+    ],
+    "notes": "Notify only when Stage in Proposal|Negotiation|Won|Lost AND feature flag true."
+  },
+  "humanApproval": [
+    "Keep Off until Owner enables with test channel binding"
+  ],
   "steps": [
-    { "id": 1, "action": "LogStart" },
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
     {
       "id": 2,
       "action": "CreateOpportunityActivity",
       "params": {
+        "list": "HVCG_OpportunityActivities",
         "ActivityType": "StageChange",
-        "Title": "Stage → @{Stage}",
-        "PriorStage": "@{triggerWindowStart Stage}",
+        "Title": "Stage \u2192 @{Stage}",
+        "ActivityDate": "@{utcNow}",
+        "PriorStage": "@{triggerOutputs previous Stage}",
         "NewStage": "@{Stage}",
-        "OwnerEmail": "@{SalesOwnerEmail}"
+        "OpportunityId": "@{ID}",
+        "ClientId": "@{ClientId}",
+        "OwnerEmail": "@{SalesOwnerEmail}",
+        "HVCG_IdempotencyKey": "opp-stage|@{ID}|@{Stage}|@{Modified}"
       }
     },
     {
       "id": 3,
       "action": "Condition_NotifyStages",
       "params": {
-        "when": "Stage in ['Proposal','Negotiation','Won','Lost']"
+        "when": "Stage in ['Proposal','Negotiation','Won','Lost'] AND HVCG_CRM_ENABLE_TEAMS_NOTIFY eq true"
       },
       "then": [
         {
           "action": "TeamsPostMessage",
           "params": {
             "channelEnv": "HVCG_TEAMS_CRM_CHANNEL_ID",
+            "groupEnv": "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
             "message": "Opportunity **@{Title}** moved to **@{Stage}** (owner @{SalesOwnerEmail}, weighted @{WeightedValue})."
           }
         }
@@ -52,21 +89,62 @@
       "id": 4,
       "action": "PatchCopilotSummary",
       "params": {
+        "list": "HVCG_Opportunities",
         "CopilotSummary": "Stage @{Stage}; probability @{Probability}; next action @{NextActionDate}"
       }
     },
-    { "id": 5, "action": "LogSuccess" }
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
   ],
   "errorHandling": {
     "notifyGroup": "HVCG-Role-OperationsManager",
+    "notifyEmailEnv": "HVCG_CRM_TEST_RECIPIENT",
     "maxRetries": 2,
-    "retryDelaySeconds": 30
+    "retryDelaySeconds": 30,
+    "outlookSend": false
   },
-  "environmentVariables": ["HVCG_SITE_URL", "HVCG_TEAMS_CRM_CHANNEL_ID"],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_TEAMS_CRM_CHANNEL_ID",
+    "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+    "HVCG_CRM_TEST_RECIPIENT",
+    "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
+  ],
+  "listsTouched": {
+    "reads": [
+      "HVCG_Opportunities"
+    ],
+    "writes": [
+      "HVCG_OpportunityActivities",
+      "HVCG_Opportunities",
+      "HVCG_AutomationLogs"
+    ]
+  },
+  "validStages": [
+    "Discovery",
+    "Assessment",
+    "Proposal",
+    "Negotiation",
+    "Won",
+    "Lost"
+  ],
   "teamsIntegration": {
-    "purpose": "Keep sales leadership aware of late-stage and close events"
+    "purpose": "Keep sales leadership aware of late-stage and close events",
+    "enabledByDefault": false
   },
   "copilotReadiness": {
-    "writes": ["CopilotSummary", "OpportunityActivities"]
-  }
+    "writes": [
+      "CopilotSummary",
+      "OpportunityActivities"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Flow Off after import",
+    "Stage change writes ActivityType StageChange with PriorStage/NewStage",
+    "Idempotent key prevents duplicate activity for same Stage+Modified tick",
+    "Teams post only for Proposal|Negotiation|Won|Lost when flag enabled",
+    "CopilotSummary patched on Opportunity"
+  ]
 }
