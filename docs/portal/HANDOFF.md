@@ -1,9 +1,10 @@
 # HANDOFF — Client Portal & Secure Data Rooms (Agent 3)
 
 **Branch:** `cursor/client-portal-data-rooms`  
+**Tip:** `08bcfe8` — portal(package): flows, screens, tests, security review, and handoff  
 **Module:** ClientPortalDataRooms `1.1.0-portal`  
 **Date:** 2026-07-15  
-**Status:** Repo-complete / Dev-gated · **External access disabled by default**
+**Status:** **READY FOR INTEGRATION** (offline tests PASS) · Dev-gated · **External access disabled by default**
 
 ## What shipped
 
@@ -43,6 +44,18 @@ python3 tests/unit/test_client_portal_data_rooms.py
 # Expect: PASS — Client Portal / Data Rooms offline validation
 ```
 
+**Last run (2026-07-15):** `PASS — Client Portal / Data Rooms offline validation` (exit 0).
+
+## Integration status
+
+| Gate | Result |
+|------|--------|
+| Offline unit suite | **PASS** |
+| Shared indexes edited by this module | **No** (exclusive paths + `SHARED_FILE_RECOMMENDATIONS.md` only) |
+| External sharing / guest invites | **Disabled** (defaults) |
+| Production | **Untouched** |
+| Next consumer | Integration agent — merge from this branch per `SHARED_FILE_RECOMMENDATIONS.md` |
+
 ## Owner next
 
-See `OWNER_ACTION_GUIDE.md`.
+See `OWNER_ACTION_GUIDE.md` (schema apply + Maker after integration merge).
