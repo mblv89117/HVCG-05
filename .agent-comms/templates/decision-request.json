@@ -1,0 +1,8 @@
+{
+  "type": "DECISION",
+  "priority": "HIGH",
+  "subject": "Decision needed: ...",
+  "body": "Options: A / B. Recommendation: ...",
+  "requestedAction": "Choose option",
+  "requiresAcknowledgement": true
+}
