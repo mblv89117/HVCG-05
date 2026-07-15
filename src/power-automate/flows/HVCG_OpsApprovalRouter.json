@@ -1,0 +1,78 @@
+{
+  "flowName": "HVCG_OpsApprovalRouter",
+  "displayName": "HVCG_OpsApprovalRouter",
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "When HVCG_Approvals created with ops ApprovalType and Pending, route Approvals connector to ApproverEmail; on complete patch related list / ApprovalStatus.",
+  "trigger": {
+    "type": "SharePointItemCreated",
+    "list": "HVCG_Approvals",
+    "condition": "ApprovalStatus eq 'Pending' and ApprovalType in ops set"
+  },
+  "connections": [
+    "SharePoint",
+    "Approvals",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Approvals": "hvcg_sharedapprovals",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "ops-appr-route|{ApprovalId}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "opsApprovalTypes": [
+    "VendorContract",
+    "SubscriptionRenewal",
+    "RecurringExpense",
+    "PolicyPublish",
+    "SoftwarePurchase",
+    "InternalProject",
+    "TrainingPublish"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "FilterOpsApprovalTypes"
+    },
+    {
+      "id": 3,
+      "action": "StartApprovalsConnector"
+    },
+    {
+      "id": 4,
+      "action": "PatchApprovalRecord"
+    },
+    {
+      "id": 5,
+      "action": "PatchRelatedListIfMapped"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-OperationsManager",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ]
+}

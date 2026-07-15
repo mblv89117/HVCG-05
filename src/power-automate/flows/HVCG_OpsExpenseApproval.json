@@ -1,0 +1,84 @@
+{
+  "flowName": "HVCG_OpsExpenseApproval",
+  "displayName": "HVCG_OpsExpenseApproval",
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "When a recurring expense requires approval (RequiresApproval=true and ApprovalStatus=Pending), create HVCG_Approvals row and start Approvals connector request.",
+  "trigger": {
+    "type": "SharePointItemCreatedOrModified",
+    "list": "HVCG_RecurringExpenses",
+    "condition": "RequiresApproval eq true and ApprovalStatus eq 'Pending'"
+  },
+  "connections": [
+    "SharePoint",
+    "Approvals",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Approvals": "hvcg_sharedapprovals",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_Approvals",
+    "pattern": "ops-exp-appr|{RecurringExpenseId}|{Amount}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "ApproverEmail required",
+    "Flow Off until Dev schema applied"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "ConditionRequiresApproval"
+    },
+    {
+      "id": 3,
+      "action": "CreateApprovalRecord",
+      "params": {
+        "list": "HVCG_Approvals",
+        "ApprovalType": "RecurringExpense",
+        "RelatedList": "HVCG_RecurringExpenses",
+        "RelatedItemId": "@{ID}",
+        "ApproverEmail": "@{ApproverEmail}",
+        "RequesterEmail": "@{OwnerEmail}",
+        "Amount": "@{Amount}",
+        "Title": "Expense approval: @{Title}"
+      }
+    },
+    {
+      "id": 4,
+      "action": "StartApprovalsConnector"
+    },
+    {
+      "id": 5,
+      "action": "PatchRecurringExpenseOnOutcome"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-OperationsManager",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ]
+}

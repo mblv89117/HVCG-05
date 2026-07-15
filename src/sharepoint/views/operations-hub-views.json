@@ -1,0 +1,272 @@
+{
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "views": [
+    {
+      "list": "HVCG_Subscriptions",
+      "title": "Renewals Next 60 Days",
+      "filter": "Status eq 'Active' and NextBillDate le '@today+60'",
+      "fields": [
+        "Title",
+        "BillingCadence",
+        "Amount",
+        "NextBillDate",
+        "OwnerEmail",
+        "RenewalStatus",
+        "AutoRenew",
+        "ApproverEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "title": "Active Subscriptions",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "BillingCadence",
+        "Amount",
+        "NextBillDate",
+        "OwnerEmail",
+        "CostCenter",
+        "RequiresApproval"
+      ]
+    },
+    {
+      "list": "HVCG_Vendors",
+      "title": "Contracts Expiring 90 Days",
+      "filter": "Status eq 'Active' and ContractEndDate le '@today+90'",
+      "fields": [
+        "Title",
+        "VendorCategory",
+        "ContractEndDate",
+        "AnnualSpend",
+        "OwnerEmail",
+        "RenewalStatus",
+        "RiskRating"
+      ]
+    },
+    {
+      "list": "HVCG_Vendors",
+      "title": "High Risk Vendors",
+      "filter": "RiskRating eq 'High' and Status eq 'Active'",
+      "fields": [
+        "Title",
+        "VendorCategory",
+        "AnnualSpend",
+        "OwnerEmail",
+        "ContractEndDate",
+        "ApproverEmail"
+      ]
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "title": "Software Renewals Upcoming",
+      "filter": "Status eq 'Active' and RenewalDate le '@today+60'",
+      "fields": [
+        "Title",
+        "Category",
+        "RenewalDate",
+        "AdminOwnerEmail",
+        "BusinessOwnerEmail",
+        "MonthlyCost",
+        "RenewalStatus"
+      ]
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "title": "Active Software",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "Category",
+        "LicenseType",
+        "SeatCount",
+        "MonthlyCost",
+        "AdminOwnerEmail",
+        "DataClassification"
+      ]
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "title": "Expenses Due 30 Days",
+      "filter": "Status eq 'Active' and NextDueDate le '@today+30'",
+      "fields": [
+        "Title",
+        "Category",
+        "Amount",
+        "Cadence",
+        "NextDueDate",
+        "OwnerEmail",
+        "ApprovalStatus"
+      ]
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "title": "Pending Expense Approvals",
+      "filter": "ApprovalStatus eq 'Pending'",
+      "fields": [
+        "Title",
+        "Category",
+        "Amount",
+        "OwnerEmail",
+        "ApproverEmail",
+        "NextDueDate"
+      ]
+    },
+    {
+      "list": "HVCG_Policies",
+      "title": "Policies Due for Review",
+      "filter": "Status eq 'Active' and ReviewDate le '@today'",
+      "fields": [
+        "Title",
+        "PolicyCategory",
+        "OwnerEmail",
+        "ReviewDate",
+        "ApproverEmail",
+        "VersionLabel"
+      ]
+    },
+    {
+      "list": "HVCG_Policies",
+      "title": "Active Policies",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "PolicyCategory",
+        "OwnerEmail",
+        "EffectiveDate",
+        "ReviewDate",
+        "VersionLabel"
+      ]
+    },
+    {
+      "list": "HVCG_SOPs",
+      "title": "Active SOPs",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "Category",
+        "OwnerEmail",
+        "LastReviewed",
+        "NextReviewDate",
+        "Audience",
+        "VersionLabel"
+      ]
+    },
+    {
+      "list": "HVCG_SOPs",
+      "title": "SOPs Due for Review",
+      "filter": "Status eq 'Active' and NextReviewDate le '@today'",
+      "fields": [
+        "Title",
+        "Category",
+        "OwnerEmail",
+        "NextReviewDate",
+        "ApproverEmail"
+      ]
+    },
+    {
+      "list": "HVCG_MeetingPlaybooks",
+      "title": "Active Playbooks",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "MeetingType",
+        "OwnerEmail",
+        "LastReviewed",
+        "FileLink"
+      ]
+    },
+    {
+      "list": "HVCG_SalesScripts",
+      "title": "Active Scripts",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "ScriptType",
+        "OwnerEmail",
+        "LastReviewed"
+      ]
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "title": "Required Training",
+      "filter": "Status eq 'Active' and CompletionRequired eq 1",
+      "fields": [
+        "Title",
+        "Audience",
+        "DurationMinutes",
+        "OwnerEmail",
+        "RequiredForRoles"
+      ]
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "title": "Active Training",
+      "filter": "Status eq 'Active'",
+      "fields": [
+        "Title",
+        "Audience",
+        "DurationMinutes",
+        "OwnerEmail",
+        "CompletionRequired"
+      ]
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "title": "Active Internal Projects",
+      "filter": "Status eq 'Active' or Status eq 'Blocked'",
+      "fields": [
+        "Title",
+        "InternalCategory",
+        "OwnerEmail",
+        "Priority",
+        "Status",
+        "TargetDate",
+        "PercentComplete",
+        "BudgetAmount"
+      ]
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "title": "Blocked Internal Projects",
+      "filter": "Status eq 'Blocked'",
+      "fields": [
+        "Title",
+        "InternalCategory",
+        "OwnerEmail",
+        "Priority",
+        "TargetDate",
+        "Notes"
+      ]
+    },
+    {
+      "list": "HVCG_Approvals",
+      "title": "Ops Pending Approvals",
+      "filter": "ApprovalStatus eq 'Pending' and (ApprovalType eq 'VendorContract' or ApprovalType eq 'SubscriptionRenewal' or ApprovalType eq 'RecurringExpense' or ApprovalType eq 'PolicyPublish' or ApprovalType eq 'SoftwarePurchase' or ApprovalType eq 'InternalProject' or ApprovalType eq 'TrainingPublish')",
+      "fields": [
+        "Title",
+        "ApprovalType",
+        "ApproverEmail",
+        "RequesterEmail",
+        "Amount",
+        "RequestedDate",
+        "DueDate",
+        "RelatedList"
+      ]
+    },
+    {
+      "list": "HVCG_OperationalAlerts",
+      "title": "Ops Open Alerts",
+      "filter": "AlertStatus eq 'Open' and (AlertType eq 'SubscriptionRenewalDue' or AlertType eq 'VendorContractExpiring' or AlertType eq 'SoftwareRenewalDue' or AlertType eq 'RecurringExpenseDue' or AlertType eq 'PolicyReviewOverdue' or AlertType eq 'UnownedOpsRecord' or AlertType eq 'OpsApprovalOverdue' or AlertType eq 'InternalProjectBlocked')",
+      "fields": [
+        "Title",
+        "AlertType",
+        "Severity",
+        "DetectedDate",
+        "OwnerEmail",
+        "RecommendedAction"
+      ]
+    }
+  ]
+}

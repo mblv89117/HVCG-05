@@ -1,0 +1,87 @@
+{
+  "flowName": "HVCG_OpsPolicyReviewReminders",
+  "displayName": "HVCG_OpsPolicyReviewReminders",
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Daily: policies and SOPs past review date → OperationalAlerts (PolicyReviewOverdue) + optional owner email.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 08:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_OperationalAlerts",
+    "pattern": "ops-review|{SourceList}|{ItemId}|{AsOfDate}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_OPS_ENABLE_EMAIL_NOTIFY"
+  },
+  "humanApproval": [
+    "Keep Off until schema applied"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetOverduePolicies",
+      "params": {
+        "list": "HVCG_Policies",
+        "dateField": "ReviewDate"
+      }
+    },
+    {
+      "id": 3,
+      "action": "GetOverdueSOPs",
+      "params": {
+        "list": "HVCG_SOPs",
+        "dateField": "NextReviewDate"
+      }
+    },
+    {
+      "id": 4,
+      "action": "CreateOrSkipOperationalAlert",
+      "params": {
+        "AlertType": "PolicyReviewOverdue",
+        "Severity": "Warning"
+      }
+    },
+    {
+      "id": 5,
+      "action": "NotifyOwnerIfEnabled"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-OperationsManager",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_OPS_ENABLE_EMAIL_NOTIFY"
+  ]
+}

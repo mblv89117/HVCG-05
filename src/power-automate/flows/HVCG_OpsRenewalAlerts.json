@@ -1,0 +1,123 @@
+{
+  "flowName": "HVCG_OpsRenewalAlerts",
+  "displayName": "HVCG_OpsRenewalAlerts",
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Daily scan of subscriptions, software, and vendor contracts in 60/30/14 windows; create OperationalAlerts and optional owner email.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 07:30 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_OperationalAlerts",
+    "pattern": "ops-renewal|{SourceList}|{ItemId}|{WindowDays}|{AsOfDate}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_OPS_ENABLE_EMAIL_NOTIFY",
+    "recipientMode": "ownerOrOpsEmail",
+    "forbidden": [
+      "Client email",
+      "Production activation without owner approval"
+    ]
+  },
+  "humanApproval": [
+    "Keep Off until Operations Hub schema repair shows zero drift",
+    "Email requires hvcg_OpsEnableEmailNotify=true"
+  ],
+  "windowsDays": [
+    60,
+    30,
+    14
+  ],
+  "sources": [
+    {
+      "list": "HVCG_Subscriptions",
+      "dateField": "NextBillDate",
+      "alertType": "SubscriptionRenewalDue",
+      "statusField": "Status",
+      "activeValue": "Active"
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "dateField": "RenewalDate",
+      "alertType": "SoftwareRenewalDue",
+      "statusField": "Status",
+      "activeValue": "Active"
+    },
+    {
+      "list": "HVCG_Vendors",
+      "dateField": "ContractEndDate",
+      "alertType": "VendorContractExpiring",
+      "statusField": "Status",
+      "activeValue": "Active"
+    }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "ForEachSourceList",
+      "params": {
+        "windows": [
+          60,
+          30,
+          14
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "action": "CreateOrSkipOperationalAlert",
+      "params": {
+        "Severity": "Warning",
+        "RecommendedAction": "Confirm renew or cancel; update RenewalStatus"
+      }
+    },
+    {
+      "id": 4,
+      "action": "PatchSourceRenewalStatus",
+      "params": {
+        "UpcomingOrDue": true
+      }
+    },
+    {
+      "id": 5,
+      "action": "NotifyOwnerIfEnabled"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-OperationsManager",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_OPS_ENABLE_EMAIL_NOTIFY"
+  ]
+}

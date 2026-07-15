@@ -1,0 +1,123 @@
+{
+  "flowName": "HVCG_OpsWeeklyDigest",
+  "displayName": "HVCG_OpsWeeklyDigest",
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Monday digest: renewals due 30d, pending ops approvals, unowned active records, blocked internal projects, open ops alerts. Email to Ops (gated).",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Weekly Monday 08:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_AutomationLogs",
+    "pattern": "ops-weekly-digest|{WeekStart}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_OPS_ENABLE_EMAIL_NOTIFY",
+    "recipientMode": "opsEmailOnly"
+  },
+  "humanApproval": [
+    "Digest Off by default",
+    "No client recipients"
+  ],
+  "dashboardSections": [
+    "SubscriptionsRenewals30d",
+    "VendorContracts90d",
+    "PendingOpsApprovals",
+    "UnownedActiveRecords",
+    "BlockedInternalProjects",
+    "OpenOpsAlerts"
+  ],
+  "unownedScanLists": [
+    {
+      "list": "HVCG_Vendors",
+      "ownerField": "OwnerEmail",
+      "statusField": "Status",
+      "activeValue": "Active"
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "ownerField": "OwnerEmail",
+      "statusField": "Status",
+      "activeValue": "Active"
+    },
+    {
+      "list": "HVCG_Policies",
+      "ownerField": "OwnerEmail",
+      "statusField": "Status",
+      "activeValue": "Active"
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "ownerField": "OwnerEmail",
+      "statusField": "Status",
+      "activeValues": [
+        "Active",
+        "Blocked"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "CollectDashboardMetrics"
+    },
+    {
+      "id": 3,
+      "action": "CreateUnownedAlertsIfNeeded",
+      "params": {
+        "AlertType": "UnownedOpsRecord",
+        "Severity": "Info"
+      }
+    },
+    {
+      "id": 4,
+      "action": "CreateBlockedProjectAlerts",
+      "params": {
+        "AlertType": "InternalProjectBlocked",
+        "Severity": "Warning"
+      }
+    },
+    {
+      "id": 5,
+      "action": "SendDigestIfEnabled"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-OperationsManager",
+    "maxRetries": 2,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_OPS_ENABLE_EMAIL_NOTIFY"
+  ]
+}

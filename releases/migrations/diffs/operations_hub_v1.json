@@ -1,0 +1,611 @@
+{
+  "description": "Operations Hub module additive schema — renewal tracking, owner assignments, approval fields, alert extensions",
+  "addLists": [],
+  "addColumns": [
+    {
+      "list": "HVCG_Vendors",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": "Contract / spend approver"
+      }
+    },
+    {
+      "list": "HVCG_Vendors",
+      "column": {
+        "internalName": "RenewalReminderDays",
+        "displayName": "RenewalReminderDays",
+        "type": "Number",
+        "required": false,
+        "indexed": false,
+        "description": "Days before ContractEndDate to alert",
+        "default": 60
+      }
+    },
+    {
+      "list": "HVCG_Vendors",
+      "column": {
+        "internalName": "LastRenewalAlertDate",
+        "displayName": "LastRenewalAlertDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Vendors",
+      "column": {
+        "internalName": "RenewalStatus",
+        "displayName": "RenewalStatus",
+        "type": "Choice",
+        "required": false,
+        "indexed": true,
+        "description": "",
+        "choices": [
+          "NotDue",
+          "Upcoming",
+          "Due",
+          "Overdue",
+          "Renewed",
+          "Cancelled"
+        ],
+        "default": "NotDue"
+      }
+    },
+    {
+      "list": "HVCG_Vendors",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "column": {
+        "internalName": "BusinessOwnerEmail",
+        "displayName": "BusinessOwnerEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": "Business owner for renewals"
+      }
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "column": {
+        "internalName": "LastRenewalAlertDate",
+        "displayName": "LastRenewalAlertDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "column": {
+        "internalName": "RenewalStatus",
+        "displayName": "RenewalStatus",
+        "type": "Choice",
+        "required": false,
+        "indexed": true,
+        "description": "",
+        "choices": [
+          "NotDue",
+          "Upcoming",
+          "Due",
+          "Overdue",
+          "Renewed",
+          "Cancelled"
+        ],
+        "default": "NotDue"
+      }
+    },
+    {
+      "list": "HVCG_SoftwareInventory",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "CancellationNoticeDays",
+        "displayName": "CancellationNoticeDays",
+        "type": "Number",
+        "required": false,
+        "indexed": false,
+        "description": "Notice period before cancel",
+        "default": 30
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "RequiresApproval",
+        "displayName": "RequiresApproval",
+        "type": "Boolean",
+        "required": false,
+        "indexed": false,
+        "description": "Require renewal approval",
+        "default": true
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "CostCenter",
+        "displayName": "CostCenter",
+        "type": "Text",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "LastRenewalAlertDate",
+        "displayName": "LastRenewalAlertDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "RenewalStatus",
+        "displayName": "RenewalStatus",
+        "type": "Choice",
+        "required": false,
+        "indexed": true,
+        "description": "",
+        "choices": [
+          "NotDue",
+          "Upcoming",
+          "Due",
+          "Overdue",
+          "Renewed",
+          "Cancelled"
+        ],
+        "default": "NotDue"
+      }
+    },
+    {
+      "list": "HVCG_Subscriptions",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "column": {
+        "internalName": "RequiresApproval",
+        "displayName": "RequiresApproval",
+        "type": "Boolean",
+        "required": false,
+        "indexed": false,
+        "description": "",
+        "default": true
+      }
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "column": {
+        "internalName": "ApprovalStatus",
+        "displayName": "ApprovalStatus",
+        "type": "Choice",
+        "required": false,
+        "indexed": true,
+        "description": "",
+        "choices": [
+          "NotRequired",
+          "Pending",
+          "Approved",
+          "Rejected"
+        ],
+        "default": "NotRequired"
+      }
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "column": {
+        "internalName": "LastAlertDate",
+        "displayName": "LastAlertDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_RecurringExpenses",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Policies",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": "Policy publish approver"
+      }
+    },
+    {
+      "list": "HVCG_Policies",
+      "column": {
+        "internalName": "LastReviewAlertDate",
+        "displayName": "LastReviewAlertDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Policies",
+      "column": {
+        "internalName": "VersionLabel",
+        "displayName": "VersionLabel",
+        "type": "Text",
+        "required": false,
+        "indexed": false,
+        "description": "",
+        "default": "1.0"
+      }
+    },
+    {
+      "list": "HVCG_Policies",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SOPs",
+      "column": {
+        "internalName": "NextReviewDate",
+        "displayName": "NextReviewDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SOPs",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SOPs",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_MeetingPlaybooks",
+      "column": {
+        "internalName": "OwnerEmail",
+        "displayName": "OwnerEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_MeetingPlaybooks",
+      "column": {
+        "internalName": "LastReviewed",
+        "displayName": "LastReviewed",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_MeetingPlaybooks",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SalesScripts",
+      "column": {
+        "internalName": "LastReviewed",
+        "displayName": "LastReviewed",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_SalesScripts",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "column": {
+        "internalName": "OwnerEmail",
+        "displayName": "OwnerEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "column": {
+        "internalName": "LastReviewed",
+        "displayName": "LastReviewed",
+        "type": "DateTime",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "column": {
+        "internalName": "CompletionRequired",
+        "displayName": "CompletionRequired",
+        "type": "Boolean",
+        "required": false,
+        "indexed": false,
+        "description": "",
+        "default": false
+      }
+    },
+    {
+      "list": "HVCG_TrainingCatalog",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "column": {
+        "internalName": "Priority",
+        "displayName": "Priority",
+        "type": "Choice",
+        "required": false,
+        "indexed": true,
+        "description": "",
+        "choices": [
+          "Low",
+          "Medium",
+          "High",
+          "Critical"
+        ],
+        "default": "Medium"
+      }
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "column": {
+        "internalName": "BudgetAmount",
+        "displayName": "BudgetAmount",
+        "type": "Currency",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "column": {
+        "internalName": "PercentComplete",
+        "displayName": "PercentComplete",
+        "type": "Number",
+        "required": false,
+        "indexed": false,
+        "description": "",
+        "default": 0
+      }
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "column": {
+        "internalName": "ApproverEmail",
+        "displayName": "ApproverEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": false,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_InternalProjects",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "RequesterEmail",
+        "displayName": "RequesterEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "Amount",
+        "displayName": "Amount",
+        "type": "Currency",
+        "required": false,
+        "indexed": false,
+        "description": "Spend-related approvals"
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "DueDate",
+        "displayName": "DueDate",
+        "type": "DateTime",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "HVCG_IdempotencyKey",
+        "displayName": "HVCG IdempotencyKey",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": ""
+      }
+    },
+    {
+      "list": "HVCG_OperationalAlerts",
+      "column": {
+        "internalName": "OwnerEmail",
+        "displayName": "OwnerEmail",
+        "type": "Text",
+        "required": false,
+        "indexed": true,
+        "description": "Assigned responder"
+      }
+    }
+  ],
+  "extendChoices": [
+    {
+      "list": "HVCG_Approvals",
+      "column": "ApprovalType",
+      "addValues": [
+        "VendorContract",
+        "SubscriptionRenewal",
+        "RecurringExpense",
+        "PolicyPublish",
+        "SoftwarePurchase",
+        "InternalProject",
+        "TrainingPublish"
+      ]
+    },
+    {
+      "list": "HVCG_OperationalAlerts",
+      "column": "AlertType",
+      "addValues": [
+        "SubscriptionRenewalDue",
+        "VendorContractExpiring",
+        "SoftwareRenewalDue",
+        "RecurringExpenseDue",
+        "PolicyReviewOverdue",
+        "UnownedOpsRecord",
+        "OpsApprovalOverdue",
+        "InternalProjectBlocked"
+      ]
+    }
+  ]
+}

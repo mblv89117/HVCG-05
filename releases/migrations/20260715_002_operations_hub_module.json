@@ -1,0 +1,17 @@
+{
+  "id": "20260715_002_operations_hub_module",
+  "fromVersion": "1.1.0",
+  "toVersion": "1.1.0",
+  "title": "Operations Hub module — additive renewals, owners, approvals, alerts",
+  "status": "Active",
+  "additiveOnly": true,
+  "module": "OperationsHub",
+  "packageVersion": "1.0.0",
+  "notes": "Does not bump product semver. Apply via Repair-HVCGOSSharePointSchema / ApplyListDiff after checking out this branch. No deployment engine, auth, env, CRM, or Production changes.",
+  "steps": [
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/operations_hub_v1.json"
+    }
+  ]
+}
