@@ -90,4 +90,4 @@ Approve Maker OA (flow import / publish / Teams) when ready.
 ## Commit hashes
 - CRM merge: `8635397`
 - Prior ACTIVE status: `60d5ed3` / tip before COMPLETED docs: `4be0b61`
-- This COMPLETED handoff: _pending after push_
+- This COMPLETED handoff: 2abb655
