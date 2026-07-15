@@ -1,0 +1,28 @@
+{
+  "templateKey": "investor-package",
+  "title": "Investor Package Data Room",
+  "roomType": "InvestorPackage",
+  "libraryTemplate": "HVCG_DataRoomLibrary",
+  "externalSharingMode": "Disabled",
+  "externalAccessAllowed": false,
+  "portalEnabled": false,
+  "defaultFolders": [
+    "00 - Room Administration",
+    "01 - Index and Guides",
+    "02 - Corporate",
+    "03 - Financials",
+    "06 - Legal",
+    "11 - Models and Analysis",
+    "13 - Investor Package",
+    "14 - Client Deliverables",
+    "15 - Q and A",
+    "16 - Approvals",
+    "17 - Closed and Archived"
+  ],
+  "requiredIndexDocuments": [
+    "Investor Package Index.xlsx",
+    "NDA Tracker.xlsx"
+  ],
+  "audienceHint": "Investor",
+  "notes": "ExternalAccessAllowed remains false by default. Investor guests require ExternalShare approval."
+}

@@ -1,0 +1,143 @@
+{
+  "title": "HVCG_PortalAuditLog",
+  "description": "Portal — Audit trail for portal visibility, data rooms, and sharing control events",
+  "template": "genericList",
+  "domain": "Portal",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Short event summary"
+    },
+    {
+      "internalName": "EventType",
+      "displayName": "EventType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "PortalEnabledChanged",
+        "PortalVisibleChanged",
+        "StatusUpdatePublished",
+        "DeliverableLinkPublished",
+        "DeliverableLinkRevoked",
+        "AccessGrantPlanned",
+        "AccessGrantRevoked",
+        "DataRoomCreated",
+        "DataRoomStatusChanged",
+        "ExternalSharingBlocked",
+        "ExternalInviteBlocked",
+        "NotificationBlocked",
+        "LibraryAclVerified",
+        "SecurityViolationAttempt",
+        "Other"
+      ],
+      "default": "Other"
+    },
+    {
+      "internalName": "ActorEmail",
+      "displayName": "ActorEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DataRoomId",
+      "displayName": "DataRoomId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_DataRooms"
+    },
+    {
+      "internalName": "ResourceType",
+      "displayName": "ResourceType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Client",
+        "DataRoom",
+        "DocumentRequest",
+        "Deliverable",
+        "Milestone",
+        "StatusUpdate",
+        "PortalAccess",
+        "Participant",
+        "Library",
+        "Notification",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ResourceId",
+      "displayName": "ResourceId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "List item id or key"
+    },
+    {
+      "internalName": "Action",
+      "displayName": "Action",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Verb: Create/Update/Publish/Revoke/Block"
+    },
+    {
+      "internalName": "Outcome",
+      "displayName": "Outcome",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Succeeded",
+        "Blocked",
+        "Failed",
+        "Skipped"
+      ],
+      "default": "Succeeded"
+    },
+    {
+      "internalName": "Details",
+      "displayName": "Details",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "No secrets; summarize before/after flags"
+    },
+    {
+      "internalName": "EventDate",
+      "displayName": "EventDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}
