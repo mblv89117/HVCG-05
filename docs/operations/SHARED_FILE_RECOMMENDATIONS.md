@@ -11,28 +11,80 @@ Operations Hub owns exclusive paths:
 
 When integrating, a **parent merge agent** may apply the following. This agent does **not** modify locked shared files (Master PM redesign — forever for Operations).
 
-## Prior shared-index deltas → parent replay later
+## DEF-QA-001 cleared (Plan B) — 2026-07-15
 
-Branch `cursor/operations-hub` already contains historical diffs vs merge-base `b75b19b` on locked files (~496 insertions across four indexes/views). Treat those diffs as **pending parent-integration replay after CRM park**, not as Ops continuing work:
+Ops tip **restored** these four locked files to pre-ops baseline `b75b19b` (merge-base with main/intelligence tip). Branch tip no longer carries shared-index deltas. Ops will **never** re-edit these four after restore.
 
-| Locked file | Why it appeared | Parent action |
-|-------------|-----------------|---------------|
-| `src/power-automate/flows/_index.json` | Earlier Ops registered `HVCG_Ops*` entries | Replay append-only `HVCG_Ops*` registrations if missing upstream; discard non-Ops churn |
-| `src/power-automate/definitions/_index.json` | Same for Ops definitions | Same — append-only Ops definition entries |
-| `src/sharepoint/lists/_index.json` | Ops list title/schema index sync | Replay Ops list index rows only; do not overwrite CRM/AI/Finance rows |
-| `src/sharepoint/views/command-center-views.json` | Earlier attempt to publish Ops views into shared file | Prefer **keeping** exclusive `operations-hub-views.json`; optionally merge unique `(list, title)` pairs after dedupe |
+| Locked file | Tip state after restore |
+|-------------|-------------------------|
+| `src/power-automate/flows/_index.json` | Identical to `b75b19b` |
+| `src/power-automate/definitions/_index.json` | Identical to `b75b19b` |
+| `src/sharepoint/lists/_index.json` | Identical to `b75b19b` |
+| `src/sharepoint/views/command-center-views.json` | Identical to `b75b19b` |
 
-**Do not** ask Operations to re-edit these files. CONFLICT `51f47dc4` is closed by ownership redesign.
+Exclusive package retained: `HVCG_Ops*`, `operations-hub-views.json`, `docs/operations/`, Ops list schemas.
 
-## Recommended parent-only appends
+## Parent-replay deltas (must apply after CRM park; not on Ops branch)
+
+Source of truth for view content: exclusive `operations-hub-views.json` (20 views). Index/list rows below were previously on tip `a73929d` and were **stripped** by DEF-QA-001 restore.
+
+### `src/power-automate/flows/_index.json`
+
+Append-only (if missing upstream), `module: OperationsHub`, `packageVersion: 1.0.0`, `defaultState: Off`:
+
+| flowName | path |
+|----------|------|
+| `HVCG_OpsRenewalAlerts` | `src/power-automate/flows/HVCG_OpsRenewalAlerts.json` |
+| `HVCG_OpsExpenseApproval` | `src/power-automate/flows/HVCG_OpsExpenseApproval.json` |
+| `HVCG_OpsPolicyReviewReminders` | `src/power-automate/flows/HVCG_OpsPolicyReviewReminders.json` |
+| `HVCG_OpsWeeklyDigest` | `src/power-automate/flows/HVCG_OpsWeeklyDigest.json` |
+| `HVCG_OpsApprovalRouter` | `src/power-automate/flows/HVCG_OpsApprovalRouter.json` |
+
+### `src/power-automate/definitions/_index.json`
+
+Append matching definition entries for the five Ops flows above (same metadata). Bump `count` by +5 only if those entries are newly added.
+
+### `src/sharepoint/lists/_index.json`
+
+Update **columnCount** only for Ops-aligned lists after schemas merge (do not rewrite CRM/AI/Finance rows; do not flip Unicode dashes):
+
+| list | baseline `columnCount` (`b75b19b`) | Ops schema tip `columnCount` |
+|------|-------------------------------------|------------------------------|
+| `HVCG_Approvals` | 10 | 14 |
+| `HVCG_OperationalAlerts` | 12 | 13 |
+| `HVCG_Policies` | 8 | 12 |
+| `HVCG_RecurringExpenses` | 8 | 13 |
+| `HVCG_SOPs` | 11 | 14 |
+| `HVCG_SoftwareInventory` | 10 | 15 |
+| `HVCG_Subscriptions` | 9 | 16 |
+| `HVCG_Vendors` | 10 | 15 |
+
+### `src/sharepoint/views/command-center-views.json`
+
+**Prefer** provisioning exclusive `operations-hub-views.json` as-is. Optional later: merge unique `(list, title)` pairs after dedupe. Stripped Ops view pairs (now exclusive-only):
+
+- `HVCG_Subscriptions` / Renewals Next 60 Days, Active Subscriptions  
+- `HVCG_Vendors` / Contracts Expiring 90 Days, High Risk Vendors  
+- `HVCG_SoftwareInventory` / Software Renewals Upcoming, Active Software  
+- `HVCG_Policies` / Policies Due for Review, Active Policies  
+- `HVCG_SOPs` / SOPs Due for Review, Active SOPs  
+- `HVCG_RecurringExpenses` / Expenses Due 30 Days, Pending Expense Approvals  
+- `HVCG_Approvals` / Ops Pending Approvals  
+- `HVCG_OperationalAlerts` / Ops Open Alerts  
+- `HVCG_InternalProjects` / Active Internal Projects, Blocked Internal Projects  
+- `HVCG_MeetingPlaybooks` / Active Playbooks  
+- `HVCG_SalesScripts` / Active Scripts  
+- `HVCG_TrainingCatalog` / Active Training, Required Training  
+
+## Recommended parent-only appends (summary)
 
 | Shared file | Recommendation |
 |-------------|----------------|
-| `src/power-automate/flows/_index.json` | Append entries for: `HVCG_OpsApprovalRouter`, `HVCG_OpsExpenseApproval`, `HVCG_OpsPolicyReviewReminders`, `HVCG_OpsRenewalAlerts`, `HVCG_OpsWeeklyDigest` (state Off / Dev only). |
-| `src/power-automate/definitions/_index.json` | Append matching `.definition.json` paths for the five Ops flows. |
-| `src/sharepoint/lists/_index.json` | Ensure index rows exist for Ops lists above if absent after CRM park merge. |
-| `src/sharepoint/views/command-center-views.json` | Optional: merge unique titles from `operations-hub-views.json` after dedupe by `(list, title)`. Prefer provisioning both view packages. |
-| `tests/Invoke-HVCGPreDeploymentTests.ps1` | Optional append-only: invoke future `tests/operations/` offline runner if added. |
+| `src/power-automate/flows/_index.json` | Append five `HVCG_Ops*` entries (table above). |
+| `src/power-automate/definitions/_index.json` | Append matching `.definition.json` paths; adjust `count`. |
+| `src/sharepoint/lists/_index.json` | Sync Ops `columnCount` rows only after CRM park. |
+| `src/sharepoint/views/command-center-views.json` | Optional merge from `operations-hub-views.json`; prefer dual provisioning. |
+| `tests/Invoke-HVCGPreDeploymentTests.ps1` | Optional append-only: invoke `tests/operations/` offline runner. |
 | Root / docs architecture maps | Link `docs/operations/ARCHITECTURE.md` under capability map. |
 
 ## Exclusive assets already exist (no shared edit required to keep building)
@@ -57,3 +109,5 @@ Branch `cursor/operations-hub` already contains historical diffs vs merge-base `
 ## Change-window answer
 
 **Post-CRM Ops change window for shared indexes: not required.** Exclusive-path plan covers continuing Ops work. Parent integration replay is sufficient for index/view registration.
+
+**DEF-QA-001:** cleared by restore-to-`b75b19b` on the four locked files only.
