@@ -1,0 +1,52 @@
+{
+  "name": "HVCG_OpportunityWonCloseout",
+  "displayName": "HVCG_OpportunityWonCloseout",
+  "description": "Won-deal closeout and capital handoff",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "triggers": {
+      "When_opportunity_modified": {
+        "type": "OpenApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Opportunities"
+          }
+        }
+      }
+    },
+    "actions": {
+      "Condition_Won": {
+        "type": "If",
+        "expression": {
+          "or": [
+            { "equals": ["@triggerOutputs()?['body/Stage']", "Won"] },
+            { "equals": ["@triggerOutputs()?['body/WinLossStatus']", "Won"] }
+          ]
+        },
+        "actions": {
+          "Teams_Notify_Win": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_teams",
+                "operationId": "PostMessageToChannel",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+              },
+              "parameters": {
+                "body/messageBody": "Opportunity won — review capital handoff if Capital Raise."
+              }
+            }
+          }
+        },
+        "runAfter": {}
+      }
+    }
+  }
+}

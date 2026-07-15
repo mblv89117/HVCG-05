@@ -97,8 +97,13 @@ Manual Dev sites:
 | Backup / restore / `DISASTER_RECOVERY.md` | Shipped |
 | Operational monitoring + System Health dashboard spec | Shipped |
 | Schema: 81 lists | Shipped |
-| Dev SharePoint baseline (fields/lookups/views/seed) | **Complete** |
+| Dev SharePoint baseline (fields/lookups/views/seed) | **Complete** (frozen) |
+| Opportunity CRM module (app layer) | **Designed in-repo** — apply schema via repair when ready |
 
 ## Next owner step
 
-Manual UI validation on Dev Command Center lists/views/seed, then Power Platform canvas/flows (Maker consent). Test/Production promotion remains separate gated work.
+**Application mode:** Opportunity CRM module is designed in-repo (schema bridge, flows, Power Apps specs, Copilot docs). Apply additive schema with idempotent repair when ready, then build canvas CRM screens and import CRM flows.
+
+Manual UI validation on Dev Command Center lists/views/seed remains useful. Test/Production promotion stays gated.
+
+Module doc: `docs/crm/OPPORTUNITY_MANAGEMENT.md`

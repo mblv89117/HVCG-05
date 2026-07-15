@@ -277,10 +277,11 @@
   ],
   "demoPath": [
     "1. Import team members and clients (stage Active for SRM/HVD).",
-    "2. Run workspace script for SRM01 and HVD01 in Dev.",
-    "3. Instantiate debt-capital-raise for SRM01 and fractional-cfo for HVD01.",
-    "4. Observe missing doc reminder candidates and executive decision on HVD.",
-    "5. Open ops vs executive views in app specs with this data shape."
+    "2. Review Qualified lead Copper Mesa and Discovery opportunity in CRM views.",
+    "3. Run workspace script for SRM01 and HVD01 in Dev.",
+    "4. Instantiate debt-capital-raise for SRM01 and fractional-cfo for HVD01.",
+    "5. Observe capital book Packaging status and CRM Commit forecast on SRM retainer upsell.",
+    "6. Open ops vs executive vs CRM screens in app specs with this data shape."
   ],
   "referralPartners": [
     {
@@ -288,6 +289,60 @@
       "PartnerType": "CPA",
       "Email": "partner@desertpeak.example",
       "PartnerStatus": "Active"
+    }
+  ],
+  "leads": [
+    {
+      "Title": "Copper Mesa Foods",
+      "ContactName": "Elena Ruiz",
+      "Email": "elena@coppermesa.example",
+      "LeadStatus": "Qualified",
+      "ServiceInterest": "Capital Advisory",
+      "EstimatedValue": 15000,
+      "OwnerEmail": "manny@hvcg.example",
+      "Source": "CPA Referral"
+    },
+    {
+      "Title": "Red Rock Logistics",
+      "ContactName": "James Chen",
+      "Email": "jchen@redrock.example",
+      "LeadStatus": "New",
+      "ServiceInterest": "Assessment",
+      "EstimatedValue": 7500,
+      "OwnerEmail": "pm@hvcg.example",
+      "Source": "Website"
+    }
+  ],
+  "opportunities": [
+    {
+      "Title": "Copper Mesa — Capital Raise Discovery",
+      "Stage": "Discovery",
+      "WinLossStatus": "Open",
+      "OpportunityType": "Capital Raise",
+      "ProposalAmount": 15000,
+      "Probability": 25,
+      "WeightedValue": 3750,
+      "ForecastCategory": "Pipeline",
+      "SalesOwnerEmail": "manny@hvcg.example",
+      "CapitalHandoffStatus": "NotApplicable",
+      "NextActionDate": "2026-07-20",
+      "CopilotSummary": "Qualified CPA-referral lead exploring debt capital advisory.",
+      "HVCG_IdempotencyKey": "opp-from-lead|copper-mesa-demo"
+    },
+    {
+      "Title": "SRM — Retainer Expansion",
+      "ClientCode": "SRM01",
+      "Stage": "Proposal",
+      "WinLossStatus": "Open",
+      "OpportunityType": "Retainer",
+      "ProposalAmount": 6000,
+      "Probability": 60,
+      "WeightedValue": 3600,
+      "ForecastCategory": "Commit",
+      "SalesOwnerEmail": "manny@hvcg.example",
+      "CapitalHandoffStatus": "NotApplicable",
+      "CopilotSummary": "Upsell monthly retainer for Summit Ridge.",
+      "HVCG_IdempotencyKey": "opp|srm-retainer-demo"
     }
   ],
   "capitalOpportunities": [
@@ -298,7 +353,8 @@
       "TargetAmount": 2500000,
       "FundingStatus": "Packaging",
       "FundingProbability": 45,
-      "ExpectedCloseDate": "2026-10-15"
+      "ExpectedCloseDate": "2026-10-15",
+      "HandoffSource": "Direct"
     }
   ],
   "invoices": [

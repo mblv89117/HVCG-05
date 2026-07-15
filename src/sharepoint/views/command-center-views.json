@@ -35,7 +35,74 @@
         "WeightedValue",
         "Probability",
         "ExpectedCloseDate",
+        "SalesOwnerEmail",
+        "CapitalHandoffStatus",
+        "NextActionDate"
+      ]
+    },
+    {
+      "list": "HVCG_Leads",
+      "title": "Open Leads",
+      "filter": "LeadStatus ne 'Converted' and LeadStatus ne 'Disqualified'",
+      "fields": [
+        "Title",
+        "ContactName",
+        "Email",
+        "LeadStatus",
+        "ServiceInterest",
+        "EstimatedValue",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Leads",
+      "title": "Qualified Leads",
+      "filter": "LeadStatus eq 'Qualified'",
+      "fields": [
+        "Title",
+        "ContactName",
+        "Email",
+        "ServiceInterest",
+        "EstimatedValue",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "Commit Forecast",
+      "filter": "ForecastCategory eq 'Commit' and WinLossStatus eq 'Open'",
+      "fields": [
+        "Title",
+        "Stage",
+        "WeightedValue",
+        "Probability",
+        "ExpectedCloseDate",
         "SalesOwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "Capital Handoffs Ready",
+      "filter": "CapitalHandoffStatus eq 'Ready' or CapitalHandoffStatus eq 'HandedOff'",
+      "fields": [
+        "Title",
+        "Stage",
+        "OpportunityType",
+        "CapitalHandoffStatus",
+        "SalesOwnerEmail",
+        "ExpectedCloseDate"
+      ]
+    },
+    {
+      "list": "HVCG_OpportunityActivities",
+      "title": "Recent Activities",
+      "filter": "",
+      "fields": [
+        "Title",
+        "ActivityType",
+        "ActivityDate",
+        "OwnerEmail",
+        "Outcome"
       ]
     },
     {
@@ -49,7 +116,8 @@
         "TargetAmount",
         "FundingStatus",
         "FundingProbability",
-        "ExpectedCloseDate"
+        "ExpectedCloseDate",
+        "HandoffSource"
       ]
     },
     {

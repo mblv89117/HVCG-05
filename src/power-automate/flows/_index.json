@@ -1,48 +1,19 @@
 {
   "flows": [
-    {
-      "flowName": "HVCG_ClientOnboarding",
-      "path": "src/power-automate/flows/HVCG_ClientOnboarding.json"
-    },
-    {
-      "flowName": "HVCG_CreateProjectFromTemplate",
-      "path": "src/power-automate/flows/HVCG_CreateProjectFromTemplate.json"
-    },
-    {
-      "flowName": "HVCG_CreateClientWorkspace",
-      "path": "src/power-automate/flows/HVCG_CreateClientWorkspace.json"
-    },
-    {
-      "flowName": "HVCG_CreateDocumentRequests",
-      "path": "src/power-automate/flows/HVCG_CreateDocumentRequests.json"
-    },
-    {
-      "flowName": "HVCG_MissingDocumentReminders",
-      "path": "src/power-automate/flows/HVCG_MissingDocumentReminders.json"
-    },
-    {
-      "flowName": "HVCG_OverdueTaskEscalation",
-      "path": "src/power-automate/flows/HVCG_OverdueTaskEscalation.json"
-    },
-    {
-      "flowName": "HVCG_DeliverableApproval",
-      "path": "src/power-automate/flows/HVCG_DeliverableApproval.json"
-    },
-    {
-      "flowName": "HVCG_RenewalReminders",
-      "path": "src/power-automate/flows/HVCG_RenewalReminders.json"
-    },
-    {
-      "flowName": "HVCG_ExecutiveDecisionEscalation",
-      "path": "src/power-automate/flows/HVCG_ExecutiveDecisionEscalation.json"
-    },
-    {
-      "flowName": "HVCG_WeeklyStatusSummary",
-      "path": "src/power-automate/flows/HVCG_WeeklyStatusSummary.json"
-    },
-    {
-      "flowName": "HVCG_UpdateProjectHealth",
-      "path": "src/power-automate/flows/HVCG_UpdateProjectHealth.json"
-    }
+    { "flowName": "HVCG_ClientOnboarding", "path": "src/power-automate/flows/HVCG_ClientOnboarding.json" },
+    { "flowName": "HVCG_CreateProjectFromTemplate", "path": "src/power-automate/flows/HVCG_CreateProjectFromTemplate.json" },
+    { "flowName": "HVCG_CreateClientWorkspace", "path": "src/power-automate/flows/HVCG_CreateClientWorkspace.json" },
+    { "flowName": "HVCG_CreateDocumentRequests", "path": "src/power-automate/flows/HVCG_CreateDocumentRequests.json" },
+    { "flowName": "HVCG_MissingDocumentReminders", "path": "src/power-automate/flows/HVCG_MissingDocumentReminders.json" },
+    { "flowName": "HVCG_OverdueTaskEscalation", "path": "src/power-automate/flows/HVCG_OverdueTaskEscalation.json" },
+    { "flowName": "HVCG_DeliverableApproval", "path": "src/power-automate/flows/HVCG_DeliverableApproval.json" },
+    { "flowName": "HVCG_RenewalReminders", "path": "src/power-automate/flows/HVCG_RenewalReminders.json" },
+    { "flowName": "HVCG_ExecutiveDecisionEscalation", "path": "src/power-automate/flows/HVCG_ExecutiveDecisionEscalation.json" },
+    { "flowName": "HVCG_WeeklyStatusSummary", "path": "src/power-automate/flows/HVCG_WeeklyStatusSummary.json" },
+    { "flowName": "HVCG_UpdateProjectHealth", "path": "src/power-automate/flows/HVCG_UpdateProjectHealth.json" },
+    { "flowName": "HVCG_LeadQualifiedCreateOpportunity", "path": "src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json" },
+    { "flowName": "HVCG_OpportunityWonCloseout", "path": "src/power-automate/flows/HVCG_OpportunityWonCloseout.json" },
+    { "flowName": "HVCG_OpportunityStageChangedNotify", "path": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json" },
+    { "flowName": "HVCG_CapitalFundingStatusNotify", "path": "src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json" }
   ]
 }

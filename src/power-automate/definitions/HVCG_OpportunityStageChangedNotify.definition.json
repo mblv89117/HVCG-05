@@ -1,0 +1,45 @@
+{
+  "name": "HVCG_OpportunityStageChangedNotify",
+  "displayName": "HVCG_OpportunityStageChangedNotify",
+  "description": "Teams + activity log on opportunity Stage change",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "triggers": {
+      "When_opportunity_modified": {
+        "type": "OpenApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Opportunities"
+          }
+        }
+      }
+    },
+    "actions": {
+      "Post_Activity_And_Teams": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_OpportunityActivities",
+            "item/Title": "Stage change",
+            "item/ActivityType": "StageChange",
+            "item/NewStage": "@triggerOutputs()?['body/Stage']"
+          }
+        },
+        "runAfter": {}
+      }
+    }
+  }
+}

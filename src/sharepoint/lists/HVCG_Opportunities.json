@@ -262,6 +262,80 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Bridge to capital funding desk after sales win / capital raise handoff",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "CapitalHandoffStatus",
+      "displayName": "CapitalHandoffStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Sales ↔ capital bridge status",
+      "choices": [
+        "NotApplicable",
+        "Ready",
+        "HandedOff",
+        "InFunding",
+        "Funded",
+        "Declined"
+      ],
+      "default": "NotApplicable"
+    },
+    {
+      "internalName": "NextActionDate",
+      "displayName": "NextActionDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Next sales or funding follow-up"
+    },
+    {
+      "internalName": "NextActionNotes",
+      "displayName": "NextActionNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Keywords for Copilot grounding"
+    },
+    {
+      "internalName": "CopilotSummary",
+      "displayName": "CopilotSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Human-curated short summary for Copilot answers"
+    },
+    {
+      "internalName": "TeamsThreadUrl",
+      "displayName": "TeamsThreadUrl",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Optional deep link to Teams deal thread"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Idempotent automation key (e.g. lead|email or opp|id)"
     }
   ]
 }

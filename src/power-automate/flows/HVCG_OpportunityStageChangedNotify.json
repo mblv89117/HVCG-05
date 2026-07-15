@@ -1,0 +1,72 @@
+{
+  "flowName": "HVCG_OpportunityStageChangedNotify",
+  "displayName": "HVCG_OpportunityStageChangedNotify",
+  "description": "Log stage changes to OpportunityActivities and notify the CRM Teams channel for meaningful stage moves.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Opportunities",
+    "condition": "Stage column changed"
+  },
+  "connections": ["SharePoint", "Teams"],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "opp-stage|{OpportunityId}|{NewStage}|{Modified}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "steps": [
+    { "id": 1, "action": "LogStart" },
+    {
+      "id": 2,
+      "action": "CreateOpportunityActivity",
+      "params": {
+        "ActivityType": "StageChange",
+        "Title": "Stage → @{Stage}",
+        "PriorStage": "@{triggerWindowStart Stage}",
+        "NewStage": "@{Stage}",
+        "OwnerEmail": "@{SalesOwnerEmail}"
+      }
+    },
+    {
+      "id": 3,
+      "action": "Condition_NotifyStages",
+      "params": {
+        "when": "Stage in ['Proposal','Negotiation','Won','Lost']"
+      },
+      "then": [
+        {
+          "action": "TeamsPostMessage",
+          "params": {
+            "channelEnv": "HVCG_TEAMS_CRM_CHANNEL_ID",
+            "message": "Opportunity **@{Title}** moved to **@{Stage}** (owner @{SalesOwnerEmail}, weighted @{WeightedValue})."
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "action": "PatchCopilotSummary",
+      "params": {
+        "CopilotSummary": "Stage @{Stage}; probability @{Probability}; next action @{NextActionDate}"
+      }
+    },
+    { "id": 5, "action": "LogSuccess" }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-OperationsManager",
+    "maxRetries": 2,
+    "retryDelaySeconds": 30
+  },
+  "environmentVariables": ["HVCG_SITE_URL", "HVCG_TEAMS_CRM_CHANNEL_ID"],
+  "teamsIntegration": {
+    "purpose": "Keep sales leadership aware of late-stage and close events"
+  },
+  "copilotReadiness": {
+    "writes": ["CopilotSummary", "OpportunityActivities"]
+  }
+}

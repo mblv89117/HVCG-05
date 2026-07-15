@@ -1,4 +1,27 @@
-# Process Map — Client to Delivery (V1)
+# Process Map — Lead to Funding Close (Opportunity CRM + Delivery)
+
+```mermaid
+flowchart TD
+  L[Lead intake] --> Q{Qualified?}
+  Q -->|Yes| O[Opportunity Discovery]
+  Q -->|No| X[Disqualified / nurture]
+  O --> A[Assessment]
+  A --> P[Proposal]
+  P --> N[Negotiation]
+  N --> W{Won?}
+  W -->|No| WL[Win/Loss analysis]
+  W -->|Yes| C[Client / engagement]
+  C --> D{Capital Raise?}
+  D -->|Yes| Cap[CapitalOpportunity handoff]
+  Cap --> Dil[Packaging → Diligence → Term Sheet]
+  Dil --> Fund{Closed funding?}
+  Fund -->|Yes| Done[Funded / success fee]
+  Fund -->|No| Dec[Declined / On Hold]
+  D -->|No| Onboard[Client onboarding / delivery]
+  Onboard --> Del[Projects / docs / billing]
+```
+
+Legacy delivery path (post-Active Client) unchanged:
 
 ```mermaid
 flowchart TD
@@ -24,3 +47,5 @@ flowchart TD
   K --> S[Approvals / Delivery]
   S --> T[Retainer Renewal or Closeout]
 ```
+
+See `docs/crm/OPPORTUNITY_MANAGEMENT.md` for the Opportunity CRM module.

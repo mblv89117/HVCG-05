@@ -1,0 +1,101 @@
+{
+  "flowName": "HVCG_LeadQualifiedCreateOpportunity",
+  "displayName": "HVCG_LeadQualifiedCreateOpportunity",
+  "description": "When a lead becomes Qualified, create (or link) a Discovery-stage opportunity idempotently and post to Teams.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Leads",
+    "condition": "LeadStatus changes to 'Qualified'"
+  },
+  "connections": ["SharePoint", "Teams", "Outlook"],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "opp-from-lead|{LeadId}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    { "id": 1, "action": "LogStart" },
+    {
+      "id": 2,
+      "action": "Condition",
+      "params": { "equals": ["LeadStatus", "Qualified"] }
+    },
+    {
+      "id": 3,
+      "action": "FindOrCreateOpportunity",
+      "params": {
+        "list": "HVCG_Opportunities",
+        "Title": "@{Title} — Discovery",
+        "Stage": "Discovery",
+        "WinLossStatus": "Open",
+        "LeadId": "@{ID}",
+        "OwnerEmail": "@{OwnerEmail}",
+        "SalesOwnerEmail": "@{OwnerEmail}",
+        "ProposalAmount": "@{EstimatedValue}",
+        "Probability": 20,
+        "OpportunityType": "MapFromServiceInterest",
+        "CapitalHandoffStatus": "NotApplicable",
+        "HVCG_IdempotencyKey": "opp-from-lead|@{ID}",
+        "CopilotSummary": "Created from qualified lead @{Title}"
+      }
+    },
+    {
+      "id": 4,
+      "action": "UpdateLead",
+      "params": {
+        "ConvertedOpportunityId": "@{OpportunityId}",
+        "LeadStatus": "Qualified"
+      }
+    },
+    {
+      "id": 5,
+      "action": "CreateOpportunityActivity",
+      "params": {
+        "ActivityType": "StageChange",
+        "Title": "Lead qualified → opportunity created",
+        "NewStage": "Discovery",
+        "LeadId": "@{LeadId}",
+        "OpportunityId": "@{OpportunityId}"
+      }
+    },
+    {
+      "id": 6,
+      "action": "TeamsPostMessage",
+      "params": {
+        "channelEnv": "HVCG_TEAMS_CRM_CHANNEL_ID",
+        "message": "Qualified lead **@{Title}** opened opportunity **@{OpportunityTitle}** (owner @{OwnerEmail})."
+      }
+    },
+    {
+      "id": 7,
+      "action": "CreateAuditEvent",
+      "params": { "eventType": "LeadQualifiedOpportunityCreated" }
+    },
+    { "id": 8, "action": "LogSuccess" }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_TEAMS_CRM_CHANNEL_ID",
+    "HVCG_OPS_EMAIL"
+  ],
+  "teamsIntegration": {
+    "purpose": "Pipeline visibility when leads become sales-ready",
+    "channel": "HVCG CRM / Pipeline"
+  },
+  "copilotReadiness": {
+    "writes": ["CopilotSummary on Opportunity"],
+    "lists": ["HVCG_Opportunities", "HVCG_OpportunityActivities"]
+  }
+}

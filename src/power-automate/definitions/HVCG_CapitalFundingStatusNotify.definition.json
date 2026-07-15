@@ -1,0 +1,45 @@
+{
+  "name": "HVCG_CapitalFundingStatusNotify",
+  "displayName": "HVCG_CapitalFundingStatusNotify",
+  "description": "Capital FundingStatus change → activity, sales bridge, Teams",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "triggers": {
+      "When_capital_opp_modified": {
+        "type": "OpenApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_CapitalOpportunities"
+          }
+        }
+      }
+    },
+    "actions": {
+      "Log_Funding_Activity": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_OpportunityActivities",
+            "item/Title": "Funding update",
+            "item/ActivityType": "FundingUpdate",
+            "item/NewStage": "@triggerOutputs()?['body/FundingStatus']"
+          }
+        },
+        "runAfter": {}
+      }
+    }
+  }
+}

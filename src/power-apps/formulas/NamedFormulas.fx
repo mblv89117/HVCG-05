@@ -57,3 +57,34 @@ nfHealthColor(h) =
 // Days since contact display
 nfDaysSinceContact(c) =
   Coalesce(c.DaysSinceLastContact, DateDiff(c.LastMeaningfulContact, Today(), Days));
+
+// --- Opportunity CRM ---
+nfOpenPipeline =
+  Filter(HVCG_Opportunities, WinLossStatus = "Open");
+
+nfMyOpportunities =
+  Filter(
+    HVCG_Opportunities,
+    SalesOwnerEmail = User().Email && WinLossStatus = "Open"
+  );
+
+nfQualifiedLeads =
+  Filter(HVCG_Leads, LeadStatus = "Qualified");
+
+nfOpenLeads =
+  Filter(
+    HVCG_Leads,
+    !(LeadStatus in ["Converted", "Disqualified"])
+  );
+
+nfCapitalHandoffsReady =
+  Filter(
+    HVCG_Opportunities,
+    CapitalHandoffStatus in ["Ready", "HandedOff"]
+  );
+
+nfPipelineWeightedValue =
+  Sum(nfOpenPipeline, WeightedValue);
+
+nfCommitForecastValue =
+  Sum(Filter(nfOpenPipeline, ForecastCategory = "Commit"), WeightedValue);

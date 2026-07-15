@@ -175,6 +175,31 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "OpportunityId",
+      "displayName": "OpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Originating sales opportunity (CRM bridge)",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "HandoffSource",
+      "displayName": "HandoffSource",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "How this capital book entry was created",
+      "choices": [
+        "SalesWin",
+        "Direct",
+        "Referral",
+        "Expansion",
+        "Other"
+      ],
+      "default": "Direct"
     }
   ]
 }

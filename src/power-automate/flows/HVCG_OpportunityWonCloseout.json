@@ -1,0 +1,134 @@
+{
+  "flowName": "HVCG_OpportunityWonCloseout",
+  "displayName": "HVCG_OpportunityWonCloseout",
+  "description": "On opportunity Won: stamp dates, create win/loss stub, Teams notify, and hand off Capital Raise deals to HVCG_CapitalOpportunities.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Opportunities",
+    "condition": "Stage eq 'Won' OR WinLossStatus eq 'Won'"
+  },
+  "connections": ["SharePoint", "Teams", "Outlook"],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "opp-won|{OpportunityId}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Capital handoff creates CapitalOpportunity only when OpportunityType is Capital Raise or Hybrid"
+  ],
+  "steps": [
+    { "id": 1, "action": "LogStart" },
+    {
+      "id": 2,
+      "action": "UpdateOpportunity",
+      "params": {
+        "WinLossStatus": "Won",
+        "Stage": "Won",
+        "WonDate": "@{utcNow}",
+        "ForecastCategory": "Closed",
+        "Probability": 100
+      }
+    },
+    {
+      "id": 3,
+      "action": "EnsureWinLossAnalysis",
+      "params": {
+        "list": "HVCG_WinLossAnalyses",
+        "Result": "Won",
+        "OpportunityId": "@{ID}",
+        "ClientId": "@{ClientId}"
+      }
+    },
+    {
+      "id": 4,
+      "action": "CreateOpportunityActivity",
+      "params": {
+        "ActivityType": "StageChange",
+        "Title": "Opportunity marked Won",
+        "PriorStage": "@{previous Stage}",
+        "NewStage": "Won"
+      }
+    },
+    {
+      "id": 5,
+      "action": "Condition_CapitalRaise",
+      "params": {
+        "when": "OpportunityType in ['Capital Raise','Hybrid'] OR CapitalHandoffStatus eq 'Ready'"
+      },
+      "then": [
+        {
+          "action": "FindOrCreateCapitalOpportunity",
+          "params": {
+            "list": "HVCG_CapitalOpportunities",
+            "ClientId": "@{ClientId}",
+            "OpportunityId": "@{ID}",
+            "HandoffSource": "SalesWin",
+            "FundingStatus": "Identified",
+            "TargetAmount": "@{ProposalAmount}",
+            "OwnerEmail": "@{SalesOwnerEmail}",
+            "HVCG_IdempotencyKey": "cap-from-opp|@{ID}"
+          }
+        },
+        {
+          "action": "UpdateOpportunity",
+          "params": {
+            "CapitalOpportunityId": "@{CapitalOpportunityId}",
+            "CapitalHandoffStatus": "HandedOff"
+          }
+        },
+        {
+          "action": "CreateOpportunityActivity",
+          "params": {
+            "ActivityType": "Handoff",
+            "Title": "Handed off to capital funding desk",
+            "NewStage": "HandedOff"
+          }
+        },
+        {
+          "action": "CreateDefaultFundingMilestones",
+          "params": {
+            "types": ["Package", "Outreach", "Underwriting", "Term Sheet", "Due Diligence", "Funding"]
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "action": "TeamsPostMessage",
+      "params": {
+        "channelEnv": "HVCG_TEAMS_CRM_CHANNEL_ID",
+        "message": "Won deal **@{Title}** (amount @{ProposalAmount}). Capital handoff: @{CapitalHandoffStatus}."
+      }
+    },
+    {
+      "id": 7,
+      "action": "CreateAuditEvent",
+      "params": { "eventType": "OpportunityWon" }
+    },
+    { "id": 8, "action": "LogSuccess" }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_TEAMS_CRM_CHANNEL_ID",
+    "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+    "HVCG_EXECUTIVE_EMAIL"
+  ],
+  "teamsIntegration": {
+    "purpose": "Celebrate wins and alert capital desk of handoffs",
+    "channels": ["HVCG CRM / Pipeline", "HVCG Capital Desk"]
+  },
+  "copilotReadiness": {
+    "writes": ["WinLossAnalyses", "CapitalOpportunity bridge fields", "OpportunityActivities"]
+  }
+}

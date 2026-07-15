@@ -1,0 +1,88 @@
+{
+  "flowName": "HVCG_CapitalFundingStatusNotify",
+  "displayName": "HVCG_CapitalFundingStatusNotify",
+  "description": "When capital FundingStatus reaches Term Sheet, Due Diligence, Committed, Closed, or Declined — activity log, bridge update on sales opp, Teams capital channel post.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_CapitalOpportunities",
+    "condition": "FundingStatus changed"
+  },
+  "connections": ["SharePoint", "Teams"],
+  "idempotency": {
+    "pattern": "cap-status|{CapitalOpportunityId}|{FundingStatus}|{Modified}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "steps": [
+    { "id": 1, "action": "LogStart" },
+    {
+      "id": 2,
+      "action": "CreateOpportunityActivity",
+      "params": {
+        "ActivityType": "FundingUpdate",
+        "Title": "FundingStatus → @{FundingStatus}",
+        "OpportunityId": "@{OpportunityId}",
+        "ClientId": "@{ClientId}",
+        "NewStage": "@{FundingStatus}",
+        "OwnerEmail": "@{OwnerEmail}"
+      }
+    },
+    {
+      "id": 3,
+      "action": "UpdateLinkedOpportunity",
+      "params": {
+        "when": "OpportunityId not empty",
+        "map": {
+          "Closed": { "CapitalHandoffStatus": "Funded" },
+          "Declined": { "CapitalHandoffStatus": "Declined" },
+          "Due Diligence": { "CapitalHandoffStatus": "InFunding" },
+          "Term Sheet": { "CapitalHandoffStatus": "InFunding" },
+          "Committed": { "CapitalHandoffStatus": "InFunding" }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "action": "Condition_Notify",
+      "params": {
+        "when": "FundingStatus in ['Term Sheet','Due Diligence','Committed','Closed','Declined']"
+      },
+      "then": [
+        {
+          "action": "TeamsPostMessage",
+          "params": {
+            "channelEnv": "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+            "message": "Capital book **@{Title}** ({ClientCode}) → **@{FundingStatus}** (${TargetAmount})."
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "action": "CreateAuditEvent",
+      "params": { "eventType": "CapitalFundingStatusChanged" }
+    },
+    { "id": 6, "action": "LogSuccess" }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-CapitalAdvisor",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+    "HVCG_EXECUTIVE_EMAIL"
+  ],
+  "teamsIntegration": {
+    "purpose": "Capital desk + executive visibility through diligence to closed funding"
+  },
+  "copilotReadiness": {
+    "lists": ["HVCG_CapitalOpportunities", "HVCG_OpportunityActivities", "HVCG_Opportunities"]
+  }
+}

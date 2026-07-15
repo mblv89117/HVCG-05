@@ -18,7 +18,8 @@
 |--------|------|---------|
 | scrHomeOps | Operations Home | Delivery command center |
 | scrHomeExec | Executive / CEO Home | Firm OS dashboard |
-| scrCRM | CRM Pipeline | Leads → proposals → win/loss |
+| scrCRM | CRM Pipeline | Lead → opportunity → proposal → win/loss → capital handoff |
+| scrOpportunityDetail | Opportunity Detail | Single deal workspace + activities + Copilot fields |
 | scrCapital | Capital Desk | Raises, lenders, investors |
 | scrOpsHub | Operations Hub | SOPs, vendors, training |
 | scrClients | Clients | Client master |

@@ -1,0 +1,73 @@
+{
+  "name": "HVCG_LeadQualifiedCreateOpportunity",
+  "displayName": "HVCG_LeadQualifiedCreateOpportunity",
+  "description": "Create Discovery opportunity when LeadStatus becomes Qualified",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "triggers": {
+      "When_lead_modified": {
+        "type": "OpenApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Leads"
+          }
+        }
+      }
+    },
+    "actions": {
+      "Condition_Qualified": {
+        "type": "If",
+        "expression": {
+          "and": [{ "equals": ["@triggerOutputs()?['body/LeadStatus']", "Qualified"] }]
+        },
+        "actions": {
+          "Create_Opportunity": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PostItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_Opportunities",
+                "item/Title": "@{triggerOutputs()?['body/Title']} — Discovery",
+                "item/Stage": "Discovery",
+                "item/WinLossStatus": "Open",
+                "item/CapitalHandoffStatus": "NotApplicable",
+                "item/HVCG_IdempotencyKey": "opp-from-lead|@{triggerOutputs()?['body/ID']}"
+              }
+            }
+          },
+          "Post_Teams": {
+            "type": "OpenApiConnection",
+            "runAfter": { "Create_Opportunity": ["Succeeded"] },
+            "inputs": {
+              "host": {
+                "connectionName": "shared_teams",
+                "operationId": "PostMessageToChannel",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+              },
+              "parameters": {
+                "poster": "Flow bot",
+                "location": "Channel",
+                "body/recipient/groupId": "@parameters('hvcg_TeamsCrmChannelGroupId')",
+                "body/recipient/channelId": "@parameters('hvcg_TeamsCrmChannelId')",
+                "body/messageBody": "Qualified lead opened a CRM opportunity."
+              }
+            }
+          }
+        },
+        "runAfter": {}
+      }
+    }
+  }
+}

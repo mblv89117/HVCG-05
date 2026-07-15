@@ -147,6 +147,8 @@ if ($py) {
   Add-Check 'pnp_auth_packaging' ($LASTEXITCODE -eq 0) 'test_pnp_auth.py'
   & $py.Source (Join-Path $RepoRoot 'tests/unit/test_field_provisioning.py')
   Add-Check 'field_provisioning_strictmode' ($LASTEXITCODE -eq 0) 'test_field_provisioning.py'
+  & $py.Source (Join-Path $RepoRoot 'tests/unit/test_opportunity_crm.py')
+  Add-Check 'opportunity_crm_module' ($LASTEXITCODE -eq 0) 'test_opportunity_crm.py'
 }
 
 # 8b) PnP retry / backoff / propagation unit tests

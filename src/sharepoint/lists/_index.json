@@ -1,5 +1,5 @@
 {
-  "version": "2.2",
+  "version": "2.3",
   "prefix": "HVCG_",
   "product": "HVCG OS",
   "lists": [
@@ -36,8 +36,14 @@
     {
       "name": "HVCG_Opportunities",
       "path": "src/sharepoint/lists/HVCG_Opportunities.json",
-      "columnCount": 27,
+      "columnCount": 35,
       "description": "Pipeline opportunities"
+    },
+    {
+      "name": "HVCG_OpportunityActivities",
+      "path": "src/sharepoint/lists/HVCG_OpportunityActivities.json",
+      "columnCount": 13,
+      "description": "CRM \u2014 Opportunity / lead activity timeline"
     },
     {
       "name": "HVCG_DiscoveryCalls",
@@ -174,7 +180,7 @@
     {
       "name": "HVCG_CapitalOpportunities",
       "path": "src/sharepoint/lists/HVCG_CapitalOpportunities.json",
-      "columnCount": 18,
+      "columnCount": 20,
       "description": "Capital \u2014 Debt/equity/SBA/CRE/etc. capital raises"
     },
     {
