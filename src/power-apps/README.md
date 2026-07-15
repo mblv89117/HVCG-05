@@ -18,8 +18,8 @@
 |--------|------|---------|
 | scrHomeOps | Operations Home | Delivery command center |
 | scrHomeExec | Executive / CEO Home | Firm OS dashboard |
-| scrCRM | CRM Pipeline | Lead → opportunity → proposal → win/loss → capital handoff |
-| scrOpportunityDetail | Opportunity Detail | Single deal workspace + activities + Copilot fields |
+| scrCRM | CRM Pipeline | Dashboard KPIs, leads, stage board/list, next-action, timeline preview |
+| scrOpportunityDetail | Opportunity Detail | Deal workspace: timeline, proposals, capital bridge, Copilot, next-action |
 | scrCapital | Capital Desk | Raises, lenders, investors |
 | scrOpsHub | Operations Hub | SOPs, vendors, training |
 | scrClients | Clients | Client master |
@@ -86,9 +86,18 @@ Use collections + Filter. Predefined: My work, Critical overdue, Yellow/Red heal
 - Color not sole indicator (health text + icon)  
 - Contrast AA  
 
+## Opportunity CRM module
+
+- Screen specs: `screens/scrCRM.md`, `screens/scrOpportunityDetail.md`
+- Desktop/phone layout notes: `crm/layout-desktop.md`, `crm/layout-phone.md`
+- Maker rebuild steps: `docs/crm/POWER_APPS_BUILD_GUIDE.md`
+- Domain / flows: `docs/crm/OPPORTUNITY_MANAGEMENT.md`
+
+Nav: global **CRM** → `scrCRM`; board/list **Open** → `scrOpportunityDetail` (`varSelectedOpportunity`). Capital badge → `scrCapital` when `CapitalOpportunityId` is set.
+
 ## Formula modules
 
-See `src/power-apps/formulas/` for reusable named formulas to paste into App.Formulas (Power Fx).
+See `src/power-apps/formulas/` for reusable named formulas to paste into App.Formulas (Power Fx). CRM block includes `nfVisiblePipeline`, `nfCanEditCRM`, `nfOverdueNextActions`, stage/handoff colors.
 
 ## Build instructions (tenant)
 
