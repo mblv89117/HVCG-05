@@ -1,29 +1,24 @@
-# Next Session
+# Next Session — Executive Command Center
 
-**Generated:** 2026-07-15 (~11:05 PT)  
-**Mode:** Dev Maker OA **PARTIAL** — offline PASS; live import **BLOCKED on pac device-code auth**
+**Generated:** 2026-07-15 (~15:41 PT)  
+**Mode:** READY FOR INTEGRATION — offline PASS; merges held by master-pm
 
-## Current project status
-
-- **Product:** HVCG OS **v1.1.0**
-- **Branch:** `cursor/v1.1.0-intelligence-ai-ops`
-- **Schema:** Still clean from repair (`schema-validation-20260715-103353.json`, hasDrift=false / 1170)
-- **Tooling:** `pac` 2.9.3 + .NET 10 installed on this Mac (`~/.dotnet/tools`)
-- **Acceptance:** `docs/crm/ACCEPTANCE_REPORT.md` (PARTIAL); evidence `deployment/reports/crm/maker-oa-acceptance-latest.json`
-
-## Do next (resume after auth)
-
-1. Complete or refresh: `export PATH="$HOME/.dotnet:$HOME/.dotnet/tools:$PATH"` then  
-   `pac auth create --deviceCode --name HVCG-Dev-Maker`  
-   Open `https://login.microsoft.com/device`, enter code, finish MFA as Global/Maker admin.
-2. `pac org list` → select **HVCG Development** only (never Prod).
-3. Import/rebuild 4 CRM flows Off; bind SharePoint Dev; keep `hvcg_CrmEnableTeamsNotify=false`.
-4. Build/publish canvas screens per `docs/crm/POWER_APPS_BUILD_GUIDE.md`.
-5. Live smoke + fill acceptance → commit.
+## Do next
+1. Integration: review validation packet on bus (thread `89258011…`); merge exclusive ECC paths when master-pm releases.
+2. Parent: append-only shared recommendations from `docs/executive/SHARED_FILE_RECOMMENDATIONS.md`.
+3. Owner (later): Maker wire `scrHomeExec` + Power BI per `docs/executive/OWNER_ACTION_GUIDE.md`.
 
 ## Do not
+- Interrupt CRM Maker OA / smoke / auth
+- Edit locked shared indexes
+- Production
+- Enable executive weekly brief without owner approval (stays Off)
 
-- Production / OA-CRM-11 without separate approval
-- Enable Teams notify or company channels
-- Modify frozen SharePoint deployment engines
-- Commit `.worktrees/` or secrets
+## Offline re-check
+```bash
+export HVCG_REPO_ROOT="/Volumes/MacMiniPro2TB/HVCG Project Management System"
+cd "$HVCG_REPO_ROOT/.worktrees/executive-command-center"
+python3 tests/executive/run_offline_tests.py
+./scripts/agent-comms/heartbeat.sh --agent-id executive --status READY
+./scripts/agent-comms/read-inbox.sh --agent-id executive
+```
