@@ -13,7 +13,7 @@
 | No tenant deploys | Agents must **not** repair, backup, deploy SharePoint, import/activate flows, publish Power Apps, or enable Teams notifications. |
 | One repair at a time | A Development schema repair may already be running from a prior session. Never start a second concurrent repair. |
 | Integration order | Parent reviews each workstream → merges **only** passing branches → resolves conflicts centrally → runs full test suite → consolidates acceptance. |
-| Do not merge early | **Standing by for worker completion — do not merge until all six agents report pass.** |
+| Integration status | **All six workers PASSED (2026-07-15).** Merged into `agent/crm-integration`; full suite + consolidated acceptance owned by Parent. |
 
 ---
 
@@ -27,7 +27,7 @@
 | 4 | Teams & Copilot | `agent/crm-teams-copilot` | `docs/crm/TEAMS_COPILOT_READINESS.md`, `docs/crm/COPILOT_OPPORTUNITY.md`, `docs/crm/TEAMS_NOTIFICATION_SPEC.md` |
 | 5 | Testing & QA | `agent/crm-testing-qa` | `tests/unit/test_opportunity_lifecycle.py`, `tests/crm/*`, `scripts/Test-HVCGOpportunityCrmAcceptance.ps1`, `docs/crm/SMOKE_TEST_CHECKLIST.md`; append-only checks in `tests/Invoke-HVCGPreDeploymentTests.ps1` for agent-5 tests only |
 | 6 | Docs & Owner Actions | `agent/crm-docs-owner` | `docs/crm/OWNER_ACTION_GUIDE.md`, `docs/crm/ACCEPTANCE_REPORT.md`, `docs/crm/OPPORTUNITY_MANAGEMENT.md` (status/apply sections only), `PROJECT_STATUS.md`, `NEXT_SESSION.md` |
-| P | Parent Integration | `agent/crm-integration` | **`docs/crm/PARALLEL_AGENT_MAP.md`** (this file); later: merge coordination, conflict resolution, consolidated acceptance after all six pass |
+| P | Parent Integration | `agent/crm-integration` | **`docs/crm/PARALLEL_AGENT_MAP.md`** (this file); merge coordination; `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` |
 
 ### Soft conflicts (merge carefully)
 
@@ -116,3 +116,20 @@ flowchart TD
 | 6 | Commit `crm(docs): owner actions and session status for Opportunity CRM` on `agent/crm-docs-owner` |
 
 Parent then merges into `agent/crm-integration`, runs the full test suite, and produces one consolidated acceptance report — still **without** tenant deploy unless explicitly approved.
+
+---
+
+## Parent integration checklist
+
+- [x] All six agent commits present and review-passed
+- [x] Soft conflicts resolved (`Invoke-HVCGPreDeploymentTests.ps1` keep-all checks; this map kept as Parent authority)
+- [ ] `Invoke-HVCGPreDeploymentTests.ps1` + CRM unit tests green
+- [ ] Consolidated acceptance: `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`
+- [ ] Explicit owner approval recorded before repair / import / publish
+
+## Change log
+
+| Date | Change |
+|------|--------|
+| 2026-07-15 | Parent authoritative map (`c31b25d`); docs-owner alternate map deferred on merge |
+| 2026-07-15 | All six workers passed; integration merge in progress |

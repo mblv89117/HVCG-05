@@ -3,7 +3,7 @@
 **Product:** HVCG OS  
 **Module:** Opportunity CRM  
 **Platform:** SharePoint lists on Command Center (immutable infrastructure baseline)  
-**Status:** Application module — additive schema on v1.1.0 platform  
+**Status:** **Repo-ready / apply-in-progress** — packages designed and committed; live Dev schema **not yet applied** (owner-attended repair pending)  
 
 ## Purpose
 
@@ -55,9 +55,22 @@ flowchart LR
 
 ### Apply to Dev (idempotent repair; owner-run when ready)
 
+**State:** Infrastructure baseline frozen (`v1.1.0-dev-sharepoint-baseline`). Opportunity CRM additive schema is in-repo via `releases/migrations/20260715_001_opportunity_crm_module.json` + `diffs/opportunity_crm_v1.json`. Parallel agent packaging may still be merging; run repair from the **integration** commit the parent agent designates — not mid-stream agent branches.
+
 ```powershell
+# Optional safety backup first
+pwsh -File ./deployment/backup/Backup-HVCGOS.ps1 -Environment development
+
+# Additive CRM schema (interactive Microsoft sign-in / consent)
 pwsh -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development
 ```
+
+Expect: new list `HVCG_OpportunityActivities`, bridge/Copilot columns, CRM views; repair exit **0** and `hasDrift=false`. Re-run is safe (idempotent). Do not delete sites/lists.
+
+**After repair (owner / Maker only):** bind SharePoint/Teams/Outlook connections → import four CRM flows → set test Teams channel env vars → activate → build/publish `scrCRM` / `scrOpportunityDetail` → fill `docs/crm/ACCEPTANCE_REPORT.md`.
+
+Full stop-point checklist: `docs/crm/OWNER_ACTION_GUIDE.md`  
+Parallel packaging map: `docs/crm/PARALLEL_AGENT_MAP.md`
 
 ## Power Apps
 

@@ -1,29 +1,41 @@
 # PROJECT STATUS
 
-**Last updated:** 2026-07-14  
+**Last updated:** 2026-07-15  
 **Product:** HVCG OS  
 **Version:** **1.1.0** (`VERSION` / `version.json`)  
-**Branch:** `cursor/v1.1.0-intelligence-ai-ops`  
+**Branch (docs workstream):** `agent/crm-docs-owner` (base `4a8f25d` / `cursor/v1.1.0-intelligence-ai-ops`)  
 **Tag:** `v1.1.0-dev-sharepoint-baseline`  
-**Overall status:** **Development SharePoint baseline complete** — package + live Dev tenant schema ready
+**Overall status:** **Opportunity CRM apply-in-progress** — Dev infrastructure frozen; CRM module **repo-ready**; live Dev tenant CRM schema **pending owner repair**
 
 ## Verdict
 
-HVCG OS **v1.1.0** repository package ships intelligence, AI ops, DR, and monitoring. The **Development SharePoint infrastructure milestone** is complete on `HVCG-CommandCenter-Dev`:
+HVCG OS **v1.1.0** Development SharePoint infrastructure remains complete and frozen on `HVCG-CommandCenter-Dev`:
 
 | Checkpoint | Result |
 |------------|--------|
-| Schema fields compliant | **1,147** |
-| Schema drift | **Zero** (missing / extra / mismatched) |
-| Lookup fields | **133** provisioned via `Add-PnPFieldFromXml` |
-| Views | Succeeded |
-| Seed data | Succeeded (3 clients, 21 templates; team rows idempotent) |
-| Repair exit code | **0** |
-| Leftover repair processes | None |
+| Schema fields compliant (baseline) | **1,147** |
+| Schema drift (baseline) | **Zero** |
+| Repair exit code (baseline) | **0** |
+| Opportunity CRM list/column package | **In repo** — not yet repaired onto live Dev |
+| CRM flows / canvas / Teams-Copilot specs | **Packaging via parallel agents** — Maker import/publish **owner-gated** |
 
-Pre-deployment critical tests: **PASS**. No further Dev schema repair is required unless schema JSON changes.
+Pre-deployment critical tests: **PASS** on last baseline. No infrastructure engine changes required for CRM (additive repair only).
 
 v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
+
+## Opportunity CRM (current)
+
+| Area | Status |
+|------|--------|
+| Module design + migration pack | **Repo-ready** (`fd5a9b9`) |
+| Parallel agent finish (flows, apps, Teams, tests, docs) | **In progress** — see `docs/crm/PARALLEL_AGENT_MAP.md` |
+| Live Dev schema apply | **Pending owner** — `Repair-HVCGOSSharePointSchema.ps1` |
+| Flow import / activation | **Pending owner** (after repair) |
+| Canvas publish | **Pending owner** (after lists exist) |
+| Acceptance | Template ready — `docs/crm/ACCEPTANCE_REPORT.md` |
+
+Owner stop points: `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-01…11).  
+Module design: `docs/crm/OPPORTUNITY_MANAGEMENT.md`.
 
 ## Development infrastructure milestone (completed)
 
@@ -98,12 +110,12 @@ Manual Dev sites:
 | Operational monitoring + System Health dashboard spec | Shipped |
 | Schema: 81 lists | Shipped |
 | Dev SharePoint baseline (fields/lookups/views/seed) | **Complete** (frozen) |
-| Opportunity CRM module (app layer) | **Designed in-repo** — apply schema via repair when ready |
+| Opportunity CRM module (app layer) | **Repo-ready / apply-in-progress** — owner repair + Maker steps next |
 
 ## Next owner step
 
-**Application mode:** Opportunity CRM module is designed in-repo (schema bridge, flows, Power Apps specs, Copilot docs). Apply additive schema with idempotent repair when ready, then build canvas CRM screens and import CRM flows.
-
-Manual UI validation on Dev Command Center lists/views/seed remains useful. Test/Production promotion stays gated.
+1. Wait for parent integration merge of CRM agent branches (or apply from designated integration SHA).  
+2. Follow `docs/crm/OWNER_ACTION_GUIDE.md`: sign-in → consent → additive repair → connections → import/activate four CRM flows (test Teams channels only) → publish canvas CRM → fill `docs/crm/ACCEPTANCE_REPORT.md`.  
+3. Do **not** promote CRM to Production without explicit written approval (OA-CRM-11).
 
 Module doc: `docs/crm/OPPORTUNITY_MANAGEMENT.md`
