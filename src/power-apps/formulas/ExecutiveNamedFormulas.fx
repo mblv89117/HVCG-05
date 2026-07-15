@@ -23,6 +23,9 @@ nfExecPipelineWeighted =
         WeightedValue
     );
 
+// Alias used by NamedFormulas.executive.fx / KPI catalog
+nfExecPipelineValue = nfExecPipelineWeighted;
+
 // --- KPI-02 MRR ---
 nfExecMRR =
     Sum(
@@ -128,17 +131,17 @@ nfExecApprovalsWaitingCount =
         );
 
 // --- KPI-17 Critical decisions ---
-nfExecCriticalDecisionsCount =
-    CountRows(
-        Filter(
-            HVCG_Decisions,
-            RequiresExecutiveAttention = true
-                && (
-                    DecisionStatus = "Proposed"
-                        || DecisionStatus = "Pending Decision"
-                )
-        )
+nfExecDecisionQueue =
+    Filter(
+        HVCG_Decisions,
+        RequiresExecutiveAttention = true
+            && (
+                DecisionStatus = "Proposed"
+                    || DecisionStatus = "Pending Decision"
+            )
     );
+
+nfExecCriticalDecisionsCount = CountRows(nfExecDecisionQueue);
 
 // --- KPI-18 Major risks ---
 nfExecMajorRisksCount =
@@ -174,3 +177,10 @@ nfExecCurrencyOrBlank =
 
 // --- Health color (reuse shared nfHealthColor when available) ---
 // nfExecHealthColor(h) = Switch(h, "Green", Color.DarkGreen, "Yellow", Color.DarkGoldenRod, "Red", Color.DarkRed, Color.Gray)
+
+// --- Added for gallery bindings ---
+nfShowExecFullHome =
+  Coalesce(
+    LookUp(HVCG_TeamMembers, Email = User().Email).PrimaryRole,
+    "OperationsAssistant"
+  ) in ["Owner", "Administrator"];

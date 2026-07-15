@@ -1,6 +1,6 @@
 // --- Executive Command Center (exclusive mirror) ---
-// Canonical paste target for parent merge: src/power-apps/formulas/ExecutiveNamedFormulas.fx
-// Keep these files in sync. Do not overwrite CRM NamedFormulas.fx on this branch.
+// Canonical: src/power-apps/formulas/ExecutiveNamedFormulas.fx
+// Keep mirrored. Parent integrator appends canonical to NamedFormulas.fx (do not overwrite CRM).
 
 // Executive Command Center — Named Formulas (nfExec*)
 // App: HVCG OS Command Center · Screen: scrHomeExec
@@ -26,6 +26,9 @@ nfExecPipelineWeighted =
         Filter(HVCG_Opportunities, WinLossStatus = "Open"),
         WeightedValue
     );
+
+// Alias used by NamedFormulas.executive.fx / KPI catalog
+nfExecPipelineValue = nfExecPipelineWeighted;
 
 // --- KPI-02 MRR ---
 nfExecMRR =
@@ -132,17 +135,17 @@ nfExecApprovalsWaitingCount =
         );
 
 // --- KPI-17 Critical decisions ---
-nfExecCriticalDecisionsCount =
-    CountRows(
-        Filter(
-            HVCG_Decisions,
-            RequiresExecutiveAttention = true
-                && (
-                    DecisionStatus = "Proposed"
-                        || DecisionStatus = "Pending Decision"
-                )
-        )
+nfExecDecisionQueue =
+    Filter(
+        HVCG_Decisions,
+        RequiresExecutiveAttention = true
+            && (
+                DecisionStatus = "Proposed"
+                    || DecisionStatus = "Pending Decision"
+            )
     );
+
+nfExecCriticalDecisionsCount = CountRows(nfExecDecisionQueue);
 
 // --- KPI-18 Major risks ---
 nfExecMajorRisksCount =
@@ -178,3 +181,10 @@ nfExecCurrencyOrBlank =
 
 // --- Health color (reuse shared nfHealthColor when available) ---
 // nfExecHealthColor(h) = Switch(h, "Green", Color.DarkGreen, "Yellow", Color.DarkGoldenRod, "Red", Color.DarkRed, Color.Gray)
+
+// --- Added for gallery bindings ---
+nfShowExecFullHome =
+  Coalesce(
+    LookUp(HVCG_TeamMembers, Email = User().Email).PrimaryRole,
+    "OperationsAssistant"
+  ) in ["Owner", "Administrator"];

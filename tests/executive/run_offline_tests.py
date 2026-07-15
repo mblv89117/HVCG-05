@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Run Executive Command Center offline validation suite."""
+"""Offline runner for Executive Command Center module tests."""
 from __future__ import annotations
 
-import subprocess
+import importlib.util
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+HERE = Path(__file__).resolve().parent
 
 
 def main() -> int:
-    script = ROOT / "tests/executive/test_executive_command_center.py"
-    print(f"=== ECC offline runner ===\n{script}")
-    proc = subprocess.run([sys.executable, str(script)], cwd=str(ROOT))
-    return proc.returncode
+    spec = importlib.util.spec_from_file_location(
+        "test_executive_command_center", HERE / "test_executive_command_center.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    return int(mod.main())
 
 
 if __name__ == "__main__":
