@@ -1,29 +1,28 @@
-# Next Session
+# Next Session — Operations Hub
 
-**Generated:** 2026-07-15 (~11:05 PT)  
-**Mode:** Dev Maker OA **PARTIAL** — offline PASS; live import **BLOCKED on pac device-code auth**
+**Generated:** 2026-07-15 (~15:35 PT)  
+**Mode:** **IN PROGRESS** — exclusive Ops Hub package; shared indexes locked forever for Ops
 
 ## Current project status
 
-- **Product:** HVCG OS **v1.1.0**
-- **Branch:** `cursor/v1.1.0-intelligence-ai-ops`
-- **Schema:** Still clean from repair (`schema-validation-20260715-103353.json`, hasDrift=false / 1170)
-- **Tooling:** `pac` 2.9.3 + .NET 10 installed on this Mac (`~/.dotnet/tools`)
-- **Acceptance:** `docs/crm/ACCEPTANCE_REPORT.md` (PARTIAL); evidence `deployment/reports/crm/maker-oa-acceptance-latest.json`
+- **Module:** Operations Hub (`operations` agent)  
+- **Branch / worktree:** `cursor/operations-hub` @ `.worktrees/operations-hub`  
+- **Status:** IN PROGRESS  
+- **CONFLICT `51f47dc4`:** closed by Master ownership redesign  
+- **Docs:** `docs/operations/{ARCHITECTURE,HANDOFF,SHARED_FILE_RECOMMENDATIONS}.md`  
+- **Exclusive assets:** `HVCG_Ops*` (5 flows + definitions), `operations-hub-views.json`, Ops list schema deltas (8 lists)
 
-## Do next (resume after auth)
+## Do next
 
-1. Complete or refresh: `export PATH="$HOME/.dotnet:$HOME/.dotnet/tools:$PATH"` then  
-   `pac auth create --deviceCode --name HVCG-Dev-Maker`  
-   Open `https://login.microsoft.com/device`, enter code, finish MFA as Global/Maker admin.
-2. `pac org list` → select **HVCG Development** only (never Prod).
-3. Import/rebuild 4 CRM flows Off; bind SharePoint Dev; keep `hvcg_CrmEnableTeamsNotify=false`.
-4. Build/publish canvas screens per `docs/crm/POWER_APPS_BUILD_GUIDE.md`.
-5. Live smoke + fill acceptance → commit.
+1. Confirm bus: register + heartbeat `IN_PROGRESS`; unread requires-ack cleared.  
+2. Exclusive-only follow-ups only (docs, screen stubs, optional offline tests under ops-owned paths).  
+3. When Master schedules parent replay: Integration applies `SHARED_FILE_RECOMMENDATIONS.md` after CRM park — Ops does not touch indexes.  
+4. Maker import of `HVCG_Ops*` only after separate owner OA; leave flows **Off**.
 
 ## Do not
 
-- Production / OA-CRM-11 without separate approval
-- Enable Teams notify or company channels
-- Modify frozen SharePoint deployment engines
-- Commit `.worktrees/` or secrets
+- Edit locked shared files: `flows/_index.json`, `definitions/_index.json`, `lists/_index.json`, `command-center-views.json`  
+- Interrupt CRM Maker OA / smoke / auth  
+- Merge, deploy, touch Prod, or put secrets on the bus  
+- Re-add Executive / CRM exclusive trees onto this branch  
+- Commit `AGENT_BOOTSTRAP_PROMPT.md` / `AGENT_COMMS_ACTIVATE.md` bootstrap copies
