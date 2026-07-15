@@ -10,6 +10,26 @@ Environments: `development` | `test` | `production`
 
 Legacy equivalent for Dev only: `deployment/Deploy-HVCGDevelopment.ps1` (still supported).
 
+## Before first SharePoint provisioning (PnP Client ID)
+
+PnP.PowerShell 3.x requires an Entra app Client ID for interactive login:
+
+```powershell
+pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -UpdateConfig
+```
+
+Guide: [`docs/deployment/PNP_AUTHENTICATION.md`](docs/deployment/PNP_AUTHENTICATION.md).
+
+## Repair partially provisioned Dev schema (lists kept)
+
+If sites/lists exist but fields are missing (StrictMode field bug recovery):
+
+```powershell
+pwsh -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development
+```
+
+Adds missing columns only; does not delete sites, lists, or data. Safe to re-run.
+
 ## After install
 
 ```powershell

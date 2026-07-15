@@ -109,8 +109,9 @@ try {
   else {
     Install-HVCGModules -Report $Report
     $null = Connect-HVCGGraphInteractive -Report $Report
+    $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
     $siteUrl = $Config.sites.commandCenter.url
-    Connect-PnPOnline -Url $siteUrl -Interactive
+    Connect-HVCGPnPOnline -Url $siteUrl -Config $Config -Report $Report
 
     # Version marker
     $installed = Get-HVCGInstalledVersion -SiteUrl $siteUrl
@@ -175,7 +176,7 @@ try {
 
     # Document library inventory on Clients hub
     try {
-      Connect-PnPOnline -Url $Config.sites.clientsHub.url -Interactive
+      Connect-HVCGPnPOnline -Url $Config.sites.clientsHub.url -Config $Config -Report $Report
       $libs = Get-PnPList | Where-Object { $_.BaseTemplate -eq 101 -and $_.Title -like 'HVCG_*' }
       $inv = foreach ($lib in $libs) {
         [pscustomobject]@{ Title = $lib.Title; ItemCount = $lib.ItemCount; Url = $lib.RootFolder.ServerRelativeUrl }

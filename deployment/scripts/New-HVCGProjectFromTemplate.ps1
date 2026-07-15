@@ -17,11 +17,16 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
+Import-Module (Join-Path $RepoRoot 'deployment/lib/HVCG.Deployment.psm1') -Force
+$Report = New-HVCGDeploymentReport -Environment 'adhoc-project' -RepoRoot $RepoRoot
+$envCfg = Get-Content (Join-Path $RepoRoot 'config/environments/development.json') -Raw | ConvertFrom-Json
+$null = Initialize-HVCGPnPAuth -Config $envCfg -Report $Report
 $templatePath = Join-Path $TemplatesRoot "$TemplateKey.json"
 if (-not (Test-Path $templatePath)) { throw "Template not found: $templatePath" }
 $t = Get-Content $templatePath -Raw | ConvertFrom-Json
 
-Connect-PnPOnline -Url $SiteUrl -Interactive
+Connect-HVCGPnPOnline -Url $SiteUrl -Config $envCfg -Report $Report
 
 $title = if ($ProjectTitle) { $ProjectTitle } else { "$($t.title) - $ClientCode" }
 $idem = "proj|$ClientCode|$TemplateKey|$($StartDate.ToString('yyyyMMdd'))"

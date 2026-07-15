@@ -143,8 +143,73 @@ else {
 if ($py) {
   & $py.Source (Join-Path $RepoRoot 'tests/intelligence/test_intelligence_ai_backup.py')
   Add-Check 'intelligence_ai_backup' ($LASTEXITCODE -eq 0) 'test_intelligence_ai_backup.py'
+  & $py.Source (Join-Path $RepoRoot 'tests/unit/test_pnp_auth.py')
+  Add-Check 'pnp_auth_packaging' ($LASTEXITCODE -eq 0) 'test_pnp_auth.py'
+  & $py.Source (Join-Path $RepoRoot 'tests/unit/test_field_provisioning.py')
+  Add-Check 'field_provisioning_strictmode' ($LASTEXITCODE -eq 0) 'test_field_provisioning.py'
+}
+
+# 8b) PnP retry / backoff / propagation unit tests
+$retryTest = Join-Path $RepoRoot 'tests/unit/Test-HVCGPnPRetry.ps1'
+if (Test-Path $retryTest) {
+  try {
+    & pwsh -NoProfile -File $retryTest -RepoRoot $RepoRoot
+    Add-Check 'pnp_retry_layer' ($LASTEXITCODE -eq 0) 'Test-HVCGPnPRetry.ps1'
+  }
+  catch {
+    Add-Check 'pnp_retry_layer' $false $_.Exception.Message
+  }
 }
 else {
+  Add-Check 'pnp_retry_layer' $false 'Test-HVCGPnPRetry.ps1 missing'
+}
+
+# 8b2) Lookup FieldXml provisioning (PnP 3.x -Values fix)
+$lookupTest = Join-Path $RepoRoot 'tests/unit/Test-HVCGLookupFieldProvisioning.ps1'
+if (Test-Path $lookupTest) {
+  try {
+    & pwsh -NoProfile -File $lookupTest -RepoRoot $RepoRoot
+    Add-Check 'lookup_field_provisioning' ($LASTEXITCODE -eq 0) 'Test-HVCGLookupFieldProvisioning.ps1'
+  }
+  catch {
+    Add-Check 'lookup_field_provisioning' $false $_.Exception.Message
+  }
+}
+else {
+  Add-Check 'lookup_field_provisioning' $false 'Test-HVCGLookupFieldProvisioning.ps1 missing'
+}
+
+# 8c) Schema validation drift report unit tests
+$schemaValTest = Join-Path $RepoRoot 'tests/unit/Test-HVCGSchemaValidation.ps1'
+if (Test-Path $schemaValTest) {
+  try {
+    & pwsh -NoProfile -File $schemaValTest -RepoRoot $RepoRoot
+    Add-Check 'schema_validation_drift' ($LASTEXITCODE -eq 0) 'Test-HVCGSchemaValidation.ps1'
+  }
+  catch {
+    Add-Check 'schema_validation_drift' $false $_.Exception.Message
+  }
+}
+else {
+  Add-Check 'schema_validation_drift' $false 'Test-HVCGSchemaValidation.ps1 missing'
+}
+
+# 8d) Seed data StrictMode / -and parameter parse unit tests
+$seedTest = Join-Path $RepoRoot 'tests/unit/Test-HVCGSeedData.ps1'
+if (Test-Path $seedTest) {
+  try {
+    & pwsh -NoProfile -File $seedTest -RepoRoot $RepoRoot
+    Add-Check 'seed_data_strictmode' ($LASTEXITCODE -eq 0) 'Test-HVCGSeedData.ps1'
+  }
+  catch {
+    Add-Check 'seed_data_strictmode' $false $_.Exception.Message
+  }
+}
+else {
+  Add-Check 'seed_data_strictmode' $false 'Test-HVCGSeedData.ps1 missing'
+}
+
+if (-not $py) {
   Add-Check 'intelligence_ai_backup' $false 'python unavailable'
 }
 

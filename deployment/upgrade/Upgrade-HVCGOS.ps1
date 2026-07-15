@@ -63,9 +63,10 @@ try {
 
   Install-HVCGModules -Report $Report
   $null = Connect-HVCGGraphInteractive -Report $Report
+  $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
 
   $siteUrl = $Config.sites.commandCenter.url
-  Connect-PnPOnline -Url $siteUrl -Interactive -ErrorAction Stop
+  Connect-HVCGPnPOnline -Url $siteUrl -Config $Config -Report $Report
 
   Ensure-HVCGSystemInfoList -SiteUrl $siteUrl -RepoRoot $RepoRoot -Report $Report
   $installed = Get-HVCGInstalledVersion -SiteUrl $siteUrl

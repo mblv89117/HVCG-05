@@ -72,8 +72,9 @@ try {
   $Config = Get-HVCGOSConfig -RepoRoot $RepoRoot -Environment $Environment -ConfigPath $ConfigPath
   Install-HVCGModules -Report $Report
   $null = Connect-HVCGGraphInteractive -Report $Report
+  $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
   $siteUrl = $Config.sites.commandCenter.url
-  Connect-PnPOnline -Url $siteUrl -Interactive
+  Connect-HVCGPnPOnline -Url $siteUrl -Config $Config -Report $Report
 
   # Version validation
   $backupVer = $null

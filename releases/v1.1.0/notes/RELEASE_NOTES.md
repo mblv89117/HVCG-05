@@ -35,6 +35,15 @@ v1.1.0 adds the **Intelligence Layer**, **AI orchestration foundation**, **backu
 - `HVCG_OperationalAlerts`
 - `docs/reporting/SYSTEM_HEALTH_DASHBOARD.md`
 
+### Development SharePoint provisioning hardening (baseline)
+- **PnP authentication** — Interactive login requires Entra app Client ID (`authentication.pnpEntraAppClientId`); `deployment/scripts/Register-HVCGPnPEntraApp.ps1`; `docs/deployment/PNP_AUTHENTICATION.md`
+- **StrictMode-safe field provisioning** — `Get-HVCGColumnSchemaFacade` / `Add-HVCGFieldFromSchema` (no unsafe `$col.choices` truthiness)
+- **Lookup fields** — `Add-PnPFieldFromXml` + CAML (PnP.PowerShell 3.3 has no `Add-PnPField -Values` / `-LookupList`)
+- **Retry / backoff** — `Invoke-HVCGPnPWithRetry` for HTTP 429, Retry-After, 503, SharePoint throttling, and transient network errors; exponential backoff 2s→30s with jitter; post-create field visibility polling
+- **Schema repair** — idempotent `deployment/repair/Repair-HVCGOSSharePointSchema.ps1` (no site/list deletion)
+- **Drift validation** — compare every configured list/column; report missing / extra / mismatched; fail deploy & repair when drift exists
+- **Seed-data StrictMode fix** — `ConvertTo-HVCGSeedClientValues` (avoids PowerShell treating `-and` as a cmdlet parameter)
+
 ## Upgrade
 
 From an installed **1.0.0** tenant:
@@ -71,3 +80,7 @@ pwsh -File ./deployment/health/Test-HVCGOSHealth.ps1 -Environment development
 pwsh -File ./deployment/health/Invoke-HVCGOSOperationalHealth.ps1 -Environment development
 pwsh -File ./deployment/backup/Backup-HVCGOS.ps1 -Environment development
 ```
+
+### Development tenant baseline (2026-07-14)
+
+Command Center Dev repaired successfully (`exit 0`): **1,147** fields compliant, **zero** schema drift, lookups/views/seed succeeded. Git tag: `v1.1.0-dev-sharepoint-baseline`.

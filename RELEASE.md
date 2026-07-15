@@ -83,7 +83,27 @@ See `.github/workflows/hvcg-os-release.yml` and `deployment/pipelines/azure-pipe
 - `DISASTER_RECOVERY.md` — RPO/RTO, restore order
 - `MONITORING.md` — signal sources, alerting cadence
 - `docs/reporting/SYSTEM_HEALTH_DASHBOARD.md` — dashboard spec
-- `PROJECT_STATUS.md` — current package readiness
+- `docs/deployment/PNP_AUTHENTICATION.md` — PnP Entra Client ID / Interactive login
+- `PROJECT_STATUS.md` — current package + Dev SharePoint baseline readiness
+
+## Development SharePoint baseline (2026-07-14)
+
+Live **Development** Command Center repaired to zero drift (1,147 fields). Repository includes:
+
+| Area | Notes |
+|------|--------|
+| PnP auth | Entra Interactive + Client ID; `Register-HVCGPnPEntraApp.ps1` |
+| Field engine | StrictMode-safe facade; lookups via `Add-PnPFieldFromXml` |
+| Resilience | `Invoke-HVCGPnPWithRetry` (429 / Retry-After / 503 / transient) + field poll |
+| Repair | `deployment/repair/Repair-HVCGOSSharePointSchema.ps1` |
+| Drift gate | Missing / extra / mismatched fails deploy & repair; reports gitignored |
+| Seed | StrictMode-safe client value mapping (`ConvertTo-HVCGSeedClientValues`) |
+
+Tag: `v1.1.0-dev-sharepoint-baseline`
+
+```powershell
+pwsh -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development
+```
 
 ## Finalize checklist (repository)
 
@@ -93,4 +113,6 @@ See `.github/workflows/hvcg-os-release.yml` and `deployment/pipelines/azure-pipe
 - [x] Env example `productVersion` = 1.1.0
 - [x] Power Platform manifests = 1.1.0.0
 - [x] Pre-deployment tests PASS
-- [ ] Owner Dev tenant install / upgrade (requires interactive auth)
+- [x] Development SharePoint schema baseline (1,147 fields, zero drift)
+- [ ] Owner Test/Production promotion (gated; never use Dev script for prod)
+- [ ] Power Platform Maker packaging after UI validation

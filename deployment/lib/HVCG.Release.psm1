@@ -145,28 +145,27 @@ function Get-HVCGMigrationPlan {
 
 function Ensure-HVCGSystemInfoList {
   param([string]$SiteUrl, [string]$RepoRoot, $Report)
-  Connect-PnPOnline -Url $SiteUrl -Interactive -ErrorAction Stop
+  Connect-HVCGPnPOnline -Url $SiteUrl
   $schema = Get-Content (Join-Path $RepoRoot 'src/sharepoint/lists/HVCG_SystemInfo.json') -Raw | ConvertFrom-Json
-  if (-not (Get-PnPList -Identity 'HVCG_SystemInfo' -ErrorAction SilentlyContinue)) {
-    New-PnPList -Title 'HVCG_SystemInfo' -Template GenericList | Out-Null
+  $existing = Invoke-HVCGPnPWithRetry -OperationName 'Get-PnPList:HVCG_SystemInfo' -Report $Report -ScriptBlock {
+    Get-PnPList -Identity 'HVCG_SystemInfo' -ErrorAction SilentlyContinue
+  }
+  if (-not $existing) {
+    Invoke-HVCGPnPWithRetry -OperationName 'New-PnPList:HVCG_SystemInfo' -Report $Report -ScriptBlock {
+      New-PnPList -Title 'HVCG_SystemInfo' -Template GenericList -ErrorAction Stop | Out-Null
+    }
+    $null = Wait-HVCGPnPListVisible -ListTitle 'HVCG_SystemInfo' -Report $Report
     $Report.ResourcesCreated.Add('List:HVCG_SystemInfo')
   }
   foreach ($col in $schema.columns) {
-    if ($col.internalName -eq 'Title') { continue }
-    if (Get-PnPField -List 'HVCG_SystemInfo' -Identity $col.internalName -ErrorAction SilentlyContinue) { continue }
-    if ($col.choices) {
-      Add-PnPField -List 'HVCG_SystemInfo' -Type Choice -InternalName $col.internalName -DisplayName $col.displayName -Choices ([string[]]$col.choices) | Out-Null
-    }
-    else {
-      Add-PnPField -List 'HVCG_SystemInfo' -Type $col.type -InternalName $col.internalName -DisplayName $col.displayName | Out-Null
-    }
+    $null = Add-HVCGFieldFromSchema -ListTitle 'HVCG_SystemInfo' -Column $col -Report $Report
   }
 }
 
 function Get-HVCGInstalledVersion {
   param([string]$SiteUrl)
   try {
-    Connect-PnPOnline -Url $SiteUrl -Interactive -ErrorAction Stop
+    Connect-HVCGPnPOnline -Url $SiteUrl
     if (-not (Get-PnPList -Identity 'HVCG_SystemInfo' -ErrorAction SilentlyContinue)) {
       return '0.0.0'
     }
@@ -193,7 +192,7 @@ function Set-HVCGInstalledVersion {
   if (-not $RepoRoot) {
     $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
   }
-  Connect-PnPOnline -Url $SiteUrl -Interactive -ErrorAction Stop
+  Connect-HVCGPnPOnline -Url $SiteUrl
   Ensure-HVCGSystemInfoList -SiteUrl $SiteUrl -RepoRoot $RepoRoot -Report $Report
   $items = @(Get-PnPListItem -List 'HVCG_SystemInfo' -PageSize 5)
   $values = @{
@@ -207,11 +206,16 @@ function Set-HVCGInstalledVersion {
   }
   if ($Notes) { $values.Notes = $Notes }
   if ($items.Count -eq 0) {
-    Add-PnPListItem -List 'HVCG_SystemInfo' -Values $values | Out-Null
+    Invoke-HVCGPnPWithRetry -OperationName "Add-PnPListItem:HVCG_SystemInfo:$Version" -Report $Report -ScriptBlock {
+      Add-PnPListItem -List 'HVCG_SystemInfo' -Values $values -ErrorAction Stop | Out-Null
+    }
     $Report.ResourcesCreated.Add("SystemInfo:$Version")
   }
   else {
-    Set-PnPListItem -List 'HVCG_SystemInfo' -Identity $items[0].Id -Values $values | Out-Null
+    $itemId = $items[0].Id
+    Invoke-HVCGPnPWithRetry -OperationName "Set-PnPListItem:HVCG_SystemInfo:$Version" -Report $Report -ScriptBlock {
+      Set-PnPListItem -List 'HVCG_SystemInfo' -Identity $itemId -Values $values -ErrorAction Stop | Out-Null
+    }
     $Report.ResourcesUpdated.Add("SystemInfo:$Version")
   }
 }
@@ -244,13 +248,15 @@ function Invoke-HVCGMigration {
       'WriteAuditEvent' {
         try {
           if (Get-PnPList -Identity 'HVCG_AuditEvents' -ErrorAction SilentlyContinue) {
-            Add-PnPListItem -List 'HVCG_AuditEvents' -Values @{
-              Title       = "$($step.eventType) $($Migration.id)"
-              EventType   = $step.eventType
-              ActorEmail  = (Get-MgContext).Account
-              Details     = $step.details
-              EventDate   = Get-Date
-            } | Out-Null
+            Invoke-HVCGPnPWithRetry -OperationName 'Add-PnPListItem:HVCG_AuditEvents' -Report $Report -ScriptBlock {
+              Add-PnPListItem -List 'HVCG_AuditEvents' -Values @{
+                Title       = "$($step.eventType) $($Migration.id)"
+                EventType   = $step.eventType
+                ActorEmail  = (Get-MgContext).Account
+                Details     = $step.details
+                EventDate   = Get-Date
+              } -ErrorAction Stop | Out-Null
+            }
           }
         }
         catch {
@@ -286,38 +292,25 @@ function Invoke-HVCGListDiff {
   param([string]$DiffPath, [string]$SiteUrl, $Report)
   # Diff format: { addLists: [...schemas], addColumns: [{list, column}] }
   $diff = Get-Content $DiffPath -Raw | ConvertFrom-Json
-  Connect-PnPOnline -Url $SiteUrl -Interactive
+  Connect-HVCGPnPOnline -Url $SiteUrl
   foreach ($listDef in @($diff.addLists)) {
     if (-not (Get-PnPList -Identity $listDef.title -ErrorAction SilentlyContinue)) {
-      New-PnPList -Title $listDef.title -Template GenericList | Out-Null
+      Invoke-HVCGPnPWithRetry -OperationName "New-PnPList:$($listDef.title)" -Report $Report -ScriptBlock {
+        New-PnPList -Title $listDef.title -Template GenericList -ErrorAction Stop | Out-Null
+      }
+      $null = Wait-HVCGPnPListVisible -ListTitle $listDef.title -Report $Report
       $Report.ResourcesCreated.Add("List:$($listDef.title)")
     }
     foreach ($col in $listDef.columns) {
-      if ($col.internalName -eq 'Title' -or $col.type -eq 'Lookup') { continue }
-      if (Get-PnPField -List $listDef.title -Identity $col.internalName -ErrorAction SilentlyContinue) { continue }
-      if ($col.choices) {
-        Add-PnPField -List $listDef.title -Type Choice -InternalName $col.internalName -DisplayName $col.displayName -Choices ([string[]]$col.choices) | Out-Null
-      }
-      else {
-        Add-PnPField -List $listDef.title -Type $col.type -InternalName $col.internalName -DisplayName $col.displayName | Out-Null
-      }
-      $Report.ResourcesCreated.Add("Field:$($listDef.title).$($col.internalName)")
+      $c = Get-HVCGColumnSchemaFacade -Column $col
+      if ($c.InternalName -eq 'Title' -or $c.Type -eq 'Lookup') { continue }
+      $null = Add-HVCGFieldFromSchema -ListTitle $listDef.title -Column $col -Report $Report
     }
   }
   foreach ($add in @($diff.addColumns)) {
     $list = $add.list
     $col = $add.column
-    if (Get-PnPField -List $list -Identity $col.internalName -ErrorAction SilentlyContinue) {
-      $Report.ResourcesSkipped.Add("Field:$list.$($col.internalName)")
-      continue
-    }
-    if ($col.choices) {
-      Add-PnPField -List $list -Type Choice -InternalName $col.internalName -DisplayName $col.displayName -Choices ([string[]]$col.choices) | Out-Null
-    }
-    else {
-      Add-PnPField -List $list -Type $col.type -InternalName $col.internalName -DisplayName $col.displayName | Out-Null
-    }
-    $Report.ResourcesCreated.Add("Field:$list.$($col.internalName)")
+    $null = Add-HVCGFieldFromSchema -ListTitle $list -Column $col -Report $Report
   }
 }
 

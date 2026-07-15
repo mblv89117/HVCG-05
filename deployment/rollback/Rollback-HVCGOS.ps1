@@ -44,8 +44,9 @@ try {
 
   Install-HVCGModules -Report $Report
   $null = Connect-HVCGGraphInteractive -Report $Report
+  $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
   $siteUrl = $Config.sites.commandCenter.url
-  Connect-PnPOnline -Url $siteUrl -Interactive
+  Connect-HVCGPnPOnline -Url $siteUrl -Config $Config -Report $Report
 
   $current = Get-HVCGInstalledVersion -SiteUrl $siteUrl
   Write-HVCGLog -Level INFO -Message "Current=$current → rollback marker to $TargetVersion" -Report $Report

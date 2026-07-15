@@ -26,8 +26,9 @@ $Config = Get-HVCGOSConfig -RepoRoot $RepoRoot -Environment $Environment -Config
 $report = New-HVCGDeploymentReport -Environment "$Environment-postdeploy" -RepoRoot $RepoRoot
 Install-HVCGModules -Report $report
 $null = Connect-HVCGGraphInteractive -Report $report
+$null = Initialize-HVCGPnPAuth -Config $Config -Report $report
 $siteUrl = $Config.sites.commandCenter.url
-Connect-PnPOnline -Url $siteUrl -Interactive
+Connect-HVCGPnPOnline -Url $siteUrl -Config $Config -Report $report
 
 $ver = Get-HVCGInstalledVersion -SiteUrl $siteUrl
 $expected = (Get-Content (Join-Path $RepoRoot 'VERSION') -Raw).Trim()

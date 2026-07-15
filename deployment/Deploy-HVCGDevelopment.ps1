@@ -104,16 +104,21 @@ try {
   # --- 5. Entra groups ---
   Ensure-HVCGEntraGroups -Config $Config -Report $Report
 
+  # --- 5b. PnP Entra app Client ID (required for SharePoint interactive auth) ---
+  $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
+
   # --- 6. Sites (security-critical for Command Center) ---
   $owner = $Config.identities.siteOwnerUpn
   $adminUrl = $Config.tenant.sharePointAdminUrl
 
-  $ccUrl = Ensure-HVCGSite -SiteCfg $Config.sites.commandCenter -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -SecurityCritical
-  $knowUrl = Ensure-HVCGSite -SiteCfg $Config.sites.knowledgeCenter -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -SecurityCritical
-  $clientsUrl = Ensure-HVCGSite -SiteCfg $Config.sites.clientsHub -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -SecurityCritical
+  $ccUrl = Ensure-HVCGSite -SiteCfg $Config.sites.commandCenter -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -Config $Config -SecurityCritical
+  $knowUrl = Ensure-HVCGSite -SiteCfg $Config.sites.knowledgeCenter -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -Config $Config -SecurityCritical
+  $clientsUrl = Ensure-HVCGSite -SiteCfg $Config.sites.clientsHub -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -Config $Config -SecurityCritical
 
-  if ($Config.sites.secureDataRooms.enabled) {
-    Ensure-HVCGSite -SiteCfg $Config.sites.secureDataRooms -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report
+  $secureDataRooms = Get-HVCGPropertyValue -Object $Config.sites -Name 'secureDataRooms' -Default $null
+  $secureDataRoomsEnabled = [bool](Get-HVCGPropertyValue -Object $secureDataRooms -Name 'enabled' -Default $false)
+  if ($secureDataRoomsEnabled) {
+    Ensure-HVCGSite -SiteCfg $secureDataRooms -OwnerUpn $owner -AdminUrl $adminUrl -Report $Report -Config $Config
   }
   else {
     Write-HVCGLog -Level INFO -Message "Secure Data Rooms site skipped (V1 default enabled=false)." -Report $Report
@@ -138,6 +143,9 @@ try {
     Install-HVCGSeedData -SiteUrl $Config.sites.commandCenter.url -RepoRoot $RepoRoot -Report $Report
   }
 
+  # --- 10b. Final schema drift gate (missing / extra / mismatched) ---
+  Assert-HVCGSharePointSchemaCompliance -SiteUrl $Config.sites.commandCenter.url -RepoRoot $RepoRoot -Report $Report -Phase 'post-deploy'
+
   # --- 11. Sample client workspace folders ---
   if ($Config.deployment.createSampleClientWorkspace -and $clientsUrl) {
     Install-HVCGSampleClientWorkspace -ClientsUrl $Config.sites.clientsHub.url -ClientCode $Config.deployment.sampleClientCode -RepoRoot $RepoRoot -Report $Report
@@ -146,7 +154,7 @@ try {
   # --- 12. Site permissions for Dev role groups (best effort) ---
   Write-HVCGLog -Level STEP -Message "Applying Dev site group permissions (best effort)" -Report $Report
   try {
-    Connect-PnPOnline -Url $Config.sites.commandCenter.url -Interactive -ErrorAction Stop
+    Connect-HVCGPnPOnline -Url $Config.sites.commandCenter.url -Config $Config -Report $Report
     foreach ($gName in $Config.groups.roleGroups) {
       try {
         # Ensure SharePoint group mapping via Entra security group - grant Contribute on webs when resolvable

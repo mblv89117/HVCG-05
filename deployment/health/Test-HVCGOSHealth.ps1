@@ -43,8 +43,9 @@ try {
     $nullReport = New-HVCGDeploymentReport -Environment 'health' -RepoRoot $RepoRoot
     Install-HVCGModules -Report $nullReport
     $null = Connect-HVCGGraphInteractive -Report $nullReport
+    $null = Initialize-HVCGPnPAuth -Config $Config -Report $nullReport
     $siteUrl = $Config.sites.commandCenter.url
-    Connect-PnPOnline -Url $siteUrl -Interactive
+    Connect-HVCGPnPOnline -Url $siteUrl -Config $Config -Report $nullReport
 
     Add-Health 'site_reachable' $true $siteUrl
 

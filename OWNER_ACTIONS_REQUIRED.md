@@ -26,6 +26,13 @@ pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment development -Tar
 | **Can continue without?** | No — this *is* the deployment. |
 | **Automated behind the login** | Modules, Entra groups, Dev sites, lists/columns/lookups/indexes, views, Knowledge templates, seed data, sample client library folders 00–23, Dev sharing lockdown, deployment report. v1.1.0 adds Relationships, AI orchestration lists, and OperationalAlerts. |
 
+### 1b. Register PnP Entra app Client ID (required once before SharePoint steps)
+| | |
+|--|--|
+| **Action** | Run `pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -UpdateConfig`, confirm `authentication.pnpEntraAppClientId` in `development.json`. Or set env `ENTRAID_CLIENT_ID`. Details: `docs/deployment/PNP_AUTHENTICATION.md`. |
+| **Why** | PnP.PowerShell 3.x requires `-Interactive -ClientId` with **your** Entra app (shared PnP multi-tenant app was retired Sept 2024). |
+| **Can continue without?** | No — SharePoint site/list provisioning will stop until the Client ID is configured. |
+
 ### 2. Approve consent prompts (first run only)
 | | |
 |--|--|
@@ -59,7 +66,7 @@ pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment development -Tar
 | OA-003 | Manually create SharePoint sites | **Automated** |
 | OA-004 | Org-wide sharing policy | **Dev sites forced SharingCapability=Disabled** by script; org policy review only before Prod |
 | OA-005 | Service account | **Deferred to Production**; Dev uses deploying admin connections |
-| OA-006 | App registration + certificate | **Not required for Dev** (interactive PnP/Graph auth) |
+| OA-006 | PnP Entra app Client ID | **Required once for Dev SharePoint** — register with `Register-HVCGPnPEntraApp.ps1`, set `authentication.pnpEntraAppClientId` in `development.json` (interactive login, not app-only certificate) |
 | OA-007 | Power BI Pro purchase | **Optional**; Excel fallback remains |
 | OA-008 | Prod connector consent | **Prod only** (Dev covered by step 4 above) |
 | OA-010 | Full staff roster | **Dev auto-adds deploying user** to Owner/Admin/OpsMgr groups |

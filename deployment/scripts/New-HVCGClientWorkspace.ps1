@@ -13,10 +13,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
+Import-Module (Join-Path $RepoRoot 'deployment/lib/HVCG.Deployment.psm1') -Force
+$Report = New-HVCGDeploymentReport -Environment 'adhoc-client-ws' -RepoRoot $RepoRoot
+$envCfg = Get-Content (Join-Path $RepoRoot 'config/environments/development.json') -Raw | ConvertFrom-Json
+$null = Initialize-HVCGPnPAuth -Config $envCfg -Report $Report
 $config = Get-Content (Resolve-Path $ConfigPath) -Raw | ConvertFrom-Json
 $libraryTitle = "HVCG_$ClientCode"
 
-Connect-PnPOnline -Url $ClientsSiteUrl -Interactive
+Connect-HVCGPnPOnline -Url $ClientsSiteUrl -Config $envCfg -Report $Report
 
 $existing = Get-PnPList -Identity $libraryTitle -ErrorAction SilentlyContinue
 if (-not $existing) {

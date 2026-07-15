@@ -15,6 +15,10 @@ deployment/reports/*.json
 deployment/reports/HVCG-Dev-Deploy-*.md
 !deployment/reports/.gitkeep
 
+# Schema validation / repair outputs (tenant-specific — never commit)
+deployment/reports/schema/**
+!deployment/reports/schema/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db
@@ -67,3 +71,6 @@ backups/
 # Operational health reports (regenerated)
 deployment/reports/health/
 !deployment/reports/health/.gitkeep
+
+# Pre-deployment test result dumps (machine-local)
+deployment/reports/predeploy-tests-latest.json

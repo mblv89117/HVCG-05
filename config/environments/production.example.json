@@ -47,6 +47,11 @@
     "solutionUniqueName": "HVCGCommandCenter",
     "solutionDisplayName": "HVCG Command Center"
   },
+  "authentication": {
+    "pnpEntraAppClientId": "REQUIRED_SET_ME_ENTRA_APP_CLIENT_ID",
+    "pnpEntraAppDisplayName": "HVCG-PnP-PowerShell",
+    "notes": "PnP.PowerShell Interactive requires your Entra app Client ID (mandatory since Sept 2024). Run: pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1"
+  },
   "identities": {
     "executiveUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
     "operationsManagerUpn": "REQUIRED_SET_ME@REQUIRED_SET_ME",
