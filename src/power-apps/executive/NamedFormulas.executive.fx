@@ -1,7 +1,3 @@
-// --- Executive Command Center (exclusive mirror) ---
-// Canonical: src/power-apps/formulas/ExecutiveNamedFormulas.fx
-// Keep mirrored. Parent integrator appends canonical to NamedFormulas.fx (do not overwrite CRM).
-
 // Executive Command Center — Named Formulas (nfExec*)
 // App: HVCG OS Command Center · Screen: scrHomeExec
 // Audience: Owner. Guard finance with nfIsOwner when present in NamedFormulas.fx.

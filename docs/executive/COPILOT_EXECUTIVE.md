@@ -1,28 +1,85 @@
-# Copilot — Executive briefs
+# Copilot — Executive briefs and prompts
 
-**Grounding:** Allow-listed fields only. Never invent revenue or legal conclusions.
+**Module:** Executive Command Center  
+**Baseline:** `docs/architecture/COPILOT_READY.md`  
+**AI approval:** Executive briefs need Owner approval if client-external (`docs/ai/AI_APPROVAL_MATRIX.md`).
 
-## Allowed context fields
+## Goal
 
-- Client: Title, ClientCode, OverallHealth, RiskLevel, PaymentStatus, RequiresExecutiveAttention (not InternalNotes unless Owner session)  
-- Opportunity: Title, Stage, WeightedValue, ForecastCategory, ExpectedCloseDate  
-- Capital: Title, FundingStatus, WeightedValue, ExpectedCloseDate  
-- Decision: Title, EscalationReason, Recommendation, FinancialImpact, Deadline  
-- Risk: Title, RiskLevel, Mitigation, RiskStatus  
+Grounded CEO summaries (pipeline, cash, capital, decisions, risks) without inventing figures.
 
-## Prompt pattern (Maker / Copilot Studio later)
+## Grounding allow-list
+
+| List | Allowed fields |
+|------|----------------|
+| Clients | Title, ClientCode, ClientStage, OverallHealth, MonthlyRetainer, PaymentStatus, RiskLevel, RequiresExecutiveAttention, CopilotSummary, CopilotKeywords |
+| Opportunities | Title, Stage, WinLossStatus, ForecastCategory, WeightedValue, Probability, ExpectedCloseDate, CapitalHandoffStatus, CopilotSummary |
+| CapitalOpportunities | Title, ClientCode, CapitalType, FundingStatus, TargetAmount, WeightedValue, FundingProbability, CopilotKeywords |
+| Invoices | ClientCode, InvoiceStatus, InvoiceType, Amount, AmountCollected, DueDate |
+| FinancialMilestones | ClientCode, MilestoneType, Amount, IsPastDue, RevenueAtRisk, PaymentStatus |
+| Decisions | Title, ClientCode, DecisionStatus, EscalationReason, Deadline, Recommendation, FinancialImpact |
+| Risks | Title, ClientCode, RiskLevel, RiskStatus, Mitigation |
+| Projects | Title, ClientCode, ProjectHealth, ProjectStatus |
+| Meetings | Title, ClientCode, MeetingDate, MeetingType |
+| Relationships | StrategicValue, SourceDisplayName, TargetDisplayName, NextPlannedInteraction, RevenueInfluenced, CapitalInfluenced |
+
+## Banned
+
+Bank details, TINs, passwords, unpublished diligence, unrestricted guest links, raw email bodies with excess PII. No autonomous external send (`ExternalSendBlocked=true`).
+
+## Prompt library
+
+### P1 — Morning command brief
 
 ```
-Summarize the executive attention queue for today.
-Use only provided SharePoint rows.
-List: ClientCode, item, reason, recommended next action.
-Do not propose client-external emails.
-Flag any row missing EscalationReason.
+Summarize HVCG executive posture for today using only SharePoint fields I can access.
+Cover: Pipeline weighted + Commit forecast; MRR + Outstanding AR; Capital pipeline;
+open executive decisions with deadlines; High/Critical risks; meetings in next 14 days.
+If a figure is missing, say "not in source". Under 250 words. Bullets only.
 ```
 
-## Blocked
+### P2 — Decision packet
 
-- Autonomous send to clients or company-wide Teams  
-- Mixing cross-client Restricted data into one brief when `IsCrossClient` risks apply (Owner-only review)  
+```
+For decision "<Title>" / ClientCode <code>, list Background, Options, Recommendation,
+FinancialImpact, Deadline, EscalationReason from HVCG_Decisions. Do not add options not in the record.
+```
 
-See also: `docs/ai/AI_CONTEXT_POLICY.md`, intelligence Q14–Q15.
+### P3 — Cash & AR
+
+```
+List invoices Status in Sent, Partial, Past Due. Show ClientCode, Outstanding (Amount-AmountCollected),
+DueDate, InvoiceType. Highlight Past Due retainers first.
+```
+
+### P4 — Capital momentum
+
+```
+For FundingStatus not Closed/Declined, summarize by status with TargetAmount or WeightedValue
+and ExpectedCloseDate. Flag RequiresExecutiveAttention.
+```
+
+### P5 — Relationship priorities (Intelligence Q15)
+
+```
+Which relationships should the Owner prioritize this week? Use StrategicValue High/Critical
+and NextPlannedInteraction within 7 days. Ranked list with one-line why. Owner audience only.
+```
+
+### P6 — Internal weekly draft
+
+```
+Draft an internal weekly CEO status from Command KPIs. Mark every number with its list source.
+Insert [NEEDS OWNER REVIEW] at top. Do not send externally.
+```
+
+## Output template
+
+```
+# Executive brief — {date}
+## North stars
+## Decisions due
+## Risks
+## Meetings (14d)
+## Data gaps
+```
