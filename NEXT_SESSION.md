@@ -1,6 +1,6 @@
 # Next Session
 
-**Generated:** 2026-07-15 (~10:07 PT)  
+**Generated:** 2026-07-15 (~10:11 PT)  
 **Mode:** Opportunity CRM **live Dev apply in flight** — repo integration complete; do not start a second Repair
 
 ## Current project status
@@ -13,10 +13,11 @@
 
 ## Live Dev SharePoint (as of handoff)
 
-- An owner/agent Repair is **already running** (`pwsh` Repair-HVCGOSSharePointSchema development; Cursor terminal `573342`). **Do not kill, interrupt, or start another Repair.**
-- Progress observed: CRM fields/lists/lookups applied; post-list and pre-view validations reported **HasDrift=False / 1170 fields**; CRM views created; then entered **pre-seed** schema validation (slow — may look stalled).
-- Earlier repair attempts had stalled around post-list validation; this run advanced past that. After the current process exits, **attest** schema (`hasDrift=false` / repair exit 0). If it dies without exit footer, owner may re-run Repair once — not now while pid alive.
+- **ACTIVE** health check 10:11 PT: `pwsh` pid **12090** (parent shell 12084), Cursor terminal **573342**. Do not kill, interrupt, or start another Repair.
+- Last STEP (10:05:56): **Seeding Development sample data** → **Validating SharePoint schema vs repo (pre-seed)** + Connect-PnPOnline to HVCG-CommandCenter-Dev. Silent gaps of ~13 min between SUCCESS lines are normal for full schema validation (post-list 09:38→09:51; pre-views 09:51→10:05 both OK, HasDrift=False / 1170 fields).
+- Prior progress this run: CRM fields/lists/lookups; views created (Open/Qualified Leads, Commit Forecast, Capital Handoffs Ready, Recent Activities).
 - Log: `deployment/reports/checkpoints/repair-opportunity-crm-live.log`
+- After process exits: attest exit 0 + `hasDrift=false`. If dead without `REPAIR_EXIT` footer, one clean re-run only when pid confirmed gone.
 
 ## Maker / OA — NOT done
 

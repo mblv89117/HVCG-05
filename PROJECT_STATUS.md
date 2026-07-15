@@ -1,22 +1,22 @@
 # PROJECT STATUS
 
-**Last updated:** 2026-07-15 (~10:07 PT)  
+**Last updated:** 2026-07-15 (~10:11 PT)  
 **Product:** HVCG OS  
 **Version:** **1.1.0** (`VERSION` / `version.json`)  
 **Branch:** `cursor/v1.1.0-intelligence-ai-ops` @ `8635397` (tracks origin; CRM integration tip)  
 **Tag:** `v1.1.0-dev-sharepoint-baseline` (pre-CRM freeze)  
-**Overall status:** **Opportunity CRM repo-integration complete** — six workstreams merged; predeploy PASS; live Dev Repair **in progress** (leave alone); Maker import/publish **not done**
+**Overall status:** **Opportunity CRM repo-integration complete** — six workstreams merged; predeploy PASS; live Dev Repair **ACTIVE** pid 12090 / terminal 573342 (pre-seed validation); Maker import/publish **not done**
 
 ## Verdict
 
-HVCG OS **v1.1.0** Opportunity CRM package is merged on `cursor/v1.1.0-intelligence-ai-ops` (`8635397`). Offline suite **PASS**. Live Dev schema apply was started (Repair terminal `573342` / `pwsh` still running at handoff) — CRM lists/fields/lookups and views advanced; process was in **pre-seed validation**. Do **not** start another Repair until that run completes or the owner confirms it is dead.
+HVCG OS **v1.1.0** Opportunity CRM package is merged on `cursor/v1.1.0-intelligence-ai-ops` (`8635397`). Offline suite **PASS**. Health check 10:11 PT: Repair **ACTIVE** (`pwsh` pid 12090, terminal `573342`). CRM lists/fields/lookups/views done; last STEP pre-seed schema validation (slow ~13 min cycles; leave alone). Do **not** start another Repair until exit or confirmed dead.
 
 | Checkpoint | Result |
 |------------|--------|
 | Integration tip | **`8635397`** |
 | Offline predeploy | **PASS** (2026-07-15) |
 | Consolidated acceptance | `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` |
-| Live Dev CRM Repair | **IN PROGRESS** — leave alone; attest `hasDrift=false` after exit |
+| Live Dev CRM Repair | **ACTIVE** — pid 12090 / term 573342; pre-seed validation; attest after exit |
 | Flow import / activation | **Pending owner** (Maker) |
 | Canvas publish / Teams | **Pending owner** (Maker) |
 
@@ -30,7 +30,7 @@ v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
 |------|--------|
 | Module design + migration pack | **Repo-ready** |
 | Parallel agent finish (flows, apps, Teams, tests, docs) | **COMPLETE** — merged at `8635397`; see `docs/crm/PARALLEL_AGENT_MAP.md` |
-| Live Dev schema apply | **IN PROGRESS / attest after exit** — do not re-run while Repair alive |
+| Live Dev schema apply | **ACTIVE** (pre-seed) / attest after exit — do not re-run while pid alive |
 | Flow import / activation | **Pending owner** (after schema attest) |
 | Canvas publish | **Pending owner** (after lists exist) |
 | Acceptance | Offline: `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`; live: `docs/crm/ACCEPTANCE_REPORT.md` |
