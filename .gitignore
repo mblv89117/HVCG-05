@@ -12,6 +12,7 @@ config/environments/production.json
 config/environments/test.json
 config/environments/*.local.json
 deployment/reports/*.json
+deployment/reports/HVCG-Dev-Deploy-*.md
 !deployment/reports/.gitkeep
 
 # OS

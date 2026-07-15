@@ -2,7 +2,7 @@
   "$schemaComment": "Copy to test.json and replace REQUIRED values. Never commit secrets. Pipeline stage between Dev and Prod.",
   "environment": "test",
   "configSchemaVersion": "1.0.0",
-  "productVersion": "1.0.0",
+  "productVersion": "1.1.0",
   "label": "HVCG OS Test",
   "region": "NAM",
   "timeZone": "America/Los_Angeles",

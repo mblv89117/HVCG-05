@@ -1,6 +1,6 @@
 {
   "solutionUniqueName": "HVCGCommandCenterDev",
-  "version": "1.0.0.0",
+  "version": "1.1.0.0",
   "managed": false,
   "components": {
     "environmentVariables": [
@@ -9,7 +9,8 @@
       "hvcg_KnowledgeSiteUrl",
       "hvcg_ExecutiveEmail",
       "hvcg_OpsEmail",
-      "hvcg_EnableClientEmails"
+      "hvcg_EnableClientEmails",
+      "hvcg_ProductVersion"
     ],
     "connectionReferences": [
       "hvcg_sharedsharepointonline",

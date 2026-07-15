@@ -83,3 +83,14 @@ See `.github/workflows/hvcg-os-release.yml` and `deployment/pipelines/azure-pipe
 - `DISASTER_RECOVERY.md` — RPO/RTO, restore order
 - `MONITORING.md` — signal sources, alerting cadence
 - `docs/reporting/SYSTEM_HEALTH_DASHBOARD.md` — dashboard spec
+- `PROJECT_STATUS.md` — current package readiness
+
+## Finalize checklist (repository)
+
+- [x] `VERSION` / `version.json` / `releases/v1.1.0/` aligned
+- [x] Migration 1.0.0 → 1.1.0 active; PLACEHOLDER superseded
+- [x] v1.0.0 release artifacts immutable
+- [x] Env example `productVersion` = 1.1.0
+- [x] Power Platform manifests = 1.1.0.0
+- [x] Pre-deployment tests PASS
+- [ ] Owner Dev tenant install / upgrade (requires interactive auth)

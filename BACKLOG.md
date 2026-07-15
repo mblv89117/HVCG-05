@@ -27,3 +27,4 @@
 - [x] Backup / restore / DR scripts and documentation
 - [x] Operational monitoring — `Invoke-HVCGOSOperationalHealth.ps1`, `HVCG_OperationalAlerts`, System Health Dashboard spec
 - [x] v1.1.0 release packaging (`releases/v1.1.0/`, migration pack `20260714_002`)
+- [x] Repository finalize — env productVersion, PP manifests, clean ignore rules, status docs

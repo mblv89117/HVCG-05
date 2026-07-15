@@ -1,61 +1,13 @@
-# ARCHITECTURE — HVCG OS (Version 1.5 / Pre-Deploy)
+# ARCHITECTURE — HVCG OS
 
-## Product identity
+**Canonical document:** [`ARCHITECTURE.md`](../../ARCHITECTURE.md) at the repository root (Version **1.1.0**).
 
-**HVCG OS** is the operating system for High Value Capital Group LLC — not only project management. It covers CRM, capital advisory, delivery, finance operations, knowledge, executive command, and AI-ready queues on Microsoft 365.
+This path is retained for docs navigation compatibility. Do not diverge content here — update the root file.
 
-Naming prefix remains `HVCG_`. App name: **HVCG OS Command Center**.
+## v1.1.0 highlights (see root for full detail)
 
-## Capability map
-
-```
-                    ┌─────────────────────────┐
-                    │   Executive Command     │
-                    │   Center (CEO view)     │
-                    └────────────┬────────────┘
-         ┌──────────────┬────────┴────────┬──────────────┐
-         ▼              ▼                 ▼              ▼
-     CRM / Sales   Capital Advisory   Delivery OS    Finance Ops
-         │              │                 │              │
-         └──────────────┴────────┬────────┴──────────────┘
-                                 ▼
-                    SharePoint Lists (SOR) + Libraries
-                                 │
-              ┌──────────────────┼──────────────────┐
-              ▼                  ▼                  ▼
-        Operations Hub      AI Work Queues     Portal Prep (V2)
-        Knowledge/SOPs      (human-approved)   (entities ready)
-```
-
-## Domains & systems of record
-
-| Domain | Primary lists | Notes |
-|--------|---------------|-------|
-| CRM | Leads, ReferralPartners, Referrals, DiscoveryCalls, Opportunities, Proposals, WinLossAnalyses, Clients, Contacts | Pipeline & CLV on Client/Opportunity |
-| Capital | CapitalOpportunities, CapitalSources, Lenders, Investors, FundingMilestones, Lender/Investor Outreach | Document requests can bind to capital deals |
-| Delivery | Engagements, Projects, Tasks, Deliverables, Meetings, Registers | Existing V1 core retained |
-| Finance Ops | Invoices, FinancialMilestones, CollectionsActivities, Budgets, ExpenseApprovals, RevenueForecastLines | Not a GL; links to accounting IDs |
-| Operations Hub | SOPs, Templates, Policies, Vendors, SoftwareInventory, Subscriptions, RecurringExpenses, InternalProjects, MeetingPlaybooks, SalesScripts, TrainingCatalog | Knowledge Center files |
-| AI Ready | 10 dedicated AI_* queues | HumanApprovalRequired default true |
-| Portal V2 prep | PortalAccess, PortalMessages, PortalDeliverableLinks + PortalVisible flags | No Power Pages in V1 |
-| Platform | AutomationLogs, Notifications, AuditEvents, TeamMembers, TimeEntries | Operability |
-
-## Count
-
-**67** SharePoint lists (extended from 27). Provisioning remains idempotent via `Deploy-HVCGDevelopment.ps1`.
-
-## Unchanged technology decisions
-
-- SharePoint Lists SOR (not Dataverse) for V1.5  
-- Standard Power Automate connectors  
-- Canvas Power Apps  
-- Dev external sharing disabled  
-- Premium products deferred (see LICENSING / SCALABILITY)
-
-## Copilot readiness
-
-Managed metadata-style fields: `CopilotKeywords`, `CopilotSummary` on key entities; content types and Knowledge library tagging documented in `docs/architecture/COPILOT_READY.md`.
-
-## Reporting
-
-Enterprise semantic model: `docs/architecture/POWERBI_ENTERPRISE_MODEL.md`.
+- SharePoint Lists remain the Version 1 system of record
+- `HVCG_Relationships` intelligence layer + query catalog
+- AI orchestration foundation (human-gated; no external auto-send)
+- Backup / restore / disaster recovery + operational health monitoring
+- Additive upgrade path from 1.0.0; customer data preserved
