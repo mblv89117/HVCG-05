@@ -151,7 +151,29 @@ if ($py) {
   Add-Check 'opportunity_crm_module' ($LASTEXITCODE -eq 0) 'test_opportunity_crm.py'
   & $py.Source (Join-Path $RepoRoot 'tests/unit/test_opportunity_migration.py')
   Add-Check 'opportunity_crm_migration' ($LASTEXITCODE -eq 0) 'test_opportunity_migration.py'
+  & $py.Source (Join-Path $RepoRoot 'tests/unit/test_opportunity_lifecycle.py')
+  Add-Check 'opportunity_crm_lifecycle' ($LASTEXITCODE -eq 0) 'test_opportunity_lifecycle.py'
+  & $py.Source (Join-Path $RepoRoot 'tests/crm/smoke_helpers.py')
+  Add-Check 'opportunity_crm_smoke_helpers' ($LASTEXITCODE -eq 0) 'tests/crm/smoke_helpers.py'
 }
+
+# 8a) Opportunity CRM offline acceptance (Agent 5)
+$crmAccept = Join-Path $RepoRoot 'scripts/Test-HVCGOpportunityCrmAcceptance.ps1'
+if (Test-Path $crmAccept) {
+  try {
+    & pwsh -NoProfile -File $crmAccept -RepoRoot $RepoRoot -Offline
+    Add-Check 'opportunity_crm_acceptance_offline' ($LASTEXITCODE -eq 0) 'Test-HVCGOpportunityCrmAcceptance.ps1 -Offline'
+  }
+  catch {
+    Add-Check 'opportunity_crm_acceptance_offline' $false $_.Exception.Message
+  }
+}
+else {
+  Add-Check 'opportunity_crm_acceptance_offline' $false 'Test-HVCGOpportunityCrmAcceptance.ps1 missing'
+}
+
+$crmSmokeDoc = Join-Path $RepoRoot 'docs/crm/SMOKE_TEST_CHECKLIST.md'
+Add-Check 'opportunity_crm_smoke_checklist' (Test-Path $crmSmokeDoc) $crmSmokeDoc
 
 # 8b) PnP retry / backoff / propagation unit tests
 $retryTest = Join-Path $RepoRoot 'tests/unit/Test-HVCGPnPRetry.ps1'
