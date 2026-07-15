@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIOutputs",
-  "description": "AI \u2014 Job outputs pending/published after approval",
+  "description": "AI — Job outputs pending/published after approval",
   "template": "genericList",
   "columns": [
     {
@@ -101,6 +101,64 @@
         "Restricted"
       ],
       "default": "Confidential"
+    },
+    {
+      "internalName": "ConfidenceThreshold",
+      "displayName": "ConfidenceThreshold",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExternalSendBlocked",
+      "displayName": "ExternalSendBlocked",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "PublishedOnlyAfterApproval",
+      "displayName": "PublishedOnlyAfterApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "CopilotSummary",
+      "displayName": "CopilotSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SupersededByOutputId",
+      "displayName": "SupersededByOutputId",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RetentionPurgeEligibleOn",
+      "displayName": "RetentionPurgeEligibleOn",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
     }
   ]
 }

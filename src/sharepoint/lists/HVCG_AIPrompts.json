@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIPrompts",
-  "description": "AI \u2014 Versioned prompts",
+  "description": "AI — Versioned prompts",
   "template": "genericList",
   "columns": [
     {
@@ -96,6 +96,87 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "ConfidenceThreshold",
+      "displayName": "ConfidenceThreshold",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Default min confidence for this prompt",
+      "default": 70
+    },
+    {
+      "internalName": "MinHumanReview",
+      "displayName": "MinHumanReview",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "ExternalSendAllowed",
+      "displayName": "ExternalSendAllowed",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Must remain false — catalog default",
+      "default": false
+    },
+    {
+      "internalName": "AllowedTools",
+      "displayName": "AllowedTools",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON allow-list of ToolKeys"
+    },
+    {
+      "internalName": "ProhibitedTools",
+      "displayName": "ProhibitedTools",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Always includes SendEmail/SendTeams/CreateExternalShare"
+    },
+    {
+      "internalName": "SystemPreamble",
+      "displayName": "SystemPreamble",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Untrusted-content and no-autonomous-send instructions"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalTypeDefault",
+      "displayName": "ApprovalTypeDefault",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "ClientEmail",
+        "Proposal",
+        "FinancialAnalysis",
+        "CapitalRecommendation",
+        "LenderRecommendation",
+        "InvestorRecommendation",
+        "LegalCompliance",
+        "Pricing",
+        "ScopeChange",
+        "ClientDeliverable",
+        "InternalOnly",
+        "Other"
+      ]
     }
   ]
 }

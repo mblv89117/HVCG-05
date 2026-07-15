@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIWorkers",
-  "description": "AI \u2014 Registered AI workers/agents (non-autonomous)",
+  "description": "AI — Registered AI workers/agents (non-autonomous)",
   "template": "genericList",
   "columns": [
     {
@@ -105,6 +105,58 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "ExternalSendBlocked",
+      "displayName": "ExternalSendBlocked",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "MaxRetries",
+      "displayName": "MaxRetries",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 2
+    },
+    {
+      "internalName": "DefaultConfidenceThreshold",
+      "displayName": "DefaultConfidenceThreshold",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 70
+    },
+    {
+      "internalName": "WeeklyCostBudget",
+      "displayName": "WeeklyCostBudget",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Enabled",
+      "displayName": "Enabled",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Admin kill switch",
+      "default": true
+    },
+    {
+      "internalName": "ProhibitedActions",
+      "displayName": "ProhibitedActions",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "SendEmail,SendTeams,CreateExternalShare,FinancialTransaction"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIJobSteps",
-  "description": "AI \u2014 Steps within an AI job",
+  "description": "AI — Steps within an AI job",
   "template": "genericList",
   "columns": [
     {
@@ -108,6 +108,33 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "RetryCount",
+      "displayName": "RetryCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "IsRetryable",
+      "displayName": "IsRetryable",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "ExternalSideEffect",
+      "displayName": "ExternalSideEffect",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "If true, step must not auto-retry and requires approval",
+      "default": false
     }
   ]
 }

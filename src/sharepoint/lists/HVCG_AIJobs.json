@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIJobs",
-  "description": "AI \u2014 Orchestrated AI jobs (human-gated)",
+  "description": "AI — Orchestrated AI jobs (human-gated)",
   "template": "genericList",
   "columns": [
     {
@@ -326,6 +326,117 @@
       "type": "Text",
       "required": false,
       "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ConfidenceThreshold",
+      "displayName": "ConfidenceThreshold",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Below threshold → escalate / force human review"
+    },
+    {
+      "internalName": "MaxRetries",
+      "displayName": "MaxRetries",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Safe retry limit for transient failures only",
+      "default": 2
+    },
+    {
+      "internalName": "LastRetryAt",
+      "displayName": "LastRetryAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RetryBackoffSeconds",
+      "displayName": "RetryBackoffSeconds",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 60
+    },
+    {
+      "internalName": "EscalationReason",
+      "displayName": "EscalationReason",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "None",
+        "LowConfidence",
+        "ReviewTimeout",
+        "PolicyViolation",
+        "CostBreach",
+        "ToolFailure",
+        "HumanRequested",
+        "Other"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "ReviewDeadline",
+      "displayName": "ReviewDeadline",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EscalationId",
+      "displayName": "EscalationId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Link to HVCG_AI_Escalations item key"
+    },
+    {
+      "internalName": "AutoApproveAllowed",
+      "displayName": "AutoApproveAllowed",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Must remain false in v1.x",
+      "default": false
+    },
+    {
+      "internalName": "ExternalActionType",
+      "displayName": "ExternalActionType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Declared intended external action — never auto-executed",
+      "choices": [
+        "None",
+        "Email",
+        "TeamsMessage",
+        "ExternalShare",
+        "FinancialTransaction",
+        "Other"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "CopilotSummary",
+      "displayName": "CopilotSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
       "description": ""
     }
   ]

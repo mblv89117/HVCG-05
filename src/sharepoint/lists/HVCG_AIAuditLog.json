@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIAuditLog",
-  "description": "AI \u2014 Immutable-style AI audit events",
+  "description": "AI — Immutable-style AI audit events",
   "template": "genericList",
   "columns": [
     {
@@ -53,7 +53,19 @@
         "Rejected",
         "Failed",
         "Retried",
-        "Escalated"
+        "Escalated",
+        "Queued",
+        "RetryScheduled",
+        "RetryExecuted",
+        "ConfidenceEvaluated",
+        "ThresholdBreached",
+        "ExternalSendBlocked",
+        "ExternalSendApproved",
+        "ExternalSendRejected",
+        "WorkerPaused",
+        "ContextRedacted",
+        "Completed",
+        "Cancelled"
       ]
     },
     {
@@ -85,6 +97,70 @@
         "Confidential",
         "Restricted"
       ]
+    },
+    {
+      "internalName": "CorrelationId",
+      "displayName": "CorrelationId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Cross-system correlation"
+    },
+    {
+      "internalName": "WorkerKey",
+      "displayName": "WorkerKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PromptKey",
+      "displayName": "PromptKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PromptVersion",
+      "displayName": "PromptVersion",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Confidence",
+      "displayName": "Confidence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PreviousStatus",
+      "displayName": "PreviousStatus",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NewStatus",
+      "displayName": "NewStatus",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ImmutabilityHash",
+      "displayName": "ImmutabilityHash",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Optional hash of event payload for tamper evidence"
     }
   ]
 }

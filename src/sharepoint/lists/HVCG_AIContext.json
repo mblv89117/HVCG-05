@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIContext",
-  "description": "AI \u2014 Context packages for jobs (minimized)",
+  "description": "AI — Context packages for jobs (minimized)",
   "template": "genericList",
   "columns": [
     {
@@ -116,6 +116,39 @@
       "type": "Text",
       "required": false,
       "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PromptVersion",
+      "displayName": "PromptVersion",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "WorkerKey",
+      "displayName": "WorkerKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CrossClientAllowed",
+      "displayName": "CrossClientAllowed",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
       "description": ""
     }
   ]

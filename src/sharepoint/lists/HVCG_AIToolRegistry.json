@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AIToolRegistry",
-  "description": "AI \u2014 Tool permissions registry",
+  "description": "AI — Tool permissions registry",
   "template": "genericList",
   "columns": [
     {
@@ -92,6 +92,29 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "IsExternalSend",
+      "displayName": "IsExternalSend",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "If true, tool is blocked unless human ExternalActionAuthorized",
+      "default": false
+    },
+    {
+      "internalName": "AutonomyLevel",
+      "displayName": "AutonomyLevel",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Never",
+        "AfterApproval",
+        "InternalOnly"
+      ],
+      "default": "Never"
     }
   ]
 }

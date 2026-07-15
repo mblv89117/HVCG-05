@@ -1,6 +1,6 @@
 {
   "title": "HVCG_AI_MeetingSummaries",
-  "description": "AI \u2014 AI meeting summaries",
+  "description": "AI — AI meeting summaries",
   "template": "genericList",
   "domain": "AI",
   "columns": [
@@ -110,7 +110,7 @@
       "type": "Text",
       "required": false,
       "indexed": false,
-      "description": "Future agent id \u2014 never auto-send external"
+      "description": "Future agent id — never auto-send external"
     },
     {
       "internalName": "InputSummary",
@@ -177,6 +177,100 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "JobIdText",
+      "displayName": "JobIdText",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Links to HVCG_AIJobs.JobId"
+    },
+    {
+      "internalName": "Confidence",
+      "displayName": "Confidence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Model confidence 0-100"
+    },
+    {
+      "internalName": "ConfidenceThreshold",
+      "displayName": "ConfidenceThreshold",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Minimum confidence to proceed without escalation; default from policy"
+    },
+    {
+      "internalName": "ExternalSendBlocked",
+      "displayName": "ExternalSendBlocked",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Always true for v1.x — no autonomous external sends",
+      "default": true
+    },
+    {
+      "internalName": "RetryCount",
+      "displayName": "RetryCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "MaxRetries",
+      "displayName": "MaxRetries",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Safe retry cap; never retries external sends",
+      "default": 2
+    },
+    {
+      "internalName": "LastRetryAt",
+      "displayName": "LastRetryAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EscalationReason",
+      "displayName": "EscalationReason",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "None",
+        "LowConfidence",
+        "ReviewTimeout",
+        "PolicyViolation",
+        "CostBreach",
+        "ToolFailure",
+        "HumanRequested",
+        "Other"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "CopilotSummary",
+      "displayName": "CopilotSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Curated retrieval summary — no secrets"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Comma-separated retrieval terms"
     }
   ]
 }
