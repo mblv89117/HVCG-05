@@ -123,8 +123,8 @@ Parent then merges into `agent/crm-integration`, runs the full test suite, and p
 
 - [x] All six agent commits present and review-passed
 - [x] Soft conflicts resolved (`Invoke-HVCGPreDeploymentTests.ps1` keep-all checks; this map kept as Parent authority)
-- [ ] `Invoke-HVCGPreDeploymentTests.ps1` + CRM unit tests green
-- [ ] Consolidated acceptance: `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`
+- [x] `Invoke-HVCGPreDeploymentTests.ps1` + CRM unit tests green
+- [x] Consolidated acceptance: `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`
 - [ ] Explicit owner approval recorded before repair / import / publish
 
 ## Change log
@@ -132,4 +132,4 @@ Parent then merges into `agent/crm-integration`, runs the full test suite, and p
 | Date | Change |
 |------|--------|
 | 2026-07-15 | Parent authoritative map (`c31b25d`); docs-owner alternate map deferred on merge |
-| 2026-07-15 | All six workers passed; integration merge in progress |
+| 2026-07-15 | All six workers passed; integration merge + full suite PASS; consolidated acceptance written |

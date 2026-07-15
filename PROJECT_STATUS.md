@@ -3,9 +3,9 @@
 **Last updated:** 2026-07-15  
 **Product:** HVCG OS  
 **Version:** **1.1.0** (`VERSION` / `version.json`)  
-**Branch (docs workstream):** `agent/crm-docs-owner` (base `4a8f25d` / `cursor/v1.1.0-intelligence-ai-ops`)  
+**Branch (integration):** `agent/crm-integration` (merged into `cursor/v1.1.0-intelligence-ai-ops` when tests green)  
 **Tag:** `v1.1.0-dev-sharepoint-baseline`  
-**Overall status:** **Opportunity CRM apply-in-progress** — Dev infrastructure frozen; CRM module **repo-ready**; live Dev tenant CRM schema **pending owner repair**
+**Overall status:** **Opportunity CRM repo-integration complete** — Dev infrastructure frozen; all six parallel workstreams merged; live Dev tenant CRM schema **pending owner repair**
 
 ## Verdict
 
@@ -17,9 +17,9 @@ HVCG OS **v1.1.0** Development SharePoint infrastructure remains complete and fr
 | Schema drift (baseline) | **Zero** |
 | Repair exit code (baseline) | **0** |
 | Opportunity CRM list/column package | **In repo** — not yet repaired onto live Dev |
-| CRM flows / canvas / Teams-Copilot specs | **Packaging via parallel agents** — Maker import/publish **owner-gated** |
+| CRM flows / canvas / Teams-Copilot specs | **Integrated on `agent/crm-integration`** — Maker import/publish **owner-gated** |
 
-Pre-deployment critical tests: **PASS** on last baseline. No infrastructure engine changes required for CRM (additive repair only).
+Pre-deployment suite (integration): **PASS** (2026-07-15). No infrastructure engine changes required for CRM (additive repair only). Agents did **not** deploy/import/publish.
 
 v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
 
@@ -27,12 +27,12 @@ v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
 
 | Area | Status |
 |------|--------|
-| Module design + migration pack | **Repo-ready** (`fd5a9b9`) |
-| Parallel agent finish (flows, apps, Teams, tests, docs) | **In progress** — see `docs/crm/PARALLEL_AGENT_MAP.md` |
+| Module design + migration pack | **Repo-ready** |
+| Parallel agent finish (flows, apps, Teams, tests, docs) | **COMPLETE** — merged; see `docs/crm/PARALLEL_AGENT_MAP.md` |
 | Live Dev schema apply | **Pending owner** — `Repair-HVCGOSSharePointSchema.ps1` |
 | Flow import / activation | **Pending owner** (after repair) |
 | Canvas publish | **Pending owner** (after lists exist) |
-| Acceptance | Template ready — `docs/crm/ACCEPTANCE_REPORT.md` |
+| Acceptance | Consolidated offline report — `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`; live template — `docs/crm/ACCEPTANCE_REPORT.md` |
 
 Owner stop points: `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-01…11).  
 Module design: `docs/crm/OPPORTUNITY_MANAGEMENT.md`.

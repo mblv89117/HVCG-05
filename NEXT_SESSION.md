@@ -1,24 +1,24 @@
 # Next Session
 
 **Generated:** 2026-07-15  
-**Mode:** Opportunity CRM apply-in-progress (infrastructure baseline frozen; CRM packaging → owner apply)
+**Mode:** Opportunity CRM **owner apply** (repo integration complete; infrastructure baseline frozen)
 
 ## Current project status
 
 - **Product:** HVCG OS **v1.1.0**
 - **Infrastructure:** Development SharePoint baseline frozen at tag `v1.1.0-dev-sharepoint-baseline` (commit `f99164a`) — 1,147 fields, zero drift; do not modify deployment engines unless fixing a confirmed defect.
-- **Application:** Opportunity CRM module v1 is **repo-ready** (schema migration, Power Apps specs, Power Automate packages, Copilot docs, tests, sample data). Parallel agents (migration audit, flows, apps, Teams/Copilot, QA, docs) are finishing exclusive paths — see `docs/crm/PARALLEL_AGENT_MAP.md`.
-- **Live Dev tenant:** CRM additive schema **not yet applied**. Do not repair until parent designates an integration commit (or you explicitly approve applying from HEAD packages).
+- **Application:** Opportunity CRM module v1 is **integration-complete** on `agent/crm-integration` (all six worker streams + consolidated acceptance). See `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` and `docs/crm/PARALLEL_AGENT_MAP.md`.
+- **Live Dev tenant:** CRM additive schema **not yet applied**. Owner may repair from the integration SHA after review.
 
 ## Git
 
 | Item | Value |
 |------|--------|
-| **Base branch** | `cursor/v1.1.0-intelligence-ai-ops` |
-| **Docs workstream** | `agent/crm-docs-owner` |
-| **CRM feature commit** | `fd5a9b9973df6f1f2193693c59c45a48a3c7237f` |
+| **Integration branch** | `agent/crm-integration` |
+| **Feature branch** | `cursor/v1.1.0-intelligence-ai-ops` |
 | **Session baseline** | `4a8f25d6a84f5bc8fa0f018b98ea7cc19652dcc7` |
 | **Baseline tag** | `v1.1.0-dev-sharepoint-baseline` |
+| **Offline predeploy** | **PASS** (2026-07-15) |
 
 ## Do not
 
@@ -30,13 +30,11 @@
 
 ## Next recommended task
 
-### A. Integration (agents / parent) — if merge incomplete
+### A. Integration — COMPLETE
 
-1. Review and merge `agent/crm-*` branches per `docs/crm/PARALLEL_AGENT_MAP.md`.
-2. Run full pre-deployment + CRM unit tests on the integration branch.
-3. Record the integration SHA for owner apply.
+Parent merged all six `agent/crm-*` workers, resolved soft conflicts, ran full suite (**PASS**), and wrote `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`.
 
-### B. Owner apply (sequential) — when packages merged
+### B. Owner apply (sequential) — ready when you are
 
 Follow `docs/crm/OWNER_ACTION_GUIDE.md`:
 
