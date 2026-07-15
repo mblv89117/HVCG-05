@@ -3,9 +3,10 @@
 **Branch:** `cursor/operations-hub`  
 **Worktree:** `.worktrees/operations-hub`  
 **Agent:** `operations`  
-**Status:** **IN PROGRESS**  
+**Status:** **READY FOR INTEGRATION**  
 **Packaging:** Exclusive paths only (Master PM ownership redesign)  
-**CONFLICT:** `51f47dc4` closed by redesign — shared indexes locked forever for Ops agent
+**CONFLICT:** `51f47dc4` closed by redesign — shared indexes locked forever for Ops agent  
+**Offline suite:** `python3 tests/operations/run_offline_tests.py` → **PASS**
 
 ## Deliverables (exclusive)
 
@@ -19,6 +20,7 @@
 | Ops views package | `src/sharepoint/views/operations-hub-views.json` |
 | Ops list schema deltas | `HVCG_{Approvals,OperationalAlerts,Policies,RecurringExpenses,SOPs,SoftwareInventory,Subscriptions,Vendors}.json` |
 | Screen stubs | `src/power-apps/screens/scrOpsHub.md`, `scrHomeOps.md` |
+| Offline tests | `tests/operations/run_offline_tests.py`, `test_operations_hub.py` |
 | Branch status | `PROJECT_STATUS.md`, `NEXT_SESSION.md` |
 
 ## Exclusive assets already present
@@ -54,12 +56,25 @@ Details: `SHARED_FILE_RECOMMENDATIONS.md`.
 
 **No** further Ops-owned shared change window is required. Exclusive-path plan is sufficient. Index appends are parent-only recommendations after CRM smoke park.
 
-## Resume cue (next Ops work)
+## Offline validation
 
-1. Keep heartbeat `IN_PROGRESS`.  
-2. Harden exclusive docs / offline checks if requested.  
-3. Maker import of `HVCG_Ops*` only after owner OA + CRM park — leave flows **Off**.  
-4. Never re-open locked shared files.
+```bash
+cd .worktrees/operations-hub
+python3 tests/operations/run_offline_tests.py
+```
+
+Expected: `PASS operations hub module checks`.
+
+## Parent integrator next steps
+
+1. Merge exclusive Ops package after CRM park / when Integration is cleared.  
+2. Apply append-only items in `SHARED_FILE_RECOMMENDATIONS.md` (parent-only).  
+3. Owner Maker import of `HVCG_Ops*` — leave **Off** until approved.  
+4. Never ask Ops agent to edit locked shared indexes.
+
+## Resume cue
+
+Module is **READY FOR INTEGRATION**. Ops agent stays exclusive-path only; Maker import deferred to owner OA.
 
 ## Contamination note
 
