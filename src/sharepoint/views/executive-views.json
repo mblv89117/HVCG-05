@@ -1,0 +1,308 @@
+{
+  "module": "executive-command-center",
+  "version": "1.0.1",
+  "description": "SharePoint views for CEO / Executive Command Center. Field names validated against list schemas.",
+  "views": [
+    {
+      "list": "HVCG_Clients",
+      "title": "CEO Active MRR Clients",
+      "filter": "IsActive eq 1 and ClientStage eq 'Active Client'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "OverallHealth",
+        "MonthlyRetainer",
+        "ClientLifetimeValue",
+        "PaymentStatus",
+        "RiskLevel"
+      ],
+      "orderBy": "MonthlyRetainer desc"
+    },
+    {
+      "list": "HVCG_Clients",
+      "title": "CEO Needs Attention",
+      "filter": "RequiresExecutiveAttention eq 1",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "OverallHealth",
+        "RiskLevel",
+        "PaymentStatus",
+        "ClientStage"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "CEO Open Pipeline",
+      "filter": "WinLossStatus eq 'Open'",
+      "fields": [
+        "Title",
+        "Stage",
+        "WeightedValue",
+        "Probability",
+        "ForecastCategory",
+        "ExpectedCloseDate",
+        "SalesOwnerEmail",
+        "NextActionDate",
+        "CapitalHandoffStatus"
+      ],
+      "orderBy": "WeightedValue desc"
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "CEO Commit Forecast",
+      "filter": "ForecastCategory eq 'Commit' and WinLossStatus eq 'Open'",
+      "fields": [
+        "Title",
+        "Stage",
+        "WeightedValue",
+        "Probability",
+        "ExpectedCloseDate",
+        "SalesOwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "CEO High Value Open",
+      "filter": "WinLossStatus eq 'Open' and (RequiresExecutiveAttention eq 1 or WeightedValue ge 50000)",
+      "fields": [
+        "Title",
+        "Stage",
+        "WeightedValue",
+        "Probability",
+        "ExpectedCloseDate",
+        "SalesOwnerEmail",
+        "RequiresExecutiveAttention"
+      ]
+    },
+    {
+      "list": "HVCG_Invoices",
+      "title": "CEO Outstanding AR",
+      "filter": "InvoiceStatus eq 'Sent' or InvoiceStatus eq 'Partial' or InvoiceStatus eq 'Past Due'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "InvoiceType",
+        "Amount",
+        "AmountCollected",
+        "DueDate",
+        "InvoiceStatus"
+      ],
+      "orderBy": "DueDate asc"
+    },
+    {
+      "list": "HVCG_Invoices",
+      "title": "CEO Past Due Retainers",
+      "filter": "InvoiceType eq 'Retainer' and InvoiceStatus eq 'Past Due'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "Amount",
+        "AmountCollected",
+        "DueDate",
+        "InvoiceStatus"
+      ]
+    },
+    {
+      "list": "HVCG_Invoices",
+      "title": "CEO Cash Collected",
+      "filter": "AmountCollected gt 0",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "InvoiceDate",
+        "Amount",
+        "AmountCollected",
+        "InvoiceStatus",
+        "InvoiceType"
+      ],
+      "orderBy": "InvoiceDate desc"
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "title": "CEO Active Capital Book",
+      "filter": "FundingStatus ne 'Closed' and FundingStatus ne 'Declined'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "CapitalType",
+        "TargetAmount",
+        "WeightedValue",
+        "FundingStatus",
+        "FundingProbability",
+        "ExpectedCloseDate",
+        "RequiresExecutiveAttention"
+      ],
+      "orderBy": "WeightedValue desc"
+    },
+    {
+      "list": "HVCG_FinancialMilestones",
+      "title": "CEO Revenue At Risk",
+      "filter": "RevenueAtRisk eq 1",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "Amount",
+        "DueDate",
+        "PaymentStatus",
+        "MilestoneType",
+        "RevenueAtRisk"
+      ]
+    },
+    {
+      "list": "HVCG_FinancialMilestones",
+      "title": "CEO Past Due Milestones",
+      "filter": "IsPastDue eq 1",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "Amount",
+        "DueDate",
+        "PaymentStatus",
+        "MilestoneType"
+      ]
+    },
+    {
+      "list": "HVCG_RevenueForecastLines",
+      "title": "CEO Forecast Lines Open",
+      "filter": "ForecastCategory ne 'Closed'",
+      "fields": [
+        "Title",
+        "ForecastCategory",
+        "WeightedAmount",
+        "ForecastMonth",
+        "Amount",
+        "RevenueType",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Decisions",
+      "title": "CEO Executive Decision Queue",
+      "filter": "RequiresExecutiveAttention eq 1 and (DecisionStatus eq 'Proposed' or DecisionStatus eq 'Pending Decision')",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "EscalationReason",
+        "Deadline",
+        "DecisionMakerEmail",
+        "DecisionStatus",
+        "FinancialImpact"
+      ],
+      "orderBy": "Deadline asc"
+    },
+    {
+      "list": "HVCG_Risks",
+      "title": "CEO Major Risks",
+      "filter": "(RiskLevel eq 'High' or RiskLevel eq 'Critical' or RequiresExecutiveAttention eq 1) and RiskStatus ne 'Closed'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "RiskLevel",
+        "RiskStatus",
+        "OwnerEmail",
+        "RequiresExecutiveAttention"
+      ]
+    },
+    {
+      "list": "HVCG_Projects",
+      "title": "CEO Projects At Risk",
+      "filter": "ProjectHealth eq 'Yellow' or ProjectHealth eq 'Red'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "ProjectHealth",
+        "ProjectStatus",
+        "ProjectOwnerEmail",
+        "RequiresExecutiveAttention"
+      ]
+    },
+    {
+      "list": "HVCG_Deliverables",
+      "title": "CEO Approvals Waiting",
+      "filter": "RequiresExecutiveApproval eq 1 and (ClientApprovalStatus eq 'Pending' or InternalReviewStatus eq 'Pending' or DeliverableStatus eq 'Internal Review' or DeliverableStatus eq 'Client Review')",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "DeliverableStatus",
+        "ClientApprovalStatus",
+        "InternalReviewStatus",
+        "FinalDueDate",
+        "ApproverEmail",
+        "RequiresExecutiveApproval"
+      ]
+    },
+    {
+      "list": "HVCG_ExpenseApprovals",
+      "title": "CEO Expense Approvals Open",
+      "filter": "ApprovalStatus eq 'Pending'",
+      "fields": [
+        "Title",
+        "Amount",
+        "ApprovalStatus",
+        "RequestedByEmail",
+        "ApproverEmail",
+        "Category",
+        "ExpenseDate"
+      ]
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "title": "CEO Capacity Snapshot",
+      "filter": "IsActive eq 1",
+      "fields": [
+        "Title",
+        "Email",
+        "PrimaryRole",
+        "CapacityHoursPerWeek",
+        "CurrentUtilizationPct",
+        "AvailableHoursThisWeek",
+        "BillableTargetPct",
+        "AssignedProjectCount"
+      ]
+    },
+    {
+      "list": "HVCG_Meetings",
+      "title": "CEO Upcoming Meetings",
+      "filter": "MeetingDate ge '@today' and MeetingDate le '@today+14'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "MeetingDate",
+        "MeetingType",
+        "CommunicationOwnerEmail"
+      ],
+      "orderBy": "MeetingDate asc"
+    },
+    {
+      "list": "HVCG_Proposals",
+      "title": "CEO Proposals Awaiting Decision",
+      "filter": "ProposalStatus eq 'Sent' or ProposalStatus eq 'Negotiation' or ProposalStatus eq 'Internal Review'",
+      "fields": [
+        "Title",
+        "ProposalStatus",
+        "ProposalAmount",
+        "ExpiryDate",
+        "OwnerEmail",
+        "DecisionMaker"
+      ]
+    },
+    {
+      "list": "HVCG_Relationships",
+      "title": "CEO Strategic This Week",
+      "filter": "StrategicValue eq 'High' or StrategicValue eq 'Critical'",
+      "fields": [
+        "Title",
+        "RelationshipType",
+        "SourceDisplayName",
+        "TargetDisplayName",
+        "StrategicValue",
+        "NextPlannedInteraction",
+        "RevenueInfluenced",
+        "CapitalInfluenced",
+        "SourceClientCode",
+        "TargetClientCode"
+      ]
+    }
+  ]
+}
