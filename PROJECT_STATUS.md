@@ -1,122 +1,81 @@
 # PROJECT STATUS
 
-**Last updated:** 2026-07-15 (~10:11 PT)  
-**Product:** HVCG OS  
-**Version:** **1.1.0** (`VERSION` / `version.json`)  
-**Branch:** `cursor/v1.1.0-intelligence-ai-ops` @ `8635397` (tracks origin; CRM integration tip)  
-**Tag:** `v1.1.0-dev-sharepoint-baseline` (pre-CRM freeze)  
-**Overall status:** **Opportunity CRM repo-integration complete** — six workstreams merged; predeploy PASS; live Dev Repair **ACTIVE** pid 12090 / terminal 573342 (pre-seed validation); Maker import/publish **not done**
+## Overall Status
+**ACTIVE** — Live Development SharePoint schema repair in progress (Opportunity CRM apply). Repo CRM integration complete; Maker/OA (flow import, canvas publish, Teams) **WAITING FOR APPROVAL** and must not start until repair exits successfully.
 
-## Verdict
+## Current Task
+Monitor and attest live Dev `Repair-HVCGOSSharePointSchema.ps1` for Opportunity CRM lists/fields/views/seed; do not start a second repair.
 
-HVCG OS **v1.1.0** Opportunity CRM package is merged on `cursor/v1.1.0-intelligence-ai-ops` (`8635397`). Offline suite **PASS**. Health check 10:11 PT: Repair **ACTIVE** (`pwsh` pid 12090, terminal `573342`). CRM lists/fields/lookups/views done; last STEP pre-seed schema validation (slow ~13 min cycles; leave alone). Do **not** start another Repair until exit or confirmed dead.
+## Current Phase
+Repair late phase: **post-repair schema validation** (after CRM fields, lookups, views, and seed gate). Pre-seed and prior validations already reported `HasDrift: False`, `IsCompliant: True`, **1170** fields / **82** lists.
 
-| Checkpoint | Result |
-|------------|--------|
-| Integration tip | **`8635397`** |
-| Offline predeploy | **PASS** (2026-07-15) |
-| Consolidated acceptance | `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` |
-| Live Dev CRM Repair | **ACTIVE** — pid 12090 / term 573342; pre-seed validation; attest after exit |
-| Flow import / activation | **Pending owner** (Maker) |
-| Canvas publish / Teams | **Pending owner** (Maker) |
+## Active Process
+| Field | Value |
+|-------|--------|
+| **Name** | Repair-HVCGOSSharePointSchema (pwsh) |
+| **Command** | `pwsh -NoProfile -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development 2>&1 \| tee deployment/reports/checkpoints/repair-opportunity-crm-live.log; echo REPAIR_EXIT:$?` |
+| **Start** | 2026-07-15 09:24:13 PT (`started_at` UTC 2026-07-15T16:24:13.253Z) |
+| **PID** | **12090** (parent shell **12084**) |
+| **Terminal / worker** | Cursor terminal **573342** |
+| **Expected output** | Final post-repair schema SUCCESS (`HasDrift: False`), then `REPAIR_EXIT:0` / terminal `exit_code` footer |
+| **Latest activity evidence** | Last STEP `[2026-07-15T10:20:06] Validating SharePoint schema vs repo (post-repair)...` + Connect-PnPOnline → HVCG-CommandCenter-Dev. Prior: pre-seed OK @ 10:19:35 (1170 fields, HasDrift False); views created 10:05:29–10:05:46; seed STEP 10:05:56. Schema validation cycles ~13–14 min of quiet — normal. Process still consuming CPU (~1.3%); ~1h09m elapsed @ 10:33 PT. Log: `deployment/reports/checkpoints/repair-opportunity-crm-live.log`. |
 
-Pre-CRM infrastructure baseline remains tagged `v1.1.0-dev-sharepoint-baseline`. Agents must not modify deployment engines or run concurrent repair/deploy/import/publish.
+**caffeinate:** already running (`pid 74204`, since 2026-07-14 20:58 PT) — do not start another.
 
-v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
+**Note:** Pre-CRM Full backup (terminal 573341) **COMPLETED** earlier (`BACKUP_LIVE_EXIT:0`, backup path `backups/development/20260715-092137`).
 
-## Opportunity CRM (current)
+## Last Completed Milestone
+- Repo: Opportunity CRM six workstreams merged at `8635397`; offline predeploy **PASS**.
+- Live this run: CRM Opportunity fields/lists; lookup pass; views (Open/Qualified Leads, Commit Forecast, Capital Handoffs Ready, Recent Activities); multiple schema compliance OK (HasDrift False / 1170 fields).
+- Docs tip before this status refresh: `9d77c2f`.
 
+## Next Step
+1. Leave repair running; recheck for new log lines / `REPAIR_EXIT` (**next monitor due ~2026-07-15 11:05 PT / ~30 min**).
+2. On success: attest exit 0 + final `HasDrift: False`; then safe offline predeploy re-run if needed.
+3. Maker OA (flow import / publish / Teams) stays **blocked pending user approval** — do not import flows or publish apps.
+
+## Recent Progress
+- 09:24 — Repair started (term 573342 / pid 12090).
+- 09:26–09:37 — CRM lists/fields + lookups (OpportunityActivities, CapitalOpportunity links, etc.).
+- 09:38–09:51 — post-list-provision validation OK (1170 / HasDrift False).
+- 09:51–10:05 — pre-views validation OK; views created.
+- 10:05–10:19 — pre-seed validation OK; seed gate passed into post-repair path.
+- 10:20 — post-repair validation STEP started (in flight @ 10:33 status write).
+
+## Validation Status
 | Area | Status |
 |------|--------|
-| Module design + migration pack | **Repo-ready** |
-| Parallel agent finish (flows, apps, Teams, tests, docs) | **COMPLETE** — merged at `8635397`; see `docs/crm/PARALLEL_AGENT_MAP.md` |
-| Live Dev schema apply | **ACTIVE** (pre-seed) / attest after exit — do not re-run while pid alive |
-| Flow import / activation | **Pending owner** (after schema attest) |
-| Canvas publish | **Pending owner** (after lists exist) |
-| Acceptance | Offline: `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`; live: `docs/crm/ACCEPTANCE_REPORT.md` |
+| Repo / branch | `cursor/v1.1.0-intelligence-ai-ops` tracking origin; tip was `9d77c2f` pre-this-commit |
+| Tests (offline predeploy) | **PASS** (prior session / consolidated acceptance) |
+| SharePoint Dev | Repair **ACTIVE**; interim schema OK 1170 fields |
+| Power Platform | No live import/publish this session |
+| Schema | Interim reports compliant / HasDrift False; await final post-repair |
+| Auth | Graph + PnP Interactive+ClientId succeeding in repair log |
+| Deploy engines | **Frozen** — no modifications |
+| Data integrity | Seed gated on field existence; final attest pending repair exit |
+| Prod readiness | **Not started** — Production forbidden until OA + approval |
 
-Owner stop points: `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-01…11).  
-Module design: `docs/crm/OPPORTUNITY_MANAGEMENT.md`.
+## Blockers
+- **Maker / OA gated (approval checkpoint):** flow import, connection bind, activate, canvas publish, Teams/Copilot — wait for repair success **and** explicit user approval before any of these.
+- No process stall identified at this check (validation quiet window expected).
 
-## Development infrastructure milestone (completed)
+## Errors and Warnings
+- Module import warnings (HVCG.Deployment / HVCG.Release unapproved verbs) — noise, non-blocking.
+- Pre-CRM backup logged `List missing, skip data: HVCG_OpportunityActivities` before repair created that list — expected for that snapshot; repair later created the list.
 
-Delivered in this baseline (tenant unchanged after repair — docs/code only):
+## Environment
+- Workspace: `/Volumes/MacMiniPro2TB/HVCG Project Management System`
+- Remote: `https://github.com/mblv89117/HVCG-05.git`
+- Branch: `cursor/v1.1.0-intelligence-ai-ops`
+- Dev site: `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev`
+- Account (from repair log): `manny@highvaluecapitalgroup.com`
+- Tag freeze: `v1.1.0-dev-sharepoint-baseline` (pre-CRM)
 
-1. **PnP authentication** — Entra app Client ID required for Interactive; `Register-HVCGPnPEntraApp.ps1`; `Connect-HVCGPnPOnline`
-2. **StrictMode-safe field provisioning** — `Get-HVCGColumnSchemaFacade` / `Add-HVCGFieldFromSchema`
-3. **Lookup provisioning** — CAML `Add-PnPFieldFromXml` (PnP 3.3 has no `-Values` / `-LookupList` on `Add-PnPField`)
-4. **Retry / backoff** — `Invoke-HVCGPnPWithRetry` (429, Retry-After, 503, throttle, transient); field visibility polling
-5. **Schema repair** — `Repair-HVCGOSSharePointSchema.ps1` (idempotent, no site/list deletion)
-6. **Drift validation** — missing / extra / mismatched gate; fails deploy/repair on drift; reports under `deployment/reports/schema/` (gitignored)
-7. **Seed-data fix** — no cmdlet+`-and` parse bug; `ConvertTo-HVCGSeedClientValues`
+## Estimated Completion
+Post-repair validation likely finishes within ~0–15 min of 10:33 PT (prior cycles ~13–14 min); then script may exit shortly after. Full repair wall-clock already ~70+ min.
 
-## Install (Development)
+## Last Updated
+2026-07-15 10:33 PT (local)
 
-```powershell
-pwsh -File ./deployment/install/Install-HVCGOS.ps1 -Environment development
-```
-
-## Repair (idempotent schema)
-
-```powershell
-pwsh -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development
-```
-
-## Upgrade from v1.0.0
-
-```powershell
-pwsh -File ./deployment/upgrade/Upgrade-HVCGOS.ps1 -Environment development -TargetVersion 1.1.0
-```
-
-Migration pack: `releases/migrations/20260714_002_intelligence_ai_backup_v1_1_0.json`
-
-## Post-install / verify
-
-```powershell
-pwsh -File ./deployment/health/Test-HVCGOSHealth.ps1 -Environment development
-pwsh -File ./deployment/health/Invoke-HVCGOSOperationalHealth.ps1 -Environment development
-pwsh -File ./deployment/backup/Backup-HVCGOS.ps1 -Environment development
-```
-
-Manual Dev sites:
-
-- Command Center: `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev`
-- Knowledge Center: `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev`
-- Clients Hub: `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev`
-
-## Release engineering
-
-| Capability | Path |
-|------------|------|
-| Release notes | `releases/v1.1.0/notes/RELEASE_NOTES.md` |
-| v1.0.0 (immutable) | `releases/v1.0.0/notes/RELEASE_NOTES.md` |
-| Upgrade | `deployment/upgrade/Upgrade-HVCGOS.ps1` |
-| Rollback | `deployment/rollback/Rollback-HVCGOS.ps1` |
-| Health | `deployment/health/Test-HVCGOSHealth.ps1` |
-| Operational health | `deployment/health/Invoke-HVCGOSOperationalHealth.ps1` |
-| Backup / restore | `deployment/backup/Backup-HVCGOS.ps1`, `deployment/restore/Restore-HVCGOS.ps1` |
-| Schema repair | `deployment/repair/Repair-HVCGOSSharePointSchema.ps1` |
-| PnP auth | `docs/deployment/PNP_AUTHENTICATION.md` |
-| Guide | `RELEASE.md` |
-| GitHub Actions | `.github/workflows/hvcg-os-release.yml` |
-| Azure Pipelines | `deployment/pipelines/azure-pipelines.yml` |
-
-## v1.1.0 capabilities packaged
-
-| Area | Status |
-|------|--------|
-| `HVCG_Relationships` + query catalog | Shipped |
-| AI orchestration lists + governance docs | Shipped |
-| Backup / restore / `DISASTER_RECOVERY.md` | Shipped |
-| Operational monitoring + System Health dashboard spec | Shipped |
-| Schema: 81 lists | Shipped |
-| Dev SharePoint baseline (fields/lookups/views/seed) | **Complete** (frozen) |
-| Opportunity CRM module (app layer) | **Repo-ready / apply-in-progress** — owner repair + Maker steps next |
-
-## Next owner step
-
-1. Wait for parent integration merge of CRM agent branches (or apply from designated integration SHA).  
-2. Follow `docs/crm/OWNER_ACTION_GUIDE.md`: sign-in → consent → additive repair → connections → import/activate four CRM flows (test Teams channels only) → publish canvas CRM → fill `docs/crm/ACCEPTANCE_REPORT.md`.  
-3. Do **not** promote CRM to Production without explicit written approval (OA-CRM-11).
-
-Module doc: `docs/crm/OPPORTUNITY_MANAGEMENT.md`
+## Commit hash (this status milestone)
+_Pending — filled after push._
