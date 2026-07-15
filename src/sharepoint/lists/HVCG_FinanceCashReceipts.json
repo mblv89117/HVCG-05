@@ -1,0 +1,108 @@
+{
+  "title": "HVCG_FinanceCashReceipts",
+  "description": "Finance Ops exclusive — cash receipts / payment applications against operational invoices (net-new). Not a GL cash book.",
+  "template": "genericList",
+  "domain": "Finance",
+  "moduleExclusive": true,
+  "module": "finance-operations",
+  "indexStatus": "pending-parent-append",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ReceiptDate",
+      "displayName": "ReceiptDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "InvoiceId",
+      "displayName": "InvoiceId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Invoice applied to (preferred)",
+      "lookupList": "HVCG_Invoices"
+    },
+    {
+      "internalName": "AmountReceived",
+      "displayName": "AmountReceived",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PaymentMethod",
+      "displayName": "PaymentMethod",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "ACH",
+        "Wire",
+        "Check",
+        "Card",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ExternalAccountingId",
+      "displayName": "ExternalAccountingId",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Future QuickBooks payment id"
+    },
+    {
+      "internalName": "AppliedByEmail",
+      "displayName": "AppliedByEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG_IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

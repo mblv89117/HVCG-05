@@ -3,21 +3,25 @@
 **Agent:** `finance`  
 **Branch:** `cursor/finance-operations`  
 **Worktree:** `.worktrees/finance-operations`  
-**Packaging:** Option A — exclusive docs + offline tests  
-**Status:** **IN PROGRESS** (package authored; Maker / live apply deferred)
+**Packaging:** Option A — exclusive docs + list stubs + Power Apps stubs + offline tests  
+**Status:** **IN PROGRESS** — WO2 package complete offline; not yet declaring READY FOR INTEGRATION (parent index append + Master PM go-ahead still needed)
 
 ## Deliverables
 
 | Deliverable | Path |
 |-------------|------|
-| Architecture | `docs/finance/ARCHITECTURE.md` |
-| Requirements | `docs/finance/REQUIREMENTS.md` |
-| Data map | `docs/finance/DATA_MAP.md` |
+| Architecture / Requirements / Data map | `docs/finance/` |
 | Shared merge recommendations | `docs/finance/SHARED_FILE_RECOMMENDATIONS.md` |
 | Owner gates (later) | `docs/finance/OWNER_ACTION_GUIDE.md` |
+| Exclusive list stubs | `HVCG_FinanceARSnapshots`, `HVCG_FinanceCashReceipts`, `HVCG_FinancePaymentPlans` (+ `HVCG_FinanceEXCLUSIVE_README.md`) |
+| Power Apps stubs | `src/power-apps/finance/` (`scrFinance*`, `BUILD.md`, `FinanceNamedFormulas.fx`) |
 | Module status | `PROJECT_STATUS.md` (Finance) |
 | Resume cue | `NEXT_SESSION.md` |
 | Offline smoke | `tests/unit/test_finance_operations.py`, `tests/finance/test_finance_package.py` |
+
+## What was NOT duplicated
+
+Invoices / Collections / Budgets / Expenses already exist as shared SoR lists — stubs were **not** recreated as `HVCG_FinanceInvoices` etc.
 
 ## Offline validation
 
@@ -35,16 +39,17 @@ Expected: `PASS finance operations package checks`.
 - Authentication / environment secrets  
 - CRM flows and active Maker OA packages  
 - Locked shared indexes (`flows/_index.json`, `definitions/_index.json`, `lists/_index.json`, `command-center-views.json`, `NamedFormulas.fx`)  
-- Existing Finance list schema bodies (documented only)  
+- Existing non-`HVCG_Finance*` list schema bodies  
 - Production  
 
 ## Parent integrator next steps
 
-1. Merge this branch after offline PASS and Master PM go-ahead.  
-2. Apply append-only items in `SHARED_FILE_RECOMMENDATIONS.md` (predeploy test hook first).  
-3. Owner Maker: build `scrFinance` + gate flows Off (see `OWNER_ACTION_GUIDE.md`).  
-4. Live Dev smoke with demo amounts only — then refresh status to READY FOR INTEGRATION / ACCEPTANCE.
+1. Offline PASS on this branch.  
+2. Append three exclusive lists to `lists/_index.json` per `SHARED_FILE_RECOMMENDATIONS.md`.  
+3. Append formula comment / tokens from `FinanceNamedFormulas.fx`; link README `scrFinance` → `src/power-apps/finance/BUILD.md`.  
+4. After append + review → status can move to **READY FOR INTEGRATION**.  
+5. Owner Maker later: OA-FIN gates (not this sprint).
 
 ## Resume cue
 
-Next finance session: optional exclusive `src/power-apps/finance/` build sheet + `finance-views.json` stubs **without** editing locked indexes; keep CRM Maker OA uninterrupted.
+Ready for parent index append review. Optional next: exclusive `finance-views.json` still without editing locked view index.

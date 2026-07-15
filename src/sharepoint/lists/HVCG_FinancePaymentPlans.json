@@ -1,0 +1,132 @@
+{
+  "title": "HVCG_FinancePaymentPlans",
+  "description": "Finance Ops exclusive — structured collection payment plans (net-new). Complements HVCG_CollectionsActivities.",
+  "template": "genericList",
+  "domain": "Finance",
+  "moduleExclusive": true,
+  "module": "finance-operations",
+  "indexStatus": "pending-parent-append",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "InvoiceId",
+      "displayName": "InvoiceId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Invoices"
+    },
+    {
+      "internalName": "PlanStatus",
+      "displayName": "PlanStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Draft",
+        "Active",
+        "Completed",
+        "Broken",
+        "Cancelled"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "TotalPlanAmount",
+      "displayName": "TotalPlanAmount",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InstallmentAmount",
+      "displayName": "InstallmentAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Cadence",
+      "displayName": "Cadence",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Weekly",
+        "Biweekly",
+        "Monthly",
+        "Custom"
+      ]
+    },
+    {
+      "internalName": "NextInstallmentDate",
+      "displayName": "NextInstallmentDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG_IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

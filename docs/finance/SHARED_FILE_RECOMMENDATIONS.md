@@ -1,16 +1,16 @@
 # Shared file recommendations (do not apply on this branch)
 
-Finance Operations owns exclusive paths under `docs/finance/`, `tests/finance/`, and `tests/unit/test_finance_operations.py`.
+Finance Operations owns exclusive paths under `docs/finance/`, `src/power-apps/finance/`, `tests/finance/`, `tests/unit/test_finance_operations.py`, and exclusive `src/sharepoint/lists/HVCG_Finance*.json` stubs.
 
 When integrating, a **parent merge agent** may apply the following. This branch does **not** modify locked shared indexes or CRM / deployment engines.
 
 | Shared file | Recommendation |
 |-------------|----------------|
-| `src/power-apps/README.md` | Confirm `scrFinance` row links to `docs/finance/ARCHITECTURE.md` + future exclusive build sheet (when authored). |
+| `src/power-apps/README.md` | Link `scrFinance` to `src/power-apps/finance/BUILD.md` + `docs/finance/ARCHITECTURE.md`. |
 | `src/power-apps/screens/scrClientDetail.md` | Keep Finance section visibility gated by `nfIsFinanceViewer` (already specified); no schema change. |
-| `src/power-apps/formulas/NamedFormulas.fx` | Later: append finance helpers (`nfFinanceOutstandingAR`, `nfFinancePastDueCount`) from an exclusive `FinanceNamedFormulas.fx` when authored — **parent append only**. |
-| `src/sharepoint/views/command-center-views.json` | Later: parent-merge finance views (Open AR, Past Due Milestones, Pending Expenses) from an exclusive `finance-views.json` when authored. Prefer dual-file provision over editing in place during agent sprints. |
-| `src/sharepoint/lists/_index.json` | **Do not edit from Finance agent.** Existing Finance lists are already indexed. |
+| `src/power-apps/formulas/NamedFormulas.fx` | Append helpers from `src/power-apps/finance/FinanceNamedFormulas.fx` (`nfFinanceOutstandingAR`, `nfFinancePastDueCount`, `nfFinancePendingExpenseCount`, `nfFinanceCashCollectedMTD`) — **parent append only**. |
+| `src/sharepoint/views/command-center-views.json` | Later: parent-merge finance views (Open AR, Past Due Milestones, Pending Expenses, AR Snapshots) from an exclusive `finance-views.json` when authored. Prefer dual-file provision. |
+| `src/sharepoint/lists/_index.json` | **Do not edit from Finance agent.** Parent append-only entries for: `HVCG_FinanceARSnapshots`, `HVCG_FinanceCashReceipts`, `HVCG_FinancePaymentPlans` (paths `src/sharepoint/lists/<name>.json`, domain Finance). Existing Invoices/Collections/Budgets/Expenses stay as-is — do **not** add duplicate wrappers. |
 | `src/power-automate/flows/_index.json` | Later parent-append past-due / renewal flow keys only after exclusive flow package exists and CRM Maker freeze lifts. |
 | `tests/Invoke-HVCGPreDeploymentTests.ps1` | Append-only: invoke `python3 tests/unit/test_finance_operations.py`. |
 | `ARCHITECTURE.md` (root) / `DATA_DICTIONARY.md` | Link `docs/finance/` as Finance Ops capability docs. |

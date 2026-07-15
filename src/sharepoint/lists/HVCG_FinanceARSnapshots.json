@@ -1,0 +1,131 @@
+{
+  "title": "HVCG_FinanceARSnapshots",
+  "description": "Finance Ops exclusive — point-in-time AR aging snapshots (net-new; not GL). Complements HVCG_Invoices without replacing them.",
+  "template": "genericList",
+  "domain": "Finance",
+  "moduleExclusive": true,
+  "module": "finance-operations",
+  "indexStatus": "pending-parent-append",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Snapshot label e.g. AR Snapshot 2026-07-15"
+    },
+    {
+      "internalName": "SnapshotDate",
+      "displayName": "SnapshotDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": "As-of date for aging buckets"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "InvoiceId",
+      "displayName": "InvoiceId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Optional link to operational invoice",
+      "lookupList": "HVCG_Invoices"
+    },
+    {
+      "internalName": "InvoiceNumber",
+      "displayName": "InvoiceNumber",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AmountOutstanding",
+      "displayName": "AmountOutstanding",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": "Amount - AmountCollected at snapshot"
+    },
+    {
+      "internalName": "Current0to30",
+      "displayName": "Current0to30",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Days31to60",
+      "displayName": "Days31to60",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Days61to90",
+      "displayName": "Days61to90",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Days90Plus",
+      "displayName": "Days90Plus",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SnapshotScope",
+      "displayName": "SnapshotScope",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Firm",
+        "Client",
+        "Invoice"
+      ],
+      "default": "Client"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG_IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Automation safety for nightly snapshot jobs"
+    }
+  ]
+}

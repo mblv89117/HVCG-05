@@ -1,68 +1,63 @@
 # PROJECT STATUS — Finance Operations
 
 ## Overall Status
-**IN PROGRESS** — Exclusive Finance Ops documentation package authored on `cursor/finance-operations`. Offline package smoke **PASS** (when tests run). No live SharePoint / Maker / Production work from this agent. CRM Maker OA left undisturbed.
+**IN PROGRESS** — WO2 exclusive package advanced: `HVCG_Finance*` net-new list stubs + `src/power-apps/finance/` screen stubs + extended offline smoke **PASS**. Closer to READY FOR INTEGRATION, but **not yet READY** until parent appends exclusive lists to locked `lists/_index.json` and Master PM accepts merge packet. CRM / deploy engines untouched.
 
 ## Current Task
-Complete Master PM sprint work order: exclusive `docs/finance/` package, Finance-focused status/resume files, offline test stub, bus register/heartbeat/acks + progress INFO to master-pm.
+Finance WO2 (bus `5614acee`): exclusive list stubs, Power Apps finance screens, docs/handoff update, offline tests, heartbeat + INFO.
 
 ## Current Phase
-Finance Operations packaging (Option A — exclusive paths). Shared indexes locked; recommendations only.
+Exclusive Finance Ops packaging (Option A). Shared indexes locked; recommendations only.
 
 ## Active Process
 | Field | Value |
 |-------|--------|
-| **Name** | Finance exclusive package authoring |
-| **Command** | Offline docs + `python3 tests/unit/test_finance_operations.py` |
+| **Name** | Finance WO2 exclusive stubs + screens |
+| **Command** | `python3 tests/unit/test_finance_operations.py` |
 | **Branch / worktree** | `cursor/finance-operations` / `.worktrees/finance-operations` |
-| **Expected output** | Docs exist; offline PASS; bus heartbeat IN_PROGRESS |
+| **Expected output** | Offline PASS; tip commit on finance branch |
 
 ## Last Completed Milestone
-- Created `docs/finance/` Architecture, Requirements, Data Map, Shared File Recommendations, Handoff, Owner Action Guide.
-- Mapped existing Finance lists (Invoices, FinancialMilestones, CollectionsActivities, Budgets, ExpenseApprovals, RevenueForecastLines) without mutating schemas.
-- Skipped new `HVCG_Finance*` list stubs — existing domain lists cover V1 needs.
-- Removed duplicate untracked bootstrap prompt copies from worktree.
+- ACK WO2 `5614acee-a569-412f-8935-6b0f35b577c4`
+- Added exclusive stubs: `HVCG_FinanceARSnapshots`, `HVCG_FinanceCashReceipts`, `HVCG_FinancePaymentPlans` (no SoR duplicates)
+- Added `src/power-apps/finance/` screens + `BUILD.md` + `FinanceNamedFormulas.fx`
+- Extended offline tests; PASS
+- Docs HANDOFF / DATA_MAP / SHARED_FILE_RECOMMENDATIONS updated
 
 ## Next Step
-1. Optional: exclusive `src/power-apps/finance/` build sheet + `finance-views.json` (still no locked-index edits).
-2. Parent merge when Master PM / integration requests; apply `SHARED_FILE_RECOMMENDATIONS.md` append-only.
-3. Owner gates OA-FIN-01…06 only when Maker apply is scheduled (do not interrupt CRM).
+1. Parent: append three exclusive lists to `lists/_index.json` + formula README pointers.  
+2. After parent accept → move status to **READY FOR INTEGRATION**.  
+3. Optional: exclusive `finance-views.json` stubs.  
+4. Maker OA-FIN later — do not interrupt CRM.
 
 ## Recent Progress
-- Master PM sprint assignment (`a5df0e3d`) — Finance work order executed.
-- Module status set **IN PROGRESS** (was NOT STARTED in directory).
+- WO1 docs package (`151faf1` / tip was `bbae62b`) accepted as scaffold.  
+- WO2 fills app + net-new list gaps (AR snapshots, cash receipts, payment plans).
 
 ## Validation Status
 | Area | Status |
 |------|--------|
-| Repo / branch | `cursor/finance-operations` (finance worktree) |
-| Docs package | **Present** under `docs/finance/` |
-| Offline smoke | `tests/unit/test_finance_operations.py` |
-| Shared indexes | **Untouched** (locked) |
-| List schemas | **Read-only** documentation |
-| Power Platform / Maker | **Not started** (deferred) |
-| Deploy engines | Frozen — unmodified |
-| Prod readiness | **Not ready** — docs package only |
+| Docs package | Present |
+| Exclusive `HVCG_Finance*` stubs | **3** present (not indexed yet) |
+| Power Apps finance stubs | Present under `src/power-apps/finance/` |
+| Offline smoke | **PASS** |
+| Shared indexes | **Untouched** |
+| Maker / live | Deferred |
+| Prod | Not ready |
 
 ## Blockers
-- None for documentation sprint.  
-- Later: owner Maker time for `scrFinance` + flow Off import (OA-FIN-*).  
-- Must not interrupt CRM live Maker OA / auth / smoke on MAIN.
-
-## Errors and Warnings
-- None for Finance package authoring.
+- Parent must append exclusive list stubs to locked index before provisioning.  
+- Not blocking docs/app stub progress.
 
 ## Environment
 - Worktree: `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/finance-operations`
-- Bus root: MAIN `HVCG_REPO_ROOT` (agent-comms)
-- Dev site (future): `https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev`
 - Agent id: `finance`
 
 ## Estimated Completion
-Docs/package sprint: **complete this session**. Maker/live Finance UX: deferred (hours of owner Maker time after merge).
+Offline WO2: this session. READY FOR INTEGRATION: after parent index append + Master PM ACK.
 
 ## Last Updated
-2026-07-15 ~15:35 PT (local)
+2026-07-15 ~15:40 PT (local)
 
 ## Commit hash (this status milestone)
-151faf1edf4930ff01348752de1f5209a09954a0
+(pending WO2 commit)

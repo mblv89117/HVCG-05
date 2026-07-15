@@ -4,9 +4,9 @@
 **Product:** HVCG OS Command Center  
 **Branch:** `cursor/finance-operations`  
 **Worktree:** `.worktrees/finance-operations`  
-**Packaging:** **Option A — exclusive** paths (`docs/finance/`, `tests/finance/`, `tests/unit/test_finance_operations.py`). Shared indexes and existing list schemas are **read-only** on this branch.  
+**Packaging:** **Option A — exclusive** paths (`docs/finance/`, `src/power-apps/finance/`, exclusive `HVCG_Finance*` list stubs, `tests/finance/`, `tests/unit/test_finance_operations.py`). Shared indexes and existing non-exclusive list schemas are **read-only** on this branch.  
 **Audience:** Owner / Finance viewers / Ops Manager (fee fields)  
-**Status:** Spec + offline documentation package (**IN PROGRESS** — no tenant deploy from this branch)
+**Status:** Spec + exclusive stubs + screen package (**IN PROGRESS** — no tenant deploy from this branch)
 
 ## 1. Purpose
 
@@ -68,6 +68,14 @@ External accounting (QuickBooks, etc.) remains outside the system of record. `Ex
 | `HVCG_Budgets` | Finance | Approved vs used budget |
 | `HVCG_ExpenseApprovals` | Finance | Spend requests + approval status |
 | `HVCG_RevenueForecastLines` | Finance | Monthly forecast by pipeline category |
+
+### Exclusive net-new stubs (pending parent index append)
+
+| List | Primary use |
+|------|-------------|
+| `HVCG_FinanceARSnapshots` | AR aging snapshots |
+| `HVCG_FinanceCashReceipts` | Cash / payment applications |
+| `HVCG_FinancePaymentPlans` | Structured collection plans |
 
 Related **Ops** lists (not owned by this module): `HVCG_Subscriptions`, `HVCG_RecurringExpenses`.  
 Related **Capital** list (not owned): `HVCG_FundingMilestones`.

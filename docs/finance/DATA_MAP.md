@@ -139,6 +139,15 @@ HVCG_Clients
 | Budget remaining | ApprovedBudget − BudgetUsed |
 | Commit forecast | Sum WeightedAmount where ForecastCategory = Commit |
 
-## 5. Gaps vs exclusive list stubs
+## 5. Exclusive net-new stubs (`HVCG_Finance*`) — WO2
 
-No new `HVCG_Finance*` lists are introduced in this sprint. Existing Finance domain coverage is sufficient for V1 operational tracking. If a later gap appears (e.g., payment plans as first-class entities), propose exclusive stubs via Master PM and document in `SHARED_FILE_RECOMMENDATIONS.md` — do **not** edit `_index.json` from this branch.
+Existing `HVCG_Invoices` / Collections / Budgets / ExpenseApprovals remain SoR (**not** duplicated). Net-new exclusive stubs:
+
+| List | Purpose | Key fields |
+|------|---------|------------|
+| `HVCG_FinanceARSnapshots` | Point-in-time AR aging | SnapshotDate, AmountOutstanding, 0–30/31–60/61–90/90+ buckets, SnapshotScope |
+| `HVCG_FinanceCashReceipts` | Payment applications | ReceiptDate, AmountReceived, InvoiceId, PaymentMethod |
+| `HVCG_FinancePaymentPlans` | Structured collection plans | PlanStatus, TotalPlanAmount, Cadence, NextInstallmentDate |
+
+JSON paths: `src/sharepoint/lists/HVCG_Finance*.json` (`moduleExclusive: true`).  
+**Not** in `lists/_index.json` until parent append (see `SHARED_FILE_RECOMMENDATIONS.md` + `HVCG_FinanceEXCLUSIVE_README.md`).
