@@ -8,5 +8,5 @@
   </description>
   <type>100000000</type>
   <isrequired>0</isrequired>
-  <defaultvalue>https://REQUIRED.sharepoint.com/sites/HVCG-Clients-Dev</defaultvalue>
+  <defaultvalue>https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev</defaultvalue>
 </environmentvariabledefinition>

@@ -3,17 +3,17 @@
     {
       "schemaName": "hvcg_CommandCenterSiteUrl",
       "displayName": "Command Center Site URL",
-      "defaultValue": "https://REQUIRED.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+      "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
     },
     {
       "schemaName": "hvcg_ClientsSiteUrl",
       "displayName": "Clients Hub Site URL",
-      "defaultValue": "https://REQUIRED.sharepoint.com/sites/HVCG-Clients-Dev"
+      "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev"
     },
     {
       "schemaName": "hvcg_KnowledgeSiteUrl",
       "displayName": "Knowledge Center Site URL",
-      "defaultValue": "https://REQUIRED.sharepoint.com/sites/HVCG-Knowledge-Dev"
+      "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev"
     },
     {
       "schemaName": "hvcg_ExecutiveEmail",
@@ -34,6 +34,42 @@
       "schemaName": "hvcg_ProductVersion",
       "displayName": "HVCG OS Product Version",
       "defaultValue": "1.1.0"
+    },
+    {
+      "schemaName": "hvcg_CrmEnableTeamsNotify",
+      "displayName": "CRM Enable Teams Notify",
+      "defaultValue": "false",
+      "description": "Master gate for Opportunity CRM Teams posts. Keep false until Dev UAT on test channels."
+    },
+    {
+      "schemaName": "hvcg_CrmTestRecipient",
+      "displayName": "CRM Test Recipient UPN",
+      "defaultValue": "REQUIRED_OWNER_UPN",
+      "description": "Dev UAT recipient only \u2014 owner UPN; never client/partner addresses."
+    },
+    {
+      "schemaName": "hvcg_TeamsCrmChannelId",
+      "displayName": "Teams CRM Test Channel ID",
+      "defaultValue": "",
+      "description": "Dev test channel only for pipeline/win notifies."
+    },
+    {
+      "schemaName": "hvcg_TeamsCrmChannelGroupId",
+      "displayName": "Teams CRM Test Channel Group ID",
+      "defaultValue": "",
+      "description": "Team id for CRM test channel."
+    },
+    {
+      "schemaName": "hvcg_TeamsCapitalChannelId",
+      "displayName": "Teams Capital Test Channel ID",
+      "defaultValue": "",
+      "description": "Dev test channel only for capital funding notifies."
+    },
+    {
+      "schemaName": "hvcg_TeamsCapitalChannelGroupId",
+      "displayName": "Teams Capital Test Channel Group ID",
+      "defaultValue": "",
+      "description": "Team id for capital test channel."
     }
   ]
 }

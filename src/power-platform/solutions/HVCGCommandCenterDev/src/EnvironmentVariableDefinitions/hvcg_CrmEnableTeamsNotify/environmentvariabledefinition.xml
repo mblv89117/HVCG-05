@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<environmentvariabledefinition schemaname="hvcg_CrmEnableTeamsNotify">
+  <displayname default="CRM Enable Teams Notify">
+    <label description="CRM Enable Teams Notify" languagecode="1033" />
+  </displayname>
+  <description default="Master gate for Opportunity CRM Teams posts. Keep false until Dev UAT on test channels.">
+    <label description="Master gate for Opportunity CRM Teams posts. Keep false until Dev UAT on test channels." languagecode="1033" />
+  </description>
+  <type>100000000</type>
+  <isrequired>0</isrequired>
+  <defaultvalue>false</defaultvalue>
+</environmentvariabledefinition>

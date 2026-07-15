@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<environmentvariabledefinition schemaname="hvcg_TeamsCrmChannelGroupId">
+  <displayname default="Teams CRM Test Channel Group ID">
+    <label description="Teams CRM Test Channel Group ID" languagecode="1033" />
+  </displayname>
+  <description default="Team id for CRM test channel.">
+    <label description="Team id for CRM test channel." languagecode="1033" />
+  </description>
+  <type>100000000</type>
+  <isrequired>0</isrequired>
+  <defaultvalue></defaultvalue>
+</environmentvariabledefinition>

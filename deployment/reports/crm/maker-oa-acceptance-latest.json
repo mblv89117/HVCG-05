@@ -1,0 +1,51 @@
+{
+  "reportId": "CRM-DEV-ACCEPT-20260715-MAKER-OA",
+  "timestampUtc": "2026-07-15T18:03:52.118402+00:00",
+  "environment": "development",
+  "verdict": "PARTIAL_BLOCKED_AUTH",
+  "flows": {
+    "imported": 0,
+    "validatedOffline": 4,
+    "names": [
+      "HVCG_LeadQualifiedCreateOpportunity",
+      "HVCG_OpportunityStageChangedNotify",
+      "HVCG_OpportunityWonCloseout",
+      "HVCG_CapitalFundingStatusNotify"
+    ]
+  },
+  "app": {
+    "status": "BLOCKED",
+    "reason": "specs only; no msapp; Maker OA-CRM-09"
+  },
+  "connections": {
+    "status": "BLOCKED",
+    "reason": "pac auth pending",
+    "teamsNotify": false
+  },
+  "e2e": {
+    "offline": "PASS",
+    "live": "NOT_RUN"
+  },
+  "tooling": {
+    "dotnet": "10.0.302",
+    "pac": "2.9.3",
+    "installedThisSession": true
+  },
+  "auth": {
+    "pacProfiles": 0,
+    "deviceCodePending": true,
+    "loginUrl": "https://login.microsoft.com/device"
+  },
+  "tests": {
+    "predeploy": 0,
+    "crmAcceptanceOffline": 0,
+    "unitCrm": 0,
+    "unitLifecycle": 0,
+    "smokeHelpers": 0
+  },
+  "packagesUpdated": [
+    "HVCG_EnvironmentVariables.json",
+    "EnvironmentVariableDefinitions CRM*"
+  ],
+  "teamsPolicy": "HVCG_CRM_ENABLE_TEAMS_NOTIFY default false \u2014 not activated"
+}

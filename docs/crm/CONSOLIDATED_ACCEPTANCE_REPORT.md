@@ -24,16 +24,31 @@
 **Repo packaging is integration-complete.** Live Development tenant apply remains **owner-only** per `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-01…11). Fill `docs/crm/ACCEPTANCE_REPORT.md` after live apply.
 
 
-## Handoff status note (2026-07-15 ~10:07 PT)
+## Handoff status note (2026-07-15 ~11:05 PT) — Maker OA attempt
+
+| Item | Value |
+|------|--------|
+| Feature branch | `cursor/v1.1.0-intelligence-ai-ops` |
+| Live Dev Repair | **COMPLETED** earlier — hasDrift=false / 1170 fields (`schema-validation-20260715-103353.json`) |
+| Maker OA approval | **Granted** (Dev only) |
+| Tooling | `pac` 2.9.3 + .NET 10 installed; device-code auth **pending owner** |
+| Flow import live | **0/4** — scaffolds need Maker rebuild; LeadQualified has Compose placeholders |
+| Canvas | **Not published** — specs only (`scrCRM.md` / `scrOpportunityDetail.md`); no `.msapp` |
+| Teams notify | Remains **false** / not activated |
+| Offline suites | predeploy + CRM acceptance/unit/lifecycle/smoke **PASS** |
+| Live acceptance | `docs/crm/ACCEPTANCE_REPORT.md` = **PARTIAL**; `deployment/reports/crm/maker-oa-acceptance-latest.json` |
+| Next | Owner completes `pac` device login → Maker import/rebuild → live smoke |
+
+## Prior handoff note (2026-07-15 ~10:07 PT)
 
 | Item | Value |
 |------|--------|
 | Feature branch | `cursor/v1.1.0-intelligence-ai-ops` |
 | Verified HEAD | `8635397` (`crm(integration): merge Opportunity CRM parallel workstreams`) |
 | Six CRM workstreams | Merged; offline predeploy **PASS** |
-| Live Dev Repair | **Running at handoff** (terminal `573342`) — CRM fields/lists/lookups applied; validations showed HasDrift=False / 1170 fields; views created; was in **pre-seed** validation. **Do not kill or start a second Repair.** |
-| Maker | Flow import, app publish, Teams activation — **NOT done** |
-| Next | After Repair exits: attest schema (`hasDrift=false`), then Owner OA actions in `OWNER_ACTION_GUIDE.md` |
+| Live Dev Repair | Was running at prior handoff — **now COMPLETED** |
+| Maker | Flow import, app publish, Teams activation — attempted; **blocked on auth** |
+| Next | Complete pac device-code; then OA-CRM-05…10 in Maker |
 
 
 ---

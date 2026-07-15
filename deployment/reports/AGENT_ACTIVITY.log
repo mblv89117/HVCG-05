@@ -18,3 +18,12 @@
 [2026-07-15T10:38:28-0700] PREDEPLOY Invoke-HVCGPreDeploymentTests.ps1 RESULT=PASS (includes CRM offline acceptance)
 [2026-07-15T10:38:28-0700] GATE Maker flow import/publish/Teams WAITING FOR APPROVAL; no Production; no second repair
 [2026-07-15T10:38:28-0700] ACTION updated PROJECT_STATUS/HANDOFF/NEXT_SESSION; commit+push COMPLETED milestone
+[2026-07-15T11:04:36-0700] CLASSIFY Maker OA attempt → PARTIAL / BLOCKED on pac device-code auth
+[2026-07-15T11:04:36-0700] TOOLING .NET 10.0.302 + pac 2.9.3 installed; PATH=~/.dotnet/tools
+[2026-07-15T11:04:36-0700] TESTS predeploy PASS; CRM offline acceptance PASS; unit crm/lifecycle/smoke PASS
+[2026-07-15T11:04:36-0700] PACKAGE CRM env vars (hvcg_CrmEnableTeamsNotify=false) + Dev site URL defaults
+[2026-07-15T11:04:36-0700] FLOWS live 0/4 imported; offline 4/4 package OK; canvas BLOCKED (no msapp)
+[2026-07-15T11:04:36-0700] AUTH pac device-code pending — NOTIFY_USER complete https://login.microsoft.com/device
+[2026-07-15T11:04:36-0700] REPORT docs/crm/ACCEPTANCE_REPORT.md ; deployment/reports/crm/maker-oa-acceptance-latest.json
+[2026-07-15T11:04:36-0700] GATES Dev-only; Teams Off; no Production; engines frozen
+[2026-07-15T11:04:36-0700] ACTION commit+push PARTIAL milestone; resume after auth
