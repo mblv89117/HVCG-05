@@ -1,0 +1,143 @@
+{
+  "title": "HVCG_PortalStatusUpdates",
+  "description": "Portal — Client-safe status updates / milestone narrative (unpublished by default)",
+  "template": "genericList",
+  "domain": "Portal",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Client-safe headline"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "MilestoneId",
+      "displayName": "MilestoneId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Milestones"
+    },
+    {
+      "internalName": "StatusCategory",
+      "displayName": "StatusCategory",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Progress",
+        "Milestone",
+        "DocumentRequest",
+        "Deliverable",
+        "Risk",
+        "General"
+      ],
+      "default": "Progress"
+    },
+    {
+      "internalName": "Body",
+      "displayName": "Body",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Client-safe body — never include fees, margins, or internal notes"
+    },
+    {
+      "internalName": "IsPublished",
+      "displayName": "IsPublished",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "Unpublished rows are staff-only drafts",
+      "default": false
+    },
+    {
+      "internalName": "PortalVisible",
+      "displayName": "PortalVisible",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "Must be true AND Clients.PortalEnabled for portal surfacing",
+      "default": false
+    },
+    {
+      "internalName": "PublishedDate",
+      "displayName": "PublishedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PublishedBy",
+      "displayName": "PublishedBy",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NotifyClient",
+      "displayName": "NotifyClient",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "Queues staff review only; never sends while HVCG_PORTAL_ENABLE_CLIENT_NOTIFY is false",
+      "default": false
+    },
+    {
+      "internalName": "NotificationStatus",
+      "displayName": "NotificationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NotRequested",
+        "QueuedStaffOnly",
+        "BlockedExternal",
+        "Sent",
+        "Failed"
+      ],
+      "default": "NotRequested"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,355 @@
+{
+  "description": "Client Portal & Secure Data Rooms — additive schema (Dev-ready; external access disabled by default)",
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "safety": {
+    "externalSharingDefault": "Disabled",
+    "externalAccessAllowedDefault": false,
+    "portalEnabledDefault": false,
+    "anonymousLinksBlocked": true,
+    "autoInviteGuests": false,
+    "modifyDeploymentCode": false,
+    "modifyCrmFlows": false
+  },
+  "addLists": [
+    {
+      "title": "HVCG_DataRooms",
+      "description": "Portal — Secure data room registry",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "lookupList": "HVCG_Clients", "required": true, "indexed": true },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "ProjectId", "displayName": "ProjectId", "type": "Lookup", "lookupList": "HVCG_Projects", "indexed": true },
+        { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Lookup", "lookupList": "HVCG_Engagements" },
+        {
+          "internalName": "RoomType",
+          "displayName": "RoomType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Diligence", "Transaction", "LenderPackage", "InvestorPackage", "Custom"],
+          "default": "Diligence"
+        },
+        { "internalName": "TemplateKey", "displayName": "TemplateKey", "type": "Text", "indexed": true },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Draft", "Staging", "Active", "Locked", "Archived"],
+          "default": "Draft"
+        },
+        { "internalName": "LibraryName", "displayName": "LibraryName", "type": "Text", "indexed": true },
+        { "internalName": "LibraryUrl", "displayName": "LibraryUrl", "type": "URL" },
+        {
+          "internalName": "ExternalSharingMode",
+          "displayName": "ExternalSharingMode",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Disabled", "SpecificPeople", "OrganizationOnly"],
+          "default": "Disabled"
+        },
+        { "internalName": "ExternalAccessAllowed", "displayName": "ExternalAccessAllowed", "type": "Boolean", "indexed": true, "default": false },
+        { "internalName": "PortalEnabled", "displayName": "PortalEnabled", "type": "Boolean", "indexed": true, "default": false },
+        { "internalName": "AnonymousLinksBlocked", "displayName": "AnonymousLinksBlocked", "type": "Boolean", "default": true },
+        { "internalName": "OwnerEmail", "displayName": "OwnerEmail", "type": "Text", "indexed": true },
+        { "internalName": "ExpiresOn", "displayName": "ExpiresOn", "type": "DateTime", "indexed": true },
+        { "internalName": "Purpose", "displayName": "Purpose", "type": "Note" },
+        { "internalName": "ClientSafeDescription", "displayName": "ClientSafeDescription", "type": "Note" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_DataRoomParticipants",
+      "description": "Portal — Planned data room participants (no auto-invite)",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "DataRoomId", "displayName": "DataRoomId", "type": "Lookup", "lookupList": "HVCG_DataRooms", "required": true, "indexed": true },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "ParticipantEmail", "displayName": "ParticipantEmail", "type": "Text", "required": true, "indexed": true },
+        {
+          "internalName": "ParticipantType",
+          "displayName": "ParticipantType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Staff", "ClientContact", "Guest", "Advisor", "Lender", "Investor"],
+          "default": "Staff"
+        },
+        {
+          "internalName": "AccessLevel",
+          "displayName": "AccessLevel",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Read", "Contribute", "Approve"],
+          "default": "Read"
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Planned", "PendingApproval", "Approved", "Active", "Revoked", "Expired"],
+          "default": "Planned"
+        },
+        { "internalName": "ExternalInviteAllowed", "displayName": "ExternalInviteAllowed", "type": "Boolean", "indexed": true, "default": false },
+        { "internalName": "InviteSent", "displayName": "InviteSent", "type": "Boolean", "indexed": true, "default": false },
+        { "internalName": "ExpiresOn", "displayName": "ExpiresOn", "type": "DateTime", "indexed": true },
+        { "internalName": "ApprovalId", "displayName": "ApprovalId", "type": "Lookup", "lookupList": "HVCG_Approvals" },
+        { "internalName": "Notes", "displayName": "Notes", "type": "Note" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_PortalStatusUpdates",
+      "description": "Portal — Client-safe status updates (unpublished by default)",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "lookupList": "HVCG_Clients", "required": true, "indexed": true },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "ProjectId", "displayName": "ProjectId", "type": "Lookup", "lookupList": "HVCG_Projects", "indexed": true },
+        { "internalName": "MilestoneId", "displayName": "MilestoneId", "type": "Lookup", "lookupList": "HVCG_Milestones", "indexed": true },
+        {
+          "internalName": "StatusCategory",
+          "displayName": "StatusCategory",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Progress", "Milestone", "DocumentRequest", "Deliverable", "Risk", "General"],
+          "default": "Progress"
+        },
+        { "internalName": "Body", "displayName": "Body", "type": "Note", "required": true },
+        { "internalName": "IsPublished", "displayName": "IsPublished", "type": "Boolean", "indexed": true, "default": false },
+        { "internalName": "PortalVisible", "displayName": "PortalVisible", "type": "Boolean", "indexed": true, "default": false },
+        { "internalName": "PublishedDate", "displayName": "PublishedDate", "type": "DateTime", "indexed": true },
+        { "internalName": "PublishedBy", "displayName": "PublishedBy", "type": "Text" },
+        { "internalName": "NotifyClient", "displayName": "NotifyClient", "type": "Boolean", "indexed": true, "default": false },
+        {
+          "internalName": "NotificationStatus",
+          "displayName": "NotificationStatus",
+          "type": "Choice",
+          "indexed": true,
+          "choices": ["NotRequested", "QueuedStaffOnly", "BlockedExternal", "Sent", "Failed"],
+          "default": "NotRequested"
+        },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_PortalAuditLog",
+      "description": "Portal — Audit trail for portal and data room control events",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        {
+          "internalName": "EventType",
+          "displayName": "EventType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": [
+            "PortalEnabledChanged",
+            "PortalVisibleChanged",
+            "StatusUpdatePublished",
+            "DeliverableLinkPublished",
+            "DeliverableLinkRevoked",
+            "AccessGrantPlanned",
+            "AccessGrantRevoked",
+            "DataRoomCreated",
+            "DataRoomStatusChanged",
+            "ExternalSharingBlocked",
+            "ExternalInviteBlocked",
+            "NotificationBlocked",
+            "LibraryAclVerified",
+            "SecurityViolationAttempt",
+            "Other"
+          ],
+          "default": "Other"
+        },
+        { "internalName": "ActorEmail", "displayName": "ActorEmail", "type": "Text", "indexed": true },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true },
+        { "internalName": "DataRoomId", "displayName": "DataRoomId", "type": "Lookup", "lookupList": "HVCG_DataRooms", "indexed": true },
+        {
+          "internalName": "ResourceType",
+          "displayName": "ResourceType",
+          "type": "Choice",
+          "indexed": true,
+          "choices": ["Client", "DataRoom", "DocumentRequest", "Deliverable", "Milestone", "StatusUpdate", "PortalAccess", "Participant", "Library", "Notification", "Other"]
+        },
+        { "internalName": "ResourceId", "displayName": "ResourceId", "type": "Text", "indexed": true },
+        { "internalName": "Action", "displayName": "Action", "type": "Text" },
+        {
+          "internalName": "Outcome",
+          "displayName": "Outcome",
+          "type": "Choice",
+          "indexed": true,
+          "choices": ["Succeeded", "Blocked", "Failed", "Skipped"],
+          "default": "Succeeded"
+        },
+        { "internalName": "Details", "displayName": "Details", "type": "Note" },
+        { "internalName": "EventDate", "displayName": "EventDate", "type": "DateTime", "required": true, "indexed": true },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_Clients",
+      "column": {
+        "internalName": "ExternalAccessAllowed",
+        "displayName": "ExternalAccessAllowed",
+        "type": "Boolean",
+        "indexed": true,
+        "default": false,
+        "description": "Client-level gate for any guest/B2B access (default false)"
+      }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": {
+        "internalName": "DataRoomEnabled",
+        "displayName": "DataRoomEnabled",
+        "type": "Boolean",
+        "indexed": true,
+        "default": false
+      }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": {
+        "internalName": "PortalNotificationMode",
+        "displayName": "PortalNotificationMode",
+        "type": "Choice",
+        "indexed": true,
+        "choices": ["Disabled", "StaffOnly", "ClientEmailQueued"],
+        "default": "StaffOnly"
+      }
+    },
+    {
+      "list": "HVCG_Milestones",
+      "column": {
+        "internalName": "PortalVisible",
+        "displayName": "PortalVisible",
+        "type": "Boolean",
+        "indexed": true,
+        "default": false
+      }
+    },
+    {
+      "list": "HVCG_Milestones",
+      "column": {
+        "internalName": "ClientSafeLabel",
+        "displayName": "ClientSafeLabel",
+        "type": "Text"
+      }
+    },
+    {
+      "list": "HVCG_Milestones",
+      "column": {
+        "internalName": "ClientSafeNotes",
+        "displayName": "ClientSafeNotes",
+        "type": "Note"
+      }
+    },
+    {
+      "list": "HVCG_PortalAccess",
+      "column": {
+        "internalName": "DataRoomId",
+        "displayName": "DataRoomId",
+        "type": "Lookup",
+        "lookupList": "HVCG_DataRooms",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_PortalAccess",
+      "column": {
+        "internalName": "InviteMode",
+        "displayName": "InviteMode",
+        "type": "Choice",
+        "indexed": true,
+        "choices": ["ManualOnly", "QueuedNeverAuto"],
+        "default": "ManualOnly"
+      }
+    },
+    {
+      "list": "HVCG_PortalAccess",
+      "column": {
+        "internalName": "ExternalSharingBlocked",
+        "displayName": "ExternalSharingBlocked",
+        "type": "Boolean",
+        "indexed": true,
+        "default": true
+      }
+    },
+    {
+      "list": "HVCG_PortalDeliverableLinks",
+      "column": { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true }
+    },
+    {
+      "list": "HVCG_PortalDeliverableLinks",
+      "column": { "internalName": "ExpiresOn", "displayName": "ExpiresOn", "type": "DateTime", "indexed": true }
+    },
+    {
+      "list": "HVCG_PortalDeliverableLinks",
+      "column": {
+        "internalName": "RequiresAcknowledgement",
+        "displayName": "RequiresAcknowledgement",
+        "type": "Boolean",
+        "default": false
+      }
+    },
+    {
+      "list": "HVCG_PortalMessages",
+      "column": {
+        "internalName": "IsPublished",
+        "displayName": "IsPublished",
+        "type": "Boolean",
+        "indexed": true,
+        "default": false
+      }
+    },
+    {
+      "list": "HVCG_Deliverables",
+      "column": {
+        "internalName": "ClientSafeTitle",
+        "displayName": "ClientSafeTitle",
+        "type": "Text"
+      }
+    },
+    {
+      "list": "HVCG_DocumentRequests",
+      "column": {
+        "internalName": "DataRoomId",
+        "displayName": "DataRoomId",
+        "type": "Lookup",
+        "lookupList": "HVCG_DataRooms",
+        "indexed": true
+      }
+    }
+  ],
+  "addViews": [
+    {
+      "list": "HVCG_DataRooms",
+      "title": "Staff — External Blocked",
+      "fields": ["Title", "ClientCode", "Status", "ExternalSharingMode", "ExternalAccessAllowed", "AnonymousLinksBlocked"]
+    },
+    {
+      "list": "HVCG_PortalStatusUpdates",
+      "title": "Staff — Unpublished Drafts",
+      "fields": ["Title", "ClientCode", "StatusCategory", "IsPublished", "PortalVisible", "NotifyClient"]
+    },
+    {
+      "list": "HVCG_PortalAuditLog",
+      "title": "Recent Portal Audit",
+      "fields": ["Title", "EventType", "ClientCode", "Outcome", "EventDate", "ActorEmail"]
+    }
+  ]
+}

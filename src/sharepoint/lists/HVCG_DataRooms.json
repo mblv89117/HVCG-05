@@ -1,0 +1,205 @@
+{
+  "title": "HVCG_DataRooms",
+  "description": "Portal — Secure data room registry (Dev-ready; external access disabled by default)",
+  "template": "genericList",
+  "domain": "Portal",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Data room display name"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "RoomType",
+      "displayName": "RoomType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Diligence",
+        "Transaction",
+        "LenderPackage",
+        "InvestorPackage",
+        "Custom"
+      ],
+      "default": "Diligence"
+    },
+    {
+      "internalName": "TemplateKey",
+      "displayName": "TemplateKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Maps to templates/data-rooms/*.json"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Draft/Staging remain staff-only. Active still requires PortalEnabled + ExternalAccessAllowed.",
+      "choices": [
+        "Draft",
+        "Staging",
+        "Active",
+        "Locked",
+        "Archived"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "LibraryName",
+      "displayName": "LibraryName",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "SharePoint library name under Clients hub or Data Rooms site"
+    },
+    {
+      "internalName": "LibraryUrl",
+      "displayName": "LibraryUrl",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExternalSharingMode",
+      "displayName": "ExternalSharingMode",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Always Disabled unless owner explicitly upgrades after P-4 approval",
+      "choices": [
+        "Disabled",
+        "SpecificPeople",
+        "OrganizationOnly"
+      ],
+      "default": "Disabled"
+    },
+    {
+      "internalName": "ExternalAccessAllowed",
+      "displayName": "ExternalAccessAllowed",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "Master switch for any guest/B2B access to this room",
+      "default": false
+    },
+    {
+      "internalName": "PortalEnabled",
+      "displayName": "PortalEnabled",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "Expose room metadata to client portal surface",
+      "default": false
+    },
+    {
+      "internalName": "AnonymousLinksBlocked",
+      "displayName": "AnonymousLinksBlocked",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Must remain true",
+      "default": true
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ExpiresOn",
+      "displayName": "ExpiresOn",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Hard lock/archive target date"
+    },
+    {
+      "internalName": "Purpose",
+      "displayName": "Purpose",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Internal purpose statement"
+    },
+    {
+      "internalName": "ClientSafeDescription",
+      "displayName": "ClientSafeDescription",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Only text eligible for portal display when PortalEnabled"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ],
+  "views": [
+    {
+      "title": "Staff — All Data Rooms",
+      "fields": ["Title", "ClientCode", "RoomType", "Status", "ExternalSharingMode", "ExternalAccessAllowed", "PortalEnabled", "ExpiresOn"],
+      "orderBy": "Title"
+    },
+    {
+      "title": "Staff — External Blocked",
+      "fields": ["Title", "ClientCode", "Status", "ExternalSharingMode", "AnonymousLinksBlocked"],
+      "filter": "ExternalAccessAllowed eq 0"
+    },
+    {
+      "title": "Staff — Staging",
+      "fields": ["Title", "ClientCode", "RoomType", "TemplateKey", "Status", "OwnerEmail"],
+      "filter": "Status eq 'Staging' or Status eq 'Draft'"
+    }
+  ]
+}

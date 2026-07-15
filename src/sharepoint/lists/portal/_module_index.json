@@ -1,0 +1,70 @@
+{
+  "module": "ClientPortalDataRooms",
+  "packageVersion": "1.1.0-portal",
+  "note": "Module-local index. See docs/portal/SHARED_FILE_RECOMMENDATIONS.md before merging into src/sharepoint/lists/_index.json.",
+  "lists": [
+    {
+      "name": "HVCG_DataRooms",
+      "path": "src/sharepoint/lists/HVCG_DataRooms.json",
+      "columnCount": 19,
+      "description": "Portal — Secure data room registry"
+    },
+    {
+      "name": "HVCG_DataRoomParticipants",
+      "path": "src/sharepoint/lists/HVCG_DataRoomParticipants.json",
+      "columnCount": 13,
+      "description": "Portal — Planned data room participants"
+    },
+    {
+      "name": "HVCG_PortalStatusUpdates",
+      "path": "src/sharepoint/lists/HVCG_PortalStatusUpdates.json",
+      "columnCount": 14,
+      "description": "Portal — Client-safe status updates"
+    },
+    {
+      "name": "HVCG_PortalAuditLog",
+      "path": "src/sharepoint/lists/HVCG_PortalAuditLog.json",
+      "columnCount": 12,
+      "description": "Portal — Portal/data room audit trail"
+    },
+    {
+      "name": "HVCG_PortalAccess",
+      "path": "src/sharepoint/lists/HVCG_PortalAccess.json",
+      "columnCount": 9,
+      "description": "Portal — access grants (existing; additive columns in migration)"
+    },
+    {
+      "name": "HVCG_PortalMessages",
+      "path": "src/sharepoint/lists/HVCG_PortalMessages.json",
+      "columnCount": 10,
+      "description": "Portal — messaging stubs (existing)"
+    },
+    {
+      "name": "HVCG_PortalDeliverableLinks",
+      "path": "src/sharepoint/lists/HVCG_PortalDeliverableLinks.json",
+      "columnCount": 6,
+      "description": "Portal — deliverable links (existing)"
+    }
+  ],
+  "existingListExtensions": [
+    "HVCG_Clients: ExternalAccessAllowed, DataRoomEnabled, PortalNotificationMode",
+    "HVCG_Milestones: PortalVisible, ClientSafeLabel, ClientSafeNotes",
+    "HVCG_Deliverables: ClientSafeTitle",
+    "HVCG_DocumentRequests: DataRoomId",
+    "HVCG_PortalAccess: DataRoomId, InviteMode, ExternalSharingBlocked",
+    "HVCG_PortalDeliverableLinks: ClientCode, ExpiresOn, RequiresAcknowledgement",
+    "HVCG_PortalMessages: IsPublished"
+  ],
+  "libraries": [
+    {
+      "name": "HVCG_DataRoomLibrary",
+      "path": "src/sharepoint/libraries/HVCG_DataRoomLibrary.template.json"
+    }
+  ],
+  "templates": [
+    "templates/data-rooms/diligence-standard.json",
+    "templates/data-rooms/lender-package.json",
+    "templates/data-rooms/investor-package.json",
+    "templates/data-rooms/transaction-close.json"
+  ]
+}
