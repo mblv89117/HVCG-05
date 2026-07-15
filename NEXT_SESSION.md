@@ -1,29 +1,27 @@
-# Next Session
+# Next Session — Finance Operations
 
-**Generated:** 2026-07-15 (~11:05 PT)  
-**Mode:** Dev Maker OA **PARTIAL** — offline PASS; live import **BLOCKED on pac device-code auth**
+**Generated:** 2026-07-15 (~15:35 PT)  
+**Mode:** Finance Ops package **IN PROGRESS** — exclusive docs + offline smoke done; Maker/live deferred
 
 ## Current project status
 
-- **Product:** HVCG OS **v1.1.0**
-- **Branch:** `cursor/v1.1.0-intelligence-ai-ops`
-- **Schema:** Still clean from repair (`schema-validation-20260715-103353.json`, hasDrift=false / 1170)
-- **Tooling:** `pac` 2.9.3 + .NET 10 installed on this Mac (`~/.dotnet/tools`)
-- **Acceptance:** `docs/crm/ACCEPTANCE_REPORT.md` (PARTIAL); evidence `deployment/reports/crm/maker-oa-acceptance-latest.json`
+- **Module:** Finance Operations  
+- **Branch / worktree:** `cursor/finance-operations` / `.worktrees/finance-operations`  
+- **Package:** `docs/finance/` (Architecture, Requirements, Data Map, Shared recommendations, Handoff, Owner guide)  
+- **Lists:** Existing Finance domain schemas documented; no new exclusive list stubs this sprint  
+- **Bus:** register + heartbeat `IN_PROGRESS`; ack Master PM messages from MAIN `HVCG_REPO_ROOT`
 
-## Do next (resume after auth)
+## Do next
 
-1. Complete or refresh: `export PATH="$HOME/.dotnet:$HOME/.dotnet/tools:$PATH"` then  
-   `pac auth create --deviceCode --name HVCG-Dev-Maker`  
-   Open `https://login.microsoft.com/device`, enter code, finish MFA as Global/Maker admin.
-2. `pac org list` → select **HVCG Development** only (never Prod).
-3. Import/rebuild 4 CRM flows Off; bind SharePoint Dev; keep `hvcg_CrmEnableTeamsNotify=false`.
-4. Build/publish canvas screens per `docs/crm/POWER_APPS_BUILD_GUIDE.md`.
-5. Live smoke + fill acceptance → commit.
+1. Re-run offline: `python3 tests/unit/test_finance_operations.py` (expect PASS).  
+2. If Master PM asks for READY: add exclusive `src/power-apps/finance/` build sheet and/or `src/sharepoint/views/finance-views.json` **without** editing locked indexes; update HANDOFF.  
+3. On parent merge request: hand integration `SHARED_FILE_RECOMMENDATIONS.md` only.  
+4. Owner Maker (later): OA-FIN-01…05 — `scrFinance`, flows Off, demo smoke.
 
 ## Do not
 
-- Production / OA-CRM-11 without separate approval
-- Enable Teams notify or company channels
-- Modify frozen SharePoint deployment engines
-- Commit `.worktrees/` or secrets
+- Interrupt CRM Maker OA / pac auth / smoke on MAIN  
+- Edit locked shared indexes or deployment engines  
+- Touch Production  
+- Commit secrets / `.env` / live client invoice amounts into the repo or bus  
+- Merge or push unless Master PM / owner explicitly asks
