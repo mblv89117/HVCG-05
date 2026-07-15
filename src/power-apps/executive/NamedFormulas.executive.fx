@@ -1,142 +1,180 @@
-// --- Executive Command Center ---
-// Package: exclusive ECC path (Option A). Parent Integrator appends this block
-// to src/power-apps/formulas/NamedFormulas.fx after CRM section (do not overwrite CRM).
+// --- Executive Command Center (exclusive mirror) ---
+// Canonical paste target for parent merge: src/power-apps/formulas/ExecutiveNamedFormulas.fx
+// Keep these files in sync. Do not overwrite CRM NamedFormulas.fx on this branch.
 
-// Executive role gate (Owner-only for full CEO surface)
-nfIsExecutiveOwner =
-  nfUserRole in ["Owner"] || User().Email = LookUp(HVCG_TeamMembers, PrimaryRole = "Owner").Email;
+// Executive Command Center — Named Formulas (nfExec*)
+// App: HVCG OS Command Center · Screen: scrHomeExec
+// Audience: Owner. Guard finance with nfIsOwner when present in NamedFormulas.fx.
+// Rule: never invent amounts — blank if Sum has no rows of meaning.
 
-// Finance tiles already gated by nfIsFinanceViewer in base formulas
+// --- Role ---
+// Prefer shared nfIsOwner if already defined; else:
+// nfExecIsOwner = User().Email = LookUp(HVCG_TeamMembers, Role = "Owner", Email)
 
-nfExecOpenPipeline =
-  Filter(HVCG_Opportunities, WinLossStatus = "Open");
+// --- Period ---
+// varCashPeriod set on screen: "MTD" | "YTD"
+nfExecCashStart =
+    If(
+        varCashPeriod = "YTD",
+        Date(Year(Today()), 1, 1),
+        Date(Year(Today()), Month(Today()), 1)
+    );
 
-nfExecPipelineValue =
-  Sum(nfExecOpenPipeline, WeightedValue);
+// --- KPI-01 Pipeline $ ---
+nfExecPipelineWeighted =
+    Sum(
+        Filter(HVCG_Opportunities, WinLossStatus = "Open"),
+        WeightedValue
+    );
 
-nfExecCommitForecastValue =
-  Sum(Filter(nfExecOpenPipeline, ForecastCategory = "Commit"), WeightedValue);
-
+// --- KPI-02 MRR ---
 nfExecMRR =
-  Sum(
-    Filter(HVCG_Clients, IsActive = true && ClientStage = "Active Client"),
-    MonthlyRetainer
-  );
+    Sum(
+        Filter(
+            HVCG_Clients,
+            IsActive = true && ClientStage = "Active Client"
+        ),
+        MonthlyRetainer
+    );
 
-nfExecPastDueMilestones =
-  Filter(HVCG_FinancialMilestones, IsPastDue = true);
+// --- KPI-03 Retainers past due $ ---
+nfExecRetainerPastDue =
+    Sum(
+        Filter(
+            HVCG_Invoices,
+            InvoiceType = "Retainer" && InvoiceStatus = "Past Due"
+        ),
+        Amount - Coalesce(AmountCollected, 0)
+    );
 
-nfExecARInvoices =
-  Filter(
-    HVCG_Invoices,
-    InvoiceStatus in ["Sent", "Partial", "Past Due"]
-  );
+// --- KPI-04 Forecast weighted ---
+nfExecForecastWeighted =
+    Sum(
+        Filter(
+            HVCG_RevenueForecastLines,
+            ForecastCategory = "Pipeline"
+                || ForecastCategory = "Best Case"
+                || ForecastCategory = "Commit"
+        ),
+        WeightedAmount
+    );
 
-nfExecAROutstanding =
-  Sum(
-    nfExecARInvoices,
-    Coalesce(Amount, 0) - Coalesce(AmountCollected, 0)
-  );
+// --- KPI-05 Cash collected (period) ---
+nfExecCashCollected =
+    Sum(
+        Filter(
+            HVCG_Invoices,
+            AmountCollected > 0 && InvoiceDate >= nfExecCashStart
+        ),
+        AmountCollected
+    );
 
-nfExecCashCollectedMTD =
-  Sum(
-    Filter(
-      HVCG_Invoices,
-      !IsBlank(AmountCollected) &&
-      Year(InvoiceDate) = Year(Today()) &&
-      Month(InvoiceDate) = Month(Today())
-    ),
-    AmountCollected
-  );
+// --- KPI-06 Outstanding AR ---
+nfExecOutstandingAR =
+    Sum(
+        Filter(
+            HVCG_Invoices,
+            InvoiceStatus = "Sent"
+                || InvoiceStatus = "Partial"
+                || InvoiceStatus = "Past Due"
+        ),
+        Amount - Coalesce(AmountCollected, 0)
+    );
 
-nfExecRevenueForecastWeighted =
-  Sum(HVCG_RevenueForecastLines, WeightedAmount);
-
+// --- KPI-07 Capital pipeline $ ---
 nfExecCapitalPipeline =
-  Sum(
-    Filter(
-      HVCG_CapitalOpportunities,
-      !(FundingStatus in ["Closed", "Declined", "Withdrawn"])
-    ),
-    WeightedValue
-  );
+    Sum(
+        Filter(
+            HVCG_CapitalOpportunities,
+            FundingStatus <> "Closed" && FundingStatus <> "Declined"
+        ),
+        Coalesce(WeightedValue, TargetAmount * FundingProbability / 100)
+    );
 
-nfExecProjectsAtRisk =
-  Filter(HVCG_Projects, ProjectHealth in ["Red", "Yellow"]);
+// --- KPI-08 Projects Red/Yellow ---
+nfExecProjectsAtRiskCount =
+    CountRows(
+        Filter(
+            HVCG_Projects,
+            ProjectHealth = "Red" || ProjectHealth = "Yellow"
+        )
+    );
 
-nfExecClientsRed =
-  Filter(HVCG_Clients, IsActive = true && OverallHealth = "Red");
+// --- KPI-09 / KPI-10 Capacity ---
+nfExecUtilizationAvg =
+    Average(
+        Filter(HVCG_TeamMembers, IsActive = true),
+        CurrentUtilizationPct
+    );
 
-nfExecDecisionQueue =
-  Filter(HVCG_Decisions, RequiresExecutiveAttention = true);
+nfExecAvailableHours =
+    Sum(
+        Filter(HVCG_TeamMembers, IsActive = true),
+        AvailableHoursThisWeek
+    );
 
-nfExecClientsAttention =
-  Filter(HVCG_Clients, RequiresExecutiveAttention = true);
+// --- KPI-16 Approvals waiting (count) ---
+nfExecApprovalsWaitingCount =
+    CountRows(
+        Filter(
+            HVCG_Deliverables,
+            RequiresExecutiveApproval = true
+                && (
+                    ClientApprovalStatus = "Pending"
+                        || InternalReviewStatus = "Pending"
+                        || DeliverableStatus = "Internal Review"
+                        || DeliverableStatus = "Client Review"
+                )
+        )
+    )
+        + CountRows(
+            Filter(HVCG_ExpenseApprovals, ApprovalStatus = "Pending")
+        );
 
-nfExecProjectsAttention =
-  Filter(
-    HVCG_Projects,
-    RequiresExecutiveAttention = true || ProjectHealth = "Red"
-  );
+// --- KPI-17 Critical decisions ---
+nfExecCriticalDecisionsCount =
+    CountRows(
+        Filter(
+            HVCG_Decisions,
+            RequiresExecutiveAttention = true
+                && (
+                    DecisionStatus = "Proposed"
+                        || DecisionStatus = "Pending Decision"
+                )
+        )
+    );
 
-nfExecMajorRisks =
-  Filter(
-    HVCG_Risks,
-    RiskLevel in ["High", "Critical"] &&
-    !(RiskStatus in ["Closed", "Accepted"])
-  );
+// --- KPI-18 Major risks ---
+nfExecMajorRisksCount =
+    CountRows(
+        Filter(
+            HVCG_Risks,
+            (RiskLevel = "High" || RiskLevel = "Critical" || RequiresExecutiveAttention = true)
+                && (RiskStatus = "Open" || RiskStatus = "Mitigating")
+        )
+    );
 
-nfExecPendingApprovals =
-  Filter(HVCG_Approvals, ApprovalStatus = "Pending");
+// --- KPI-19 Meetings next 14d ---
+nfExecUpcomingMeetingsCount =
+    CountRows(
+        Filter(
+            HVCG_Meetings,
+            MeetingDate >= Today() && MeetingDate <= DateAdd(Today(), 14)
+        )
+    );
 
-nfExecPendingExpenseApprovals =
-  Filter(HVCG_ExpenseApprovals, ApprovalStatus = "Pending");
+// --- KPI-23 Revenue at risk $ ---
+nfExecRevenueAtRisk =
+    Sum(
+        Filter(HVCG_FinancialMilestones, RevenueAtRisk = true),
+        Amount
+    );
 
-nfExecDeliverablesNeedingApproval =
-  Filter(
-    HVCG_Deliverables,
-    RequiresExecutiveApproval = true &&
-    !(DeliverableStatus in ["Approved", "Cancelled"])
-  );
+// --- Display helper ---
+nfExecCurrencyOrBlank =
+    // usage: nfExecCurrencyOrBlank(nfExecMRR) — implement as component or inline Text:
+    // If(IsBlank(value) || value = 0 && CountRows(source)=0, "—", Text(value, "$#,##0"))
+    Blank();
 
-nfExecProposalsAwaiting =
-  Filter(HVCG_Proposals, ProposalStatus = "Sent");
-
-nfExecMeetingsNext14 =
-  Filter(
-    HVCG_Meetings,
-    MeetingDate >= Today() &&
-    MeetingDate <= DateAdd(Today(), 14, Days)
-  );
-
-nfExecStrategicRelationships =
-  Filter(
-    HVCG_Relationships,
-    StrategicValue in ["High", "Critical"]
-  );
-
-nfExecMyApprovals =
-  Filter(
-    nfExecPendingApprovals,
-    ApproverEmail = User().Email
-  );
-
-// Capacity (simplified — refine with weekly TimeEntries join in BI)
-nfExecTeamCapacityHours =
-  Sum(HVCG_TeamMembers, CapacityHoursPerWeek);
-
-nfExecBillableHoursLogged =
-  Sum(Filter(HVCG_TimeEntries, IsBillable = true), Hours);
-
-nfExecUtilizationPct =
-  If(
-    nfExecTeamCapacityHours = 0,
-    0,
-    nfExecBillableHoursLogged / nfExecTeamCapacityHours
-  );
-
-nfShowExecFinanceTiles =
-  nfIsFinanceViewer;
-
-nfShowExecFullHome =
-  nfIsExecutive;
+// --- Health color (reuse shared nfHealthColor when available) ---
+// nfExecHealthColor(h) = Switch(h, "Green", Color.DarkGreen, "Yellow", Color.DarkGoldenRod, "Red", Color.DarkRed, Color.Gray)

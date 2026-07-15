@@ -1,0 +1,30 @@
+{
+  "description": "Offline fixture for Executive Command Center KPI arithmetic tests",
+  "clients": [
+    { "ClientCode": "AAA01", "ClientStage": "Active Client", "IsActive": true, "MonthlyRetainer": 5000, "OverallHealth": "Green" },
+    { "ClientCode": "BBB02", "ClientStage": "Active Client", "IsActive": true, "MonthlyRetainer": 3000, "OverallHealth": "Yellow" },
+    { "ClientCode": "CCC03", "ClientStage": "Prospect", "IsActive": true, "MonthlyRetainer": 0, "OverallHealth": "Green" }
+  ],
+  "opportunities": [
+    { "Title": "Deal A", "WinLossStatus": "Open", "ForecastCategory": "Commit", "WeightedValue": 40000 },
+    { "Title": "Deal B", "WinLossStatus": "Open", "ForecastCategory": "Pipeline", "WeightedValue": 10000 },
+    { "Title": "Deal C", "WinLossStatus": "Won", "ForecastCategory": "Commit", "WeightedValue": 99000 }
+  ],
+  "invoices": [
+    { "InvoiceStatus": "Sent", "InvoiceType": "Retainer", "Amount": 5000, "AmountCollected": 0 },
+    { "InvoiceStatus": "Past Due", "InvoiceType": "Retainer", "Amount": 3000, "AmountCollected": 500 },
+    { "InvoiceStatus": "Paid", "InvoiceType": "Retainer", "Amount": 5000, "AmountCollected": 5000 }
+  ],
+  "capital": [
+    { "FundingStatus": "TermSheet", "WeightedValue": 250000 },
+    { "FundingStatus": "Closed", "WeightedValue": 1000000 }
+  ],
+  "expected": {
+    "mrr": 8000,
+    "pipelineWeighted": 50000,
+    "commitForecast": 40000,
+    "outstandingAR": 7500,
+    "pastDueRetainerAR": 2500,
+    "capitalPipeline": 250000
+  }
+}

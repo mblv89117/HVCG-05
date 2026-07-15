@@ -1,0 +1,62 @@
+{
+  "flowName": "HVCG_ExecutiveWeeklyBrief",
+  "displayName": "HVCG_ExecutiveWeeklyBrief",
+  "module": "ExecutiveCommandCenter",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Monday executive KPI digest email to Owner only. Scaffold only — not registered in shared flow indexes from this branch.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Weekly Monday 07:45 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_AutomationLogs",
+    "pattern": "exec-weekly-brief|{WeekStart}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "recipientMode": "executiveEmailOnly",
+    "forbidden": [
+      "Client email",
+      "Company-wide Teams",
+      "Contractor recipients"
+    ]
+  },
+  "kpiSections": [
+    "PipelineValue",
+    "CommitForecast",
+    "MRR",
+    "AROutstanding",
+    "CapitalPipeline",
+    "ExecQueueCount",
+    "ProjectsAtRisk",
+    "PastDueFinancial"
+  ],
+  "steps": [
+    { "id": 1, "action": "LogStart" },
+    { "id": 2, "action": "AggregateKpisFromSharePoint" },
+    { "id": 3, "action": "ComposeHtmlBrief" },
+    { "id": 4, "action": "EmailExecutiveIfEnabled" },
+    { "id": 5, "action": "LogSuccess" }
+  ],
+  "humanApproval": [
+    "Keep Off until Owner approves digest content",
+    "Do not merge into CRM solution zip without parent integrator"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_EXECUTIVE_EMAIL"
+  ]
+}

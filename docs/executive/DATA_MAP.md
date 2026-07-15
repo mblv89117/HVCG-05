@@ -74,7 +74,7 @@ Power BI physical mapping: `src/power-bi/executive/ceo-semantic-model.json` and 
 |-------|-----|
 | Amount, AmountCollected, InvoiceStatus, DueDate, InvoiceType | Cash + AR |
 | FinancialMilestones: Amount, IsPastDue, RevenueAtRisk, PaymentStatus, MilestoneType | Revenue at risk / success fees |
-| RevenueForecastLines: WeightedAmount, ForecastCategory, Period | Forecast strip |
+| RevenueForecastLines: WeightedAmount, ForecastCategory, ForecastMonth | Forecast strip (no ClientCode on list — join via OpportunityId when expanded) |
 
 ### Capacity
 | Field | Use |
@@ -86,10 +86,12 @@ Power BI physical mapping: `src/power-bi/executive/ceo-semantic-model.json` and 
 | Field | Use |
 |-------|-----|
 | Decisions: DecisionStatus, RequiresExecutiveAttention, Deadline, EscalationReason, DecisionMakerEmail | Decision queue |
-| Risks: RiskLevel, Status, RequiresExecutiveAttention | Major risks |
-| Meetings: MeetingDate, Attendees / OwnerEmail | Upcoming meetings |
-| Deliverables: RequiresExecutiveApproval, ApprovalStatus | Approvals |
-| ExpenseApprovals: ApprovalStatus, Amount | Expense approvals |
+| Risks: RiskLevel, RiskStatus, RequiresExecutiveAttention | Major risks |
+| Meetings: MeetingDate, CommunicationOwnerEmail | Upcoming meetings |
+| Deliverables: RequiresExecutiveApproval, ClientApprovalStatus, InternalReviewStatus, DeliverableStatus | Approvals |
+| ExpenseApprovals: ApprovalStatus, Amount, RequestedByEmail | Expense approvals |
+| Proposals: ProposalStatus, ProposalAmount, ExpiryDate | Awaiting decision |
+| Relationships: StrategicValue, NextPlannedInteraction, Source/Target ClientCode | Strategic this week |
 
 ## 4. View mapping
 

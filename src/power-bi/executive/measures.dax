@@ -1,0 +1,82 @@
+-- HVCG_CEO_Command measures (DAX sketches)
+-- Wire to SharePoint-imported tables using naming from POWERBI_ENTERPRISE_MODEL.md
+
+MRR =
+CALCULATE (
+    SUM ( DimClient[MonthlyRetainer] ),
+    DimClient[ClientStage] = "Active Client",
+    DimClient[IsActive] = TRUE ()
+)
+
+Pipeline Value =
+CALCULATE (
+    SUM ( FactOpportunity[WeightedValue] ),
+    FactOpportunity[WinLossStatus] = "Open"
+)
+
+Commit Forecast =
+CALCULATE (
+    SUM ( FactOpportunity[WeightedValue] ),
+    FactOpportunity[WinLossStatus] = "Open",
+    FactOpportunity[ForecastCategory] = "Commit"
+)
+
+Capital Pipeline =
+CALCULATE (
+    SUM ( FactCapitalOpportunity[WeightedValue] ),
+    NOT FactCapitalOpportunity[FundingStatus] IN { "Closed", "Declined", "Withdrawn" }
+)
+
+Cash Collected MTD =
+CALCULATE (
+    SUM ( FactInvoice[AmountCollected] ),
+    DATESMTD ( DimDate[Date] )
+)
+
+Outstanding AR =
+SUMX (
+    FILTER (
+        FactInvoice,
+        FactInvoice[InvoiceStatus] IN { "Sent", "Partial", "Past Due" }
+    ),
+    FactInvoice[Amount] - COALESCE ( FactInvoice[AmountCollected], 0 )
+)
+
+Revenue Forecast Weighted =
+SUM ( FactRevenueForecast[WeightedAmount] )
+
+Projects At Risk =
+CALCULATE (
+    COUNTROWS ( DimProject ),
+    DimProject[ProjectHealth] IN { "Red", "Yellow" }
+)
+
+Client Health Red =
+CALCULATE (
+    DISTINCTCOUNT ( DimClient[ClientCode] ),
+    DimClient[OverallHealth] = "Red",
+    DimClient[IsActive] = TRUE ()
+)
+
+Executive Queue Count =
+VAR Decisions =
+    CALCULATE ( COUNTROWS ( FactDecision ), FactDecision[RequiresExecutiveAttention] = TRUE () )
+VAR Clients =
+    CALCULATE ( COUNTROWS ( DimClient ), DimClient[RequiresExecutiveAttention] = TRUE () )
+VAR Projects =
+    CALCULATE ( COUNTROWS ( DimProject ), DimProject[RequiresExecutiveAttention] = TRUE () )
+RETURN
+    Decisions + Clients + Projects
+
+Utilization % =
+DIVIDE (
+    CALCULATE ( SUM ( FactTimeEntry[Hours] ), FactTimeEntry[IsBillable] = TRUE () ),
+    SUM ( DimTeamMember[CapacityHoursPerWeek] ) * DISTINCTCOUNT ( DimDate[Week] )
+)
+
+Past Due Financial Count =
+CALCULATE ( COUNTROWS ( FactFinancialMilestone ), FactFinancialMilestone[IsPastDue] = TRUE () )
+
+
+-- Alias used by TEST_PLAN / CEO visuals
+Executive Open Decisions = [Executive Queue Count]

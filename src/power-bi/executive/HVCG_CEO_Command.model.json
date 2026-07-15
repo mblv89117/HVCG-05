@@ -1,0 +1,55 @@
+{
+  "datasetName": "HVCG_CEO_Command",
+  "module": "ExecutiveCommandCenter",
+  "packageVersion": "1.0.0",
+  "description": "CEO-focused Power BI semantic model / app packaging. Reads SharePoint lists; does not alter CRM deployment packages.",
+  "workspace": "HVCG OS",
+  "audienceGroups": [
+    "HVCG-Role-Owner",
+    "HVCG-Role-Administrator"
+  ],
+  "sourceLists": [
+    "HVCG_Clients",
+    "HVCG_Opportunities",
+    "HVCG_CapitalOpportunities",
+    "HVCG_Invoices",
+    "HVCG_FinancialMilestones",
+    "HVCG_RevenueForecastLines",
+    "HVCG_Projects",
+    "HVCG_Tasks",
+    "HVCG_Decisions",
+    "HVCG_Risks",
+    "HVCG_TimeEntries",
+    "HVCG_TeamMembers",
+    "HVCG_Proposals",
+    "HVCG_Relationships"
+  ],
+  "pages": [
+    {
+      "name": "Command",
+      "visuals": ["MRR", "CashCollected", "OutstandingAR", "PipelineValue", "CapitalPipeline", "ProjectsByHealth", "ExecQueueCount"]
+    },
+    {
+      "name": "Sales",
+      "visuals": ["FunnelByStage", "WinLoss90d", "CommitVsPipeline", "ReferralInfluence"]
+    },
+    {
+      "name": "Capital",
+      "visuals": ["FundingStatus", "WeightedCapital", "ExpectedCloseCalendar"]
+    },
+    {
+      "name": "Delivery",
+      "visuals": ["Utilization", "ProjectsRedYellow", "CapacityByRole"]
+    },
+    {
+      "name": "RiskAndDecisions",
+      "visuals": ["ExecutiveQueue", "MajorRisks", "PastDueFinancial"]
+    }
+  ],
+  "relatedEnterpriseModel": "docs/architecture/POWERBI_ENTERPRISE_MODEL.md",
+  "measuresFile": "src/power-bi/executive/measures.dax",
+  "security": {
+    "rowLevel": "None in V1 SharePoint import — rely on workspace app audience Owner/Admin only",
+    "hideFrom": ["Contractor", "Client Contact", "Guest"]
+  }
+}

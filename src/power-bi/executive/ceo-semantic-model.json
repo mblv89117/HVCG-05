@@ -1,0 +1,145 @@
+{
+  "modelName": "HVCG_CEO_Command",
+  "module": "ExecutiveCommandCenter",
+  "packageVersion": "1.0.0",
+  "description": "Logical semantic model for CEO Command Center Power BI app. Import SharePoint lists; no live accounting or bank connectors.",
+  "connections": {
+    "sharePointSite": {
+      "type": "SharePointList",
+      "configDriven": true,
+      "envVar": "HVCG_SITE_URL",
+      "devDefaultHint": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+    }
+  },
+  "refreshSchedule": {
+    "dev": "Manual or 4x/day",
+    "production": "Owner-approved only — not activated from this branch"
+  },
+  "dimensions": [
+    {
+      "name": "DimClient",
+      "sourceList": "HVCG_Clients",
+      "key": "ClientCode",
+      "columns": [
+        "ClientCode",
+        "Title",
+        "ClientStage",
+        "IsActive",
+        "MonthlyRetainer",
+        "OverallHealth",
+        "PaymentStatus",
+        "RiskLevel",
+        "ClientLifetimeValue",
+        "RequiresExecutiveAttention"
+      ]
+    },
+    {
+      "name": "DimTeamMember",
+      "sourceList": "HVCG_TeamMembers",
+      "key": "Email",
+      "columns": [
+        "Email",
+        "Title",
+        "PrimaryRole",
+        "CapacityHoursPerWeek",
+        "CurrentUtilizationPct",
+        "AvailableHoursThisWeek",
+        "BillableTargetPct"
+      ]
+    },
+    {
+      "name": "DimDate",
+      "type": "generated",
+      "grain": "Day",
+      "notes": "Standard calendar table for InvoiceDate, DueDate, MeetingDate, ExpectedCloseDate"
+    },
+    {
+      "name": "DimPipelineStage",
+      "type": "static",
+      "values": ["Discovery", "Assessment", "Proposal", "Negotiation", "Won", "Lost"]
+    }
+  ],
+  "facts": [
+    {
+      "name": "FactOpportunity",
+      "sourceList": "HVCG_Opportunities",
+      "measuresRef": ["PipelineWeighted", "CommitForecast", "WinRate90d"]
+    },
+    {
+      "name": "FactCapitalOpportunity",
+      "sourceList": "HVCG_CapitalOpportunities",
+      "measuresRef": ["CapitalPipeline"]
+    },
+    {
+      "name": "FactInvoice",
+      "sourceList": "HVCG_Invoices",
+      "measuresRef": ["CashCollected", "OutstandingAR", "PastDueRetainerAR"]
+    },
+    {
+      "name": "FactFinancialMilestone",
+      "sourceList": "HVCG_FinancialMilestones",
+      "measuresRef": ["RevenueAtRisk"]
+    },
+    {
+      "name": "FactRevenueForecast",
+      "sourceList": "HVCG_RevenueForecastLines",
+      "measuresRef": ["WeightedForecast"]
+    },
+    {
+      "name": "FactDecision",
+      "sourceList": "HVCG_Decisions",
+      "measuresRef": ["OpenExecutiveDecisions"]
+    },
+    {
+      "name": "FactRisk",
+      "sourceList": "HVCG_Risks",
+      "measuresRef": ["MajorRiskCount"]
+    },
+    {
+      "name": "FactMeeting",
+      "sourceList": "HVCG_Meetings",
+      "measuresRef": ["UpcomingMeetings14d"]
+    },
+    {
+      "name": "FactTimeEntry",
+      "sourceList": "HVCG_TimeEntries",
+      "measuresRef": ["TeamUtilization"]
+    },
+    {
+      "name": "FactProject",
+      "sourceList": "HVCG_Projects",
+      "measuresRef": ["ProjectsAtRisk"]
+    }
+  ],
+  "pages": [
+    {
+      "name": "CEO Overview",
+      "tiles": ["KPI-01", "KPI-02", "KPI-03", "KPI-04", "KPI-05", "KPI-06", "KPI-07", "KPI-08", "KPI-23"]
+    },
+    {
+      "name": "Pipeline & Forecast",
+      "tiles": ["KPI-01", "KPI-04", "KPI-12", "KPI-13", "KPI-22"]
+    },
+    {
+      "name": "Cash & AR",
+      "tiles": ["KPI-05", "KPI-06", "KPI-03", "KPI-23"],
+      "audience": "Owner"
+    },
+    {
+      "name": "Capital Book",
+      "tiles": ["KPI-07", "KPI-20"]
+    },
+    {
+      "name": "Capacity & Delivery",
+      "tiles": ["KPI-08", "KPI-09", "KPI-10", "KPI-11"]
+    },
+    {
+      "name": "Exceptions Queue",
+      "tiles": ["KPI-17", "KPI-18", "KPI-16", "KPI-19"]
+    }
+  ],
+  "security": {
+    "rowLevel": "None in V1 — rely on SharePoint ACL + workspace audience Owner group",
+    "workspaceAudience": ["HVCG-Role-Owner", "HVCG-DEV-Role-Owner"]
+  }
+}

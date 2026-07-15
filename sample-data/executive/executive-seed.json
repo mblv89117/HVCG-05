@@ -1,0 +1,46 @@
+{
+  "module": "ExecutiveCommandCenter",
+  "packageVersion": "1.0.0",
+  "disclaimer": "Synthetic executive-attention seed only. Merge carefully into demo-pack — do not use real client secrets.",
+  "decisions": [
+    {
+      "Title": "HVD01 pricing exception review",
+      "ClientCode": "HVD01",
+      "EscalationReason": "PricingOrScopeException",
+      "RequiresExecutiveAttention": true,
+      "DecisionStatus": "Pending Decision",
+      "OwnerEmail": "pm@hvcg.example",
+      "DecisionMakerEmail": "manny@hvcg.example",
+      "Deadline": "2026-07-20",
+      "Recommendation": "Approve one-time fee credit against past-due to save relationship",
+      "FinancialImpact": "One-time -$2,500 retainer credit"
+    }
+  ],
+  "risks": [
+    {
+      "Title": "HVD01 payment continuity risk",
+      "ClientCode": "HVD01",
+      "RiskLevel": "High",
+      "RiskStatus": "Open",
+      "RequiresExecutiveAttention": true,
+      "OwnerEmail": "manny@hvcg.example",
+      "Description": "Past-due retainer with work continuing"
+    }
+  ],
+  "projectsAttention": [
+    {
+      "Title": "HVD01 Fractional CFO delivery",
+      "ClientCode": "HVD01",
+      "ProjectHealth": "Red",
+      "RequiresExecutiveAttention": true,
+      "ProjectOwnerEmail": "pm@hvcg.example",
+      "Blockers": "Payment past due; escalate executive decision"
+    }
+  ],
+  "kpiExpectedWithDemoPack": {
+    "notes": "When combined with sample-data/demo-pack.json Harbor View (HVD01) and Summit Ridge (SRM01)",
+    "expectExecQueueMinRows": 1,
+    "expectPastDueOrAttentionClient": "HVD01",
+    "expectOpenPipelinePresent": true
+  }
+}

@@ -3,6 +3,7 @@
 **Module:** CEO / Executive Command Center  
 **Product:** HVCG OS Command Center  
 **Branch:** `cursor/executive-command-center`  
+**Packaging:** **Option A — exclusive** module paths (`docs/executive/`, `src/power-apps/executive/`, `src/power-bi/executive/`, `src/sharepoint/views/executive-views.json`, `src/power-automate/executive/`, `tests/executive/`). Shared files are recommendation-only.  
 **Audience:** Owner (Manny) — role `Owner` only for finance KPIs and decision queue  
 **Status:** Spec + offline implementation package (no tenant deploy from this branch)
 

@@ -1,7 +1,7 @@
 {
-  "module": "executive-command-center",
+  "module": "ExecutiveCommandCenter",
   "version": "1.0.1",
-  "description": "SharePoint views for CEO / Executive Command Center. Field names validated against list schemas.",
+  "description": "SharePoint views for CEO / Executive Command Center. Field names validated against list schemas. Option A exclusive package — do not merge into command-center-views.json on this branch.",
   "views": [
     {
       "list": "HVCG_Clients",
