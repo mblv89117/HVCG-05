@@ -23,6 +23,19 @@
 
 **Repo packaging is integration-complete.** Live Development tenant apply remains **owner-only** per `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-01…11). Fill `docs/crm/ACCEPTANCE_REPORT.md` after live apply.
 
+
+## Handoff status note (2026-07-15 ~10:07 PT)
+
+| Item | Value |
+|------|--------|
+| Feature branch | `cursor/v1.1.0-intelligence-ai-ops` |
+| Verified HEAD | `8635397` (`crm(integration): merge Opportunity CRM parallel workstreams`) |
+| Six CRM workstreams | Merged; offline predeploy **PASS** |
+| Live Dev Repair | **Running at handoff** (terminal `573342`) — CRM fields/lists/lookups applied; validations showed HasDrift=False / 1170 fields; views created; was in **pre-seed** validation. **Do not kill or start a second Repair.** |
+| Maker | Flow import, app publish, Teams activation — **NOT done** |
+| Next | After Repair exits: attest schema (`hasDrift=false`), then Owner OA actions in `OWNER_ACTION_GUIDE.md` |
+
+
 ---
 
 ## Workstream commits (verified tips)
@@ -153,10 +166,11 @@ Companion map: `docs/crm/PARALLEL_AGENT_MAP.md`.
 
 | Item | Value |
 |------|--------|
-| Consolidation commit | `crm(integration): merge Opportunity CRM parallel workstreams` on `agent/crm-integration` |
+| Consolidation commit | `8635397` — `crm(integration): merge Opportunity CRM parallel workstreams` |
+| Feature branch | `cursor/v1.1.0-intelligence-ai-ops` (tracks origin) |
+| Also on | `agent/crm-integration` @ same tip |
 | Resolve tip (docs-owner merge) | `3fb543e` |
 | Parent map base | `c31b25d` |
-| Feature branch | `cursor/v1.1.0-intelligence-ai-ops` |
-| Deployed by agents | **No** |
+| Deployed by agents | Repair may be running on Dev — **do not start another**; Maker steps still owner-gated |
 
-Record the exact `git rev-parse agent/crm-integration` SHA at owner apply time.
+Record `git rev-parse HEAD` after any later commits before owner apply attestation.

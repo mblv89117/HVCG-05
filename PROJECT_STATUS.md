@@ -1,25 +1,26 @@
 # PROJECT STATUS
 
-**Last updated:** 2026-07-15  
+**Last updated:** 2026-07-15 (~10:07 PT)  
 **Product:** HVCG OS  
 **Version:** **1.1.0** (`VERSION` / `version.json`)  
-**Branch (integration):** `agent/crm-integration` (merged into `cursor/v1.1.0-intelligence-ai-ops` when tests green)  
-**Tag:** `v1.1.0-dev-sharepoint-baseline`  
-**Overall status:** **Opportunity CRM repo-integration complete** — Dev infrastructure frozen; all six parallel workstreams merged; live Dev tenant CRM schema **pending owner repair**
+**Branch:** `cursor/v1.1.0-intelligence-ai-ops` @ `8635397` (tracks origin; CRM integration tip)  
+**Tag:** `v1.1.0-dev-sharepoint-baseline` (pre-CRM freeze)  
+**Overall status:** **Opportunity CRM repo-integration complete** — six workstreams merged; predeploy PASS; live Dev Repair **in progress** (leave alone); Maker import/publish **not done**
 
 ## Verdict
 
-HVCG OS **v1.1.0** Development SharePoint infrastructure remains complete and frozen on `HVCG-CommandCenter-Dev`:
+HVCG OS **v1.1.0** Opportunity CRM package is merged on `cursor/v1.1.0-intelligence-ai-ops` (`8635397`). Offline suite **PASS**. Live Dev schema apply was started (Repair terminal `573342` / `pwsh` still running at handoff) — CRM lists/fields/lookups and views advanced; process was in **pre-seed validation**. Do **not** start another Repair until that run completes or the owner confirms it is dead.
 
 | Checkpoint | Result |
 |------------|--------|
-| Schema fields compliant (baseline) | **1,147** |
-| Schema drift (baseline) | **Zero** |
-| Repair exit code (baseline) | **0** |
-| Opportunity CRM list/column package | **In repo** — not yet repaired onto live Dev |
-| CRM flows / canvas / Teams-Copilot specs | **Integrated on `agent/crm-integration`** — Maker import/publish **owner-gated** |
+| Integration tip | **`8635397`** |
+| Offline predeploy | **PASS** (2026-07-15) |
+| Consolidated acceptance | `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` |
+| Live Dev CRM Repair | **IN PROGRESS** — leave alone; attest `hasDrift=false` after exit |
+| Flow import / activation | **Pending owner** (Maker) |
+| Canvas publish / Teams | **Pending owner** (Maker) |
 
-Pre-deployment suite (integration): **PASS** (2026-07-15). No infrastructure engine changes required for CRM (additive repair only). Agents did **not** deploy/import/publish.
+Pre-CRM infrastructure baseline remains tagged `v1.1.0-dev-sharepoint-baseline`. Agents must not modify deployment engines or run concurrent repair/deploy/import/publish.
 
 v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
 
@@ -28,11 +29,11 @@ v1.0.0 artifacts remain immutable at `releases/v1.0.0/`.
 | Area | Status |
 |------|--------|
 | Module design + migration pack | **Repo-ready** |
-| Parallel agent finish (flows, apps, Teams, tests, docs) | **COMPLETE** — merged; see `docs/crm/PARALLEL_AGENT_MAP.md` |
-| Live Dev schema apply | **Pending owner** — `Repair-HVCGOSSharePointSchema.ps1` |
-| Flow import / activation | **Pending owner** (after repair) |
+| Parallel agent finish (flows, apps, Teams, tests, docs) | **COMPLETE** — merged at `8635397`; see `docs/crm/PARALLEL_AGENT_MAP.md` |
+| Live Dev schema apply | **IN PROGRESS / attest after exit** — do not re-run while Repair alive |
+| Flow import / activation | **Pending owner** (after schema attest) |
 | Canvas publish | **Pending owner** (after lists exist) |
-| Acceptance | Consolidated offline report — `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`; live template — `docs/crm/ACCEPTANCE_REPORT.md` |
+| Acceptance | Offline: `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`; live: `docs/crm/ACCEPTANCE_REPORT.md` |
 
 Owner stop points: `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-01…11).  
 Module design: `docs/crm/OPPORTUNITY_MANAGEMENT.md`.

@@ -1,54 +1,43 @@
 # Next Session
 
-**Generated:** 2026-07-15  
-**Mode:** Opportunity CRM **owner apply** (repo integration complete; infrastructure baseline frozen)
+**Generated:** 2026-07-15 (~10:07 PT)  
+**Mode:** Opportunity CRM **live Dev apply in flight** — repo integration complete; do not start a second Repair
 
 ## Current project status
 
 - **Product:** HVCG OS **v1.1.0**
-- **Infrastructure:** Development SharePoint baseline frozen at tag `v1.1.0-dev-sharepoint-baseline` (commit `f99164a`) — 1,147 fields, zero drift; do not modify deployment engines unless fixing a confirmed defect.
-- **Application:** Opportunity CRM module v1 is **integration-complete** on `agent/crm-integration` (all six worker streams + consolidated acceptance). See `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md` and `docs/crm/PARALLEL_AGENT_MAP.md`.
-- **Live Dev tenant:** CRM additive schema **not yet applied**. Owner may repair from the integration SHA after review.
+- **Branch:** `cursor/v1.1.0-intelligence-ai-ops` (tracks `origin/cursor/v1.1.0-intelligence-ai-ops`)
+- **HEAD tip:** `8635397` — `crm(integration): merge Opportunity CRM parallel workstreams` (verified)
+- **Repo:** Six CRM workstreams merged; offline predeploy **PASS**; see `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`
+- **Infrastructure engines:** Frozen — do not modify `deployment/lib/*` / provisioning unless a confirmed defect
 
-## Git
+## Live Dev SharePoint (as of handoff)
 
-| Item | Value |
-|------|--------|
-| **Integration branch** | `agent/crm-integration` |
-| **Feature branch** | `cursor/v1.1.0-intelligence-ai-ops` |
-| **Session baseline** | `4a8f25d6a84f5bc8fa0f018b98ea7cc19652dcc7` |
-| **Baseline tag** | `v1.1.0-dev-sharepoint-baseline` |
-| **Offline predeploy** | **PASS** (2026-07-15) |
+- An owner/agent Repair is **already running** (`pwsh` Repair-HVCGOSSharePointSchema development; Cursor terminal `573342`). **Do not kill, interrupt, or start another Repair.**
+- Progress observed: CRM fields/lists/lookups applied; post-list and pre-view validations reported **HasDrift=False / 1170 fields**; CRM views created; then entered **pre-seed** schema validation (slow — may look stalled).
+- Earlier repair attempts had stalled around post-list validation; this run advanced past that. After the current process exits, **attest** schema (`hasDrift=false` / repair exit 0). If it dies without exit footer, owner may re-run Repair once — not now while pid alive.
+- Log: `deployment/reports/checkpoints/repair-opportunity-crm-live.log`
+
+## Maker / OA — NOT done
+
+- Flow import / connection bind / activate — **not done**
+- Canvas publish (`scrCRM` / `scrOpportunityDetail`) — **not done**
+- Teams / Copilot activation — **not done**
 
 ## Do not
 
-- Modify `deployment/lib/*` or provisioning scripts unless a confirmed defect
-- Rewrite the immutable release docs under `releases/v1.1.0/` for new behavior
-- Run production deploy from Dev scripts
-- Import/activate flows, publish apps, or repair SharePoint concurrently from multiple agents
-- Point Teams/Outlook notifications at non-test recipients before acceptance
+- Stop or kill existing Repair/Backup/seed processes
+- Modify frozen deployment engines
+- Run a concurrent SharePoint repair/deploy/import/publish
+- Commit `.worktrees/`, `.env`, or credentials
 
-## Next recommended task
+## Next owner/agent steps (sequential)
 
-### A. Integration — COMPLETE
+1. **Wait** for current Dev Repair to finish (or confirm dead + no footer → then one clean re-run when owner ready).
+2. **Attest schema:** repair exit 0 and `hasDrift=false` (report under `deployment/reports/schema/`).
+3. **Maker OA actions** from `docs/crm/OWNER_ACTION_GUIDE.md` (OA-CRM-05…10): connections → import four CRM flows → test/activate → publish apps → fill `docs/crm/ACCEPTANCE_REPORT.md`.
+4. Do not promote to Production until OA-CRM-11.
 
-Parent merged all six `agent/crm-*` workers, resolved soft conflicts, ran full suite (**PASS**), and wrote `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`.
-
-### B. Owner apply (sequential) — ready when you are
-
-Follow `docs/crm/OWNER_ACTION_GUIDE.md`:
-
-1. **Sign-in / consent** (OA-CRM-01…02), optional backup.
-2. **Apply Opportunity CRM schema to Dev**:
-   ```powershell
-   pwsh -File ./deployment/repair/Repair-HVCGOSSharePointSchema.ps1 -Environment development
-   ```
-   Expect additive list `HVCG_OpportunityActivities` + bridge columns; confirm `hasDrift=false`.
-3. **Authorize connections** (SharePoint, Teams, Outlook) — OA-CRM-05.
-4. **Import the four CRM flows** in Maker; bind connections; set **test** Teams channel env vars (`HVCG_TEAMS_CRM_CHANNEL_ID`, `HVCG_TEAMS_CAPITAL_CHANNEL_ID`) — OA-CRM-06…07.
-5. **Test then activate** flows — OA-CRM-08.
-6. **Build/publish** canvas `scrCRM` / `scrOpportunityDetail` per `src/power-apps/BUILD_SHEET.md` — OA-CRM-09.
-7. **Manual lifecycle verify** + fill `docs/crm/ACCEPTANCE_REPORT.md` — OA-CRM-10.
-
-Primary module doc: `docs/crm/OPPORTUNITY_MANAGEMENT.md`  
-Owner stops: `docs/crm/OWNER_ACTION_GUIDE.md`
+Primary module: `docs/crm/OPPORTUNITY_MANAGEMENT.md`  
+Owner guide: `docs/crm/OWNER_ACTION_GUIDE.md`  
+Acceptance (offline): `docs/crm/CONSOLIDATED_ACCEPTANCE_REPORT.md`
