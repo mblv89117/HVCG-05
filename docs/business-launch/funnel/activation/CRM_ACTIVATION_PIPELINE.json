@@ -1,0 +1,68 @@
+{
+  "pipeline_version": "crm-activation-1.0.0",
+  "environment_intent": "Development",
+  "production_writes": false,
+  "schema_mutation": false,
+  "schema_only_keys_unchanged": true,
+  "existing_flows_referenced_not_modified": [
+    "HVCG_EvaFormCreateLead",
+    "HVCG_LeadQualifiedCreateOpportunity"
+  ],
+  "stages": [
+    {
+      "id": "capture_lead",
+      "label": "EVA lead capture (existing Dev flow)",
+      "status": "READY_DEV",
+      "flow_ref": "HVCG_EvaFormCreateLead",
+      "environment": "Development",
+      "activated": false
+    },
+    {
+      "id": "attach_activation",
+      "label": "Attach activation package to Notes / _experience (additive)",
+      "status": "READY_STAGING",
+      "environment": "Development",
+      "activated": false
+    },
+    {
+      "id": "strategy_request",
+      "label": "Strategy session request queue",
+      "status": "READY_STAGING",
+      "environment": "Development",
+      "activated": false
+    },
+    {
+      "id": "nurture_plan",
+      "label": "Nurture trigger plan (no send)",
+      "status": "READY_STAGING",
+      "environment": "Development",
+      "activated": false,
+      "outbound_blocked": true,
+      "gate": "BL-C1"
+    },
+    {
+      "id": "manual_qualify",
+      "label": "Manual qualify in Dev CRM",
+      "status": "OWNER_GATE",
+      "environment": "Development",
+      "activated": false
+    },
+    {
+      "id": "create_opportunity",
+      "label": "LeadQualified → Opportunity (existing)",
+      "status": "OWNER_GATE",
+      "flow_ref": "HVCG_LeadQualifiedCreateOpportunity",
+      "environment": "Development",
+      "activated": false
+    },
+    {
+      "id": "production_sync",
+      "label": "Production write",
+      "status": "BLOCKED",
+      "environment": "Production",
+      "activated": false,
+      "reason": "Track 1 frozen"
+    }
+  ],
+  "owner_gates": ["BL-C1", "LIVE-BOOKING", "PROD-CRM", "AUTO-QUALIFY"]
+}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Strategy Session Request | High Value Capital Group</title>
+<link rel="stylesheet" href="css/eva-app.css"/>
+<link rel="stylesheet" href="css/activation.css"/>
+</head>
+<body>
+<div class="app-shell">
+  <header class="brand-bar">
+    <p class="brand">High Value Capital Group</p>
+    <p class="tag">Strategy Session — staging request</p>
+  </header>
+
+  <main class="panel">
+    <h1 id="pageTitle">Request a Strategy Session</h1>
+    <p class="lead">Capture your preferred times for an internal follow-up. Live calendar booking and confirmation email are <strong>not enabled</strong> until owner approval (BL-C1 / LIVE-BOOKING).</p>
+
+    <div class="banner gate-banner" id="gateBanner">
+      <strong>Owner gates active:</strong> no prospect email/SMS · no live booking · Dev/Staging capture only.
+    </div>
+
+    <div class="error" id="formError" hidden></div>
+    <div class="success" id="formSuccess" hidden></div>
+
+    <form class="eva-form" id="ssForm" onsubmit="return false;">
+      <div class="field">
+        <label for="ssName">Your name <span class="req">*</span></label>
+        <input id="ssName" type="text" autocomplete="name"/>
+      </div>
+      <div class="field">
+        <label for="ssEmail">Work email <span class="req">*</span></label>
+        <input id="ssEmail" type="email" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label for="ssPhone">Phone</label>
+        <input id="ssPhone" type="tel" autocomplete="tel"/>
+      </div>
+      <div class="field">
+        <label for="ssCompany">Company</label>
+        <input id="ssCompany" type="text"/>
+      </div>
+      <div class="field">
+        <label for="ssType">Session type</label>
+        <select id="ssType"></select>
+      </div>
+      <div class="field">
+        <label>Preferred times (select all that apply) <span class="req">*</span></label>
+        <div class="multi" id="ssSlots"></div>
+      </div>
+      <div class="field">
+        <label for="ssNotes">Notes for the HVCG team</label>
+        <textarea id="ssNotes" rows="4" maxlength="2000"></textarea>
+      </div>
+      <div class="nav-row">
+        <a class="btn secondary" href="index.html">Back to assessment</a>
+        <button type="button" class="btn" id="ssSubmit">Submit request (staging)</button>
+      </div>
+    </form>
+
+    <section class="results" id="confirmPanel" hidden>
+      <h2>Request captured</h2>
+      <p id="confirmText"></p>
+      <p class="fine">No confirmation email was sent. An HVCG advisor will follow up manually using the internal queue.</p>
+      <div class="cta-row">
+        <a class="btn secondary" href="report.html">Open branded report</a>
+        <a class="btn ghost" href="sales-dashboard.html">Internal sales board</a>
+      </div>
+      <p class="contact-line">manny@highvaluecapitalgroup.com · 702.906.6444</p>
+    </section>
+  </main>
+
+  <footer class="eva-foot">
+    <p>Staging / Development only. Not a live booking system.</p>
+    <p>© High Value Capital Group LLC</p>
+  </footer>
+</div>
+<script src="js/nurture-framework.js"></script>
+<script src="js/activation-engine.js"></script>
+<script src="js/strategy-session.js"></script>
+</body>
+</html>

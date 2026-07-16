@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Internal Sales Board | High Value Capital Group</title>
+<link rel="stylesheet" href="css/eva-app.css"/>
+<link rel="stylesheet" href="css/activation.css"/>
+</head>
+<body>
+<div class="app-shell wide">
+  <header class="brand-bar">
+    <p class="brand">High Value Capital Group</p>
+    <p class="tag">Internal sales board — staging</p>
+  </header>
+
+  <main class="panel">
+    <h1>Sales activation board</h1>
+    <p class="lead">Local staging view of EVA conversion → activation. Not Production CRM. No outbound from this board.</p>
+
+    <div class="meta-grid" id="boardMeta"></div>
+
+    <h2>Pipeline queues</h2>
+    <div class="queue-grid" id="queueGrid"></div>
+
+    <h2>Leads (local)</h2>
+    <div class="table-wrap">
+      <table class="board-table" id="boardTable">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Contact</th>
+            <th>Temp</th>
+            <th>Fit</th>
+            <th>SKU</th>
+            <th>Queue</th>
+            <th>Strategy</th>
+            <th>Price gate</th>
+            <th>Updated</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h2>Strategy session requests</h2>
+    <ul id="requestList" class="fine-list"></ul>
+
+    <h2>Owner gates</h2>
+    <ul id="gateList" class="fine-list"></ul>
+
+    <div class="cta-row" style="margin-top:1.25rem">
+      <a class="btn secondary" href="index.html">EVA assessment</a>
+      <a class="btn ghost" href="strategy-session.html">Strategy request form</a>
+      <button type="button" class="btn ghost" id="btnClearBoard">Clear local board</button>
+    </div>
+  </main>
+
+  <footer class="eva-foot">
+    <p>Internal staging tool. Track 1 Production frozen — do not use this board as Prod SoR.</p>
+    <p>© High Value Capital Group LLC</p>
+  </footer>
+</div>
+<script src="js/nurture-framework.js"></script>
+<script src="js/activation-engine.js"></script>
+<script src="js/sales-dashboard.js"></script>
+</body>
+</html>
