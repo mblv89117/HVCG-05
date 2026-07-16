@@ -1,6 +1,13 @@
 {
-  "count": 15,
+  "count": 16,
   "flows": [
+    {
+      "name": "HVCG_EvaFormCreateLead",
+      "path": "src/power-automate/definitions/HVCG_EvaFormCreateLead.definition.json",
+      "module": "RevenueOS",
+      "packageVersion": "1.0.0",
+      "defaultState": "Off"
+    },
     { "name": "HVCG_ClientOnboarding", "path": "src/power-automate/definitions/HVCG_ClientOnboarding.definition.json" },
     { "name": "HVCG_MissingDocumentReminders", "path": "src/power-automate/definitions/HVCG_MissingDocumentReminders.definition.json" },
     { "name": "HVCG_OverdueTaskEscalation", "path": "src/power-automate/definitions/HVCG_OverdueTaskEscalation.definition.json" },
