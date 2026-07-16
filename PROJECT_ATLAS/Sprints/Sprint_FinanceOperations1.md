@@ -1,8 +1,9 @@
 # Finance Operations Sprint 1
 
 **Track:** Track 7 — Internal Operations / Finance  
-**Status:** **PHASE 1 COMPLETE — AWAITING OWNER APPROVAL TO COMMIT**  
+**Status:** **SPRINT 1 PHASE 1 COMPLETE — QA PASSED — BRANCH SYNCHRONIZED — READY FOR SPRINT 2**  
 **Branch:** `cursor/finance-operations-sprint1`  
+**Remote branch:** `origin/cursor/finance-operations-sprint1`  
 **Worktree:** `.worktrees/finance-operations-sprint1`  
 **Data mode:** Mock only  
 **As of:** 2026-07-16
@@ -39,8 +40,8 @@ Build the HVCG Finance Operations Module — the financial operating system for 
 - No Activation Framework or CRM schema changes  
 - No Track 1 / Production / DNS / live bank connections  
 - No live credentials  
-- **No commit, push, merge, or deploy** (pending owner approval)
+- No merge or deploy
 
 ## Next
 
-Owner approval → commit/push only. Merge and deploy remain prohibited until separately approved.
+Sprint 1 is synchronized to origin and ready for Sprint 2 planning. Sprint 2, merge, and deployment remain separately gated by owner approval.
