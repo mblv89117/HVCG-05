@@ -1,6 +1,6 @@
 # Sprint 4 Phase 2 — Automated Sales Engine
 
-**Status:** COMPLETE (Dev/Staging) — pending owner review / commit
+**Status:** COMPLETE (Dev/Staging) @ `7e4eb10`
 **Branch:** `cursor/revenue-sprint4-activation`
 **Worktree:** `.worktrees/revenue-sprint4`
 **Base:** Phase 1 `7fd8bf2` + Sprint 3 `0073bf4`

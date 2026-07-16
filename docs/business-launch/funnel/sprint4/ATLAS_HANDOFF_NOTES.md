@@ -6,8 +6,8 @@
 
 ## Status
 
-Revenue Sprint 4 Phase 2 — Automated Sales Engine — **COMPLETE (Dev/Staging)** awaiting owner review.
-No commit / push / deploy performed under standing Master PM constraints.
+Revenue Sprint 4 Phase 2 — Automated Sales Engine — **COMPLETE (Dev/Staging)** @ `7e4eb10`.
+Owner approved the clean Dev/Staging commit. No merge or deploy performed.
 
 ## Tip / branch
 
@@ -15,9 +15,9 @@ No commit / push / deploy performed under standing Master PM constraints.
 |-------|-------|
 | Branch | `cursor/revenue-sprint4-activation` |
 | Worktree | `.worktrees/revenue-sprint4` |
-| Prior Phase 1 tip | `7fd8bf270dc080eea9a3326184707169a3b120ca` |
+| Sprint 4 tip | `7e4eb104d339b3bdb07b8f25298534da895080e9` |
 | Sprint 3 base | `0073bf49411408cced88873805b432bce4eefb31` |
-| Working tree | Dirty with Phase 2 docs/engines/tests (uncommitted) |
+| Working tree | Clean after isolated Revenue commit/push |
 
 ## Evidence
 
@@ -28,7 +28,7 @@ No commit / push / deploy performed under standing Master PM constraints.
 
 ## Atlas updates requested (Master PM)
 
-1. CURRENT_STATE — Sprint 4 Phase 2 COMPLETE (Dev/Staging); tip pending commit
+1. CURRENT_STATE — Sprint 4 Phase 2 COMPLETE (Dev/Staging) @ `7e4eb10`
 2. Sprints/Sprint4.md — Phase 1 + Phase 2
 3. Track2_RevenueOS.md — Sprint 4 status
 4. SPRINT_INDEX / TRACK_INDEX

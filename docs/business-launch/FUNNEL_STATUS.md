@@ -2,7 +2,7 @@
 
 **As of:** 2026-07-16
 **Sprint:** 4 — Automated Sales Engine
-**Status:** SPRINT 4 – PHASE 2 (SALES ENGINE) COMPLETE (DEV/STAGING) — pending owner review
+**Status:** SPRINT 4 – PHASE 2 (SALES ENGINE) COMPLETE (DEV/STAGING) @ `7e4eb10`
 
 | Component | Status | Artifact |
 |-----------|--------|----------|
@@ -21,10 +21,10 @@
 
 ## Remaining owner-gated tasks (not engineering defects)
 
-1. Approve commit/push of Phase 2 worktree changes
-2. Pricing card approval — FCFO / Exit / Acq / Modeling
-3. Soft UAT of sales engine + strategy form
-4. Outbound email/SMS activation (BL-C1)
-5. Production activation gates (Track 1 frozen)
-6. Live booking integration (LIVE-BOOKING)
-7. Optional Dev CRM Draft persistence for proposals / shells
+1. Pricing card approval — FCFO / Exit / Acq / Modeling
+2. Soft UAT of sales engine + strategy form
+3. Outbound email/SMS activation (BL-C1)
+4. Production activation gates (Track 1 frozen)
+5. Live booking integration (LIVE-BOOKING)
+6. Optional Dev CRM Draft persistence for proposals / shells
+7. Separate authoritative Atlas reconciliation commit

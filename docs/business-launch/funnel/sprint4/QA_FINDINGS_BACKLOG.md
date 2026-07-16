@@ -4,16 +4,16 @@
 **Owner decision:** Approved for clean Dev/Staging commit
 **Date:** 2026-07-16
 
-## Six independent QA findings
+## Technical-debt backlog converted from six QA findings
 
-| ID | Severity | Finding | Commit disposition |
-|---|---|---|---|
-| DEF-S4-001 | Low | Draft onboarding assignee email was embedded in pipeline code | **Resolved:** moved to pipeline config |
-| DEF-S4-002 | Low | Capital-intent signal used embedded `100` / `40` points | **Resolved:** moved to qualification config |
-| DEF-S4-003 | Low | Proposal timeline used an embedded eight-week fallback | **Resolved:** no embedded fallback; missing timeline requires owner scoping |
-| DEF-S4-004 | Low | Phase 1 qualification workflow and Phase 2 sales qualification use different vocabularies | **Backlog:** document/canonicalize one operator-facing vocabulary before broader adoption |
-| DEF-S4-005 | Low | Config exists as JSON and generated browser `.config.js`, creating drift risk | **Backlog:** add a committed generator/check to CI; JSON remains source |
-| DEF-S4-006 | Info | Pipeline trigger includes `&& !auto_qualify`; behavior would invert if the flag changed | **Backlog:** replace with an explicit manual-approval gate before any auto-qualify design |
+| ID | QA source | Item | Status | Priority | Estimate | Recommended sprint | Dependencies |
+|---|---|---|---|---|---|---|---|
+| TD-001 | DEF-S4-001 | Move Draft onboarding assignee email into pipeline configuration | **Resolved in `7e4eb10`** | P2 | 0.25 day | Sprint 4 closure | Pipeline config |
+| TD-002 | DEF-S4-002 | Move capital-intent signal points into qualification configuration | **Resolved in `7e4eb10`** | P2 | 0.25 day | Sprint 4 closure | Qualification config |
+| TD-003 | DEF-S4-003 | Remove embedded proposal timeline fallback; use configured or owner-scoped timeline | **Resolved in `7e4eb10`** | P2 | 0.25 day | Sprint 4 closure | Pricing timeline output |
+| TD-004 | DEF-S4-004 | Unify Phase 1 Hot/Warm workflow and Phase 2 sales-qualification vocabulary | **Open** | P1 | 1 day | Proposed Sprint 5 | Owner-approved canonical vocabulary; dashboard mapping |
+| TD-005 | DEF-S4-005 | Make JSON the single config source and generate/check browser `.config.js` artifacts | **Open** | P1 | 0.5 day | Proposed Sprint 5 | Node generator; CI/test hook |
+| TD-006 | DEF-S4-006 | Replace `&& !auto_qualify` trigger semantics with an explicit manual-approval safety gate | **Open** | P1 | 0.5 day | Proposed Sprint 5 | Qualification decision; pipeline regression tests |
 
 ## Additional technical debt
 
