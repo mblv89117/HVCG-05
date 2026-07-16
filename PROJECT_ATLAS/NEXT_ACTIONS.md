@@ -1,6 +1,6 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 19:01 UTC
+**As of:** 2026-07-16 21:10 UTC
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
 ## Now
@@ -9,6 +9,8 @@
 2. Treat Revenue tip `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` as Sprint 2–3 SoR.  
 3. Revenue Track is **READY TO START Sprint 4**; Sprint 4 remains **NOT STARTED** until assigned.
 4. Preserve [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) commit anchors; do not include dirty working-tree files in the checkpoint.
+5. Execute [PARALLEL_WORKSTREAM_CONTROL](Reports/PARALLEL_WORKSTREAM_CONTROL.md): Ops Hub / AI Governance / Deployment Manager Sprint 1 Phase 1 — concurrent under exclusive paths; **no commit/push** without separate owner approval.
+6. **Ops remediation (blocking):** revert locked Atlas roots + remove `Sprint_FinanceOperations1.md` from Ops WT; see [OperationsHubSprint1_STOP_REMEDIATE](Handoffs/proposed/OperationsHubSprint1_STOP_REMEDIATE.md).
 
 ## Owner decisions
 
