@@ -5,6 +5,8 @@
 **Scope:** `PROJECT_ATLAS/**` only  
 **Actions:** Documentation fixes inside Atlas · **no** source/Prod/Dev/commit/push  
 
+**Superseded status note (2026-07-16 19:01 UTC):** The original run predated Revenue commit `0073bf49411408cced88873805b432bce4eefb31`. Current status is Sprint 3 **COMPLETE and committed**; Sprint 4 **READY TO START — NOT STARTED**. See [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).
+
 ## Verdict
 
 **PASS with fixes applied.** Sprint/Track status narratives were already aligned; primary defects were **incorrect or unqualified paths**, one **timestamp drift**, **architecture SoR ambiguity**, and **stale registry ownership** called out for operators.
@@ -25,8 +27,8 @@
 | Track 1 COMPLETE / FROZEN LIVE—INTERNAL | Consistent across CURRENT_STATE, Track1, DEPLOYMENT_STATUS, RELEASES, agents | Track-1-Live-Internal + Deployment Engineer GO_LIVE_STATUS |
 | Sprint 1 COMPLETE | Consistent | Revenue handoff + Dev smoke LeadId=13 |
 | Sprint 2 COMPLETE (Dev/Staging) | Consistent | SPRINT2_EVA_EXPERIENCE + handoff |
-| Sprint 3 COMPLETE + **uncommitted** | Consistent | Handoff 2026-07-16T04:06Z; tests 33/33; LeadId=14 |
-| Sprint 4 NOT STARTED | Consistent | Handoff |
+| Sprint 3 COMPLETE + committed (updated after original validation) | Consistent | Revenue commit `0073bf49411408cced88873805b432bce4eefb31` |
+| Sprint 4 READY TO START — NOT STARTED | Consistent | RC-1 checkpoint |
 | Track 2 Pilot BLOCKED | Consistent (distinct from Revenue Sprint completion) | GO_LIVE_STATUS |
 | Track 3 website IN PROGRESS; DNS NOT STARTED | Consistent | GO_LIVE_STATUS + OWNER_DECISIONS |
 
@@ -100,7 +102,7 @@ External stale doc (not Atlas): Master PM `go-live/GO_LIVE_STATUS.md` still desc
 
 - Master PM go-live status file (stale vs Track 1)  
 - `.agent-comms/registry.json` ownership fields (would be a bus/registry edit, not Atlas)  
-- Sprint 3 still uncommitted on revenue worktree (fact, not a doc bug)
+- Revenue worktree has three untracked paths excluded from RC-1; Sprint 3 committed content is anchored at `0073bf49411408cced88873805b432bce4eefb31`
 
 ## Files updated this validation
 

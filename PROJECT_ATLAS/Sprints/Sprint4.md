@@ -1,8 +1,9 @@
 # Sprint 4 — Conversion activation (candidate)
 
-**Status:** **NOT STARTED** — Revenue Track **ready**; do not begin without Master PM + owner assignment  
-**As of:** 2026-07-16 04:20 UTC  
+**Status:** **READY TO START — NOT STARTED**; do not begin without Master PM + owner assignment
+**As of:** 2026-07-16 19:01 UTC
 **Prereq tip:** Sprints 1–3 complete @ `0073bf49411408cced88873805b432bce4eefb31`
+**Checkpoint:** [Release Candidate RC-1](../Releases/Release_Candidate_RC-1.md)
 
 ## Proposed scope (from prior Revenue handoff — not started)
 

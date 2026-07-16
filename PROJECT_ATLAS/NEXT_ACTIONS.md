@@ -1,13 +1,14 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 19:01 UTC
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
 ## Now
 
 1. Keep Track 1 **frozen**.  
 2. Treat Revenue tip `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` as Sprint 2–3 SoR.  
-3. Revenue Track is **ready for Sprint 4** — do **not** start until assigned.
+3. Revenue Track is **READY TO START Sprint 4**; Sprint 4 remains **NOT STARTED** until assigned.
+4. Preserve [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) commit anchors; do not include dirty working-tree files in the checkpoint.
 
 ## Owner decisions
 

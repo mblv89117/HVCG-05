@@ -1,6 +1,6 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 19:01 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`  
 **Canonical SoR:** this Atlas. Begin here before any other work.
 
@@ -33,16 +33,20 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Tracks | [Tracks/](Tracks/) |
 | Sprints | [Sprints/](Sprints/) |
 | Role handbooks | [Agents/](Agents/) |
+| Track index | [TRACK_INDEX.md](TRACK_INDEX.md) |
+| Sprint index | [SPRINT_INDEX.md](SPRINT_INDEX.md) |
+| Agent index | [AGENT_INDEX.md](AGENT_INDEX.md) |
 | Decisions | [DECISIONS.md](DECISIONS.md) |
 | Issues | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
 | Releases | [RELEASES.md](RELEASES.md) |
+| Pre-Sprint 4 checkpoint | [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) |
 
 ## What each Track owns
 
 | Track | Owns | Status |
 |-------|------|--------|
 | [1](Tracks/Track1_Production.md) | Internal Prod CRM freeze | **FROZEN LIVE—INTERNAL** |
-| [2](Tracks/Track2_RevenueOS.md) | Revenue OS / EVA / conversion | Sprints 1–3 **COMPLETE**; **ready for Sprint 4** (not started) |
+| [2](Tracks/Track2_RevenueOS.md) | Revenue OS / EVA / conversion | Sprints 1–3 **COMPLETE**; Sprint 4 **READY TO START — NOT STARTED** |
 | [3](Tracks/Track3_Website.md) | Website staging → public | In progress; DNS gated |
 | [4](Tracks/Track4_ClientPortal.md) | Portal / data rooms | Invites gated BL-C1 |
 | [5](Tracks/Track5_ClientOnboarding.md) | Onboarding specs/automation | Gated D-002/BL-C1 |
@@ -57,7 +61,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [1](Sprints/Sprint1.md) | EVA → Dev CRM — **COMPLETE** |
 | [2](Sprints/Sprint2.md) | Multi-step EVA — **COMPLETE** @ `0073bf4` |
 | [3](Sprints/Sprint3.md) | Conversion engine — **COMPLETE** @ `0073bf4` |
-| [4](Sprints/Sprint4.md) | **NOT STARTED** (Track ready) |
+| [4](Sprints/Sprint4.md) | **READY TO START — NOT STARTED** |
 
 ## Revenue tip
 

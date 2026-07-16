@@ -1,11 +1,12 @@
 # RELEASES
 
-**As of:** 2026-07-16 04:10 UTC
+**As of:** 2026-07-16 19:01 UTC
 
 ## Freeze / candidate packages
 
 | Name | Location | Status |
 |------|----------|--------|
+| Release Candidate RC-1 (pre-Sprint 4 Atlas checkpoint) | [Releases/Release_Candidate_RC-1.md](Releases/Release_Candidate_RC-1.md) | **VERIFIED**; dirty worktrees documented; uncommitted pending approval |
 | Track 1 Live — Internal | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` | **INTERNALLY_PRODUCTION_READY** · Prod |
 | RC-1 Development Baseline | `releases/RC-1-Development-Baseline/` (also mirrored in deployment-engineer WT) | Development Baseline Complete |
 | Sprint 1 managed export pack | `.worktrees/master-pm-orchestrator/docs/business-launch/go-live/sprint1/packages/` | Pre/go-live packaging evidence |

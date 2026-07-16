@@ -4,6 +4,7 @@
 
 | Date | Change |
 |------|--------|
+| 2026-07-16 19:01 UTC | Created pre-Sprint 4 [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md): Revenue/Atlas/Track 1 immutable refs verified; dirty worktrees documented and excluded; Sprint 4 READY TO START / NOT STARTED. |
 | 2026-07-16 04:20 UTC | Revenue Systems Engineer COMPLETE; Sprint 1–3 complete at `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`; Track 1 frozen; Sprint 4 ready/not started. |
 | 2026-07-16 (validation) | Path/timestamp/ownership consistency fixes per [VALIDATION_REPORT.md](VALIDATION_REPORT.md). |
 | 2026-07-16 04:10 UTC | Created `PROJECT_ATLAS/` as permanent project brain (docs only). |

@@ -1,7 +1,7 @@
 # AGENT_HANDOFF
 
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer  
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 19:01 UTC
 **Goal:** Resume with **zero** prior chat history.
 
 ## 60-second orientation
@@ -10,8 +10,9 @@
 2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only.  
 3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.  
 4. **Revenue OS Sprints 1–3 are COMPLETE.** Revenue Systems Engineer is **COMPLETE**. Tip: `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`.  
-5. Revenue Track is **ready for Sprint 4** — Sprint 4 is **NOT STARTED** until assigned.  
+5. Revenue Track is **READY TO START Sprint 4** — Sprint 4 is **NOT STARTED** until assigned.
 6. Prefer **repository evidence** over chat. Never rely on previous chat history.
+7. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md). It locks committed SHAs and excludes dirty worktree content.
 
 ## Canonical SoR
 
@@ -28,6 +29,7 @@ Every new agent begins with [PROJECT_INDEX.md](PROJECT_INDEX.md). Read Atlas bef
 7. Your role handbook under [Agents/](Agents/)  
 8. [KNOWN_ISSUES.md](KNOWN_ISSUES.md) + [NEXT_ACTIONS.md](NEXT_ACTIONS.md)  
 9. [OWNERSHIP.md](OWNERSHIP.md) + [DECISIONS.md](DECISIONS.md)  
+10. [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md)
 
 ## Authoritative evidence (do not invent)
 
@@ -69,6 +71,7 @@ cd "$HVCG_REPO_ROOT"
 # Always: read PROJECT_ATLAS/PROJECT_INDEX.md first
 git worktree list
 # Revenue tip: .worktrees/revenue-sprint3 @ 0073bf4 (origin/cursor/revenue-sprint3-conversion)
+# RC-1 excludes uncommitted files; inspect current git status before Sprint 4
 # Enter the worktree for your role (see AGENT_ASSIGNMENTS.md)
 ```
 

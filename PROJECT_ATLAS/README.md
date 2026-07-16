@@ -12,7 +12,8 @@
 2. [CURRENT_STATE.md](CURRENT_STATE.md) — what is true right now  
 3. [AGENT_HANDOFF.md](AGENT_HANDOFF.md) — resume with zero chat history  
 4. [NEXT_ACTIONS.md](NEXT_ACTIONS.md) — ordered next work  
-5. [VALIDATION_REPORT.md](VALIDATION_REPORT.md) — latest Atlas consistency check  
+5. [Releases/Release_Candidate_RC-1.md](Releases/Release_Candidate_RC-1.md) — pre-Sprint 4 checkpoint
+6. [VALIDATION_REPORT.md](VALIDATION_REPORT.md) — latest Atlas consistency check
 
 ## Contents
 
@@ -28,6 +29,9 @@
 | [RELEASES.md](RELEASES.md) | Release packages index |
 | [OWNERSHIP.md](OWNERSHIP.md) | Path ownership / collision rules |
 | [VALIDATION_REPORT.md](VALIDATION_REPORT.md) | Atlas validation results |
+| [TRACK_INDEX.md](TRACK_INDEX.md) | Canonical Track index |
+| [SPRINT_INDEX.md](SPRINT_INDEX.md) | Canonical Sprint index |
+| [AGENT_INDEX.md](AGENT_INDEX.md) | Canonical Agent index |
 | [Tracks/](Tracks/) | Track 1–8 status ([index](Tracks/README.md)) |
 | [Sprints/](Sprints/) | Sprint 1–4 + backlog ([index](Sprints/README.md)) |
 | [Agents/](Agents/) | Role handbooks ([index](Agents/README.md)) |

@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 19:01 UTC
 **Sources:** `git` (`origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`), `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`, `.worktrees/deployment-engineer/deployment/release-ops/GO_LIVE_STATUS.md`, `deployment/release-ops/HANDOFFS/RevenueSystemsEngineer.md`, `releases/RC-1-Development-Baseline/version.json`
 
 ## Snapshot
@@ -11,7 +11,7 @@
 | Sprint 1 Revenue OS | **COMPLETE** | Revenue handoff; EVA → Dev CRM smoke |
 | Sprint 2 Revenue OS | **COMPLETE** (Dev/Staging) | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` |
 | Sprint 3 Revenue OS | **COMPLETE** (Dev/Staging) | Same commit; conversion engine + tests in git |
-| Sprint 4 | **NOT STARTED** — Track ready | Awaiting Master PM + owner assignment |
+| Sprint 4 | **READY TO START — NOT STARTED** | Awaiting Master PM + owner assignment |
 | Revenue Systems Engineer | **COMPLETE** | Role closed for Sprint 1–3 @ `0073bf49411408cced88873805b432bce4eefb31` |
 | Production | HVCG Production Track 1 slice live | `https://orgee2f7545.crm.dynamics.com/` |
 | Development | HVCG Development | `https://org1131a2b0.crm.dynamics.com/` |
@@ -20,6 +20,17 @@
 | Canvas publish | **NOT DONE** (D-002) | RC-1 + Deployment Engineer handoff |
 | Main checkout | `cursor/agent-communications` | Local orientation/Atlas branch |
 | Revenue tip | `0073bf4` on `origin/cursor/revenue-sprint3-conversion` | Verified via `git fetch` / `git rev-parse` |
+| Atlas committed tip | `692d276` on `origin/cursor/agent-communications` | Local HEAD = remote branch tip |
+
+## Release checkpoint
+
+[Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) records the verified pre-Sprint 4 state. Immutable anchors:
+
+- Revenue: `0073bf49411408cced88873805b432bce4eefb31`
+- Atlas baseline: `692d27668e2144ec0e62360941c249dfd3d92db4`
+- Track 1 freeze tag: `302615956cea80c238172931f5901792f548f59c`
+
+The repository working directories are **not clean**; RC-1 excludes all uncommitted files. See the checkpoint for counts and worktree status.
 
 ## Revenue tip (canonical for Sprint 2–3 code)
 
@@ -58,7 +69,7 @@ Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 ## Priorities now
 
 1. Do **not** modify Track 1 frozen Production slice without new owner approval  
-2. Assign / gate **Sprint 4** when ready (Revenue Track ready; Sprint 4 not started)  
+2. Assign / gate **Sprint 4** (Revenue Track **READY TO START**; Sprint 4 not started)
 3. Soft UAT / optional Dev HTTP URL / website preview / pilot — owner gates  
 4. Keep Atlas as SoR; Revenue code SoR is `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`
 

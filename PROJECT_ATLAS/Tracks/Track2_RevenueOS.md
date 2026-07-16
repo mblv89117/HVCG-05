@@ -1,7 +1,8 @@
 # Track 2 — Revenue Operating System
 
-**Status:** Sprints **1–3 COMPLETE** · Revenue Systems Engineer **COMPLETE** · **Ready for Sprint 4** (Sprint 4 **NOT STARTED**) · Track 1 Prod **untouched** by Revenue work  
-**As of:** 2026-07-16 04:20 UTC  
+**Status:** Sprints **1–3 COMPLETE** · Revenue Systems Engineer **COMPLETE** · Sprint 4 **READY TO START — NOT STARTED** · Track 1 Prod **untouched** by Revenue work
+**As of:** 2026-07-16 19:01 UTC
+**Checkpoint:** [Release Candidate RC-1](../Releases/Release_Candidate_RC-1.md)
 
 ## Tip (canonical)
 
@@ -23,7 +24,7 @@ EVA intake → Dev CRM lead capture → multi-step assessment experience → con
 | 1 | COMPLETE | [../Sprints/Sprint1.md](../Sprints/Sprint1.md) |
 | 2 | COMPLETE | [../Sprints/Sprint2.md](../Sprints/Sprint2.md) |
 | 3 | COMPLETE | [../Sprints/Sprint3.md](../Sprints/Sprint3.md) |
-| 4 | NOT STARTED (Track ready) | [../Sprints/Sprint4.md](../Sprints/Sprint4.md) |
+| 4 | READY TO START — NOT STARTED | [../Sprints/Sprint4.md](../Sprints/Sprint4.md) |
 
 ## Key evidence
 
