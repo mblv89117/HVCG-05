@@ -1,0 +1,74 @@
+{
+  "generated": "2026-07-15T20:02:51.1923620-07:00",
+  "environment": "HVCG Production",
+  "siteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+  "approval": "APPROVE DIAGNOSE AND RERUN PROD LEADQUALIFIED FUNCTIONAL SMOKE",
+  "stamp": "20260715-200131",
+  "leadId": 2,
+  "opportunityId": 2,
+  "activityId": 2,
+  "passed": true,
+  "failureCount": 0,
+  "steps": [
+    {
+      "name": "create_lead",
+      "ok": true,
+      "detail": "Id=2"
+    },
+    {
+      "name": "qualify_lead",
+      "ok": true,
+      "detail": "Qualified"
+    },
+    {
+      "name": "opportunity_creation",
+      "ok": true,
+      "detail": "OppId=2"
+    },
+    {
+      "name": "activity_creation",
+      "ok": true,
+      "detail": "ActId=2"
+    },
+    {
+      "name": "activity_opportunity_lookup",
+      "ok": true,
+      "detail": "LookupId=2"
+    },
+    {
+      "name": "activity_lead_lookup",
+      "ok": true,
+      "detail": "LookupId=2"
+    },
+    {
+      "name": "lead_converted_opportunity",
+      "ok": true,
+      "detail": "LookupId=2"
+    },
+    {
+      "name": "flow_success_log",
+      "ok": true,
+      "detail": "LogId=4 Msg=Created opportunity 2 for lead 2"
+    },
+    {
+      "name": "sharepoint_writes",
+      "ok": true,
+      "detail": "opp+act+Succeeded log"
+    },
+    {
+      "name": "notifications_prod",
+      "ok": true,
+      "detail": "AutomationLogs Succeeded (Teams notify=false by policy)"
+    },
+    {
+      "name": "flow_activation",
+      "ok": true,
+      "detail": "evidenced by exact lead-id run artifacts"
+    },
+    {
+      "name": "sharepoint_field_persist",
+      "ok": true,
+      "detail": "CopilotSummary=sum-20260715-200131"
+    }
+  ]
+}

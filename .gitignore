@@ -74,3 +74,6 @@ deployment/reports/health/
 
 # Pre-deployment test result dumps (machine-local)
 deployment/reports/predeploy-tests-latest.json
+# local Dataverse patch tool builds
+deployment/release-ops/tools/**/bin/
+deployment/release-ops/tools/**/obj/

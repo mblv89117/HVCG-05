@@ -1,0 +1,13 @@
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+schemaname                defaultvalue                                                              environmentvariabledefinitionid      v.value
+hvcg_ExecutiveEmail       manny@highvaluecapitalgroup.com                                           84f8e078-3c08-473c-8c5c-1389a85db832 manny@highvaluecapitalgroup.com
+hvcg_EnableClientEmails   false                                                                     599bf386-96ba-4871-8500-00ba95700aed false
+hvcg_KnowledgeSiteUrl     https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev     73a252ad-b5c6-43a1-a02a-bb9cd761a78e https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge
+hvcg_CrmEnableTeamsNotify false                                                                     d566833c-7c60-47d5-9dae-ae0d82a7d293 false
+hvcg_ClientsSiteUrl       https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev       74349652-2e78-455c-8be4-1f17c06d6a70 https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients
+hvcg_CrmTestRecipient     manny@highvaluecapitalgroup.com                                           3fa2518d-edd8-42ea-8a19-d54ce4330910 manny@highvaluecapitalgroup.com
+hvcg_CommandCenterSiteUrl https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev 6abe9182-f614-415f-b7d5-41fc0c09565a https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter
+hvcg_OpsEmail             manny@highvaluecapitalgroup.com                                           ab6b049e-a0a0-40be-a4be-35a6abcdeb10 manny@highvaluecapitalgroup.com
+

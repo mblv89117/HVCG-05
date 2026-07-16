@@ -1,0 +1,20 @@
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+statecode workflowid                           name                                statuscode category
+Draft     d970e2a2-c7e6-555a-8759-596538260f52 HVCG_OverdueTaskEscalation          Draft      Modern Flow
+Draft     dc79d236-2c3d-5179-966c-a627bff6d0d3 HVCG_DeliverableApproval            Draft      Modern Flow
+Draft     bd6e4fa2-1c39-5c58-b389-06c3a05942f9 HVCG_ClientOnboarding               Draft      Modern Flow
+Draft     b2d8b14a-5948-5db7-949d-9bf12a0610bf HVCG_CreateDocumentRequests         Draft      Modern Flow
+Draft     ce87af47-06a6-5a7b-acc9-601429b31018 HVCG_CreateProjectFromTemplate      Draft      Modern Flow
+Draft     6d2f1a72-88a3-527d-bfc9-fddf90c0ad0a HVCG_CreateClientWorkspace          Draft      Modern Flow
+Activated 1716e663-153f-5588-af1a-56f3fb9ec2d4 HVCG_LeadQualifiedCreateOpportunity Activated  Modern Flow
+Draft     996bb7bc-a8a7-555e-ab2c-718f9f7960a7 HVCG_MissingDocumentReminders       Draft      Modern Flow
+Draft     eaf06b86-9ab6-51f2-942a-3a2407bc71ee HVCG_OpportunityStageChangedNotify  Draft      Modern Flow
+Draft     86192f2a-130f-54e3-9d85-23ba7330e6c5 HVCG_OpportunityWonCloseout         Draft      Modern Flow
+Draft     36794755-15ff-5be5-a454-46c5e414e295 HVCG_ExecutiveDecisionEscalation    Draft      Modern Flow
+Draft     4a5d357d-5874-513c-bf83-f4e6cf3b47cd HVCG_WeeklyStatusSummary            Draft      Modern Flow
+Draft     13aaf262-a539-53bc-bf9f-d46f59bcfc3d HVCG_UpdateProjectHealth            Draft      Modern Flow
+Draft     afa48f6a-0f99-5d42-b292-50d0581c077b HVCG_RenewalReminders               Draft      Modern Flow
+Draft     c393d0ed-48a8-5c79-a3aa-607bd3c819f3 HVCG_CapitalFundingStatusNotify     Draft      Modern Flow
+

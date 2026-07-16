@@ -1,0 +1,7 @@
+Connected as manny@highvaluecapitalgroup.com
+Id                               Name                            API Id                                                      Status
+f2e0400083e44915828d5bf9f6069a2e manny@highvaluecapitalgroup.com /providers/Microsoft.PowerApps/apis/shared_sharepointonline Connected
+ac42d3339d4f4841a21f86dade898123 manny@highvaluecapitalgroup.com /providers/Microsoft.PowerApps/apis/shared_office365        Connected
+305c5c5e2c80407fac9d5993d54cdae9 manny@highvaluecapitalgroup.com /providers/Microsoft.PowerApps/apis/shared_teams            Connected
+620037803eda4c06b748ac66e9196c9b Standard approvals              /providers/Microsoft.PowerApps/apis/shared_approvals        Connected
+

@@ -1,0 +1,9 @@
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+connectionreferencedisplayname connectionreferencelogicalname connectorid                                                 connectionid                     connectionreferenceid
+HVCG Outlook                   hvcg_sharedoffice365           /providers/Microsoft.PowerApps/apis/shared_office365        ac42d3339d4f4841a21f86dade898123 65e071d4-821a-4835-96b6-6709ee68cf26
+HVCG Teams                     hvcg_sharedteams               /providers/Microsoft.PowerApps/apis/shared_teams            305c5c5e2c80407fac9d5993d54cdae9 8c5f29f2-66a8-4310-ab8f-9acb7655b7ab
+HVCG SharePoint                hvcg_sharedsharepointonline    /providers/Microsoft.PowerApps/apis/shared_sharepointonline f2e0400083e44915828d5bf9f6069a2e 3fcd4249-357a-4a65-91a3-2f26975a1129
+HVCG Approvals                 hvcg_sharedapprovals           /providers/Microsoft.PowerApps/apis/shared_approvals        620037803eda4c06b748ac66e9196c9b bd12b230-fcd5-467f-ac25-a397e738c460
+

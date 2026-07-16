@@ -1,0 +1,40 @@
+{
+  "tag": "Track 1 Live - Internal",
+  "tagSlug": "Track-1-Live-Internal",
+  "status": "INTERNALLY_PRODUCTION_READY",
+  "declaredAt": "2026-07-16T03:08:00Z",
+  "track": 1,
+  "environment": {
+    "displayName": "HVCG Production",
+    "environmentId": "f141a2cf-ae13-eb59-84c4-25817d899105",
+    "organizationId": "a34bbff3-b380-f111-8068-6045bd0a1f11",
+    "uniqueName": "unqa34bbff3b380f11180686045bd0a1",
+    "url": "https://orgee2f7545.crm.dynamics.com/"
+  },
+  "solution": {
+    "uniqueName": "HVCGCommandCenterDev",
+    "friendlyName": "HVCG Command Center DEV",
+    "version": "1.1.0.1",
+    "managed": true,
+    "solutionId": "f3284fd3-fd4a-44a8-bc3a-b6963b8595d5",
+    "frozenPackageSha256": "515c692c213c4618e437b8d71fc62e2b708a52b2c5d8794a4384adb32d337cdf"
+  },
+  "configSolution": {
+    "uniqueName": "HVCGProductionConfig",
+    "version": "1.0.0.0",
+    "managed": false
+  },
+  "flows": {
+    "activated": ["HVCG_LeadQualifiedCreateOpportunity"],
+    "draftCount": 14
+  },
+  "gates": {
+    "hvcg_CrmEnableTeamsNotify": "false",
+    "hvcg_EnableClientEmails": "false",
+    "canvasPublished": false,
+    "pilotImport": false,
+    "dnsChanged": false
+  },
+  "branch": "cursor/deployment-engineer",
+  "sourceRc1Commit": "0f8d8ebf6542a1ea1ec679b6e382b3e00a366319"
+}

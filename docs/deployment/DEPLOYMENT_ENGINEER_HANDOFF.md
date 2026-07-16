@@ -15,12 +15,13 @@
 | Managed solution import | COMPLETE |
 | Connection reference binding | COMPLETE (Dataverse `connectionid` populated 4/4) |
 | Read-only Prod smoke | PASS (2026-07-16T02:33Z) |
-| Functional LeadQualified smoke | **INCOMPLETE / FAILING** — lead created on Prod; no opp/act/Succeeded log observed before session interrupt |
+| Functional LeadQualified smoke | **PASS** (2026-07-16T03:02Z) — after site-URL patch Dev→Prod |
 | Pilot client import | NOT STARTED |
 | Website DNS / public launch | NOT STARTED |
 | Canvas publish | NOT DONE (gated D-002) |
+| Track 1 Live - Internal tag | **DECLARED** — `releases/Track-1-Live-Internal/` |
 
-**Release status (Track 1):** VALIDATING — solution live; one flow Activated; functional smoke not green.
+**Release status (Track 1):** **LIVE—INTERNAL** — internally production ready (2026-07-16T03:08Z).
 
 ---
 
@@ -145,15 +146,15 @@ Settings file: `deployment/release-ops/deploymentSettings-production.PARTIAL.jso
 
 Scope: identity, solution, connections, env Values, gates, all flows Draft at that time, no sends.
 
-### B) Functional LeadQualified Prod smoke — NOT PASSED
+### B) Functional LeadQualified Prod smoke — PASS (after diagnose)
 
 | Field | Value |
 |-------|-------|
-| Approval | `APPROVE ACTIVATE HVCG_LeadQualifiedCreateOpportunity IN HVCG PRODUCTION` (activation executed) |
-| Attempt | Create/qualify lead on Prod Command Center |
-| Observed | `PASS create_lead — Id=1` · `PASS qualify_lead` · polls showed `opp=False act=False ok=False fail=False` (no AutomationLogs Started/Succeeded observed in poll window) |
-| Result JSON | **Not written** (run interrupted / incomplete) |
-| Verdict | **FAIL / INCOMPLETE** — do not claim functional smoke PASS |
+| Prior fail | Flow parameter `hvcg_CommandCenterSiteUrl` still defaulted to **Dev**; env var Values did not override (plain String param). Prod AutomationLogs empty; Dev caught activation catch-up. |
+| Fix | Patched live `clientdata` defaultValue → Prod Command Center; re-Activated LeadQualified only (`prod-site-url-patch.log`) |
+| Approval (retest) | `APPROVE DIAGNOSE AND RERUN PROD LEADQUALIFIED FUNCTIONAL SMOKE` |
+| Result | **PASS** lead Id=2 → opp 2 / act 2 / Succeeded log 4; also lead Id=1 converted |
+| Evidence | `deployment/release-ops/evidence/PROD_LEADQUALIFIED_FUNCTIONAL_SMOKE_PASS.md` · `prod-smoke-leadqualified-latest.json` |
 
 ---
 
@@ -200,55 +201,17 @@ No owner approval has been given to turn these On.
 
 ## 10. Exact next approval request
 
-Do **not** activate additional flows. LeadQualified is already Activated; functional smoke is not green.
+Track 1 is **LIVE—INTERNAL**. Do **not** activate additional flows without a new named approval.
 
-Use this when ready to authorize diagnosis + controlled re-test (still no other flow activation):
+Suggested next (owner choice):
 
 ```
-DEPLOYMENT APPROVAL REQUEST
-
-Action:
-Diagnose and re-run functional smoke for HVCG_LeadQualifiedCreateOpportunity in HVCG Production only (fix SharePoint trigger / site binding / list schema gaps; create one more test lead if needed). Do not activate any other flow. Do not enable Teams notify or client emails. Do not import pilot clients. Do not change DNS.
-
-Environment:
-HVCG Production
-f141a2cf-ae13-eb59-84c4-25817d899105
-https://orgee2f7545.crm.dynamics.com/
-
-Package:
-HVCGCommandCenterDev 1.1.0.1
-Hash 515c692c213c4618e437b8d71fc62e2b708a52b2c5d8794a4384adb32d337cdf
-
-Scope:
-LeadQualified flow + Prod Command Center CRM lists only
-
-Owner steps:
-1. Reply with approval phrase below
-2. Review resulting evidence JSON/MD from Deployment Engineer
-3. Decide GO/NO-GO for LIVE—INTERNAL
-
-Expected result:
-Either functional smoke PASS with evidence, or documented root cause + recommended fix (still no extra flows On)
-
-Risk:
-Test rows written to Prod SharePoint lists; broken trigger may leave Activated flow idle or erroring
-
-Rollback:
-Set HVCG_LeadQualifiedCreateOpportunity back to Draft/Off; delete test list items if required
-
-Estimated duration:
-30–90 minutes
-
-Recommendation:
-GO for diagnose+retest only
-
-Approval phrase required:
-APPROVE DIAGNOSE AND RERUN PROD LEADQUALIFIED FUNCTIONAL SMOKE
+APPROVE ACTIVATE HVCG_OpportunityStageChangedNotify IN HVCG PRODUCTION
 ```
 
-Optional safety approval (if owner prefers flow Off until fixed):
+Or pilot / website tracks under their own go-live plans.
 
-`APPROVE DEACTIVATE HVCG_LeadQualifiedCreateOpportunity IN HVCG PRODUCTION`
+Keep Teams notify Off and client emails Off unless separately approved.
 
 ---
 
@@ -295,13 +258,13 @@ Notable messages from this workstream (subjects): GL-0 complete; Track1 import c
 
 ## 13. Unresolved risks
 
-1. **Functional smoke not green** while LeadQualified is **Activated** — trigger/site/list binding may be wrong; risk of silent failure or unexpected runs.  
-2. **Definition DefaultValues** still contain `*-Dev` URLs — Values override, but flow parameters must be re-checked.  
+1. **Flow site URL is a plain parameter** (now Prod) — not true environment-variable metadata; future package should bind `hvcg_CommandCenterSiteUrl` properly so Values drive the flow.  
+2. **Definition DefaultValues** still contain `*-Dev` URLs — Values override for Dataverse; do not assume flows read Values unless parameters are env-var–linked.  
 3. **Partial SharePoint schema** on Prod Command Center — only four CRM lists provisioned; other lookups skipped (Clients, Referrals, etc.).  
 4. **Security group = None** — intentional; revisit before adding external makers.  
 5. **Maker UI “Status Off”** on connection refs — misleading; do not re-bind blindly.  
-6. **Test lead Id=1** left on Prod HVCG_Leads after incomplete smoke — UNKNOWN whether flow ran after interrupt.  
-7. **Full Track1 LIVE—INTERNAL** not declared — wait for green functional smoke + QA.  
+6. **Test leads Id=1 and Id=2** remain on Prod HVCG_Leads (smoke artifacts).  
+7. **Track1 LIVE—INTERNAL declared** — freeze at `releases/Track-1-Live-Internal/`; further flow activation still gated.  
 8. **Pilot import / DNS / canvas / other flows** — all still gated.
 
 ---

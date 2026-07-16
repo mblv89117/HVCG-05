@@ -1,0 +1,10 @@
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+Listing all Solutions from the current Dataverse organization...
+Unique Name          Friendly Name                         Version Managed
+Cr08ecd              Common Data Services Default Solution 1.0.0.0 False
+Default              Default Solution                      1.0     False
+HVCGCommandCenterDev HVCG Command Center DEV               1.1.0.1 True
+HVCGProductionConfig HVCG Production Config                1.0.0.0 False
+

@@ -1,0 +1,26 @@
+{
+  "environment": "production",
+  "label": "HVCG Production",
+  "tenant": {
+    "domain": "highvaluecapitalgroup.com",
+    "tenantId": "3df46563-86f3-4414-87fd-84ba967741ef",
+    "sharePointRoot": "https://highvaluecapitalgroup.sharepoint.com"
+  },
+  "sites": {
+    "commandCenter": {
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter"
+    }
+  },
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Production",
+    "environmentId": "f141a2cf-ae13-eb59-84c4-25817d899105",
+    "orgUrl": "https://orgee2f7545.crm.dynamics.com/",
+    "solutionUniqueName": "HVCGCommandCenterDev"
+  },
+  "authentication": {
+    "pnpEntraAppClientId": "836fb743-6439-4836-b1f2-4a144ce2f762"
+  },
+  "identities": {
+    "executiveUpn": "manny@highvaluecapitalgroup.com"
+  }
+}

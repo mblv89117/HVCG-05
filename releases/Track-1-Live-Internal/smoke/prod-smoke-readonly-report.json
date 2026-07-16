@@ -1,0 +1,94 @@
+{
+  "testSuite": "PROD_SMOKE_READONLY",
+  "approvedBy": "OWNER phrase APPROVE PROD SMOKE TESTS",
+  "timestampUtc": "2026-07-16T02:33:24Z",
+  "environment": {
+    "displayName": "HVCG Production",
+    "environmentId": "f141a2cf-ae13-eb59-84c4-25817d899105",
+    "orgUrl": "https://orgee2f7545.crm.dynamics.com/"
+  },
+  "package": {
+    "uniqueName": "HVCGCommandCenterDev",
+    "version": "1.1.0.1",
+    "managed": true,
+    "sha256": "515c692c213c4618e437b8d71fc62e2b708a52b2c5d8794a4384adb32d337cdf"
+  },
+  "overall": "PASS",
+  "counts": {
+    "PASS": 8,
+    "FAIL": 0,
+    "INFO": 1
+  },
+  "checks": [
+    {
+      "id": "S1",
+      "name": "Correct Production environment",
+      "expect": "HVCG Production / orgee2f7545 / f141a2cf-ae13-eb59-84c4-25817d899105",
+      "result": "PASS",
+      "detail": "pac org who matched"
+    },
+    {
+      "id": "S2",
+      "name": "Managed solution present",
+      "expect": "HVCGCommandCenterDev 1.1.0.1 Managed",
+      "result": "PASS",
+      "detail": "solution fetch confirmed"
+    },
+    {
+      "id": "S3",
+      "name": "Connection references bound 4/4",
+      "expect": "non-empty connectionid for all hvcg_shared*",
+      "result": "PASS",
+      "detail": "SharePoint/Outlook/Teams/Approvals bound"
+    },
+    {
+      "id": "S4",
+      "name": "PAC connections Connected",
+      "expect": "4 connectors Connected",
+      "result": "PASS",
+      "detail": "pac connection list"
+    },
+    {
+      "id": "S5",
+      "name": "Prod SharePoint Values (no -Dev in Value)",
+      "expect": "CommandCenter/Clients/Knowledge Prod URLs",
+      "result": "PASS",
+      "detail": "v.value uses non-Dev sites"
+    },
+    {
+      "id": "S6",
+      "name": "Notification gates Off",
+      "expect": "TeamsNotify=false EnableClientEmails=false",
+      "result": "PASS",
+      "detail": "both false"
+    },
+    {
+      "id": "S7",
+      "name": "All HVCG cloud flows Draft/Off",
+      "expect": "statecode Draft for all HVCG% modern flows",
+      "result": "PASS",
+      "detail": "15/15 Draft \u2014 none Activated"
+    },
+    {
+      "id": "S8",
+      "name": "No flow execution / no sends this run",
+      "expect": "read-only validation only",
+      "result": "PASS",
+      "detail": "Did not invoke CRM smoke harness; no activate-plugins"
+    },
+    {
+      "id": "S9",
+      "name": "Definition DefaultValue still contains *-Dev URLs",
+      "expect": "Informational residual",
+      "result": "INFO",
+      "detail": "Defaults retain Dev URLs; Values override \u2014 monitor flow parameter defaults before activation"
+    }
+  ],
+  "flowsDraftCount": 15,
+  "excluded": [
+    "CRM functional smoke (LeadQualified/Stage/Won/Capital) \u2014 requires flow activation + separate approval",
+    "Canvas publish",
+    "Client import",
+    "DNS / website"
+  ]
+}

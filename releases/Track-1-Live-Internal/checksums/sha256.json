@@ -1,0 +1,127 @@
+{
+  "generated": "2026-07-16T03:07:24Z",
+  "tag": "Track 1 Live - Internal",
+  "tagSlug": "Track-1-Live-Internal",
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "550e41660cb4f43b2234154a44cac867c52db4971e8507427ad334654a3e6d5d",
+      "bytes": 2065
+    },
+    {
+      "path": "backup/HVCGCommandCenterDev_managed_1.1.0.1_FROZEN.zip",
+      "sha256": "515c692c213c4618e437b8d71fc62e2b708a52b2c5d8794a4384adb32d337cdf",
+      "bytes": 31045
+    },
+    {
+      "path": "backup/HVCGProductionConfig_unmanaged_1.0.0.0_PROD_EXPORT.zip",
+      "sha256": "1d216ae15cde97afe1bf6133a6ff4e39571d866fade0e0b0b2b0baf10ab1e188",
+      "bytes": 1937
+    },
+    {
+      "path": "backup/export-config.log",
+      "sha256": "aced65782e29397fffdf12194ed1715c0bdf8c44f159e97b8efd5bd80629725d",
+      "bytes": 728
+    },
+    {
+      "path": "backup/export-managed.log",
+      "sha256": "007b4d26f5437ff2a89cf2135b1a90534ae5b6f978f12026e61f5d095c2eb220",
+      "bytes": 987
+    },
+    {
+      "path": "backup/leadqualified-clientdata-live-raw.txt",
+      "sha256": "140b5915ba7378a6dd6c1234f1729edeb0dbe8fea5eb1cddcd3038dc987e3417",
+      "bytes": 9696
+    },
+    {
+      "path": "backup/prod-connectionreferences.txt",
+      "sha256": "659224a21ea28313b82cfe1a5fbc0bfc40a30b73b71283f01059be2c9cd98bc6",
+      "bytes": 1024
+    },
+    {
+      "path": "backup/prod-environmentvariables.txt",
+      "sha256": "f52ac7a00ddb8b1a2ce0ce2d3995e2ad4dbb29b02a8a42ab1e17835ba7df1ba8",
+      "bytes": 1628
+    },
+    {
+      "path": "backup/prod-flows.txt",
+      "sha256": "f1e5b9c900088c57dc80195df21dce9cc8acc7ff9a5f7eb58a08bec602ec3768",
+      "bytes": 1772
+    },
+    {
+      "path": "backup/prod-org-who.txt",
+      "sha256": "9c18f99abd47a8ff63c287d5ef28b97d7cb2e3dafc2dc690ba8085ac893e3dd7",
+      "bytes": 542
+    },
+    {
+      "path": "backup/prod-pac-connections.txt",
+      "sha256": "840a661c6d1bf9bced41ac5bd6c0d74b61d50e0b4954ae8798c6d8691d55c287",
+      "bytes": 718
+    },
+    {
+      "path": "backup/prod-solutions.txt",
+      "sha256": "314fa98574eb1536ece85415d731c06063c2ae75527a5a62fb020016185efab8",
+      "bytes": 510
+    },
+    {
+      "path": "guides/ROLLBACK.md",
+      "sha256": "2ce8ffa0a1c5ebc27caa8ea6a850c58818db99951bd2956fdcb94acd850cd0a3",
+      "bytes": 934
+    },
+    {
+      "path": "settings/deploymentSettings-production.PARTIAL.json",
+      "sha256": "39964f1432d2586d73579e36d03fd5ae7a453baf413cceb2a6255d6bcde25932",
+      "bytes": 3667
+    },
+    {
+      "path": "settings/production.runtime.json",
+      "sha256": "2b88a0da850385e1ff667e8d8f9b723fddc8d02db1b10ceeaf8c47bfe6f1584f",
+      "bytes": 793
+    },
+    {
+      "path": "smoke/PROD_LEADQUALIFIED_DIAGNOSIS.md",
+      "sha256": "a221754ebafa7746dd6d73d5ca76e3a439b5396960b9c34dfa248f04b51e3959",
+      "bytes": 1513
+    },
+    {
+      "path": "smoke/PROD_LEADQUALIFIED_FUNCTIONAL_SMOKE_PASS.md",
+      "sha256": "384dd627438130cd10538ebdbfccc3d347213fb0e82d2da99629183921691137",
+      "bytes": 1646
+    },
+    {
+      "path": "smoke/PROD_SMOKE_READONLY_REPORT.md",
+      "sha256": "13fa541b44e51becb7f1081309e6362c626be710b033cb7d02548b1dee50dd4d",
+      "bytes": 1383
+    },
+    {
+      "path": "smoke/prod-smoke-leadqualified-latest.json",
+      "sha256": "7db81b1acf61518ea8fe8f14f8157f38a0e4f008ecdbdd8d16aaa8db33ade7cd",
+      "bytes": 1689
+    },
+    {
+      "path": "smoke/prod-smoke-readonly-report.json",
+      "sha256": "38560b1416b47db1b07a4ea27d8cfeb2d2cdf869a821d88a2c71ff81d10ed8a1",
+      "bytes": 2792
+    },
+    {
+      "path": "solution/HVCGCommandCenterDev_managed_1.1.0.1_IMPORT_ANCHOR.zip",
+      "sha256": "515c692c213c4618e437b8d71fc62e2b708a52b2c5d8794a4384adb32d337cdf",
+      "bytes": 31045
+    },
+    {
+      "path": "solution/HVCG_LeadQualifiedCreateOpportunity.clientdata.PROD_LAYER.json",
+      "sha256": "a4039ac5e575d0d925ea990b21ce8a2c1c0be0c09542a034d3a287e1061201c8",
+      "bytes": 19822
+    },
+    {
+      "path": "validation/PRODUCTION_VALIDATION_REPORT.md",
+      "sha256": "105837edcf8ba450e6c0f21e13278b4c44e88e05dd84cfdab14b881395fdc801",
+      "bytes": 6452
+    },
+    {
+      "path": "version.json",
+      "sha256": "b6fee0c860b43fa859771073d8db940f6ddf946179485de1b002e5f555a84473",
+      "bytes": 1273
+    }
+  ]
+}
