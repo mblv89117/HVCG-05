@@ -1,0 +1,91 @@
+{
+  "generatedAt": "2026-07-16T20:48:43.311Z",
+  "branch": "cursor/finance-operations-sprint1",
+  "dataMode": "mock-only",
+  "summary": {
+    "passed": 12,
+    "failed": 0,
+    "total": 12
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "overview route",
+      "pass": true,
+      "evidence": "/ → Finance Overview"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "revenue route",
+      "pass": true,
+      "evidence": "/revenue → Revenue Dashboard"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "ar route",
+      "pass": true,
+      "evidence": "/ar → Accounts Receivable"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "retainers route",
+      "pass": true,
+      "evidence": "/retainers → Retainer Management"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "pricing route",
+      "pass": true,
+      "evidence": "/pricing → Proposal Pricing"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "cash route",
+      "pass": true,
+      "evidence": "/cash → Cash Flow"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "kpis route",
+      "pass": true,
+      "evidence": "/kpis → Financial KPIs"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 cash dashboard",
+      "pass": true,
+      "evidence": "mobile nav=true; overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant layout",
+      "pass": true,
+      "evidence": "ar=false; cash=false; retainers=true"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected AR route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4175/"
+    },
+    {
+      "suite": "Financial QA",
+      "name": "Overview KPI density",
+      "pass": true,
+      "evidence": "8 revenue cards"
+    },
+    {
+      "suite": "Financial QA",
+      "name": "Mock-only banner present",
+      "pass": true,
+      "evidence": "matches=1"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-overview-desktop.png",
+    "screenshots/02-revenue-desktop.png",
+    "screenshots/03-ar-desktop.png",
+    "screenshots/04-pricing-desktop.png",
+    "screenshots/05-cash-mobile.png"
+  ]
+}
