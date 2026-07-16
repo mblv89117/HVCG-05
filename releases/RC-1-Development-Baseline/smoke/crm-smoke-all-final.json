@@ -1,0 +1,56 @@
+{
+  "generated": "2026-07-15T16:56:27.0614860-07:00",
+  "stamp": "20260715-165501",
+  "passed": true,
+  "failureCount": 0,
+  "suites": {
+    "Capital": true,
+    "Stage": true,
+    "Won": true,
+    "LeadQualified": true
+  },
+  "steps": [
+    {
+      "suite": "LeadQualified",
+      "name": "prior_smoke_passed",
+      "ok": true,
+      "detail": "lead=11 fails=0"
+    },
+    {
+      "suite": "Stage",
+      "name": "prepare_opp",
+      "ok": true,
+      "detail": "OppId=16 Stage=Negotiation"
+    },
+    {
+      "suite": "Won",
+      "name": "prepare_opp",
+      "ok": true,
+      "detail": "OppId=17"
+    },
+    {
+      "suite": "Capital",
+      "name": "prepare_cap",
+      "ok": true,
+      "detail": "CapId=3 FundingStatus=Committed"
+    },
+    {
+      "suite": "Stage",
+      "name": "activity_and_success",
+      "ok": true,
+      "detail": "Act=21 Log=52"
+    },
+    {
+      "suite": "Won",
+      "name": "activity_and_success",
+      "ok": true,
+      "detail": "Act=19 Log=48"
+    },
+    {
+      "suite": "Capital",
+      "name": "activity_and_success",
+      "ok": true,
+      "detail": "Act=30 Log=70"
+    }
+  ]
+}

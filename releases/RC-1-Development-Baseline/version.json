@@ -1,0 +1,30 @@
+{
+  "releaseCandidate": "RC-1-Development-Baseline",
+  "displayName": "RC-1 Development Baseline",
+  "status": "Development Baseline Complete",
+  "nextMilestone": "Production Deployment Planning",
+  "branch": "agent/crm-dev-validation",
+  "solutionUniqueName": "HVCGCommandCenterDev",
+  "solutionVersion": "1.1.0.1",
+  "solutionZip": "solution/HVCGCommandCenterDev-unmanaged-20260716-004621.zip",
+  "solutionSha256": "b08b45bc2aad8605d13a6dbce89eb01895510ae64ab452f2ea050a369f9e3522",
+  "environmentProven": "HVCG Development",
+  "productionTouched": false,
+  "canvasPublished": false,
+  "ownerApprovalRequired": true,
+  "gates": [
+    "Do not publish Canvas",
+    "Do not activate Production flows",
+    "Do not import into Production without Owner approval"
+  ],
+  "crmSmoke": {
+    "passed": true,
+    "failureCount": 0,
+    "evidence": [
+      "smoke/crm-smoke-all-final.json",
+      "smoke/crm-smoke-leadqualified-final.json"
+    ]
+  },
+  "packagingStatus": "READY_WITH_MANUAL_OWNER_ACTIONS",
+  "validationReport": "validation/ENV_VAR_GAP_VALIDATION.md"
+}

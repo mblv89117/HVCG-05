@@ -1,0 +1,131 @@
+{
+  "EnvironmentVariables": [
+    {
+      "SchemaName": "hvcg_ClientsSiteUrl",
+      "Value": "",
+      "DefaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev",
+      "Name": {
+        "Default": "Clients Hub Site URL",
+        "ByLcid": {
+          "1033": "Clients Hub Site URL"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_CommandCenterSiteUrl",
+      "Value": "",
+      "DefaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev",
+      "Name": {
+        "Default": "Command Center Site URL",
+        "ByLcid": {
+          "1033": "Command Center Site URL"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_CrmEnableTeamsNotify",
+      "Value": "",
+      "DefaultValue": "false",
+      "Name": {
+        "Default": "CRM Enable Teams Notify",
+        "ByLcid": {
+          "1033": "CRM Enable Teams Notify"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_CrmTestRecipient",
+      "Value": "",
+      "DefaultValue": "manny@highvaluecapitalgroup.com",
+      "Name": {
+        "Default": "CRM Test Recipient UPN",
+        "ByLcid": {
+          "1033": "CRM Test Recipient UPN"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_EnableClientEmails",
+      "Value": "",
+      "DefaultValue": "false",
+      "Name": {
+        "Default": "Enable Client Emails",
+        "ByLcid": {
+          "1033": "Enable Client Emails"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_ExecutiveEmail",
+      "Value": "",
+      "DefaultValue": "manny@highvaluecapitalgroup.com",
+      "Name": {
+        "Default": "Executive UPN/Email",
+        "ByLcid": {
+          "1033": "Executive UPN/Email"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_KnowledgeSiteUrl",
+      "Value": "",
+      "DefaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev",
+      "Name": {
+        "Default": "Knowledge Center Site URL",
+        "ByLcid": {
+          "1033": "Knowledge Center Site URL"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    },
+    {
+      "SchemaName": "hvcg_OpsEmail",
+      "Value": "",
+      "DefaultValue": "manny@highvaluecapitalgroup.com",
+      "Name": {
+        "Default": "Operations Notification Email",
+        "ByLcid": {
+          "1033": "Operations Notification Email"
+        }
+      },
+      "TypeId": 100000000,
+      "IsRequired": false
+    }
+  ],
+  "ConnectionReferences": [
+    {
+      "LogicalName": "hvcg_sharedapprovals",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+    },
+    {
+      "LogicalName": "hvcg_sharedoffice365",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+    },
+    {
+      "LogicalName": "hvcg_sharedsharepointonline",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+    },
+    {
+      "LogicalName": "hvcg_sharedteams",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+    }
+  ],
+  "CopilotAgents": []
+}
