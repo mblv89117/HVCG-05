@@ -1,0 +1,80 @@
+{
+  "generatedUtc": "2026-07-16T00:35:42Z",
+  "environment": "HVCG Development",
+  "orgUrl": "https://org1131a2b0.crm.dynamics.com/",
+  "solutionUniqueName": "HVCGCommandCenterDev",
+  "solutionVersion": "1.1.0.1",
+  "exportZip": "deployment/packages/crm/HVCGCommandCenterDev-unmanaged-20260716-003427.zip",
+  "sha256": "76414a1d836a12a527e472095c99d2396daff788663a248a752282e4523fdea0",
+  "productionTouched": false,
+  "workflows": {
+    "count": 15,
+    "all": [
+      "HVCG_CapitalFundingStatusNotify-C393D0ED-48A8-5C79-A3AA-607BD3C819F3.json",
+      "HVCG_ClientOnboarding-BD6E4FA2-1C39-5C58-B389-06C3A05942F9.json",
+      "HVCG_CreateClientWorkspace-6D2F1A72-88A3-527D-BFC9-FDDF90C0AD0A.json",
+      "HVCG_CreateDocumentRequests-B2D8B14A-5948-5DB7-949D-9BF12A0610BF.json",
+      "HVCG_CreateProjectFromTemplate-CE87AF47-06A6-5A7B-ACC9-601429B31018.json",
+      "HVCG_DeliverableApproval-DC79D236-2C3D-5179-966C-A627BFF6D0D3.json",
+      "HVCG_ExecutiveDecisionEscalation-36794755-15FF-5BE5-A454-46C5E414E295.json",
+      "HVCG_LeadQualifiedCreateOpportunity-1716E663-153F-5588-AF1A-56F3FB9EC2D4.json",
+      "HVCG_MissingDocumentReminders-996BB7BC-A8A7-555E-AB2C-718F9F7960A7.json",
+      "HVCG_OpportunityStageChangedNotify-EAF06B86-9AB6-51F2-942A-3A2407BC71EE.json",
+      "HVCG_OpportunityWonCloseout-86192F2A-130F-54E3-9D85-23BA7330E6C5.json",
+      "HVCG_OverdueTaskEscalation-D970E2A2-C7E6-555A-8759-596538260F52.json",
+      "HVCG_RenewalReminders-AFA48F6A-0F99-5D42-B292-50D0581C077B.json",
+      "HVCG_UpdateProjectHealth-13AAF262-A539-53BC-BF9F-D46F59BCFC3D.json",
+      "HVCG_WeeklyStatusSummary-4A5D357D-5874-513C-BF83-F4E6CF3B47CD.json"
+    ],
+    "crmExpected": [
+      "HVCG_LeadQualifiedCreateOpportunity",
+      "HVCG_OpportunityStageChangedNotify",
+      "HVCG_OpportunityWonCloseout",
+      "HVCG_CapitalFundingStatusNotify"
+    ],
+    "crmPresent": [
+      "HVCG_CapitalFundingStatusNotify-C393D0ED-48A8-5C79-A3AA-607BD3C819F3.json",
+      "HVCG_LeadQualifiedCreateOpportunity-1716E663-153F-5588-AF1A-56F3FB9EC2D4.json",
+      "HVCG_OpportunityStageChangedNotify-EAF06B86-9AB6-51F2-942A-3A2407BC71EE.json",
+      "HVCG_OpportunityWonCloseout-86192F2A-130F-54E3-9D85-23BA7330E6C5.json"
+    ],
+    "crmPatternCheck": {
+      "allFourPresent": true,
+      "recurrenceAndHttp": true,
+      "note": "Verified Recurrence + HTTP patterns in all 4 CRM flow JSON exports"
+    }
+  },
+  "connectionReferences": {
+    "inCustomizationsXml": [
+      "hvcg_sharedapprovals",
+      "hvcg_sharedoffice365",
+      "hvcg_sharedsharepointonline",
+      "hvcg_sharedteams"
+    ],
+    "asPackagerFoldersInLiveExport": false,
+    "repoPackagerFoldersPresent": true,
+    "crmFlowsUse": [
+      "shared_sharepointonline"
+    ]
+  },
+  "environmentVariables": {
+    "asRootComponentsInLiveExport": false,
+    "referencedInCrmFlowParameters": [
+      "hvcg_CommandCenterSiteUrl",
+      "hvcg_CrmEnableTeamsNotify"
+    ],
+    "repoDefinitionsCount": 12,
+    "gap": "Live Dev solution export contains connectionreferences in customizations.xml but NO EnvironmentVariableDefinitions folder/RootComponents. Env vars are referenced by flows; ensure they exist in environment and add to solution before managed promote."
+  },
+  "canvasApps": {
+    "inSolutionExport": false,
+    "pacCanvasListCount": 0,
+    "status": "NOT_PRESENT \u2014 build/import package prepared; publish gated on owner approval"
+  },
+  "verdict": "PASS_WITH_GAPS",
+  "gaps": [
+    "Environment variable definitions not packaged as solution RootComponents in live export",
+    "No canvas app in Dev environment or solution",
+    "ConnectionReferences present in customizations.xml but not as separate packager folders in raw export"
+  ]
+}

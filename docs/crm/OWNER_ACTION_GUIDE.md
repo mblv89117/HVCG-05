@@ -33,7 +33,7 @@ Complete in this order. Items marked **STOP** block automation until you act.
 | **OA-CRM-06** | Import four CRM flows in Maker + bind connections | Maker UI + your connections | Automations |
 | **OA-CRM-07** | Set env vars / Teams channel IDs (test channels only until approved) | Channel IDs are tenant-specific | Notification actions |
 | **OA-CRM-08** | Activate flows (Off → On) after dry-run binding | Enabling can send messages if misconfigured | Runtime |
-| **OA-CRM-09** | Build/publish canvas `scrCRM` / `scrOpportunityDetail` in Maker | App authoring requires Maker + your connections | End-user CRM UI |
+| **OA-CRM-09** | Build canvas `scrCRM` / `scrOpportunityDetail` in Maker (**publish gated** — see `CANVAS_APP_OWNER_GUIDE.md`) | App authoring requires Maker + your connections; **do not publish without explicit owner approval** | End-user CRM UI |
 | **OA-CRM-10** | Manual verification + fill `ACCEPTANCE_REPORT.md` | Business sign-off | Declaring CRM Dev-ready |
 | **OA-CRM-11** | Explicit approval before Production promote | Production gate | Prod CRM |
 

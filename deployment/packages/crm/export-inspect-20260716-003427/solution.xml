@@ -1,0 +1,43 @@
+<ImportExportXml version="9.2.26062.163" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26062.163" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26062.00163">
+  <SolutionManifest>
+    <UniqueName>HVCGCommandCenterDev</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="HVCG Command Center DEV" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="HVCG Project Management Development solution - SharePoint-connected canvas app, flows, env vars, connection references." languagecode="1033" />
+    </Descriptions>
+    <Version>1.1.0.1</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>HVCG</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="High Value Capital Group" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress>ops@highvaluecapitalgroup.example</EMailAddress>
+      <SupportingWebsiteUrl></SupportingWebsiteUrl>
+      <CustomizationPrefix>hvcg</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>88000</CustomizationOptionValuePrefix>
+      <Addresses />
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="29" id="{13aaf262-a539-53bc-bf9f-d46f59bcfc3d}" behavior="0" />
+      <RootComponent type="29" id="{1716e663-153f-5588-af1a-56f3fb9ec2d4}" behavior="0" />
+      <RootComponent type="29" id="{36794755-15ff-5be5-a454-46c5e414e295}" behavior="0" />
+      <RootComponent type="29" id="{4a5d357d-5874-513c-bf83-f4e6cf3b47cd}" behavior="0" />
+      <RootComponent type="29" id="{6d2f1a72-88a3-527d-bfc9-fddf90c0ad0a}" behavior="0" />
+      <RootComponent type="29" id="{86192f2a-130f-54e3-9d85-23ba7330e6c5}" behavior="0" />
+      <RootComponent type="29" id="{996bb7bc-a8a7-555e-ab2c-718f9f7960a7}" behavior="0" />
+      <RootComponent type="29" id="{afa48f6a-0f99-5d42-b292-50d0581c077b}" behavior="0" />
+      <RootComponent type="29" id="{b2d8b14a-5948-5db7-949d-9bf12a0610bf}" behavior="0" />
+      <RootComponent type="29" id="{bd6e4fa2-1c39-5c58-b389-06c3a05942f9}" behavior="0" />
+      <RootComponent type="29" id="{c393d0ed-48a8-5c79-a3aa-607bd3c819f3}" behavior="0" />
+      <RootComponent type="29" id="{ce87af47-06a6-5a7b-acc9-601429b31018}" behavior="0" />
+      <RootComponent type="29" id="{d970e2a2-c7e6-555a-8759-596538260f52}" behavior="0" />
+      <RootComponent type="29" id="{dc79d236-2c3d-5179-966c-a627bff6d0d3}" behavior="0" />
+      <RootComponent type="29" id="{eaf06b86-9ab6-51f2-942a-3a2407bc71ee}" behavior="0" />
+    </RootComponents>
+    <MissingDependencies />
+  </SolutionManifest>
+</ImportExportXml>
