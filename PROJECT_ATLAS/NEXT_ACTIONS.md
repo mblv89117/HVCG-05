@@ -5,16 +5,16 @@
 
 ## Now
 
-1. Keep Track 1 **frozen**.  
-2. Treat Revenue tip `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` as Sprint 2–3 SoR.  
+1. Keep Track 1 **frozen**.
+2. Treat Revenue tip `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` as Sprint 2–3 SoR.
 3. Revenue Track is **READY TO START Sprint 4**; Sprint 4 remains **NOT STARTED** until assigned.
 4. Preserve [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) commit anchors; do not include dirty working-tree files in the checkpoint.
 
 ## Owner decisions
 
-1. Confirm Sprint 4 start (or defer).  
-2. Price cards: SKU-FCFO / SKU-EXIT / SKU-ACQ / SKU-MODEL (or keep OWNER REVIEW).  
-3. Phone routing for `725.577.6511` vs `702.906.6444`.  
+1. Confirm Sprint 4 start (or defer).
+2. Price cards: SKU-FCFO / SKU-EXIT / SKU-ACQ / SKU-MODEL (or keep OWNER REVIEW).
+3. Phone routing for `725.577.6511` vs `702.906.6444`.
 
 ## Next engineering candidates (gated)
 
@@ -29,10 +29,11 @@
 | Pilot import ACCG / Prodigy / Christie | Track 2 data | Owner |
 | Canvas publish | CRM product | D-002 |
 | Public DNS | Track 3 | BL-PUBLISH-1 / GL-PUBLISH-1 |
+| Client Portal Sprint 1 merge | Track 4 | Separate owner instruction; branch remains isolated |
 | Portal invites | Track 4 | BL-C1 |
 
 ## Explicit non-actions
 
-- Do not begin Sprint 4 until assigned  
-- Do not modify Track 1 Production freeze  
-- Do not push unless the human asks  
+- Do not begin Sprint 4 until assigned
+- Do not modify Track 1 Production freeze
+- Do not push unless the human asks

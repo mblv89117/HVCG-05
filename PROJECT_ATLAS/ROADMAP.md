@@ -16,15 +16,16 @@
 | 7 | Canvas publish | Product | D-002 |
 | 8 | Public DNS / website publish | Track 3 | GL-PUBLISH-1 / BL-PUBLISH-1 |
 | 9 | Client portal invites | Track 4 | BL-C1 |
+| 9a | Client Portal Sprint 1 merge | Track 4 | Separate owner instruction; isolated branch complete |
 | 10 | Enterprise / scale | Track 8 | Later |
 
 ## Completed
 
-- RC-1 Development Baseline (`releases/RC-1-Development-Baseline/`)  
-- Track 1 Live — Internal (**FROZEN**)  
-- Revenue OS Sprint 1 **COMPLETE**  
-- Revenue OS Sprint 2 **COMPLETE** (`0073bf4`)  
-- Revenue OS Sprint 3 **COMPLETE** (`0073bf4`)  
+- RC-1 Development Baseline (`releases/RC-1-Development-Baseline/`)
+- Track 1 Live — Internal (**FROZEN**)
+- Revenue OS Sprint 1 **COMPLETE**
+- Revenue OS Sprint 2 **COMPLETE** (`0073bf4`)
+- Revenue OS Sprint 3 **COMPLETE** (`0073bf4`)
 - Revenue Systems Engineer **COMPLETE** for Sprint 1–3 @ `0073bf49411408cced88873805b432bce4eefb31`
 - Pre-Sprint 4 [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) verification recorded
 

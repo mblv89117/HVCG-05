@@ -62,16 +62,27 @@ The repository working directories are **not clean**; RC-1 excludes all uncommit
 | `.` (main) | `cursor/agent-communications` | see `git rev-parse` |
 | `.worktrees/deployment-engineer` | `cursor/deployment-engineer` | `c726f1e` |
 | `.worktrees/revenue-sprint3` | `cursor/revenue-sprint3-conversion` | `0073bf4` |
+| `.worktrees/client-portal-sprint1` | `cursor/client-portal-sprint1` | Sprint 1 Phase 1 MVP (pending commit) |
 | `.worktrees/master-pm-orchestrator` | `cursor/master-pm-orchestrator` | `b75b19b` |
 
 Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 
+## Client Portal (Track 4)
+
+| Field | Value |
+|-------|-------|
+| Sprint 1 Phase 1 | **COMPLETE (repo)** on `cursor/client-portal-sprint1` / `.worktrees/client-portal-sprint1` |
+| App | `apps/hvcg-client-portal` (mocked integrations; no live invites) |
+| Commit/push | **Owner approved — committed and pushed on isolated branch** |
+| Prod invites | Still gated **BL-C1** |
+
 ## Priorities now
 
-1. Do **not** modify Track 1 frozen Production slice without new owner approval  
+1. Do **not** modify Track 1 frozen Production slice without new owner approval
 2. Assign / gate **Sprint 4** (Revenue Track **READY TO START**; Sprint 4 not started)
-3. Soft UAT / optional Dev HTTP URL / website preview / pilot — owner gates  
+3. Soft UAT / optional Dev HTTP URL / website preview / pilot — owner gates
 4. Keep Atlas as SoR; Revenue code SoR is `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`
+5. Preserve Client Portal Sprint 1 on its isolated branch; do not merge without a separate instruction
 
 ## Status authority
 

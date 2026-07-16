@@ -1,0 +1,37 @@
+{
+  "name": "hvcg-client-portal",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --port 4173",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "qa:smoke": "node ../../tests/portal/smoke.mjs",
+    "qa:permissions": "node ../../tests/portal/permissions.mjs",
+    "qa:navigation": "node ../../tests/portal/navigation.mjs",
+    "qa:responsive": "node ../../tests/portal/responsive.mjs",
+    "qa:all": "npm run build && npm run test && npm run qa:smoke && npm run qa:permissions && npm run qa:navigation && npm run qa:responsive"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "jsdom": "^26.1.0",
+    "playwright": "^1.61.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "vitest": "^3.2.7"
+  }
+}
