@@ -17,7 +17,11 @@
 
 ## Verdict
 
-**PASS_WITH_GAPS** — all expected CRM flows are present with the validated recurrence + HTTP patterns. Connection references are present in `customizations.xml`. Environment variable **definitions are not RootComponents** in the live export. No canvas app is in the environment or solution yet.
+Superseded for the env-var packaging question by **`docs/crm/ENV_VAR_GAP_VALIDATION.md`**.
+
+**Latest status (2026-07-16):** **READY WITH MANUAL OWNER ACTIONS**
+
+Post-remediation export: `HVCGCommandCenterDev-unmanaged-20260716-004621.zip` (8 env var definitions + values in package). Prior export `…003427.zip` lacked env var folders. Canvas still absent; publish gated.
 
 ## Workflows (15)
 

@@ -1,0 +1,11 @@
+<environmentvariabledefinition schemaname="hvcg_CommandCenterSiteUrl">
+  <defaultvalue>https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev</defaultvalue>
+  <displayname default="Command Center Site URL">
+    <label description="Command Center Site URL" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

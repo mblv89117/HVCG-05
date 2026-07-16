@@ -1,0 +1,228 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "10.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "hvcg_CommandCenterSiteUrl": {
+          "type": "String",
+          "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+        },
+        "hvcg_CrmEnableTeamsNotify": {
+          "type": "Bool",
+          "defaultValue": false
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "type": "Recurrence",
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          }
+        }
+      },
+      "actions": {
+        "Http_List": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "HttpRequest",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+              "parameters/method": "GET",
+              "parameters/uri": "_api/web/lists/getbytitle('HVCG_Opportunities')/items?$filter=Stage eq 'Won'&$select=Id,Title,SalesOwnerEmail,OwnerEmail&$top=20",
+              "parameters/headers": {
+                "Accept": "application/json;odata=nometadata"
+              }
+            }
+          }
+        },
+        "Apply": {
+          "type": "Foreach",
+          "foreach": "@body('Http_List')?['value']",
+          "runAfter": {
+            "Http_List": [
+              "Succeeded"
+            ]
+          },
+          "actions": {
+            "HttpFind": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                  "parameters/method": "GET",
+                  "parameters/uri": "_api/web/lists/getbytitle('HVCG_OpportunityActivities')/items?$filter=HVCG_IdempotencyKey eq 'act-opp-won|@{items('Apply')?['Id']}'&$select=Id&$top=1",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                }
+              }
+            },
+            "Need": {
+              "type": "If",
+              "runAfter": {
+                "HttpFind": [
+                  "Succeeded",
+                  "Failed"
+                ]
+              },
+              "expression": {
+                "equals": [
+                  "@empty(coalesce(body('HttpFind')?['value'], createArray()))",
+                  true
+                ]
+              },
+              "actions": {
+                "LogS": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_AutomationLogs",
+                      "item/Title": "Started",
+                      "item/FlowName": "HVCG_OpportunityWonCloseout",
+                      "item/Status": {
+                        "Value": "Started"
+                      },
+                      "item/Message": "Won @{items('Apply')?['Id']}"
+                    }
+                  }
+                },
+                "Create": {
+                  "type": "OpenApiConnection",
+                  "runAfter": {
+                    "LogS": [
+                      "Succeeded"
+                    ]
+                  },
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_OpportunityActivities",
+                      "item/Title": "Opportunity marked Won",
+                      "item/ActivityType": {
+                        "Value": "StageChange"
+                      },
+                      "item/NewStage": "Won",
+                      "item/OwnerEmail": "@coalesce(items('Apply')?['SalesOwnerEmail'], items('Apply')?['OwnerEmail'], 'manny@highvaluecapitalgroup.com')",
+                      "item/ActivityDate": "@utcNow()",
+                      "item/OpportunityId": {
+                        "Id": "@items('Apply')?['Id']"
+                      },
+                      "item/HVCG_IdempotencyKey": "act-opp-won|@{items('Apply')?['Id']}"
+                    }
+                  }
+                },
+                "WinLoss": {
+                  "type": "OpenApiConnection",
+                  "runAfter": {
+                    "Create": [
+                      "Succeeded",
+                      "Failed"
+                    ]
+                  },
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_WinLossAnalyses",
+                      "item/Title": "Won analysis @{items('Apply')?['Title']}",
+                      "item/Result": {
+                        "Value": "Won"
+                      },
+                      "item/OpportunityId": {
+                        "Id": "@items('Apply')?['Id']"
+                      }
+                    }
+                  }
+                },
+                "LogOk": {
+                  "type": "OpenApiConnection",
+                  "runAfter": {
+                    "WinLoss": [
+                      "Succeeded",
+                      "Failed"
+                    ]
+                  },
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_AutomationLogs",
+                      "item/Title": "Succeeded",
+                      "item/FlowName": "HVCG_OpportunityWonCloseout",
+                      "item/Status": {
+                        "Value": "Succeeded"
+                      },
+                      "item/RelatedList": "HVCG_Opportunities",
+                      "item/RelatedItemId": "@items('Apply')?['Id']",
+                      "item/Message": "@concat('Won closeout for opp ', string(items('Apply')?['Id']))"
+                    }
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Skip": {
+                    "type": "Compose",
+                    "inputs": "skip"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,11 @@
+<environmentvariabledefinition schemaname="hvcg_ClientsSiteUrl">
+  <defaultvalue>https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev</defaultvalue>
+  <displayname default="Clients Hub Site URL">
+    <label description="Clients Hub Site URL" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

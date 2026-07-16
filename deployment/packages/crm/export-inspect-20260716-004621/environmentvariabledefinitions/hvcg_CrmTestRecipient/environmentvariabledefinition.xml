@@ -1,0 +1,11 @@
+<environmentvariabledefinition schemaname="hvcg_CrmTestRecipient">
+  <defaultvalue>manny@highvaluecapitalgroup.com</defaultvalue>
+  <displayname default="CRM Test Recipient UPN">
+    <label description="CRM Test Recipient UPN" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

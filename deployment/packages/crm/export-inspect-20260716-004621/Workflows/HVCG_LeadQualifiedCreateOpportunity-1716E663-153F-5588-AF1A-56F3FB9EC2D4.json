@@ -1,0 +1,467 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "10.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "hvcg_CommandCenterSiteUrl": {
+          "type": "String",
+          "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+        },
+        "hvcg_CrmEnableTeamsNotify": {
+          "type": "Bool",
+          "defaultValue": false
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "type": "Recurrence",
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          }
+        }
+      },
+      "actions": {
+        "Get_Qualified_Leads": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+              "table": "HVCG_Leads",
+              "$filter": "LeadStatus eq 'Qualified'",
+              "$orderby": "Modified desc",
+              "$top": 25
+            }
+          }
+        },
+        "Apply_to_each_Lead": {
+          "type": "Foreach",
+          "foreach": "@outputs('Get_Qualified_Leads')?['body/value']",
+          "actions": {
+            "Condition_Needs_Conversion": {
+              "type": "If",
+              "expression": {
+                "or": [
+                  {
+                    "equals": [
+                      "@items('Apply_to_each_Lead')?['ConvertedOpportunityId']",
+                      "@null"
+                    ]
+                  },
+                  {
+                    "equals": [
+                      "@items('Apply_to_each_Lead')?['ConvertedOpportunityId/Id']",
+                      "@null"
+                    ]
+                  },
+                  {
+                    "equals": [
+                      "@string(items('Apply_to_each_Lead')?['ConvertedOpportunityId'])",
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Log_Start": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_AutomationLogs",
+                      "item/Title": "Started",
+                      "item/FlowName": "HVCG_LeadQualifiedCreateOpportunity",
+                      "item/Status": {
+                        "Value": "Started"
+                      },
+                      "item/Message": "Lead @{items('Apply_to_each_Lead')?['ID']} @{items('Apply_to_each_Lead')?['Title']}"
+                    }
+                  }
+                },
+                "Http_Find_Opportunity": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "HttpRequest",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "parameters/method": "GET",
+                      "parameters/uri": "_api/web/lists/getbytitle('HVCG_Opportunities')/items?$filter=HVCG_IdempotencyKey eq 'opp-from-lead|@{items('Apply_to_each_Lead')?['ID']}'&$select=Id&$top=1",
+                      "parameters/headers": {
+                        "Accept": "application/json;odata=nometadata"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Log_Start": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Compose_Existing_OppId": {
+                  "type": "Compose",
+                  "inputs": "@coalesce(body('Http_Find_Opportunity')?['value']?[0]?['Id'], body('Http_Find_Opportunity')?['value']?[0]?['ID'])",
+                  "runAfter": {
+                    "Http_Find_Opportunity": [
+                      "Succeeded",
+                      "Failed"
+                    ]
+                  }
+                },
+                "Condition_Create_If_Missing": {
+                  "type": "If",
+                  "expression": {
+                    "or": [
+                      {
+                        "equals": [
+                          "@outputs('Compose_Existing_OppId')",
+                          "@null"
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@string(outputs('Compose_Existing_OppId'))",
+                          ""
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Create_Opportunity": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PostItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                          "table": "HVCG_Opportunities",
+                          "item/Title": "@{items('Apply_to_each_Lead')?['Title']} — Discovery",
+                          "item/Stage": {
+                            "Value": "Discovery"
+                          },
+                          "item/WinLossStatus": {
+                            "Value": "Open"
+                          },
+                          "item/ForecastCategory": {
+                            "Value": "Pipeline"
+                          },
+                          "item/CapitalHandoffStatus": {
+                            "Value": "NotApplicable"
+                          },
+                          "item/Probability": 20,
+                          "item/OwnerEmail": "@coalesce(items('Apply_to_each_Lead')?['OwnerEmail'], 'manny@highvaluecapitalgroup.com')",
+                          "item/SalesOwnerEmail": "@coalesce(items('Apply_to_each_Lead')?['OwnerEmail'], 'manny@highvaluecapitalgroup.com')",
+                          "item/HVCG_IdempotencyKey": "opp-from-lead|@{items('Apply_to_each_Lead')?['ID']}",
+                          "item/CopilotSummary": "Created from qualified lead @{items('Apply_to_each_Lead')?['Title']}"
+                        }
+                      }
+                    },
+                    "Http_Resolve_Created_Opp": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "HttpRequest",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                          "parameters/method": "GET",
+                          "parameters/uri": "_api/web/lists/getbytitle('HVCG_Opportunities')/items?$filter=HVCG_IdempotencyKey eq 'opp-from-lead|@{items('Apply_to_each_Lead')?['ID']}'&$select=Id&$top=1",
+                          "parameters/headers": {
+                            "Accept": "application/json;odata=nometadata"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Create_Opportunity": [
+                          "Succeeded",
+                          "Failed"
+                        ]
+                      }
+                    },
+                    "Compose_Created_OppId": {
+                      "type": "Compose",
+                      "inputs": "@coalesce(body('Http_Resolve_Created_Opp')?['value']?[0]?['Id'], body('Http_Resolve_Created_Opp')?['value']?[0]?['ID'])",
+                      "runAfter": {
+                        "Http_Resolve_Created_Opp": [
+                          "Succeeded",
+                          "Failed"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Compose_Created_OppId_From_Existing": {
+                        "type": "Compose",
+                        "inputs": "@outputs('Compose_Existing_OppId')"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Compose_Existing_OppId": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Compose_OpportunityId": {
+                  "type": "Compose",
+                  "inputs": "@coalesce(outputs('Compose_Created_OppId'), outputs('Compose_Created_OppId_From_Existing'))",
+                  "runAfter": {
+                    "Condition_Create_If_Missing": [
+                      "Succeeded",
+                      "Failed",
+                      "Skipped"
+                    ]
+                  }
+                },
+                "Condition_Has_OpportunityId": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "not": [
+                          {
+                            "equals": [
+                              "@outputs('Compose_OpportunityId')",
+                              "@null"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "not": [
+                          {
+                            "equals": [
+                              "@string(outputs('Compose_OpportunityId'))",
+                              ""
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Http_Find_Activity": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "HttpRequest",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                          "parameters/method": "GET",
+                          "parameters/uri": "_api/web/lists/getbytitle('HVCG_OpportunityActivities')/items?$filter=HVCG_IdempotencyKey eq 'act-lead-qualify|@{items('Apply_to_each_Lead')?['ID']}'&$select=Id&$top=1",
+                          "parameters/headers": {
+                            "Accept": "application/json;odata=nometadata"
+                          }
+                        }
+                      }
+                    },
+                    "Condition_Create_Activity_If_Missing": {
+                      "type": "If",
+                      "expression": {
+                        "or": [
+                          {
+                            "equals": [
+                              "@body('Http_Find_Activity')?['value']?[0]?['Id']",
+                              "@null"
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@length(coalesce(body('Http_Find_Activity')?['value'], createArray()))",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Create_Activity": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "host": {
+                              "connectionName": "shared_sharepointonline",
+                              "operationId": "PostItem",
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                            },
+                            "parameters": {
+                              "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                              "table": "HVCG_OpportunityActivities",
+                              "item/Title": "Lead qualified → opportunity created",
+                              "item/ActivityType": {
+                                "Value": "StageChange"
+                              },
+                              "item/NewStage": "Discovery",
+                              "item/PriorStage": "Lead",
+                              "item/ActivityDate": "@utcNow()",
+                              "item/OwnerEmail": "@coalesce(items('Apply_to_each_Lead')?['OwnerEmail'], 'manny@highvaluecapitalgroup.com')",
+                              "item/OpportunityId": {
+                                "Id": "@outputs('Compose_OpportunityId')"
+                              },
+                              "item/LeadId": {
+                                "Id": "@items('Apply_to_each_Lead')?['ID']"
+                              },
+                              "item/HVCG_IdempotencyKey": "act-lead-qualify|@{items('Apply_to_each_Lead')?['ID']}"
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Http_Find_Activity": [
+                          "Succeeded",
+                          "Failed"
+                        ]
+                      }
+                    },
+                    "Patch_Lead_Converted": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PatchItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                          "table": "HVCG_Leads",
+                          "id": "@items('Apply_to_each_Lead')?['ID']",
+                          "item/Title": "@items('Apply_to_each_Lead')?['Title']",
+                          "item/ConvertedOpportunityId": {
+                            "Id": "@outputs('Compose_OpportunityId')"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Condition_Create_Activity_If_Missing": [
+                          "Succeeded",
+                          "Failed",
+                          "Skipped"
+                        ]
+                      }
+                    },
+                    "Log_Success": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "host": {
+                          "connectionName": "shared_sharepointonline",
+                          "operationId": "PostItem",
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                        },
+                        "parameters": {
+                          "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                          "table": "HVCG_AutomationLogs",
+                          "item/Title": "Succeeded",
+                          "item/FlowName": "HVCG_LeadQualifiedCreateOpportunity",
+                          "item/Status": {
+                            "Value": "Succeeded"
+                          },
+                          "item/RelatedList": "HVCG_Leads",
+                          "item/RelatedItemId": "@items('Apply_to_each_Lead')?['ID']",
+                          "item/Message": "@concat('Created opportunity ', string(outputs('Compose_OpportunityId')), ' for lead ', string(items('Apply_to_each_Lead')?['ID']))"
+                        }
+                      },
+                      "runAfter": {
+                        "Patch_Lead_Converted": [
+                          "Succeeded",
+                          "Failed",
+                          "Skipped"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {
+                      "Log_Missing_OpportunityId": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "host": {
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "PostItem",
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                          },
+                          "parameters": {
+                            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                            "table": "HVCG_AutomationLogs",
+                            "item/Title": "Failed",
+                            "item/FlowName": "HVCG_LeadQualifiedCreateOpportunity",
+                            "item/Status": {
+                              "Value": "Failed"
+                            },
+                            "item/RelatedList": "HVCG_Leads",
+                            "item/RelatedItemId": "@items('Apply_to_each_Lead')?['ID']",
+                            "item/Message": "Could not resolve opportunity ID for lead @{items('Apply_to_each_Lead')?['ID']}"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Compose_OpportunityId": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Skip_Already_Converted": {
+                    "type": "Compose",
+                    "inputs": "Lead already has ConvertedOpportunityId — skipped"
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Get_Qualified_Leads": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
