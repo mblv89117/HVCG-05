@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <environmentvariabledefinition schemaname="hvcg_TeamsCrmChannelId">
+  <environmentvariabledefinitionid>{1a75e988-4184-5300-bc44-89355570f683}</environmentvariabledefinitionid>
   <displayname default="Teams CRM Test Channel ID">
     <label description="Teams CRM Test Channel ID" languagecode="1033" />
   </displayname>

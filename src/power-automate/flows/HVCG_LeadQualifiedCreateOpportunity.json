@@ -5,6 +5,9 @@
   "packageVersion": "1.1.0",
   "defaultState": "Off",
   "description": "When a lead becomes Qualified, create (or link) a Discovery-stage opportunity idempotently. Optional Teams/Outlook notify is gated and test-recipient only.",
+  "implementationNotes": {
+    "wo3IdCapture": "After Create_Opportunity PostItem, Compose_OpportunityId coalesces body/ID|body/Id|body.ID paths; Create_Activity/Patch_Lead_Converted/Log_Success must use outputs('Compose_OpportunityId') — never raw outputs('Create_Opportunity')?['body/ID'] alone. See deployment/reports/crm/E2E_LEADQUALIFIED_PATCH_NOTE.md."
+  },
   "trigger": {
     "type": "SharePointItemModified",
     "list": "HVCG_Leads",

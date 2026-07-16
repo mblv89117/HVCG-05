@@ -3,7 +3,43 @@
 **Product:** HVCG OS  
 **Module:** Opportunity CRM v1  
 **Environment:** Development (`HVCG-CommandCenter-Dev`)  
-**Status:** `PARTIAL — blocked on interactive Power Platform auth + Maker rebuild`  
+**Status:** `PARTIAL — flows imported + bound + activated; live E2E FAILED; canvas pending`  
+
+---
+
+
+## Resume checkpoint 4 (2026-07-15 ~15:33 PT) — offline reconcile
+
+**Supersedes stale `maker-oa-acceptance-latest.json` (oauthConnectionsBound=0 / liveE2E=NOT_RUN).** Newer checkpoint truth:
+
+| Item | Result | Evidence |
+|------|--------|----------|
+| Connection refs bound | **4/4 PASS** | `deployment/reports/checkpoints/dataverse-bind-activate.json` |
+| Env var values in Dataverse | **PASS** (Teams notify false) | same bind evidence |
+| CRM flows activated | **4/4 PASS** | `deployment/reports/checkpoints/flow-v7-activate.json` |
+| Live LeadQualified E2E | **FAILED** (opp/act missing) | `deployment/reports/checkpoints/crm-smoke-leadqualified-final.json` |
+| Canvas | **FAIL** — no `.msapp` | OA-CRM-09 / D-002 |
+| Production / Teams notify | Untouched / **false** | policy |
+
+Canonical machine summary: `deployment/reports/crm/maker-oa-acceptance-latest.json` (reconciled). Dirty-tree segregation: `deployment/reports/crm/DIRTY_TREE_SEGREGATION.md`. **No commit** from offline CRM agent (mixed agent-comms + solution WIP). Smoke not actively running at reconcile (only `caffeinate`).
+
+**Blockers:** OA-CRM-09 / D-002 (canvas); LeadQualified live write/lookup repair (live worker).
+
+## Resume checkpoint 3 (2026-07-15 ~13:35 PT)
+
+**HVCG Development** bound (`org1131a2b0.crm.dynamics.com`). Solution **HVCGCommandCenterDev** imported (**15 flows live**, **4/4 CRM** confirmed via export). Connection references in solution (**4**). Offline predeploy + CRM acceptance **PASS**. At this checkpoint: **OAuth connections not yet bound**; **env var values not visible in export**; **canvas not built** (no `.msapp`). Live E2E **NOT RUN** *(superseded by checkpoint 4)*. **No success push.** Production untouched. Teams notify remains **false**.
+
+**Blockers (then):** OA-CRM-05 (Maker connector consent), OA-CRM-09 (canvas build).
+
+## Resume checkpoint 2 (2026-07-15 ~12:00 PT)
+
+`HVCG-Dev-Maker` verified + selected. `pac org/env/admin list` still return **0 environments** — cannot select **HVCG Development**. Live import remains **0/4**. Offline CRM acceptance **PASS**. **No success push.** Teams notify remains false. Production untouched.
+
+## Resume checkpoint (2026-07-15 ~11:18 PT)
+
+User confirmed authentication, but verification found **no `pac` profiles**. Resume re-issued device code **[REDACTED_DEVICE_CODE]**. Live import still **0/4**. CRM flow JSON staged into solution `Workflows/`. **No success push.** Teams notify remains false.
+
+---
 
 ---
 
@@ -12,7 +48,7 @@
 | Field | Value |
 |-------|--------|
 | Report ID | `CRM-DEV-ACCEPT-20260715-MAKER-OA` |
-| Operator (owner / delegate) | Auto agent (Dev Maker OA approved) — **pac device-code pending owner** |
+| Operator (owner / delegate) | Auto agent (Dev Maker OA) — **pac auth OK** (`HVCG-Dev-Maker` → HVCG Development). Stale device-code worker [REDACTED_DEVICE_CODE] **RETIRED** |
 | Date (America/Los_Angeles) | 2026-07-15 11:03 PDT |
 | Integration commit SHA | `61ec9839534176804892b6ee98c3fc16215cc5ca` (pre-status commit) |
 | Branch / tag at apply | `cursor/v1.1.0-intelligence-ai-ops` |
@@ -27,8 +63,8 @@
 |-------|--------|------------------|
 | Infra baseline still zero-drift before CRM apply | ✅ Pass | Prior repair attest `schema-validation-20260715-103353.json` hasDrift=false / 1170 fields |
 | PnP Entra Client ID configured | ✅ Pass | `development.json` authentication.pnpEntraAppClientId set (gitignored) |
-| Interactive Microsoft sign-in completed | ⛔ Fail (pending) | `pac auth create --deviceCode --name HVCG-Dev-Maker` waiting — code issued |
-| Admin consent completed (if prompted) | ☐ N/A pending | After pac auth |
+| Interactive Microsoft sign-in completed | ✅ Pass | Profile `HVCG-Dev-Maker` active (`pac auth list`). Stale terminal 307703 / pid 27093 / code **[REDACTED_DEVICE_CODE]** verified **DEAD** — do not enter that code |
+| Admin consent completed (if prompted) | ✅ Pass (Dev) | Bound to HVCG Development |
 | Optional backup taken | ✅ Pass (earlier) | `backups/development/20260715-092137` |
 
 ---
@@ -123,7 +159,7 @@ Outbound traffic during tests: ☑ N/A (no flows activated; Teams gate false)
 | `test_opportunity_crm.py` | **0** | lists_indexed=82 flows=15 |
 | `test_opportunity_lifecycle.py` | **0** | bridge=ok |
 | `tests/crm/smoke_helpers.py` | **0** | artifacts present |
-| Live Maker import/E2E | **BLOCKED** | pac device-code pending |
+| Live Maker import/E2E | **PARTIAL** | Auth OK; E2E failed (Create_Opportunity ID capture — offline patch staged); canvas unmet (D-002) |
 
 `schema-validation-latest.json` restored from post-repair dated snapshot after predeploy unit-test overwrite.
 
@@ -144,9 +180,9 @@ Outbound traffic during tests: ☑ N/A (no flows activated; Teams gate false)
 | Role | Name | Date | Result |
 |------|------|------|--------|
 | Agent (package/offline) | Auto | 2026-07-15 11:03 PDT | Offline PASS; live Maker PARTIAL/BLOCKED |
-| Owner / Admin | _(pending device-code + Maker)_ | | |
+| Owner / Admin | Auth complete — remaining: D-002 canvas + E2E retest | 2026-07-15 | |
 
 **Notes / defects:**
-1. **NOTIFY:** Complete `https://login.microsoft.com/device` with active device code from running `pac auth create` (see `deployment/reports/checkpoints/pac-auth-dev-maker.log`).
-2. After auth: `pac org list` → select **HVCG Development** → owner rebuilds 4 CRM flows per `POWER_AUTOMATE_OWNER_GUIDE.md` (leave Off; Teams false) → canvas per `POWER_APPS_BUILD_GUIDE.md`.
-3. LeadQualified definition needs Compose placeholders replaced during Maker build.
+1. **RETIRED:** Do **not** use device code **[REDACTED_DEVICE_CODE]** or re-run `pac auth create` while `HVCG-Dev-Maker` exists. See `deployment/reports/checkpoints/pac-auth-dev-maker.log` (retirement notice).
+2. Remaining owner gate: **D-002** — build/publish CRM canvas in Maker (`POWER_APPS_BUILD_GUIDE.md`).
+3. LeadQualified offline ID patch staged (`Compose_OpportunityId`); requires controlled reimport/retest (not auth).

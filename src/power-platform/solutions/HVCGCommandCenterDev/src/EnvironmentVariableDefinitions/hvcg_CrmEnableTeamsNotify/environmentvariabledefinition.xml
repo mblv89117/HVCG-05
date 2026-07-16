@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <environmentvariabledefinition schemaname="hvcg_CrmEnableTeamsNotify">
+  <environmentvariabledefinitionid>{6c4cf9fa-d7b2-5f79-aab7-34ecee89e3cd}</environmentvariabledefinitionid>
   <displayname default="CRM Enable Teams Notify">
     <label description="CRM Enable Teams Notify" languagecode="1033" />
   </displayname>

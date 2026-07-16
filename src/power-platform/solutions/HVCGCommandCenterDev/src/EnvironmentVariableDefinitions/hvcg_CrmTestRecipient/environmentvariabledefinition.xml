@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <environmentvariabledefinition schemaname="hvcg_CrmTestRecipient">
+  <environmentvariabledefinitionid>{1f56cc61-34ac-50b9-8b94-5d4ed8413e65}</environmentvariabledefinitionid>
   <displayname default="CRM Test Recipient UPN">
     <label description="CRM Test Recipient UPN" languagecode="1033" />
   </displayname>

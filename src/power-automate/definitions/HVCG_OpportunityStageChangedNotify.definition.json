@@ -1,129 +1,237 @@
 {
   "name": "HVCG_OpportunityStageChangedNotify",
   "displayName": "HVCG_OpportunityStageChangedNotify",
-  "description": "Activity log + gated Teams notify on opportunity Stage change (CRM package 1.1.0)",
+  "description": "Activity log + gated Teams notify on opportunity Stage change (CRM package 1.1.0) (WO6 recurrence scanner) (WO6 recurrence scanner)",
   "defaultState": "Off",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
     "parameters": {
-      "$authentication": { "defaultValue": {}, "type": "SecureObject" },
-      "$connections": { "defaultValue": {}, "type": "Object" },
-      "hvcg_CommandCenterSiteUrl": { "type": "String" },
-      "hvcg_TeamsCrmChannelId": { "type": "String", "defaultValue": "" },
-      "hvcg_TeamsCrmChannelGroupId": { "type": "String", "defaultValue": "" },
-      "hvcg_CrmEnableTeamsNotify": { "type": "Bool", "defaultValue": false }
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      },
+      "hvcg_CommandCenterSiteUrl": {
+        "type": "String",
+        "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+      },
+      "hvcg_CrmEnableTeamsNotify": {
+        "type": "Bool",
+        "defaultValue": false
+      }
     },
     "triggers": {
-      "When_opportunity_modified": {
-        "type": "OpenApiConnectionWebhook",
-        "inputs": {
-          "host": {
-            "connectionName": "shared_sharepointonline",
-            "operationId": "GetOnUpdatedItems",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
-          },
-          "parameters": {
-            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
-            "table": "HVCG_Opportunities"
-          },
-          "splitOn": "@triggerOutputs()?['body/value']"
+      "Recurrence": {
+        "type": "Recurrence",
+        "recurrence": {
+          "frequency": "Minute",
+          "interval": 1
         }
       }
     },
     "actions": {
-      "Log_Start": {
+      "Get_Recent_Opportunities": {
         "type": "OpenApiConnection",
         "inputs": {
           "host": {
             "connectionName": "shared_sharepointonline",
-            "operationId": "PostItem",
+            "operationId": "GetItems",
             "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
           },
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
-            "table": "HVCG_AutomationLogs",
-            "item/Title": "Started",
-            "item/FlowName": "HVCG_OpportunityStageChangedNotify",
-            "item/Status": "Started"
+            "table": "HVCG_Opportunities",
+            "$orderby": "Modified desc",
+            "$top": 15
           }
-        },
-        "runAfter": {}
+        }
       },
-      "Create_Stage_Activity": {
-        "type": "OpenApiConnection",
-        "inputs": {
-          "host": {
-            "connectionName": "shared_sharepointonline",
-            "operationId": "PostItem",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
-          },
-          "parameters": {
-            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
-            "table": "HVCG_OpportunityActivities",
-            "item/Title": "Stage → @{triggerOutputs()?['body/Stage']}",
-            "item/ActivityType": "StageChange",
-            "item/NewStage": "@triggerOutputs()?['body/Stage']",
-            "item/OwnerEmail": "@triggerOutputs()?['body/SalesOwnerEmail']",
-            "item/ActivityDate": "@utcNow()",
-            "item/HVCG_IdempotencyKey": "opp-stage|@{triggerOutputs()?['body/ID']}|@{triggerOutputs()?['body/Stage']}|@{triggerOutputs()?['body/Modified']}"
-          }
-        },
-        "runAfter": { "Log_Start": ["Succeeded"] }
-      },
-      "Patch_CopilotSummary": {
-        "type": "Compose",
-        "inputs": "Patch Opportunity CopilotSummary: Stage {Stage}; probability {Probability}; next action {NextActionDate}",
-        "runAfter": { "Create_Stage_Activity": ["Succeeded"] }
-      },
-      "Condition_Notify_Late_Stages": {
-        "type": "If",
-        "expression": {
-          "and": [{ "equals": ["@parameters('hvcg_CrmEnableTeamsNotify')", true] }]
+      "Apply_to_each_Opp": {
+        "type": "Foreach",
+        "foreach": "@outputs('Get_Recent_Opportunities')?['body/value']",
+        "runAfter": {
+          "Get_Recent_Opportunities": [
+            "Succeeded"
+          ]
         },
         "actions": {
-          "Compose_Stage_Filter": {
+          "Compose_Stage": {
             "type": "Compose",
-            "inputs": "Only post when Stage in Proposal|Negotiation|Won|Lost — implement with nested If/Switch in Maker"
+            "inputs": "@coalesce(items('Apply_to_each_Opp')?['Stage/Value'], items('Apply_to_each_Opp')?['Stage'])"
           },
-          "Post_Teams_Test_Only": {
+          "Http_Find_Stage_Activity": {
             "type": "OpenApiConnection",
+            "runAfter": {
+              "Compose_Stage": [
+                "Succeeded"
+              ]
+            },
             "inputs": {
               "host": {
-                "connectionName": "shared_teams",
-                "operationId": "PostMessageToChannel",
-                "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+                "connectionName": "shared_sharepointonline",
+                "operationId": "HttpRequest",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
               },
               "parameters": {
-                "poster": "Flow bot",
-                "location": "Channel",
-                "body/recipient/groupId": "@parameters('hvcg_TeamsCrmChannelGroupId')",
-                "body/recipient/channelId": "@parameters('hvcg_TeamsCrmChannelId')",
-                "body/messageBody": "Opportunity stage changed (test channel only)."
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "parameters/method": "GET",
+                "parameters/uri": "_api/web/lists/getbytitle('HVCG_OpportunityActivities')/items?$filter=HVCG_IdempotencyKey eq 'opp-stage|@{items('Apply_to_each_Opp')?['ID']}|@{outputs('Compose_Stage')}'&$select=Id&$top=1",
+                "parameters/headers": {
+                  "Accept": "application/json;odata=nometadata"
+                }
+              }
+            }
+          },
+          "Condition_Create_Stage_Activity": {
+            "type": "If",
+            "runAfter": {
+              "Http_Find_Stage_Activity": [
+                "Succeeded",
+                "Failed"
+              ]
+            },
+            "expression": {
+              "or": [
+                {
+                  "equals": [
+                    "@body('Http_Find_Stage_Activity')?['value']?[0]?['Id']",
+                    "@null"
+                  ]
+                },
+                {
+                  "equals": [
+                    "@length(coalesce(body('Http_Find_Stage_Activity')?['value'], createArray()))",
+                    0
+                  ]
+                }
+              ]
+            },
+            "actions": {
+              "Log_Start": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                    "table": "HVCG_AutomationLogs",
+                    "item/Title": "Started",
+                    "item/FlowName": "HVCG_OpportunityStageChangedNotify",
+                    "item/Status": {
+                      "Value": "Started"
+                    },
+                    "item/Message": "Opp @{items('Apply_to_each_Opp')?['ID']} stage @{outputs('Compose_Stage')}"
+                  }
+                }
+              },
+              "Create_Stage_Activity": {
+                "type": "OpenApiConnection",
+                "runAfter": {
+                  "Log_Start": [
+                    "Succeeded"
+                  ]
+                },
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                    "table": "HVCG_OpportunityActivities",
+                    "item/Title": "Stage \u2192 @{outputs('Compose_Stage')}",
+                    "item/ActivityType": {
+                      "Value": "StageChange"
+                    },
+                    "item/NewStage": "@outputs('Compose_Stage')",
+                    "item/OwnerEmail": "@coalesce(items('Apply_to_each_Opp')?['SalesOwnerEmail'], items('Apply_to_each_Opp')?['OwnerEmail'], 'manny@highvaluecapitalgroup.com')",
+                    "item/ActivityDate": "@utcNow()",
+                    "item/OpportunityId": {
+                      "Id": "@items('Apply_to_each_Opp')?['ID']"
+                    },
+                    "item/HVCG_IdempotencyKey": "opp-stage|@{items('Apply_to_each_Opp')?['ID']}|@{outputs('Compose_Stage')}"
+                  }
+                }
+              },
+              "Patch_CopilotSummary": {
+                "type": "OpenApiConnection",
+                "runAfter": {
+                  "Create_Stage_Activity": [
+                    "Succeeded",
+                    "Failed"
+                  ]
+                },
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PatchItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                    "table": "HVCG_Opportunities",
+                    "id": "@items('Apply_to_each_Opp')?['ID']",
+                    "item/Title": "@items('Apply_to_each_Opp')?['Title']",
+                    "item/CopilotSummary": "Stage @{outputs('Compose_Stage')}; probability @{items('Apply_to_each_Opp')?['Probability']}"
+                  }
+                }
+              },
+              "Notify_Gated": {
+                "type": "Compose",
+                "runAfter": {
+                  "Patch_CopilotSummary": [
+                    "Succeeded",
+                    "Failed"
+                  ]
+                },
+                "inputs": "Teams notify gated false \u2014 AutomationLogs only"
+              },
+              "Log_Success": {
+                "type": "OpenApiConnection",
+                "runAfter": {
+                  "Notify_Gated": [
+                    "Succeeded"
+                  ]
+                },
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PostItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                    "table": "HVCG_AutomationLogs",
+                    "item/Title": "Succeeded",
+                    "item/FlowName": "HVCG_OpportunityStageChangedNotify",
+                    "item/Status": {
+                      "Value": "Succeeded"
+                    },
+                    "item/RelatedList": "HVCG_Opportunities",
+                    "item/RelatedItemId": "@items('Apply_to_each_Opp')?['ID']",
+                    "item/Message": "@concat('Stage activity for opp ', string(items('Apply_to_each_Opp')?['ID']), ' \u2192 ', string(outputs('Compose_Stage')))"
+                  }
+                }
               }
             },
-            "runAfter": { "Compose_Stage_Filter": ["Succeeded"] }
+            "else": {
+              "actions": {
+                "Skip_Stage_Exists": {
+                  "type": "Compose",
+                  "inputs": "Stage activity already exists"
+                }
+              }
+            }
           }
-        },
-        "runAfter": { "Patch_CopilotSummary": ["Succeeded"] }
-      },
-      "Log_Success": {
-        "type": "OpenApiConnection",
-        "inputs": {
-          "host": {
-            "connectionName": "shared_sharepointonline",
-            "operationId": "PostItem",
-            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
-          },
-          "parameters": {
-            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
-            "table": "HVCG_AutomationLogs",
-            "item/Title": "Succeeded",
-            "item/FlowName": "HVCG_OpportunityStageChangedNotify",
-            "item/Status": "Succeeded"
-          }
-        },
-        "runAfter": { "Condition_Notify_Late_Stages": ["Succeeded", "Skipped", "TimedOut"] }
+        }
       }
     },
     "outputs": {}
@@ -131,13 +239,21 @@
   "connectionReferences": {
     "shared_sharepointonline": {
       "runtimeSource": "embedded",
-      "connection": { "connectionReferenceLogicalName": "hvcg_sharedsharepointonline" },
-      "api": { "name": "shared_sharepointonline" }
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
+      },
+      "api": {
+        "name": "shared_sharepointonline"
+      }
     },
     "shared_teams": {
       "runtimeSource": "embedded",
-      "connection": { "connectionReferenceLogicalName": "hvcg_sharedteams" },
-      "api": { "name": "shared_teams" }
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedteams"
+      },
+      "api": {
+        "name": "shared_teams"
+      }
     }
   },
   "environmentVariables": [
@@ -153,7 +269,14 @@
     "recipientMode": "testOnly"
   },
   "buildSheet": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json",
-  "validStages": ["Discovery", "Assessment", "Proposal", "Negotiation", "Won", "Lost"],
+  "validStages": [
+    "Discovery",
+    "Assessment",
+    "Proposal",
+    "Negotiation",
+    "Won",
+    "Lost"
+  ],
   "acceptanceCriteria": [
     "Imported Off; SharePoint + Teams connection refs resolve",
     "Stage change writes OpportunityActivities StageChange row",
