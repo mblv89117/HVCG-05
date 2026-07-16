@@ -1,15 +1,15 @@
 # DEPLOYMENT_STATUS
 
-**As of:** 2026-07-16 19:01 UTC
+**As of:** 2026-07-16 19:52 UTC
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 | Environment | Status | Package / tip | Notes |
 |-------------|--------|---------------|-------|
-| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprint 2–3 on Dev/Staging code tip | Revenue code: `0073bf4` |
+| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprint 4 Phase 1 complete in Dev/Staging | Revenue code: `7fd8bf2` |
 | HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | 1 flow Activated; gates Off |
 | Website | Staging/preview only | go-live track3 / staging HTML | No DNS |
 | Pilot data Prod | Not imported | Pre-import reports in master-pm go-live | Owner gate |
-| Revenue engineering tip | Committed | `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` | Sprint 1–3 COMPLETE; Sprint 4 READY TO START / NOT STARTED |
+| Revenue engineering tip | Committed | `cursor/revenue-sprint4-activation` @ `7fd8bf270dc080eea9a3326184707169a3b120ca` | Sprints 1–3 + Sprint 4 Phase 1 COMPLETE; no Prod activation |
 | Atlas checkpoint baseline | Committed / remote synchronized | `origin/cursor/agent-communications` @ `692d27668e2144ec0e62360941c249dfd3d92db4` | RC-1 documentation update currently uncommitted |
 
 ## Freeze packages

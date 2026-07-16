@@ -1,7 +1,7 @@
 # Revenue Systems Engineer
 
 **As of:** 2026-07-16 04:20 UTC  
-**Role status:** **COMPLETE** (Sprint 1–3 delivery closed)  
+**Role status:** **COMPLETE** (Sprint 1–4 Phase 1 delivery closed)  
 **Comms / worktree:** `.worktrees/revenue-sprint3` · `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`  
 **Path rule:** Sprint 2–3 paths live on the revenue tip (worktree). They are not necessarily on the main `cursor/agent-communications` checkout.
 
@@ -38,7 +38,7 @@ Revenue Operating System: EVA experience, CRM payload contract, conversion engin
 
 ## Current work
 
-**None assigned.** Role COMPLETE for Sprint 1–3. Sprint 4 **NOT STARTED** — do not begin without Master PM + owner assignment.
+**None assigned.** Role COMPLETE for Sprint 1–4 Phase 1. Track 1 and Production remain frozen.
 
 ## Completed work
 
@@ -47,7 +47,7 @@ Revenue Operating System: EVA experience, CRM payload contract, conversion engin
 
 ## Current blockers
 
-Soft UAT · optional Dev HTTP URL · BL-PUBLISH-1 · BL-C1 · price card owner reviews · Sprint 4 start gate
+Soft UAT · optional Dev HTTP URL · BL-PUBLISH-1 · BL-C1 · price card owner reviews · Production activation gate
 
 ## Rules
 
@@ -55,7 +55,7 @@ No Production modifications. No prospect-visible CRM JSON/debug. Preserve HVS le
 
 ## Approval gates
 
-Sprint 4 start · public publish · outbound contact
+Production activation · public publish · outbound contact
 
 ## Safe boundaries
 

@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-07-16T19:56:26.832Z",
+  "branch": "cursor/executive-command-center-sprint1",
+  "dataMode": "mock-only",
+  "summary": {
+    "passed": 12,
+    "failed": 0,
+    "total": 12
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "overview route",
+      "pass": true,
+      "evidence": "/ → Good afternoon, leadership"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "revenue route",
+      "pass": true,
+      "evidence": "/revenue → Revenue performance"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "clients route",
+      "pass": true,
+      "evidence": "/clients → Client portfolio"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "operations route",
+      "pass": true,
+      "evidence": "/operations → Operating control plane"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "financial route",
+      "pass": true,
+      "evidence": "/financial → Financial performance"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "ai route",
+      "pass": true,
+      "evidence": "/ai → Executive intelligence"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "notifications route",
+      "pass": true,
+      "evidence": "/notifications → Notifications"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 client dashboard",
+      "pass": true,
+      "evidence": "mobile nav=true; horizontal overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant layout",
+      "pass": true,
+      "evidence": "finance=false; revenue=false; operations=true"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected financial route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4174/"
+    },
+    {
+      "suite": "Dashboard QA",
+      "name": "Overview feature density",
+      "pass": true,
+      "evidence": "9 visible KPI cards"
+    },
+    {
+      "suite": "Performance QA",
+      "name": "Local load duration",
+      "pass": true,
+      "evidence": "5 ms"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-overview-desktop.png",
+    "screenshots/02-revenue-desktop.png",
+    "screenshots/03-financial-desktop.png",
+    "screenshots/04-clients-mobile.png"
+  ]
+}

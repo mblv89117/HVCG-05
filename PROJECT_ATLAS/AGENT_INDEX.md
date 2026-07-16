@@ -1,13 +1,15 @@
 # AGENT_INDEX
 
-**As of:** 2026-07-16 19:01 UTC  
+**As of:** 2026-07-16 19:52 UTC  
 **Begin with:** [PROJECT_INDEX.md](PROJECT_INDEX.md)
 
 | Role | Handbook | Checkpoint status |
 |------|----------|-------------------|
 | Master PM | [Agents/MasterPM.md](Agents/MasterPM.md) | Atlas / program coordination |
 | Deployment Engineer | [Agents/DeploymentEngineer.md](Agents/DeploymentEngineer.md) | Track 1 freeze owner |
-| Revenue Systems Engineer | [Agents/RevenueSystemsEngineer.md](Agents/RevenueSystemsEngineer.md) | **COMPLETE** for Sprints 1–3 @ `0073bf4` |
+| Revenue Systems Engineer | [Agents/RevenueSystemsEngineer.md](Agents/RevenueSystemsEngineer.md) | **COMPLETE** for Sprints 1–4 Phase 1 @ `7fd8bf2` |
+| Executive Command Center Engineer | [Agents/FutureAgents.md](Agents/FutureAgents.md) | Sprint 1 **COMPLETE** |
+| Client Portal Engineer | [Agents/FutureAgents.md](Agents/FutureAgents.md) | Sprint 1 **COMPLETE** @ `8c8806b` |
 | CRM Engineer | [Agents/CRMEngineer.md](Agents/CRMEngineer.md) | Development / CRM |
 | Website Engineer | [Agents/WebsiteEngineer.md](Agents/WebsiteEngineer.md) | Staging / preview |
 | QA Engineer | [Agents/QAEngineer.md](Agents/QAEngineer.md) | QA / smoke |

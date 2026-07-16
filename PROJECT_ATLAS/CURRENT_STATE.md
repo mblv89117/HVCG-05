@@ -1,7 +1,7 @@
 # CURRENT_STATE
 
-**As of:** 2026-07-16 19:01 UTC
-**Sources:** `git` (`origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`), `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`, `.worktrees/deployment-engineer/deployment/release-ops/GO_LIVE_STATUS.md`, `deployment/release-ops/HANDOFFS/RevenueSystemsEngineer.md`, `releases/RC-1-Development-Baseline/version.json`
+**As of:** 2026-07-16 19:52 UTC
+**Sources:** Revenue Systems Engineer (`cursor/revenue-sprint4-activation` @ `7fd8bf270dc080eea9a3326184707169a3b120ca`), Client Portal Sprint 1 (`cursor/client-portal-sprint1` @ `8c8806b1c9c01522c574c6d8ec28c5d6ea81aed7`), `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`, and owner directive dated 2026-07-16.
 
 ## Snapshot
 
@@ -11,15 +11,18 @@
 | Sprint 1 Revenue OS | **COMPLETE** | Revenue handoff; EVA → Dev CRM smoke |
 | Sprint 2 Revenue OS | **COMPLETE** (Dev/Staging) | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` |
 | Sprint 3 Revenue OS | **COMPLETE** (Dev/Staging) | Same commit; conversion engine + tests in git |
-| Sprint 4 | **READY TO START — NOT STARTED** | Awaiting Master PM + owner assignment |
-| Revenue Systems Engineer | **COMPLETE** | Role closed for Sprint 1–3 @ `0073bf49411408cced88873805b432bce4eefb31` |
+| Sprint 4 Revenue OS | **PHASE 1 COMPLETE** (Dev/Staging) | Activation Framework @ `7fd8bf2`; no Production activation |
+| Revenue Systems Engineer | **COMPLETE** | Authoritative for Revenue Sprints 1–4 Phase 1 |
+| Client Portal Sprint 1 | **COMPLETE** | Isolated branch @ `8c8806b`; not merged or deployed |
+| Executive Command Center Sprint 1 | **COMPLETE** | Mock-only app, QA, screenshots, architecture, and handoff approved for commit/push |
 | Production | HVCG Production Track 1 slice live | `https://orgee2f7545.crm.dynamics.com/` |
 | Development | HVCG Development | `https://org1131a2b0.crm.dynamics.com/` |
 | Website public / DNS | **NOT STARTED** | Track-1 freeze gates |
 | Pilot client import | **NOT STARTED** / BLOCKED | GO_LIVE Track 2 Pilot |
 | Canvas publish | **NOT DONE** (D-002) | RC-1 + Deployment Engineer handoff |
 | Main checkout | `cursor/agent-communications` | Local orientation/Atlas branch |
-| Revenue tip | `0073bf4` on `origin/cursor/revenue-sprint3-conversion` | Verified via `git fetch` / `git rev-parse` |
+| Revenue Phase 1 tip | `7fd8bf2` on `cursor/revenue-sprint4-activation` | Revenue Systems Engineer authority |
+| Client Portal Sprint 1 tip | `8c8806b` on `cursor/client-portal-sprint1` | Complete; isolated |
 | Atlas committed tip | `692d276` on `origin/cursor/agent-communications` | Local HEAD = remote branch tip |
 
 ## Release checkpoint
@@ -32,15 +35,14 @@
 
 The repository working directories are **not clean**; RC-1 excludes all uncommitted files. See the checkpoint for counts and worktree status.
 
-## Revenue tip (canonical for Sprint 2–3 code)
+## Revenue tip (canonical for Sprint 1–4 Phase 1)
 
 | Field | Value |
 |-------|-------|
-| Remote branch | `origin/cursor/revenue-sprint3-conversion` |
-| Local branch | `cursor/revenue-sprint3-conversion` |
-| Commit | `0073bf49411408cced88873805b432bce4eefb31` |
-| Worktree | `.worktrees/revenue-sprint3` |
-| Message | Add Sprint 2 EVA experience and Sprint 3 conversion engine (Dev/Staging). |
+| Branch | `cursor/revenue-sprint4-activation` |
+| Commit | `7fd8bf270dc080eea9a3326184707169a3b120ca` |
+| Worktree | `.worktrees/revenue-sprint4` |
+| State | Sprints 1–3 complete; Sprint 4 Phase 1 Activation Framework complete in Dev/Staging |
 
 ## Environments
 
@@ -63,15 +65,19 @@ The repository working directories are **not clean**; RC-1 excludes all uncommit
 | `.worktrees/deployment-engineer` | `cursor/deployment-engineer` | `c726f1e` |
 | `.worktrees/revenue-sprint3` | `cursor/revenue-sprint3-conversion` | `0073bf4` |
 | `.worktrees/master-pm-orchestrator` | `cursor/master-pm-orchestrator` | `b75b19b` |
+| `.worktrees/revenue-sprint4` | `cursor/revenue-sprint4-activation` | `7fd8bf2` |
+| `.worktrees/client-portal-sprint1` | `cursor/client-portal-sprint1` | `8c8806b` |
+| `.worktrees/executive-command-center-sprint1` | `cursor/executive-command-center-sprint1` | Sprint 1 COMPLETE; commit/push authorized |
 
 Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 
 ## Priorities now
 
 1. Do **not** modify Track 1 frozen Production slice without new owner approval  
-2. Assign / gate **Sprint 4** (Revenue Track **READY TO START**; Sprint 4 not started)
-3. Soft UAT / optional Dev HTTP URL / website preview / pilot — owner gates  
-4. Keep Atlas as SoR; Revenue code SoR is `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`
+2. Preserve Executive Command Center Sprint 1 as COMPLETE after approved commit/push
+3. Preserve Revenue Sprint 4 Phase 1 and Client Portal Sprint 1 completed branches without modifying them
+4. Soft UAT / optional Dev HTTP URL / website preview / pilot remain separately gated
+5. Keep Atlas as SoR; Revenue code authority is the Revenue Systems Engineer
 
 ## Status authority
 

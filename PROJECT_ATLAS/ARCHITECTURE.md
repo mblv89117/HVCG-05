@@ -1,6 +1,6 @@
 # ARCHITECTURE
 
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 19:52 UTC  
 **Role:** Atlas **index only** — not a second architecture SoR.
 
 ## Canonical architecture sources (outside Atlas)
@@ -12,6 +12,10 @@
 | 3 | Freeze packages: `releases/RC-1-Development-Baseline/`, `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` |
 
 Do **not** copy full architecture prose into Atlas. Link out. Future dated notes/diagrams may live in [Architecture/](Architecture/) only as pointers or ADRs that cite evidence.
+
+## Sprint architecture notes
+
+- [Executive Command Center Sprint 1](Architecture/ExecutiveCommandCenterSprint1.md) — mock-only modular React dashboard, role layouts, widget contracts, notification aggregation, and future tenant adapter boundary.
 
 ## Platform shape (summary — repository-backed)
 

@@ -1,17 +1,17 @@
 # Track 2 — Revenue Operating System
 
-**Status:** Sprints **1–3 COMPLETE** · Revenue Systems Engineer **COMPLETE** · Sprint 4 **READY TO START — NOT STARTED** · Track 1 Prod **untouched** by Revenue work
-**As of:** 2026-07-16 19:01 UTC
+**Status:** Sprints **1–3 COMPLETE** · Sprint 4 Phase 1 Activation Framework **COMPLETE** (Dev/Staging) · Track 1 Prod **untouched**
+**As of:** 2026-07-16 19:52 UTC
 **Checkpoint:** [Release Candidate RC-1](../Releases/Release_Candidate_RC-1.md)
 
 ## Tip (canonical)
 
 | Field | Value |
 |-------|-------|
-| Remote branch | `origin/cursor/revenue-sprint3-conversion` |
-| Commit | `0073bf49411408cced88873805b432bce4eefb31` |
-| Worktree | `.worktrees/revenue-sprint3` |
-| Role | Revenue Systems Engineer — **COMPLETE** |
+| Branch | `cursor/revenue-sprint4-activation` |
+| Commit | `7fd8bf270dc080eea9a3326184707169a3b120ca` |
+| Worktree | `.worktrees/revenue-sprint4` |
+| Role | Revenue Systems Engineer — **COMPLETE** for Sprints 1–4 Phase 1 |
 
 ## What Track 2 owns
 
@@ -24,11 +24,12 @@ EVA intake → Dev CRM lead capture → multi-step assessment experience → con
 | 1 | COMPLETE | [../Sprints/Sprint1.md](../Sprints/Sprint1.md) |
 | 2 | COMPLETE | [../Sprints/Sprint2.md](../Sprints/Sprint2.md) |
 | 3 | COMPLETE | [../Sprints/Sprint3.md](../Sprints/Sprint3.md) |
-| 4 | READY TO START — NOT STARTED | [../Sprints/Sprint4.md](../Sprints/Sprint4.md) |
+| 4 | PHASE 1 COMPLETE (Dev/Staging) | [../Sprints/Sprint4.md](../Sprints/Sprint4.md) |
 
 ## Key evidence
 
 - Commit: `0073bf4` — Sprint 2 EVA + Sprint 3 conversion (Dev/Staging)  
+- Commit: `7fd8bf2` — Sprint 4 Phase 1 Activation Framework (Dev/Staging)
 - FUNNEL_STATUS / EVA app / tests on revenue branch under `docs/business-launch/` and `tests/revenue/`  
 - Smoke (historical): `deployment/reports/checkpoints/eva-sprint3-conversion-smoke-20260715-205800.json` (LeadId=14)  
 - Handoff: `deployment/release-ops/HANDOFFS/RevenueSystemsEngineer.md`

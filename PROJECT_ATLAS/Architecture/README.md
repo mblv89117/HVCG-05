@@ -1,6 +1,6 @@
 # Architecture (Atlas folder)
 
-**As of:** 2026-07-16 04:20 UTC
+**As of:** 2026-07-16 19:52 UTC
 
 This folder is for **future** ADRs/diagrams with evidence links only.
 
@@ -12,3 +12,7 @@ This folder is for **future** ADRs/diagrams with evidence links only.
 - RC-1 + Track-1 packages  
 
 If a document here conflicts with those sources, the external SoR wins.
+
+## Current sprint notes
+
+- [Executive Command Center Sprint 1](ExecutiveCommandCenterSprint1.md)

@@ -28,7 +28,7 @@ Program orchestration, owner decision routing, business-launch documentation, cr
 
 ## Current work
 
-Track 1 frozen; Revenue Systems Engineer COMPLETE (Sprints 1–3 @ `0073bf4`); prioritize Sprint 4 assignment and gated next milestones. Atlas is canonical SoR.
+Track 1 frozen; Revenue Systems Engineer COMPLETE (Sprints 1–4 Phase 1 @ `7fd8bf2`); Client Portal Sprint 1 complete; prioritize Executive Command Center owner review and gated next milestones. Atlas is canonical SoR.
 
 ## Completed work
 

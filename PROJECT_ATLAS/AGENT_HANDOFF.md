@@ -1,7 +1,7 @@
 # AGENT_HANDOFF
 
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer  
-**As of:** 2026-07-16 19:01 UTC
+**As of:** 2026-07-16 19:52 UTC
 **Goal:** Resume with **zero** prior chat history.
 
 ## 60-second orientation
@@ -9,10 +9,11 @@
 1. This repo is the **HVCG Project Management System** (High Value Capital Group platform).  
 2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only.  
 3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.  
-4. **Revenue OS Sprints 1–3 are COMPLETE.** Revenue Systems Engineer is **COMPLETE**. Tip: `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`.  
-5. Revenue Track is **READY TO START Sprint 4** — Sprint 4 is **NOT STARTED** until assigned.
-6. Prefer **repository evidence** over chat. Never rely on previous chat history.
-7. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md). It locks committed SHAs and excludes dirty worktree content.
+4. **Revenue OS Sprints 1–3 and Sprint 4 Phase 1 are COMPLETE.** Revenue Systems Engineer is authoritative. Tip: `cursor/revenue-sprint4-activation` @ `7fd8bf2`.  
+5. **Client Portal Sprint 1 is COMPLETE** at `cursor/client-portal-sprint1` @ `8c8806b`; invites remain gated.
+6. Executive Command Center Sprint 1 is **COMPLETE** with mock data; commit/push approved, merge/deploy prohibited.
+7. Prefer **repository evidence** over chat. Never rely on previous chat history.
+8. [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) remains locked; it predates Sprint 4 Phase 1 completion.
 
 ## Canonical SoR
 
@@ -37,7 +38,9 @@ Every new agent begins with [PROJECT_INDEX.md](PROJECT_INDEX.md). Read Atlas bef
 |-------|--------|
 | Track 1 Prod freeze | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` + `.worktrees/deployment-engineer/deployment/release-ops/GO_LIVE_STATUS.md` |
 | Deployment Engineer resume | `.worktrees/deployment-engineer/docs/deployment/DEPLOYMENT_ENGINEER_HANDOFF.md` |
-| Revenue Sprints 1–3 code tip | `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` · worktree `.worktrees/revenue-sprint3` |
+| Revenue Sprints 1–4 Phase 1 tip | `cursor/revenue-sprint4-activation` @ `7fd8bf270dc080eea9a3326184707169a3b120ca` · worktree `.worktrees/revenue-sprint4` |
+| Client Portal Sprint 1 | `cursor/client-portal-sprint1` @ `8c8806b1c9c01522c574c6d8ec28c5d6ea81aed7` |
+| Executive Command Center Sprint 1 | `.worktrees/executive-command-center-sprint1` · **COMPLETE** |
 | Revenue handoff doc | `deployment/release-ops/HANDOFFS/RevenueSystemsEngineer.md` |
 | RC-1 Dev baseline | `releases/RC-1-Development-Baseline/` |
 | Owner gates | `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md` |

@@ -1,6 +1,6 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-16 19:01 UTC
+**As of:** 2026-07-16 19:52 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`  
 **Canonical SoR:** this Atlas. Begin here before any other work.
 
@@ -16,11 +16,11 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 |-------|-------|
 | Orientation brain | `PROJECT_ATLAS/` (this tree) — **canonical SoR** |
 | Agent messaging | `.agent-comms/` + `docs/agents/` + `scripts/agent-comms/` |
-| Business launch / Revenue OS | `.worktrees/revenue-sprint3/` @ `0073bf4` (Sprint 2–3 SoR); master-pm mirrors |
+| Business launch / Revenue OS | Revenue Systems Engineer; `.worktrees/revenue-sprint4/` @ `7fd8bf2` (Sprints 1–4 Phase 1 complete) |
 | Deployment / Prod freeze | `.worktrees/deployment-engineer/deployment/release-ops/` + `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` |
 | CRM module | `docs/crm/`, `src/power-automate/`, `.worktrees/crm-*` |
 | Historical OS releases | `releases/v1.0.0`, `releases/v1.1.0`, migrations |
-| Parallel products | executive / operations / finance / portal / AI worktrees |
+| Parallel products | Executive Command Center Sprint 1 (owner review) / Client Portal Sprint 1 (complete) / operations / finance / AI worktrees |
 
 ## Where everything lives (Atlas map)
 
@@ -46,12 +46,12 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Track | Owns | Status |
 |-------|------|--------|
 | [1](Tracks/Track1_Production.md) | Internal Prod CRM freeze | **FROZEN LIVE—INTERNAL** |
-| [2](Tracks/Track2_RevenueOS.md) | Revenue OS / EVA / conversion | Sprints 1–3 **COMPLETE**; Sprint 4 **READY TO START — NOT STARTED** |
+| [2](Tracks/Track2_RevenueOS.md) | Revenue OS / EVA / conversion | Sprints 1–3 + Sprint 4 Phase 1 **COMPLETE** |
 | [3](Tracks/Track3_Website.md) | Website staging → public | In progress; DNS gated |
-| [4](Tracks/Track4_ClientPortal.md) | Portal / data rooms | Invites gated BL-C1 |
+| [4](Tracks/Track4_ClientPortal.md) | Portal / data rooms | Sprint 1 **COMPLETE**; invites gated BL-C1 |
 | [5](Tracks/Track5_ClientOnboarding.md) | Onboarding specs/automation | Gated D-002/BL-C1 |
 | [6](Tracks/Track6_AI.md) | AI governance | Worktree active |
-| [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | Parallel; Prod Draft-heavy |
+| [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | Executive Command Center Sprint 1 **COMPLETE** |
 | [8](Tracks/Track8_Enterprise.md) | Scale / v2 | Horizon |
 
 ## What each Sprint accomplished
@@ -61,13 +61,15 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [1](Sprints/Sprint1.md) | EVA → Dev CRM — **COMPLETE** |
 | [2](Sprints/Sprint2.md) | Multi-step EVA — **COMPLETE** @ `0073bf4` |
 | [3](Sprints/Sprint3.md) | Conversion engine — **COMPLETE** @ `0073bf4` |
-| [4](Sprints/Sprint4.md) | **READY TO START — NOT STARTED** |
+| [4](Sprints/Sprint4.md) | Phase 1 Activation Framework **COMPLETE** (Dev/Staging) |
+| [Client Portal 1](Sprints/Sprint_ClientPortal1.md) | **COMPLETE** |
+| [Executive Command Center 1](Sprints/Sprint_ExecutiveCommandCenter1.md) | **COMPLETE** |
 
 ## Revenue tip
 
-- Branch: `origin/cursor/revenue-sprint3-conversion`  
-- Commit: `0073bf49411408cced88873805b432bce4eefb31`  
-- Role: Revenue Systems Engineer — **COMPLETE**
+- Branch: `cursor/revenue-sprint4-activation`  
+- Commit: `7fd8bf270dc080eea9a3326184707169a3b120ca`  
+- Role: Revenue Systems Engineer — **COMPLETE** for Sprints 1–4 Phase 1
 
 ## What every agent owns
 
@@ -91,4 +93,4 @@ Versioned folders under `releases/` (and worktree `releases/`) with `version.jso
 
 [ROADMAP.md](ROADMAP.md) · [NEXT_ACTIONS.md](NEXT_ACTIONS.md) · [Sprints/BACKLOG.md](Sprints/BACKLOG.md)
 
-Priority theme: **protect Track 1 freeze** → **Sprint 4 assignment** → gated website preview / soft UAT / pilot.
+Priority theme: **protect Track 1 freeze** → **preserve completed Executive Sprint 1** → gated website preview / soft UAT / pilot.

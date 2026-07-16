@@ -29,7 +29,8 @@
 | BL-PUBLISH-1 / GL-PUBLISH-1 | Public website DNS/publish | Public launch |
 | D-002 / OA-CRM-09 | Canvas build/publish in Maker | Canvas app |
 | Sprint 3 commit | **CLOSED** — `0073bf49411408cced88873805b432bce4eefb31` on `origin/cursor/revenue-sprint3-conversion` | Sprint 2–3 landed |
-| Sprint 4 start | Explicit assignment | Conversion activation |
+| Sprint 4 Phase 1 | **CLOSED** — Activation Framework complete in Dev/Staging @ `7fd8bf2` | Production activation remains separately gated |
+| Executive Command Center Sprint 1 | Owner approval required | Commit / push of mock dashboard package |
 | FCFO/Exit/Acq/Model price cards | OWNER REVIEW REQUIRED | Full SKU pricing in conversion |
 
 ## Standing hard rules (LOCKED)

@@ -1,6 +1,6 @@
 # AGENT_ASSIGNMENTS
 
-**As of:** 2026-07-16 04:10 UTC  
+**As of:** 2026-07-16 19:52 UTC  
 **Sources:** `docs/agents/AGENT_COMMUNICATIONS.md`, `git worktree list`, Deployment Engineer / Revenue Systems handoffs
 
 ## Active git worktrees
@@ -10,6 +10,7 @@
 | `.` (repo root) | `cursor/agent-communications` | `2c064b3` | Agent Comms SoR (D-004 — do not fork/rebuild without owner) |
 | `.worktrees/deployment-engineer` | `cursor/deployment-engineer` | `c726f1e` | Deployment Engineer |
 | `.worktrees/revenue-sprint3` | `cursor/revenue-sprint3-conversion` | `0073bf4` (**COMPLETE** Sprint 1–3) | Revenue Systems (role COMPLETE) |
+| `.worktrees/revenue-sprint4` | `cursor/revenue-sprint4-activation` | `7fd8bf2` (**COMPLETE** Phase 1) | Revenue Systems (authoritative) |
 | `.worktrees/master-pm-orchestrator` | `cursor/master-pm-orchestrator` | `b75b19b` | Master PM |
 | `.worktrees/system-architect` | `cursor/system-architect` | `b75b19b` | Architecture |
 | `.worktrees/crm-dev-validation-commit` | `agent/crm-dev-validation` | `7c226e6` | CRM Dev validation / RC-1 lineage |
@@ -21,9 +22,11 @@
 | `.worktrees/qa-release-manager` | `cursor/qa-release-manager` | `2c064b3` | QA / release |
 | `.worktrees/documentation-knowledge-manager` | `cursor/documentation-knowledge-manager` | `2c064b3` | Docs |
 | `.worktrees/executive-command-center` | `cursor/executive-command-center` | `e074cfc` | Executive |
+| `.worktrees/executive-command-center-sprint1` | `cursor/executive-command-center-sprint1` | Sprint 1 **COMPLETE**; commit/push approved | Executive Command Center Sprint 1 |
 | `.worktrees/operations-hub` | `cursor/operations-hub` | `a584f61` | Operations |
 | `.worktrees/finance-operations` | `cursor/finance-operations` | `c79d35b` | Finance |
 | `.worktrees/client-portal-data-rooms` | `cursor/client-portal-data-rooms` | `b8b2005` | Client portal |
+| `.worktrees/client-portal-sprint1` | `cursor/client-portal-sprint1` | `8c8806b` (**COMPLETE**) | Client Portal Sprint 1 |
 | `.worktrees/ai-governance-work-queues` | `cursor/ai-governance-work-queues` | `fc1fa79` | AI governance |
 
 ## Atlas agent handbooks → runtime agentIds
@@ -32,7 +35,7 @@
 |----------------|-----------------------------------|------------------|
 | [Agents/MasterPM.md](Agents/MasterPM.md) | `master-pm` | `.worktrees/master-pm-orchestrator` |
 | [Agents/DeploymentEngineer.md](Agents/DeploymentEngineer.md) | (deployment-engineer) | `.worktrees/deployment-engineer` |
-| [Agents/RevenueSystemsEngineer.md](Agents/RevenueSystemsEngineer.md) | — | `.worktrees/revenue-sprint3` |
+| [Agents/RevenueSystemsEngineer.md](Agents/RevenueSystemsEngineer.md) | — | `.worktrees/revenue-sprint4` |
 | [Agents/CRMEngineer.md](Agents/CRMEngineer.md) | `crm` / crm-* WTs | CRM worktrees |
 | [Agents/WebsiteEngineer.md](Agents/WebsiteEngineer.md) | — | master-pm / revenue staging |
 | [Agents/QAEngineer.md](Agents/QAEngineer.md) | — | `.worktrees/qa-release-manager`, `.worktrees/crm-testing-qa` |

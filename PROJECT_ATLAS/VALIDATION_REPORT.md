@@ -5,7 +5,7 @@
 **Scope:** `PROJECT_ATLAS/**` only  
 **Actions:** Documentation fixes inside Atlas · **no** source/Prod/Dev/commit/push  
 
-**Superseded status note (2026-07-16 19:01 UTC):** The original run predated Revenue commit `0073bf49411408cced88873805b432bce4eefb31`. Current status is Sprint 3 **COMPLETE and committed**; Sprint 4 **READY TO START — NOT STARTED**. See [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).
+**Superseded status note (2026-07-16 19:52 UTC):** This report is historical RC-1 validation. The Revenue Systems Engineer now records Sprint 4 Phase 1 Activation Framework **COMPLETE** in Dev/Staging at `7fd8bf2`. RC-1 itself remains locked and predates that completion. Current authority: [CURRENT_STATE.md](CURRENT_STATE.md).
 
 ## Verdict
 
@@ -28,7 +28,7 @@
 | Sprint 1 COMPLETE | Consistent | Revenue handoff + Dev smoke LeadId=13 |
 | Sprint 2 COMPLETE (Dev/Staging) | Consistent | SPRINT2_EVA_EXPERIENCE + handoff |
 | Sprint 3 COMPLETE + committed (updated after original validation) | Consistent | Revenue commit `0073bf49411408cced88873805b432bce4eefb31` |
-| Sprint 4 READY TO START — NOT STARTED | Consistent | RC-1 checkpoint |
+| Sprint 4 Phase 1 COMPLETE (post-RC-1) | Current Atlas updated; RC-1 historical text preserved | Revenue Systems Engineer tip `7fd8bf2` |
 | Track 2 Pilot BLOCKED | Consistent (distinct from Revenue Sprint completion) | GO_LIVE_STATUS |
 | Track 3 website IN PROGRESS; DNS NOT STARTED | Consistent | GO_LIVE_STATUS + OWNER_DECISIONS |
 
