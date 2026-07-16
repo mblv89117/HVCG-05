@@ -40,6 +40,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Issues | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
 | Releases | [RELEASES.md](RELEASES.md) |
 | Pre-Sprint 4 checkpoint | [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) |
+| Continuation / cold-start | [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md) · [CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md](CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md) · [CONTINUATION/PROJECT_PHILOSOPHY.md](CONTINUATION/PROJECT_PHILOSOPHY.md) · [CONTINUATION/DECISION_HISTORY.md](CONTINUATION/DECISION_HISTORY.md) |
 
 ## What each Track owns
 
