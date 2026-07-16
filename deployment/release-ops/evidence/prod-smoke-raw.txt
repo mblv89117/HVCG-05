@@ -1,0 +1,64 @@
+SOLUTION
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+uniquename           friendlyname            version ismanaged solutionid
+HVCGCommandCenterDev HVCG Command Center DEV 1.1.0.1 Managed   f3284fd3-fd4a-44a8-bc3a-b6963b8595d5
+
+
+CONNECTIONS
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+connectionreferencedisplayname connectionreferencelogicalname connectorid                                                 connectionid                     connectionreferenceid
+HVCG SharePoint                hvcg_sharedsharepointonline    /providers/Microsoft.PowerApps/apis/shared_sharepointonline f2e0400083e44915828d5bf9f6069a2e 3fcd4249-357a-4a65-91a3-2f26975a1129
+HVCG Teams                     hvcg_sharedteams               /providers/Microsoft.PowerApps/apis/shared_teams            305c5c5e2c80407fac9d5993d54cdae9 8c5f29f2-66a8-4310-ab8f-9acb7655b7ab
+HVCG Approvals                 hvcg_sharedapprovals           /providers/Microsoft.PowerApps/apis/shared_approvals        620037803eda4c06b748ac66e9196c9b bd12b230-fcd5-467f-ac25-a397e738c460
+HVCG Outlook                   hvcg_sharedoffice365           /providers/Microsoft.PowerApps/apis/shared_office365        ac42d3339d4f4841a21f86dade898123 65e071d4-821a-4835-96b6-6709ee68cf26
+
+
+ENVVARS
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+schemaname                defaultvalue                                                              environmentvariabledefinitionid      v.value
+hvcg_CommandCenterSiteUrl https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev 6abe9182-f614-415f-b7d5-41fc0c09565a https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter
+hvcg_KnowledgeSiteUrl     https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev     73a252ad-b5c6-43a1-a02a-bb9cd761a78e https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge
+hvcg_CrmEnableTeamsNotify false                                                                     d566833c-7c60-47d5-9dae-ae0d82a7d293 false
+hvcg_EnableClientEmails   false                                                                     599bf386-96ba-4871-8500-00ba95700aed false
+hvcg_ClientsSiteUrl       https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev       74349652-2e78-455c-8be4-1f17c06d6a70 https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients
+hvcg_ExecutiveEmail       manny@highvaluecapitalgroup.com                                           84f8e078-3c08-473c-8c5c-1389a85db832 manny@highvaluecapitalgroup.com
+hvcg_OpsEmail             manny@highvaluecapitalgroup.com                                           ab6b049e-a0a0-40be-a4be-35a6abcdeb10 manny@highvaluecapitalgroup.com
+hvcg_CrmTestRecipient     manny@highvaluecapitalgroup.com                                           3fa2518d-edd8-42ea-8a19-d54ce4330910 manny@highvaluecapitalgroup.com
+
+
+FLOWS
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+
+statecode workflowid                           name                                statuscode category    primaryentity
+Draft     dc79d236-2c3d-5179-966c-a627bff6d0d3 HVCG_DeliverableApproval            Draft      Modern Flow none
+Draft     b2d8b14a-5948-5db7-949d-9bf12a0610bf HVCG_CreateDocumentRequests         Draft      Modern Flow none
+Draft     996bb7bc-a8a7-555e-ab2c-718f9f7960a7 HVCG_MissingDocumentReminders       Draft      Modern Flow none
+Draft     c393d0ed-48a8-5c79-a3aa-607bd3c819f3 HVCG_CapitalFundingStatusNotify     Draft      Modern Flow none
+Draft     bd6e4fa2-1c39-5c58-b389-06c3a05942f9 HVCG_ClientOnboarding               Draft      Modern Flow none
+Draft     ce87af47-06a6-5a7b-acc9-601429b31018 HVCG_CreateProjectFromTemplate      Draft      Modern Flow none
+Draft     d970e2a2-c7e6-555a-8759-596538260f52 HVCG_OverdueTaskEscalation          Draft      Modern Flow none
+Draft     1716e663-153f-5588-af1a-56f3fb9ec2d4 HVCG_LeadQualifiedCreateOpportunity Draft      Modern Flow none
+Draft     86192f2a-130f-54e3-9d85-23ba7330e6c5 HVCG_OpportunityWonCloseout         Draft      Modern Flow none
+Draft     afa48f6a-0f99-5d42-b292-50d0581c077b HVCG_RenewalReminders               Draft      Modern Flow none
+Draft     4a5d357d-5874-513c-bf83-f4e6cf3b47cd HVCG_WeeklyStatusSummary            Draft      Modern Flow none
+Draft     36794755-15ff-5be5-a454-46c5e414e295 HVCG_ExecutiveDecisionEscalation    Draft      Modern Flow none
+Draft     6d2f1a72-88a3-527d-bfc9-fddf90c0ad0a HVCG_CreateClientWorkspace          Draft      Modern Flow none
+Draft     13aaf262-a539-53bc-bf9f-d46f59bcfc3d HVCG_UpdateProjectHealth            Draft      Modern Flow none
+Draft     eaf06b86-9ab6-51f2-942a-3a2407bc71ee HVCG_OpportunityStageChangedNotify  Draft      Modern Flow none
+
+
+PAC_CONNECTIONS
+Connected as manny@highvaluecapitalgroup.com
+Id                               Name                            API Id                                                      Status
+f2e0400083e44915828d5bf9f6069a2e manny@highvaluecapitalgroup.com /providers/Microsoft.PowerApps/apis/shared_sharepointonline Connected
+ac42d3339d4f4841a21f86dade898123 manny@highvaluecapitalgroup.com /providers/Microsoft.PowerApps/apis/shared_office365        Connected
+305c5c5e2c80407fac9d5993d54cdae9 manny@highvaluecapitalgroup.com /providers/Microsoft.PowerApps/apis/shared_teams            Connected
+620037803eda4c06b748ac66e9196c9b Standard approvals              /providers/Microsoft.PowerApps/apis/shared_approvals        Connected
+

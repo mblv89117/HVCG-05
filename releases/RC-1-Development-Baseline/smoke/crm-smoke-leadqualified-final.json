@@ -1,0 +1,71 @@
+{
+  "generated": "2026-07-15T16:19:02.8866570-07:00",
+  "stamp": "20260715-161828",
+  "leadId": 11,
+  "opportunityId": 11,
+  "activityId": 12,
+  "passed": true,
+  "failureCount": 0,
+  "steps": [
+    {
+      "name": "create_lead",
+      "ok": true,
+      "detail": "Id=11"
+    },
+    {
+      "name": "qualify_lead",
+      "ok": true,
+      "detail": "Qualified"
+    },
+    {
+      "name": "opportunity_creation",
+      "ok": true,
+      "detail": "OppId=11"
+    },
+    {
+      "name": "activity_creation",
+      "ok": true,
+      "detail": "ActId=12"
+    },
+    {
+      "name": "activity_opportunity_lookup",
+      "ok": true,
+      "detail": "LookupId=11"
+    },
+    {
+      "name": "activity_lead_lookup",
+      "ok": true,
+      "detail": "LookupId=11"
+    },
+    {
+      "name": "lead_converted_opportunity",
+      "ok": true,
+      "detail": "LookupId=11"
+    },
+    {
+      "name": "flow_success_log",
+      "ok": true,
+      "detail": "LogId=36 Msg=Created opportunity 11 for lead 11"
+    },
+    {
+      "name": "sharepoint_writes",
+      "ok": true,
+      "detail": "opp+act+Succeeded log"
+    },
+    {
+      "name": "notifications_dev",
+      "ok": true,
+      "detail": "AutomationLogs Succeeded (Teams notify=false by policy)"
+    },
+    {
+      "name": "flow_activation",
+      "ok": true,
+      "detail": "evidenced by exact lead-id run artifacts"
+    },
+    {
+      "name": "sharepoint_field_persist",
+      "ok": true,
+      "detail": "CopilotSummary=sum-20260715-161828"
+    }
+  ]
+}

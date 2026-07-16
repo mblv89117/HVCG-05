@@ -1,0 +1,10 @@
+Connected as manny@highvaluecapitalgroup.com
+Connected to... HVCG Production
+Organization Information
+  Org ID:                     a34bbff3-b380-f111-8068-6045bd0a1f11
+  Unique Name:                unqa34bbff3b380f11180686045bd0a1
+  Friendly Name:              HVCG Production
+  Org URL:                    https://orgee2f7545.crm.dynamics.com/
+  User Email:                 manny@highvaluecapitalgroup.com
+  User ID:                    73d09aeb-ed7b-f111-ab0e-70a8a5b05cde
+  Environment ID:             f141a2cf-ae13-eb59-84c4-25817d899105
