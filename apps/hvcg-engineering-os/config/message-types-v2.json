@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "compatibleWith": "1.0.0",
+  "requiredFields": [
+    "messageId",
+    "timestamp",
+    "sourceAgent",
+    "destinationAgent",
+    "priority",
+    "status",
+    "correlationId",
+    "relatedSprint",
+    "relatedTrack",
+    "type",
+    "body"
+  ],
+  "priorities": ["P0", "P1", "P2", "P3"],
+  "statuses": ["draft", "sent", "acknowledged", "in_progress", "resolved", "blocked", "closed"],
+  "types": [
+    "assignment",
+    "status_update",
+    "progress_report",
+    "question",
+    "blocker",
+    "qa_request",
+    "release_request",
+    "atlas_update",
+    "engineering_handoff"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "version": "eos-1.0.0",
+  "kpis": [
+    { "id": "sprint_velocity", "label": "Sprint Velocity", "unit": "points", "direction": "higher_better" },
+    { "id": "avg_cycle_time", "label": "Average Cycle Time", "unit": "days", "direction": "lower_better" },
+    { "id": "lead_time", "label": "Lead Time", "unit": "days", "direction": "lower_better" },
+    { "id": "qa_pass_rate", "label": "QA Pass Rate", "unit": "percent", "direction": "higher_better" },
+    { "id": "regression_rate", "label": "Regression Rate", "unit": "percent", "direction": "lower_better" },
+    { "id": "open_technical_debt", "label": "Open Technical Debt", "unit": "items", "direction": "lower_better" },
+    { "id": "agent_throughput", "label": "Agent Throughput", "unit": "items/sprint", "direction": "higher_better" },
+    { "id": "deployment_frequency", "label": "Deployment Frequency", "unit": "deploys/month", "direction": "context" },
+    { "id": "documentation_coverage", "label": "Documentation Coverage", "unit": "percent", "direction": "higher_better" },
+    { "id": "atlas_health", "label": "Atlas Health", "unit": "score", "direction": "higher_better" }
+  ]
+}

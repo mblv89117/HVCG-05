@@ -1,7 +1,7 @@
 # AGENT_HANDOFF
 
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer
-**As of:** 2026-07-16 22:46 UTC
+**As of:** 2026-07-16 23:20 UTC
 **Goal:** Resume with **zero** prior chat history.
 
 ## 60-second orientation
@@ -9,10 +9,11 @@
 1. This repo is the **HVCG Project Management System** (High Value Capital Group platform).
 2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only.
 3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.
-4. **Revenue OS Sprints 1–4 are COMPLETE in Dev/Staging.** Sprint 4 implementation: `7e4eb10`; closure docs / branch tip: `bf34c93` on `origin/cursor/revenue-sprint4-activation`.
-5. Sprint 5 is **PLANNING ONLY — NOT ASSIGNED / NOT STARTED**.
-6. Prefer **repository evidence** over chat. Never rely on previous chat history.
-7. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md). It locks committed SHAs and excludes dirty worktree content.
+4. **Revenue OS Sprints 1–4 are COMPLETE in Dev/Staging.** Sprint 4 implementation: `7e4eb10`; tip: `bf34c93` on `origin/cursor/revenue-sprint4-activation`. Do **not** modify.
+5. **Track 9 EOS Sprint 1 is COMPLETE in Development** on `cursor/track9-eos-sprint1` / `.worktrees/track9-eos-sprint1` — **commit/push pending owner review**.
+6. Revenue Sprint 5 and EOS Sprint 2 are **PLANNING ONLY — NOT STARTED**.
+7. Prefer **repository evidence** over chat. Never rely on previous chat history.
+8. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).
 
 ## Canonical SoR
 
@@ -25,11 +26,13 @@ Every new agent begins with [PROJECT_INDEX.md](PROJECT_INDEX.md). Read Atlas bef
 3. [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md)
 4. [Tracks/Track1_Production.md](Tracks/Track1_Production.md)
 5. [Tracks/Track2_RevenueOS.md](Tracks/Track2_RevenueOS.md)
-6. [Sprints/Sprint3.md](Sprints/Sprint3.md) · [Sprints/Sprint4.md](Sprints/Sprint4.md)
-7. Your role handbook under [Agents/](Agents/)
-8. [KNOWN_ISSUES.md](KNOWN_ISSUES.md) + [NEXT_ACTIONS.md](NEXT_ACTIONS.md)
-9. [OWNERSHIP.md](OWNERSHIP.md) + [DECISIONS.md](DECISIONS.md)
-10. [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md)
+6. [Tracks/Track9_EngineeringOS.md](Tracks/Track9_EngineeringOS.md)
+7. [Sprints/Sprint4.md](Sprints/Sprint4.md) · [Sprints/Sprint_EOS1.md](Sprints/Sprint_EOS1.md)
+8. Your role handbook under [Agents/](Agents/)
+9. [KNOWN_ISSUES.md](KNOWN_ISSUES.md) + [NEXT_ACTIONS.md](NEXT_ACTIONS.md)
+10. [OWNERSHIP.md](OWNERSHIP.md) + [DECISIONS.md](DECISIONS.md)
+11. [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md)
+12. [Handoffs/Track9EosSprint1.md](Handoffs/Track9EosSprint1.md) if resuming EOS
 
 ## Authoritative evidence (do not invent)
 
@@ -40,6 +43,7 @@ Every new agent begins with [PROJECT_INDEX.md](PROJECT_INDEX.md). Read Atlas bef
 | Revenue Sprints 1–3 code tip | `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` · worktree `.worktrees/revenue-sprint3` |
 | Revenue Sprint 4 tip | `origin/cursor/revenue-sprint4-activation` @ `bf34c93` · implementation `7e4eb10` · worktree `.worktrees/revenue-sprint4` |
 | Revenue handoff doc | [Handoffs/RevenueSprint4.md](Handoffs/RevenueSprint4.md) |
+| Track 9 EOS Sprint 1 | `.worktrees/track9-eos-sprint1` · branch `cursor/track9-eos-sprint1` · [Handoffs/Track9EosSprint1.md](Handoffs/Track9EosSprint1.md) |
 | RC-1 Dev baseline | `releases/RC-1-Development-Baseline/` |
 | Owner gates | `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md` |
 | Agent bus | `docs/agents/AGENT_COMMUNICATIONS.md` |
@@ -72,6 +76,7 @@ cd "$HVCG_REPO_ROOT"
 # Always: read PROJECT_ATLAS/PROJECT_INDEX.md first
 git worktree list
 # Revenue Sprint 4: .worktrees/revenue-sprint4 @ bf34c93 (implementation 7e4eb10)
+# EOS Sprint 1: .worktrees/track9-eos-sprint1 @ cursor/track9-eos-sprint1 (uncommitted; owner review)
 # RC-1 remains the pre-Sprint 4 checkpoint; Sprint 4 is Dev/Staging only
 # Enter the worktree for your role (see AGENT_ASSIGNMENTS.md)
 ```

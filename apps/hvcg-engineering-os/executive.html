@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Executive Engineering Dashboard — HVCG EOS</title>
+  <link rel="stylesheet" href="css/eos.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <h1 class="brand">HVCG Engineering OS</h1>
+        <p class="sub">Executive Engineering Dashboard · Owner view · Development only</p>
+        <div class="nav-links">
+          <a href="index.html">Command Center</a>
+          <a href="executive.html">Executive Dashboard</a>
+        </div>
+      </div>
+      <div class="meta" id="meta"></div>
+    </header>
+
+    <div class="banner">
+      One view for overall project health, engineering, revenue status, risks, and pending decisions.
+      Commit / push / deploy remain gated on owner authorization.
+    </div>
+
+    <div class="grid" id="root"></div>
+  </div>
+
+  <script src="js/eos-core.js"></script>
+  <script src="js/workflow-engine.js"></script>
+  <script src="js/change-request-system.js"></script>
+  <script src="js/agent-bus-v2.js"></script>
+  <script src="js/master-pm-automation.js"></script>
+  <script src="js/engineering-analytics.js"></script>
+  <script src="js/executive-dashboard.js"></script>
+  <script src="js/app-executive.js"></script>
+</body>
+</html>

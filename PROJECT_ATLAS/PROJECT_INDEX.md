@@ -1,6 +1,6 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-16 22:30 UTC
+**As of:** 2026-07-16 23:20 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`
 **Canonical SoR:** this Atlas. Future ChatGPT sessions begin with [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md).
 
@@ -56,6 +56,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [6](Tracks/Track6_AI.md) | AI governance | Worktree active |
 | [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | Parallel; Prod Draft-heavy |
 | [8](Tracks/Track8_Enterprise.md) | Scale / v2 | Horizon |
+| [9](Tracks/Track9_EngineeringOS.md) | Engineering Operating System | Sprint 1 **COMPLETE (Dev)** — commit/push pending owner review |
 
 ## What each Sprint accomplished
 

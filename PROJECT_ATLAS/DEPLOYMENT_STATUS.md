@@ -1,18 +1,19 @@
 # DEPLOYMENT_STATUS
 
-**As of:** 2026-07-16 22:30 UTC
+**As of:** 2026-07-16 23:20 UTC
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 | Environment | Status | Package / tip | Notes |
 |-------------|--------|---------------|-------|
-| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprints 1–4 Phase 2 on Dev/Staging | Sprint 4 @ `7e4eb10` |
-| HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | 1 flow Activated; gates Off; **no Sprint 4 Prod deploy** |
+| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprints 1–4; Track 9 EOS Sprint 1 (local) | EOS uncommitted pending owner |
+| HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | **no EOS / Sprint 4 Prod deploy** |
 | Website | Staging/preview only | go-live track3 / staging HTML | No DNS |
 | Pilot data Prod | Not imported | Pre-import reports in master-pm go-live | Owner gate |
 | Revenue Sprint 2–3 tip | Committed | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` | COMPLETE |
 | Revenue Sprint 4 Phase 1 | Committed | `origin/cursor/revenue-sprint4-activation` @ `7fd8bf2` | Activation framework |
 | Revenue Sprint 4 Phase 2 | Committed | `origin/cursor/revenue-sprint4-activation` @ `7e4eb10` | Sales engine Dev/Staging only |
-| Atlas authoritative tip | Committed | `origin/cursor/project-atlas-rc1` @ `c391318` | Continuation V2; Sprint 4 Atlas sync uncommitted |
+| Atlas authoritative tip | Committed | `origin/cursor/project-atlas-rc1` @ `bd07e61` | Sprint 4 Atlas reconciliation |
+| EOS Sprint 1 | Local worktree | `cursor/track9-eos-sprint1` | **NOT committed** — owner review |
 
 ## Freeze packages
 

@@ -544,6 +544,48 @@ Only through Change Request / owner assignment.
 
 ---
 
+Decision ID
+
+DEC-0014
+
+Date
+
+2026-07-16
+
+Decision Owner
+
+HVCG Owner
+
+Category
+
+Track 9 — Engineering Operating System
+
+Status
+
+Approved
+
+Context
+
+Independent QA validated EOS Sprint 1 in Development. The seven-module package passed 26/26 automated tests. Five non-blocking defects were identified for workflow gate enforcement, KPI source duplication, UI output escaping, live snapshot collection, and Agent Bus 2.0 persistence/bridge.
+
+Decision
+
+Approve Track 9 EOS Sprint 1 for Development release with minor changes accepted as tracked EOS Sprint 2 technical debt: DEF-EOS-001, DEF-EOS-002, DEF-EOS-003, DEF-EOS-004, and DEF-EOS-005. Authorize commit and push of `cursor/track9-eos-sprint1` only. Do not merge, tag, deploy, modify Revenue, modify Track 1, or change Production.
+
+Reasoning
+
+The accepted defects do not block the isolated Development staging release. Revenue, Track 1, Production, and deployment-engine paths remain outside the Sprint 1 change set.
+
+Impact
+
+EOS Sprint 1 may be committed and pushed on its feature branch. EOS Sprint 2 remains unassigned and is the recommended scope for the accepted debt. Merge, tag, and deployment remain separately gated.
+
+Can This Be Revisited?
+
+Only through a new owner decision or approved Change Request.
+
+---
+
 # FUTURE DECISIONS
 
 Every future architectural decision should be appended below.

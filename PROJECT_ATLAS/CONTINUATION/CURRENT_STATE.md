@@ -1,7 +1,7 @@
 # CURRENT STATE
 
 **Project name:** High Value Capital Group Operating System — Project Atlas
-**Date updated:** 2026-07-16 22:30 UTC
+**Date updated:** 2026-07-16 23:20 UTC
 **Owner:** HVCG Owner; coordinated by the Master Project Management Agent
 **State authority:** This live continuation snapshot, supported by the authoritative Project Atlas and Git evidence
 
@@ -9,45 +9,36 @@
 
 | Control point | Current value |
 |---|---|
-| Current Release Candidate | **RC-1 — pre-Sprint 4 documentation lock** (Sprint 4 now executed in Dev/Staging) |
-| Current authoritative branch | `cursor/project-atlas-rc1` |
-| Current Atlas branch | `cursor/project-atlas-rc1` |
+| Current Release Candidate | **RC-1** documentation lock remains; Revenue Sprint 4 executed; Track 9 EOS Sprint 1 executed in Dev |
+| Current authoritative branch | `cursor/project-atlas-rc1` @ `bd07e61` |
 | Current Atlas worktree | `.worktrees/project-atlas-authoritative` |
 | Current Production ref | Frozen tag `Track-1-Live-Internal` @ `302615956cea80c238172931f5901792f548f59c` |
-| Production owner branch | `cursor/deployment-engineer` @ `c726f1e` |
 | Revenue Sprint 2–3 authority | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` |
-| Revenue Sprint 4 branch | Implementation `7e4eb10`; closure docs / branch tip `bf34c93` |
-| Current Sprint | **Revenue Sprint 4 — COMPLETE and committed (Dev/Staging); no Sprint 5** |
+| Revenue Sprint 4 branch | Implementation `7e4eb10`; tip `bf34c93` |
+| Current Sprint | **Track 9 EOS Sprint 1 — APPROVED WITH MINOR CHANGES; feature-branch commit/push authorized** |
+| EOS branch / worktree | `cursor/track9-eos-sprint1` · `.worktrees/track9-eos-sprint1` |
 | Production status | **FROZEN — LIVE—INTERNAL** |
 
 ## Completed modules
 
 - Track 1 freeze
-- Revenue Sprints 1–3
-- Sprint 4 Phase 1 activation framework
-- Sprint 4 Phase 2 Automated Sales Engine (local Dev/Staging)
+- Revenue Sprints 1–4 (Dev/Staging)
 - Continuation Framework V2 (`c391318`)
+- Track 9 EOS Sprint 1 modules (Development release approved under DEC-0014)
 
 ## Outstanding modules
 
-- Owner commit/push of Sprint 4 Phase 2
+- Feature-branch commit/push and release verification of EOS Sprint 1
 - Soft UAT, price-card approvals, BL-C1, DNS, canvas, pilot import
-- Sprint 5 not started
+- Revenue Sprint 5 not started
+- EOS Sprint 2 not started
 
 ## Known blockers
 
 - Track 1 Production freeze
-- Commit/push requires separate owner approval
-- Outbound / portal invite / public DNS gated
+- Merge, tag, and deployment remain unauthorized
+- No merge/deploy without owner
 
-## Next priorities
+## Immediate next action
 
-1. Soft UAT
-2. Track six QA findings (three resolved, three backlog)
-3. Reconcile authoritative Atlas commit separately if approved
-4. Preserve Track 1 freeze
-5. Do not start Sprint 5 without a new owner assignment
-
-## Update rule
-
-Update this file after every completed sprint and whenever control points change. Keep synchronized with `ACTIVE_SPRINT.md`.
+Commit/push only `cursor/track9-eos-sprint1`, verify clean remote synchronization, then await the next assignment. Do not merge, tag, deploy, start Revenue Sprint 5, or start EOS Sprint 2.

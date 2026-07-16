@@ -31,6 +31,8 @@ Only ask a question when the uploaded continuation documents contain a material 
 
 Preserve module ownership. Protect application code, client data, Production, Track 1, completed releases, and committed work outside the active scope.
 
+Current release instruction: EOS Sprint 1 was approved with minor changes under DEC-0014. Feature-branch commit/push is authorized only for `cursor/track9-eos-sprint1`; merge, tag, deployment, Production, Revenue, and Track 1 changes remain prohibited. After release verification, await a new assignment before starting EOS Sprint 2.
+
 When the user types:
 
 `Continue Project Atlas.`

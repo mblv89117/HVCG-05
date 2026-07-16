@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Engineering Command Center — HVCG EOS</title>
+  <link rel="stylesheet" href="css/eos.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <h1 class="brand">HVCG Engineering OS</h1>
+        <p class="sub">Engineering Command Center · Track 9 · Sprint 1 · Development only</p>
+        <div class="nav-links">
+          <a href="index.html">Command Center</a>
+          <a href="executive.html">Executive Dashboard</a>
+        </div>
+      </div>
+      <div class="meta" id="meta"></div>
+    </header>
+
+    <div class="banner">
+      Reuses Project Atlas, agent registry, worktrees, QA, and deployment conventions.
+      Does not modify Revenue Sprint 4, Track 1, or Production.
+    </div>
+
+    <div class="grid" id="root"></div>
+  </div>
+
+  <script src="js/eos-core.js"></script>
+  <script src="js/workflow-engine.js"></script>
+  <script src="js/change-request-system.js"></script>
+  <script src="js/agent-bus-v2.js"></script>
+  <script src="js/master-pm-automation.js"></script>
+  <script src="js/engineering-analytics.js"></script>
+  <script src="js/command-center.js"></script>
+  <script src="js/app-command-center.js"></script>
+</body>
+</html>

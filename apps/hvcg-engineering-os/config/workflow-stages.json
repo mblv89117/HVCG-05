@@ -1,0 +1,24 @@
+{
+  "version": "eos-1.0.0",
+  "stages": [
+    { "id": "owner_request", "label": "Owner Request", "order": 1 },
+    { "id": "impact_analysis", "label": "Impact Analysis", "order": 2 },
+    { "id": "change_request", "label": "Change Request", "order": 3 },
+    { "id": "assignment", "label": "Assignment", "order": 4 },
+    { "id": "development", "label": "Development", "order": 5 },
+    { "id": "testing", "label": "Testing", "order": 6 },
+    { "id": "qa", "label": "QA", "order": 7 },
+    { "id": "owner_approval", "label": "Owner Approval", "order": 8 },
+    { "id": "commit", "label": "Commit", "order": 9 },
+    { "id": "push", "label": "Push", "order": 10 },
+    { "id": "release", "label": "Release", "order": 11 },
+    { "id": "deployment", "label": "Deployment", "order": 12 },
+    { "id": "atlas_update", "label": "Atlas Update", "order": 13 },
+    { "id": "close_sprint", "label": "Close Sprint", "order": 14 }
+  ],
+  "terminalStages": ["close_sprint"],
+  "blockedTransitions": {
+    "deployment": ["Requires owner + QA + deployment approvals"],
+    "push": ["Requires owner authorization in Dev policy"]
+  }
+}

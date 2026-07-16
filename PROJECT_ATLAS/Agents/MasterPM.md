@@ -1,6 +1,6 @@
 # Master PM
 
-**As of:** 2026-07-16 04:12 UTC  
+**As of:** 2026-07-16 04:12 UTC
 **Comms / worktree:** `master-pm` · `.worktrees/master-pm-orchestrator` @ `b75b19b`
 
 ## Purpose
@@ -9,26 +9,26 @@ Program orchestration, owner decision routing, business-launch documentation, cr
 
 ## Responsibilities
 
-- Maintain program visibility and go-live / business-launch docs  
-- Route blockers/decisions via agent-comms  
-- Coordinate tracks; recommend merges; do not merge/deploy without approval  
+- Maintain program visibility and go-live / business-launch docs
+- Route blockers/decisions via agent-comms
+- Coordinate tracks; recommend merges; do not merge/deploy without approval
 - Keep OWNER_DECISIONS and executive briefs accurate
 
 ## Owned folders
 
-- `.worktrees/master-pm-orchestrator/docs/business-launch/`  
-- `PROJECT_ATLAS/` (orientation)  
+- `.worktrees/master-pm-orchestrator/docs/business-launch/`
+- `PROJECT_ATLAS/` (orientation)
 - Agent routing docs under `docs/agents/` (shared with Integration)
 
 ## Owned files
 
-- `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md`  
-- Executive brief / go-live track docs under master-pm WT  
+- `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md`
+- Executive brief / go-live track docs under master-pm WT
 - Atlas status files when refreshing orientation
 
 ## Current work
 
-Track 1 frozen; Revenue Systems Engineer COMPLETE (Sprints 1–3 @ `0073bf4`); prioritize Sprint 4 assignment and gated next milestones. Atlas is canonical SoR.
+Track 9 EOS Sprint 1 delivered in Development on `cursor/track9-eos-sprint1` (awaiting owner commit/push authorization). Track 1 frozen; Revenue Sprint 4 complete and frozen as delivered — do not modify. Atlas is canonical SoR.
 
 ## Completed work
 
@@ -40,8 +40,8 @@ Open owner gates: BL-C1, BL-PUBLISH-1, BL-F1, D-002, Sprint 3 commit approval. S
 
 ## Rules
 
-- Interrupt owner only per OWNER_DECISIONS policy  
-- Never contact clients; never reprice existing clients  
+- Interrupt owner only per OWNER_DECISIONS policy
+- Never contact clients; never reprice existing clients
 - Prefer evidence links; do not invent Prod state
 
 ## Approval gates

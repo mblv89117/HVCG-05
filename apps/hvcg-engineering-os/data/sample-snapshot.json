@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-07-16T23:10:00Z",
+  "environment": "Development",
+  "atlasSyncStatus": "healthy",
+  "activeTracks": [
+    { "id": "track1", "name": "Track 1 — Live Internal", "status": "FROZEN", "health": "stable" },
+    { "id": "track2", "name": "Track 2 — Revenue OS", "status": "Sprint 4 COMPLETE", "health": "healthy" },
+    { "id": "track9", "name": "Track 9 — Engineering OS", "status": "Sprint 1 ACTIVE", "health": "building" }
+  ],
+  "activeSprints": [
+    {
+      "id": "eos-sprint-1",
+      "trackId": "track9",
+      "name": "EOS Sprint 1",
+      "progressPercent": 85,
+      "status": "in_progress",
+      "blocked": false
+    }
+  ],
+  "activeBranches": [
+    { "name": "cursor/track9-eos-sprint1", "owner": "master-pm", "track": "track9" },
+    { "name": "cursor/project-atlas-rc1", "owner": "master-pm", "track": "atlas" },
+    { "name": "cursor/revenue-sprint4-activation", "owner": "revenue", "track": "track2", "frozenTip": true }
+  ],
+  "activeWorktrees": [
+    { "path": ".worktrees/track9-eos-sprint1", "branch": "cursor/track9-eos-sprint1", "owner": "master-pm" },
+    { "path": ".worktrees/project-atlas-authoritative", "branch": "cursor/project-atlas-rc1", "owner": "master-pm" },
+    { "path": ".worktrees/revenue-sprint4", "branch": "cursor/revenue-sprint4-activation", "owner": "revenue" }
+  ],
+  "assignedAgents": [
+    { "id": "master-pm", "role": "Master Project Management", "assignment": "Track 9 Sprint 1", "status": "active" },
+    { "id": "qa-agent", "role": "QA", "assignment": "On call", "status": "ready" },
+    { "id": "deployment-manager", "role": "Deployment", "assignment": "Frozen pending owner", "status": "idle" }
+  ],
+  "blockedItems": [],
+  "qaStatus": {
+    "queueDepth": 1,
+    "latestVerdict": "IN_PROGRESS",
+    "passRatePercent": 100
+  },
+  "deploymentReadiness": {
+    "ready": false,
+    "reason": "Development only — commit/push/deploy gated"
+  },
+  "technicalDebt": [
+    { "id": "TD-004", "title": "Revenue proposed Sprint 5 backlog item", "severity": "low", "track": "track2" },
+    { "id": "TD-EOS-001", "title": "Live git collector optional enhancement", "severity": "low", "track": "track9" }
+  ],
+  "openChangeRequests": [],
+  "releaseCandidates": [],
+  "ownerApprovals": [
+    { "id": "OA-EOS-S1", "item": "EOS Sprint 1 commit/push", "status": "pending" }
+  ],
+  "revenueHealth": {
+    "status": "Sprint 4 COMPLETE (Dev/Staging)",
+    "score": 92
+  },
+  "engineeringHealth": {
+    "status": "Track 9 Sprint 1 building",
+    "score": 78
+  },
+  "overallProjectHealth": {
+    "status": "Controlled — Atlas validated, Revenue frozen complete, EOS active",
+    "score": 88
+  },
+  "openRisks": [
+    { "id": "R-EOS-001", "title": "Owner coordination still manual until EOS adopted", "severity": "medium" }
+  ],
+  "upcomingReleases": [],
+  "pendingDecisions": [
+    { "id": "D-EOS-S1", "title": "Approve EOS Sprint 1 for commit/push", "owner": "Manny" }
+  ],
+  "metricsSeed": {
+    "completedPoints": 34,
+    "plannedPoints": 40,
+    "cycleTimesDays": [2, 3, 2.5, 4],
+    "leadTimesDays": [5, 6, 4, 7],
+    "qaPassed": 12,
+    "qaFailed": 0,
+    "regressions": 0,
+    "agentCompletedItems": 18,
+    "deploysLast30Days": 0,
+    "docsPresent": 18,
+    "docsExpected": 20,
+    "atlasBrokenLinks": 0,
+    "atlasTotalLinks": 301
+  }
+}
