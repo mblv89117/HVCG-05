@@ -26,5 +26,7 @@
     ]
   },
   "packagingStatus": "READY_WITH_MANUAL_OWNER_ACTIONS",
-  "validationReport": "validation/ENV_VAR_GAP_VALIDATION.md"
+  "validationReport": "validation/ENV_VAR_GAP_VALIDATION.md",
+  "gitCommit": "0f8d8ebf6542a1ea1ec679b6e382b3e00a366319",
+  "gitCommitShort": "0f8d8eb"
 }
