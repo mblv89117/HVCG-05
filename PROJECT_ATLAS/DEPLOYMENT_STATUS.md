@@ -5,7 +5,7 @@
 
 | Environment | Status | Package / tip | Notes |
 |-------------|--------|---------------|-------|
-| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprints 1–4; Track 9 EOS Sprint 1 (local) | EOS uncommitted pending owner |
+| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprints 1–4; Track 9 EOS Sprint 1 | EOS feature branch pushed; not deployed |
 | HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | **no EOS / Sprint 4 Prod deploy** |
 | Website | Staging/preview only | go-live track3 / staging HTML | No DNS |
 | Pilot data Prod | Not imported | Pre-import reports in master-pm go-live | Owner gate |

@@ -76,7 +76,7 @@ cd "$HVCG_REPO_ROOT"
 # Always: read PROJECT_ATLAS/PROJECT_INDEX.md first
 git worktree list
 # Revenue Sprint 4: .worktrees/revenue-sprint4 @ bf34c93 (implementation 7e4eb10)
-# EOS Sprint 1: .worktrees/track9-eos-sprint1 @ cursor/track9-eos-sprint1 (uncommitted; owner review)
+# EOS Sprint 1: .worktrees/track9-eos-sprint1 @ origin/cursor/track9-eos-sprint1 (pushed; no merge/deploy)
 # RC-1 remains the pre-Sprint 4 checkpoint; Sprint 4 is Dev/Staging only
 # Enter the worktree for your role (see AGENT_ASSIGNMENTS.md)
 ```

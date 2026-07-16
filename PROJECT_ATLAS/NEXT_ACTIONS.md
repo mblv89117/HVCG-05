@@ -1,12 +1,12 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 23:20 UTC
+**As of:** 2026-07-16 23:23 UTC
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
 ## Now
 
 1. Keep Track 1 **frozen**.
-2. Commit and push only `cursor/track9-eos-sprint1`; verify clean remote synchronization. Owner approval is recorded in DEC-0014.
+2. Preserve synchronized `origin/cursor/track9-eos-sprint1`; no merge, tag, or deploy.
 3. Preserve Revenue Sprint 4 commit `7e4eb10` on `origin/cursor/revenue-sprint4-activation` (do not modify).
 4. Soft UAT of sales engine + strategy capture (human).
 5. Do **not** begin Revenue Sprint 5 without a new assignment.
@@ -22,7 +22,7 @@
 
 | Action | Track | Gate |
 |--------|-------|------|
-| Commit/push EOS Sprint 1 | Track 9 | **APPROVED WITH MINOR CHANGES** |
+| EOS Sprint 1 merge/tag/deploy | Track 9 | New owner approval |
 | Soft UAT sales engine | Track 2 | Human QA |
 | EOS Sprint 2 (live collector / bus bridge) | Track 9 | New assignment |
 | Dev CRM Draft persistence for proposals/shells | Track 2 | CR + owner |
