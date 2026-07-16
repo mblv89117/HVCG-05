@@ -1,6 +1,6 @@
 # ROADMAP
 
-**As of:** 2026-07-16 19:52 UTC
+**As of:** 2026-07-16 21:15 UTC
 **Sources:** [CURRENT_STATE.md](CURRENT_STATE.md); Revenue Systems Engineer; Client Portal Sprint 1 handoff; Track-1-Live-Internal.
 
 ## Near-term
@@ -30,6 +30,7 @@
 - Client Portal Sprint 1 **COMPLETE** (`8c8806b`; isolated, not merged/deployed)
 - Executive Command Center Sprint 1 **COMPLETE** (mock-only; commit/push approved)
 - Pre-Sprint 4 [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) verification recorded
+- Operations Hub Sprint 1 Phase 1 **COMPLETE** (mock-only; build, unit, browser, and responsive QA passed)
 
 ## Longer horizon
 

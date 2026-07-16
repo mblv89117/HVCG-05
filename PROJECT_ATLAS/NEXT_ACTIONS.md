@@ -1,6 +1,6 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 19:52 UTC
+**As of:** 2026-07-16 21:15 UTC
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
 ## Now
@@ -10,6 +10,7 @@
 3. Treat Client Portal Sprint 1 as **COMPLETE** at `8c8806b`; do not modify or merge it from this workstream.
 4. Preserve Executive Command Center Sprint 1 as **COMPLETE** after approved commit/push; do not merge or deploy without a new instruction.
 5. Preserve [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) commit anchors; do not include dirty working-tree files in the checkpoint.
+6. Preserve Operations Hub Sprint 1 Phase 1 as **COMPLETE** after approved commit/push; do not merge or deploy without a new instruction.
 
 ## Owner decisions
 

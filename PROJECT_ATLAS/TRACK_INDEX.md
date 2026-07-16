@@ -1,6 +1,6 @@
 # TRACK_INDEX
 
-**As of:** 2026-07-16 19:52 UTC  
+**As of:** 2026-07-16 21:15 UTC  
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 | Track | Document | Checkpoint status |
@@ -11,7 +11,7 @@
 | Track 4 — Client Portal | [Tracks/Track4_ClientPortal.md](Tracks/Track4_ClientPortal.md) | Sprint 1 **COMPLETE**; invites gated by BL-C1 |
 | Track 5 — Client Onboarding | [Tracks/Track5_ClientOnboarding.md](Tracks/Track5_ClientOnboarding.md) | Specs / automation gated |
 | Track 6 — AI | [Tracks/Track6_AI.md](Tracks/Track6_AI.md) | Parallel worktree |
-| Track 7 — Internal Operations | [Tracks/Track7_InternalOperations.md](Tracks/Track7_InternalOperations.md) | Executive Command Center Sprint 1 **COMPLETE** |
+| Track 7 — Internal Operations | [Tracks/Track7_InternalOperations.md](Tracks/Track7_InternalOperations.md) | Executive Command Center Sprint 1 **COMPLETE**; Operations Hub Sprint 1 Phase 1 **COMPLETE** |
 | Track 8 — Enterprise | [Tracks/Track8_Enterprise.md](Tracks/Track8_Enterprise.md) | Future horizon |
 
 Checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).

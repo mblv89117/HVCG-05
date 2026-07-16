@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-07-16T21:09:26.676Z",
+  "branch": "cursor/operations-hub-sprint1",
+  "dataMode": "mock-only",
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "operations route",
+      "pass": true,
+      "evidence": "/ → Today’s operations pulse"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "team route",
+      "pass": true,
+      "evidence": "/team → Team capacity & availability"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "projects route",
+      "pass": true,
+      "evidence": "/projects → Active project board"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "sop route",
+      "pass": true,
+      "evidence": "/sop → Standard operating procedures"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "ai route",
+      "pass": true,
+      "evidence": "/ai → Agent fleet status"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "human route",
+      "pass": true,
+      "evidence": "/human → People capacity board"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "notifications route",
+      "pass": true,
+      "evidence": "/notifications → Ops signal feed"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 human workforce",
+      "pass": true,
+      "evidence": "mobile nav=true; horizontal overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant layout",
+      "pass": true,
+      "evidence": "ai=false; human=false; projects=false; operations=true"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected AI route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4176/"
+    },
+    {
+      "suite": "Dashboard QA",
+      "name": "Operations feature density",
+      "pass": true,
+      "evidence": "11 visible KPI cards"
+    },
+    {
+      "suite": "Performance QA",
+      "name": "Local load duration",
+      "pass": true,
+      "evidence": "6 ms"
+    },
+    {
+      "suite": "Feature QA",
+      "name": "SOP search filter",
+      "pass": true,
+      "evidence": "filtered to 1 SOP(s)"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-operations-desktop.png",
+    "screenshots/02-team-desktop.png",
+    "screenshots/03-projects-desktop.png",
+    "screenshots/04-sop-desktop.png",
+    "screenshots/05-ai-desktop.png",
+    "screenshots/06-human-mobile.png",
+    "screenshots/07-notifications-mobile.png"
+  ]
+}
