@@ -1,8 +1,8 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-16 19:01 UTC
+**As of:** 2026-07-16 22:13 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`  
-**Canonical SoR:** this Atlas. Begin here before any other work.
+**Canonical SoR:** this Atlas. Future ChatGPT sessions begin with [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md).
 
 ## Current architecture (summary)
 
@@ -29,7 +29,8 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | What is true now | [CURRENT_STATE.md](CURRENT_STATE.md) |
 | What to do next | [NEXT_ACTIONS.md](NEXT_ACTIONS.md) |
 | Who owns work | [OWNERSHIP.md](OWNERSHIP.md) · [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md) |
-| Resume cold | [AGENT_HANDOFF.md](AGENT_HANDOFF.md) |
+| Resume a future ChatGPT session | [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md) → [authoritative startup workflow](CONTINUATION/STARTUP_SEQUENCE.md) |
+| Agent handoff archive | [AGENT_HANDOFF.md](AGENT_HANDOFF.md) |
 | Tracks | [Tracks/](Tracks/) |
 | Sprints | [Sprints/](Sprints/) |
 | Role handbooks | [Agents/](Agents/) |
@@ -40,7 +41,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Issues | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
 | Releases | [RELEASES.md](RELEASES.md) |
 | Pre-Sprint 4 checkpoint | [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) |
-| Continuation / cold-start | [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md) · [CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md](CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md) · [CONTINUATION/PROJECT_PHILOSOPHY.md](CONTINUATION/PROJECT_PHILOSOPHY.md) · [CONTINUATION/DECISION_HISTORY.md](CONTINUATION/DECISION_HISTORY.md) |
+| Continuation Framework V2 | [START HERE](CONTINUATION/START_HERE.md) · [Startup sequence](CONTINUATION/STARTUP_SEQUENCE.md) · [ChatGPT prompt](CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md) · [Project philosophy](CONTINUATION/PROJECT_PHILOSOPHY.md) · [Decision history](CONTINUATION/DECISION_HISTORY.md) · [Current state](CONTINUATION/CURRENT_STATE.md) · [Active sprint](CONTINUATION/ACTIVE_SPRINT.md) |
 
 ## What each Track owns
 
