@@ -40,6 +40,46 @@
       )
       .join("");
 
+    if (window.HVCG_EVA_EXEC_REVENUE) {
+      const exec = window.HVCG_EVA_EXEC_REVENUE.buildFromLocal({
+        board: board,
+        requests: requests,
+      });
+      const k = exec.kpis || {};
+      const execEl = document.getElementById("execKpiMeta");
+      if (execEl) {
+        execEl.innerHTML = [
+          ["Leads", k.leads],
+          ["EVAs completed", k.evas_completed],
+          ["Conversion %", k.conversion_pct],
+          ["Qualified leads", k.qualified_leads],
+          ["Proposals sent", k.proposals_sent],
+          ["Deals won", k.deals_won],
+          ["MRR", k.mrr],
+          ["Pipeline value", k.pipeline_value],
+          ["Revenue forecast", k.revenue_forecast],
+          ["Owner tasks", k.owner_tasks],
+          ["Outstanding approvals", k.outstanding_approvals],
+        ]
+          .map(
+            ([label, val]) =>
+              `<div class="meta-row"><span>${label}</span><strong>${esc(
+                val
+              )}</strong></div>`
+          )
+          .join("");
+      }
+      const funnelEl = document.getElementById("funnelList");
+      if (funnelEl) {
+        funnelEl.innerHTML = (exec.sales_funnel || [])
+          .map(
+            (s) =>
+              `<li><strong>${esc(s.stage)}</strong> — ${esc(s.count)}</li>`
+          )
+          .join("");
+      }
+    }
+
     document.getElementById("queueGrid").innerHTML = Object.keys(queues)
       .map(
         (k) =>

@@ -1,0 +1,48 @@
+window.HVCG_PIPELINE_CONFIG = {
+  "config_version": "pipeline-config-1.0.0",
+  "environment_intent": "Development",
+  "production_writes": false,
+  "communications_enabled": false,
+  "email_enabled": false,
+  "teams_notify_enabled": false,
+  "auto_activate_flows": false,
+  "default_assignee_email": "manny@highvaluecapitalgroup.com",
+  "trigger_classes": [
+    "Sales Qualified",
+    "Priority",
+    "Immediate Opportunity"
+  ],
+  "stage_by_class": {
+    "Sales Qualified": "Discovery",
+    "Priority": "Qualification",
+    "Immediate Opportunity": "Proposal"
+  },
+  "document_checklist_template": [
+    "Last 2 years business tax returns",
+    "YTD and prior-year P&L, balance sheet, cash-flow statement",
+    "6\u201312 months business bank statements",
+    "Current debt schedule",
+    "Ownership / operating agreement summary",
+    "Engagement questionnaire (owner)"
+  ],
+  "onboarding_task_templates": [
+    "Confirm opportunity Draft in Dev CRM",
+    "Assemble diligence package",
+    "Prepare proposal Draft for owner review",
+    "Stage client portal workspace (no invite)",
+    "Queue onboarding checklist (Draft)"
+  ],
+  "portal_prep": {
+    "invite_enabled": false,
+    "status": "PREPARED_DRAFT",
+    "gate": "BL-C1"
+  },
+  "existing_flows_referenced_not_modified": [
+    "HVCG_EvaFormCreateLead",
+    "HVCG_LeadQualifiedCreateOpportunity",
+    "HVCG_ClientOnboarding",
+    "HVCG_CreateClientWorkspace",
+    "HVCG_CreateProjectFromTemplate",
+    "HVCG_CreateDocumentRequests"
+  ]
+};

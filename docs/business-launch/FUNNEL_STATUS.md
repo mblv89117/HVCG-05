@@ -1,28 +1,30 @@
 # FUNNEL_STATUS
 
-**As of:** 2026-07-16  
-**Sprint:** 4 — Conversion Activation  
-**Status:** SPRINT 4 – PHASE 1 (ACTIVATION FRAMEWORK) COMPLETE (DEV/STAGING)  
+**As of:** 2026-07-16
+**Sprint:** 4 — Automated Sales Engine
+**Status:** SPRINT 4 – PHASE 2 (SALES ENGINE) COMPLETE (DEV/STAGING) — pending owner review
 
 | Component | Status | Artifact |
 |-----------|--------|----------|
 | Sprint 1–3 | **PRESERVED** | tip `0073bf4` engines untouched |
+| Phase 1 activation framework | **PRESERVED** | tip `7fd8bf2` |
+| AI Pricing Engine | **READY** | `pricing-engine.js` + config |
+| Proposal Generator | **READY** (Draft) | `proposal-generator.js` |
+| Sales Qualification Engine | **READY** | `sales-qualification-engine.js` + config |
+| Pipeline Automation | **READY** (Draft shells) | `pipeline-automation.js` + config |
+| Executive Revenue Dashboard data | **READY** (local extension) | `executive-revenue-dashboard.js` |
 | Strategy Session scheduling | **READY** (staging capture) | `eva/strategy-session.html` |
-| Lead qualification workflow | **READY** | `activation-engine.js` → `qualifyWorkflow` |
-| Engagement recommendation | **READY** | `engagementPackage` |
-| CRM activation pipeline | **READY** (Dev doc + runtime) | `CRM_ACTIVATION_PIPELINE.json` |
-| Nurture trigger framework | **READY** (no send) | `nurture-framework.js` |
-| Internal sales dashboard | **READY** (local) | `eva/sales-dashboard.html` |
+| Internal sales dashboard | **READY** (extended KPIs) | `eva/sales-dashboard.html` |
 | Owner approval gates | **READY** | BL-C1 / LIVE-BOOKING / PROD / AUTO-QUALIFY |
-| Sprint 4 unit tests | **PASS** (incl. S3 regression) | `tests/revenue/run_activation_tests.js` |
+| Sprint 4 Phase 2 tests | **PASS** (+ S3/S4P1 regression) | `tests/revenue/run_sprint4_sales_engine_tests.js` |
 | Production | Untouched | Track 1 frozen |
 
-## Remaining owner-gated activation tasks (not engineering defects)
+## Remaining owner-gated tasks (not engineering defects)
 
-1. Live booking integration (LIVE-BOOKING)  
-2. Pricing card approval — FCFO / Exit / Acq / Modeling  
-3. Soft UAT of activation CTA + strategy form  
-4. Outbound email/SMS activation (BL-C1)  
-5. Production activation gates (PROD-CRM / AUTO-QUALIFY; Track 1 frozen)  
-6. Optional: wire Dev HTTP for strategy request queue (no outbound)  
-7. Atlas update after approved commit  
+1. Approve commit/push of Phase 2 worktree changes
+2. Pricing card approval — FCFO / Exit / Acq / Modeling
+3. Soft UAT of sales engine + strategy form
+4. Outbound email/SMS activation (BL-C1)
+5. Production activation gates (Track 1 frozen)
+6. Live booking integration (LIVE-BOOKING)
+7. Optional Dev CRM Draft persistence for proposals / shells

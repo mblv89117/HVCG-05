@@ -357,6 +357,28 @@ window.HVCG_EVA_ACTIVATION = (function () {
       nurturePlan
     );
 
+    const answers =
+      opts.answers ||
+      (fullPayload && fullPayload.answers) ||
+      (fullPayload && fullPayload.eva && fullPayload.eva.answers) ||
+      {};
+
+    const salesEngine = buildSalesEngine(
+      conversion,
+      fullPayload,
+      strategyRequest,
+      answers,
+      opts
+    );
+
+    let salesDashboard = buildDashboardRow(conversion, fullPayload, pipeline);
+    if (window.HVCG_EVA_EXEC_REVENUE && salesEngine) {
+      salesDashboard = window.HVCG_EVA_EXEC_REVENUE.buildDashboardRowExtension(
+        salesDashboard,
+        salesEngine
+      );
+    }
+
     return {
       activation_version: VERSION,
       assessment_version: ASSESSMENT_VER,
@@ -369,7 +391,71 @@ window.HVCG_EVA_ACTIVATION = (function () {
       nurture: nurturePlan,
       crm_pipeline: pipeline,
       owner_gates: pipeline.owner_gates,
-      sales_dashboard: buildDashboardRow(conversion, fullPayload, pipeline),
+      sales_engine: salesEngine,
+      sales_dashboard: salesDashboard,
+      executive_revenue_dashboard:
+        window.HVCG_EVA_EXEC_REVENUE
+          ? window.HVCG_EVA_EXEC_REVENUE.buildFromLocal({
+              board: salesDashboard ? [salesDashboard] : [],
+              requests: strategyRequest ? [strategyRequest] : [],
+              activations: salesEngine ? [{ pricing: salesEngine.pricing, proposal: salesEngine.proposal, pipeline: salesEngine.pipeline }] : [],
+            })
+          : null,
+    };
+  }
+
+  /**
+   * Sprint 4 Phase 2 — Automated Sales Engine (additive; optional if modules loaded).
+   */
+  function buildSalesEngine(conversion, fullPayload, strategyRequest, answers, opts) {
+    opts = opts || {};
+    if (
+      !window.HVCG_EVA_PRICING ||
+      !window.HVCG_EVA_SALES_QUAL ||
+      !window.HVCG_EVA_PROPOSAL ||
+      !window.HVCG_EVA_PIPELINE
+    ) {
+      return null;
+    }
+
+    const pricing = window.HVCG_EVA_PRICING.build(conversion, fullPayload, {
+      answers: answers,
+      config: opts.pricingConfig,
+    });
+    const qualification = window.HVCG_EVA_SALES_QUAL.build(
+      conversion,
+      fullPayload,
+      {
+        answers: answers,
+        strategyRequest: strategyRequest,
+        config: opts.qualConfig,
+      }
+    );
+    const proposal = window.HVCG_EVA_PROPOSAL.build(
+      pricing,
+      qualification,
+      conversion,
+      fullPayload,
+      { proposal_version: opts.proposal_version || 1 }
+    );
+    const pipelineAutomation = window.HVCG_EVA_PIPELINE.build(
+      qualification,
+      pricing,
+      proposal,
+      conversion,
+      fullPayload,
+      { config: opts.pipelineConfig }
+    );
+
+    return {
+      phase: "Sprint4-Phase2",
+      phase_version: "sales-engine-1.0.0",
+      pricing: pricing,
+      qualification: qualification,
+      proposal: proposal,
+      pipeline: pipelineAutomation,
+      production_writes: false,
+      communications_enabled: false,
     };
   }
 
@@ -428,6 +514,22 @@ window.HVCG_EVA_ACTIVATION = (function () {
           JSON.stringify(reqs.slice(0, 50))
         );
       }
+      if (activation.sales_engine) {
+        const runs = JSON.parse(
+          localStorage.getItem("hvcg_eva_sales_engine_runs") || "[]"
+        );
+        runs.unshift({
+          at: activation.generated_at,
+          pricing: activation.sales_engine.pricing,
+          qualification: activation.sales_engine.qualification,
+          proposal: activation.sales_engine.proposal,
+          pipeline: activation.sales_engine.pipeline,
+        });
+        localStorage.setItem(
+          "hvcg_eva_sales_engine_runs",
+          JSON.stringify(runs.slice(0, 50))
+        );
+      }
     } catch (_) {}
   }
 
@@ -448,6 +550,7 @@ window.HVCG_EVA_ACTIVATION = (function () {
     engagementPackage,
     buildStrategySessionRequest,
     crmActivationPipeline,
+    buildSalesEngine,
     build,
     persist,
     load,

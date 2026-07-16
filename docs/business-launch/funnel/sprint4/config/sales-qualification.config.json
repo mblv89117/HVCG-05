@@ -1,0 +1,44 @@
+{
+  "config_version": "qual-config-1.0.0",
+  "auto_qualify": false,
+  "classes": [
+    "Not Qualified",
+    "Marketing Qualified",
+    "Sales Qualified",
+    "Priority",
+    "Immediate Opportunity"
+  ],
+  "weights": {
+    "fit_score": 0.35,
+    "temperature_hot": 0.2,
+    "temperature_warm": 0.1,
+    "decision_maker": 0.1,
+    "capital_intent": 0.1,
+    "revenue_band": 0.1,
+    "strategy_request": 0.05
+  },
+  "signals": {
+    "temperature_points": { "Hot": 100, "Warm": 60, "Nurture": 25 },
+    "capital_intent_points": { "present": 100, "absent": 40 },
+    "revenue_band_points": {
+      "under_250": 20,
+      "250_1m": 50,
+      "1m_3m": 70,
+      "3m_10m": 85,
+      "10m_plus": 95
+    }
+  },
+  "thresholds": [
+    { "class": "Immediate Opportunity", "min_score": 85 },
+    { "class": "Priority", "min_score": 70 },
+    { "class": "Sales Qualified", "min_score": 55 },
+    { "class": "Marketing Qualified", "min_score": 35 },
+    { "class": "Not Qualified", "min_score": 0 }
+  ],
+  "pipeline_trigger_classes": [
+    "Sales Qualified",
+    "Priority",
+    "Immediate Opportunity"
+  ],
+  "legacy_force_class": "Not Qualified"
+}
