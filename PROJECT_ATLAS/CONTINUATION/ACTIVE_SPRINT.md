@@ -1,91 +1,62 @@
 # ACTIVE SPRINT
 
-**Current sprint name:** Continuation Framework V2
-**Sprint type:** Project Atlas documentation initiative
-**Status:** ACTIVE — workflow enhancement validated; owner approval pending
-**Date updated:** 2026-07-16 22:13 UTC
+**Current sprint name:** Revenue Sprint 4 — Automated Sales Engine
+**Sprint type:** Revenue Operating System — Development / Staging
+**Status:** COMPLETE and committed (Dev/Staging) — merge/deploy not authorized
+**Date updated:** 2026-07-16 22:30 UTC
 **Owner:** HVCG Owner
 **Coordinator:** HVCG Master Project Management Agent
-**Branch:** `cursor/project-atlas-rc1`
-**Worktree:** `.worktrees/project-atlas-authoritative`
+**Executing agent:** Revenue Systems Engineer
+**Branch:** `cursor/revenue-sprint4-activation`
+**Worktree:** `.worktrees/revenue-sprint4`
 
 ## Objectives
 
-1. Replace the prior continuation behavior with an instant-resume system.
-2. Make seven uploaded continuation files and one authoritative startup workflow sufficient to resume Project Atlas.
-3. Eliminate status summaries, context reconstruction, and unnecessary branch/sprint questions in new ChatGPT conversations.
-4. Preserve stable philosophy, historical decisions, ownership boundaries, approval gates, and Production protections.
-5. Establish live `CURRENT_STATE.md` and `ACTIVE_SPRINT.md` continuation snapshots.
-6. Link all seven continuation documents from `PROJECT_INDEX.md` with zero broken links.
+1. Assign and execute Revenue Sprint 4 under owner direction.
+2. Deliver AI Pricing, Proposal Generator, Sales Qualification, Pipeline Automation (Draft), Executive Revenue Dashboard data layer.
+3. Reuse Sprint 3 + Phase 1; no redesign of completed systems.
+4. Keep Production frozen; no email/Teams/DNS/canvas.
+5. Synchronize Project Atlas; stop for owner review; do not begin Sprint 5.
 
 ## Agents currently working
 
 | Agent | Responsibility | Status |
 |---|---|---|
-| Master Project Management Agent | Author, validate, and hand off Continuation Framework V2 | ACTIVE |
-| HVCG Owner | Review and authorize commit/push | PENDING |
-
-No specialist agent is authorized by this sprint.
+| Master Project Management Agent | Assignment, analysis oversight, Atlas sync | ACTIVE (handoff) |
+| Revenue Systems Engineer | Phase 2 implementation + tests | COMPLETE @ `7e4eb10` |
+| HVCG Owner | Review / authorize commit | PENDING |
 
 ## Modules currently in progress
 
-- `PROJECT_ATLAS/CONTINUATION/START_HERE.md` — rewritten as the primary ChatGPT directive.
-- `PROJECT_ATLAS/CONTINUATION/STARTUP_SEQUENCE.md` — authoritative continuation workflow created.
-- `PROJECT_ATLAS/CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md` — rewritten for immediate resume.
-- `PROJECT_ATLAS/CONTINUATION/PROJECT_PHILOSOPHY.md` — stable; retained without rewrite.
-- `PROJECT_ATLAS/CONTINUATION/DECISION_HISTORY.md` — historical decisions retained; V2 decisions appended.
-- `PROJECT_ATLAS/CONTINUATION/CURRENT_STATE.md` — live project snapshot created.
-- `PROJECT_ATLAS/CONTINUATION/ACTIVE_SPRINT.md` — live execution snapshot created.
-- `PROJECT_ATLAS/PROJECT_INDEX.md` — continuation links being updated.
-
-## Dependencies
-
-- Authoritative RC-1 Project Atlas branch and worktree.
-- Existing Project Atlas status, release, deployment, sprint, agent, and decision records.
-- Git evidence for authoritative branch tips and frozen release refs.
-- Owner approval before commit or push.
-
-## Known issues
-
-- Root `PROJECT_ATLAS/CURRENT_STATE.md` remains the full Atlas status record; continuation `CURRENT_STATE.md` is the portable live snapshot. They must remain synchronized rather than treated as competing authorities.
-- Isolated specialist and Revenue Sprint 4 branches contain work not yet reconciled into authoritative RC-1 Atlas.
-- Repository-root unrelated changes require path-scoped staging.
+None open. Phase 2 modules are committed and pushed on the isolated Revenue branch.
 
 ## Testing status
 
 | Validation | Status |
 |---|---|
-| Seven continuation files exist | PASS |
-| Continuation files readable | PASS |
-| Internal Markdown links resolve | PASS — 300 Atlas relative links checked; zero broken |
-| `PROJECT_INDEX.md` links all seven files | PASS |
-| Startup sequence is authoritative and conflict-free | PASS |
-| Obsolete continuation instructions removed | PASS |
-| Duplicate continuation filenames absent | PASS |
-| Documentation-only scope | PASS |
+| Phase 2 sales engine asserts | PASS |
+| Phase 1 activation | 25/25 PASS |
+| Sprint 3 regression | 33/33 PASS |
+| Production untouched | PASS |
+| Atlas documentation synchronized locally (separate Atlas commit pending) | PASS |
 
 ## Exit criteria
 
-- All seven continuation documents exist and are readable.
-- `START_HERE.md` delegates all startup behavior to `STARTUP_SEQUENCE.md`.
-- `STARTUP_SEQUENCE.md` defines the authoritative workflow and exact reading order.
-- The continuation prompt forbids re-analysis, summaries, and redundant context questions.
-- Stable philosophy remains intact.
-- Historical decisions remain intact and V2 decisions are appended.
-- Current state and active sprint contain all required fields.
-- Project Index links all seven continuation files.
-- Markdown link validation reports zero broken links.
-- Only requested Project Atlas documentation files are changed.
-- Owner approves commit and push.
+- Five modules exist and tested — **MET**
+- Documentation + Atlas sync prepared — **MET**
+- Handoff complete — **MET**
+- Owner Dev/Staging commit review — **APPROVED WITH MINOR CHANGES**
+- Commit/push — **COMPLETE** @ `7e4eb10`
+- Merge/deploy — **NOT AUTHORIZED**
 
 ## Immediate next task
 
-Present the validated, uncommitted workflow-driven Continuation Framework V2 diff for owner approval. If approved separately, stage only the seven continuation documents and `PROJECT_INDEX.md`, then commit and push the authoritative Atlas branch.
+Await owner direction. Do not merge, deploy, or start Sprint 5. Atlas documentation may be committed only through a separate approval on the authoritative Atlas branch.
 
 ## Owner approval status
 
-Content creation is authorized. Commit and push are **NOT YET AUTHORIZED**; stop after validation and await owner approval.
+Implementation and isolated Revenue commit/push approved. Merge and deploy remain **NOT AUTHORIZED**.
 
 ## Estimated completion
 
-Documentation is ready for validation now. Final completion requires one owner approval cycle for commit and push.
+Engineering and isolated branch commit complete. Sprint 5 requires a new owner assignment.

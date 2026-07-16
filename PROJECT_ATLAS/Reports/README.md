@@ -10,5 +10,6 @@ Prefer linking to evidence rather than copying binaries.
 | EVA Sprint smokes | `deployment/reports/checkpoints/eva-*-smoke-*.json` |
 | CRM acceptance | `docs/crm/ACCEPTANCE_REPORT.md` |
 | Sprint 3 QA packet | `.worktrees/revenue-sprint3/docs/business-launch/funnel/conversion/QA_VALIDATION_PACKET.md` |
+| Revenue Sprint 4 Atlas reconciliation | [Atlas_Reconciliation_Sprint4.md](Atlas_Reconciliation_Sprint4.md) |
 
 Optional: drop short markdown summaries here that **only** link to the above.

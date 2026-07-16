@@ -1,13 +1,13 @@
 # Sprint BACKLOG
 
-**As of:** 2026-07-16 04:11 UTC  
+**As of:** 2026-07-16 22:46 UTC
 Items below are **repository-mentioned** candidates, not a commitment to order.
 
 ## Gated / blocked
 
 | Item | Gate | Source |
 |------|------|--------|
-| Sprint 4 conversion activation | Assignment + owner | Revenue Track ready; sprint not started |
+| [Sprint 5 planning](Sprint5_Planning.md) | New owner assignment | Planning only; not started |
 | Soft UAT conversion copy | Human QA | FUNNEL_STATUS |
 | Wire Dev HTTP URL for EVA UI POST | Optional Dev | Revenue handoff |
 | SKU-FCFO/EXIT/ACQ/MODEL prices | Owner | PRICING_REGISTER / handoff |

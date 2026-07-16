@@ -1,12 +1,12 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-16 22:13 UTC
-**Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`  
+**As of:** 2026-07-16 22:30 UTC
+**Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`
 **Canonical SoR:** this Atlas. Future ChatGPT sessions begin with [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md).
 
 ## Current architecture (summary)
 
-HVCG runs a Microsoft 365 / Power Platform stack: SharePoint lists + Dataverse solution **HVCGCommandCenterDev**, Power Automate flows, planned Power Apps canvas (unpublished), plus a **staging website** with EVA assessment app feeding **Dev CRM**.  
+HVCG runs a Microsoft 365 / Power Platform stack: SharePoint lists + Dataverse solution **HVCGCommandCenterDev**, Power Automate flows, planned Power Apps canvas (unpublished), plus a **staging website** with EVA assessment app feeding **Dev CRM**.
 
 Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freeze packages under `releases/` and deployment-engineer worktree.
 
@@ -40,6 +40,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Decisions | [DECISIONS.md](DECISIONS.md) |
 | Issues | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
 | Releases | [RELEASES.md](RELEASES.md) |
+| Reconciliation / validation reports | [Reports/README.md](Reports/README.md) |
 | Pre-Sprint 4 checkpoint | [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) |
 | Continuation Framework V2 | [START HERE](CONTINUATION/START_HERE.md) · [Startup sequence](CONTINUATION/STARTUP_SEQUENCE.md) · [ChatGPT prompt](CONTINUATION/CHATGPT_CONTINUATION_PROMPT.md) · [Project philosophy](CONTINUATION/PROJECT_PHILOSOPHY.md) · [Decision history](CONTINUATION/DECISION_HISTORY.md) · [Current state](CONTINUATION/CURRENT_STATE.md) · [Active sprint](CONTINUATION/ACTIVE_SPRINT.md) |
 
@@ -48,7 +49,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Track | Owns | Status |
 |-------|------|--------|
 | [1](Tracks/Track1_Production.md) | Internal Prod CRM freeze | **FROZEN LIVE—INTERNAL** |
-| [2](Tracks/Track2_RevenueOS.md) | Revenue OS / EVA / conversion | Sprints 1–3 **COMPLETE**; Sprint 4 **READY TO START — NOT STARTED** |
+| [2](Tracks/Track2_RevenueOS.md) | Revenue OS / EVA / conversion / sales engine | Sprints 1–4 **COMPLETE (Dev/Staging)**; Sprint 4 @ `7e4eb10` |
 | [3](Tracks/Track3_Website.md) | Website staging → public | In progress; DNS gated |
 | [4](Tracks/Track4_ClientPortal.md) | Portal / data rooms | Invites gated BL-C1 |
 | [5](Tracks/Track5_ClientOnboarding.md) | Onboarding specs/automation | Gated D-002/BL-C1 |
@@ -63,12 +64,12 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [1](Sprints/Sprint1.md) | EVA → Dev CRM — **COMPLETE** |
 | [2](Sprints/Sprint2.md) | Multi-step EVA — **COMPLETE** @ `0073bf4` |
 | [3](Sprints/Sprint3.md) | Conversion engine — **COMPLETE** @ `0073bf4` |
-| [4](Sprints/Sprint4.md) | **READY TO START — NOT STARTED** |
+| [4](Sprints/Sprint4.md) | **COMPLETE (Dev/Staging)** @ `7e4eb10` |
 
 ## Revenue tip
 
-- Branch: `origin/cursor/revenue-sprint3-conversion`  
-- Commit: `0073bf49411408cced88873805b432bce4eefb31`  
+- Branch: `origin/cursor/revenue-sprint3-conversion`
+- Commit: `0073bf49411408cced88873805b432bce4eefb31`
 - Role: Revenue Systems Engineer — **COMPLETE**
 
 ## What every agent owns
@@ -77,11 +78,11 @@ See [Agents/](Agents/) handbooks and [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md
 
 ## How deployments work
 
-1. Prove in Development (RC-1 pattern).  
-2. Owner approval.  
-3. Deployment Engineer imports managed solution, binds connections, smokes.  
-4. Freeze package + rollback guide.  
-5. Track 1 currently **frozen** — no further Prod without new approval.  
+1. Prove in Development (RC-1 pattern).
+2. Owner approval.
+3. Deployment Engineer imports managed solution, binds connections, smokes.
+4. Freeze package + rollback guide.
+5. Track 1 currently **frozen** — no further Prod without new approval.
 
 Details: [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md).
 

@@ -1,82 +1,40 @@
 # CURRENT_STATE
 
-**As of:** 2026-07-16 19:01 UTC
-**Sources:** `git` (`origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`), `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`, `.worktrees/deployment-engineer/deployment/release-ops/GO_LIVE_STATUS.md`, `deployment/release-ops/HANDOFFS/RevenueSystemsEngineer.md`, `releases/RC-1-Development-Baseline/version.json`
+**As of:** 2026-07-16 22:30 UTC
+**Sources:** `origin/cursor/revenue-sprint3-conversion` @ `0073bf4`; `.worktrees/revenue-sprint4` Phase 2 working tree; Track-1 freeze; RC-1 checkpoint; Continuation Framework V2 @ `c391318`
 
 ## Snapshot
 
 | Area | Status | Evidence |
 |------|--------|----------|
-| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`; GO_LIVE_STATUS 2026-07-16T03:08Z |
-| Sprint 1 Revenue OS | **COMPLETE** | Revenue handoff; EVA → Dev CRM smoke |
-| Sprint 2 Revenue OS | **COMPLETE** (Dev/Staging) | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` |
-| Sprint 3 Revenue OS | **COMPLETE** (Dev/Staging) | Same commit; conversion engine + tests in git |
-| Sprint 4 | **READY TO START — NOT STARTED** | Awaiting Master PM + owner assignment |
-| Revenue Systems Engineer | **COMPLETE** | Role closed for Sprint 1–3 @ `0073bf49411408cced88873805b432bce4eefb31` |
-| Production | HVCG Production Track 1 slice live | `https://orgee2f7545.crm.dynamics.com/` |
-| Development | HVCG Development | `https://org1131a2b0.crm.dynamics.com/` |
-| Website public / DNS | **NOT STARTED** | Track-1 freeze gates |
-| Pilot client import | **NOT STARTED** / BLOCKED | GO_LIVE Track 2 Pilot |
-| Canvas publish | **NOT DONE** (D-002) | RC-1 + Deployment Engineer handoff |
-| Main checkout | `cursor/agent-communications` | Local orientation/Atlas branch |
-| Revenue tip | `0073bf4` on `origin/cursor/revenue-sprint3-conversion` | Verified via `git fetch` / `git rev-parse` |
-| Atlas committed tip | `692d276` on `origin/cursor/agent-communications` | Local HEAD = remote branch tip |
+| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | Track-1-Live-Internal tag `302615956cea80c238172931f5901792f548f59c` |
+| Sprint 1–3 Revenue OS | **COMPLETE** | `0073bf49411408cced88873805b432bce4eefb31` |
+| Sprint 4 Phase 1 activation | **COMPLETE** (Dev/Staging) | `7fd8bf270dc080eea9a3326184707169a3b120ca` |
+| Sprint 4 Phase 2 sales engine | **COMPLETE** (Dev/Staging) — **COMMITTED** | `origin/cursor/revenue-sprint4-activation` @ `7e4eb10` |
+| Revenue Systems Engineer | **COMPLETE for Sprint 4 delivery** (Sprints 1–3 remain closed) | Handoff complete; owner approved Dev/Staging commit |
+| Production | Track 1 slice live; frozen | No Sprint 4 Prod writes |
+| Development | HVCG Development | Sales engine Dev/Staging only |
+| Website public / DNS | **NOT STARTED** | Gated |
+| Canvas publish | **NOT DONE** (D-002) | Gated |
+| Authoritative Atlas branch | `cursor/project-atlas-rc1` | `.worktrees/project-atlas-authoritative` |
+| Continuation Framework V2 | **COMMITTED** | `c391318` |
 
-## Release checkpoint
+## Revenue tips
 
-[Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) records the verified pre-Sprint 4 state. Immutable anchors:
-
-- Revenue: `0073bf49411408cced88873805b432bce4eefb31`
-- Atlas baseline: `692d27668e2144ec0e62360941c249dfd3d92db4`
-- Track 1 freeze tag: `302615956cea80c238172931f5901792f548f59c`
-
-The repository working directories are **not clean**; RC-1 excludes all uncommitted files. See the checkpoint for counts and worktree status.
-
-## Revenue tip (canonical for Sprint 2–3 code)
-
-| Field | Value |
-|-------|-------|
-| Remote branch | `origin/cursor/revenue-sprint3-conversion` |
-| Local branch | `cursor/revenue-sprint3-conversion` |
-| Commit | `0073bf49411408cced88873805b432bce4eefb31` |
-| Worktree | `.worktrees/revenue-sprint3` |
-| Message | Add Sprint 2 EVA experience and Sprint 3 conversion engine (Dev/Staging). |
-
-## Environments
-
-| Name | ID | URL |
-|------|-----|-----|
-| HVCG Production | `f141a2cf-ae13-eb59-84c4-25817d899105` | `https://orgee2f7545.crm.dynamics.com/` |
-| HVCG Development | `c03b1329-4394-ece7-acc9-c50794b3db1e` | `https://org1131a2b0.crm.dynamics.com/` |
-
-## Production Track 1 slice (frozen)
-
-- Managed solution imported; LeadQualified functional smoke **PASS**
-- Flows: **1 Activated** (`HVCG_LeadQualifiedCreateOpportunity`) · **14 Draft**
-- Gates: Teams notify **Off** · client emails **Off** · no canvas · no pilot import · no DNS
-
-## Active worktrees (notable)
-
-| Worktree | Branch | HEAD (short) |
-|----------|--------|--------------|
-| `.` (main) | `cursor/agent-communications` | see `git rev-parse` |
-| `.worktrees/deployment-engineer` | `cursor/deployment-engineer` | `c726f1e` |
-| `.worktrees/revenue-sprint3` | `cursor/revenue-sprint3-conversion` | `0073bf4` |
-| `.worktrees/master-pm-orchestrator` | `cursor/master-pm-orchestrator` | `b75b19b` |
-
-Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
+| Layer | Branch | Commit / state |
+|-------|--------|----------------|
+| Sprint 2–3 SoR | `origin/cursor/revenue-sprint3-conversion` | `0073bf4` |
+| Sprint 4 Phase 1 | `origin/cursor/revenue-sprint4-activation` | `7fd8bf2` |
+| Sprint 4 Phase 2 | `origin/cursor/revenue-sprint4-activation` | `7e4eb10` |
+| Sprint 4 closure docs / branch tip | `origin/cursor/revenue-sprint4-activation` | `bf34c93` |
 
 ## Priorities now
 
-1. Do **not** modify Track 1 frozen Production slice without new owner approval  
-2. Assign / gate **Sprint 4** (Revenue Track **READY TO START**; Sprint 4 not started)
-3. Soft UAT / optional Dev HTTP URL / website preview / pilot — owner gates  
-4. Keep Atlas as SoR; Revenue code SoR is `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`
+1. Keep Track 1 frozen
+2. Soft UAT / price-card owner reviews
+3. Reconcile and commit authoritative Atlas updates separately if approved
+4. Do not start Sprint 5
 
 ## Status authority
 
-Within Atlas, **this file** is the status SoR. Track/Sprint pages and agent handbooks must match it.
-
-## Known stale note
-
-`.worktrees/master-pm-orchestrator/docs/business-launch/go-live/GO_LIVE_STATUS.md` may still describe earlier Prod-blocked state. Prefer Deployment Engineer Track-1 package + GO_LIVE_STATUS for Track 1. Track-1 freeze is **not** at repo-root `releases/Track-1-Live-Internal/`.
+Within Atlas, **this file** is the status SoR.

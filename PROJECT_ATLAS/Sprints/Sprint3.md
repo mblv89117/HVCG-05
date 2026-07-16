@@ -1,7 +1,7 @@
 # Sprint 3 — Revenue recommendations & conversion engine
 
-**Status:** **COMPLETE** (Dev/Staging) · **committed**  
-**As of:** 2026-07-16 04:20 UTC  
+**Status:** **COMPLETE** (Dev/Staging) · **committed**
+**As of:** 2026-07-16 04:20 UTC
 **Tip:** `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`
 
 ## Objective
@@ -21,11 +21,12 @@ Conversion engine, prospect-safe results UX, branded report update, additive CRM
 
 Under `.worktrees/revenue-sprint3` @ `0073bf4`:
 
-- `docs/business-launch/website/staging/assessments/eva/`  
-- `docs/business-launch/funnel/SPRINT3_CONVERSION_ENGINE.md`  
-- `docs/business-launch/funnel/conversion/QA_VALIDATION_PACKET.md`  
-- `tests/revenue/`  
+- `docs/business-launch/website/staging/assessments/eva/`
+- `docs/business-launch/funnel/SPRINT3_CONVERSION_ENGINE.md`
+- `docs/business-launch/funnel/conversion/QA_VALIDATION_PACKET.md`
+- `tests/revenue/`
 
 ## Next
 
-Sprint 4 only if assigned — Track ready, sprint not started.
+Sprint 4 was subsequently assigned and completed in Dev/Staging. See
+[Sprint4.md](Sprint4.md). Sprint 5 remains unassigned.

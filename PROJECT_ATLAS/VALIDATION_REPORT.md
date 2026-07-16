@@ -1,11 +1,15 @@
 # VALIDATION_REPORT
 
-**Atlas validation**  
-**Run at:** 2026-07-16 (local)  
-**Scope:** `PROJECT_ATLAS/**` only  
-**Actions:** Documentation fixes inside Atlas · **no** source/Prod/Dev/commit/push  
+**Atlas validation**
+**Run at:** 2026-07-16 (local)
+**Scope:** `PROJECT_ATLAS/**` only
+**Actions:** Documentation fixes inside Atlas · **no** source/Prod/Dev/commit/push
 
-**Superseded status note (2026-07-16 19:01 UTC):** The original run predated Revenue commit `0073bf49411408cced88873805b432bce4eefb31`. Current status is Sprint 3 **COMPLETE and committed**; Sprint 4 **READY TO START — NOT STARTED**. See [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).
+**Current superseding note (2026-07-16 22:46 UTC):** Revenue Sprints 1–4 are
+**COMPLETE in Dev/Staging**. Sprint 4 implementation is `7e4eb10`; Revenue
+branch tip is `bf34c93`. Track 1 remains frozen and no Production deployment
+occurred. The tables below retain the earlier validation context except where
+explicitly updated.
 
 ## Verdict
 
@@ -13,12 +17,12 @@
 
 ## Method
 
-1. Enumerated all Atlas markdown files  
-2. Resolved every relative markdown link  
-3. Spot-checked cited evidence paths against the live filesystem  
-4. Compared worktree names, branches, and short SHAs to `git worktree list` / `git rev-parse`  
-5. Cross-read Track 1–8 and Sprint 1–4 status lines against `CURRENT_STATE.md` and handoffs  
-6. Reviewed architecture duplication and `.agent-comms/registry.json` vs Atlas ownership  
+1. Enumerated all Atlas markdown files
+2. Resolved every relative markdown link
+3. Spot-checked cited evidence paths against the live filesystem
+4. Compared worktree names, branches, and short SHAs to `git worktree list` / `git rev-parse`
+5. Cross-read Track 1–8 and Sprint 1–4 status lines against `CURRENT_STATE.md` and handoffs
+6. Reviewed architecture duplication and `.agent-comms/registry.json` vs Atlas ownership
 
 ## Status consistency (Tracks / Sprints)
 
@@ -28,7 +32,7 @@
 | Sprint 1 COMPLETE | Consistent | Revenue handoff + Dev smoke LeadId=13 |
 | Sprint 2 COMPLETE (Dev/Staging) | Consistent | SPRINT2_EVA_EXPERIENCE + handoff |
 | Sprint 3 COMPLETE + committed (updated after original validation) | Consistent | Revenue commit `0073bf49411408cced88873805b432bce4eefb31` |
-| Sprint 4 READY TO START — NOT STARTED | Consistent | RC-1 checkpoint |
+| Sprint 4 COMPLETE (Dev/Staging) | Consistent | `origin/cursor/revenue-sprint4-activation` @ `7e4eb10`; closure tip `bf34c93` |
 | Track 2 Pilot BLOCKED | Consistent (distinct from Revenue Sprint completion) | GO_LIVE_STATUS |
 | Track 3 website IN PROGRESS; DNS NOT STARTED | Consistent | GO_LIVE_STATUS + OWNER_DECISIONS |
 
@@ -100,17 +104,17 @@ External stale doc (not Atlas): Master PM `go-live/GO_LIVE_STATUS.md` still desc
 
 ## Remaining known external drift (not fixed — outside Atlas / safety)
 
-- Master PM go-live status file (stale vs Track 1)  
-- `.agent-comms/registry.json` ownership fields (would be a bus/registry edit, not Atlas)  
+- Master PM go-live status file (stale vs Track 1)
+- `.agent-comms/registry.json` ownership fields (would be a bus/registry edit, not Atlas)
 - Revenue worktree has three untracked paths excluded from RC-1; Sprint 3 committed content is anchored at `0073bf49411408cced88873805b432bce4eefb31`
 
 ## Files updated this validation
 
-- `CURRENT_STATE.md`, `AGENT_HANDOFF.md`, `PROJECT_INDEX.md`, `DEPLOYMENT_STATUS.md`, `RELEASES.md`, `CHANGELOG.md`, `README.md`  
-- `ARCHITECTURE.md`, `Architecture/README.md`, `OWNERSHIP.md`, `AGENT_ASSIGNMENTS.md`, `DECISIONS.md`, `KNOWN_ISSUES.md`, `Evidence/README.md`  
-- `Tracks/Track2_RevenueOS.md`, `Tracks/Track3_Website.md`  
-- `Sprints/Sprint2.md`, `Sprints/Sprint3.md`  
-- `Agents/DeploymentEngineer.md`, `RevenueSystemsEngineer.md`, `WebsiteEngineer.md`, `CRMEngineer.md`, `AutomationEngineer.md`, `QAEngineer.md`, `MasterPM.md`  
+- `CURRENT_STATE.md`, `AGENT_HANDOFF.md`, `PROJECT_INDEX.md`, `DEPLOYMENT_STATUS.md`, `RELEASES.md`, `CHANGELOG.md`, `README.md`
+- `ARCHITECTURE.md`, `Architecture/README.md`, `OWNERSHIP.md`, `AGENT_ASSIGNMENTS.md`, `DECISIONS.md`, `KNOWN_ISSUES.md`, `Evidence/README.md`
+- `Tracks/Track2_RevenueOS.md`, `Tracks/Track3_Website.md`
+- `Sprints/Sprint2.md`, `Sprints/Sprint3.md`
+- `Agents/DeploymentEngineer.md`, `RevenueSystemsEngineer.md`, `WebsiteEngineer.md`, `CRMEngineer.md`, `AutomationEngineer.md`, `QAEngineer.md`, `MasterPM.md`
 - **This file:** `VALIDATION_REPORT.md`
 
 ## Re-validation checklist (next run)

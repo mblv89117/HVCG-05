@@ -500,6 +500,48 @@ Can This Be Revisited?
 
 Only through an approved Project Atlas documentation change.
 
+--------------------------------------------------
+
+Decision ID
+
+DEC-0013
+
+Date
+
+2026-07-16
+
+Decision Owner
+
+HVCG Owner
+
+Category
+
+Revenue
+
+Status
+
+Implemented
+
+Context
+
+Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1–3 completion and RC-1 lock.
+
+Decision
+
+Execute Sprint 4 Phase 2 on `cursor/revenue-sprint4-activation` as an additive Dev/Staging sales engine (pricing, qualification, proposal Draft, pipeline Draft shells, executive revenue data), retaining Phase 1 activation and Sprint 3 conversion without redesign. Production remains frozen. Commit/push require separate owner approval.
+
+Reasoning
+
+Continue Revenue OS automation while protecting completed work and Track 1.
+
+Impact
+
+Atlas status moves Sprint 4 from READY TO START to COMPLETE (Dev/Staging). The owner-approved isolated Revenue commit is `7e4eb10`; Sprint 5 remains unassigned.
+
+Can This Be Revisited?
+
+Only through Change Request / owner assignment.
+
 ---
 
 # FUTURE DECISIONS
