@@ -149,7 +149,8 @@ var exec = new ExecutiveEngineeringDashboard({
 });
 var exVm = exec.buildViewModel();
 assert(exVm.overallProjectHealth.score >= 80, 'exec overall health');
-assert(exVm.pendingDecisions.length >= 1, 'pending decisions present');
+assert(Array.isArray(exVm.pendingDecisions), 'pending decisions array');
+assert(exVm.pendingDecisions.length === 0, 'no pending EOS release decision');
 assert(exVm.constraints.length >= 3, 'constraints listed');
 
 var indexHtml = fs.readFileSync(path.join(APP, 'index.html'), 'utf8');

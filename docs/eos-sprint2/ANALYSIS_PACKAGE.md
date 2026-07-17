@@ -8,7 +8,7 @@
 **Worktree:** `.worktrees/track9-eos-sprint2`
 **Base:** `cursor/track9-eos-sprint1` @ `6b36782`
 **Environment:** Development only
-**Commit/push/deploy:** STOPPED pending QA and owner review
+**Release outcome:** QA/owner approved; committed/pushed @ `e7bb1a3`; no deploy
 
 ---
 
@@ -130,14 +130,14 @@ Revenue / Track 1 / Deployment Production paths: **out of scope**.
 
 ## 9. Acceptance Criteria
 
-- [ ] Workflow cannot skip stages or enter gated stages without required approvals
-- [ ] KPI definitions loaded only from `config/kpi-definitions.json`
-- [ ] Dynamic dashboard values are HTML-escaped
-- [ ] Live snapshot collector exists and is read-only
-- [ ] Agent Bus 2.0 persists messages to EOS store
-- [ ] Additive v1 bridge exists; live send disabled by default
-- [ ] DEF-EOS-001–005 resolved or formally closed with evidence
-- [ ] Expanded tests pass (regression, negative, XSS, freeze, config)
-- [ ] Atlas Sprint 2 documentation synchronized
-- [ ] No Production / Track 1 / Revenue modifications
-- [ ] No commit/push until QA + owner review
+- [x] Workflow cannot skip stages or enter gated stages without required approvals
+- [x] KPI definitions loaded only from `config/kpi-definitions.json`
+- [x] Dynamic dashboard values are HTML-escaped
+- [x] Live snapshot collector exists and is read-only
+- [x] Agent Bus 2.0 persists messages to EOS store
+- [x] Additive v1 bridge exists; live send disabled by default
+- [x] DEF-EOS-001–005 resolved or formally closed with evidence
+- [x] Expanded tests pass (regression, negative, XSS, freeze, config)
+- [x] Atlas Sprint 2 documentation synchronized
+- [x] No Production / Track 1 / Revenue modifications
+- [x] No commit/push until QA + owner review (gate held)

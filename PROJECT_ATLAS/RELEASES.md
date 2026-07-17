@@ -1,6 +1,6 @@
 # RELEASES
 
-**As of:** 2026-07-16 22:46 UTC
+**As of:** 2026-07-17 01:21 UTC
 
 ## Freeze / candidate packages
 
@@ -8,6 +8,7 @@
 |------|----------|--------|
 | Release Candidate RC-1 (pre-Sprint 4 Atlas checkpoint) | [Releases/Release_Candidate_RC-1.md](Releases/Release_Candidate_RC-1.md) | **VERIFIED / COMMITTED** historical checkpoint |
 | Revenue Sprint 4 Phase 2 (Dev/Staging) | [Releases/Revenue_Sprint4_Phase2_DevStaging_Notes.md](Releases/Revenue_Sprint4_Phase2_DevStaging_Notes.md) | Implementation `7e4eb10`; branch tip `bf34c93`; no Production deploy |
+| Track 9 EOS Sprint 2 (Development) | [Releases/Track9_EOS_Sprint2_Dev.md](Releases/Track9_EOS_Sprint2_Dev.md) | **COMPLETE** @ `e7bb1a3`; QA/owner approved; no deploy |
 | Track 1 Live — Internal | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` | **INTERNALLY_PRODUCTION_READY** · Prod |
 | RC-1 Development Baseline | `releases/RC-1-Development-Baseline/` (also mirrored in deployment-engineer WT) | Development Baseline Complete |
 | Sprint 1 managed export pack | `.worktrees/master-pm-orchestrator/docs/business-launch/go-live/sprint1/packages/` | Pre/go-live packaging evidence |

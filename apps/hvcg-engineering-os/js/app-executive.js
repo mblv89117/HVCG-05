@@ -64,6 +64,12 @@
     root.appendChild(panel('QA Queue',
       '<p class="stat">' + escape(vm.qaQueue.queueDepth != null ? vm.qaQueue.queueDepth : '—') + '</p>' +
       '<p class="muted">' + escape(vm.qaQueue.latestVerdict || '') + '</p>'));
+    root.appendChild(panel('EOS Sprint 2 Release',
+      '<p class="stat">COMPLETE</p>' +
+      '<p class="muted">QA approved · owner approved · branch synchronized</p>'));
+    root.appendChild(panel('Atlas Synchronization',
+      '<p class="stat">' + escape(snapshot.atlasSyncStatus || 'unknown') + '</p>' +
+      '<p class="muted">Track 9 release records synchronized</p>'));
     root.appendChild(panel('Critical Technical Debt', listHtml(vm.criticalTechnicalDebt, function (d) {
       return '<li>' + escape(d.id) + ' — ' + escape(d.title) + '</li>';
     }), 'wide'));

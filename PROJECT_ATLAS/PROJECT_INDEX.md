@@ -1,6 +1,6 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-16 23:20 UTC
+**As of:** 2026-07-17 01:21 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`
 **Canonical SoR:** this Atlas. Future ChatGPT sessions begin with [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md).
 
@@ -39,6 +39,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Agent index | [AGENT_INDEX.md](AGENT_INDEX.md) |
 | Decisions | [DECISIONS.md](DECISIONS.md) |
 | Issues | [KNOWN_ISSUES.md](KNOWN_ISSUES.md) |
+| Technical debt | [TECHNICAL_DEBT.md](TECHNICAL_DEBT.md) |
 | Releases | [RELEASES.md](RELEASES.md) |
 | Reconciliation / validation reports | [Reports/README.md](Reports/README.md) |
 | Pre-Sprint 4 checkpoint | [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) |
@@ -56,7 +57,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [6](Tracks/Track6_AI.md) | AI governance | Worktree active |
 | [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | Parallel; Prod Draft-heavy |
 | [8](Tracks/Track8_Enterprise.md) | Scale / v2 | Horizon |
-| [9](Tracks/Track9_EngineeringOS.md) | Engineering Operating System | Sprint 1 **COMPLETE AND PUSHED**; Sprint 2 **IMPLEMENTATION COMPLETE (Dev)** — awaiting QA |
+| [9](Tracks/Track9_EngineeringOS.md) | Engineering Operating System | Sprints 1–2 **COMPLETE AND PUSHED (Dev)**; Sprint 2 @ `e7bb1a3` |
 
 ## What each Sprint accomplished
 
@@ -66,6 +67,8 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [2](Sprints/Sprint2.md) | Multi-step EVA — **COMPLETE** @ `0073bf4` |
 | [3](Sprints/Sprint3.md) | Conversion engine — **COMPLETE** @ `0073bf4` |
 | [4](Sprints/Sprint4.md) | **COMPLETE (Dev/Staging)** @ `7e4eb10` |
+| [EOS 1](Sprints/Sprint_EOS1.md) | **COMPLETE AND PUSHED (Dev)** @ `6b36782` |
+| [EOS 2](Sprints/Sprint_EOS2.md) | **COMPLETE AND PUSHED (Dev)** @ `e7bb1a3` |
 
 ## Revenue tip
 
@@ -95,4 +98,5 @@ Versioned folders under `releases/` (and worktree `releases/`) with `version.jso
 
 [ROADMAP.md](ROADMAP.md) · [NEXT_ACTIONS.md](NEXT_ACTIONS.md) · [Sprints/BACKLOG.md](Sprints/BACKLOG.md)
 
-Priority theme: **protect Track 1 freeze** → **Sprint 4 assignment** → gated website preview / soft UAT / pilot.
+Priority theme: **protect Track 1 freeze** → preserve completed Revenue and
+EOS releases → await owner assignment. EOS Sprint 3 is not started.

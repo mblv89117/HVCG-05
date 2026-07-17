@@ -1,6 +1,6 @@
 # Tracks index
 
-**As of:** 2026-07-16 23:20 UTC
+**As of:** 2026-07-17 01:21 UTC
 **Status SoR:** [../CURRENT_STATE.md](../CURRENT_STATE.md)
 
 | Track | File | Status |
@@ -13,4 +13,4 @@
 | 6 AI | [Track6_AI.md](Track6_AI.md) | Worktree active |
 | 7 Internal Operations | [Track7_InternalOperations.md](Track7_InternalOperations.md) | Parallel |
 | 8 Enterprise | [Track8_Enterprise.md](Track8_Enterprise.md) | Horizon |
-| 9 Engineering OS | [Track9_EngineeringOS.md](Track9_EngineeringOS.md) | Sprint 1 COMPLETE (Dev) — commit/push pending |
+| 9 Engineering OS | [Track9_EngineeringOS.md](Track9_EngineeringOS.md) | Sprints 1–2 COMPLETE AND PUSHED (Dev) |

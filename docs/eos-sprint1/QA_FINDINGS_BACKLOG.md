@@ -7,8 +7,8 @@
 
 | ID | Sprint 1 | Sprint 2 |
 |----|----------|----------|
-| DEF-EOS-001 | Accepted debt | **RESOLVED** (pending QA confirm) |
-| DEF-EOS-002 | Accepted debt | **RESOLVED** (pending QA confirm) |
-| DEF-EOS-003 | Accepted debt | **RESOLVED** (pending QA confirm) |
-| DEF-EOS-004 | Accepted debt | **RESOLVED** (pending QA confirm) |
-| DEF-EOS-005 | Accepted debt | **RESOLVED** (pending QA confirm) |
+| DEF-EOS-001 | Accepted debt | **CLOSED — QA CONFIRMED** |
+| DEF-EOS-002 | Accepted debt | **CLOSED — QA CONFIRMED** |
+| DEF-EOS-003 | Accepted debt | **CLOSED — QA CONFIRMED** |
+| DEF-EOS-004 | Accepted debt | **CLOSED — QA CONFIRMED** |
+| DEF-EOS-005 | Accepted debt | **CLOSED — QA CONFIRMED** |

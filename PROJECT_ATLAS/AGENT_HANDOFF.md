@@ -1,7 +1,7 @@
 # AGENT_HANDOFF
 
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer
-**As of:** 2026-07-16 23:45 UTC
+**As of:** 2026-07-17 01:21 UTC
 **Goal:** Resume with **zero** prior chat history.
 
 ## 60-second orientation
@@ -11,7 +11,7 @@
 3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.
 4. **Revenue OS Sprints 1–4 are COMPLETE in Dev/Staging.** Sprint 4 implementation: `7e4eb10`; tip: `bf34c93` on `origin/cursor/revenue-sprint4-activation`. Do **not** modify.
 5. **Track 9 EOS Sprint 1 is COMPLETE AND PUSHED** on `origin/cursor/track9-eos-sprint1` @ `6b36782`.
-6. **Track 9 EOS Sprint 2 is IMPLEMENTATION COMPLETE (Dev)** on `cursor/track9-eos-sprint2` — **awaiting QA; no commit/push**.
+6. **Track 9 EOS Sprint 2 is COMPLETE AND PUSHED (Dev)** on `origin/cursor/track9-eos-sprint2` @ `e7bb1a3`.
 7. Revenue Sprint 5 and EOS Sprint 3 are **NOT STARTED**.
 8. Prefer **repository evidence** over chat. Never rely on previous chat history.
 9. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).

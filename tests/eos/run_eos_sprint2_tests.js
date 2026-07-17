@@ -86,11 +86,13 @@ var appCc = fs.readFileSync(path.join(APP, 'js/app-command-center.js'), 'utf8');
 var appEx = fs.readFileSync(path.join(APP, 'js/app-executive.js'), 'utf8');
 assert(appCc.indexOf('kpi-definitions.json') >= 0, 'command center loads KPI config');
 assert(appEx.indexOf('kpi-definitions.json') >= 0, 'executive loads KPI config');
+assert(appEx.indexOf('EOS Sprint 2 Release') >= 0, 'executive shows Sprint 2 release');
 assert(appCc.indexOf("id: 'sprint_velocity'") < 0, 'command center has no embedded KPI array');
 assert(appEx.indexOf("id: 'sprint_velocity'") < 0, 'executive has no embedded KPI array');
 var analytics = new EngineeringAnalytics(kpis);
 var metrics = analytics.compute(loadJson('data/sample-snapshot.json'));
 assert(metrics.kpis[0].id === kpis.kpis[0].id, 'analytics uses SoT ids');
+assert(metrics.values.open_technical_debt === 0, 'EOS dashboard debt is closed');
 
 // --- DEF-EOS-003 XSS escape ---
 assert(EOS.escapeHtml('<script>alert(1)</script>') === '&lt;script&gt;alert(1)&lt;/script&gt;', 'escapeHtml encodes script tags');

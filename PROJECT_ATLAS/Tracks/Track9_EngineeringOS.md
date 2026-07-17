@@ -1,6 +1,6 @@
 # Track 9 — Engineering Operating System (EOS)
 
-**As of:** 2026-07-16 23:45 UTC
+**As of:** 2026-07-17 01:21 UTC
 **Status SoR:** [../CURRENT_STATE.md](../CURRENT_STATE.md)
 **Active branch:** `cursor/track9-eos-sprint2`
 **Active worktree:** `.worktrees/track9-eos-sprint2`
@@ -16,7 +16,7 @@ Automate and manage software engineering across the HVCG Operating System.
 | Sprint | Status |
 |--------|--------|
 | EOS Sprint 1 | **COMPLETE AND PUSHED (Dev)** @ `6b36782` |
-| EOS Sprint 2 | **IMPLEMENTATION COMPLETE (Dev)** — awaiting QA |
+| EOS Sprint 2 | **COMPLETE AND PUSHED (Dev)** @ `e7bb1a3` |
 
 ## Sprint 1 modules
 
@@ -51,7 +51,8 @@ Automate and manage software engineering across the HVCG Operating System.
 
 ## Constraints
 
-No Production · No Track 1 · No Revenue Track 2 mutation · No merge/deploy · No live communications · Development only · No commit/push until QA + owner
+No Production · No Track 1 · No Revenue Track 2 mutation · No
+merge/deploy · No live communications · Development release only
 
 ## Docs
 

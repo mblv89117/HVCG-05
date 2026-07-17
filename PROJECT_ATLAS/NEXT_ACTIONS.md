@@ -1,19 +1,19 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 23:45 UTC
+**As of:** 2026-07-17 01:21 UTC
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
 ## Now
 
 1. Keep Track 1 **frozen**.
-2. **QA review EOS Sprint 2** on `cursor/track9-eos-sprint2` (no commit/push yet).
-3. Preserve `origin/cursor/track9-eos-sprint1` @ `6b36782` and Revenue Track 2 tip.
+2. Preserve `origin/cursor/track9-eos-sprint2` @ `e7bb1a3`; no merge/deploy.
+3. Preserve Revenue Track 2 and EOS Sprint 1 tips.
 4. Soft UAT of sales engine (human) remains optional.
-5. Do **not** begin EOS Sprint 3 or Revenue Sprint 5 without assignment.
+5. Await owner instructions; do **not** begin EOS Sprint 3 or Revenue Sprint 5.
 
 ## Owner decisions
 
-1. After QA: approve or revise EOS Sprint 2 for Dev commit/push.
+1. No Track 9 decision pending; EOS Sprint 3 requires a new assignment.
 2. Price cards: SKU-FCFO / SKU-EXIT / SKU-ACQ / SKU-MODEL.
 3. Phone routing for `725.577.6511` vs `702.906.6444`.
 
@@ -21,7 +21,6 @@
 
 | Action | Track | Gate |
 |--------|-------|------|
-| QA + commit/push EOS Sprint 2 | Track 9 | QA then owner |
 | EOS Sprint 2 merge/tag/deploy | Track 9 | New owner approval |
 | Soft UAT sales engine | Track 2 | Human QA |
 | EOS Sprint 3 | Track 9 | New assignment |

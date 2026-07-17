@@ -31,7 +31,11 @@ Only ask a question when the uploaded continuation documents contain a material 
 
 Preserve module ownership. Protect application code, client data, Production, Track 1, completed releases, and committed work outside the active scope.
 
-Current release instruction: EOS Sprint 1 was approved with minor changes under DEC-0014. Feature-branch commit/push is authorized only for `cursor/track9-eos-sprint1`; merge, tag, deployment, Production, Revenue, and Track 1 changes remain prohibited. After release verification, await a new assignment before starting EOS Sprint 2.
+Current release instruction: EOS Sprint 2 is COMPLETE in Development
+under DEC-0016. Release implementation commit `e7bb1a3` is pushed on
+`origin/cursor/track9-eos-sprint2`. Do not merge, tag, deploy, modify
+Production, Track 1, or Revenue Track 2, enable live communications, or
+start EOS Sprint 3. Enter standby and await owner instructions.
 
 When the user types:
 

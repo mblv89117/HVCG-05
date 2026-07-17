@@ -1,8 +1,8 @@
 # Sprint EOS-2 — Engineering Operating System Sprint 2
 
 **Track:** 9 — Engineering Operating System
-**Status:** IMPLEMENTATION COMPLETE (Development) — awaiting QA review
-**As of:** 2026-07-16 23:45 UTC
+**Status:** COMPLETE AND PUSHED (Development) — QA/owner approved
+**As of:** 2026-07-17 01:21 UTC
 **Branch:** `cursor/track9-eos-sprint2`
 **Worktree:** `.worktrees/track9-eos-sprint2`
 **Base tip:** `6b36782` (EOS Sprint 1)
@@ -35,10 +35,18 @@ See `docs/eos-sprint2/ACCEPTANCE_CRITERIA.md` and `docs/eos-sprint2/DEFECT_DISPO
 
 - Sprint 1 regression: 26/26 PASS
 - Sprint 2 suite: 37/37 PASS
+- QA: APPROVED
+- DEF-EOS-001–005: CLOSED — QA CONFIRMED
+
+## Release
+
+- Implementation commit: `e7bb1a3896ac5fbebf0eab8335b6d6e9f1c4fe7f`
+- Push: SUCCESS / remote synchronized
+- Archive: [../Archive/Track9EosSprint2/RELEASE_PACKAGE.md](../Archive/Track9EosSprint2/RELEASE_PACKAGE.md)
 
 ## Deployment
 
-**NOT AUTHORIZED.** Development only. No commit/push until QA + owner review.
+**NOT AUTHORIZED.** Development release only; no deployment.
 
 ## Non-goals
 

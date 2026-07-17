@@ -524,7 +524,7 @@ Implemented
 
 Context
 
-Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1‚Äì3 completion and RC-1 lock.
+Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1ù3 completion and RC-1 lock.
 
 Decision
 
@@ -558,7 +558,7 @@ HVCG Owner
 
 Category
 
-Track 9 ‚Äî Engineering Operating System
+Track 9 ó Engineering Operating System
 
 Status
 
@@ -600,7 +600,7 @@ HVCG Owner
 
 Category
 
-Track 9 ó Engineering Operating System
+Track 9 ù Engineering Operating System
 
 Status
 
@@ -621,6 +621,55 @@ Accepted Sprint 1 technical debt should be retired before broader EOS automation
 Impact
 
 Master PM executes Sprint 2 in Development on `cursor/track9-eos-sprint2` and stops for QA.
+
+Can This Be Revisited?
+
+Only through a new owner decision or approved Change Request.
+
+---
+
+Decision ID
+
+DEC-0016
+
+Date
+
+2026-07-17
+
+Decision Owner
+
+HVCG Owner
+
+Category
+
+Track 9 ù Engineering Operating System
+
+Status
+
+Implemented
+
+Context
+
+EOS Sprint 2 completed Development implementation and QA validation.
+DEF-EOS-001 through DEF-EOS-005 were verified resolved.
+
+Decision
+
+Approve EOS Sprint 2 release on `cursor/track9-eos-sprint2`. Authorize
+commit and push of that branch only. Do not merge, deploy, modify
+Production, Track 1, or Revenue Track 2, enable live communications, or
+begin EOS Sprint 3.
+
+Reasoning
+
+All approved scope and test requirements passed, with no open accepted
+EOS Sprint 2 technical debt.
+
+Impact
+
+EOS Sprint 2 is COMPLETE in Development. Release implementation commit:
+`e7bb1a3896ac5fbebf0eab8335b6d6e9f1c4fe7f`. The branch is pushed and
+synchronized; merge and deployment remain separately gated.
 
 Can This Be Revisited?
 
