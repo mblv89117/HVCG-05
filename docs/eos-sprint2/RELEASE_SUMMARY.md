@@ -11,7 +11,8 @@
 ## Outcomes
 
 - DEF-EOS-001–005 closed
-- 63 total automated assertions passed (26 regression + 37 Sprint 2)
+- QA baseline: 63 assertions passed (26 regression + 37 Sprint 2)
+- Final dashboard/Atlas closure: 66 assertions passed (27 regression + 39 Sprint 2)
 - Executive dashboard updated to GREEN / Sprint 2 complete
 - Atlas release package archived
 - No accepted open EOS Sprint 2 debt
