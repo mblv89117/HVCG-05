@@ -1,5 +1,5 @@
 {
-  "version": "eos-1.0.0",
+  "version": "eos-2.0.0",
   "stages": [
     { "id": "owner_request", "label": "Owner Request", "order": 1 },
     { "id": "impact_analysis", "label": "Impact Analysis", "order": 2 },
@@ -17,6 +17,13 @@
     { "id": "close_sprint", "label": "Close Sprint", "order": 14 }
   ],
   "terminalStages": ["close_sprint"],
+  "transitionGates": {
+    "qa": ["testingComplete"],
+    "owner_approval": ["qaApproved"],
+    "commit": ["ownerApproved"],
+    "push": ["ownerAuthorizedPush"],
+    "deployment": ["ownerApproved", "qaApproved", "deploymentApproved"]
+  },
   "blockedTransitions": {
     "deployment": ["Requires owner + QA + deployment approvals"],
     "push": ["Requires owner authorization in Dev policy"]

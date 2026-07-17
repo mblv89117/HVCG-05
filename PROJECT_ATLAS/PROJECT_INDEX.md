@@ -56,7 +56,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [6](Tracks/Track6_AI.md) | AI governance | Worktree active |
 | [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | Parallel; Prod Draft-heavy |
 | [8](Tracks/Track8_Enterprise.md) | Scale / v2 | Horizon |
-| [9](Tracks/Track9_EngineeringOS.md) | Engineering Operating System | Sprint 1 **COMPLETE (Dev)** — commit/push pending owner review |
+| [9](Tracks/Track9_EngineeringOS.md) | Engineering Operating System | Sprint 1 **COMPLETE AND PUSHED**; Sprint 2 **IMPLEMENTATION COMPLETE (Dev)** — awaiting QA |
 
 ## What each Sprint accomplished
 

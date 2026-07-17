@@ -1,7 +1,7 @@
 # AGENT_HANDOFF
 
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer
-**As of:** 2026-07-16 23:20 UTC
+**As of:** 2026-07-16 23:45 UTC
 **Goal:** Resume with **zero** prior chat history.
 
 ## 60-second orientation
@@ -10,10 +10,11 @@
 2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only.
 3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.
 4. **Revenue OS Sprints 1–4 are COMPLETE in Dev/Staging.** Sprint 4 implementation: `7e4eb10`; tip: `bf34c93` on `origin/cursor/revenue-sprint4-activation`. Do **not** modify.
-5. **Track 9 EOS Sprint 1 is COMPLETE in Development** on `cursor/track9-eos-sprint1` / `.worktrees/track9-eos-sprint1` — **commit/push pending owner review**.
-6. Revenue Sprint 5 and EOS Sprint 2 are **PLANNING ONLY — NOT STARTED**.
-7. Prefer **repository evidence** over chat. Never rely on previous chat history.
-8. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).
+5. **Track 9 EOS Sprint 1 is COMPLETE AND PUSHED** on `origin/cursor/track9-eos-sprint1` @ `6b36782`.
+6. **Track 9 EOS Sprint 2 is IMPLEMENTATION COMPLETE (Dev)** on `cursor/track9-eos-sprint2` — **awaiting QA; no commit/push**.
+7. Revenue Sprint 5 and EOS Sprint 3 are **NOT STARTED**.
+8. Prefer **repository evidence** over chat. Never rely on previous chat history.
+9. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).
 
 ## Canonical SoR
 
@@ -32,7 +33,7 @@ Every new agent begins with [PROJECT_INDEX.md](PROJECT_INDEX.md). Read Atlas bef
 9. [KNOWN_ISSUES.md](KNOWN_ISSUES.md) + [NEXT_ACTIONS.md](NEXT_ACTIONS.md)
 10. [OWNERSHIP.md](OWNERSHIP.md) + [DECISIONS.md](DECISIONS.md)
 11. [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md)
-12. [Handoffs/Track9EosSprint1.md](Handoffs/Track9EosSprint1.md) if resuming EOS
+12. [Handoffs/Track9EosSprint2.md](Handoffs/Track9EosSprint2.md) if resuming EOS Sprint 2
 
 ## Authoritative evidence (do not invent)
 

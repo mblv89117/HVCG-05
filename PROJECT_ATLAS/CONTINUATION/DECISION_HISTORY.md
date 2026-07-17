@@ -586,6 +586,48 @@ Only through a new owner decision or approved Change Request.
 
 ---
 
+Decision ID
+
+DEC-0015
+
+Date
+
+2026-07-16
+
+Decision Owner
+
+HVCG Owner
+
+Category
+
+Track 9 — Engineering Operating System
+
+Status
+
+Approved
+
+Context
+
+EOS Sprint 1 was complete and pushed. Owner approved starting EOS Sprint 2 to resolve DEF-EOS-001 through DEF-EOS-005 in Development only.
+
+Decision
+
+Authorize planning and implementation of EOS Sprint 2 on an isolated branch/worktree. Scope: workflow gates, KPI SoT, UI escaping, read-only live snapshot, Agent Bus persistence, additive offline agent-comms bridge, expanded tests, and Atlas updates. Do not commit or push until QA and owner review. Do not merge, deploy, modify Production, Track 1, or Revenue Track 2. Do not enable live communications. Do not begin EOS Sprint 3.
+
+Reasoning
+
+Accepted Sprint 1 technical debt should be retired before broader EOS automation.
+
+Impact
+
+Master PM executes Sprint 2 in Development on `cursor/track9-eos-sprint2` and stops for QA.
+
+Can This Be Revisited?
+
+Only through a new owner decision or approved Change Request.
+
+---
+
 # FUTURE DECISIONS
 
 Every future architectural decision should be appended below.

@@ -1,5 +1,5 @@
 /**
- * Engineering Workflow Engine — explicit lifecycle stages.
+ * Engineering Workflow Engine — explicit lifecycle stages + transition gates.
  */
 (function (root) {
   'use strict';
@@ -17,6 +17,7 @@
     this.stages = (options.stages && options.stages.map(function (s) {
       return typeof s === 'string' ? s : s.id;
     })) || DEFAULT_STAGES.slice();
+    this.transitionGates = options.transitionGates || {};
     this.items = {};
   }
 
@@ -31,6 +32,13 @@
       history: [{ stage: 'owner_request', at: EOS.nowIso(), note: 'Created' }],
       blocked: false,
       blockReason: null,
+      approvals: Object.assign({
+        testingComplete: false,
+        qaApproved: false,
+        ownerApproved: false,
+        ownerAuthorizedPush: false,
+        deploymentApproved: false
+      }, input.approvals || {}),
       metadata: input.metadata || {}
     };
     this.items[id] = item;
@@ -45,6 +53,26 @@
     return this.stages.indexOf(stage);
   };
 
+  WorkflowEngine.prototype.setApproval = function (id, flag, value) {
+    var item = this.items[id];
+    if (!item) throw new Error('Unknown workflow item: ' + id);
+    item.approvals[flag] = !!value;
+    return EOS.deepClone(item);
+  };
+
+  WorkflowEngine.prototype.checkGates = function (item, targetStage) {
+    var required = this.transitionGates[targetStage] || [];
+    var missing = [];
+    required.forEach(function (flag) {
+      if (!item.approvals || !item.approvals[flag]) missing.push(flag);
+    });
+    return {
+      ok: missing.length === 0,
+      missing: missing,
+      required: required.slice()
+    };
+  };
+
   WorkflowEngine.prototype.advance = function (id, note) {
     var item = this.items[id];
     if (!item) throw new Error('Unknown workflow item: ' + id);
@@ -54,6 +82,10 @@
       throw new Error('Cannot advance from stage: ' + item.stage);
     }
     var next = this.stages[idx + 1];
+    var gate = this.checkGates(item, next);
+    if (!gate.ok) {
+      throw new Error('Gate blocked for ' + next + ': missing ' + gate.missing.join(', '));
+    }
     item.stage = next;
     item.history.push({ stage: next, at: EOS.nowIso(), note: note || 'Advanced' });
     return EOS.deepClone(item);
@@ -62,7 +94,18 @@
   WorkflowEngine.prototype.setStage = function (id, stage, note) {
     var item = this.items[id];
     if (!item) throw new Error('Unknown workflow item: ' + id);
-    if (this.stageIndex(stage) < 0) throw new Error('Unknown stage: ' + stage);
+    if (item.blocked) throw new Error('Item blocked: ' + (item.blockReason || id));
+    var targetIdx = this.stageIndex(stage);
+    if (targetIdx < 0) throw new Error('Unknown stage: ' + stage);
+    var currentIdx = this.stageIndex(item.stage);
+    if (targetIdx === currentIdx) return EOS.deepClone(item);
+    if (targetIdx !== currentIdx + 1) {
+      throw new Error('Illegal stage jump from ' + item.stage + ' to ' + stage + '; use advance()');
+    }
+    var gate = this.checkGates(item, stage);
+    if (!gate.ok) {
+      throw new Error('Gate blocked for ' + stage + ': missing ' + gate.missing.join(', '));
+    }
     item.stage = stage;
     item.history.push({ stage: stage, at: EOS.nowIso(), note: note || 'Set stage' });
     return EOS.deepClone(item);

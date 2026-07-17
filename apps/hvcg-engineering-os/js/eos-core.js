@@ -26,13 +26,24 @@
     return Math.round((part / whole) * 1000) / 10;
   }
 
+  function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   var EOS = {
     deepClone: deepClone,
     nowIso: nowIso,
     uid: uid,
     avg: avg,
     pct: pct,
-    VERSION: 'eos-1.0.0'
+    escapeHtml: escapeHtml,
+    VERSION: 'eos-2.0.0'
   };
 
   root.EOS = EOS;

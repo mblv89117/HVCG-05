@@ -1,30 +1,24 @@
 # Track 9 — Engineering Operating System (EOS)
 
-**As of:** 2026-07-16 23:20 UTC
+**As of:** 2026-07-16 23:45 UTC
 **Status SoR:** [../CURRENT_STATE.md](../CURRENT_STATE.md)
-**Branch (Sprint 1):** `cursor/track9-eos-sprint1`
-**Worktree:** `.worktrees/track9-eos-sprint1`
-**Base:** `cursor/project-atlas-rc1` @ `bd07e61`
+**Active branch:** `cursor/track9-eos-sprint2`
+**Active worktree:** `.worktrees/track9-eos-sprint2`
+**Sprint 1 tip:** `origin/cursor/track9-eos-sprint1` @ `6b36782`
 
 ## Purpose
 
 Automate and manage software engineering across the HVCG Operating System.
-**Not** part of the Revenue Operating System.
+**Not** part of the Revenue Operating System (Track 2).
 
-## Business objectives
+## Sprint status
 
-- Reduce owner coordination
-- Automate engineering management
-- Increase delivery speed and engineering visibility
-- Reduce project risk
-- Protect Project Atlas
-- Improve scalability and institutional knowledge
+| Sprint | Status |
+|--------|--------|
+| EOS Sprint 1 | **COMPLETE AND PUSHED (Dev)** @ `6b36782` |
+| EOS Sprint 2 | **IMPLEMENTATION COMPLETE (Dev)** — awaiting QA |
 
-## Sprint 1 status
-
-**COMPLETE AND PUSHED (Development only) — APPROVED WITH MINOR CHANGES**
-
-## Modules (Sprint 1)
+## Sprint 1 modules
 
 | Module | Location |
 |--------|----------|
@@ -36,32 +30,32 @@ Automate and manage software engineering across the HVCG Operating System.
 | Engineering Analytics | `apps/hvcg-engineering-os/js/engineering-analytics.js` |
 | Executive Engineering Dashboard | `apps/hvcg-engineering-os/executive.html` |
 
+## Sprint 2 hardening
+
+| Module | Location |
+|--------|----------|
+| Workflow transition gates | `config/workflow-stages.json` + `js/workflow-engine.js` |
+| KPI SoT | `config/kpi-definitions.json` |
+| UI escaping | `js/eos-core.js` + app bootloaders |
+| Live snapshot (read-only) | `js/live-snapshot-collector.js` |
+| Bus persistence | `js/agent-bus-v2.js` + `store/` |
+| Offline agent-comms bridge | `js/agent-bus-bridge.js` |
+
 ## Agent ownership
 
 | Role | Agent |
 |------|-------|
 | Track owner / coordinator | Master Project Management Agent |
 | QA | QA Engineer (on request) |
-| Deployment | Deployment Engineer (gated — no deploy this sprint) |
-
-## Dependencies (reuse only)
-
-Project Atlas · Agent framework / registry · Worktree model · Branching strategy · QA process · Deployment process · Existing documentation · Agent-comms v1 (Bus 2.0 additive)
+| Deployment | Deployment Engineer (gated — no deploy) |
 
 ## Constraints
 
-No Production · No Track 1 · No Revenue Sprint 4 mutation · No merge/deploy · No email/Teams · Development only
+No Production · No Track 1 · No Revenue Track 2 mutation · No merge/deploy · No live communications · Development only · No commit/push until QA + owner
 
-## Roadmap / future sprints
+## Docs
 
-See [../Sprints/Sprint_EOS1.md](../Sprints/Sprint_EOS1.md) and [../Sprints/Sprint_EOS2_Planning.md](../Sprints/Sprint_EOS2_Planning.md).
-
-## Acceptance / QA / Deployment
-
-- Acceptance: [../Sprints/Sprint_EOS1.md](../Sprints/Sprint_EOS1.md)
-- QA: [../QA/Track9EosSprint1/QA_NOTES.md](../QA/Track9EosSprint1/QA_NOTES.md)
-- Deployment: **NOT AUTHORIZED** this sprint
-
-## Docs package
-
-`docs/eos-sprint1/` — impact, architecture, plan, backlog, risks, testing, release notes, handoff.
+- Sprint 1: `docs/eos-sprint1/` · [Sprint_EOS1.md](../Sprints/Sprint_EOS1.md)
+- Sprint 2: `docs/eos-sprint2/` · [Sprint_EOS2.md](../Sprints/Sprint_EOS2.md)
+- QA Sprint 2: [../QA/Track9EosSprint2/QA_NOTES.md](../QA/Track9EosSprint2/QA_NOTES.md)
+- Handoff: [../Handoffs/Track9EosSprint2.md](../Handoffs/Track9EosSprint2.md)

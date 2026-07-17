@@ -1,6 +1,6 @@
 # TRACK_INDEX
 
-**As of:** 2026-07-16 23:20 UTC
+**As of:** 2026-07-16 23:45 UTC
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 | Track | Document | Checkpoint status |
@@ -13,6 +13,6 @@
 | Track 6 — AI | [Tracks/Track6_AI.md](Tracks/Track6_AI.md) | Parallel worktree |
 | Track 7 — Internal Operations | [Tracks/Track7_InternalOperations.md](Tracks/Track7_InternalOperations.md) | Parallel workstreams |
 | Track 8 — Enterprise | [Tracks/Track8_Enterprise.md](Tracks/Track8_Enterprise.md) | Future horizon |
-| Track 9 — Engineering OS | [Tracks/Track9_EngineeringOS.md](Tracks/Track9_EngineeringOS.md) | Sprint 1 **COMPLETE (Dev)** — commit/push pending owner review |
+| Track 9 — Engineering OS | [Tracks/Track9_EngineeringOS.md](Tracks/Track9_EngineeringOS.md) | Sprint 1 **COMPLETE AND PUSHED**; Sprint 2 **IMPLEMENTATION COMPLETE (Dev)** — awaiting QA |
 
 Checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md).

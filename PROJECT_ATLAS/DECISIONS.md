@@ -17,6 +17,7 @@
 | Track 1 Live — Internal | Prod CRM slice frozen LIVE—INTERNAL | Track-1-Live-Internal |
 | D-004 | Agent Comms tip `2c064b3` is SoR; no rebuild/fork without owner | `.agent-comms` bus messages (canonical-bus-lock) |
 | DEC-0014 | Track 9 EOS Sprint 1 approved with minor changes; DEF-EOS-001 through DEF-EOS-005 accepted for EOS Sprint 2; feature-branch commit/push authorized only | `CONTINUATION/DECISION_HISTORY.md` |
+| DEC-0015 | Track 9 EOS Sprint 2 start approved (Dev only); commit/push gated on QA + owner; no merge/deploy/live comms | `CONTINUATION/DECISION_HISTORY.md` |
 
 ## Open gates
 

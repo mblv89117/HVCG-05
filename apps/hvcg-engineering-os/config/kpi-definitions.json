@@ -1,7 +1,8 @@
 {
-  "version": "eos-1.0.0",
+  "version": "eos-2.0.0",
+  "sourceOfTruth": true,
   "kpis": [
-    { "id": "sprint_velocity", "label": "Sprint Velocity", "unit": "points", "direction": "higher_better" },
+    { "id": "sprint_velocity", "label": "Sprint Velocity", "unit": "percent", "direction": "higher_better" },
     { "id": "avg_cycle_time", "label": "Average Cycle Time", "unit": "days", "direction": "lower_better" },
     { "id": "lead_time", "label": "Lead Time", "unit": "days", "direction": "lower_better" },
     { "id": "qa_pass_rate", "label": "QA Pass Rate", "unit": "percent", "direction": "higher_better" },

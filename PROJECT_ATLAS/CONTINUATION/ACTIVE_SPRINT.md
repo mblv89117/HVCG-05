@@ -1,68 +1,46 @@
 # ACTIVE SPRINT
 
-**Current sprint name:** Track 9 — Engineering Operating System Sprint 1
+**Current sprint name:** Track 9 — Engineering Operating System Sprint 2
 **Sprint type:** Engineering Operating System — Development only
-**Status:** COMPLETE AND PUSHED (Development) — APPROVED WITH MINOR CHANGES
-**Date updated:** 2026-07-16 23:23 UTC
+**Status:** IMPLEMENTATION COMPLETE — awaiting QA review (no commit/push)
+**Date updated:** 2026-07-16 23:45 UTC
 **Owner:** HVCG Owner
 **Coordinator:** HVCG Master Project Management Agent
 **Executing agent:** Master Project Management Agent
-**Branch:** `cursor/track9-eos-sprint1`
-**Worktree:** `.worktrees/track9-eos-sprint1`
-**Base:** `cursor/project-atlas-rc1` @ `bd07e61`
+**Branch:** `cursor/track9-eos-sprint2`
+**Worktree:** `.worktrees/track9-eos-sprint2`
+**Base:** `cursor/track9-eos-sprint1` @ `6b36782`
 
 ## Objectives
 
-1. Create first version of Engineering Operating System (Track 9).
-2. Deliver seven modules: Command Center, Master PM Automation, Workflow Engine, Agent Bus 2.0, Change Requests, Analytics, Executive Dashboard.
-3. Reuse Atlas, agent framework, worktrees, QA, deployment conventions — no redesign of completed systems.
-4. Do not modify Revenue Sprint 4, Track 1, or Production.
-5. Synchronize Project Atlas; stop for owner review; do not commit/push until authorized.
-
-## Agents currently working
-
-| Agent | Responsibility | Status |
-|---|---|---|
-| Master Project Management Agent | Track 9 Sprint 1 delivery + Atlas sync | COMPLETE (Dev) |
-| HVCG Owner | Review / authorize commit | APPROVED WITH MINOR CHANGES |
-
-## Modules currently in progress
-
-None open. All seven Sprint 1 modules implemented in the EOS worktree.
+1. Enforce workflow transition gates (DEF-EOS-001)
+2. Consolidate KPI configuration SoT (DEF-EOS-002)
+3. Escape dynamic UI output (DEF-EOS-003)
+4. Add read-only live snapshot collection (DEF-EOS-004)
+5. Add Agent Bus 2.0 persistence + offline additive bridge (DEF-EOS-005)
+6. Expand tests; update Atlas; stop for QA
 
 ## Testing status
 
 | Validation | Status |
 |---|---|
-| EOS Sprint 1 automated tests | 26/26 PASS |
-| Production untouched | PASS |
-| Track 1 untouched | PASS |
-| Revenue Sprint 4 untouched | PASS |
+| EOS Sprint 1 regression | 26/26 PASS |
+| EOS Sprint 2 suite | 37/37 PASS |
+| Production / Track 1 / Revenue untouched | PASS |
 
 ## Exit criteria
 
-- Seven modules exist and tested — **MET**
-- Documentation + Atlas sync prepared — **MET**
-- Handoff complete — **MET**
-- Owner Dev commit review — **APPROVED**
-- Commit/push — **COMPLETE** on `cursor/track9-eos-sprint1`
+- Approved scope implemented — **MET**
+- DEF-EOS-001–005 disposition recorded — **MET** (pending QA confirm)
+- Atlas Sprint 2 docs — **MET**
+- QA review — **PENDING**
+- Commit/push — **NOT AUTHORIZED**
 - Merge/deploy — **NOT AUTHORIZED**
 
 ## Immediate next task
 
-Await the next assignment. EOS Sprint 2 is recommended for accepted QA
-debt but is not authorized. Do not merge, tag, deploy, or start Revenue
-Sprint 5/EOS Sprint 2.
-
-## Related closed sprint (context)
-
-Revenue Sprint 4 remains **COMPLETE** on `origin/cursor/revenue-sprint4-activation` @ `7e4eb10` (tip `bf34c93`). Do not modify.
+Await QA review of EOS Sprint 2. Do not commit, push, merge, deploy, or start EOS Sprint 3.
 
 ## Owner approval status
 
-EOS Sprint 1 feature-branch commit/push **APPROVED WITH MINOR CHANGES**. DEF-EOS-001 through DEF-EOS-005 are accepted EOS Sprint 2 debt. Merge, tag, and deploy remain **NOT AUTHORIZED**.
-
-## Estimated completion
-
-Implementation, owner review, feature-branch push, and synchronization
-verification complete.
+Sprint 2 **start** approved. Sprint 2 **commit/push** pending QA + owner review.

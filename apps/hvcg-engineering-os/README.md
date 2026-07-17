@@ -1,17 +1,21 @@
 # HVCG Engineering Operating System (EOS)
 
-Track 9 · Sprint 1 · Development staging
+Track 9 · Sprint 2 · Development staging
 
 ## Quick start
 
 ```bash
 node tests/eos/run_eos_sprint1_tests.js
-npx --yes serve apps/hvcg-engineering-os -p 5189
+node tests/eos/run_eos_sprint2_tests.js
+node apps/hvcg-engineering-os/scripts/collect-live-snapshot.js
+npx --yes serve apps/hvcg-engineering-os -p 5190
 ```
 
-- Command Center: http://localhost:5189/
-- Executive Dashboard: http://localhost:5189/executive.html
+- Command Center: http://localhost:5190/
+- Executive Dashboard: http://localhost:5190/executive.html
 
-## Modules
+## Sprint 2 hardening
 
-See `docs/eos-sprint1/` and `PROJECT_ATLAS/Tracks/Track9_EngineeringOS.md`.
+Gates · KPI SoT · XSS escape · live snapshot · bus persist · offline agent-comms bridge
+
+See `docs/eos-sprint2/`.

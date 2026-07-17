@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * EOS Sprint 1 — automated tests (Development only).
+ * EOS Sprint 1 — automated regression (gate-aware after Sprint 2).
  */
 'use strict';
 
@@ -10,7 +10,6 @@ var path = require('path');
 var ROOT = path.resolve(__dirname, '../..');
 var APP = path.join(ROOT, 'apps/hvcg-engineering-os');
 
-var EOS = require(path.join(APP, 'js/eos-core.js'));
 var WorkflowEngine = require(path.join(APP, 'js/workflow-engine.js'));
 var ChangeRequestSystem = require(path.join(APP, 'js/change-request-system.js'));
 var AgentBusV2 = require(path.join(APP, 'js/agent-bus-v2.js'));
@@ -36,7 +35,30 @@ function loadJson(rel) {
   return JSON.parse(fs.readFileSync(path.join(APP, rel), 'utf8'));
 }
 
-console.log('EOS Sprint 1 tests\n');
+function advanceWithGates(wf, id) {
+  // Approvals required immediately before advancing INTO the named stage.
+  var beforeTarget = {
+    qa: { testingComplete: true },
+    owner_approval: { qaApproved: true },
+    commit: { ownerApproved: true },
+    push: { ownerAuthorizedPush: true },
+    deployment: { ownerApproved: true, qaApproved: true, deploymentApproved: true }
+  };
+  while (wf.getItem(id).stage !== 'close_sprint') {
+    var current = wf.getItem(id);
+    var idx = wf.stageIndex(current.stage);
+    var next = wf.stages[idx + 1];
+    var flags = beforeTarget[next];
+    if (flags) {
+      Object.keys(flags).forEach(function (k) {
+        wf.setApproval(id, k, flags[k]);
+      });
+    }
+    wf.advance(id);
+  }
+}
+
+console.log('EOS Sprint 1 regression tests\n');
 
 var snapshot = loadJson('data/sample-snapshot.json');
 var stages = loadJson('config/workflow-stages.json');
@@ -47,14 +69,18 @@ assert(stages.stages.length === 14, 'workflow has 14 stages');
 assert(msgTypes.requiredFields.indexOf('correlationId') >= 0, 'bus v2 requires correlationId');
 assert(kpis.kpis.length === 10, '10 KPI definitions');
 
-var wf = new WorkflowEngine({ stages: stages.stages });
+var wf = new WorkflowEngine({
+  stages: stages.stages,
+  transitionGates: stages.transitionGates || {}
+});
 var item = wf.createItem({ title: 'Test item', trackId: 'track9', sprintId: 'eos-sprint-1' });
 assert(item.stage === 'owner_request', 'workflow starts at owner_request');
 wf.advance(item.id);
 assert(wf.getItem(item.id).stage === 'impact_analysis', 'advance to impact_analysis');
-for (var i = 0; i < 12; i++) wf.advance(item.id);
-assert(wf.getItem(item.id).stage === 'close_sprint', 'can reach close_sprint');
+advanceWithGates(wf, item.id);
+assert(wf.getItem(item.id).stage === 'close_sprint', 'can reach close_sprint with gates');
 assert(wf.progressPercent(item.id) === 100, 'progress 100 at close');
+// impact_analysis reached above; gated path covered by advanceWithGates
 
 var crs = new ChangeRequestSystem();
 var cr = crs.create({
@@ -126,7 +152,6 @@ assert(exVm.overallProjectHealth.score >= 80, 'exec overall health');
 assert(exVm.pendingDecisions.length >= 1, 'pending decisions present');
 assert(exVm.constraints.length >= 3, 'constraints listed');
 
-// Regression guards: do not ship Production activation flags
 var indexHtml = fs.readFileSync(path.join(APP, 'index.html'), 'utf8');
 assert(indexHtml.indexOf('Development only') >= 0, 'UI marked Development only');
 assert(!fs.existsSync(path.join(ROOT, 'apps/hvcg-revenue')), 'no revenue app mutation in EOS tree check');
