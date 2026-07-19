@@ -1,0 +1,95 @@
+name: Atlas Elite OS — Static Web Apps (HVCG Production)
+
+# Targets permanent Azure subscription: HVCG Production
+# Subscription ID: ebc84d85-b5ff-4c4b-add1-b0a8de31b319
+# DEPRECATED forever: 866189c6-5aa0-4037-8094-05771caceb0d
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Atlas SWA environment'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - production
+  push:
+    branches: [cursor/sprint11-azure-production-migration, main]
+    paths:
+      - 'apps/atlas-elite-os/**'
+      - 'packages/atlas-design-system/**'
+      - 'scripts/deploy-swa-dev.sh'
+      - '.github/workflows/atlas-elite-swa.yml'
+
+permissions:
+  contents: read
+
+env:
+  AZURE_SUBSCRIPTION_ID: ebc84d85-b5ff-4c4b-add1-b0a8de31b319
+  ATLAS_SWA_NAME_DEV: swa-atlas-elite-os-dev
+  ATLAS_SWA_RG_DEV: rg-atlas-dev
+  VITE_ENTRA_CLIENT_ID: 49d20328-fe3c-40ec-9d0e-99f57e4646e4
+
+jobs:
+  build-and-deploy-dev:
+    name: Build & deploy Elite OS (Dev SWA)
+    if: github.event_name != 'workflow_dispatch' || inputs.environment == 'development'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build
+        env:
+          VITE_ATLAS_ENV: development
+          VITE_BLOCK_LIVE_CLIENT_COMMS: 'true'
+          VITE_ALLOW_SAMPLE_FALLBACK: 'true'
+          VITE_ENTRA_CLIENT_ID: ${{ env.VITE_ENTRA_CLIENT_ID }}
+        run: npm run build -w @hvcg/atlas-elite-os
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: apps/atlas-elite-os/dist
+          skip_app_build: true
+          skip_api_build: true
+
+  # Production SWA deploy is owner-gated via GitHub Environment "production".
+  build-and-deploy-prod:
+    name: Build & deploy Elite OS (Prod SWA)
+    if: github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Build
+        env:
+          VITE_ATLAS_ENV: production
+          VITE_BLOCK_LIVE_CLIENT_COMMS: 'true'
+          VITE_ALLOW_SAMPLE_FALLBACK: 'false'
+          VITE_ENTRA_CLIENT_ID: ${{ secrets.VITE_ENTRA_CLIENT_ID_PROD }}
+        run: npm run build -w @hvcg/atlas-elite-os
+      - name: Deploy to Azure Static Web Apps (Prod)
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROD }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: apps/atlas-elite-os/dist
+          skip_app_build: true
+          skip_api_build: true

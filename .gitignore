@@ -74,3 +74,6 @@ deployment/reports/health/
 
 # Pre-deployment test result dumps (machine-local)
 deployment/reports/predeploy-tests-latest.json
+
+.npm-cache/
+.env.local

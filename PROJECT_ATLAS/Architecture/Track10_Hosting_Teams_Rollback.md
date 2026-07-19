@@ -1,30 +1,24 @@
 # Track 10 — Azure hosting + Teams embedding plan
 
-## Preferred: Azure Static Web Apps (HVCG Development subscription)
+## Preferred: Azure Static Web Apps (HVCG Production subscription)
 
-1. Create SWA resource e.g. `hvcg-atlas-elite-os-dev`
-2. Build app:
+**Subscription:** HVCG Production `ebc84d85-b5ff-4c4b-add1-b0a8de31b319` (never use deprecated `866189c6-…`)
 
-```bash
-cd .worktrees/track10-elite-ui
-npm ci --cache .npm-cache
-npm run build -w @hvcg/atlas-elite-os
-```
-
-3. Deploy `apps/atlas-elite-os/dist` (+ `staticwebapp.config.json` from `public/`)
-4. Set SWA app settings / build env for all `VITE_*` values
-5. Add SWA URL to Entra SPA redirect URIs + Dataverse CORS
-
-### Deploy script (after `az` login + SWA token)
+| Item | Value |
+|------|-------|
+| Resource | `swa-atlas-elite-os-dev` |
+| Resource group | `rg-atlas-dev` |
+| Region | West US 2 |
+| Hostname | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` |
 
 ```bash
-npx @azure/static-web-apps-cli deploy \
-  apps/atlas-elite-os/dist \
-  --deployment-token "$AZURE_STATIC_WEB_APPS_API_TOKEN" \
-  --env production
+cd .worktrees/sprint11-azure-production-migration
+az account set --subscription ebc84d85-b5ff-4c4b-add1-b0a8de31b319
+bash scripts/deploy-swa-dev.sh
 ```
 
-(`production` here means SWA slot naming — still HVCG **Development** business environment.)
+Entra SPA redirect URIs already include localhost + SWA hostname.  
+Add SWA origin to Dataverse CORS when enabling live Dataverse from the hosted SPA.
 
 ## Fallback: Azure App Service
 
