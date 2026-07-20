@@ -12,10 +12,26 @@ import {
   SourceBadge,
   QuickActionButton,
   LoadingState,
+  FilterToolbar,
+  SectionHeader,
+  AtlasProgress,
 } from '@hvcg/atlas-design-system';
-import { Button, Text, Caption1, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
+import {
+  Button,
+  Text,
+  Caption1,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
+  Dropdown,
+  Option,
+} from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
+import { useWorkspaceContext } from '../state/WorkspaceContext';
+import { workspaceCatalog } from '../data/workspaces';
+import { reportingPeriods } from '../data/projects';
+import { atlasRole } from '../security/rbac';
 
 function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'success' {
   if (severity === 'Critical' || severity === 'High') return 'danger';
@@ -25,6 +41,8 @@ function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'succes
 
 export function ExecutiveDashboardPage() {
   const { account, configured, signIn } = useMicrosoftAuth();
+  const { workspaceId, setWorkspaceId, workspaceName, periodId, setPeriodId, periodLabel } =
+    useWorkspaceContext();
   const [model, setModel] = useState<ExecutiveHomeModel | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -64,12 +82,12 @@ export function ExecutiveDashboardPage() {
     connection,
   } = model;
 
-  const roleLabel = account ? 'HVCG Owner / Executive' : 'Signed out';
+  const roleLabel = account ? `${atlasRole()} · signed in` : `${atlasRole()} · signed out`;
 
   return (
     <PageLayout
       title="Executive Home"
-      subtitle="HVCG command center — Dataverse · Entra · Graph"
+      subtitle="HVCG command center — calm, low-click, pending-safe financials"
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {!account && configured ? (
@@ -85,43 +103,75 @@ export function ExecutiveDashboardPage() {
               Colorado Craft Beef
             </Button>
           </Link>
+          <Link to="/notifications">
+            <Button appearance="subtle" size="small">
+              Notifications
+            </Button>
+          </Link>
         </div>
       }
     >
-      <AtlasCard variant="glass">
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 16,
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div>
-            <Caption1>Organization</Caption1>
-            <Text weight="semibold">High Value Capital Group</Text>
-          </div>
-          <div>
-            <Caption1>Reporting period</Caption1>
-            <Text weight="semibold">Current month (pending ledger)</Text>
-          </div>
-          <div>
-            <Caption1>Last refresh</Caption1>
-            <Text weight="semibold">{connection.lastRefresh}</Text>
-          </div>
-          <div>
-            <Caption1>Operating status</Caption1>
+      <FilterToolbar>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 200 }}>
+          <Caption1>Organization / client</Caption1>
+          <Dropdown
+            value={workspaceName}
+            selectedOptions={[workspaceId]}
+            onOptionSelect={(_, d) => {
+              if (d.optionValue) setWorkspaceId(d.optionValue);
+            }}
+            style={{ minWidth: 220 }}
+          >
+            {workspaceCatalog.map((w) => (
+              <Option key={w.id} value={w.id} text={w.name}>
+                {w.name}
+              </Option>
+            ))}
+          </Dropdown>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 180 }}>
+          <Caption1>Reporting period</Caption1>
+          <Dropdown
+            value={periodLabel}
+            selectedOptions={[periodId]}
+            onOptionSelect={(_, d) => {
+              if (d.optionValue) setPeriodId(d.optionValue as typeof periodId);
+            }}
+            style={{ minWidth: 180 }}
+          >
+            {reportingPeriods.map((p) => (
+              <Option key={p.id} value={p.id} text={p.label}>
+                {p.label}
+              </Option>
+            ))}
+          </Dropdown>
+        </div>
+        <div>
+          <Caption1>Last refresh</Caption1>
+          <Text weight="semibold" style={{ display: 'block' }}>
+            {connection.lastRefresh}
+          </Text>
+        </div>
+        <div>
+          <Caption1>Operating status</Caption1>
+          <div style={{ marginTop: 4 }}>
             <StatusChip label="On Track" tone="success" />
           </div>
-          <div>
-            <Caption1>Profile</Caption1>
-            <Text weight="semibold">
-              {account?.name || 'Manny Barela'} · {roleLabel}
-            </Text>
-          </div>
         </div>
-      </AtlasCard>
+        <div>
+          <Caption1>Profile</Caption1>
+          <Text weight="semibold" style={{ display: 'block' }}>
+            {account?.name || 'Manny Barela'} · {roleLabel}
+          </Text>
+        </div>
+        {workspaceId === 'ws-ccb' ? (
+          <Link to="/clients/ws-ccb" style={{ marginLeft: 'auto' }}>
+            <Button appearance="primary" size="small">
+              Open client workspace
+            </Button>
+          </Link>
+        ) : null}
+      </FilterToolbar>
 
       <MessageBar intent={connection.mode === 'dataverse' ? 'success' : 'warning'}>
         <MessageBarBody>
@@ -129,11 +179,12 @@ export function ExecutiveDashboardPage() {
             {connection.mode === 'dataverse' ? 'Dataverse connected' : 'Pending-safe mode'}
           </MessageBarTitle>
           {connection.detail}
-          {connection.error ? ` — ${connection.error}` : ''}
+          {connection.error ? ` — ${connection.error}` : ''} Context: {workspaceName} · {periodLabel}.
         </MessageBarBody>
       </MessageBar>
 
-      <ResponsiveGrid>
+      <SectionHeader title="Key performance" subtitle="Values appear only when verified sources connect" />
+      <ResponsiveGrid className="atlas-stagger">
         {metrics.map((m) => (
           <AtlasCard key={m.id} variant="glass">
             <DashboardWidget
@@ -146,12 +197,11 @@ export function ExecutiveDashboardPage() {
             >
               <SparkBars values={m.spark} aria-label={`${m.label} trend`} />
             </DashboardWidget>
-            <Caption1>Status: {m.source === 'Live' ? 'Live' : 'Pending'} · Drill-down in Financials</Caption1>
           </AtlasCard>
         ))}
       </ResponsiveGrid>
 
-      <ResponsiveGrid dense>
+      <ResponsiveGrid dense className="atlas-stagger">
         <GridSpan span={2}>
           <AtlasCard title="Executive alerts" subtitle="Prioritized by severity">
             <DataTable
@@ -202,14 +252,6 @@ export function ExecutiveDashboardPage() {
                 </li>
               ))}
             </ul>
-            <Text weight="semibold">Decisions awaiting Owner</Text>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {aiBrief.decisionsAwaiting.map((r) => (
-                <li key={r}>
-                  <Text size={300}>{r}</Text>
-                </li>
-              ))}
-            </ul>
           </div>
         </AtlasCard>
 
@@ -228,7 +270,11 @@ export function ExecutiveDashboardPage() {
                 },
                 { key: 'owner', header: 'Owner', render: (r) => r.owner },
                 { key: 'due', header: 'Due', render: (r) => r.due },
-                { key: 'pct', header: '%', render: (r) => `${r.percentComplete}%` },
+                {
+                  key: 'pct',
+                  header: 'Progress',
+                  render: (r) => <AtlasProgress value={r.percentComplete} />,
+                },
                 { key: 'block', header: 'Blocker', render: (r) => r.blocker },
                 { key: 'next', header: 'Next', render: (r) => r.nextAction },
               ]}
@@ -265,7 +311,17 @@ export function ExecutiveDashboardPage() {
         </AtlasCard>
 
         <GridSpan span={2}>
-          <AtlasCard title="My Approvals" subtitle="Owner decision inbox">
+          <AtlasCard
+            title="Decisions requiring attention"
+            subtitle="Owner decision inbox"
+            headerAction={
+              <Link to="/tasks">
+                <Button size="small" appearance="subtle">
+                  Action center
+                </Button>
+              </Link>
+            }
+          >
             <DataTable
               ariaLabel="Approvals"
               getRowKey={(r) => r.id}
@@ -290,13 +346,25 @@ export function ExecutiveDashboardPage() {
                 },
               ]}
             />
+            <ul style={{ margin: '12px 0 0', paddingLeft: 18 }}>
+              {aiBrief.decisionsAwaiting.map((r) => (
+                <li key={r}>
+                  <Text size={300}>{r}</Text>
+                </li>
+              ))}
+            </ul>
           </AtlasCard>
         </GridSpan>
 
         <AtlasCard title="Workspaces" subtitle="HVCG + clients">
           <div style={{ display: 'grid', gap: 10 }}>
             {pinnedClients.map((c) => (
-              <Link key={c.id} to={`/clients/${c.id}`} style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Link
+                key={c.id}
+                to={`/clients/${c.id}`}
+                style={{ display: 'flex', justifyContent: 'space-between' }}
+                onClick={() => setWorkspaceId(c.id)}
+              >
                 <Text>{c.name}</Text>
                 <StatusChip label={c.status} tone="gold" />
               </Link>

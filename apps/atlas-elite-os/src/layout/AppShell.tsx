@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   AtlasProvider,
   CommandBar,
@@ -23,15 +23,18 @@ import {
   DataPieRegular,
   ArrowTrendingRegular,
   CheckboxCheckedRegular,
+  AlertRegular,
+  OptionsRegular,
 } from '@fluentui/react-icons';
 import { Button } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { microsoftConfig } from '../microsoft/config';
+import { notificationCatalog } from '../data/projects';
 
 const sections: NavSection[] = [
   {
     id: 'primary',
-    title: 'Atlas',
+    title: 'Executive',
     items: [
       { id: 'home', label: 'Home', to: '/', icon: <HomeRegular /> },
       { id: 'financials', label: 'Financials', to: '/financials', icon: <DataBarVerticalRegular /> },
@@ -43,6 +46,20 @@ const sections: NavSection[] = [
       { id: 'ev', label: 'Enterprise Value', to: '/enterprise-value', icon: <ArrowTrendingRegular /> },
       { id: 'docs', label: 'Documents', to: '/documents', icon: <DocumentRegular /> },
       { id: 'ai', label: 'AI Insights', to: '/ai', icon: <SparkleRegular /> },
+    ],
+  },
+  {
+    id: 'system',
+    title: 'System',
+    items: [
+      {
+        id: 'notifications',
+        label: 'Notifications',
+        to: '/notifications',
+        icon: <AlertRegular />,
+        badge: notificationCatalog.length,
+      },
+      { id: 'settings', label: 'Settings', to: '/settings', icon: <OptionsRegular /> },
       { id: 'admin', label: 'Administration', to: '/admin', icon: <SettingsRegular /> },
     ],
   },
@@ -54,23 +71,31 @@ const catalog: SearchResult[] = [
   { id: 's3', title: 'High Value Capital Group', category: 'Clients', subtitle: 'Internal workspace' },
   { id: 's4', title: 'Capital Advisory', category: 'Navigation' },
   { id: 's5', title: 'Financial Performance', category: 'Navigation' },
-  { id: 's6', title: 'Model-driven admin app', category: 'Administration', subtitle: 'Dataverse SoR' },
+  { id: 's6', title: 'Notifications', category: 'Navigation' },
+  { id: 's7', title: 'Settings', category: 'Navigation' },
+  { id: 's8', title: 'Model-driven admin app', category: 'Administration', subtitle: 'Dataverse SoR' },
 ];
 
+const searchRoutes: Record<string, string> = {
+  s1: '/',
+  s2: '/clients/ws-ccb',
+  s3: '/clients/ws-hvcg',
+  s4: '/capital',
+  s5: '/financials',
+  s6: '/notifications',
+  s7: '/settings',
+  s8: '/admin',
+};
+
 export function AppShell() {
-  const { account, configured, signIn, signOutUser, environmentBanner } = useMicrosoftAuth();
-  const location = useLocation();
   const navigate = useNavigate();
+  const { account, configured, signIn, signOutUser, environmentBanner } = useMicrosoftAuth();
   const [scheme, setScheme] = useState<AtlasColorScheme>('light');
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const { items, push, dismiss } = useNotifications();
-
-  useEffect(() => {
-    setMobileNav(false);
-  }, [location.pathname]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -84,7 +109,6 @@ export function AppShell() {
   }, [query]);
 
   const userName = account?.name || account?.username || 'Manny';
-  const notificationCount = items.length;
 
   return (
     <AtlasProvider scheme={scheme}>
@@ -111,18 +135,8 @@ export function AppShell() {
               setSearchOpen(true);
             }}
             searchValue={query}
-            notificationCount={notificationCount}
-            onNotifications={() =>
-              push({
-                title: account ? 'Open Tasks & Approvals' : 'Sign in required',
-                body: account
-                  ? 'Review owner decisions in Tasks.'
-                  : configured
-                    ? 'Sign in with your HVCG Microsoft account to load Dataverse.'
-                    : 'Owner must register the Entra SPA app (see Microsoft architecture docs).',
-                tone: account ? 'warning' : 'info',
-              })
-            }
+            notificationCount={notificationCatalog.length}
+            onNotifications={() => navigate('/notifications')}
             userName={userName}
             trailing={
               configured ? (
@@ -163,18 +177,9 @@ export function AppShell() {
         onQueryChange={setQuery}
         results={results}
         onSelect={(r) => {
-          setSearchOpen(false);
-          const routes: Record<string, string> = {
-            s1: '/',
-            s2: '/clients/ws-ccb',
-            s3: '/clients/ws-hvcg',
-            s4: '/capital',
-            s5: '/financials',
-            s6: '/admin',
-          };
-          const to = routes[r.id];
-          if (to) navigate(to);
-          else push({ title: `Opened ${r.title}`, body: r.category, tone: 'info' });
+          const path = searchRoutes[r.id];
+          if (path) navigate(path);
+          push({ title: `Opened ${r.title}`, body: r.category, tone: 'info' });
         }}
       />
       <NotificationStack items={items} onDismiss={dismiss} />

@@ -162,6 +162,9 @@ Full Development actor matrix (Track 10): see [Track10_Security_Matrix.md](Track
 | P2 | Document confirmation UX for destructive/approval actions | Elite UI + QA | Admin boundaries |
 | P2 | Power BI RLS design for client-facing reports | Analytics | Future client BI |
 | P2 | Guest / Client Executive access path (B2B) design review before enablement | Security + Architecture | Client portal |
+| P1 | Before any non-Owner CCB access: provision `HVCG-Client-{Code}` + library ACL (none exists today — catalog only) | Administration + Client Workspace | Client isolation |
+| P2 | Promote Track10 Entra/Security matrix into main `PROJECT_ATLAS/` or `docs/security/` (today worktree-only) | Documentation + Security | Single SoR |
+| P1 | Align Elite Exec AI/briefing path with AI Governance `R-AI-01` / `R-AI-06` (grounding + ClientCode) | AI Governance + Security | Ungrounded $ / cross-client |
 
 Coordinate with: Architecture, AI Governance, Azure, Power Platform, Data Engineering, QA.
 
@@ -205,6 +208,33 @@ Executive Dashboard · HVCG internal workspace · Client workspaces · Colorado 
 
 - [Track10_Security_Matrix.md](Track10_Security_Matrix.md)  
 - [Track10_Entra_App_Registration.md](Track10_Entra_App_Registration.md)  
-- `SECURITY_MODEL.md` / `docs/security/SECURITY_MODEL.md`  
+- Main repo `SECURITY_MODEL.md` / `docs/security/SECURITY_MODEL.md` (prefer root for v1.1 AI sections; avoid drift)  
+- Main repo `PERMISSIONS_MATRIX.md` — operational RBAC SoR (Exec dashboard: Owner/Admin **E**, Ops Mgr **R**, others **N**)  
+- Main repo `RISKS.md` — R003 oversharing, R009 contractor linger, R010 sample/prod mix  
 - `docs/ai/AI_SECURITY_MODEL.md` / `docs/ai/AI_CONTEXT_POLICY.md`  
-- Architecture Executive Dashboard sign-off (system-architect)  
+- AI Governance product AI risks: `.worktrees/sprint12-engineering-orchestration/docs/ai/AI_RISK_ASSESSMENT.md` (not yet in main `docs/ai/`)  
+- Portal package: `.worktrees/client-portal-data-rooms/docs/portal/SECURITY_REVIEW.md` — **PASS Dev**; external unlock needs separate sign-off  
+- Architecture Executive Dashboard sign-off (system-architect) — PR-4 incomplete SPA role mapping  
+
+## Appendix C — STRIDE (product Elite OS path)
+
+| Category | Example | Control / status |
+|----------|---------|------------------|
+| **S**poofing | Fake SWA origin / stolen session | Entra + PKCE; sessionStorage; exact redirect URIs — Pass design |
+| **T**ampering | Client-side KPI / role spoof | Server Dataverse roles + list ACLs must be SoR; SPA labels not authoritative — **Gap** (C-01) |
+| **R**epudiation | Unaudited approval / AI accept | Purview + HVCG_AuditEvents / AIAuditLog / App Insights — Partial |
+| **I**nformation disclosure | Cross-client Graph/Sites read; CCB finance | Narrow Graph; ClientCode; CCB pending-safe; no `HVCG-Client-*` for CCB yet — **Gap** |
+| **D**enial of service | Cost abuse on AI / Graph | AI CostTracking + Worker pause (policy); SPA N/A |
+| **E**levation of privilege | Maker role / PnP FullControl / Owner label | Dedicated Atlas Exec role; PnP deploy-only; fix C-01 — **Gap** |
+
+## Appendix D — Exploration follow-up (2026-07-20)
+
+Confirmed by product-security exploration ([Explore Atlas security surfaces](339bbdf6-ecc2-4681-b252-609cd1568e7b)):
+
+1. **CCB** is demo catalog (`ws-ccb`) only — no Entra `HVCG-Client-*`, SharePoint library grant, or portal data room for CCB.  
+2. **Track10** Entra/Security docs exist only under worktrees — not mirrored to main `PROJECT_ATLAS/`.  
+3. **Portal** Dev package already security-reviewed (PASS); do not conflate with Elite Exec Production sign-off.  
+4. **PERMISSIONS_MATRIX** already denies Exec dashboard to PM/Capital/Contractor/Client — Elite OS must eventually honor this, not Owner-label everyone.  
+5. Formal STRIDE for Elite path added above; prior gap was “AI/portal risk reviews only.”  
+
+**Sign-off unchanged:** Production / multi-role / client-guest remain **NOT APPROVED**.  

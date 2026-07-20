@@ -3,7 +3,9 @@ import { StatusChip, SourceBadge } from './StatusChip';
 import { EmptyState, LoadingState } from './EmptyState';
 import { DashboardWidget, SparkBars } from './DashboardWidget';
 import { GlobalAICommandPanel } from './SearchAndAI';
+import { AtlasProgress, AccessDeniedState, ErrorState, FilterToolbar, SectionHeader } from './Overlays';
 import { DocumentSearchRegular } from '@fluentui/react-icons';
+import { Button } from '@fluentui/react-components';
 
 const meta: Meta = { title: 'Primitives', tags: ['autodocs'] };
 export default meta;
@@ -30,6 +32,21 @@ export const EmptyAndLoading: StoryObj = {
         icon={<DocumentSearchRegular />}
       />
       <LoadingState rows={4} />
+      <AtlasProgress value={55} label="Initiative progress" />
+    </div>
+  ),
+};
+
+export const SystemStates: StoryObj = {
+  render: () => (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <SectionHeader title="System patterns" subtitle="Access denied, error, filters" />
+      <FilterToolbar>
+        <StatusChip label="Filters" tone="gold" />
+        <Button size="small">Apply</Button>
+      </FilterToolbar>
+      <AccessDeniedState actions={<Button appearance="primary">Home</Button>} />
+      <ErrorState actions={<Button appearance="secondary">Retry</Button>} />
     </div>
   ),
 };
@@ -38,13 +55,12 @@ export const Widget: StoryObj = {
   render: () => (
     <DashboardWidget
       label="Pipeline value"
-      value="1.25M"
-      unit="USD"
-      trend="up"
-      trendLabel="+8% vs last month"
-      source="Development sample"
+      value="Awaiting verified source"
+      trend="flat"
+      trendLabel="Unavailable"
+      source="Unavailable"
     >
-      <SparkBars values={[4, 6, 5, 8, 7, 9, 11]} />
+      <SparkBars values={[0, 0, 0, 0, 0, 0, 0]} />
     </DashboardWidget>
   ),
 };

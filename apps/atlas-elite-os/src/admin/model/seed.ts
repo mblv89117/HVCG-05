@@ -1,0 +1,346 @@
+import type { AdminState, PermissionKey } from './types';
+import { ALL_PERMISSION_KEYS } from './types';
+
+function ref(
+  id: string,
+  label: string,
+  code: string,
+  sortOrder: number,
+  group?: string,
+): AdminState['statuses'][number] {
+  return { id, label, code, sortOrder, active: true, group };
+}
+
+const ownerPerms: PermissionKey[] = [...ALL_PERMISSION_KEYS];
+const adminPerms: PermissionKey[] = ALL_PERMISSION_KEYS.filter((k) => k !== 'settings.eva');
+const opsPerms: PermissionKey[] = [
+  'clients.access.manage',
+  'reference.edit',
+  'notifications.configure',
+  'workflow.configure',
+  'integrations.view',
+  'audit.view',
+];
+const pmPerms: PermissionKey[] = ['reference.edit', 'notifications.configure'];
+const readPerms: PermissionKey[] = ['audit.view'];
+
+export function createSeedState(): AdminState {
+  return {
+    organizations: [
+      { id: 'org-hvcg', name: 'High Value Capital Group LLC', code: 'HVCG', active: true },
+    ],
+    businessUnits: [
+      { id: 'bu-delivery', organizationId: 'org-hvcg', name: 'Client Delivery', active: true },
+      { id: 'bu-capital', organizationId: 'org-hvcg', name: 'Capital Advisory', active: true },
+      { id: 'bu-ops', organizationId: 'org-hvcg', name: 'Operations', active: true },
+    ],
+    teams: [
+      {
+        id: 'team-exec',
+        name: 'Executive',
+        businessUnitId: 'bu-ops',
+        memberUserIds: ['user-manny'],
+      },
+      {
+        id: 'team-delivery',
+        name: 'Delivery PMs',
+        businessUnitId: 'bu-delivery',
+        memberUserIds: ['user-alex'],
+      },
+    ],
+    roles: [
+      {
+        id: 'role-owner',
+        name: 'Owner',
+        entraGroup: 'HVCG-Role-Owner',
+        description: 'Full business oversight and administration.',
+        permissionKeys: ownerPerms,
+        ownerOnlyAssign: true,
+      },
+      {
+        id: 'role-admin',
+        name: 'Administrator',
+        entraGroup: 'HVCG-Role-Administrator',
+        description: 'Site settings, provisioning, and administration.',
+        permissionKeys: adminPerms,
+        ownerOnlyAssign: true,
+      },
+      {
+        id: 'role-ops',
+        name: 'Operations Manager',
+        entraGroup: 'HVCG-Role-OperationsManager',
+        description: 'Ops dashboards, assignments, escalations.',
+        permissionKeys: opsPerms,
+      },
+      {
+        id: 'role-pm',
+        name: 'Project Manager',
+        entraGroup: 'HVCG-Role-ProjectManager',
+        description: 'Projects and tasks for assigned work.',
+        permissionKeys: pmPerms,
+      },
+      {
+        id: 'role-readonly',
+        name: 'Read Only Reviewer',
+        entraGroup: 'HVCG-Role-ReadOnlyReviewer',
+        description: 'Read across permitted clients.',
+        permissionKeys: readPerms,
+      },
+    ],
+    users: [
+      {
+        id: 'user-manny',
+        displayName: 'Manuel Barela',
+        email: 'manny@hvcg.example',
+        status: 'Active',
+        roleIds: ['role-owner'],
+        organizationIds: ['org-hvcg'],
+        clientCodes: ['CCB', 'HVCG'],
+        teamIds: ['team-exec'],
+      },
+      {
+        id: 'user-alex',
+        displayName: 'Alex Rivera',
+        email: 'alex@hvcg.example',
+        status: 'Active',
+        roleIds: ['role-pm'],
+        organizationIds: ['org-hvcg'],
+        clientCodes: ['CCB'],
+        teamIds: ['team-delivery'],
+      },
+      {
+        id: 'user-sam',
+        displayName: 'Sam Chen',
+        email: 'sam@hvcg.example',
+        status: 'Invited',
+        roleIds: ['role-ops'],
+        organizationIds: ['org-hvcg'],
+        clientCodes: [],
+        teamIds: [],
+      },
+    ],
+    clientAccess: [
+      {
+        id: 'ca-1',
+        clientCode: 'CCB',
+        clientName: 'Colorado Craft Beef',
+        userId: 'user-manny',
+        accessLevel: 'Manage',
+      },
+      {
+        id: 'ca-2',
+        clientCode: 'CCB',
+        clientName: 'Colorado Craft Beef',
+        userId: 'user-alex',
+        accessLevel: 'Contribute',
+      },
+      {
+        id: 'ca-3',
+        clientCode: 'HVCG',
+        clientName: 'High Value Capital Group',
+        userId: 'user-manny',
+        accessLevel: 'Manage',
+      },
+    ],
+    statuses: [
+      ref('st-lead', 'Lead', 'Lead', 1, 'client'),
+      ref('st-prospect', 'Prospect', 'Prospect', 2, 'client'),
+      ref('st-assessment', 'Assessment', 'Assessment', 3, 'client'),
+      ref('st-proposal', 'Proposal', 'Proposal', 4, 'client'),
+      ref('st-active', 'Active Client', 'Active Client', 5, 'client'),
+      ref('st-hold', 'On Hold', 'On Hold', 6, 'client'),
+      ref('st-alumni', 'Alumni', 'Alumni', 7, 'client'),
+      ref('st-dne', 'Do Not Engage', 'Do Not Engage', 8, 'client'),
+    ],
+    categories: [
+      ref('cat-ops', 'Operations', 'OPS', 1),
+      ref('cat-cap', 'Capital', 'CAP', 2),
+      ref('cat-fin', 'Finance', 'FIN', 3),
+    ],
+    referralSources: [
+      ref('ref-partner', 'Partner referral', 'PARTNER', 1),
+      ref('ref-web', 'Website', 'WEB', 2),
+      ref('ref-event', 'Event', 'EVENT', 3),
+    ],
+    serviceTypes: [
+      ref('svc-cfo', 'Fractional CFO', 'FCFO', 1),
+      ref('svc-cap', 'Capital Advisory', 'CAPADV', 2),
+      ref('svc-ops', 'Operations Support', 'OPS', 3),
+    ],
+    engagementTypes: [
+      ref('eng-ret', 'Monthly retainer', 'RETAINER', 1),
+      ref('eng-proj', 'Fixed project', 'PROJECT', 2),
+      ref('eng-success', 'Success fee', 'SUCCESS', 3),
+    ],
+    documentCategories: [
+      '00 - Engagement Administration',
+      '01 - Corporate Documents',
+      '03 - Historical Financials',
+      '04 - Current Financials',
+      '16 - Lender Package',
+      '17 - Investor Package',
+      '19 - Deliverables',
+    ].map((label, i) =>
+      ref(`doc-${i}`, label, label.split(' - ')[0] || `D${i}`, i + 1),
+    ),
+    featureFlags: [
+      {
+        key: 'enableClientEmails',
+        label: 'Client email sends',
+        description: 'Allow automated email to client contacts.',
+        highImpact: true,
+        impactSummary: 'Can send messages outside HVCG. Keep off unless owner-approved.',
+        value: false,
+        safeDefault: false,
+      },
+      {
+        key: 'enablePremiumConnectors',
+        label: 'Premium connectors',
+        description: 'Allow Power Automate premium connectors in flows.',
+        highImpact: true,
+        impactSummary: 'May incur licensing cost and broader connector reach.',
+        value: false,
+        safeDefault: false,
+      },
+      {
+        key: 'enablePowerPages',
+        label: 'Power Pages',
+        description: 'Enable portal-related surfaces.',
+        highImpact: true,
+        impactSummary: 'Exposes external-facing pages when published.',
+        value: false,
+        safeDefault: false,
+      },
+      {
+        key: 'enableCopilotStudio',
+        label: 'Copilot Studio',
+        description: 'Allow Copilot Studio agents in Atlas workflows.',
+        highImpact: true,
+        impactSummary: 'AI agents may act on firm data within configured scopes.',
+        value: false,
+        safeDefault: false,
+      },
+      {
+        key: 'enableAIQueues',
+        label: 'AI queues',
+        description: 'Show AI job queues to eligible staff.',
+        highImpact: false,
+        impactSummary: 'Internal AI work queues only; no outbound client send.',
+        value: true,
+        safeDefault: true,
+      },
+      {
+        key: 'enablePortalPrepEntities',
+        label: 'Portal prep entities',
+        description: 'Keep portal preparation lists visible to makers.',
+        highImpact: false,
+        impactSummary: 'Internal prep data only until portal launch.',
+        value: true,
+        safeDefault: true,
+      },
+      {
+        key: 'enableCapitalDesk',
+        label: 'Capital desk',
+        description: 'Enable capital advisory desk module.',
+        highImpact: false,
+        impactSummary: 'Shows capital workspace to authorized roles.',
+        value: true,
+        safeDefault: true,
+      },
+    ],
+    notifications: {
+      renewalReminderDays: [60, 30, 14],
+      documentReminderBusinessDays: [0, 3, 7, 14],
+      emailDigestEnabled: true,
+      executiveEscalationAlerts: true,
+      teamsNotifyEnabled: false,
+    },
+    workflow: {
+      autoCreateRenewalTasks: true,
+      requireExecutiveClearForAttention: true,
+      blockLiveClientComms: true,
+      escalationRuleKeys: [
+        'ClientRelationshipAtRisk',
+        'CriticalDeadlineAtRisk',
+        'PaymentMateriallyOverdue',
+      ],
+    },
+    financial: {
+      currency: 'USD',
+      showSuccessFeesToNonFinance: false,
+      invoiceDueDaysDefault: 30,
+      retainersVisibleToOps: true,
+    },
+    capital: {
+      deskEnabled: true,
+      defaultPackageType: 'Lender Package',
+      requireOwnerForLenderOutreach: true,
+    },
+    eva: {
+      defaultRevenueMultiple: 1.2,
+      defaultEbitdaMultiple: 6.5,
+      discountRatePercent: 12,
+      assumptionNotes: 'Defaults for new worksheets only. Do not treat as live valuations.',
+    },
+    ai: {
+      queuesEnabled: true,
+      allowPromptLibraryEdit: false,
+      showCostTrackingToOps: true,
+      notes: 'API keys and model credentials are never stored in Administration.',
+    },
+    application: {
+      productName: 'HVCG OS',
+      companyShortName: 'HVCG',
+      timeZone: 'America/Los_Angeles',
+      locale: 'en-US',
+      namingPrefix: 'HVCG_',
+    },
+    integrations: [
+      {
+        id: 'int-dataverse',
+        name: 'Dataverse (HVCG Development)',
+        status: 'Healthy',
+        lastCheckedAt: '2026-07-20T01:00:00Z',
+        failedRunCount: 0,
+        secretsConfigured: true,
+      },
+      {
+        id: 'int-graph',
+        name: 'Microsoft Graph',
+        status: 'Healthy',
+        lastCheckedAt: '2026-07-20T01:00:00Z',
+        failedRunCount: 0,
+        secretsConfigured: true,
+      },
+      {
+        id: 'int-pa',
+        name: 'Power Automate HTTP',
+        status: 'Failed',
+        lastCheckedAt: '2026-07-19T22:10:00Z',
+        lastFailureMessage: 'HTTP 401 on renewal reminder flow (connection reference expired).',
+        failedRunCount: 3,
+        secretsConfigured: true,
+      },
+      {
+        id: 'int-sp',
+        name: 'SharePoint lists',
+        status: 'Degraded',
+        lastCheckedAt: '2026-07-20T00:30:00Z',
+        lastFailureMessage: 'Throttle on Clients library enumeration.',
+        failedRunCount: 1,
+        secretsConfigured: true,
+      },
+    ],
+    audit: [
+      {
+        id: 'aud-seed',
+        at: '2026-07-20T00:00:00Z',
+        actor: 'system',
+        areaId: 'application-settings',
+        action: 'seed',
+        summary: 'Administration sample store initialized.',
+        highImpact: false,
+      },
+    ],
+  };
+}
