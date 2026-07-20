@@ -15,7 +15,9 @@ import {
 } from '@hvcg/atlas-design-system';
 import { Button, Text, Caption1, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
+import { useAtlasRole } from '../security/RoleProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
+import { ATLAS_BUILD } from '../buildInfo';
 
 function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'success' {
   if (severity === 'Critical' || severity === 'High') return 'danger';
@@ -25,6 +27,7 @@ function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'succes
 
 export function ExecutiveDashboardPage() {
   const { account, configured, signIn } = useMicrosoftAuth();
+  const { role } = useAtlasRole();
   const [model, setModel] = useState<ExecutiveHomeModel | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -64,7 +67,7 @@ export function ExecutiveDashboardPage() {
     connection,
   } = model;
 
-  const roleLabel = account ? 'HVCG Owner / Executive' : 'Signed out';
+  const roleLabel = role;
 
   return (
     <PageLayout
@@ -104,20 +107,26 @@ export function ExecutiveDashboardPage() {
           </div>
           <div>
             <Caption1>Reporting period</Caption1>
-            <Text weight="semibold">Current month (pending ledger)</Text>
+            <Text weight="semibold">{connection.reportingPeriod}</Text>
           </div>
           <div>
             <Caption1>Last refresh</Caption1>
             <Text weight="semibold">{connection.lastRefresh}</Text>
           </div>
           <div>
-            <Caption1>Operating status</Caption1>
-            <StatusChip label="On Track" tone="success" />
+            <Caption1>Verification</Caption1>
+            <Text weight="semibold">{connection.verificationStatus}</Text>
           </div>
           <div>
-            <Caption1>Profile</Caption1>
+            <Caption1>Data source</Caption1>
+            <Text weight="semibold" size={200}>
+              {connection.dataSource}
+            </Text>
+          </div>
+          <div>
+            <Caption1>Build</Caption1>
             <Text weight="semibold">
-              {account?.name || 'Manny Barela'} · {roleLabel}
+              {ATLAS_BUILD.shortSha} · {roleLabel}
             </Text>
           </div>
         </div>

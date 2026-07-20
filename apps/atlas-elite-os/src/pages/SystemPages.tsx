@@ -11,8 +11,10 @@ import { Button } from '@fluentui/react-components';
 
 export function AccessDeniedPage() {
   return (
-    <PageLayout title="Access denied" subtitle="Role-aware gate">
+    <PageLayout title="Access denied" subtitle="Role matrix enforcement">
       <AccessDeniedState
+        title="No authorized Atlas role"
+        description="Signed-in users must have an Entra app role (HVCG Owner, HVCG Team Member, Client Executive, Client Team Member, Read-Only Advisor, or Administrator). There is no default Owner access."
         actions={
           <Link to="/">
             <Button appearance="primary">Return to Executive Home</Button>

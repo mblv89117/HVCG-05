@@ -38,13 +38,12 @@ export const Widget: StoryObj = {
   render: () => (
     <DashboardWidget
       label="Pipeline value"
-      value="1.25M"
-      unit="USD"
-      trend="up"
-      trendLabel="+8% vs last month"
-      source="Development sample"
+      value="Awaiting verified data"
+      trend="flat"
+      trendLabel="Verification pending"
+      source="Unavailable"
     >
-      <SparkBars values={[4, 6, 5, 8, 7, 9, 11]} />
+      <SparkBars values={[0, 0, 0, 0, 0, 0, 0]} />
     </DashboardWidget>
   ),
 };

@@ -6,7 +6,7 @@
 export type DataAvailability =
   | 'Verified'
   | 'Repository-derived'
-  | 'Awaiting verified source'
+  | 'Awaiting verified data'
   | 'Data connection pending'
   | 'Not yet calculated';
 
@@ -80,10 +80,10 @@ export function getWorkspace(id: string): WorkspaceSummary | undefined {
 
 /** Standard pending KPI set for Executive Home when Dataverse has no verified values */
 export const pendingExecutiveKpis: PendingField[] = [
-  { label: 'Revenue', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+  { label: 'Revenue', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
   { label: 'Gross Profit', value: 'Not yet calculated', availability: 'Not yet calculated' },
-  { label: 'EBITDA', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
-  { label: 'Cash', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+  { label: 'EBITDA', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
+  { label: 'Cash', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
   { label: 'Accounts Receivable', value: 'Data connection pending', availability: 'Data connection pending' },
   { label: 'Working Capital', value: 'Not yet calculated', availability: 'Not yet calculated' },
   { label: 'Active Pipeline', value: 'Data connection pending', availability: 'Data connection pending' },

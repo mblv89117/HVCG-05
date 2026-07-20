@@ -13,6 +13,8 @@ export interface AtlasApprovalRecord {
   risk: string;
   track: string;
   decision: string;
+  notes?: string;
+  modifiedOn?: string;
   source: DataSourceKind;
 }
 
@@ -24,6 +26,7 @@ export interface AtlasRevenueKpi {
   trend?: string;
   period?: string;
   source: DataSourceKind;
+  verificationStatus?: string;
 }
 
 export interface AtlasBrief {

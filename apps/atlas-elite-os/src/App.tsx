@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
 import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import { MicrosoftAuthProvider } from './microsoft/auth/AuthProvider';
 import { WorkspaceProvider } from './state/WorkspaceContext';
+import { RoleProvider, useAtlasRole } from './security/RoleProvider';
 import { AppShell } from './layout/AppShell';
 import { ExecutiveDashboardPage } from './pages/ExecutiveDashboard';
 import { AdminPage } from './pages/AdminPage';
@@ -18,16 +20,12 @@ import {
 } from './pages/Modules';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
-import {
-  AccessDeniedPage,
-  EmptyDemoPage,
-  ErrorPage,
-  LoadingDemoPage,
-} from './pages/SystemPages';
-import { canAccessAdmin } from './security/rbac';
+import { AccessDeniedPage } from './pages/SystemPages';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
+  const { can } = useAtlasRole();
+  if (!can('viewClientDetail')) return <Navigate to="/access-denied" replace />;
   return <ClientDetailPage workspaceId={workspaceId} />;
 }
 
@@ -37,38 +35,96 @@ function ProjectDetailRoute() {
 }
 
 function AdminRoute() {
-  if (!canAccessAdmin()) return <Navigate to="/access-denied" replace />;
+  const { can } = useAtlasRole();
+  if (!can('viewAdmin')) return <Navigate to="/access-denied" replace />;
   return <AdminPage />;
+}
+
+function FinanceRoute({ children }: { children: ReactNode }) {
+  const { can } = useAtlasRole();
+  if (!can('viewFinance')) return <Navigate to="/access-denied" replace />;
+  return children;
+}
+
+function ClientsRoute({ children }: { children: ReactNode }) {
+  const { can, role } = useAtlasRole();
+  if (role === 'Unauthenticated') return children; // portfolio visible; detail may still require sign-in UX
+  if (!can('viewClients')) return <Navigate to="/access-denied" replace />;
+  return children;
+}
+
+function HomeRoute() {
+  const { can, role } = useAtlasRole();
+  // Signed-out users may view pending-safe home and sign in.
+  if (role === 'Unauthenticated') return <ExecutiveDashboardPage />;
+  if (role === 'Unresolved') return <Navigate to="/access-denied" replace />;
+  if (!can('viewExecutiveHome') && can('viewClients')) return <Navigate to="/clients" replace />;
+  if (!can('viewExecutiveHome')) return <Navigate to="/access-denied" replace />;
+  return <ExecutiveDashboardPage />;
 }
 
 export function App() {
   return (
     <MicrosoftAuthProvider>
-      <WorkspaceProvider>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route index element={<ExecutiveDashboardPage />} />
-            <Route path="financials" element={<FinancialsPage />} />
-            <Route path="revenue" element={<RevenuePage />} />
-            <Route path="clients" element={<ClientsPage />} />
-            <Route path="clients/:workspaceId" element={<ClientDetailRoute />} />
-            <Route path="projects" element={<ProjectsPage />} />
-            <Route path="projects/:projectId" element={<ProjectDetailRoute />} />
-            <Route path="tasks" element={<TasksPage />} />
-            <Route path="capital" element={<CapitalPage />} />
-            <Route path="enterprise-value" element={<EnterpriseValuePage />} />
-            <Route path="documents" element={<DocumentsPage />} />
-            <Route path="ai" element={<AiInsightsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="admin" element={<AdminRoute />} />
-            <Route path="access-denied" element={<AccessDeniedPage />} />
-            <Route path="error" element={<ErrorPage />} />
-            <Route path="empty" element={<EmptyDemoPage />} />
-            <Route path="loading" element={<LoadingDemoPage />} />
-          </Route>
-        </Routes>
-      </WorkspaceProvider>
+      <RoleProvider>
+        <WorkspaceProvider>
+          <Routes>
+            <Route element={<AppShell />}>
+              <Route index element={<HomeRoute />} />
+              <Route
+                path="financials"
+                element={
+                  <FinanceRoute>
+                    <FinancialsPage />
+                  </FinanceRoute>
+                }
+              />
+              <Route
+                path="revenue"
+                element={
+                  <FinanceRoute>
+                    <RevenuePage />
+                  </FinanceRoute>
+                }
+              />
+              <Route
+                path="clients"
+                element={
+                  <ClientsRoute>
+                    <ClientsPage />
+                  </ClientsRoute>
+                }
+              />
+              <Route path="clients/:workspaceId" element={<ClientDetailRoute />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="projects/:projectId" element={<ProjectDetailRoute />} />
+              <Route path="tasks" element={<TasksPage />} />
+              <Route
+                path="capital"
+                element={
+                  <FinanceRoute>
+                    <CapitalPage />
+                  </FinanceRoute>
+                }
+              />
+              <Route
+                path="enterprise-value"
+                element={
+                  <FinanceRoute>
+                    <EnterpriseValuePage />
+                  </FinanceRoute>
+                }
+              />
+              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="ai" element={<AiInsightsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="admin" element={<AdminRoute />} />
+              <Route path="access-denied" element={<AccessDeniedPage />} />
+            </Route>
+          </Routes>
+        </WorkspaceProvider>
+      </RoleProvider>
     </MicrosoftAuthProvider>
   );
 }

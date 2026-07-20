@@ -16,11 +16,10 @@ import {
   pendingExecutiveKpis,
   pipelineStages,
   portfolioProjects,
-  actionCenterItems,
   workspaceCatalog,
 } from '../data/workspaces';
 import { projectCatalog } from '../data/projects';
-import { atlasRole, canAccessAdmin } from '../security/rbac';
+export { TasksPage } from './TasksApprovalsPage';
 export function FinancialsPage() {
   return (
     <ModuleScaffold
@@ -31,13 +30,13 @@ export function FinancialsPage() {
       <AtlasCard title="Statements & aging" subtitle="Structure ready — no invented balances">
         <FieldGrid
           fields={[
-            { label: 'Monthly revenue', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+            { label: 'Monthly revenue', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
             { label: 'Gross margin', value: 'Not yet calculated', availability: 'Not yet calculated' },
-            { label: 'Operating expenses', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+            { label: 'Operating expenses', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
             { label: 'Cash runway', value: 'Not yet calculated', availability: 'Not yet calculated' },
             { label: 'AR aging', value: 'Data connection pending', availability: 'Data connection pending' },
             { label: 'AP aging', value: 'Data connection pending', availability: 'Data connection pending' },
-            { label: 'Debt obligations', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+            { label: 'Debt obligations', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
             { label: 'Budget vs actual', value: 'Data connection pending', availability: 'Data connection pending' },
             { label: 'Rolling forecast', value: 'Not yet calculated', availability: 'Not yet calculated' },
             { label: 'Working-capital trend', value: 'Not yet calculated', availability: 'Not yet calculated' },
@@ -53,8 +52,8 @@ export function RevenuePage() {
     id: `stage-${i}`,
     stage,
     count: '—',
-    weighted: 'Awaiting verified source',
-    availability: 'Awaiting verified source' as const,
+    weighted: 'Awaiting verified data',
+    availability: 'Awaiting verified data' as const,
   }));
 
   return (
@@ -227,13 +226,13 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
                 },
                 {
                   label: 'Lender-package status',
-                  value: 'Awaiting verified source',
-                  availability: 'Awaiting verified source',
+                  value: 'Awaiting verified data',
+                  availability: 'Awaiting verified data',
                 },
                 {
                   label: 'Underwriting gaps',
-                  value: 'Awaiting verified source',
-                  availability: 'Awaiting verified source',
+                  value: 'Awaiting verified data',
+                  availability: 'Awaiting verified data',
                 },
                 {
                   label: 'Next financing milestone',
@@ -246,7 +245,7 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
           <AtlasCard title="Financing roadmap">
             <Text>
               Explore non-dilutive and agricultural financing options consistent with prior discussion. Specific
-              facility sizing: Awaiting verified source.
+              facility sizing: Awaiting verified data.
             </Text>
             <Caption1 style={{ display: 'block', marginTop: 8 }}>
               Eligible funding-type catalog includes: {fundingTypes.slice(0, 6).join(', ')}, …
@@ -288,7 +287,7 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
               getRowKey={(r) => r.category}
               rows={documentCategories.map((c) => ({
                 category: c,
-                status: 'Awaiting verified source',
+                status: 'Awaiting verified data',
               }))}
               columns={[
                 { key: 'cat', header: 'Category', render: (r) => r.category },
@@ -393,51 +392,6 @@ export function ProjectsPage() {
   );
 }
 
-export function TasksPage() {
-  return (
-    <ModuleScaffold
-      title="Tasks & Approvals"
-      subtitle="Unified action center. Live Dataverse approvals also appear on Executive Home when signed in."
-      showPendingBanner={false}
-    >
-      <AtlasCard title="Action queues">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-          {['Assigned', 'Delegated', 'Overdue', 'Approvals', 'Blocked', 'Owner decisions'].map((q) => (
-            <StatusChip key={q} label={q} tone="neutral" />
-          ))}
-        </div>
-        <DataTable
-          ariaLabel="Action center"
-          getRowKey={(r) => r.id}
-          rows={actionCenterItems}
-          columns={[
-            { key: 'title', header: 'Action', render: (r) => r.title },
-            {
-              key: 'queue',
-              header: 'Queue',
-              render: (r) => <StatusChip label={r.queue} tone="gold" />,
-            },
-            { key: 'related', header: 'Related', render: (r) => r.related },
-            { key: 'due', header: 'Due', render: (r) => r.due },
-            {
-              key: 'pri',
-              header: 'Priority',
-              render: (r) => <StatusChip label={r.priority} tone={r.priority === 'P0' ? 'danger' : 'warning'} />,
-            },
-            {
-              key: 'src',
-              header: 'Source',
-              render: (r) => <Caption1>{r.availability}</Caption1>,
-            },
-          ]}
-        />
-      </AtlasCard>
-      <Caption1>
-        Role context: {atlasRole()} · Admin surfaces {canAccessAdmin() ? 'available' : 'restricted'}
-      </Caption1>
-    </ModuleScaffold>
-  );
-}
 export function CapitalPage() {
   return (
     <ModuleScaffold
@@ -454,7 +408,7 @@ export function CapitalPage() {
       <FieldGrid
         fields={[
           { label: 'Active capital opportunities', value: 'Data connection pending', availability: 'Data connection pending' },
-          { label: 'Requested amount (aggregate)', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+          { label: 'Requested amount (aggregate)', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
           { label: 'Expected fees', value: 'Not yet calculated', availability: 'Not yet calculated' },
         ]}
       />
@@ -475,9 +429,9 @@ export function EnterpriseValuePage() {
             value: 'Not yet calculated — preliminary/indicative only when available',
             availability: 'Not yet calculated',
           },
-          { label: 'Valuation range', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+          { label: 'Valuation range', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
           { label: 'Methodology', value: 'Data connection pending', availability: 'Data connection pending' },
-          { label: 'EBITDA multiple', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+          { label: 'EBITDA multiple', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
           { label: 'Target future value', value: 'Not yet calculated', availability: 'Not yet calculated' },
         ]}
       />

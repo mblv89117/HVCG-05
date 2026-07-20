@@ -24,11 +24,13 @@ import {
   ArrowTrendingRegular,
   CheckboxCheckedRegular,
 } from '@fluentui/react-icons';
-import { Button } from '@fluentui/react-components';
+import { Button, Caption1 } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { microsoftConfig } from '../microsoft/config';
+import { useAtlasRole } from '../security/RoleProvider';
+import { ATLAS_BUILD } from '../buildInfo';
 
-const sections: NavSection[] = [
+const allSections: NavSection[] = [
   {
     id: 'primary',
     title: 'Atlas',
@@ -59,6 +61,7 @@ const catalog: SearchResult[] = [
 
 export function AppShell() {
   const { account, configured, signIn, signOutUser, environmentBanner } = useMicrosoftAuth();
+  const { role, can } = useAtlasRole();
   const location = useLocation();
   const navigate = useNavigate();
   const [scheme, setScheme] = useState<AtlasColorScheme>('light');
@@ -72,6 +75,18 @@ export function AppShell() {
     setMobileNav(false);
   }, [location.pathname]);
 
+  const sections = useMemo(() => {
+    const financeIds = new Set(['financials', 'revenue', 'capital', 'ev']);
+    const items = allSections[0].items.filter((item) => {
+      if (item.id === 'admin') return can('viewAdmin');
+      if (financeIds.has(item.id)) return role === 'Unauthenticated' || can('viewFinance');
+      if (item.id === 'clients') return role === 'Unauthenticated' || can('viewClients');
+      if (item.id === 'home') return true;
+      return true;
+    });
+    return [{ ...allSections[0], items }];
+  }, [can, role]);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return catalog;
@@ -83,7 +98,7 @@ export function AppShell() {
     );
   }, [query]);
 
-  const userName = account?.name || account?.username || 'Manny';
+  const userName = account?.name || account?.username || 'Guest';
   const notificationCount = items.length;
 
   return (
@@ -155,6 +170,12 @@ export function AppShell() {
         }
       >
         <Outlet />
+        <div style={{ padding: '8px 16px 16px', opacity: 0.75 }}>
+          <Caption1>
+            Atlas Elite OS · {ATLAS_BUILD.environment} · SHA {ATLAS_BUILD.sha} · built {ATLAS_BUILD.builtAt} · role{' '}
+            {role}
+          </Caption1>
+        </div>
       </NavShell>
       <GlobalSearch
         open={searchOpen}

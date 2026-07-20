@@ -1,20 +1,20 @@
 import { PageLayout, AtlasCard, StatusChip } from '@hvcg/atlas-design-system';
 import { Button, Text, Link } from '@fluentui/react-components';
 import { microsoftConfig } from '../microsoft/config';
-import { atlasRole, canAccessAdmin } from '../security/rbac';
+import { useAtlasRole } from '../security/RoleProvider';
+import { ATLAS_BUILD } from '../buildInfo';
 
 const MODEL_DRIVEN =
   'https://org1131a2b0.crm.dynamics.com/main.aspx?appid=dea8a490-4b82-f111-ab0e-6045bd0193e8';
 
 export function AdminPage() {
-  const role = atlasRole();
-  if (!canAccessAdmin(role)) {
+  const { role, can } = useAtlasRole();
+  if (!can('viewAdmin')) {
     return (
       <PageLayout title="Administration" subtitle="Access restricted">
         <AtlasCard title="Insufficient role">
           <Text>
-            Current role <strong>{role}</strong> cannot open administration. Contact an HVCG Owner /
-            Executive.
+            Current role <strong>{role}</strong> cannot open administration.
           </Text>
         </AtlasCard>
       </PageLayout>
@@ -35,15 +35,14 @@ export function AdminPage() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <StatusChip label={microsoftConfig.environment} tone="gold" />
             <StatusChip label={`Role: ${role}`} tone="neutral" />
-            <StatusChip label="No Production" tone="danger" />
-            <StatusChip label="No live client comms" tone="warning" />
+            <StatusChip label={`Build ${ATLAS_BUILD.shortSha}`} tone="info" />
+            <StatusChip label="No Production writes" tone="danger" />
           </div>
           <Button appearance="primary" onClick={() => window.open(MODEL_DRIVEN, '_blank', 'noopener,noreferrer')}>
             Open model-driven admin app
           </Button>
           <Text size={200}>
-            Solution: <strong>HVCGProjectAtlasCommandCenterDEV</strong> · App ID{' '}
-            <code>dea8a490-4b82-f111-ab0e-6045bd0193e8</code>
+            Deployed SHA: <code>{ATLAS_BUILD.sha}</code> · Built {ATLAS_BUILD.builtAt}
           </Text>
           <Link href={MODEL_DRIVEN} target="_blank" rel="noreferrer">
             {MODEL_DRIVEN}
