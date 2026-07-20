@@ -18,6 +18,7 @@ import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
 import { ATLAS_BUILD } from '../buildInfo';
+import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
 
 function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'success' {
   if (severity === 'Critical' || severity === 'High') return 'danger';
@@ -68,6 +69,13 @@ export function ExecutiveDashboardPage() {
   } = model;
 
   const roleLabel = role;
+  const knowledgeUser = knowledgeUserFromHost({
+    role,
+    name: account?.name ?? roleLabel,
+    email: account?.username,
+    assignedClients: ['CCB'],
+    organizationId: 'HVCG',
+  });
 
   return (
     <PageLayout
@@ -326,6 +334,10 @@ export function ExecutiveDashboardPage() {
             ))}
           </div>
         </AtlasCard>
+
+        <GridSpan span="full">
+          <ModuleKnowledgeRail module="Executive" user={knowledgeUser} title="Executive knowledge context" />
+        </GridSpan>
       </ResponsiveGrid>
     </PageLayout>
   );

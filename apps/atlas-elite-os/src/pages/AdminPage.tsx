@@ -3,6 +3,7 @@ import { Button, Text, Link } from '@fluentui/react-components';
 import { microsoftConfig } from '../microsoft/config';
 import { useAtlasRole } from '../security/RoleProvider';
 import { ATLAS_BUILD } from '../buildInfo';
+import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
 
 const MODEL_DRIVEN =
   'https://org1131a2b0.crm.dynamics.com/main.aspx?appid=dea8a490-4b82-f111-ab0e-6045bd0193e8';
@@ -20,6 +21,8 @@ export function AdminPage() {
       </PageLayout>
     );
   }
+
+  const knowledgeUser = knowledgeUserFromHost({ role, organizationId: 'HVCG' });
 
   return (
     <PageLayout
@@ -49,6 +52,9 @@ export function AdminPage() {
           </Link>
         </div>
       </AtlasCard>
+      <div style={{ marginTop: 16 }}>
+        <ModuleKnowledgeRail module="Deployment" user={knowledgeUser} title="Administration & security guidance" />
+      </div>
     </PageLayout>
   );
 }
