@@ -100,16 +100,16 @@
 
 | Field | Value |
 |-------|-------|
-| Branch | _(none found)_ |
-| Agent / owner | Unassigned |
-| Commit | N/A |
-| Scope | Accounting Connections page = honest BLOCKED surface |
-| Merge method | N/A — no fabrication |
-| Conflicts | N/A |
-| Resolution | Documented blocker |
-| Tests run | NOT APPLICABLE |
-| Result | **BLOCKED** |
-| Remaining defects | P1 — no QBO implementation |
+| Branch | `cursor/quickbooks-integration` |
+| Agent / owner | QuickBooks Online Integration Specialist |
+| Commit | Pending Integration Manager merge |
+| Scope | `atlas-qbo-api`, contracts, Accounting Connections UI, docs, tests |
+| Merge method | Do **not** auto-merge — Integration & Release Manager reviews |
+| Conflicts | Expect none vs `cursor/atlas-integration-release` base (branched from it) |
+| Resolution | Honest 503 when secrets missing; no fake connected state |
+| Tests run | `npm run test:qbo-api` — 20/20 PASS |
+| Result | **READY FOR MERGE REVIEW** (live OAuth awaits Owner secrets) |
+| Remaining defects | INT-004 secrets portion OPEN; code READY |
 | Date | 2026-07-20 |
 
 ---

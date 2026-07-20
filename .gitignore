@@ -9,3 +9,5 @@ apps/atlas-elite-os/tsconfig.tsbuildinfo
 
 .secrets/
 .npm-cache/
+apps/atlas-plaid-api/.data/
+apps/atlas-qbo-api/.data/

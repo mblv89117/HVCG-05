@@ -8,7 +8,7 @@
 | INT-001 | P0 | Plaid Sandbox secrets not configured (`plaidConfigured: false`) | Owner (Key Vault / `.secrets`) | OPEN |
 | INT-002 | P0 | `PLAID_TOKEN_ENCRYPTION_KEY` unset — cannot store access tokens securely | Owner | OPEN |
 | INT-003 | P1 | Entra SPA `VITE_ENTRA_CLIENT_ID` may be unset — live sign-in blocked | Owner / Azure | OPEN |
-| INT-004 | P1 | QuickBooks Phase 1 implementation missing — Accounting Connections BLOCKED | QuickBooks agent (unassigned) | OPEN |
+| INT-004 | P1 | QuickBooks Phase 1 — implementation on `cursor/quickbooks-integration`; Owner secrets still required for live OAuth | QuickBooks Specialist / Owner | READY_FOR_MERGE (code); OPEN (secrets) |
 | INT-005 | P1 | Plaid webhook HTTPS URL unset — async item updates incomplete | Owner / Azure | OPEN |
 | INT-006 | P1 | Prior DEF-ELITE-001–005/009 live QA retest still pending on Dev SWA | QA | OPEN |
 | INT-007 | P2 | Capital / Revenue / EV / AI removed from primary nav (still reachable via Reports + routes) | Integration | ACCEPTED |

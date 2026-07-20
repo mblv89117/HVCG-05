@@ -11,6 +11,8 @@
     "build": "npm run build -w @hvcg/atlas-elite-os",
     "dev:plaid-api": "npm run start -w @hvcg/atlas-plaid-api",
     "test:plaid-api": "npm run test -w @hvcg/atlas-plaid-api",
+    "dev:qbo-api": "npm run start -w @hvcg/atlas-qbo-api",
+    "test:qbo-api": "npm run test -w @hvcg/atlas-qbo-api",
     "test:recovery": "npm run test:recovery -w @hvcg/atlas-elite-os",
     "storybook": "npm run storybook -w @hvcg/atlas-design-system",
     "build-storybook": "npm run build-storybook -w @hvcg/atlas-design-system"

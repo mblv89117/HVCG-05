@@ -15,6 +15,7 @@
     "@fluentui/react-icons": "^2.0.311",
     "@hvcg/atlas-design-system": "*",
     "@hvcg/atlas-plaid-contracts": "*",
+    "@hvcg/atlas-qbo-contracts": "*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.18.1"

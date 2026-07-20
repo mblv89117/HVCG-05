@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@hvcg/atlas-design-system': resolve(__dirname, '../../packages/atlas-design-system/src/index.ts'),
+      '@hvcg/atlas-plaid-contracts': resolve(__dirname, '../../packages/atlas-plaid-contracts/src/index.ts'),
+      '@hvcg/atlas-qbo-contracts': resolve(__dirname, '../../packages/atlas-qbo-contracts/src/index.ts'),
     },
   },
   server: {

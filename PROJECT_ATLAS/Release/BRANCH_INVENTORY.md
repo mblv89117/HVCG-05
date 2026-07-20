@@ -64,7 +64,7 @@
 | `cursor/finance-intelligence-sprint1` | Mock-demo financials — policy conflict |
 | `cursor/executive-*-sprint1` separate app | Elite already has Executive Dashboard |
 | `cursor/client-portal-sprint1` full portal | Separate shell; BL-C1 gate |
-| QuickBooks | **No specialist branch / incomplete** |
+| QuickBooks | `cursor/quickbooks-integration` — ready for Integration Manager merge review |
 | `cursor/orchestration-sprint12` | High-risk divergent ancestry |
 | Production / `main` promotion | Blocked until QA written GO |
 
@@ -82,7 +82,7 @@
 | Knowledge Platform | Knowledge rail + Knowledge nav |
 | Revenue OS | S1–3 complete on own branch; not re-merged into UI |
 | Plaid | Integrated Sandbox stack |
-| QuickBooks | **Missing — blocker** |
+| QuickBooks | **Specialist branch ready — Owner secrets for live OAuth** |
 | Azure deployment | Scripts + bicep included |
 | Power Platform | Track 1 frozen; Prod NO-GO unchanged |
 | Entra auth | Elite MSAL path — needs `VITE_ENTRA_CLIENT_ID` |
