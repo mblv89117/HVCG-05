@@ -2,7 +2,7 @@
 
 **As of:** 2026-07-20  
 **Authority:** Integration & Release Manager  
-**Recommendation:** **NO-GO for Production** · **CONDITIONAL GO for Owner Local UAT**
+**Recommendation:** **NO-GO for Production** · **CONDITIONAL GO for Owner Local UAT** · **RC1 designated** — see [RELEASE_CANDIDATE_1.md](./RELEASE_CANDIDATE_1.md)
 
 ## Current integration
 
@@ -10,7 +10,7 @@
 |-------|-------|
 | Integration branch | `cursor/atlas-integration-release` |
 | Repository path | `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release` |
-| Current commit | `0ebea90` (verify with `git rev-parse HEAD`) |
+| Current commit | `9a26e78` (RC1 — verify with `git rev-parse HEAD`) |
 | Base commit | `35ca684` (`cursor/elite-ui-release-recovery`) |
 | Overall build status | **PASS** (`npm run build`) |
 | Local runtime status | **PASS** — Elite OS responding |
