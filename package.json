@@ -1,0 +1,15 @@
+{
+  "name": "atlas-plaid-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:portal": "npm run dev -w hvcg-client-portal",
+    "dev:plaid-api": "npm run start -w @hvcg/atlas-plaid-api",
+    "test:plaid-api": "npm run test -w @hvcg/atlas-plaid-api",
+    "build:portal": "npm run build -w hvcg-client-portal"
+  }
+}

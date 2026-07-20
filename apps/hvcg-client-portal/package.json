@@ -18,7 +18,8 @@
   "dependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "@hvcg/atlas-plaid-contracts": "*"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

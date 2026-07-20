@@ -10,6 +10,7 @@ import { TasksPage } from './pages/TasksPage'
 import { MeetingsPage } from './pages/MeetingsPage'
 import { AdvisorPage } from './pages/AdvisorPage'
 import { FilesPage } from './pages/FilesPage'
+import { FinancialConnectionsPage } from './pages/FinancialConnectionsPage'
 import './styles/portal.css'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="engagement" element={<EngagementPage />} />
             <Route path="funding" element={<FundingPage />} />
+            <Route path="banking" element={<FinancialConnectionsPage />} />
             <Route path="documents" element={<DocumentsPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="tasks" element={<TasksPage />} />

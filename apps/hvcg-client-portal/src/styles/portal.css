@@ -400,3 +400,93 @@ button, select, input, textarea { font: inherit; }
   .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
   .topbar { flex-wrap: wrap; }
 }
+
+/* Financial Connections / Plaid */
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+.page-head h2 {
+  margin: 0.15rem 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+}
+.lede { color: var(--muted); max-width: 42rem; margin: 0.35rem 0 0; }
+.btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent-deep);
+}
+.btn.danger { color: var(--danger); border-color: #e0b4b4; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.consent-card ul { margin: 0.5rem 0 1rem; padding-left: 1.2rem; color: var(--muted); }
+.consent-check { display: flex; gap: 0.55rem; align-items: flex-start; font-size: 0.92rem; }
+.banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+.banner.danger { background: #f8e8e8; color: var(--danger); }
+.banner.ok { background: #e4efe8; color: var(--ok); }
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.kpi { font-size: 1.35rem; font-weight: 600; margin-top: 0.25rem; }
+.institution-grid { display: grid; gap: 1rem; }
+.inst-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.inst-head h4 { margin: 0 0 0.35rem; }
+.inst-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.status {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.status.ok { background: #e4efe8; color: var(--ok); }
+.status.warn { background: #f5edd8; color: var(--warn); }
+.status.danger { background: #f8e8e8; color: var(--danger); }
+.acct-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-top: 0.75rem;
+}
+.acct-table th,
+.acct-table td {
+  text-align: left;
+  padding: 0.45rem 0.35rem;
+  border-bottom: 1px solid var(--line);
+}
+.badge.verified {
+  font-size: 0.72rem;
+  background: #e8f0ea;
+  color: var(--accent-deep);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+.empty { text-align: center; padding: 2rem 1rem; }
+@media (max-width: 960px) {
+  .page-head { flex-direction: column; }
+  .kpi-row { grid-template-columns: 1fr; }
+  .inst-head { flex-direction: column; }
+  .acct-table { display: block; overflow-x: auto; }
+}
+

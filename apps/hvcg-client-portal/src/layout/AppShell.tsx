@@ -5,6 +5,7 @@ const links = [
   { to: '/', label: 'Client Home', end: true },
   { to: '/engagement', label: 'Engagement Status' },
   { to: '/funding', label: 'Funding Progress' },
+  { to: '/banking', label: 'Bank Connections' },
   { to: '/documents', label: 'Document Checklist' },
   { to: '/messages', label: 'Messages' },
   { to: '/tasks', label: 'Tasks' },
