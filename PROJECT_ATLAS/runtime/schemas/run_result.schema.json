@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.hvcg.local/schemas/runtime-run-result.schema.json",
+  "title": "AtlasRuntimeRunResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taskId",
+    "agentRole",
+    "dispatchMethod",
+    "status",
+    "startedAt"
+  ],
+  "properties": {
+    "taskId": { "type": "string" },
+    "agentRole": { "type": "string" },
+    "dispatchMethod": { "type": "string" },
+    "cloudAgentId": { "type": ["string", "null"] },
+    "cloudRunId": { "type": ["string", "null"] },
+    "branch": { "type": ["string", "null"] },
+    "commitHash": { "type": ["string", "null"] },
+    "filesChanged": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "endedAt": { "type": ["string", "null"], "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "dispatched",
+        "running",
+        "finished",
+        "error",
+        "cancelled",
+        "expired",
+        "blocked"
+      ]
+    },
+    "errorDetails": { "type": ["string", "null"] },
+    "agentUrl": { "type": ["string", "null"] },
+    "resultText": { "type": ["string", "null"] },
+    "durationMs": { "type": ["integer", "null"] },
+    "raw": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Sanitized API payloads (no secrets)"
+    }
+  }
+}

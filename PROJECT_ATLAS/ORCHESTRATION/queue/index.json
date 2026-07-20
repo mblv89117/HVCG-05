@@ -168,6 +168,14 @@
       "assignedAgent": "qa-release",
       "priority": "P1",
       "title": "QA clearance: Sprint 12 orchestration tasks still Waiting Review"
+    },
+    {
+      "id": "ATLAS-R-001",
+      "sprint": null,
+      "status": "Closed",
+      "assignedAgent": "documentation-manager",
+      "priority": "P0",
+      "title": "Validate Cursor Cloud Agent Dispatch"
     }
   ]
 }

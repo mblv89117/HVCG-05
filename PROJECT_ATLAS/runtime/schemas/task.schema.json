@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.hvcg.local/schemas/runtime-task.schema.json",
+  "title": "AtlasRuntimeTask",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taskId",
+    "title",
+    "assignedRole",
+    "repoUrl",
+    "requiredBranch",
+    "authorizedPaths",
+    "prompt",
+    "dispatch"
+  ],
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "pattern": "^ATLAS-[A-Z]+-[0-9]+$",
+      "description": "Stable Atlas task identifier"
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "assignedRole": {
+      "type": "string",
+      "description": "Agent role from AGENT_REGISTRY (e.g. documentation-manager)"
+    },
+    "repoUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "GitHub repository URL for the Cloud Agent"
+    },
+    "requiredBranch": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exclusive branch the Cloud Agent must push to"
+    },
+    "startingRef": {
+      "type": "string",
+      "description": "Optional base ref when creating the branch; defaults to requiredBranch"
+    },
+    "authorizedPaths": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Only these paths may be modified"
+    },
+    "prompt": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "default": "composer-2.5" },
+    "autoCreatePR": { "type": "boolean", "default": false },
+    "workOnCurrentBranch": { "type": "boolean", "default": true },
+    "dispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["cursor-cloud-agents-api"],
+          "description": "Programmatic dispatch channel"
+        },
+        "pollIntervalSeconds": { "type": "number", "minimum": 2, "default": 10 },
+        "timeoutSeconds": { "type": "number", "minimum": 30, "default": 1800 }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

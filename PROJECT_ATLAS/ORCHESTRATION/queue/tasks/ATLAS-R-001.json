@@ -1,0 +1,56 @@
+{
+  "id": "ATLAS-R-001",
+  "sprint": null,
+  "title": "Validate Cursor Cloud Agent Dispatch",
+  "description": "Phase 1 PoC: programmatically dispatch a Cursor Cloud Agent to create PROJECT_ATLAS/ORCHESTRATION/runtime-validation.md on exclusive branch cursor/documentation-manager/runtime-validation-ATLAS-R-001. Documentation-only. Do not merge to main.",
+  "assignedAgent": "documentation-manager",
+  "priority": "P0",
+  "status": "Closed",
+  "dependencies": [],
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation.md"
+  ],
+  "acceptanceCriteria": [
+    "Cursor Cloud Agent actually launched (cloud agent id + run id)",
+    "Required unique branch used",
+    "Only authorized file committed",
+    "Atlas runtime run result recorded under PROJECT_ATLAS/runtime/runs/",
+    "No manual specialist chat activation",
+    "Branch not merged to main"
+  ],
+  "requiredReviewers": [
+    "master-pm",
+    "qa-release"
+  ],
+  "branch": "cursor/documentation-manager/runtime-validation-ATLAS-R-001",
+  "worktree": null,
+  "requiredTests": [
+    "PROJECT_ATLAS/runtime/tests/test_cursor_adapter.py"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation.md",
+    "PROJECT_ATLAS/runtime/runs/ATLAS-R-001.json",
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-R-001-evidence.md"
+  ],
+  "ownerApprovalRequired": false,
+  "commitReferences": [
+    "2065b3ae839ec61871927d579b9338517c556bb7"
+  ],
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation.md",
+    "PROJECT_ATLAS/runtime/runs/ATLAS-R-001.json",
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-R-001-evidence.md",
+    "PROJECT_ATLAS/ORCHESTRATION/PHASE1_CURSOR_CLOUD_DISPATCH_REPORT.md"
+  ],
+  "createdAt": "2026-07-20T00:28:00Z",
+  "updatedAt": "2026-07-20T00:35:30Z",
+  "createdBy": "master-pm",
+  "claimedBy": "documentation-manager",
+  "completionSummary": "Cloud Agent bc-90bfd18c-6d6d-4146-9fad-668f647d7344 committed runtime-validation.md on required branch (2065b3a). REST API dispatcher built; live API call pending CURSOR_API_KEY.",
+  "runtimeDispatch": {
+    "method": "cursor-cloud-agent-task-tool",
+    "cloudAgentId": "bc-90bfd18c-6d6d-4146-9fad-668f647d7344",
+    "taskDefinition": "PROJECT_ATLAS/runtime/tasks/ATLAS-R-001.json",
+    "apiAdapterStatus": "ready_blocked_on_api_key"
+  }
+}

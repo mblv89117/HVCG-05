@@ -1,0 +1,27 @@
+{
+  "taskId": "ATLAS-R-001",
+  "agentRole": "documentation-manager",
+  "dispatchMethod": "cursor-cloud-agent-task-tool",
+  "cloudAgentId": "bc-90bfd18c-6d6d-4146-9fad-668f647d7344",
+  "cloudRunId": "bc-90bfd18c-6d6d-4146-9fad-668f647d7344",
+  "branch": "cursor/documentation-manager/runtime-validation-ATLAS-R-001",
+  "commitHash": "2065b3ae839ec61871927d579b9338517c556bb7",
+  "filesChanged": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation.md"
+  ],
+  "startedAt": "2026-07-20T00:31:40Z",
+  "endedAt": "2026-07-20T00:35:00Z",
+  "status": "finished",
+  "errorDetails": null,
+  "agentUrl": "https://cursor.com/agents/bc-90bfd18c-6d6d-4146-9fad-668f647d7344",
+  "resultText": "PASS — created runtime-validation.md on required branch",
+  "durationMs": null,
+  "raw": {
+    "notes": [
+      "Primary PoC launch used Cursor Cloud Agent (Task environment=cloud) because CURSOR_API_KEY was not present for REST adapter.",
+      "Prior failed attempt agent id: bc-2808686d-89f9-4db6-9219-76ed961b77db (internal error).",
+      "REST adapter path remains ready: PROJECT_ATLAS/runtime/dispatch_cloud_agent.py — blocked until Owner stores CURSOR_API_KEY.",
+      "preDispatchCommit": "08b02da5d397b0044e15e606507e8c8cf975cd77"
+    ]
+  }
+}

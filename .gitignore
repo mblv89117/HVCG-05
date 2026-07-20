@@ -74,3 +74,4 @@ deployment/reports/health/
 
 # Pre-deployment test result dumps (machine-local)
 deployment/reports/predeploy-tests-latest.json
+PROJECT_ATLAS/runtime/secrets/
