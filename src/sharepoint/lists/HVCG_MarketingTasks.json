@@ -1,0 +1,180 @@
+{
+  "title": "HVCG_MarketingTasks",
+  "description": "Marketing agent task queue",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TaskId",
+      "displayName": "TaskId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CampaignId",
+      "displayName": "CampaignId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TaskType",
+      "displayName": "TaskType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Research",
+        "Strategy",
+        "Draft",
+        "Creative",
+        "QA",
+        "Publish",
+        "LeadOps",
+        "Nurture",
+        "Analytics",
+        "Experiment",
+        "Integration",
+        "Escalation",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "AssignedAgent",
+      "displayName": "AssignedAgent",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "HumanOwner",
+      "displayName": "HumanOwner",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "P0",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "default": "P2"
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Queued",
+        "InProgress",
+        "Blocked",
+        "InQA",
+        "Done",
+        "Cancelled"
+      ],
+      "default": "Queued"
+    },
+    {
+      "internalName": "Dependencies",
+      "displayName": "Dependencies",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiredInput",
+      "displayName": "RequiredInput",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OutputLocation",
+      "displayName": "OutputLocation",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "QAStatus",
+      "displayName": "QAStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "NotRequired",
+        "Pending",
+        "Passed",
+        "Failed"
+      ],
+      "default": "NotRequired"
+    },
+    {
+      "internalName": "Blocker",
+      "displayName": "Blocker",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EscalationStatus",
+      "displayName": "EscalationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "None",
+        "Orchestrator",
+        "Manny",
+        "Resolved"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "CompletionEvidence",
+      "displayName": "CompletionEvidence",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

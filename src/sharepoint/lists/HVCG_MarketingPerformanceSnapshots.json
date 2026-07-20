@@ -1,0 +1,87 @@
+{
+  "title": "HVCG_MarketingPerformanceSnapshots",
+  "description": "Periodic marketing performance snapshots",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SnapshotId",
+      "displayName": "SnapshotId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PeriodStart",
+      "displayName": "PeriodStart",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PeriodEnd",
+      "displayName": "PeriodEnd",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CampaignId",
+      "displayName": "CampaignId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AssetId",
+      "displayName": "AssetId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Channel",
+      "displayName": "Channel",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "MetricsJson",
+      "displayName": "MetricsJson",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Full metric bag per analytics dictionary"
+    },
+    {
+      "internalName": "DataQualityFlags",
+      "displayName": "DataQualityFlags",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "GeneratedByAgent",
+      "displayName": "GeneratedByAgent",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

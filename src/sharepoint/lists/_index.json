@@ -494,6 +494,48 @@
       "path": "src/sharepoint/lists/HVCG_AuditEvents.json",
       "columnCount": 6,
       "description": "Significant business audit events"
+    },
+    {
+      "name": "HVCG_MarketingCampaigns",
+      "path": "src/sharepoint/lists/HVCG_MarketingCampaigns.json",
+      "columnCount": 23,
+      "description": "Marketing \u2014 campaigns SoR",
+      "domain": "Marketing"
+    },
+    {
+      "name": "HVCG_MarketingContentAssets",
+      "path": "src/sharepoint/lists/HVCG_MarketingContentAssets.json",
+      "columnCount": 23,
+      "description": "Marketing \u2014 content assets",
+      "domain": "Marketing"
+    },
+    {
+      "name": "HVCG_MarketingTasks",
+      "path": "src/sharepoint/lists/HVCG_MarketingTasks.json",
+      "columnCount": 16,
+      "description": "Marketing \u2014 agent task queue",
+      "domain": "Marketing"
+    },
+    {
+      "name": "HVCG_MarketingExperiments",
+      "path": "src/sharepoint/lists/HVCG_MarketingExperiments.json",
+      "columnCount": 16,
+      "description": "Marketing \u2014 experiments",
+      "domain": "Marketing"
+    },
+    {
+      "name": "HVCG_MarketingPerformanceSnapshots",
+      "path": "src/sharepoint/lists/HVCG_MarketingPerformanceSnapshots.json",
+      "columnCount": 10,
+      "description": "Marketing \u2014 performance snapshots",
+      "domain": "Marketing"
+    },
+    {
+      "name": "HVCG_MarketingChannelRegistry",
+      "path": "src/sharepoint/lists/HVCG_MarketingChannelRegistry.json",
+      "columnCount": 12,
+      "description": "Marketing \u2014 channel registry",
+      "domain": "Marketing"
     }
   ],
   "productVersion": "1.1.0"

@@ -1,0 +1,129 @@
+{
+  "title": "HVCG_MarketingChannelRegistry",
+  "description": "Channel strategy registry",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Channel",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "StrategicPurpose",
+      "displayName": "StrategicPurpose",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Audience",
+      "displayName": "Audience",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ContentFormats",
+      "displayName": "ContentFormats",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PublishingFrequency",
+      "displayName": "PublishingFrequency",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ConversionPath",
+      "displayName": "ConversionPath",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AutomationCapability",
+      "displayName": "AutomationCapability",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Full",
+        "Partial",
+        "Manual"
+      ],
+      "default": "Partial"
+    },
+    {
+      "internalName": "HumanDependency",
+      "displayName": "HumanDependency",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "default": "Medium"
+    },
+    {
+      "internalName": "CostProfile",
+      "displayName": "CostProfile",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Risk",
+      "displayName": "Risk",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "default": "R1"
+    },
+    {
+      "internalName": "MeasurementMethod",
+      "displayName": "MeasurementMethod",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Decision",
+      "displayName": "Decision",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Continue",
+        "Pause",
+        "Test",
+        "DoNotActivate"
+      ],
+      "default": "Test"
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "title": "HVCG_MarketingExperiments",
+  "description": "Marketing experiments",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExperimentId",
+      "displayName": "ExperimentId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CampaignId",
+      "displayName": "CampaignId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Hypothesis",
+      "displayName": "Hypothesis",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Control",
+      "displayName": "Control",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Variant",
+      "displayName": "Variant",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Audience",
+      "displayName": "Audience",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Metric",
+      "displayName": "Metric",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "StartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EndDate",
+      "displayName": "EndDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MinimumSample",
+      "displayName": "MinimumSample",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Result",
+      "displayName": "Result",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ConfidenceLevel",
+      "displayName": "ConfidenceLevel",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Decision",
+      "displayName": "Decision",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Running",
+        "Stop",
+        "Scale",
+        "Iterate",
+        "Inconclusive"
+      ],
+      "default": "Running"
+    },
+    {
+      "internalName": "Learning",
+      "displayName": "Learning",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FollowUpAction",
+      "displayName": "FollowUpAction",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,1174 @@
+{
+  "description": "Marketing OS module \u2014 additive marketing lists + Lead consent/attribution/scoring columns. Dev Command Center only. No Prod.",
+  "addLists": [
+    {
+      "title": "HVCG_MarketingCampaigns",
+      "description": "Marketing campaigns \u2014 Atlas SoR",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Campaign Name",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "CampaignId",
+          "displayName": "CampaignId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "MKT-CAMP-YYYYMM-###"
+        },
+        {
+          "internalName": "Objective",
+          "displayName": "Objective",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "TargetAudience",
+          "displayName": "TargetAudience",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "FunnelStage",
+          "displayName": "FunnelStage",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Awareness",
+            "Consideration",
+            "Conversion",
+            "Retention"
+          ]
+        },
+        {
+          "internalName": "PrimaryOffer",
+          "displayName": "PrimaryOffer",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "StartDate",
+          "displayName": "StartDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "EndDate",
+          "displayName": "EndDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "OwnerAgent",
+          "displayName": "OwnerAgent",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "SupportingAgents",
+          "displayName": "SupportingAgents",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Draft",
+            "Scheduled",
+            "Active",
+            "Paused",
+            "Completed",
+            "Cancelled"
+          ],
+          "default": "Draft"
+        },
+        {
+          "internalName": "Budget",
+          "displayName": "Budget",
+          "type": "Currency",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Channels",
+          "displayName": "Channels",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "SuccessCriteria",
+          "displayName": "SuccessCriteria",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "KPIs",
+          "displayName": "KPIs",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RiskLevel",
+          "displayName": "RiskLevel",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "default": "R1"
+        },
+        {
+          "internalName": "ApprovalRequirement",
+          "displayName": "ApprovalRequirement",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "L1",
+            "L2",
+            "L3"
+          ],
+          "default": "L2"
+        },
+        {
+          "internalName": "Results",
+          "displayName": "Results",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "LessonsLearned",
+          "displayName": "LessonsLearned",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RelatedContentIds",
+          "displayName": "RelatedContentIds",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RelatedLeadCount",
+          "displayName": "RelatedLeadCount",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RelatedOpportunityIds",
+          "displayName": "RelatedOpportunityIds",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RelatedExperimentIds",
+          "displayName": "RelatedExperimentIds",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_MarketingChannelRegistry",
+      "description": "Channel strategy registry",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Channel",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "StrategicPurpose",
+          "displayName": "StrategicPurpose",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Audience",
+          "displayName": "Audience",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ContentFormats",
+          "displayName": "ContentFormats",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "PublishingFrequency",
+          "displayName": "PublishingFrequency",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ConversionPath",
+          "displayName": "ConversionPath",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "AutomationCapability",
+          "displayName": "AutomationCapability",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Full",
+            "Partial",
+            "Manual"
+          ],
+          "default": "Partial"
+        },
+        {
+          "internalName": "HumanDependency",
+          "displayName": "HumanDependency",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Low",
+            "Medium",
+            "High"
+          ],
+          "default": "Medium"
+        },
+        {
+          "internalName": "CostProfile",
+          "displayName": "CostProfile",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Risk",
+          "displayName": "Risk",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "default": "R1"
+        },
+        {
+          "internalName": "MeasurementMethod",
+          "displayName": "MeasurementMethod",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Decision",
+          "displayName": "Decision",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Continue",
+            "Pause",
+            "Test",
+            "DoNotActivate"
+          ],
+          "default": "Test"
+        }
+      ]
+    },
+    {
+      "title": "HVCG_MarketingContentAssets",
+      "description": "Marketing content assets",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "AssetId",
+          "displayName": "AssetId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "CampaignId",
+          "displayName": "CampaignId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "AssetType",
+          "displayName": "AssetType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Pillar",
+            "SocialPost",
+            "Email",
+            "Landing",
+            "Script",
+            "LeadMagnet",
+            "CaseStudy",
+            "Research",
+            "Creative",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "Channel",
+          "displayName": "Channel",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "LinkedIn",
+            "Email",
+            "Website",
+            "YouTube",
+            "Instagram",
+            "Facebook",
+            "Webinar",
+            "Partner",
+            "Internal",
+            "Multi"
+          ]
+        },
+        {
+          "internalName": "TargetAudience",
+          "displayName": "TargetAudience",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "FunnelStage",
+          "displayName": "FunnelStage",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "Awareness",
+            "Consideration",
+            "Conversion",
+            "Retention"
+          ]
+        },
+        {
+          "internalName": "Draft",
+          "displayName": "Draft",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "FinalVersion",
+          "displayName": "FinalVersion",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CreativeAssets",
+          "displayName": "CreativeAssets",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CallToAction",
+          "displayName": "CallToAction",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "SourceMaterial",
+          "displayName": "SourceMaterial",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "CreatedByAgent",
+          "displayName": "CreatedByAgent",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ReviewedByAgent",
+          "displayName": "ReviewedByAgent",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ApprovalStatus",
+          "displayName": "ApprovalStatus",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Draft",
+            "InReview",
+            "Approved",
+            "Blocked",
+            "Published",
+            "Archived"
+          ],
+          "default": "Draft"
+        },
+        {
+          "internalName": "RiskClassification",
+          "displayName": "RiskClassification",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "R0",
+            "R1",
+            "R2",
+            "R3"
+          ],
+          "default": "R0"
+        },
+        {
+          "internalName": "ScheduledDate",
+          "displayName": "ScheduledDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "PublishedDate",
+          "displayName": "PublishedDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "PublicationURL",
+          "displayName": "PublicationURL",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Performance",
+          "displayName": "Performance",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RepurposedFromAssetId",
+          "displayName": "RepurposedFromAssetId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "TrackingId",
+          "displayName": "TrackingId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "VersionHistory",
+          "displayName": "VersionHistory",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_MarketingExperiments",
+      "description": "Marketing experiments",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ExperimentId",
+          "displayName": "ExperimentId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "CampaignId",
+          "displayName": "CampaignId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "Hypothesis",
+          "displayName": "Hypothesis",
+          "type": "Note",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Control",
+          "displayName": "Control",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Variant",
+          "displayName": "Variant",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Audience",
+          "displayName": "Audience",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Metric",
+          "displayName": "Metric",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "StartDate",
+          "displayName": "StartDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "EndDate",
+          "displayName": "EndDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "MinimumSample",
+          "displayName": "MinimumSample",
+          "type": "Number",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Result",
+          "displayName": "Result",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "ConfidenceLevel",
+          "displayName": "ConfidenceLevel",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Decision",
+          "displayName": "Decision",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Running",
+            "Stop",
+            "Scale",
+            "Iterate",
+            "Inconclusive"
+          ],
+          "default": "Running"
+        },
+        {
+          "internalName": "Learning",
+          "displayName": "Learning",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "FollowUpAction",
+          "displayName": "FollowUpAction",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_MarketingPerformanceSnapshots",
+      "description": "Periodic marketing performance snapshots",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "SnapshotId",
+          "displayName": "SnapshotId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "PeriodStart",
+          "displayName": "PeriodStart",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "PeriodEnd",
+          "displayName": "PeriodEnd",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "CampaignId",
+          "displayName": "CampaignId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "AssetId",
+          "displayName": "AssetId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "Channel",
+          "displayName": "Channel",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "MetricsJson",
+          "displayName": "MetricsJson",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": "Full metric bag per analytics dictionary"
+        },
+        {
+          "internalName": "DataQualityFlags",
+          "displayName": "DataQualityFlags",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "GeneratedByAgent",
+          "displayName": "GeneratedByAgent",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    },
+    {
+      "title": "HVCG_MarketingTasks",
+      "description": "Marketing agent task queue",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "TaskId",
+          "displayName": "TaskId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "CampaignId",
+          "displayName": "CampaignId",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "TaskType",
+          "displayName": "TaskType",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Research",
+            "Strategy",
+            "Draft",
+            "Creative",
+            "QA",
+            "Publish",
+            "LeadOps",
+            "Nurture",
+            "Analytics",
+            "Experiment",
+            "Integration",
+            "Escalation",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "AssignedAgent",
+          "displayName": "AssignedAgent",
+          "type": "Text",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "HumanOwner",
+          "displayName": "HumanOwner",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "Priority",
+          "displayName": "Priority",
+          "type": "Choice",
+          "required": false,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "P0",
+            "P1",
+            "P2",
+            "P3"
+          ],
+          "default": "P2"
+        },
+        {
+          "internalName": "DueDate",
+          "displayName": "DueDate",
+          "type": "DateTime",
+          "required": false,
+          "indexed": true,
+          "description": ""
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "description": "",
+          "choices": [
+            "Queued",
+            "InProgress",
+            "Blocked",
+            "InQA",
+            "Done",
+            "Cancelled"
+          ],
+          "default": "Queued"
+        },
+        {
+          "internalName": "Dependencies",
+          "displayName": "Dependencies",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "RequiredInput",
+          "displayName": "RequiredInput",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "OutputLocation",
+          "displayName": "OutputLocation",
+          "type": "Text",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "QAStatus",
+          "displayName": "QAStatus",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "NotRequired",
+            "Pending",
+            "Passed",
+            "Failed"
+          ],
+          "default": "NotRequired"
+        },
+        {
+          "internalName": "Blocker",
+          "displayName": "Blocker",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        },
+        {
+          "internalName": "EscalationStatus",
+          "displayName": "EscalationStatus",
+          "type": "Choice",
+          "required": false,
+          "indexed": false,
+          "description": "",
+          "choices": [
+            "None",
+            "Orchestrator",
+            "Manny",
+            "Resolved"
+          ],
+          "default": "None"
+        },
+        {
+          "internalName": "CompletionEvidence",
+          "displayName": "CompletionEvidence",
+          "type": "Note",
+          "required": false,
+          "indexed": false,
+          "description": ""
+        }
+      ]
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "MarketingCampaignId",
+        "displayName": "MarketingCampaignId",
+        "type": "Text",
+        "indexed": true,
+        "description": "MKT-CAMP-YYYYMM-###"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "FirstTouchCampaignId",
+        "displayName": "FirstTouchCampaignId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "LatestTouchCampaignId",
+        "displayName": "LatestTouchCampaignId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "ConsentStatus",
+        "displayName": "ConsentStatus",
+        "type": "Choice",
+        "indexed": true,
+        "choices": [
+          "Granted",
+          "Pending",
+          "Withdrawn"
+        ],
+        "default": "Pending"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "ConsentTimestamp",
+        "displayName": "ConsentTimestamp",
+        "type": "DateTime",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "ConsentVersion",
+        "displayName": "ConsentVersion",
+        "type": "Text"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "OptOutStatus",
+        "displayName": "OptOutStatus",
+        "type": "Boolean",
+        "indexed": true,
+        "default": false
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "NurtureSegment",
+        "displayName": "NurtureSegment",
+        "type": "Choice",
+        "indexed": true,
+        "choices": [
+          "Capital readiness",
+          "Cash-flow and CFO needs",
+          "AI and automation",
+          "Operational bottlenecks",
+          "Growth strategy",
+          "Enterprise-value improvement",
+          "Atlas OS interest",
+          "Immediate advisory need",
+          "Not ready yet"
+        ]
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "QualificationStatus",
+        "displayName": "QualificationStatus",
+        "type": "Choice",
+        "indexed": true,
+        "choices": [
+          "Unscored",
+          "MQL",
+          "SQL",
+          "Disqualified",
+          "Nurture"
+        ],
+        "default": "Unscored"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "Urgency",
+        "displayName": "Urgency",
+        "type": "Choice",
+        "choices": [
+          "Now",
+          "30d",
+          "90d",
+          "Exploring",
+          "Unknown"
+        ],
+        "default": "Unknown"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "BudgetReadiness",
+        "displayName": "BudgetReadiness",
+        "type": "Choice",
+        "choices": [
+          "Unknown",
+          "Low",
+          "Medium",
+          "High"
+        ],
+        "default": "Unknown"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "DecisionAuthority",
+        "displayName": "DecisionAuthority",
+        "type": "Choice",
+        "choices": [
+          "Owner",
+          "Partner",
+          "Influencer",
+          "Unknown"
+        ],
+        "default": "Unknown"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "PainPoints",
+        "displayName": "PainPoints",
+        "type": "Note"
+      }
+    },
+    {
+      "list": "HVCG_Leads",
+      "column": {
+        "internalName": "DoNotContact",
+        "displayName": "DoNotContact",
+        "type": "Boolean",
+        "indexed": true,
+        "default": false,
+        "description": "Hard stop for all prospect outreach"
+      }
+    }
+  ]
+}

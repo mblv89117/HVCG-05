@@ -1,0 +1,25 @@
+{
+  "id": "20260719_001_marketing_os_module",
+  "fromVersion": "marketing-os-0.0.0",
+  "toVersion": "marketing-os-1.0.0",
+  "title": "Marketing OS module \u2014 lists + Lead additive columns",
+  "status": "ReadyForDevApply",
+  "additiveOnly": true,
+  "environment": "Dev Command Center only",
+  "notes": "Dev Command Center only. Additive. Idempotent via ApplyListDiff/Add-HVCGFieldFromSchema skip-if-exists.",
+  "atlasPromotionPaths": [
+    "Copy atlas/lists/*.json \u2192 HVCG PMS src/sharepoint/lists/",
+    "Register in src/sharepoint/lists/_index.json",
+    "Apply releases/migrations style diff"
+  ],
+  "steps": [
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/marketing_os_v1.json"
+    }
+  ],
+  "blockedOn": [
+    "BL-SP-LISTS owner approval for Dev provision",
+    "Owner PnP auth"
+  ]
+}

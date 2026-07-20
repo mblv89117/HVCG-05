@@ -1,0 +1,219 @@
+{
+  "title": "HVCG_MarketingCampaigns",
+  "description": "Marketing campaigns \u2014 Atlas SoR",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Campaign Name",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CampaignId",
+      "displayName": "CampaignId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "MKT-CAMP-YYYYMM-###"
+    },
+    {
+      "internalName": "Objective",
+      "displayName": "Objective",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TargetAudience",
+      "displayName": "TargetAudience",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FunnelStage",
+      "displayName": "FunnelStage",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Awareness",
+        "Consideration",
+        "Conversion",
+        "Retention"
+      ]
+    },
+    {
+      "internalName": "PrimaryOffer",
+      "displayName": "PrimaryOffer",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "StartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EndDate",
+      "displayName": "EndDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerAgent",
+      "displayName": "OwnerAgent",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "SupportingAgents",
+      "displayName": "SupportingAgents",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Draft",
+        "Scheduled",
+        "Active",
+        "Paused",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "Budget",
+      "displayName": "Budget",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Channels",
+      "displayName": "Channels",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SuccessCriteria",
+      "displayName": "SuccessCriteria",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "KPIs",
+      "displayName": "KPIs",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RiskLevel",
+      "displayName": "RiskLevel",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "default": "R1"
+    },
+    {
+      "internalName": "ApprovalRequirement",
+      "displayName": "ApprovalRequirement",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "default": "L2"
+    },
+    {
+      "internalName": "Results",
+      "displayName": "Results",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LessonsLearned",
+      "displayName": "LessonsLearned",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedContentIds",
+      "displayName": "RelatedContentIds",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedLeadCount",
+      "displayName": "RelatedLeadCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedOpportunityIds",
+      "displayName": "RelatedOpportunityIds",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedExperimentIds",
+      "displayName": "RelatedExperimentIds",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

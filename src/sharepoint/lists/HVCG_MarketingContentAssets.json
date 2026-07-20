@@ -1,0 +1,237 @@
+{
+  "title": "HVCG_MarketingContentAssets",
+  "description": "Marketing content assets",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AssetId",
+      "displayName": "AssetId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CampaignId",
+      "displayName": "CampaignId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "AssetType",
+      "displayName": "AssetType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pillar",
+        "SocialPost",
+        "Email",
+        "Landing",
+        "Script",
+        "LeadMagnet",
+        "CaseStudy",
+        "Research",
+        "Creative",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Channel",
+      "displayName": "Channel",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "LinkedIn",
+        "Email",
+        "Website",
+        "YouTube",
+        "Instagram",
+        "Facebook",
+        "Webinar",
+        "Partner",
+        "Internal",
+        "Multi"
+      ]
+    },
+    {
+      "internalName": "TargetAudience",
+      "displayName": "TargetAudience",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FunnelStage",
+      "displayName": "FunnelStage",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Awareness",
+        "Consideration",
+        "Conversion",
+        "Retention"
+      ]
+    },
+    {
+      "internalName": "Draft",
+      "displayName": "Draft",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FinalVersion",
+      "displayName": "FinalVersion",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CreativeAssets",
+      "displayName": "CreativeAssets",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CallToAction",
+      "displayName": "CallToAction",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SourceMaterial",
+      "displayName": "SourceMaterial",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CreatedByAgent",
+      "displayName": "CreatedByAgent",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ReviewedByAgent",
+      "displayName": "ReviewedByAgent",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "ApprovalStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Draft",
+        "InReview",
+        "Approved",
+        "Blocked",
+        "Published",
+        "Archived"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "RiskClassification",
+      "displayName": "RiskClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "default": "R0"
+    },
+    {
+      "internalName": "ScheduledDate",
+      "displayName": "ScheduledDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PublishedDate",
+      "displayName": "PublishedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PublicationURL",
+      "displayName": "PublicationURL",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Performance",
+      "displayName": "Performance",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RepurposedFromAssetId",
+      "displayName": "RepurposedFromAssetId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TrackingId",
+      "displayName": "TrackingId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "VersionHistory",
+      "displayName": "VersionHistory",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}
