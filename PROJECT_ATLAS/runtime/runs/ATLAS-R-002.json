@@ -8,9 +8,9 @@
   "commitHash": null,
   "filesChanged": [],
   "startedAt": "2026-07-20T01:08:22Z",
-  "endedAt": "2026-07-20T01:12:01Z",
+  "endedAt": "2026-07-20T01:15:47Z",
   "status": "blocked",
-  "errorDetails": "Resume auth probe failed: GET https://api.cursor.com/v1/models HTTP 401 Invalid User API Key. Keychain CURSOR_API_KEY unchanged fingerprint sha256_12=580f767240b8 len=182 hex-like (not a Cursor User API Key prefix).",
+  "errorDetails": "Auth verification failed on resume: GET https://api.cursor.com/v1/models returned HTTP 401 {\"code\":\"error\",\"message\":\"Invalid User API Key\"}. Keychain service CURSOR_API_KEY still present with same fingerprint as prior attempt (len=182, prefix 7365, not key_/cursor_/crsr_). Keychain cdat/mdat=20260720010111Z (not updated after owner replace directive). Env and secrets file absent.",
   "agentUrl": null,
   "resultText": null,
   "durationMs": null,
@@ -49,18 +49,25 @@
     ],
     "preDispatchCommit": "9891e1df6df8d9be426a8e3ca45ffcdd49584656",
     "validationBranchPushed": true,
-    "resumeAuthProbe": {
-      "at": "2026-07-20T01:12:01Z",
-      "endpoint": "GET https://api.cursor.com/v1/models",
+    "resumeAuthCheck": {
+      "at": "2026-07-20T01:15:47Z",
+      "endpoint": "https://api.cursor.com/v1/models",
+      "method": "GET",
       "httpStatus": 401,
       "responseBody": {
         "code": "error",
         "message": "Invalid User API Key"
       },
-      "keySource": "keychain:CURSOR_API_KEY",
-      "keyFingerprintSha256_12": "580f767240b8",
-      "keyLen": 182,
-      "keyLooksLikeCursorUserKeyPrefix": false
+      "keySources": {
+        "env": false,
+        "file": false,
+        "keychainService": "CURSOR_API_KEY",
+        "keychainPresent": true,
+        "keyLen": 182,
+        "keyPrefix": "7365",
+        "startsWithKey_": false,
+        "keychainCdatMdat": "20260720010111Z"
+      }
     }
   }
 }

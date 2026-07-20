@@ -43,16 +43,14 @@ Replace Keychain service `CURSOR_API_KEY` with a **valid Cursor User API Key** f
 
 Why: the dispatcher and validation branch are ready; the API rejects the current Keychain value, and creating a valid API key is owner-only.
 
-## Resume attempt (2026-07-20T01:11Z)
 
-Owner reported CURSOR_API_KEY replaced. Auth probe re-run from Sprint 12 worktree.
+## Resume auth check (2026-07-20T01:15:47Z)
 
 | Field | Value |
 |---|---|
 | Endpoint | `GET https://api.cursor.com/v1/models` |
 | HTTP status | `401` |
-| Response body | `{"code":"error","message":"Invalid User API Key"}` |
-| Key source used | Keychain service `CURSOR_API_KEY` |
-| Key fingerprint (sha256_12) | `580f767240b8` |
-| Observation | Fingerprint matches prior invalid credential (len=182, hex-like). Env/file absent. No dispatch performed. |
-
+| Response body | `{{"code":"error","message":"Invalid User API Key"}}` |
+| Keychain mdat | `20260720010111Z` (unchanged since first failure) |
+| Env / file key | absent |
+| Dispatch attempted on resume | **No** |
