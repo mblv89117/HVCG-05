@@ -1,0 +1,26 @@
+{
+  "taskId": "ATLAS-R-002",
+  "title": "Validate Cursor Cloud Agents API Dispatch",
+  "assignedRole": "documentation-manager",
+  "repoUrl": "https://github.com/mblv89117/HVCG-05",
+  "requiredBranch": "cursor/documentation-manager/runtime-validation-ATLAS-R-002",
+  "startingRef": "cursor/documentation-manager/runtime-validation-ATLAS-R-002",
+  "authorizedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation-ATLAS-R-002.md"
+  ],
+  "workOnCurrentBranch": true,
+  "autoCreatePR": false,
+  "model": "composer-2.5",
+  "prompt": "PROJECT ATLAS VALIDATION TASK ATLAS-R-002\n\nYou are acting as role: documentation-manager.\n\nWork ONLY on branch: cursor/documentation-manager/runtime-validation-ATLAS-R-002\n(You must push commits to this exact branch; do not create a different branch; do not open a PR; do not merge to main.)\n\nAuthorized path (ONLY file you may create or modify):\nPROJECT_ATLAS/ORCHESTRATION/runtime-validation-ATLAS-R-002.md\n\nCreate that file with Markdown content containing these fields filled with real values from this run:\n- Task ID: ATLAS-R-002\n- Cloud run ID: (your run id)\n- Assigned role: documentation-manager\n- Branch: cursor/documentation-manager/runtime-validation-ATLAS-R-002\n- Start time: (ISO-8601 UTC when you began)\n- Completion time: (ISO-8601 UTC when you finish)\n- Dispatch method: cursor-cloud-agents-api\n- Validation outcome: PASS (if constraints met) or FAIL with reason\n\nDo not modify any other files.\nCommit the change with a clear message referencing ATLAS-R-002.\nDo not merge to main.\nDo not launch any subagents or recursive agents.",
+  "dispatch": {
+    "method": "cursor-cloud-agents-api",
+    "pollIntervalSeconds": 15,
+    "timeoutSeconds": 1800
+  },
+  "metadata": {
+    "phase": 1,
+    "ownerDirective": "Complete Phase 1 Atlas Agent Runtime validation via REST API",
+    "preDispatchCommit": "9891e1df6df8d9be426a8e3ca45ffcdd49584656",
+    "retryCount": 0
+  }
+}

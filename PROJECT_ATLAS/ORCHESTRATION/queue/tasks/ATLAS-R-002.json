@@ -1,0 +1,50 @@
+{
+  "id": "ATLAS-R-002",
+  "sprint": null,
+  "title": "Validate Cursor Cloud Agents API Dispatch",
+  "description": "Phase 1 completion: dispatch via Cloud Agents REST API using Atlas dispatcher. Create PROJECT_ATLAS/ORCHESTRATION/runtime-validation-ATLAS-R-002.md on exclusive branch. Do not merge.",
+  "assignedAgent": "documentation-manager",
+  "priority": "P0",
+  "status": "Blocked",
+  "dependencies": [],
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation-ATLAS-R-002.md"
+  ],
+  "acceptanceCriteria": [
+    "Dispatcher calls Cloud Agents API successfully",
+    "Cloud agent reaches terminal FINISHED",
+    "Required branch used",
+    "Only authorized file committed",
+    "Run result recorded under PROJECT_ATLAS/runtime/runs/ATLAS-R-002.json",
+    "Branch not merged to main"
+  ],
+  "requiredReviewers": [
+    "master-pm",
+    "qa-release"
+  ],
+  "branch": "cursor/documentation-manager/runtime-validation-ATLAS-R-002",
+  "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/sprint12-engineering-orchestration",
+  "requiredTests": [
+    "PROJECT_ATLAS/runtime/tests/test_cursor_adapter.py"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/runtime-validation-ATLAS-R-002.md",
+    "PROJECT_ATLAS/runtime/runs/ATLAS-R-002.json"
+  ],
+  "ownerApprovalRequired": true,
+  "commitReferences": [],
+  "artifacts": [
+    "PROJECT_ATLAS/runtime/runs/ATLAS-R-002.json",
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-R-002-blocked.md"
+  ],
+  "createdAt": "2026-07-20T01:08:00Z",
+  "updatedAt": "2026-07-20T01:10:00Z",
+  "createdBy": "master-pm",
+  "blockedReason": "CURSOR_API_KEY Keychain value rejected by Cursor API (HTTP 401 Invalid User API Key). Owner must replace with a valid User API Key.",
+  "runtimeDispatch": {
+    "method": "cursor-cloud-agents-api",
+    "taskDefinition": "PROJECT_ATLAS/runtime/tasks/ATLAS-R-002.json",
+    "retryCount": 0,
+    "status": "blocked"
+  }
+}

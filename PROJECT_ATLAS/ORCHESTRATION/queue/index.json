@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:23:46Z",
+  "updatedAt": "2026-07-20T01:10:00Z",
   "tasks": [
     {
       "id": "ATLAS-T-1201",
@@ -176,6 +176,14 @@
       "assignedAgent": "documentation-manager",
       "priority": "P0",
       "title": "Validate Cursor Cloud Agent Dispatch"
+    },
+    {
+      "id": "ATLAS-R-002",
+      "sprint": null,
+      "status": "Blocked",
+      "assignedAgent": "documentation-manager",
+      "priority": "P0",
+      "title": "Validate Cursor Cloud Agents API Dispatch"
     }
   ]
 }
