@@ -1,40 +1,53 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 21:10 UTC
+**As of:** 2026-07-19 (Master PM program audit)  
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
-## Now
+## Now (program critical path)
 
 1. Keep Track 1 **frozen**.  
-2. Treat Revenue tip `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` as Sprint 2–3 SoR.  
-3. Revenue Track is **READY TO START Sprint 4**; Sprint 4 remains **NOT STARTED** until assigned.
-4. Preserve [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) commit anchors; do not include dirty working-tree files in the checkpoint.
-5. Execute [PARALLEL_WORKSTREAM_CONTROL](Reports/PARALLEL_WORKSTREAM_CONTROL.md): Ops Hub / AI Governance / Deployment Manager Sprint 1 Phase 1 — concurrent under exclusive paths; **no commit/push** without separate owner approval.
-6. **Ops remediation (blocking):** revert locked Atlas roots + remove `Sprint_FinanceOperations1.md` from Ops WT; see [OperationsHubSprint1_STOP_REMEDIATE](Handoffs/proposed/OperationsHubSprint1_STOP_REMEDIATE.md).
+2. Treat Elite **RC1** Release pack as sole product release SoR:  
+   `.worktrees/atlas-integration-release/PROJECT_ATLAS/Release/`  
+3. **Freeze** `cursor/atlas-integration-release` to stabilization / defect fixes only.  
+4. Assign **QA** to rebase onto RC1 and issue written Local UAT GO/NO-GO.  
+5. Assign **Documentation** to point status readers at RC1 + [CURRENT_STATE.md](CURRENT_STATE.md); stop treating root Maker OA `PROJECT_STATUS.md` as live program status.  
+6. Stop `track10` feature divergence from recovery/RC1 line.  
+7. Hold **QBO merge** until written QA ACK; tip remains `c892215` on `cursor/quickbooks-integration`.
 
 ## Owner decisions
 
-1. Confirm Sprint 4 start (or defer).  
-2. Price cards: SKU-FCFO / SKU-EXIT / SKU-ACQ / SKU-MODEL (or keep OWNER REVIEW).  
-3. Phone routing for `725.577.6511` vs `702.906.6444`.  
+1. Walk RC1 Local UAT at http://127.0.0.1:5180/ (nav, pending financials, Accounting BLOCKED).  
+2. Provide Plaid Sandbox + encryption secrets via `.secrets` / Key Vault — **never paste into chat**.  
+3. Provide / register Entra SPA client ID.  
+4. Accept or reject RC1 shell for continued stabilization.  
+5. QBO: merge-after-QA vs defer past RC1.  
+6. Confirm Track 1 freeze stands.  
+7. BL-C1 / DNS / pilot / canvas — remain closed unless explicitly opened.
 
 ## Next engineering candidates (gated)
 
 | Action | Track | Gate |
 |--------|-------|------|
-| Sprint 4 conversion activation | Track 2 | Assignment + owner |
-| Soft UAT of conversion CTA copy | Track 2 | Human QA |
-| Wire live Dev HTTP URL for EVA POST (optional) | Track 2 | Dev only |
+| Full QA written GO on RC1 | QA / Release | Assignment |
+| Plaid Sandbox E2E | Banking | Owner secrets |
+| Security Sandbox re-review | Security | After Plaid E2E |
+| QBO tip merge into integration | Accounting | QA ACK + Master PM |
+| Dev SWA redeploy + DEF-ELITE retest | Elite | QA |
+| Staging KV prep | Azure | Infra only |
+| Portal / Finance Ops / Ops / AI schema merge queue | Multi | Post Owner UAT acceptance |
+| Revenue Sprint 5 | Track 2 | Owner assignment |
+| Soft UAT conversion CTA | Track 2 | Human QA |
 | Hosted private website preview | Track 3 | Owner (not public DNS) |
-| Forms → CRM path retirement optional | Track 2/3 | After EVA parity |
-| Next Prod flow activation | Track 1/7 | New owner approval (freeze) |
-| Pilot import ACCG / Prodigy / Christie | Track 2 data | Owner |
-| Canvas publish | CRM product | D-002 |
-| Public DNS | Track 3 | BL-PUBLISH-1 / GL-PUBLISH-1 |
+| Next Prod flow activation | Track 1/7 | New owner approval |
+| Pilot import | Track 2 data | Owner |
+| Canvas publish | CRM | D-002 |
+| Public DNS | Track 3 | BL-PUBLISH-1 |
 | Portal invites | Track 4 | BL-C1 |
 
 ## Explicit non-actions
 
-- Do not begin Sprint 4 until assigned  
-- Do not modify Track 1 Production freeze  
+- Do not prepare Production  
+- Do not add features on Elite RC1 branch  
+- Do not merge QBO before QA ACK  
+- Do not treat Jul 15 QA dashboard or Master PM `b75b19b` tip as current release authority  
 - Do not push unless the human asks  

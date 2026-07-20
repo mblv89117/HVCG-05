@@ -1,18 +1,20 @@
 # AGENT_HANDOFF
 
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer  
-**As of:** 2026-07-16 19:01 UTC
+**As of:** 2026-07-19 (Master PM program audit)  
 **Goal:** Resume with **zero** prior chat history.
 
 ## 60-second orientation
 
 1. This repo is the **HVCG Project Management System** (High Value Capital Group platform).  
-2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only.  
-3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.  
-4. **Revenue OS Sprints 1–3 are COMPLETE.** Revenue Systems Engineer is **COMPLETE**. Tip: `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`.  
-5. Revenue Track is **READY TO START Sprint 4** — Sprint 4 is **NOT STARTED** until assigned.
-6. Prefer **repository evidence** over chat. Never rely on previous chat history.
-7. Pre-Sprint 4 checkpoint: [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md). It locks committed SHAs and excludes dirty worktree content.
+2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only. Start at [CURRENT_STATE.md](CURRENT_STATE.md).  
+3. **Elite Integration RC1** is the current product release SoR: `.worktrees/atlas-integration-release/PROJECT_ATLAS/Release/` — **CONDITIONAL GO** local Owner UAT · **NO-GO** Production.  
+4. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.  
+5. **Revenue OS Sprints 1–4 are COMPLETE** (Dev/Staging). S3 tip `0073bf4`; S4 tip `bf34c93`. Revenue is **deferred from Elite RC1** until gated.  
+6. **QBO tip exists** at `c892215` but is **not merged** into RC1 (Accounting shows BLOCKED).  
+7. Prefer **repository evidence** over chat. Root `PROJECT_STATUS.md` Maker OA text is widely **stale**.  
+8. Executive report: [Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md](Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md).  
+9. Naming: Jul 16 [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) ≠ Elite Integration **RC1**.
 
 ## Canonical SoR
 
@@ -20,26 +22,27 @@ Every new agent begins with [PROJECT_INDEX.md](PROJECT_INDEX.md). Read Atlas bef
 
 ## Read order (mandatory)
 
-1. [PROJECT_INDEX.md](PROJECT_INDEX.md)  
-2. [CURRENT_STATE.md](CURRENT_STATE.md)  
-3. [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md)  
-4. [Tracks/Track1_Production.md](Tracks/Track1_Production.md)  
-5. [Tracks/Track2_RevenueOS.md](Tracks/Track2_RevenueOS.md)  
-6. [Sprints/Sprint3.md](Sprints/Sprint3.md) · [Sprints/Sprint4.md](Sprints/Sprint4.md)  
-7. Your role handbook under [Agents/](Agents/)  
-8. [KNOWN_ISSUES.md](KNOWN_ISSUES.md) + [NEXT_ACTIONS.md](NEXT_ACTIONS.md)  
-9. [OWNERSHIP.md](OWNERSHIP.md) + [DECISIONS.md](DECISIONS.md)  
-10. [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md)
+1. [CURRENT_STATE.md](CURRENT_STATE.md)  
+2. [Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md](Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md)  
+3. Elite RC1 Release pack under `.worktrees/atlas-integration-release/PROJECT_ATLAS/Release/`  
+4. [NEXT_ACTIONS.md](NEXT_ACTIONS.md) · [ROADMAP.md](ROADMAP.md) · [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md)  
+5. [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)  
+6. Your role handbook under [Agents/](Agents/)  
+7. [Tracks/](Tracks/) + [Sprints/](Sprints/) as needed  
+8. [OWNERSHIP.md](OWNERSHIP.md) + [DECISIONS.md](DECISIONS.md)  
+9. Jul 16 [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) only for pre-S4 anchors (not Elite RC1)
 
 ## Authoritative evidence (do not invent)
 
 | Topic | Prefer |
 |-------|--------|
-| Track 1 Prod freeze | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` + `.worktrees/deployment-engineer/deployment/release-ops/GO_LIVE_STATUS.md` |
-| Deployment Engineer resume | `.worktrees/deployment-engineer/docs/deployment/DEPLOYMENT_ENGINEER_HANDOFF.md` |
-| Revenue Sprints 1–3 code tip | `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` · worktree `.worktrees/revenue-sprint3` |
-| Revenue handoff doc | `deployment/release-ops/HANDOFFS/RevenueSystemsEngineer.md` |
-| RC-1 Dev baseline | `releases/RC-1-Development-Baseline/` |
+| Elite product release / Owner UAT | `.worktrees/atlas-integration-release/PROJECT_ATLAS/Release/` |
+| Program status | [CURRENT_STATE.md](CURRENT_STATE.md) + executive report |
+| Track 1 Prod freeze | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` + GO_LIVE_STATUS |
+| Revenue Sprints 1–3 | `0073bf4` · `.worktrees/revenue-sprint3` |
+| Revenue Sprint 4 | `bf34c93` · `.worktrees/revenue-sprint4` |
+| QBO tip (unmerged) | `c892215` · `.worktrees/quickbooks-integration` |
+| Plaid tip | `6d78514` · `.worktrees/plaid-integration` |
 | Owner gates | `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md` |
 | Agent bus | `docs/agents/AGENT_COMMUNICATIONS.md` |
 
@@ -55,6 +58,8 @@ PAC profile historically used: `HVCG-Dev-Maker` · do **not** re-run `pac auth c
 ## Hard safety (standing)
 
 - No Production changes without owner gate  
+- No new features on Elite RC1 integration branch (stabilization/QA only)  
+- No QBO merge into RC1 before written QA ACK  
 - No extra Prod flow activation (only LeadQualified is Activated under freeze)  
 - No canvas publish (D-002 / OA-CRM-09 open)  
 - No client outbound / portal invite (BL-C1)  
@@ -68,10 +73,9 @@ PAC profile historically used: `HVCG-Dev-Maker` · do **not** re-run `pac auth c
 ```bash
 export HVCG_REPO_ROOT="/Volumes/MacMiniPro2TB/HVCG Project Management System"
 cd "$HVCG_REPO_ROOT"
-# Always: read PROJECT_ATLAS/PROJECT_INDEX.md first
+# Always: read PROJECT_ATLAS/CURRENT_STATE.md first
 git worktree list
-# Revenue tip: .worktrees/revenue-sprint3 @ 0073bf4 (origin/cursor/revenue-sprint3-conversion)
-# RC-1 excludes uncommitted files; inspect current git status before Sprint 4
+# Elite RC1: .worktrees/atlas-integration-release @ 95ec0fa
 # Enter the worktree for your role (see AGENT_ASSIGNMENTS.md)
 ```
 
