@@ -38,12 +38,30 @@ export function TasksPage() {
     )
   }
 
+  const nextActions = tasks.filter((t) => t.nextAction && t.status !== 'Done')
+
   return (
     <div>
       <div className="page-head">
         <h2>Task Center</h2>
-        <p>Client and advisor tasks with due dates, completion %, and progress indicators.</p>
+        <p>Client and advisor tasks with due dates, next actions, and progress indicators.</p>
       </div>
+
+      {nextActions.length > 0 && (
+        <div className="card" style={{ marginBottom: '1rem', background: '#e8f1eb' }}>
+          <h3>Next actions</h3>
+          <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+            {nextActions.map((t) => (
+              <li key={t.id}>
+                <strong>{t.title}</strong>
+                <div className="muted">
+                  {t.ownerType} · {t.dueDate}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="card" style={{ marginBottom: '1rem' }}>
         <h3>Overall completion</h3>

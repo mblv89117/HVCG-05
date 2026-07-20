@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
  * Portal smoke tests — static build + route inventory.
- * No browser required.
  */
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
@@ -21,14 +20,32 @@ else {
 
 const appSrc = readFileSync(app, 'utf8')
 const requiredRoutes = [
+  'summary',
+  'contacts',
   'engagement',
-  'funding',
-  'documents',
-  'messages',
+  'projects',
+  'milestones',
   'tasks',
-  'meetings',
-  'advisor',
+  'approvals',
+  'deliverables',
+  'kpis',
+  'capital',
+  'pipeline',
+  'enterprise-value',
+  'funding',
+  'data-room',
+  'documents',
   'files',
+  'meetings',
+  'notes',
+  'decisions',
+  'messages',
+  'advisor',
+  'ai-insights',
+  'activity',
+  'timeline',
+  'notifications',
+  'invoices',
 ]
 for (const r of requiredRoutes) {
   if (!appSrc.includes(`path="${r}"`) && !appSrc.includes(`path='${r}'`)) {

@@ -20,17 +20,21 @@ Client (browser)
 * Outlook outbound remains disabled by default.
 ```
 
-## Screens (Phase 1)
+## Screens (Version 1)
 
 | Route | Screen |
 |-------|--------|
 | `/` | Client Home |
 | `/engagement` | Engagement Status |
-| `/funding` | Funding Progress (11-stage tracker) |
+| `/timeline` | Project Timeline |
+| `/milestones` | Milestones |
+| `/funding` | Capital Raise Tracker / Funding Progress (11 stages) |
 | `/documents` | Document Checklist / Requested / Uploaded |
-| `/messages` | Secure messaging + notifications |
+| `/messages` | Secure messaging |
 | `/tasks` | Client & Advisor Task Center |
 | `/meetings` | Upcoming Meetings + Book (mock) |
+| `/invoices` | Mock read-only invoices |
+| `/notifications` | In-app notifications |
 | `/advisor` | Assigned Advisor + integration readiness |
 | `/files` | Secure File Center |
 
@@ -42,6 +46,9 @@ Client (browser)
 | Users | id, name, email, role, clientIds | ClientContact / Advisor / Admin |
 | Engagements | clientId, title, type, status, progressPct, nextMilestone | No fee fields |
 | FundingRequests | clientId, stage, amountTarget, amountCommitted, lenderInterest | 11 visual stages |
+| TimelineEvents | clientId, title, date, type, status | Client-safe chronology |
+| Milestones | clientId, dueDate, owner, status, progressPct | Shared checkpoints |
+| Invoices | clientId, invoiceNumber, dates, amount, status | Mock/read-only |
 | DocumentRequests | clientId, folder, title, status, dueDate, uploaded* | Reusable engine |
 | Folders | DOCUMENT_FOLDERS catalog (15) | Diligence taxonomy |
 | Tasks | clientId, ownerType, dueDate, status, weight | Completion % |
@@ -74,4 +81,7 @@ Aligned with HVCG EVA staging: forest green `#1a5c42`, deep `#0f3d2c`, gold `#b0
 - `docs/portal-sprint1/DATA_MODEL.md`
 - `docs/portal-sprint1/HANDOFF.md`
 - `docs/portal-sprint1/QA_RESULTS.md`
+- `docs/portal-sprint1/INTERFACE_SPECIFICATIONS.md`
+- `docs/portal-sprint1/V1_DELIVERY_REPORT.md`
+- `docs/portal-sprint1/QA_HANDOFF_V1.md`
 - Atlas Track 4 + Sprint Client Portal 1

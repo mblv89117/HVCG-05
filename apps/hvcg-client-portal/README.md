@@ -1,25 +1,21 @@
-# HVCG Client Portal Sprint 1 — README
+# HVCG Client Portal — Executive Dashboard Integration Support
 
-Multi-client secure engagement workspace MVP.
-
-## Quick start
-
-```bash
-cd apps/hvcg-client-portal
-npm install --cache /tmp/npm-cache-hvcg-portal
-npm run dev
-```
-
-Open http://localhost:5174
+Reference client workspace module. **Elite OS is the Executive Dashboard UX SoR.** This app is the CCB / data-room reference for adapter integration — not an independent production deploy.
 
 ## Docs
 
-- Architecture: `docs/portal-sprint1/ARCHITECTURE.md`
-- Data model: `docs/portal-sprint1/DATA_MODEL.md`
-- Handoff: `docs/portal-sprint1/HANDOFF.md`
-- QA: `docs/portal-sprint1/QA_RESULTS.md`
-- Screenshots: `docs/portal-sprint1/screenshots/`
+- Integration readiness: `docs/portal-sprint1/INTEGRATION_READINESS_REPORT.md`
+- CCB guide: `docs/portal-sprint1/CCB_WORKSPACE_GUIDE.md`
+- QA handoff: `docs/portal-sprint1/QA_HANDOFF_CCB.md`
+
+## Roles (Exec release)
+
+HVCG Owner · HVCG Team Member · Client Executive · Client Contributor · Read-Only Advisor · Administrator
+
+## Pending data labels
+
+`Awaiting verified data` · `Pending verification` · `Not yet calculated`
 
 ## Safety
 
-No production credentials. Invites gated (BL-C1). Does not modify Revenue Sprint 1–4, Track 1, CRM schema, or live DNS/email/SMS.
+No fabricated CCB financials · No anonymous sharing · No live invites (BL-C1) · No independent deploy

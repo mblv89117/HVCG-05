@@ -7,6 +7,9 @@ Client 1──* User (via clientIds)
 Client 1──1 Advisor (advisorId)
 Client 1──* Engagement
 Client 1──* FundingRequest
+Client 1──* TimelineEvent
+Client 1──* Milestone
+Client 1──* Invoice
 Client 1──* DocumentRequest ──> Folder (catalog)
 Client 1──* Task
 Client 1──* MessageThread 1──* Message
@@ -31,6 +34,9 @@ Client 1──* SecureFile
 - Engagement client: Active | Onboarding | Paused | Closed
 - Document: Requested | Uploaded | In Review | Accepted | Rejected
 - Task: Open | In Progress | Done
+- Timeline: Complete | Current | Upcoming
+- Milestone: Complete | In Progress | Upcoming | At Risk
+- Invoice: Draft | Open | Paid | Overdue
 - Funding: 11-stage enum (see Architecture)
 
 ## Scale notes

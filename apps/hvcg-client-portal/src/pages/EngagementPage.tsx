@@ -5,23 +5,25 @@ export function EngagementPage() {
   if (!engagement) {
     return (
       <div className="page-head">
-        <h2>Engagement Status</h2>
+        <h2>Engagement Overview</h2>
         <p>No engagement found for {activeClient.name}.</p>
       </div>
     )
   }
 
+  const pct = engagement.progressPct
+
   return (
     <div>
       <div className="page-head">
-        <h2>Engagement Status</h2>
+        <h2>Engagement Overview</h2>
         <p>Client-safe view of delivery progress for {activeClient.name}.</p>
       </div>
       <div className="grid cols-2">
         <div className="card">
           <h3>{engagement.title}</h3>
           <p className="muted">
-            {engagement.type} · Started {engagement.startDate}
+            {engagement.type} · Started {engagement.startDate} · {engagement.availability}
           </p>
           <p>
             Status: <span className="badge ok">{engagement.status}</span>
@@ -31,11 +33,13 @@ export function EngagementPage() {
           </p>
           <div style={{ marginTop: '1rem' }}>
             <div className="muted" style={{ marginBottom: '0.35rem' }}>
-              Overall completion {engagement.progressPct}%
+              Overall completion {pct === null ? 'pending verified progress' : `${pct}%`}
             </div>
-            <div className="progress">
-              <span style={{ width: `${engagement.progressPct}%` }} />
-            </div>
+            {pct !== null && (
+              <div className="progress">
+                <span style={{ width: `${pct}%` }} />
+              </div>
+            )}
           </div>
         </div>
         <div className="card">
@@ -43,9 +47,13 @@ export function EngagementPage() {
           <p style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', margin: '0.35rem 0 0.75rem' }}>
             {engagement.nextMilestone}
           </p>
-          <p className="muted">
-            Fees, margins, and internal notes are never shown in the client portal.
+          <p>
+            <strong>Document readiness:</strong> {activeClient.documentReadiness}
           </p>
+          <p>
+            <strong>Capital readiness:</strong> {activeClient.capitalReadiness}
+          </p>
+          <p className="muted">Fees, margins, and internal notes are never shown in the client portal.</p>
         </div>
       </div>
     </div>

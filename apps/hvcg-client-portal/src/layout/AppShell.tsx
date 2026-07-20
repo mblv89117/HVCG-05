@@ -1,20 +1,71 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { usePortal } from '../state/PortalContext'
+import type { PortalRole } from '../types'
 
-const links = [
-  { to: '/', label: 'Client Home', end: true },
-  { to: '/engagement', label: 'Engagement Status' },
-  { to: '/funding', label: 'Funding Progress' },
-  { to: '/documents', label: 'Document Checklist' },
-  { to: '/messages', label: 'Messages' },
-  { to: '/tasks', label: 'Tasks' },
-  { to: '/meetings', label: 'Meetings' },
-  { to: '/advisor', label: 'Assigned Advisor' },
-  { to: '/files', label: 'Secure File Center' },
+const groups: { label: string; links: { to: string; label: string; end?: boolean }[] }[] = [
+  {
+    label: 'Overview',
+    links: [
+      { to: '/', label: 'Client Home', end: true },
+      { to: '/summary', label: 'Executive Summary' },
+      { to: '/contacts', label: 'Contacts' },
+      { to: '/engagement', label: 'Engagement Overview' },
+    ],
+  },
+  {
+    label: 'Delivery',
+    links: [
+      { to: '/projects', label: 'Projects' },
+      { to: '/milestones', label: 'Milestones' },
+      { to: '/tasks', label: 'Tasks' },
+      { to: '/approvals', label: 'Approvals' },
+      { to: '/deliverables', label: 'Deliverables' },
+    ],
+  },
+  {
+    label: 'Capital',
+    links: [
+      { to: '/kpis', label: 'Financial KPIs' },
+      { to: '/capital', label: 'Capital Roadmap' },
+      { to: '/pipeline', label: 'Lender / Investor Pipeline' },
+      { to: '/enterprise-value', label: 'Enterprise Value' },
+      { to: '/funding', label: 'Funding Progress' },
+    ],
+  },
+  {
+    label: 'Data Room',
+    links: [
+      { to: '/data-room', label: 'Secure Data Room' },
+      { to: '/documents', label: 'Document Requests' },
+      { to: '/files', label: 'Approved Files' },
+    ],
+  },
+  {
+    label: 'Collaborate',
+    links: [
+      { to: '/meetings', label: 'Meetings' },
+      { to: '/notes', label: 'Notes' },
+      { to: '/decisions', label: 'Decisions' },
+      { to: '/messages', label: 'Messages' },
+      { to: '/advisor', label: 'Assigned Advisor' },
+    ],
+  },
+  {
+    label: 'Insights',
+    links: [
+      { to: '/ai-insights', label: 'AI Insights' },
+      { to: '/activity', label: 'Activity History' },
+      { to: '/timeline', label: 'Project Timeline' },
+      { to: '/notifications', label: 'Notifications' },
+      { to: '/invoices', label: 'Invoices' },
+    ],
+  },
 ]
 
+const roles: PortalRole[] = ['HVCG Owner', 'HVCG Team Member', 'Client Executive', 'Client Contributor', 'Read-Only Advisor', 'Administrator']
+
 export function AppShell() {
-  const { clients, activeClientId, setActiveClientId, user, activeClient } = usePortal()
+  const { clients, activeClientId, setActiveClientId, user, activeClient, setUserRole } = usePortal()
 
   return (
     <div className="app-shell">
@@ -22,19 +73,29 @@ export function AppShell() {
         <div className="brand-block">
           <p className="eyebrow">High Value Capital Group</p>
           <h1>Client Portal</h1>
-          <p className="sub">Secure engagement workspace</p>
+          <p className="sub">Secure client workspaces &amp; data rooms</p>
         </div>
         <nav className="nav" aria-label="Portal sections">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => (isActive ? 'active' : undefined)}>
-              {l.label}
-            </NavLink>
+          {groups.map((g) => (
+            <div key={g.label} className="nav-group">
+              <div className="nav-group-label">{g.label}</div>
+              {g.links.map((l) => (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  end={l.end}
+                  className={({ isActive }) => (isActive ? 'active' : undefined)}
+                >
+                  {l.label}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="sidebar-foot">
-          Dev MVP · integrations mocked · invites gated (BL-C1)
+          Template: Colorado Craft Beef · invites gated · no anonymous sharing
           <br />
-          Active client: {activeClient.code}
+          Active: {activeClient.code}
         </div>
       </aside>
       <div className="main">
@@ -50,6 +111,21 @@ export function AppShell() {
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name} ({c.code})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="client-switch">
+            <label htmlFor="roleSelect">Role</label>
+            <select
+              id="roleSelect"
+              value={user.role}
+              onChange={(e) => setUserRole(e.target.value as PortalRole)}
+              aria-label="Select portal role"
+            >
+              {roles.map((r) => (
+                <option key={r} value={r}>
+                  {r}
                 </option>
               ))}
             </select>

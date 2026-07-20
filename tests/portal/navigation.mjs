@@ -12,14 +12,32 @@ const errors = []
 
 const expected = [
   ['/', 'HomePage'],
+  ['/summary', 'ExecutiveSummaryPage'],
+  ['/contacts', 'ContactsPage'],
   ['/engagement', 'EngagementPage'],
-  ['/funding', 'FundingPage'],
-  ['/documents', 'DocumentsPage'],
-  ['/messages', 'MessagesPage'],
+  ['/projects', 'ProjectsPage'],
+  ['/milestones', 'MilestonesPage'],
   ['/tasks', 'TasksPage'],
-  ['/meetings', 'MeetingsPage'],
-  ['/advisor', 'AdvisorPage'],
+  ['/approvals', 'ApprovalsPage'],
+  ['/deliverables', 'DeliverablesPage'],
+  ['/kpis', 'KpisPage'],
+  ['/capital', 'CapitalRoadmapPage'],
+  ['/pipeline', 'PipelinePage'],
+  ['/enterprise-value', 'EnterpriseValuePage'],
+  ['/funding', 'FundingPage'],
+  ['/data-room', 'DataRoomPage'],
+  ['/documents', 'DocumentsPage'],
   ['/files', 'FilesPage'],
+  ['/meetings', 'MeetingsPage'],
+  ['/notes', 'NotesPage'],
+  ['/decisions', 'DecisionsPage'],
+  ['/messages', 'MessagesPage'],
+  ['/advisor', 'AdvisorPage'],
+  ['/ai-insights', 'AiInsightsPage'],
+  ['/activity', 'ActivityPage'],
+  ['/timeline', 'TimelinePage'],
+  ['/notifications', 'NotificationsPage'],
+  ['/invoices', 'InvoicesPage'],
 ]
 
 for (const [path, page] of expected) {
@@ -31,6 +49,7 @@ for (const [path, page] of expected) {
 }
 
 if (!shell.includes('Client Home')) errors.push('Missing Client Home nav label')
+if (!shell.includes('Secure Data Room')) errors.push('Missing Secure Data Room nav label')
 
 if (errors.length) {
   console.error('FAIL — Portal navigation')

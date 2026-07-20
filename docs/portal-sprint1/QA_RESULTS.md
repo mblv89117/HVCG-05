@@ -1,4 +1,4 @@
-# Client Portal QA Results — Sprint 1 Phase 1
+# Client Portal QA Results — Version 1
 
 **As of:** 2026-07-16
 **Branch:** `cursor/client-portal-sprint1`
@@ -8,7 +8,7 @@
 
 | Suite | Result |
 |-------|--------|
-| Unit (Vitest) | **PASS** — 7/7 |
+| Unit (Vitest) | **PASS** — 10/10 |
 | Portal smoke | **PASS** |
 | Permission tests | **PASS** |
 | Navigation tests | **PASS** |
@@ -33,6 +33,8 @@ npm run qa:responsive
 - Branding + nav + multi-client switcher
 - Funding stages (all 11) render
 - Document folders present
+- Timeline, milestone, invoice, and notification routes present
+- New mock records are client-scoped
 - Integrations mocked; Outlook not ready
 - Mobile breakpoint CSS + viewport meta
 - Build emits `dist/` for preview/screenshots
@@ -46,4 +48,5 @@ See `docs/portal-sprint1/screenshots/` (desktop + mobile home).
 - Live Entra invites (BL-C1)
 - Live SharePoint wiring
 - Merge requires a separate owner instruction
+- Current Version 1 additions remain uncommitted pending QA disposition
 - No Production / Track 1 / Revenue edits performed

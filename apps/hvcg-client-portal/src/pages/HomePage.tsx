@@ -1,117 +1,124 @@
 import { Link } from 'react-router-dom'
+import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge'
 import { usePortal } from '../state/PortalContext'
-import { FUNDING_STAGES } from '../types'
-
-function money(n: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
-}
 
 export function HomePage() {
-  const { activeClient, engagement, funding, docs, tasks, meetings, advisor, notifications } = usePortal()
+  const { activeClient, engagement, tasks, docs, meetings, notifications, advisor, user } = usePortal()
+  const nextActions = tasks.filter((t) => t.nextAction && t.status !== 'Done')
   const openDocs = docs.filter((d) => d.status === 'Requested' || d.status === 'In Review').length
-  const clientTasks = tasks.filter((t) => t.ownerType === 'Client')
-  const doneWeight = clientTasks.filter((t) => t.status === 'Done').reduce((s, t) => s + t.weight, 0)
-  const totalWeight = clientTasks.reduce((s, t) => s + t.weight, 0) || 1
-  const taskPct = Math.round((doneWeight / totalWeight) * 100)
-  const stageIdx = funding ? FUNDING_STAGES.indexOf(funding.stage) : -1
+  const unread = notifications.filter((n) => !n.read).length
+  const knowledgeUser = knowledgeUserFromHost({
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    assignedClients: [activeClient.code],
+    organizationId: 'HVCG',
+  })
 
   return (
     <div>
       <div className="page-head">
-        <h2>Welcome, {activeClient.name}</h2>
+        <h2>{activeClient.name}</h2>
         <p>
-          Your secure HVCG workspace for engagement status, funding progress, documents, and advisor collaboration.
-          Multi-client ready — switch workspaces above.
+          Secure HVCG client workspace. Verified relationship facts only — financial figures remain pending until
+          Atlas sources connect.
         </p>
       </div>
 
       <div className="grid cols-4" style={{ marginBottom: '1rem' }}>
         <div className="card stat">
           <span className="label">Engagement</span>
-          <span className="value">{engagement?.progressPct ?? 0}%</span>
-          <span className="muted">{engagement?.status ?? '—'}</span>
-        </div>
-        <div className="card stat">
-          <span className="label">Funding stage</span>
-          <span className="value" style={{ fontSize: '1.15rem' }}>
-            {funding?.stage ?? '—'}
+          <span className="value" style={{ fontSize: '1.05rem' }}>
+            {activeClient.engagementStatus}
           </span>
-          <span className="muted">
-            Step {stageIdx + 1} of {FUNDING_STAGES.length}
+          <span className="muted">Health: {activeClient.health}</span>
+        </div>
+        <div className="card stat">
+          <span className="label">Document readiness</span>
+          <span className="value" style={{ fontSize: '0.95rem' }}>
+            In Progress
           </span>
+          <span className="muted">{openDocs} open requests</span>
         </div>
         <div className="card stat">
-          <span className="label">Open documents</span>
-          <span className="value">{openDocs}</span>
-          <span className="muted">Requested or in review</span>
+          <span className="label">Capital readiness</span>
+          <span className="value" style={{ fontSize: '0.95rem' }}>
+            {activeClient.blueprintStage}
+          </span>
+          <span className="muted">Amounts not verified</span>
         </div>
         <div className="card stat">
-          <span className="label">Your tasks</span>
-          <span className="value">{taskPct}%</span>
-          <div className="progress" style={{ marginTop: '0.45rem' }}>
-            <span style={{ width: `${taskPct}%` }} />
-          </div>
+          <span className="label">Notifications</span>
+          <span className="value">{unread}</span>
+          <span className="muted">In-app only</span>
         </div>
       </div>
 
       <div className="grid cols-2">
+        <div className="card">
+          <h3>Next actions</h3>
+          <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+            {nextActions.map((t) => (
+              <li key={t.id}>
+                <strong>{t.title}</strong>
+                <div className="muted">
+                  {t.ownerType} · {t.dueDate}
+                </div>
+              </li>
+            ))}
+            {nextActions.length === 0 && <li className="muted">No open next actions</li>}
+          </ul>
+          <div style={{ marginTop: '0.85rem' }}>
+            <Link className="btn secondary" to="/tasks">
+              Task center
+            </Link>
+          </div>
+        </div>
         <div className="card">
           <h3>Engagement snapshot</h3>
           <p className="muted">{engagement?.title}</p>
           <p>
             Next milestone: <strong>{engagement?.nextMilestone}</strong>
           </p>
-          <div className="progress" style={{ margin: '0.75rem 0' }}>
-            <span style={{ width: `${engagement?.progressPct ?? 0}%` }} />
-          </div>
-          <Link className="btn secondary" to="/engagement">
-            View engagement status
+          <p className="muted">Referral: {activeClient.referralSource}</p>
+          <Link className="btn secondary" to="/summary">
+            Executive summary
           </Link>
         </div>
         <div className="card">
-          <h3>Funding target</h3>
-          <p className="muted">Target {funding ? money(funding.amountTarget) : '—'}</p>
+          <h3>Blueprint workspace</h3>
           <p>
-            Committed: <strong>{funding ? money(funding.amountCommitted) : '—'}</strong>
+            Current stage: <strong>{activeClient.blueprintStage}</strong>
           </p>
-          <p className="muted">Lender interest: {funding?.lenderInterest ?? 0}</p>
-          <Link className="btn secondary" to="/funding">
-            View funding tracker
+          <p className="muted">Growth capital + additional real estate · non-dilutive &amp; agricultural themes</p>
+          <Link className="btn secondary" to="/capital">
+            Capital roadmap
           </Link>
         </div>
         <div className="card">
-          <h3>Upcoming meetings</h3>
-          <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
-            {meetings.slice(0, 2).map((m) => (
-              <li key={m.id}>
-                <strong>{m.title}</strong>
-                <div className="muted">{new Date(m.startsAt).toLocaleString()}</div>
-              </li>
-            ))}
-            {meetings.length === 0 && <li className="muted">No meetings scheduled</li>}
-          </ul>
-          <div style={{ marginTop: '0.85rem' }}>
-            <Link className="btn secondary" to="/meetings">
-              All meetings
-            </Link>
-          </div>
-        </div>
-        <div className="card">
-          <h3>Assigned advisor</h3>
+          <h3>Advisor</h3>
           <p>
             <strong>{advisor.name}</strong> · {advisor.title}
           </p>
           <p className="muted">{advisor.email}</p>
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
-            <Link className="btn secondary" to="/advisor">
-              Advisor profile
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
+            <Link className="btn secondary" to="/meetings">
+              Meetings ({meetings.length})
             </Link>
-            <Link className="btn ghost" to="/messages">
-              Messages
-              {notifications.some((n) => !n.read) ? ' · new' : ''}
+            <Link className="btn ghost" to="/data-room">
+              Data room
             </Link>
           </div>
         </div>
+      </div>
+
+      <div style={{ marginTop: '1.25rem' }}>
+        <ModuleKnowledgeRail
+          module="ClientPortal"
+          user={knowledgeUser}
+          clientCode={activeClient.code}
+          title="Engagement knowledge"
+        />
       </div>
     </div>
   )

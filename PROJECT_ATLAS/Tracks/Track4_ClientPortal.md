@@ -1,6 +1,6 @@
 # Track 4 — Client Portal
 
-**Status:** Sprint 1 Phase 1 MVP **COMPLETE (repo)**; **Prod portal invites NOT started** (BL-C1)
+**Status:** Version 1 UI **COMPLETE — AWAITING QA**; uncommitted; **Prod portal invites NOT started** (BL-C1)
 **As of:** 2026-07-16
 
 ## What Track 4 owns
@@ -22,6 +22,10 @@ Client portal & data rooms experiences, invite flows (gated), client-facing Shar
 ## Sprint 1 Phase 1
 
 Secure multi-client dashboard: Home, Engagement, Funding (11 stages), Document Checklist, Messages, Tasks, Meetings, Advisor, Secure File Center. See [Sprint_ClientPortal1.md](../Sprints/Sprint_ClientPortal1.md).
+
+## Version 1 QA candidate
+
+Additive UI modules: Project Timeline, Milestones, Invoices, and dedicated Notifications. All external dependencies remain mocked. See [Sprint_ClientPortal_V1.md](../Sprints/Sprint_ClientPortal_V1.md).
 
 ## Do not
 

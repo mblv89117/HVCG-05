@@ -11,6 +11,7 @@
 | Revenue Sprint 3 | [Sprints/Sprint3.md](Sprints/Sprint3.md) | **COMPLETE** |
 | Revenue Sprint 4 | [Sprints/Sprint4.md](Sprints/Sprint4.md) | **READY TO START — NOT STARTED** |
 | Client Portal Sprint 1 | [Sprints/Sprint_ClientPortal1.md](Sprints/Sprint_ClientPortal1.md) | Phase 1 MVP **COMPLETE** — isolated branch committed/pushed |
+| Client Portal Version 1 | [Sprints/Sprint_ClientPortal_V1.md](Sprints/Sprint_ClientPortal_V1.md) | UI **COMPLETE — AWAITING QA**; uncommitted |
 | Backlog | [Sprints/BACKLOG.md](Sprints/BACKLOG.md) | Gated candidates |
 
 Revenue Systems Engineer: **COMPLETE** for Sprints 1–3.

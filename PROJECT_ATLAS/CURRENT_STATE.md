@@ -72,7 +72,8 @@ Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 | Field | Value |
 |-------|-------|
 | Sprint 1 Phase 1 | **COMPLETE (repo)** on `cursor/client-portal-sprint1` / `.worktrees/client-portal-sprint1` |
-| App | `apps/hvcg-client-portal` (mocked integrations; no live invites) |
+| Version 1 UI | **COMPLETE — AWAITING QA**; uncommitted by instruction |
+| App | `apps/hvcg-client-portal` (13 routes; mocked integrations; no live invites) |
 | Commit/push | **Owner approved — committed and pushed on isolated branch** |
 | Prod invites | Still gated **BL-C1** |
 
@@ -83,6 +84,7 @@ Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 3. Soft UAT / optional Dev HTTP URL / website preview / pilot — owner gates
 4. Keep Atlas as SoR; Revenue code SoR is `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`
 5. Preserve Client Portal Sprint 1 on its isolated branch; do not merge without a separate instruction
+6. QA validate the uncommitted Client Portal Version 1 UI candidate
 
 ## Status authority
 

@@ -53,7 +53,7 @@ export function FilesPage() {
                   <button className="btn ghost" type="button" disabled title="Mock download">
                     Download
                   </button>
-                  {f.folder === 'Contracts' && (
+                  {f.folder === 'Legal' && (
                     <button className="btn secondary" onClick={() => sign(f.name)}>
                       E-sign (mock)
                     </button>

@@ -1,400 +1,301 @@
+/**
+ * Portal mock store — Colorado Craft Beef is the primary reusable template.
+ * ACCG remains as a secondary workspace for cross-client isolation tests only.
+ */
+
 import type {
+  ActivityEvent,
   Advisor,
+  AiInsight,
+  ApprovalItem,
+  CapitalRoadmapItem,
   Client,
+  Contact,
+  DataRoomDocument,
+  DecisionItem,
+  DeliverableItem,
   DocumentRequest,
   Engagement,
   FundingRequest,
+  Invoice,
+  KpiField,
   Meeting,
   Message,
   MessageThread,
+  Milestone,
+  NoteItem,
   NotificationItem,
+  PipelineParty,
   PortalUser,
+  Project,
   SecureFile,
   TaskItem,
+  TimelineEvent,
 } from '../types'
+import { createClientWorkspaceShell } from './workspaceTemplate'
+import {
+  ccbActivity,
+  ccbAdvisor,
+  ccbApprovals,
+  ccbClient,
+  ccbContacts,
+  ccbDataRoomDocs,
+  ccbDecisions,
+  ccbDeliverables,
+  ccbDocRequests,
+  ccbEngagement,
+  ccbFunding,
+  ccbInsights,
+  ccbKpis,
+  ccbMeetings,
+  ccbMilestones,
+  ccbNotes,
+  ccbNotifications,
+  ccbPipeline,
+  ccbPortalUser,
+  ccbProjects,
+  ccbRoadmap,
+  ccbTasks,
+  ccbTimeline,
+  CCB_CLIENT_ID,
+} from './coloradoCraftBeef'
 
-export const advisors: Advisor[] = [
-  {
-    id: 'adv-1',
-    name: 'Jordan Hale',
-    title: 'Capital Advisor',
-    email: 'jordan.hale@hvcg.example',
-    phone: '702.555.0142',
-    initials: 'JH',
-  },
-  {
-    id: 'adv-2',
-    name: 'Alex Rivera',
-    title: 'Engagement Lead',
-    email: 'alex.rivera@hvcg.example',
-    phone: '702.555.0198',
-    initials: 'AR',
-  },
-]
-
-export const clients: Client[] = [
-  {
-    id: 'cli-accg',
-    code: 'ACCG',
-    name: 'ACCG Holdings',
-    industry: 'Professional Services',
-    engagementStatus: 'Active',
-    advisorId: 'adv-1',
-  },
-  {
-    id: 'cli-prodigy',
-    code: 'PRODIGY',
-    name: 'Prodigy Manufacturing',
-    industry: 'Industrial',
-    engagementStatus: 'Onboarding',
-    advisorId: 'adv-2',
-  },
-  {
-    id: 'cli-christie',
-    code: 'CHRISTIE',
-    name: 'Christie Family Enterprises',
-    industry: 'Real Estate',
-    engagementStatus: 'Active',
-    advisorId: 'adv-1',
-  },
-]
-
-export const currentUser: PortalUser = {
-  id: 'user-1',
-  name: 'Taylor Morgan',
-  email: 'taylor@accg.example',
-  role: 'ClientContact',
-  clientIds: ['cli-accg', 'cli-prodigy', 'cli-christie'],
+const isolationAdvisor: Advisor = {
+  id: 'adv-isolation',
+  name: 'Jordan Hale',
+  title: 'Capital Advisor',
+  email: 'jordan.hale@hvcg.example',
+  phone: '702.555.0142',
+  initials: 'JH',
 }
 
+/** Secondary mock client — isolation / multi-tenant switcher only. */
+const isolationClient: Client = createClientWorkspaceShell({
+  id: 'cli-accg',
+  code: 'ACCG',
+  name: 'ACCG Holdings',
+  advisorId: isolationAdvisor.id,
+  overrides: {
+    industry: 'Professional Services',
+    engagementStatus: 'Active',
+    health: 'On Track',
+    referralSource: 'Internal demo',
+    originalRelationship: 'Demo',
+    currentRelationship: 'HVCG',
+    originalObjectives: ['Demo isolation'],
+    financingThemes: [],
+    services: ['Demo'],
+    relationshipHistory: ['Isolation test workspace — not a production client profile.'],
+    documentReadiness: 'Demo',
+    capitalReadiness: 'Demo',
+    blueprintStage: 'Active Engagement',
+    notes: 'Secondary workspace for Client A / Client B isolation tests.',
+    internalNotes: 'INTERNAL isolation fixture.',
+  },
+})
+
+export const advisors: Advisor[] = [ccbAdvisor, isolationAdvisor]
+
+export const clients: Client[] = [ccbClient, isolationClient]
+
+export const currentUser: PortalUser = {
+  ...ccbPortalUser,
+  // Demo switcher: can see CCB + ACCG to prove filtering; production users get one org.
+  clientIds: [CCB_CLIENT_ID, isolationClient.id],
+}
+
+export const contacts: Contact[] = [
+  ...ccbContacts,
+  {
+    id: 'ct-accg-1',
+    clientId: isolationClient.id,
+    name: 'ACCG Contact',
+    title: 'Demo',
+    organization: 'ACCG Holdings',
+    email: 'demo@accg.example',
+    role: 'Client',
+    visibility: 'ClientVisible',
+  },
+]
+
 export const engagements: Engagement[] = [
+  ccbEngagement,
   {
-    id: 'eng-1',
-    clientId: 'cli-accg',
-    title: 'Growth Capital Advisory',
-    type: 'Capital Raise',
-    status: 'In Delivery',
-    startDate: '2026-03-01',
-    progressPct: 62,
-    nextMilestone: 'Lender package QA',
+    id: 'eng-accg',
+    clientId: isolationClient.id,
+    title: 'Isolation Demo Engagement',
+    type: 'Demo',
+    status: 'Active',
+    startDate: '2026-01-01',
+    progressPct: 50,
+    nextMilestone: 'Isolation check',
+    availability: 'Repository-derived',
   },
+]
+
+export const projects: Project[] = [
+  ...ccbProjects,
   {
-    id: 'eng-2',
-    clientId: 'cli-prodigy',
-    title: 'Fractional CFO Onboarding',
-    type: 'Retainer',
-    status: 'Kickoff',
-    startDate: '2026-07-01',
-    progressPct: 28,
-    nextMilestone: 'Document checklist complete',
-  },
-  {
-    id: 'eng-3',
-    clientId: 'cli-christie',
-    title: 'CRE Financing Package',
-    type: 'Debt Capital',
-    status: 'In Delivery',
-    startDate: '2026-05-12',
-    progressPct: 74,
-    nextMilestone: 'Term sheet review',
+    id: 'prj-accg',
+    clientId: isolationClient.id,
+    name: 'ACCG Isolation Project',
+    sponsor: 'Demo',
+    pm: 'Demo',
+    health: 'On Track',
+    nextMilestone: 'N/A',
+    availability: 'Repository-derived',
   },
 ]
 
 export const fundingRequests: FundingRequest[] = [
+  ccbFunding,
   {
-    id: 'fr-1',
-    clientId: 'cli-accg',
+    id: 'fr-accg',
+    clientId: isolationClient.id,
     stage: 'Lender Matching',
-    amountTarget: 4_500_000,
-    amountCommitted: 0,
-    lenderInterest: 3,
+    amountTarget: null,
+    amountCommitted: null,
+    lenderInterest: null,
+    themes: [],
     updatedAt: '2026-07-14T16:00:00Z',
+    availability: 'Awaiting verified data',
   },
+]
+
+export const capitalRoadmap: CapitalRoadmapItem[] = [...ccbRoadmap]
+
+export const pipelineParties: PipelineParty[] = [...ccbPipeline]
+
+export const kpis: KpiField[] = [
+  ...ccbKpis,
   {
-    id: 'fr-2',
-    clientId: 'cli-prodigy',
-    stage: 'Document Collection',
-    amountTarget: 2_200_000,
-    amountCommitted: 0,
-    lenderInterest: 0,
-    updatedAt: '2026-07-15T12:00:00Z',
-  },
-  {
-    id: 'fr-3',
-    clientId: 'cli-christie',
-    stage: 'Conditional Approval',
-    amountTarget: 8_000_000,
-    amountCommitted: 6_500_000,
-    lenderInterest: 2,
-    updatedAt: '2026-07-13T18:30:00Z',
+    id: 'kpi-accg-1',
+    clientId: isolationClient.id,
+    label: 'Revenue',
+    value: 'Isolation fixture — not verified',
+    availability: 'Awaiting verified data',
   },
 ]
 
 export const documentRequests: DocumentRequest[] = [
+  ...ccbDocRequests,
   {
-    id: 'dr-1',
-    clientId: 'cli-accg',
-    folder: 'Financial Statements',
-    title: 'FY2024 audited financials',
-    status: 'Accepted',
-    dueDate: '2026-06-01',
-    uploadedFileName: 'ACCG_FY2024_FS.pdf',
-    uploadedAt: '2026-05-28T15:00:00Z',
-  },
-  {
-    id: 'dr-2',
-    clientId: 'cli-accg',
-    folder: 'Bank Statements',
-    title: 'Last 3 months operating account',
-    status: 'Uploaded',
-    dueDate: '2026-07-10',
-    uploadedFileName: 'ACCG_Bank_Apr-Jun.pdf',
-    uploadedAt: '2026-07-09T11:20:00Z',
-  },
-  {
-    id: 'dr-3',
-    clientId: 'cli-accg',
-    folder: 'P&L',
-    title: 'YTD P&L (management)',
+    id: 'dr-accg-1',
+    clientId: isolationClient.id,
+    folder: 'Corporate',
+    title: 'ACCG isolation doc request',
     status: 'Requested',
-    dueDate: '2026-07-18',
-  },
-  {
-    id: 'dr-4',
-    clientId: 'cli-accg',
-    folder: 'Ownership Docs',
-    title: 'Cap table / ownership schedule',
-    status: 'In Review',
-    dueDate: '2026-07-12',
-    uploadedFileName: 'ACCG_Ownership.xlsx',
-    uploadedAt: '2026-07-11T09:00:00Z',
-  },
-  {
-    id: 'dr-5',
-    clientId: 'cli-prodigy',
-    folder: 'Tax Returns',
-    title: 'Business tax returns 2023–2024',
-    status: 'Requested',
-    dueDate: '2026-07-20',
-  },
-  {
-    id: 'dr-6',
-    clientId: 'cli-prodigy',
-    folder: 'Operating Agreement',
-    title: 'Current operating agreement',
-    status: 'Requested',
-    dueDate: '2026-07-22',
-  },
-  {
-    id: 'dr-7',
-    clientId: 'cli-christie',
-    folder: 'Real Estate',
-    title: 'Property rent roll',
-    status: 'Accepted',
-    dueDate: '2026-06-15',
-    uploadedFileName: 'Christie_RentRoll.xlsx',
-    uploadedAt: '2026-06-14T14:00:00Z',
-  },
-  {
-    id: 'dr-8',
-    clientId: 'cli-christie',
-    folder: 'Insurance',
-    title: 'Property & liability certificates',
-    status: 'Uploaded',
-    dueDate: '2026-07-08',
-    uploadedFileName: 'Christie_COI.pdf',
-    uploadedAt: '2026-07-07T16:40:00Z',
+    dueDate: 'N/A',
+    owner: 'Client',
+    approvalStatus: 'Not Required',
   },
 ]
 
+export const dataRoomDocuments: DataRoomDocument[] = [
+  ...ccbDataRoomDocs,
+  {
+    id: 'drdoc-accg-1',
+    clientId: isolationClient.id,
+    category: 'Corporate',
+    name: 'ACCG_ONLY_SECRET.pdf',
+    version: '1.0',
+    sizeKb: 10,
+    uploadedAt: '2026-07-01T00:00:00Z',
+    owner: 'ACCG',
+    approvalStatus: 'Approved',
+    sensitivity: 'ClientVisible',
+    downloadAllowed: true,
+    auditSummary: 'Isolation fixture — must never appear in CCB workspace',
+  },
+]
+
+export const secureFiles: SecureFile[] = dataRoomDocuments
+  .filter((d) => d.sizeKb > 0)
+  .map((d) => ({
+    id: `sf-${d.id}`,
+    clientId: d.clientId,
+    folder: d.category,
+    name: d.name,
+    sizeKb: d.sizeKb,
+    updatedAt: d.uploadedAt || '2026-07-19T00:00:00Z',
+    sensitivity: d.sensitivity,
+  }))
+
 export const threads: MessageThread[] = [
   {
-    id: 'th-1',
-    clientId: 'cli-accg',
-    subject: 'Lender Q&A — working capital package',
+    id: 'th-ccb-1',
+    clientId: CCB_CLIENT_ID,
+    subject: 'Financial package intake',
     unread: 1,
-    updatedAt: '2026-07-15T19:10:00Z',
-  },
-  {
-    id: 'th-2',
-    clientId: 'cli-accg',
-    subject: 'Document checklist follow-up',
-    unread: 0,
-    updatedAt: '2026-07-12T14:00:00Z',
-  },
-  {
-    id: 'th-3',
-    clientId: 'cli-prodigy',
-    subject: 'Welcome & onboarding schedule',
-    unread: 2,
-    updatedAt: '2026-07-15T10:00:00Z',
+    updatedAt: '2026-07-19T12:00:00Z',
   },
 ]
 
 export const messages: Message[] = [
   {
-    id: 'msg-1',
-    threadId: 'th-1',
-    sender: 'Jordan Hale',
+    id: 'msg-ccb-1',
+    threadId: 'th-ccb-1',
+    sender: 'Manny Barela',
     direction: 'HVCGToClient',
-    body: 'Two lenders asked for trailing twelve-month AR aging. Can you upload by Friday?',
-    sentAt: '2026-07-15T19:10:00Z',
-  },
-  {
-    id: 'msg-2',
-    threadId: 'th-1',
-    sender: 'Taylor Morgan',
-    direction: 'ClientToHVCG',
-    body: 'Yes — we will prepare the aging report tomorrow morning.',
-    sentAt: '2026-07-15T18:40:00Z',
-  },
-  {
-    id: 'msg-3',
-    threadId: 'th-2',
-    sender: 'System',
-    direction: 'System',
-    body: 'Reminder: YTD P&L is still outstanding.',
-    sentAt: '2026-07-12T14:00:00Z',
-  },
-  {
-    id: 'msg-4',
-    threadId: 'th-3',
-    sender: 'Alex Rivera',
-    direction: 'HVCGToClient',
-    body: 'Kickoff deck attached. Please confirm attendees for Thursday.',
-    sentAt: '2026-07-15T10:00:00Z',
-    attachmentName: 'Prodigy_Kickoff.pdf',
+    body: 'Please upload your verified financial package to the Financial data-room category. We will not display dollar figures until sources are verified.',
+    sentAt: '2026-07-19T12:00:00Z',
   },
 ]
 
 export const tasks: TaskItem[] = [
+  ...ccbTasks,
   {
-    id: 'tk-1',
-    clientId: 'cli-accg',
-    title: 'Upload YTD P&L',
+    id: 'tk-accg-1',
+    clientId: isolationClient.id,
+    title: 'ACCG-only task (isolation)',
     ownerType: 'Client',
-    dueDate: '2026-07-18',
+    dueDate: 'N/A',
     status: 'Open',
-    weight: 20,
-  },
-  {
-    id: 'tk-2',
-    clientId: 'cli-accg',
-    title: 'Confirm lender Q&A responses',
-    ownerType: 'Client',
-    dueDate: '2026-07-17',
-    status: 'In Progress',
-    weight: 15,
-  },
-  {
-    id: 'tk-3',
-    clientId: 'cli-accg',
-    title: 'Prepare lender teaser draft',
-    ownerType: 'Advisor',
-    dueDate: '2026-07-19',
-    status: 'In Progress',
-    weight: 25,
-  },
-  {
-    id: 'tk-4',
-    clientId: 'cli-accg',
-    title: 'Sign NDA addendum',
-    ownerType: 'Client',
-    dueDate: '2026-07-09',
-    status: 'Done',
-    weight: 10,
-  },
-  {
-    id: 'tk-5',
-    clientId: 'cli-prodigy',
-    title: 'Complete tax return upload',
-    ownerType: 'Client',
-    dueDate: '2026-07-20',
-    status: 'Open',
-    weight: 30,
+    weight: 1,
   },
 ]
 
-export const meetings: Meeting[] = [
-  {
-    id: 'mt-1',
-    clientId: 'cli-accg',
-    title: 'Weekly capital desk sync',
-    startsAt: '2026-07-17T17:00:00Z',
-    location: 'Microsoft Teams',
-    joinUrl: 'https://teams.microsoft.com/l/meetup-join/mock',
-  },
-  {
-    id: 'mt-2',
-    clientId: 'cli-accg',
-    title: 'Lender intro — Regional Bank',
-    startsAt: '2026-07-21T16:00:00Z',
-    location: 'Microsoft Teams',
-    joinUrl: 'https://teams.microsoft.com/l/meetup-join/mock-2',
-  },
-  {
-    id: 'mt-3',
-    clientId: 'cli-prodigy',
-    title: 'Onboarding kickoff',
-    startsAt: '2026-07-18T18:30:00Z',
-    location: 'Microsoft Teams',
-  },
-]
+export const approvals: ApprovalItem[] = [...ccbApprovals]
+
+export const meetings: Meeting[] = [...ccbMeetings]
+
+export const notes: NoteItem[] = [...ccbNotes]
+
+export const decisions: DecisionItem[] = [...ccbDecisions]
+
+export const deliverables: DeliverableItem[] = [...ccbDeliverables]
+
+export const aiInsights: AiInsight[] = [...ccbInsights]
+
+export const activityEvents: ActivityEvent[] = [...ccbActivity]
 
 export const notifications: NotificationItem[] = [
+  ...ccbNotifications,
   {
-    id: 'n-1',
-    clientId: 'cli-accg',
-    title: 'New message from Jordan Hale',
-    body: 'Lender Q&A — working capital package',
-    createdAt: '2026-07-15T19:10:00Z',
+    id: 'n-accg-1',
+    clientId: isolationClient.id,
+    title: 'ACCG-only notification',
+    body: 'Must not appear when CCB workspace is active.',
+    createdAt: '2026-07-19T00:00:00Z',
     read: false,
-  },
-  {
-    id: 'n-2',
-    clientId: 'cli-accg',
-    title: 'Document accepted',
-    body: 'FY2024 audited financials marked Accepted',
-    createdAt: '2026-07-14T12:00:00Z',
-    read: true,
+    channel: 'InApp',
   },
 ]
 
-export const secureFiles: SecureFile[] = [
+export const timelineEvents: TimelineEvent[] = [...ccbTimeline]
+
+export const milestones: Milestone[] = [...ccbMilestones]
+
+export const invoices: Invoice[] = [
   {
-    id: 'sf-1',
-    clientId: 'cli-accg',
-    folder: 'Financial Statements',
-    name: 'ACCG_FY2024_FS.pdf',
-    sizeKb: 2400,
-    updatedAt: '2026-05-28T15:00:00Z',
-    sensitivity: 'ClientVisible',
-  },
-  {
-    id: 'sf-2',
-    clientId: 'cli-accg',
-    folder: 'Deliverables',
-    name: 'ACCG_Capital_Strategy_Memo.pdf',
-    sizeKb: 880,
-    updatedAt: '2026-07-01T10:00:00Z',
-    sensitivity: 'ClientVisible',
-  },
-  {
-    id: 'sf-3',
-    clientId: 'cli-accg',
-    folder: 'Contracts',
-    name: 'Engagement_Letter_executed.pdf',
-    sizeKb: 420,
-    updatedAt: '2026-03-02T09:00:00Z',
-    sensitivity: 'ClientVisible',
-  },
-  {
-    id: 'sf-4',
-    clientId: 'cli-christie',
-    folder: 'Real Estate',
-    name: 'Christie_RentRoll.xlsx',
-    sizeKb: 310,
-    updatedAt: '2026-06-14T14:00:00Z',
-    sensitivity: 'ClientVisible',
+    id: 'inv-ccb-pending',
+    clientId: CCB_CLIENT_ID,
+    invoiceNumber: 'PENDING',
+    description: 'No client invoices until verified billing sources connect.',
+    issuedDate: '—',
+    dueDate: '—',
+    amount: null,
+    status: 'PendingVerification',
+    availability: 'Awaiting verified data',
   },
 ]

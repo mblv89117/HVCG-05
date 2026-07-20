@@ -1,19 +1,19 @@
-# HANDOFF — Client Portal Sprint 1 (Phase 1 MVP)
+# HANDOFF — Client Portal Version 1
 
 **Agent:** Client Portal & Data Rooms Engineer
 **Branch:** `cursor/client-portal-sprint1`
 **Worktree:** `.worktrees/client-portal-sprint1`
-**Status:** Phase 1 deliverables **COMPLETE** — owner approved commit/push; branch remains unmerged
+**Status:** Version 1 UI **COMPLETE — AWAITING QA**; current additions are uncommitted
 
 ## Delivered
 
 1. Secure multi-client React portal MVP (`apps/hvcg-client-portal`)
-2. All Phase 1 screens (Home → File Center)
+2. Version 1 screens: Home, Engagement, Timeline, Milestones, Funding, Documents, Messages, Tasks, Meetings, Invoices, Notifications, Advisor, File Center
 3. Document request engine + 15 folders
 4. 11-stage funding tracker
 5. Messaging, tasks, meetings, advisor, secure files
 6. Mock integrations (Entra, SharePoint, OneDrive, Teams, Outlook disabled, Power Automate, Book Meeting, Doc Requests, E-sign)
-7. Architecture + data model + QA suite + Atlas updates
+7. Architecture + data model + mock interface specifications + QA suite + Atlas updates
 8. Screenshots under `docs/portal-sprint1/screenshots/`
 
 ## Run locally
@@ -38,7 +38,9 @@ npm run qa:all
 - No Revenue Sprint 1–4 / Conversion Engine / CRM Schema / Activation Framework edits
 - No live DNS / email / SMS
 - No merge performed
+- No SharePoint or production connections
+- Version 1 additions not committed or pushed
 
-## Recommended commit message
+## QA handoff
 
-See owner response packet from this session.
+See `docs/portal-sprint1/QA_HANDOFF_V1.md`.
