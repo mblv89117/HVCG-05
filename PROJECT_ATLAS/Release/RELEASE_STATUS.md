@@ -10,7 +10,7 @@
 |-------|-------|
 | Integration branch | `cursor/atlas-integration-release` |
 | Repository path | `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release` |
-| Current commit | `6402bfb` (verify with `git rev-parse HEAD`) |
+| Current commit | `0ebea90` (verify with `git rev-parse HEAD`) |
 | Base commit | `35ca684` (`cursor/elite-ui-release-recovery`) |
 | Overall build status | **PASS** (`npm run build`) |
 | Local runtime status | **PASS** — Elite OS responding |

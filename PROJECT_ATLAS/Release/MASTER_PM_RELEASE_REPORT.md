@@ -2,7 +2,7 @@
 
 **From:** Integration & Release Manager  
 **Date:** 2026-07-20  
-**Branch:** `cursor/atlas-integration-release` @ `6402bfb`
+**Branch:** `cursor/atlas-integration-release` @ `0ebea90`
 
 1. **Integrated:** Elite UI recovery SoR + knowledge rail + Plaid API/contracts + Banking UI in Elite shell + Azure infra scripts + unified primary nav + client selector.
 2. **Running:** http://127.0.0.1:5180/ (Elite OS) · http://127.0.0.1:8787/ (Plaid API, not configured).
