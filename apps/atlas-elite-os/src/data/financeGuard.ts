@@ -5,7 +5,6 @@
 
 export const APPROVED_PENDING_LABELS = [
   'Awaiting verified data',
-  'Awaiting verified data',
   'Data connection pending',
   'Not yet calculated',
   'No verified records available',

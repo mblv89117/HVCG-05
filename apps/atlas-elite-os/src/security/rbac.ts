@@ -126,14 +126,14 @@ export function resolveAtlasRole(input: {
   idTokenClaims?: Record<string, unknown> | null;
   environment: string;
 }): AtlasRole {
+  if (!input.signedIn) return 'Unauthenticated';
+
   const allowSim =
     import.meta.env.VITE_ALLOW_ROLE_SIM === 'true' && input.environment !== 'production';
   if (allowSim) {
     const sim = normalizeRole(String(import.meta.env.VITE_ATLAS_ROLE_SIM || ''));
     if (sim && sim !== 'Unauthenticated' && sim !== 'Unresolved') return sim;
   }
-
-  if (!input.signedIn) return 'Unauthenticated';
 
   const claims = input.idTokenClaims || {};
   const candidates: unknown[] = [

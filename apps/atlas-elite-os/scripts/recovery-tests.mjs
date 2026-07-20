@@ -32,13 +32,21 @@ assert.ok(looksLikeFabricatedFinance('4.8M'));
 
 // Role matrix: no default owner — unresolved when signed in without claims
 function resolveRole({ signedIn, claims, env, allowSim, sim }) {
-  if (allowSim && env !== 'production' && sim) return sim;
   if (!signedIn) return 'Unauthenticated';
+  if (allowSim && env !== 'production' && sim) return sim;
   if (claims?.roles?.length) return claims.roles[0];
   return 'Unresolved';
 }
 assert.equal(resolveRole({ signedIn: true, claims: {}, env: 'development' }), 'Unresolved');
 assert.equal(resolveRole({ signedIn: false, claims: null, env: 'development' }), 'Unauthenticated');
+assert.equal(
+  resolveRole({ signedIn: false, claims: null, env: 'development', allowSim: true, sim: 'HVCG Owner' }),
+  'Unauthenticated',
+);
+assert.equal(
+  resolveRole({ signedIn: true, claims: {}, env: 'development', allowSim: true, sim: 'Read-Only Advisor' }),
+  'Read-Only Advisor',
+);
 assert.notEqual(resolveRole({ signedIn: true, claims: {}, env: 'development' }), 'HVCG Owner');
 
 const dist = join(root, 'dist/assets');

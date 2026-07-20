@@ -38,9 +38,10 @@ export VITE_ALLOW_SAMPLE_FALLBACK="${VITE_ALLOW_SAMPLE_FALLBACK:-true}"
 export VITE_REDIRECT_URI="${VITE_REDIRECT_URI:-https://${SWA_HOST}}"
 export VITE_ATLAS_BUILD_SHA="$(git rev-parse HEAD)"
 export VITE_ATLAS_BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-# QA role sim for Dev SWA retest of role matrix (not production)
+# QA role sim for Dev SWA: enable flag only; do NOT default any role to Owner.
+# Set VITE_ATLAS_ROLE_SIM explicitly when QA needs a simulated identity.
 export VITE_ALLOW_ROLE_SIM="${VITE_ALLOW_ROLE_SIM:-true}"
-export VITE_ATLAS_ROLE_SIM="${VITE_ATLAS_ROLE_SIM:-HVCG Owner}"
+export VITE_ATLAS_ROLE_SIM="${VITE_ATLAS_ROLE_SIM:-}"
 
 echo "Building Elite OS SHA=${VITE_ATLAS_BUILD_SHA} for https://${SWA_HOST} (env=$ENV_NAME)..."
 rm -rf apps/atlas-elite-os/dist
