@@ -195,13 +195,25 @@ export function TasksPage() {
         {!loading && rows.length > 0 ? (
           <DataTable
             ariaLabel="Live approvals"
+            searchable
+            selectable
             getRowKey={(r) => r.id}
             rows={rows}
             columns={[
-              { key: 'title', header: 'Title', render: (r) => r.title },
+              {
+                key: 'title',
+                header: 'Title',
+                sortable: true,
+                pinned: 'left',
+                getSortValue: (r) => r.title,
+                getFilterValue: (r) => r.title,
+                render: (r) => r.title,
+              },
               {
                 key: 'dec',
                 header: 'Decision',
+                filterable: true,
+                getFilterValue: (r) => r.decision,
                 render: (r) => <StatusChip label={r.decision} tone="gold" />,
               },
               { key: 'risk', header: 'Risk', render: (r) => r.risk },

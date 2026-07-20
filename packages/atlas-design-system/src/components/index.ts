@@ -38,11 +38,13 @@ export {
 export {
   GlobalSearch,
   GlobalAICommandPanel,
+  AICommandDrawer,
   DEFAULT_AI_EXAMPLES,
   BrandMark,
   type SearchResult,
   type GlobalSearchProps,
   type GlobalAICommandPanelProps,
+  type AICommandDrawerProps,
 } from './SearchAndAI';
 export {
   AtlasDrawer,
@@ -54,3 +56,27 @@ export {
   ErrorState,
   type AtlasDrawerProps,
 } from './Overlays';
+export {
+  KpiTile,
+  InsightCard,
+  SectionRail,
+  RecentList,
+  FavoritePin,
+  HeroGreeting,
+  PriorityList,
+  type KpiTileProps,
+  type InsightCardProps,
+  type RecentItem,
+} from './ExecutivePrimitives';
+export { seriesFromSpark, type ChartPoint } from './chartUtils';
+export type { AtlasChartProps } from './AtlasChartTypes';
+export {
+  LazyAreaChart as AtlasAreaChart,
+  LazyLineChart as AtlasLineChart,
+  LazyBarChart as AtlasBarChart,
+  LazyDonutChart as AtlasDonutChart,
+  LazyAreaChart,
+  LazyLineChart,
+  LazyBarChart,
+  LazyDonutChart,
+} from './LazyCharts';

@@ -7,6 +7,8 @@ import {
 } from '@fluentui/react-components';
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { RecentList, type RecentItem } from './ExecutivePrimitives';
+import { color, elevation } from '../tokens';
 
 export interface NavItem {
   id: string;
@@ -30,72 +32,88 @@ const useStyles = makeStyles({
     minHeight: '100vh',
     backgroundColor: tokens.colorNeutralBackground1,
     '@media (min-width: 960px)': {
-      gridTemplateColumns: '260px 1fr',
+      gridTemplateColumns: '280px 1fr',
       gridTemplateRows: 'auto 1fr',
       gridTemplateAreas: `"bar bar" "nav main"`,
+      padding: '0 12px 12px 12px',
+      gap: '12px',
+      boxSizing: 'border-box',
     },
   },
   shellCollapsed: {
     '@media (min-width: 960px)': {
-      gridTemplateColumns: '72px 1fr',
+      gridTemplateColumns: '84px 1fr',
     },
   },
   bar: {
     gridColumn: '1 / -1',
     '@media (min-width: 960px)': {
       gridArea: 'bar',
+      position: 'sticky',
+      top: '0',
+      zIndex: 40,
+      paddingTop: '10px',
     },
   },
   nav: {
     display: 'none',
     flexDirection: 'column',
-    gap: '4px',
-    padding: '12px 10px',
-    borderRight: `1px solid ${tokens.colorNeutralStroke2}`,
-    backgroundColor: tokens.colorNeutralBackground2,
+    gap: '2px',
+    padding: '14px 12px 20px',
+    borderRadius: '20px',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: 'rgba(255,255,255,0.72)',
+    backdropFilter: 'blur(18px)',
+    WebkitBackdropFilter: 'blur(18px)',
+    boxShadow: elevation.md,
     overflowY: 'auto',
     '@media (min-width: 960px)': {
       display: 'flex',
       gridArea: 'nav',
+      position: 'sticky',
+      top: '76px',
+      maxHeight: 'calc(100vh - 96px)',
+      alignSelf: 'start',
     },
   },
   navOpenMobile: {
     display: 'flex',
     position: 'fixed',
-    inset: '56px 0 0 0',
+    inset: '64px 12px 12px 12px',
     zIndex: 30,
-    backgroundColor: tokens.colorNeutralBackground2,
+    backgroundColor: tokens.colorNeutralBackground1,
   },
   sectionTitle: {
-    padding: '12px 10px 6px',
+    padding: '14px 10px 6px',
     color: tokens.colorNeutralForeground2,
     textTransform: 'uppercase',
-    letterSpacing: '0.06em',
+    letterSpacing: '0.08em',
     fontSize: tokens.fontSizeBase100,
+    fontWeight: tokens.fontWeightSemibold,
   },
   link: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
     padding: '10px 12px',
-    borderRadius: tokens.borderRadiusMedium,
+    borderRadius: '12px',
     color: tokens.colorNeutralForeground1,
     textDecoration: 'none',
-    transitionProperty: 'background-color, color',
-    transitionDuration: '120ms',
+    transitionProperty: 'background-color, color, box-shadow',
+    transitionDuration: '140ms',
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground3,
     },
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: '2px',
+    },
   },
   linkActive: {
-    backgroundColor: 'rgba(176, 138, 60, 0.18)',
-    color: tokens.colorBrandForeground1,
+    backgroundColor: 'rgba(37, 99, 235, 0.10)',
+    color: color.navy,
     fontWeight: tokens.fontWeightSemibold,
-  },
-  collapsedLabel: {
-    '@media (min-width: 960px)': {
-      // parent controls collapsed via data attribute
-    },
+    boxShadow: `inset 3px 0 0 ${color.gold}`,
   },
   main: {
     display: 'flex',
@@ -104,6 +122,11 @@ const useStyles = makeStyles({
     minHeight: 0,
     '@media (min-width: 960px)': {
       gridArea: 'main',
+      borderRadius: '20px',
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      backgroundColor: tokens.colorNeutralBackground1,
+      boxShadow: elevation.sm,
+      overflow: 'hidden',
     },
   },
   content: {
@@ -111,16 +134,22 @@ const useStyles = makeStyles({
     padding: '16px',
     overflow: 'auto',
     '@media (min-width: 960px)': {
-      padding: '24px',
+      padding: '28px',
     },
   },
   banner: {
     padding: '8px 16px',
-    background: 'linear-gradient(90deg, #0f3d2c, #1a5c42)',
-    color: '#f2eee6',
+    background: `linear-gradient(90deg, ${color.navyDeep}, ${color.navySoft})`,
+    color: '#F8FAFC',
     textAlign: 'center',
     fontSize: tokens.fontSizeBase200,
     fontWeight: tokens.fontWeightSemibold,
+    letterSpacing: '0.04em',
+  },
+  favorites: {
+    marginTop: '12px',
+    paddingTop: '10px',
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
 });
 
@@ -131,6 +160,9 @@ export interface NavShellProps {
   collapsed?: boolean;
   mobileNavOpen?: boolean;
   environmentBanner?: string;
+  favorites?: RecentItem[];
+  recents?: RecentItem[];
+  onSelectRecent?: (item: RecentItem) => void;
   className?: string;
 }
 
@@ -141,12 +173,17 @@ export function NavShell({
   collapsed = false,
   mobileNavOpen = false,
   environmentBanner = 'DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS',
+  favorites = [],
+  recents = [],
+  onSelectRecent,
   className,
 }: NavShellProps) {
   const s = useStyles();
   return (
-    <div className={mergeClasses(s.shell, collapsed && s.shellCollapsed, className)}>
-      <div className={s.banner} role="status">{environmentBanner}</div>
+    <div className={mergeClasses(s.shell, collapsed && s.shellCollapsed, 'atlas-atmosphere', className)}>
+      <div className={s.banner} role="status">
+        {environmentBanner}
+      </div>
       <div className={s.bar}>{commandBar}</div>
       <nav
         className={mergeClasses(s.nav, mobileNavOpen && s.navOpenMobile)}
@@ -155,9 +192,7 @@ export function NavShell({
       >
         {sections.map((section) => (
           <div key={section.id}>
-            {section.title && !collapsed ? (
-              <div className={s.sectionTitle}>{section.title}</div>
-            ) : null}
+            {section.title && !collapsed ? <div className={s.sectionTitle}>{section.title}</div> : null}
             {section.items.map((item) => (
               <NavLink
                 key={item.id}
@@ -174,9 +209,25 @@ export function NavShell({
             ))}
           </div>
         ))}
+        {!collapsed && (favorites.length > 0 || recents.length > 0) ? (
+          <div className={s.favorites}>
+            {favorites.length ? (
+              <>
+                <div className={s.sectionTitle}>Favorites</div>
+                <RecentList items={favorites} onSelect={onSelectRecent} />
+              </>
+            ) : null}
+            {recents.length ? (
+              <>
+                <div className={s.sectionTitle}>Recent</div>
+                <RecentList items={recents} onSelect={onSelectRecent} />
+              </>
+            ) : null}
+          </div>
+        ) : null}
       </nav>
       <main className={s.main}>
-        <div className={s.content}>{children}</div>
+        <div className={mergeClasses(s.content, 'atlas-page-enter')}>{children}</div>
       </main>
     </div>
   );
@@ -186,8 +237,8 @@ const useLayout = makeStyles({
   page: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
-    maxWidth: '1440px',
+    gap: '22px',
+    maxWidth: '1520px',
     margin: '0 auto',
     width: '100%',
   },
@@ -214,6 +265,9 @@ const useLayout = makeStyles({
     '@media (min-width: 960px)': {
       gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     },
+    '@media (min-width: 1280px)': {
+      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    },
   },
   span2: {
     '@media (min-width: 960px)': {
@@ -230,22 +284,38 @@ export function PageLayout({
   subtitle,
   actions,
   children,
+  hideTitle,
 }: {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
+  hideTitle?: boolean;
 }) {
   const s = useLayout();
   return (
     <div className={s.page}>
-      <div className={s.header} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-        <div>
-          <Text as="h1" size={700} weight="semibold">{title}</Text>
-          {subtitle ? <Caption1>{subtitle}</Caption1> : null}
+      {!hideTitle ? (
+        <div
+          className={s.header}
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: 12,
+          }}
+        >
+          <div>
+            <Text as="h1" size={700} weight="semibold">
+              {title}
+            </Text>
+            {subtitle ? <Caption1>{subtitle}</Caption1> : null}
+          </div>
+          {actions}
         </div>
-        {actions}
-      </div>
+      ) : actions ? (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{actions}</div>
+      ) : null}
       {children}
     </div>
   );
@@ -273,8 +343,6 @@ export function GridSpan({
 }) {
   const s = useLayout();
   return (
-    <div className={span === 'full' ? s.spanFull : span === 2 ? s.span2 : undefined}>
-      {children}
-    </div>
+    <div className={span === 'full' ? s.spanFull : span === 2 ? s.span2 : undefined}>{children}</div>
   );
 }

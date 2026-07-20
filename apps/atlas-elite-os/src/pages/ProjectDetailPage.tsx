@@ -41,11 +41,11 @@ export function ProjectDetailPage({ projectId }: { projectId: string }) {
           gap: 12,
         }}
       >
-        <AtlasCard variant="quiet">
+        <AtlasCard variant="glass">
           <Caption1>Status</Caption1>
           <StatusChip label={project.status} tone="gold" />
         </AtlasCard>
-        <AtlasCard variant="quiet">
+        <AtlasCard variant="glass">
           <Caption1>Health</Caption1>
           <StatusChip
             label={project.health}
@@ -58,23 +58,23 @@ export function ProjectDetailPage({ projectId }: { projectId: string }) {
             }
           />
         </AtlasCard>
-        <AtlasCard variant="quiet">
+        <AtlasCard variant="glass">
           <Caption1>Sponsor</Caption1>
           <Text weight="semibold">{project.sponsor}</Text>
         </AtlasCard>
-        <AtlasCard variant="quiet">
+        <AtlasCard variant="glass">
           <Caption1>Project manager</Caption1>
           <Text weight="semibold">{project.projectManager}</Text>
         </AtlasCard>
       </div>
-      <AtlasCard title="Progress">
+      <AtlasCard title="Progress" variant="accent">
         <AtlasProgress value={project.percentComplete} label="Completion" />
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
           Next milestone: {project.nextMilestone} · Due {project.due}
         </Caption1>
         <Caption1>Blocker: {project.blocker}</Caption1>
       </AtlasCard>
-      <AtlasCard title="Financials" subtitle="No invented amounts">
+      <AtlasCard title="Financials" subtitle="No invented amounts" variant="quiet">
         <Text>
           Budget, actual, forecast, and burn remain labeled pending until verified finance sources connect for
           this engagement.

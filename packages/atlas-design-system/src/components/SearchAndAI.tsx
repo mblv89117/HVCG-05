@@ -11,16 +11,30 @@ import {
   DialogBody,
   DialogTitle,
   DialogContent,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerHeaderTitle,
 } from '@fluentui/react-components';
-import { SearchRegular, SparkleRegular, SendRegular } from '@fluentui/react-icons';
+import {
+  SearchRegular,
+  SparkleRegular,
+  SendRegular,
+  DismissRegular,
+  MicRegular,
+  HistoryRegular,
+  CheckboxCheckedRegular,
+} from '@fluentui/react-icons';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { color, elevation } from '../tokens';
 
 export interface SearchResult {
   id: string;
   title: string;
   category: string;
   subtitle?: string;
+  to?: string;
 }
 
 export interface GlobalSearchProps {
@@ -35,8 +49,10 @@ export interface GlobalSearchProps {
 
 const useSearch = makeStyles({
   surface: {
-    maxWidth: '640px',
+    maxWidth: '680px',
     width: 'calc(100vw - 24px)',
+    borderRadius: '16px',
+    boxShadow: elevation.lg,
   },
   list: {
     display: 'flex',
@@ -80,7 +96,7 @@ export function GlobalSearch({
     <Dialog open={open} onOpenChange={(_, d) => onOpenChange(d.open)}>
       <DialogSurface className={s.surface}>
         <DialogBody>
-          <DialogTitle>Search Atlas</DialogTitle>
+          <DialogTitle>Command palette</DialogTitle>
           <DialogContent>
             <Input
               appearance="outline"
@@ -129,10 +145,10 @@ const useAi = makeStyles({
     gap: '12px',
     padding: '16px',
     borderRadius: tokens.borderRadiusXLarge,
-    background: `linear-gradient(135deg, rgba(15, 61, 44, 0.92), rgba(26, 92, 66, 0.88))`,
-    color: '#f2eee6',
-    boxShadow: '0 12px 32px rgba(12, 22, 18, 0.18)',
-    border: '1px solid rgba(176, 138, 60, 0.35)',
+    background: `linear-gradient(145deg, ${color.navyDeep} 0%, ${color.navySoft} 55%, #163556 100%)`,
+    color: '#F8FAFC',
+    boxShadow: elevation.ai,
+    border: '1px solid rgba(37, 99, 235, 0.35)',
   },
   titleRow: {
     display: 'flex',
@@ -145,19 +161,19 @@ const useAi = makeStyles({
     gap: '8px',
   },
   chip: {
-    border: '1px solid rgba(242, 238, 230, 0.35)',
-    backgroundColor: 'rgba(242, 238, 230, 0.08)',
-    color: '#f2eee6',
+    border: '1px solid rgba(248, 250, 252, 0.28)',
+    backgroundColor: 'rgba(248, 250, 252, 0.08)',
+    color: '#F8FAFC',
     borderRadius: '999px',
     padding: '6px 12px',
     cursor: 'pointer',
     fontSize: tokens.fontSizeBase200,
     ':hover': {
-      backgroundColor: 'rgba(176, 138, 60, 0.28)',
-      border: '1px solid rgba(176, 138, 60, 0.65)',
+      backgroundColor: 'rgba(37, 99, 235, 0.28)',
+      border: '1px solid rgba(201, 162, 39, 0.65)',
     },
     ':focus-visible': {
-      outline: '2px solid #d4af5a',
+      outline: '2px solid #E0B93A',
       outlineOffset: '2px',
     },
   },
@@ -176,18 +192,32 @@ const useAi = makeStyles({
     borderRadius: tokens.borderRadiusMedium,
     backgroundColor: 'rgba(0,0,0,0.22)',
   },
+  history: {
+    display: 'grid',
+    gap: '6px',
+    maxHeight: '160px',
+    overflow: 'auto',
+  },
+  historyItem: {
+    padding: '8px 10px',
+    borderRadius: '10px',
+    background: 'rgba(255,255,255,0.06)',
+    border: '1px solid rgba(255,255,255,0.08)',
+  },
+  quick: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+  },
 });
 
 export const DEFAULT_AI_EXAMPLES = [
-  'Build SBA package.',
-  'Find missing documents.',
-  'Summarize client.',
-  'Create valuation.',
-  'Prepare lender package.',
-  'Generate investor memo.',
-  'Schedule follow-up.',
-  'Create tasks.',
-  'Update CRM.',
+  'Summarize today’s executive priorities.',
+  'What is blocking capital readiness?',
+  'Find missing lender documents.',
+  'Draft investor memo outline.',
+  'Recommend next client actions.',
+  'Explain cash position status.',
 ];
 
 export interface GlobalAICommandPanelProps {
@@ -197,28 +227,37 @@ export interface GlobalAICommandPanelProps {
   title?: string;
   subtitle?: string;
   className?: string;
-  /** Dev-only stub response renderer */
   stubResponder?: (prompt: string) => string;
+  history?: string[];
+  quickActions?: Array<{ id: string; label: string; onClick?: () => void }>;
 }
 
 export function GlobalAICommandPanel({
   examples = DEFAULT_AI_EXAMPLES,
   onSubmit,
   placeholder = 'Ask Atlas Copilot…',
-  title = 'AI Command Center',
-  subtitle = 'Development stubs only — no live client actions.',
+  title = 'Executive Copilot',
+  subtitle = 'Context-aware guidance — Development stubs only; no live client actions.',
   className,
   stubResponder = (p) =>
     `Dev stub: received “${p}”. Live Copilot / client communications are disabled in Development.`,
+  history = [],
+  quickActions = [
+    { id: 'approve', label: 'Review approvals' },
+    { id: 'capital', label: 'Capital readiness' },
+    { id: 'docs', label: 'Missing documents' },
+  ],
 }: GlobalAICommandPanelProps) {
   const s = useAi();
   const [value, setValue] = useState('');
   const [response, setResponse] = useState<string | null>(null);
+  const [localHistory, setLocalHistory] = useState<string[]>(history);
 
   const run = (prompt: string) => {
     const trimmed = prompt.trim();
     if (!trimmed) return;
     onSubmit?.(trimmed);
+    setLocalHistory((h) => [trimmed, ...h].slice(0, 8));
     setResponse(stubResponder(trimmed));
   };
 
@@ -226,14 +265,21 @@ export function GlobalAICommandPanel({
     <section className={mergeClasses(s.root, 'atlas-fade-in', className)} aria-label={title}>
       <div className={s.titleRow}>
         <SparkleRegular fontSize={22} aria-hidden />
-        <div>
-          <Text weight="semibold" size={500} style={{ color: '#f2eee6' }}>
+        <div style={{ flex: 1 }}>
+          <Text weight="semibold" size={500} style={{ color: '#F8FAFC' }}>
             {title}
           </Text>
-          <Caption1 style={{ color: 'rgba(242,238,230,0.82)' }}>{subtitle}</Caption1>
+          <Caption1 style={{ color: 'rgba(248,250,252,0.82)' }}>{subtitle}</Caption1>
         </div>
+        <Button
+          appearance="subtle"
+          icon={<MicRegular />}
+          aria-label="Voice-ready interface"
+          title="Voice-ready"
+          style={{ color: '#F8FAFC' }}
+        />
       </div>
-      <div className={s.examples} aria-label="Example prompts">
+      <div className={s.examples} aria-label="Suggested prompts">
         {examples.map((ex) => (
           <button
             key={ex}
@@ -246,6 +292,22 @@ export function GlobalAICommandPanel({
           >
             {ex}
           </button>
+        ))}
+      </div>
+      <div className={s.quick} aria-label="Quick actions">
+        {quickActions.map((a) => (
+          <Button
+            key={a.id}
+            size="small"
+            appearance="secondary"
+            icon={<CheckboxCheckedRegular />}
+            onClick={() => {
+              a.onClick?.();
+              run(a.label);
+            }}
+          >
+            {a.label}
+          </Button>
         ))}
       </div>
       <div className={s.row}>
@@ -261,23 +323,89 @@ export function GlobalAICommandPanel({
             aria-label="AI command prompt"
           />
         </div>
-        <Button
-          appearance="primary"
-          icon={<SendRegular />}
-          onClick={() => run(value)}
-          aria-label="Submit AI command"
-        >
-          Run
+        <Button appearance="primary" icon={<SendRegular />} onClick={() => run(value)} aria-label="Submit AI command">
+          Ask
         </Button>
       </div>
       {response ? (
         <div className={s.response} role="status">
-          <Text size={300} style={{ color: '#f2eee6' }}>
+          <Text size={300} style={{ color: '#F8FAFC' }}>
             {response}
           </Text>
         </div>
       ) : null}
+      {localHistory.length ? (
+        <div>
+          <div className={s.titleRow} style={{ marginBottom: 6 }}>
+            <HistoryRegular />
+            <Caption1 style={{ color: 'rgba(248,250,252,0.82)' }}>Conversation history</Caption1>
+          </div>
+          <div className={s.history}>
+            {localHistory.map((h) => (
+              <button
+                key={h}
+                type="button"
+                className={s.historyItem}
+                onClick={() => {
+                  setValue(h);
+                  run(h);
+                }}
+                style={{ color: '#F8FAFC', textAlign: 'left', cursor: 'pointer', width: '100%' }}
+              >
+                <Caption1 style={{ color: 'rgba(248,250,252,0.9)' }}>{h}</Caption1>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+export interface AICommandDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit?: (prompt: string) => void;
+}
+
+export function AICommandDrawer({ open, onOpenChange, onSubmit }: AICommandDrawerProps) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        onOpenChange(!open);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onOpenChange]);
+
+  return (
+    <Drawer
+      open={open}
+      onOpenChange={(_, d) => onOpenChange(d.open)}
+      position="end"
+      size="medium"
+      style={{ width: 'min(420px, 100vw)' }}
+    >
+      <DrawerHeader>
+        <DrawerHeaderTitle
+          action={
+            <Button
+              appearance="subtle"
+              aria-label="Close Copilot"
+              icon={<DismissRegular />}
+              onClick={() => onOpenChange(false)}
+            />
+          }
+        >
+          Executive Copilot
+        </DrawerHeaderTitle>
+      </DrawerHeader>
+      <DrawerBody>
+        <GlobalAICommandPanel onSubmit={onSubmit} />
+      </DrawerBody>
+    </Drawer>
   );
 }
 

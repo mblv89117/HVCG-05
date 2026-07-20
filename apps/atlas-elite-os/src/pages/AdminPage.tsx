@@ -29,7 +29,7 @@ export function AdminPage() {
       title="Administration"
       subtitle="Model-driven Power App remains the Dataverse administration surface."
     >
-      <AtlasCard title="HVCG Development Dataverse" subtitle={microsoftConfig.dataverseUrl}>
+      <AtlasCard title="HVCG Development Dataverse" subtitle={microsoftConfig.dataverseUrl} variant="glass">
         <div style={{ display: 'grid', gap: 12 }}>
           <Text>
             The premium Fluent UI is the executive experience layer. Use the published model-driven

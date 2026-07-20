@@ -1,3 +1,13 @@
+:root {
+  color-scheme: light dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
@@ -5,11 +15,34 @@ body,
   min-height: 100%;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 body {
+  font-family: 'Segoe UI Variable', 'Segoe UI', 'Avenir Next', 'Helvetica Neue', sans-serif;
+  background: #f8fafc;
+  color: #0b1f33;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+a {
+  color: #2563eb;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -30,8 +30,8 @@ const useStyles = makeStyles({
     lineHeight: tokens.lineHeightHero800,
     color: tokens.colorNeutralForeground1,
   },
-  trendUp: { color: '#1a5c42' },
-  trendDown: { color: '#8b2e2e' },
+  trendUp: { color: '#059669' },
+  trendDown: { color: '#DC2626' },
   trendFlat: { color: tokens.colorNeutralForeground2 },
   meta: {
     display: 'flex',
@@ -115,7 +115,7 @@ const useSpark = makeStyles({
   bar: {
     flex: 1,
     borderRadius: '3px 3px 0 0',
-    background: `linear-gradient(180deg, ${tokens.colorBrandBackgroundHover}, ${tokens.colorBrandBackground})`,
+    background: `linear-gradient(180deg, #3B82F6, #2563EB)`,
     minWidth: '4px',
   },
 });

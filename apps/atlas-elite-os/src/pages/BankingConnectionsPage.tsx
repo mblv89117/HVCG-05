@@ -306,20 +306,24 @@ export function BankingConnectionsPage() {
         </MessageBar>
       ) : null}
 
-      <AtlasCard title="Verified cash snapshot" subtitle="Shown only when provenance is VerifiedBank">
+      <AtlasCard title="Verified cash snapshot" subtitle="Shown only when provenance is VerifiedBank" variant="glass">
         {verifiedCash ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
             <div>
               <Caption1>Current balance (Verified bank data)</Caption1>
-              <Text weight="semibold">{money(verifiedCash.totalCurrentBalance)}</Text>
+              <Text weight="semibold" size={500}>
+                {money(verifiedCash.totalCurrentBalance)}
+              </Text>
             </div>
             <div>
               <Caption1>Available</Caption1>
-              <Text weight="semibold">{money(verifiedCash.totalAvailableBalance)}</Text>
+              <Text weight="semibold" size={500}>
+                {money(verifiedCash.totalAvailableBalance)}
+              </Text>
             </div>
             <div>
               <Caption1>Accounts / Institutions</Caption1>
-              <Text weight="semibold">
+              <Text weight="semibold" size={500}>
                 {verifiedCash.accountCount} / {verifiedCash.institutionCount}
               </Text>
             </div>
@@ -329,48 +333,85 @@ export function BankingConnectionsPage() {
         )}
       </AtlasCard>
 
-      <AtlasCard title="Connected institutions" subtitle={loading ? 'Loading…' : undefined}>
+      <AtlasCard title="Connected institutions" subtitle={loading ? 'Loading…' : 'Institution logos appear when Plaid metadata is live'} variant="glass">
         {!loading && connections.length === 0 ? (
           <Text>No banks connected yet. Use Connect Bank Account after accepting consent.</Text>
         ) : null}
-        {connections.map((c) => (
-          <div key={c.connectionId} style={{ marginBottom: 16 }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Text weight="semibold">{c.institution.name}</Text>
-              <StatusChip tone={statusTone(c.status)} label={c.status} />
-              <Caption1>
-                Last synced: {c.lastSyncedAt ? new Date(c.lastSyncedAt).toLocaleString() : 'Not yet synchronized'}
-              </Caption1>
-              {c.status === 'NeedsReauthorization' ? (
-                <Button size="small" disabled={busy !== null} onClick={() => void openLink('reconnect')}>
-                  Reconnect
+        <div style={{ display: 'grid', gap: 14 }}>
+          {connections.map((c) => (
+            <div
+              key={c.connectionId}
+              className="atlas-hover-lift"
+              style={{
+                marginBottom: 4,
+                padding: 14,
+                borderRadius: 14,
+                border: '1px solid rgba(226,232,240,0.95)',
+                background: 'rgba(248,250,252,0.85)',
+              }}
+            >
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div
+                  aria-hidden
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 10,
+                    background: 'linear-gradient(135deg, #0B1F33, #2563EB)',
+                    color: '#fff',
+                    display: 'grid',
+                    placeItems: 'center',
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  {(c.institution.name || '?').slice(0, 2).toUpperCase()}
+                </div>
+                <Text weight="semibold">{c.institution.name}</Text>
+                <StatusChip tone={statusTone(c.status)} label={c.status} />
+                <Caption1>
+                  Last synced: {c.lastSyncedAt ? new Date(c.lastSyncedAt).toLocaleString() : 'Not yet synchronized'}
+                </Caption1>
+                {c.status === 'NeedsReauthorization' ? (
+                  <Button size="small" disabled={busy !== null} onClick={() => void openLink('reconnect')}>
+                    Reconnect
+                  </Button>
+                ) : null}
+                <Button
+                  size="small"
+                  disabled={busy !== null || c.status === 'Disconnected'}
+                  onClick={() => void onRefresh(c.connectionId)}
+                >
+                  {busy === c.connectionId ? 'Syncing…' : 'Refresh'}
                 </Button>
-              ) : null}
-              <Button
-                size="small"
-                disabled={busy !== null || c.status === 'Disconnected'}
-                onClick={() => void onRefresh(c.connectionId)}
-              >
-                {busy === c.connectionId ? 'Syncing…' : 'Refresh'}
-              </Button>
-              <Button
-                size="small"
-                appearance="secondary"
-                disabled={busy !== null || c.status === 'Disconnected'}
-                onClick={() => void onDisconnect(c.connectionId)}
-              >
-                Disconnect
-              </Button>
+                <Button
+                  size="small"
+                  appearance="secondary"
+                  disabled={busy !== null || c.status === 'Disconnected'}
+                  onClick={() => void onDisconnect(c.connectionId)}
+                >
+                  Disconnect
+                </Button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
         {accountRows.length > 0 ? (
           <DataTable
             ariaLabel="Bank accounts"
+            searchable
             getRowKey={(r) => r.id}
             rows={accountRows}
             columns={[
-              { key: 'institution', header: 'Institution', render: (r) => r.institution },
+              {
+                key: 'institution',
+                header: 'Institution',
+                sortable: true,
+                pinned: 'left',
+                getSortValue: (r) => r.institution,
+                getFilterValue: (r) => r.institution,
+                render: (r) => r.institution,
+              },
               { key: 'name', header: 'Account', render: (r) => r.name },
               { key: 'type', header: 'Type', render: (r) => r.type },
               { key: 'mask', header: 'Last 4', render: (r) => `•••• ${r.mask}` },
