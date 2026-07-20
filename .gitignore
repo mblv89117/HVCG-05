@@ -6,3 +6,6 @@ storybook-static/
 *.log
 .DS_Store
 apps/atlas-elite-os/tsconfig.tsbuildinfo
+
+.secrets/
+.npm-cache/
