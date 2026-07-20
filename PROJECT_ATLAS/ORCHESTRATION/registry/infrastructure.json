@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "subscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+  "subscriptionName": "HVCG Production",
+  "regionPrimary": "westus3",
+  "resources": [
+    {
+      "name": "rg-atlas-dev",
+      "type": "resourceGroup"
+    },
+    {
+      "name": "rg-atlas-prod",
+      "type": "resourceGroup"
+    },
+    {
+      "name": "rg-atlas-shared",
+      "type": "resourceGroup"
+    },
+    {
+      "name": "rg-atlas-network",
+      "type": "resourceGroup"
+    },
+    {
+      "name": "rg-atlas-security",
+      "type": "resourceGroup"
+    },
+    {
+      "name": "rg-atlas-monitoring",
+      "type": "resourceGroup"
+    },
+    {
+      "name": "law-atlas-prod",
+      "type": "logAnalytics",
+      "rg": "rg-atlas-monitoring"
+    },
+    {
+      "name": "appi-atlas-prod",
+      "type": "appInsights",
+      "rg": "rg-atlas-monitoring"
+    },
+    {
+      "name": "kv-atlas-hvcg-ebc84d85",
+      "type": "keyVault",
+      "rg": "rg-atlas-security",
+      "enableSoftDelete": true,
+      "enablePurgeProtection": true,
+      "enableRbacAuthorization": true,
+      "softDeleteRetentionInDays": 7,
+      "vaultUri": "https://kv-atlas-hvcg-ebc84d85.vault.azure.net/",
+      "environment": "Production",
+      "updatedAt": "2026-07-20T00:06:00Z",
+      "notes": "ATLAS-T-1302: purge protection enabled"
+    },
+    {
+      "name": "id-atlas-prod",
+      "type": "managedIdentity",
+      "rg": "rg-atlas-shared"
+    },
+    {
+      "name": "swa-atlas-elite-os-dev",
+      "type": "staticWebApp",
+      "rg": "rg-atlas-dev",
+      "url": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net"
+    },
+    {
+      "name": "budget-atlas-100",
+      "type": "budget"
+    }
+  ]
+}

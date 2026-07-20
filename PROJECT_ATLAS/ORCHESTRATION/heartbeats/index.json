@@ -1,0 +1,22 @@
+{
+  "updatedAt": "2026-07-20T00:06:28Z",
+  "agents": {
+    "master-pm": "heartbeats/agents/master-pm.json",
+    "system-architect": "heartbeats/agents/system-architect.json",
+    "ai-governance": "heartbeats/agents/ai-governance.json",
+    "data-engineering": "heartbeats/agents/data-engineering.json",
+    "deployment-manager": "heartbeats/agents/deployment-manager.json",
+    "power-platform": "heartbeats/agents/power-platform.json",
+    "analytics": "heartbeats/agents/analytics.json",
+    "knowledge-platform": "heartbeats/agents/knowledge-platform.json",
+    "security": "heartbeats/agents/security.json",
+    "revenue-systems": "heartbeats/agents/revenue-systems.json",
+    "azure-platform": "heartbeats/agents/azure-platform.json",
+    "administration": "heartbeats/agents/administration.json",
+    "elite-ui": "heartbeats/agents/elite-ui.json",
+    "client-workspace": "heartbeats/agents/client-workspace.json",
+    "qa-release": "heartbeats/agents/qa-release.json",
+    "documentation": "heartbeats/agents/documentation.json",
+    "communications": "heartbeats/agents/communications.json"
+  }
+}

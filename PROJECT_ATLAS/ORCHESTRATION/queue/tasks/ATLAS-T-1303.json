@@ -1,0 +1,43 @@
+{
+  "id": "ATLAS-T-1303",
+  "sprint": 13,
+  "epic": "ELITE-UI-UAT",
+  "feature": "app-insights-sdk",
+  "title": "Wire Application Insights into Elite OS",
+  "description": "Add App Insights JS SDK using appi-atlas-prod connection string from Key Vault / build secret \u2014 no secrets in git.",
+  "assignedAgent": "elite-ui",
+  "priority": "P1",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [
+    "ATLAS-T-1302"
+  ],
+  "blockedBy": [],
+  "status": "Ready",
+  "acceptanceCriteria": [
+    "Page views appear in App Insights",
+    "No secrets committed"
+  ],
+  "requiredReviews": [
+    "qa",
+    "security"
+  ],
+  "branch": null,
+  "worktree": null,
+  "affectedPaths": [
+    "apps/atlas-elite-os/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "claimedBy": null,
+  "claimedAt": null
+}

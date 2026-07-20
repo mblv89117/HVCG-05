@@ -1,0 +1,120 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "nodes": [
+    {
+      "id": "n-elite-os",
+      "type": "react-app",
+      "name": "Atlas Elite OS",
+      "path": "apps/atlas-elite-os"
+    },
+    {
+      "id": "n-design-system",
+      "type": "component-library",
+      "name": "Atlas Design System",
+      "path": "packages/atlas-design-system"
+    },
+    {
+      "id": "n-command-center",
+      "type": "power-app",
+      "name": "Atlas Command Center",
+      "appId": "dea8a490-4b82-f111-ab0e-6045bd0193e8"
+    },
+    {
+      "id": "n-dataverse-dev",
+      "type": "dataverse",
+      "name": "HVCG Development",
+      "url": "https://org1131a2b0.crm.dynamics.com"
+    },
+    {
+      "id": "n-swa-dev",
+      "type": "azure-resource",
+      "name": "swa-atlas-elite-os-dev",
+      "url": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net"
+    },
+    {
+      "id": "n-kv",
+      "type": "azure-resource",
+      "name": "kv-atlas-hvcg-ebc84d85"
+    },
+    {
+      "id": "n-appi",
+      "type": "azure-resource",
+      "name": "appi-atlas-prod"
+    },
+    {
+      "id": "n-entra-spa",
+      "type": "entra-app",
+      "name": "HVCG-Atlas-Elite-OS-DEV",
+      "clientId": "49d20328-fe3c-40ec-9d0e-99f57e4646e4"
+    },
+    {
+      "id": "n-graph",
+      "type": "api",
+      "name": "Microsoft Graph"
+    },
+    {
+      "id": "n-orch",
+      "type": "platform",
+      "name": "Engineering Orchestration",
+      "path": "PROJECT_ATLAS/ORCHESTRATION"
+    },
+    {
+      "id": "n-comms",
+      "type": "platform",
+      "name": "Agent Comms Bus",
+      "path": ".agent-comms"
+    }
+  ],
+  "edges": [
+    {
+      "from": "n-elite-os",
+      "to": "n-design-system",
+      "rel": "uses"
+    },
+    {
+      "from": "n-elite-os",
+      "to": "n-entra-spa",
+      "rel": "authenticates-via"
+    },
+    {
+      "from": "n-elite-os",
+      "to": "n-dataverse-dev",
+      "rel": "reads"
+    },
+    {
+      "from": "n-elite-os",
+      "to": "n-graph",
+      "rel": "calls"
+    },
+    {
+      "from": "n-elite-os",
+      "to": "n-swa-dev",
+      "rel": "hosted-on"
+    },
+    {
+      "from": "n-command-center",
+      "to": "n-dataverse-dev",
+      "rel": "bound-to"
+    },
+    {
+      "from": "n-swa-dev",
+      "to": "n-kv",
+      "rel": "future-secrets-via-mi"
+    },
+    {
+      "from": "n-elite-os",
+      "to": "n-appi",
+      "rel": "telemetry-planned"
+    },
+    {
+      "from": "n-orch",
+      "to": "n-comms",
+      "rel": "complements"
+    },
+    {
+      "from": "n-orch",
+      "to": "n-elite-os",
+      "rel": "coordinates-work-for"
+    }
+  ]
+}

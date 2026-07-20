@@ -1,0 +1,19 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "owner": "Manuel Barela",
+  "escalateOnlyWhen": [
+    "Financial approval",
+    "Microsoft permission",
+    "Legal/compliance",
+    "Destructive action",
+    "Multiple valid architectural paths needing business direction"
+  ],
+  "openOwnerDecisions": [],
+  "playUrls": {
+    "eliteOsDev": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+    "commandCenterDev": "https://org1131a2b0.crm.dynamics.com/main.aspx?appid=dea8a490-4b82-f111-ab0e-6045bd0193e8"
+  },
+  "recommendedAttention": [
+    "Optional: approve Dataverse CORS for SWA (ATLAS-T-1301) if Master PM lacks admin"
+  ]
+}

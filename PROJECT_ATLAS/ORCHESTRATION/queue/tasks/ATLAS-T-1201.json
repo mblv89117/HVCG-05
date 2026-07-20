@@ -1,0 +1,43 @@
+{
+  "id": "ATLAS-T-1201",
+  "sprint": 12,
+  "epic": "ORCH-PLATFORM",
+  "feature": "orchestration-v1",
+  "title": "Stand up ORCHESTRATION directory and schemas",
+  "description": "Create PROJECT_ATLAS/ORCHESTRATION with JSON schemas for task/agent/lock/heartbeat/decision/sprint/release.",
+  "assignedAgent": "master-pm",
+  "priority": "P0",
+  "complexity": "L",
+  "estimatedEffortHours": 8,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Waiting Review",
+  "acceptanceCriteria": [
+    "schemas/*.json exist and validate sample objects",
+    "README documents operating model"
+  ],
+  "requiredReviews": [
+    "qa",
+    "architecture"
+  ],
+  "branch": "cursor/sprint12-engineering-orchestration",
+  "worktree": ".worktrees/sprint12-engineering-orchestration",
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": "Delivered as part of Sprint 12 Orchestration Platform v1.0 implementation.",
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:02:07Z",
+  "claimedBy": "master-pm",
+  "claimedAt": "2026-07-20T00:01:57Z"
+}

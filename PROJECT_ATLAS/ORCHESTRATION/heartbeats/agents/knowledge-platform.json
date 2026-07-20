@@ -1,0 +1,13 @@
+{
+  "agentId": "knowledge-platform",
+  "currentTask": null,
+  "currentBranch": "cursor/sprint12-engineering-orchestration",
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:05:28Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": "poll list-ready; extend knowledge graph when tasked",
+  "heartbeatTime": "2026-07-20T00:05:28Z"
+}

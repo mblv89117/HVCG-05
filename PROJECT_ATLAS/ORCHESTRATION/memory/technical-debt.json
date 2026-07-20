@@ -1,0 +1,25 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "items": [
+    {
+      "id": "TD-001",
+      "title": "Key Vault purge protection disabled",
+      "severity": "medium",
+      "ownerAgent": "azure-platform",
+      "relatedTask": "ATLAS-T-1302"
+    },
+    {
+      "id": "TD-002",
+      "title": "Elite OS bundle >500kB; needs code-splitting",
+      "severity": "low",
+      "ownerAgent": "elite-ui"
+    },
+    {
+      "id": "TD-003",
+      "title": "agent-comms registry worktree paths can go stale",
+      "severity": "medium",
+      "ownerAgent": "communications",
+      "relatedTask": "ATLAS-T-1306"
+    }
+  ]
+}

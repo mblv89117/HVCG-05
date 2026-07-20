@@ -1,0 +1,87 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "rules": [
+    "Path ownership from agents.json ownedPaths is authoritative for locks.",
+    "ORCHESTRATION/ is owned by master-pm; specialists may write heartbeats/locks/tasks assigned to them.",
+    "Never claim another agent's branch without Master PM reassignment.",
+    "agent-comms remains the message bus; ORCHESTRATION is the work SoR."
+  ],
+  "pathOwners": {
+    "master-pm": [
+      "PROJECT_ATLAS/ORCHESTRATION/",
+      "MASTER_*.md",
+      "docs/agents/"
+    ],
+    "system-architect": [
+      "PROJECT_ATLAS/Architecture/",
+      "docs/architecture/"
+    ],
+    "deployment-manager": [
+      "deployment/",
+      "infrastructure/",
+      "scripts/deploy-*.sh"
+    ],
+    "qa-release": [
+      "PROJECT_ATLAS/QA/",
+      "tests/",
+      "releases/"
+    ],
+    "documentation": [
+      "docs/",
+      "PROJECT_ATLAS/**/*.md"
+    ],
+    "ai-governance": [
+      "docs/ai/",
+      "src/power-apps/ai/"
+    ],
+    "elite-ui": [
+      "apps/atlas-elite-os/",
+      "packages/atlas-design-system/"
+    ],
+    "power-platform": [
+      "src/power-platform/",
+      "src/power-apps/",
+      "ms-atlas-command-center/"
+    ],
+    "azure-platform": [
+      "infrastructure/azure/",
+      "docs/deployment/AZURE_*.md"
+    ],
+    "data-engineering": [
+      "sample-data/",
+      "releases/migrations/"
+    ],
+    "security": [
+      "PROJECT_ATLAS/Architecture/Track10_Security_Matrix.md"
+    ],
+    "revenue-systems": [
+      "docs/revenue/",
+      ".worktrees/revenue-*/"
+    ],
+    "client-workspace": [
+      "docs/portal/",
+      "src/power-apps/portal/"
+    ],
+    "knowledge-platform": [
+      "PROJECT_ATLAS/ORCHESTRATION/knowledge/",
+      "docs/"
+    ],
+    "communications": [
+      ".agent-comms/",
+      "scripts/agent-comms/",
+      "docs/agents/"
+    ],
+    "analytics": [
+      "PROJECT_ATLAS/ORCHESTRATION/metrics/",
+      "PROJECT_ATLAS/ORCHESTRATION/dashboards/"
+    ],
+    "automation": [
+      "src/power-automate/",
+      "scripts/"
+    ],
+    "administration": [
+      "PROJECT_ATLAS/Architecture/Track10_Entra_App_Registration.md"
+    ]
+  }
+}

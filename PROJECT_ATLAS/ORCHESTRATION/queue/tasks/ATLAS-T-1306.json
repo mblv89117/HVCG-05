@@ -1,0 +1,43 @@
+{
+  "id": "ATLAS-T-1306",
+  "sprint": 13,
+  "epic": "ORCH-ADOPTION",
+  "feature": "comms-bridge",
+  "title": "Bridge agent-comms status requests to orchestration heartbeats",
+  "description": "When Master PM requests status, agents update ORCHESTRATION heartbeats and optionally ack via .agent-comms.",
+  "assignedAgent": "communications",
+  "priority": "P2",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "In Progress",
+  "acceptanceCriteria": [
+    "Documented bridge procedure",
+    "Sample heartbeat sync script"
+  ],
+  "requiredReviews": [
+    "qa"
+  ],
+  "branch": "cursor/comms-orch-bridge",
+  "worktree": ".worktrees/sprint12-engineering-orchestration",
+  "affectedPaths": [
+    ".agent-comms/",
+    "scripts/agent-comms/",
+    "docs/agents/",
+    "PROJECT_ATLAS/ORCHESTRATION/heartbeats/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:06:28Z",
+  "claimedBy": "communications",
+  "claimedAt": "2026-07-20T00:05:01Z"
+}

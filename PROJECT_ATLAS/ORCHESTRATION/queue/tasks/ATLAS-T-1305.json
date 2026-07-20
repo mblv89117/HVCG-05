@@ -1,0 +1,41 @@
+{
+  "id": "ATLAS-T-1305",
+  "sprint": 13,
+  "epic": "ORCH-ADOPTION",
+  "feature": "agent-onboarding",
+  "title": "Onboard specialist agents to discover Ready queue",
+  "description": "Update agent handbooks and AGENT_ASSIGNMENTS so every agent starts by running orchestration list-ready + heartbeat.",
+  "assignedAgent": "documentation",
+  "priority": "P1",
+  "complexity": "S",
+  "estimatedEffortHours": 3,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Claimed",
+  "acceptanceCriteria": [
+    "AGENT_ASSIGNMENTS points to ORCHESTRATION",
+    "At least 3 agent handbooks reference claim workflow"
+  ],
+  "requiredReviews": [
+    "documentation",
+    "qa"
+  ],
+  "branch": "cursor/documentation-knowledge-manager",
+  "worktree": ".worktrees/documentation-knowledge-manager",
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:05:34Z",
+  "claimedBy": "documentation",
+  "claimedAt": "2026-07-20T00:05:34Z"
+}

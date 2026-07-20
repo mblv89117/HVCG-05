@@ -1,0 +1,13 @@
+{
+  "agentId": "client-workspace",
+  "currentTask": null,
+  "currentBranch": "cursor/client-portal-sprint1",
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:05:59Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": "claim first Ready client-workspace task when Master PM seeds queue",
+  "heartbeatTime": "2026-07-20T00:05:59Z"
+}

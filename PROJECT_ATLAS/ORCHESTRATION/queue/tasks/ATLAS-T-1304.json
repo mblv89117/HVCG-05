@@ -1,0 +1,43 @@
+{
+  "id": "ATLAS-T-1304",
+  "sprint": 13,
+  "epic": "ELITE-UI-UAT",
+  "feature": "owner-uat-dashboard",
+  "title": "Owner UAT: Design System + Executive Dashboard on SWA",
+  "description": "Facilitate Manuel Barela UAT of Design System and Executive Dashboard on Microsoft-hosted URL; capture defects as tasks.",
+  "assignedAgent": "qa-release",
+  "priority": "P0",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [
+    "ATLAS-T-1301"
+  ],
+  "blockedBy": [],
+  "status": "Ready",
+  "acceptanceCriteria": [
+    "UAT checklist completed",
+    "Pass/fail recorded in task validationResults"
+  ],
+  "requiredReviews": [
+    "qa",
+    "owner"
+  ],
+  "branch": null,
+  "worktree": null,
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "claimedBy": null,
+  "claimedAt": null
+}

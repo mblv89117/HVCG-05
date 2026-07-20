@@ -1,0 +1,11 @@
+{
+  "lockId": "LOCK-B96406E594",
+  "type": "directory",
+  "resource": "scripts/agent-comms/",
+  "holder": "communications",
+  "taskId": "ATLAS-T-1306",
+  "acquiredAt": "2026-07-20T00:06:28Z",
+  "expiresAt": "2026-07-20T02:06:28Z",
+  "heartbeatAt": "2026-07-20T00:06:28Z",
+  "ttlMinutes": 120
+}

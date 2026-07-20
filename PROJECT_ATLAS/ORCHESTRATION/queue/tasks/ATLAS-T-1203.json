@@ -1,0 +1,45 @@
+{
+  "id": "ATLAS-T-1203",
+  "sprint": 12,
+  "epic": "ORCH-PLATFORM",
+  "feature": "orchestration-v1",
+  "title": "Implement task engine CLI (claim/list/complete)",
+  "description": "Ship scripts/orchestration for discovering Ready tasks, claiming with locks, heartbeats, and completion.",
+  "assignedAgent": "automation",
+  "priority": "P0",
+  "complexity": "XL",
+  "estimatedEffortHours": 12,
+  "dependencies": [
+    "ATLAS-T-1201"
+  ],
+  "blockedBy": [],
+  "status": "Waiting Review",
+  "acceptanceCriteria": [
+    "atlas-orch.py supports list-ready, claim, heartbeat, complete, locks",
+    "Unit tests pass"
+  ],
+  "requiredReviews": [
+    "qa",
+    "architecture"
+  ],
+  "branch": "cursor/sprint12-engineering-orchestration",
+  "worktree": ".worktrees/sprint12-engineering-orchestration",
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": "Delivered as part of Sprint 12 Orchestration Platform v1.0 implementation.",
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:02:08Z",
+  "claimedBy": "master-pm",
+  "claimedAt": "2026-07-20T00:01:57Z"
+}

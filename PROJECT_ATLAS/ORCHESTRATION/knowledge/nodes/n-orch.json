@@ -1,0 +1,12 @@
+{
+  "id": "n-orch",
+  "summary": "Permanent engineering OS for tasks, locks, reviews, releases, memory.",
+  "owners": [
+    "master-pm"
+  ],
+  "features": [
+    "task-engine",
+    "heartbeats",
+    "knowledge-graph"
+  ]
+}

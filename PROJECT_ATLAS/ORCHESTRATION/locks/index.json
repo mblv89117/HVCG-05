@@ -1,0 +1,28 @@
+{
+  "updatedAt": "2026-07-20T00:06:28Z",
+  "policy": {
+    "defaultTtlMinutes": 120,
+    "heartbeatRenewMinutes": 30,
+    "staleAfterMinutes": 45,
+    "types": [
+      "file",
+      "directory",
+      "task",
+      "worktree",
+      "branch"
+    ]
+  },
+  "activeLockIds": [
+    "LOCK-07B5F40A7E",
+    "LOCK-2B3202B289",
+    "LOCK-6135556A15",
+    "LOCK-9DA91A4F46",
+    "LOCK-AD71EE1015",
+    "LOCK-B96406E594",
+    "LOCK-BE8A4E2F98",
+    "LOCK-C8041F98B7",
+    "LOCK-D394991477",
+    "LOCK-F74E49A1D8",
+    "LOCK-ORCH-DIR-S12"
+  ]
+}

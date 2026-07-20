@@ -1,0 +1,93 @@
+{
+  "updatedAt": "2026-07-20T00:06:28Z",
+  "tasks": [
+    {
+      "id": "ATLAS-T-1201",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "master-pm",
+      "priority": "P0",
+      "title": "Stand up ORCHESTRATION directory and schemas"
+    },
+    {
+      "id": "ATLAS-T-1202",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "master-pm",
+      "priority": "P0",
+      "title": "Register all engineering agents"
+    },
+    {
+      "id": "ATLAS-T-1203",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "automation",
+      "priority": "P0",
+      "title": "Implement task engine CLI (claim/list/complete)"
+    },
+    {
+      "id": "ATLAS-T-1204",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "knowledge-platform",
+      "priority": "P0",
+      "title": "Seed engineering memory, ADRs, knowledge graph"
+    },
+    {
+      "id": "ATLAS-T-1205",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "Define review + release workflows and Sprint 13 backlog"
+    },
+    {
+      "id": "ATLAS-T-1301",
+      "sprint": 13,
+      "status": "In Progress",
+      "assignedAgent": "power-platform",
+      "priority": "P0",
+      "title": "Apply Dataverse CORS for Elite OS SWA origin"
+    },
+    {
+      "id": "ATLAS-T-1302",
+      "sprint": 13,
+      "status": "In Progress",
+      "assignedAgent": "azure-platform",
+      "priority": "P1",
+      "title": "Enable Key Vault purge protection"
+    },
+    {
+      "id": "ATLAS-T-1303",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "elite-ui",
+      "priority": "P1",
+      "title": "Wire Application Insights into Elite OS"
+    },
+    {
+      "id": "ATLAS-T-1304",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "Owner UAT: Design System + Executive Dashboard on SWA"
+    },
+    {
+      "id": "ATLAS-T-1305",
+      "sprint": 13,
+      "status": "Claimed",
+      "assignedAgent": "documentation",
+      "priority": "P1",
+      "title": "Onboard specialist agents to discover Ready queue"
+    },
+    {
+      "id": "ATLAS-T-1306",
+      "sprint": 13,
+      "status": "In Progress",
+      "assignedAgent": "communications",
+      "priority": "P2",
+      "title": "Bridge agent-comms status requests to orchestration heartbeats"
+    }
+  ]
+}

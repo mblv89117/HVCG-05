@@ -1,0 +1,23 @@
+{
+  "number": 12,
+  "name": "Engineering Orchestration Platform",
+  "status": "Active",
+  "goals": [
+    "Ship Atlas ORCHESTRATION as permanent engineering OS",
+    "Register all specialist agents",
+    "Provide claimable task queue + locks + heartbeats",
+    "Seed Sprint 13 Ready backlog"
+  ],
+  "capacityHours": 40,
+  "velocityTarget": 30,
+  "taskIds": [
+    "ATLAS-T-1201",
+    "ATLAS-T-1202",
+    "ATLAS-T-1203",
+    "ATLAS-T-1204",
+    "ATLAS-T-1205"
+  ],
+  "riskSummary": "Adoption risk if agents ignore queue \u2014 mitigated by handbook updates in Sprint 13.",
+  "executiveSummary": "Sprint 12 builds the coordination layer so Atlas scales beyond owner-prompted agents.",
+  "releaseReadiness": "orch-1.0 ready when ATLAS-T-1201..1205 Closed"
+}

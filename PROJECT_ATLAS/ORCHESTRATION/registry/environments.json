@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "environments": [
+    {
+      "id": "local",
+      "platform": "developer-workstation",
+      "purpose": "Elite OS Vite + scripts",
+      "azureSubscription": null
+    },
+    {
+      "id": "development",
+      "platform": "microsoft",
+      "purpose": "Dataverse Dev + SWA Dev",
+      "dataverse": "https://org1131a2b0.crm.dynamics.com",
+      "swa": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+      "azureSubscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+      "azureSubscriptionName": "HVCG Production",
+      "note": "Azure sub hosts Dev SWA; PP env remains Development"
+    },
+    {
+      "id": "staging",
+      "platform": "microsoft",
+      "purpose": "Pre-prod validation",
+      "status": "planned"
+    },
+    {
+      "id": "production",
+      "platform": "microsoft",
+      "purpose": "Customer-facing / owner-gated",
+      "azureSubscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+      "powerPlatform": "gated",
+      "status": "azure-foundations-ready"
+    }
+  ],
+  "deprecatedAzureSubscriptionId": "866189c6-5aa0-4037-8094-05771caceb0d"
+}

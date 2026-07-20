@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AtlasRelease",
+  "type": "object",
+  "required": [
+    "version",
+    "stage",
+    "taskIds"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "Implementation",
+        "QA",
+        "Architecture",
+        "Security",
+        "Documentation",
+        "Release",
+        "Owner Approval",
+        "Production"
+      ]
+    },
+    "taskIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ownerApprovalRequired": {
+      "type": "boolean"
+    }
+  }
+}

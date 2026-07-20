@@ -1,0 +1,5 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "policy": "One merge at a time into integration branches; path locks must be held by merger.",
+  "queue": []
+}

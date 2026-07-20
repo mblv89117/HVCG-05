@@ -1,0 +1,33 @@
+{
+  "id": "TEMPLATE",
+  "sprint": null,
+  "epic": null,
+  "feature": null,
+  "title": "Perform review gate",
+  "description": "",
+  "assignedAgent": null,
+  "priority": "P2",
+  "complexity": "XS",
+  "estimatedEffortHours": 4,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Waiting Review",
+  "acceptanceCriteria": [],
+  "requiredReviews": [
+    "qa"
+  ],
+  "branch": null,
+  "worktree": null,
+  "affectedPaths": [],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": null,
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "claimedBy": null,
+  "claimedAt": null
+}

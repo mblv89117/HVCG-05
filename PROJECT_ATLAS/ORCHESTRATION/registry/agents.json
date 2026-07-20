@@ -1,0 +1,339 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "owner": "Manuel Barela",
+  "registrationPolicy": "Append agent objects matching schemas/agent.schema.json; never reuse retired agentIds.",
+  "agents": [
+    {
+      "agentId": "master-pm",
+      "displayName": "Master Project Manager",
+      "role": "Master PM",
+      "capabilities": [
+        "orchestration",
+        "routing",
+        "escalation",
+        "sprint-planning"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/ORCHESTRATION/",
+        "MASTER_*.md",
+        "docs/agents/"
+      ],
+      "defaultBranchPrefix": "cursor/master-pm-",
+      "commsAgentId": "master-pm",
+      "escalatesTo": "owner",
+      "status": "active"
+    },
+    {
+      "agentId": "system-architect",
+      "displayName": "System Architect",
+      "role": "System Architect",
+      "capabilities": [
+        "architecture-review",
+        "adr",
+        "scalability"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/Architecture/",
+        "docs/architecture/"
+      ],
+      "defaultBranchPrefix": "cursor/system-architect-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "deployment-manager",
+      "displayName": "Deployment Manager",
+      "role": "Deployment Manager",
+      "capabilities": [
+        "deploy",
+        "pipelines",
+        "environments"
+      ],
+      "ownedPaths": [
+        "deployment/",
+        "infrastructure/",
+        "scripts/deploy-*.sh"
+      ],
+      "defaultBranchPrefix": "cursor/deployment-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "qa-release",
+      "displayName": "QA & Release",
+      "role": "QA & Release",
+      "capabilities": [
+        "qa",
+        "release-gate",
+        "test-plans"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/QA/",
+        "tests/",
+        "releases/"
+      ],
+      "defaultBranchPrefix": "cursor/qa-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "documentation",
+      "displayName": "Documentation Manager",
+      "role": "Documentation Manager",
+      "capabilities": [
+        "docs",
+        "runbooks",
+        "knowledge-index"
+      ],
+      "ownedPaths": [
+        "docs/",
+        "PROJECT_ATLAS/**/*.md"
+      ],
+      "defaultBranchPrefix": "cursor/docs-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "ai-governance",
+      "displayName": "AI Governance",
+      "role": "AI Governance",
+      "capabilities": [
+        "ai-policy",
+        "security-review-assist",
+        "control-plane"
+      ],
+      "ownedPaths": [
+        "docs/ai/",
+        "src/power-apps/ai/"
+      ],
+      "defaultBranchPrefix": "cursor/ai-governance-",
+      "commsAgentId": "ai-governance",
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "elite-ui",
+      "displayName": "Elite UI",
+      "role": "Elite UI",
+      "capabilities": [
+        "react",
+        "design-system",
+        "swa"
+      ],
+      "ownedPaths": [
+        "apps/atlas-elite-os/",
+        "packages/atlas-design-system/"
+      ],
+      "defaultBranchPrefix": "cursor/elite-ui-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "power-platform",
+      "displayName": "Power Platform",
+      "role": "Power Platform",
+      "capabilities": [
+        "dataverse",
+        "power-apps",
+        "power-automate"
+      ],
+      "ownedPaths": [
+        "src/power-platform/",
+        "src/power-apps/",
+        "ms-atlas-command-center/"
+      ],
+      "defaultBranchPrefix": "cursor/power-platform-",
+      "commsAgentId": "crm",
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "azure-platform",
+      "displayName": "Azure Platform",
+      "role": "Azure Platform",
+      "capabilities": [
+        "azure",
+        "bicep",
+        "monitor",
+        "keyvault"
+      ],
+      "ownedPaths": [
+        "infrastructure/azure/",
+        "docs/deployment/AZURE_*.md"
+      ],
+      "defaultBranchPrefix": "cursor/azure-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "data-engineering",
+      "displayName": "Data Engineering",
+      "role": "Data Engineering",
+      "capabilities": [
+        "schema",
+        "etl",
+        "sample-data",
+        "dataverse-model"
+      ],
+      "ownedPaths": [
+        "sample-data/",
+        "releases/migrations/"
+      ],
+      "defaultBranchPrefix": "cursor/data-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "security",
+      "displayName": "Security Engineering",
+      "role": "Security Engineering",
+      "capabilities": [
+        "security-review",
+        "rbac",
+        "secrets",
+        "compliance"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/Architecture/Track10_Security_Matrix.md"
+      ],
+      "defaultBranchPrefix": "cursor/security-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "revenue-systems",
+      "displayName": "Revenue Systems",
+      "role": "Revenue Systems",
+      "capabilities": [
+        "revenue-os",
+        "eva",
+        "conversion"
+      ],
+      "ownedPaths": [
+        "docs/revenue/",
+        ".worktrees/revenue-*/"
+      ],
+      "defaultBranchPrefix": "cursor/revenue-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "client-workspace",
+      "displayName": "Client Workspace",
+      "role": "Client Workspace",
+      "capabilities": [
+        "portal",
+        "data-rooms",
+        "client-sharepoint"
+      ],
+      "ownedPaths": [
+        "docs/portal/",
+        "src/power-apps/portal/"
+      ],
+      "defaultBranchPrefix": "cursor/client-",
+      "commsAgentId": "client-portal",
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "knowledge-platform",
+      "displayName": "Knowledge Platform",
+      "role": "Knowledge Platform",
+      "capabilities": [
+        "knowledge-graph",
+        "search",
+        "sop"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/ORCHESTRATION/knowledge/",
+        "docs/"
+      ],
+      "defaultBranchPrefix": "cursor/knowledge-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "communications",
+      "displayName": "Communications",
+      "role": "Communications",
+      "capabilities": [
+        "agent-comms",
+        "inbox",
+        "broadcast"
+      ],
+      "ownedPaths": [
+        ".agent-comms/",
+        "scripts/agent-comms/",
+        "docs/agents/"
+      ],
+      "defaultBranchPrefix": "cursor/comms-",
+      "commsAgentId": "master-pm",
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "analytics",
+      "displayName": "Analytics",
+      "role": "Analytics",
+      "capabilities": [
+        "metrics",
+        "dashboards",
+        "telemetry"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/ORCHESTRATION/metrics/",
+        "PROJECT_ATLAS/ORCHESTRATION/dashboards/"
+      ],
+      "defaultBranchPrefix": "cursor/analytics-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "automation",
+      "displayName": "Automation",
+      "role": "Automation",
+      "capabilities": [
+        "power-automate",
+        "scripts",
+        "ci-hooks"
+      ],
+      "ownedPaths": [
+        "src/power-automate/",
+        "scripts/"
+      ],
+      "defaultBranchPrefix": "cursor/automation-",
+      "commsAgentId": null,
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "administration",
+      "displayName": "Administration",
+      "role": "Administration",
+      "capabilities": [
+        "entra",
+        "rbac",
+        "tenant-admin-assist"
+      ],
+      "ownedPaths": [
+        "PROJECT_ATLAS/Architecture/Track10_Entra_App_Registration.md"
+      ],
+      "defaultBranchPrefix": "cursor/admin-",
+      "commsAgentId": null,
+      "escalatesTo": "owner",
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "id": "ATLAS-T-1204",
+  "sprint": 12,
+  "epic": "ORCH-PLATFORM",
+  "feature": "orchestration-v1",
+  "title": "Seed engineering memory, ADRs, knowledge graph",
+  "description": "Create memory/, decisions/adr, knowledge graph linking Microsoft assets to Elite UI and Azure.",
+  "assignedAgent": "knowledge-platform",
+  "priority": "P0",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [
+    "ATLAS-T-1201"
+  ],
+  "blockedBy": [],
+  "status": "Waiting Review",
+  "acceptanceCriteria": [
+    "ADR-0001 and ADR-0002 accepted",
+    "knowledge/graph.json links React, Dataverse, Azure, Graph"
+  ],
+  "requiredReviews": [
+    "qa",
+    "architecture"
+  ],
+  "branch": "cursor/sprint12-engineering-orchestration",
+  "worktree": ".worktrees/sprint12-engineering-orchestration",
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/"
+  ],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": "Delivered as part of Sprint 12 Orchestration Platform v1.0 implementation.",
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:02:08Z",
+  "claimedBy": "master-pm",
+  "claimedAt": "2026-07-20T00:01:57Z"
+}

@@ -1,0 +1,13 @@
+{
+  "agentId": "system-architect",
+  "currentTask": null,
+  "currentBranch": "cursor/system-architect",
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue \u2014 available for architecture review",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:03:15Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": "Claim ATLAS-T-* assigned to system-architect when Ready; review Waiting Review packs when routed",
+  "heartbeatTime": "2026-07-20T00:03:15Z"
+}

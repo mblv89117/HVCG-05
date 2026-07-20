@@ -1,0 +1,11 @@
+{
+  "id": "n-elite-os",
+  "summary": "React 19 + Vite Elite executive experience with MSAL and Dataverse adapters.",
+  "owners": [
+    "elite-ui"
+  ],
+  "features": [
+    "executive-dashboard",
+    "design-system-consumption"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "lockId": "LOCK-2B3202B289",
+  "type": "file",
+  "resource": "PROJECT_ATLAS/ORCHESTRATION/registry/environments.json",
+  "holder": "power-platform",
+  "taskId": "ATLAS-T-1301",
+  "acquiredAt": "2026-07-20T00:04:49Z",
+  "expiresAt": "2026-07-20T02:04:55Z",
+  "heartbeatAt": "2026-07-20T00:04:55Z",
+  "ttlMinutes": 120
+}

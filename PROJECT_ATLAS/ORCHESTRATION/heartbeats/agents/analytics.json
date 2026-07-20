@@ -1,0 +1,13 @@
+{
+  "agentId": "analytics",
+  "currentTask": null,
+  "currentBranch": null,
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:05:26Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": null,
+  "heartbeatTime": "2026-07-20T00:05:26Z"
+}

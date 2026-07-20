@@ -1,0 +1,19 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "events": [
+    {
+      "id": "CAL-S12",
+      "title": "Sprint 12 \u2014 Orchestration Platform",
+      "start": "2026-07-19",
+      "end": "2026-07-19",
+      "type": "sprint"
+    },
+    {
+      "id": "CAL-S13",
+      "title": "Sprint 13 \u2014 Hosted UAT + Adoption",
+      "start": "2026-07-20",
+      "end": "2026-07-27",
+      "type": "sprint"
+    }
+  ]
+}

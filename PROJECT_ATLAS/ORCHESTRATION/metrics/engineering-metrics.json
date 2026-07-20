@@ -1,0 +1,14 @@
+{
+  "updatedAt": "2026-07-20T00:02:08Z",
+  "sprint": 12,
+  "tasksTotal": 11,
+  "tasksReady": 6,
+  "tasksWaitingReview": 5,
+  "agentsRegistered": 18,
+  "openRisks": 2,
+  "openDebt": 3,
+  "activeLocks": 1,
+  "velocityNotes": "Sprint 12 delivered orch-1.0; Sprint 13 measures claim-to-close on Ready backlog.",
+  "cliHealthy": true,
+  "testsPassing": true
+}

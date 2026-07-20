@@ -1,0 +1,35 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "edges": [
+    {
+      "from": "ATLAS-T-1202",
+      "to": "ATLAS-T-1201",
+      "type": "depends-on"
+    },
+    {
+      "from": "ATLAS-T-1203",
+      "to": "ATLAS-T-1201",
+      "type": "depends-on"
+    },
+    {
+      "from": "ATLAS-T-1204",
+      "to": "ATLAS-T-1201",
+      "type": "depends-on"
+    },
+    {
+      "from": "ATLAS-T-1205",
+      "to": "ATLAS-T-1201",
+      "type": "depends-on"
+    },
+    {
+      "from": "ATLAS-T-1303",
+      "to": "ATLAS-T-1302",
+      "type": "depends-on"
+    },
+    {
+      "from": "ATLAS-T-1304",
+      "to": "ATLAS-T-1301",
+      "type": "depends-on"
+    }
+  ]
+}

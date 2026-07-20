@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AtlasHeartbeat",
+  "type": "object",
+  "required": [
+    "agentId",
+    "status",
+    "heartbeatTime"
+  ],
+  "properties": {
+    "agentId": {
+      "type": "string"
+    },
+    "currentTask": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "currentBranch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "Idle",
+        "In Progress",
+        "Blocked",
+        "Waiting Review",
+        "Offline"
+      ]
+    },
+    "currentAction": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "progressPercent": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "lastActivity": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "estimatedCompletion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nextAction": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "heartbeatTime": {
+      "type": "string"
+    }
+  }
+}

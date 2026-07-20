@@ -1,0 +1,41 @@
+{
+  "id": "ATLAS-T-1301",
+  "sprint": 13,
+  "epic": "ELITE-UI-UAT",
+  "feature": "dataverse-cors-swa",
+  "title": "Apply Dataverse CORS for Elite OS SWA origin",
+  "description": "Allow https://zealous-rock-0090c7e1e.7.azurestaticapps.net (and localhost) in Dataverse CORS so signed-in dashboard works hosted.",
+  "assignedAgent": "power-platform",
+  "priority": "P0",
+  "complexity": "M",
+  "estimatedEffortHours": 3,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "In Progress",
+  "acceptanceCriteria": [
+    "CORS includes SWA + localhost origins",
+    "Signed-in Elite OS loads Dataverse tracks on SWA URL"
+  ],
+  "requiredReviews": [
+    "qa",
+    "security"
+  ],
+  "branch": null,
+  "worktree": null,
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/registry/environments.json"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:04:55Z",
+  "claimedBy": "power-platform",
+  "claimedAt": "2026-07-20T00:04:48Z"
+}

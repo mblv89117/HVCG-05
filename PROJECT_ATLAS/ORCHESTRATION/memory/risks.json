@@ -1,0 +1,19 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "items": [
+    {
+      "id": "RISK-001",
+      "title": "Agents bypass orchestration and edit without locks",
+      "likelihood": "medium",
+      "impact": "high",
+      "mitigation": "Handbook mandate + CI check for Ready claim in Sprint 13"
+    },
+    {
+      "id": "RISK-002",
+      "title": "Dataverse CORS missing for SWA",
+      "likelihood": "high",
+      "impact": "medium",
+      "mitigation": "ATLAS-T-1301"
+    }
+  ]
+}

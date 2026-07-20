@@ -1,0 +1,20 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "items": [
+    {
+      "id": "OPP-001",
+      "title": "Export orchestration board to Microsoft Planner",
+      "horizon": "6-12 months"
+    },
+    {
+      "id": "OPP-002",
+      "title": "Dataverse tables mirroring ORCHESTRATION tasks for Command Center",
+      "horizon": "1-2 sprints"
+    },
+    {
+      "id": "OPP-003",
+      "title": "Auto-generate knowledge graph edges from repo path analysis",
+      "horizon": "3-6 months"
+    }
+  ]
+}

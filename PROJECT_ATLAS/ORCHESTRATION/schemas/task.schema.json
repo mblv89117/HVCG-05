@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.hvcg/orchestration/task.schema.json",
+  "title": "AtlasOrchestrationTask",
+  "type": "object",
+  "required": [
+    "id",
+    "sprint",
+    "title",
+    "description",
+    "assignedAgent",
+    "priority",
+    "status",
+    "acceptanceCriteria"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^ATLAS-T-[0-9]{4,}$"
+    },
+    "sprint": {
+      "type": [
+        "integer",
+        "string"
+      ]
+    },
+    "epic": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "feature": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "assignedAgent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "priority": {
+      "enum": [
+        "P0",
+        "P1",
+        "P2",
+        "P3"
+      ]
+    },
+    "complexity": {
+      "enum": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL"
+      ]
+    },
+    "estimatedEffortHours": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blockedBy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "enum": [
+        "Backlog",
+        "Planned",
+        "Ready",
+        "Claimed",
+        "In Progress",
+        "Blocked",
+        "Waiting Review",
+        "QA",
+        "Architecture Review",
+        "Security Review",
+        "Approved",
+        "Merged",
+        "Released",
+        "Closed",
+        "Cancelled"
+      ]
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiredReviews": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "qa",
+          "architecture",
+          "security",
+          "documentation",
+          "owner"
+        ]
+      }
+    },
+    "branch": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "worktree": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "affectedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiredTests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validationResults": {
+      "type": "object"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "commitReferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ownerDecisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completionSummary": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "releaseVersion": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    },
+    "claimedBy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "claimedAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

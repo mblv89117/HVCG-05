@@ -1,0 +1,13 @@
+{
+  "agentId": "deployment-manager",
+  "currentTask": null,
+  "currentBranch": null,
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue",
+  "progressPercent": 0.0,
+  "lastActivity": "2026-07-20T00:04:40Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": "claim highest-priority Ready task when Master PM assigns deployment-manager work",
+  "heartbeatTime": "2026-07-20T00:04:40Z"
+}

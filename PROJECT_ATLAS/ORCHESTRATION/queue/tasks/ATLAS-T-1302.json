@@ -1,0 +1,43 @@
+{
+  "id": "ATLAS-T-1302",
+  "sprint": 13,
+  "epic": "AZURE-HARDENING",
+  "feature": "kv-purge-protection",
+  "title": "Enable Key Vault purge protection",
+  "description": "Enable purge protection on kv-atlas-hvcg-ebc84d85 before storing long-lived production secrets.",
+  "assignedAgent": "azure-platform",
+  "priority": "P1",
+  "complexity": "S",
+  "estimatedEffortHours": 1,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "In Progress",
+  "acceptanceCriteria": [
+    "Purge protection enabled",
+    "Inventory updated"
+  ],
+  "requiredReviews": [
+    "security",
+    "architecture"
+  ],
+  "branch": null,
+  "worktree": null,
+  "affectedPaths": [
+    "infrastructure/azure/",
+    "PROJECT_ATLAS/ORCHESTRATION/registry/infrastructure.json",
+    "PROJECT_ATLAS/ORCHESTRATION/memory/technical-debt.json"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:05:42Z",
+  "claimedBy": "azure-platform",
+  "claimedAt": "2026-07-20T00:04:57Z"
+}

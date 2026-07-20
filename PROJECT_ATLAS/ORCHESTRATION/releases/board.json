@@ -1,0 +1,28 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "active": [
+    {
+      "version": "orch-1.0",
+      "stage": "Implementation",
+      "taskIds": [
+        "ATLAS-T-1201",
+        "ATLAS-T-1202",
+        "ATLAS-T-1203",
+        "ATLAS-T-1204",
+        "ATLAS-T-1205"
+      ],
+      "ownerApprovalRequired": false
+    }
+  ],
+  "upcoming": [
+    {
+      "version": "elite-os-dev-uat",
+      "stage": "Implementation",
+      "taskIds": [
+        "ATLAS-T-1301",
+        "ATLAS-T-1303",
+        "ATLAS-T-1304"
+      ]
+    }
+  ]
+}

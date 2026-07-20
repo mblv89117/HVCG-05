@@ -1,0 +1,33 @@
+{
+  "id": "TEMPLATE",
+  "sprint": null,
+  "epic": null,
+  "feature": null,
+  "title": "Update documentation",
+  "description": "",
+  "assignedAgent": "documentation",
+  "priority": "P2",
+  "complexity": "S",
+  "estimatedEffortHours": 4,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Backlog",
+  "acceptanceCriteria": [],
+  "requiredReviews": [
+    "documentation"
+  ],
+  "branch": null,
+  "worktree": null,
+  "affectedPaths": [],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": null,
+  "createdAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "claimedBy": null,
+  "claimedAt": null
+}

@@ -1,0 +1,13 @@
+{
+  "agentId": "azure-platform",
+  "currentTask": "ATLAS-T-1302",
+  "currentBranch": "cursor/azure-kv-purge-protection",
+  "status": "In Progress",
+  "currentAction": "enabling Key Vault purge protection",
+  "progressPercent": 10.0,
+  "lastActivity": "2026-07-20T00:05:42Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": "az keyvault update --enable-purge-protection",
+  "heartbeatTime": "2026-07-20T00:05:42Z"
+}

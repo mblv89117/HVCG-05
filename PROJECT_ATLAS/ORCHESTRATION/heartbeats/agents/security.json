@@ -1,0 +1,13 @@
+{
+  "agentId": "security",
+  "currentTask": null,
+  "currentBranch": "cursor/executive-command-center",
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue \u2014 security intake complete; standing by for Security Review on ATLAS-T-1301/1302/1303",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:05:33Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": "Claim Ready ATLAS-T-* assigned to security; execute Security Review when Waiting Review packs list security",
+  "heartbeatTime": "2026-07-20T00:05:33Z"
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.hvcg/orchestration/agent.schema.json",
+  "title": "AtlasOrchestrationAgent",
+  "type": "object",
+  "required": [
+    "agentId",
+    "displayName",
+    "role",
+    "status"
+  ],
+  "properties": {
+    "agentId": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ownedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaultBranchPrefix": {
+      "type": "string"
+    },
+    "commsAgentId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "escalatesTo": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "active",
+        "paused",
+        "retired"
+      ]
+    }
+  }
+}

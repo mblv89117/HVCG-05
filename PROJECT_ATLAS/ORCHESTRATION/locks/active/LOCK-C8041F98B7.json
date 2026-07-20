@@ -1,0 +1,11 @@
+{
+  "lockId": "LOCK-C8041F98B7",
+  "type": "task",
+  "resource": "ATLAS-T-1305",
+  "holder": "documentation",
+  "taskId": "ATLAS-T-1305",
+  "acquiredAt": "2026-07-20T00:05:34Z",
+  "expiresAt": "2026-07-20T02:06:27Z",
+  "heartbeatAt": "2026-07-20T00:06:27Z",
+  "ttlMinutes": 120
+}

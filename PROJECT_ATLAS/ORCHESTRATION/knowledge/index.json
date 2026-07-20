@@ -1,0 +1,20 @@
+{
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "strategy": "Manual curated graph + per-node notes; future agents append nodes/edges when shipping features.",
+  "graph": "knowledge/graph.json",
+  "nodeDir": "knowledge/nodes/",
+  "coverage": [
+    "React pages",
+    "Power Apps",
+    "Dataverse",
+    "SharePoint (extend)",
+    "Power Automate (extend)",
+    "Azure resources",
+    "APIs",
+    "Components",
+    "Design tokens (via design-system node)",
+    "Workspaces",
+    "Features",
+    "Owners (via agent registry)"
+  ]
+}

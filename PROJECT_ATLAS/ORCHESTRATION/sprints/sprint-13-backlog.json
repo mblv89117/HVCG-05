@@ -1,0 +1,21 @@
+{
+  "number": 13,
+  "name": "Hosted Elite UAT + Orchestration Adoption",
+  "status": "Planned",
+  "goals": [
+    "Dataverse CORS + signed-in SWA dashboard",
+    "Owner UAT of Design System + Dashboard",
+    "Azure hardening (KV purge protection, App Insights)",
+    "All agents discover work from ORCHESTRATION"
+  ],
+  "capacityHours": 40,
+  "velocityTarget": 28,
+  "taskIds": [
+    "ATLAS-T-1301",
+    "ATLAS-T-1302",
+    "ATLAS-T-1303",
+    "ATLAS-T-1304",
+    "ATLAS-T-1305",
+    "ATLAS-T-1306"
+  ]
+}

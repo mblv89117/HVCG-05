@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AtlasLock",
+  "type": "object",
+  "required": [
+    "lockId",
+    "type",
+    "resource",
+    "holder",
+    "acquiredAt",
+    "expiresAt"
+  ],
+  "properties": {
+    "lockId": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "file",
+        "directory",
+        "task",
+        "worktree",
+        "branch"
+      ]
+    },
+    "resource": {
+      "type": "string"
+    },
+    "holder": {
+      "type": "string"
+    },
+    "taskId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "acquiredAt": {
+      "type": "string"
+    },
+    "expiresAt": {
+      "type": "string"
+    },
+    "heartbeatAt": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ttlMinutes": {
+      "type": "integer"
+    }
+  }
+}

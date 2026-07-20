@@ -1,0 +1,13 @@
+{
+  "agentId": "revenue-systems",
+  "currentTask": null,
+  "currentBranch": null,
+  "status": "Idle",
+  "currentAction": "permanent specialist online; no Ready tasks; awaiting Master PM assignment / QA on revenue-os-atlas-design",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:05:49Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": null,
+  "heartbeatTime": "2026-07-20T00:05:49Z"
+}

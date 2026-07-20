@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-07-20T00:01:57Z",
+  "convention": "cursor/<agent-or-track>-<slug>",
+  "protected": [
+    "main",
+    "cursor/agent-communications"
+  ],
+  "active": [
+    {
+      "branch": "cursor/sprint12-engineering-orchestration",
+      "ownerAgent": "master-pm",
+      "purpose": "Sprint 12 Orchestration Platform",
+      "worktree": ".worktrees/sprint12-engineering-orchestration"
+    },
+    {
+      "branch": "cursor/sprint11-azure-production-migration",
+      "ownerAgent": "azure-platform",
+      "purpose": "Sprint 11 Azure Production (complete)",
+      "worktree": ".worktrees/sprint11-azure-production-migration"
+    },
+    {
+      "branch": "cursor/track10-elite-ui",
+      "ownerAgent": "elite-ui",
+      "purpose": "Elite UI design system + dashboard",
+      "worktree": ".worktrees/track10-elite-ui"
+    }
+  ]
+}

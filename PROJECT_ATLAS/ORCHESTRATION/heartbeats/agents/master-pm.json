@@ -1,0 +1,13 @@
+{
+  "agentId": "master-pm",
+  "currentTask": "ATLAS-T-1201",
+  "currentBranch": "cursor/sprint12-engineering-orchestration",
+  "status": "Waiting Review",
+  "currentAction": "Sprint 12 platform delivered; awaiting QA review",
+  "progressPercent": 100.0,
+  "lastActivity": "2026-07-20T00:02:08Z",
+  "estimatedCompletion": null,
+  "blockers": [],
+  "nextAction": null,
+  "heartbeatTime": "2026-07-20T00:02:08Z"
+}

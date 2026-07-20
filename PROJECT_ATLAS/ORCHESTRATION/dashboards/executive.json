@@ -1,0 +1,16 @@
+{
+  "updatedAt": "2026-07-20T00:02:08Z",
+  "headline": "Sprint 12 Orchestration Platform v1.0 delivered — Waiting Review; Sprint 13 Ready queue live",
+  "azureProduction": "HVCG Production online",
+  "eliteOsUrl": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+  "orchestrationStatus": "orch-1.0-waiting-review",
+  "sprint": 12,
+  "nextSprintGoals": [
+    "CORS + signed-in SWA",
+    "Owner UAT dashboard",
+    "Agent adoption of Ready queue"
+  ],
+  "blockersRequiringOwner": [],
+  "risks": ["RISK-001", "RISK-002"],
+  "readyTaskCount": 6
+}
