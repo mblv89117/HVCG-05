@@ -1,0 +1,15 @@
+{
+  "name": "atlas-elite-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @hvcg/atlas-elite-os",
+    "build": "npm run build -w @hvcg/atlas-elite-os",
+    "storybook": "npm run storybook -w @hvcg/atlas-design-system",
+    "build-storybook": "npm run build-storybook -w @hvcg/atlas-design-system"
+  }
+}

@@ -1,0 +1,142 @@
+import type { SourceKind } from './executiveHome';
+import { pendingExecutiveKpis } from './workspaces';
+import type { HomeMetric } from './executiveHome';
+
+export type { SourceKind, HomeMetric, ApprovalRow, ActivityItem, DeadlineItem, PinnedClient } from './executiveHome';
+
+function pendingToMetric(
+  id: string,
+  label: string,
+  value: string,
+  source: SourceKind,
+): HomeMetric {
+  return {
+    id,
+    label,
+    value,
+    trend: 'flat',
+    trendLabel: source,
+    source,
+    spark: [0, 0, 0, 0, 0, 0, 0],
+  };
+}
+
+/** Fallback KPIs — never invent dollar amounts */
+export const pendingHomeMetrics: HomeMetric[] = pendingExecutiveKpis.map((k, i) =>
+  pendingToMetric(
+    `kpi-${i}`,
+    k.label,
+    k.value,
+    k.availability === 'Repository-derived' ? 'Repository-derived' : 'Unavailable',
+  ),
+);
+
+export const executiveHomeData = {
+  metrics: pendingHomeMetrics,
+  approvals: [
+    {
+      id: 'a1',
+      title: 'Approve Elite OS Executive Dashboard UAT',
+      risk: 'High',
+      track: 'Sprint 14',
+      decision: 'Pending',
+      source: 'Repository-derived' as SourceKind,
+    },
+    {
+      id: 'a2',
+      title: 'Connect verified financial sources for KPI cards',
+      risk: 'High',
+      track: 'Finance',
+      decision: 'Pending',
+      source: 'Repository-derived' as SourceKind,
+    },
+  ],
+  activity: [
+    {
+      id: 'act1',
+      title: 'Executive Dashboard modules replaced placeholders',
+      when: 'This session',
+      source: 'Repository-derived' as SourceKind,
+    },
+    {
+      id: 'act2',
+      title: 'Colorado Craft Beef workspace scaffolded (pending finance)',
+      when: 'This session',
+      source: 'Repository-derived' as SourceKind,
+    },
+  ],
+  deadlines: [
+    { id: 'd1', title: 'Owner demo — Executive Dashboard', due: 'This week', severity: 'High' as const },
+    { id: 'd2', title: 'Import verified CCB financial package', due: 'Before valuation display', severity: 'High' as const },
+  ],
+  pinnedClients: [
+    { id: 'ws-hvcg', name: 'High Value Capital Group', status: 'Internal' },
+    { id: 'ws-ccb', name: 'Colorado Craft Beef', status: 'Transitioning' },
+  ],
+  alerts: [
+    {
+      id: 'al1',
+      title: 'Financial KPI sources not connected',
+      severity: 'Critical' as const,
+      category: 'cash-flow risk / data gap',
+    },
+    {
+      id: 'al2',
+      title: 'CCB lender-document package incomplete (pending intake)',
+      severity: 'High' as const,
+      category: 'lender-document gaps',
+    },
+    {
+      id: 'al3',
+      title: 'Owner UAT for Executive Dashboard outstanding',
+      severity: 'High' as const,
+      category: 'unresolved owner approvals',
+    },
+  ],
+  initiatives: [
+    {
+      id: 'i1',
+      name: 'Elite OS Executive Dashboard release',
+      status: 'In Progress',
+      owner: 'Master PM',
+      due: 'Sprint 14',
+      percentComplete: 55,
+      blocker: 'Verified finance feed',
+      nextAction: 'Owner UAT on Dev SWA',
+    },
+    {
+      id: 'i2',
+      name: 'Colorado Craft Beef workspace readiness',
+      status: 'On Track',
+      owner: 'Manny Barela',
+      due: 'Client meeting',
+      percentComplete: 40,
+      blocker: 'Awaiting verified financial source',
+      nextAction: 'Demo relationship + capital checklist only',
+    },
+  ],
+  capitalReadiness: [
+    { label: 'Readiness score', value: 'Not yet calculated' },
+    { label: 'Financial-document completion', value: 'Data connection pending' },
+    { label: 'Legal-document completion', value: 'Data connection pending' },
+    { label: 'Lender-package status', value: 'Awaiting verified source' },
+    { label: 'Debt schedule status', value: 'Awaiting verified source' },
+    { label: 'Underwriting gaps', value: 'Awaiting verified source' },
+    { label: 'Active financing opportunities', value: 'Data connection pending' },
+    { label: 'Next financing milestone', value: 'Verify source import for CCB' },
+  ],
+  aiBrief: {
+    generated: true,
+    timestampLabel: 'Generated at page load — not a verified ledger',
+    whatChanged: 'Executive Dashboard modules are live in Elite OS; fabricated KPI dollars removed.',
+    attention: 'Connect verified financial sources before client-facing dollar discussions.',
+    recommendations: [
+      'Open Colorado Craft Beef workspace for relationship + capital checklist demo.',
+      'Keep all dollar fields labeled pending until Finance confirms sources.',
+      'Complete Owner UAT on Dev SWA link.',
+    ],
+    risks: ['Presenting sample dollars would mislead clients — blocked by design.'],
+    opportunities: ['Generational Group referral (Randy Kamin) for CCB growth capital.'],
+    decisionsAwaiting: ['Approve Sprint 14 Executive Dashboard UAT', 'Authorize verified finance connector'],
+  },
+};
