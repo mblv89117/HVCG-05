@@ -1,0 +1,59 @@
+{
+  "version": "2.0",
+  "updatedAt": "2026-07-20T00:17:30Z",
+  "policy": "Operational intelligence agents consume Atlas data to operate HVCG. They are not general-purpose software engineers.",
+  "agents": [
+    {
+      "agentId": "executive-intelligence",
+      "displayName": "Atlas Executive Intelligence",
+      "role": "Operational Intelligence",
+      "agentClass": "operational-intelligence",
+      "capabilities": [
+        "owner-briefing",
+        "sprint-health",
+        "client-health",
+        "revenue-visibility",
+        "executive-dashboards"
+      ],
+      "ownedPaths": [
+        "docs/executive/",
+        ".worktrees/executive-command-center*/"
+      ],
+      "defaultBranchPrefix": "cursor/executive-intelligence/",
+      "commsAgentId": "executive",
+      "constraints": [
+        "Must not modify platform infrastructure unless assigned engineering task",
+        "May request engineering changes only through Master PM"
+      ],
+      "escalatesTo": "master-pm",
+      "status": "active"
+    },
+    {
+      "agentId": "finance-intelligence",
+      "displayName": "Atlas Finance Intelligence",
+      "role": "Operational Intelligence",
+      "agentClass": "operational-intelligence",
+      "capabilities": [
+        "cash",
+        "ar-ap",
+        "forecasting",
+        "budgeting",
+        "financial-kpis",
+        "owner-financial-briefing"
+      ],
+      "ownedPaths": [
+        "docs/finance/",
+        ".worktrees/finance-operations*/"
+      ],
+      "defaultBranchPrefix": "cursor/finance-intelligence/",
+      "commsAgentId": "finance",
+      "constraints": [
+        "Must not execute payments or binding financial commitments without human approval",
+        "Must not send external financial communications without approval",
+        "May request engineering changes only through Master PM"
+      ],
+      "escalatesTo": "master-pm",
+      "status": "active"
+    }
+  ]
+}

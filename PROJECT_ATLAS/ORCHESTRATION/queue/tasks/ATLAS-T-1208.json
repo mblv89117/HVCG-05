@@ -1,0 +1,44 @@
+{
+  "id": "ATLAS-T-1208",
+  "sprint": 12,
+  "title": "Orchestration validation: org registry stamp (reversible)",
+  "description": "Controlled Sprint 12 validation. Write a small timestamped validation artifact under PROJECT_ATLAS/ORCHESTRATION/artifacts/. Non-destructive. Proves claim\u2192heartbeat\u2192complete\u2192QA\u2192close.",
+  "assignedAgent": "documentation-manager",
+  "priority": "P0",
+  "status": "Closed",
+  "dependencies": [],
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/"
+  ],
+  "acceptanceCriteria": [
+    "Validation artifact file exists with task id and timestamp",
+    "Heartbeat recorded for documentation-manager",
+    "Task reaches Waiting Review then Closed after QA",
+    "No production systems touched"
+  ],
+  "requiredReviewers": [
+    "qa-release",
+    "master-pm"
+  ],
+  "branch": "cursor/documentation-manager/sprint12-validation-ATLAS-T-1208",
+  "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/documentation-manager-sprint12-validation",
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-T-1208-validation.md"
+  ],
+  "ownerApprovalRequired": false,
+  "commitReferences": [
+    "bd428ff9b040fa74d4353e1784082d5dda2ea205"
+  ],
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-T-1208-validation.md"
+  ],
+  "createdAt": "2026-07-20T00:18:21Z",
+  "updatedAt": "2026-07-20T00:19:13Z",
+  "createdBy": "master-pm",
+  "claimedBy": "documentation-manager",
+  "claimedAt": "2026-07-20T00:18:52Z",
+  "completionSummary": "Validation artifact committed on exclusive branch bd428ff"
+}

@@ -1,13 +1,13 @@
 {
   "agentId": "security",
   "currentTask": null,
-  "currentBranch": "cursor/executive-command-center",
+  "currentBranch": "cursor/comms-orch-bridge",
   "status": "Idle",
-  "currentAction": "awaiting Ready queue \u2014 security intake complete; standing by for Security Review on ATLAS-T-1301/1302/1303",
+  "currentAction": "Verified data-engineering Sprint 12 registration: active, ownedPaths least-privilege, escalatesTo master-pm",
   "progressPercent": null,
-  "lastActivity": "2026-07-20T00:05:33Z",
+  "lastActivity": "2026-07-20T00:08:39Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "Claim Ready ATLAS-T-* assigned to security; execute Security Review when Waiting Review packs list security",
-  "heartbeatTime": "2026-07-20T00:05:33Z"
+  "nextAction": "Security Review when ATLAS-T-1301/1302/1303 enter Waiting Review",
+  "heartbeatTime": "2026-07-20T00:08:39Z"
 }

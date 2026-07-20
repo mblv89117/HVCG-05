@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:19:13Z",
   "items": [
     {
       "id": "RISK-001",
@@ -11,9 +11,26 @@
     {
       "id": "RISK-002",
       "title": "Dataverse CORS missing for SWA",
-      "likelihood": "high",
+      "likelihood": "low",
       "impact": "medium",
-      "mitigation": "ATLAS-T-1301"
+      "mitigation": "ATLAS-T-1301 verified 2026-07-20: Dev Web API returns Access-Control-Allow-Origin for SWA + localhost (see artifacts/ATLAS-T-1301-dataverse-cors.md)",
+      "status": "mitigated"
+    },
+    {
+      "id": "RISK-003",
+      "title": "Shared branch checkout collisions across 34 worktrees",
+      "likelihood": "medium",
+      "impact": "high",
+      "mitigation": "Exclusive branch policy + guards + BRANCH_REGISTRY; ATLAS-T-1208 validation PASS",
+      "status": "mitigated"
+    },
+    {
+      "id": "RISK-004",
+      "title": "Legacy session branch names not yet renamed to cursor/<agentId>/\u2026",
+      "likelihood": "high",
+      "impact": "low",
+      "mitigation": "SESSION_RECONCILIATION.json Phase-2 idle renames; do not force mid-flight",
+      "status": "accepted"
     }
   ]
 }

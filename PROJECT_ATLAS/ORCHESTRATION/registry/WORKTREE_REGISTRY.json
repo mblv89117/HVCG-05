@@ -1,0 +1,354 @@
+{
+  "version": "2.0",
+  "updatedAt": "2026-07-20T00:17:30Z",
+  "worktreeCount": 34,
+  "convention": ".worktrees/<agentId>-<purpose>",
+  "worktrees": [
+    {
+      "worktree": ".",
+      "branch": "cursor/agent-communications",
+      "detached": false,
+      "head": "912d3ca52fea",
+      "mappedAgentId": "orchestration-infrastructure",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": [
+        "Protected \u2014 do not reassign to other specialists"
+      ],
+      "protected": true
+    },
+    {
+      "worktree": ".worktrees/ai-governance-sprint1",
+      "branch": "cursor/ai-governance-sprint1",
+      "detached": false,
+      "head": "0dc0c6fafe6c",
+      "mappedAgentId": "ai-governance",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/ai-governance-work-queues",
+      "branch": "cursor/ai-governance-work-queues",
+      "detached": false,
+      "head": "fc1fa79eac23",
+      "mappedAgentId": "ai-governance",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/atlas-powerapps-uat",
+      "branch": "cursor/track7-atlas-powerapps-uat",
+      "detached": false,
+      "head": "d778f23ad53e",
+      "mappedAgentId": "power-platform",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/ceo-command-center-sprint2",
+      "branch": "cursor/track7-ceo-command-center-sprint2",
+      "detached": false,
+      "head": "d778f23ad53e",
+      "mappedAgentId": "executive-intelligence",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/client-portal-data-rooms",
+      "branch": "cursor/client-portal-data-rooms",
+      "detached": false,
+      "head": "b8b2005b5467",
+      "mappedAgentId": "client-workspace",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/client-portal-sprint1",
+      "branch": "cursor/client-portal-sprint1",
+      "detached": false,
+      "head": "8c8806b1c9c0",
+      "mappedAgentId": "client-workspace",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/crm-dev-validation-commit",
+      "branch": "agent/crm-dev-validation",
+      "detached": false,
+      "head": "7c226e6737dd",
+      "mappedAgentId": "power-platform",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/crm-docs-owner",
+      "branch": "agent/crm-docs-owner",
+      "detached": false,
+      "head": "d39efa22bd58",
+      "mappedAgentId": "documentation-manager",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/crm-integration",
+      "branch": "agent/crm-integration",
+      "detached": false,
+      "head": "bbfeec9df72a",
+      "mappedAgentId": "qa-release",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/crm-migration-audit",
+      "branch": "agent/crm-migration-audit",
+      "detached": false,
+      "head": "e6c5d723fc12",
+      "mappedAgentId": "data-engineering",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/crm-power-automate",
+      "branch": "agent/crm-power-automate",
+      "detached": false,
+      "head": "4c3d709252a8",
+      "mappedAgentId": "automation",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/crm-testing-qa",
+      "branch": "agent/crm-testing-qa",
+      "detached": false,
+      "head": "fdd5f1157132",
+      "mappedAgentId": "qa-release",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/deployment-engineer",
+      "branch": "cursor/deployment-engineer",
+      "detached": false,
+      "head": "c726f1ecf945",
+      "mappedAgentId": "deployment-manager",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/deployment-manager-sprint1",
+      "branch": "cursor/deployment-manager-sprint1",
+      "detached": false,
+      "head": "2290456e488c",
+      "mappedAgentId": "deployment-manager",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/documentation-knowledge-manager",
+      "branch": "cursor/documentation-knowledge-manager",
+      "detached": false,
+      "head": "2c064b3235f3",
+      "mappedAgentId": "documentation-manager",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/executive-command-center",
+      "branch": "cursor/executive-command-center-active",
+      "detached": false,
+      "head": "e074cfcc382b",
+      "mappedAgentId": "executive-intelligence",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/executive-command-center-sprint1",
+      "branch": "cursor/executive-command-center-sprint1",
+      "detached": false,
+      "head": "5bb42c252f5a",
+      "mappedAgentId": "executive-intelligence",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/finance-operations",
+      "branch": "cursor/finance-operations",
+      "detached": false,
+      "head": "c79d35b3ad30",
+      "mappedAgentId": "finance-intelligence",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/finance-operations-sprint1",
+      "branch": "cursor/finance-operations-sprint1",
+      "detached": false,
+      "head": "c287508ab775",
+      "mappedAgentId": "finance-intelligence",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/master-pm-orchestrator",
+      "branch": "cursor/master-pm-orchestrator",
+      "detached": false,
+      "head": "b75b19bef11d",
+      "mappedAgentId": "master-pm",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/operations-hub",
+      "branch": "cursor/operations-hub",
+      "detached": false,
+      "head": "a584f612cb43",
+      "mappedAgentId": "operations-hub",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/operations-hub-sprint1",
+      "branch": "cursor/operations-hub-sprint1",
+      "detached": false,
+      "head": "0f8f6da42dc9",
+      "mappedAgentId": "operations-hub",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/project-atlas-authoritative",
+      "branch": "cursor/project-atlas-rc1",
+      "detached": false,
+      "head": "bd07e6104847",
+      "mappedAgentId": "master-pm",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/qa-release-manager",
+      "branch": "cursor/qa-release-manager",
+      "detached": false,
+      "head": "2c064b3235f3",
+      "mappedAgentId": "qa-release",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/revenue-os-atlas-design",
+      "branch": "cursor/revenue-os-atlas-design",
+      "detached": false,
+      "head": "7fd8bf270dc0",
+      "mappedAgentId": "revenue-systems",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/revenue-sprint3",
+      "branch": "cursor/revenue-sprint3-conversion",
+      "detached": false,
+      "head": "0073bf494114",
+      "mappedAgentId": "revenue-systems",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/revenue-sprint4",
+      "branch": "cursor/revenue-sprint4-activation",
+      "detached": false,
+      "head": "bf34c931e645",
+      "mappedAgentId": "revenue-systems",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/sprint11-azure-production-migration",
+      "branch": "cursor/sprint11-azure-production-migration",
+      "detached": false,
+      "head": "a386d816e77a",
+      "mappedAgentId": "azure-platform",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/sprint12-engineering-orchestration",
+      "branch": "cursor/orchestration-sprint12",
+      "detached": false,
+      "head": "d179e70efe2c",
+      "mappedAgentId": "master-pm",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": [
+        "Protected \u2014 do not reassign to other specialists"
+      ],
+      "protected": true
+    },
+    {
+      "worktree": ".worktrees/system-architect",
+      "branch": "cursor/system-architect",
+      "detached": false,
+      "head": "b75b19bef11d",
+      "mappedAgentId": "system-architect",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/track10-elite-ui",
+      "branch": "cursor/track10-elite-ui",
+      "detached": false,
+      "head": "912d3ca52fea",
+      "mappedAgentId": "elite-ui",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/track9-eos-sprint1",
+      "branch": "cursor/track9-eos-sprint1",
+      "detached": false,
+      "head": "6b36782265e9",
+      "mappedAgentId": "elite-ui",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    },
+    {
+      "worktree": ".worktrees/track9-eos-sprint2",
+      "branch": "cursor/track9-eos-sprint2",
+      "detached": false,
+      "head": "d778f23ad53e",
+      "mappedAgentId": "elite-ui",
+      "exclusive": true,
+      "safeToMigrate": true,
+      "notes": []
+    }
+  ]
+}

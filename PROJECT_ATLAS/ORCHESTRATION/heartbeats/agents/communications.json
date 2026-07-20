@@ -1,13 +1,13 @@
 {
   "agentId": "communications",
-  "currentTask": "ATLAS-T-1306",
-  "currentBranch": "cursor/comms-orch-bridge",
-  "status": "In Progress",
-  "currentAction": "implementing agent-comms to orchestration heartbeat bridge",
-  "progressPercent": 10.0,
-  "lastActivity": "2026-07-20T00:06:28Z",
+  "currentTask": null,
+  "currentBranch": null,
+  "status": "Idle",
+  "currentAction": "verified data-engineering already registered in Sprint 12 (ATLAS-T-1202); no DE claim (out of ownership)",
+  "progressPercent": null,
+  "lastActivity": "2026-07-20T00:09:22Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "write procedure doc and sync script",
-  "heartbeatTime": "2026-07-20T00:06:28Z"
+  "nextAction": "await Ready queue / QA on ATLAS-T-1306",
+  "heartbeatTime": "2026-07-20T00:09:22Z"
 }

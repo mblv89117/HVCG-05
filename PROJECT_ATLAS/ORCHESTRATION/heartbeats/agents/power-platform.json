@@ -1,13 +1,13 @@
 {
   "agentId": "power-platform",
-  "currentTask": "ATLAS-T-1301",
+  "currentTask": null,
   "currentBranch": null,
-  "status": "Working",
-  "currentAction": "applying Dataverse CORS for Elite OS SWA",
+  "status": "Idle",
+  "currentAction": "awaiting Ready queue; ATLAS-T-1301 Waiting Review",
   "progressPercent": null,
-  "lastActivity": "2026-07-20T00:04:55Z",
+  "lastActivity": "2026-07-20T00:10:34Z",
   "estimatedCompletion": null,
   "blockers": [],
   "nextAction": null,
-  "heartbeatTime": "2026-07-20T00:04:55Z"
+  "heartbeatTime": "2026-07-20T00:10:34Z"
 }

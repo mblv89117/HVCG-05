@@ -1,11 +1,17 @@
 {
-  "updatedAt": "2026-07-20T00:02:08Z",
+  "updatedAt": "2026-07-20T00:19:13Z",
   "waiting": [
     "ATLAS-T-1201",
     "ATLAS-T-1202",
     "ATLAS-T-1203",
     "ATLAS-T-1204",
-    "ATLAS-T-1205"
+    "ATLAS-T-1205",
+    "ATLAS-T-1302",
+    "ATLAS-T-1306",
+    "ATLAS-T-1301"
   ],
-  "policyRef": "reviews/workflow.md"
+  "policyRef": "reviews/workflow.md",
+  "completed": [
+    "ATLAS-T-1208"
+  ]
 }

@@ -1,0 +1,289 @@
+{
+  "version": "2.0",
+  "updatedAt": "2026-07-20T00:17:30Z",
+  "assignments": [
+    {
+      "agentId": "master-pm",
+      "currentBranch": "cursor/master-pm-orchestrator",
+      "currentWorktree": ".worktrees/master-pm-orchestrator",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/project-atlas-authoritative",
+          "branch": "cursor/project-atlas-rc1"
+        },
+        {
+          "worktree": ".worktrees/sprint12-engineering-orchestration",
+          "branch": "cursor/orchestration-sprint12"
+        }
+      ],
+      "recommendedBranch": "cursor/master-pm/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "system-architect",
+      "currentBranch": "cursor/system-architect",
+      "currentWorktree": ".worktrees/system-architect",
+      "additionalSessions": [],
+      "recommendedBranch": "cursor/system-architect/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "deployment-manager",
+      "currentBranch": "cursor/deployment-engineer",
+      "currentWorktree": ".worktrees/deployment-engineer",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/deployment-manager-sprint1",
+          "branch": "cursor/deployment-manager-sprint1"
+        }
+      ],
+      "recommendedBranch": "cursor/deployment-manager/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "azure-platform",
+      "currentBranch": "cursor/sprint11-azure-production-migration",
+      "currentWorktree": ".worktrees/sprint11-azure-production-migration",
+      "additionalSessions": [],
+      "recommendedBranch": "cursor/azure-platform/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "power-platform",
+      "currentBranch": "cursor/track7-atlas-powerapps-uat",
+      "currentWorktree": ".worktrees/atlas-powerapps-uat",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/crm-dev-validation-commit",
+          "branch": "agent/crm-dev-validation"
+        }
+      ],
+      "recommendedBranch": "cursor/power-platform/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "data-engineering",
+      "currentBranch": "agent/crm-migration-audit",
+      "currentWorktree": ".worktrees/crm-migration-audit",
+      "additionalSessions": [],
+      "recommendedBranch": "cursor/data-engineering/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "security-engineering",
+      "status": "NO_SESSION",
+      "recommendedBranch": "cursor/security-engineering/standing",
+      "recommendedWorktree": ".worktrees/security-engineering-standing",
+      "action": "Create worktree when agent is activated"
+    },
+    {
+      "agentId": "elite-ui",
+      "currentBranch": "cursor/track10-elite-ui",
+      "currentWorktree": ".worktrees/track10-elite-ui",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/track9-eos-sprint1",
+          "branch": "cursor/track9-eos-sprint1"
+        },
+        {
+          "worktree": ".worktrees/track9-eos-sprint2",
+          "branch": "cursor/track9-eos-sprint2"
+        }
+      ],
+      "recommendedBranch": "cursor/elite-ui/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "client-workspace",
+      "currentBranch": "cursor/client-portal-data-rooms",
+      "currentWorktree": ".worktrees/client-portal-data-rooms",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/client-portal-sprint1",
+          "branch": "cursor/client-portal-sprint1"
+        }
+      ],
+      "recommendedBranch": "cursor/client-workspace/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "operations-hub",
+      "currentBranch": "cursor/operations-hub",
+      "currentWorktree": ".worktrees/operations-hub",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/operations-hub-sprint1",
+          "branch": "cursor/operations-hub-sprint1"
+        }
+      ],
+      "recommendedBranch": "cursor/operations-hub/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "revenue-systems",
+      "currentBranch": "cursor/revenue-os-atlas-design",
+      "currentWorktree": ".worktrees/revenue-os-atlas-design",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/revenue-sprint3",
+          "branch": "cursor/revenue-sprint3-conversion"
+        },
+        {
+          "worktree": ".worktrees/revenue-sprint4",
+          "branch": "cursor/revenue-sprint4-activation"
+        }
+      ],
+      "recommendedBranch": "cursor/revenue-systems/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "knowledge-platform",
+      "status": "NO_SESSION",
+      "recommendedBranch": "cursor/knowledge-platform/standing",
+      "recommendedWorktree": ".worktrees/knowledge-platform-standing",
+      "action": "Create worktree when agent is activated"
+    },
+    {
+      "agentId": "communications",
+      "status": "NO_SESSION",
+      "recommendedBranch": "cursor/communications/standing",
+      "recommendedWorktree": ".worktrees/communications-standing",
+      "action": "Create worktree when agent is activated"
+    },
+    {
+      "agentId": "analytics",
+      "status": "NO_SESSION",
+      "recommendedBranch": "cursor/analytics/standing",
+      "recommendedWorktree": ".worktrees/analytics-standing",
+      "action": "Create worktree when agent is activated"
+    },
+    {
+      "agentId": "automation",
+      "currentBranch": "agent/crm-power-automate",
+      "currentWorktree": ".worktrees/crm-power-automate",
+      "additionalSessions": [],
+      "recommendedBranch": "cursor/automation/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "administration",
+      "status": "NO_SESSION",
+      "recommendedBranch": "cursor/administration/standing",
+      "recommendedWorktree": ".worktrees/administration-standing",
+      "action": "Create worktree when agent is activated"
+    },
+    {
+      "agentId": "qa-release",
+      "currentBranch": "agent/crm-integration",
+      "currentWorktree": ".worktrees/crm-integration",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/crm-testing-qa",
+          "branch": "agent/crm-testing-qa"
+        },
+        {
+          "worktree": ".worktrees/qa-release-manager",
+          "branch": "cursor/qa-release-manager"
+        }
+      ],
+      "recommendedBranch": "cursor/qa-release/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "documentation-manager",
+      "currentBranch": "agent/crm-docs-owner",
+      "currentWorktree": ".worktrees/crm-docs-owner",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/documentation-knowledge-manager",
+          "branch": "cursor/documentation-knowledge-manager"
+        }
+      ],
+      "recommendedBranch": "cursor/documentation-manager/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "ai-governance",
+      "currentBranch": "cursor/ai-governance-sprint1",
+      "currentWorktree": ".worktrees/ai-governance-sprint1",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/ai-governance-work-queues",
+          "branch": "cursor/ai-governance-work-queues"
+        }
+      ],
+      "recommendedBranch": "cursor/ai-governance/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "executive-intelligence",
+      "currentBranch": "cursor/track7-ceo-command-center-sprint2",
+      "currentWorktree": ".worktrees/ceo-command-center-sprint2",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/executive-command-center",
+          "branch": "cursor/executive-command-center-active"
+        },
+        {
+          "worktree": ".worktrees/executive-command-center-sprint1",
+          "branch": "cursor/executive-command-center-sprint1"
+        }
+      ],
+      "recommendedBranch": "cursor/executive-intelligence/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    },
+    {
+      "agentId": "finance-intelligence",
+      "currentBranch": "cursor/finance-operations",
+      "currentWorktree": ".worktrees/finance-operations",
+      "additionalSessions": [
+        {
+          "worktree": ".worktrees/finance-operations-sprint1",
+          "branch": "cursor/finance-operations-sprint1"
+        }
+      ],
+      "recommendedBranch": "cursor/finance-intelligence/active",
+      "migrationRequired": true,
+      "blockedByProtected": false,
+      "action": "Defer rename until Idle + clean working tree"
+    }
+  ],
+  "conflictsCorrected": [
+    "Sprint12 attached to cursor/orchestration-sprint12 (not agent-communications)",
+    "operations-hub reattached from detached HEAD",
+    "executive-command-center on cursor/executive-command-center-active",
+    "Agent Communications System marked retired \u2014 superseded by ORCHESTRATION",
+    "security id aliased to security-engineering",
+    "documentation id aliased to documentation-manager"
+  ]
+}

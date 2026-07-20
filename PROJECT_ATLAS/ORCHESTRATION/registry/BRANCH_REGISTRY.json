@@ -1,16 +1,20 @@
 {
   "version": "2.0",
   "updatedAt": "2026-07-20T00:17:30Z",
-  "convention": {
-    "branch": "cursor/<agentId>/<purpose>[-<taskId>]",
-    "worktree": ".worktrees/<agentId>-<purpose>"
-  },
+  "convention": "cursor/<agentId>/<purpose>[-<taskId>]",
   "protected": [
     "main",
     "master",
     "cursor/agent-communications",
     "cursor/orchestration-sprint12",
     "cursor/v1.1.0-intelligence-ai-ops"
+  ],
+  "rules": [
+    "One branch attached to at most one worktree",
+    "Run branch availability guard before assign/migrate",
+    "Never force checkout a branch owned by another worktree",
+    "Do not delete worktrees automatically",
+    "Do not rewrite history or discard uncommitted work"
   ],
   "active": [
     {
@@ -285,7 +289,5 @@
       "exclusive": true,
       "protected": false
     }
-  ],
-  "strategyDoc": "PROJECT_ATLAS/ORCHESTRATION/BRANCH_WORKTREE_STRATEGY.md",
-  "migrationNotes": "PROJECT_ATLAS/ORCHESTRATION/MIGRATION_WORKTREE_UNIQUENESS.md"
+  ]
 }

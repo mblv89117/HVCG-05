@@ -1,0 +1,47 @@
+{
+  "version": "2.0",
+  "updatedAt": "2026-07-20T00:17:30Z",
+  "agents": [
+    {
+      "agentId": "agent-communications-system",
+      "displayName": "Agent Communications System",
+      "role": "Retired Infrastructure",
+      "agentClass": "retired",
+      "status": "retired",
+      "retiredReason": "Superseded by Atlas Engineering Orchestration Platform",
+      "supersededBy": "PROJECT_ATLAS/ORCHESTRATION/",
+      "preserveArtifacts": [
+        ".agent-comms/",
+        "scripts/agent-comms/",
+        "docs/agents/AGENT_COMMUNICATIONS.md",
+        "docs/agents/MESSAGE_PROTOCOL.md",
+        "docs/agents/FILE_LOCK_PROTOCOL.md"
+      ],
+      "migratedInto": [
+        "Agent Registry",
+        "Task Queue",
+        "Heartbeat Registry",
+        "Lock Registry",
+        "Branch Registry",
+        "Review Queue",
+        "Merge Queue",
+        "Sprint Board",
+        "Decision History",
+        "Engineering Memory",
+        "Event/notification records"
+      ],
+      "defaultBranchPrefix": "cursor/agent-communications",
+      "ownedPaths": [
+        ".agent-comms/",
+        "scripts/agent-comms/"
+      ],
+      "capabilities": [
+        "legacy-inbox",
+        "legacy-outbox"
+      ],
+      "note": "Do not delete history or files. Main checkout may remain on cursor/agent-communications as protected shared-infra home.",
+      "escalatesTo": "master-pm",
+      "commsAgentId": null
+    }
+  ]
+}

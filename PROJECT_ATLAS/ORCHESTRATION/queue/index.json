@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:06:28Z",
+  "updatedAt": "2026-07-20T00:19:13Z",
   "tasks": [
     {
       "id": "ATLAS-T-1201",
@@ -42,9 +42,25 @@
       "title": "Define review + release workflows and Sprint 13 backlog"
     },
     {
+      "id": "ATLAS-T-1206",
+      "sprint": 12,
+      "status": "Closed",
+      "assignedAgent": "data-engineering",
+      "priority": "P0",
+      "title": "Register Data Engineering with Orchestration Platform"
+    },
+    {
+      "id": "ATLAS-T-1208",
+      "sprint": 12,
+      "status": "Closed",
+      "assignedAgent": "documentation-manager",
+      "priority": "P0",
+      "title": "Orchestration validation: org registry stamp (reversible)"
+    },
+    {
       "id": "ATLAS-T-1301",
       "sprint": 13,
-      "status": "In Progress",
+      "status": "Waiting Review",
       "assignedAgent": "power-platform",
       "priority": "P0",
       "title": "Apply Dataverse CORS for Elite OS SWA origin"
@@ -52,7 +68,7 @@
     {
       "id": "ATLAS-T-1302",
       "sprint": 13,
-      "status": "In Progress",
+      "status": "Waiting Review",
       "assignedAgent": "azure-platform",
       "priority": "P1",
       "title": "Enable Key Vault purge protection"
@@ -84,10 +100,18 @@
     {
       "id": "ATLAS-T-1306",
       "sprint": 13,
-      "status": "In Progress",
+      "status": "Waiting Review",
       "assignedAgent": "communications",
       "priority": "P2",
       "title": "Bridge agent-comms status requests to orchestration heartbeats"
+    },
+    {
+      "id": "ATLAS-T-1307",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "data-engineering",
+      "priority": "P1",
+      "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map"
     }
   ]
 }

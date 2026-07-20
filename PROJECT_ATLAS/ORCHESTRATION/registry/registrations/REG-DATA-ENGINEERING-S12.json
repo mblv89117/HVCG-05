@@ -1,0 +1,45 @@
+{
+  "registrationId": "REG-DATA-ENGINEERING-S12",
+  "agentId": "data-engineering",
+  "displayName": "Data Engineering",
+  "sprint": 12,
+  "status": "registered",
+  "registeredAt": "2026-07-20T00:09:41Z",
+  "registeredBy": "master-pm",
+  "platform": "PROJECT_ATLAS/ORCHESTRATION",
+  "platformVersion": "1.0",
+  "handbook": "PROJECT_ATLAS/Agents/DataEngineer.md",
+  "capabilities": [
+    "schema",
+    "etl",
+    "sample-data",
+    "dataverse-model",
+    "sharepoint-schema",
+    "import-packs",
+    "data-dictionary"
+  ],
+  "ownedPaths": [
+    "sample-data/",
+    "docs/data-model/",
+    "releases/migrations/",
+    "PROJECT_ATLAS/Agents/DataEngineer.md"
+  ],
+  "defaultBranchPrefix": "cursor/data-",
+  "escalatesTo": "master-pm",
+  "commsAgentId": null,
+  "microsoftSurfaces": [
+    "Dataverse",
+    "SharePoint",
+    "Microsoft Graph",
+    "Power Automate (data flows — coordinate with automation/power-platform)"
+  ],
+  "acceptanceCriteria": [
+    "Present in registry/agents.json with status active",
+    "Heartbeat published under heartbeats/agents/data-engineering.json",
+    "Handbook linked and orchestration bootstrap documented",
+    "Knowledge graph node n-data-engineering exists",
+    "list-ready discovers tasks assigned to data-engineering"
+  ],
+  "relatedTasks": ["ATLAS-T-1206", "ATLAS-T-1307"],
+  "notes": "Formal Sprint 12 registration completes the Data Engineering seat on the Atlas Engineering Orchestration Platform."
+}

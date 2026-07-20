@@ -1,0 +1,123 @@
+{
+  "version": "2.0",
+  "updatedAt": "2026-07-20T00:17:30Z",
+  "distinction": {
+    "agent": "Cursor/session identity that performs work",
+    "productModule": "Capability being built for HVCG/Atlas",
+    "orchestration": "Shared coordination infrastructure"
+  },
+  "modules": [
+    {
+      "moduleId": "executive-command-center",
+      "name": "Executive Command Center",
+      "product": true,
+      "primaryEngineeringAgent": "elite-ui",
+      "operationalConsumer": "executive-intelligence",
+      "paths": [
+        "docs/executive/",
+        "src/power-apps/executive/",
+        ".worktrees/executive-command-center*"
+      ]
+    },
+    {
+      "moduleId": "finance-operations",
+      "name": "Finance Operations Module",
+      "product": true,
+      "primaryEngineeringAgent": "automation",
+      "operationalConsumer": "finance-intelligence",
+      "paths": [
+        "docs/finance/",
+        ".worktrees/finance-operations*"
+      ]
+    },
+    {
+      "moduleId": "operations-hub",
+      "name": "Operations Hub",
+      "product": true,
+      "primaryEngineeringAgent": "operations-hub",
+      "paths": [
+        "docs/operations/"
+      ]
+    },
+    {
+      "moduleId": "revenue-operating-system",
+      "name": "Revenue Operating System",
+      "product": true,
+      "primaryEngineeringAgent": "revenue-systems",
+      "paths": [
+        "docs/revenue/"
+      ]
+    },
+    {
+      "moduleId": "client-portal-data-rooms",
+      "name": "Client Portal and Data Rooms",
+      "product": true,
+      "primaryEngineeringAgent": "client-workspace",
+      "paths": [
+        "docs/portal/",
+        "apps/hvcg-client-portal/"
+      ]
+    },
+    {
+      "moduleId": "knowledge-platform",
+      "name": "Knowledge Platform",
+      "product": true,
+      "primaryEngineeringAgent": "knowledge-platform",
+      "paths": [
+        "PROJECT_ATLAS/ORCHESTRATION/knowledge/"
+      ]
+    },
+    {
+      "moduleId": "analytics",
+      "name": "Analytics",
+      "product": true,
+      "primaryEngineeringAgent": "analytics",
+      "paths": [
+        "PROJECT_ATLAS/ORCHESTRATION/metrics/"
+      ]
+    },
+    {
+      "moduleId": "administration",
+      "name": "Administration",
+      "product": true,
+      "primaryEngineeringAgent": "administration",
+      "paths": []
+    },
+    {
+      "moduleId": "automation",
+      "name": "Automation",
+      "product": true,
+      "primaryEngineeringAgent": "automation",
+      "paths": [
+        "src/power-automate/"
+      ]
+    },
+    {
+      "moduleId": "communications",
+      "name": "Communications",
+      "product": true,
+      "primaryEngineeringAgent": "communications",
+      "paths": []
+    },
+    {
+      "moduleId": "elite-ui",
+      "name": "Elite UI",
+      "product": true,
+      "primaryEngineeringAgent": "elite-ui",
+      "paths": [
+        "apps/atlas-elite-os/"
+      ]
+    },
+    {
+      "moduleId": "orchestration-platform",
+      "name": "Atlas Engineering Orchestration Platform",
+      "product": false,
+      "infrastructure": true,
+      "primaryEngineeringAgent": "master-pm",
+      "paths": [
+        "PROJECT_ATLAS/ORCHESTRATION/",
+        "scripts/orchestration/"
+      ]
+    }
+  ]
+}

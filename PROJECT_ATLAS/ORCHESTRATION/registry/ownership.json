@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:10:29Z",
   "rules": [
     "Path ownership from agents.json ownedPaths is authoritative for locks.",
     "ORCHESTRATION/ is owned by master-pm; specialists may write heartbeats/locks/tasks assigned to them.",
@@ -50,7 +50,9 @@
     ],
     "data-engineering": [
       "sample-data/",
-      "releases/migrations/"
+      "docs/data-model/",
+      "releases/migrations/",
+      "PROJECT_ATLAS/Agents/DataEngineer.md"
     ],
     "security": [
       "PROJECT_ATLAS/Architecture/Track10_Security_Matrix.md"

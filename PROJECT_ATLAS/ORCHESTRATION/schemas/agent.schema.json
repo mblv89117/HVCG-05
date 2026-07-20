@@ -49,6 +49,18 @@
         "paused",
         "retired"
       ]
+    },
+    "agentClass": {
+      "type": "string",
+      "description": "executive-leadership | architecture | platform-engineering | product-engineering | governance | operational-intelligence | retired"
+    },
+    "aliases": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
     }
   }
 }

@@ -1,13 +1,13 @@
 {
-  "agentId": "master-pm",
-  "currentTask": "ATLAS-T-1208",
+  "agentId": "security-engineering",
+  "currentTask": null,
   "currentBranch": null,
   "status": "Idle",
-  "currentAction": "closed ATLAS-T-1208 validation",
-  "progressPercent": 100,
+  "currentAction": "registered (migrated from security id)",
+  "progressPercent": 0,
   "lastActivity": "2026-07-20T00:19:13Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "executive report",
+  "nextAction": null,
   "heartbeatTime": "2026-07-20T00:19:13Z"
 }

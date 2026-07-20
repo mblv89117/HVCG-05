@@ -3,13 +3,11 @@
   "currentTask": null,
   "currentBranch": null,
   "status": "Idle",
-  "currentAction": "awaiting Ready queue \u2014 ATLAS-T-1303 blocked on ATLAS-T-1302 (KV purge protection In Progress by azure-platform)",
+  "currentAction": "verified data-engineering already registered in Sprint 12 registry; no DE claim (out of ownership)",
   "progressPercent": 0.0,
-  "lastActivity": "2026-07-20T00:05:50Z",
+  "lastActivity": "2026-07-20T00:09:04Z",
   "estimatedCompletion": null,
-  "blockers": [
-    "ATLAS-T-1302"
-  ],
-  "nextAction": "claim ATLAS-T-1303 when ATLAS-T-1302 reaches Approved/Merged/Released/Closed",
-  "heartbeatTime": "2026-07-20T00:05:50Z"
+  "blockers": [],
+  "nextAction": "await ATLAS-T-1302 then claim ATLAS-T-1303",
+  "heartbeatTime": "2026-07-20T00:09:04Z"
 }

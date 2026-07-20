@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:06:28Z",
+  "updatedAt": "2026-07-20T00:19:13Z",
   "agents": {
     "master-pm": "heartbeats/agents/master-pm.json",
     "system-architect": "heartbeats/agents/system-architect.json",
@@ -17,6 +17,11 @@
     "client-workspace": "heartbeats/agents/client-workspace.json",
     "qa-release": "heartbeats/agents/qa-release.json",
     "documentation": "heartbeats/agents/documentation.json",
-    "communications": "heartbeats/agents/communications.json"
+    "communications": "heartbeats/agents/communications.json",
+    "automation": "heartbeats/agents/automation.json",
+    "documentation-manager": "heartbeats/agents/documentation-manager.json",
+    "executive-intelligence": "heartbeats/agents/executive-intelligence.json",
+    "finance-intelligence": "heartbeats/agents/finance-intelligence.json",
+    "security-engineering": "heartbeats/agents/security-engineering.json"
   }
 }
