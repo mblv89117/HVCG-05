@@ -21,6 +21,9 @@ import {
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
 import { AccessDeniedPage } from './pages/SystemPages';
+import { BankingConnectionsPage } from './pages/BankingConnectionsPage';
+import { AccountingConnectionsPage } from './pages/AccountingConnectionsPage';
+import { AutomationsPage, KnowledgePage, ReportsPage } from './pages/PlatformModules';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
@@ -48,14 +51,13 @@ function FinanceRoute({ children }: { children: ReactNode }) {
 
 function ClientsRoute({ children }: { children: ReactNode }) {
   const { can, role } = useAtlasRole();
-  if (role === 'Unauthenticated') return children; // portfolio visible; detail may still require sign-in UX
+  if (role === 'Unauthenticated') return children;
   if (!can('viewClients')) return <Navigate to="/access-denied" replace />;
   return children;
 }
 
 function HomeRoute() {
   const { can, role } = useAtlasRole();
-  // Signed-out users may view pending-safe home and sign in.
   if (role === 'Unauthenticated') return <ExecutiveDashboardPage />;
   if (role === 'Unresolved') return <Navigate to="/access-denied" replace />;
   if (!can('viewExecutiveHome') && can('viewClients')) return <Navigate to="/clients" replace />;
@@ -71,6 +73,7 @@ export function App() {
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<HomeRoute />} />
+              <Route path="executive" element={<HomeRoute />} />
               <Route
                 path="financials"
                 element={
@@ -116,6 +119,25 @@ export function App() {
                 }
               />
               <Route path="documents" element={<DocumentsPage />} />
+              <Route
+                path="banking"
+                element={
+                  <FinanceRoute>
+                    <BankingConnectionsPage />
+                  </FinanceRoute>
+                }
+              />
+              <Route
+                path="accounting"
+                element={
+                  <FinanceRoute>
+                    <AccountingConnectionsPage />
+                  </FinanceRoute>
+                }
+              />
+              <Route path="knowledge" element={<KnowledgePage />} />
+              <Route path="automations" element={<AutomationsPage />} />
+              <Route path="reports" element={<ReportsPage />} />
               <Route path="ai" element={<AiInsightsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="settings" element={<SettingsPage />} />

@@ -13,21 +13,26 @@ import {
 } from '@hvcg/atlas-design-system';
 import {
   HomeRegular,
-  SparkleRegular,
   PeopleRegular,
   MoneyRegular,
   ClipboardTaskRegular,
   DocumentRegular,
   SettingsRegular,
   DataBarVerticalRegular,
-  DataPieRegular,
-  ArrowTrendingRegular,
   CheckboxCheckedRegular,
+  BuildingBankRegular,
+  CalculatorRegular,
+  BookRegular,
+  BotRegular,
+  DocumentDataRegular,
+  BoardRegular,
 } from '@fluentui/react-icons';
-import { Button, Caption1 } from '@fluentui/react-components';
+import { Button, Caption1, Dropdown, Option } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { microsoftConfig } from '../microsoft/config';
 import { useAtlasRole } from '../security/RoleProvider';
+import { useWorkspaceContext } from '../state/WorkspaceContext';
+import { workspaceCatalog } from '../data/workspaces';
 import { ATLAS_BUILD } from '../buildInfo';
 
 const allSections: NavSection[] = [
@@ -36,16 +41,19 @@ const allSections: NavSection[] = [
     title: 'Atlas',
     items: [
       { id: 'home', label: 'Home', to: '/', icon: <HomeRegular /> },
-      { id: 'financials', label: 'Financials', to: '/financials', icon: <DataBarVerticalRegular /> },
-      { id: 'revenue', label: 'Revenue', to: '/revenue', icon: <DataPieRegular /> },
+      { id: 'executive', label: 'Executive Dashboard', to: '/executive', icon: <BoardRegular /> },
       { id: 'clients', label: 'Clients', to: '/clients', icon: <PeopleRegular /> },
       { id: 'projects', label: 'Projects', to: '/projects', icon: <ClipboardTaskRegular /> },
       { id: 'tasks', label: 'Tasks', to: '/tasks', icon: <CheckboxCheckedRegular /> },
-      { id: 'capital', label: 'Capital', to: '/capital', icon: <MoneyRegular /> },
-      { id: 'ev', label: 'Enterprise Value', to: '/enterprise-value', icon: <ArrowTrendingRegular /> },
       { id: 'docs', label: 'Documents', to: '/documents', icon: <DocumentRegular /> },
-      { id: 'ai', label: 'AI Insights', to: '/ai', icon: <SparkleRegular /> },
+      { id: 'financials', label: 'Financial Intelligence', to: '/financials', icon: <DataBarVerticalRegular /> },
+      { id: 'banking', label: 'Banking Connections', to: '/banking', icon: <BuildingBankRegular /> },
+      { id: 'accounting', label: 'Accounting Connections', to: '/accounting', icon: <CalculatorRegular /> },
+      { id: 'knowledge', label: 'Knowledge', to: '/knowledge', icon: <BookRegular /> },
+      { id: 'automations', label: 'Automations', to: '/automations', icon: <BotRegular /> },
+      { id: 'reports', label: 'Reports', to: '/reports', icon: <DocumentDataRegular /> },
       { id: 'admin', label: 'Administration', to: '/admin', icon: <SettingsRegular /> },
+      { id: 'settings', label: 'Settings', to: '/settings', icon: <SettingsRegular /> },
     ],
   },
 ];
@@ -54,14 +62,16 @@ const catalog: SearchResult[] = [
   { id: 's1', title: 'Executive Home', category: 'Navigation' },
   { id: 's2', title: 'Colorado Craft Beef', category: 'Clients', subtitle: 'Client workspace' },
   { id: 's3', title: 'High Value Capital Group', category: 'Clients', subtitle: 'Internal workspace' },
-  { id: 's4', title: 'Capital Advisory', category: 'Navigation' },
-  { id: 's5', title: 'Financial Performance', category: 'Navigation' },
-  { id: 's6', title: 'Model-driven admin app', category: 'Administration', subtitle: 'Dataverse SoR' },
+  { id: 's4', title: 'Banking Connections', category: 'Navigation' },
+  { id: 's5', title: 'Financial Intelligence', category: 'Navigation' },
+  { id: 's6', title: 'Administration', category: 'Administration', subtitle: 'Dataverse SoR' },
+  { id: 's7', title: 'Knowledge', category: 'Navigation' },
 ];
 
 export function AppShell() {
   const { account, configured, signIn, signOutUser, environmentBanner } = useMicrosoftAuth();
   const { role, can } = useAtlasRole();
+  const { workspaceId, setWorkspaceId, workspaceName } = useWorkspaceContext();
   const location = useLocation();
   const navigate = useNavigate();
   const [scheme, setScheme] = useState<AtlasColorScheme>('light');
@@ -76,15 +86,14 @@ export function AppShell() {
   }, [location.pathname]);
 
   const sections = useMemo(() => {
-    const financeIds = new Set(['financials', 'revenue', 'capital', 'ev']);
-    const items = allSections[0].items.filter((item) => {
+    const financeIds = new Set(['financials', 'banking', 'accounting']);
+    const filtered = allSections[0].items.filter((item) => {
       if (item.id === 'admin') return can('viewAdmin');
       if (financeIds.has(item.id)) return role === 'Unauthenticated' || can('viewFinance');
       if (item.id === 'clients') return role === 'Unauthenticated' || can('viewClients');
-      if (item.id === 'home') return true;
       return true;
     });
-    return [{ ...allSections[0], items }];
+    return [{ ...allSections[0], items: filtered }];
   }, [can, role]);
 
   const results = useMemo(() => {
@@ -127,44 +136,52 @@ export function AppShell() {
             }}
             searchValue={query}
             notificationCount={notificationCount}
-            onNotifications={() =>
-              push({
-                title: account ? 'Open Tasks & Approvals' : 'Sign in required',
-                body: account
-                  ? 'Review owner decisions in Tasks.'
-                  : configured
-                    ? 'Sign in with your HVCG Microsoft account to load Dataverse.'
-                    : 'Owner must register the Entra SPA app (see Microsoft architecture docs).',
-                tone: account ? 'warning' : 'info',
-              })
-            }
+            onNotifications={() => navigate('/notifications')}
             userName={userName}
             trailing={
-              configured ? (
-                account ? (
-                  <Button size="small" appearance="subtle" onClick={() => void signOutUser()}>
-                    Sign out
-                  </Button>
-                ) : (
-                  <Button size="small" appearance="primary" onClick={() => void signIn()}>
-                    Sign in
-                  </Button>
-                )
-              ) : (
-                <Button
-                  size="small"
-                  appearance="secondary"
-                  onClick={() =>
-                    push({
-                      title: 'Entra SPA client ID missing',
-                      body: 'Set VITE_ENTRA_CLIENT_ID after app registration in HVCG tenant.',
-                      tone: 'warning',
-                    })
-                  }
+              <>
+                <Dropdown
+                  aria-label="Client workspace"
+                  placeholder="Client"
+                  value={workspaceName}
+                  selectedOptions={[workspaceId]}
+                  onOptionSelect={(_, data) => {
+                    if (data.optionValue) setWorkspaceId(data.optionValue);
+                  }}
+                  style={{ minWidth: 180 }}
                 >
-                  {microsoftConfig.environment}
-                </Button>
-              )
+                  {workspaceCatalog.map((w) => (
+                    <Option key={w.id} value={w.id} text={w.name}>
+                      {w.name}
+                    </Option>
+                  ))}
+                </Dropdown>
+                {configured ? (
+                  account ? (
+                    <Button size="small" appearance="subtle" onClick={() => void signOutUser()}>
+                      Sign out
+                    </Button>
+                  ) : (
+                    <Button size="small" appearance="primary" onClick={() => void signIn()}>
+                      Sign in
+                    </Button>
+                  )
+                ) : (
+                  <Button
+                    size="small"
+                    appearance="secondary"
+                    onClick={() =>
+                      push({
+                        title: 'Entra SPA client ID missing',
+                        body: 'Set VITE_ENTRA_CLIENT_ID after app registration in HVCG tenant.',
+                        tone: 'warning',
+                      })
+                    }
+                  >
+                    {microsoftConfig.environment}
+                  </Button>
+                )}
+              </>
             }
           />
         }
@@ -172,8 +189,8 @@ export function AppShell() {
         <Outlet />
         <div style={{ padding: '8px 16px 16px', opacity: 0.75 }}>
           <Caption1>
-            Atlas Elite OS · {ATLAS_BUILD.environment} · SHA {ATLAS_BUILD.sha} · built {ATLAS_BUILD.builtAt} · role{' '}
-            {role}
+            Atlas Integration · {ATLAS_BUILD.environment} · SHA {ATLAS_BUILD.sha} · built {ATLAS_BUILD.builtAt} ·
+            role {role} · client {workspaceName}
           </Caption1>
         </div>
       </NavShell>
@@ -189,9 +206,10 @@ export function AppShell() {
             s1: '/',
             s2: '/clients/ws-ccb',
             s3: '/clients/ws-hvcg',
-            s4: '/capital',
+            s4: '/banking',
             s5: '/financials',
             s6: '/admin',
+            s7: '/knowledge',
           };
           const to = routes[r.id];
           if (to) navigate(to);
