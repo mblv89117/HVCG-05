@@ -1,4 +1,15 @@
-/* Atlas Design System global utilities — used with Fluent makeStyles */
+/* Atlas Design System — executive motion, glass, atmosphere */
+
+:root {
+  --atlas-navy: #0b1f33;
+  --atlas-navy-deep: #071624;
+  --atlas-azure: #2563eb;
+  --atlas-gold: #c9a227;
+  --atlas-emerald: #059669;
+  --atlas-paper: #f8fafc;
+  --atlas-ease: cubic-bezier(0.33, 1, 0.68, 1);
+  --atlas-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
 
 @keyframes atlas-fade-in {
   from { opacity: 0; transform: translateY(4px); }
@@ -10,29 +21,43 @@
   100% { background-position: 200% 0; }
 }
 
-.atlas-fade-in {
-  animation: atlas-fade-in 200ms cubic-bezier(0.33, 1, 0.68, 1) both;
-}
-
-.atlas-skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(176, 138, 60, 0.08) 0%,
-    rgba(176, 138, 60, 0.18) 50%,
-    rgba(176, 138, 60, 0.08) 100%
-  );
-  background-size: 200% 100%;
-  animation: atlas-shimmer 1.2s ease-in-out infinite;
-  border-radius: 8px;
-}
-
 @keyframes atlas-rise {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes atlas-slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes atlas-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
+}
+
+.atlas-fade-in {
+  animation: atlas-fade-in 200ms var(--atlas-ease) both;
+}
+
 .atlas-rise {
-  animation: atlas-rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: atlas-rise 320ms var(--atlas-ease-emphasized) both;
+}
+
+.atlas-slide-in {
+  animation: atlas-slide-in-right 280ms var(--atlas-ease) both;
+}
+
+.atlas-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(37, 99, 235, 0.06) 0%,
+    rgba(201, 162, 39, 0.14) 50%,
+    rgba(37, 99, 235, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: atlas-shimmer 1.2s ease-in-out infinite;
+  border-radius: 8px;
 }
 
 .atlas-stagger > *:nth-child(1) { animation-delay: 0ms; }
@@ -41,15 +66,75 @@
 .atlas-stagger > *:nth-child(4) { animation-delay: 120ms; }
 .atlas-stagger > *:nth-child(5) { animation-delay: 160ms; }
 .atlas-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.atlas-stagger > *:nth-child(7) { animation-delay: 240ms; }
+.atlas-stagger > *:nth-child(8) { animation-delay: 280ms; }
 .atlas-stagger > * {
-  animation: atlas-rise 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: atlas-rise 320ms var(--atlas-ease-emphasized) both;
+}
+
+.atlas-page-enter {
+  animation: atlas-fade-in 280ms var(--atlas-ease) both;
+}
+
+.atlas-atmosphere {
+  background:
+    radial-gradient(1200px 600px at 8% -10%, rgba(37, 99, 235, 0.08), transparent 55%),
+    radial-gradient(900px 500px at 92% 0%, rgba(201, 162, 39, 0.07), transparent 50%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  min-height: 100%;
+}
+
+[data-atlas-scheme='dark'] .atlas-atmosphere,
+.atlas-atmosphere-dark {
+  background:
+    radial-gradient(1200px 600px at 8% -10%, rgba(37, 99, 235, 0.16), transparent 55%),
+    radial-gradient(900px 500px at 92% 0%, rgba(201, 162, 39, 0.10), transparent 50%),
+    linear-gradient(180deg, #071624 0%, #0b1f33 100%);
+}
+
+.atlas-glass {
+  background: rgba(248, 250, 252, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 14px rgba(11, 31, 51, 0.07);
+}
+
+[data-atlas-scheme='dark'] .atlas-glass {
+  background: rgba(7, 22, 36, 0.78);
+  border-color: rgba(30, 58, 95, 0.85);
+}
+
+.atlas-hover-lift {
+  transition: transform 200ms var(--atlas-ease), box-shadow 200ms var(--atlas-ease);
+}
+.atlas-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 36px rgba(11, 31, 51, 0.10);
+}
+
+.atlas-focus-ring:focus-visible {
+  outline: 2px solid var(--atlas-azure);
+  outline-offset: 2px;
+}
+
+.atlas-kpi-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .atlas-fade-in,
   .atlas-rise,
+  .atlas-slide-in,
+  .atlas-page-enter,
   .atlas-stagger > *,
-  .atlas-skeleton {
+  .atlas-skeleton,
+  .atlas-hover-lift {
     animation: none !important;
+    transition: none !important;
+  }
+  .atlas-hover-lift:hover {
+    transform: none;
   }
 }

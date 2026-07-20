@@ -33,7 +33,12 @@ export function AtlasProvider({
   const theme = scheme === 'dark' ? atlasDarkTheme : atlasLightTheme;
   return (
     <IdPrefixProvider value={idPrefix}>
-      <FluentProvider theme={theme} className={styles.root}>
+      <FluentProvider
+        theme={theme}
+        className={styles.root}
+        data-atlas-scheme={scheme}
+        style={{ minHeight: '100%' }}
+      >
         {children}
       </FluentProvider>
     </IdPrefixProvider>

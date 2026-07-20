@@ -1,8 +1,5 @@
-import type { SourceKind } from './executiveHome';
+import type { SourceKind, HomeMetric } from './executiveHomeTypes';
 import { pendingExecutiveKpis } from './workspaces';
-import type { HomeMetric } from './executiveHome';
-
-export type { SourceKind, HomeMetric, ApprovalRow, ActivityItem, DeadlineItem, PinnedClient } from './executiveHome';
 
 function pendingToMetric(
   id: string,

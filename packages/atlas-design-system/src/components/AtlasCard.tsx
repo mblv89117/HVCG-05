@@ -1,38 +1,50 @@
 import { makeStyles, mergeClasses, tokens, Text, Caption1 } from '@fluentui/react-components';
 import type { ReactNode, CSSProperties } from 'react';
+import { elevation, color } from '../tokens';
 
 const useStyles = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    padding: '16px',
+    padding: '18px',
     borderRadius: tokens.borderRadiusLarge,
     backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    boxShadow: '0 4px 12px rgba(12, 22, 18, 0.08)',
+    boxShadow: elevation.md,
     transitionProperty: 'box-shadow, transform, border-color',
     transitionDuration: '200ms',
     transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
+    minHeight: 0,
   },
   glass: {
-    backgroundColor: tokens.colorNeutralBackground2,
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     border: `1px solid ${tokens.colorNeutralStroke1}`,
-    boxShadow: '0 0 0 1px rgba(176, 138, 60, 0.14), 0 8px 24px rgba(26, 92, 66, 0.08)',
+    boxShadow: elevation.glow,
   },
   quiet: {
-    boxShadow: 'none',
+    boxShadow: elevation.sm,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
   },
+  accent: {
+    boxShadow: elevation.glow,
+    border: `1px solid rgba(201, 162, 39, 0.45)`,
+    backgroundImage: `linear-gradient(135deg, rgba(201, 162, 39, 0.08), transparent 55%)`,
+  },
+  ai: {
+    boxShadow: elevation.ai,
+    border: `1px solid rgba(37, 99, 235, 0.28)`,
+    backgroundImage: `linear-gradient(135deg, rgba(37, 99, 235, 0.10), transparent 60%)`,
+  },
   interactive: {
     cursor: 'pointer',
-    ':hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 12px 32px rgba(12, 22, 18, 0.12)',
-      border: '1px solid rgba(176, 138, 60, 0.45)',
+            ':hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: elevation.lg,
+      border: `1px solid ${color.gold}`,
     },
     ':focus-visible': {
       outline: `2px solid ${tokens.colorStrokeFocus2}`,
@@ -56,6 +68,7 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gap: '8px',
     minWidth: 0,
+    flex: 1,
   },
   footer: {
     display: 'flex',
@@ -66,7 +79,7 @@ const useStyles = makeStyles({
   },
 });
 
-export type CardVariant = 'default' | 'glass' | 'quiet';
+export type CardVariant = 'default' | 'glass' | 'quiet' | 'accent' | 'ai';
 
 export interface AtlasCardProps {
   children: ReactNode;
@@ -103,6 +116,8 @@ export function AtlasCard({
         s.root,
         variant === 'glass' && s.glass,
         variant === 'quiet' && s.quiet,
+        variant === 'accent' && s.accent,
+        variant === 'ai' && s.ai,
         clickable && s.interactive,
         'atlas-fade-in',
         className,
@@ -126,7 +141,11 @@ export function AtlasCard({
       {(title || headerAction) && (
         <div className={s.header}>
           <div className={s.titleBlock}>
-            {title ? <Text weight="semibold" size={400}>{title}</Text> : null}
+            {title ? (
+              <Text weight="semibold" size={400}>
+                {title}
+              </Text>
+            ) : null}
             {subtitle ? <Caption1>{subtitle}</Caption1> : null}
           </div>
           {headerAction}

@@ -1,4 +1,4 @@
-export { tokens, color, space, radius, elevation, typography, motion, breakpoints, type AtlasTokens } from './tokens';
+export { tokens, color, space, radius, elevation, typography, motion, breakpoints, chartPalette, type AtlasTokens } from './tokens';
 export {
   AtlasProvider,
   hvcgBrand,

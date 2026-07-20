@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { AtlasCard, EmptyState } from '@hvcg/atlas-design-system';
+import { AtlasCard, EmptyState, StatusChip } from '@hvcg/atlas-design-system';
 import { Text, Caption1 } from '@fluentui/react-components';
-import { BotRegular, DocumentDataRegular } from '@fluentui/react-icons';
+import { BotRegular, DocumentDataRegular, BookRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -27,11 +27,13 @@ export function KnowledgePage() {
       subtitle="Contextual guidance and repository-derived knowledge for the active module."
       showPendingBanner={false}
     >
-      <ModuleKnowledgeRail module="Knowledge" user={user} clientCode={clientCode} />
-      <AtlasCard title="Knowledge Platform status">
+      <AtlasCard title="Knowledge operating surface" variant="ai" headerAction={<BookRegular />}>
+        <ModuleKnowledgeRail module="Knowledge" user={user} clientCode={clientCode} />
+      </AtlasCard>
+      <AtlasCard title="Knowledge Platform status" variant="glass">
         <Text>
-          Knowledge catalog and rail are integrated into Elite OS. Full SharePoint / Copilot grounding
-          remains gated on Entra configuration and Knowledge Platform track completion.
+          Knowledge catalog and rail are integrated into Elite OS. Full SharePoint / Copilot grounding remains gated on
+          Entra configuration and Knowledge Platform track completion.
         </Text>
       </AtlasCard>
     </ModuleScaffold>
@@ -41,11 +43,15 @@ export function KnowledgePage() {
 export function AutomationsPage() {
   return (
     <ModuleScaffold
-      title="Automations"
+      title="Automation"
       subtitle="Power Automate and Atlas orchestration — status surfaces only."
       showPendingBanner={false}
     >
-      <AtlasCard>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <StatusChip label="Catalog linked" tone="info" />
+        <StatusChip label="Runtime: gated" tone="warning" />
+      </div>
+      <AtlasCard variant="glass">
         <EmptyState
           title="Automation catalog linked"
           description="Flow packages live under src/power-automate. Runtime activation requires Power Platform environment and owner connection references. No fake run success is shown."
@@ -66,10 +72,13 @@ export function ReportsPage() {
       subtitle="Executive and operational report entry points."
       showPendingBanner={false}
     >
-      <AtlasCard title="Available report surfaces">
-        <ul>
+      <AtlasCard title="Available report surfaces" variant="glass">
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8 }}>
           <li>
-            <Link to="/">Executive Dashboard (Home)</Link>
+            <Link to="/">Executive Command Center</Link>
+          </li>
+          <li>
+            <Link to="/executive">Executive Dashboard</Link>
           </li>
           <li>
             <Link to="/financials">Financial Intelligence</Link>
@@ -84,11 +93,13 @@ export function ReportsPage() {
             <Link to="/enterprise-value">Enterprise Value</Link>
           </li>
         </ul>
-        <EmptyState
-          title="Export & scheduled reports"
-          description="Scheduled PDF/Excel export is not yet integrated. Values remain pending until verified data sources connect."
-          icon={<DocumentDataRegular />}
-        />
+        <div style={{ marginTop: 16 }}>
+          <EmptyState
+            title="Export & scheduled reports"
+            description="Scheduled PDF/Excel export is not yet integrated. Values remain pending until verified data sources connect."
+            icon={<DocumentDataRegular />}
+          />
+        </div>
       </AtlasCard>
     </ModuleScaffold>
   );

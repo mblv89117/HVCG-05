@@ -1,7 +1,7 @@
 import { microsoftConfig } from '../microsoft/config';
 import * as dataverse from '../microsoft/adapters/dataverse';
-import { executiveHomeData, pendingHomeMetrics } from './executiveHome';
-import type { ApprovalRow, HomeMetric } from './executiveHome';
+import { executiveHomeData, pendingHomeMetrics } from './executiveHomeDefaults';
+import type { ApprovalRow, HomeMetric } from './executiveHomeTypes';
 import type { DataSourceKind } from '../microsoft/types';
 import { sanitizeFinancialDisplay } from './financeGuard';
 
