@@ -10,3 +10,4 @@
 8. **Memory is permanent.** ADRs, owner decisions, rejected ideas, and lessons are append-only (supersede, do not erase history).
 9. **Releases are gated.** Follow `releases/pipeline.md`; Production Power Platform remains owner-gated.
 10. **Comms complements orchestration.** `.agent-comms/` carries messages; orchestration carries work state.
+11. **Exclusive branch per worktree.** Every specialist agent uses a dedicated branch and worktree. Never check out a branch already attached elsewhere (especially not `cursor/agent-communications` from `.worktrees/*`). See `BRANCH_WORKTREE_STRATEGY.md`.

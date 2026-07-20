@@ -17,24 +17,30 @@ Cursor does **not** auto-launch specialist agents. Agents discover `Ready` tasks
 ## Quick start (every agent, every session)
 
 ```bash
+# 0. Confirm exclusive branch (must not be agent-communications in a specialist worktree)
+git status -sb
+git worktree list | grep "$(pwd)"
+
 # 1. See work assigned to you
 bash scripts/orchestration/list-ready.sh --agent elite-ui
 
-# 2. Claim + lock paths
+# 2. Allocate unique branch/worktree if needed, then claim + lock paths
+bash scripts/orchestration/allocate-branch.sh --agent elite-ui --purpose appinsights --task ATLAS-T-1303
 bash scripts/orchestration/claim-task.sh ATLAS-T-1303 --agent elite-ui \
-  --branch cursor/elite-ui-appinsights \
+  --branch cursor/elite-ui/appinsights-ATLAS-T-1303 \
   --worktree .worktrees/elite-ui-appinsights
 
 # 3. Mark in progress + heartbeat
 bash scripts/orchestration/atlas-orch.sh start ATLAS-T-1303 --agent elite-ui
 bash scripts/orchestration/heartbeat.sh --agent elite-ui --task ATLAS-T-1303 \
-  --branch cursor/elite-ui-appinsights --action "wiring App Insights" --progress 20
+  --branch cursor/elite-ui/appinsights-ATLAS-T-1303 --action "wiring App Insights" --progress 20
 
 # 4. Board / conflicts
 bash scripts/orchestration/board.sh
 bash scripts/orchestration/atlas-orch.sh conflicts
 ```
 
+Branch/worktree policy: `BRANCH_WORKTREE_STRATEGY.md` · Migration: `MIGRATION_WORKTREE_UNIQUENESS.md`
 ---
 
 ## Folder map

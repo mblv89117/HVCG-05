@@ -1,29 +1,336 @@
 {
-  "version": "1.0",
-  "updatedAt": "2026-07-20T00:01:57Z",
-  "convention": "cursor/<agent-or-track>-<slug>",
+  "version": "1.1",
+  "updatedAt": "2026-07-20T00:11:02Z",
+  "convention": {
+    "branch": "cursor/<agentId>/<purpose>[-<taskId>]",
+    "worktree": ".worktrees/<agentId>-<purpose>",
+    "legacyAccepted": [
+      "cursor/<flat-slug>",
+      "agent/<module>-<slug>"
+    ],
+    "rules": [
+      "One branch attached to at most one worktree (git enforces; orchestration must not attempt violations)",
+      "Never checkout a branch already listed in `git worktree list`",
+      "Never use cursor/agent-communications from a specialist worktree",
+      "Allocate a new branch for each agent+task when starting work",
+      "Do not delete, force-reset, or overwrite other agents worktrees/branches"
+    ]
+  },
   "protected": [
     "main",
-    "cursor/agent-communications"
+    "master",
+    "cursor/agent-communications",
+    "cursor/v1.1.0-intelligence-ai-ops"
   ],
   "active": [
     {
-      "branch": "cursor/sprint12-engineering-orchestration",
-      "ownerAgent": "master-pm",
-      "purpose": "Sprint 12 Orchestration Platform",
-      "worktree": ".worktrees/sprint12-engineering-orchestration"
+      "branch": "agent/crm-dev-validation",
+      "detached": false,
+      "worktree": ".worktrees/crm-dev-validation-commit",
+      "head": "7c226e6737dd",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "agent/crm-docs-owner",
+      "detached": false,
+      "worktree": ".worktrees/crm-docs-owner",
+      "head": "d39efa22bd58",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "agent/crm-integration",
+      "detached": false,
+      "worktree": ".worktrees/crm-integration",
+      "head": "bbfeec9df72a",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "agent/crm-migration-audit",
+      "detached": false,
+      "worktree": ".worktrees/crm-migration-audit",
+      "head": "e6c5d723fc12",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "agent/crm-power-automate",
+      "detached": false,
+      "worktree": ".worktrees/crm-power-automate",
+      "head": "4c3d709252a8",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "agent/crm-testing-qa",
+      "detached": false,
+      "worktree": ".worktrees/crm-testing-qa",
+      "head": "fdd5f1157132",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/agent-communications",
+      "detached": false,
+      "worktree": ".",
+      "head": "912d3ca52fea",
+      "exclusive": true,
+      "purpose": "Main checkout (protected agent-comms home)",
+      "ownerAgentHint": "communications"
+    },
+    {
+      "branch": "cursor/ai-governance-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/ai-governance-sprint1",
+      "head": "0dc0c6fafe6c",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/ai-governance-work-queues",
+      "detached": false,
+      "worktree": ".worktrees/ai-governance-work-queues",
+      "head": "fc1fa79eac23",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/client-portal-data-rooms",
+      "detached": false,
+      "worktree": ".worktrees/client-portal-data-rooms",
+      "head": "b8b2005b5467",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/client-portal-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/client-portal-sprint1",
+      "head": "8c8806b1c9c0",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/deployment-engineer",
+      "detached": false,
+      "worktree": ".worktrees/deployment-engineer",
+      "head": "c726f1ecf945",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/deployment-manager-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/deployment-manager-sprint1",
+      "head": "2290456e488c",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/documentation-knowledge-manager",
+      "detached": false,
+      "worktree": ".worktrees/documentation-knowledge-manager",
+      "head": "2c064b3235f3",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/executive-command-center-active",
+      "detached": false,
+      "worktree": ".worktrees/executive-command-center",
+      "head": "e074cfcc382b",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/executive-command-center-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/executive-command-center-sprint1",
+      "head": "5bb42c252f5a",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/finance-operations",
+      "detached": false,
+      "worktree": ".worktrees/finance-operations",
+      "head": "c79d35b3ad30",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/finance-operations-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/finance-operations-sprint1",
+      "head": "c287508ab775",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/master-pm-orchestrator",
+      "detached": false,
+      "worktree": ".worktrees/master-pm-orchestrator",
+      "head": "b75b19bef11d",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/operations-hub",
+      "detached": false,
+      "worktree": ".worktrees/operations-hub",
+      "head": "a584f612cb43",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/operations-hub-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/operations-hub-sprint1",
+      "head": "0f8f6da42dc9",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/orchestration-sprint12",
+      "detached": false,
+      "worktree": ".worktrees/sprint12-engineering-orchestration",
+      "head": "3c4728c58409",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/project-atlas-rc1",
+      "detached": false,
+      "worktree": ".worktrees/project-atlas-authoritative",
+      "head": "bd07e6104847",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/qa-release-manager",
+      "detached": false,
+      "worktree": ".worktrees/qa-release-manager",
+      "head": "2c064b3235f3",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/revenue-os-atlas-design",
+      "detached": false,
+      "worktree": ".worktrees/revenue-os-atlas-design",
+      "head": "7fd8bf270dc0",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/revenue-sprint3-conversion",
+      "detached": false,
+      "worktree": ".worktrees/revenue-sprint3",
+      "head": "0073bf494114",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/revenue-sprint4-activation",
+      "detached": false,
+      "worktree": ".worktrees/revenue-sprint4",
+      "head": "bf34c931e645",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
     },
     {
       "branch": "cursor/sprint11-azure-production-migration",
-      "ownerAgent": "azure-platform",
-      "purpose": "Sprint 11 Azure Production (complete)",
-      "worktree": ".worktrees/sprint11-azure-production-migration"
+      "detached": false,
+      "worktree": ".worktrees/sprint11-azure-production-migration",
+      "head": "a386d816e77a",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/system-architect",
+      "detached": false,
+      "worktree": ".worktrees/system-architect",
+      "head": "b75b19bef11d",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
     },
     {
       "branch": "cursor/track10-elite-ui",
-      "ownerAgent": "elite-ui",
-      "purpose": "Elite UI design system + dashboard",
-      "worktree": ".worktrees/track10-elite-ui"
+      "detached": false,
+      "worktree": ".worktrees/track10-elite-ui",
+      "head": "912d3ca52fea",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/track7-atlas-powerapps-uat",
+      "detached": false,
+      "worktree": ".worktrees/atlas-powerapps-uat",
+      "head": "d778f23ad53e",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/track7-ceo-command-center-sprint2",
+      "detached": false,
+      "worktree": ".worktrees/ceo-command-center-sprint2",
+      "head": "d778f23ad53e",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/track9-eos-sprint1",
+      "detached": false,
+      "worktree": ".worktrees/track9-eos-sprint1",
+      "head": "6b36782265e9",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
+    },
+    {
+      "branch": "cursor/track9-eos-sprint2",
+      "detached": false,
+      "worktree": ".worktrees/track9-eos-sprint2",
+      "head": "d778f23ad53e",
+      "exclusive": true,
+      "purpose": "Specialist worktree",
+      "ownerAgentHint": "see-branch"
     }
-  ]
+  ],
+  "detachedWorktrees": [],
+  "migrationNotes": "PROJECT_ATLAS/ORCHESTRATION/MIGRATION_WORKTREE_UNIQUENESS.md",
+  "strategyDoc": "PROJECT_ATLAS/ORCHESTRATION/BRANCH_WORKTREE_STRATEGY.md"
 }

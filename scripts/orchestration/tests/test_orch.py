@@ -74,6 +74,14 @@ class OrchTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             orch.claim_task(self.tmp, "ATLAS-T-9999", "azure-platform")
 
+    def test_allocate_branch_unique_pattern(self) -> None:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+        import git_worktree_guard as gwg  # noqa: E402
+
+        name = gwg.allocate_branch_name("documentation", "onboarding", "ATLAS-T-1305")
+        self.assertEqual(name, "cursor/documentation/onboarding-atlas-t-1305")
+        self.assertIn("documentation", gwg.suggest_worktree_path("documentation", "onboarding"))
+
 
 if __name__ == "__main__":
     unittest.main()

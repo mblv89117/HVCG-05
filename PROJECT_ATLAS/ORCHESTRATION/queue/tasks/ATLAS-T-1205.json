@@ -23,7 +23,7 @@
     "qa",
     "architecture"
   ],
-  "branch": "cursor/sprint12-engineering-orchestration",
+  "branch": "cursor/orchestration-sprint12",
   "worktree": ".worktrees/sprint12-engineering-orchestration",
   "affectedPaths": [
     "PROJECT_ATLAS/ORCHESTRATION/"

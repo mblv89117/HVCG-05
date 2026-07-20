@@ -1,13 +1,6 @@
 {
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:06:46Z",
   "items": [
-    {
-      "id": "TD-001",
-      "title": "Key Vault purge protection disabled",
-      "severity": "medium",
-      "ownerAgent": "azure-platform",
-      "relatedTask": "ATLAS-T-1302"
-    },
     {
       "id": "TD-002",
       "title": "Elite OS bundle >500kB; needs code-splitting",
@@ -20,6 +13,27 @@
       "severity": "medium",
       "ownerAgent": "communications",
       "relatedTask": "ATLAS-T-1306"
+    },
+    {
+      "id": "TD-WT-001",
+      "title": "Historical shared branch attempts (agent-communications)",
+      "status": "mitigated",
+      "severity": "medium",
+      "notes": "Specialists must not checkout cursor/agent-communications. Guards + BRANCH_WORKTREE_STRATEGY.md added 2026-07-20.",
+      "updatedAt": "2026-07-20T00:12:19Z"
+    }
+  ],
+  "resolved": [
+    {
+      "id": "TD-001",
+      "title": "Key Vault purge protection disabled",
+      "severity": "medium",
+      "ownerAgent": "azure-platform",
+      "relatedTask": "ATLAS-T-1302",
+      "status": "resolved",
+      "resolvedBy": "azure-platform",
+      "resolvedAt": "2026-07-20T00:06:46Z",
+      "resolution": "ATLAS-T-1302: enablePurgeProtection=true on kv-atlas-hvcg-ebc84d85"
     }
   ]
 }

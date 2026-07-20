@@ -116,6 +116,26 @@ def claim_task(repo: Path, task_id: str, agent_id: str, *, branch: Optional[str]
             dep_t = load_json(dep_path)
             if dep_t.get("status") not in ("Closed", "Released", "Merged", "Approved"):
                 raise SystemExit(f"Dependency {dep} not complete (status={dep_t.get('status')})")
+    # Branch uniqueness: refuse claims that target a branch already attached elsewhere
+    claim_branch = branch or t.get("branch")
+    claim_worktree = worktree or t.get("worktree")
+    if claim_branch:
+        try:
+            from git_worktree_guard import (  # type: ignore
+                assert_branch_available,
+                assert_not_protected_for_specialist,
+            )
+        except ImportError:
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from git_worktree_guard import (  # type: ignore
+                assert_branch_available,
+                assert_not_protected_for_specialist,
+            )
+        intended = None
+        if claim_worktree:
+            intended = str((repo / claim_worktree).resolve()) if not Path(claim_worktree).is_absolute() else claim_worktree
+        assert_not_protected_for_specialist(claim_branch, agent_id)
+        assert_branch_available(repo, claim_branch, intended_worktree=intended)
     t["status"] = "Claimed"
     t["claimedBy"] = agent_id
     t["claimedAt"] = iso_now()

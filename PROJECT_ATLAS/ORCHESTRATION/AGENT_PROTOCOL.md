@@ -2,10 +2,12 @@
 
 ## Session bootstrap (mandatory from Sprint 13)
 
-1. `git status` / confirm worktree + branch.
-2. `bash scripts/orchestration/list-ready.sh --agent <your-agentId>`
-3. If no Ready work: `bash scripts/orchestration/heartbeat.sh --agent <id> --status Idle --action "awaiting Ready queue"`
-4. If Ready work exists: claim → start → heartbeat → implement → complete → await review.
+1. `git status` / confirm **this** worktree + **dedicated** branch (`git worktree list` must show your branch only here).
+2. Never `git switch` / `checkout` `cursor/agent-communications` or any branch already attached to another worktree.
+3. If you need a new line of work: `bash scripts/orchestration/allocate-branch.sh` then `ensure-agent-worktree.sh` (see `BRANCH_WORKTREE_STRATEGY.md`).
+4. `bash scripts/orchestration/list-ready.sh --agent <your-agentId>`
+5. If no Ready work: `bash scripts/orchestration/heartbeat.sh --agent <id> --status Idle --action "awaiting Ready queue"`
+6. If Ready work exists: claim (with your exclusive `--branch` / `--worktree`) → start → heartbeat → implement → complete → await review.
 
 ## agentId values
 

@@ -11,7 +11,7 @@
   "estimatedEffortHours": 4,
   "dependencies": [],
   "blockedBy": [],
-  "status": "In Progress",
+  "status": "Waiting Review",
   "acceptanceCriteria": [
     "Documented bridge procedure",
     "Sample heartbeat sync script"
@@ -19,7 +19,7 @@
   "requiredReviews": [
     "qa"
   ],
-  "branch": "cursor/comms-orch-bridge",
+  "branch": "cursor/orchestration-sprint12",
   "worktree": ".worktrees/sprint12-engineering-orchestration",
   "affectedPaths": [
     ".agent-comms/",
@@ -30,14 +30,22 @@
   "requiredTests": [
     "scripts/orchestration/tests/test_orch.py"
   ],
-  "validationResults": {},
-  "artifacts": [],
+  "validationResults": {
+    "scripts/orchestration/tests/test_orch.py": "pass",
+    "scripts/agent-comms/tests/test_orch_heartbeat_bridge.py": "pass"
+  },
+  "artifacts": [
+    "docs/agents/ORCHESTRATION_HEARTBEAT_BRIDGE.md",
+    "scripts/agent-comms/sync-orch-heartbeat.sh",
+    "scripts/agent-comms/lib/orch_heartbeat_bridge.py",
+    "scripts/agent-comms/tests/test_orch_heartbeat_bridge.py"
+  ],
   "commitReferences": [],
   "ownerDecisions": [],
-  "completionSummary": null,
+  "completionSummary": "Documented agent-comms status-request bridge (orchestration heartbeat before ACK) and shipped sync-orch-heartbeat sample script with unit tests. No live Outlook/Teams/Graph sends.",
   "releaseVersion": "orch-1.0",
   "createdAt": "2026-07-20T00:01:57Z",
-  "updatedAt": "2026-07-20T00:06:28Z",
+  "updatedAt": "2026-07-20T00:08:32Z",
   "claimedBy": "communications",
   "claimedAt": "2026-07-20T00:05:01Z"
 }
