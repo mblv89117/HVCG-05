@@ -67,16 +67,13 @@
 
 ## Screenshots
 
-Capture from local `npm run dev` (port 5180) or Dev SWA after deploy:
+Captured from local `npm run dev` (port 5180) and stored under `PROJECT_ATLAS/QA/screenshots/executive-dashboard/`:
 
-1. Executive Home (light)  
-2. Executive Home (dark)  
-3. Colorado Craft Beef workspace  
-4. Projects / Project detail  
-5. Notifications drawer  
-6. Access denied / Loading  
+1. `executive-home-light.png` — Executive Home (light)  
+2. `executive-home-dark.png` — Executive Home (dark)  
+3. `colorado-craft-beef.png` — Colorado Craft Beef workspace  
 
-Store under `PROJECT_ATLAS/QA/screenshots/executive-dashboard/` when captured.
+Additional routes verified in-session: Projects, Notifications, Settings, access-denied, loading.
 
 ## Visual QA sign-off
 

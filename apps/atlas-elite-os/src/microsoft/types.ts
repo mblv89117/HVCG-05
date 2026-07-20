@@ -24,6 +24,8 @@ export interface AtlasRevenueKpi {
   trend?: string;
   period?: string;
   source: DataSourceKind;
+  /** Raw Dataverse verification / datasource label used for pending-safe gating */
+  verificationLabel?: string;
 }
 
 export interface AtlasBrief {

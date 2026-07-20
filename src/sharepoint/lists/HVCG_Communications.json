@@ -1,6 +1,6 @@
 {
   "title": "HVCG_Communications",
-  "description": "Significant communications log",
+  "description": "Business communication timeline — context and launch into Outlook/Teams; not a full mail/Teams client. Drafts are distinct from sent/recorded items.",
   "template": "genericList",
   "columns": [
     {
@@ -9,7 +9,7 @@
       "type": "Text",
       "required": true,
       "indexed": false,
-      "description": ""
+      "description": "Short subject shown on the timeline"
     },
     {
       "internalName": "ClientId",
@@ -17,7 +17,7 @@
       "type": "Lookup",
       "required": true,
       "indexed": true,
-      "description": "",
+      "description": "Related client",
       "lookupList": "HVCG_Clients"
     },
     {
@@ -27,6 +27,59 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "ContactId",
+      "displayName": "ContactId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Related contact",
+      "lookupList": "HVCG_Contacts"
+    },
+    {
+      "internalName": "ContactName",
+      "displayName": "ContactName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Denormalized contact display name"
+    },
+    {
+      "internalName": "OpportunityId",
+      "displayName": "OpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Related opportunity",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Related project",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "TaskId",
+      "displayName": "TaskId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "Related task (non-follow-up link)",
+      "lookupList": "HVCG_Tasks"
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Related capital opportunity",
+      "lookupList": "HVCG_CapitalOpportunities"
     },
     {
       "internalName": "Channel",
@@ -41,6 +94,7 @@
         "Phone",
         "In Person",
         "Portal",
+        "Notification",
         "Other"
       ]
     },
@@ -58,6 +112,26 @@
       ]
     },
     {
+      "internalName": "Purpose",
+      "displayName": "Purpose",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Business purpose for filters and templates",
+      "choices": [
+        "ClientFollowUp",
+        "MeetingHistory",
+        "Notification",
+        "ProjectUpdate",
+        "ApprovalMessage",
+        "DocumentRequest",
+        "RevenueFollowUp",
+        "ExecutiveBriefing",
+        "Referral",
+        "Other"
+      ]
+    },
+    {
       "internalName": "CommunicationDate",
       "displayName": "CommunicationDate",
       "type": "DateTime",
@@ -66,12 +140,44 @@
       "description": ""
     },
     {
+      "internalName": "FollowUpDate",
+      "displayName": "FollowUpDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Scheduled follow-up"
+    },
+    {
       "internalName": "OwnerEmail",
       "displayName": "OwnerEmail",
       "type": "Text",
       "required": false,
       "indexed": false,
-      "description": ""
+      "description": "Communication owner UPN/email"
+    },
+    {
+      "internalName": "CommunicationOwner",
+      "displayName": "CommunicationOwner",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Display name of communication owner"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Draft vs sent/recorded — never conflate",
+      "choices": [
+        "Draft",
+        "PendingApproval",
+        "Sent",
+        "Recorded",
+        "Cancelled"
+      ],
+      "default": "Recorded"
     },
     {
       "internalName": "Summary",
@@ -79,7 +185,55 @@
       "type": "Note",
       "required": false,
       "indexed": false,
-      "description": ""
+      "description": "Business summary (not full mailbox body)"
+    },
+    {
+      "internalName": "EmailSummary",
+      "displayName": "EmailSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Approved email summary excerpt — no unrelated mailbox content"
+    },
+    {
+      "internalName": "MeetingSummary",
+      "displayName": "MeetingSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Meeting summary linked to this record"
+    },
+    {
+      "internalName": "TeamsActivityLink",
+      "displayName": "TeamsActivityLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": "Deep link to Teams chat/channel/meeting (launch only)"
+    },
+    {
+      "internalName": "OutlookItemLink",
+      "displayName": "OutlookItemLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": "Deep link to Outlook item/calendar (launch only)"
+    },
+    {
+      "internalName": "AttachmentOrDocLinks",
+      "displayName": "AttachmentOrDocLinks",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON array or newline list of approved SharePoint/OneDrive document links — never mailbox dump"
+    },
+    {
+      "internalName": "TemplateId",
+      "displayName": "TemplateId",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Communication template key used to prepare draft"
     },
     {
       "internalName": "RequiresFollowUp",
@@ -114,8 +268,8 @@
       "type": "Boolean",
       "required": false,
       "indexed": false,
-      "description": "",
-      "default": false
+      "description": "True for any external/client-facing outbound",
+      "default": true
     },
     {
       "internalName": "SendApproved",
@@ -123,8 +277,28 @@
       "type": "Boolean",
       "required": false,
       "indexed": false,
-      "description": "",
+      "description": "Human approval recorded before send",
       "default": false
     }
+  ],
+  "views": [
+    {
+      "title": "Timeline by client",
+      "orderBy": "CommunicationDate desc",
+      "filter": "ClientCode eq '{ClientCode}'"
+    },
+    {
+      "title": "Drafts only",
+      "filter": "Status eq 'Draft' or Status eq 'PendingApproval'"
+    },
+    {
+      "title": "Follow-ups due",
+      "filter": "RequiresFollowUp eq 1"
+    }
+  ],
+  "securityNotes": [
+    "Row-level access follows Client workspace membership; Guests must not see HVCG-internal rows.",
+    "Do not sync full Outlook mailboxes into this list — only curated summaries linked to business records.",
+    "External send requires ApprovalRequiredBeforeSend + SendApproved + Owner gate (OA-EXT-01)."
   ]
 }

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import {
   AtlasCard,
   DataTable,
@@ -21,6 +22,8 @@ import {
 } from '../data/workspaces';
 import { projectCatalog } from '../data/projects';
 import { atlasRole, canAccessAdmin } from '../security/rbac';
+import { communicationsForWorkspace, isDraftStatus } from '../data/communications';
+import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 export function FinancialsPage() {
   return (
     <ModuleScaffold
@@ -192,6 +195,43 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
 
       {isCcb ? (
         <>
+          <AtlasCard
+            title="Jeff Smith — relationship communications"
+            subtitle="Generational Group · Randy Kamin · HVS → HVCG · Blueprint"
+          >
+            <Text>
+              Primary contact: Jeff Smith. Referral: Randy Kamin — Generational Group. Timeline includes prior HVS
+              discussions, current HVCG meeting, Blueprint presentation, and open follow-ups.
+            </Text>
+            <div style={{ marginTop: 12 }}>
+              <DataTable
+                ariaLabel="CCB communication timeline"
+                getRowKey={(r) => r.id}
+                rows={communicationsForWorkspace('ws-ccb').slice(0, 6)}
+                columns={[
+                  {
+                    key: 'when',
+                    header: 'When',
+                    render: (r) => new Date(r.communicationDate).toLocaleDateString(),
+                  },
+                  { key: 'title', header: 'Item', render: (r) => r.title },
+                  {
+                    key: 'st',
+                    header: 'Status',
+                    render: (r) => (
+                      <StatusChip
+                        label={isDraftStatus(r.status) ? `DRAFT · ${r.status}` : r.status}
+                        tone={isDraftStatus(r.status) ? 'warning' : 'success'}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </div>
+            <Link to="/communications?client=ws-ccb" style={{ display: 'inline-block', marginTop: 12 }}>
+              <Button appearance="primary">Open full communications timeline</Button>
+            </Link>
+          </AtlasCard>
           <AtlasCard title="Company overview" subtitle="Relationship facts from Owner directive">
             <Text>
               Colorado Craft Beef is transitioning to HVCG. Original need involved growth capital and additional
@@ -453,8 +493,8 @@ export function CapitalPage() {
       </AtlasCard>
       <FieldGrid
         fields={[
-          { label: 'Active capital opportunities', value: 'Data connection pending', availability: 'Data connection pending' },
-          { label: 'Requested amount (aggregate)', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+          { label: 'Active capital opportunities', value: 'Pending verification', availability: 'Data connection pending' },
+          { label: 'Requested amount (aggregate)', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
           { label: 'Expected fees', value: 'Not yet calculated', availability: 'Not yet calculated' },
         ]}
       />
@@ -472,12 +512,12 @@ export function EnterpriseValuePage() {
         fields={[
           {
             label: 'Current estimated value',
-            value: 'Not yet calculated — preliminary/indicative only when available',
+            value: 'Not yet calculated',
             availability: 'Not yet calculated',
           },
-          { label: 'Valuation range', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
-          { label: 'Methodology', value: 'Data connection pending', availability: 'Data connection pending' },
-          { label: 'EBITDA multiple', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+          { label: 'Valuation range', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
+          { label: 'Methodology', value: 'Pending verification', availability: 'Data connection pending' },
+          { label: 'EBITDA multiple', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
           { label: 'Target future value', value: 'Not yet calculated', availability: 'Not yet calculated' },
         ]}
       />
@@ -492,30 +532,113 @@ export function EnterpriseValuePage() {
 }
 
 export function DocumentsPage() {
+  return <DocumentsPageConnected />;
+}
+
+function DocumentsPageConnected() {
+  const { account } = useMicrosoftAuth();
+  const [rows, setRows] = useState<{ id: string; name: string; status: string; href?: string }[]>([]);
+  const [detail, setDetail] = useState('Pending verification');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!account) {
+        setRows(
+          documentCategories.map((c) => ({
+            id: c,
+            name: c,
+            status: 'Awaiting verified data',
+          })),
+        );
+        setDetail('Sign in to load SharePoint document libraries via Microsoft Graph.');
+        return;
+      }
+      setLoading(true);
+      try {
+        const { listAtlasDocuments } = await import('../microsoft/adapters/sharepoint');
+        const result = await listAtlasDocuments(25);
+        if (cancelled) return;
+        if (!result.data.length) {
+          setRows(
+            documentCategories.map((c) => ({
+              id: c,
+              name: c,
+              status: 'Pending verification',
+            })),
+          );
+          setDetail(result.detail || 'SharePoint connected but no files returned — categories remain pending.');
+        } else {
+          setRows(
+            result.data.map((d) => ({
+              id: d.id,
+              name: d.name,
+              status: 'Verified',
+              href: d.webUrl,
+            })),
+          );
+          setDetail(result.detail || 'SharePoint via Microsoft Graph');
+        }
+      } catch (e) {
+        if (cancelled) return;
+        setRows(
+          documentCategories.map((c) => ({
+            id: c,
+            name: c,
+            status: 'Pending verification',
+          })),
+        );
+        setDetail(e instanceof Error ? e.message : String(e));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [account]);
+
   return (
     <ModuleScaffold
       title="Documents"
-      subtitle="SharePoint-backed readiness. Confidential docs require Entra role checks."
+      subtitle="SharePoint via Microsoft Graph. Confidential docs require Entra role checks."
       showPendingBanner={false}
     >
-      <Pendingish />
-      <AtlasCard title="Categories">
+      <AtlasCard>
+        <Caption1>{loading ? 'Loading SharePoint…' : detail}</Caption1>
+      </AtlasCard>
+      <AtlasCard title="Library / categories">
         <DataTable
-          ariaLabel="Document categories"
-          getRowKey={(r) => r.category}
-          rows={documentCategories.map((c) => ({
-            category: c,
-            status: 'Data connection pending',
-          }))}
+          ariaLabel="Documents"
+          getRowKey={(r) => r.id}
+          rows={rows}
           columns={[
-            { key: 'c', header: 'Category', render: (r) => r.category },
+            {
+              key: 'c',
+              header: 'Name',
+              render: (r) =>
+                r.href ? (
+                  <a href={r.href} target="_blank" rel="noreferrer">
+                    {r.name}
+                  </a>
+                ) : (
+                  r.name
+                ),
+            },
             {
               key: 's',
               header: 'Status',
-              render: (r) => <StatusChip label={r.status} tone="warning" />,
+              render: (r) => (
+                <StatusChip
+                  label={r.status}
+                  tone={r.status === 'Verified' ? 'success' : 'warning'}
+                />
+              ),
             },
           ]}
-        />      </AtlasCard>
+        />
+      </AtlasCard>
     </ModuleScaffold>
   );
 }
@@ -541,16 +664,5 @@ export function AiInsightsPage() {
         />
       </AtlasCard>
     </ModuleScaffold>
-  );
-}
-
-function Pendingish() {
-  return (
-    <AtlasCard>
-      <Caption1>
-        Document links will use SharePoint sites HVCG-CommandCenter-Dev / HVCG-Clients-Dev. Status: Data
-        connection pending for item-level rows.
-      </Caption1>
-    </AtlasCard>
   );
 }

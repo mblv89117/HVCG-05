@@ -3,6 +3,12 @@ import * as dataverse from '../microsoft/adapters/dataverse';
 import { executiveHomeData, pendingHomeMetrics } from './executiveHome';
 import type { ApprovalRow, HomeMetric } from './executiveHome';
 import type { DataSourceKind } from '../microsoft/types';
+import {
+  isVerifiedDataSource,
+  PENDING_LABELS,
+  safeKpiDisplay,
+} from './verifiedDisplay';
+import { canViewFinance } from '../security/rbac';
 
 export interface ExecutiveHomeModel {
   metrics: HomeMetric[];
@@ -30,25 +36,35 @@ function mapTrend(raw?: string): 'up' | 'down' | 'flat' {
   return 'flat';
 }
 
-function toSource(kind: DataSourceKind): HomeMetric['source'] {
-  if (kind === 'Dataverse' || kind === 'Live') return 'Live';
+function toSource(kind: DataSourceKind, verified: boolean): HomeMetric['source'] {
+  if (verified && (kind === 'Dataverse' || kind === 'Live')) return 'Live';
   if (kind === 'Unavailable') return 'Unavailable';
   if (kind === 'Development sample') return 'Development sample';
-  return 'Repository-derived';
+  return verified ? 'Live' : 'Unavailable';
 }
 
 function nowIso() {
   return new Date().toISOString();
 }
 
+const ZERO_SPARK = [0, 0, 0, 0, 0, 0, 0];
+
 export async function loadExecutiveHome(signedIn: boolean): Promise<ExecutiveHomeModel> {
+  const financeAllowed = canViewFinance();
   const sample: ExecutiveHomeModel = {
     ...executiveHomeData,
+    metrics: financeAllowed ? pendingHomeMetrics : pendingHomeMetrics.map((m) => ({
+      ...m,
+      value: PENDING_LABELS.awaiting,
+      trendLabel: 'Role-restricted or pending',
+      source: 'Unavailable',
+      spark: ZERO_SPARK,
+    })),
     aiRecommendations: executiveHomeData.aiBrief.recommendations,
     connection: {
       mode: 'sample-fallback',
       detail: microsoftConfig.allowSampleFallback
-        ? 'Pending-safe fallback (no fabricated financial figures). Sign in to load Dataverse when available.'
+        ? 'Pending-safe fallback (no fabricated financial figures). Sign in to load verified Dataverse when available.'
         : 'Sample fallback disabled.',
       lastRefresh: nowIso(),
     },
@@ -61,20 +77,31 @@ export async function loadExecutiveHome(signedIn: boolean): Promise<ExecutiveHom
   try {
     const [approvals, kpis, brief] = await Promise.all([
       dataverse.listApprovals(),
-      dataverse.listRevenueKpis(),
+      financeAllowed
+        ? dataverse.listRevenueKpis()
+        : Promise.resolve({ data: [], source: 'Unavailable' as const, detail: 'Finance role required' }),
       dataverse.listBriefs(),
     ]);
 
-    const metrics: HomeMetric[] = (kpis.data.length ? kpis.data : []).slice(0, 8).map((k, i) => ({
-      id: k.id || `kpi-${i}`,
-      label: k.name,
-      value: k.value,
-      unit: k.unit,
-      trend: mapTrend(k.trend),
-      trendLabel: k.period || k.trend || 'Dataverse',
-      source: toSource(k.source),
-      spark: [3, 4, 5, 5, 6, 7, 8],
-    }));
+    const metrics: HomeMetric[] = (kpis.data.length ? kpis.data : []).slice(0, 8).map((k, i) => {
+      const verified = isVerifiedDataSource(k.verificationLabel);
+      const value = safeKpiDisplay(k.value, {
+        verified,
+        emptyLabel: PENDING_LABELS.notCalculated,
+      });
+      return {
+        id: k.id || `kpi-${i}`,
+        label: k.name || `KPI ${i + 1}`,
+        value,
+        unit: verified && value !== PENDING_LABELS.pending && value !== PENDING_LABELS.notCalculated && value !== PENDING_LABELS.awaiting
+          ? k.unit
+          : undefined,
+        trend: verified ? mapTrend(k.trend) : 'flat',
+        trendLabel: verified ? k.period || k.trend || 'Verified' : PENDING_LABELS.pending,
+        source: toSource(k.source, verified),
+        spark: verified ? ZERO_SPARK : ZERO_SPARK,
+      };
+    });
 
     const approvalRows: ApprovalRow[] = approvals.data.map((a) => ({
       id: a.id,
@@ -82,7 +109,7 @@ export async function loadExecutiveHome(signedIn: boolean): Promise<ExecutiveHom
       risk: a.risk,
       track: a.track,
       decision: a.decision,
-      source: toSource(a.source),
+      source: toSource(a.source, true),
     }));
 
     const topBrief = brief.data[0];
@@ -125,7 +152,7 @@ export async function loadExecutiveHome(signedIn: boolean): Promise<ExecutiveHom
       aiRecommendations,
       connection: {
         mode: 'dataverse',
-        detail: approvals.detail || `Connected to ${microsoftConfig.dataverseUrl}`,
+        detail: approvals.detail || `Connected to ${microsoftConfig.dataverseUrl} · KPI values gated to verified sources only`,
         lastRefresh: nowIso(),
       },
     };

@@ -82,7 +82,7 @@ export interface CommandBarProps {
 }
 
 export function CommandBar({
-  logoSrc = '/brand/hvcg-logo.png',
+  logoSrc = '/brand/hvcg-logo.svg',
   title = 'HIGH VALUE',
   subtitle = 'CAPITAL GROUP',
   searchPlaceholder = 'Search Atlas…',

@@ -4,9 +4,11 @@ export { AtlasCard, type AtlasCardProps, type CardVariant } from './AtlasCard';
 export {
   DashboardWidget,
   SparkBars,
+  AtlasChart,
   QuickActionButton,
   type DashboardWidgetProps,
   type SparkBarsProps,
+  type AtlasChartProps,
 } from './DashboardWidget';
 export { CommandBar, type CommandBarProps } from './CommandBar';
 export {

@@ -1,24 +1,29 @@
 # Track 10 — Elite Microsoft UI / Atlas Design System
 
-**Status:** Design System + Executive Dashboard ready for owner UAT (Dev)  
-**Branch:** `cursor/track10-elite-ui`  
+**Status:** **COMPLETE — Owner UAT stop gate**  
+**Branch:** `cursor/track10-elite-microsoft-ui`  
 **Worktree:** `.worktrees/track10-elite-ui`
 
-## Delivered (Sprint 10.1)
+## Delivered
 
-1. `@hvcg/atlas-design-system` — Fluent UI v9 + HVCG gold logo branding, light/dark, reusable composites
-2. Storybook for independent component review
+1. `@hvcg/atlas-design-system` — Fluent UI v9 + HVCG gold branding, light/dark, reusable composites
+2. Storybook for independent component review (`npm run storybook` → :6006)
 3. `apps/atlas-elite-os` Executive Dashboard composed only from design-system components
-4. Labeled Development sample / repository / unavailable data
+4. Labeled Development sample / repository / unavailable / pending-safe data
+5. Owner UAT package: [QA/Track10EliteUI/OWNER_UAT_PACKAGE.md](../QA/Track10EliteUI/OWNER_UAT_PACKAGE.md)
 
 ## Run
 
-- App: `npm run dev` → http://127.0.0.1:5180
-- Storybook: `npm run storybook` → http://127.0.0.1:6006
+```bash
+cd .worktrees/track10-elite-ui
+npm run dev          # http://127.0.0.1:5180
+npm run storybook    # http://127.0.0.1:6006
+npm run verify:owner-gate -w @hvcg/atlas-elite-os
+```
 
-## Stop
+## Stop gate
 
-Await owner UAT before AI Command Center, Client Workspace, Capital, Projects, Documents, Admin.
+**STOP for owner review.** Do not start AI Command Center (full), Client Workspace, Capital, Projects, Documents, or Admin until owner approves UAT checklist.
 
 ## Constraints
 

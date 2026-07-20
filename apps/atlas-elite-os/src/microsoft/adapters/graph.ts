@@ -88,3 +88,29 @@ export async function listUpcomingEvents(top = 5): Promise<Sourced<{ id: string;
     detail: 'Outlook calendar via Graph (read-only)',
   };
 }
+
+/** Transitive security group IDs for Entra role mapping (POST me/getMemberGroups). */
+export async function listMyMemberGroupIds(): Promise<Sourced<string[]>> {
+  const token = await acquireGraphToken();
+  if (!token) throw new Error('Graph token unavailable — sign in and consent Graph scopes.');
+  const res = await fetch(`${microsoftConfig.graphUrl}/me/getMemberGroups`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ securityEnabledOnly: true }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Graph getMemberGroups ${res.status}: ${text.slice(0, 240)}`);
+  }
+  const json = (await res.json()) as { value: string[] };
+  return {
+    data: json.value || [],
+    source: 'Live',
+    detail: 'Microsoft Graph transitive security groups',
+    lastUpdated: new Date().toISOString(),
+  };
+}

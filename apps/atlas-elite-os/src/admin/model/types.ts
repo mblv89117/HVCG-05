@@ -214,6 +214,13 @@ export interface ApplicationSettings {
   namingPrefix: string;
 }
 
+/** Existing project health rules from firm config (not a new product). */
+export interface ProjectHealthRules {
+  green: string;
+  yellow: string;
+  red: string;
+}
+
 export interface IntegrationStatus {
   id: string;
   name: string;
@@ -258,48 +265,59 @@ export interface AdminState {
   eva: EvaAssumptions;
   ai: AiSettings;
   application: ApplicationSettings;
+  projectHealthRules: ProjectHealthRules;
   integrations: IntegrationStatus[];
   audit: AuditEvent[];
 }
 
-export type AdminAreaId =
+export type ControlCenterAreaId =
   | 'organizations'
-  | 'clients'
   | 'users'
-  | 'roles'
-  | 'permissions'
   | 'teams'
-  | 'business-units'
-  | 'status-values'
-  | 'categories'
-  | 'referral-sources'
-  | 'service-types'
-  | 'engagement-types'
-  | 'notification-preferences'
-  | 'workflow-settings'
-  | 'document-categories'
-  | 'financial-settings'
-  | 'capital-advisory-settings'
-  | 'enterprise-value-assumptions'
-  | 'ai-settings'
+  | 'roles-permissions'
+  | 'clients'
+  | 'projects'
+  | 'ai-agents'
+  | 'automation-registry'
+  | 'knowledge-platform'
   | 'integrations'
-  | 'feature-flags'
-  | 'audit-history'
-  | 'application-settings';
+  | 'azure-resources'
+  | 'dataverse'
+  | 'sharepoint'
+  | 'notifications'
+  | 'branding'
+  | 'licensing'
+  | 'security-center'
+  | 'ai-governance'
+  | 'audit-center'
+  | 'release-center'
+  | 'system-health';
 
-export type AdminAreaGroup =
-  | 'People & access'
-  | 'Reference data'
-  | 'Configuration'
-  | 'Operations'
-  | 'System';
+/** @deprecated Prefer ControlCenterAreaId */
+export type AdminAreaId = ControlCenterAreaId | string;
+
+export type ControlCenterGroup =
+  | 'Identity & access'
+  | 'Delivery'
+  | 'Intelligence'
+  | 'Platform'
+  | 'Experience'
+  | 'Governance'
+  | 'Operations';
+
+/** @deprecated Prefer ControlCenterGroup */
+export type AdminAreaGroup = ControlCenterGroup;
+
+export type AreaVisibility = 'admin';
 
 export interface AdminAreaMeta {
-  id: AdminAreaId;
+  id: ControlCenterAreaId;
   title: string;
   description: string;
   impact: string;
-  group: AdminAreaGroup;
+  group: ControlCenterGroup;
   systemConfig: boolean;
   keywords: string[];
+  /** Who may see this area inside Control Center (hub is already admin-gated). */
+  visibility: AreaVisibility;
 }

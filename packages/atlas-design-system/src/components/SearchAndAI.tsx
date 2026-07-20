@@ -282,7 +282,7 @@ export function GlobalAICommandPanel({
 }
 
 export function BrandMark({
-  src = '/brand/hvcg-logo.png',
+  src = '/brand/hvcg-logo.svg',
   height = 40,
 }: {
   src?: string;

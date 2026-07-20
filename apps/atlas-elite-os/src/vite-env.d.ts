@@ -14,6 +14,14 @@ interface ImportMetaEnv {
   readonly VITE_HOSTED_APP_URL?: string;
   readonly VITE_ALLOW_SAMPLE_FALLBACK?: string;
   readonly VITE_BLOCK_LIVE_CLIENT_COMMS?: string;
+  readonly VITE_ATLAS_ROLE?: string;
+  readonly VITE_ATLAS_ROLE_FORCE?: string;
+  readonly VITE_ENTRA_GROUP_HVCG_OWNER?: string;
+  readonly VITE_ENTRA_GROUP_ADMINISTRATOR?: string;
+  readonly VITE_ENTRA_GROUP_HVCG_TEAM?: string;
+  readonly VITE_ENTRA_GROUP_CLIENT_EXECUTIVE?: string;
+  readonly VITE_ENTRA_GROUP_CLIENT_TEAM?: string;
+  readonly VITE_ENTRA_GROUP_READ_ONLY_ADVISOR?: string;
 }
 
 interface ImportMeta {

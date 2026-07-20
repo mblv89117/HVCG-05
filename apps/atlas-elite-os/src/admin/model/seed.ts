@@ -183,6 +183,12 @@ export function createSeedState(): AdminState {
     ].map((label, i) =>
       ref(`doc-${i}`, label, label.split(' - ')[0] || `D${i}`, i + 1),
     ),
+    projectHealthRules: {
+      green: 'No critical overdue; <20% tasks overdue; no open High risks',
+      yellow:
+        'Any high-priority task overdue OR open High risk OR missing critical docs >7 days',
+      red: 'Critical deadline at risk OR executive escalation open OR payment materially overdue with work continuing',
+    },
     featureFlags: [
       {
         key: 'enableClientEmails',

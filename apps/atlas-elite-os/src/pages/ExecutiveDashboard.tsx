@@ -31,7 +31,7 @@ import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiv
 import { useWorkspaceContext } from '../state/WorkspaceContext';
 import { workspaceCatalog } from '../data/workspaces';
 import { reportingPeriods } from '../data/projects';
-import { atlasRole } from '../security/rbac';
+import { useAtlasRole } from '../security/RoleProvider';
 
 function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'success' {
   if (severity === 'Critical' || severity === 'High') return 'danger';
@@ -41,6 +41,7 @@ function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'succes
 
 export function ExecutiveDashboardPage() {
   const { account, configured, signIn } = useMicrosoftAuth();
+  const { role } = useAtlasRole();
   const { workspaceId, setWorkspaceId, workspaceName, periodId, setPeriodId, periodLabel } =
     useWorkspaceContext();
   const [model, setModel] = useState<ExecutiveHomeModel | null>(null);
@@ -82,7 +83,7 @@ export function ExecutiveDashboardPage() {
     connection,
   } = model;
 
-  const roleLabel = account ? `${atlasRole()} · signed in` : `${atlasRole()} · signed out`;
+  const roleLabel = account ? `${role} · signed in` : `${role} · signed out`;
 
   return (
     <PageLayout

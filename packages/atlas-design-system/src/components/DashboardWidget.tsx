@@ -137,6 +137,10 @@ export function SparkBars({ values, 'aria-label': ariaLabel = 'Trend chart' }: S
   );
 }
 
+/** Alias for design-system catalog — Chart wrappers. */
+export const AtlasChart = SparkBars;
+export type AtlasChartProps = SparkBarsProps;
+
 export function QuickActionButton({
   children,
   onClick,

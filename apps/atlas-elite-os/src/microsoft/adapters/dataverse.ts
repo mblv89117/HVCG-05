@@ -58,20 +58,24 @@ export async function listRevenueKpis(): Promise<Sourced<AtlasRevenueKpi[]>> {
   const json = await dvFetch<{ value: Record<string, unknown>[] }>(
     'hvcg_atlasrevenuekpis?$select=hvcg_atlasrevenuekpiid,hvcg_name,hvcg_value,hvcg_unit,hvcg_trend,hvcg_period,hvcg_datasource&$top=20',
   );
-  const data: AtlasRevenueKpi[] = (json.value || []).map((r) => ({
-    id: String(r.hvcg_atlasrevenuekpiid),
-    name: String(r.hvcg_name || ''),
-    value: String(r.hvcg_value || ''),
-    unit: r.hvcg_unit ? String(r.hvcg_unit) : undefined,
-    trend: r.hvcg_trend ? String(r.hvcg_trend) : undefined,
-    period: r.hvcg_period ? String(r.hvcg_period) : undefined,
-    source: 'Dataverse',
-  }));
+  const data: AtlasRevenueKpi[] = (json.value || []).map((r) => {
+    const datasource = choiceLabel(r, 'hvcg_datasource') || String(r.hvcg_datasource || '');
+    return {
+      id: String(r.hvcg_atlasrevenuekpiid),
+      name: String(r.hvcg_name || ''),
+      value: String(r.hvcg_value || ''),
+      unit: r.hvcg_unit ? String(r.hvcg_unit) : undefined,
+      trend: r.hvcg_trend ? String(r.hvcg_trend) : undefined,
+      period: r.hvcg_period ? String(r.hvcg_period) : undefined,
+      source: 'Dataverse',
+      verificationLabel: datasource,
+    };
+  });
   return {
     data,
     source: 'Dataverse',
     lastUpdated: new Date().toISOString(),
-    detail: 'Atlas Revenue KPI table (Development)',
+    detail: 'Atlas Revenue KPI table (Development/Production per environment)',
   };
 }
 

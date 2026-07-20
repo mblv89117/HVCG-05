@@ -56,23 +56,6 @@ function nowIso() {
 
 const ACTOR = 'admin-session';
 
-function pushAudit(partial: Omit<AuditEvent, 'id' | 'at' | 'actor'>) {
-  const event: AuditEvent = {
-    id: uid('aud'),
-    at: nowIso(),
-    actor: ACTOR,
-    ...partial,
-  };
-  state = { ...state, audit: [event, ...state.audit] };
-}
-
-function mutate(next: AdminState, audit: Omit<AuditEvent, 'id' | 'at' | 'actor'>) {
-  state = next;
-  pushAudit(audit);
-  // pushAudit already mutated audit on a copy after next assignment — fix order
-}
-
-/** Correct mutate: apply next then audit on top */
 function commit(nextWithoutAudit: AdminState, audit: Omit<AuditEvent, 'id' | 'at' | 'actor'>) {
   const event: AuditEvent = {
     id: uid('aud'),
@@ -183,17 +166,17 @@ export const adminApi = {
 
   assignRoles(userId: string, roleIds: string[]) {
     if (!roleIds.length) throw new ValidationError('Assign at least one role.');
+    const before = state.users.find((u) => u.id === userId);
+    if (!before) throw new ValidationError('User not found.');
     for (const roleId of roleIds) {
       const role = state.roles.find((r) => r.id === roleId);
       if (!role) throw new ValidationError('Unknown role.');
-      if (role.ownerOnlyAssign) {
+      if (role.ownerOnlyAssign && !before.roleIds.includes(roleId)) {
         throw new ValidationError(
-          `Cannot assign "${role.name}" from this screen without Owner confirmation workflow.`,
+          `Cannot newly assign "${role.name}" from this screen without Owner confirmation workflow.`,
         );
       }
     }
-    const before = state.users.find((u) => u.id === userId);
-    if (!before) throw new ValidationError('User not found.');
     const users = state.users.map((u) => (u.id === userId ? { ...u, roleIds: [...roleIds] } : u));
     commit(
       { ...state, users },
@@ -301,7 +284,7 @@ export const adminApi = {
     commit(
       { ...state, roles },
       {
-        areaId: 'permissions',
+        areaId: 'roles-permissions',
         action: 'set_role_permissions',
         summary: `Updated permissions for role ${role.name}.`,
         before: role.permissionKeys.join(','),
@@ -332,16 +315,16 @@ export const adminApi = {
       {
         areaId:
           collection === 'statuses'
-            ? 'status-values'
+            ? 'clients'
             : collection === 'referralSources'
-              ? 'referral-sources'
+              ? 'clients'
               : collection === 'serviceTypes'
-                ? 'service-types'
+                ? 'projects'
                 : collection === 'engagementTypes'
-                  ? 'engagement-types'
+                  ? 'projects'
                   : collection === 'documentCategories'
-                    ? 'document-categories'
-                    : 'categories',
+                    ? 'knowledge-platform'
+                    : 'projects',
         action: exists ? 'update_reference' : 'create_reference',
         summary: `${exists ? 'Updated' : 'Added'} ${item.label}.`,
         highImpact: false,
@@ -358,7 +341,7 @@ export const adminApi = {
     commit(
       { ...state, featureFlags },
       {
-        areaId: 'feature-flags',
+        areaId: 'licensing',
         action: 'set_flag',
         summary: `Set ${flag.label} to ${value ? 'on' : 'off'}.`,
         before: String(flag.value),
@@ -375,7 +358,7 @@ export const adminApi = {
     commit(
       { ...state, notifications },
       {
-        areaId: 'notification-preferences',
+        areaId: 'notifications',
         action: 'update',
         summary: 'Updated notification preferences.',
         highImpact: false,
@@ -387,7 +370,7 @@ export const adminApi = {
     commit(
       { ...state, workflow },
       {
-        areaId: 'workflow-settings',
+        areaId: 'automation-registry',
         action: 'update',
         summary: 'Updated workflow settings.',
         highImpact: !workflow.blockLiveClientComms,
@@ -400,7 +383,7 @@ export const adminApi = {
     commit(
       { ...state, financial },
       {
-        areaId: 'financial-settings',
+        areaId: 'security-center',
         action: 'update',
         summary: 'Updated financial settings.',
         highImpact: financial.showSuccessFeesToNonFinance,
@@ -412,7 +395,7 @@ export const adminApi = {
     commit(
       { ...state, capital },
       {
-        areaId: 'capital-advisory-settings',
+        areaId: 'security-center',
         action: 'update',
         summary: 'Updated capital-advisory settings.',
         highImpact: !capital.requireOwnerForLenderOutreach,
@@ -425,7 +408,7 @@ export const adminApi = {
     commit(
       { ...state, eva },
       {
-        areaId: 'enterprise-value-assumptions',
+        areaId: 'security-center',
         action: 'update',
         summary: 'Updated enterprise-value assumptions.',
         highImpact: true,
@@ -437,7 +420,7 @@ export const adminApi = {
     commit(
       { ...state, ai },
       {
-        areaId: 'ai-settings',
+        areaId: 'ai-governance',
         action: 'update',
         summary: 'Updated AI settings.',
         highImpact: false,
@@ -450,7 +433,7 @@ export const adminApi = {
     commit(
       { ...state, application },
       {
-        areaId: 'application-settings',
+        areaId: 'branding',
         action: 'update',
         summary: 'Updated application settings.',
         highImpact: false,

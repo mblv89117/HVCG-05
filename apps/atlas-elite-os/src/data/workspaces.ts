@@ -59,10 +59,12 @@ export const coloradoCraftBeefWorkspace: WorkspaceSummary = {
   health: 'On Track',
   referralSource: 'Randy Kamin — Generational Group',
   relationshipHistory: [
-    'Original HVS referral',
+    'Original HVS referral via Generational Group (Randy Kamin)',
+    'Primary contact: Jeff Smith',
     'Transitioning to HVCG',
-    'Original need involved growth capital and additional real estate',
+    'Prior HVS discussions: growth capital and additional real estate',
     'Prior financing discussion included non-dilutive and agricultural financing options',
+    'Current HVCG meeting + Blueprint presentation (relationship facts only)',
   ],
   services: ['Growth capital advisory', 'Real estate financing exploration'],
   notes:
@@ -80,13 +82,13 @@ export function getWorkspace(id: string): WorkspaceSummary | undefined {
 
 /** Standard pending KPI set for Executive Home when Dataverse has no verified values */
 export const pendingExecutiveKpis: PendingField[] = [
-  { label: 'Revenue', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+  { label: 'Revenue', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
   { label: 'Gross Profit', value: 'Not yet calculated', availability: 'Not yet calculated' },
-  { label: 'EBITDA', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
-  { label: 'Cash', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
-  { label: 'Accounts Receivable', value: 'Data connection pending', availability: 'Data connection pending' },
+  { label: 'EBITDA', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
+  { label: 'Cash', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
+  { label: 'Accounts Receivable', value: 'Pending verification', availability: 'Data connection pending' },
   { label: 'Working Capital', value: 'Not yet calculated', availability: 'Not yet calculated' },
-  { label: 'Active Pipeline', value: 'Data connection pending', availability: 'Data connection pending' },
+  { label: 'Active Pipeline', value: 'Pending verification', availability: 'Data connection pending' },
   {
     label: 'Enterprise Value Estimate',
     value: 'Not yet calculated',
