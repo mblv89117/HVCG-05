@@ -16,6 +16,12 @@ import {
   isEntraConfigured,
   microsoftConfig,
 } from '../index';
+import {
+  DEV_OWNER_DISPLAY_NAME,
+  isDevOwnerLoginAllowed,
+  readDevOwnerSessionActive,
+  writeDevOwnerSessionActive,
+} from '../../security/devOwnerSession';
 
 interface AuthState {
   ready: boolean;
@@ -25,6 +31,13 @@ interface AuthState {
   signIn: () => Promise<void>;
   signOutUser: () => Promise<void>;
   environmentBanner: string;
+  /** True when Local Owner (Dev) session is active and allowed. */
+  devOwnerActive: boolean;
+  /** True when the DEV Owner login control may be shown. */
+  devOwnerLoginAllowed: boolean;
+  activateDevOwner: () => void;
+  clearDevOwner: () => void;
+  displayName: string;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -33,7 +46,13 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [devOwnerActive, setDevOwnerActive] = useState(false);
   const configured = isEntraConfigured();
+  const devOwnerLoginAllowed = isDevOwnerLoginAllowed();
+
+  useEffect(() => {
+    setDevOwnerActive(readDevOwnerSessionActive());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,9 +76,26 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const activateDevOwner = useCallback(() => {
+    if (!isDevOwnerLoginAllowed()) {
+      setError('Local Owner (Dev) login is disabled in this environment.');
+      return;
+    }
+    writeDevOwnerSessionActive(true);
+    setDevOwnerActive(true);
+    setError(null);
+  }, []);
+
+  const clearDevOwner = useCallback(() => {
+    writeDevOwnerSessionActive(false);
+    setDevOwnerActive(false);
+  }, []);
+
   const signIn = useCallback(async () => {
     setError(null);
     try {
+      writeDevOwnerSessionActive(false);
+      setDevOwnerActive(false);
       const a = await signInInteractive();
       setAccount(a);
     } catch (e) {
@@ -70,12 +106,22 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
   const signOutUser = useCallback(async () => {
     setError(null);
     try {
+      writeDevOwnerSessionActive(false);
+      setDevOwnerActive(false);
       await signOut();
       setAccount(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   }, []);
+
+  const effectiveDevOwner = devOwnerLoginAllowed && devOwnerActive && !account;
+
+  const displayName = account?.name || account?.username || (effectiveDevOwner ? DEV_OWNER_DISPLAY_NAME : 'Guest');
+
+  const environmentBanner = effectiveDevOwner
+    ? `${microsoftConfig.environmentBanner} · LOCAL OWNER SESSION (DEV ONLY)`
+    : microsoftConfig.environmentBanner;
 
   const value = useMemo(
     () => ({
@@ -85,9 +131,27 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
       error,
       signIn,
       signOutUser,
-      environmentBanner: microsoftConfig.environmentBanner,
+      environmentBanner,
+      devOwnerActive: effectiveDevOwner,
+      devOwnerLoginAllowed,
+      activateDevOwner,
+      clearDevOwner,
+      displayName,
     }),
-    [ready, configured, account, error, signIn, signOutUser],
+    [
+      ready,
+      configured,
+      account,
+      error,
+      signIn,
+      signOutUser,
+      environmentBanner,
+      effectiveDevOwner,
+      devOwnerLoginAllowed,
+      activateDevOwner,
+      clearDevOwner,
+      displayName,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

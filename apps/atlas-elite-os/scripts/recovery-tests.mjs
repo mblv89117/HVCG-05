@@ -31,9 +31,11 @@ assert.equal(sanitize('Awaiting verified data'), 'Awaiting verified data');
 assert.ok(looksLikeFabricatedFinance('4.8M'));
 
 // Role matrix: no default owner — unresolved when signed in without claims
-function resolveRole({ signedIn, claims, env, allowSim, sim }) {
+function resolveRole({ signedIn, claims, env, allowSim, sim, devOwnerSession, devOwnerRole }) {
   if (!signedIn) return 'Unauthenticated';
-  if (allowSim && env !== 'production' && sim) return sim;
+  const nonProd = env !== 'production' && env !== 'staging';
+  if (devOwnerSession && nonProd && devOwnerRole) return devOwnerRole;
+  if (allowSim && nonProd && sim) return sim;
   if (claims?.roles?.length) return claims.roles[0];
   return 'Unresolved';
 }
@@ -48,7 +50,36 @@ assert.equal(
   'Read-Only Advisor',
 );
 assert.notEqual(resolveRole({ signedIn: true, claims: {}, env: 'development' }), 'HVCG Owner');
-
+assert.equal(
+  resolveRole({
+    signedIn: true,
+    claims: {},
+    env: 'local',
+    devOwnerSession: true,
+    devOwnerRole: 'HVCG Owner',
+  }),
+  'HVCG Owner',
+);
+assert.equal(
+  resolveRole({
+    signedIn: true,
+    claims: {},
+    env: 'production',
+    devOwnerSession: true,
+    devOwnerRole: 'HVCG Owner',
+  }),
+  'Unresolved',
+);
+assert.equal(
+  resolveRole({
+    signedIn: true,
+    claims: {},
+    env: 'staging',
+    devOwnerSession: true,
+    devOwnerRole: 'HVCG Owner',
+  }),
+  'Unresolved',
+);
 const dist = join(root, 'dist/assets');
 if (existsSync(dist)) {
   const needles = ['1.25M', '4.8M', 'Revenue (sample)', '$1.25', '$4.8'];

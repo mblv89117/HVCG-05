@@ -106,6 +106,8 @@ const ROLE_ALIASES: Record<string, AtlasRole> = {
   'read_only_advisor': 'Read-Only Advisor',
   administrator: 'Administrator',
   admin: 'Administrator',
+  'atlas administrator': 'Administrator',
+  'atlas_administrator': 'Administrator',
 };
 
 export function normalizeRole(raw: string | null | undefined): AtlasRole | null {
@@ -118,18 +120,28 @@ export function normalizeRole(raw: string | null | undefined): AtlasRole | null 
 
 /**
  * Resolve role from identity claims.
- * QA may set VITE_ALLOW_ROLE_SIM=true + VITE_ATLAS_ROLE_SIM=<role> in non-production only.
- * Never defaults to Owner.
+ * - Production / staging: Entra app roles only (no silent Owner).
+ * - Local / development: optional DEV Owner session OR VITE_ALLOW_ROLE_SIM (explicit only).
+ * Never defaults to Owner when unsigned or when claims are missing.
  */
 export function resolveAtlasRole(input: {
   signedIn: boolean;
   idTokenClaims?: Record<string, unknown> | null;
   environment: string;
+  /** Explicit Local Owner (Dev) session — must already be gated by isDevOwnerLoginAllowed(). */
+  devOwnerSession?: boolean;
+  /** Role to apply for an active DEV Owner session. */
+  devOwnerRole?: AtlasRole;
 }): AtlasRole {
   if (!input.signedIn) return 'Unauthenticated';
 
-  const allowSim =
-    import.meta.env.VITE_ALLOW_ROLE_SIM === 'true' && input.environment !== 'production';
+  const nonProd = input.environment !== 'production' && input.environment !== 'staging';
+
+  if (input.devOwnerSession && nonProd && input.devOwnerRole) {
+    return input.devOwnerRole;
+  }
+
+  const allowSim = import.meta.env.VITE_ALLOW_ROLE_SIM === 'true' && nonProd;
   if (allowSim) {
     const sim = normalizeRole(String(import.meta.env.VITE_ATLAS_ROLE_SIM || ''));
     if (sim && sim !== 'Unauthenticated' && sim !== 'Unresolved') return sim;

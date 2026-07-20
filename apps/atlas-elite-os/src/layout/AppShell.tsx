@@ -69,7 +69,18 @@ const catalog: SearchResult[] = [
 ];
 
 export function AppShell() {
-  const { account, configured, signIn, signOutUser, environmentBanner } = useMicrosoftAuth();
+  const {
+    account,
+    configured,
+    signIn,
+    signOutUser,
+    environmentBanner,
+    displayName,
+    devOwnerActive,
+    devOwnerLoginAllowed,
+    activateDevOwner,
+    clearDevOwner,
+  } = useMicrosoftAuth();
   const { role, can } = useAtlasRole();
   const { workspaceId, setWorkspaceId, workspaceName } = useWorkspaceContext();
   const location = useLocation();
@@ -107,7 +118,7 @@ export function AppShell() {
     );
   }, [query]);
 
-  const userName = account?.name || account?.username || 'Guest';
+  const userName = displayName;
   const notificationCount = items.length;
 
   return (
@@ -156,17 +167,50 @@ export function AppShell() {
                     </Option>
                   ))}
                 </Dropdown>
+                {devOwnerActive ? (
+                  <Button
+                    size="small"
+                    appearance="subtle"
+                    onClick={() => {
+                      clearDevOwner();
+                      push({
+                        title: 'Local Owner session ended',
+                        body: 'You are Unauthenticated again until you sign in.',
+                        tone: 'info',
+                      });
+                    }}
+                  >
+                    End Local Owner
+                  </Button>
+                ) : null}
+                {devOwnerLoginAllowed && !account && !devOwnerActive ? (
+                  <Button
+                    size="small"
+                    appearance="primary"
+                    onClick={() => {
+                      activateDevOwner();
+                      push({
+                        title: 'Local Owner (Dev) active',
+                        body: 'HVCG Owner capabilities for local UAT. Disabled in production/staging.',
+                        tone: 'success',
+                      });
+                      if (location.pathname === '/access-denied') navigate('/');
+                    }}
+                  >
+                    Local Owner (Dev)
+                  </Button>
+                ) : null}
                 {configured ? (
                   account ? (
                     <Button size="small" appearance="subtle" onClick={() => void signOutUser()}>
                       Sign out
                     </Button>
                   ) : (
-                    <Button size="small" appearance="primary" onClick={() => void signIn()}>
-                      Sign in
+                    <Button size="small" appearance="secondary" onClick={() => void signIn()}>
+                      Sign in with Microsoft
                     </Button>
                   )
-                ) : (
+                ) : !devOwnerLoginAllowed ? (
                   <Button
                     size="small"
                     appearance="secondary"
@@ -180,7 +224,7 @@ export function AppShell() {
                   >
                     {microsoftConfig.environment}
                   </Button>
-                )}
+                ) : null}
               </>
             }
           />
