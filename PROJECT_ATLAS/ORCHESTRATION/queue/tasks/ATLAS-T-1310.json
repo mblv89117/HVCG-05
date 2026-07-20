@@ -1,0 +1,49 @@
+{
+  "sprint": 13,
+  "dependencies": [
+    "ATLAS-T-1303"
+  ],
+  "blockedBy": [],
+  "status": "Planned",
+  "complexity": "S",
+  "estimatedEffortHours": 2,
+  "requiredReviews": [
+    "qa"
+  ],
+  "branch": "cursor/security-engineering/appinsights-review-ATLAS-T-1310",
+  "worktree": ".worktrees/security-engineering-appinsights-review",
+  "affectedPaths": [
+    "apps/atlas-elite-os/",
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "ownerApprovalRequired": false,
+  "completionSummary": null,
+  "claimedBy": null,
+  "claimedAt": null,
+  "createdAt": "2026-07-20T00:23:46Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "createdBy": "master-pm",
+  "releaseVersion": "s13-1.0",
+  "id": "ATLAS-T-1310",
+  "epic": "FEAT-S13-ELITE-TELEMETRY-UAT",
+  "feature": "telemetry-security-review",
+  "title": "Security review: Elite OS App Insights telemetry (PII / secrets)",
+  "description": "Review ATLAS-T-1303 design and implementation for PII leakage, secret handling, and Key Vault usage. No Production destructive actions.",
+  "assignedAgent": "security-engineering",
+  "priority": "P1",
+  "acceptanceCriteria": [
+    "Written security findings or PASS recorded on task",
+    "No secrets in git confirmed",
+    "PII scrubbing guidance documented if needed"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-T-1310-security-review.md"
+  ]
+}

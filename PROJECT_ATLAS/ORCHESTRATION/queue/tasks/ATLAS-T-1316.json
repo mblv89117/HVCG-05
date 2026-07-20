@@ -1,0 +1,46 @@
+{
+  "sprint": 13,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Ready",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "requiredReviews": [
+    "master-pm"
+  ],
+  "branch": "cursor/qa-release/s12-clearance-ATLAS-T-1316",
+  "worktree": ".worktrees/qa-release-s12-clearance",
+  "affectedPaths": [
+    "PROJECT_ATLAS/ORCHESTRATION/queue/tasks/",
+    "PROJECT_ATLAS/ORCHESTRATION/reviews/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "ownerApprovalRequired": false,
+  "completionSummary": null,
+  "claimedBy": null,
+  "claimedAt": null,
+  "createdAt": "2026-07-20T00:23:46Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "createdBy": "master-pm",
+  "releaseVersion": "s13-1.0",
+  "id": "ATLAS-T-1316",
+  "epic": "ORCH-STABILITY-S13",
+  "feature": "s12-review-clearance",
+  "title": "QA clearance: Sprint 12 orchestration tasks still Waiting Review",
+  "description": "Review ATLAS-T-1201..1205 (and related) Waiting Review items; approve with evidence or reopen with defects. Clears governance backlog so Sprint 13 velocity is visible.",
+  "assignedAgent": "qa-release",
+  "priority": "P1",
+  "acceptanceCriteria": [
+    "Each S12 Waiting Review task Approved/Closed or defect task opened",
+    "Review queue updated"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-T-1316-s12-clearance.md"
+  ]
+}

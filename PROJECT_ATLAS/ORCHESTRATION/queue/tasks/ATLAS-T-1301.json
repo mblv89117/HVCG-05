@@ -11,7 +11,7 @@
   "estimatedEffortHours": 3,
   "dependencies": [],
   "blockedBy": [],
-  "status": "In Progress",
+  "status": "QA Review",
   "acceptanceCriteria": [
     "CORS includes SWA + localhost origins",
     "Signed-in Elite OS loads Dataverse tracks on SWA URL"
@@ -20,22 +20,51 @@
     "qa",
     "security"
   ],
-  "branch": null,
-  "worktree": null,
+  "branch": "cursor/power-platform-ATLAS-T-1301-dataverse-cors",
+  "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/sprint12-engineering-orchestration",
   "affectedPaths": [
     "PROJECT_ATLAS/ORCHESTRATION/registry/environments.json"
   ],
   "requiredTests": [
     "scripts/orchestration/tests/test_orch.py"
   ],
-  "validationResults": {},
-  "artifacts": [],
+  "validationResults": {
+    "corsPreflight": {
+      "script": "scripts/power-platform/verify-dataverse-cors.sh",
+      "result": "pass",
+      "verifiedAt": "2026-07-20T00:08:01Z",
+      "accessControlAllowOrigin": "*",
+      "origins": [
+        "http://127.0.0.1:5180",
+        "http://localhost:5180",
+        "https://zealous-rock-0090c7e1e.7.azurestaticapps.net"
+      ]
+    },
+    "signedInSwaUat": {
+      "result": "deferred",
+      "notes": "AC2 signed-in SWA Dataverse load deferred to ATLAS-T-1304 Owner UAT; CORS preflight AC1 satisfied"
+    },
+    "orchTests": {
+      "script": "scripts/orchestration/tests/test_orch.py",
+      "result": "pass",
+      "verifiedAt": "2026-07-20T00:10:34Z"
+    }
+  },
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-T-1301-dataverse-cors.md",
+    "PROJECT_ATLAS/ORCHESTRATION/registry/environments.json",
+    "scripts/power-platform/verify-dataverse-cors.sh"
+  ],
   "commitReferences": [],
   "ownerDecisions": [],
-  "completionSummary": null,
+  "completionSummary": "Verified HVCG Development Dataverse Web API CORS preflight for Elite OS SWA + localhost (ACAO *). Recorded corsOrigins/corsStatus in environments.json; added verify script + artifact. Signed-in SWA UAT deferred to ATLAS-T-1304.",
   "releaseVersion": "orch-1.0",
   "createdAt": "2026-07-20T00:01:57Z",
-  "updatedAt": "2026-07-20T00:04:55Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "claimedBy": "power-platform",
-  "claimedAt": "2026-07-20T00:04:48Z"
+  "claimedAt": "2026-07-20T00:04:48Z",
+  "sprintNotes": "CORS evidence present; AC2 deferred to 1304 \u2014 QA/security review",
+  "worktreePolicy": "MUST use dedicated Power Platform worktree \u2014 not sprint12-engineering-orchestration",
+  "worktreeConflict": true,
+  "correctWorktreeHint": ".worktrees/power-platform-ATLAS-T-1301-dataverse-cors (create if missing)"
 }

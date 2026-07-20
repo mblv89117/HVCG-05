@@ -1,0 +1,48 @@
+{
+  "sprint": 13,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Ready",
+  "complexity": "S",
+  "estimatedEffortHours": 2,
+  "requiredReviews": [
+    "master-pm"
+  ],
+  "branch": "cursor/executive-intelligence/daily-brief-ATLAS-T-1314",
+  "worktree": ".worktrees/executive-intelligence-daily-brief",
+  "affectedPaths": [
+    "docs/executive/",
+    "PROJECT_ATLAS/ORCHESTRATION/dashboards/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "ownerApprovalRequired": false,
+  "completionSummary": null,
+  "claimedBy": null,
+  "claimedAt": null,
+  "createdAt": "2026-07-20T00:23:46Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "createdBy": "master-pm",
+  "releaseVersion": "s13-1.0",
+  "id": "ATLAS-T-1314",
+  "epic": "OPS-INTEL-S13",
+  "feature": "owner-daily-brief",
+  "title": "Executive Intelligence: Owner Daily Brief (Sprint 13 Day 1)",
+  "description": "Produce Owner Daily Brief covering sprint health, engineering health, top risks, blockers, decisions, workload, release forecast. Operational only \u2014 no infra edits.",
+  "assignedAgent": "executive-intelligence",
+  "priority": "P0",
+  "acceptanceCriteria": [
+    "Brief published under dashboards or docs/executive",
+    "Includes risks, blockers, decisions, workload",
+    "No platform infrastructure changes"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/dashboards/owner-daily-brief-s13.md"
+  ],
+  "agentClass": "operational-intelligence"
+}

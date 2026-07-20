@@ -1,0 +1,49 @@
+{
+  "sprint": 13,
+  "dependencies": [
+    "ATLAS-T-1303"
+  ],
+  "blockedBy": [],
+  "status": "Planned",
+  "complexity": "S",
+  "estimatedEffortHours": 2,
+  "requiredReviews": [
+    "qa"
+  ],
+  "branch": "cursor/documentation-manager/appinsights-docs-ATLAS-T-1311",
+  "worktree": ".worktrees/documentation-manager-appinsights-docs",
+  "affectedPaths": [
+    "docs/",
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "ownerApprovalRequired": false,
+  "completionSummary": null,
+  "claimedBy": null,
+  "claimedAt": null,
+  "createdAt": "2026-07-20T00:23:46Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "createdBy": "master-pm",
+  "releaseVersion": "s13-1.0",
+  "id": "ATLAS-T-1311",
+  "epic": "FEAT-S13-ELITE-TELEMETRY-UAT",
+  "feature": "telemetry-docs",
+  "title": "Document Elite OS App Insights + Owner UAT runbook",
+  "description": "Documentation for telemetry wiring, secret injection at build, and Owner UAT checklist linkage to ATLAS-T-1304.",
+  "assignedAgent": "documentation-manager",
+  "priority": "P1",
+  "acceptanceCriteria": [
+    "Runbook committed without secrets",
+    "Links to SWA URL and App Insights resource naming",
+    "Rollback section included"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/artifacts/ATLAS-T-1311-appinsights-runbook.md"
+  ]
+}

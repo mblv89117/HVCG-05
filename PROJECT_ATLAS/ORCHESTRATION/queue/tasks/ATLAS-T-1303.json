@@ -1,7 +1,7 @@
 {
   "id": "ATLAS-T-1303",
   "sprint": 13,
-  "epic": "ELITE-UI-UAT",
+  "epic": "FEAT-S13-ELITE-TELEMETRY-UAT",
   "feature": "app-insights-sdk",
   "title": "Wire Application Insights into Elite OS",
   "description": "Add App Insights JS SDK using appi-atlas-prod connection string from Key Vault / build secret \u2014 no secrets in git.",
@@ -20,10 +20,11 @@
   ],
   "requiredReviews": [
     "qa",
-    "security"
+    "security",
+    "architecture"
   ],
-  "branch": null,
-  "worktree": null,
+  "branch": "cursor/elite-ui/appinsights-ATLAS-T-1303",
+  "worktree": ".worktrees/elite-ui-appinsights",
   "affectedPaths": [
     "apps/atlas-elite-os/"
   ],
@@ -37,7 +38,8 @@
   "completionSummary": null,
   "releaseVersion": "orch-1.0",
   "createdAt": "2026-07-20T00:01:57Z",
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "claimedBy": null,
-  "claimedAt": null
+  "claimedAt": null,
+  "assignmentNote": "Claim ONLY after allocating exclusive worktree via ensure-agent-worktree.sh. Dependency ATLAS-T-1302 is in QA Review with completion evidence \u2014 may proceed in parallel; do not embed secrets."
 }

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:19:13Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "tasks": [
     {
       "id": "ATLAS-T-1201",
@@ -60,7 +60,7 @@
     {
       "id": "ATLAS-T-1301",
       "sprint": 13,
-      "status": "Waiting Review",
+      "status": "QA Review",
       "assignedAgent": "power-platform",
       "priority": "P0",
       "title": "Apply Dataverse CORS for Elite OS SWA origin"
@@ -68,7 +68,7 @@
     {
       "id": "ATLAS-T-1302",
       "sprint": 13,
-      "status": "Waiting Review",
+      "status": "QA Review",
       "assignedAgent": "azure-platform",
       "priority": "P1",
       "title": "Enable Key Vault purge protection"
@@ -93,7 +93,7 @@
       "id": "ATLAS-T-1305",
       "sprint": 13,
       "status": "Claimed",
-      "assignedAgent": "documentation",
+      "assignedAgent": "documentation-manager",
       "priority": "P1",
       "title": "Onboard specialist agents to discover Ready queue"
     },
@@ -112,6 +112,62 @@
       "assignedAgent": "data-engineering",
       "priority": "P1",
       "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map"
+    },
+    {
+      "id": "ATLAS-T-1310",
+      "sprint": 13,
+      "status": "Planned",
+      "assignedAgent": "security-engineering",
+      "priority": "P1",
+      "title": "Security review: Elite OS App Insights telemetry (PII / secrets)"
+    },
+    {
+      "id": "ATLAS-T-1311",
+      "sprint": 13,
+      "status": "Planned",
+      "assignedAgent": "documentation-manager",
+      "priority": "P1",
+      "title": "Document Elite OS App Insights + Owner UAT runbook"
+    },
+    {
+      "id": "ATLAS-T-1312",
+      "sprint": 13,
+      "status": "Planned",
+      "assignedAgent": "system-architect",
+      "priority": "P1",
+      "title": "Architecture review: App Insights + Dataverse CORS pattern"
+    },
+    {
+      "id": "ATLAS-T-1313",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "QA gate: ATLAS-T-1301 CORS + ATLAS-T-1302 KV purge protection"
+    },
+    {
+      "id": "ATLAS-T-1314",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "executive-intelligence",
+      "priority": "P0",
+      "title": "Executive Intelligence: Owner Daily Brief (Sprint 13 Day 1)"
+    },
+    {
+      "id": "ATLAS-T-1315",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "finance-intelligence",
+      "priority": "P1",
+      "title": "Finance Intelligence: Sprint 13 engineering investment & Azure spend brief"
+    },
+    {
+      "id": "ATLAS-T-1316",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P1",
+      "title": "QA clearance: Sprint 12 orchestration tasks still Waiting Review"
     }
   ]
 }

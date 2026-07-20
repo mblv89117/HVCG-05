@@ -1,7 +1,7 @@
 {
   "id": "ATLAS-T-1304",
   "sprint": 13,
-  "epic": "ELITE-UI-UAT",
+  "epic": "FEAT-S13-ELITE-TELEMETRY-UAT",
   "feature": "owner-uat-dashboard",
   "title": "Owner UAT: Design System + Executive Dashboard on SWA",
   "description": "Facilitate Manuel Barela UAT of Design System and Executive Dashboard on Microsoft-hosted URL; capture defects as tasks.",
@@ -22,8 +22,8 @@
     "qa",
     "owner"
   ],
-  "branch": null,
-  "worktree": null,
+  "branch": "cursor/qa-release/owner-uat-ATLAS-T-1304",
+  "worktree": ".worktrees/qa-release-owner-uat",
   "affectedPaths": [
     "PROJECT_ATLAS/ORCHESTRATION/"
   ],
@@ -37,7 +37,8 @@
   "completionSummary": null,
   "releaseVersion": "orch-1.0",
   "createdAt": "2026-07-20T00:01:57Z",
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "claimedBy": null,
-  "claimedAt": null
+  "claimedAt": null,
+  "assignmentNote": "Depends on ATLAS-T-1301 CORS (in QA Review). Owner UAT on SWA URL; capture defects as child tasks."
 }

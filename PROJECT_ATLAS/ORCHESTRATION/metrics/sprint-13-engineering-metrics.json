@@ -1,0 +1,30 @@
+{
+  "sprint": 13,
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "definitions": {
+    "leadTimeHours": "createdAt \u2192 Closed",
+    "cycleTimeHours": "claimedAt \u2192 Waiting Review",
+    "blockedTimeHours": "sum of intervals in Blocked",
+    "idleTimeHours": "agent without In Progress heartbeat"
+  },
+  "targets": {
+    "qaFailureRateMax": 0.2,
+    "reviewDurationHoursMax": 24,
+    "velocityPoints": 32
+  },
+  "counters": {
+    "tasksCreated": 0,
+    "tasksClosed": 0,
+    "qaFailures": 0,
+    "architectureIssues": 0,
+    "securityFindings": 0,
+    "documentationGaps": 0
+  },
+  "snapshots": [
+    {
+      "at": "2026-07-20T00:23:46Z",
+      "ready": 7,
+      "note": "Sprint 13 kickoff baseline \u2014 refresh via board.sh"
+    }
+  ]
+}

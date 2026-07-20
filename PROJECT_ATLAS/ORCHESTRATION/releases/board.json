@@ -1,17 +1,22 @@
 {
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "active": [
     {
-      "version": "orch-1.0",
+      "version": "s13-elite-telemetry-uat",
       "stage": "Implementation",
+      "feature": "FEAT-S13-ELITE-TELEMETRY-UAT",
       "taskIds": [
-        "ATLAS-T-1201",
-        "ATLAS-T-1202",
-        "ATLAS-T-1203",
-        "ATLAS-T-1204",
-        "ATLAS-T-1205"
+        "ATLAS-T-1301",
+        "ATLAS-T-1302",
+        "ATLAS-T-1303",
+        "ATLAS-T-1304",
+        "ATLAS-T-1310",
+        "ATLAS-T-1311",
+        "ATLAS-T-1312",
+        "ATLAS-T-1313"
       ],
-      "ownerApprovalRequired": false
+      "ownerApprovalRequired": true,
+      "notes": "Owner UAT (1304) required before production promotion claims"
     }
   ],
   "upcoming": [

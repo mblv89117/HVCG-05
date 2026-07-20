@@ -1,13 +1,13 @@
 {
   "agentId": "master-pm",
-  "currentTask": "ATLAS-T-1208",
+  "currentTask": null,
   "currentBranch": null,
-  "status": "Idle",
-  "currentAction": "closed ATLAS-T-1208 validation",
-  "progressPercent": 100,
-  "lastActivity": "2026-07-20T00:19:13Z",
+  "status": "In Progress",
+  "currentAction": "Sprint 13 kickoff \u2014 assignments published",
+  "progressPercent": 10,
+  "lastActivity": "2026-07-20T00:23:46Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "executive report",
-  "heartbeatTime": "2026-07-20T00:19:13Z"
+  "nextAction": "Monitor claims; clear review bottlenecks",
+  "heartbeatTime": "2026-07-20T00:23:46Z"
 }

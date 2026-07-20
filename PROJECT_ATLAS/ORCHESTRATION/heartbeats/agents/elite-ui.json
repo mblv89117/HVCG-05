@@ -3,11 +3,11 @@
   "currentTask": null,
   "currentBranch": null,
   "status": "Idle",
-  "currentAction": "verified data-engineering already registered in Sprint 12 registry; no DE claim (out of ownership)",
-  "progressPercent": 0.0,
-  "lastActivity": "2026-07-20T00:09:04Z",
+  "currentAction": "Ready work available: ATLAS-T-1303",
+  "progressPercent": 0,
+  "lastActivity": "2026-07-20T00:23:46Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "await ATLAS-T-1302 then claim ATLAS-T-1303",
-  "heartbeatTime": "2026-07-20T00:09:04Z"
+  "nextAction": "Claim ATLAS-T-1303 on exclusive branch",
+  "heartbeatTime": "2026-07-20T00:23:46Z"
 }

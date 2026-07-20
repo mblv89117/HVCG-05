@@ -5,7 +5,7 @@
   "feature": "agent-onboarding",
   "title": "Onboard specialist agents to discover Ready queue",
   "description": "Update agent handbooks and AGENT_ASSIGNMENTS so every agent starts by running orchestration list-ready + heartbeat.",
-  "assignedAgent": "documentation",
+  "assignedAgent": "documentation-manager",
   "priority": "P1",
   "complexity": "S",
   "estimatedEffortHours": 3,
@@ -35,7 +35,8 @@
   "completionSummary": null,
   "releaseVersion": "orch-1.0",
   "createdAt": "2026-07-20T00:01:57Z",
-  "updatedAt": "2026-07-20T00:05:34Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "claimedBy": "documentation",
-  "claimedAt": "2026-07-20T00:05:34Z"
+  "claimedAt": "2026-07-20T00:05:34Z",
+  "notes": "agentId migrated from documentation \u2192 documentation-manager"
 }

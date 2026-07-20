@@ -1,0 +1,48 @@
+{
+  "sprint": 13,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Ready",
+  "complexity": "S",
+  "estimatedEffortHours": 3,
+  "requiredReviews": [
+    "master-pm"
+  ],
+  "branch": "cursor/finance-intelligence/s13-cost-brief-ATLAS-T-1315",
+  "worktree": ".worktrees/finance-intelligence-s13-cost-brief",
+  "affectedPaths": [
+    "docs/finance/",
+    "PROJECT_ATLAS/ORCHESTRATION/dashboards/"
+  ],
+  "requiredTests": [
+    "scripts/orchestration/tests/test_orch.py"
+  ],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "ownerApprovalRequired": false,
+  "completionSummary": null,
+  "claimedBy": null,
+  "claimedAt": null,
+  "createdAt": "2026-07-20T00:23:46Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "createdBy": "master-pm",
+  "releaseVersion": "s13-1.0",
+  "id": "ATLAS-T-1315",
+  "epic": "OPS-INTEL-S13",
+  "feature": "finance-dev-cost-brief",
+  "title": "Finance Intelligence: Sprint 13 engineering investment & Azure spend brief",
+  "description": "Summarize development cost tracking approach, Azure spend (HVCG Production sub ebc84d85-\u2026), budget notes, projected operating cost assumptions. No payments or external financial communications.",
+  "assignedAgent": "finance-intelligence",
+  "priority": "P1",
+  "acceptanceCriteria": [
+    "Cost/spend brief published without secrets",
+    "Subscription HVCG Production referenced correctly",
+    "Explicit non-actions: no payments executed"
+  ],
+  "expectedArtifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/dashboards/finance-brief-s13.md"
+  ],
+  "agentClass": "operational-intelligence"
+}

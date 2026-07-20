@@ -1,0 +1,42 @@
+{
+  "id": "ATLAS-T-1307",
+  "sprint": 13,
+  "epic": "DATA-FOUNDATION",
+  "feature": "atlas-dataverse-inventory",
+  "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map",
+  "description": "Produce a living inventory of Atlas Dataverse tables (hvcg_atlas*) mapped to sample-data packs and Elite OS / Command Center consumers for agent discoverability.",
+  "assignedAgent": "data-engineering",
+  "priority": "P1",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Ready",
+  "acceptanceCriteria": [
+    "docs/data-model/ or ORCHESTRATION knowledge node lists all hvcg_atlas* tables",
+    "sample-data mapping documented",
+    "power-platform acknowledged via review"
+  ],
+  "requiredReviews": [
+    "qa",
+    "power-platform"
+  ],
+  "branch": "cursor/data-engineering/dataverse-inventory-ATLAS-T-1307",
+  "worktree": ".worktrees/data-engineering-dataverse-inventory",
+  "affectedPaths": [
+    "docs/data-model/",
+    "sample-data/",
+    "PROJECT_ATLAS/ORCHESTRATION/knowledge/"
+  ],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": null,
+  "createdAt": "2026-07-20T00:10:29Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "claimedBy": null,
+  "claimedAt": null
+}

@@ -1,7 +1,7 @@
 {
-  "sprint": 12,
-  "ref": "sprints/sprint-12.json",
-  "updatedAt": "2026-07-20T00:01:57Z",
-  "nextSprint": 13,
-  "nextSprintRef": "sprints/sprint-13-backlog.json"
+  "sprint": 13,
+  "status": "Active",
+  "updatedAt": "2026-07-20T00:23:46Z",
+  "name": "Stabilization & Production Readiness",
+  "validationFeature": "Elite OS Production Telemetry & Owner UAT Readiness"
 }

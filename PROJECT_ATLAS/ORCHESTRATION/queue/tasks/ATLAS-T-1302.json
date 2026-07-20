@@ -11,7 +11,7 @@
   "estimatedEffortHours": 1,
   "dependencies": [],
   "blockedBy": [],
-  "status": "In Progress",
+  "status": "QA Review",
   "acceptanceCriteria": [
     "Purge protection enabled",
     "Inventory updated"
@@ -31,13 +31,20 @@
     "scripts/orchestration/tests/test_orch.py"
   ],
   "validationResults": {},
-  "artifacts": [],
+  "artifacts": [
+    "infrastructure/azure/bicep/foundations.bicep",
+    "infrastructure/azure/arm/foundations.json",
+    "infrastructure/azure/scripts/provision-atlas-foundations.sh",
+    "PROJECT_ATLAS/ORCHESTRATION/registry/infrastructure.json",
+    "PROJECT_ATLAS/Architecture/Azure_Infrastructure_Guide.md"
+  ],
   "commitReferences": [],
   "ownerDecisions": [],
-  "completionSummary": null,
+  "completionSummary": "Enabled purge protection on kv-atlas-hvcg-ebc84d85 (HVCG Production). Soft-delete already on; RBAC retained. Updated Bicep/ARM/provision script, infrastructure registry, cleared TD-001.",
   "releaseVersion": "orch-1.0",
   "createdAt": "2026-07-20T00:01:57Z",
-  "updatedAt": "2026-07-20T00:05:42Z",
+  "updatedAt": "2026-07-20T00:23:46Z",
   "claimedBy": "azure-platform",
-  "claimedAt": "2026-07-20T00:04:57Z"
+  "claimedAt": "2026-07-20T00:04:57Z",
+  "sprintNotes": "KV purge protection evidence present \u2014 security/architecture review"
 }

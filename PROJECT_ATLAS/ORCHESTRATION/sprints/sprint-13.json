@@ -1,0 +1,114 @@
+{
+  "number": 13,
+  "name": "Stabilization & Production Readiness",
+  "status": "Active",
+  "directiveVersion": "3.0",
+  "startedAt": "2026-07-20T00:23:46Z",
+  "ownerDecisionsAccepted": [
+    "Accept Sprint 12 organizational alignment",
+    "Continue exclusive branch and worktree ownership",
+    "Keep Power Platform on dedicated worktree",
+    "Keep orchestration protection rules active \u2014 do not relax until Sprint 13 validation complete"
+  ],
+  "themes": [
+    {
+      "priority": 1,
+      "name": "Engineering Stability"
+    },
+    {
+      "priority": 2,
+      "name": "Production Readiness"
+    },
+    {
+      "priority": 3,
+      "name": "Microsoft Platform Validation"
+    },
+    {
+      "priority": 4,
+      "name": "Operational Intelligence"
+    },
+    {
+      "priority": 5,
+      "name": "Elite User Experience"
+    }
+  ],
+  "goals": [
+    "Validate orchestration under real engineering work",
+    "Complete one production-quality multi-specialist feature",
+    "Measure engineering performance",
+    "Improve orchestration where weaknesses appear",
+    "Prepare Atlas for production deployment"
+  ],
+  "validationFeature": {
+    "id": "FEAT-S13-ELITE-TELEMETRY-UAT",
+    "title": "Elite OS Production Telemetry & Owner UAT Readiness",
+    "rationale": "Valuable, low-risk, multi-specialist; advances production readiness and Microsoft platform validation without Production Power Platform publish.",
+    "specialists": [
+      "azure-platform",
+      "power-platform",
+      "elite-ui",
+      "security-engineering",
+      "qa-release",
+      "documentation-manager",
+      "system-architect"
+    ],
+    "taskIds": [
+      "ATLAS-T-1301",
+      "ATLAS-T-1302",
+      "ATLAS-T-1303",
+      "ATLAS-T-1304",
+      "ATLAS-T-1310",
+      "ATLAS-T-1311",
+      "ATLAS-T-1312",
+      "ATLAS-T-1313"
+    ]
+  },
+  "parallelTracks": [
+    {
+      "name": "Dataverse inventory",
+      "taskIds": [
+        "ATLAS-T-1307"
+      ]
+    },
+    {
+      "name": "Agent onboarding docs",
+      "taskIds": [
+        "ATLAS-T-1305"
+      ]
+    },
+    {
+      "name": "Operational intelligence",
+      "taskIds": [
+        "ATLAS-T-1314",
+        "ATLAS-T-1315"
+      ]
+    },
+    {
+      "name": "Sprint 12 review clearance",
+      "taskIds": [
+        "ATLAS-T-1316"
+      ]
+    }
+  ],
+  "capacityHours": 48,
+  "velocityTarget": 32,
+  "taskIds": [
+    "ATLAS-T-1301",
+    "ATLAS-T-1302",
+    "ATLAS-T-1303",
+    "ATLAS-T-1304",
+    "ATLAS-T-1305",
+    "ATLAS-T-1306",
+    "ATLAS-T-1307",
+    "ATLAS-T-1310",
+    "ATLAS-T-1311",
+    "ATLAS-T-1312",
+    "ATLAS-T-1313",
+    "ATLAS-T-1314",
+    "ATLAS-T-1315",
+    "ATLAS-T-1316"
+  ],
+  "metricsPath": "PROJECT_ATLAS/ORCHESTRATION/metrics/sprint-13-engineering-metrics.json",
+  "executiveBriefPath": "PROJECT_ATLAS/ORCHESTRATION/dashboards/owner-daily-brief-s13.md",
+  "orchestrationSafety": "LOCKED \u2014 do not relax exclusivity/protection until Sprint 13 end validation"
+}
