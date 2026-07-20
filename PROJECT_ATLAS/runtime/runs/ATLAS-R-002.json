@@ -8,9 +8,9 @@
   "commitHash": null,
   "filesChanged": [],
   "startedAt": "2026-07-20T01:08:22Z",
-  "endedAt": "2026-07-20T01:08:22Z",
+  "endedAt": "2026-07-20T01:12:01Z",
   "status": "blocked",
-  "errorDetails": "Cursor API POST /agents failed: HTTP 401 Invalid User API Key. Keychain service CURSOR_API_KEY is present (len=182, hex-like) but rejected by api.cursor.com under Basic and Bearer auth. GET /v1/models also returned 401.",
+  "errorDetails": "Resume auth probe failed: GET https://api.cursor.com/v1/models HTTP 401 Invalid User API Key. Keychain CURSOR_API_KEY unchanged fingerprint sha256_12=580f767240b8 len=182 hex-like (not a Cursor User API Key prefix).",
   "agentUrl": null,
   "resultText": null,
   "durationMs": null,
@@ -31,11 +31,36 @@
       "keyLooksLikeCursorUserKeyPrefix": false
     },
     "authAttempts": [
-      {"method": "basic", "endpoint": "POST /v1/agents", "status": 401},
-      {"method": "basic", "endpoint": "GET /v1/models", "status": 401},
-      {"method": "bearer", "endpoint": "GET /v1/models", "status": 401}
+      {
+        "method": "basic",
+        "endpoint": "POST /v1/agents",
+        "status": 401
+      },
+      {
+        "method": "basic",
+        "endpoint": "GET /v1/models",
+        "status": 401
+      },
+      {
+        "method": "bearer",
+        "endpoint": "GET /v1/models",
+        "status": 401
+      }
     ],
     "preDispatchCommit": "9891e1df6df8d9be426a8e3ca45ffcdd49584656",
-    "validationBranchPushed": true
+    "validationBranchPushed": true,
+    "resumeAuthProbe": {
+      "at": "2026-07-20T01:12:01Z",
+      "endpoint": "GET https://api.cursor.com/v1/models",
+      "httpStatus": 401,
+      "responseBody": {
+        "code": "error",
+        "message": "Invalid User API Key"
+      },
+      "keySource": "keychain:CURSOR_API_KEY",
+      "keyFingerprintSha256_12": "580f767240b8",
+      "keyLen": 182,
+      "keyLooksLikeCursorUserKeyPrefix": false
+    }
   }
 }
