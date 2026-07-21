@@ -213,19 +213,15 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
 
   return (
     <ModuleScaffold
-      title={ws.name}
-      subtitle={`${ws.kind === 'internal' ? 'Internal workspace' : 'Client operating system'} · ${ws.engagementStatus}`}
-      showPendingBanner={ws.kind === 'client'}
+      title={`${ws.name} (demo catalog)`}
+      subtitle={`DEMO ONLY · not live Client 360 · ${ws.engagementStatus}`}
+      showPendingBanner={true}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Link to="/banking">
-            <Button appearance="secondary" size="small">
-              Banking
-            </Button>
-          </Link>
+          <StatusChip label="DEMO DATA" tone="warning" />
           <Link to="/clients">
-            <Button appearance="secondary" size="small">
-              All clients
+            <Button appearance="primary" size="small">
+              Live clients
             </Button>
           </Link>
         </div>

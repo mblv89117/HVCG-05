@@ -14,6 +14,8 @@
 param(
   [string]$RepoRoot = '',
   [string]$Client360JsonPath = '',
+  [ValidateSet('development', 'test', 'production')]
+  [string]$Environment = 'development',
   [switch]$DeviceLogin,
   [switch]$WhatIf
 )
@@ -26,9 +28,9 @@ if (-not $RepoRoot) {
 
 Import-Module (Join-Path $RepoRoot 'deployment/lib/HVCG.Deployment.psm1') -Force
 Import-Module (Join-Path $RepoRoot 'deployment/lib/HVCG.Release.psm1') -Force
-$Report = New-HVCGDeploymentReport -Environment 'development-client-import' -RepoRoot $RepoRoot
+$Report = New-HVCGDeploymentReport -Environment "$Environment-client-import" -RepoRoot $RepoRoot
 
-$Config = Get-HVCGOSConfig -RepoRoot $RepoRoot -Environment development
+$Config = Get-HVCGOSConfig -RepoRoot $RepoRoot -Environment $Environment
 Assert-HVCGConfig -Config $Config -Report $Report
 Install-HVCGModules -Report $Report | Out-Null
 $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
@@ -36,7 +38,7 @@ $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
 $siteUrl = $Config.sites.commandCenter.url
 $cid = Resolve-HVCGPnPClientId -Config $Config
 
-Write-HVCGLog -Level STEP -Message "Connecting to $siteUrl (DeviceLogin=$DeviceLogin)" -Report $Report
+Write-HVCGLog -Level STEP -Message "Connecting to $siteUrl (DeviceLogin=$DeviceLogin env=$Environment)" -Report $Report
 if ($DeviceLogin) {
   Connect-PnPOnline -Url $siteUrl -DeviceLogin -ClientId $cid -ErrorAction Stop | Out-Null
 }

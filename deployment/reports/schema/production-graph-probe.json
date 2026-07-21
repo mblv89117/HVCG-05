@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-07-21T05:46:59.101Z",
+  "environment": "production",
+  "sites": [
+    {
+      "alias": "HVCG-CommandCenter",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+      "listCount": 6,
+      "hasClientsList": false,
+      "columnCount": 0,
+      "itemSampleCount": 0,
+      "sample": []
+    },
+    {
+      "alias": "HVCG-Knowledge",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge",
+      "listCount": 2,
+      "hasClientsList": false,
+      "columnCount": 0,
+      "itemSampleCount": 0,
+      "sample": []
+    },
+    {
+      "alias": "HVCG-Clients",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients",
+      "listCount": 2,
+      "hasClientsList": false,
+      "columnCount": 0,
+      "itemSampleCount": 0,
+      "sample": []
+    }
+  ]
+}

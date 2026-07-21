@@ -242,6 +242,23 @@ export interface Client360Candidate {
   domains?: string[];
   phones?: string[];
   completenessScore?: number;
+  recommendedNextActions?: string[];
+  businessEntities?: string[];
+  timeline?: Array<{
+    at: string;
+    kind: string;
+    title: string;
+    sourceRecordId: string;
+    connectionId: string;
+  }>;
+  sourceRefs?: Array<{
+    connectionId: string;
+    sourceRecordId: string;
+    kind: string;
+    title: string;
+    businessEntity?: string;
+    occurredAt?: string;
+  }>;
   associations?: {
     emails?: string[];
     documents?: string[];
@@ -255,6 +272,51 @@ export async function fetchClient360(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/client360`, { headers: headers(auth) });
   const data = (await parse(res)) as { candidates?: Client360Candidate[]; clients?: Client360Candidate[] };
   return { clients: data.clients || data.candidates || [] };
+}
+
+export async function fetchClient360Detail(auth: AtlasHubAuthHeaders, clientId: string) {
+  const res = await fetch(`${base()}/api/client360/${encodeURIComponent(clientId)}`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ client: Client360Candidate }>;
+}
+
+export interface Client360Document {
+  id: string;
+  title: string;
+  kind: string;
+  webUrl?: string;
+  path?: string;
+  classification?: string;
+  sensitivityRestricted?: boolean;
+  sensitivityReasons?: string[];
+  sourceTenant?: string;
+  sourceAccount?: string;
+  sourceRecordId?: string;
+  migrationStatus?: string;
+  modifiedAt?: string;
+  searchVisible?: boolean;
+}
+
+export async function fetchClient360Documents(auth: AtlasHubAuthHeaders, clientId: string) {
+  const res = await fetch(
+    `${base()}/api/client360/${encodeURIComponent(clientId)}/documents`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{
+    clientId: string;
+    displayName: string;
+    count: number;
+    restrictedOmitted: boolean;
+    documents: Client360Document[];
+  }>;
+}
+
+export async function fetchMigrationSummary(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/client360/migration/summary`, {
+    headers: headers(auth),
+  });
+  return parse(res);
 }
 
 export interface ExecutiveDashboard {

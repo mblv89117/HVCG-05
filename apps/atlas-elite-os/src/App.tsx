@@ -14,8 +14,7 @@ import { AdminPage } from './pages/AdminPage';
 import {
   AiInsightsPage,
   CapitalPage,
-  ClientDetailPage,
-  ClientsPage,
+  ClientDetailPage as DemoClientDetailPage,
   DocumentsPage,
   EnterpriseValuePage,
   FinancialsPage,
@@ -23,6 +22,8 @@ import {
   RevenuePage,
   TasksPage,
 } from './pages/Modules';
+import { ClientsPage } from './pages/LiveClientsPage';
+import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
 import { AccessDeniedPage } from './pages/SystemPages';
@@ -36,7 +37,11 @@ function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
   const { can } = useAtlasRole();
   if (!can('viewClientDetail')) return <Navigate to="/access-denied" replace />;
-  return <ClientDetailPage workspaceId={workspaceId} />;
+  // Prefer live Client 360 IDs; demo catalog detail remains at /clients/demo/:id
+  if (workspaceId.startsWith('demo-') || workspaceId.startsWith('ws-')) {
+    return <DemoClientDetailPage workspaceId={workspaceId} />;
+  }
+  return <LiveClientDetailPage clientId={workspaceId} />;
 }
 
 function ProjectDetailRoute() {

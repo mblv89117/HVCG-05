@@ -373,6 +373,105 @@ export async function handleRequest(
       return;
     }
 
+    // GET /api/client360/migration/summary — HVS link-first migration status
+    if (method === 'GET' && path === '/api/client360/migration/summary') {
+      requirePrincipal(req, cfg);
+      const records = repo.listAllSourceRecords(500_000).filter(
+        (r) => r.fields?.migrationStatus === 'link_only',
+      );
+      const byClient: Record<string, number> = {};
+      let restricted = 0;
+      for (const r of records) {
+        const name = String(r.fields.atlasClientName || 'Unknown');
+        byClient[name] = (byClient[name] || 0) + 1;
+        if (r.fields.sensitivityRestricted) restricted++;
+      }
+      send(
+        res,
+        200,
+        {
+          mode: 'link_first',
+          originalsUnchanged: true,
+          hvsMutated: false,
+          linkedDocuments: records.length,
+          restrictedDocuments: restricted,
+          byClient,
+        },
+        origin,
+      );
+      return;
+    }
+
+    // GET /api/client360/:id
+    const clientMatch = path.match(/^\/api\/client360\/([^/]+)$/);
+    if (method === 'GET' && clientMatch) {
+      requirePrincipal(req, cfg);
+      const id = decodeURIComponent(clientMatch[1]);
+      const cand = repo.listClient360().find((c) => c.id === id);
+      if (!cand) {
+        send(res, 404, { error: 'client_not_found' }, origin);
+        return;
+      }
+      send(res, 200, { client: cand }, origin);
+      return;
+    }
+
+    // GET /api/client360/:id/documents — HVS link-first docs (restricted excluded from broad list)
+    const docsMatch = path.match(/^\/api\/client360\/([^/]+)\/documents$/);
+    if (method === 'GET' && docsMatch) {
+      requirePrincipal(req, cfg);
+      const id = decodeURIComponent(docsMatch[1]);
+      const cand = repo.listClient360().find((c) => c.id === id);
+      if (!cand) {
+        send(res, 404, { error: 'client_not_found' }, origin);
+        return;
+      }
+      const includeRestricted = new URL(req.url || '', 'http://local').searchParams.get('includeRestricted') === '1';
+      const docIds = new Set(cand.associations.documents);
+      const hvsKeys = new Set(
+        cand.sourceRefs.filter((s) => s.businessEntity === 'HVS').map((s) => s.sourceRecordId),
+      );
+      const records = repo.listAllSourceRecords(500_000).filter((r) => {
+        if (docIds.has(r.id)) return true;
+        if (hvsKeys.has(r.provenance.sourceRecordId)) return true;
+        if (String(r.fields.atlasClientId || '') === id) return true;
+        const name = String(r.fields.atlasClientName || '').toLowerCase();
+        return name && name === (cand.displayName || '').toLowerCase();
+      });
+      const documents = records
+        .filter((r) => includeRestricted || !r.fields.sensitivityRestricted)
+        .slice(0, 500)
+        .map((r) => ({
+          id: r.id,
+          title: r.title,
+          kind: r.kind,
+          webUrl: r.fields.webUrl || r.provenance.sourceUrl,
+          path: r.fields.path,
+          classification: r.fields.atlasClassification || r.fields.documentClass,
+          sensitivityRestricted: Boolean(r.fields.sensitivityRestricted),
+          sensitivityReasons: r.fields.sensitivityReasons || [],
+          sourceTenant: r.fields.sourceTenant || 'highvaluesolution.com',
+          sourceAccount: r.fields.accountEmail || r.provenance.sourceAccount,
+          sourceRecordId: r.provenance.sourceRecordId,
+          migrationStatus: r.fields.migrationStatus || 'link_only',
+          modifiedAt: r.fields.occurredAt || r.provenance.originalModifiedAt,
+          searchVisible: r.fields.searchVisible !== false && !r.fields.sensitivityRestricted,
+        }));
+      send(
+        res,
+        200,
+        {
+          clientId: id,
+          displayName: cand.displayName,
+          count: documents.length,
+          restrictedOmitted: !includeRestricted,
+          documents,
+        },
+        origin,
+      );
+      return;
+    }
+
     // POST routes
     if (method !== 'POST') {
       send(res, 405, { error: 'method_not_allowed' }, origin);
