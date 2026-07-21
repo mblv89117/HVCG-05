@@ -268,17 +268,72 @@ export interface Client360Candidate {
   };
 }
 
+type Client360Snapshot = {
+  generatedAt?: string;
+  clients?: Array<
+    Client360Candidate & {
+      documentCount?: number;
+      documents?: Client360Document[];
+    }
+  >;
+};
+
+let snapshotCache: Client360Snapshot | null | undefined;
+
+async function loadClient360Snapshot(): Promise<Client360Snapshot | null> {
+  if (snapshotCache !== undefined) return snapshotCache;
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}client360-snapshot.json`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      snapshotCache = null;
+      return null;
+    }
+    snapshotCache = (await res.json()) as Client360Snapshot;
+    return snapshotCache;
+  } catch {
+    snapshotCache = null;
+    return null;
+  }
+}
+
+function isHubUnreachable(err: unknown): boolean {
+  const msg = String((err as Error)?.message || err || '');
+  return /failed to fetch|networkerror|load failed|mixed content|err_connection|econnrefused/i.test(msg);
+}
+
 export async function fetchClient360(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/client360`, { headers: headers(auth) });
-  const data = (await parse(res)) as { candidates?: Client360Candidate[]; clients?: Client360Candidate[] };
-  return { clients: data.clients || data.candidates || [] };
+  try {
+    const res = await fetch(`${base()}/api/client360`, { headers: headers(auth) });
+    const data = (await parse(res)) as { candidates?: Client360Candidate[]; clients?: Client360Candidate[] };
+    return { clients: data.clients || data.candidates || [], source: 'hub' as const };
+  } catch (err) {
+    if (!isHubUnreachable(err)) throw err;
+    const snap = await loadClient360Snapshot();
+    if (!snap?.clients?.length) throw err;
+    return {
+      clients: snap.clients.map(({ documents: _docs, documentCount: _n, ...c }) => c),
+      source: 'snapshot' as const,
+      snapshotGeneratedAt: snap.generatedAt,
+    };
+  }
 }
 
 export async function fetchClient360Detail(auth: AtlasHubAuthHeaders, clientId: string) {
-  const res = await fetch(`${base()}/api/client360/${encodeURIComponent(clientId)}`, {
-    headers: headers(auth),
-  });
-  return parse(res) as Promise<{ client: Client360Candidate }>;
+  try {
+    const res = await fetch(`${base()}/api/client360/${encodeURIComponent(clientId)}`, {
+      headers: headers(auth),
+    });
+    return parse(res) as Promise<{ client: Client360Candidate }>;
+  } catch (err) {
+    if (!isHubUnreachable(err)) throw err;
+    const snap = await loadClient360Snapshot();
+    const client = snap?.clients?.find((c) => c.id === clientId);
+    if (!client) throw err;
+    const { documents: _docs, documentCount: _n, ...rest } = client;
+    return { client: rest };
+  }
 }
 
 export interface Client360Document {
@@ -299,17 +354,32 @@ export interface Client360Document {
 }
 
 export async function fetchClient360Documents(auth: AtlasHubAuthHeaders, clientId: string) {
-  const res = await fetch(
-    `${base()}/api/client360/${encodeURIComponent(clientId)}/documents`,
-    { headers: headers(auth) },
-  );
-  return parse(res) as Promise<{
-    clientId: string;
-    displayName: string;
-    count: number;
-    restrictedOmitted: boolean;
-    documents: Client360Document[];
-  }>;
+  try {
+    const res = await fetch(
+      `${base()}/api/client360/${encodeURIComponent(clientId)}/documents`,
+      { headers: headers(auth) },
+    );
+    return parse(res) as Promise<{
+      clientId: string;
+      displayName: string;
+      count: number;
+      restrictedOmitted: boolean;
+      documents: Client360Document[];
+    }>;
+  } catch (err) {
+    if (!isHubUnreachable(err)) throw err;
+    const snap = await loadClient360Snapshot();
+    const client = snap?.clients?.find((c) => c.id === clientId);
+    if (!client) throw err;
+    const documents = client.documents || [];
+    return {
+      clientId,
+      displayName: client.displayName,
+      count: client.documentCount ?? documents.length,
+      restrictedOmitted: true,
+      documents,
+    };
+  }
 }
 
 export async function fetchMigrationSummary(auth: AtlasHubAuthHeaders) {

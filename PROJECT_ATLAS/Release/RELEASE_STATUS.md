@@ -1,8 +1,8 @@
 # Release Status — Project Atlas
 
-**As of:** 2026-07-20  
+**As of:** 2026-07-21  
 **Authority:** Integration & Release Manager  
-**Recommendation:** **NO-GO for Production** · **CONDITIONAL GO for Owner Local UAT** · **RC1 designated** — see [RELEASE_CANDIDATE_1.md](./RELEASE_CANDIDATE_1.md)
+**Recommendation:** **CONDITIONAL GO for Owner Local UAT** · **NO-GO for tag `atlas-v1.0.0-production`** until SWA redeploy + Power Automate + E2E QA GO — see [ATLAS_PRODUCTION_READINESS.md](../../deployment/reports/ATLAS_PRODUCTION_READINESS.md)
 
 ## Current integration
 
@@ -93,14 +93,15 @@ See [DEFECT_LIST.md](./DEFECT_LIST.md).
 
 | Target | Status |
 |--------|--------|
-| Local owner UAT | **READY** at http://127.0.0.1:5180 |
-| Dev SWA (prior) | Live at prior SHA `ce59f8e` — not yet redeployed from integration |
+| Local owner UAT | **READY** at http://127.0.0.1:5180 (LaunchAgents) |
+| Production SharePoint | **PASS** — Command Center 82/82 lists, 7 clients (Graph verified 2026-07-21) |
+| Dev SWA | Live https://zealous-rock-0090c7e1e.7.azurestaticapps.net — **redeploy from this branch still required** |
 | Azure staging | **NOT READY** — see AZURE_STAGING_READINESS.md |
-| Production | **NO-GO** |
+| Tag `atlas-v1.0.0-production` | **HOLD** |
 
 ## Production readiness
 
-**NO-GO.** Requires: QA written GO, Entra verified, Plaid Sandbox QA GO, QBO decision, staging Key Vault validation, no P0s.
+**Schema/data gate: PASS.** Tag still **HOLD** for: SWA redeploy (or waiver), Power Automate production, E2E QA written GO. See `deployment/reports/ATLAS_PRODUCTION_READINESS.md`.
 
 ## Owner actions
 

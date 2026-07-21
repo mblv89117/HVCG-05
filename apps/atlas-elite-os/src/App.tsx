@@ -35,8 +35,11 @@ import { ModuleScaffold } from './pages/shared/ModuleScaffold';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
-  const { can } = useAtlasRole();
-  if (!can('viewClientDetail')) return <Navigate to="/access-denied" replace />;
+  const { can, role } = useAtlasRole();
+  // Match ClientsRoute: allow unauthenticated read of Live Client 360 (snapshot/hub).
+  if (role !== 'Unauthenticated' && !can('viewClientDetail')) {
+    return <Navigate to="/access-denied" replace />;
+  }
   // Prefer live Client 360 IDs; demo catalog detail remains at /clients/demo/:id
   if (workspaceId.startsWith('demo-') || workspaceId.startsWith('ws-')) {
     return <DemoClientDetailPage workspaceId={workspaceId} />;

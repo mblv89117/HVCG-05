@@ -43,7 +43,13 @@ export function loadConfig() {
       : !isLocal,
     allowedOrigins: (
       process.env.INTEGRATION_ALLOWED_ORIGINS ||
-      'http://127.0.0.1:5180,http://localhost:5180,http://127.0.0.1:5173,http://localhost:5173'
+      [
+        'http://127.0.0.1:5180',
+        'http://localhost:5180',
+        'http://127.0.0.1:5173',
+        'http://localhost:5173',
+        'https://zealous-rock-0090c7e1e.7.azurestaticapps.net',
+      ].join(',')
     )
       .split(',')
       .map((s) => s.trim())
