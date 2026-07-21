@@ -14,3 +14,10 @@ apps/atlas-elite-os/tsconfig.tsbuildinfo
 config/environments/development.json
 config/environments/test.json
 config/environments/production.json
+
+# HVS inventory bulk dumps (keep summaries in reports)
+deployment/reports/hvs-onedrive-inventory/inventory-*.json
+deployment/reports/hvs-onedrive-inventory/inventory-*.csv
+deployment/reports/hvs-onedrive-inventory/migration-manifest-*.json
+deployment/reports/hvs-onedrive-inventory/review-queue-*.json
+deployment/reports/hvs-onedrive-inventory/delta-link-*.txt
