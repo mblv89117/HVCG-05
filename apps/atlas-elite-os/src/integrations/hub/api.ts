@@ -230,7 +230,31 @@ export async function rebuildClient360(auth: AtlasHubAuthHeaders) {
     method: 'POST',
     headers: headers(auth),
   });
-  return parse(res) as Promise<{ candidates: unknown[]; dashboard?: ExecutiveDashboard }>;
+  return parse(res) as Promise<{ candidates: Client360Candidate[]; dashboard?: ExecutiveDashboard }>;
+}
+
+export interface Client360Candidate {
+  id: string;
+  displayName: string;
+  legalName?: string;
+  lifecycle?: string;
+  emails?: string[];
+  domains?: string[];
+  phones?: string[];
+  completenessScore?: number;
+  associations?: {
+    emails?: string[];
+    documents?: string[];
+    meetings?: string[];
+    conversations?: string[];
+    attachments?: string[];
+  };
+}
+
+export async function fetchClient360(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/client360`, { headers: headers(auth) });
+  const data = (await parse(res)) as { candidates?: Client360Candidate[]; clients?: Client360Candidate[] };
+  return { clients: data.clients || data.candidates || [] };
 }
 
 export interface ExecutiveDashboard {

@@ -6,9 +6,11 @@ storybook-static/
 *.log
 .DS_Store
 apps/atlas-elite-os/tsconfig.tsbuildinfo
-
 .secrets/
-.npm-cache/
 .data/
 **/plaid-store.json
 **/integration-store.json
+# Local environment configs (never commit secrets / tenant wiring)
+config/environments/development.json
+config/environments/test.json
+config/environments/production.json

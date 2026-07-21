@@ -1,0 +1,102 @@
+# HVCG Schema Validation Report
+
+- **Phase:** unit-test
+- **Generated (UTC):** 2026-07-21T05:28:01.1593970Z
+- **Site:** https://example.sharepoint.com/sites/mock
+- **Lists checked:** 82
+- **Fields OK:** 9
+- **Missing:** 82
+- **Extra:** 1
+- **Mismatched:** 1
+- **Compliant:** False
+- **Has drift:** True
+
+## Missing
+- List:HVCG_Clients
+- List:HVCG_Contacts
+- List:HVCG_ReferralPartners
+- List:HVCG_Leads
+- List:HVCG_Referrals
+- List:HVCG_Opportunities
+- List:HVCG_OpportunityActivities
+- List:HVCG_DiscoveryCalls
+- List:HVCG_Proposals
+- List:HVCG_WinLossAnalyses
+- List:HVCG_Engagements
+- List:HVCG_Projects
+- List:HVCG_Workstreams
+- List:HVCG_Milestones
+- List:HVCG_Tasks
+- List:HVCG_DocumentRequests
+- List:HVCG_Deliverables
+- List:HVCG_Meetings
+- List:HVCG_Communications
+- List:HVCG_Decisions
+- List:HVCG_Risks
+- List:HVCG_Issues
+- List:HVCG_ChangeRequests
+- List:HVCG_Assumptions
+- List:HVCG_Dependencies
+- List:HVCG_Approvals
+- List:HVCG_CapitalSources
+- List:HVCG_Lenders
+- List:HVCG_Investors
+- List:HVCG_CapitalOpportunities
+- List:HVCG_FundingMilestones
+- List:HVCG_InvestorOutreach
+- List:HVCG_LenderOutreach
+- List:HVCG_Invoices
+- List:HVCG_FinancialMilestones
+- List:HVCG_CollectionsActivities
+- List:HVCG_Budgets
+- List:HVCG_ExpenseApprovals
+- List:HVCG_RevenueForecastLines
+- HVCG_TeamMembers.Email
+- List:HVCG_TimeEntries
+- List:HVCG_Templates
+- List:HVCG_SOPs
+- List:HVCG_Policies
+- List:HVCG_Vendors
+- List:HVCG_SoftwareInventory
+- List:HVCG_Subscriptions
+- List:HVCG_RecurringExpenses
+- List:HVCG_InternalProjects
+- List:HVCG_MeetingPlaybooks
+- List:HVCG_SalesScripts
+- List:HVCG_TrainingCatalog
+- List:HVCG_PortalAccess
+- List:HVCG_PortalMessages
+- List:HVCG_PortalDeliverableLinks
+- List:HVCG_AI_Tasks
+- List:HVCG_AI_Reviews
+- List:HVCG_AI_GeneratedDocuments
+- List:HVCG_AI_SuggestedActions
+- List:HVCG_AI_DraftEmails
+- List:HVCG_AI_MeetingSummaries
+- List:HVCG_AI_SOPDrafts
+- List:HVCG_AI_QualityReviews
+- List:HVCG_AI_Escalations
+- List:HVCG_AI_KnowledgeExtraction
+- List:HVCG_Relationships
+- List:HVCG_AIWorkers
+- List:HVCG_AIPrompts
+- List:HVCG_AIToolRegistry
+- List:HVCG_AIContext
+- List:HVCG_AIJobs
+- List:HVCG_AIJobSteps
+- List:HVCG_AIOutputs
+- List:HVCG_AIApprovals
+- List:HVCG_AIFeedback
+- List:HVCG_AIAuditLog
+- List:HVCG_AICostTracking
+- List:HVCG_OperationalAlerts
+- List:HVCG_SystemInfo
+- List:HVCG_AutomationLogs
+- List:HVCG_Notifications
+- List:HVCG_AuditEvents
+
+## Extra
+- HVCG_TeamMembers.LegacyGhostField
+
+## Mismatched
+- HVCG_TeamMembers.IsActive:schema=Boolean:sp=Text

@@ -1,0 +1,228 @@
+{
+  "started": "2026-07-20T22:27:59.5242120-07:00",
+  "checks": [
+    {
+      "name": "schema_integrity",
+      "passed": true,
+      "detail": "validate_predeployment.py exit=0"
+    },
+    {
+      "name": "script_exists:deployment/Deploy-HVCGDevelopment.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/Deploy-HVCGDevelopment.ps1"
+    },
+    {
+      "name": "script_exists:deployment/lib/HVCG.Deployment.psm1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/lib/HVCG.Deployment.psm1"
+    },
+    {
+      "name": "script_exists:deployment/scripts/Install-HVCGLists.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/scripts/Install-HVCGLists.ps1"
+    },
+    {
+      "name": "script_exists:deployment/scripts/New-HVCGEntraGroups.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/scripts/New-HVCGEntraGroups.ps1"
+    },
+    {
+      "name": "script_exists:deployment/scripts/New-HVCGClientWorkspace.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/scripts/New-HVCGClientWorkspace.ps1"
+    },
+    {
+      "name": "script_exists:deployment/scripts/New-HVCGProjectFromTemplate.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/scripts/New-HVCGProjectFromTemplate.ps1"
+    },
+    {
+      "name": "script_exists:deployment/install/Install-HVCGOS.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/install/Install-HVCGOS.ps1"
+    },
+    {
+      "name": "script_exists:deployment/upgrade/Upgrade-HVCGOS.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/upgrade/Upgrade-HVCGOS.ps1"
+    },
+    {
+      "name": "script_exists:deployment/rollback/Rollback-HVCGOS.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/rollback/Rollback-HVCGOS.ps1"
+    },
+    {
+      "name": "script_exists:deployment/backup/Backup-HVCGOS.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/backup/Backup-HVCGOS.ps1"
+    },
+    {
+      "name": "script_exists:deployment/restore/Restore-HVCGOS.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/restore/Restore-HVCGOS.ps1"
+    },
+    {
+      "name": "script_exists:deployment/health/Invoke-HVCGOSOperationalHealth.ps1",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/health/Invoke-HVCGOSOperationalHealth.ps1"
+    },
+    {
+      "name": "ps_parse:deployment/Deploy-HVCGDevelopment.ps1",
+      "passed": true,
+      "detail": "parsed OK"
+    },
+    {
+      "name": "ps_parse:deployment/lib/HVCG.Deployment.psm1",
+      "passed": true,
+      "detail": "parsed OK"
+    },
+    {
+      "name": "ps_parse:tests/Invoke-HVCGPreDeploymentTests.ps1",
+      "passed": true,
+      "detail": "parsed OK"
+    },
+    {
+      "name": "env_placeholders:config/environments/development.example.json",
+      "passed": true,
+      "detail": "requiredFields=5"
+    },
+    {
+      "name": "env_placeholders:config/environments/production.example.json",
+      "passed": true,
+      "detail": "requiredFields=6"
+    },
+    {
+      "name": "flow_definitions",
+      "passed": true,
+      "detail": "count=16"
+    },
+    {
+      "name": "no_secrets_in_examples",
+      "passed": true,
+      "detail": "scanned example configs"
+    },
+    {
+      "name": "semver_sync",
+      "passed": true,
+      "detail": "VERSION=1.1.0 version.json=1.1.0"
+    },
+    {
+      "name": "release_notes",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/v1.1.0/notes/RELEASE_NOTES.md"
+    },
+    {
+      "name": "baseline_migration",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/migrations/20260714_001_baseline_v1_0_0.json"
+    },
+    {
+      "name": "installer_present",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/install/Install-HVCGOS.ps1"
+    },
+    {
+      "name": "migration_1_1_0",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/migrations/20260714_002_intelligence_ai_backup_v1_1_0.json"
+    },
+    {
+      "name": "release_notes_1_1_0",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/v1.1.0/notes/RELEASE_NOTES.md"
+    },
+    {
+      "name": "release_immutability_v1_0_0",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/v1.0.0/notes/RELEASE_NOTES.md"
+    },
+    {
+      "name": "intelligence_ai_backup",
+      "passed": true,
+      "detail": "test_intelligence_ai_backup.py"
+    },
+    {
+      "name": "pnp_auth_packaging",
+      "passed": true,
+      "detail": "test_pnp_auth.py"
+    },
+    {
+      "name": "field_provisioning_strictmode",
+      "passed": true,
+      "detail": "test_field_provisioning.py"
+    },
+    {
+      "name": "opportunity_crm_module",
+      "passed": true,
+      "detail": "test_opportunity_crm.py"
+    },
+    {
+      "name": "opportunity_crm_migration",
+      "passed": true,
+      "detail": "test_opportunity_migration.py"
+    },
+    {
+      "name": "opportunity_crm_lifecycle",
+      "passed": true,
+      "detail": "test_opportunity_lifecycle.py"
+    },
+    {
+      "name": "opportunity_crm_smoke_helpers",
+      "passed": true,
+      "detail": "tests/crm/smoke_helpers.py"
+    },
+    {
+      "name": "opportunity_crm_acceptance_offline",
+      "passed": true,
+      "detail": "Test-HVCGOpportunityCrmAcceptance.ps1 -Offline"
+    },
+    {
+      "name": "opportunity_crm_smoke_checklist",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/docs/crm/SMOKE_TEST_CHECKLIST.md"
+    },
+    {
+      "name": "pnp_retry_layer",
+      "passed": true,
+      "detail": "Test-HVCGPnPRetry.ps1"
+    },
+    {
+      "name": "lookup_field_provisioning",
+      "passed": true,
+      "detail": "Test-HVCGLookupFieldProvisioning.ps1"
+    },
+    {
+      "name": "schema_validation_drift",
+      "passed": true,
+      "detail": "Test-HVCGSchemaValidation.ps1"
+    },
+    {
+      "name": "seed_data_strictmode",
+      "passed": true,
+      "detail": "Test-HVCGSeedData.ps1"
+    },
+    {
+      "name": "operational_health_report",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/reports/health/operational-latest.json"
+    },
+    {
+      "name": "ps_parse:deployment/backup/Backup-HVCGOS.ps1",
+      "passed": true,
+      "detail": "parsed OK"
+    },
+    {
+      "name": "ps_parse:deployment/restore/Restore-HVCGOS.ps1",
+      "passed": true,
+      "detail": "parsed OK"
+    },
+    {
+      "name": "ps_parse:deployment/health/Invoke-HVCGOSOperationalHealth.ps1",
+      "passed": true,
+      "detail": "parsed OK"
+    }
+  ],
+  "finished": "2026-07-20T22:28:03.5060910-07:00",
+  "passed": true,
+  "failureCount": 0
+}

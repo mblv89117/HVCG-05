@@ -28,6 +28,7 @@ import {
 import { PortfolioPage } from './PortfolioPage';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
+export { ClientsPage } from './LiveClientsPage';
 
 export function FinancialsPage() {
   return (
@@ -150,11 +151,11 @@ export function RevenuePage() {
   );
 }
 
-export function ClientsPage() {
+export function ClientsPageDemoCatalog() {
   return (
     <ModuleScaffold
-      title="Clients"
-      subtitle="Portfolio of internal and client workspaces — each client is its own operating system."
+      title="Clients (demo catalog)"
+      subtitle="Legacy static workspace catalog — superseded by live Client 360."
       showPendingBanner={false}
     >
       <FilterToolbar>
