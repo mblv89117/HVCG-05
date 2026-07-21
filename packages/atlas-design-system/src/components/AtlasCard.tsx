@@ -6,33 +6,41 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
-    padding: '16px',
+    padding: '20px',
     borderRadius: tokens.borderRadiusLarge,
-    backgroundColor: tokens.colorNeutralBackground1,
+    backgroundColor: tokens.colorNeutralBackground2,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    boxShadow: '0 4px 12px rgba(12, 22, 18, 0.08)',
-    transitionProperty: 'box-shadow, transform, border-color',
+    boxShadow: '0 4px 14px rgba(11, 31, 51, 0.06)',
+    transitionProperty: 'box-shadow, transform, border-color, background-color',
     transitionDuration: '200ms',
     transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
   },
   glass: {
-    backgroundColor: tokens.colorNeutralBackground2,
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    backdropFilter: 'blur(14px)',
+    WebkitBackdropFilter: 'blur(14px)',
     border: `1px solid ${tokens.colorNeutralStroke1}`,
-    boxShadow: '0 0 0 1px rgba(176, 138, 60, 0.14), 0 8px 24px rgba(26, 92, 66, 0.08)',
+    boxShadow: '0 0 0 1px rgba(201, 162, 39, 0.12), 0 8px 28px rgba(11, 31, 51, 0.08)',
   },
   quiet: {
     boxShadow: 'none',
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground1,
+    padding: '16px',
+  },
+  accent: {
+    borderTop: '3px solid #C9A227',
+  },
+  ai: {
+    border: '1px solid rgba(37, 99, 235, 0.28)',
+    boxShadow: '0 0 0 1px rgba(37, 99, 235, 0.10), 0 8px 24px rgba(37, 99, 235, 0.08)',
   },
   interactive: {
     cursor: 'pointer',
     ':hover': {
       transform: 'translateY(-1px)',
-      boxShadow: '0 12px 32px rgba(12, 22, 18, 0.12)',
-      border: '1px solid rgba(176, 138, 60, 0.45)',
+      boxShadow: '0 12px 36px rgba(11, 31, 51, 0.10)',
+      border: '1px solid rgba(201, 162, 39, 0.40)',
     },
     ':focus-visible': {
       outline: `2px solid ${tokens.colorStrokeFocus2}`,
@@ -66,7 +74,7 @@ const useStyles = makeStyles({
   },
 });
 
-export type CardVariant = 'default' | 'glass' | 'quiet';
+export type CardVariant = 'default' | 'glass' | 'quiet' | 'accent' | 'ai';
 
 export interface AtlasCardProps {
   children: ReactNode;
@@ -103,6 +111,8 @@ export function AtlasCard({
         s.root,
         variant === 'glass' && s.glass,
         variant === 'quiet' && s.quiet,
+        variant === 'accent' && s.accent,
+        variant === 'ai' && s.ai,
         clickable && s.interactive,
         'atlas-fade-in',
         className,
@@ -126,7 +136,11 @@ export function AtlasCard({
       {(title || headerAction) && (
         <div className={s.header}>
           <div className={s.titleBlock}>
-            {title ? <Text weight="semibold" size={400}>{title}</Text> : null}
+            {title ? (
+              <Text weight="semibold" size={400}>
+                {title}
+              </Text>
+            ) : null}
             {subtitle ? <Caption1>{subtitle}</Caption1> : null}
           </div>
           {headerAction}

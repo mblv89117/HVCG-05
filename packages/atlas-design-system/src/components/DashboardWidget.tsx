@@ -30,8 +30,8 @@ const useStyles = makeStyles({
     lineHeight: tokens.lineHeightHero800,
     color: tokens.colorNeutralForeground1,
   },
-  trendUp: { color: '#1a5c42' },
-  trendDown: { color: '#8b2e2e' },
+  trendUp: { color: '#059669' },
+  trendDown: { color: '#DC2626' },
   trendFlat: { color: tokens.colorNeutralForeground2 },
   meta: {
     display: 'flex',
@@ -115,13 +115,25 @@ const useSpark = makeStyles({
   bar: {
     flex: 1,
     borderRadius: '3px 3px 0 0',
-    background: `linear-gradient(180deg, ${tokens.colorBrandBackgroundHover}, ${tokens.colorBrandBackground})`,
+    background: 'linear-gradient(180deg, #3B82F6, #2563EB)',
     minWidth: '4px',
+  },
+  barGold: {
+    background: 'linear-gradient(180deg, #E0B93A, #C9A227)',
+  },
+  barEmerald: {
+    background: 'linear-gradient(180deg, #10B981, #059669)',
   },
 });
 
+export type SparkTone = 'azure' | 'gold' | 'emerald';
+
 /** Lightweight theme-aware chart primitive (no chart lib dependency). */
-export function SparkBars({ values, 'aria-label': ariaLabel = 'Trend chart' }: SparkBarsProps) {
+export function SparkBars({
+  values,
+  'aria-label': ariaLabel = 'Trend chart',
+  tone = 'azure',
+}: SparkBarsProps & { tone?: SparkTone }) {
   const s = useSpark();
   const max = Math.max(...values, 1);
   return (
@@ -129,7 +141,11 @@ export function SparkBars({ values, 'aria-label': ariaLabel = 'Trend chart' }: S
       {values.map((v, i) => (
         <span
           key={i}
-          className={s.bar}
+          className={mergeClasses(
+            s.bar,
+            tone === 'gold' && s.barGold,
+            tone === 'emerald' && s.barEmerald,
+          )}
           style={{ height: `${Math.max(8, (v / max) * 100)}%` }}
         />
       ))}

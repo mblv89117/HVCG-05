@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   AtlasCard,
-  DashboardWidget,
-  SparkBars,
+  KpiTile,
+  InsightCard,
+  SectionRail,
   PageLayout,
   ResponsiveGrid,
   GridSpan,
@@ -12,6 +13,8 @@ import {
   SourceBadge,
   QuickActionButton,
   LoadingState,
+  SparkBars,
+  FavoritePin,
 } from '@hvcg/atlas-design-system';
 import { Button, Text, Caption1, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -29,8 +32,11 @@ function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'succes
 export function ExecutiveDashboardPage() {
   const { account, configured, signIn } = useMicrosoftAuth();
   const { role } = useAtlasRole();
+  const location = useLocation();
+  const denseAnalytics = location.pathname.startsWith('/executive');
   const [model, setModel] = useState<ExecutiveHomeModel | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pinnedIds, setPinnedIds] = useState<Record<string, boolean>>({ 'ws-ccb': true });
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +55,10 @@ export function ExecutiveDashboardPage() {
 
   if (loading || !model) {
     return (
-      <PageLayout title="Executive Home" subtitle="Connecting to Microsoft Development…">
+      <PageLayout
+        title={denseAnalytics ? 'Executive Dashboard' : 'Executive Home'}
+        subtitle="Connecting to Microsoft Development…"
+      >
         <LoadingState rows={6} />
       </PageLayout>
     );
@@ -77,10 +86,15 @@ export function ExecutiveDashboardPage() {
     organizationId: 'HVCG',
   });
 
+  const pageTitle = denseAnalytics ? 'Executive Dashboard' : 'Executive Home';
+  const pageSubtitle = denseAnalytics
+    ? 'Presentation-ready KPIs, cash, runway, and capital pipeline'
+    : 'Enterprise command center — priorities, capital readiness, and AI insights';
+
   return (
     <PageLayout
-      title="Executive Home"
-      subtitle="HVCG command center — Dataverse · Entra · Graph"
+      title={pageTitle}
+      subtitle={pageSubtitle}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {!account && configured ? (
@@ -89,22 +103,27 @@ export function ExecutiveDashboardPage() {
             </Button>
           ) : null}
           <Link to="/tasks">
-            <QuickActionButton onClick={() => undefined}>Open tasks</QuickActionButton>
+            <QuickActionButton onClick={() => undefined}>Today&apos;s priorities</QuickActionButton>
           </Link>
           <Link to="/clients/ws-ccb">
             <Button appearance="secondary" size="small">
               Colorado Craft Beef
             </Button>
           </Link>
+          <Link to="/financials">
+            <Button appearance="secondary" size="small">
+              Financial Intelligence
+            </Button>
+          </Link>
         </div>
       }
     >
-      <AtlasCard variant="glass">
+      <AtlasCard variant="quiet">
         <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: 16,
+            gap: 20,
             justifyContent: 'space-between',
             alignItems: 'center',
           }}
@@ -150,25 +169,115 @@ export function ExecutiveDashboardPage() {
         </MessageBarBody>
       </MessageBar>
 
-      <ResponsiveGrid>
-        {metrics.map((m) => (
-          <AtlasCard key={m.id} variant="glass">
-            <DashboardWidget
+      <SectionRail title="Executive KPIs" subtitle="Enterprise value, cash, growth, and capital readiness">
+        <ResponsiveGrid className="atlas-stagger">
+          {metrics.map((m) => (
+            <KpiTile
+              key={m.id}
               label={m.label}
               value={m.value}
               unit={m.unit}
               trend={m.trend}
               trendLabel={m.trendLabel}
-              source={m.source}
-            >
-              <SparkBars values={m.spark} aria-label={`${m.label} trend`} />
-            </DashboardWidget>
-            <Caption1>Status: {m.source === 'Live' ? 'Live' : 'Pending'} · Drill-down in Financials</Caption1>
-          </AtlasCard>
-        ))}
-      </ResponsiveGrid>
+              sparkValues={m.spark}
+              footer={
+                <Caption1>
+                  {m.source === 'Live' ? 'Live' : 'Pending'} · <SourceBadge kind={m.source} />
+                </Caption1>
+              }
+            />
+          ))}
+        </ResponsiveGrid>
+      </SectionRail>
 
       <ResponsiveGrid dense>
+        <GridSpan span={2}>
+          <InsightCard
+            title="AI Executive Brief"
+            body={`${aiBrief.whatChanged} ${aiBrief.attention}`}
+            actions={
+              <div style={{ display: 'grid', gap: 10, width: '100%' }}>
+                <Caption1>{aiBrief.timestampLabel}</Caption1>
+                <div>
+                  <Text weight="semibold" size={300}>
+                    Recommended actions
+                  </Text>
+                  <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                    {aiBrief.recommendations.map((r) => (
+                      <li key={r}>
+                        <Text size={300}>{r}</Text>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Link to="/tasks">
+                    <Button size="small" appearance="primary">
+                      Open approvals
+                    </Button>
+                  </Link>
+                  <Link to="/capital">
+                    <Button size="small" appearance="secondary">
+                      Capital roadmap
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            }
+          />
+        </GridSpan>
+
+        <AtlasCard title="Business health" subtitle="Capital readiness snapshot" variant="accent">
+          <div style={{ display: 'grid', gap: 10 }}>
+            {capitalReadiness.map((c) => (
+              <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <Caption1>{c.label}</Caption1>
+                <Text size={300} weight="semibold">
+                  {c.value}
+                </Text>
+              </div>
+            ))}
+          </div>
+        </AtlasCard>
+
+        <AtlasCard title="Today's priorities" subtitle="Upcoming deadlines">
+          <div style={{ display: 'grid', gap: 12 }}>
+            {deadlines.map((d) => (
+              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <div>
+                  <Text weight="semibold">{d.title}</Text>
+                  <Caption1>{d.due}</Caption1>
+                </div>
+                <StatusChip
+                  label={d.severity}
+                  tone={d.severity === 'High' ? 'danger' : d.severity === 'Medium' ? 'warning' : 'neutral'}
+                />
+              </div>
+            ))}
+          </div>
+        </AtlasCard>
+
+        <AtlasCard title="Pinned clients" subtitle="Quick workspace access">
+          <div style={{ display: 'grid', gap: 10 }}>
+            {pinnedClients.map((c) => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FavoritePin
+                  active={Boolean(pinnedIds[c.id])}
+                  onToggle={() => setPinnedIds((p) => ({ ...p, [c.id]: !p[c.id] }))}
+                  label={`Pin ${c.name}`}
+                />
+                <Link
+                  to={`/clients/${c.id}`}
+                  style={{ display: 'flex', flex: 1, justifyContent: 'space-between', textDecoration: 'none' }}
+                >
+                  <Text>{c.name}</Text>
+                  <StatusChip label={c.status} tone="gold" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </AtlasCard>
+
         <GridSpan span={2}>
           <AtlasCard title="Executive alerts" subtitle="Prioritized by severity">
             <DataTable
@@ -188,47 +297,24 @@ export function ExecutiveDashboardPage() {
           </AtlasCard>
         </GridSpan>
 
-        <AtlasCard title="AI Executive Brief" subtitle="Generated recommendations — not verified ledger data">
-          <Caption1>{aiBrief.timestampLabel}</Caption1>
-          <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
-            <Text weight="semibold">What changed</Text>
-            <Text size={300}>{aiBrief.whatChanged}</Text>
-            <Text weight="semibold">Requires attention</Text>
-            <Text size={300}>{aiBrief.attention}</Text>
-            <Text weight="semibold">Recommended actions</Text>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {aiBrief.recommendations.map((r) => (
-                <li key={r}>
-                  <Text size={300}>{r}</Text>
-                </li>
-              ))}
-            </ul>
-            <Text weight="semibold">Material risks</Text>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {aiBrief.risks.map((r) => (
-                <li key={r}>
-                  <Text size={300}>{r}</Text>
-                </li>
-              ))}
-            </ul>
-            <Text weight="semibold">Top opportunities</Text>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {aiBrief.opportunities.map((r) => (
-                <li key={r}>
-                  <Text size={300}>{r}</Text>
-                </li>
-              ))}
-            </ul>
-            <Text weight="semibold">Decisions awaiting Owner</Text>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {aiBrief.decisionsAwaiting.map((r) => (
-                <li key={r}>
-                  <Text size={300}>{r}</Text>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </AtlasCard>
+        {denseAnalytics ? (
+          <GridSpan span="full">
+            <AtlasCard title="Cash & growth trends" subtitle="Spark series from verified home metrics">
+              <ResponsiveGrid>
+                {metrics.slice(0, 4).map((m) => (
+                  <div key={`spark-${m.id}`}>
+                    <Caption1>{m.label}</Caption1>
+                    <Text weight="semibold" size={500}>
+                      {m.value}
+                      {m.unit ? ` ${m.unit}` : ''}
+                    </Text>
+                    <SparkBars values={m.spark} tone="emerald" aria-label={`${m.label} chart`} />
+                  </div>
+                ))}
+              </ResponsiveGrid>
+            </AtlasCard>
+          </GridSpan>
+        ) : null}
 
         <GridSpan span={2}>
           <AtlasCard title="Growth initiatives">
@@ -252,34 +338,6 @@ export function ExecutiveDashboardPage() {
             />
           </AtlasCard>
         </GridSpan>
-
-        <AtlasCard title="Capital readiness">
-          <div style={{ display: 'grid', gap: 8 }}>
-            {capitalReadiness.map((c) => (
-              <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                <Caption1>{c.label}</Caption1>
-                <Text size={300}>{c.value}</Text>
-              </div>
-            ))}
-          </div>
-        </AtlasCard>
-
-        <AtlasCard title="Upcoming priorities">
-          <div style={{ display: 'grid', gap: 10 }}>
-            {deadlines.map((d) => (
-              <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                <div>
-                  <Text weight="semibold">{d.title}</Text>
-                  <Caption1>{d.due}</Caption1>
-                </div>
-                <StatusChip
-                  label={d.severity}
-                  tone={d.severity === 'High' ? 'danger' : d.severity === 'Medium' ? 'warning' : 'neutral'}
-                />
-              </div>
-            ))}
-          </div>
-        </AtlasCard>
 
         <GridSpan span={2}>
           <AtlasCard title="My Approvals" subtitle="Owner decision inbox">
@@ -310,17 +368,6 @@ export function ExecutiveDashboardPage() {
           </AtlasCard>
         </GridSpan>
 
-        <AtlasCard title="Workspaces" subtitle="HVCG + clients">
-          <div style={{ display: 'grid', gap: 10 }}>
-            {pinnedClients.map((c) => (
-              <Link key={c.id} to={`/clients/${c.id}`} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Text>{c.name}</Text>
-                <StatusChip label={c.status} tone="gold" />
-              </Link>
-            ))}
-          </div>
-        </AtlasCard>
-
         <AtlasCard title="Recent activity">
           <div style={{ display: 'grid', gap: 10 }}>
             {activity.map((a) => (
@@ -333,6 +380,34 @@ export function ExecutiveDashboardPage() {
               </div>
             ))}
           </div>
+        </AtlasCard>
+
+        <AtlasCard title="Quick actions" subtitle="Executive shortcuts">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <Link to="/documents">
+              <Button size="small" appearance="secondary">
+                Recent documents
+              </Button>
+            </Link>
+            <Link to="/banking">
+              <Button size="small" appearance="secondary">
+                Cash position
+              </Button>
+            </Link>
+            <Link to="/ai">
+              <Button size="small" appearance="secondary">
+                AI conversation
+              </Button>
+            </Link>
+            <Link to="/reports">
+              <Button size="small" appearance="secondary">
+                Reports
+              </Button>
+            </Link>
+          </div>
+          <Caption1 style={{ marginTop: 12 }}>
+            Calendar and meeting sync remain Microsoft Graph–gated; use Tasks for dated priorities.
+          </Caption1>
         </AtlasCard>
 
         <GridSpan span="full">

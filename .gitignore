@@ -9,3 +9,6 @@ apps/atlas-elite-os/tsconfig.tsbuildinfo
 
 .secrets/
 .npm-cache/
+.data/
+**/plaid-store.json
+**/integration-store.json

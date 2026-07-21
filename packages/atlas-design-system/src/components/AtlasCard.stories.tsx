@@ -28,3 +28,19 @@ export const Glass: Story = {
     title: 'Glass card',
   },
 };
+
+export const Accent: Story = {
+  args: {
+    ...Default.args,
+    variant: 'accent',
+    title: 'Accent card',
+  },
+};
+
+export const AI: Story = {
+  args: {
+    ...Default.args,
+    variant: 'ai',
+    title: 'AI insight card',
+  },
+};

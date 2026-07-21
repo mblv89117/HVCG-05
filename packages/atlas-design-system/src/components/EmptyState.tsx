@@ -8,7 +8,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '12px',
-    padding: '32px 24px',
+    padding: '40px 28px',
     textAlign: 'center',
     borderRadius: tokens.borderRadiusLarge,
     border: `1px dashed ${tokens.colorNeutralStroke2}`,
@@ -16,7 +16,7 @@ const useStyles = makeStyles({
   },
   icon: {
     fontSize: '32px',
-    color: tokens.colorBrandForeground1,
+    color: '#2563EB',
   },
   title: {
     margin: 0,

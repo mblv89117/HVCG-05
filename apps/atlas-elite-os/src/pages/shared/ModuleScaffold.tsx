@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { PageLayout, AtlasCard, EmptyState } from '@hvcg/atlas-design-system';
+import { PageLayout, AtlasCard, EmptyState, SectionRail } from '@hvcg/atlas-design-system';
 import { MessageBar, MessageBarBody, MessageBarTitle, Text, Caption1 } from '@fluentui/react-components';
 import type { DataAvailability } from '../../data/workspaces';
 
@@ -44,9 +44,11 @@ export function ModuleScaffold({
   return (
     <PageLayout title={title} subtitle={subtitle} actions={actions}>
       {showPendingBanner ? <PendingBanner /> : null}
-      {children}
+      <div className="atlas-stagger" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {children}
+      </div>
       {emptyTitle ? (
-        <AtlasCard>
+        <AtlasCard variant="quiet">
           <EmptyState title={emptyTitle} description={emptyDescription} />
         </AtlasCard>
       ) : null}
@@ -64,18 +66,45 @@ export function FieldGrid({
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-        gap: 12,
+        gap: 14,
       }}
     >
       {fields.map((f) => (
         <AtlasCard key={f.label} variant="glass">
-          <Caption1>{f.label}</Caption1>
-          <Text weight="semibold" size={400} style={{ display: 'block', marginTop: 6 }}>
+          <Caption1
+            style={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            {f.label}
+          </Caption1>
+          <Text weight="semibold" size={400} style={{ display: 'block', marginTop: 8 }}>
             {f.value}
           </Text>
           {f.availability ? <AvailabilityLine availability={f.availability} /> : null}
         </AtlasCard>
       ))}
     </div>
+  );
+}
+
+export function ModuleSection({
+  title,
+  subtitle,
+  children,
+  actions,
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <SectionRail title={title} subtitle={subtitle} actions={actions}>
+      {children}
+    </SectionRail>
   );
 }

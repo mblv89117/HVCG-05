@@ -1,25 +1,43 @@
-/** HVCG Atlas Design System — foundational tokens (logo gold + forest/ink/paper). */
+/** HVCG Atlas Design System — executive navy / slate foundation with gold · azure · emerald accents. */
 
 export const color = {
-  ink: '#0c1612',
-  inkMuted: '#5a675f',
-  paper: '#f2eee6',
-  paperElevated: '#faf8f4',
-  fog: '#e4ebe6',
-  forest: '#1a5c42',
-  forestDeep: '#0f3d2c',
-  forestSoft: '#173d30',
-  gold: '#b08a3c',
-  goldBright: '#d4af5a',
-  goldDeep: '#8a6a2c',
-  danger: '#8b2e2e',
-  warning: '#9a6b1f',
-  success: '#1a5c42',
-  info: '#2a5a7a',
-  glassLight: 'rgba(250, 248, 244, 0.72)',
-  glassDark: 'rgba(15, 20, 18, 0.72)',
-  line: '#cfc8ba',
-  lineDark: '#2a3530',
+  /** Deep navy — primary ink / brand surface */
+  navy: '#0B1F33',
+  navyDeep: '#071624',
+  navySoft: '#122A42',
+  /** Slate neutrals */
+  slate: '#334155',
+  slateMuted: '#64748B',
+  slateSoft: '#94A3B8',
+  /** Surfaces */
+  white: '#FFFFFF',
+  paper: '#F8FAFC',
+  paperElevated: '#FFFFFF',
+  fog: '#E2E8F0',
+  /** Legacy aliases (map to navy system for gradual migration) */
+  ink: '#0B1F33',
+  inkMuted: '#64748B',
+  forest: '#0B1F33',
+  forestDeep: '#071624',
+  forestSoft: '#122A42',
+  /** Accents */
+  gold: '#C9A227',
+  goldBright: '#E0B93A',
+  goldDeep: '#A3841C',
+  azure: '#2563EB',
+  azureSoft: '#3B82F6',
+  azureMuted: 'rgba(37, 99, 235, 0.12)',
+  emerald: '#059669',
+  emeraldSoft: '#10B981',
+  emeraldMuted: 'rgba(5, 150, 105, 0.12)',
+  danger: '#DC2626',
+  warning: '#D97706',
+  success: '#059669',
+  info: '#2563EB',
+  glassLight: 'rgba(248, 250, 252, 0.78)',
+  glassDark: 'rgba(7, 22, 36, 0.78)',
+  line: '#E2E8F0',
+  lineDark: '#1E3A5F',
 } as const;
 
 export const space = {
@@ -30,6 +48,7 @@ export const space = {
   xl: '24px',
   '2xl': '32px',
   '3xl': '48px',
+  '4xl': '64px',
 } as const;
 
 export const radius = {
@@ -42,17 +61,18 @@ export const radius = {
 
 export const elevation = {
   none: 'none',
-  sm: '0 1px 2px rgba(12, 22, 18, 0.06), 0 1px 3px rgba(12, 22, 18, 0.04)',
-  md: '0 4px 12px rgba(12, 22, 18, 0.08), 0 2px 4px rgba(12, 22, 18, 0.04)',
-  lg: '0 12px 32px rgba(12, 22, 18, 0.12), 0 4px 8px rgba(12, 22, 18, 0.06)',
-  glow: '0 0 0 1px rgba(176, 138, 60, 0.28), 0 8px 24px rgba(26, 92, 66, 0.12)',
+  sm: '0 1px 2px rgba(11, 31, 51, 0.05), 0 1px 3px rgba(11, 31, 51, 0.04)',
+  md: '0 4px 14px rgba(11, 31, 51, 0.07), 0 2px 4px rgba(11, 31, 51, 0.04)',
+  lg: '0 12px 36px rgba(11, 31, 51, 0.10), 0 4px 10px rgba(11, 31, 51, 0.05)',
+  glow: '0 0 0 1px rgba(201, 162, 39, 0.32), 0 8px 28px rgba(37, 99, 235, 0.10)',
+  ai: '0 0 0 1px rgba(37, 99, 235, 0.22), 0 8px 24px rgba(37, 99, 235, 0.12)',
 } as const;
 
 export const typography = {
   fontFamily:
     '"Segoe UI Variable", "Segoe UI", "Avenir Next", "Helvetica Neue", sans-serif',
   fontFamilyDisplay:
-    '"Segoe UI Variable Display", "Segoe UI", "Iowan Old Style", Georgia, serif',
+    '"Segoe UI Variable Display", "Segoe UI", "Avenir Next", sans-serif',
   size: {
     xs: '0.75rem',
     sm: '0.8125rem',

@@ -256,7 +256,7 @@ export function BankingConnectionsPage() {
 
   return (
     <ModuleScaffold
-      title="Banking Connections"
+      title="Banking"
       subtitle={`Plaid Sandbox · ${workspaceName} (${clientCode}). Source lineage: bank vs accounting kept distinct.`}
       showPendingBanner={false}
       actions={
@@ -306,41 +306,93 @@ export function BankingConnectionsPage() {
         </MessageBar>
       ) : null}
 
-      <AtlasCard title="Verified cash snapshot" subtitle="Shown only when provenance is VerifiedBank">
+      <AtlasCard title="Verified cash snapshot" subtitle="Shown only when provenance is VerifiedBank" variant="accent">
         {verifiedCash ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
             <div>
-              <Caption1>Current balance (Verified bank data)</Caption1>
-              <Text weight="semibold">{money(verifiedCash.totalCurrentBalance)}</Text>
+              <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11 }}>
+                Current balance
+              </Caption1>
+              <Text weight="semibold" size={600} style={{ display: 'block', marginTop: 6 }}>
+                {money(verifiedCash.totalCurrentBalance)}
+              </Text>
             </div>
             <div>
-              <Caption1>Available</Caption1>
-              <Text weight="semibold">{money(verifiedCash.totalAvailableBalance)}</Text>
+              <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11 }}>
+                Available
+              </Caption1>
+              <Text weight="semibold" size={600} style={{ display: 'block', marginTop: 6 }}>
+                {money(verifiedCash.totalAvailableBalance)}
+              </Text>
             </div>
             <div>
-              <Caption1>Accounts / Institutions</Caption1>
-              <Text weight="semibold">
+              <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11 }}>
+                Accounts / Institutions
+              </Caption1>
+              <Text weight="semibold" size={500} style={{ display: 'block', marginTop: 6 }}>
                 {verifiedCash.accountCount} / {verifiedCash.institutionCount}
               </Text>
             </div>
+            <div>
+              <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11 }}>
+                Connection health
+              </Caption1>
+              <div style={{ marginTop: 8 }}>
+                <StatusChip
+                  label={connections.every((c) => c.status === 'Connected') ? 'Healthy' : 'Needs attention'}
+                  tone={connections.every((c) => c.status === 'Connected') ? 'success' : 'warning'}
+                />
+              </div>
+            </div>
           </div>
         ) : (
-          <Text>No verified bank data yet — connect an institution after Sandbox credentials are configured.</Text>
+          <Text>
+            No verified bank data yet — connect an institution after Sandbox credentials are configured.
+          </Text>
         )}
       </AtlasCard>
 
-      <AtlasCard title="Connected institutions" subtitle={loading ? 'Loading…' : undefined}>
+      <AtlasCard title="Connected institutions" subtitle={loading ? 'Loading…' : 'Institution logos · balances · sync health'}>
         {!loading && connections.length === 0 ? (
           <Text>No banks connected yet. Use Connect Bank Account after accepting consent.</Text>
         ) : null}
         {connections.map((c) => (
-          <div key={c.connectionId} style={{ marginBottom: 16 }}>
+          <div
+            key={c.connectionId}
+            style={{
+              marginBottom: 16,
+              padding: 14,
+              borderRadius: 12,
+              border: '1px solid var(--colorNeutralStroke2, #E2E8F0)',
+              background: 'var(--colorNeutralBackground1, #F8FAFC)',
+            }}
+          >
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Text weight="semibold">{c.institution.name}</Text>
+              <div
+                aria-hidden
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  background: 'linear-gradient(135deg, #0B1F33, #2563EB)',
+                  color: '#E0B93A',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: 12,
+                }}
+              >
+                {(c.institution.name || 'BK').slice(0, 2).toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <Text weight="semibold">{c.institution.name}</Text>
+                <Caption1 style={{ display: 'block' }}>
+                  Last synced:{' '}
+                  {c.lastSyncedAt ? new Date(c.lastSyncedAt).toLocaleString() : 'Not yet synchronized'}
+                </Caption1>
+              </div>
               <StatusChip tone={statusTone(c.status)} label={c.status} />
-              <Caption1>
-                Last synced: {c.lastSyncedAt ? new Date(c.lastSyncedAt).toLocaleString() : 'Not yet synchronized'}
-              </Caption1>
               {c.status === 'NeedsReauthorization' ? (
                 <Button size="small" disabled={busy !== null} onClick={() => void openLink('reconnect')}>
                   Reconnect
@@ -380,6 +432,13 @@ export function BankingConnectionsPage() {
             ]}
           />
         ) : null}
+      </AtlasCard>
+
+      <AtlasCard title="AI cash insights" variant="ai" subtitle="Development stubs — no invented forecasts">
+        <Text size={300}>
+          Cash forecasting, transaction analytics, and risk alerts activate when VerifiedBank provenance is
+          present. Until then Atlas shows connection health only — never fabricated runway or spend trends.
+        </Text>
       </AtlasCard>
     </ModuleScaffold>
   );

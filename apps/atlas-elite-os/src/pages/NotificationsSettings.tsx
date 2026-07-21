@@ -107,10 +107,11 @@ export function NotificationsPage() {
 export function SettingsPage() {
   return (
     <PageLayout title="Settings" subtitle="Personal preferences for the Elite OS experience">
-      <AtlasCard title="Appearance" subtitle="Theme follows command-bar toggle; preference is session-local">
+      <AtlasCard title="Appearance" subtitle="Theme persists in this browser via localStorage">
         <Text size={300}>
-          Use the theme control in the command bar for light and dark modes. Reduced-motion preferences are
-          respected for entrance animations.
+          Use the theme control in the command bar for light and dark modes. Preference is saved locally.
+          Reduced-motion preferences are respected for entrance animations. Command palette: ⌘K · AI Command
+          Center: ⌘J.
         </Text>
       </AtlasCard>
       <AtlasCard title="Notifications">

@@ -38,11 +38,13 @@ export {
 export {
   GlobalSearch,
   GlobalAICommandPanel,
+  AICommandDrawer,
   DEFAULT_AI_EXAMPLES,
   BrandMark,
   type SearchResult,
   type GlobalSearchProps,
   type GlobalAICommandPanelProps,
+  type AICommandDrawerProps,
 } from './SearchAndAI';
 export {
   AtlasDrawer,
@@ -54,3 +56,13 @@ export {
   ErrorState,
   type AtlasDrawerProps,
 } from './Overlays';
+export {
+  KpiTile,
+  InsightCard,
+  SectionRail,
+  RecentList,
+  FavoritePin,
+  type KpiTileProps,
+  type InsightCardProps,
+  type RecentItem,
+} from './ExecutivePrimitives';

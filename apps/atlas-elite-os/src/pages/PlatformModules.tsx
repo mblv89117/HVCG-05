@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { AtlasCard, EmptyState } from '@hvcg/atlas-design-system';
-import { Text, Caption1 } from '@fluentui/react-components';
-import { BotRegular, DocumentDataRegular } from '@fluentui/react-icons';
+import { AtlasCard, EmptyState, InsightCard, ResponsiveGrid } from '@hvcg/atlas-design-system';
+import { Text, Caption1, Button } from '@fluentui/react-components';
+import { BotRegular, DocumentDataRegular, BookRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -28,12 +28,23 @@ export function KnowledgePage() {
       showPendingBanner={false}
     >
       <ModuleKnowledgeRail module="Knowledge" user={user} clientCode={clientCode} />
-      <AtlasCard title="Knowledge Platform status">
-        <Text>
-          Knowledge catalog and rail are integrated into Elite OS. Full SharePoint / Copilot grounding
-          remains gated on Entra configuration and Knowledge Platform track completion.
-        </Text>
-      </AtlasCard>
+      <ResponsiveGrid dense>
+        <AtlasCard title="Knowledge Platform status" variant="quiet">
+          <Text>
+            Knowledge catalog and rail are integrated into Elite OS. Full SharePoint / Copilot grounding
+            remains gated on Entra configuration and Knowledge Platform track completion.
+          </Text>
+        </AtlasCard>
+        <InsightCard
+          title="AI-assisted retrieval"
+          body="Ask Atlas Copilot (⌘J) for module-aware guidance. Grounded answers require Knowledge Platform connectors."
+          actions={
+            <Button size="small" appearance="secondary" icon={<BookRegular />} disabled>
+              Browse catalog
+            </Button>
+          }
+        />
+      </ResponsiveGrid>
     </ModuleScaffold>
   );
 }
@@ -41,11 +52,11 @@ export function KnowledgePage() {
 export function AutomationsPage() {
   return (
     <ModuleScaffold
-      title="Automations"
+      title="Automation"
       subtitle="Power Automate and Atlas orchestration — status surfaces only."
       showPendingBanner={false}
     >
-      <AtlasCard>
+      <AtlasCard variant="quiet">
         <EmptyState
           title="Automation catalog linked"
           description="Flow packages live under src/power-automate. Runtime activation requires Power Platform environment and owner connection references. No fake run success is shown."
@@ -63,13 +74,16 @@ export function ReportsPage() {
   return (
     <ModuleScaffold
       title="Reports"
-      subtitle="Executive and operational report entry points."
+      subtitle="Executive and operational report entry points — presentation-ready surfaces."
       showPendingBanner={false}
     >
-      <AtlasCard title="Available report surfaces">
-        <ul>
+      <AtlasCard title="Available report surfaces" variant="accent">
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 8 }}>
           <li>
-            <Link to="/">Executive Dashboard (Home)</Link>
+            <Link to="/">Executive Home</Link>
+          </li>
+          <li>
+            <Link to="/executive">Executive Dashboard</Link>
           </li>
           <li>
             <Link to="/financials">Financial Intelligence</Link>
@@ -84,12 +98,12 @@ export function ReportsPage() {
             <Link to="/enterprise-value">Enterprise Value</Link>
           </li>
         </ul>
-        <EmptyState
-          title="Export & scheduled reports"
-          description="Scheduled PDF/Excel export is not yet integrated. Values remain pending until verified data sources connect."
-          icon={<DocumentDataRegular />}
-        />
       </AtlasCard>
+      <EmptyState
+        title="Export & scheduled reports"
+        description="Scheduled PDF/Excel export is not yet integrated. Values remain pending until verified data sources connect."
+        icon={<DocumentDataRegular />}
+      />
     </ModuleScaffold>
   );
 }

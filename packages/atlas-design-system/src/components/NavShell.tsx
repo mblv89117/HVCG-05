@@ -7,6 +7,7 @@ import {
 } from '@fluentui/react-components';
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { RecentList, type RecentItem } from './ExecutivePrimitives';
 
 export interface NavItem {
   id: string;
@@ -30,7 +31,7 @@ const useStyles = makeStyles({
     minHeight: '100vh',
     backgroundColor: tokens.colorNeutralBackground1,
     '@media (min-width: 960px)': {
-      gridTemplateColumns: '260px 1fr',
+      gridTemplateColumns: '272px 1fr',
       gridTemplateRows: 'auto 1fr',
       gridTemplateAreas: `"bar bar" "nav main"`,
     },
@@ -49,8 +50,8 @@ const useStyles = makeStyles({
   nav: {
     display: 'none',
     flexDirection: 'column',
-    gap: '4px',
-    padding: '12px 10px',
+    gap: '2px',
+    padding: '12px 10px 20px',
     borderRight: `1px solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground2,
     overflowY: 'auto',
@@ -67,35 +68,36 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground2,
   },
   sectionTitle: {
-    padding: '12px 10px 6px',
+    padding: '14px 10px 6px',
     color: tokens.colorNeutralForeground2,
     textTransform: 'uppercase',
-    letterSpacing: '0.06em',
+    letterSpacing: '0.08em',
     fontSize: tokens.fontSizeBase100,
+    fontWeight: tokens.fontWeightSemibold,
   },
   link: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    padding: '10px 12px',
+    padding: '9px 12px',
     borderRadius: tokens.borderRadiusMedium,
     color: tokens.colorNeutralForeground1,
     textDecoration: 'none',
-    transitionProperty: 'background-color, color',
+    transitionProperty: 'background-color, color, box-shadow',
     transitionDuration: '120ms',
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground3,
     },
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: '1px',
+    },
   },
   linkActive: {
-    backgroundColor: 'rgba(176, 138, 60, 0.18)',
+    backgroundColor: 'rgba(37, 99, 235, 0.10)',
     color: tokens.colorBrandForeground1,
     fontWeight: tokens.fontWeightSemibold,
-  },
-  collapsedLabel: {
-    '@media (min-width: 960px)': {
-      // parent controls collapsed via data attribute
-    },
+    boxShadow: 'inset 3px 0 0 #C9A227',
   },
   main: {
     display: 'flex',
@@ -111,16 +113,22 @@ const useStyles = makeStyles({
     padding: '16px',
     overflow: 'auto',
     '@media (min-width: 960px)': {
-      padding: '24px',
+      padding: '28px 32px',
     },
   },
   banner: {
     padding: '8px 16px',
-    background: 'linear-gradient(90deg, #0f3d2c, #1a5c42)',
-    color: '#f2eee6',
+    background: 'linear-gradient(90deg, #071624, #0B1F33 40%, #122A42)',
+    color: '#F1F5F9',
     textAlign: 'center',
     fontSize: tokens.fontSizeBase200,
     fontWeight: tokens.fontWeightSemibold,
+    letterSpacing: '0.04em',
+  },
+  sideBlock: {
+    marginTop: '8px',
+    paddingTop: '8px',
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
 });
 
@@ -132,6 +140,9 @@ export interface NavShellProps {
   mobileNavOpen?: boolean;
   environmentBanner?: string;
   className?: string;
+  favorites?: RecentItem[];
+  recentItems?: RecentItem[];
+  onSelectShortcut?: (item: RecentItem) => void;
 }
 
 export function NavShell({
@@ -142,11 +153,16 @@ export function NavShell({
   mobileNavOpen = false,
   environmentBanner = 'DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS',
   className,
+  favorites,
+  recentItems,
+  onSelectShortcut,
 }: NavShellProps) {
   const s = useStyles();
   return (
     <div className={mergeClasses(s.shell, collapsed && s.shellCollapsed, className)}>
-      <div className={s.banner} role="status">{environmentBanner}</div>
+      <div className={s.banner} role="status">
+        {environmentBanner}
+      </div>
       <div className={s.bar}>{commandBar}</div>
       <nav
         className={mergeClasses(s.nav, mobileNavOpen && s.navOpenMobile)}
@@ -162,6 +178,7 @@ export function NavShell({
               <NavLink
                 key={item.id}
                 to={item.to}
+                end={item.to === '/'}
                 className={({ isActive }) => mergeClasses(s.link, isActive && s.linkActive)}
                 title={item.label}
               >
@@ -174,9 +191,21 @@ export function NavShell({
             ))}
           </div>
         ))}
+        {!collapsed && favorites && favorites.length > 0 ? (
+          <div className={s.sideBlock}>
+            <div className={s.sectionTitle}>Favorites</div>
+            <RecentList items={favorites} onSelect={onSelectShortcut} />
+          </div>
+        ) : null}
+        {!collapsed && recentItems && recentItems.length > 0 ? (
+          <div className={s.sideBlock}>
+            <div className={s.sectionTitle}>Recent</div>
+            <RecentList items={recentItems} onSelect={onSelectShortcut} />
+          </div>
+        ) : null}
       </nav>
       <main className={s.main}>
-        <div className={s.content}>{children}</div>
+        <div className={mergeClasses(s.content, 'atlas-page')}>{children}</div>
       </main>
     </div>
   );
@@ -186,8 +215,8 @@ const useLayout = makeStyles({
   page: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
-    maxWidth: '1440px',
+    gap: '24px',
+    maxWidth: '1480px',
     margin: '0 auto',
     width: '100%',
   },
@@ -239,9 +268,19 @@ export function PageLayout({
   const s = useLayout();
   return (
     <div className={s.page}>
-      <div className={s.header} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+      <div
+        className={s.header}
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 12,
+        }}
+      >
         <div>
-          <Text as="h1" size={700} weight="semibold">{title}</Text>
+          <Text as="h1" size={700} weight="semibold">
+            {title}
+          </Text>
           {subtitle ? <Caption1>{subtitle}</Caption1> : null}
         </div>
         {actions}
@@ -273,8 +312,6 @@ export function GridSpan({
 }) {
   const s = useLayout();
   return (
-    <div className={span === 'full' ? s.spanFull : span === 2 ? s.span2 : undefined}>
-      {children}
-    </div>
+    <div className={span === 'full' ? s.spanFull : span === 2 ? s.span2 : undefined}>{children}</div>
   );
 }

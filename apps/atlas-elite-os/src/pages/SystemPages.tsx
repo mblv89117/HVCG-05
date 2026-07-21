@@ -1,4 +1,4 @@
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import {
   AccessDeniedState,
   ErrorState,
@@ -13,12 +13,23 @@ import { useAtlasRole } from '../security/RoleProvider';
 
 export function AccessDeniedPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { role, can } = useAtlasRole();
   const { activateDevOwner, devOwnerLoginAllowed, configured, signIn } = useMicrosoftAuth();
 
+  const returnTo =
+    (location.state as { from?: string } | null)?.from ||
+    (typeof location.search === 'string' && new URLSearchParams(location.search).get('from')) ||
+    '/';
+
   // If authorization was just established (e.g. Local Owner), leave the denial page.
-  if (role !== 'Unauthenticated' && role !== 'Unresolved' && can('viewExecutiveHome')) {
-    return <Navigate to="/" replace />;
+  if (role !== 'Unauthenticated' && role !== 'Unresolved') {
+    if (can('viewAdmin') && (returnTo === '/connections' || returnTo.startsWith('/connections'))) {
+      return <Navigate to="/connections" replace />;
+    }
+    if (can('viewExecutiveHome')) {
+      return <Navigate to={returnTo === '/access-denied' ? '/' : returnTo} replace />;
+    }
   }
 
   const unauthenticated = role === 'Unauthenticated';
@@ -48,7 +59,7 @@ export function AccessDeniedPage() {
                 appearance="primary"
                 onClick={() => {
                   activateDevOwner();
-                  navigate('/');
+                  navigate(returnTo === '/access-denied' ? '/connections' : returnTo, { replace: true });
                 }}
               >
                 Continue as Local Owner (Dev)

@@ -3,34 +3,34 @@ import type { CSSProperties, ReactNode } from 'react';
 
 const toneStyles: Record<string, CSSProperties> = {
   success: {
-    backgroundColor: 'rgba(26, 92, 66, 0.12)',
-    color: '#1a5c42',
-    border: '1px solid rgba(26, 92, 66, 0.28)',
+    backgroundColor: 'rgba(5, 150, 105, 0.12)',
+    color: '#047857',
+    border: '1px solid rgba(5, 150, 105, 0.28)',
   },
   warning: {
-    backgroundColor: 'rgba(176, 138, 60, 0.16)',
-    color: '#8a6a2c',
-    border: '1px solid rgba(176, 138, 60, 0.35)',
+    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    color: '#B45309',
+    border: '1px solid rgba(217, 119, 6, 0.28)',
   },
   danger: {
-    backgroundColor: 'rgba(139, 46, 46, 0.12)',
-    color: '#8b2e2e',
-    border: '1px solid rgba(139, 46, 46, 0.28)',
+    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+    color: '#B91C1C',
+    border: '1px solid rgba(220, 38, 38, 0.28)',
   },
   info: {
-    backgroundColor: 'rgba(42, 90, 122, 0.12)',
-    color: '#2a5a7a',
-    border: '1px solid rgba(42, 90, 122, 0.28)',
+    backgroundColor: 'rgba(37, 99, 235, 0.10)',
+    color: '#1D4ED8',
+    border: '1px solid rgba(37, 99, 235, 0.28)',
   },
   neutral: {
-    backgroundColor: 'rgba(228, 235, 230, 0.8)',
-    color: '#5a675f',
-    border: '1px solid rgba(207, 200, 186, 0.9)',
+    backgroundColor: 'rgba(226, 232, 240, 0.9)',
+    color: '#475569',
+    border: '1px solid rgba(203, 213, 225, 0.95)',
   },
   gold: {
-    backgroundColor: 'rgba(176, 138, 60, 0.2)',
-    color: '#6b5224',
-    border: '1px solid rgba(176, 138, 60, 0.45)',
+    backgroundColor: 'rgba(201, 162, 39, 0.16)',
+    color: '#8A6A1C',
+    border: '1px solid rgba(201, 162, 39, 0.40)',
   },
 };
 
@@ -62,7 +62,9 @@ export function StatusChip({ label, tone = 'neutral', icon, className }: StatusC
   return (
     <span className={mergeClasses(s.root, className)} style={toneStyles[tone]} role="status">
       {icon}
-      <Text size={200} weight="semibold">{label}</Text>
+      <Text size={200} weight="semibold">
+        {label}
+      </Text>
     </span>
   );
 }
@@ -89,7 +91,13 @@ export interface SourceBadgeProps {
 export function SourceBadge({ kind, detail }: SourceBadgeProps) {
   const s = useSource();
   const tone: StatusTone =
-    kind === 'Live' ? 'success' : kind === 'Unavailable' ? 'danger' : kind === 'Development sample' ? 'warning' : 'info';
+    kind === 'Live'
+      ? 'success'
+      : kind === 'Unavailable'
+        ? 'danger'
+        : kind === 'Development sample'
+          ? 'warning'
+          : 'info';
   return (
     <span className={s.root} title={detail || kind}>
       <StatusChip label={kind} tone={tone} />

@@ -39,13 +39,26 @@ const useStyles = makeStyles({
     overflowX: 'auto',
     borderRadius: tokens.borderRadiusLarge,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    backgroundColor: tokens.colorNeutralBackground1,
+    backgroundColor: tokens.colorNeutralBackground2,
+    boxShadow: '0 1px 2px rgba(11, 31, 51, 0.04)',
   },
   table: {
     minWidth: '640px',
   },
   header: {
-    backgroundColor: tokens.colorNeutralBackground2,
+    backgroundColor: tokens.colorNeutralBackground1,
+    position: 'sticky',
+    top: 0,
+    zIndex: 1,
+  },
+  row: {
+    ':hover': {
+      backgroundColor: tokens.colorNeutralBackground3,
+    },
+  },
+  cell: {
+    paddingTop: '12px',
+    paddingBottom: '12px',
   },
 });
 
@@ -78,9 +91,9 @@ export function DataTable<T>({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={getRowKey(row)}>
+            <TableRow key={getRowKey(row)} className={s.row}>
               {columns.map((c) => (
-                <TableCell key={c.key}>
+                <TableCell key={c.key} className={s.cell}>
                   <TableCellLayout>{c.render(row)}</TableCellLayout>
                 </TableCell>
               ))}

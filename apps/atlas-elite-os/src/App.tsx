@@ -1,10 +1,15 @@
 import type { ReactNode } from 'react';
 import { Routes, Route, useParams, Navigate } from 'react-router-dom';
-import { MicrosoftAuthProvider } from './microsoft/auth/AuthProvider';
+import { Button, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
+import { MicrosoftAuthProvider, useMicrosoftAuth } from './microsoft/auth/AuthProvider';
 import { WorkspaceProvider } from './state/WorkspaceContext';
 import { RoleProvider, useAtlasRole } from './security/RoleProvider';
 import { AppShell } from './layout/AppShell';
 import { ExecutiveDashboardPage } from './pages/ExecutiveDashboard';
+import { CommandCenterPage } from './pages/CommandCenterPage';
+import { MyWorkPage } from './pages/MyWorkPage';
+import { PortfolioPage } from './pages/PortfolioPage';
+import { UniversalInboxPage, TeamAgentsPage } from './pages/OperatingSystemPages';
 import { AdminPage } from './pages/AdminPage';
 import {
   AiInsightsPage,
@@ -23,7 +28,9 @@ import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
 import { AccessDeniedPage } from './pages/SystemPages';
 import { BankingConnectionsPage } from './pages/BankingConnectionsPage';
 import { AccountingConnectionsPage } from './pages/AccountingConnectionsPage';
+import { ConnectionsCenterPage } from './pages/ConnectionsCenterPage';
 import { AutomationsPage, KnowledgePage, ReportsPage } from './pages/PlatformModules';
+import { ModuleScaffold } from './pages/shared/ModuleScaffold';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
@@ -43,6 +50,42 @@ function AdminRoute() {
   return <AdminPage />;
 }
 
+function ConnectionsRoute() {
+  const { can, role } = useAtlasRole();
+  const { activateDevOwner, devOwnerLoginAllowed } = useMicrosoftAuth();
+  if (!can('viewAdmin')) {
+    return (
+      <ModuleScaffold
+        title="Connections Center"
+        subtitle="Owner / Administrator access required"
+        showPendingBanner={false}
+      >
+        <MessageBar intent="warning">
+          <MessageBarBody>
+            <MessageBarTitle>
+              {role === 'Unauthenticated' ? 'Sign-in required' : 'Insufficient permissions'}
+            </MessageBarTitle>
+            {role === 'Unauthenticated'
+              ? 'Connections is blank until you activate Local Owner (Dev) or sign in as HVCG Owner. The top-right company dropdown only switches client workspace — it does not grant access.'
+              : `Role "${role}" cannot manage integrations. Use an HVCG Owner or Administrator account.`}
+          </MessageBarBody>
+        </MessageBar>
+        {role === 'Unauthenticated' && devOwnerLoginAllowed ? (
+          <Button
+            appearance="primary"
+            onClick={() => {
+              activateDevOwner();
+            }}
+          >
+            Continue as Local Owner (Dev)
+          </Button>
+        ) : null}
+      </ModuleScaffold>
+    );
+  }
+  return <ConnectionsCenterPage />;
+}
+
 function FinanceRoute({ children }: { children: ReactNode }) {
   const { can } = useAtlasRole();
   if (!can('viewFinance')) return <Navigate to="/access-denied" replace />;
@@ -58,11 +101,11 @@ function ClientsRoute({ children }: { children: ReactNode }) {
 
 function HomeRoute() {
   const { can, role } = useAtlasRole();
-  if (role === 'Unauthenticated') return <ExecutiveDashboardPage />;
+  if (role === 'Unauthenticated') return <CommandCenterPage />;
   if (role === 'Unresolved') return <Navigate to="/access-denied" replace />;
   if (!can('viewExecutiveHome') && can('viewClients')) return <Navigate to="/clients" replace />;
   if (!can('viewExecutiveHome')) return <Navigate to="/access-denied" replace />;
-  return <ExecutiveDashboardPage />;
+  return <CommandCenterPage />;
 }
 
 export function App() {
@@ -73,7 +116,12 @@ export function App() {
           <Routes>
             <Route element={<AppShell />}>
               <Route index element={<HomeRoute />} />
-              <Route path="executive" element={<HomeRoute />} />
+              <Route path="executive" element={<ExecutiveDashboardPage />} />
+              <Route path="command-center" element={<HomeRoute />} />
+              <Route path="my-work" element={<MyWorkPage />} />
+              <Route path="portfolio" element={<PortfolioPage />} />
+              <Route path="inbox" element={<UniversalInboxPage />} />
+              <Route path="team" element={<TeamAgentsPage />} />
               <Route
                 path="financials"
                 element={
@@ -141,6 +189,7 @@ export function App() {
               <Route path="ai" element={<AiInsightsPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="connections" element={<ConnectionsRoute />} />
               <Route path="admin" element={<AdminRoute />} />
               <Route path="access-denied" element={<AccessDeniedPage />} />
             </Route>

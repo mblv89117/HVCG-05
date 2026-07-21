@@ -96,12 +96,12 @@ const useToast = makeStyles({
     borderRadius: tokens.borderRadiusLarge,
     backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    boxShadow: '0 12px 32px rgba(12, 22, 18, 0.16)',
+    boxShadow: '0 12px 32px rgba(11, 31, 51, 0.14)',
   },
-  success: { border: '1px solid rgba(26, 92, 66, 0.45)' },
-  warning: { border: '1px solid rgba(176, 138, 60, 0.55)' },
-  danger: { border: '1px solid rgba(139, 46, 46, 0.45)' },
-  info: { border: '1px solid rgba(42, 90, 122, 0.45)' },
+  success: { border: '1px solid rgba(5, 150, 105, 0.45)' },
+  warning: { border: '1px solid rgba(217, 119, 6, 0.55)' },
+  danger: { border: '1px solid rgba(220, 38, 38, 0.45)' },
+  info: { border: '1px solid rgba(37, 99, 235, 0.45)' },
 });
 
 export function NotificationStack({
