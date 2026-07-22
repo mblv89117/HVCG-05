@@ -42,7 +42,7 @@ function scopeHeaders(auth: AtlasHubAuthHeaders): Record<string, string> {
 
 /**
  * Resolve a Hub API access token. Prefers an already-acquired access token.
- * Does not return ID tokens or Graph nonce tokens.
+ * Does not return ID tokens. Silent acquisition only (no auto-popup).
  */
 export async function resolveHubBearer(
   preferred?: string | null,

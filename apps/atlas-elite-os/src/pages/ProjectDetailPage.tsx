@@ -106,7 +106,11 @@ export function ProjectDetailPage({
     if (!auth.hasBearer) {
       setLoading(false);
       setMissing(false);
-      setAuthFailure('Microsoft sign-in required (Bearer token missing)');
+      setAuthFailure(
+        auth.bootstrapStatus === 'interaction_required'
+          ? auth.bootstrapMessage || 'Authorize Atlas Integration Hub'
+          : auth.bootstrapMessage || 'Microsoft sign-in required (Bearer token missing)',
+      );
       return;
     }
     setLoading(true);
@@ -188,19 +192,35 @@ export function ProjectDetailPage({
     return (
       <ModuleScaffold
         title="Authentication required"
-        subtitle="Integration Hub rejected the request (401)"
+        subtitle={
+          auth.bootstrapStatus === 'interaction_required'
+            ? 'Hub API authorization required'
+            : 'Integration Hub rejected the request (401)'
+        }
         showPendingBanner={false}
       >
-        <AtlasCard title="Bearer token missing or rejected">
+        <AtlasCard
+          title={
+            auth.bootstrapStatus === 'interaction_required'
+              ? 'Authorize Atlas Integration Hub'
+              : 'Bearer token missing or rejected'
+          }
+        >
           <Text>{authFailure}</Text>
           <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            Your Atlas UI session is signed in, but the Hub API call did not receive a valid
-            Authorization Bearer. This is not a missing project.
+            Your Atlas UI session may be signed in, but the Hub API call did not receive a valid
+            access token. This is not a missing project.
           </Caption1>
           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            <Button appearance="primary" onClick={() => void refresh()}>
-              Retry with Hub bearer
-            </Button>
+            {auth.bootstrapStatus === 'interaction_required' ? (
+              <Button appearance="primary" onClick={() => void auth.authorizeHub()}>
+                Authorize Atlas Integration Hub
+              </Button>
+            ) : (
+              <Button appearance="primary" onClick={() => void refresh()}>
+                Retry with Hub bearer
+              </Button>
+            )}
             <Link to="/projects">
               <Button appearance="secondary">Back to projects</Button>
             </Link>

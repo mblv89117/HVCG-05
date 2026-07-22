@@ -11,9 +11,13 @@ export {
   signInInteractive,
   signInRedirect,
   signOut,
+  trySsoSilent,
   acquireDataverseToken,
   acquireGraphToken,
   acquireHubBearerToken,
+  acquireHubAccessTokenSilent,
+  acquireHubAccessTokenInteractive,
   getHubApiScopes,
   getActiveAccount,
 } from './auth/msal';
+export type { HubTokenAcquisition } from './auth/msal';

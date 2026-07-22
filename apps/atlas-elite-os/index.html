@@ -4,10 +4,74 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Atlas Elite OS</title>
-    <meta name="description" content="HVCG Project Atlas Elite OS — no live client communications without owner gates." />
+    <meta
+      name="description"
+      content="HVCG Project Atlas Elite OS — no live client communications without owner gates."
+    />
+    <style>
+      #atlas-boot {
+        min-height: 100vh;
+        margin: 0;
+        padding: 32px;
+        box-sizing: border-box;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: linear-gradient(160deg, #071624, #0b1f33 45%, #122a42);
+        color: #f8fafc;
+      }
+      #atlas-boot h1 {
+        margin: 0 0 8px;
+        font-size: 1.5rem;
+      }
+      #atlas-boot p {
+        margin: 0 0 8px;
+        opacity: 0.9;
+      }
+      #atlas-boot.atlas-boot-failed {
+        background: #3f1d1d;
+      }
+      #atlas-boot-actions[hidden] {
+        display: none;
+      }
+      #atlas-boot-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      #atlas-boot-actions a,
+      #atlas-boot-actions button {
+        appearance: none;
+        border: 0;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font: inherit;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      #atlas-boot-actions button {
+        background: #c9a227;
+        color: #071624;
+        font-weight: 600;
+      }
+      #atlas-boot-actions a {
+        background: transparent;
+        color: #f8fafc;
+        border: 1px solid rgba(248, 250, 252, 0.35);
+      }
+    </style>
   </head>
   <body>
+    <div id="atlas-boot" role="status" aria-live="polite">
+      <h1>Atlas</h1>
+      <p id="atlas-boot-stage">Loading Atlas</p>
+      <p id="atlas-boot-detail">Preparing application shell…</p>
+      <p id="atlas-boot-sha"></p>
+      <div id="atlas-boot-actions" hidden>
+        <button type="button" onclick="location.reload()">Retry</button>
+        <a href="/">Command Center</a>
+      </div>
+    </div>
     <div id="root"></div>
+    <script src="/atlas-boot.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

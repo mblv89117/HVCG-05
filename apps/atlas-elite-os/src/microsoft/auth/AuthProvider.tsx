@@ -13,6 +13,7 @@ import {
   getActiveAccount,
   signInInteractive,
   signOut,
+  trySsoSilent,
   isEntraConfigured,
   microsoftConfig,
 } from '../index';
@@ -22,6 +23,7 @@ import {
   readDevOwnerSessionActive,
   writeDevOwnerSessionActive,
 } from '../../security/devOwnerSession';
+import { fetchSwaAuthMe, swaLoginHint, type SwaClientPrincipal } from '../../startup/swaAuthMe';
 
 interface AuthState {
   ready: boolean;
@@ -38,6 +40,9 @@ interface AuthState {
   activateDevOwner: () => void;
   clearDevOwner: () => void;
   displayName: string;
+  /** SWA /.auth/me principal when present (hint only). */
+  swaPrincipal: SwaClientPrincipal | null;
+  initStage: string;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -47,6 +52,8 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<AccountInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devOwnerActive, setDevOwnerActive] = useState(false);
+  const [swaPrincipal, setSwaPrincipal] = useState<SwaClientPrincipal | null>(null);
+  const [initStage, setInitStage] = useState('boot');
   const configured = isEntraConfigured();
   const devOwnerLoginAllowed = isDevOwnerLoginAllowed();
 
@@ -58,17 +65,55 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
+        setInitStage('swa_principal');
+        window.__ATLAS_BOOT__?.setStage('Checking Static Web Apps session', 'Reading /.auth/me…');
+        const swa = await fetchSwaAuthMe();
+        if (!cancelled) setSwaPrincipal(swa.clientPrincipal);
+
+        setInitStage('msal_init');
+        window.__ATLAS_BOOT__?.setStage('Initializing Microsoft authentication', 'MSAL initialize…');
         const instance = await getMsal();
         if (!instance) {
-          if (!cancelled) setReady(true);
+          if (!cancelled) {
+            setReady(true);
+            setInitStage('ready_unconfigured');
+            window.__ATLAS_BOOT__?.hide();
+          }
           return;
         }
-        const active = getActiveAccount(instance);
-        if (!cancelled) setAccount(active);
+
+        setInitStage('redirect_handled');
+        let active = getActiveAccount(instance);
+
+        if (!active) {
+          setInitStage('sso_silent');
+          window.__ATLAS_BOOT__?.setStage(
+            'Connecting Microsoft account',
+            'Attempting silent SSO when a SWA login hint is available…',
+          );
+          active = await trySsoSilent(swaLoginHint(swa.clientPrincipal));
+        }
+
+        if (!cancelled) {
+          setAccount(active);
+          setInitStage(active ? 'ready_signed_in' : 'ready_signed_out');
+        }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e));
+          setInitStage('error');
+          window.__ATLAS_BOOT__?.fail(
+            'msal_init_failed',
+            e instanceof Error ? e.message : String(e),
+          );
+        }
       } finally {
-        if (!cancelled) setReady(true);
+        if (!cancelled) {
+          setReady(true);
+          window.__ATLAS_REACT_MOUNTED__ = true;
+          // Hide boot splash once auth state is resolved; React shell is visible.
+          window.__ATLAS_BOOT__?.hide();
+        }
       }
     })();
     return () => {
@@ -117,7 +162,8 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
 
   const effectiveDevOwner = devOwnerLoginAllowed && devOwnerActive && !account;
 
-  const displayName = account?.name || account?.username || (effectiveDevOwner ? DEV_OWNER_DISPLAY_NAME : 'Guest');
+  const displayName =
+    account?.name || account?.username || (effectiveDevOwner ? DEV_OWNER_DISPLAY_NAME : 'Guest');
 
   const environmentBanner = effectiveDevOwner
     ? `${microsoftConfig.environmentBanner} · LOCAL OWNER SESSION (DEV ONLY)`
@@ -137,6 +183,8 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
       activateDevOwner,
       clearDevOwner,
       displayName,
+      swaPrincipal,
+      initStage,
     }),
     [
       ready,
@@ -151,6 +199,8 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
       activateDevOwner,
       clearDevOwner,
       displayName,
+      swaPrincipal,
+      initStage,
     ],
   );
 

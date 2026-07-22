@@ -290,6 +290,7 @@ export function AppShell() {
 
   return (
     <AtlasProvider scheme={scheme}>
+      <div data-atlas-shell="true">
       <NavShell
         sections={sections}
         collapsed={collapsed}
@@ -437,6 +438,7 @@ export function AppShell() {
         }
       />
       <NotificationStack items={items} onDismiss={dismiss} />
+      </div>
     </AtlasProvider>
   );
 }

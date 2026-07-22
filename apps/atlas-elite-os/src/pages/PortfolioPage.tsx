@@ -101,7 +101,42 @@ export function PortfolioPage() {
   if (!auth.tokenReady) {
     return (
       <ModuleScaffold title="Projects" subtitle="Preparing Microsoft session…" showPendingBanner={false}>
-        <Spinner label="Acquiring Hub bearer…" />
+        <Spinner label="Acquiring Hub access token…" />
+      </ModuleScaffold>
+    );
+  }
+
+  if (auth.bootstrapStatus === 'interaction_required') {
+    return (
+      <ModuleScaffold
+        title="Projects"
+        subtitle="Integration Hub authorization required"
+        showPendingBanner={false}
+      >
+        <EmptyState
+          title="Authorize Atlas Integration Hub"
+          description={
+            auth.bootstrapMessage ||
+            'Your Microsoft session is active, but Atlas still needs a Hub API access token. This is a one-time authorization for the Integration Hub scope.'
+          }
+        />
+        <Button appearance="primary" onClick={() => void auth.authorizeHub()}>
+          Authorize Atlas Integration Hub
+        </Button>
+      </ModuleScaffold>
+    );
+  }
+
+  if (!auth.hasBearer) {
+    return (
+      <ModuleScaffold title="Projects" subtitle="Authentication required" showPendingBanner={false}>
+        <EmptyState
+          title="Microsoft sign-in required"
+          description={
+            auth.bootstrapMessage ||
+            'Atlas could not acquire an Integration Hub access token. The application shell remains available.'
+          }
+        />
       </ModuleScaffold>
     );
   }

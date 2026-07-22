@@ -18,7 +18,6 @@ import {
   ClientDetailPage as DemoClientDetailPage,
   EnterpriseValuePage,
   FinancialsPage,
-  ProjectsPage,
   RevenuePage,
   TasksPage,
 } from './pages/Modules';
@@ -219,7 +218,7 @@ export function App() {
                 path="projects"
                 element={
                   <PrivateRoute>
-                    <ProjectsPage />
+                    <PortfolioPage />
                   </PrivateRoute>
                 }
               />
