@@ -55,8 +55,12 @@ Pages wait for `tokenReady` / `hasBearer` before Hub calls. `hubFetchJson` acqui
 ## Manny manual check (no sign-out)
 
 1. Hard-refresh authenticated Atlas tab
-2. Footer SHA must match this access-token deploy (not claim until stamped)
+2. Footer SHA must begin `74fe886` (access-token deploy — **not** `40d2396`)
 3. Footer still `HVCG Owner`
 4. Open `/projects`
 5. Portfolio request 200
 6. Do not click Sync until `/projects` loads
+
+Deployed frontend commit: `74fe8862392af6c355955464d95c25b1f22a478c`
+Asset: `index-Bd-pPO26.js`
+Hub zip deploy: RuntimeSuccessful (scope-aware middleware)
