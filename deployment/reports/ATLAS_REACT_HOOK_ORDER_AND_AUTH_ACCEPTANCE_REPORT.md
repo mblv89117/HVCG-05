@@ -118,23 +118,39 @@ Rules-of-Hooks lint results: **no `react-hooks/rules-of-hooks` errors** across `
 
 | Field | Value |
 |---|---|
-| Deploy commit SHA | *(filled after commit + deploy)* |
-| Production asset filename | *(filled after deploy)* |
-| Footer SHA | Must match deploy commit |
+| Deploy commit SHA | `bc16ed656727f6ae5f4396d18b0dc8f609b545d0` |
+| Production asset filename | `assets/index-BJdw2xIC.js` |
+| CSS asset | `assets/index-ZTMcapBL.css` |
+| Footer / bundle SHA | `bc16ed656727f6ae5f4396d18b0dc8f609b545d0` embedded in JS |
+| index.html | 200 `text/html` |
+| JS MIME | 200 `text/javascript` |
+| CSS MIME | 200 `text/css` |
+| SWA AAD login | 302 to identity redirect |
 | Production tags | `atlas-v1.0.0-production` and `atlas-v1.0.1-production` **unchanged** |
+| Deployed URL | https://zealous-rock-0090c7e1e.7.azurestaticapps.net |
 
-## Production acceptance (owner sequence — after deploy asset verified)
+## Production acceptance (owner sequence — deploy asset verified)
 
-1. Open `https://zealous-rock-0090c7e1e.7.azurestaticapps.net/projects`
-2. Confirm Atlas shell (no blank page, no recovery screen on normal startup)
-3. Click **Sign in with Microsoft** once
-4. Sign in as `manny@highvaluecapitalgroup.com` (MFA only if Microsoft prompts)
-5. Confirm return to `/projects`
-6. Confirm footer shows new SHA and **HVCG Owner**
-7. If shown once: **Authorize Atlas Integration Hub** — click once
-8. Confirm Projects portfolio renders (authenticated 200)
-9. Spot-check Clients (7), Documents, My Work, Command Center
-10. Confirm no repeated popup/login loop
+**Stop condition met:** Microsoft interactive sign-in can only be completed by the owner.
+
+### Exact owner instruction (one session)
+
+1. Open exactly: `https://zealous-rock-0090c7e1e.7.azurestaticapps.net/projects`
+2. Confirm footer / diagnostics show build SHA starting with `bc16ed6` (not `df6c9ce`).
+3. Confirm Atlas shell renders (no blank page; no “Atlas hit a recoverable error” on normal load).
+4. Click **Sign in with Microsoft** once.
+5. Account: `manny@highvaluecapitalgroup.com`
+6. Complete MFA only if Microsoft requests it.
+7. Expect return to `/projects` with **no React #310** and **no recovery screen**.
+8. Footer role: **HVCG Owner**.
+9. If Hub consent is still required, click **Authorize Atlas Integration Hub** exactly once.
+10. Expect Projects portfolio to load (authenticated 200).
+
+Do not open a second login popup/tab. Do not clear cookies unless this sequence fails with a documented cache mismatch.
+
+## Operating-data validation
+
+Deferred until authenticated Projects API returns 200 under the owner session. Do not invent counts.
 
 ## Confirmations
 
