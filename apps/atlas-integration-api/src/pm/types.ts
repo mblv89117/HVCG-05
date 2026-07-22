@@ -350,6 +350,36 @@ export interface ProjectTemplateRecord {
   approvalGates: string[];
 }
 
+export interface NoteRecord {
+  id: string;
+  body: string;
+  title?: string;
+  ownerId: string;
+  ownerName: string;
+  clientId?: string;
+  clientName?: string;
+  projectId?: string;
+  sourceLinks: SourceLink[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Ambiguous records held for Manny — never auto-assigned without evidence. */
+export interface OwnerReviewItem {
+  id: string;
+  kind: 'project' | 'task' | 'document' | 'meeting' | 'other';
+  title: string;
+  reason: string;
+  suggestedClientId?: string;
+  suggestedClientName?: string;
+  sourceLinks: SourceLink[];
+  status: 'pending' | 'resolved' | 'skipped';
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+  resolutionNote?: string;
+}
+
 export interface PmStoreSnapshot {
   version: 1;
   projects: ProjectRecord[];
@@ -365,6 +395,8 @@ export interface PmStoreSnapshot {
   agents: AgentWorkRecord[];
   templates: ProjectTemplateRecord[];
   activity: ActivityEvent[];
+  notes: NoteRecord[];
+  ownerReviewQueue: OwnerReviewItem[];
   lastBootstrapAt?: string;
   lastExtractionAt?: string;
 }

@@ -8,6 +8,8 @@ import type {
   DeliverableRecord,
   InboxItemRecord,
   MilestoneRecord,
+  NoteRecord,
+  OwnerReviewItem,
   PmStoreSnapshot,
   ProjectRecord,
   RiskIssueRecord,
@@ -41,6 +43,8 @@ function empty(): PmStoreSnapshot {
     ),
     templates: [...PROJECT_TEMPLATES],
     activity: [],
+    notes: [],
+    ownerReviewQueue: [],
   };
 }
 
@@ -59,6 +63,8 @@ export class PmRepository {
         team: raw.team?.length ? raw.team : DEFAULT_TEAM,
         templates: raw.templates?.length ? raw.templates : PROJECT_TEMPLATES,
         agents: raw.agents?.length ? raw.agents : empty().agents,
+        notes: raw.notes || [],
+        ownerReviewQueue: raw.ownerReviewQueue || [],
       };
     } else {
       this.data = empty();
@@ -247,5 +253,35 @@ export class PmRepository {
     });
     this.data.activity = this.data.activity.slice(0, 2000);
     this.persist();
+  }
+
+  listNotes(filter?: { projectId?: string; clientId?: string }) {
+    return this.data.notes.filter((n) => {
+      if (filter?.projectId && n.projectId !== filter.projectId) return false;
+      if (filter?.clientId && n.clientId !== filter.clientId) return false;
+      return true;
+    });
+  }
+
+  upsertNote(note: NoteRecord) {
+    const i = this.data.notes.findIndex((n) => n.id === note.id);
+    if (i >= 0) this.data.notes[i] = note;
+    else this.data.notes.push(note);
+    this.persist();
+  }
+
+  listOwnerReview(status: OwnerReviewItem['status'] = 'pending') {
+    return this.data.ownerReviewQueue.filter((r) => r.status === status);
+  }
+
+  upsertOwnerReview(item: OwnerReviewItem) {
+    const i = this.data.ownerReviewQueue.findIndex((x) => x.id === item.id);
+    if (i >= 0) this.data.ownerReviewQueue[i] = item;
+    else this.data.ownerReviewQueue.push(item);
+    this.persist();
+  }
+
+  listActivity(limit = 100) {
+    return this.data.activity.slice(0, limit);
   }
 }

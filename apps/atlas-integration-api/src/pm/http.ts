@@ -12,9 +12,18 @@ import {
   buildPortfolio,
   buildWeeklyCeoReview,
 } from './commandCenter.ts';
+import { listOperatingDocuments } from './documents.ts';
+import { isValidProjectId } from './projectId.ts';
 import { quickCapture } from './quickCapture.ts';
 import type { PmRepository } from './repository.ts';
-import type { ProjectRecord, TaskRecord } from './types.ts';
+import type {
+  DecisionRecord,
+  MilestoneRecord,
+  NoteRecord,
+  OwnerReviewItem,
+  ProjectRecord,
+  TaskRecord,
+} from './types.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
   const headers: Record<string, string> = {
@@ -77,23 +86,66 @@ export async function handlePmRoutes(opts: {
     }
     const projectMatch = path.match(/^\/api\/pm\/projects\/([^/]+)$/);
     if (projectMatch) {
-      const project = pm.getProject(projectMatch[1]);
-      if (!project) {
-        send(res, 404, { error: 'not_found' }, origin);
+      const rawId = decodeURIComponent(projectMatch[1]);
+      if (!isValidProjectId(rawId)) {
+        send(
+          res,
+          404,
+          {
+            error: 'invalid_project_id',
+            message:
+              'Project id is missing or invalid. Open Projects from the sidebar to choose a real project.',
+          },
+          origin,
+        );
         return true;
       }
+      const project = pm.getProject(rawId);
+      if (!project) {
+        send(
+          res,
+          404,
+          {
+            error: 'not_found',
+            message: 'No project exists for this id. It may be archived, never created, or from an obsolete demo catalog.',
+          },
+          origin,
+        );
+        return true;
+      }
+      const tasks = pm.listTasks({ projectId: project.id });
       send(
         res,
         200,
         {
           project,
-          tasks: pm.listTasks({ projectId: project.id }),
+          tasks,
+          board: {
+            todo: tasks.filter((t) =>
+              ['inbox', 'ready', 'scheduled', 'deferred'].includes(t.status),
+            ),
+            inProgress: tasks.filter((t) =>
+              ['in_progress', 'waiting', 'blocked'].includes(t.status),
+            ),
+            review: tasks.filter((t) =>
+              ['needs_review', 'needs_owner_approval'].includes(t.status),
+            ),
+            done: tasks.filter((t) => ['completed', 'cancelled'].includes(t.status)),
+          },
           milestones: pm.listMilestones(project.id),
           risks: pm.listRisksIssues().filter((r) => r.projectId === project.id),
           decisions: pm.listDecisions().filter((d) => d.projectId === project.id),
           commitments: pm.listCommitments().filter((c) => c.projectId === project.id),
           deliverables: pm.listDeliverables(project.id),
           waiting: pm.listWaiting().filter((w) => w.projectId === project.id),
+          notes: pm.listNotes({ projectId: project.id }),
+          activity: pm.listActivity(50).filter(
+            (a) => a.detail?.includes(project.id) || a.detail?.includes(project.name),
+          ),
+          documents: listOperatingDocuments(pm, repo, {
+            clientId: project.clientId,
+            projectId: project.id,
+          }).documents.slice(0, 100),
         },
         origin,
       );
@@ -150,7 +202,69 @@ export async function handlePmRoutes(opts: {
     }
     const clientWs = path.match(/^\/api\/pm\/clients\/([^/]+)\/workspace$/);
     if (clientWs) {
-      send(res, 200, { workspace: buildClientWorkspace(pm, repo, clientWs[1]) }, origin);
+      const clientId = decodeURIComponent(clientWs[1]);
+      const workspace = buildClientWorkspace(pm, repo, clientId);
+      const docs = listOperatingDocuments(pm, repo, { clientId });
+      send(
+        res,
+        200,
+        {
+          workspace: {
+            ...workspace,
+            notes: pm.listNotes({ clientId }),
+            documents: docs.documents,
+            meetings: (workspace.client?.timeline || [])
+              .filter((t) => /meeting|calendar|call/i.test(String(t.kind || t.title || '')))
+              .slice(0, 40),
+          },
+        },
+        origin,
+      );
+      return true;
+    }
+    if (path === '/api/pm/documents') {
+      const url = new URL(req.url || '', 'http://local');
+      const result = listOperatingDocuments(pm, repo, {
+        clientId: url.searchParams.get('clientId') || undefined,
+        projectId: url.searchParams.get('projectId') || undefined,
+        query: url.searchParams.get('q') || undefined,
+        documentType: url.searchParams.get('type') || undefined,
+        confidentiality: url.searchParams.get('confidentiality') || undefined,
+        includeRestricted: url.searchParams.get('includeRestricted') === '1',
+      });
+      send(
+        res,
+        200,
+        {
+          count: result.documents.length,
+          restrictedOmitted: result.restrictedOmitted,
+          sharePointSites: {
+            commandCenter: 'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter',
+            clients: 'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients',
+          },
+          documents: result.documents,
+        },
+        origin,
+      );
+      return true;
+    }
+    if (path === '/api/pm/notes') {
+      const url = new URL(req.url || '', 'http://local');
+      send(
+        res,
+        200,
+        {
+          notes: pm.listNotes({
+            projectId: url.searchParams.get('projectId') || undefined,
+            clientId: url.searchParams.get('clientId') || undefined,
+          }),
+        },
+        origin,
+      );
+      return true;
+    }
+    if (path === '/api/pm/owner-review') {
+      send(res, 200, { items: pm.listOwnerReview('pending') }, origin);
       return true;
     }
     send(res, 404, { error: 'pm_route_not_found' }, origin);
@@ -334,6 +448,9 @@ export async function handlePmRoutes(opts: {
       health: 'healthy',
       progressPercent: 0,
       nextAction: body.nextAction ? String(body.nextAction) : 'Define first milestone',
+      targetCompletionDate: body.targetCompletionDate
+        ? String(body.targetCompletionDate)
+        : undefined,
       sourceLinks: [],
       tags: [],
       createdAt: now,
@@ -341,7 +458,191 @@ export async function handlePmRoutes(opts: {
       lastActivityAt: now,
     };
     pm.upsertProject(project);
+    pm.appendActivity('project_created', principal.userId, `${project.id}:${project.name}`);
     send(res, 200, { project }, origin);
+    return true;
+  }
+
+  const projectPatch = path.match(/^\/api\/pm\/projects\/([^/]+)$/);
+  if (projectPatch && method === 'PATCH') {
+    const rawId = decodeURIComponent(projectPatch[1]);
+    if (!isValidProjectId(rawId)) {
+      send(res, 404, { error: 'invalid_project_id' }, origin);
+      return true;
+    }
+    const existing = pm.getProject(rawId);
+    if (!existing) {
+      send(res, 404, { error: 'not_found' }, origin);
+      return true;
+    }
+    const updated: ProjectRecord = {
+      ...existing,
+      ...('name' in body ? { name: String(body.name) } : {}),
+      ...('clientId' in body ? { clientId: body.clientId ? String(body.clientId) : undefined } : {}),
+      ...('clientName' in body
+        ? { clientName: body.clientName ? String(body.clientName) : undefined }
+        : {}),
+      ...('status' in body ? { status: body.status as ProjectRecord['status'] } : {}),
+      ...('priority' in body ? { priority: body.priority as ProjectRecord['priority'] } : {}),
+      ...('health' in body ? { health: body.health as ProjectRecord['health'] } : {}),
+      ...('objective' in body
+        ? { objective: body.objective ? String(body.objective) : undefined }
+        : {}),
+      ...('nextAction' in body
+        ? { nextAction: body.nextAction ? String(body.nextAction) : undefined }
+        : {}),
+      ...('ownerId' in body ? { ownerId: String(body.ownerId) } : {}),
+      ...('ownerName' in body ? { ownerName: String(body.ownerName) } : {}),
+      ...('targetCompletionDate' in body
+        ? {
+            targetCompletionDate: body.targetCompletionDate
+              ? String(body.targetCompletionDate)
+              : undefined,
+          }
+        : {}),
+      ...('teamMemberIds' in body && Array.isArray(body.teamMemberIds)
+        ? { teamMemberIds: body.teamMemberIds as string[] }
+        : {}),
+      updatedAt: new Date().toISOString(),
+      lastActivityAt: new Date().toISOString(),
+    };
+    pm.upsertProject(updated);
+    pm.appendActivity('project_updated', principal.userId, `${updated.id}:${updated.name}`);
+    send(res, 200, { project: updated }, origin);
+    return true;
+  }
+
+  const projectArchive = path.match(/^\/api\/pm\/projects\/([^/]+)\/archive$/);
+  if (projectArchive && method === 'POST') {
+    const rawId = decodeURIComponent(projectArchive[1]);
+    if (!isValidProjectId(rawId)) {
+      send(res, 404, { error: 'invalid_project_id' }, origin);
+      return true;
+    }
+    const existing = pm.getProject(rawId);
+    if (!existing) {
+      send(res, 404, { error: 'not_found' }, origin);
+      return true;
+    }
+    const now = new Date().toISOString();
+    const updated: ProjectRecord = {
+      ...existing,
+      status: 'archived',
+      archivedAt: now,
+      updatedAt: now,
+      lastActivityAt: now,
+    };
+    pm.upsertProject(updated);
+    pm.appendActivity('project_archived', principal.userId, `${updated.id}:${updated.name}`);
+    send(res, 200, { project: updated }, origin);
+    return true;
+  }
+
+  if (path === '/api/pm/milestones' && method === 'POST') {
+    const now = new Date().toISOString();
+    const projectId = String(body.projectId || '');
+    if (!isValidProjectId(projectId) || !pm.getProject(projectId)) {
+      send(res, 400, { error: 'project_required' }, origin);
+      return true;
+    }
+    const milestone: MilestoneRecord = {
+      id: crypto.randomUUID(),
+      projectId,
+      title: String(body.title || 'Milestone'),
+      dueDate: body.dueDate ? String(body.dueDate) : undefined,
+      status: (body.status as MilestoneRecord['status']) || 'pending',
+      order: Number(body.order || pm.listMilestones(projectId).length + 1),
+    };
+    pm.upsertMilestone(milestone);
+    pm.appendActivity('milestone_created', principal.userId, `${projectId}:${milestone.title}`);
+    send(res, 200, { milestone }, origin);
+    return true;
+  }
+
+  if (path === '/api/pm/decisions' && method === 'POST') {
+    const now = new Date().toISOString();
+    const decision: DecisionRecord = {
+      id: crypto.randomUUID(),
+      title: String(body.title || 'Decision'),
+      decision: String(body.decision || body.title || ''),
+      date: String(body.date || now.slice(0, 10)),
+      ownerId: String(body.ownerId || 'person-manny'),
+      ownerName: String(body.ownerName || 'Manny Barela'),
+      context: body.context ? String(body.context) : undefined,
+      clientId: body.clientId ? String(body.clientId) : undefined,
+      clientName: body.clientName ? String(body.clientName) : undefined,
+      projectId: body.projectId ? String(body.projectId) : undefined,
+      sourceLinks: [],
+      status: (body.status as DecisionRecord['status']) || 'open',
+      createdAt: now,
+      updatedAt: now,
+    };
+    pm.upsertDecision(decision);
+    send(res, 200, { decision }, origin);
+    return true;
+  }
+
+  if (path === '/api/pm/notes' && method === 'POST') {
+    const now = new Date().toISOString();
+    const note: NoteRecord = {
+      id: crypto.randomUUID(),
+      body: String(body.body || body.text || ''),
+      title: body.title ? String(body.title) : undefined,
+      ownerId: String(body.ownerId || 'person-manny'),
+      ownerName: String(body.ownerName || 'Manny Barela'),
+      clientId: body.clientId ? String(body.clientId) : undefined,
+      clientName: body.clientName ? String(body.clientName) : undefined,
+      projectId: body.projectId ? String(body.projectId) : undefined,
+      sourceLinks: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    if (!note.body.trim()) {
+      send(res, 400, { error: 'body_required' }, origin);
+      return true;
+    }
+    pm.upsertNote(note);
+    send(res, 200, { note }, origin);
+    return true;
+  }
+
+  if (path === '/api/pm/owner-review' && method === 'POST') {
+    const now = new Date().toISOString();
+    const item: OwnerReviewItem = {
+      id: crypto.randomUUID(),
+      kind: (body.kind as OwnerReviewItem['kind']) || 'other',
+      title: String(body.title || 'Review item'),
+      reason: String(body.reason || 'Ambiguous ownership or client association'),
+      suggestedClientId: body.suggestedClientId ? String(body.suggestedClientId) : undefined,
+      suggestedClientName: body.suggestedClientName ? String(body.suggestedClientName) : undefined,
+      sourceLinks: [],
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    };
+    pm.upsertOwnerReview(item);
+    send(res, 200, { item }, origin);
+    return true;
+  }
+
+  const ownerReviewPatch = path.match(/^\/api\/pm\/owner-review\/([^/]+)$/);
+  if (ownerReviewPatch && method === 'PATCH') {
+    const existing = pm.listOwnerReview('pending').find((i) => i.id === ownerReviewPatch[1])
+      || pm.snapshot().ownerReviewQueue.find((i) => i.id === ownerReviewPatch[1]);
+    if (!existing) {
+      send(res, 404, { error: 'not_found' }, origin);
+      return true;
+    }
+    const now = new Date().toISOString();
+    const updated: OwnerReviewItem = {
+      ...existing,
+      status: (body.status as OwnerReviewItem['status']) || existing.status,
+      resolutionNote: body.resolutionNote ? String(body.resolutionNote) : existing.resolutionNote,
+      updatedAt: now,
+      resolvedAt: body.status && body.status !== 'pending' ? now : existing.resolvedAt,
+    };
+    pm.upsertOwnerReview(updated);
+    send(res, 200, { item: updated }, origin);
     return true;
   }
 

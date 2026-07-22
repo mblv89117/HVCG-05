@@ -34,78 +34,16 @@ export function FinancialsPage() {
   return (
     <ModuleScaffold
       title="Financial Intelligence"
-      subtitle="Bloomberg-meets-Copilot density — forecasting, cash, readiness. Values only when verified."
+      subtitle="Verified cash, runway, and forecasting — no fabricated KPIs."
+      showPendingBanner={false}
     >
-      <SectionRail title="Executive summary" subtitle="Entity · client · period filters ready">
-        <ResponsiveGrid className="atlas-stagger">
-          {pendingExecutiveKpis.slice(0, 4).map((f) => (
-            <KpiTile key={f.label} label={f.label} value={f.value} trend="flat" trendLabel={f.availability} />
-          ))}
-        </ResponsiveGrid>
-      </SectionRail>
-
-      <ResponsiveGrid dense>
-        <GridSpan span={2}>
-          <AtlasCard title="Cash analysis & runway" subtitle="No invented balances" variant="accent">
-            <FieldGrid
-              fields={[
-                { label: 'Cash runway', value: 'Not yet calculated', availability: 'Not yet calculated' },
-                { label: 'Working-capital trend', value: 'Not yet calculated', availability: 'Not yet calculated' },
-                { label: 'AR aging', value: 'Data connection pending', availability: 'Data connection pending' },
-                { label: 'AP aging', value: 'Data connection pending', availability: 'Data connection pending' },
-              ]}
-            />
-          </AtlasCard>
-        </GridSpan>
-        <AtlasCard title="Scenario planning" subtitle="Structure ready">
-          <FieldGrid
-            fields={[
-              { label: 'Base case', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-              { label: 'Upside', value: 'Not yet calculated', availability: 'Not yet calculated' },
-              { label: 'Downside', value: 'Not yet calculated', availability: 'Not yet calculated' },
-            ]}
-          />
-        </AtlasCard>
-        <GridSpan span={2}>
-          <AtlasCard title="Statements & performance">
-            <FieldGrid
-              fields={[
-                { label: 'Monthly revenue', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-                { label: 'Gross margin', value: 'Not yet calculated', availability: 'Not yet calculated' },
-                { label: 'Operating expenses', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-                { label: 'EBITDA', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-                { label: 'Debt obligations', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-                { label: 'Budget vs actual', value: 'Data connection pending', availability: 'Data connection pending' },
-                { label: 'Rolling forecast', value: 'Not yet calculated', availability: 'Not yet calculated' },
-                { label: 'Debt capacity', value: 'Not yet calculated', availability: 'Not yet calculated' },
-              ]}
-            />
-          </AtlasCard>
-        </GridSpan>
-        <InsightCard
-          title="AI executive summary"
-          body="Connect verified bank and accounting sources to unlock cash, EBITDA, and funding-readiness narratives. Recommendations will cite source records — never silent overwrites."
-          actions={
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Link to="/banking">
-                <Button size="small" appearance="secondary">
-                  Banking
-                </Button>
-              </Link>
-              <Link to="/capital">
-                <Button size="small" appearance="secondary">
-                  Capital readiness
-                </Button>
-              </Link>
-              <Link to="/enterprise-value">
-                <Button size="small" appearance="secondary">
-                  Enterprise value
-                </Button>
-              </Link>
-            </div>
-          }
-        />
-      </ResponsiveGrid>
+      <EmptyState
+        title="Not yet configured"
+        description="Intended source: Banking (Plaid) + Accounting (QuickBooks) once owner-authorized. Atlas will not invent balances or revenue figures."
+      />
+      <Caption1 style={{ display: 'block', marginTop: 12 }}>
+        Owner setup: connect Banking and Accounting under those modules, then return here.
+      </Caption1>
     </ModuleScaffold>
   );
 }
@@ -495,42 +433,16 @@ export function CapitalPage() {
   return (
     <ModuleScaffold
       title="Capital Advisory"
-      subtitle="Financing workspace — funding pipeline, debt capacity, and readiness. Amounts stay pending until verified."
+      subtitle="Financing workspace — funding pipeline and readiness when verified sources connect."
+      showPendingBanner={false}
     >
-      <AtlasCard title="Funding types supported" variant="accent">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {fundingTypes.map((t) => (
-            <StatusChip key={t} label={t} tone="gold" />
-          ))}
-        </div>
-      </AtlasCard>
-      <ResponsiveGrid>
-        <KpiTile
-          label="Active capital opportunities"
-          value="—"
-          trendLabel="Data connection pending"
-          trend="flat"
-        />
-        <KpiTile
-          label="Requested amount (aggregate)"
-          value="—"
-          trendLabel="Awaiting verified data"
-          trend="flat"
-        />
-        <KpiTile label="Expected fees" value="—" trendLabel="Not yet calculated" trend="flat" />
-        <KpiTile label="Funding readiness" value="—" trendLabel="Not yet calculated" trend="flat" />
-      </ResponsiveGrid>
-      <InsightCard
-        title="Growth opportunities"
-        body="Capital opportunities and lender packaging surfaces activate when verified financial packages and Dataverse opportunity records connect."
-        actions={
-          <Link to="/financials">
-            <Button size="small" appearance="secondary">
-              Open Financial Intelligence
-            </Button>
-          </Link>
-        }
+      <EmptyState
+        title="Not yet configured"
+        description="Intended source: Dataverse / SharePoint capital opportunities with verified financial packages. No fabricated opportunity counts or fee totals are shown."
       />
+      <Caption1 style={{ display: 'block', marginTop: 12 }}>
+        Supported funding-type catalog remains documented for packaging once live opportunities bind.
+      </Caption1>
     </ModuleScaffold>
   );
 }
@@ -564,73 +476,7 @@ export function EnterpriseValuePage() {
   );
 }
 
-export function DocumentsPage() {
-  const [query, setQuery] = useState('');
-  const rows = documentCategories
-    .map((c) => ({
-      category: c,
-      status: 'Data connection pending',
-      folder: c.includes('Legal') ? 'Legal' : c.includes('Financial') ? 'Financial' : 'General',
-    }))
-    .filter(
-      (r) =>
-        !query.trim() ||
-        r.category.toLowerCase().includes(query.trim().toLowerCase()) ||
-        r.folder.toLowerCase().includes(query.trim().toLowerCase()),
-    );
-
-  return (
-    <ModuleScaffold
-      title="Documents"
-      subtitle="Modern workspace — folders, search, preview readiness. SharePoint-backed when connected."
-      showPendingBanner={false}
-    >
-      <FilterToolbar>
-        <Input
-          appearance="outline"
-          contentBefore={<SearchRegular />}
-          placeholder="Search categories…"
-          value={query}
-          onChange={(_, d) => setQuery(d.value)}
-          aria-label="Search documents"
-          style={{ minWidth: 220 }}
-        />
-        <StatusChip label="Recent" tone="neutral" />
-        <StatusChip label="Favorites" tone="gold" />
-        <Caption1>Drag & drop · version history · approvals activate with SharePoint binding</Caption1>
-      </FilterToolbar>
-
-      <ResponsiveGrid dense>
-        <GridSpan span={2}>
-          <AtlasCard title="Library" subtitle="Categories awaiting item-level rows">
-            <DataTable
-              ariaLabel="Document categories"
-              getRowKey={(r) => r.category}
-              rows={rows}
-              emptyTitle="No matching folders"
-              emptyDescription="Try another search term."
-              columns={[
-                { key: 'folder', header: 'Folder', render: (r) => r.folder },
-                { key: 'c', header: 'Category', render: (r) => r.category },
-                {
-                  key: 's',
-                  header: 'Status',
-                  render: (r) => <StatusChip label={r.status} tone="warning" />,
-                },
-              ]}
-            />
-          </AtlasCard>
-        </GridSpan>
-        <AtlasCard title="Preview" subtitle="Select a document when SharePoint is bound">
-          <EmptyState
-            title="No preview available"
-            description="Document links will use SharePoint sites HVCG-CommandCenter-Dev / HVCG-Clients-Dev. AI summaries appear after item-level rows connect."
-          />
-        </AtlasCard>
-      </ResponsiveGrid>
-    </ModuleScaffold>
-  );
-}
+export { DocumentsOperatingPage as DocumentsPage } from './DocumentsOperatingPage';
 
 export function AiInsightsPage() {
   return (
@@ -639,39 +485,10 @@ export function AiInsightsPage() {
       subtitle="Copilot experience — suggested prompts, history, and approval-ready actions."
       showPendingBanner={false}
     >
-      <GlobalAICommandPanel
-        title="Atlas Copilot"
-        subtitle="Context-aware assistant — development stubs only; no live client actions."
-        onNavigateHint={() => undefined}
+      <EmptyState
+        title="Not yet configured"
+        description="Intended source: Knowledge Platform + Copilot connectors. Development stubs only — no live client actions."
       />
-      <ResponsiveGrid dense>
-        <AtlasCard title="Governance" variant="quiet">
-          <Text>
-            Every insight must show source records, generated timestamp, confidence/verification status,
-            responsible reviewer, and accept / dismiss / convert-to-task actions once live AI connectors are
-            enabled.
-          </Text>
-        </AtlasCard>
-        <AtlasCard title="Approval workflow">
-          <Text size={300}>
-            Convert Copilot recommendations into Tasks for Owner review. Live AI will never silently overwrite
-            verified ledger data.
-          </Text>
-          <Link to="/tasks">
-            <Button size="small" appearance="primary" style={{ marginTop: 12 }}>
-              Open task approvals
-            </Button>
-          </Link>
-        </AtlasCard>
-        <GridSpan span="full">
-          <AtlasCard title="Connected insight surfaces">
-            <EmptyState
-              title="No live AI insights connected"
-              description="Connect approved AI pipeline to Dataverse insight entities. Until then, use Command Center (⌘J) and labeled recommendations on Home / client workspaces."
-            />
-          </AtlasCard>
-        </GridSpan>
-      </ResponsiveGrid>
     </ModuleScaffold>
   );
 }

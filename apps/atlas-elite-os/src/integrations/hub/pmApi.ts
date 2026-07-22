@@ -61,13 +61,165 @@ export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
   return parse(res) as Promise<{
     project: PmProject;
     tasks: PmTask[];
+    board?: {
+      todo: PmTask[];
+      inProgress: PmTask[];
+      review: PmTask[];
+      done: PmTask[];
+    };
     milestones: unknown[];
     risks: unknown[];
     decisions: unknown[];
     commitments: unknown[];
     deliverables: unknown[];
     waiting: unknown[];
+    notes?: unknown[];
+    activity?: unknown[];
+    documents?: OperatingDocument[];
   }>;
+}
+
+export async function createPmProject(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/pm/projects`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ project: PmProject }>;
+}
+
+export async function patchPmProject(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  patch: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/pm/projects/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: headers(auth),
+    body: JSON.stringify(patch),
+  });
+  return parse(res) as Promise<{ project: PmProject }>;
+}
+
+export async function archivePmProject(auth: AtlasHubAuthHeaders, id: string) {
+  const res = await fetch(`${base()}/api/pm/projects/${encodeURIComponent(id)}/archive`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: '{}',
+  });
+  return parse(res) as Promise<{ project: PmProject }>;
+}
+
+export async function createPmTask(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/pm/tasks`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ task: PmTask }>;
+}
+
+export async function createPmMilestone(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/pm/milestones`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res);
+}
+
+export async function createPmNote(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/pm/notes`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res);
+}
+
+export async function createPmDecision(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/pm/decisions`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res);
+}
+
+export async function fetchPmDocuments(
+  auth: AtlasHubAuthHeaders,
+  params?: {
+    clientId?: string;
+    projectId?: string;
+    q?: string;
+    type?: string;
+    confidentiality?: string;
+  },
+) {
+  const q = new URLSearchParams();
+  if (params?.clientId) q.set('clientId', params.clientId);
+  if (params?.projectId) q.set('projectId', params.projectId);
+  if (params?.q) q.set('q', params.q);
+  if (params?.type) q.set('type', params.type);
+  if (params?.confidentiality) q.set('confidentiality', params.confidentiality);
+  const qs = q.toString();
+  const res = await fetch(`${base()}/api/pm/documents${qs ? `?${qs}` : ''}`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{
+    count: number;
+    restrictedOmitted: number;
+    sharePointSites: { commandCenter: string; clients: string };
+    documents: OperatingDocument[];
+  }>;
+}
+
+export async function fetchOwnerReview(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/pm/owner-review`, { headers: headers(auth) });
+  return parse(res) as Promise<{ items: OwnerReviewItem[] }>;
+}
+
+export interface OperatingDocument {
+  id: string;
+  title: string;
+  kind: string;
+  webUrl?: string;
+  path?: string;
+  classification?: string;
+  confidentiality: string;
+  clientId?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  owner?: string;
+  modifiedAt?: string;
+  version?: string;
+  sourceSystem: string;
+  sensitivityRestricted: boolean;
+}
+
+export interface OwnerReviewItem {
+  id: string;
+  kind: string;
+  title: string;
+  reason: string;
+  suggestedClientName?: string;
+  status: string;
 }
 
 export async function fetchPmInbox(auth: AtlasHubAuthHeaders) {
@@ -175,6 +327,7 @@ export interface PmTask {
 export interface PmProject {
   id: string;
   name: string;
+  clientId?: string;
   clientName?: string;
   businessEntity: string;
   projectType: string;
@@ -182,10 +335,13 @@ export interface PmProject {
   priority: string;
   health: string;
   progressPercent: number;
+  ownerId?: string;
   ownerName: string;
   nextAction?: string;
   targetCompletionDate?: string;
   objective?: string;
+  lastActivityAt?: string;
+  teamMemberIds?: string[];
 }
 
 export interface PortfolioProject extends PmProject {

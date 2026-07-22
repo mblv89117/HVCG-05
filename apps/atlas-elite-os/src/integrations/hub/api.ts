@@ -252,6 +252,7 @@ export interface Client360Candidate {
   phones?: string[];
   completenessScore?: number;
   recommendedNextActions?: string[];
+  missingInformation?: string[];
   businessEntities?: string[];
   timeline?: Array<{
     at: string;

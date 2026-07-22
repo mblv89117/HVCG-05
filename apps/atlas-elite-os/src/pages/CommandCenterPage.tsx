@@ -27,6 +27,7 @@ import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
 import { workspaceCatalog } from '../data/workspaces';
+import { projectDetailPath } from '../routing/projectId';
 import {
   fetchCommandCenter,
   initializePm,
@@ -417,24 +418,34 @@ export function CommandCenterPage() {
               {(cc.projects.atRisk || []).length === 0 ? (
                 <Caption1>No at-risk projects</Caption1>
               ) : (
-                cc.projects.atRisk.map((p) => (
+                cc.projects.atRisk.map((p) => {
+                  const path = projectDetailPath(p.id);
+                  return (
                   <div key={p.id} style={{ padding: '6px 0' }}>
-                    <Link to={`/projects/${p.id}`}>
+                    {path ? (
+                      <Link to={path}>
+                        <Text weight="semibold">{p.name}</Text>
+                      </Link>
+                    ) : (
                       <Text weight="semibold">{p.name}</Text>
-                    </Link>
+                    )}
                     <Caption1 style={{ display: 'block' }}>
                       {p.health} · {p.progressPercent}% · {p.nextAction || 'No next action'}
                     </Caption1>
                   </div>
-                ))
+                  );
+                })
               )}
             </AtlasCard>
             <AtlasCard title="Projects lacking next action">
-              {(cc.projects.lackingNextAction || []).map((p) => (
+              {(cc.projects.lackingNextAction || []).map((p) => {
+                const path = projectDetailPath(p.id);
+                return (
                 <div key={p.id} style={{ padding: '6px 0' }}>
-                  <Link to={`/projects/${p.id}`}>{p.name}</Link>
+                  {path ? <Link to={path}>{p.name}</Link> : p.name}
                 </div>
-              ))}
+                );
+              })}
             </AtlasCard>
             <AtlasCard title="Owner approvals">
               {(cc.ownerApprovals || []).length === 0 ? (

@@ -58,13 +58,13 @@ export function AutomationsPage() {
     >
       <AtlasCard variant="quiet">
         <EmptyState
-          title="Automation catalog linked"
-          description="Flow packages live under src/power-automate. Runtime activation requires Power Platform environment and owner connection references. No fake run success is shown."
+          title="Not yet configured"
+          description="Intended source: Power Automate packages under src/power-automate on HVCG-CommandCenter. MissingDocumentReminders, RenewalReminders, and Eva intake remain Off. No fake run success is shown."
           icon={<BotRegular />}
         />
       </AtlasCard>
       <Caption1>
-        See DEPLOYMENT_GUIDE.md and Power Platform Prod NO-GO report before enabling production flows.
+        Owner setup: review flow packages in Power Platform after security gates — do not enable client email reminders.
       </Caption1>
     </ModuleScaffold>
   );

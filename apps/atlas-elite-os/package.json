@@ -7,7 +7,8 @@
     "dev": "vite --host 127.0.0.1 --port 5180",
     "build": "tsc -b && vite build",
     "test:recovery": "node ./scripts/recovery-tests.mjs",
-    "preview": "vite preview --host 127.0.0.1 --port 4180"
+    "preview": "vite preview --host 127.0.0.1 --port 4180",
+    "test:routes": "node ./scripts/project-route-tests.mjs"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.12.0",

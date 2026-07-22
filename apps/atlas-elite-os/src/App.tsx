@@ -16,13 +16,13 @@ import {
   AiInsightsPage,
   CapitalPage,
   ClientDetailPage as DemoClientDetailPage,
-  DocumentsPage,
   EnterpriseValuePage,
   FinancialsPage,
   ProjectsPage,
   RevenuePage,
   TasksPage,
 } from './pages/Modules';
+import { DocumentsOperatingPage } from './pages/DocumentsOperatingPage';
 import { ClientsPage } from './pages/LiveClientsPage';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
@@ -33,6 +33,7 @@ import { AccountingConnectionsPage } from './pages/AccountingConnectionsPage';
 import { ConnectionsCenterPage } from './pages/ConnectionsCenterPage';
 import { AutomationsPage, KnowledgePage, ReportsPage } from './pages/PlatformModules';
 import { ModuleScaffold } from './pages/shared/ModuleScaffold';
+import { isValidProjectId } from './routing/projectId';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
@@ -45,6 +46,9 @@ function ClientDetailRoute() {
 
 function ProjectDetailRoute() {
   const { projectId = '' } = useParams();
+  if (!isValidProjectId(projectId)) {
+    return <ProjectDetailPage projectId={projectId} invalidId />;
+  }
   return <ProjectDetailPage projectId={projectId} />;
 }
 
@@ -255,7 +259,7 @@ export function App() {
                 path="documents"
                 element={
                   <PrivateRoute>
-                    <DocumentsPage />
+                    <DocumentsOperatingPage />
                   </PrivateRoute>
                 }
               />
