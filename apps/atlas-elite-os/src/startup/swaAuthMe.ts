@@ -15,7 +15,7 @@ export interface SwaAuthMe {
   clientPrincipal: SwaClientPrincipal | null;
 }
 
-export async function fetchSwaAuthMe(timeoutMs = 4000): Promise<SwaAuthMe> {
+export async function fetchSwaAuthMe(timeoutMs = 2500): Promise<SwaAuthMe> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -23,6 +23,7 @@ export async function fetchSwaAuthMe(timeoutMs = 4000): Promise<SwaAuthMe> {
       credentials: 'include',
       signal: ctrl.signal,
       headers: { accept: 'application/json' },
+      cache: 'no-store',
     });
     if (!res.ok) return { clientPrincipal: null };
     const data = (await res.json()) as SwaAuthMe;

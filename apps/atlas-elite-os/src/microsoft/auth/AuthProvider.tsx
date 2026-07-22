@@ -65,19 +65,19 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        setInitStage('swa_principal');
-        window.__ATLAS_BOOT__?.setStage('Checking Static Web Apps session', 'Reading /.auth/me…');
-        const swa = await fetchSwaAuthMe();
-        if (!cancelled) setSwaPrincipal(swa.clientPrincipal);
-
         setInitStage('msal_init');
         window.__ATLAS_BOOT__?.setStage('Initializing Microsoft authentication', 'MSAL initialize…');
         const instance = await getMsal();
+
+        setInitStage('swa_principal');
+        // Hint only — never blocks shell; short timeout; not authorization.
+        const swa = await fetchSwaAuthMe();
+        if (!cancelled) setSwaPrincipal(swa.clientPrincipal);
+
         if (!instance) {
           if (!cancelled) {
             setReady(true);
             setInitStage('ready_unconfigured');
-            window.__ATLAS_BOOT__?.hide();
           }
           return;
         }
@@ -111,8 +111,6 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setReady(true);
           window.__ATLAS_REACT_MOUNTED__ = true;
-          // Hide boot splash once auth state is resolved; React shell is visible.
-          window.__ATLAS_BOOT__?.hide();
         }
       }
     })();

@@ -23,5 +23,6 @@ createRoot(rootEl).render(
   </StrictMode>,
 );
 
-// Mark mount attempted; AuthProvider hides boot splash after MSAL ready.
+// React has taken over #root — never leave the pre-React splash covering the shell.
 window.__ATLAS_REACT_MOUNTED__ = true;
+window.__ATLAS_BOOT__?.hide();
