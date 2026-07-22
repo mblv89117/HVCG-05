@@ -1,0 +1,82 @@
+{
+  "title": "HVCG_InternalProjects",
+  "description": "Ops \u2014 Internal HVCG projects (non-client)",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "InternalCategory",
+      "displayName": "InternalCategory",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Product",
+        "Process",
+        "Hiring",
+        "Marketing",
+        "Compliance",
+        "Technology",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Planned",
+        "Active",
+        "Blocked",
+        "Done",
+        "Cancelled"
+      ],
+      "default": "Planned"
+    },
+    {
+      "internalName": "TargetDate",
+      "displayName": "TargetDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

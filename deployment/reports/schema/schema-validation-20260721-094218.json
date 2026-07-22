@@ -1,0 +1,8207 @@
+{
+  "phase": "post-list-provision",
+  "generatedAtUtc": "2026-07-21T16:42:18.6465400Z",
+  "siteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+  "listsChecked": 82,
+  "okCount": 1170,
+  "missingCount": 0,
+  "extraCount": 0,
+  "mismatchedCount": 0,
+  "hasDrift": false,
+  "isCompliant": true,
+  "missing": [],
+  "extra": [],
+  "mismatched": [],
+  "fields": [
+    {
+      "List": "HVCG_Clients",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "DBA",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "PrimaryContactId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "Industry",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "BusinessDescription",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "EntityType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "StateOfFormation",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "TaxIdStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "Website",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "ReferralSource",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "ClientStage",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "EngagementTypePrimary",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "RelationshipOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "ProjectManagerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "TeamMemberEmails",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "ServicePackage",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "MonthlyRetainer",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "SetupFee",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "SuccessFeeTerms",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "SuccessFeePercent",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "EngagementStartDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "EngagementEndDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "RenewalDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "PaymentStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "RiskLevel",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "OverallHealth",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "KeyGoals",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "KeyConstraints",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "CapitalNeed",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "CapitalType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "TargetAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "CurrentRevenue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "CurrentProfitability",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "EnterpriseValueRange",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "SharePointLibraryUrl",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "TeamsLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "InternalNotes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "LastMeaningfulContact",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "DaysSinceLastContact",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "IsActive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "ClientLifetimeValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "LifetimeValueMethod",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "FirstEngagementDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "TotalRevenueCollected",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "TotalRevenueBooked",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "NPS",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "PortalEnabled",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "PortalAccessGroup",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Clients",
+      "Field": "CopilotSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "Email",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "Phone",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "JobTitle",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "IsPrimary",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "IsBillingContact",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "IsDecisionMaker",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "PreferredContactMethod",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Contacts",
+      "Field": "IsActive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "PartnerType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "PrimaryContactName",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "Email",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "Phone",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "Firm",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "PartnerStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "AgreementOnFile",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "ReferralFeeTerms",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "LifetimeReferralCount",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_ReferralPartners",
+      "Field": "LifetimeWonCount",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "ContactName",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "Email",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "Phone",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "Source",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "LeadStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "ServiceInterest",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "EstimatedValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "ConvertedClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "ReferralPartnerId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "ReferralId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "LeadScore",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "DiscoveryCallDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "NextFollowUpDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "PipelineValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "LossReason",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "ConvertedOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "LeadSourceDetail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Leads",
+      "Field": "IsReferral",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ReferralPartnerId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "LeadId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ReferralDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ReferralStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ReferredCompany",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ReferredContact",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "ReferredEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "FeeOwed",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "FeePaid",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Referrals",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "LeadId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "Stage",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ProposalAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "Probability",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "WeightedValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ExpectedCloseDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ServicePackage",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "OpportunityType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ReferralPartnerId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ProposalId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "WinLossStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "LostReason",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "WonDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "LostDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "Competitor",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "DiscoveryCallId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ForecastCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "MRRImpact",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "SetupFeeImpact",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "SuccessFeeImpact",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "ClientLifetimeValueEstimate",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "SalesOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "CapitalOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "CapitalHandoffStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "NextActionDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "NextActionNotes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "CopilotSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "TeamsThreadUrl",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Opportunities",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "OpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "LeadId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "ActivityType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "ActivityDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "Outcome",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "PriorStage",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "NewStage",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_OpportunityActivities",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "LeadId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "OpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "CallDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "Outcome",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "PainPoints",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "CapitalNeedSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "NextStep",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "MeetingId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "RecordingLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_DiscoveryCalls",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "OpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "ProposalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "SentDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "ExpiryDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "ProposalAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "RetainerAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "SetupFee",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "SuccessFeeTerms",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "VersionLabel",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "DecisionMaker",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Proposals",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "OpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "Result",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "PrimaryReason",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "CompetitorName",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "LessonsLearned",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "ProcessImprovements",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "AnalyzedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "AnalysisDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_WinLossAnalyses",
+      "Field": "RevenueImpact",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "EngagementType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "Scope",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "ServicePackage",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "PricingSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "BillingStructure",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "SuccessFeeStructure",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "StartDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "TargetCompletionDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "EngagementStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "ProjectOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "TeamMemberEmails",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "Objectives",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "ClientResponsibilities",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "InternalResponsibilities",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "FinancialStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "EngagementHealth",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "ClientSatisfaction",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "NextExecutiveAction",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "MonthlyRetainer",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "SetupFee",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "EngagementValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "TemplateKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Engagements",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "ProjectTemplateKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "ProjectStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "ProjectHealth",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "ProjectOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "StartDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "TargetEndDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "PercentComplete",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "Workstreams",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "Objectives",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "Blockers",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "NextAction",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "SharePointFolderUrl",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "UtilizationHoursPlanned",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "UtilizationHoursActual",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "IsInternalProject",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Projects",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "WorkstreamKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Workstreams",
+      "Field": "Sequence",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "IsCritical",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Milestones",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "WorkstreamId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "MilestoneId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ParentTaskId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ApproverEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "DefaultRole",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "TaskStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "StartDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "CompletedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "PercentComplete",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "Blockers",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "EstimatedHours",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "ActualHours",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "DependsOnTaskKeys",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "RelatedDeliverableId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "IsOverdue",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "EscalationStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "CompletionEvidence",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "AttachmentLinks",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "TemplateTaskKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "Sequence",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "IsRecurring",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Tasks",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "DocumentCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "RequestDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ResponsibleClientContactEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "InternalOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "RequestStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "DateReceived",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "DateReviewed",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ApprovalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "RejectionReason",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ResubmissionRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ReminderCount",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "LastReminderDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "EscalationStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "IsCritical",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "ExpirationDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "IsStale",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "FolderTarget",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "TemplateItemKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "PortalVisible",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "CapitalOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_DocumentRequests",
+      "Field": "Audience",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "DeliverableType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "ReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "ApproverEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "DraftDueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "FinalDueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "DeliverableStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "VersionLabel",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "InternalReviewStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "ClientApprovalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "DeliveryDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "RevisionRequest",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "CompletionEvidence",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "RequiresExecutiveApproval",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "PortalVisible",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Deliverables",
+      "Field": "AIGenerated",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "MeetingType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "MeetingDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "Attendees",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "Objective",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "Summary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "DecisionsSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "ActionItemsSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "ClientCommitments",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "InternalCommitments",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "RisksRaised",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "Questions",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "NextMeetingDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "OutlookEventLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "TeamsMeetingLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "CommunicationOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "FollowUpDraftApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "NotesFileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "PlaybookKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "AISummaryId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "DiscoveryCallId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Meetings",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "Channel",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "Direction",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "CommunicationDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "Summary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "RequiresFollowUp",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "FollowUpTaskId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "IsMeaningfulContact",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "ApprovalRequiredBeforeSend",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Communications",
+      "Field": "SendApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "Background",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "Options",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "Recommendation",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "FinancialImpact",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "ClientImpact",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "LegalComplianceImpact",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "DecisionMakerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "Deadline",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "DecisionStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "FinalDecision",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "DecisionDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "SupportingDocuments",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Decisions",
+      "Field": "EscalationReason",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "Likelihood",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "Impact",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "RiskLevel",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "Mitigation",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "RiskStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Risks",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "IssueStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "Resolution",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "IssueType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Issues",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "BusinessJustification",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "EstimatedEffortHours",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "EstimatedFeeImpact",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "OutOfScopeFlag",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "ChangeStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "RequesterEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "ApproverEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ChangeRequests",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "Validated",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "ImpactIfWrong",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Assumptions",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "DependsOn",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "DependencyType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Dependencies",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "ApprovalType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "ApproverEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "ApprovalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "RequestedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "CompletedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Approvals",
+      "Field": "Comments",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "SourceType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "CapitalFocus",
+      "Status": "Ok",
+      "SchemaType": "MultiChoice",
+      "SharePointType": "MultiChoice"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "MinDealSize",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "MaxDealSize",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "Geography",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "ContactEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "ContactPhone",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "Website",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "RelationshipOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "SourceStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CapitalSources",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "CapitalSourceId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "LenderType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "PreferredProducts",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "TypicalAdvanceRate",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "CovenantStyle",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "LastContactDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Lenders",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "CapitalSourceId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "InvestorType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "CheckSizeMin",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "CheckSizeMax",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "Thesis",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "LastContactDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Investors",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "CapitalType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "TargetAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "FundingStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "FundingProbability",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "ExpectedCloseDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "ActualCloseDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "UseOfProceeds",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "WeightedValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "OpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_CapitalOpportunities",
+      "Field": "HandoffSource",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "CapitalOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "MilestoneType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "CompletedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FundingMilestones",
+      "Field": "IsCritical",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "CapitalOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "InvestorId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "OutreachDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "Channel",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "Response",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "NextAction",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_InvestorOutreach",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "CapitalOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "LenderId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "OutreachDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "Response",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "NextAction",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_LenderOutreach",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "InvoiceNumber",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "InvoiceDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "Amount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "AmountCollected",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "InvoiceStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "InvoiceType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "ExternalAccountingId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Invoices",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "MilestoneType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "Amount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "DueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "PaymentStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "Probability",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "WeightedValue",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "InvoiceReference",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "IsPastDue",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "RevenueAtRisk",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "WorkContinuingWithoutPayment",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "InvoiceId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "BudgetId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "CollectionsStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "ForecastMonth",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "IsRetainer",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "IsSuccessFee",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "RecognizedAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_FinancialMilestones",
+      "Field": "CollectedAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "InvoiceId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "ActivityDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "ActivityType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "Outcome",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "NextActionDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_CollectionsActivities",
+      "Field": "RequiresExecutiveAttention",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "ApprovedBudget",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "BudgetUsed",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "DiscretionarySpendLimit",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "DiscretionarySpendUsed",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "BudgetStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Budgets",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "BudgetId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "Amount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "ExpenseDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "Category",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "ApproverEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "ApprovalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "IsClientBillable",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "IsDiscretionaryClientSpend",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "ReceiptLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_ExpenseApprovals",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "OpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "CapitalOpportunityId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "ForecastMonth",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "RevenueType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "Amount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "Probability",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "WeightedAmount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "ForecastCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_RevenueForecastLines",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "Email",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "PrimaryRole",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "IsActive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "CapacityHoursPerWeek",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "Skills",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "BillableTargetPct",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "CurrentUtilizationPct",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "AvailableHoursThisWeek",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "AssignedProjectCount",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TeamMembers",
+      "Field": "IsBillable",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "TeamMemberEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "WorkDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "Hours",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "IsBillable",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_TimeEntries",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "TemplateKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "TemplateType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "Description",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "ConfigJsonPath",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "IsActive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "DefaultDurationDays",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "Domain",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Templates",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "Category",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "RelatedTemplateKeys",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "LastReviewed",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "Audience",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "RelatedWorkstreamKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SOPs",
+      "Field": "VersionLabel",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "PolicyCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "EffectiveDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "ReviewDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Policies",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "VendorCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "PrimaryContact",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "Email",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "ContractEndDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "AnnualSpend",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "RiskRating",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Vendors",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "VendorId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "Category",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "LicenseType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "AdminOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "RenewalDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "SeatCount",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "MonthlyCost",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "DataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SoftwareInventory",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "SoftwareId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "VendorId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "BillingCadence",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "Amount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "NextBillDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "AutoRenew",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Subscriptions",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "Category",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "Amount",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "Cadence",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "NextDueDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "VendorId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_RecurringExpenses",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "InternalCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "TargetDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_InternalProjects",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "MeetingType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "AgendaTemplate",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "RequiredAttendeesRoles",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_MeetingPlaybooks",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "ScriptType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "Body",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SalesScripts",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "Audience",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "DurationMinutes",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "RequiredForRoles",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_TrainingCatalog",
+      "Field": "CopilotKeywords",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "ContactId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "GuestUpn",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "AccessLevel",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "ExpiresOn",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_PortalAccess",
+      "Field": "PortalUserId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "Direction",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "Body",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "SentByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "SentDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "RequiresStaffResponse",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "RelatedDeliverableId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_PortalMessages",
+      "Field": "IsClientVisible",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_PortalDeliverableLinks",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_PortalDeliverableLinks",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_PortalDeliverableLinks",
+      "Field": "DeliverableId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_PortalDeliverableLinks",
+      "Field": "FileLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_PortalDeliverableLinks",
+      "Field": "PublishedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_PortalDeliverableLinks",
+      "Field": "IsActive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Tasks",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "JobIdText",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "ApprovalType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Reviews",
+      "Field": "Confidence",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_GeneratedDocuments",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SuggestedActions",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_DraftEmails",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_MeetingSummaries",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_SOPDrafts",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_QualityReviews",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "JobIdText",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "EscalationSeverity",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_Escalations",
+      "Field": "CostThresholdBreached",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "AIStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "AssignedReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "ModelOrAgent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "HumanApprovalRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "SafetyFlags",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AI_KnowledgeExtraction",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "RelationshipId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "SourceEntityType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "SourceRecordId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "SourceDisplayName",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "SourceClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "TargetEntityType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "TargetRecordId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "TargetDisplayName",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "TargetClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "RelationshipType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "RelationshipStrength",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "RelationshipStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "StartDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "EndDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "LastMeaningfulInteraction",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "NextPlannedInteraction",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "RelationshipOwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "StrategicValue",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "RevenueInfluenced",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "CapitalInfluenced",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "SourceSystem",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "IsCrossClient",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_Relationships",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "WorkerKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "WorkerType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "DefaultModel",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "AllowedTools",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "MaxDataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "RequiresHumanApproval",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIWorkers",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "PromptKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "PromptVersion",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "JobType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "PromptBody",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "IsActive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "DataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "OwnerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIPrompts",
+      "Field": "ChangeNotes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "ToolKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "ToolCategory",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "IsEnabled",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "RequiresApproval",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "MaxDataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "AllowedWorkerKeys",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "ProhibitedActions",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIToolRegistry",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "ContextId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "DataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "IncludedEntityRefs",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "RedactionApplied",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "MinimizationNotes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "ExpiresOn",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "CreatedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIContext",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "JobType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "RequestedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ClientId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "EngagementId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ProjectId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "InputReferences",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ContextId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "PromptKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "PromptVersion",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "WorkerKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ModelOrProvider",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ToolPermissions",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "DataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "JobStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "Priority",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "HumanReviewRequired",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ReviewerEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ApprovalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "Confidence",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "CostEstimate",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ActualCost",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "StartedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "CompletedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "RetryCount",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "AuditReference",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "SpecializedQueueList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "SpecializedQueueItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "ExternalSendBlocked",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIJobs",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "StepOrder",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "StepType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "StepStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "ToolKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "InputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "OutputSummary",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "ErrorMessage",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "StartedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIJobSteps",
+      "Field": "CompletedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "OutputType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "OutputLink",
+      "Status": "Ok",
+      "SchemaType": "URL",
+      "SharePointType": "URL"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "OutputBody",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "Confidence",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "IsPublished",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "HumanApproved",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AIOutputs",
+      "Field": "DataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "OutputId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "ApprovalType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "ApproverEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "ApprovalStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "DecisionDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "Comments",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIApprovals",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "FeedbackType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "Rating",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "Comments",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "SubmittedByEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIFeedback",
+      "Field": "SubmittedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "ActorEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "EventType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "Details",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "EventDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_AIAuditLog",
+      "Field": "DataClassification",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "JobId",
+      "Status": "Ok",
+      "SchemaType": "Lookup",
+      "SharePointType": "Lookup"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "Provider",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "Model",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "TokensIn",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "TokensOut",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "EstimatedCost",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "ActualCost",
+      "Status": "Ok",
+      "SchemaType": "Currency",
+      "SharePointType": "Currency"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "BillingMonth",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AICostTracking",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "AlertType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "Severity",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "EnvironmentName",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "SourceComponent",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "DetectedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "AlertStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "Details",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "RecommendedAction",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "ResolvedDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_OperationalAlerts",
+      "Field": "HVCG_IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "InstalledVersion",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "SchemaVersion",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "ConfigSchemaVersion",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "LastUpgradeUtc",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "LastHealthCheckUtc",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "LastHealthStatus",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "EnvironmentName",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_SystemInfo",
+      "Field": "Notes",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "FlowName",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "RunId",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "Status",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "RelatedList",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "RelatedItemId",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "Message",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "IdempotencyKey",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AutomationLogs",
+      "Field": "DurationMs",
+      "Status": "Ok",
+      "SchemaType": "Number",
+      "SharePointType": "Number"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "RecipientEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "NotificationType",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "Channel",
+      "Status": "Ok",
+      "SchemaType": "Choice",
+      "SharePointType": "Choice"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "Body",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "SentDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "RelatedClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_Notifications",
+      "Field": "IsExecutive",
+      "Status": "Ok",
+      "SchemaType": "Boolean",
+      "SharePointType": "Boolean"
+    },
+    {
+      "List": "HVCG_AuditEvents",
+      "Field": "Title",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AuditEvents",
+      "Field": "EventType",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AuditEvents",
+      "Field": "ActorEmail",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AuditEvents",
+      "Field": "ClientCode",
+      "Status": "Ok",
+      "SchemaType": "Text",
+      "SharePointType": "Text"
+    },
+    {
+      "List": "HVCG_AuditEvents",
+      "Field": "Details",
+      "Status": "Ok",
+      "SchemaType": "Note",
+      "SharePointType": "Note"
+    },
+    {
+      "List": "HVCG_AuditEvents",
+      "Field": "EventDate",
+      "Status": "Ok",
+      "SchemaType": "DateTime",
+      "SharePointType": "DateTime"
+    }
+  ]
+}

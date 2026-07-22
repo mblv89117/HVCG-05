@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-07-22T02:54:35.292497+00:00",
+  "flow": "HVCG_DeliverableApproval",
+  "runId": "08584169181821856627151136758CU11",
+  "runStatus": "Succeeded",
+  "approvalId": "6baa1960-5bd3-4dc7-acbc-c4db0534303f",
+  "approvalTitle": "Approve deliverable: ATLAS Lifecycle Deliverable 024941",
+  "approvalResponse": "Approve",
+  "approvalResponseId": "b9458f27-89a9-4fc9-9f1b-d79b94a93f16",
+  "approverEmail": "manny@highvaluecapitalgroup.com",
+  "deliverableId": 6,
+  "deliverableTitle": "ATLAS Lifecycle Deliverable 024941",
+  "sharePointAfter": {
+    "DeliverableStatus": "Approved",
+    "InternalReviewStatus": "Approved",
+    "ApproverEmail": "manny@highvaluecapitalgroup.com",
+    "CompletionEvidence": "Approved 2026-07-22T02:53:38.4823057Z by manny@highvaluecapitalgroup.com. Comments: ATLAS GO lifecycle",
+    "ClientCode": "ACCG01",
+    "AtlasClientRefLookupId": "1"
+  },
+  "actions": {
+    "Condition_AlreadyApproved": {
+      "status": "Succeeded"
+    },
+    "Condition_Approved": {
+      "status": "Succeeded"
+    },
+    "Create_Approval": {
+      "status": "Succeeded"
+    },
+    "Get_Deliverable": {
+      "status": "Succeeded"
+    },
+    "Init_ApproverEmail": {
+      "status": "Succeeded"
+    },
+    "Log_Approved": {
+      "status": "Succeeded"
+    },
+    "Log_Rejected": {
+      "status": "Skipped"
+    },
+    "Log_Skipped": {
+      "status": "Skipped"
+    },
+    "Log_Start": {
+      "status": "Succeeded"
+    },
+    "Patch_Approval_Approved": {
+      "status": "Succeeded"
+    },
+    "Patch_Approval_Rejected": {
+      "status": "Skipped"
+    },
+    "Patch_Deliverable_Approved": {
+      "status": "Succeeded"
+    },
+    "Patch_Deliverable_Revisions": {
+      "status": "Skipped"
+    },
+    "Start_an_approval": {
+      "status": "Succeeded"
+    },
+    "Terminate_Skipped": {
+      "status": "Skipped"
+    }
+  },
+  "triggerKindDuringTest": "Http",
+  "triggerKindRestored": "Button",
+  "neverAutoReleasedToClient": true,
+  "absoluteGoDeliverableApprovalLifecycle": true,
+  "notes": "Real StartAndWait approval completed via Approvals API as manny@; Production SP record updated. Prior cancelled Waiting run is NOT counted as success."
+}

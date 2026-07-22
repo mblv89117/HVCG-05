@@ -342,17 +342,38 @@ https://pnp.github.io/powershell/articles/registerapplication.html
   return $id
 }
 
+function Test-HVCGPnPConnectedTo {
+  <#
+  .SYNOPSIS
+    True when an active PnP connection already targets $Url (ignore trailing slash).
+  #>
+  param([Parameter(Mandatory)][string]$Url)
+  try {
+    $conn = Get-PnPConnection -ErrorAction SilentlyContinue
+    if (-not $conn) { return $false }
+    $current = [string](Get-HVCGPropertyValue -Object $conn -Name 'Url' -Default '')
+    if ([string]::IsNullOrWhiteSpace($current)) { return $false }
+    return ($current.TrimEnd('/') -eq $Url.TrimEnd('/'))
+  }
+  catch {
+    return $false
+  }
+}
+
 function Connect-HVCGPnPOnline {
   <#
   .SYNOPSIS
     Connect-PnPOnline -Interactive -ClientId (supported PnP.PowerShell 3.x flow).
+    Reuses an existing connection to the same URL so DeviceLogin sessions are not
+    replaced by a second Interactive MFA prompt mid-deploy.
   #>
   param(
     [Parameter(Mandatory)]
     [string]$Url,
     $Config,
     [string]$ClientId = '',
-    $Report
+    $Report,
+    [switch]$Force
   )
   $cid = Resolve-HVCGPnPClientId -Config $Config -ClientId $ClientId
   if (-not $cid) {
@@ -362,6 +383,10 @@ Register: pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -UpdateCo
 "@
   }
   $script:HVCGPnPClientId = $cid
+  if (-not $Force -and (Test-HVCGPnPConnectedTo -Url $Url)) {
+    Write-HVCGLog -Level INFO -Message "Reusing existing PnP connection → $Url" -Report $Report
+    return
+  }
   Write-HVCGLog -Level INFO -Message "Connect-PnPOnline Interactive+ClientId → $Url" -Report $Report
   Connect-PnPOnline -Url $Url -Interactive -ClientId $cid -ErrorAction Stop | Out-Null
 }

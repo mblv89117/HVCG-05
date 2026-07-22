@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-07-21T23:15:23Z",
+  "flows": [
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "statecode": 1,
+      "statuscode": 2,
+      "actions": 14,
+      "scaffold": false,
+      "actionNames": [
+        "Log_Start",
+        "Init_ClientId",
+        "Init_RunOutcome",
+        "Compose_LibraryTitle",
+        "Condition_NeedClientLookup",
+        "Compose_SiteServerRelative",
+        "Check_Library",
+        "Condition_LibraryMissing"
+      ]
+    },
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "statecode": 1,
+      "statuscode": 2,
+      "actions": 8,
+      "scaffold": false,
+      "actionNames": [
+        "Log_Start",
+        "Init_ClientId",
+        "Init_TemplateKey",
+        "Init_StartDate",
+        "Compose_IdempotencyKey",
+        "Condition_NeedClientLookup",
+        "Get_Existing_Project",
+        "Condition_Duplicate"
+      ]
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "statecode": 1,
+      "statuscode": 2,
+      "actions": 9,
+      "scaffold": false,
+      "actionNames": [
+        "Log_Start",
+        "Init_ClientId",
+        "Init_Created",
+        "Init_Skipped",
+        "Init_DocsToCreate",
+        "Condition_NeedClientLookup",
+        "Condition_HasTitles",
+        "Apply_to_each_Doc"
+      ]
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "statecode": 1,
+      "statuscode": 2,
+      "actions": 4,
+      "scaffold": false,
+      "actionNames": [
+        "Log_Start",
+        "Get_Deliverable",
+        "Init_ApproverEmail",
+        "Condition_AlreadyApproved"
+      ]
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "statecode": 1,
+      "statuscode": 2,
+      "actions": 6,
+      "scaffold": false,
+      "actionNames": [
+        "Log_Start",
+        "Init_ClientId",
+        "Compose_IdempotencyKey",
+        "Condition_NeedClientLookup",
+        "Get_Existing_Decision",
+        "Condition_Duplicate"
+      ]
+    },
+    {
+      "name": "HVCG_EvaFormCreateLead",
+      "statecode": 0,
+      "statuscode": 1,
+      "actions": 7,
+      "scaffold": false,
+      "actionNames": [
+        "Compose_LegalName",
+        "Compose_Email",
+        "Compose_ContactName",
+        "Compose_IdempotencyKey",
+        "Compose_Legacy_Name_Lower",
+        "Compose_Legacy_Block",
+        "Condition_Legacy_Guard"
+      ]
+    }
+  ]
+}

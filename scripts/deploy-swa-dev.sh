@@ -49,14 +49,26 @@ else
   export VITE_DATAVERSE_URL="${VITE_DATAVERSE_URL:-https://org1131a2b0.crm.dynamics.com}"
 fi
 # Client 360 / PM API: Mac-local LaunchAgent hub (browser on this Mac). Remote browsers need a hosted hub.
-export VITE_INTEGRATION_API_BASE="${VITE_INTEGRATION_API_BASE:-http://127.0.0.1:8790}"
+export VITE_INTEGRATION_API_BASE="${VITE_INTEGRATION_API_BASE:-https://app-atlas-integration-hub.azurewebsites.net}"
 export VITE_ATLAS_BUILD_SHA="${VITE_ATLAS_BUILD_SHA:-$(git rev-parse HEAD 2>/dev/null || echo unknown)}"
 export VITE_ATLAS_BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 echo "Building Elite OS for SWA https://${SWA_HOST} (env=$ENV_NAME, SharePoint=$VITE_SHAREPOINT_SITE_URL)..."
 
-# Refresh Client 360 snapshot from local hub when available (HTTPS SWA cannot call http://127.0.0.1 hub).
-if curl -sf "http://127.0.0.1:8790/health" >/dev/null 2>&1; then
+# Production / locked builds must NOT ship live client names in public/client360-snapshot.json.
+# Snapshot is offline/demo only when VITE_ALLOW_SAMPLE_FALLBACK=true (never on Production SWA).
+if [[ "${VITE_ALLOW_SAMPLE_FALLBACK}" != "true" ]]; then
+  echo "Sample/snapshot fallback disabled — writing empty client360-snapshot.json (no client PII)."
+  mkdir -p apps/atlas-elite-os/public
+  cat > apps/atlas-elite-os/public/client360-snapshot.json <<'EOF'
+{
+  "generatedAt": null,
+  "source": "disabled-in-production",
+  "clients": [],
+  "note": "Snapshot fallback is disabled. Sign in with Microsoft for live Client 360."
+}
+EOF
+elif curl -sf "http://127.0.0.1:8790/health" >/dev/null 2>&1; then
   echo "Refreshing public/client360-snapshot.json from local hub…"
   node <<'SNAP' || true
 const KEEP = new Set(['client-accg01','client-pdg01','client-ccb01','client-kava01','client-cpl01','client-hfd01','client-lien01']);
@@ -116,7 +128,69 @@ writeFileSync(
 console.log('snapshot clients', clients.length, clients.map((c) => c.id).join(','));
 SNAP
 else
-  echo "WARN: local hub not reachable — reusing existing client360-snapshot.json if present"
+  echo "Local hub down — refreshing snapshot from hosted hub ${VITE_INTEGRATION_API_BASE}…"
+  HUB_BASE="${VITE_INTEGRATION_API_BASE}" node <<'SNAP2' || echo "WARN: hosted hub snapshot refresh failed — reusing existing snapshot if present"
+const HUB = process.env.HUB_BASE || 'https://app-atlas-integration-hub.azurewebsites.net';
+const KEEP = new Set(['client-accg01','client-pdg01','client-ccb01','client-kava01','client-cpl01','client-hfd01','client-lien01']);
+const hdr = {
+  'x-atlas-user-id': 'swa-snap',
+  'x-atlas-organization-id': 'org-hvcg',
+  'x-atlas-client-ids': '*',
+  'x-atlas-roles': 'Admin',
+};
+const full = await fetch(`${HUB}/api/client360`, { headers: hdr }).then((r) => {
+  if (!r.ok) throw new Error(`hub ${r.status}`);
+  return r.json();
+});
+const all = full.candidates || full.clients || [];
+const clients = [];
+for (const c of all.filter((x) => KEEP.has(x.id))) {
+  const d = await fetch(`${HUB}/api/client360/${encodeURIComponent(c.id)}/documents`, {
+    headers: { ...hdr, 'x-atlas-client-ids': c.id },
+  }).then((r) => (r.ok ? r.json() : { documents: [], count: 0 }));
+  const documents = d.documents || [];
+  clients.push({
+    id: c.id,
+    displayName: c.displayName,
+    legalName: c.legalName,
+    lifecycle: c.lifecycle || 'active',
+    emails: c.emails || [],
+    domains: c.domains || [],
+    completenessScore: c.completenessScore,
+    recommendedNextActions: c.recommendedNextActions || [],
+    businessEntities: c.businessEntities || ['HVCG'],
+    sourceRefs: (c.sourceRefs || []).slice(0, 50),
+    timeline: (c.timeline || []).slice(0, 50),
+    associations: c.associations,
+    documentCount: d.count || documents.length,
+    documents: documents.map((x) => ({
+      id: x.id,
+      title: x.title,
+      kind: x.kind,
+      webUrl: x.webUrl || x.url,
+      path: x.path,
+      classification: x.classification,
+      sensitivityRestricted: x.sensitivityRestricted,
+      migrationStatus: x.migrationStatus,
+      modifiedAt: x.modifiedAt,
+      searchVisible: x.searchVisible,
+    })),
+  });
+}
+const { writeFileSync, mkdirSync } = await import('node:fs');
+mkdirSync('apps/atlas-elite-os/public', { recursive: true });
+writeFileSync(
+  'apps/atlas-elite-os/public/client360-snapshot.json',
+  JSON.stringify({
+    generatedAt: new Date().toISOString(),
+    source: 'hosted-hub-snapshot',
+    hub: HUB,
+    sharePointSite: process.env.VITE_SHAREPOINT_SITE_URL,
+    clients,
+  }),
+);
+console.log('hosted snapshot clients', clients.length, clients.map((c) => c.id).join(','));
+SNAP2
 fi
 
 npm run build -w @hvcg/atlas-elite-os
@@ -128,5 +202,7 @@ npx --yes --cache "${ROOT}/.npm-cache" @azure/static-web-apps-cli@2.0.9 deploy \
 
 echo ""
 echo "Deploy submitted: https://${SWA_HOST}"
+echo "Build SHA: ${VITE_ATLAS_BUILD_SHA}"
+echo "Built at: ${VITE_ATLAS_BUILT_AT}"
 echo "Confirm Entra SPA redirect URIs + hub INTEGRATION_ALLOWED_ORIGINS include https://${SWA_HOST}"
 echo "Dataverse CORS (Power Platform Admin → environment → CORS): add https://${SWA_HOST}"

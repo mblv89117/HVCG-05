@@ -13,5 +13,6 @@ export {
   signOut,
   acquireDataverseToken,
   acquireGraphToken,
+  acquireHubBearerToken,
   getActiveAccount,
 } from './auth/msal';

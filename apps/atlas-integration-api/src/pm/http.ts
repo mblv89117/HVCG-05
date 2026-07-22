@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { audit } from '../audit/auditLog.ts';
 import type { AppConfig } from '../config.ts';
-import { headersFromIncoming, parsePrincipal, type AtlasPrincipal } from '../middleware/auth.ts';
+import { requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import { bootstrapKnownProjects, extractWorkFromSources } from './bootstrap.ts';
 import { populateRealWorkFromMicrosoft } from './populateReal.ts';
@@ -37,22 +37,6 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   return JSON.parse(raw) as Record<string, unknown>;
 }
 
-function requirePrincipal(req: IncomingMessage, cfg: AppConfig): AtlasPrincipal {
-  if (!cfg.requireAuth) {
-    return {
-      userId: 'dev-user',
-      organizationId: 'org-hvcg',
-      allowedClientIds: ['*'],
-      roles: ['Admin'],
-    };
-  }
-  const p = parsePrincipal(headersFromIncoming(req.headers));
-  if (!p) {
-    throw Object.assign(new Error('Unauthorized'), { status: 401 });
-  }
-  return p;
-}
-
 /**
  * Returns true if the request was handled as a /api/pm/* route.
  */
@@ -71,7 +55,7 @@ export async function handlePmRoutes(opts: {
 
   // GET routes
   if (method === 'GET') {
-    requirePrincipal(req, cfg);
+    await requirePrincipal(req, cfg);
 
     if (path === '/api/pm/command-center') {
       send(res, 200, { commandCenter: buildCommandCenter(pm, repo) }, origin);
@@ -178,7 +162,7 @@ export async function handlePmRoutes(opts: {
     return true;
   }
 
-  const principal = requirePrincipal(req, cfg);
+  const principal = await requirePrincipal(req, cfg);
   const body = await readJson(req);
 
   if (path === '/api/pm/bootstrap') {

@@ -54,6 +54,21 @@ export function loadConfig() {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    /** Entra JWT audiences accepted for hub Bearer auth (SPA id token, hub app, Graph). */
+    acceptedAudiences: (
+      process.env.INTEGRATION_ACCEPTED_AUDIENCES ||
+      [
+        process.env.INTEGRATION_SPA_CLIENT_ID || '',
+        process.env.MICROSOFT_CLIENT_ID || '',
+        'https://graph.microsoft.com',
+        '00000003-0000-0000-c000-000000000000',
+      ]
+        .filter(Boolean)
+        .join(',')
+    )
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
     publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:8790',
     microsoft: {
       tenantId: process.env.MICROSOFT_TENANT_ID || 'common',

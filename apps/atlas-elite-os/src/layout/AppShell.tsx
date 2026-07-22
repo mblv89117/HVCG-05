@@ -98,8 +98,6 @@ const catalog: SearchResult[] = [
   { id: 's1b', title: 'My Work', category: 'Navigation', to: '/my-work' },
   { id: 's1c', title: 'Portfolio', category: 'Navigation', to: '/portfolio' },
   { id: 's1d', title: 'Universal Inbox', category: 'Navigation', to: '/inbox' },
-  { id: 's2', title: 'Colorado Craft Beef', category: 'Clients', subtitle: 'Client workspace', to: '/clients/ws-ccb' },
-  { id: 's3', title: 'High Value Capital Group', category: 'Clients', subtitle: 'Internal workspace', to: '/clients/ws-hvcg' },
   { id: 's4', title: 'Banking', category: 'Navigation', to: '/banking' },
   { id: 's5', title: 'Financial Intelligence', category: 'Navigation', to: '/financials' },
   { id: 's6', title: 'Administration', category: 'Administration', subtitle: 'Dataverse SoR', to: '/admin' },
@@ -112,6 +110,7 @@ const catalog: SearchResult[] = [
   { id: 's13', title: 'Reports', category: 'Navigation', to: '/reports' },
   { id: 's14', title: 'Settings', category: 'Navigation', to: '/settings' },
   { id: 's15', title: 'Connections Center', category: 'Administration', subtitle: 'Integrations', to: '/connections' },
+  { id: 's16', title: 'Clients', category: 'Navigation', to: '/clients' },
 ];
 
 const routeLabels: Record<string, string> = {
@@ -159,9 +158,13 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 const defaultFavorites: RecentItem[] = [
-  { id: 'fav-ccb', label: 'Colorado Craft Beef', subtitle: 'Client', to: '/clients/ws-ccb' },
   { id: 'fav-banking', label: 'Banking', subtitle: 'Module', to: '/banking' },
 ];
+
+function isClientShortcut(item: RecentItem): boolean {
+  const to = item.to || '';
+  return to.startsWith('/clients/') || /client/i.test(item.subtitle || '') || /client/i.test(item.label);
+}
 
 export function AppShell() {
   const {
@@ -248,24 +251,35 @@ export function AppShell() {
         ...section,
         items: section.items.filter((item) => {
           if (item.id === 'admin') return can('viewAdmin');
-          if (financeIds.has(item.id)) return role === 'Unauthenticated' || can('viewFinance');
-          if (item.id === 'clients') return role === 'Unauthenticated' || can('viewClients');
-          return true;
+          if (financeIds.has(item.id)) return can('viewFinance');
+          if (item.id === 'clients') return can('viewClients');
+          return role !== 'Unauthenticated';
         }),
       }))
       .filter((section) => section.items.length > 0);
   }, [can, role]);
 
+  const signedIn = role !== 'Unauthenticated';
+  const visibleFavorites = useMemo(
+    () => (signedIn ? favorites.filter((f) => !isClientShortcut(f) || can('viewClients')) : []),
+    [signedIn, favorites, can],
+  );
+  const visibleRecents = useMemo(
+    () => (signedIn ? recentItems.filter((r) => !isClientShortcut(r) || can('viewClients')) : []),
+    [signedIn, recentItems, can],
+  );
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter(
+    const pool = signedIn ? catalog : catalog.filter((r) => r.category === 'Navigation' || r.category === 'Administration');
+    if (!q) return pool;
+    return pool.filter(
       (r) =>
         r.title.toLowerCase().includes(q) ||
         r.category.toLowerCase().includes(q) ||
         (r.subtitle || '').toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, signedIn]);
 
   const userName = displayName;
   const notificationCount = items.length;
@@ -281,8 +295,8 @@ export function AppShell() {
         collapsed={collapsed}
         mobileNavOpen={mobileNav}
         environmentBanner={environmentBanner}
-        favorites={favorites}
-        recentItems={recentItems}
+        favorites={visibleFavorites}
+        recentItems={visibleRecents}
         onSelectShortcut={goShortcut}
         commandBar={
           <CommandBar
@@ -308,6 +322,7 @@ export function AppShell() {
             userName={userName}
             trailing={
               <>
+                {signedIn ? (
                 <Dropdown
                   aria-label="Client workspace"
                   placeholder="Client workspace"
@@ -317,7 +332,7 @@ export function AppShell() {
                     if (data.optionValue) setWorkspaceId(data.optionValue);
                   }}
                   style={{ minWidth: 200 }}
-                  title="Switches client workspace (HVCG / Colorado Craft Beef). Does not change integration accounts."
+                  title="Switches client workspace. Does not change integration accounts."
                 >
                   {workspaceCatalog.map((w) => (
                     <Option key={w.id} value={w.id} text={w.name}>
@@ -325,6 +340,7 @@ export function AppShell() {
                     </Option>
                   ))}
                 </Dropdown>
+                ) : null}
                 {devOwnerActive ? (
                   <Button
                     size="small"
@@ -392,7 +408,8 @@ export function AppShell() {
         <div style={{ padding: '8px 0 0', opacity: 0.7 }}>
           <Caption1>
             Atlas Integration · {ATLAS_BUILD.environment} · SHA {ATLAS_BUILD.sha} · built {ATLAS_BUILD.builtAt} ·
-            role {role} · client {workspaceName}
+            role {role}
+            {signedIn ? ` · client ${workspaceName}` : ''}
           </Caption1>
         </div>
       </NavShell>

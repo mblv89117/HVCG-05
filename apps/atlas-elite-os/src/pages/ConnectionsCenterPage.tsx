@@ -56,6 +56,7 @@ import {
   type InventoryResponse,
   type MailboxType,
 } from '../integrations/hub/api';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
 
 type CenterTab =
   | 'connections'
@@ -139,15 +140,7 @@ export function ConnectionsCenterPage() {
   const [inventory, setInventory] = useState<InventoryResponse | null>(null);
   const [executiveDashboard, setExecutiveDashboard] = useState<ExecutiveDashboard | null>(null);
 
-  const auth: AtlasHubAuthHeaders = useMemo(() => {
-    return {
-      userId: account?.localAccountId || account?.homeAccountId || 'local-dev-user',
-      organizationId: 'org-hvcg',
-      clientIds: workspaceCatalog.map((w) => w.id),
-      email: account?.username,
-      roles: [role === 'Unauthenticated' ? 'Guest' : role],
-    };
-  }, [account, role]);
+  const auth = useHubAuth();
 
   const refresh = useCallback(async () => {
     setLoading(true);

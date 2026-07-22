@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-07-21T23:11:49Z",
+  "source": "long-lived DeviceLogin AJ5Y72MX7 process 419872",
+  "compliant": true,
+  "getItemsOk": true,
+  "writeReadOk": true,
+  "writeReadValue": "ACCG Inc.",
+  "clientsListId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+  "lists": [
+    {"list":"HVCG_Projects","ok":true,"lookupList":"f60a7d4e-74d9-4b57-8c98-1a7b75d76104","showField":"Title","restGetItemsNoSelect":"OK"},
+    {"list":"HVCG_Tasks","ok":true,"lookupList":"f60a7d4e-74d9-4b57-8c98-1a7b75d76104","showField":"Title","restGetItemsNoSelect":"OK"}
+  ],
+  "schemaAssertNote": "Assert-HVCGSharePointSchemaCompliance failed on Report.Log property bug after ClientId checks passed; ClientId itself validated healthy",
+  "retired": []
+}

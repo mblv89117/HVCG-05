@@ -4,6 +4,7 @@ import { Button, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/r
 import { MicrosoftAuthProvider, useMicrosoftAuth } from './microsoft/auth/AuthProvider';
 import { WorkspaceProvider } from './state/WorkspaceContext';
 import { RoleProvider, useAtlasRole } from './security/RoleProvider';
+import { RequireMicrosoftAuth } from './security/RequireMicrosoftAuth';
 import { AppShell } from './layout/AppShell';
 import { ExecutiveDashboardPage } from './pages/ExecutiveDashboard';
 import { CommandCenterPage } from './pages/CommandCenterPage';
@@ -35,11 +36,6 @@ import { ModuleScaffold } from './pages/shared/ModuleScaffold';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
-  const { can, role } = useAtlasRole();
-  // Match ClientsRoute: allow unauthenticated read of Live Client 360 (snapshot/hub).
-  if (role !== 'Unauthenticated' && !can('viewClientDetail')) {
-    return <Navigate to="/access-denied" replace />;
-  }
   // Prefer live Client 360 IDs; demo catalog detail remains at /clients/demo/:id
   if (workspaceId.startsWith('demo-') || workspaceId.startsWith('ws-')) {
     return <DemoClientDetailPage workspaceId={workspaceId} />;
@@ -52,10 +48,16 @@ function ProjectDetailRoute() {
   return <ProjectDetailPage projectId={projectId} />;
 }
 
+function FinanceRoute({ children }: { children: ReactNode }) {
+  return <RequireMicrosoftAuth capability="viewFinance">{children}</RequireMicrosoftAuth>;
+}
+
 function AdminRoute() {
-  const { can } = useAtlasRole();
-  if (!can('viewAdmin')) return <Navigate to="/access-denied" replace />;
-  return <AdminPage />;
+  return (
+    <RequireMicrosoftAuth capability="viewAdmin">
+      <AdminPage />
+    </RequireMicrosoftAuth>
+  );
 }
 
 function ConnectionsRoute() {
@@ -94,22 +96,20 @@ function ConnectionsRoute() {
   return <ConnectionsCenterPage />;
 }
 
-function FinanceRoute({ children }: { children: ReactNode }) {
-  const { can } = useAtlasRole();
-  if (!can('viewFinance')) return <Navigate to="/access-denied" replace />;
-  return children;
+function ClientsRoute({ children }: { children: ReactNode }) {
+  return <RequireMicrosoftAuth capability="viewClients">{children}</RequireMicrosoftAuth>;
 }
 
-function ClientsRoute({ children }: { children: ReactNode }) {
-  const { can, role } = useAtlasRole();
-  if (role === 'Unauthenticated') return children;
-  if (!can('viewClients')) return <Navigate to="/access-denied" replace />;
-  return children;
+function ClientDetailAuthRoute({ children }: { children: ReactNode }) {
+  return <RequireMicrosoftAuth capability="viewClientDetail">{children}</RequireMicrosoftAuth>;
+}
+
+function PrivateRoute({ children }: { children: ReactNode }) {
+  return <RequireMicrosoftAuth>{children}</RequireMicrosoftAuth>;
 }
 
 function HomeRoute() {
   const { can, role } = useAtlasRole();
-  if (role === 'Unauthenticated') return <CommandCenterPage />;
   if (role === 'Unresolved') return <Navigate to="/access-denied" replace />;
   if (!can('viewExecutiveHome') && can('viewClients')) return <Navigate to="/clients" replace />;
   if (!can('viewExecutiveHome')) return <Navigate to="/access-denied" replace />;
@@ -123,13 +123,62 @@ export function App() {
         <WorkspaceProvider>
           <Routes>
             <Route element={<AppShell />}>
-              <Route index element={<HomeRoute />} />
-              <Route path="executive" element={<ExecutiveDashboardPage />} />
-              <Route path="command-center" element={<HomeRoute />} />
-              <Route path="my-work" element={<MyWorkPage />} />
-              <Route path="portfolio" element={<PortfolioPage />} />
-              <Route path="inbox" element={<UniversalInboxPage />} />
-              <Route path="team" element={<TeamAgentsPage />} />
+              <Route
+                index
+                element={
+                  <PrivateRoute>
+                    <HomeRoute />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="executive"
+                element={
+                  <PrivateRoute>
+                    <ExecutiveDashboardPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="command-center"
+                element={
+                  <PrivateRoute>
+                    <HomeRoute />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="my-work"
+                element={
+                  <PrivateRoute>
+                    <MyWorkPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="portfolio"
+                element={
+                  <PrivateRoute>
+                    <PortfolioPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="inbox"
+                element={
+                  <PrivateRoute>
+                    <UniversalInboxPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="team"
+                element={
+                  <PrivateRoute>
+                    <TeamAgentsPage />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="financials"
                 element={
@@ -154,10 +203,38 @@ export function App() {
                   </ClientsRoute>
                 }
               />
-              <Route path="clients/:workspaceId" element={<ClientDetailRoute />} />
-              <Route path="projects" element={<ProjectsPage />} />
-              <Route path="projects/:projectId" element={<ProjectDetailRoute />} />
-              <Route path="tasks" element={<TasksPage />} />
+              <Route
+                path="clients/:workspaceId"
+                element={
+                  <ClientDetailAuthRoute>
+                    <ClientDetailRoute />
+                  </ClientDetailAuthRoute>
+                }
+              />
+              <Route
+                path="projects"
+                element={
+                  <PrivateRoute>
+                    <ProjectsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="projects/:projectId"
+                element={
+                  <PrivateRoute>
+                    <ProjectDetailRoute />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="tasks"
+                element={
+                  <PrivateRoute>
+                    <TasksPage />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="capital"
                 element={
@@ -174,7 +251,14 @@ export function App() {
                   </FinanceRoute>
                 }
               />
-              <Route path="documents" element={<DocumentsPage />} />
+              <Route
+                path="documents"
+                element={
+                  <PrivateRoute>
+                    <DocumentsPage />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="banking"
                 element={
@@ -191,12 +275,54 @@ export function App() {
                   </FinanceRoute>
                 }
               />
-              <Route path="knowledge" element={<KnowledgePage />} />
-              <Route path="automations" element={<AutomationsPage />} />
-              <Route path="reports" element={<ReportsPage />} />
-              <Route path="ai" element={<AiInsightsPage />} />
-              <Route path="notifications" element={<NotificationsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
+              <Route
+                path="knowledge"
+                element={
+                  <PrivateRoute>
+                    <KnowledgePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="automations"
+                element={
+                  <PrivateRoute>
+                    <AutomationsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="reports"
+                element={
+                  <PrivateRoute>
+                    <ReportsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="ai"
+                element={
+                  <PrivateRoute>
+                    <AiInsightsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="notifications"
+                element={
+                  <PrivateRoute>
+                    <NotificationsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <PrivateRoute>
+                    <SettingsPage />
+                  </PrivateRoute>
+                }
+              />
               <Route path="connections" element={<ConnectionsRoute />} />
               <Route path="admin" element={<AdminRoute />} />
               <Route path="access-denied" element={<AccessDeniedPage />} />

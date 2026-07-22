@@ -34,23 +34,10 @@ import {
   type CommandCenter,
   type PmTask,
 } from '../integrations/hub/pmApi';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
 import type { AtlasHubAuthHeaders } from '../integrations/hub/api';
 import { QuickCaptureBar } from '../components/QuickCaptureBar';
 
-function useHubAuth(): AtlasHubAuthHeaders {
-  const { account } = useMicrosoftAuth();
-  const { role } = useAtlasRole();
-  return useMemo(
-    () => ({
-      userId: account?.localAccountId || account?.homeAccountId || 'local-dev-user',
-      organizationId: 'org-hvcg',
-      clientIds: workspaceCatalog.map((w) => w.id),
-      email: account?.username,
-      roles: [role === 'Unauthenticated' ? 'Guest' : role],
-    }),
-    [account, role],
-  );
-}
 
 function priorityTone(p: string): 'danger' | 'warning' | 'info' | 'success' | 'neutral' {
   if (p === 'critical') return 'danger';
@@ -151,8 +138,14 @@ export function CommandCenterPage() {
   }, [auth]);
 
   useEffect(() => {
+    if (!auth.accessToken) {
+      setCc(null);
+      setLoading(false);
+      setError('Sign in with Microsoft to load Command Center.');
+      return;
+    }
     void refresh();
-  }, [refresh]);
+  }, [refresh, auth.accessToken]);
 
   const initialize = async () => {
     setBusy(true);

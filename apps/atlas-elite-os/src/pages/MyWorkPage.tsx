@@ -11,23 +11,10 @@ import {
   type MyWork,
   type PmTask,
 } from '../integrations/hub/pmApi';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
 import type { AtlasHubAuthHeaders } from '../integrations/hub/api';
 import { QuickCaptureBar } from '../components/QuickCaptureBar';
 
-function useHubAuth(): AtlasHubAuthHeaders {
-  const { account } = useMicrosoftAuth();
-  const { role } = useAtlasRole();
-  return useMemo(
-    () => ({
-      userId: account?.localAccountId || account?.homeAccountId || 'local-dev-user',
-      organizationId: 'org-hvcg',
-      clientIds: workspaceCatalog.map((w) => w.id),
-      email: account?.username,
-      roles: [role === 'Unauthenticated' ? 'Guest' : role],
-    }),
-    [account, role],
-  );
-}
 
 type Bucket =
   | 'today'

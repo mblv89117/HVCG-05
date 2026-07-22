@@ -42,7 +42,7 @@ export function AccessDeniedPage() {
       : 'Insufficient Atlas permissions';
 
   const description = unauthenticated
-    ? 'You are browsing as Unauthenticated. Finance, Administration, and other gated modules require an Atlas role. For local Owner UAT, use Local Owner (Dev). For shared environments, sign in with Microsoft and ensure your Entra account has HVCG Owner or Administrator app roles.'
+    ? 'You must sign in with Microsoft before Atlas will show clients, portfolios, or other private data. Local Owner (Dev) is disabled in Production. Sign in with your HVCG Entra account to continue.'
     : unresolved
       ? 'You are signed in, but your Entra token has no recognizable Atlas app role (HVCG Owner, HVCG Team Member, Client Executive, Client Team Member, Read-Only Advisor, or Administrator). There is no default Owner access.'
       : 'Your current Atlas role does not include this module. Contact an HVCG Owner to adjust Entra app role assignments.';
@@ -54,9 +54,14 @@ export function AccessDeniedPage() {
         description={description}
         actions={
           <>
+            {unauthenticated && configured ? (
+              <Button appearance="primary" onClick={() => void signIn()}>
+                Sign in with Microsoft
+              </Button>
+            ) : null}
             {unauthenticated && devOwnerLoginAllowed ? (
               <Button
-                appearance="primary"
+                appearance="secondary"
                 onClick={() => {
                   activateDevOwner();
                   navigate(returnTo === '/access-denied' ? '/connections' : returnTo, { replace: true });
@@ -65,13 +70,8 @@ export function AccessDeniedPage() {
                 Continue as Local Owner (Dev)
               </Button>
             ) : null}
-            {unauthenticated && configured ? (
-              <Button appearance="secondary" onClick={() => void signIn()}>
-                Sign in with Microsoft
-              </Button>
-            ) : null}
             <Link to="/">
-              <Button appearance={unauthenticated ? 'secondary' : 'primary'}>Return to Executive Home</Button>
+              <Button appearance="secondary">Return home</Button>
             </Link>
           </>
         }

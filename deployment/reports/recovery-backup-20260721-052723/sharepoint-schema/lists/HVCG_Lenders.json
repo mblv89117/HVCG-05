@@ -1,0 +1,90 @@
+{
+  "title": "HVCG_Lenders",
+  "description": "Capital \u2014 Lender tracking (operational subtype of capital sources)",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalSourceId",
+      "displayName": "CapitalSourceId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalSources"
+    },
+    {
+      "internalName": "LenderType",
+      "displayName": "LenderType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Bank",
+        "SBA",
+        "CRE",
+        "Private Credit",
+        "Equipment",
+        "Factoring",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "PreferredProducts",
+      "displayName": "PreferredProducts",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TypicalAdvanceRate",
+      "displayName": "TypicalAdvanceRate",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CovenantStyle",
+      "displayName": "CovenantStyle",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastContactDate",
+      "displayName": "LastContactDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

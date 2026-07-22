@@ -1,7 +1,10 @@
 /**
  * Browser client for Atlas Universal Integration Hub API.
- * Never requests or stores access/refresh tokens in the browser.
+ * Sends MSAL Bearer when signed in. Never trusts atlas headers alone on the server.
+ * Snapshot/sample fallback is offline/demo only — disabled in Production.
  */
+
+import { microsoftConfig } from '../../microsoft/config';
 
 export interface AtlasHubAuthHeaders {
   userId: string;
@@ -9,6 +12,8 @@ export interface AtlasHubAuthHeaders {
   clientIds: string[];
   email?: string;
   roles?: string[];
+  /** Entra ID token or Graph access token for hub Authorization header */
+  accessToken?: string;
 }
 
 export type HubProviderId = 'microsoft' | 'google' | 'github';
@@ -26,7 +31,7 @@ export interface ConnectOptions {
 }
 
 function headers(auth: AtlasHubAuthHeaders): HeadersInit {
-  return {
+  const h: Record<string, string> = {
     'content-type': 'application/json',
     'x-atlas-user-id': auth.userId,
     'x-atlas-organization-id': auth.organizationId,
@@ -34,6 +39,10 @@ function headers(auth: AtlasHubAuthHeaders): HeadersInit {
     ...(auth.email ? { 'x-atlas-user-email': auth.email } : {}),
     'x-atlas-roles': (auth.roles || ['Staff']).join(','),
   };
+  if (auth.accessToken) {
+    h.Authorization = `Bearer ${auth.accessToken}`;
+  }
+  return h;
 }
 
 const base = () =>
@@ -280,7 +289,16 @@ type Client360Snapshot = {
 
 let snapshotCache: Client360Snapshot | null | undefined;
 
+/** Explicit offline/demo only. Never true in Production SWA builds. */
+function sampleFallbackAllowed(): boolean {
+  if (microsoftConfig.environment === 'production' || microsoftConfig.environment === 'staging') {
+    return false;
+  }
+  return microsoftConfig.allowSampleFallback === true;
+}
+
 async function loadClient360Snapshot(): Promise<Client360Snapshot | null> {
+  if (!sampleFallbackAllowed()) return null;
   if (snapshotCache !== undefined) return snapshotCache;
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}client360-snapshot.json`, {
@@ -303,30 +321,70 @@ function isHubUnreachable(err: unknown): boolean {
   return /failed to fetch|networkerror|load failed|mixed content|err_connection|econnrefused/i.test(msg);
 }
 
+function isAuthDenied(err: unknown): boolean {
+  const status = (err as Error & { status?: number })?.status;
+  if (status === 401 || status === 403) return true;
+  const msg = String((err as Error)?.message || err || '');
+  return /unauthorized|microsoft sign-in required|forbidden|bearer token/i.test(msg);
+}
+
+function signInRequiredError(): Error & { status: number } {
+  return Object.assign(new Error('Sign in required for live Client 360'), { status: 401 });
+}
+
+async function snapshotClientsFallback(): Promise<{
+  clients: Client360Candidate[];
+  source: 'snapshot';
+  snapshotGeneratedAt?: string;
+} | null> {
+  if (!sampleFallbackAllowed()) return null;
+  const snap = await loadClient360Snapshot();
+  if (!snap?.clients?.length) return null;
+  return {
+    clients: snap.clients.map(({ documents: _docs, documentCount: _n, ...c }) => c),
+    source: 'snapshot' as const,
+    snapshotGeneratedAt: snap.generatedAt,
+  };
+}
+
 export async function fetchClient360(auth: AtlasHubAuthHeaders) {
+  if (!auth.accessToken) {
+    // Auth denial must never unlock snapshot client data.
+    if (!sampleFallbackAllowed()) throw signInRequiredError();
+    const snap = await snapshotClientsFallback();
+    if (snap) return snap;
+    throw signInRequiredError();
+  }
   try {
     const res = await fetch(`${base()}/api/client360`, { headers: headers(auth) });
     const data = (await parse(res)) as { candidates?: Client360Candidate[]; clients?: Client360Candidate[] };
     return { clients: data.clients || data.candidates || [], source: 'hub' as const };
   } catch (err) {
+    // 401/403 = sign-in problem, never treat as permission to show fallback clients.
+    if (isAuthDenied(err)) throw err;
     if (!isHubUnreachable(err)) throw err;
-    const snap = await loadClient360Snapshot();
-    if (!snap?.clients?.length) throw err;
-    return {
-      clients: snap.clients.map(({ documents: _docs, documentCount: _n, ...c }) => c),
-      source: 'snapshot' as const,
-      snapshotGeneratedAt: snap.generatedAt,
-    };
+    const snap = await snapshotClientsFallback();
+    if (!snap) throw err;
+    return snap;
   }
 }
 
 export async function fetchClient360Detail(auth: AtlasHubAuthHeaders, clientId: string) {
+  if (!auth.accessToken) {
+    if (!sampleFallbackAllowed()) throw signInRequiredError();
+    const snap = await loadClient360Snapshot();
+    const client = snap?.clients?.find((c) => c.id === clientId);
+    if (!client) throw signInRequiredError();
+    const { documents: _docs, documentCount: _n, ...rest } = client;
+    return { client: rest };
+  }
   try {
     const res = await fetch(`${base()}/api/client360/${encodeURIComponent(clientId)}`, {
       headers: headers(auth),
     });
     return parse(res) as Promise<{ client: Client360Candidate }>;
   } catch (err) {
+    if (isAuthDenied(err)) throw err;
     if (!isHubUnreachable(err)) throw err;
     const snap = await loadClient360Snapshot();
     const client = snap?.clients?.find((c) => c.id === clientId);
@@ -354,6 +412,20 @@ export interface Client360Document {
 }
 
 export async function fetchClient360Documents(auth: AtlasHubAuthHeaders, clientId: string) {
+  if (!auth.accessToken) {
+    if (!sampleFallbackAllowed()) throw signInRequiredError();
+    const snap = await loadClient360Snapshot();
+    const client = snap?.clients?.find((c) => c.id === clientId);
+    if (!client) throw signInRequiredError();
+    const documents = client.documents || [];
+    return {
+      clientId,
+      displayName: client.displayName,
+      count: client.documentCount ?? documents.length,
+      restrictedOmitted: true,
+      documents,
+    };
+  }
   try {
     const res = await fetch(
       `${base()}/api/client360/${encodeURIComponent(clientId)}/documents`,
@@ -367,6 +439,7 @@ export async function fetchClient360Documents(auth: AtlasHubAuthHeaders, clientI
       documents: Client360Document[];
     }>;
   } catch (err) {
+    if (isAuthDenied(err)) throw err;
     if (!isHubUnreachable(err)) throw err;
     const snap = await loadClient360Snapshot();
     const client = snap?.clients?.find((c) => c.id === clientId);

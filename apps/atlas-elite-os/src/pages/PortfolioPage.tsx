@@ -7,22 +7,9 @@ import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
 import { workspaceCatalog } from '../data/workspaces';
 import { fetchPortfolio, type PortfolioProject } from '../integrations/hub/pmApi';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
 import type { AtlasHubAuthHeaders } from '../integrations/hub/api';
 
-function useHubAuth(): AtlasHubAuthHeaders {
-  const { account } = useMicrosoftAuth();
-  const { role } = useAtlasRole();
-  return useMemo(
-    () => ({
-      userId: account?.localAccountId || account?.homeAccountId || 'local-dev-user',
-      organizationId: 'org-hvcg',
-      clientIds: workspaceCatalog.map((w) => w.id),
-      email: account?.username,
-      roles: [role === 'Unauthenticated' ? 'Guest' : role],
-    }),
-    [account, role],
-  );
-}
 
 export function PortfolioPage() {
   const auth = useHubAuth();

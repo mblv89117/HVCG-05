@@ -1,0 +1,500 @@
+{
+  "version": "2.3",
+  "prefix": "HVCG_",
+  "product": "HVCG OS",
+  "lists": [
+    {
+      "name": "HVCG_Clients",
+      "path": "src/sharepoint/lists/HVCG_Clients.json",
+      "columnCount": 52,
+      "description": "Client master records"
+    },
+    {
+      "name": "HVCG_Contacts",
+      "path": "src/sharepoint/lists/HVCG_Contacts.json",
+      "columnCount": 12,
+      "description": "People related to clients"
+    },
+    {
+      "name": "HVCG_ReferralPartners",
+      "path": "src/sharepoint/lists/HVCG_ReferralPartners.json",
+      "columnCount": 13,
+      "description": "CRM \u2014 Referral partners / channel relationships"
+    },
+    {
+      "name": "HVCG_Leads",
+      "path": "src/sharepoint/lists/HVCG_Leads.json",
+      "columnCount": 22,
+      "description": "Inbound leads before client record"
+    },
+    {
+      "name": "HVCG_Referrals",
+      "path": "src/sharepoint/lists/HVCG_Referrals.json",
+      "columnCount": 13,
+      "description": "CRM \u2014 Individual referrals"
+    },
+    {
+      "name": "HVCG_Opportunities",
+      "path": "src/sharepoint/lists/HVCG_Opportunities.json",
+      "columnCount": 35,
+      "description": "Pipeline opportunities"
+    },
+    {
+      "name": "HVCG_OpportunityActivities",
+      "path": "src/sharepoint/lists/HVCG_OpportunityActivities.json",
+      "columnCount": 13,
+      "description": "CRM \u2014 Opportunity / lead activity timeline"
+    },
+    {
+      "name": "HVCG_DiscoveryCalls",
+      "path": "src/sharepoint/lists/HVCG_DiscoveryCalls.json",
+      "columnCount": 13,
+      "description": "CRM \u2014 Discovery / sales calls"
+    },
+    {
+      "name": "HVCG_Proposals",
+      "path": "src/sharepoint/lists/HVCG_Proposals.json",
+      "columnCount": 16,
+      "description": "CRM \u2014 Proposal tracking"
+    },
+    {
+      "name": "HVCG_WinLossAnalyses",
+      "path": "src/sharepoint/lists/HVCG_WinLossAnalyses.json",
+      "columnCount": 11,
+      "description": "CRM \u2014 Win/loss analysis"
+    },
+    {
+      "name": "HVCG_Engagements",
+      "path": "src/sharepoint/lists/HVCG_Engagements.json",
+      "columnCount": 27,
+      "description": "Commercial engagements with clients"
+    },
+    {
+      "name": "HVCG_Projects",
+      "path": "src/sharepoint/lists/HVCG_Projects.json",
+      "columnCount": 23,
+      "description": "Delivery projects"
+    },
+    {
+      "name": "HVCG_Workstreams",
+      "path": "src/sharepoint/lists/HVCG_Workstreams.json",
+      "columnCount": 7,
+      "description": "Workstream instances on projects"
+    },
+    {
+      "name": "HVCG_Milestones",
+      "path": "src/sharepoint/lists/HVCG_Milestones.json",
+      "columnCount": 8,
+      "description": "Project milestones"
+    },
+    {
+      "name": "HVCG_Tasks",
+      "path": "src/sharepoint/lists/HVCG_Tasks.json",
+      "columnCount": 33,
+      "description": "Work tasks"
+    },
+    {
+      "name": "HVCG_DocumentRequests",
+      "path": "src/sharepoint/lists/HVCG_DocumentRequests.json",
+      "columnCount": 32,
+      "description": "Client document request register"
+    },
+    {
+      "name": "HVCG_Deliverables",
+      "path": "src/sharepoint/lists/HVCG_Deliverables.json",
+      "columnCount": 24,
+      "description": "Work product tracking"
+    },
+    {
+      "name": "HVCG_Meetings",
+      "path": "src/sharepoint/lists/HVCG_Meetings.json",
+      "columnCount": 26,
+      "description": "Meeting log"
+    },
+    {
+      "name": "HVCG_Communications",
+      "path": "src/sharepoint/lists/HVCG_Communications.json",
+      "columnCount": 13,
+      "description": "Significant communications log"
+    },
+    {
+      "name": "HVCG_Decisions",
+      "path": "src/sharepoint/lists/HVCG_Decisions.json",
+      "columnCount": 20,
+      "description": "Decision register"
+    },
+    {
+      "name": "HVCG_Risks",
+      "path": "src/sharepoint/lists/HVCG_Risks.json",
+      "columnCount": 12,
+      "description": "Risk register"
+    },
+    {
+      "name": "HVCG_Issues",
+      "path": "src/sharepoint/lists/HVCG_Issues.json",
+      "columnCount": 12,
+      "description": "Issue register"
+    },
+    {
+      "name": "HVCG_ChangeRequests",
+      "path": "src/sharepoint/lists/HVCG_ChangeRequests.json",
+      "columnCount": 14,
+      "description": "Scope change requests"
+    },
+    {
+      "name": "HVCG_Assumptions",
+      "path": "src/sharepoint/lists/HVCG_Assumptions.json",
+      "columnCount": 8,
+      "description": "Engagement/project assumptions register"
+    },
+    {
+      "name": "HVCG_Dependencies",
+      "path": "src/sharepoint/lists/HVCG_Dependencies.json",
+      "columnCount": 8,
+      "description": "Dependency register"
+    },
+    {
+      "name": "HVCG_Approvals",
+      "path": "src/sharepoint/lists/HVCG_Approvals.json",
+      "columnCount": 10,
+      "description": "Approval workflow records"
+    },
+    {
+      "name": "HVCG_CapitalSources",
+      "path": "src/sharepoint/lists/HVCG_CapitalSources.json",
+      "columnCount": 13,
+      "description": "Capital \u2014 Lenders, funds, investors (master capital sources)"
+    },
+    {
+      "name": "HVCG_Lenders",
+      "path": "src/sharepoint/lists/HVCG_Lenders.json",
+      "columnCount": 9,
+      "description": "Capital \u2014 Lender tracking (operational subtype of capital sources)"
+    },
+    {
+      "name": "HVCG_Investors",
+      "path": "src/sharepoint/lists/HVCG_Investors.json",
+      "columnCount": 9,
+      "description": "Capital \u2014 Investor tracking"
+    },
+    {
+      "name": "HVCG_CapitalOpportunities",
+      "path": "src/sharepoint/lists/HVCG_CapitalOpportunities.json",
+      "columnCount": 20,
+      "description": "Capital \u2014 Debt/equity/SBA/CRE/etc. capital raises"
+    },
+    {
+      "name": "HVCG_FundingMilestones",
+      "path": "src/sharepoint/lists/HVCG_FundingMilestones.json",
+      "columnCount": 9,
+      "description": "Capital \u2014 Funding process milestones"
+    },
+    {
+      "name": "HVCG_InvestorOutreach",
+      "path": "src/sharepoint/lists/HVCG_InvestorOutreach.json",
+      "columnCount": 9,
+      "description": "Capital \u2014 Investor outreach tracker"
+    },
+    {
+      "name": "HVCG_LenderOutreach",
+      "path": "src/sharepoint/lists/HVCG_LenderOutreach.json",
+      "columnCount": 8,
+      "description": "Capital \u2014 Lender outreach tracker"
+    },
+    {
+      "name": "HVCG_Invoices",
+      "path": "src/sharepoint/lists/HVCG_Invoices.json",
+      "columnCount": 15,
+      "description": "Finance \u2014 Operational invoices (not GL)"
+    },
+    {
+      "name": "HVCG_FinancialMilestones",
+      "path": "src/sharepoint/lists/HVCG_FinancialMilestones.json",
+      "columnCount": 23,
+      "description": "Operational financial milestones (not GL)"
+    },
+    {
+      "name": "HVCG_CollectionsActivities",
+      "path": "src/sharepoint/lists/HVCG_CollectionsActivities.json",
+      "columnCount": 9,
+      "description": "Finance \u2014 Collections workflow activities"
+    },
+    {
+      "name": "HVCG_Budgets",
+      "path": "src/sharepoint/lists/HVCG_Budgets.json",
+      "columnCount": 10,
+      "description": "Finance \u2014 Engagement/client budgets"
+    },
+    {
+      "name": "HVCG_ExpenseApprovals",
+      "path": "src/sharepoint/lists/HVCG_ExpenseApprovals.json",
+      "columnCount": 14,
+      "description": "Finance \u2014 Expense approvals"
+    },
+    {
+      "name": "HVCG_RevenueForecastLines",
+      "path": "src/sharepoint/lists/HVCG_RevenueForecastLines.json",
+      "columnCount": 11,
+      "description": "Finance \u2014 Revenue forecast lines"
+    },
+    {
+      "name": "HVCG_TeamMembers",
+      "path": "src/sharepoint/lists/HVCG_TeamMembers.json",
+      "columnCount": 11,
+      "description": "Internal team directory for role mapping"
+    },
+    {
+      "name": "HVCG_TimeEntries",
+      "path": "src/sharepoint/lists/HVCG_TimeEntries.json",
+      "columnCount": 8,
+      "description": "Ops \u2014 Time / utilization entries (optional actuals)"
+    },
+    {
+      "name": "HVCG_Templates",
+      "path": "src/sharepoint/lists/HVCG_Templates.json",
+      "columnCount": 9,
+      "description": "Project/template catalog metadata"
+    },
+    {
+      "name": "HVCG_SOPs",
+      "path": "src/sharepoint/lists/HVCG_SOPs.json",
+      "columnCount": 11,
+      "description": "Knowledge center index"
+    },
+    {
+      "name": "HVCG_Policies",
+      "path": "src/sharepoint/lists/HVCG_Policies.json",
+      "columnCount": 8,
+      "description": "Ops \u2014 Internal policies"
+    },
+    {
+      "name": "HVCG_Vendors",
+      "path": "src/sharepoint/lists/HVCG_Vendors.json",
+      "columnCount": 10,
+      "description": "Ops \u2014 Vendor management"
+    },
+    {
+      "name": "HVCG_SoftwareInventory",
+      "path": "src/sharepoint/lists/HVCG_SoftwareInventory.json",
+      "columnCount": 10,
+      "description": "Ops \u2014 Software inventory"
+    },
+    {
+      "name": "HVCG_Subscriptions",
+      "path": "src/sharepoint/lists/HVCG_Subscriptions.json",
+      "columnCount": 9,
+      "description": "Ops \u2014 Subscriptions"
+    },
+    {
+      "name": "HVCG_RecurringExpenses",
+      "path": "src/sharepoint/lists/HVCG_RecurringExpenses.json",
+      "columnCount": 8,
+      "description": "Ops \u2014 Recurring internal expenses"
+    },
+    {
+      "name": "HVCG_InternalProjects",
+      "path": "src/sharepoint/lists/HVCG_InternalProjects.json",
+      "columnCount": 7,
+      "description": "Ops \u2014 Internal HVCG projects (non-client)"
+    },
+    {
+      "name": "HVCG_MeetingPlaybooks",
+      "path": "src/sharepoint/lists/HVCG_MeetingPlaybooks.json",
+      "columnCount": 7,
+      "description": "Ops \u2014 Meeting playbooks"
+    },
+    {
+      "name": "HVCG_SalesScripts",
+      "path": "src/sharepoint/lists/HVCG_SalesScripts.json",
+      "columnCount": 7,
+      "description": "Ops \u2014 Sales scripts"
+    },
+    {
+      "name": "HVCG_TrainingCatalog",
+      "path": "src/sharepoint/lists/HVCG_TrainingCatalog.json",
+      "columnCount": 7,
+      "description": "Ops \u2014 Training materials catalog"
+    },
+    {
+      "name": "HVCG_PortalAccess",
+      "path": "src/sharepoint/lists/HVCG_PortalAccess.json",
+      "columnCount": 9,
+      "description": "Portal \u2014 Client portal access grants (V2-ready)"
+    },
+    {
+      "name": "HVCG_PortalMessages",
+      "path": "src/sharepoint/lists/HVCG_PortalMessages.json",
+      "columnCount": 10,
+      "description": "Portal \u2014 Secure messaging thread stubs (V2-ready)"
+    },
+    {
+      "name": "HVCG_PortalDeliverableLinks",
+      "path": "src/sharepoint/lists/HVCG_PortalDeliverableLinks.json",
+      "columnCount": 6,
+      "description": "Portal \u2014 Client-visible deliverable download registry (V2-ready)"
+    },
+    {
+      "name": "HVCG_AI_Tasks",
+      "path": "src/sharepoint/lists/HVCG_AI_Tasks.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI task queue"
+    },
+    {
+      "name": "HVCG_AI_Reviews",
+      "path": "src/sharepoint/lists/HVCG_AI_Reviews.json",
+      "columnCount": 22,
+      "description": "AI \u2014 AI review queue"
+    },
+    {
+      "name": "HVCG_AI_GeneratedDocuments",
+      "path": "src/sharepoint/lists/HVCG_AI_GeneratedDocuments.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI generated documents pending review"
+    },
+    {
+      "name": "HVCG_AI_SuggestedActions",
+      "path": "src/sharepoint/lists/HVCG_AI_SuggestedActions.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI suggested next actions"
+    },
+    {
+      "name": "HVCG_AI_DraftEmails",
+      "path": "src/sharepoint/lists/HVCG_AI_DraftEmails.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI draft emails \u2014 never send without approval"
+    },
+    {
+      "name": "HVCG_AI_MeetingSummaries",
+      "path": "src/sharepoint/lists/HVCG_AI_MeetingSummaries.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI meeting summaries"
+    },
+    {
+      "name": "HVCG_AI_SOPDrafts",
+      "path": "src/sharepoint/lists/HVCG_AI_SOPDrafts.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI SOP drafts"
+    },
+    {
+      "name": "HVCG_AI_QualityReviews",
+      "path": "src/sharepoint/lists/HVCG_AI_QualityReviews.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI quality review queue"
+    },
+    {
+      "name": "HVCG_AI_Escalations",
+      "path": "src/sharepoint/lists/HVCG_AI_Escalations.json",
+      "columnCount": 22,
+      "description": "AI \u2014 AI escalations to humans"
+    },
+    {
+      "name": "HVCG_AI_KnowledgeExtraction",
+      "path": "src/sharepoint/lists/HVCG_AI_KnowledgeExtraction.json",
+      "columnCount": 19,
+      "description": "AI \u2014 AI knowledge extraction from transcripts/notes"
+    },
+    {
+      "name": "HVCG_Relationships",
+      "path": "src/sharepoint/lists/HVCG_Relationships.json",
+      "columnCount": 25,
+      "description": "Intelligence \u2014 Cross-domain relationship graph edges"
+    },
+    {
+      "name": "HVCG_AIWorkers",
+      "path": "src/sharepoint/lists/HVCG_AIWorkers.json",
+      "columnCount": 10,
+      "description": "AI \u2014 Registered AI workers/agents (non-autonomous)"
+    },
+    {
+      "name": "HVCG_AIPrompts",
+      "path": "src/sharepoint/lists/HVCG_AIPrompts.json",
+      "columnCount": 9,
+      "description": "AI \u2014 Versioned prompts"
+    },
+    {
+      "name": "HVCG_AIToolRegistry",
+      "path": "src/sharepoint/lists/HVCG_AIToolRegistry.json",
+      "columnCount": 9,
+      "description": "AI \u2014 Tool permissions registry"
+    },
+    {
+      "name": "HVCG_AIContext",
+      "path": "src/sharepoint/lists/HVCG_AIContext.json",
+      "columnCount": 13,
+      "description": "AI \u2014 Context packages for jobs (minimized)"
+    },
+    {
+      "name": "HVCG_AIJobs",
+      "path": "src/sharepoint/lists/HVCG_AIJobs.json",
+      "columnCount": 34,
+      "description": "AI \u2014 Orchestrated AI jobs (human-gated)"
+    },
+    {
+      "name": "HVCG_AIJobSteps",
+      "path": "src/sharepoint/lists/HVCG_AIJobSteps.json",
+      "columnCount": 11,
+      "description": "AI \u2014 Steps within an AI job"
+    },
+    {
+      "name": "HVCG_AIOutputs",
+      "path": "src/sharepoint/lists/HVCG_AIOutputs.json",
+      "columnCount": 10,
+      "description": "AI \u2014 Job outputs pending/published after approval"
+    },
+    {
+      "name": "HVCG_AIApprovals",
+      "path": "src/sharepoint/lists/HVCG_AIApprovals.json",
+      "columnCount": 9,
+      "description": "AI \u2014 Explicit approvals for gated AI outputs"
+    },
+    {
+      "name": "HVCG_AIFeedback",
+      "path": "src/sharepoint/lists/HVCG_AIFeedback.json",
+      "columnCount": 7,
+      "description": "AI \u2014 Human feedback / corrections"
+    },
+    {
+      "name": "HVCG_AIAuditLog",
+      "path": "src/sharepoint/lists/HVCG_AIAuditLog.json",
+      "columnCount": 8,
+      "description": "AI \u2014 Immutable-style AI audit events"
+    },
+    {
+      "name": "HVCG_AICostTracking",
+      "path": "src/sharepoint/lists/HVCG_AICostTracking.json",
+      "columnCount": 11,
+      "description": "AI \u2014 Cost tracking per job/provider"
+    },
+    {
+      "name": "HVCG_OperationalAlerts",
+      "path": "src/sharepoint/lists/HVCG_OperationalAlerts.json",
+      "columnCount": 12,
+      "description": "Platform \u2014 Operational monitoring alerts"
+    },
+    {
+      "name": "HVCG_SystemInfo",
+      "path": "src/sharepoint/lists/HVCG_SystemInfo.json",
+      "columnCount": 9,
+      "description": "Platform \u2014 installed version and health markers (single-item list)"
+    },
+    {
+      "name": "HVCG_AutomationLogs",
+      "path": "src/sharepoint/lists/HVCG_AutomationLogs.json",
+      "columnCount": 10,
+      "description": "Flow run logging"
+    },
+    {
+      "name": "HVCG_Notifications",
+      "path": "src/sharepoint/lists/HVCG_Notifications.json",
+      "columnCount": 8,
+      "description": "Notification queue / history"
+    },
+    {
+      "name": "HVCG_AuditEvents",
+      "path": "src/sharepoint/lists/HVCG_AuditEvents.json",
+      "columnCount": 6,
+      "description": "Significant business audit events"
+    }
+  ],
+  "productVersion": "1.1.0"
+}

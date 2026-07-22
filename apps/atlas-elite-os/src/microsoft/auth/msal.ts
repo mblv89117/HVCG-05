@@ -103,4 +103,34 @@ export async function acquireGraphToken(): Promise<string | null> {
   return acquireToken(getGraphScopes());
 }
 
+/**
+ * Bearer for Atlas Integration Hub.
+ * Prefer Entra ID token (aud = SPA client id). Fall back to Graph access token
+ * (also accepted by hub after JWT validation).
+ */
+export async function acquireHubBearerToken(): Promise<string | null> {
+  const instance = await getMsal();
+  if (!instance) return null;
+  const account = getActiveAccount(instance);
+  if (!account) return null;
+  try {
+    const silent: AuthenticationResult = await instance.acquireTokenSilent({
+      account,
+      scopes: ['openid', 'profile', 'email', 'User.Read'],
+    });
+    if (silent.idToken) return silent.idToken;
+    return silent.accessToken || null;
+  } catch (e) {
+    if (e instanceof InteractionRequiredAuthError) {
+      const interactive = await instance.acquireTokenPopup({
+        account,
+        scopes: ['openid', 'profile', 'email', 'User.Read'],
+      });
+      if (interactive.idToken) return interactive.idToken;
+      return interactive.accessToken || null;
+    }
+    throw e;
+  }
+}
+
 export { dataverseApiRoot };

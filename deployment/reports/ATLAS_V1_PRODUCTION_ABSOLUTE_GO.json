@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-07-22T04:41:34Z",
+  "branch": "fix/atlas-production-hardening",
+  "verdict": "GO",
+  "commitAllowed": true,
+  "tagAllowed": true,
+  "tagName": "atlas-v1.0.1-production",
+  "buildSha": "8d3c7d58102543e80ca2ef9fa364d59c980abed2",
+  "builtAt": "2026-07-22T03:31:05Z",
+  "asset": "index-CxXf2tXp.js",
+  "ownerConfirmed": true,
+  "ownerConfirmedAt": "2026-07-22T04:41:34Z",
+  "atlasV100Production": "6a346aa736ba5ecaaff701c3561b1d4b1befd564",
+  "urls": {
+    "swa": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+    "hub": "https://app-atlas-integration-hub.azurewebsites.net",
+    "sharePointCommandCenter": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+    "sharePointClients": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients"
+  },
+  "artifacts": {
+    "managedSolution": "releases/v1.0.1/artifacts/HVCGAtlasProduction_1.0.1.0_managed.zip",
+    "unmanagedSolution": "releases/v1.0.1/artifacts/HVCGAtlasProduction_1.0.1.0.zip",
+    "rollbackPackage": "deployment/reports/recovery-backup-20260721-atlas-v101/"
+  },
+  "checklist": {
+    "clientLookupSchema": "GREEN",
+    "fiveFunctionalFlows": "GREEN",
+    "deliverableApprovalLifecycle": "GREEN",
+    "safetyControls": "GREEN",
+    "hostedHub": "GREEN",
+    "client360AuthAnonForged": "GREEN",
+    "signedOutClientsRouteGuard": "GREEN",
+    "signedInPublicSwaClient360": "GREEN",
+    "productionSolutionPackaging": "GREEN",
+    "productionSchemaValidation": "GREEN",
+    "rollbackArtifact": "GREEN",
+    "legacyClientIdPreserved": "GREEN",
+    "hvsUntouched": "GREEN",
+    "atlasV100TagUntouched": "GREEN",
+    "ownerUat": "GREEN"
+  },
+  "evidence": {
+    "schema": "deployment/reports/schema/atlas-client-ref-migration-latest.md",
+    "flows": "deployment/reports/flow-functional-tests-latest.md",
+    "deliverableLifecycle": "deployment/reports/deliverable-approval-lifecycle-latest.md",
+    "safety": "deployment/reports/safety-controls-latest.md",
+    "hub": "deployment/reports/hub-swa-path-latest.md",
+    "auth": "deployment/reports/client360-auth-security-latest.md",
+    "signedIn": "deployment/reports/signed-in-swa-client360-latest.md",
+    "solution": "deployment/reports/hvcg-atlas-production-solution-latest.md"
+  }
+}
