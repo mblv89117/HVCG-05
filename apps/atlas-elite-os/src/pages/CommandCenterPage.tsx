@@ -36,7 +36,6 @@ import {
   type PmTask,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
-import type { AtlasHubAuthHeaders } from '../integrations/hub/api';
 import { QuickCaptureBar } from '../components/QuickCaptureBar';
 
 
@@ -118,7 +117,7 @@ function ListBlock({
 }
 
 export function CommandCenterPage() {
-  const auth = useHubAuth() as AtlasHubAuthHeaders;
+  const auth = useHubAuth();
   const [cc, setCc] = useState<CommandCenter | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
