@@ -1,0 +1,94 @@
+{
+  "generatedAtUtc": "2026-07-22T05:52:02Z",
+  "status": "ASSIGNED",
+  "mechanism": "Entra appRoles on SPA registration + appRoleAssignedTo",
+  "authorizedUser": {
+    "upn": "manny@highvaluecapitalgroup.com",
+    "objectId": "e4835ea2-3c45-493a-95f5-472f6339661d",
+    "displayName": "Manuel  Barela",
+    "note": "manuel@ is NOT a valid Entra user; manny@ is correct UPN"
+  },
+  "requiredRole": {
+    "displayName": "HVCG Owner",
+    "claimValue": "HVCG_Owner",
+    "appRoleId": "a1000001-0001-4000-8000-000000000001",
+    "frontendResolvedRole": "HVCG Owner",
+    "aliasPath": "normalizeRole('HVCG_Owner') -> ROLE_ALIASES['hvcg_owner']"
+  },
+  "spaApplication": {
+    "displayName": "HVCG-Atlas-Elite-OS-DEV",
+    "appId": "49d20328-fe3c-40ec-9d0e-99f57e4646e4",
+    "objectId": "85562351-0732-406d-b9e1-2604e23571ee",
+    "servicePrincipalId": "de32a483-f097-4d78-81ae-d5544c2a1384",
+    "appRoleAssignmentRequired": false,
+    "note": "Named DEV but is the Production Absolute GO SWA client (zealous-rock / swa-atlas-elite-os-dev)"
+  },
+  "hubApplication": {
+    "displayName": "Atlas Integration Hub (Dev)",
+    "appId": "99dd84b0-33f7-481b-86db-d76287b124f6",
+    "objectId": "c28a6f9e-8e7a-4681-95d8-fb4e680ee0b2",
+    "servicePrincipalId": "8c7950e2-cfc6-4797-a067-0d13d0aeca35",
+    "appRolesDefined": false,
+    "note": "Hub JWT auth validates audience; Elite OS role resolution uses SPA ID token claims.roles — hub app roles not required for /access-denied fix"
+  },
+  "tenantId": "3df46563-86f3-4414-87fd-84ba967741ef",
+  "swaHostname": "zealous-rock-0090c7e1e.7.azurestaticapps.net",
+  "rootCause": {
+    "summary": "SPA application had zero appRoles; Manny only had Default Access (00000000-...) which emits no recognizable Atlas roles claim",
+    "priorAssignment": {
+      "appRoleId": "00000000-0000-0000-0000-000000000000",
+      "assignmentId": "ol6D5EU8OkmV9UcvYzlmHbi5MkGheRxBgt54GonMNik",
+      "meaning": "Default Access — does not populate roles claim with Atlas role values"
+    }
+  },
+  "actionsTaken": [
+    "PATCH /applications/85562351-0732-406d-b9e1-2604e23571ee with six Atlas appRoles (underscore claim values; Entra rejects spaces)",
+    "POST /servicePrincipals/de32a483-f097-4d78-81ae-d5544c2a1384/appRoleAssignedTo for HVCG Owner"
+  ],
+  "appRolesDefined": [
+    {"displayName": "HVCG Owner", "value": "HVCG_Owner", "id": "a1000001-0001-4000-8000-000000000001"},
+    {"displayName": "HVCG Team Member", "value": "HVCG_Team_Member", "id": "a1000001-0001-4000-8000-000000000002"},
+    {"displayName": "Client Executive", "value": "Client_Executive", "id": "a1000001-0001-4000-8000-000000000003"},
+    {"displayName": "Client Team Member", "value": "Client_Team_Member", "id": "a1000001-0001-4000-8000-000000000004"},
+    {"displayName": "Read-Only Advisor", "value": "Read_Only_Advisor", "id": "a1000001-0001-4000-8000-000000000005"},
+    {"displayName": "Administrator", "value": "Administrator", "id": "a1000001-0001-4000-8000-000000000006"}
+  ],
+  "assignment": {
+    "id": "ol6D5EU8OkmV9UcvYzlmHfEQhXY6gclPr6nzGMyucew",
+    "principalId": "e4835ea2-3c45-493a-95f5-472f6339661d",
+    "resourceId": "de32a483-f097-4d78-81ae-d5544c2a1384",
+    "appRoleId": "a1000001-0001-4000-8000-000000000001",
+    "createdDateTime": "2026-07-22T05:51:32.5499088Z"
+  },
+  "tokenClaimExpected": {
+    "claim": "roles",
+    "value": ["HVCG_Owner"],
+    "tokenType": "SPA ID token (aud = 49d20328-fe3c-40ec-9d0e-99f57e4646e4)",
+    "frontendPath": "account.idTokenClaims.roles -> resolveAtlasRole -> normalizeRole -> HVCG Owner"
+  },
+  "authorizationMechanism": {
+    "type": "Entra app roles (not groups, not static owner mapping)",
+    "productionPath": "MSAL account.idTokenClaims.roles only; Local Owner / role sim disabled for production/staging",
+    "files": [
+      "apps/atlas-elite-os/src/security/rbac.ts",
+      "apps/atlas-elite-os/src/security/RoleProvider.tsx",
+      "apps/atlas-elite-os/src/security/RequireMicrosoftAuth.tsx",
+      "apps/atlas-elite-os/src/microsoft/auth/msal.ts"
+    ],
+    "hub": "apps/atlas-integration-api/src/middleware/auth.ts validates JWT audience; x-atlas-roles header is client-asserted after SPA resolves role — SPA gate is authoritative for Unresolved"
+  },
+  "mustSignOutAndBackIn": true,
+  "codeChanges": false,
+  "redeployRequired": false,
+  "authWeakened": false,
+  "browserVerification": {
+    "status": "PENDING_OWNER_RELOGIN",
+    "reason": "Cached ID token without roles claim until sign-out/sign-in; interactive MFA may be required"
+  },
+  "remainingOwnerActions": [
+    "Sign out of Atlas Elite OS completely (clear MSAL sessionStorage)",
+    "Sign in again as manny@highvaluecapitalgroup.com",
+    "Confirm /access-denied is gone; footer role shows HVCG Owner",
+    "Open Command Center and /clients"
+  ]
+}
