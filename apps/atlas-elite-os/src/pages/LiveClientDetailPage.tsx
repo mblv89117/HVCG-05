@@ -15,31 +15,17 @@ import { Button, Caption1, Spinner, Text, Tab, TabList } from '@fluentui/react-c
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import { useAtlasRole } from '../security/RoleProvider';
 import {
   fetchClient360Detail,
   fetchClient360Documents,
-  type AtlasHubAuthHeaders,
   type Client360Candidate,
   type Client360Document,
 } from '../integrations/hub/api';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
 
-function useHubAuth(): AtlasHubAuthHeaders {
-  const { account } = useMicrosoftAuth();
-  const { role } = useAtlasRole();
-  return useMemo(
-    () => ({
-      userId: account?.localAccountId || account?.homeAccountId || 'local-dev-user',
-      organizationId: 'org-hvcg',
-      clientIds: [/* scoped below */],
-      email: account?.username,
-      roles: [role === 'Unauthenticated' ? 'Guest' : role],
-    }),
-    [account, role],
-  );
-}
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
+  const { account, ready } = useMicrosoftAuth();
   const auth = useHubAuth();
   const [tab, setTab] = useState('overview');
   const [client, setClient] = useState<Client360Candidate | null>(null);
@@ -64,8 +50,17 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   }, [auth, clientId]);
 
   useEffect(() => {
+    if (!ready) return;
+    if (!account) {
+      setClient(null);
+      setDocs([]);
+      setError(null);
+      setBusy(false);
+      return;
+    }
+    if (!auth.accessToken) return;
     void refresh();
-  }, [refresh]);
+  }, [refresh, ready, account, auth.accessToken]);
 
   const hvsTimeline = useMemo(
     () =>

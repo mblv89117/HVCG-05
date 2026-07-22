@@ -1,0 +1,301 @@
+{
+  "views": [
+    {
+      "list": "HVCG_Clients",
+      "title": "Active Clients",
+      "filter": "IsActive eq 1 and ClientStage eq 'Active Client'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "OverallHealth",
+        "MonthlyRetainer",
+        "ClientLifetimeValue",
+        "PaymentStatus"
+      ]
+    },
+    {
+      "list": "HVCG_Clients",
+      "title": "Needs Executive Attention",
+      "filter": "RequiresExecutiveAttention eq 1",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "OverallHealth",
+        "RiskLevel",
+        "PaymentStatus"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "Open Pipeline",
+      "filter": "WinLossStatus eq 'Open'",
+      "fields": [
+        "Title",
+        "Stage",
+        "WeightedValue",
+        "Probability",
+        "ExpectedCloseDate",
+        "SalesOwnerEmail",
+        "CapitalHandoffStatus",
+        "NextActionDate"
+      ]
+    },
+    {
+      "list": "HVCG_Leads",
+      "title": "Open Leads",
+      "filter": "LeadStatus ne 'Converted' and LeadStatus ne 'Disqualified'",
+      "fields": [
+        "Title",
+        "ContactName",
+        "Email",
+        "LeadStatus",
+        "ServiceInterest",
+        "EstimatedValue",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Leads",
+      "title": "Qualified Leads",
+      "filter": "LeadStatus eq 'Qualified'",
+      "fields": [
+        "Title",
+        "ContactName",
+        "Email",
+        "ServiceInterest",
+        "EstimatedValue",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "Commit Forecast",
+      "filter": "ForecastCategory eq 'Commit' and WinLossStatus eq 'Open'",
+      "fields": [
+        "Title",
+        "Stage",
+        "WeightedValue",
+        "Probability",
+        "ExpectedCloseDate",
+        "SalesOwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "title": "Capital Handoffs Ready",
+      "filter": "CapitalHandoffStatus eq 'Ready' or CapitalHandoffStatus eq 'HandedOff'",
+      "fields": [
+        "Title",
+        "Stage",
+        "OpportunityType",
+        "CapitalHandoffStatus",
+        "SalesOwnerEmail",
+        "ExpectedCloseDate"
+      ]
+    },
+    {
+      "list": "HVCG_OpportunityActivities",
+      "title": "Recent Activities",
+      "filter": "",
+      "fields": [
+        "Title",
+        "ActivityType",
+        "ActivityDate",
+        "OwnerEmail",
+        "Outcome"
+      ]
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "title": "Active Capital Book",
+      "filter": "FundingStatus ne 'Closed' and FundingStatus ne 'Declined'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "CapitalType",
+        "TargetAmount",
+        "FundingStatus",
+        "FundingProbability",
+        "ExpectedCloseDate",
+        "HandoffSource"
+      ]
+    },
+    {
+      "list": "HVCG_Invoices",
+      "title": "Outstanding AR",
+      "filter": "InvoiceStatus eq 'Sent' or InvoiceStatus eq 'Partial' or InvoiceStatus eq 'Past Due'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "Amount",
+        "AmountCollected",
+        "DueDate",
+        "InvoiceStatus"
+      ]
+    },
+    {
+      "list": "HVCG_Tasks",
+      "title": "Overdue",
+      "filter": "IsOverdue eq 1",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "OwnerEmail",
+        "Priority",
+        "DueDate",
+        "TaskStatus"
+      ]
+    },
+    {
+      "list": "HVCG_DocumentRequests",
+      "title": "Open Critical",
+      "filter": "IsCritical eq 1 and RequestStatus ne 'Accepted' and RequestStatus ne 'Waived' and RequestStatus ne 'Cancelled'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "RequestStatus",
+        "DueDate",
+        "ReminderCount"
+      ]
+    },
+    {
+      "list": "HVCG_Decisions",
+      "title": "Executive Queue",
+      "filter": "RequiresExecutiveAttention eq 1 and (DecisionStatus eq 'Proposed' or DecisionStatus eq 'Pending Decision')",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "EscalationReason",
+        "Deadline",
+        "DecisionMakerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_AI_DraftEmails",
+      "title": "Pending Human Approval",
+      "filter": "HumanApproved eq 0 and AIStatus ne 'Cancelled'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "AIStatus",
+        "Priority",
+        "AssignedReviewerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_FinancialMilestones",
+      "title": "Past Due",
+      "filter": "IsPastDue eq 1",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "Amount",
+        "DueDate",
+        "PaymentStatus",
+        "RevenueAtRisk"
+      ]
+    },
+    {
+      "list": "HVCG_Projects",
+      "title": "At Risk Health",
+      "filter": "ProjectHealth eq 'Yellow' or ProjectHealth eq 'Red'",
+      "fields": [
+        "Title",
+        "ClientCode",
+        "ProjectHealth",
+        "ProjectStatus",
+        "ProjectOwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Relationships",
+      "title": "Active Relationships",
+      "filter": "RelationshipStatus eq 'Active'",
+      "fields": [
+        "Title",
+        "RelationshipType",
+        "SourceDisplayName",
+        "TargetDisplayName",
+        "RelationshipStrength",
+        "RelationshipOwnerEmail",
+        "NextPlannedInteraction"
+      ]
+    },
+    {
+      "list": "HVCG_Relationships",
+      "title": "Strategic High",
+      "filter": "StrategicValue eq 'High' or StrategicValue eq 'Critical'",
+      "fields": [
+        "Title",
+        "RelationshipType",
+        "SourceDisplayName",
+        "TargetDisplayName",
+        "StrategicValue",
+        "RevenueInfluenced",
+        "CapitalInfluenced"
+      ]
+    },
+    {
+      "list": "HVCG_Relationships",
+      "title": "Pending Interactions",
+      "filter": "NextPlannedInteraction le '@today+7'",
+      "fields": [
+        "Title",
+        "RelationshipOwnerEmail",
+        "NextPlannedInteraction",
+        "LastMeaningfulInteraction",
+        "SourceClientCode"
+      ]
+    },
+    {
+      "list": "HVCG_Relationships",
+      "title": "Cross-Client Review",
+      "filter": "IsCrossClient eq 1",
+      "fields": [
+        "Title",
+        "SourceClientCode",
+        "TargetClientCode",
+        "RelationshipType",
+        "RelationshipOwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_AIJobs",
+      "title": "Awaiting Review",
+      "filter": "JobStatus eq 'AwaitingReview'",
+      "fields": [
+        "Title",
+        "JobType",
+        "ClientCode",
+        "Priority",
+        "ReviewerEmail",
+        "Confidence",
+        "CostEstimate"
+      ]
+    },
+    {
+      "list": "HVCG_AIJobs",
+      "title": "Failed Jobs",
+      "filter": "JobStatus eq 'Failed'",
+      "fields": [
+        "Title",
+        "JobType",
+        "ClientCode",
+        "ErrorMessage",
+        "RetryCount"
+      ]
+    },
+    {
+      "list": "HVCG_OperationalAlerts",
+      "title": "Open Critical",
+      "filter": "AlertStatus eq 'Open' and Severity eq 'Critical'",
+      "fields": [
+        "Title",
+        "AlertType",
+        "Severity",
+        "DetectedDate",
+        "RecommendedAction"
+      ]
+    }
+  ]
+}

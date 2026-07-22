@@ -1,0 +1,58 @@
+{
+  "flowName": "HVCG_WeeklyStatusSummary",
+  "displayName": "HVCG_WeeklyStatusSummary",
+  "description": "Weekly ops digest and executive attention-only digest.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Monday 06:30 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "QueryOpsMetrics"
+    },
+    {
+      "id": 2,
+      "action": "EmailOpsDigest"
+    },
+    {
+      "id": 3,
+      "action": "QueryExecutiveItems"
+    },
+    {
+      "id": 4,
+      "action": "EmailExecutiveDigestIfAny"
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

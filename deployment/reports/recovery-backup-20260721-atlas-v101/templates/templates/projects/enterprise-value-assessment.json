@@ -1,0 +1,255 @@
+{
+  "templateKey": "enterprise-value-assessment",
+  "title": "Enterprise Value Assessment",
+  "templateType": "Project",
+  "defaultDurationDays": 30,
+  "workstreams": [
+    "Financial analysis",
+    "Enterprise value assessment",
+    "Client reporting"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Scoping",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Data Room Intake",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Valuation Analysis",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "Delivery",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Data complete",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Draft valuation",
+      "offsetDays": 20,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Client delivery",
+      "offsetDays": 30,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Confirm valuation purpose and standard",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Document purpose: sale, capital, internal.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Request valuation diligence docs",
+      "phase": "p2",
+      "offsetDays": 1,
+      "defaultRole": "OperationsAssistant",
+      "description": "Financials, comps inputs, debt.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Normalize historical earnings",
+      "phase": "p3",
+      "offsetDays": 12,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Apply add-backs with evidence.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 8,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Build valuation model",
+      "phase": "p3",
+      "offsetDays": 18,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Income, market, asset approaches as applicable.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 10,
+      "isCritical": true
+    },
+    {
+      "key": "t5",
+      "title": "Internal QC of valuation",
+      "phase": "p3",
+      "offsetDays": 22,
+      "defaultRole": "ProjectManager",
+      "description": "Challenge assumptions; QC checklist.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 3,
+      "isCritical": true
+    },
+    {
+      "key": "t6",
+      "title": "Draft EV assessment report",
+      "phase": "p4",
+      "offsetDays": 24,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Executive summary + ranges.",
+      "dependsOn": [
+        "t5"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t7",
+      "title": "Executive review if high-stakes",
+      "phase": "p4",
+      "offsetDays": 26,
+      "defaultRole": "Owner",
+      "description": "Only if RequiresExecutiveApproval.",
+      "dependsOn": [
+        "t6"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t8",
+      "title": "Present to client",
+      "phase": "p4",
+      "offsetDays": 30,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Meeting + file deliverable.",
+      "dependsOn": [
+        "t6"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Historical financials 3yr",
+      "documentCategory": "Historical Financials",
+      "folderTarget": "03 - Historical Financials",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Historical financials 3yr"
+    },
+    {
+      "key": "d2",
+      "title": "YTD financials",
+      "documentCategory": "Current Financials",
+      "folderTarget": "04 - Current Financials",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: YTD financials"
+    },
+    {
+      "key": "d3",
+      "title": "Debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Debt schedule"
+    },
+    {
+      "key": "d4",
+      "title": "Customer concentration summary",
+      "documentCategory": "Other",
+      "folderTarget": "04 - Current Financials",
+      "dueOffsetDays": 10,
+      "isCritical": false,
+      "description": "Please provide: Customer concentration summary"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Enterprise value assessment report",
+      "deliverableType": "Enterprise Value Assessment",
+      "draftOffsetDays": 22,
+      "finalOffsetDays": 30,
+      "requiresExecutiveApproval": true,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "Owner"
+    },
+    {
+      "key": "del2",
+      "title": "Valuation model",
+      "deliverableType": "Financial Model",
+      "draftOffsetDays": 18,
+      "finalOffsetDays": 28,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Insufficient quality of earnings support",
+      "likelihood": "High",
+      "impact": "High",
+      "mitigation": "Flag confidence intervals; do not overstate precision"
+    }
+  ],
+  "qualityControlChecks": [
+    "Assumption log complete",
+    "Range not single-point without disclaimer",
+    "Sources cited"
+  ],
+  "automationTriggers": [
+    "On template instantiate",
+    "Deliverable approval flow"
+  ],
+  "clientResponsibilities": [
+    "Timely financials",
+    "Management interview"
+  ],
+  "internalResponsibilities": [
+    "Maintain independence of analysis",
+    "Document assumptions"
+  ],
+  "approvalPoints": [
+    "Enterprise value assessment report",
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

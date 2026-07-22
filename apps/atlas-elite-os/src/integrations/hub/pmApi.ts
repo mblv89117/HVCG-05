@@ -3,7 +3,7 @@ import type { AtlasHubAuthHeaders } from './api.ts';
 export type { AtlasHubAuthHeaders };
 
 function headers(auth: AtlasHubAuthHeaders): HeadersInit {
-  return {
+  const h: Record<string, string> = {
     'content-type': 'application/json',
     'x-atlas-user-id': auth.userId,
     'x-atlas-organization-id': auth.organizationId,
@@ -11,6 +11,10 @@ function headers(auth: AtlasHubAuthHeaders): HeadersInit {
     ...(auth.email ? { 'x-atlas-user-email': auth.email } : {}),
     'x-atlas-roles': (auth.roles || ['Staff']).join(','),
   };
+  if (auth.accessToken) {
+    h.Authorization = `Bearer ${auth.accessToken}`;
+  }
+  return h;
 }
 
 const base = () =>

@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-07-22T00:23:24.366696+00:00",
+  "dataverseUrl": "https://orgee2f7545.crm.dynamics.com",
+  "method": "python-raw-json",
+  "flows": [
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "found": true,
+      "workflowId": "6d2f1a72-88a3-527d-bfc9-fddf90c0ad0a",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "816d6e90e837b3b2",
+      "liveHashBefore": "823f2d40d0530566",
+      "liveHashAfter": "816d6e90e837b3b2",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "found": true,
+      "workflowId": "ce87af47-06a6-5a7b-acc9-601429b31018",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "ce4745f0ca0edeb8",
+      "liveHashBefore": "b5d292e67f185e9d",
+      "liveHashAfter": "ce4745f0ca0edeb8",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "found": true,
+      "workflowId": "b2d8b14a-5948-5db7-949d-9bf12a0610bf",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "3efa9897f399c28b",
+      "liveHashBefore": "7f56666b9a895fa1",
+      "liveHashAfter": "3efa9897f399c28b",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "found": true,
+      "workflowId": "dc79d236-2c3d-5179-966c-a627bff6d0d3",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "559b8e23433c2d6f",
+      "liveHashBefore": "313e6077569047c0",
+      "liveHashAfter": "559b8e23433c2d6f",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "found": true,
+      "workflowId": "36794755-15ff-5be5-a454-46c5e414e295",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "8a84a3bec5b694fa",
+      "liveHashBefore": "c8abd6fbfeda762e",
+      "liveHashAfter": "8a84a3bec5b694fa",
+      "matchAfter": true,
+      "error": null
+    }
+  ],
+  "errors": [],
+  "success": true
+}

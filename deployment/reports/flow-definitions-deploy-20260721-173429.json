@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-07-22T00:32:37.580615+00:00",
+  "dataverseUrl": "https://orgee2f7545.crm.dynamics.com",
+  "method": "python-raw-json",
+  "flows": [
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "found": true,
+      "workflowId": "6d2f1a72-88a3-527d-bfc9-fddf90c0ad0a",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "b9b7a319859e9d8a",
+      "liveHashBefore": "b9b7a319859e9d8a",
+      "liveHashAfter": "b9b7a319859e9d8a",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "found": true,
+      "workflowId": "ce87af47-06a6-5a7b-acc9-601429b31018",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "61fd18ee76c6d6fb",
+      "liveHashBefore": "ce4745f0ca0edeb8",
+      "liveHashAfter": "61fd18ee76c6d6fb",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "found": true,
+      "workflowId": "b2d8b14a-5948-5db7-949d-9bf12a0610bf",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "4f869d85e81c01c8",
+      "liveHashBefore": "4f869d85e81c01c8",
+      "liveHashAfter": "4f869d85e81c01c8",
+      "matchAfter": true,
+      "error": null
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "found": true,
+      "workflowId": "dc79d236-2c3d-5179-966c-a627bff6d0d3",
+      "wasActive": true,
+      "patched": false,
+      "reactivated": false,
+      "sourceHash": "978e729094171c6a",
+      "liveHashBefore": "f58380077d69fddf",
+      "liveHashAfter": null,
+      "matchAfter": false,
+      "error": "patch failed 400: {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'OpenApiOperationParameterValidationFailed' and message 'Input parameter 'item' validation failed in workflow operation 'Patch_Deliverable_Approved': The API operation 'PatchItem' is missing required property 'item/Title'.'.\\\"}}\\\".\"}}"
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "found": true,
+      "workflowId": "36794755-15ff-5be5-a454-46c5e414e295",
+      "wasActive": true,
+      "patched": true,
+      "reactivated": true,
+      "sourceHash": "07ae116ae7cb864e",
+      "liveHashBefore": "bbbe1db8ce1788cc",
+      "liveHashAfter": "07ae116ae7cb864e",
+      "matchAfter": true,
+      "error": null
+    }
+  ],
+  "errors": [
+    "HVCG_DeliverableApproval: patch failed 400: {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'OpenApiOperationParameterValidationFailed' and message 'Input parameter 'item' validation failed in workflow operation 'Patch_Deliverable_Approved': The API operation 'PatchItem' is missing required property 'item/Title'.'.\\\"}}\\\".\"}}"
+  ],
+  "success": false
+}

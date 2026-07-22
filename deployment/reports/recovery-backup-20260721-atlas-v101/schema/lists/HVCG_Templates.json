@@ -1,0 +1,97 @@
+{
+  "title": "HVCG_Templates",
+  "description": "Project/template catalog metadata",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TemplateKey",
+      "displayName": "TemplateKey",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TemplateType",
+      "displayName": "TemplateType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Project",
+        "DocumentRequestSet",
+        "DeliverableSet",
+        "Workstream"
+      ]
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ConfigJsonPath",
+      "displayName": "ConfigJsonPath",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsActive",
+      "displayName": "IsActive",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "DefaultDurationDays",
+      "displayName": "DefaultDurationDays",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Domain",
+      "displayName": "Domain",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Project",
+        "Sales",
+        "Capital",
+        "Ops",
+        "Meeting",
+        "Communication",
+        "AI",
+        "Portal"
+      ],
+      "default": "Project"
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

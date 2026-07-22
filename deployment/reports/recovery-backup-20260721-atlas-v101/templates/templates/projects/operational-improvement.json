@@ -1,0 +1,174 @@
+{
+  "templateKey": "operational-improvement",
+  "title": "Operational Improvement",
+  "templateType": "Project",
+  "defaultDurationDays": 35,
+  "workstreams": [
+    "Operational improvement",
+    "SOP development"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Diagnose",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Design",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Implement",
+      "seq": 3
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Baseline metrics",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Process redesign",
+      "offsetDays": 25,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Adoption check",
+      "offsetDays": 35,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Current-state mapping",
+      "phase": "p1",
+      "offsetDays": 5,
+      "defaultRole": "OperationsManager",
+      "description": "Process interviews.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 6,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Issue/root cause register",
+      "phase": "p1",
+      "offsetDays": 8,
+      "defaultRole": "ProjectManager",
+      "description": "Link to HVCG_Issues.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    },
+    {
+      "key": "t3",
+      "title": "Future-state + SOPs",
+      "phase": "p2",
+      "offsetDays": 20,
+      "defaultRole": "OperationsManager",
+      "description": "Draft SOPs.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 8,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Pilot implementation",
+      "phase": "p3",
+      "offsetDays": 28,
+      "defaultRole": "ProjectManager",
+      "description": "Train staff.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 6,
+      "isCritical": true
+    },
+    {
+      "key": "t5",
+      "title": "Measure adoption",
+      "phase": "p3",
+      "offsetDays": 35,
+      "defaultRole": "OperationsManager",
+      "description": "KPI vs baseline.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Existing SOPs / Loom links",
+      "documentCategory": "Other",
+      "folderTarget": "00 - Engagement Administration",
+      "dueOffsetDays": 7,
+      "isCritical": false,
+      "description": "Please provide: Existing SOPs / Loom links"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Process maps & SOP pack",
+      "deliverableType": "SOP",
+      "draftOffsetDays": 18,
+      "finalOffsetDays": 30,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    },
+    {
+      "key": "del2",
+      "title": "Improvement report",
+      "deliverableType": "Client Report",
+      "draftOffsetDays": 30,
+      "finalOffsetDays": 35,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "No operational owner at client",
+      "likelihood": "High",
+      "impact": "High",
+      "mitigation": "Require named client process owner"
+    }
+  ],
+  "qualityControlChecks": [
+    "Before/after metrics captured"
+  ],
+  "automationTriggers": [
+    "SOP index entry in HVCG_SOPs"
+  ],
+  "clientResponsibilities": [
+    "Assign process owner"
+  ],
+  "internalResponsibilities": [
+    "Avoid tool sprawl"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

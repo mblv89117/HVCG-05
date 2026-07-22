@@ -13,7 +13,7 @@ import type { AppRegistry } from '../connectors/registry.ts';
 import { completeOAuthForProvider, getProviderAdapter } from '../connectors/registry.ts';
 import { runDiscoveryForConnection } from '../discovery/discover.ts';
 import { runClient360Ingestion, buildExecutiveDashboard } from '../client360/ingest.ts';
-import { headersFromIncoming, parsePrincipal, type AtlasPrincipal } from '../middleware/auth.ts';
+import { requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
@@ -61,23 +61,6 @@ function corsOrigin(req: IncomingMessage, cfg: AppConfig): string | null {
   return cfg.allowedOrigins.includes(origin) ? origin : null;
 }
 
-function requirePrincipal(req: IncomingMessage, cfg: AppConfig): AtlasPrincipal {
-  if (!cfg.requireAuth) {
-    return {
-      userId: 'dev-user',
-      organizationId: 'org-hvcg',
-      allowedClientIds: ['*'],
-      roles: ['Admin'],
-    };
-  }
-  const p = parsePrincipal(headersFromIncoming(req.headers));
-  if (!p) {
-    audit({ action: 'auth_failure', outcome: 'denied', detail: 'missing principal headers' });
-    throw Object.assign(new Error('Unauthorized'), { status: 401 });
-  }
-  return p;
-}
-
 function parseProvider(pathSegment: string): ProviderId | null {
   if (pathSegment === 'microsoft' || pathSegment === 'google' || pathSegment === 'github') {
     return pathSegment;
@@ -123,7 +106,7 @@ export async function handleRequest(
       'access-control-allow-origin': origin || '',
       'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS',
       'access-control-allow-headers':
-        'content-type,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256',
+        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256',
       'access-control-max-age': '86400',
     });
     res.end();
@@ -170,21 +153,21 @@ export async function handleRequest(
 
     // GET /api/integrations/registry
     if (method === 'GET' && path === '/api/integrations/registry') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { providers: app.registry.list() }, origin);
       return;
     }
 
     // GET /api/integrations/source-of-truth
     if (method === 'GET' && path === '/api/integrations/source-of-truth') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { rules: SOURCE_OF_TRUTH_RULES }, origin);
       return;
     }
 
     // GET /api/connections
     if (method === 'GET' && path === '/api/connections') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       // Multi-account inventory: return ALL active connections unless filtered.
       const ownerUserId = url.searchParams.get('ownerUserId') || undefined;
       const providerId = url.searchParams.get('provider') as ProviderId | null;
@@ -201,7 +184,7 @@ export async function handleRequest(
     // GET /api/connections/:id
     const connMatch = path.match(/^\/api\/connections\/([^/]+)$/);
     if (method === 'GET' && connMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const conn = repo.getConnection(connMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -214,7 +197,7 @@ export async function handleRequest(
     // GET /api/connections/:id/health
     const healthMatch = path.match(/^\/api\/connections\/([^/]+)\/health$/);
     if (method === 'GET' && healthMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const health = connectionHealth(deps, healthMatch[1]);
       if (!health) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -227,7 +210,7 @@ export async function handleRequest(
     // GET /api/connections/:id/resources
     const resourcesMatch = path.match(/^\/api\/connections\/([^/]+)\/resources$/);
     if (method === 'GET' && resourcesMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const conn = repo.getConnection(resourcesMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -251,7 +234,7 @@ export async function handleRequest(
     // GET /api/connections/:id/sync-jobs
     const syncJobsMatch = path.match(/^\/api\/connections\/([^/]+)\/sync-jobs$/);
     if (method === 'GET' && syncJobsMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { jobs: repo.listSyncJobs(syncJobsMatch[1]) }, origin);
       return;
     }
@@ -259,7 +242,7 @@ export async function handleRequest(
     // GET /api/connections/:id/errors
     const errorsMatch = path.match(/^\/api\/connections\/([^/]+)\/errors$/);
     if (method === 'GET' && errorsMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { errors: repo.listSyncErrors(errorsMatch[1]) }, origin);
       return;
     }
@@ -299,7 +282,7 @@ export async function handleRequest(
 
     // GET /api/audit
     if (method === 'GET' && path === '/api/audit') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const limit = Number(url.searchParams.get('limit') || 100);
       send(res, 200, { events: repo.listAudit(limit) }, origin);
       return;
@@ -307,14 +290,14 @@ export async function handleRequest(
 
     // GET /api/admin/dashboard
     if (method === 'GET' && path === '/api/admin/dashboard') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { summary: repo.dashboardSummary(), ...repo.dashboardSummary() }, origin);
       return;
     }
 
     // GET /api/inventory — multi-account connection inventory for HVS/HVCG
     if (method === 'GET' && path === '/api/inventory') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const connections = repo.listConnections();
       send(
         res,
@@ -354,28 +337,28 @@ export async function handleRequest(
     // GET /api/connections/:id/discovered
     const discoveredMatch = path.match(/^\/api\/connections\/([^/]+)\/discovered$/);
     if (method === 'GET' && discoveredMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { resources: repo.listDiscoveredResources(discoveredMatch[1]) }, origin);
       return;
     }
 
     // GET /api/client360
     if (method === 'GET' && path === '/api/client360') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { candidates: repo.listClient360() }, origin);
       return;
     }
 
     // GET /api/client360/executive-dashboard
     if (method === 'GET' && path === '/api/client360/executive-dashboard') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       send(res, 200, { dashboard: buildExecutiveDashboard(repo) }, origin);
       return;
     }
 
     // GET /api/client360/migration/summary — HVS link-first migration status
     if (method === 'GET' && path === '/api/client360/migration/summary') {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const records = repo.listAllSourceRecords(500_000).filter(
         (r) => r.fields?.migrationStatus === 'link_only',
       );
@@ -405,7 +388,7 @@ export async function handleRequest(
     // GET /api/client360/:id
     const clientMatch = path.match(/^\/api\/client360\/([^/]+)$/);
     if (method === 'GET' && clientMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const id = decodeURIComponent(clientMatch[1]);
       const cand = repo.listClient360().find((c) => c.id === id);
       if (!cand) {
@@ -419,7 +402,7 @@ export async function handleRequest(
     // GET /api/client360/:id/documents — HVS link-first docs (restricted excluded from broad list)
     const docsMatch = path.match(/^\/api\/client360\/([^/]+)\/documents$/);
     if (method === 'GET' && docsMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const id = decodeURIComponent(docsMatch[1]);
       const cand = repo.listClient360().find((c) => c.id === id);
       if (!cand) {
@@ -482,7 +465,7 @@ export async function handleRequest(
 
     // POST /api/client360/ingest-microsoft — deep sync ALL Microsoft accounts, then rebuild Client 360
     if (path === '/api/client360/ingest-microsoft') {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const msIds = repo
         .listConnections({ providerId: 'microsoft' })
         .filter((c) => c.status === 'Connected')
@@ -504,7 +487,7 @@ export async function handleRequest(
     // POST /api/connections/:provider/connect
     const connectMatch = path.match(/^\/api\/connections\/([^/]+)\/connect$/);
     if (connectMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const provider = parseProvider(connectMatch[1]);
       if (!provider) {
         send(res, 400, { error: 'invalid_provider' }, origin);
@@ -573,7 +556,7 @@ export async function handleRequest(
     // POST /api/connections/:id/disconnect
     const disconnectMatch = path.match(/^\/api\/connections\/([^/]+)\/disconnect$/);
     if (disconnectMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const conn = repo.getConnection(disconnectMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -598,7 +581,7 @@ export async function handleRequest(
     // POST /api/connections/:id/discover
     const discoverMatch = path.match(/^\/api\/connections\/([^/]+)\/discover$/);
     if (discoverMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const conn = repo.getConnection(discoverMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -631,7 +614,7 @@ export async function handleRequest(
 
     // POST /api/sync/all — each connection independently
     if (path === '/api/sync/all') {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const ids = repo.listConnections().map((c) => c.id);
       const jobs = await runBatchSync({ repo, app }, ids);
       audit({
@@ -647,7 +630,7 @@ export async function handleRequest(
 
     // POST /api/client360/rebuild
     if (path === '/api/client360/rebuild') {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const candidates = runClient360Ingestion(repo);
       const dashboard = buildExecutiveDashboard(repo);
       audit({
@@ -664,7 +647,7 @@ export async function handleRequest(
     // POST /api/connections/:id/reauthorize
     const reauthMatch = path.match(/^\/api\/connections\/([^/]+)\/reauthorize$/);
     if (reauthMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const conn = repo.getConnection(reauthMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -712,7 +695,7 @@ export async function handleRequest(
     // POST /api/connections/:id/verify
     const verifyMatch = path.match(/^\/api\/connections\/([^/]+)\/verify$/);
     if (verifyMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const conn = repo.getConnection(verifyMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -736,7 +719,7 @@ export async function handleRequest(
     // POST /api/connections/:id/sync
     const syncMatch = path.match(/^\/api\/connections\/([^/]+)\/sync$/);
     if (syncMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const conn = repo.getConnection(syncMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -766,7 +749,7 @@ export async function handleRequest(
     // POST /api/connections/:id/resources/select
     const selectMatch = path.match(/^\/api\/connections\/([^/]+)\/resources\/select$/);
     if (selectMatch) {
-      const principal = requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const conn = repo.getConnection(selectMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);
@@ -799,7 +782,7 @@ export async function handleRequest(
     // POST /api/connections/:id/search
     const searchMatch = path.match(/^\/api\/connections\/([^/]+)\/search$/);
     if (searchMatch) {
-      requirePrincipal(req, cfg);
+      await requirePrincipal(req, cfg);
       const conn = repo.getConnection(searchMatch[1]);
       if (!conn) {
         send(res, 404, { error: 'not_found' }, origin);

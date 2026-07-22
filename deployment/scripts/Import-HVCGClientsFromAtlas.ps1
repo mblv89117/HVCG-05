@@ -39,7 +39,10 @@ $siteUrl = $Config.sites.commandCenter.url
 $cid = Resolve-HVCGPnPClientId -Config $Config
 
 Write-HVCGLog -Level STEP -Message "Connecting to $siteUrl (DeviceLogin=$DeviceLogin env=$Environment)" -Report $Report
-if ($DeviceLogin) {
+if (Test-HVCGPnPConnectedTo -Url $siteUrl) {
+  Write-HVCGLog -Level INFO -Message "Reusing existing PnP connection → $siteUrl" -Report $Report
+}
+elseif ($DeviceLogin) {
   Connect-PnPOnline -Url $siteUrl -DeviceLogin -ClientId $cid -ErrorAction Stop | Out-Null
 }
 else {

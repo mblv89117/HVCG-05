@@ -1,0 +1,124 @@
+{
+  "title": "HVCG_DiscoveryCalls",
+  "description": "CRM \u2014 Discovery / sales calls",
+  "template": "genericList",
+  "domain": "CRM",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LeadId",
+      "displayName": "LeadId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Leads"
+    },
+    {
+      "internalName": "OpportunityId",
+      "displayName": "OpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "CallDate",
+      "displayName": "CallDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Outcome",
+      "displayName": "Outcome",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Qualified",
+        "Nurture",
+        "Proposal",
+        "Disqualified",
+        "No Show",
+        "Reschedule"
+      ]
+    },
+    {
+      "internalName": "PainPoints",
+      "displayName": "PainPoints",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalNeedSummary",
+      "displayName": "CapitalNeedSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NextStep",
+      "displayName": "NextStep",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MeetingId",
+      "displayName": "MeetingId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Meetings"
+    },
+    {
+      "internalName": "RecordingLink",
+      "displayName": "RecordingLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

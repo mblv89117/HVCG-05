@@ -11,29 +11,12 @@ import { Button, Caption1, Input, Spinner, Text } from '@fluentui/react-componen
 import { ArrowSyncRegular, SearchRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import { useAtlasRole } from '../security/RoleProvider';
-import { workspaceCatalog } from '../data/workspaces';
 import {
   fetchClient360,
   ingestMicrosoftClient360,
-  type AtlasHubAuthHeaders,
   type Client360Candidate,
 } from '../integrations/hub/api';
-
-function useHubAuth(): AtlasHubAuthHeaders {
-  const { account } = useMicrosoftAuth();
-  const { role } = useAtlasRole();
-  return useMemo(
-    () => ({
-      userId: account?.localAccountId || account?.homeAccountId || 'local-dev-user',
-      organizationId: 'org-hvcg',
-      clientIds: workspaceCatalog.map((w) => w.id),
-      email: account?.username,
-      roles: [role === 'Unauthenticated' ? 'Guest' : role],
-    }),
-    [account, role],
-  );
-}
+import { useHubAuth } from '../integrations/hub/useHubAuth';
 
 function toneForLifecycle(lifecycle?: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
   switch (lifecycle) {
@@ -52,11 +35,13 @@ function toneForLifecycle(lifecycle?: string): 'success' | 'warning' | 'danger' 
  * Live Clients portfolio — sourced from Client 360 (Microsoft-backed), not demo catalog.
  */
 export function ClientsPage() {
+  const { account, ready } = useMicrosoftAuth();
   const auth = useHubAuth();
   const [clients, setClients] = useState<Client360Candidate[]>([]);
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dataSource, setDataSource] = useState<string>('');
 
   const refresh = useCallback(async () => {
     setBusy(true);
@@ -64,6 +49,7 @@ export function ClientsPage() {
     try {
       const data = await fetchClient360(auth);
       setClients(data.clients || []);
+      setDataSource(data.source);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -84,8 +70,18 @@ export function ClientsPage() {
   }, [auth, refresh]);
 
   useEffect(() => {
+    if (!ready) return;
+    // Signed-out: never request hub or snapshot; clear any prior rows.
+    if (!account) {
+      setClients([]);
+      setDataSource('');
+      setError(null);
+      setBusy(false);
+      return;
+    }
+    if (!auth.accessToken) return;
     void refresh();
-  }, [refresh]);
+  }, [refresh, ready, account, auth.accessToken]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -129,6 +125,12 @@ export function ClientsPage() {
 
       <FilterToolbar>
         <StatusChip label={`${filtered.length} / ${clients.length} clients`} tone="info" />
+        {dataSource ? (
+          <StatusChip
+            label={dataSource === 'hub' ? 'Live hub' : dataSource === 'snapshot' ? 'Snapshot fallback' : 'Signed out'}
+            tone={dataSource === 'hub' ? 'success' : 'warning'}
+          />
+        ) : null}
         <Input
           contentBefore={<SearchRegular />}
           placeholder="Search name, email, domain…"

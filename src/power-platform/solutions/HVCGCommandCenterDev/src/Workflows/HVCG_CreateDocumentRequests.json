@@ -1,7 +1,7 @@
 {
   "name": "HVCG_CreateDocumentRequests",
   "displayName": "HVCG_CreateDocumentRequests",
-  "description": "Seed document requests from template",
+  "description": "Create client document request records (records only, no emails). Skips titles that already have an open request for the client. Idempotent.",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
@@ -24,19 +24,27 @@
             "type": "object",
             "properties": {
               "ClientCode": {
-                "type": "string"
+                "type": "string",
+                "title": "ClientCode",
+                "description": "Short unique client code, e.g. ACME01"
               },
               "ClientListItemId": {
-                "type": "integer"
+                "type": "integer",
+                "title": "ClientListItemId",
+                "description": "Optional HVCG_Clients item Id (skips ClientCode lookup)"
               },
-              "TemplateKey": {
-                "type": "string"
+              "ProjectId": {
+                "type": "integer",
+                "title": "ProjectId",
+                "description": "Optional HVCG_Projects item Id to link the requests to"
               },
-              "EngagementId": {
-                "type": "integer"
-              },
-              "StartDate": {
-                "type": "string"
+              "DocumentTitles": {
+                "type": "array",
+                "title": "DocumentTitles",
+                "description": "Optional list of document titles; if empty a standard set of 3 is created",
+                "items": {
+                  "type": "string"
+                }
               }
             },
             "required": [
@@ -60,16 +68,24 @@
             "table": "HVCG_AutomationLogs",
             "item/Title": "Started",
             "item/FlowName": "@workflow()?['name']",
-            "item/Status": "Started"
+            "item/Status": {
+              "Value": "Started"
+            },
+            "item/ClientCode": "@triggerBody()?['ClientCode']"
           }
         },
         "runAfter": {}
       },
-      "Compose_Inputs": {
-        "type": "Compose",
+      "Init_ClientId": {
+        "type": "InitializeVariable",
         "inputs": {
-          "note": "Manual or child flow: Seed document requests from template",
-          "buildSheet": "src/power-automate/flows/HVCG_CreateDocumentRequests.json"
+          "variables": [
+            {
+              "name": "ClientId",
+              "type": "integer",
+              "value": "@coalesce(triggerBody()?['ClientListItemId'], 0)"
+            }
+          ]
         },
         "runAfter": {
           "Log_Start": [
@@ -77,11 +93,302 @@
           ]
         }
       },
-      "Log_Success": {
-        "type": "Compose",
-        "inputs": "Succeeded scaffold",
+      "Init_Created": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "CreatedCount",
+              "type": "integer",
+              "value": 0
+            }
+          ]
+        },
         "runAfter": {
-          "Compose_Inputs": [
+          "Init_ClientId": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Init_Skipped": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "SkippedCount",
+              "type": "integer",
+              "value": 0
+            }
+          ]
+        },
+        "runAfter": {
+          "Init_Created": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Init_DocsToCreate": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "DocsToCreate",
+              "type": "array",
+              "value": [
+                {
+                  "Title": "Corporate formation and governance documents",
+                  "Category": "Corporate",
+                  "FolderTarget": "01 - Corporate Documents"
+                },
+                {
+                  "Title": "Trailing twelve months financial statements",
+                  "Category": "Current Financials",
+                  "FolderTarget": "04 - Current Financials"
+                },
+                {
+                  "Title": "Most recent business tax return",
+                  "Category": "Tax Returns",
+                  "FolderTarget": "05 - Tax Returns"
+                }
+              ]
+            }
+          ]
+        },
+        "runAfter": {
+          "Init_Skipped": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_NeedClientLookup": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "lessOrEquals": [
+                "@variables('ClientId')",
+                0
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Get_Client_ByCode": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "GetItems",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_Clients",
+                "$filter": "ClientCode eq '@{triggerBody()?['ClientCode']}'",
+                "$top": 1
+              }
+            },
+            "runAfter": {}
+          },
+          "Set_ClientId": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "ClientId",
+              "value": "@int(first(outputs('Get_Client_ByCode')?['body/value'])?['ID'])"
+            },
+            "runAfter": {
+              "Get_Client_ByCode": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "runAfter": {
+          "Init_DocsToCreate": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_HasTitles": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "greater": [
+                "@length(coalesce(triggerBody()?['DocumentTitles'], json('[]')))",
+                0
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Select_Titles": {
+            "type": "Select",
+            "inputs": {
+              "from": "@triggerBody()?['DocumentTitles']",
+              "select": {
+                "Title": "@item()",
+                "Category": "Other",
+                "FolderTarget": "00 - Engagement Administration"
+              }
+            },
+            "runAfter": {}
+          },
+          "Set_DocsToCreate": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "DocsToCreate",
+              "value": "@body('Select_Titles')"
+            },
+            "runAfter": {
+              "Select_Titles": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "else": {
+          "actions": {}
+        },
+        "runAfter": {
+          "Condition_NeedClientLookup": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Apply_to_each_Doc": {
+        "type": "Foreach",
+        "foreach": "@variables('DocsToCreate')",
+        "runtimeConfiguration": {
+          "concurrency": {
+            "repetitions": 1
+          }
+        },
+        "actions": {
+          "Get_Open_Duplicates": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "GetItems",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_DocumentRequests",
+                "$filter": "ClientCode eq '@{triggerBody()?['ClientCode']}' and Title eq '@{item()?['Title']}' and RequestStatus ne 'Received' and RequestStatus ne 'Waived' and RequestStatus ne 'Cancelled'",
+                "$top": 1
+              }
+            },
+            "runAfter": {}
+          },
+          "Condition_OpenExists": {
+            "type": "If",
+            "expression": {
+              "and": [
+                {
+                  "greater": [
+                    "@length(outputs('Get_Open_Duplicates')?['body/value'])",
+                    0
+                  ]
+                }
+              ]
+            },
+            "actions": {
+              "Increment_Skipped": {
+                "type": "IncrementVariable",
+                "inputs": {
+                  "name": "SkippedCount",
+                  "value": 1
+                },
+                "runAfter": {}
+              }
+            },
+            "else": {
+              "actions": {
+                "Create_Document_Request": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_DocumentRequests",
+                      "item/Title": "@item()?['Title']",
+                      "item/AtlasClientRefId": "@variables('ClientId')",
+                      "item/ProjectIdId": "@if(greater(coalesce(triggerBody()?['ProjectId'], 0), 0), triggerBody()?['ProjectId'], null)",
+                      "item/ClientCode": "@triggerBody()?['ClientCode']",
+                      "item/DocumentCategory": {
+                        "Value": "@item()?['Category']"
+                      },
+                      "item/RequestDate": "@utcNow()",
+                      "item/DueDate": "@addDays(utcNow(), 7)",
+                      "item/RequestStatus": {
+                        "Value": "Requested"
+                      },
+                      "item/InternalOwnerEmail": "@parameters('hvcg_OpsEmail')",
+                      "item/FolderTarget": "@item()?['FolderTarget']",
+                      "item/Audience": {
+                        "Value": "Client"
+                      },
+                      "item/HVCG_IdempotencyKey": "@concat('docreq|', triggerBody()?['ClientCode'], '|', item()?['Title'])"
+                    }
+                  },
+                  "runAfter": {}
+                },
+                "Increment_Created": {
+                  "type": "IncrementVariable",
+                  "inputs": {
+                    "name": "CreatedCount",
+                    "value": 1
+                  },
+                  "runAfter": {
+                    "Create_Document_Request": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              }
+            },
+            "runAfter": {
+              "Get_Open_Duplicates": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "runAfter": {
+          "Condition_HasTitles": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Log_Success": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Document requests created",
+            "item/FlowName": "@workflow()?['name']",
+            "item/Status": {
+              "Value": "Succeeded"
+            },
+            "item/ClientCode": "@triggerBody()?['ClientCode']",
+            "item/RelatedList": "HVCG_DocumentRequests",
+            "item/Message": "@concat('Created ', string(variables('CreatedCount')), ', skipped ', string(variables('SkippedCount')), ' (open duplicate)')"
+          }
+        },
+        "runAfter": {
+          "Apply_to_each_Doc": [
             "Succeeded"
           ]
         }
@@ -119,7 +426,8 @@
   "acceptanceCriteria": [
     "Flow appears in solution or My flows",
     "Connection references resolved",
-    "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
-    "Idempotent re-run does not duplicate business records"
+    "Test run writes HVCG_AutomationLogs Started/Succeeded",
+    "Document request records created with ClientId lookup populated; no emails sent",
+    "Re-run skips titles that already have an open request for the client"
   ]
 }

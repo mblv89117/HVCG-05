@@ -1,0 +1,130 @@
+{
+  "title": "HVCG_ReferralPartners",
+  "description": "CRM \u2014 Referral partners / channel relationships",
+  "template": "genericList",
+  "domain": "CRM",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Partner name"
+    },
+    {
+      "internalName": "PartnerType",
+      "displayName": "PartnerType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Attorney",
+        "CPA",
+        "Banker",
+        "Broker",
+        "Consultant",
+        "Client Referral",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "PrimaryContactName",
+      "displayName": "PrimaryContactName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Email",
+      "displayName": "Email",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Phone",
+      "displayName": "Phone",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Firm",
+      "displayName": "Firm",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PartnerStatus",
+      "displayName": "PartnerStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Inactive",
+        "Prospective"
+      ],
+      "default": "Active"
+    },
+    {
+      "internalName": "AgreementOnFile",
+      "displayName": "AgreementOnFile",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "ReferralFeeTerms",
+      "displayName": "ReferralFeeTerms",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LifetimeReferralCount",
+      "displayName": "LifetimeReferralCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "LifetimeWonCount",
+      "displayName": "LifetimeWonCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    }
+  ]
+}
