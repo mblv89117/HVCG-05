@@ -58,6 +58,13 @@ export function PortfolioPage() {
   });
 
   const refresh = useCallback(async () => {
+    if (!auth.tokenReady) return;
+    if (!auth.hasBearer) {
+      setLoading(false);
+      setError('Microsoft sign-in required (Bearer token missing)');
+      setRows([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -73,7 +80,14 @@ export function PortfolioPage() {
         })),
       );
     } catch (err) {
-      setError(String(err));
+      const status = (err as { status?: number }).status;
+      if (status === 401) {
+        setError('Authentication failed talking to Integration Hub (401). Bearer was missing or rejected.');
+      } else if (status === 403) {
+        setError('Authenticated but not authorized for projects (403).');
+      } else {
+        setError(String(err));
+      }
       setRows([]);
     } finally {
       setLoading(false);
@@ -83,6 +97,14 @@ export function PortfolioPage() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  if (!auth.tokenReady) {
+    return (
+      <ModuleScaffold title="Projects" subtitle="Preparing Microsoft session…" showPendingBanner={false}>
+        <Spinner label="Acquiring Hub bearer…" />
+      </ModuleScaffold>
+    );
+  }
 
   const owners = useMemo(
     () => Array.from(new Set(rows.map((r) => r.ownerName).filter(Boolean))).sort(),

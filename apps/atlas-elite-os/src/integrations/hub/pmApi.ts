@@ -1,64 +1,27 @@
-import type { AtlasHubAuthHeaders } from './api.ts';
+import type { AtlasHubAuthHeaders } from './api';
+import { hubFetchJson } from './hubFetch';
 
 export type { AtlasHubAuthHeaders };
-
-function headers(auth: AtlasHubAuthHeaders): HeadersInit {
-  const h: Record<string, string> = {
-    'content-type': 'application/json',
-    'x-atlas-user-id': auth.userId,
-    'x-atlas-organization-id': auth.organizationId,
-    'x-atlas-client-ids': auth.clientIds.join(','),
-    ...(auth.email ? { 'x-atlas-user-email': auth.email } : {}),
-    'x-atlas-roles': (auth.roles || ['Staff']).join(','),
-  };
-  if (auth.accessToken) {
-    h.Authorization = `Bearer ${auth.accessToken}`;
-  }
-  return h;
-}
-
-const base = () =>
-  (import.meta as ImportMeta & { env?: { VITE_INTEGRATION_API_BASE?: string } }).env
-    ?.VITE_INTEGRATION_API_BASE || 'http://127.0.0.1:8790';
-
-async function parse(res: Response) {
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const err = new Error(
-      (data as { message?: string }).message ||
-        (data as { error?: string }).error ||
-        res.statusText,
-    );
-    throw err;
-  }
-  return data;
-}
+export { HubHttpError } from './hubFetch';
 
 export async function fetchCommandCenter(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/command-center`, { headers: headers(auth) });
-  return parse(res) as Promise<{ commandCenter: CommandCenter }>;
+  return hubFetchJson<{ commandCenter: CommandCenter }>(auth, '/api/pm/command-center');
 }
 
 export async function fetchMyWork(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/my-work`, { headers: headers(auth) });
-  return parse(res) as Promise<{ myWork: MyWork }>;
+  return hubFetchJson<{ myWork: MyWork }>(auth, '/api/pm/my-work');
 }
 
 export async function fetchPortfolio(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/portfolio`, { headers: headers(auth) });
-  return parse(res) as Promise<{ portfolio: PortfolioProject[] }>;
+  return hubFetchJson<{ portfolio: PortfolioProject[] }>(auth, '/api/pm/portfolio');
 }
 
 export async function fetchPmProjects(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/projects`, { headers: headers(auth) });
-  return parse(res) as Promise<{ projects: PmProject[] }>;
+  return hubFetchJson<{ projects: PmProject[] }>(auth, '/api/pm/projects');
 }
 
 export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
-  const res = await fetch(`${base()}/api/pm/projects/${encodeURIComponent(id)}`, {
-    headers: headers(auth),
-  });
-  return parse(res) as Promise<{
+  return hubFetchJson<{
     project: PmProject;
     tasks: PmTask[];
     board?: {
@@ -76,19 +39,17 @@ export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
     notes?: unknown[];
     activity?: unknown[];
     documents?: OperatingDocument[];
-  }>;
+  }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`);
 }
 
 export async function createPmProject(
   auth: AtlasHubAuthHeaders,
   body: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/projects`, {
+  return hubFetchJson<{ project: PmProject }>(auth, '/api/pm/projects', {
     method: 'POST',
-    headers: headers(auth),
     body: JSON.stringify(body),
   });
-  return parse(res) as Promise<{ project: PmProject }>;
 }
 
 export async function patchPmProject(
@@ -96,69 +57,58 @@ export async function patchPmProject(
   id: string,
   patch: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/projects/${encodeURIComponent(id)}`, {
+  return hubFetchJson<{ project: PmProject }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`, {
     method: 'PATCH',
-    headers: headers(auth),
     body: JSON.stringify(patch),
   });
-  return parse(res) as Promise<{ project: PmProject }>;
 }
 
 export async function archivePmProject(auth: AtlasHubAuthHeaders, id: string) {
-  const res = await fetch(`${base()}/api/pm/projects/${encodeURIComponent(id)}/archive`, {
-    method: 'POST',
-    headers: headers(auth),
-    body: '{}',
-  });
-  return parse(res) as Promise<{ project: PmProject }>;
+  return hubFetchJson<{ project: PmProject }>(
+    auth,
+    `/api/pm/projects/${encodeURIComponent(id)}/archive`,
+    { method: 'POST', body: '{}' },
+  );
 }
 
 export async function createPmTask(
   auth: AtlasHubAuthHeaders,
   body: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/tasks`, {
+  return hubFetchJson<{ task: PmTask }>(auth, '/api/pm/tasks', {
     method: 'POST',
-    headers: headers(auth),
     body: JSON.stringify(body),
   });
-  return parse(res) as Promise<{ task: PmTask }>;
 }
 
 export async function createPmMilestone(
   auth: AtlasHubAuthHeaders,
   body: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/milestones`, {
+  return hubFetchJson(auth, '/api/pm/milestones', {
     method: 'POST',
-    headers: headers(auth),
     body: JSON.stringify(body),
   });
-  return parse(res);
 }
 
 export async function createPmNote(
   auth: AtlasHubAuthHeaders,
   body: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/notes`, {
+  return hubFetchJson(auth, '/api/pm/notes', {
     method: 'POST',
-    headers: headers(auth),
     body: JSON.stringify(body),
   });
-  return parse(res);
 }
 
 export async function createPmDecision(
   auth: AtlasHubAuthHeaders,
   body: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/decisions`, {
+  return hubFetchJson(auth, '/api/pm/decisions', {
     method: 'POST',
-    headers: headers(auth),
     body: JSON.stringify(body),
   });
-  return parse(res);
 }
 
 export async function fetchPmDocuments(
@@ -178,20 +128,16 @@ export async function fetchPmDocuments(
   if (params?.type) q.set('type', params.type);
   if (params?.confidentiality) q.set('confidentiality', params.confidentiality);
   const qs = q.toString();
-  const res = await fetch(`${base()}/api/pm/documents${qs ? `?${qs}` : ''}`, {
-    headers: headers(auth),
-  });
-  return parse(res) as Promise<{
+  return hubFetchJson<{
     count: number;
     restrictedOmitted: number;
     sharePointSites: { commandCenter: string; clients: string };
     documents: OperatingDocument[];
-  }>;
+  }>(auth, `/api/pm/documents${qs ? `?${qs}` : ''}`);
 }
 
 export async function fetchOwnerReview(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/owner-review`, { headers: headers(auth) });
-  return parse(res) as Promise<{ items: OwnerReviewItem[] }>;
+  return hubFetchJson<{ items: OwnerReviewItem[] }>(auth, '/api/pm/owner-review');
 }
 
 export interface OperatingDocument {
@@ -223,29 +169,22 @@ export interface OwnerReviewItem {
 }
 
 export async function fetchPmInbox(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/inbox`, { headers: headers(auth) });
-  return parse(res) as Promise<{ inbox: InboxItem[] }>;
+  return hubFetchJson<{ inbox: InboxItem[] }>(auth, '/api/pm/inbox');
 }
 
 export async function fetchPmTeam(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/team`, { headers: headers(auth) });
-  return parse(res) as Promise<{ team: TeamMember[]; agents: AgentWork[] }>;
+  return hubFetchJson<{ team: TeamMember[]; agents: AgentWork[] }>(auth, '/api/pm/team');
 }
 
 export async function initializePm(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/populate`, {
-    method: 'POST',
-    headers: headers(auth),
-    body: '{}',
-  });
-  return parse(res) as Promise<{
+  return hubFetchJson<{
     ok: boolean;
     populate: Record<string, unknown>;
     bootstrap: { created: number; updated: number };
     extract: Record<string, number>;
     commandCenter: CommandCenter;
     myWork: MyWork;
-  }>;
+  }>(auth, '/api/pm/populate', { method: 'POST', body: '{}' });
 }
 
 export async function populatePmFromMicrosoft(auth: AtlasHubAuthHeaders) {
@@ -253,12 +192,11 @@ export async function populatePmFromMicrosoft(auth: AtlasHubAuthHeaders) {
 }
 
 export async function quickCapturePm(auth: AtlasHubAuthHeaders, text: string) {
-  const res = await fetch(`${base()}/api/pm/quick-capture`, {
-    method: 'POST',
-    headers: headers(auth),
-    body: JSON.stringify({ text }),
-  });
-  return parse(res) as Promise<{ kind: string; message: string; created: unknown }>;
+  return hubFetchJson<{ kind: string; message: string; created: unknown }>(
+    auth,
+    '/api/pm/quick-capture',
+    { method: 'POST', body: JSON.stringify({ text }) },
+  );
 }
 
 export async function patchPmTask(
@@ -266,43 +204,32 @@ export async function patchPmTask(
   id: string,
   patch: Record<string, unknown>,
 ) {
-  const res = await fetch(`${base()}/api/pm/tasks/${encodeURIComponent(id)}`, {
+  return hubFetchJson<{ task: PmTask }>(auth, `/api/pm/tasks/${encodeURIComponent(id)}`, {
     method: 'PATCH',
-    headers: headers(auth),
     body: JSON.stringify(patch),
   });
-  return parse(res) as Promise<{ task: PmTask }>;
 }
 
 export async function acceptInboxItem(auth: AtlasHubAuthHeaders, id: string) {
-  const res = await fetch(`${base()}/api/pm/inbox/${encodeURIComponent(id)}/accept`, {
+  return hubFetchJson(auth, `/api/pm/inbox/${encodeURIComponent(id)}/accept`, {
     method: 'POST',
-    headers: headers(auth),
     body: '{}',
   });
-  return parse(res);
 }
 
 export async function dismissInboxItem(auth: AtlasHubAuthHeaders, id: string) {
-  const res = await fetch(`${base()}/api/pm/inbox/${encodeURIComponent(id)}/dismiss`, {
+  return hubFetchJson(auth, `/api/pm/inbox/${encodeURIComponent(id)}/dismiss`, {
     method: 'POST',
-    headers: headers(auth),
     body: '{}',
   });
-  return parse(res);
 }
 
 export async function fetchWeeklyReview(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/pm/weekly-review`, { headers: headers(auth) });
-  return parse(res);
+  return hubFetchJson(auth, '/api/pm/weekly-review');
 }
 
 export async function fetchClientPmWorkspace(auth: AtlasHubAuthHeaders, clientId: string) {
-  const res = await fetch(
-    `${base()}/api/pm/clients/${encodeURIComponent(clientId)}/workspace`,
-    { headers: headers(auth) },
-  );
-  return parse(res);
+  return hubFetchJson(auth, `/api/pm/clients/${encodeURIComponent(clientId)}/workspace`);
 }
 
 export interface PmTask {

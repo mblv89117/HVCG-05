@@ -105,32 +105,47 @@ export async function acquireGraphToken(): Promise<string | null> {
 
 /**
  * Bearer for Atlas Integration Hub.
- * Prefer Entra ID token (aud = SPA client id). Fall back to Graph access token
- * (also accepted by hub after JWT validation).
+ * Use Entra ID token (aud = SPA client id). Never send Microsoft Graph
+ * access tokens that include a JWT header `nonce` — the hub rejects those.
  */
 export async function acquireHubBearerToken(): Promise<string | null> {
   const instance = await getMsal();
   if (!instance) return null;
   const account = getActiveAccount(instance);
   if (!account) return null;
+
+  const request = {
+    account,
+    scopes: ['openid', 'profile', 'email'],
+    forceRefresh: false,
+  };
+
   try {
-    const silent: AuthenticationResult = await instance.acquireTokenSilent({
-      account,
-      scopes: ['openid', 'profile', 'email', 'User.Read'],
-    });
+    const silent: AuthenticationResult = await instance.acquireTokenSilent(request);
     if (silent.idToken) return silent.idToken;
-    return silent.accessToken || null;
   } catch (e) {
-    if (e instanceof InteractionRequiredAuthError) {
-      const interactive = await instance.acquireTokenPopup({
-        account,
-        scopes: ['openid', 'profile', 'email', 'User.Read'],
-      });
-      if (interactive.idToken) return interactive.idToken;
-      return interactive.accessToken || null;
+    if (!(e instanceof InteractionRequiredAuthError)) {
+      // Fall through to popup only for interaction-required; otherwise try once more with refresh
+      try {
+        const refreshed: AuthenticationResult = await instance.acquireTokenSilent({
+          ...request,
+          forceRefresh: true,
+        });
+        if (refreshed.idToken) return refreshed.idToken;
+      } catch {
+        /* continue */
+      }
+      if (!(e instanceof InteractionRequiredAuthError)) throw e;
     }
-    throw e;
+    const interactive = await instance.acquireTokenPopup({
+      account,
+      scopes: ['openid', 'profile', 'email'],
+    });
+    if (interactive.idToken) return interactive.idToken;
   }
+
+  // No Graph access-token fallback — Graph tokens with nonce are rejected by the hub.
+  return null;
 }
 
 export { dataverseApiRoot };

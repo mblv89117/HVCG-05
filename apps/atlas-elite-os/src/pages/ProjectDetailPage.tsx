@@ -26,6 +26,7 @@ import {
   createPmTask,
   fetchPmProject,
   patchPmTask,
+  HubHttpError,
   type OperatingDocument,
   type PmProject,
   type PmTask,
@@ -79,6 +80,8 @@ export function ProjectDetailPage({
   const [documents, setDocuments] = useState<OperatingDocument[]>([]);
   const [loading, setLoading] = useState(!invalidId);
   const [missing, setMissing] = useState(Boolean(invalidId));
+  const [authFailure, setAuthFailure] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState(false);
   const [message, setMessage] = useState(
     invalidId
       ? 'This project link is invalid (missing, undefined, unknown, or obsolete demo id).'
@@ -93,13 +96,23 @@ export function ProjectDetailPage({
     if (!isValidProjectId(projectId)) {
       setMissing(true);
       setLoading(false);
+      setAuthFailure(null);
       setMessage(
         'This project link is invalid (missing, undefined, unknown, or obsolete demo id).',
       );
       return;
     }
+    if (!auth.tokenReady) return;
+    if (!auth.hasBearer) {
+      setLoading(false);
+      setMissing(false);
+      setAuthFailure('Microsoft sign-in required (Bearer token missing)');
+      return;
+    }
     setLoading(true);
     setMissing(false);
+    setAuthFailure(null);
+    setForbidden(false);
     try {
       const res = await fetchPmProject(auth, projectId);
       setProject(res.project);
@@ -122,12 +135,32 @@ export function ProjectDetailPage({
       setDocuments(res.documents || []);
       setMessage('');
     } catch (err) {
-      setMissing(true);
-      setMessage(
-        err instanceof Error
-          ? err.message
-          : 'No project exists for this id. It may be archived or never created.',
-      );
+      const status = err instanceof HubHttpError ? err.status : (err as { status?: number }).status;
+      if (status === 401) {
+        setAuthFailure(
+          err instanceof Error
+            ? err.message
+            : 'Microsoft sign-in required (Bearer token missing)',
+        );
+        setMissing(false);
+        setProject(null);
+      } else if (status === 403) {
+        setForbidden(true);
+        setMissing(false);
+        setProject(null);
+        setMessage('Authenticated but not authorized to view this project.');
+      } else if (status === 404) {
+        setMissing(true);
+        setProject(null);
+        setMessage(
+          err instanceof Error
+            ? err.message
+            : 'No project exists for this id. It may be archived or never created.',
+        );
+      } else {
+        setMissing(true);
+        setMessage(err instanceof Error ? err.message : 'Server error loading project.');
+      }
     } finally {
       setLoading(false);
     }
@@ -142,10 +175,51 @@ export function ProjectDetailPage({
     await refresh();
   };
 
-  if (loading) {
+  if (!auth.tokenReady || loading) {
     return (
       <ModuleScaffold title="Project" subtitle="Loading…" showPendingBanner={false}>
         <Spinner />
+      </ModuleScaffold>
+    );
+  }
+
+  if (authFailure) {
+    return (
+      <ModuleScaffold
+        title="Authentication required"
+        subtitle="Integration Hub rejected the request (401)"
+        showPendingBanner={false}
+      >
+        <AtlasCard title="Bearer token missing or rejected">
+          <Text>{authFailure}</Text>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            Your Atlas UI session is signed in, but the Hub API call did not receive a valid
+            Authorization Bearer. This is not a missing project.
+          </Caption1>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            <Button appearance="primary" onClick={() => void refresh()}>
+              Retry with Hub bearer
+            </Button>
+            <Link to="/projects">
+              <Button appearance="secondary">Back to projects</Button>
+            </Link>
+          </div>
+        </AtlasCard>
+      </ModuleScaffold>
+    );
+  }
+
+  if (forbidden) {
+    return (
+      <ModuleScaffold title="Access denied" subtitle="403" showPendingBanner={false}>
+        <AtlasCard title="Insufficient authorization">
+          <Text>{message}</Text>
+          <Link to="/projects">
+            <Button appearance="primary" style={{ marginTop: 12 }}>
+              Back to projects
+            </Button>
+          </Link>
+        </AtlasCard>
       </ModuleScaffold>
     );
   }
@@ -154,7 +228,7 @@ export function ProjectDetailPage({
     return (
       <ModuleScaffold
         title="Project not found"
-        subtitle={message || 'Unknown or missing project'}
+        subtitle={message || 'Authenticated request succeeded but project does not exist'}
         showPendingBanner={false}
       >
         <AtlasCard title="Recover safely">

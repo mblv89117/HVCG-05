@@ -5,6 +5,7 @@
  */
 
 import { microsoftConfig } from '../../microsoft/config';
+import { resolveHubBearer } from './hubFetch';
 
 export interface AtlasHubAuthHeaders {
   userId: string;
@@ -12,7 +13,7 @@ export interface AtlasHubAuthHeaders {
   clientIds: string[];
   email?: string;
   roles?: string[];
-  /** Entra ID token or Graph access token for hub Authorization header */
+  /** Entra ID token for hub Authorization header (aud = SPA client id) */
   accessToken?: string;
 }
 
@@ -30,7 +31,7 @@ export interface ConnectOptions {
   mailboxType?: MailboxType;
 }
 
-function headers(auth: AtlasHubAuthHeaders): HeadersInit {
+async function headers(auth: AtlasHubAuthHeaders): Promise<HeadersInit> {
   const h: Record<string, string> = {
     'content-type': 'application/json',
     'x-atlas-user-id': auth.userId,
@@ -39,8 +40,9 @@ function headers(auth: AtlasHubAuthHeaders): HeadersInit {
     ...(auth.email ? { 'x-atlas-user-email': auth.email } : {}),
     'x-atlas-roles': (auth.roles || ['Staff']).join(','),
   };
-  if (auth.accessToken) {
-    h.Authorization = `Bearer ${auth.accessToken}`;
+  const bearer = await resolveHubBearer(auth.accessToken);
+  if (bearer) {
+    h.Authorization = `Bearer ${bearer}`;
   }
   return h;
 }
@@ -73,7 +75,7 @@ export async function fetchHealth() {
 }
 
 export async function fetchRegistry(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/integrations/registry`, { headers: headers(auth) });
+  const res = await fetch(`${base()}/api/integrations/registry`, { headers: await headers(auth) });
   return parse(res) as Promise<{
     providers: Array<{
       providerId: HubProviderId;
@@ -95,13 +97,13 @@ export async function fetchRegistry(auth: AtlasHubAuthHeaders) {
 
 export async function fetchSourceOfTruth(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/integrations/source-of-truth`, {
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res);
 }
 
 export async function fetchConnections(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/connections`, { headers: headers(auth) });
+  const res = await fetch(`${base()}/api/connections`, { headers: await headers(auth) });
   return parse(res) as Promise<{ connections: ConnectionSummary[] }>;
 }
 
@@ -182,7 +184,7 @@ export interface DiscoveredResourceResponse {
 
 export async function fetchConnectionHealth(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(`${base()}/api/connections/${encodeURIComponent(connectionId)}/health`, {
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res);
 }
@@ -201,7 +203,7 @@ export async function startConnect(
   };
   const res = await fetch(`${base()}/api/connections/${provider}/connect`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
     body: JSON.stringify(payload),
   });
   return parse(res) as Promise<{
@@ -214,14 +216,14 @@ export async function startConnect(
 }
 
 export async function fetchInventory(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/inventory`, { headers: headers(auth) });
+  const res = await fetch(`${base()}/api/inventory`, { headers: await headers(auth) });
   return parse(res) as Promise<InventoryResponse>;
 }
 
 export async function discoverConnection(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(
     `${base()}/api/connections/${encodeURIComponent(connectionId)}/discover`,
-    { method: 'POST', headers: headers(auth) },
+    { method: 'POST', headers: await headers(auth) },
   );
   return parse(res) as Promise<{ resources: unknown[]; count: number }>;
 }
@@ -229,7 +231,7 @@ export async function discoverConnection(auth: AtlasHubAuthHeaders, connectionId
 export async function syncAll(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/sync/all`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res) as Promise<{ jobs: unknown[] }>;
 }
@@ -237,7 +239,7 @@ export async function syncAll(auth: AtlasHubAuthHeaders) {
 export async function rebuildClient360(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/client360/rebuild`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res) as Promise<{ candidates: Client360Candidate[]; dashboard?: ExecutiveDashboard }>;
 }
@@ -357,7 +359,7 @@ export async function fetchClient360(auth: AtlasHubAuthHeaders) {
     throw signInRequiredError();
   }
   try {
-    const res = await fetch(`${base()}/api/client360`, { headers: headers(auth) });
+    const res = await fetch(`${base()}/api/client360`, { headers: await headers(auth) });
     const data = (await parse(res)) as { candidates?: Client360Candidate[]; clients?: Client360Candidate[] };
     return { clients: data.clients || data.candidates || [], source: 'hub' as const };
   } catch (err) {
@@ -381,7 +383,7 @@ export async function fetchClient360Detail(auth: AtlasHubAuthHeaders, clientId: 
   }
   try {
     const res = await fetch(`${base()}/api/client360/${encodeURIComponent(clientId)}`, {
-      headers: headers(auth),
+      headers: await headers(auth),
     });
     return parse(res) as Promise<{ client: Client360Candidate }>;
   } catch (err) {
@@ -430,7 +432,7 @@ export async function fetchClient360Documents(auth: AtlasHubAuthHeaders, clientI
   try {
     const res = await fetch(
       `${base()}/api/client360/${encodeURIComponent(clientId)}/documents`,
-      { headers: headers(auth) },
+      { headers: await headers(auth) },
     );
     return parse(res) as Promise<{
       clientId: string;
@@ -458,7 +460,7 @@ export async function fetchClient360Documents(auth: AtlasHubAuthHeaders, clientI
 
 export async function fetchMigrationSummary(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/client360/migration/summary`, {
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res);
 }
@@ -492,7 +494,7 @@ export interface ExecutiveDashboard {
 export async function ingestMicrosoftClient360(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/client360/ingest-microsoft`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res) as Promise<{
     jobs: unknown[];
@@ -504,7 +506,7 @@ export async function ingestMicrosoftClient360(auth: AtlasHubAuthHeaders) {
 
 export async function fetchExecutiveDashboard(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/client360/executive-dashboard`, {
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res) as Promise<{ dashboard: ExecutiveDashboard }>;
 }
@@ -512,7 +514,7 @@ export async function fetchExecutiveDashboard(auth: AtlasHubAuthHeaders) {
 export async function fetchDiscovered(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(
     `${base()}/api/connections/${encodeURIComponent(connectionId)}/discovered`,
-    { headers: headers(auth) },
+    { headers: await headers(auth) },
   );
   return parse(res) as Promise<DiscoveredResourceResponse>;
 }
@@ -520,7 +522,7 @@ export async function fetchDiscovered(auth: AtlasHubAuthHeaders, connectionId: s
 export async function disconnectConnection(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(`${base()}/api/connections/${encodeURIComponent(connectionId)}/disconnect`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res);
 }
@@ -528,7 +530,7 @@ export async function disconnectConnection(auth: AtlasHubAuthHeaders, connection
 export async function verifyConnection(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(`${base()}/api/connections/${encodeURIComponent(connectionId)}/verify`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res);
 }
@@ -536,7 +538,7 @@ export async function verifyConnection(auth: AtlasHubAuthHeaders, connectionId: 
 export async function syncConnection(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(`${base()}/api/connections/${encodeURIComponent(connectionId)}/sync`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
   });
   return parse(res);
 }
@@ -544,7 +546,7 @@ export async function syncConnection(auth: AtlasHubAuthHeaders, connectionId: st
 export async function reauthorizeConnection(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(
     `${base()}/api/connections/${encodeURIComponent(connectionId)}/reauthorize`,
-    { method: 'POST', headers: headers(auth) },
+    { method: 'POST', headers: await headers(auth) },
   );
   return parse(res) as Promise<{ authorizationUrl?: string; state?: string }>;
 }
@@ -557,7 +559,7 @@ export async function searchConnection(
 ) {
   const res = await fetch(`${base()}/api/connections/${encodeURIComponent(connectionId)}/search`, {
     method: 'POST',
-    headers: headers(auth),
+    headers: await headers(auth),
     body: JSON.stringify({ query, resourceTypes }),
   });
   return parse(res);
@@ -566,7 +568,7 @@ export async function searchConnection(
 export async function listResources(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(
     `${base()}/api/connections/${encodeURIComponent(connectionId)}/resources`,
-    { headers: headers(auth) },
+    { headers: await headers(auth) },
   );
   return parse(res);
 }
@@ -574,7 +576,7 @@ export async function listResources(auth: AtlasHubAuthHeaders, connectionId: str
 export async function fetchSyncJobs(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(
     `${base()}/api/connections/${encodeURIComponent(connectionId)}/sync-jobs`,
-    { headers: headers(auth) },
+    { headers: await headers(auth) },
   );
   return parse(res);
 }
@@ -582,17 +584,17 @@ export async function fetchSyncJobs(auth: AtlasHubAuthHeaders, connectionId: str
 export async function fetchErrors(auth: AtlasHubAuthHeaders, connectionId: string) {
   const res = await fetch(
     `${base()}/api/connections/${encodeURIComponent(connectionId)}/errors`,
-    { headers: headers(auth) },
+    { headers: await headers(auth) },
   );
   return parse(res);
 }
 
 export async function fetchAdminDashboard(auth: AtlasHubAuthHeaders) {
-  const res = await fetch(`${base()}/api/admin/dashboard`, { headers: headers(auth) });
+  const res = await fetch(`${base()}/api/admin/dashboard`, { headers: await headers(auth) });
   return parse(res);
 }
 
 export async function fetchAudit(auth: AtlasHubAuthHeaders, limit = 50) {
-  const res = await fetch(`${base()}/api/audit?limit=${limit}`, { headers: headers(auth) });
+  const res = await fetch(`${base()}/api/audit?limit=${limit}`, { headers: await headers(auth) });
   return parse(res);
 }

@@ -35,6 +35,13 @@ export function DocumentsOperatingPage() {
   const [confidentiality, setConfidentiality] = useState('all');
 
   const refresh = useCallback(async () => {
+    if (!auth.tokenReady) return;
+    if (!auth.hasBearer) {
+      setLoading(false);
+      setError('Microsoft sign-in required (Bearer token missing)');
+      setDocs([]);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

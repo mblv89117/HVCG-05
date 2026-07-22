@@ -139,14 +139,15 @@ export function CommandCenterPage() {
   }, [auth]);
 
   useEffect(() => {
-    if (!auth.accessToken) {
+    if (!auth.tokenReady) return;
+    if (!auth.hasBearer) {
       setCc(null);
       setLoading(false);
-      setError('Sign in with Microsoft to load Command Center.');
+      setError('Sign in with Microsoft to load Command Center (Hub Bearer required).');
       return;
     }
     void refresh();
-  }, [refresh, auth.accessToken]);
+  }, [refresh, auth.tokenReady, auth.hasBearer]);
 
   const initialize = async () => {
     setBusy(true);

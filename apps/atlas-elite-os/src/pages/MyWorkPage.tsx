@@ -84,6 +84,12 @@ export function MyWorkPage() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    if (!auth.tokenReady) return;
+    if (!auth.hasBearer) {
+      setLoading(false);
+      setWork(null);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetchMyWork(auth);
@@ -96,6 +102,14 @@ export function MyWorkPage() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  if (!auth.tokenReady) {
+    return (
+      <ModuleScaffold title="My Work" subtitle="Preparing Microsoft session…" showPendingBanner={false}>
+        <Spinner label="Acquiring Hub bearer…" />
+      </ModuleScaffold>
+    );
+  }
 
   const complete = async (id: string) => {
     await patchPmTask(auth, id, { status: 'completed' });
