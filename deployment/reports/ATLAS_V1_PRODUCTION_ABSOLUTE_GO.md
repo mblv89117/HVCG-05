@@ -36,3 +36,8 @@
 
 ## Commit / tag
 - **Allowed**: commit on `fix/atlas-production-hardening` and annotated tag `atlas-v1.0.1-production`
+
+## Release recorded
+- Commit: `dceea798fe18a83ba46043d802931a988480f8db`
+- Tag: `atlas-v1.0.1-production` (`8b12146c7e3c452e98ba2865a889baede055b11c`)
+- Record: `deployment/reports/ATLAS_V1_0_1_PRODUCTION_RELEASE.md`

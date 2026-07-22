@@ -48,5 +48,9 @@
     "auth": "deployment/reports/client360-auth-security-latest.md",
     "signedIn": "deployment/reports/signed-in-swa-client360-latest.md",
     "solution": "deployment/reports/hvcg-atlas-production-solution-latest.md"
-  }
+  },
+  "releaseCommit": "dceea798fe18a83ba46043d802931a988480f8db",
+  "tag": "atlas-v1.0.1-production",
+  "tagObject": "8b12146c7e3c452e98ba2865a889baede055b11c",
+  "releaseRecord": "deployment/reports/ATLAS_V1_0_1_PRODUCTION_RELEASE.md"
 }
