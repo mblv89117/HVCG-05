@@ -124,20 +124,28 @@ See git commit on `fix/atlas-usable-operating-layer` (Elite OS + Integration API
 
 ## 16. Preview URL
 
-SWA staging environment (`--env preview`) for `swa-atlas-elite-os-dev`. Hostname recorded at deploy time in the companion JSON / console output (Azure Static Web Apps preview slot under the same SWA resource).
+https://zealous-rock-0090c7e1e-preview.westus2.7.azurestaticapps.net
+
+(Note: Azure App Service platform CORS for the preview origin was added; if preview API calls fail CORS briefly after deploy, Production SWA remains the verified operating URL.)
 
 ## 17. Production deployment result
 
-- Hub: deploy status **RuntimeSuccessful**
-- SWA production: deployed after preview gates (see commit SHA below)
+- Hub: deploy status **RuntimeSuccessful** (`app-atlas-integration-hub`)
+- SWA production: **deployed** to https://zealous-rock-0090c7e1e.7.azurestaticapps.net
+- Bundle asset: `index-BHJBaIol.js`
 
 ## 18. Production commit SHA
 
-Filled after commit/push: see git tip of `fix/atlas-usable-operating-layer`.
+`766067265d9e1f44a73c9258528d9b5ffe2fd110` on branch `fix/atlas-usable-operating-layer`
 
 ## 19. Old Production tags untouched
 
-Confirmed: this work did **not** move or rewrite `atlas-v1.0.0-production` or `atlas-v1.0.1-production`.
+Confirmed:
+
+- `atlas-v1.0.0-production` → `6a346aa736ba5ecaaff701c3561b1d4b1befd564`
+- `atlas-v1.0.1-production` → `8b12146c7e3c452e98ba2865a889baede055b11c` (peels to `dceea79…`)
+
+Neither tag was moved or rewritten.
 
 ## 20. No external email / reminder flows enabled
 
