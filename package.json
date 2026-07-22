@@ -9,11 +9,14 @@
   "scripts": {
     "dev": "npm run dev -w @hvcg/atlas-elite-os",
     "build": "npm run build -w @hvcg/atlas-elite-os",
+    "lint": "npm run lint -w @hvcg/atlas-elite-os",
+    "lint:hooks": "npm run lint:hooks -w @hvcg/atlas-elite-os",
     "dev:plaid-api": "npm run start -w @hvcg/atlas-plaid-api",
     "test:plaid-api": "npm run test -w @hvcg/atlas-plaid-api",
     "dev:integration-api": "npm run start -w @hvcg/atlas-integration-api",
     "test:integration-api": "npm run test -w @hvcg/atlas-integration-api",
     "test:recovery": "npm run test:recovery -w @hvcg/atlas-elite-os",
+    "test:elite": "npm run test:all -w @hvcg/atlas-elite-os",
     "storybook": "npm run storybook -w @hvcg/atlas-design-system",
     "build-storybook": "npm run build-storybook -w @hvcg/atlas-design-system"
   }

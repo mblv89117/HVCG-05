@@ -24,6 +24,7 @@ import {
   writeDevOwnerSessionActive,
 } from '../../security/devOwnerSession';
 import { fetchSwaAuthMe, swaLoginHint, type SwaClientPrincipal } from '../../startup/swaAuthMe';
+import { beginSwaMicrosoftSignIn, shouldUseSwaSignInNavigation } from '../../startup/swaSignIn';
 
 const MSAL_INIT_TIMEOUT_MS = 10000;
 
@@ -154,9 +155,15 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async () => {
     setError(null);
+    writeDevOwnerSessionActive(false);
+    setDevOwnerActive(false);
+    // Hosted SWA: full-page Easy Auth navigation preserves the current route and
+    // does not wait for MSAL/Hub readiness. Local Vite keeps MSAL popup.
+    if (shouldUseSwaSignInNavigation()) {
+      beginSwaMicrosoftSignIn();
+      return;
+    }
     try {
-      writeDevOwnerSessionActive(false);
-      setDevOwnerActive(false);
       const a = await signInInteractive();
       setAccount(a);
     } catch (e) {

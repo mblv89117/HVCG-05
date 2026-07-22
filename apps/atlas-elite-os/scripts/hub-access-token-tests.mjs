@@ -68,6 +68,17 @@ assert.match(app, /PortfolioPage/);
 assert.match(portfolio, /Authorize Atlas Integration Hub/);
 assert.match(portfolio, /if \(!auth\.tokenReady\)/);
 assert.match(portfolio, /bootstrapStatus === 'interaction_required'/);
+// React #310 guard: useMemo owners/filtered must precede the render-time tokenReady early return
+{
+  const ownersIdx = portfolio.indexOf('const owners = useMemo');
+  const filteredIdx = portfolio.indexOf('const filtered = useMemo');
+  const renderGate = portfolio.search(
+    /if\s*\(\s*!auth\.tokenReady\s*\)\s*\{\s*\n\s*return\s*\(\s*\n\s*<ModuleScaffold/,
+  );
+  assert.ok(ownersIdx > 0 && filteredIdx > 0 && renderGate > 0);
+  assert.ok(ownersIdx < renderGate, 'PortfolioPage: owners useMemo after tokenReady gate causes React #310');
+  assert.ok(filteredIdx < renderGate, 'PortfolioPage: filtered useMemo after tokenReady gate causes React #310');
+}
 
 // 401 vs 404
 assert.match(detail, /setAuthFailure/);

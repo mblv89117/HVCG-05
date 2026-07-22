@@ -98,6 +98,29 @@ export function PortfolioPage() {
     void refresh();
   }, [refresh]);
 
+  // Hooks must run unconditionally before any auth/token early return.
+  // Previously these useMemos sat after tokenReady/hasBearer gates and caused
+  // React #310 (more hooks than previous render) when Hub bootstrap completed.
+  const owners = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.ownerName).filter(Boolean))).sort(),
+    [rows],
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (clientFilter !== 'all' && (r.clientId || r.clientName) !== clientFilter && r.clientName !== clientFilter) {
+        if (r.clientId !== clientFilter && r.clientName !== clientFilter) return false;
+      }
+      if (ownerFilter !== 'all' && r.ownerName !== ownerFilter) return false;
+      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+      if (priorityFilter !== 'all' && r.priority !== priorityFilter) return false;
+      if (!q) return true;
+      const hay = `${r.name} ${r.clientName || ''} ${r.ownerName} ${r.nextAction || ''} ${r.nextMilestone || ''}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [rows, query, clientFilter, ownerFilter, statusFilter, priorityFilter]);
+
   if (!auth.tokenReady) {
     return (
       <ModuleScaffold title="Projects" subtitle="Preparing Microsoft session…" showPendingBanner={false}>
@@ -140,26 +163,6 @@ export function PortfolioPage() {
       </ModuleScaffold>
     );
   }
-
-  const owners = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.ownerName).filter(Boolean))).sort(),
-    [rows],
-  );
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (clientFilter !== 'all' && (r.clientId || r.clientName) !== clientFilter && r.clientName !== clientFilter) {
-        if (r.clientId !== clientFilter && r.clientName !== clientFilter) return false;
-      }
-      if (ownerFilter !== 'all' && r.ownerName !== ownerFilter) return false;
-      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-      if (priorityFilter !== 'all' && r.priority !== priorityFilter) return false;
-      if (!q) return true;
-      const hay = `${r.name} ${r.clientName || ''} ${r.ownerName} ${r.nextAction || ''} ${r.nextMilestone || ''}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }, [rows, query, clientFilter, ownerFilter, statusFilter, priorityFilter]);
 
   const openCreate = () => {
     setForm({
