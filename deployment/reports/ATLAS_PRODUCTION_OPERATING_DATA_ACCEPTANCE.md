@@ -115,4 +115,9 @@ Sticky first (Project) + sticky Actions; honest labels; quality filters; sync pr
 
 ## Production commit / asset
 
-Filled after final provenance redeploy in this session.
+| Field | Value |
+|---|---|
+| Production commit SHA | `6b4912a1ee5c3dfba939a295d47dd06e37bc3910` |
+| Production asset | `assets/index-DBEnqS-1.js` |
+| Hub | Redeployed bundled `server.js` to `app-atlas-integration-hub` |
+| Tags | `atlas-v1.0.0-production` and `atlas-v1.0.1-production` **unchanged** |
