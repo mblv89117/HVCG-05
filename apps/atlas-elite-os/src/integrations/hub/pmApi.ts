@@ -187,6 +187,27 @@ export async function initializePm(auth: AtlasHubAuthHeaders) {
   }>(auth, '/api/pm/populate', { method: 'POST', body: '{}' });
 }
 
+/** Dry-run only — never mutates Hub pm-store. */
+export async function previewPmSync(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    ok: boolean;
+    dryRun: true;
+    preview: {
+      clientsSelected: number;
+      projectsToCreate: Array<{ name: string; clientId?: string; clientName?: string; reason: string }>;
+      projectsToUpdate: Array<{ id: string; name: string; reason: string }>;
+      projectsUnchanged: number;
+      duplicateCandidates: Array<{ name: string; ids: string[] }>;
+      ambiguousMappings: Array<{ name: string; issue: string }>;
+      documentsLinkable: number;
+      wouldArchiveNoise: string[];
+      conflicts: string[];
+      before: { projects: number; tasks: number };
+      after: { projects: number; tasks: number };
+    };
+  }>(auth, '/api/pm/populate/preview');
+}
+
 export async function populatePmFromMicrosoft(auth: AtlasHubAuthHeaders) {
   return initializePm(auth);
 }
@@ -277,6 +298,15 @@ export interface PortfolioProject extends PmProject {
   openTaskCount: number;
   nextMilestone?: string;
   nextMilestoneDue?: string;
+  dataQuality?: {
+    healthAssessed?: boolean;
+    milestoneEstablished?: boolean;
+    nextActionSet?: boolean;
+    dueDateSet?: boolean;
+    duplicateCandidate?: boolean;
+    needsOwnerReview?: boolean;
+    missingClientId?: boolean;
+  };
 }
 
 export interface InboxItem {

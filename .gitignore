@@ -21,3 +21,6 @@ deployment/reports/hvs-onedrive-inventory/inventory-*.csv
 deployment/reports/hvs-onedrive-inventory/migration-manifest-*.json
 deployment/reports/hvs-onedrive-inventory/review-queue-*.json
 deployment/reports/hvs-onedrive-inventory/delta-link-*.txt
+
+# Production data exports (may contain operating records)
+deployment/reports/data/

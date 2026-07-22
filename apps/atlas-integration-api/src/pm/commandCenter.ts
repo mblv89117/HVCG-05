@@ -330,6 +330,10 @@ export function buildWeeklyCeoReview(
 
 export function buildPortfolio(pm: PmRepository) {
   const today = todayStr();
+  const nameCounts = new Map<string, number>();
+  for (const p of pm.listProjects()) {
+    nameCounts.set(p.name, (nameCounts.get(p.name) || 0) + 1);
+  }
   return pm.listProjects().map((p) => {
     const tasks = pm.listTasks({ projectId: p.id, openOnly: true });
     const overdue = tasks.filter((t) => t.dueDate && t.dueDate < today).length;
@@ -338,6 +342,16 @@ export function buildPortfolio(pm: PmRepository) {
       .listMilestones(p.id)
       .filter((m) => m.status !== 'completed')
       .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))[0];
+    const bootstrapNext =
+      !p.nextAction ||
+      /^define next action\b/i.test(p.nextAction) ||
+      /^next action required\b/i.test(p.nextAction);
+    const bootstrapMilestone =
+      !nextMilestone?.title || /^scope confirmed$/i.test(nextMilestone.title);
+    const duplicateCandidate = (nameCounts.get(p.name) || 0) > 1;
+    const needsOwnerReview =
+      duplicateCandidate ||
+      (!p.clientId && /engagement|falk|gnieski|loanspark|personal|comics/i.test(p.name));
     return {
       ...p,
       overdueTaskCount: overdue,
@@ -345,6 +359,15 @@ export function buildPortfolio(pm: PmRepository) {
       openTaskCount: tasks.length,
       nextMilestone: nextMilestone?.title,
       nextMilestoneDue: nextMilestone?.dueDate,
+      dataQuality: {
+        healthAssessed: Boolean(p.health && p.health !== 'unknown' && !(p.health === 'healthy' && bootstrapNext)),
+        milestoneEstablished: !bootstrapMilestone,
+        nextActionSet: !bootstrapNext,
+        dueDateSet: Boolean(p.targetCompletionDate),
+        duplicateCandidate,
+        needsOwnerReview,
+        missingClientId: !p.clientId,
+      },
     };
   });
 }

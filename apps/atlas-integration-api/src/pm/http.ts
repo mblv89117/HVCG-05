@@ -4,7 +4,7 @@ import type { AppConfig } from '../config.ts';
 import { requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import { bootstrapKnownProjects, extractWorkFromSources } from './bootstrap.ts';
-import { populateRealWorkFromMicrosoft } from './populateReal.ts';
+import { populateRealWorkFromMicrosoft, previewPopulateFromMicrosoft } from './populateReal.ts';
 import {
   buildClientWorkspace,
   buildCommandCenter,
@@ -267,6 +267,17 @@ export async function handlePmRoutes(opts: {
       send(res, 200, { items: pm.listOwnerReview('pending') }, origin);
       return true;
     }
+    if (
+      path === '/api/pm/populate/preview' ||
+      path === '/api/pm/sync/preview' ||
+      path === '/api/pm/populate' ||
+      path === '/api/pm/initialize'
+    ) {
+      // GET populate/initialize is always dry-run — never mutates.
+      const preview = previewPopulateFromMicrosoft(pm, repo);
+      send(res, 200, { ok: true, dryRun: true, preview }, origin);
+      return true;
+    }
     send(res, 404, { error: 'pm_route_not_found' }, origin);
     return true;
   }
@@ -312,6 +323,16 @@ export async function handlePmRoutes(opts: {
   }
 
   if (path === '/api/pm/initialize' || path === '/api/pm/populate') {
+    const dryRun =
+      method === 'GET' ||
+      body?.dryRun === true ||
+      body?.preview === true ||
+      new URL(req.url || '', 'http://local').searchParams.get('dryRun') === '1';
+    if (dryRun) {
+      const preview = previewPopulateFromMicrosoft(pm, repo);
+      send(res, 200, { ok: true, dryRun: true, preview }, origin);
+      return true;
+    }
     const result = populateRealWorkFromMicrosoft(pm, repo);
     audit({
       repo,
@@ -333,6 +354,12 @@ export async function handlePmRoutes(opts: {
       },
       origin,
     );
+    return true;
+  }
+
+  if (path === '/api/pm/populate/preview' || path === '/api/pm/sync/preview') {
+    const preview = previewPopulateFromMicrosoft(pm, repo);
+    send(res, 200, { ok: true, dryRun: true, preview }, origin);
     return true;
   }
 
@@ -445,9 +472,9 @@ export async function handlePmRoutes(opts: {
         : ['person-manny'],
       status: 'active',
       priority: (body.priority as ProjectRecord['priority']) || 'normal',
-      health: 'healthy',
+      health: 'unknown',
       progressPercent: 0,
-      nextAction: body.nextAction ? String(body.nextAction) : 'Define first milestone',
+      nextAction: body.nextAction ? String(body.nextAction) : undefined,
       targetCompletionDate: body.targetCompletionDate
         ? String(body.targetCompletionDate)
         : undefined,

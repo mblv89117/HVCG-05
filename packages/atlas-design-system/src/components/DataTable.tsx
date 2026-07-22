@@ -20,6 +20,8 @@ export interface DataColumn<T> {
   header: string;
   width?: string | number;
   render: (row: T) => ReactNode;
+  /** Stick first column (project) or last actions column while scrolling. */
+  sticky?: 'left' | 'right';
 }
 
 export interface DataTableProps<T> {
@@ -41,15 +43,19 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground2,
     boxShadow: '0 1px 2px rgba(11, 31, 51, 0.04)',
+    // Make horizontal scroll visually obvious
+    scrollbarGutter: 'stable',
   },
   table: {
-    minWidth: '640px',
+    minWidth: '1100px',
+    borderCollapse: 'separate',
+    borderSpacing: 0,
   },
   header: {
     backgroundColor: tokens.colorNeutralBackground1,
     position: 'sticky',
     top: 0,
-    zIndex: 1,
+    zIndex: 2,
   },
   row: {
     ':hover': {
@@ -59,6 +65,36 @@ const useStyles = makeStyles({
   cell: {
     paddingTop: '12px',
     paddingBottom: '12px',
+  },
+  stickyLeft: {
+    position: 'sticky',
+    left: 0,
+    zIndex: 3,
+    backgroundColor: tokens.colorNeutralBackground2,
+    boxShadow: '2px 0 4px rgba(11, 31, 51, 0.06)',
+  },
+  stickyRight: {
+    position: 'sticky',
+    right: 0,
+    zIndex: 3,
+    backgroundColor: tokens.colorNeutralBackground2,
+    boxShadow: '-2px 0 4px rgba(11, 31, 51, 0.06)',
+    minWidth: '148px',
+  },
+  stickyHeaderLeft: {
+    position: 'sticky',
+    left: 0,
+    zIndex: 4,
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: '2px 0 4px rgba(11, 31, 51, 0.06)',
+  },
+  stickyHeaderRight: {
+    position: 'sticky',
+    right: 0,
+    zIndex: 4,
+    backgroundColor: tokens.colorNeutralBackground1,
+    boxShadow: '-2px 0 4px rgba(11, 31, 51, 0.06)',
+    minWidth: '148px',
   },
 });
 
@@ -78,12 +114,18 @@ export function DataTable<T>({
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
   return (
-    <div className={mergeClasses(s.wrap, className)}>
+    <div className={mergeClasses(s.wrap, className)} tabIndex={0} aria-label={`${ariaLabel} (scroll horizontally for more columns)`}>
       <Table className={s.table} aria-label={ariaLabel}>
         <TableHeader className={s.header}>
           <TableRow>
             {columns.map((c) => (
-              <TableHeaderCell key={c.key} style={c.width ? { width: c.width } : undefined}>
+              <TableHeaderCell
+                key={c.key}
+                style={c.width ? { width: c.width } : undefined}
+                className={
+                  c.sticky === 'left' ? s.stickyHeaderLeft : c.sticky === 'right' ? s.stickyHeaderRight : undefined
+                }
+              >
                 {c.header}
               </TableHeaderCell>
             ))}
@@ -93,8 +135,17 @@ export function DataTable<T>({
           {rows.map((row) => (
             <TableRow key={getRowKey(row)} className={s.row}>
               {columns.map((c) => (
-                <TableCell key={c.key} className={s.cell}>
-                  <TableCellLayout>{c.render(row)}</TableCellLayout>
+                <TableCell
+                  key={c.key}
+                  className={mergeClasses(
+                    s.cell,
+                    c.sticky === 'left' ? s.stickyLeft : undefined,
+                    c.sticky === 'right' ? s.stickyRight : undefined,
+                  )}
+                >
+                  <TableCellLayout truncate={c.key === 'action' || c.key === 'next'}>
+                    {c.render(row)}
+                  </TableCellLayout>
                 </TableCell>
               ))}
             </TableRow>

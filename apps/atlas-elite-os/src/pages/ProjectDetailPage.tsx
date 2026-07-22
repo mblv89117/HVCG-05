@@ -33,6 +33,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { isValidProjectId } from '../routing/projectId';
+import { displayHealth, displayNextAction, isBootstrapNextAction } from '../operating/projectDisplay';
 
 const BOARD_STATUS: Record<string, string> = {
   todo: 'ready',
@@ -373,13 +374,19 @@ export function ProjectDetailPage({
             <AtlasCard variant="quiet">
               <Caption1>Health</Caption1>
               <StatusChip
-                label={project.health}
+                label={displayHealth(project.health, {
+                  treatHealthyAsUnassessed: isBootstrapNextAction(project.nextAction),
+                })}
                 tone={
-                  project.health === 'healthy'
-                    ? 'success'
-                    : project.health === 'at_risk' || project.health === 'critical'
-                      ? 'danger'
-                      : 'warning'
+                  displayHealth(project.health, {
+                    treatHealthyAsUnassessed: isBootstrapNextAction(project.nextAction),
+                  }) === 'Not assessed'
+                    ? 'neutral'
+                    : project.health === 'healthy'
+                      ? 'success'
+                      : project.health === 'at_risk' || project.health === 'critical'
+                        ? 'danger'
+                        : 'warning'
                 }
               />
             </AtlasCard>
@@ -400,7 +407,7 @@ export function ProjectDetailPage({
           <AtlasCard title="Objective & next action">
             <Text>{project.objective || '—'}</Text>
             <Caption1 style={{ display: 'block', marginTop: 8 }}>
-              Next action: {project.nextAction || 'Define next action'}
+              Next action: {displayNextAction(project.nextAction)}
             </Caption1>
             <div style={{ marginTop: 12 }}>
               <AtlasProgress value={project.progressPercent} label="Completion" />

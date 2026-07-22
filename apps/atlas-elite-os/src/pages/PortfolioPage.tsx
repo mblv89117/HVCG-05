@@ -23,12 +23,22 @@ import {
   createPmProject,
   fetchPortfolio,
   initializePm,
+  previewPmSync,
   patchPmProject,
   type PortfolioProject,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
 import { fetchClient360 } from '../integrations/hub/api';
+import {
+  displayDueDate,
+  displayHealth,
+  displayLastActivity,
+  displayMilestone,
+  displayNextAction,
+  isBootstrapMilestoneTitle,
+  isBootstrapNextAction,
+} from '../operating/projectDisplay';
 
 export function PortfolioPage() {
   const auth = useHubAuth();
@@ -43,6 +53,8 @@ export function PortfolioPage() {
   const [ownerFilter, setOwnerFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [qualityFilter, setQualityFilter] = useState('all');
+  const [syncPreview, setSyncPreview] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editRow, setEditRow] = useState<PortfolioProject | null>(null);
   const [archiveRow, setArchiveRow] = useState<PortfolioProject | null>(null);
@@ -115,11 +127,18 @@ export function PortfolioPage() {
       if (ownerFilter !== 'all' && r.ownerName !== ownerFilter) return false;
       if (statusFilter !== 'all' && r.status !== statusFilter) return false;
       if (priorityFilter !== 'all' && r.priority !== priorityFilter) return false;
+      const dq = r.dataQuality;
+      if (qualityFilter === 'needs_review' && !dq?.needsOwnerReview && !dq?.duplicateCandidate) return false;
+      if (qualityFilter === 'duplicates' && !dq?.duplicateCandidate) return false;
+      if (qualityFilter === 'missing_next' && !isBootstrapNextAction(r.nextAction)) return false;
+      if (qualityFilter === 'missing_due' && r.targetCompletionDate) return false;
+      if (qualityFilter === 'blocked' && r.status !== 'blocked' && !(r.blockerCount > 0)) return false;
+      if (qualityFilter === 'no_activity' && r.lastActivityAt) return false;
       if (!q) return true;
       const hay = `${r.name} ${r.clientName || ''} ${r.ownerName} ${r.nextAction || ''} ${r.nextMilestone || ''}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [rows, query, clientFilter, ownerFilter, statusFilter, priorityFilter]);
+  }, [rows, query, clientFilter, ownerFilter, statusFilter, priorityFilter, qualityFilter]);
 
   if (!auth.tokenReady) {
     return (
@@ -242,9 +261,37 @@ export function PortfolioPage() {
   const initialize = async () => {
     setBusy(true);
     setError(null);
+    setSyncPreview(null);
     try {
+      // Always dry-run first. Do not mutate until preview is clean of unexpected creates/dupes.
+      const previewRes = await previewPmSync(auth);
+      const p = previewRes.preview;
+      const summary = [
+        `Clients selected: ${p.clientsSelected}`,
+        `Projects to create: ${p.projectsToCreate.length}`,
+        `Projects to update: ${p.projectsToUpdate.length}`,
+        `Unchanged: ${p.projectsUnchanged}`,
+        `Duplicate candidates: ${p.duplicateCandidates.length}`,
+        `Ambiguous: ${p.ambiguousMappings.length}`,
+        `Docs linkable: ${p.documentsLinkable}`,
+        p.conflicts.length ? `Conflicts: ${p.conflicts.join('; ')}` : 'Conflicts: none',
+      ].join(' · ');
+      setSyncPreview(summary);
+      if (p.duplicateCandidates.length > 0 || p.projectsToCreate.length > 0 || p.conflicts.length > 0) {
+        setError(
+          'Sync preview blocked automatic apply. Resolve duplicate/owner-review items first, or confirm create list. Dry-run only — no records were changed.',
+        );
+        return;
+      }
+      // Safe path: second preview must stay idempotent (zero creates) before apply.
+      const second = await previewPmSync(auth);
+      if (second.preview.projectsToCreate.length !== 0) {
+        setError('Second dry-run was not idempotent (would create projects). Sync aborted.');
+        return;
+      }
       await initializePm(auth);
       await refresh();
+      setSyncPreview(`${summary} · Applied after two clean dry-runs.`);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -266,7 +313,7 @@ export function PortfolioPage() {
             Refresh
           </Button>
           <Button appearance="secondary" onClick={() => void initialize()} disabled={busy}>
-            Sync from Microsoft + Client 360
+            Preview / Sync from Microsoft + Client 360
           </Button>
         </div>
       }
@@ -274,6 +321,12 @@ export function PortfolioPage() {
       {error ? (
         <AtlasCard title="Error">
           <Text>{error}</Text>
+        </AtlasCard>
+      ) : null}
+
+      {syncPreview ? (
+        <AtlasCard title="Sync dry-run preview">
+          <Text>{syncPreview}</Text>
         </AtlasCard>
       ) : null}
 
@@ -333,6 +386,33 @@ export function PortfolioPage() {
             <Option value="normal">normal</Option>
             <Option value="low">low</Option>
           </Dropdown>
+          <Dropdown
+            value={
+              qualityFilter === 'all'
+                ? 'All data quality'
+                : qualityFilter === 'needs_review'
+                  ? 'Needs review'
+                  : qualityFilter === 'duplicates'
+                    ? 'Duplicate candidates'
+                    : qualityFilter === 'missing_next'
+                      ? 'Missing next action'
+                      : qualityFilter === 'missing_due'
+                        ? 'Missing due date'
+                        : qualityFilter === 'blocked'
+                          ? 'Blocked'
+                          : 'No recent activity'
+            }
+            selectedOptions={[qualityFilter]}
+            onOptionSelect={(_, d) => setQualityFilter(String(d.optionValue || 'all'))}
+          >
+            <Option value="all">All data quality</Option>
+            <Option value="needs_review">Needs review</Option>
+            <Option value="duplicates">Duplicate candidates</Option>
+            <Option value="missing_next">Missing next action</Option>
+            <Option value="missing_due">Missing due date</Option>
+            <Option value="blocked">Blocked</Option>
+            <Option value="no_activity">No recent activity</Option>
+          </Dropdown>
           <Caption1>{filtered.length} projects</Caption1>
         </div>
       </AtlasCard>
@@ -350,16 +430,26 @@ export function PortfolioPage() {
             {
               key: 'name',
               header: 'Project',
+              sticky: 'left',
+              width: 220,
               render: (r) => {
                 const path = projectDetailPath(r.id);
+                const badge = r.dataQuality?.duplicateCandidate
+                  ? ' · Duplicate candidate'
+                  : r.dataQuality?.needsOwnerReview
+                    ? ' · Needs owner review'
+                    : '';
                 return path ? (
-                  <Link to={path}>{r.name}</Link>
+                  <Link to={path} title={r.name}>
+                    {r.name}
+                    {badge ? <Caption1>{badge}</Caption1> : null}
+                  </Link>
                 ) : (
                   <Text>{r.name}</Text>
                 );
               },
             },
-            { key: 'client', header: 'Client', render: (r) => r.clientName || '—' },
+            { key: 'client', header: 'Client', width: 160, render: (r) => r.clientName || '—' },
             { key: 'owner', header: 'Owner', render: (r) => r.ownerName },
             {
               key: 'status',
@@ -370,22 +460,42 @@ export function PortfolioPage() {
             {
               key: 'health',
               header: 'Health',
-              render: (r) => (
-                <StatusChip
-                  tone={
-                    r.health === 'critical' || r.health === 'at_risk'
+              render: (r) => {
+                const label = displayHealth(r.health, {
+                  treatHealthyAsUnassessed:
+                    isBootstrapNextAction(r.nextAction) || isBootstrapMilestoneTitle(r.nextMilestone),
+                });
+                const tone =
+                  label === 'Not assessed'
+                    ? 'neutral'
+                    : r.health === 'critical' || r.health === 'at_risk'
                       ? 'danger'
                       : r.health === 'watch'
                         ? 'warning'
-                        : 'success'
-                  }
-                  label={r.health}
-                />
+                        : 'success';
+                return <StatusChip tone={tone} label={label} />;
+              },
+            },
+            {
+              key: 'next',
+              header: 'Next milestone',
+              render: (r) => (
+                <span title={r.nextMilestone || undefined}>{displayMilestone(r.nextMilestone)}</span>
               ),
             },
-            { key: 'next', header: 'Next milestone', render: (r) => r.nextMilestone || '—' },
-            { key: 'action', header: 'Next action', render: (r) => r.nextAction || '—' },
-            { key: 'due', header: 'Due', render: (r) => r.targetCompletionDate || '—' },
+            {
+              key: 'action',
+              header: 'Next action',
+              width: 220,
+              render: (r) => (
+                <span title={r.nextAction || undefined}>{displayNextAction(r.nextAction)}</span>
+              ),
+            },
+            {
+              key: 'due',
+              header: 'Due',
+              render: (r) => displayDueDate(r.targetCompletionDate),
+            },
             {
               key: 'blocked',
               header: 'Blocked',
@@ -394,13 +504,15 @@ export function PortfolioPage() {
             {
               key: 'activity',
               header: 'Last activity',
-              render: (r) => (r.lastActivityAt ? r.lastActivityAt.slice(0, 10) : '—'),
+              render: (r) => displayLastActivity(r.lastActivityAt),
             },
             {
               key: 'ops',
               header: 'Actions',
+              sticky: 'right',
+              width: 160,
               render: (r) => (
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'nowrap' }}>
                   <Button
                     size="small"
                     onClick={() => {

@@ -199,3 +199,147 @@ describe('PM project CRUD + routing', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 });
+
+describe('populate matching + preview idempotency', () => {
+  it('matches Lienpartners to Lien Partners without creating a second project', async () => {
+    const { previewPopulateFromMicrosoft, populateRealWorkFromMicrosoft } = await import(
+      '../src/pm/populateReal.ts'
+    );
+    const { bootstrapKnownProjects } = await import('../src/pm/bootstrap.ts');
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-pm-lien-'));
+    const cfg = loadConfig();
+    const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
+    const pm = new PmRepository(dir);
+
+    const clients = [
+      {
+        id: 'client-lien01',
+        displayName: 'Lien Partners',
+        legalName: 'Lien Partners',
+        domains: ['lienpartners.com'],
+        emails: [] as string[],
+        lifecycle: 'active' as const,
+        completenessScore: 50,
+        associations: {
+          documents: [{ id: 'd1' }],
+          emails: [],
+          meetings: [{ id: 'm1' }, { id: 'm2' }],
+        },
+        sourceRefs: [
+          {
+            providerId: 'microsoft',
+            connectionId: 'c',
+            sourceRecordId: 'r1',
+            kind: 'file',
+            title: 'x',
+          },
+        ],
+        businessEntities: ['HVS'],
+        recommendedNextActions: ['Open HVS source links'],
+      },
+    ];
+    repo.saveClient360(clients as never);
+
+    bootstrapKnownProjects(
+      pm,
+      clients.map((c) => ({
+        id: c.id,
+        displayName: c.displayName,
+        domains: c.domains,
+        completenessScore: c.completenessScore,
+      })),
+    );
+    // Force the historical mismatch: bootstrap clientName without space/id
+    const lien = pm.listProjects().find((p) => p.name === 'Lien Partners Engagement');
+    assert.ok(lien);
+    pm.upsertProject({
+      ...lien!,
+      clientId: undefined,
+      clientName: 'Lienpartners',
+      tags: ['lienpartner', 'lien partners'],
+    });
+
+    const before = pm.listProjects().filter((p) => p.name === 'Lien Partners Engagement').length;
+    assert.equal(before, 1);
+
+    const preview1 = previewPopulateFromMicrosoft(pm, repo);
+    assert.equal(preview1.dryRun, true);
+    assert.equal(
+      preview1.projectsToCreate.filter((p) => /lien/i.test(p.name)).length,
+      0,
+      JSON.stringify(preview1.projectsToCreate),
+    );
+    const preview2 = previewPopulateFromMicrosoft(pm, repo);
+    assert.equal(preview2.projectsToCreate.length, preview1.projectsToCreate.length);
+
+    populateRealWorkFromMicrosoft(pm, repo);
+    const after = pm.listProjects().filter((p) => p.name === 'Lien Partners Engagement');
+    assert.equal(after.length, 1, 'populate must not create Lien Partners duplicate');
+    assert.equal(after[0].clientId, 'client-lien01');
+
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('create project defaults health to unknown and omits fabricated next action', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-pm-qa-'));
+    const cfg = loadConfig();
+    const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
+    const pm = new PmRepository(dir);
+    const m = mockRes();
+    await handlePmRoutes({
+      cfg,
+      repo,
+      pm,
+      req: mockReq('POST', '/api/pm/projects', {
+        name: 'Atlas Production QA Verification',
+        clientName: 'High Value Capital Group',
+        businessEntity: 'HVCG',
+        projectType: 'internal_operations',
+        ownerName: 'Manny Barela',
+        tags: ['qa', 'internal', 'non-client', 'safe-to-archive'],
+      }),
+      res: m.res,
+      method: 'POST',
+      path: '/api/pm/projects',
+    });
+    assert.equal(m.status(), 200);
+    const created = m.json().project;
+    assert.equal(created.health, 'unknown');
+    assert.equal(created.nextAction == null || created.nextAction === '', true);
+
+    const id = created.id;
+    {
+      const m2 = mockRes();
+      await handlePmRoutes({
+        cfg,
+        repo,
+        pm,
+        req: mockReq('PATCH', `/api/pm/projects/${id}`, {
+          name: 'Atlas Production QA Verification (edited)',
+        }),
+        res: m2.res,
+        method: 'PATCH',
+        path: `/api/pm/projects/${id}`,
+      });
+      assert.equal(m2.status(), 200);
+      assert.match(m2.json().project.name, /edited/);
+    }
+    {
+      const m3 = mockRes();
+      await handlePmRoutes({
+        cfg,
+        repo,
+        pm,
+        req: mockReq('POST', `/api/pm/projects/${id}/archive`, {}),
+        res: m3.res,
+        method: 'POST',
+        path: `/api/pm/projects/${id}/archive`,
+      });
+      assert.equal(m3.status(), 200);
+      assert.equal(m3.json().project.status, 'archived');
+    }
+    assert.equal(pm.listProjects().some((p) => p.id === id), false);
+    assert.ok(pm.getProject(id)?.status === 'archived' || pm.getProject(id)?.archivedAt);
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
