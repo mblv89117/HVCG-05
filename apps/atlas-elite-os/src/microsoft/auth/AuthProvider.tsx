@@ -25,6 +25,24 @@ import {
 } from '../../security/devOwnerSession';
 import { fetchSwaAuthMe, swaLoginHint, type SwaClientPrincipal } from '../../startup/swaAuthMe';
 
+const MSAL_INIT_TIMEOUT_MS = 10000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
+
 interface AuthState {
   ready: boolean;
   configured: boolean;
@@ -67,7 +85,7 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
       try {
         setInitStage('msal_init');
         window.__ATLAS_BOOT__?.setStage('Initializing Microsoft authentication', 'MSAL initialize…');
-        const instance = await getMsal();
+        const instance = await withTimeout(getMsal(), MSAL_INIT_TIMEOUT_MS, 'MSAL initialize');
 
         setInitStage('swa_principal');
         // Hint only — never blocks shell; short timeout; not authorization.
