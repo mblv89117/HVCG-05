@@ -1,75 +1,148 @@
 # Atlas Hub Bearer Auth Repair — Production Acceptance
 
-- Generated: 2026-07-22T18:45:00Z
+- Generated: 2026-07-22T18:50:00Z
 - Branch: `fix/atlas-usable-operating-layer`
+- Deployed commit (footer + bundle): `40d2396bdce807e4e832d2206452add243744005`
+- Production SWA: `https://zealous-rock-0090c7e1e.7.azurestaticapps.net`
+- Hub: `https://app-atlas-integration-hub.azurewebsites.net`
+- Asset: `/assets/index-ChdNTBM5.js`
 
-## Phase 1 — Failing request table
+## 1. Exact root cause of missing Bearer
+
+PM pages (`PortfolioPage`, `ProjectDetailPage`, My Work, Documents, Command Center) fired Hub `fetch` as soon as React mounted, while `useHubAuth` was still acquiring the MSAL **ID token** asynchronously.
+
+`pmApi` / prior clients only attached `Authorization` when `auth.accessToken` was already set. Race → request with **no Authorization header** → Hub `requirePrincipal` → `missing_bearer` → UI often labeled the failure **Project not found**.
+
+Clients page already gated on `accessToken`; Projects did not.
+
+## 2. Exact failing endpoint(s)
+
+Cross-origin:
+
+- `GET https://app-atlas-integration-hub.azurewebsites.net/api/pm/projects/:id`
+- Related: `/api/pm/portfolio`, `/api/pm/my-work`, `/api/pm/documents`, command-center PM routes
+
+Observed Production error body:
+
+`{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}`
+
+## Phase 1 table
 
 | Field | Actual value |
 |---|---|
 | Browser page origin | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` |
-| Request URL | `https://app-atlas-integration-hub.azurewebsites.net/api/pm/projects/:id` (and related `/api/pm/*`) |
+| Request URL | `https://app-atlas-integration-hub.azurewebsites.net/api/pm/*` (detail used UUID `fd6c7c89-3780-4997-a801-dcf0ccd55706`) |
 | Same-origin or cross-origin | **Cross-origin** |
 | HTTP status | **401** |
-| Authorization header present? | **No** on failing calls (Hub middleware `missing_bearer`) |
-| Credential mode | `credentials: omit` (Bearer only; cookies not used) |
-| API expected audience | SPA client id `49d20328-fe3c-40ec-9d0e-99f57e4646e4` (Entra ID token) plus configured hub/SPA audiences |
-| API expected issuer | `https://login.microsoftonline.com/3df46563-86f3-4414-87fd-84ba967741ef/v2.0` (and AAD v1 STS variants) |
-| API expected role | Scope roles via `x-atlas-roles` after Bearer identity proof (`HVCG Owner` in UI) |
-| Middleware rejecting request | `apps/atlas-integration-api/src/middleware/auth.ts` → `requirePrincipal` → `unauthorized('Microsoft sign-in required (Bearer token missing)')` |
-| Root cause | PM pages called Hub **before** MSAL ID token was attached; optional Authorization was omitted. Clients worked because that page gated on `accessToken`. 401 was mislabeled as Project not found. |
+| Authorization header present? | **No** on failing calls |
+| Credential mode | `credentials: omit` (Bearer only; SWA cookies not sent to Hub) |
+| API expected audience | SPA client id `49d20328-fe3c-40ec-9d0e-99f57e4646e4` (Entra ID token) + Hub app client `99dd84b0-33f7-481b-86db-d76287b124f6` |
+| API expected issuer | `https://login.microsoftonline.com/3df46563-86f3-4414-87fd-84ba967741ef/v2.0` (+ AAD v1 STS variants) |
+| API expected role | After Bearer proof, scope roles via `x-atlas-roles` (UI `HVCG Owner`) |
+| Middleware rejecting request | `apps/atlas-integration-api/src/middleware/auth.ts` → `requirePrincipal` → `missing_bearer` |
+| Root cause | Bearer race / optional Authorization on PM paths; 401 mislabeled as 404 |
 
-## Phase 2 — Architecture (documented, then repaired)
+## 3. Chosen secure authentication architecture
 
-### Static Web App
-- MSAL SPA public client (not SWA Easy Auth for Hub).
-- Footer role from Entra ID token claims via `RoleProvider`.
-- `staticwebapp.config.json` SPA fallback only; no linked backend.
+**Entra ID token for Integration Hub (cross-origin)** — intentional existing design.
 
-### Frontend
-- API base: `VITE_INTEGRATION_API_BASE=https://app-atlas-integration-hub.azurewebsites.net`
-- Auth: MSAL → `acquireHubBearerToken()` → Entra **ID token** (aud=SPA)
-- Prior bug: `useHubAuth` set token asynchronously; `pmApi` only added Authorization **if** `auth.accessToken` already present
-
-### Integration Hub
-- App Service Easy Auth: **disabled**
-- Custom Bearer JWT validation (`INTEGRATION_REQUIRE_AUTH=true`)
-- `x-atlas-*` never authenticate alone
-- Direct anonymous Hub access remains blocked
-
-## Phase 3 — Chosen architecture
-
-**Alternative (intentional): Entra ID token for Integration Hub (cross-origin).**
-
-Not SWA linked backend (would be a larger platform change; current Hub already validates SPA ID tokens).
+Not SWA linked backend: Hub already validates SPA ID tokens; Easy Auth is off; linking would be a larger platform change.
 
 Implemented:
 
-1. Central `hubFetchJson` always acquires Bearer before protected calls
-2. One silent retry on `missing_bearer` / invalid token
-3. Never send Graph nonce access tokens as Hub Bearer
+1. Central `hubFetchJson` **always** acquires Bearer before protected calls
+2. Silent retry on `missing_bearer` / invalid token
+3. Never send Graph nonce access tokens as Hub Bearer (`acquireHubBearerToken` ID-token only)
 4. Pages wait for `tokenReady` / `hasBearer`
-5. 401 ≠ Project not found
+5. 401 / 403 / 404 separated in Project detail and portfolio
 
-Consent: **not required** (existing SPA + openid/profile/email ID token path).
+Consent: **not required**.
 
-## Phase 5 — SHA mismatch explained
+## 4. Files changed
 
-Previous Production footer SHA `a3a945b…` was **correct for the injected env at build time**:
+- `apps/atlas-elite-os/src/integrations/hub/hubFetch.ts` (new)
+- `apps/atlas-elite-os/src/integrations/hub/useHubAuth.ts`
+- `apps/atlas-elite-os/src/integrations/hub/pmApi.ts`
+- `apps/atlas-elite-os/src/integrations/hub/api.ts`
+- `apps/atlas-elite-os/src/microsoft/auth/msal.ts`
+- `apps/atlas-elite-os/src/pages/PortfolioPage.tsx`
+- `apps/atlas-elite-os/src/pages/ProjectDetailPage.tsx`
+- `apps/atlas-elite-os/src/pages/MyWorkPage.tsx`
+- `apps/atlas-elite-os/src/pages/DocumentsOperatingPage.tsx`
+- `apps/atlas-elite-os/src/pages/CommandCenterPage.tsx`
+- `deployment/reports/ATLAS_HUB_BEARER_AUTH_REPAIR.md`
 
-- Feature JS **was** deployed (`Sync from Microsoft`, project recovery UI present in `index-BHJBaIol.js`)
-- Deploy script set `VITE_ATLAS_BUILD_SHA=$(git rev-parse HEAD)` **before** committing `7660672`/`b409ca4`
-- Therefore code ≠ stamped SHA
+Commits: `c59a4d6`, `40d2396`
 
-This repair rebuilds **after** commit so stamped SHA matches deployed commit.
+## 5. Azure resources changed
 
-## Security (unchanged posture)
+- **Redeployed** Production Static Web App `swa-atlas-elite-os-dev` (production env) with stamped SHA `40d2396…`
+- Integration Hub App Service: **no auth settings weakened**; no anonymous open
+- No SWA linked-backend change
 
-| Test | Expected | Actual |
-|---|---|---|
-| No identity `/api/pm/portfolio` | 401 | 401 |
-| Forged `x-atlas-*` only | 401 | 401 |
-| Hub Easy Auth | Off | Off |
+## 6. Entra resources changed
+
+None.
+
+## 7. Consent required?
+
+No.
+
+## 8. Actual deployed commit
+
+`40d2396bdce807e4e832d2206452add243744005`
+
+Proven in:
+
+- Production HTML → `index-ChdNTBM5.js`
+- Bundle contains full SHA string (3 occurrences)
+- Footer screenshot (automation, signed-out): `SHA 40d2396bdce807e4e832d2206452add243744005`
+
+## 9. Previous SHA mismatch (`a3a945b…`)
+
+Production **did** receive feature JS earlier, but deploy stamped `VITE_ATLAS_BUILD_SHA=$(git rev-parse HEAD)` **before** the feature commits were created, so footer showed merge base `a3a945b…` while branch tip was `b409ca4` / `7660672`.
+
+This deploy stamps SHA **after** commit.
+
+## 10. Sanitized API tests (automation session)
+
+| Test | Expected | Actual | Pass/Fail |
+|---|---|---|---|
+| Authenticated owner `/api/pm/portfolio` | 200 | **Not run in automation** (browser session Unauthenticated; do not force Manny re-login) | Pending owner hard-refresh |
+| Valid project detail | 200 | Pending owner session | Pending |
+| Missing project | 404 | Code path present; not live-proven | Pending |
+| No identity | 401 | 401 `Bearer token missing` | Pass |
+| Wrong role | 403 | Not live-proven this pass | Pending |
+| Forged Atlas header only | 401 | 401 `Bearer token missing` | Pass |
+| Forged `x-ms-client-principal` + Atlas headers | 401 | 401 | Pass |
+| Bad Bearer | 401 | 401 | Pass |
+| Seven clients | 200 | Pending authenticated UI | Pending |
+| Documents query | 200 | Pending authenticated UI | Pending |
+
+## 11. Browser evidence
+
+Automation opened Production `/projects` while signed out → route guard → `/access-denied` with footer SHA `40d2396…`. Screenshot: `prod-projects-signed-out.png`.
+
+**Owner action (not re-login):** hard-refresh existing Production tab so MSAL cache + new bundle load; confirm footer SHA `40d2396…` and `/projects` portfolio 200.
+
+## 12–15. Data counts
+
+Deferred until authenticated owner `/api/pm/portfolio` returns 200. Do **not** claim usable operating layer data until then. Do **not** click Sync until that 200 is observed.
+
+## 16. Anonymous / forged blocked
+
+Confirmed against live Hub with `INTEGRATION_REQUIRE_AUTH=true`. Forged `x-atlas-*` and forged `x-ms-client-principal` do not authenticate.
+
+## Hub auth posture (unchanged)
+
+| Setting | Value |
+|---|---|
+| Easy Auth | Off / null |
+| `INTEGRATION_REQUIRE_AUTH` | `true` |
+| Tenant | `3df46563-86f3-4414-87fd-84ba967741ef` |
+| SPA audience | `49d20328-fe3c-40ec-9d0e-99f57e4646e4` |
+| Hub app client id | `99dd84b0-33f7-481b-86db-d76287b124f6` |
+| CORS origins | Production + preview SWA hosts only |
 
 ## Owner note
 
