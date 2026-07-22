@@ -30,6 +30,11 @@ export interface AtlasMicrosoftConfig {
   powerAutomateBaseUrl: string;
   /** Hosted app public URL (SWA / App Service) */
   hostedAppUrl: string;
+  /**
+   * Delegated scope for Atlas Integration Hub access tokens.
+   * Must be an API scope (`api://…/…`), never openid/profile/email alone.
+   */
+  integrationHubApiScope: string;
   /** Allow labeled sample fallback when Microsoft data unavailable */
   allowSampleFallback: boolean;
   /** Block live client communications (always true outside explicit Production gates) */
@@ -77,6 +82,10 @@ export function loadMicrosoftConfig(): AtlasMicrosoftConfig {
     sharePointSiteUrl: env('VITE_SHAREPOINT_SITE_URL', ''),
     powerAutomateBaseUrl: env('VITE_POWER_AUTOMATE_BASE_URL', ''),
     hostedAppUrl: env('VITE_HOSTED_APP_URL', ''),
+    integrationHubApiScope: env(
+      'VITE_INTEGRATION_HUB_API_SCOPE',
+      'api://99dd84b0-33f7-481b-86db-d76287b124f6/access_as_user',
+    ),
     allowSampleFallback: env('VITE_ALLOW_SAMPLE_FALLBACK', environment === 'local' || environment === 'development' ? 'true' : 'false') === 'true',
     blockLiveClientComms: env('VITE_BLOCK_LIVE_CLIENT_COMMS', isProd ? 'true' : 'true') === 'true',
   };

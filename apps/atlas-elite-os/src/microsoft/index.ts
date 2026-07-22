@@ -14,5 +14,6 @@ export {
   acquireDataverseToken,
   acquireGraphToken,
   acquireHubBearerToken,
+  getHubApiScopes,
   getActiveAccount,
 } from './auth/msal';

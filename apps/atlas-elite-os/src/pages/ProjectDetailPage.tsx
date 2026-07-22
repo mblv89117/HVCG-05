@@ -158,7 +158,8 @@ export function ProjectDetailPage({
             : 'No project exists for this id. It may be archived or never created.',
         );
       } else {
-        setMissing(true);
+        setMissing(false);
+        setProject(null);
         setMessage(err instanceof Error ? err.message : 'Server error loading project.');
       }
     } finally {

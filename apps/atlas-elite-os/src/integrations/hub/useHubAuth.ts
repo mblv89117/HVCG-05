@@ -14,7 +14,7 @@ export type HubAuthState = AtlasHubAuthHeaders & {
 /**
  * Hub auth for Elite OS pages.
  * Signed-out: no forged user id / no Bearer (hub must 401; UI must show zero client data).
- * Signed-in: MSAL Bearer + scope headers after identity is proven server-side.
+ * Signed-in: wait for Hub API accessToken, then send Bearer + scope headers.
  *
  * Callers MUST wait for `tokenReady` (and preferably `hasBearer`) before Hub requests.
  */

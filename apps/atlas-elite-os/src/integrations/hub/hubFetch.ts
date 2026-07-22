@@ -1,7 +1,7 @@
 /**
  * Centralized Integration Hub HTTP client.
- * Always acquires an Entra Bearer (ID token, aud=SPA) before protected calls.
- * Never sends forged identity as authentication; x-atlas-* are scope only after Bearer.
+ * Always acquires an Entra access token (aud = Hub API) before protected calls.
+ * Never attaches idToken. x-atlas-* are scope only after Bearer identity is proven.
  */
 
 import { acquireHubBearerToken } from '../../microsoft/auth/msal';
@@ -41,8 +41,8 @@ function scopeHeaders(auth: AtlasHubAuthHeaders): Record<string, string> {
 }
 
 /**
- * Resolve a Bearer for the Hub. Prefers a freshly acquired ID token.
- * Does not return Graph nonce tokens.
+ * Resolve a Hub API access token. Prefers an already-acquired access token.
+ * Does not return ID tokens or Graph nonce tokens.
  */
 export async function resolveHubBearer(
   preferred?: string | null,

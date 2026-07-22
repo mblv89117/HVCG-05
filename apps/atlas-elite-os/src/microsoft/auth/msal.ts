@@ -105,47 +105,21 @@ export async function acquireGraphToken(): Promise<string | null> {
 
 /**
  * Bearer for Atlas Integration Hub.
- * Use Entra ID token (aud = SPA client id). Never send Microsoft Graph
- * access tokens that include a JWT header `nonce` — the hub rejects those.
+ * Returns AuthenticationResult.accessToken for the Hub API delegated scope.
+ * Never returns idToken, Graph tokens, or SPA-only ID-token audiences.
  */
-export async function acquireHubBearerToken(): Promise<string | null> {
-  const instance = await getMsal();
-  if (!instance) return null;
-  const account = getActiveAccount(instance);
-  if (!account) return null;
-
-  const request = {
-    account,
-    scopes: ['openid', 'profile', 'email'],
-    forceRefresh: false,
-  };
-
-  try {
-    const silent: AuthenticationResult = await instance.acquireTokenSilent(request);
-    if (silent.idToken) return silent.idToken;
-  } catch (e) {
-    if (!(e instanceof InteractionRequiredAuthError)) {
-      // Fall through to popup only for interaction-required; otherwise try once more with refresh
-      try {
-        const refreshed: AuthenticationResult = await instance.acquireTokenSilent({
-          ...request,
-          forceRefresh: true,
-        });
-        if (refreshed.idToken) return refreshed.idToken;
-      } catch {
-        /* continue */
-      }
-      if (!(e instanceof InteractionRequiredAuthError)) throw e;
-    }
-    const interactive = await instance.acquireTokenPopup({
-      account,
-      scopes: ['openid', 'profile', 'email'],
-    });
-    if (interactive.idToken) return interactive.idToken;
+export function getHubApiScopes(): string[] {
+  const scope = microsoftConfig.integrationHubApiScope.trim();
+  if (!scope || scope.startsWith('openid') || !scope.includes('/')) {
+    throw new Error(
+      'VITE_INTEGRATION_HUB_API_SCOPE must be an API delegated scope (api://<hub-app-id>/access_as_user).',
+    );
   }
+  return [scope];
+}
 
-  // No Graph access-token fallback — Graph tokens with nonce are rejected by the hub.
-  return null;
+export async function acquireHubBearerToken(): Promise<string | null> {
+  return acquireToken(getHubApiScopes());
 }
 
 export { dataverseApiRoot };

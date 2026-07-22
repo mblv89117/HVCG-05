@@ -1,8 +1,9 @@
 /**
  * Auth + tenant isolation middleware.
- * Production (INTEGRATION_REQUIRE_AUTH=true): require a validated Entra JWT
- * (Authorization: Bearer). Client-supplied x-atlas-* headers may carry org/client
- * scope AFTER identity is proven — they are never authentication by themselves.
+ * Production (INTEGRATION_REQUIRE_AUTH=true): require a validated Entra
+ * access token (Authorization: Bearer) issued for the Integration Hub API.
+ * Client-supplied x-atlas-* headers may carry org/client scope AFTER identity
+ * is proven — they are never authentication by themselves.
  * Dev (requireAuth=false): optional headers / anonymous admin principal for local work.
  */
 
@@ -123,14 +124,14 @@ async function validateEntraJwt(token: string, cfg: AppConfig): Promise<JWTPaylo
     unauthorized('No accepted JWT audiences configured', 'audience_unconfigured');
   }
 
-  // Microsoft Graph access tokens often include a JWT header `nonce` and are not
-  // validatable by third-party APIs. Hub auth requires an Entra ID token (aud=SPA)
-  // or an access token issued for an accepted hub/SPA audience.
+  // Hub requires an access token for the Integration Hub API audience.
+  // Reject Microsoft Graph tokens (JWT header `nonce`) and SPA ID tokens
+  // (wrong audience — not listed in acceptedAudiences).
   try {
     const header = decodeProtectedHeader(token);
     if (header.nonce) {
       unauthorized(
-        'Microsoft Graph access tokens cannot authenticate the hub; sign in and send an Entra ID token',
+        'Microsoft Graph access tokens cannot authenticate the hub; request a Hub API access token',
         'graph_nonce_token',
       );
     }
@@ -169,7 +170,23 @@ async function validateEntraJwt(token: string, cfg: AppConfig): Promise<JWTPaylo
     unauthorized('Token tenant mismatch', 'tenant_mismatch');
   }
 
+  assertRequiredScope(payload, cfg);
+
   return payload;
+}
+
+function assertRequiredScope(payload: JWTPayload, cfg: AppConfig): void {
+  const required = cfg.requiredScope;
+  if (!required) return;
+
+  const scp = claimString(payload, 'scp') || '';
+  const scopes = scp.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  if (scopes.includes(required)) return;
+
+  // Some tokens encode the full api://…/scope value in scp
+  if (scopes.some((s) => s === required || s.endsWith(`/${required}`))) return;
+
+  unauthorized(`Missing required API scope (${required})`, 'missing_scope');
 }
 
 function principalFromJwt(payload: JWTPayload, headers: Headers): AtlasPrincipal {
@@ -190,7 +207,7 @@ function principalFromJwt(payload: JWTPayload, headers: Headers): AtlasPrincipal
 /**
  * Resolve the caller principal.
  * - requireAuth=false: header principal or local admin bypass
- * - requireAuth=true: Entra Bearer JWT required; x-atlas-* used only for scope
+ * - requireAuth=true: Entra Hub API access token required; x-atlas-* used only for scope
  */
 export async function requirePrincipal(
   req: IncomingMessage,
