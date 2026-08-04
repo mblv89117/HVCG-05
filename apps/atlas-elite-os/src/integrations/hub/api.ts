@@ -824,6 +824,18 @@ export async function processLocalAiContentPack(
   return parse(res) as Promise<{ pack: LocalAiContentPack; job: LocalAiJob }>;
 }
 
+export async function postLocalAiModelCompare(
+  auth: AtlasHubAuthHeaders,
+  body: { operation: string; sourceContent: string },
+) {
+  const res = await fetch(`${base()}/api/local-ai/model-compare`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ comparison: Record<string, unknown> }>;
+}
+
 export interface LocalAiContentPack {
   packId: string;
   status: string;

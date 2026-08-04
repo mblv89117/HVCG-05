@@ -19,6 +19,7 @@ import {
   extractMeetingHintsFromText,
   redactText,
   resolveModelForOperation,
+  sanitizeModelProfileOverride,
   scanForInjection,
   seedClientOperationsFromText,
   type ContentPackRecord,
@@ -298,11 +299,12 @@ export function enrichJobOutputForPhase3(opts: {
 export function resolveJobModel(
   operation: string,
   routing: ModelRoutingConfig,
-  override?: ModelProfile | null,
+  override?: ModelProfile | string | null,
   installed?: string[],
 ): ModelResolution {
+  const profile = sanitizeModelProfileOverride(override);
   return resolveModelForOperation(operation, routing, {
-    overrideProfile: override || undefined,
+    overrideProfile: profile || undefined,
     installedModels: installed,
   });
 }

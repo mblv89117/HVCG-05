@@ -1,5 +1,5 @@
 /**
- * Configurable model profiles + per-operation routing (Phase 3).
+ * Configurable model profiles + per-operation routing (Phase 3/4A).
  * Never auto-pull models. Never silently substitute without recording.
  */
 
@@ -25,6 +25,8 @@ export interface ModelRoutingConfig {
   /** Recommended faster models for owner authorization (not installed automatically). */
   recommendedFasterModels: string[];
   fasterModelAvailable: boolean;
+  /** Phase 4A locked Fast model id when configured */
+  phase4aFastModel: string | null;
 }
 
 export interface ModelResolution {
@@ -34,9 +36,22 @@ export interface ModelResolution {
   actualModel: string;
   usedFallback: boolean;
   fallbackReason: string | null;
+  /** Phase 4A: quality-gate deep retry after Fast failure */
+  qualityFallbackAttempted?: boolean;
 }
 
+/** Operations that must stay Deep-only (policy layer). */
+export const DEEP_ONLY_OPERATIONS = [
+  'prepare_decision_package',
+  'summarize_synthetic_eva',
+  'prepare_document_review_pack',
+  'prepare_client_operations_pack',
+  'complex_client_review',
+  'strategic_issue_analysis',
+] as const;
+
 export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
+  // Fast Operations (Phase 4A)
   classify_work_value: 'Fast Operations Model',
   identify_missing_information: 'Fast Operations Model',
   summarize_text: 'Fast Operations Model',
@@ -46,6 +61,7 @@ export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
   prepare_meeting_brief: 'Fast Operations Model',
   summarize_meeting_outcomes: 'Fast Operations Model',
   draft_internal_task_plan: 'Fast Operations Model',
+  // Deep Analysis
   prepare_decision_package: 'Deep Analysis Model',
   summarize_synthetic_eva: 'Deep Analysis Model',
   prepare_document_review_pack: 'Deep Analysis Model',
@@ -56,11 +72,13 @@ export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
 
 /** Owner-facing recommendations when no distinct fast model is installed. */
 export const RECOMMENDED_FASTER_MODELS = [
-  'llama3.2:3b',
   'qwen2.5:7b-instruct',
+  'llama3.2:3b',
   'phi4-mini',
   'gemma2:9b',
 ];
+
+export const PHASE4A_AUTHORIZED_FAST_MODEL = 'qwen2.5:7b-instruct';
 
 export function buildModelRoutingConfig(opts: {
   deepModel: string;
@@ -83,13 +101,13 @@ export function buildModelRoutingConfig(opts: {
         profile: 'Fast Operations Model',
         modelName: fastDistinct ? fast : '',
         notes: fastDistinct
-          ? 'Configured distinct fast model'
+          ? `Phase 4A Fast Operations model: ${fast}`
           : 'No distinct faster model installed/configured — awaits owner authorization',
       },
       'Deep Analysis Model': {
         profile: 'Deep Analysis Model',
         modelName: deep,
-        notes: 'Primary deep analysis model (Phase 2 selection)',
+        notes: 'Primary deep analysis model',
       },
       'Fallback Model': {
         profile: 'Fallback Model',
@@ -100,6 +118,7 @@ export function buildModelRoutingConfig(opts: {
     operationProfiles: { ...DEFAULT_OPERATION_PROFILES },
     recommendedFasterModels: RECOMMENDED_FASTER_MODELS,
     fasterModelAvailable: fastDistinct,
+    phase4aFastModel: fastDistinct ? fast : null,
   };
 }
 
@@ -110,12 +129,34 @@ export function preferredProfileForOperation(
   return routing.operationProfiles[operation] || 'Deep Analysis Model';
 }
 
+export function isDeepOnlyOperation(operation: string): boolean {
+  return (DEEP_ONLY_OPERATIONS as readonly string[]).includes(operation);
+}
+
+/**
+ * Reject untrusted client model overrides — only allow known profiles from policy.
+ */
+export function sanitizeModelProfileOverride(
+  value: unknown,
+): ModelProfile | null {
+  if (typeof value !== 'string') return null;
+  if ((MODEL_PROFILES as readonly string[]).includes(value)) {
+    return value as ModelProfile;
+  }
+  return null;
+}
+
 export function resolveModelForOperation(
   operation: string,
   routing: ModelRoutingConfig,
   opts?: { overrideProfile?: ModelProfile; installedModels?: string[] },
 ): ModelResolution {
-  const requestedProfile = opts?.overrideProfile || preferredProfileForOperation(operation, routing);
+  // Untrusted overrides cannot force Deep-only ops onto Fast
+  let requestedProfile = opts?.overrideProfile || preferredProfileForOperation(operation, routing);
+  if (isDeepOnlyOperation(operation) && requestedProfile === 'Fast Operations Model') {
+    requestedProfile = 'Deep Analysis Model';
+  }
+
   const installed = new Set(opts?.installedModels || []);
   const preferredName = routing.profiles[requestedProfile].modelName;
   const fallbackName = routing.profiles['Fallback Model'].modelName;
@@ -135,7 +176,6 @@ export function resolveModelForOperation(
     };
   }
 
-  // Prefer Deep, then Fallback, when Fast is missing
   const candidates: Array<{ profile: ModelProfile; reason: string }> = [];
   if (requestedProfile === 'Fast Operations Model') {
     candidates.push({
@@ -170,7 +210,6 @@ export function resolveModelForOperation(
     }
   }
 
-  // Last resort: deep name even if not in installed list (caller may still fail at execute)
   const last = deepName || fallbackName || preferredName;
   if (!last) {
     throw Object.assign(new Error('No Ollama model configured for any profile'), {
@@ -185,5 +224,27 @@ export function resolveModelForOperation(
     actualModel: last,
     usedFallback: true,
     fallbackReason: 'no_suitable_installed_model',
+  };
+}
+
+/** After Fast model schema/quality failure — explicit Deep retry target. */
+export function resolveQualityFallbackToDeep(
+  prior: ModelResolution,
+  routing: ModelRoutingConfig,
+  installedModels?: string[],
+): ModelResolution | null {
+  if (prior.actualProfile !== 'Fast Operations Model') return null;
+  const deep = routing.profiles['Deep Analysis Model'].modelName;
+  if (!deep || deep === prior.actualModel) return null;
+  const installed = new Set(installedModels || []);
+  if (installed.size > 0 && !installed.has(deep)) return null;
+  return {
+    requestedProfile: prior.requestedProfile,
+    requestedModel: prior.requestedModel,
+    actualProfile: 'Deep Analysis Model',
+    actualModel: deep,
+    usedFallback: true,
+    fallbackReason: 'fast_model_schema_validation_failed',
+    qualityFallbackAttempted: true,
   };
 }

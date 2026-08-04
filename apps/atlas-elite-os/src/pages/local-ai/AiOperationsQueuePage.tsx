@@ -31,6 +31,7 @@ import {
   fetchLocalAiOllamaDiscovery,
   fetchLocalAiPerformance,
   postLocalAiMannyDecision,
+  postLocalAiModelCompare,
   processLocalAiContentPack,
   processLocalAiJob,
   retryLocalAiJob,
@@ -54,6 +55,7 @@ export function AiOperationsQueuePage() {
   const [selected, setSelected] = useState<{ job: LocalAiJob; audit: unknown[] } | null>(null);
   const [paste, setPaste] = useState('');
   const [editedRedaction, setEditedRedaction] = useState('');
+  const [compare, setCompare] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -242,13 +244,27 @@ export function AiOperationsQueuePage() {
       </AtlasCard>
 
       {perf ? (
-        <AtlasCard title="Performance" subtitle="Latency + failure metrics" style={{ marginTop: 12 }}>
+        <AtlasCard title="Performance" subtitle="Phase 4A Fast vs Deep metrics" style={{ marginTop: 12 }}>
           <Caption1>
-            Jobs: {String(perf.jobCount)} · Fail rate: {Number(perf.failureRate || 0).toFixed(2)} ·
-            Validation fail: {Number(perf.validationFailureRate || 0).toFixed(2)} · Fallbacks:{' '}
-            {String(perf.fallbackUsageCount)} · Cancelled: {String(perf.cancelledJobs)} · Timeouts:{' '}
-            {String(perf.timeoutCount)} · Est. Manny minutes saved:{' '}
+            Fast avg ms: {String(perf.fastModelAverageLatencyMs ?? '—')} · Deep avg ms:{' '}
+            {String(perf.deepModelAverageLatencyMs ?? '—')} · Fail rate:{' '}
+            {Number(perf.failureRate || 0).toFixed(2)} · Validation fail:{' '}
+            {Number(perf.validationFailureRate || 0).toFixed(2)} · Fallback rate:{' '}
+            {Number(perf.fallbackRate || 0).toFixed(2)} · Retry rate:{' '}
+            {Number(perf.retryRate || 0).toFixed(2)} · Est. Manny minutes saved:{' '}
             {String(perf.estimatedMannyTimeSavedMinutes)}
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Validation by model: {JSON.stringify(perf.validationRateByModel || {})}
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Selection reasons: {JSON.stringify(perf.modelSelectionReasons || {})}
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Slowest routine: {JSON.stringify(perf.slowestRoutineOperations || [])}
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Deep-only ops: {JSON.stringify(perf.operationsThatShouldRemainDeepOnly || [])}
           </Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
             Flags: {JSON.stringify(perf.flags || [])}
@@ -282,15 +298,43 @@ export function AiOperationsQueuePage() {
           placeholder="Paste synthetic or owner-approved content (TEST — banners preferred)"
           style={{ width: '100%', minHeight: 100 }}
         />
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
           <Button appearance="primary" disabled={busy || !signedIn} onClick={() => void createPack()}>
             Create pack (Manny initiate)
+          </Button>
+          <Button
+            disabled={busy || !signedIn || !paste.trim()}
+            onClick={() => {
+              void (async () => {
+                setBusy(true);
+                try {
+                  const res = await postLocalAiModelCompare(hubAuth, {
+                    operation: 'summarize_text',
+                    sourceContent: paste.includes('TEST —')
+                      ? paste
+                      : `TEST — SYNTHETIC DATA\n${paste}\nTEST — DO NOT CONTACT`,
+                  });
+                  setCompare(res.comparison);
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : String(e));
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            }}
+          >
+            Side-by-side Fast vs Deep (local only)
           </Button>
           <Button disabled={loading || !signedIn} onClick={() => void refresh()}>
             Refresh
           </Button>
           {loading ? <Spinner size="tiny" /> : null}
         </div>
+        {compare ? (
+          <pre style={{ marginTop: 12, fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(compare, null, 2)}
+          </pre>
+        ) : null}
         {selectedPack ? (
           <div style={{ marginTop: 12 }}>
             <Caption1>

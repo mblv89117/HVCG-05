@@ -185,6 +185,18 @@ export async function handleLocalAiRoutes(opts: {
       return true;
     }
 
+    if (method === 'POST' && path === '/api/local-ai/model-compare') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const comparison = await localAi.compareModelsSideBySide({
+        operation: String(body.operation || 'summarize_text'),
+        sourceContent: String(body.sourceContent || ''),
+        force: Boolean(body.force),
+      });
+      send(res, 200, { comparison }, origin);
+      return true;
+    }
+
     if (method === 'GET' && path === '/api/local-ai/approval-queue') {
       await requirePrincipal(req, cfg);
       send(res, 200, localAi.approvalQueue(), origin);

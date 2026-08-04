@@ -137,6 +137,7 @@ export interface AiJobRecord {
     actualModel: string;
     usedFallback: boolean;
     fallbackReason: string | null;
+    qualityFallbackAttempted?: boolean;
   } | null;
   /** Phase 3 time-protection classification */
   timeProtection?: import('./timeProtectionOutput.ts').MannyTimeProtectionOutput | null;

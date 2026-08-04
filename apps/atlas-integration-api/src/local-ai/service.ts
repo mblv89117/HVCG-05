@@ -28,6 +28,7 @@ import {
   normalizeAssignee,
   redactText,
   requiresMannyApproval,
+  resolveQualityFallbackToDeep,
   type AiJobRecord,
   type ContentPackRecord,
   type CreateAiJobRequest,
@@ -73,6 +74,8 @@ export interface LocalAiServiceDeps {
   ollamaConfig?: OllamaExecutorConfig;
   ollamaClient?: OllamaClient;
   defaultExecutorMode?: 'mock' | 'ollama';
+  /** Test hook: override secrets file env (model profiles). */
+  secretsFileEnv?: Record<string, string>;
 }
 
 function nowIso() {
@@ -105,7 +108,8 @@ export class LocalAiService {
     this.repo = deps.repo;
     this.flags = deps.flags ?? loadLocalAiFeatureFlags();
     this.killSwitch = Boolean(deps.killSwitch);
-    this.secretsFileEnv = loadLocalAiSecretsFile([findRepoRootFromApi(), process.cwd()]);
+    this.secretsFileEnv =
+      deps.secretsFileEnv ?? loadLocalAiSecretsFile([findRepoRootFromApi(), process.cwd()]);
     this.ollamaConfig = deps.ollamaConfig ?? resolveOllamaConfig(process.env, this.secretsFileEnv);
     this.ollamaClient = deps.ollamaClient ?? new OllamaClient(this.ollamaConfig);
     const envMode = (
@@ -152,7 +156,7 @@ export class LocalAiService {
         externalCommunications: false,
         modelRouting: this.getModelRouting(),
       },
-      phase: 'phase3-controlled-live-content-read-only',
+      phase: 'phase4a-fast-model-routing',
       syntheticBanner: SYNTHETIC_AI_OUTPUT_BANNER,
     };
   }
@@ -514,7 +518,7 @@ export class LocalAiService {
     const pack = current.contentPackId
       ? this.repo.getContentPack(current.contentPackId)
       : undefined;
-    const resolution = resolveJobModel(
+    let resolution = resolveJobModel(
       current.requestedOperation,
       routing,
       (pack?.modelProfileOverride as ModelProfile | null) || undefined,
@@ -533,13 +537,49 @@ export class LocalAiService {
       nextStatus: 'In Progress',
     });
 
-    const result = await runOllamaExecutor({
+    let result = await runOllamaExecutor({
       job: current,
       sourceContent: source,
       cfg: { ...this.ollamaConfig, model: resolution.actualModel },
       client: this.ollamaClient.withModel(resolution.actualModel),
       modelOverride: resolution.actualModel,
     });
+
+    // Phase 4A quality gate: Fast schema/malformed failure → recorded Deep retry
+    const schemaFail =
+      !result.ok &&
+      (result.errorType === 'ValidationFailed' || result.errorType === 'MalformedResponse');
+    if (schemaFail && !result.cancelled) {
+      const quality = resolveQualityFallbackToDeep(
+        resolution,
+        routing,
+        installed.length ? installed : undefined,
+      );
+      if (quality) {
+        this.repo.appendAudit({
+          auditCorrelationId: current.auditCorrelationId,
+          aiJobId: current.aiJobId,
+          at: nowIso(),
+          actor: LOCAL_AI_OWNER,
+          action: 'fast_model_quality_fallback',
+          detail: `Fast model ${resolution.actualModel} failed (${result.errorType}); retrying Deep ${quality.actualModel}; priorDetail=${result.errorDetail}`,
+          previousStatus: 'In Progress',
+          nextStatus: 'In Progress',
+        });
+        const priorDuration = result.durationMs;
+        resolution = quality;
+        current.modelRouting = resolution;
+        this.repo.upsertJob(current);
+        result = await runOllamaExecutor({
+          job: current,
+          sourceContent: source,
+          cfg: { ...this.ollamaConfig, model: resolution.actualModel },
+          client: this.ollamaClient.withModel(resolution.actualModel),
+          modelOverride: resolution.actualModel,
+        });
+        result = { ...result, durationMs: priorDuration + result.durationMs };
+      }
+    }
 
     current = this.requireJob(aiJobId);
     current.processingDurationMs = result.durationMs;
@@ -606,6 +646,16 @@ export class LocalAiService {
       return current;
     }
 
+    // Never allow model to strip Manny approval requirements for gated ops
+    if (current.requiresMannyApproval && result.outputPayload) {
+      const payload = result.outputPayload as { requires_manny_approval?: boolean };
+      if (payload.requires_manny_approval === false) {
+        payload.requires_manny_approval = true;
+        result.requiresMannyApproval = true;
+        result.outputPayload = payload;
+      }
+    }
+
     current.validationStatus = 'Passed';
     current.outputPayload = result.outputPayload;
     current.outputSummary = result.outputSummary;
@@ -613,12 +663,12 @@ export class LocalAiService {
     current.confidence = result.confidence;
     current.errorType = null;
     current.errorDetail = null;
-    current.requiresMannyApproval = result.requiresMannyApproval;
-    current.mannyDecision = result.requiresMannyApproval ? 'Pending' : current.mannyDecision;
-    current.recommendedNextAction = result.requiresMannyApproval
+    current.requiresMannyApproval = result.requiresMannyApproval || current.requiresMannyApproval;
+    current.mannyDecision = current.requiresMannyApproval ? 'Pending' : current.mannyDecision;
+    current.recommendedNextAction = current.requiresMannyApproval
       ? 'Waiting on Manny approval'
       : 'Review draft';
-    current.processingStatus = result.requiresMannyApproval ? 'Waiting on Manny' : 'Draft Ready';
+    current.processingStatus = current.requiresMannyApproval ? 'Waiting on Manny' : 'Draft Ready';
     if ((result.confidence ?? 1) < 0.5) {
       current.processingStatus = 'Waiting on Manny';
       current.requiresMannyApproval = true;
@@ -642,7 +692,7 @@ export class LocalAiService {
     current.meetingDraft = enriched.meetingDraft;
     current.clientOperationsPack = enriched.clientOperationsPack;
     current.timeProtection = enriched.timeProtection;
-    current.phase = current.phase || 'phase3';
+    current.phase = current.phase || 'phase4a';
 
     if (pack) {
       pack.status = 'Completed';
@@ -657,7 +707,7 @@ export class LocalAiService {
       at: nowIso(),
       actor: LOCAL_AI_OWNER,
       action: 'ollama_output_validated',
-      detail: `${SYNTHETIC_AI_OUTPUT_BANNER}; status=${current.processingStatus}; durationMs=${result.durationMs}; model=${resolution.actualModel}; fallback=${resolution.usedFallback}`,
+      detail: `${SYNTHETIC_AI_OUTPUT_BANNER}; status=${current.processingStatus}; durationMs=${result.durationMs}; model=${resolution.actualModel}; fallback=${resolution.usedFallback}; reason=${resolution.fallbackReason || 'none'}`,
       previousStatus: 'In Progress',
       nextStatus: current.processingStatus,
     });
@@ -1077,7 +1127,148 @@ export class LocalAiService {
   }
 
   performanceDashboard() {
-    return buildPerformanceDashboard(this.repo.listJobs(), this.repo.listAudit());
+    const routing = this.getModelRouting();
+    return buildPerformanceDashboard(this.repo.listJobs(), this.repo.listAudit(), {
+      fastModelName: routing.profiles['Fast Operations Model'].modelName || null,
+      deepModelName: routing.profiles['Deep Analysis Model'].modelName || null,
+    });
+  }
+
+  /**
+   * Local-only Fast vs Deep side-by-side evaluation (Phase 4A).
+   * Does not write authoritative records. Does not send communications.
+   */
+  async compareModelsSideBySide(opts: {
+    operation: string;
+    sourceContent: string;
+    force?: boolean;
+  }): Promise<{
+    localOnly: true;
+    operation: string;
+    fast: Record<string, unknown>;
+    deep: Record<string, unknown>;
+    differences: Record<string, unknown>;
+  }> {
+    assertAllowedLocalAiOperation(opts.operation);
+    if (this.flags.LocalAIWritesEnabled) {
+      throw Object.assign(new Error('Writes must remain disabled'), {
+        status: 403,
+        code: 'writes_not_allowed',
+      });
+    }
+    const routing = this.getModelRouting();
+    const fastName = routing.profiles['Fast Operations Model'].modelName;
+    const deepName = routing.profiles['Deep Analysis Model'].modelName;
+    if (!fastName || !deepName) {
+      throw Object.assign(new Error('Fast and Deep models must both be configured for comparison'), {
+        status: 503,
+        code: 'models_incomplete',
+      });
+    }
+
+    const runOne = async (model: string, profile: string) => {
+      const { job } = this.createJob({
+        sourceRecordType: 'ModelCompare',
+        sourceRecordId: `${profile}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        requestedOperation: opts.operation,
+        idempotencyKey: `compare:${profile}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+        executorMode: 'ollama',
+        sourceContent: opts.sourceContent,
+        phase: 'phase4a',
+      });
+      // Force specific model by temporarily setting routing on job and calling executor path
+      job.modelRouting = {
+        requestedProfile: profile,
+        requestedModel: model,
+        actualProfile: profile,
+        actualModel: model,
+        usedFallback: false,
+        fallbackReason: null,
+      };
+      job.redactionApprovedForModel = true;
+      this.repo.upsertJob(job);
+
+      const started = Date.now();
+      const result = await runOllamaExecutor({
+        job,
+        sourceContent: job.redactedSourceContent || opts.sourceContent,
+        cfg: { ...this.ollamaConfig, model },
+        client: this.ollamaClient.withModel(model),
+        modelOverride: model,
+      });
+      const durationMs = Date.now() - started;
+      job.processingDurationMs = durationMs;
+      job.ollamaMetrics = { ...result.metrics, model };
+      job.validationStatus = result.ok ? 'Passed' : 'Failed';
+      job.confidence = result.confidence;
+      job.outputPayload = result.outputPayload;
+      job.outputSummary = result.outputSummary;
+      job.processingStatus = result.ok ? 'Draft Ready' : 'Validation Failed';
+      job.wroteAuthoritativeBusinessRecord = false;
+      job.modelRouting = {
+        requestedProfile: profile,
+        requestedModel: model,
+        actualProfile: profile,
+        actualModel: model,
+        usedFallback: false,
+        fallbackReason: null,
+      };
+      this.repo.upsertJob(job);
+      this.repo.appendAudit({
+        auditCorrelationId: job.auditCorrelationId,
+        aiJobId: job.aiJobId,
+        at: nowIso(),
+        actor: MANNY_OWNER,
+        action: 'model_compare_run',
+        detail: `local-only compare profile=${profile} model=${model} ok=${result.ok} durationMs=${durationMs}`,
+      });
+
+      const payload = (result.outputPayload || {}) as Record<string, unknown>;
+      return {
+        aiJobId: job.aiJobId,
+        model,
+        profile,
+        durationMs,
+        schemaValid: result.ok,
+        validationErrors: result.validationErrors,
+        confidence: result.confidence,
+        requiresMannyApproval: result.requiresMannyApproval,
+        executiveSummary: payload.executive_summary || result.outputSummary,
+        missingInformation: payload.missing_information || [],
+        risks: payload.risks || [],
+        recommendedNextAction: payload.recommended_next_action || null,
+        workValueTier: payload.work_value_tier || null,
+        estimatedReviewMinutes:
+          (payload.decision_package as { required_review_minutes?: number } | undefined)
+            ?.required_review_minutes ?? null,
+      };
+    };
+
+    const [fast, deep] = await Promise.all([
+      runOne(fastName, 'Fast Operations Model'),
+      runOne(deepName, 'Deep Analysis Model'),
+    ]);
+
+    return {
+      localOnly: true,
+      operation: opts.operation,
+      fast,
+      deep,
+      differences: {
+        durationDeltaMs: (fast.durationMs as number) - (deep.durationMs as number),
+        confidenceDelta:
+          typeof fast.confidence === 'number' && typeof deep.confidence === 'number'
+            ? fast.confidence - deep.confidence
+            : null,
+        schemaBothValid: Boolean(fast.schemaValid && deep.schemaValid),
+        recommendationDiffers:
+          String(fast.recommendedNextAction || '') !== String(deep.recommendedNextAction || ''),
+        missingInfoDiffers:
+          JSON.stringify(fast.missingInformation) !== JSON.stringify(deep.missingInformation),
+        riskDiffers: JSON.stringify(fast.risks) !== JSON.stringify(deep.risks),
+        note: 'Comparison is for local model-selection decisions only — not public',
+      },
+    };
   }
 
   approvalQueue() {

@@ -96,6 +96,7 @@ function tempService(fake = new FakeOllamaClient()) {
     ollamaClient: fake as unknown as OllamaClient,
     ollamaConfig: fake.getConfig(),
     defaultExecutorMode: 'ollama',
+    secretsFileEnv: {},
   });
   return { dir, service, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 }
