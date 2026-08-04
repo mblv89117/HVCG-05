@@ -5,7 +5,7 @@
 
 import {
   SYNTHETIC_AI_OUTPUT_BANNER,
-  assertPhase2AllowedOperation,
+  assertAllowedLocalAiOperation,
   buildLocalAiPrompt,
   extractJsonObject,
   mapPhase2ToLegacyDecisionPackage,
@@ -62,10 +62,12 @@ export async function runOllamaExecutor(opts: {
   sourceContent: string;
   cfg: OllamaExecutorConfig;
   client?: OllamaClient;
+  /** Resolved model name (routing); overrides client default when set. */
+  modelOverride?: string;
 }): Promise<OllamaExecutorResult> {
   const started = Date.now();
   const job = opts.job;
-  assertPhase2AllowedOperation(job.requestedOperation);
+  assertAllowedLocalAiOperation(job.requestedOperation);
 
   const redaction = redactText(opts.sourceContent, { maskFinancialValues: true });
   if (redaction.blocked) {
@@ -96,7 +98,9 @@ export async function runOllamaExecutor(opts: {
     sourceRecordId: job.sourceRecordId,
   });
 
-  const client = opts.client || new OllamaClient(opts.cfg);
+  const client = (opts.client || new OllamaClient(opts.cfg)).withModel(
+    opts.modelOverride || opts.cfg.model,
+  );
   const controller = new AbortController();
   activeControllers.set(job.aiJobId, controller);
 
@@ -105,6 +109,7 @@ export async function runOllamaExecutor(opts: {
       system: prompt.system,
       user: prompt.user,
       signal: controller.signal,
+      model: opts.modelOverride || opts.cfg.model,
     });
 
     let parsed: unknown;

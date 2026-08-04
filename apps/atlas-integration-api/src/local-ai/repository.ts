@@ -9,6 +9,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   AiAuditEvent,
   AiJobRecord,
+  ContentPackRecord,
   OperationsQueueItem,
 } from '@hvcg/atlas-integration-core';
 
@@ -17,6 +18,7 @@ export interface LocalAiStoreSnapshot {
   aiJobs: AiJobRecord[];
   auditEvents: AiAuditEvent[];
   operationsQueue: OperationsQueueItem[];
+  contentPacks: ContentPackRecord[];
   authoritativeWriteAttempts: Array<{
     id: string;
     at: string;
@@ -29,10 +31,11 @@ export interface LocalAiStoreSnapshot {
 
 function empty(): LocalAiStoreSnapshot {
   return {
-    version: 1,
+    version: 2,
     aiJobs: [],
     auditEvents: [],
     operationsQueue: [],
+    contentPacks: [],
     authoritativeWriteAttempts: [],
   };
 }
@@ -45,8 +48,8 @@ export class LocalAiRepository {
     mkdirSync(dataDir, { recursive: true });
     this.path = join(dataDir, 'local-ai-operations.json');
     if (existsSync(this.path)) {
-      const raw = JSON.parse(readFileSync(this.path, 'utf8')) as LocalAiStoreSnapshot;
-      this.data = { ...empty(), ...raw };
+      const raw = JSON.parse(readFileSync(this.path, 'utf8')) as Partial<LocalAiStoreSnapshot>;
+      this.data = { ...empty(), ...raw, contentPacks: raw.contentPacks || [] };
     } else {
       this.data = empty();
       this.persist();
@@ -132,6 +135,21 @@ export class LocalAiRepository {
     const i = this.data.operationsQueue.findIndex((x) => x.id === item.id);
     if (i >= 0) this.data.operationsQueue[i] = item;
     else this.data.operationsQueue.push(item);
+    this.persist();
+  }
+
+  listContentPacks(): ContentPackRecord[] {
+    return [...this.data.contentPacks];
+  }
+
+  getContentPack(packId: string): ContentPackRecord | undefined {
+    return this.data.contentPacks.find((p) => p.packId === packId);
+  }
+
+  upsertContentPack(pack: ContentPackRecord) {
+    const i = this.data.contentPacks.findIndex((p) => p.packId === pack.packId);
+    if (i >= 0) this.data.contentPacks[i] = pack;
+    else this.data.contentPacks.push(pack);
     this.persist();
   }
 }

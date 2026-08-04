@@ -8,10 +8,10 @@ import {
   isConfigurableOwner,
 } from './ownership.ts';
 import { WORK_VALUE_TIERS, type WorkValueTier } from './workValue.ts';
-import { isPhase2AllowedOperation } from './allowedOperations.ts';
+import { isPhase3AllowedOperation } from './phase3Operations.ts';
 import { SYNTHETIC_AI_OUTPUT_BANNER } from './decisionPackage.ts';
 
-export const OLLAMA_OUTPUT_SCHEMA_VERSION = '1.0.0-phase2';
+export const OLLAMA_OUTPUT_SCHEMA_VERSION = '1.0.0-phase3';
 export const MAX_OLLAMA_OUTPUT_CHARS = 50_000;
 
 export interface Phase2DecisionPackage {
@@ -141,7 +141,7 @@ export function validatePhase2OllamaOutput(
     if (asStringArray(value[arrKey]) === null) errors.push(`${arrKey} must be string[]`);
   }
 
-  if (value.operation && !isPhase2AllowedOperation(String(value.operation))) {
+  if (value.operation && !isPhase3AllowedOperation(String(value.operation))) {
     errors.push(`Unauthorized operation in output: ${value.operation}`);
   }
   if (opts?.expectedOperation && value.operation !== opts.expectedOperation) {

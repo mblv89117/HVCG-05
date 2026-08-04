@@ -621,6 +621,13 @@ export interface LocalAiJob {
   injectionWarnings?: string[];
   redactionSummary?: unknown;
   ollamaMetrics?: unknown;
+  modelRouting?: unknown;
+  timeProtection?: unknown;
+  contentPackId?: string | null;
+  meetingDraft?: unknown;
+  documentReviewPack?: unknown;
+  clientOperationsPack?: unknown;
+  phase?: string;
 }
 
 export interface LocalAiCommandCenter {
@@ -670,7 +677,14 @@ export async function fetchLocalAiJob(auth: AtlasHubAuthHeaders, aiJobId: string
 export async function postLocalAiMannyDecision(
   auth: AtlasHubAuthHeaders,
   aiJobId: string,
-  decision: 'Approved' | 'Rejected' | 'Returned for Revision',
+  decision:
+    | 'Approved'
+    | 'Rejected'
+    | 'Returned for Revision'
+    | 'Archived'
+    | 'No Action Required'
+    | 'Automation Candidate'
+    | 'Eliminate',
   actor = 'Manny',
 ) {
   const res = await fetch(
@@ -736,4 +750,92 @@ export async function retryLocalAiJob(auth: AtlasHubAuthHeaders, aiJobId: string
     body: JSON.stringify({ force }),
   });
   return parse(res) as Promise<{ job: LocalAiJob }>;
+}
+
+export async function fetchLocalAiModelRouting(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/model-routing`, { headers: headers(auth) });
+  return parse(res) as Promise<{ routing: Record<string, unknown> }>;
+}
+
+export async function fetchLocalAiPerformance(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/performance`, { headers: headers(auth) });
+  return parse(res) as Promise<{ dashboard: Record<string, unknown> }>;
+}
+
+export async function fetchLocalAiApprovalQueue(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/approval-queue`, { headers: headers(auth) });
+  return parse(res) as Promise<{ items: unknown[]; generatedAt: string }>;
+}
+
+export async function fetchLocalAiContentPacks(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/content-packs`, { headers: headers(auth) });
+  return parse(res) as Promise<{ packs: LocalAiContentPack[] }>;
+}
+
+export async function fetchLocalAiContentPack(auth: AtlasHubAuthHeaders, packId: string) {
+  const res = await fetch(`${base()}/api/local-ai/content-packs/${encodeURIComponent(packId)}`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ pack: LocalAiContentPack }>;
+}
+
+export async function createLocalAiContentPack(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/local-ai/content-packs`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ pack: LocalAiContentPack }>;
+}
+
+export async function decideLocalAiContentPackRedaction(
+  auth: AtlasHubAuthHeaders,
+  packId: string,
+  decision: string,
+  editedRedactedContent?: string,
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/content-packs/${encodeURIComponent(packId)}/redaction-decision`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify({ decision, editedRedactedContent }),
+    },
+  );
+  return parse(res) as Promise<{ pack: LocalAiContentPack }>;
+}
+
+export async function processLocalAiContentPack(
+  auth: AtlasHubAuthHeaders,
+  packId: string,
+  force = true,
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/content-packs/${encodeURIComponent(packId)}/process`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify({ force }),
+    },
+  );
+  return parse(res) as Promise<{ pack: LocalAiContentPack; job: LocalAiJob }>;
+}
+
+export interface LocalAiContentPack {
+  packId: string;
+  status: string;
+  clientLabel: string;
+  requestedOperation: string;
+  sensitivity: string;
+  redactionDecision: string;
+  estimatedChars: number;
+  estimatedTokensApprox: number;
+  redactedContent?: string;
+  originalContent?: string;
+  redactionPreview?: unknown;
+  injectionPreview?: unknown;
+  linkedAiJobId?: string | null;
 }

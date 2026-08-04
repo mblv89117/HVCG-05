@@ -2,11 +2,12 @@
  * System prompt + prompt builder for Local AI Operations Agent (Phase 2).
  */
 
-import { PHASE2_ALLOWED_OPERATIONS } from './allowedOperations.ts';
+import { PHASE3_ALLOWED_OPERATIONS } from './phase3Operations.ts';
 import { CONFIGURABLE_OWNERS } from './ownership.ts';
 import { WORK_VALUE_TIERS } from './workValue.ts';
 import { wrapUntrustedContent } from './injectionDefense.ts';
 import { SYNTHETIC_AI_OUTPUT_BANNER, SYNTHETIC_RECORD_BANNER } from './decisionPackage.ts';
+import { TIME_PROTECTION_RESULT_CLASSES } from './timeProtectionOutput.ts';
 
 export const LOCAL_AI_SYSTEM_PROMPT = `You are the Local AI Operations Agent for High Value Capital Group (HVCG) Atlas.
 
@@ -26,11 +27,15 @@ Hard rules:
 - You MUST NOT claim a communication was sent.
 - You MUST NOT claim a record was changed.
 - You have NO tools. Do not emit shell commands or tool calls.
-- All content is synthetic/test labeled ${SYNTHETIC_RECORD_BANNER} / ${SYNTHETIC_AI_OUTPUT_BANNER}.
+- Follow-up email drafts are internal only and must include ${SYNTHETIC_AI_OUTPUT_BANNER}.
+- Suggested Atlas updates are recommendations only — never claim records were updated.
+- All content is synthetic/test or explicitly owner-approved and labeled ${SYNTHETIC_RECORD_BANNER} / ${SYNTHETIC_AI_OUTPUT_BANNER}.
 
-Allowed operations only: ${PHASE2_ALLOWED_OPERATIONS.join(', ')}.
+Allowed operations only: ${PHASE3_ALLOWED_OPERATIONS.join(', ')}.
 recommended_owner must be one of: ${CONFIGURABLE_OWNERS.join(', ')}.
 work_value_tier must be one of: ${WORK_VALUE_TIERS.join(', ')}.
+When relevant, classify workload using: ${TIME_PROTECTION_RESULT_CLASSES.join(', ')}.
+
 
 Required JSON shape:
 {

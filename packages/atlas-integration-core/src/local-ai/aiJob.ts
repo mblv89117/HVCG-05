@@ -46,9 +46,23 @@ export const MANNY_DECISIONS = [
   'Approved',
   'Rejected',
   'Returned for Revision',
+  'Archived',
+  'No Action Required',
+  'Automation Candidate',
+  'Eliminate',
   'NotRequired',
 ] as const;
 export type MannyDecision = (typeof MANNY_DECISIONS)[number];
+
+/** Draft-acceptance decisions that complete the governance cycle without writes. */
+export const MANNY_TERMINAL_DRAFT_DECISIONS = [
+  'Approved',
+  'Rejected',
+  'Archived',
+  'No Action Required',
+  'Automation Candidate',
+  'Eliminate',
+] as const;
 
 export const MOCK_SCENARIOS = [
   'success',
@@ -115,6 +129,24 @@ export interface AiJobRecord {
     evalCount?: number;
     evalDurationNs?: number;
   } | null;
+  /** Phase 3 model routing audit */
+  modelRouting?: {
+    requestedProfile: string;
+    requestedModel: string | null;
+    actualProfile: string;
+    actualModel: string;
+    usedFallback: boolean;
+    fallbackReason: string | null;
+  } | null;
+  /** Phase 3 time-protection classification */
+  timeProtection?: import('./timeProtectionOutput.ts').MannyTimeProtectionOutput | null;
+  /** Linked controlled live-content pack */
+  contentPackId?: string | null;
+  phase?: 'phase1' | 'phase2' | 'phase3';
+  documentReviewPack?: unknown | null;
+  meetingDraft?: unknown | null;
+  clientOperationsPack?: unknown | null;
+  redactionApprovedForModel?: boolean;
 }
 
 export interface AiAuditEvent {
@@ -143,9 +175,14 @@ export interface CreateAiJobRequest {
   mockScenario?: MockScenario;
   assignedAiRole?: ConfigurableOwner;
   executorMode?: 'mock' | 'ollama';
+  contentPackId?: string;
+  modelProfileOverride?: string;
+  phase?: 'phase1' | 'phase2' | 'phase3';
+  /** When true, processJob refuses until redactionApprovedForModel. */
+  requireRedactionApproval?: boolean;
 }
 
-export const AI_JOB_SCHEMA_VERSION = '1.0.0-phase1';
+export const AI_JOB_SCHEMA_VERSION = '1.0.0-phase3';
 export const DEFAULT_MAX_RETRIES = 2;
 export const DEFAULT_JOB_TIMEOUT_MS = 5_000;
 export const DEFAULT_OLLAMA_JOB_TIMEOUT_MS = 120_000;

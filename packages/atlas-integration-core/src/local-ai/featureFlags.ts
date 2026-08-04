@@ -60,7 +60,9 @@ export function assertSafetyFlagsOff(flags: LocalAiFeatureFlags): {
     violations.push('LocalAIExternalMessagesEnabled must be false');
   }
   if (flags.LocalAIWritesEnabled) {
-    violations.push('LocalAIWritesEnabled must be false for Phase 2 read-only draft mode');
+    violations.push(
+      'LocalAIWritesEnabled must be false for Phase 3 controlled read-only draft mode',
+    );
   }
   return { ok: violations.length === 0, violations };
 }

@@ -172,11 +172,95 @@ export async function handleLocalAiRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/local-ai/model-routing') {
+      await requirePrincipal(req, cfg);
+      await localAi.refreshOllamaDiscovery(false);
+      send(res, 200, { routing: localAi.getModelRouting() }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/performance') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { dashboard: localAi.performanceDashboard() }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/approval-queue') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.approvalQueue(), origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/content-packs') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { packs: localAi.listContentPacks() }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/content-packs') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const pack = localAi.createContentPack({
+        sourceKind: body.sourceKind as never,
+        sourceConfirmed: Boolean(body.sourceConfirmed),
+        clientId: String(body.clientId || ''),
+        clientLabel: String(body.clientLabel || ''),
+        projectId: body.projectId ? String(body.projectId) : null,
+        projectLabel: body.projectLabel ? String(body.projectLabel) : null,
+        sensitivity: body.sensitivity as never,
+        requestedOperation: String(body.requestedOperation || ''),
+        originalContent: String(body.originalContent || ''),
+        modelProfileOverride: body.modelProfileOverride as never,
+        notes: body.notes ? String(body.notes) : undefined,
+        ownerApprovedLiveContent: Boolean(body.ownerApprovedLiveContent),
+      });
+      send(res, 201, { pack }, origin);
+      return true;
+    }
+
+    const packMatch = path.match(/^\/api\/local-ai\/content-packs\/([^/]+)$/);
+    if (method === 'GET' && packMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { pack: localAi.getContentPack(packMatch[1]) }, origin);
+      return true;
+    }
+
+    const packRedactionMatch = path.match(
+      /^\/api\/local-ai\/content-packs\/([^/]+)\/redaction-decision$/,
+    );
+    if (method === 'POST' && packRedactionMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const pack = localAi.decideContentPackRedaction(
+        packRedactionMatch[1],
+        String(body.decision || '') as never,
+        {
+          editedRedactedContent: body.editedRedactedContent
+            ? String(body.editedRedactedContent)
+            : undefined,
+        },
+      );
+      send(res, 200, { pack }, origin);
+      return true;
+    }
+
+    const packProcessMatch = path.match(/^\/api\/local-ai\/content-packs\/([^/]+)\/process$/);
+    if (method === 'POST' && packProcessMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const result = await localAi.processContentPack(packProcessMatch[1], {
+        force: Boolean(body.force),
+        processNow: body.processNow !== false,
+      });
+      send(res, 200, result, origin);
+      return true;
+    }
+
     const decideMatch = path.match(/^\/api\/local-ai\/jobs\/([^/]+)\/manny-decision$/);
     if (method === 'POST' && decideMatch) {
       const principal = await requirePrincipal(req, cfg);
       const body = await readJson(req);
-      const decision = String(body.decision || '') as 'Approved' | 'Rejected' | 'Returned for Revision';
+      const decision = String(body.decision || '') as never;
       const actor = String(body.actor || principal.roles[0] || 'Manny');
       send(res, 200, { job: localAi.mannyDecide(decideMatch[1], decision, actor) }, origin);
       return true;

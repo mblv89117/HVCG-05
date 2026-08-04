@@ -10,30 +10,37 @@ import {
   DEFAULT_MAX_RETRIES,
   LOCAL_AI_OWNER,
   MANNY_OWNER,
+  MANNY_TERMINAL_DRAFT_DECISIONS,
   SYNTHETIC_AI_OUTPUT_BANNER,
   SYNTHETIC_RECORD_BANNER,
   TIME_PROTECTION_POLICY_VERSION,
+  assertAllowedLocalAiOperation,
   assertConfigurableOwner,
-  assertPhase2AllowedOperation,
   assertSafetyFlagsOff,
   blockExternalCommunication,
+  buildPerformanceDashboard,
   containsForbiddenPersonName,
   evaluateAiActionAttempt,
   evaluateTimeProtection,
   isLocalAiRuntimeAllowed,
-  isPhase2AllowedOperation,
+  isPhase3AllowedOperation,
   loadLocalAiFeatureFlags,
   normalizeAssignee,
   redactText,
   requiresMannyApproval,
   type AiJobRecord,
+  type ContentPackRecord,
   type CreateAiJobRequest,
+  type CreateContentPackRequest,
   type CreateOperationsQueueItemRequest,
   type LocalAiFeatureFlags,
   type MannyDecision,
   type MockScenario,
+  type ModelProfile,
+  type ModelRoutingConfig,
   type OllamaExecutorConfig,
   type OperationsQueueItem,
+  type RedactionDecision,
   type TimeProtectionInput,
   type TimeProtectionResult,
 } from '@hvcg/atlas-integration-core';
@@ -49,6 +56,14 @@ import {
   writeDiscoverySnapshot,
   writeLocalAiEnvExample,
 } from './ollamaConfigLoader.ts';
+import {
+  applyRedactionDecision,
+  assertContentPackReadyForModel,
+  createContentPackRecord,
+  enrichJobOutputForPhase3,
+  loadModelRoutingFromEnv,
+  resolveJobModel,
+} from './phase3Workflow.ts';
 
 export interface LocalAiServiceDeps {
   repo: LocalAiRepository;
@@ -83,17 +98,29 @@ export class LocalAiService {
   private ollamaClient: OllamaClient;
   private defaultExecutorMode: 'mock' | 'ollama';
   private lastDiscovery: Awaited<ReturnType<typeof discoverOllama>> | null = null;
+  private modelRouting: ModelRoutingConfig;
+  private secretsFileEnv: Record<string, string>;
 
   constructor(deps: LocalAiServiceDeps) {
     this.repo = deps.repo;
     this.flags = deps.flags ?? loadLocalAiFeatureFlags();
     this.killSwitch = Boolean(deps.killSwitch);
-    const fileEnv = loadLocalAiSecretsFile([findRepoRootFromApi(), process.cwd()]);
-    this.ollamaConfig = deps.ollamaConfig ?? resolveOllamaConfig(process.env, fileEnv);
+    this.secretsFileEnv = loadLocalAiSecretsFile([findRepoRootFromApi(), process.cwd()]);
+    this.ollamaConfig = deps.ollamaConfig ?? resolveOllamaConfig(process.env, this.secretsFileEnv);
     this.ollamaClient = deps.ollamaClient ?? new OllamaClient(this.ollamaConfig);
-    const envMode = (process.env.LOCAL_AI_EXECUTOR || fileEnv.LOCAL_AI_EXECUTOR || 'mock').toLowerCase();
+    const envMode = (
+      process.env.LOCAL_AI_EXECUTOR ||
+      this.secretsFileEnv.LOCAL_AI_EXECUTOR ||
+      'mock'
+    ).toLowerCase();
     this.defaultExecutorMode =
       deps.defaultExecutorMode || (envMode === 'ollama' ? 'ollama' : 'mock');
+    this.modelRouting = loadModelRoutingFromEnv(
+      this.ollamaConfig.model,
+      process.env,
+      this.secretsFileEnv,
+      [],
+    );
   }
 
   getFlags(): LocalAiFeatureFlags {
@@ -123,9 +150,33 @@ export class LocalAiService {
         localDevelopmentOnly: true,
         businessRecordWrites: false,
         externalCommunications: false,
+        modelRouting: this.getModelRouting(),
       },
-      phase: 'phase2-ollama-read-only-drafts',
+      phase: 'phase3-controlled-live-content-read-only',
       syntheticBanner: SYNTHETIC_AI_OUTPUT_BANNER,
+    };
+  }
+
+  getModelRouting(): ModelRoutingConfig & {
+    installedModels: string[];
+    fasterModelAvailable: boolean;
+    ownerActionRequired: string | null;
+  } {
+    const installed = (this.lastDiscovery?.models || []).map((m) => m.name);
+    const routing = loadModelRoutingFromEnv(
+      this.ollamaConfig.model || this.lastDiscovery?.selectedModel || '',
+      process.env,
+      this.secretsFileEnv,
+      installed,
+    );
+    this.modelRouting = routing;
+    return {
+      ...routing,
+      installedModels: installed,
+      fasterModelAvailable: routing.fasterModelAvailable,
+      ownerActionRequired: routing.fasterModelAvailable
+        ? null
+        : `No distinct Fast Operations model installed. Recommended (do not auto-pull): ${routing.recommendedFasterModels.join(', ')}. Authorize and install one, then set OLLAMA_FAST_MODEL.`,
     };
   }
 
@@ -136,6 +187,12 @@ export class LocalAiService {
       this.ollamaClient = this.ollamaClient.withModel(snap.selectedModel);
     }
     this.lastDiscovery = snap;
+    this.modelRouting = loadModelRoutingFromEnv(
+      this.ollamaConfig.model || snap.selectedModel || '',
+      process.env,
+      this.secretsFileEnv,
+      snap.models.map((m) => m.name),
+    );
     if (writeLocalFiles) {
       const root = findRepoRootFromApi();
       writeDiscoverySnapshot(root, snap);
@@ -174,10 +231,10 @@ export class LocalAiService {
 
     const resolvedMode: 'mock' | 'ollama' =
       req.executorMode ||
-      (isPhase2AllowedOperation(req.requestedOperation) ? this.defaultExecutorMode : 'mock');
+      (isPhase3AllowedOperation(req.requestedOperation) ? this.defaultExecutorMode : 'mock');
 
     if (resolvedMode === 'ollama') {
-      assertPhase2AllowedOperation(req.requestedOperation);
+      assertAllowedLocalAiOperation(req.requestedOperation);
     }
 
     const gated = requiresMannyApproval(req.requestedOperation);
@@ -254,7 +311,33 @@ export class LocalAiService {
       cancelled: false,
       processingDurationMs: null,
       ollamaMetrics: null,
+      modelRouting: null,
+      timeProtection: null,
+      contentPackId: req.contentPackId || null,
+      phase: req.phase || (req.contentPackId ? 'phase3' : resolvedMode === 'ollama' ? 'phase2' : 'phase1'),
+      documentReviewPack: null,
+      meetingDraft: null,
+      clientOperationsPack: null,
+      redactionApprovedForModel: req.requireRedactionApproval
+        ? false
+        : Boolean(req.contentPackId) === false
+          ? true
+          : false,
     };
+
+    if (req.contentPackId) {
+      const pack = this.repo.getContentPack(req.contentPackId);
+      if (!pack) {
+        throw Object.assign(new Error('Content pack not found'), {
+          status: 404,
+          code: 'pack_not_found',
+        });
+      }
+      job.redactedSourceContent = pack.redactedContent;
+      job.redactionApprovedForModel = pack.redactionDecision === 'Approve Redacted Content';
+      job.auditCorrelationId = pack.auditCorrelationId;
+      job.injectionWarnings = pack.injectionPreview?.warnings || [];
+    }
 
     this.repo.upsertJob(job);
     this.repo.appendAudit({
@@ -336,12 +419,21 @@ export class LocalAiService {
       });
     }
 
-    // Writes must remain false in Phase 2
+    // Writes must remain false in Phase 3
     if (this.flags.LocalAIWritesEnabled) {
       throw Object.assign(
-        new Error('LocalAIWritesEnabled must remain false in Phase 2'),
+        new Error('LocalAIWritesEnabled must remain false in Phase 3'),
         { status: 403, code: 'writes_not_allowed' },
       );
+    }
+
+    if (job.contentPackId || job.redactionApprovedForModel === false) {
+      if (!job.redactionApprovedForModel) {
+        throw Object.assign(
+          new Error('Explicit redaction approval required before model processing'),
+          { status: 409, code: 'redaction_not_approved' },
+        );
+      }
     }
 
     if (job.processingStatus === 'Pending') {
@@ -417,15 +509,41 @@ export class LocalAiService {
       current.redactedSourceContent ||
       `${SYNTHETIC_RECORD_BANNER}\nSynthetic placeholder content for ${current.sourceRecordType}/${current.sourceRecordId}`;
 
+    const installed = (this.lastDiscovery?.models || []).map((m) => m.name);
+    const routing = this.getModelRouting();
+    const pack = current.contentPackId
+      ? this.repo.getContentPack(current.contentPackId)
+      : undefined;
+    const resolution = resolveJobModel(
+      current.requestedOperation,
+      routing,
+      (pack?.modelProfileOverride as ModelProfile | null) || undefined,
+      installed.length ? installed : undefined,
+    );
+    current.modelRouting = resolution;
+    this.repo.upsertJob(current);
+    this.repo.appendAudit({
+      auditCorrelationId: current.auditCorrelationId,
+      aiJobId: current.aiJobId,
+      at: nowIso(),
+      actor: LOCAL_AI_OWNER,
+      action: resolution.usedFallback ? 'model_fallback_used' : 'model_selected',
+      detail: `requested=${resolution.requestedProfile}/${resolution.requestedModel || 'none'}; actual=${resolution.actualProfile}/${resolution.actualModel}; reason=${resolution.fallbackReason || 'none'}`,
+      previousStatus: 'In Progress',
+      nextStatus: 'In Progress',
+    });
+
     const result = await runOllamaExecutor({
       job: current,
       sourceContent: source,
-      cfg: this.ollamaConfig,
-      client: this.ollamaClient,
+      cfg: { ...this.ollamaConfig, model: resolution.actualModel },
+      client: this.ollamaClient.withModel(resolution.actualModel),
+      modelOverride: resolution.actualModel,
     });
 
     current = this.requireJob(aiJobId);
     current.processingDurationMs = result.durationMs;
+    current.modelRouting = resolution;
     current.redactionSummary = {
       policyVersion: result.redaction.policyVersion,
       fieldsRedacted: result.redaction.fieldsRedacted,
@@ -437,7 +555,10 @@ export class LocalAiService {
     current.redactionStatus =
       result.redaction.redactionCount > 0 ? 'Redacted' : current.redactionStatus;
     current.injectionWarnings = result.injection.warnings;
-    current.ollamaMetrics = result.metrics;
+    current.ollamaMetrics = {
+      ...result.metrics,
+      model: resolution.actualModel,
+    };
     current.wroteAuthoritativeBusinessRecord = false;
 
     if (result.cancelled) {
@@ -505,6 +626,30 @@ export class LocalAiService {
       current.recommendedNextAction = 'Low confidence — Manny review required';
     }
 
+    const enriched = enrichJobOutputForPhase3({
+      operation: current.requestedOperation,
+      originalText: pack?.originalContent || source,
+      redactedText: source,
+      clientLabel: pack?.clientLabel || current.sourceRecordId,
+      projectLabel: pack?.projectLabel,
+      sensitivity: pack?.sensitivity || 'Internal',
+      injectionWarnings: current.injectionWarnings || [],
+      outputPayload: result.outputPayload,
+      requiresMannyApproval: current.requiresMannyApproval,
+      confidence: current.confidence,
+    });
+    current.documentReviewPack = enriched.documentReviewPack;
+    current.meetingDraft = enriched.meetingDraft;
+    current.clientOperationsPack = enriched.clientOperationsPack;
+    current.timeProtection = enriched.timeProtection;
+    current.phase = current.phase || 'phase3';
+
+    if (pack) {
+      pack.status = 'Completed';
+      pack.updatedAt = nowIso();
+      this.repo.upsertContentPack(pack);
+    }
+
     this.repo.upsertJob(current);
     this.repo.appendAudit({
       auditCorrelationId: current.auditCorrelationId,
@@ -512,7 +657,7 @@ export class LocalAiService {
       at: nowIso(),
       actor: LOCAL_AI_OWNER,
       action: 'ollama_output_validated',
-      detail: `${SYNTHETIC_AI_OUTPUT_BANNER}; status=${current.processingStatus}; durationMs=${result.durationMs}`,
+      detail: `${SYNTHETIC_AI_OUTPUT_BANNER}; status=${current.processingStatus}; durationMs=${result.durationMs}; model=${resolution.actualModel}; fallback=${resolution.usedFallback}`,
       previousStatus: 'In Progress',
       nextStatus: current.processingStatus,
     });
@@ -691,7 +836,7 @@ export class LocalAiService {
 
   mannyDecide(
     aiJobId: string,
-    decision: Extract<MannyDecision, 'Approved' | 'Rejected' | 'Returned for Revision'>,
+    decision: MannyDecision,
     actor: string,
   ): AiJobRecord {
     scanForbidden(actor);
@@ -712,6 +857,22 @@ export class LocalAiService {
       );
     }
 
+    const allowed: MannyDecision[] = [
+      'Approved',
+      'Rejected',
+      'Returned for Revision',
+      'Archived',
+      'No Action Required',
+      'Automation Candidate',
+      'Eliminate',
+    ];
+    if (!allowed.includes(decision)) {
+      throw Object.assign(new Error(`Unsupported Manny decision: ${decision}`), {
+        status: 400,
+        code: 'invalid_decision',
+      });
+    }
+
     const job = this.requireJob(aiJobId);
     if (job.processingStatus !== 'Waiting on Manny' && job.processingStatus !== 'Draft Ready') {
       throw Object.assign(new Error(`Job not awaiting Manny decision (status=${job.processingStatus})`), {
@@ -724,32 +885,59 @@ export class LocalAiService {
     job.mannyDecision = decision;
     job.mannyDecisionDate = nowIso();
 
-    if (decision === 'Approved') {
-      job.processingStatus = 'Manny Approved';
-      // Still do NOT write authoritative business records in Phase 1
-      job.wroteAuthoritativeBusinessRecord = false;
-      if (!this.flags.LocalAIWritesEnabled) {
-        this.repo.appendAudit({
-          auditCorrelationId: job.auditCorrelationId,
-          aiJobId: job.aiJobId,
-          at: nowIso(),
-          actor: MANNY_OWNER,
-          action: 'writes_still_disabled',
-          detail: 'Manny approved draft; LocalAIWritesEnabled=false — no business record mutation',
-        });
-      }
-      // Mark completed as governance cycle complete without business write
-      job.processingStatus = 'Completed';
-      job.completedDate = nowIso();
-      job.recommendedNextAction = 'Approved — authoritative apply deferred (writes disabled)';
-    } else if (decision === 'Rejected') {
-      job.processingStatus = 'Manny Rejected';
-      job.completedDate = nowIso();
-      job.recommendedNextAction = 'Rejected — no business record changes';
-    } else {
+    if (decision === 'Returned for Revision') {
       job.processingStatus = 'Returned for Revision';
       job.completedDate = null;
-      job.recommendedNextAction = 'Revise mock output and re-queue';
+      job.recommendedNextAction = 'Revise draft and re-queue';
+    } else if ((MANNY_TERMINAL_DRAFT_DECISIONS as readonly string[]).includes(decision)) {
+      if (decision === 'Approved') {
+        job.processingStatus = 'Manny Approved';
+        job.wroteAuthoritativeBusinessRecord = false;
+        if (!this.flags.LocalAIWritesEnabled) {
+          this.repo.appendAudit({
+            auditCorrelationId: job.auditCorrelationId,
+            aiJobId: job.aiJobId,
+            at: nowIso(),
+            actor: MANNY_OWNER,
+            action: 'writes_still_disabled',
+            detail:
+              'Manny approved draft for later use; LocalAIWritesEnabled=false — no business record mutation; no external action',
+          });
+        }
+        job.processingStatus = 'Completed';
+        job.recommendedNextAction =
+          'Approved draft accepted for later use — authoritative apply deferred (writes disabled)';
+      } else if (decision === 'Rejected') {
+        job.processingStatus = 'Manny Rejected';
+        job.recommendedNextAction = 'Rejected — no business record changes';
+      } else if (decision === 'Archived') {
+        job.processingStatus = 'Completed';
+        job.recommendedNextAction = 'Archived draft — no action';
+      } else if (decision === 'No Action Required') {
+        job.processingStatus = 'Completed';
+        job.recommendedNextAction = 'No action required';
+      } else if (decision === 'Automation Candidate') {
+        job.processingStatus = 'Completed';
+        job.recommendedNextAction = 'Marked automation candidate — no auto-run';
+        if (job.timeProtection) {
+          job.timeProtection = {
+            ...job.timeProtection,
+            classification: 'Automation Candidate',
+          };
+        }
+      } else if (decision === 'Eliminate') {
+        job.processingStatus = 'Completed';
+        job.recommendedNextAction = 'Marked eliminate — work should not exist';
+        if (job.timeProtection) {
+          job.timeProtection = {
+            ...job.timeProtection,
+            classification: 'Eliminate',
+            shouldExist: false,
+          };
+        }
+      }
+      job.completedDate = nowIso();
+      job.wroteAuthoritativeBusinessRecord = false;
     }
 
     this.repo.upsertJob(job);
@@ -759,11 +947,177 @@ export class LocalAiService {
       at: nowIso(),
       actor: MANNY_OWNER,
       action: `manny_${decision.toLowerCase().replace(/\s+/g, '_')}`,
-      detail: `Manny decision: ${decision}`,
+      detail: `Manny decision: ${decision} (draft acceptance only — no writes/external actions)`,
       previousStatus: prev,
       nextStatus: job.processingStatus,
     });
     return job;
+  }
+
+  createContentPack(req: CreateContentPackRequest): ContentPackRecord {
+    scanForbidden(
+      req.clientId,
+      req.clientLabel,
+      req.projectId || undefined,
+      req.projectLabel || undefined,
+      req.requestedOperation,
+      req.originalContent,
+      req.notes,
+    );
+    const pack = createContentPackRecord(req);
+    this.repo.upsertContentPack(pack);
+    this.repo.appendAudit({
+      auditCorrelationId: pack.auditCorrelationId,
+      aiJobId: pack.linkedAiJobId || pack.packId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: 'content_pack_created',
+      detail: `Pack ${pack.packId} source=${pack.sourceKind} op=${pack.requestedOperation}; awaiting redaction approval; model not called`,
+      nextStatus: undefined,
+    });
+    return this.sanitizePackForResponse(pack);
+  }
+
+  listContentPacks() {
+    return this.repo.listContentPacks().map((p) => this.sanitizePackForResponse(p));
+  }
+
+  getContentPack(packId: string) {
+    const pack = this.repo.getContentPack(packId);
+    if (!pack) {
+      throw Object.assign(new Error('Content pack not found'), {
+        status: 404,
+        code: 'pack_not_found',
+      });
+    }
+    return this.sanitizePackForResponse(pack, true);
+  }
+
+  decideContentPackRedaction(
+    packId: string,
+    decision: RedactionDecision,
+    opts?: { editedRedactedContent?: string },
+  ): ContentPackRecord {
+    const pack = this.repo.getContentPack(packId);
+    if (!pack) {
+      throw Object.assign(new Error('Content pack not found'), {
+        status: 404,
+        code: 'pack_not_found',
+      });
+    }
+    const next = applyRedactionDecision(pack, decision, opts);
+    this.repo.upsertContentPack(next);
+    this.repo.appendAudit({
+      auditCorrelationId: next.auditCorrelationId,
+      aiJobId: next.linkedAiJobId || next.packId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action:
+        decision === 'Approve Redacted Content'
+          ? 'redaction_approved'
+          : decision === 'Cancel Job'
+            ? 'content_pack_cancelled'
+            : 'redaction_edited',
+      detail: `Redaction decision: ${decision}`,
+    });
+    return this.sanitizePackForResponse(next, true);
+  }
+
+  /**
+   * After redaction approval: create linked AI job and optionally process.
+   */
+  async processContentPack(
+    packId: string,
+    opts?: { force?: boolean; processNow?: boolean },
+  ): Promise<{ pack: ContentPackRecord; job: AiJobRecord }> {
+    const pack = this.repo.getContentPack(packId);
+    if (!pack) {
+      throw Object.assign(new Error('Content pack not found'), {
+        status: 404,
+        code: 'pack_not_found',
+      });
+    }
+    assertContentPackReadyForModel(pack);
+
+    let job: AiJobRecord;
+    if (pack.linkedAiJobId) {
+      job = this.requireJob(pack.linkedAiJobId);
+      job.redactionApprovedForModel = true;
+      job.redactedSourceContent = pack.redactedContent;
+      this.repo.upsertJob(job);
+    } else {
+      const created = this.createJob({
+        sourceRecordType: 'ContentPack',
+        sourceRecordId: pack.packId,
+        requestedOperation: pack.requestedOperation,
+        requestedBy: MANNY_OWNER,
+        idempotencyKey: `pack:${pack.packId}`,
+        executorMode: 'ollama',
+        sourceContent: pack.redactedContent,
+        contentPackId: pack.packId,
+        phase: 'phase3',
+        requireRedactionApproval: false,
+      });
+      job = created.job;
+      job.redactionApprovedForModel = true;
+      job.contentPackId = pack.packId;
+      job.auditCorrelationId = pack.auditCorrelationId;
+      this.repo.upsertJob(job);
+      pack.linkedAiJobId = job.aiJobId;
+      pack.status = 'Processing';
+      pack.updatedAt = nowIso();
+      this.repo.upsertContentPack(pack);
+    }
+
+    if (opts?.processNow !== false) {
+      job = await this.processJob(job.aiJobId, { force: opts?.force });
+    }
+    const latest = this.repo.getContentPack(packId)!;
+    return { pack: this.sanitizePackForResponse(latest), job };
+  }
+
+  performanceDashboard() {
+    return buildPerformanceDashboard(this.repo.listJobs(), this.repo.listAudit());
+  }
+
+  approvalQueue() {
+    const jobs = this.repo.listJobs().filter(
+      (j) =>
+        j.processingStatus === 'Waiting on Manny' || j.processingStatus === 'Draft Ready',
+    );
+    return {
+      generatedAt: nowIso(),
+      items: jobs.map((j) => ({
+        aiJobId: j.aiJobId,
+        operation: j.requestedOperation,
+        status: j.processingStatus,
+        confidence: j.confidence,
+        timeProtection: j.timeProtection,
+        modelRouting: j.modelRouting,
+        requiresMannyApproval: j.requiresMannyApproval,
+        contentPackId: j.contentPackId,
+        outputSummary: j.outputSummary,
+        allowedDecisions: [
+          'Approved',
+          'Rejected',
+          'Returned for Revision',
+          'Archived',
+          'No Action Required',
+          'Automation Candidate',
+          'Eliminate',
+        ],
+        note: 'Approval accepts draft for later use only — no writes or external actions',
+      })),
+    };
+  }
+
+  /** Never return full original content in list views; detail may include for Manny review. */
+  private sanitizePackForResponse(pack: ContentPackRecord, includeOriginal = false): ContentPackRecord {
+    if (includeOriginal) return { ...pack };
+    return {
+      ...pack,
+      originalContent: `[local-only ${pack.originalContent.length} chars — open detail for Manny review]`,
+    };
   }
 
   attemptProhibitedAction(aiJobId: string, action: string) {
