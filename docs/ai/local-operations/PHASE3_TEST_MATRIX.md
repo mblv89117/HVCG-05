@@ -9,10 +9,15 @@
 | Document review + injection + sensitive | PASS |
 | Post-meeting / client ops / classify | PASS |
 | Approve / Reject / Return / No Action / Eliminate | PASS |
+| Edit Redactions / Archive / Automation Candidate | PASS |
 | Cancel before process | PASS |
+| Cancel in-flight (Queued) | PASS |
 | Oversized input | PASS |
+| Malformed empty content | PASS |
+| Source confirmation + live-content owner flag | PASS |
 | Safety flags remain false | PASS |
 | Performance dashboard | PASS |
-| Phase 1+2 regression | PASS (48 API tests total) |
+| Phase 1+2 regression | PASS (50 API tests total) |
 
-**Elite build:** PASS (`tsc -b && vite build`)
+**Command:** `npm run test -w @hvcg/atlas-integration-api`  
+**Result:** 50 pass / 0 fail

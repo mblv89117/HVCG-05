@@ -1,10 +1,19 @@
-# Document / Meeting / Client Pack Schemas
+# Phase 3 Pack Schemas
 
-SoR:
+## Document review pack (`DocumentReviewPack`)
 
-- `documentReviewPack.ts`
-- `meetingWorkflow.ts`
-- `clientOperationsPack.ts`
+sourceDocumentTitle · documentType · client · project · sensitivityLevel · extractedTextPreview · redactedTextPreview · detectedDates · detectedAmounts · detectedObligations · detectedDeadlines · missingSignatures · missingPages · duplicationIndicators · injectionWarnings · requestedAiOperation · `draftOnly: true`
 
-All drafts set `draftOnly: true` / `authoritativeRecordsUpdated: false` / `atlasRecordsUpdated: false`.
-Follow-up email drafts are internal and must remain unsent.
+## Meeting — before (`MeetingBriefDraft`)
+
+meetingObjective · backgroundSummary · currentProjects · openCommitments · missingDocuments · risks · decisionsRequired · recommendedTalkingPoints · agenda · atlasUpdatesSuggested · `draftOnly: true`
+
+## Meeting — after (`MeetingOutcomesDraft`)
+
+summary · decisions · tasks · owners · deadlines · clientCommitments · hvcgCommitments · unresolvedIssues · followUpEmailDraft (internal, never sent) · suggestedAtlasUpdates · `atlasRecordsUpdated: false` · `draftOnly: true`
+
+## Client operations pack (`ClientOperationsPack`)
+
+executiveSummary · activeProjects · missingDocuments · overdueCommitments · currentRisks · clientDependencies · hvcgDependencies · decisionsRequired · recommendedNextActions · tasksAiCouldHandle · tasksRequiringManny · tasksRecommendedForAutomation · tasksRecommendedForElimination · `draftOnly: true` · `authoritativeRecordsUpdated: false`
+
+Code: `packages/atlas-integration-core/src/local-ai/{documentReviewPack,meetingWorkflow,clientOperationsPack}.ts`

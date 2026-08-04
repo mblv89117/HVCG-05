@@ -53,6 +53,7 @@ export function AiOperationsQueuePage() {
   const [selectedPack, setSelectedPack] = useState<LocalAiContentPack | null>(null);
   const [selected, setSelected] = useState<{ job: LocalAiJob; audit: unknown[] } | null>(null);
   const [paste, setPaste] = useState('');
+  const [editedRedaction, setEditedRedaction] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -160,6 +161,7 @@ export function AiOperationsQueuePage() {
       });
       const detail = await fetchLocalAiContentPack(hubAuth, pack.packId);
       setSelectedPack(detail.pack);
+      setEditedRedaction(detail.pack.redactedContent || '');
       setPaste('');
       await refresh();
     } catch (e) {
@@ -177,8 +179,14 @@ export function AiOperationsQueuePage() {
         hubAuth,
         selectedPack.packId,
         decision,
+        decision === 'Edit Redactions'
+          ? editedRedaction || selectedPack.redactedContent
+          : undefined,
       );
       setSelectedPack(pack);
+      if (decision === 'Edit Redactions') {
+        setEditedRedaction(pack.redactedContent || '');
+      }
       if (decision === 'Approve Redacted Content') {
         const result = await processLocalAiContentPack(hubAuth, pack.packId, true);
         setSelected({ job: result.job, audit: [] });
@@ -299,9 +307,18 @@ export function AiOperationsQueuePage() {
               Proposed redacted preview:{'\n'}
               {(selectedPack.redactedContent || '').slice(0, 800)}
             </Caption1>
+            <Textarea
+              value={editedRedaction || selectedPack.redactedContent || ''}
+              onChange={(_, d) => setEditedRedaction(d.value)}
+              placeholder="Edit redacted content before Approve"
+              style={{ width: '100%', minHeight: 80, marginTop: 8 }}
+            />
             <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
               <Button disabled={busy} onClick={() => void packDecision('Approve Redacted Content')}>
                 Approve Redacted Content
+              </Button>
+              <Button disabled={busy} onClick={() => void packDecision('Edit Redactions')}>
+                Edit Redactions
               </Button>
               <Button disabled={busy} onClick={() => void packDecision('Cancel Job')}>
                 Cancel Job

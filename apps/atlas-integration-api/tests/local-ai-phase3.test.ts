@@ -354,6 +354,90 @@ describe('phase3 content packs and workflows', () => {
     cleanup();
   });
 
+  it('supports Edit Redactions, Archive, Automation Candidate, and cancel in-flight', async () => {
+    const { service, cleanup } = tempService();
+    const pack = service.createContentPack({
+      sourceKind: 'pasted_text',
+      sourceConfirmed: true,
+      clientId: 'edit-1',
+      clientLabel: 'Synthetic Client',
+      sensitivity: 'Confidential',
+      requestedOperation: 'summarize_text',
+      originalContent: SYNTHETIC_FIXTURES.agreement_summary.content,
+    });
+    const edited = service.decideContentPackRedaction(pack.packId, 'Edit Redactions', {
+      editedRedactedContent: 'TEST — SYNTHETIC DATA\n[REDACTED MANUAL EDIT]\nTEST — DO NOT CONTACT',
+    });
+    assert.equal(edited.status, 'AwaitingRedactionApproval');
+    assert.match(edited.redactedContent, /REDACTED MANUAL EDIT/);
+
+    service.decideContentPackRedaction(pack.packId, 'Approve Redacted Content');
+    const { job } = await service.processContentPack(pack.packId, { force: true });
+    const archived = service.mannyDecide(job.aiJobId, 'Archived', 'Manny');
+    assert.equal(archived.mannyDecision, 'Archived');
+    assert.equal(archived.wroteAuthoritativeBusinessRecord, false);
+
+    const pack2 = service.createContentPack({
+      sourceKind: 'pasted_text',
+      sourceConfirmed: true,
+      clientId: 'auto-1',
+      clientLabel: 'Synthetic Client',
+      sensitivity: 'Internal',
+      requestedOperation: 'classify_work_value',
+      originalContent: SYNTHETIC_FIXTURES.task_value.content,
+    });
+    service.decideContentPackRedaction(pack2.packId, 'Approve Redacted Content');
+    const { job: job2 } = await service.processContentPack(pack2.packId, { force: true });
+    const auto = service.mannyDecide(job2.aiJobId, 'Automation Candidate', 'Manny');
+    assert.equal(auto.mannyDecision, 'Automation Candidate');
+    assert.equal(auto.wroteAuthoritativeBusinessRecord, false);
+
+    // Cancel while Queued / before model completes path
+    const pack3 = service.createContentPack({
+      sourceKind: 'pasted_text',
+      sourceConfirmed: true,
+      clientId: 'cancel-1',
+      clientLabel: 'Synthetic Client',
+      sensitivity: 'Internal',
+      requestedOperation: 'summarize_text',
+      originalContent: SYNTHETIC_FIXTURES.post_meeting.content,
+    });
+    service.decideContentPackRedaction(pack3.packId, 'Approve Redacted Content');
+    const { job: job3 } = await service.processContentPack(pack3.packId, { force: true });
+    // Job already completed in fake executor — cancel is no-op for Completed; create queued job via createJob path
+    job3.processingStatus = 'Queued';
+    service['repo'].upsertJob(job3);
+    const cancelled = service.cancelJob(job3.aiJobId);
+    assert.equal(cancelled.processingStatus, 'Cancelled');
+    cleanup();
+  });
+
+  it('handles malformed empty content and financial sensitivity markers', () => {
+    const { service, cleanup } = tempService();
+    assert.throws(() =>
+      service.createContentPack({
+        sourceKind: 'uploaded_document',
+        sourceConfirmed: true,
+        clientId: 'm',
+        clientLabel: 'M',
+        sensitivity: 'Highly Confidential',
+        requestedOperation: 'prepare_document_review_pack',
+        originalContent: '   ',
+      }),
+    );
+    const pack = service.createContentPack({
+      sourceKind: 'uploaded_document',
+      sourceConfirmed: true,
+      clientId: 'fin',
+      clientLabel: 'SolidPath Concrete',
+      sensitivity: 'Highly Confidential',
+      requestedOperation: 'prepare_document_review_pack',
+      originalContent: SYNTHETIC_FIXTURES.agreement_summary.content,
+    });
+    assert.ok((pack.redactionPreview?.redactionCount || 0) >= 1);
+    cleanup();
+  });
+
   it('blocks process without source confirmation and live content without owner flag', () => {
     const { service, cleanup } = tempService();
     assert.throws(() =>
