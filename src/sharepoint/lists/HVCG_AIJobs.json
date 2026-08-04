@@ -327,6 +327,183 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "SourceRecordType",
+      "displayName": "SourceRecordType",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Phase 1 Local AI Operations \u2014 additive (not deployed)"
+    },
+    {
+      "internalName": "SourceRecordId",
+      "displayName": "SourceRecordId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Phase 1 Local AI Operations \u2014 additive (not deployed)"
+    },
+    {
+      "internalName": "RequestedOperation",
+      "displayName": "RequestedOperation",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Phase 1 Local AI Operations \u2014 additive (not deployed)"
+    },
+    {
+      "internalName": "AssignedAiRole",
+      "displayName": "AssignedAiRole",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Role-neutral AI assignee",
+      "choices": [
+        "Manny",
+        "Local AI Operations Agent",
+        "Unassigned Operations",
+        "Future Human Operator",
+        "Automation"
+      ]
+    },
+    {
+      "internalName": "WorkValueTier",
+      "displayName": "WorkValueTier",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Work-value classification tier",
+      "choices": [
+        "Tier 1 \u2014 Manny Only",
+        "Tier 2 \u2014 Advanced Delegate",
+        "Tier 3 \u2014 Administrative Delegate",
+        "Tier 4 \u2014 Automate",
+        "Tier 5 \u2014 Eliminate",
+        "Unclassified"
+      ],
+      "default": "Unclassified"
+    },
+    {
+      "internalName": "RedactionStatus",
+      "displayName": "RedactionStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "choices": [
+        "NotRequired",
+        "Pending",
+        "Redacted",
+        "Failed"
+      ],
+      "default": "NotRequired"
+    },
+    {
+      "internalName": "ValidationStatus",
+      "displayName": "ValidationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "NotStarted",
+        "Passed",
+        "Failed",
+        "Skipped"
+      ],
+      "default": "NotStarted"
+    },
+    {
+      "internalName": "OutputPayload",
+      "displayName": "OutputPayload",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Governed AI draft payload \u2014 never authoritative business record"
+    },
+    {
+      "internalName": "OutputSummary",
+      "displayName": "OutputSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RecommendedNextAction",
+      "displayName": "RecommendedNextAction",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresMannyApproval",
+      "displayName": "RequiresMannyApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "default": true
+    },
+    {
+      "internalName": "MannyDecision",
+      "displayName": "MannyDecision",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Returned for Revision",
+        "NotRequired"
+      ],
+      "default": "Pending"
+    },
+    {
+      "internalName": "MannyDecisionDate",
+      "displayName": "MannyDecisionDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ErrorType",
+      "displayName": "ErrorType",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AuditCorrelationId",
+      "displayName": "AuditCorrelationId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ProcessingStatusExtended",
+      "displayName": "ProcessingStatusExtended",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Extended Phase 1 statuses (hub store is SoR until SharePoint deploy approved)",
+      "choices": [
+        "Pending",
+        "Queued",
+        "In Progress",
+        "Draft Ready",
+        "Validation Failed",
+        "Processing Failed",
+        "Waiting on Manny",
+        "Manny Approved",
+        "Manny Rejected",
+        "Returned for Revision",
+        "Completed",
+        "Cancelled"
+      ]
     }
   ]
 }

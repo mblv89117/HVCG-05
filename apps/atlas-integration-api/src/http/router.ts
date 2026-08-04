@@ -18,12 +18,15 @@ import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
+import type { LocalAiService } from '../local-ai/service.ts';
+import { handleLocalAiRoutes } from '../local-ai/http.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
   repo: IntegrationRepository;
   app: AppRegistry;
   pm: PmRepository;
+  localAi: LocalAiService;
 }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
@@ -118,6 +121,19 @@ export async function handleRequest(
   const method = req.method || 'GET';
 
   try {
+    if (path.startsWith('/api/local-ai')) {
+      const handled = await handleLocalAiRoutes({
+        cfg,
+        localAi: deps.localAi,
+        req,
+        res,
+        method,
+        path,
+        origin,
+      });
+      if (handled) return;
+    }
+
     if (path.startsWith('/api/pm')) {
       const handled = await handlePmRoutes({
         cfg,

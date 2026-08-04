@@ -22,6 +22,7 @@ import { useAtlasRole } from '../security/RoleProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
 import { ATLAS_BUILD } from '../buildInfo';
 import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
+import { MannyCommandCenterPanel } from './local-ai/MannyCommandCenterPanel';
 
 function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'success' {
   if (severity === 'Critical' || severity === 'High') return 'danger';
@@ -409,6 +410,10 @@ export function ExecutiveDashboardPage() {
             Calendar and meeting sync remain Microsoft Graph–gated; use Tasks for dated priorities.
           </Caption1>
         </AtlasCard>
+
+        <GridSpan span="full">
+          <MannyCommandCenterPanel />
+        </GridSpan>
 
         <GridSpan span="full">
           <ModuleKnowledgeRail module="Executive" user={knowledgeUser} title="Executive knowledge context" />

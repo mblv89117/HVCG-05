@@ -649,8 +649,14 @@ export function AiInsightsPage() {
           <Text>
             Every insight must show source records, generated timestamp, confidence/verification status,
             responsible reviewer, and accept / dismiss / convert-to-task actions once live AI connectors are
-            enabled.
+            enabled. Phase 1 Local AI Operations uses a mock worker only — open the AI Operations Queue for
+            governed jobs.
           </Text>
+          <Link to="/ai-operations">
+            <Button size="small" appearance="secondary" style={{ marginTop: 12 }}>
+              Open AI Operations Queue
+            </Button>
+          </Link>
         </AtlasCard>
         <AtlasCard title="Approval workflow">
           <Text size={300}>
@@ -667,7 +673,7 @@ export function AiInsightsPage() {
           <AtlasCard title="Connected insight surfaces">
             <EmptyState
               title="No live AI insights connected"
-              description="Connect approved AI pipeline to Dataverse insight entities. Until then, use Command Center (⌘J) and labeled recommendations on Home / client workspaces."
+              description="Ollama is not connected in Phase 1. Use AI Operations Queue for synthetic governed jobs labeled TEST — SYNTHETIC AI OUTPUT — DO NOT SEND."
             />
           </AtlasCard>
         </GridSpan>

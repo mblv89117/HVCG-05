@@ -595,3 +595,90 @@ export async function fetchAudit(auth: AtlasHubAuthHeaders, limit = 50) {
   const res = await fetch(`${base()}/api/audit?limit=${limit}`, { headers: headers(auth) });
   return parse(res);
 }
+
+/* —— Local AI Operations (Phase 1 mock control plane) —— */
+
+export interface LocalAiJob {
+  aiJobId: string;
+  sourceRecordType: string;
+  sourceRecordId: string;
+  requestedOperation: string;
+  workValueTier: string;
+  processingStatus: string;
+  validationStatus: string;
+  confidence: number | null;
+  outputSummary: string | null;
+  requiresMannyApproval: boolean;
+  mannyDecision: string;
+  retryCount: number;
+  recommendedNextAction: string | null;
+  auditCorrelationId: string;
+  wroteAuthoritativeBusinessRecord: boolean;
+  syntheticBanner: string;
+}
+
+export interface LocalAiCommandCenter {
+  generatedAt: string;
+  featureFlags: Record<string, boolean>;
+  evaIntakeEnabled: boolean;
+  evaSubmissionsAwaitingReview: unknown[];
+  aiDraftsAwaitingApproval: LocalAiJob[];
+  highValueClientDecisions: LocalAiJob[];
+  capitalDecisions: LocalAiJob[];
+  pricingAndScopeApprovals: LocalAiJob[];
+  externalCommunicationsAwaitingApproval: LocalAiJob[];
+  majorRisksAndBlockers: LocalAiJob[];
+  criticalDeadlines: unknown[];
+  failedAiJobs: LocalAiJob[];
+  lowConfidenceAiOutputs: LocalAiJob[];
+  workImproperlyRoutedToManny: unknown[];
+  estimatedMannyTimeSavedMinutes: number;
+  draftReadyCount: number;
+  operationsOpen: number;
+  syntheticNotice: string;
+}
+
+export async function fetchLocalAiFlags(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/flags`, { headers: headers(auth) });
+  return parse(res) as Promise<{ flags: Record<string, boolean>; safety: Record<string, unknown> }>;
+}
+
+export async function fetchLocalAiCommandCenter(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/command-center`, { headers: headers(auth) });
+  return parse(res) as Promise<{ commandCenter: LocalAiCommandCenter }>;
+}
+
+export async function fetchLocalAiJobs(auth: AtlasHubAuthHeaders, status?: string) {
+  const q = status ? `?status=${encodeURIComponent(status)}` : '';
+  const res = await fetch(`${base()}/api/local-ai/jobs${q}`, { headers: headers(auth) });
+  return parse(res) as Promise<{ jobs: LocalAiJob[] }>;
+}
+
+export async function fetchLocalAiJob(auth: AtlasHubAuthHeaders, aiJobId: string) {
+  const res = await fetch(`${base()}/api/local-ai/jobs/${encodeURIComponent(aiJobId)}`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ job: LocalAiJob; audit: unknown[] }>;
+}
+
+export async function postLocalAiMannyDecision(
+  auth: AtlasHubAuthHeaders,
+  aiJobId: string,
+  decision: 'Approved' | 'Rejected' | 'Returned for Revision',
+  actor = 'Manny',
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/jobs/${encodeURIComponent(aiJobId)}/manny-decision`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify({ decision, actor }),
+    },
+  );
+  return parse(res) as Promise<{ job: LocalAiJob }>;
+}
+
+export async function fetchLocalAiOperationsQueue(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/operations-queue`, { headers: headers(auth) });
+  return parse(res) as Promise<{ items: unknown[] }>;
+}

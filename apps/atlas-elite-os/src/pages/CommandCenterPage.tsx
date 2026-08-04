@@ -37,6 +37,7 @@ import {
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import type { AtlasHubAuthHeaders } from '../integrations/hub/api';
 import { QuickCaptureBar } from '../components/QuickCaptureBar';
+import { MannyCommandCenterPanel } from './local-ai/MannyCommandCenterPanel';
 
 
 function priorityTone(p: string): 'danger' | 'warning' | 'info' | 'success' | 'neutral' {
@@ -446,6 +447,10 @@ export function CommandCenterPage() {
           </ResponsiveGrid>
         </div>
       ) : null}
+
+      <div style={{ marginTop: 16 }}>
+        <MannyCommandCenterPanel />
+      </div>
     </ModuleScaffold>
   );
 }
