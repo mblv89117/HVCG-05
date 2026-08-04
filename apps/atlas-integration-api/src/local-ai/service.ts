@@ -1,6 +1,7 @@
 /**
- * Local AI Operations service — control plane for governed mock AI jobs.
- * Feature flags default Off. No Ollama. No authoritative business writes.
+ * Local AI Operations service — governed control plane.
+ * Phase 1: mock worker. Phase 2: optional loopback Ollama executor (read-only drafts).
+ * Feature flags default Off. No authoritative business writes. No external messages.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -13,14 +14,17 @@ import {
   SYNTHETIC_RECORD_BANNER,
   TIME_PROTECTION_POLICY_VERSION,
   assertConfigurableOwner,
+  assertPhase2AllowedOperation,
   assertSafetyFlagsOff,
   blockExternalCommunication,
   containsForbiddenPersonName,
   evaluateAiActionAttempt,
   evaluateTimeProtection,
   isLocalAiRuntimeAllowed,
+  isPhase2AllowedOperation,
   loadLocalAiFeatureFlags,
   normalizeAssignee,
+  redactText,
   requiresMannyApproval,
   type AiJobRecord,
   type CreateAiJobRequest,
@@ -28,18 +32,32 @@ import {
   type LocalAiFeatureFlags,
   type MannyDecision,
   type MockScenario,
+  type OllamaExecutorConfig,
   type OperationsQueueItem,
   type TimeProtectionInput,
   type TimeProtectionResult,
 } from '@hvcg/atlas-integration-core';
 import { LocalAiRepository } from './repository.ts';
 import { runMockWorker } from './mockWorker.ts';
+import { OllamaClient } from './ollamaClient.ts';
+import { cancelOllamaJob, runOllamaExecutor } from './ollamaExecutor.ts';
+import {
+  discoverOllama,
+  findRepoRootFromApi,
+  loadLocalAiSecretsFile,
+  resolveOllamaConfig,
+  writeDiscoverySnapshot,
+  writeLocalAiEnvExample,
+} from './ollamaConfigLoader.ts';
 
 export interface LocalAiServiceDeps {
   repo: LocalAiRepository;
   flags?: LocalAiFeatureFlags;
   /** Test hook: force kill switch */
   killSwitch?: boolean;
+  ollamaConfig?: OllamaExecutorConfig;
+  ollamaClient?: OllamaClient;
+  defaultExecutorMode?: 'mock' | 'ollama';
 }
 
 function nowIso() {
@@ -61,18 +79,32 @@ export class LocalAiService {
   private repo: LocalAiRepository;
   private flags: LocalAiFeatureFlags;
   private killSwitch: boolean;
+  private ollamaConfig: OllamaExecutorConfig;
+  private ollamaClient: OllamaClient;
+  private defaultExecutorMode: 'mock' | 'ollama';
+  private lastDiscovery: Awaited<ReturnType<typeof discoverOllama>> | null = null;
 
   constructor(deps: LocalAiServiceDeps) {
     this.repo = deps.repo;
     this.flags = deps.flags ?? loadLocalAiFeatureFlags();
     this.killSwitch = Boolean(deps.killSwitch);
+    const fileEnv = loadLocalAiSecretsFile([findRepoRootFromApi(), process.cwd()]);
+    this.ollamaConfig = deps.ollamaConfig ?? resolveOllamaConfig(process.env, fileEnv);
+    this.ollamaClient = deps.ollamaClient ?? new OllamaClient(this.ollamaConfig);
+    const envMode = (process.env.LOCAL_AI_EXECUTOR || fileEnv.LOCAL_AI_EXECUTOR || 'mock').toLowerCase();
+    this.defaultExecutorMode =
+      deps.defaultExecutorMode || (envMode === 'ollama' ? 'ollama' : 'mock');
   }
 
   getFlags(): LocalAiFeatureFlags {
     return { ...this.flags };
   }
 
-  /** Phase 1 safety snapshot for health/diagnostics */
+  getOllamaConfig(): OllamaExecutorConfig {
+    return { ...this.ollamaConfig };
+  }
+
+  /** Safety + executor diagnostics */
   safetyStatus() {
     const safety = assertSafetyFlagsOff(this.flags);
     return {
@@ -80,10 +112,36 @@ export class LocalAiService {
       killSwitch: this.killSwitch || !this.flags.LocalAIEnabled,
       safetyFlagsOk: safety.ok,
       safetyViolations: safety.violations,
-      ollamaConnected: false,
-      phase: 'phase1-mock-only',
+      ollamaConnected: Boolean(this.lastDiscovery?.healthy),
+      ollama: this.lastDiscovery,
+      executor: {
+        modeDefault: this.defaultExecutorMode,
+        baseUrl: this.ollamaConfig.baseUrl,
+        model: this.ollamaConfig.model || this.lastDiscovery?.selectedModel || null,
+        timeoutMs: this.ollamaConfig.timeoutMs,
+        loopbackOnly: !this.ollamaConfig.allowNonLoopback,
+        localDevelopmentOnly: true,
+        businessRecordWrites: false,
+        externalCommunications: false,
+      },
+      phase: 'phase2-ollama-read-only-drafts',
       syntheticBanner: SYNTHETIC_AI_OUTPUT_BANNER,
     };
+  }
+
+  async refreshOllamaDiscovery(writeLocalFiles = false) {
+    const snap = await discoverOllama(this.ollamaConfig);
+    if (!this.ollamaConfig.model && snap.selectedModel) {
+      this.ollamaConfig = { ...this.ollamaConfig, model: snap.selectedModel };
+      this.ollamaClient = this.ollamaClient.withModel(snap.selectedModel);
+    }
+    this.lastDiscovery = snap;
+    if (writeLocalFiles) {
+      const root = findRepoRootFromApi();
+      writeDiscoverySnapshot(root, snap);
+      if (snap.selectedModel) writeLocalAiEnvExample(root, snap.selectedModel);
+    }
+    return snap;
   }
 
   evaluatePolicy(input: TimeProtectionInput): TimeProtectionResult {
@@ -99,6 +157,7 @@ export class LocalAiService {
       req.requestedBy,
       req.inputPayloadReference,
       req.idempotencyKey,
+      req.sourceContent,
     );
 
     if (!req.idempotencyKey?.trim()) {
@@ -113,11 +172,45 @@ export class LocalAiService {
       return { job: existing, duplicate: true };
     }
 
+    const resolvedMode: 'mock' | 'ollama' =
+      req.executorMode ||
+      (isPhase2AllowedOperation(req.requestedOperation) ? this.defaultExecutorMode : 'mock');
+
+    if (resolvedMode === 'ollama') {
+      assertPhase2AllowedOperation(req.requestedOperation);
+    }
+
     const gated = requiresMannyApproval(req.requestedOperation);
-    const requiresManny = req.requiresMannyApproval ?? gated;
+    const requiresManny = req.requiresMannyApproval ?? (gated || resolvedMode === 'ollama');
     const correlationId = randomUUID();
     const created = nowIso();
     const scenario: MockScenario = req.mockScenario || 'success';
+
+    let redactedSourceContent: string | null = null;
+    let redactionSummary: AiJobRecord['redactionSummary'] = null;
+    let redactionStatus: AiJobRecord['redactionStatus'] = 'NotRequired';
+    let injectionWarnings: string[] = [];
+
+    if (req.sourceContent) {
+      const redaction = redactText(req.sourceContent, { maskFinancialValues: true });
+      if (redaction.blocked) {
+        throw Object.assign(new Error(redaction.blockReason || 'Redaction blocked'), {
+          status: 400,
+          code: 'redaction_blocked',
+        });
+      }
+      redactedSourceContent = redaction.redactedText;
+      redactionSummary = {
+        policyVersion: redaction.policyVersion,
+        fieldsRedacted: redaction.fieldsRedacted,
+        redactionCount: redaction.redactionCount,
+        manualReviewRequired: redaction.manualReviewRequired,
+        blocked: redaction.blocked,
+        blockReason: redaction.blockReason,
+      };
+      redactionStatus = redaction.redactionCount > 0 ? 'Redacted' : 'NotRequired';
+      // Do not retain unredacted sourceContent anywhere
+    }
 
     const job: AiJobRecord = {
       aiJobId: randomUUID(),
@@ -127,8 +220,12 @@ export class LocalAiService {
       requestedBy: req.requestedBy || MANNY_OWNER,
       assignedAiRole: req.assignedAiRole || LOCAL_AI_OWNER,
       workValueTier: req.workValueTier || 'Unclassified',
-      inputPayloadReference: req.inputPayloadReference || `synthetic://${req.sourceRecordType}/${req.sourceRecordId}`,
-      redactionStatus: 'NotRequired',
+      inputPayloadReference:
+        req.inputPayloadReference || `synthetic://${req.sourceRecordType}/${req.sourceRecordId}`,
+      redactedSourceContent,
+      redactionStatus,
+      redactionSummary,
+      injectionWarnings,
       processingStatus: 'Pending',
       validationStatus: 'NotStarted',
       confidence: null,
@@ -148,11 +245,15 @@ export class LocalAiService {
       auditCorrelationId: correlationId,
       idempotencyKey: req.idempotencyKey,
       mockScenario: scenario,
+      executorMode: resolvedMode,
       decisionPackage: null,
       syntheticBanner: SYNTHETIC_AI_OUTPUT_BANNER,
       wroteAuthoritativeBusinessRecord: false,
       policyVersion: TIME_PROTECTION_POLICY_VERSION,
       killSwitchEngaged: false,
+      cancelled: false,
+      processingDurationMs: null,
+      ollamaMetrics: null,
     };
 
     this.repo.upsertJob(job);
@@ -162,7 +263,7 @@ export class LocalAiService {
       at: created,
       actor: String(job.requestedBy),
       action: 'job_created',
-      detail: `Created job for ${job.requestedOperation} (${SYNTHETIC_RECORD_BANNER})`,
+      detail: `Created job for ${job.requestedOperation} mode=${resolvedMode} (${SYNTHETIC_RECORD_BANNER})`,
       nextStatus: 'Pending',
     });
 
@@ -210,10 +311,10 @@ export class LocalAiService {
   }
 
   /**
-   * Process a queued job with the mock worker.
-   * Does not require LocalAIEnabled for explicit test harness calls when force=true.
+   * Process a queued job with mock or Ollama executor.
+   * force=true bypasses LocalAIEnabled for local tests only.
    */
-  processJob(aiJobId: string, opts?: { force?: boolean }): AiJobRecord {
+  async processJob(aiJobId: string, opts?: { force?: boolean }): Promise<AiJobRecord> {
     const job = this.requireJob(aiJobId);
 
     if (this.killSwitch || (!opts?.force && !isLocalAiRuntimeAllowed(this.flags))) {
@@ -235,6 +336,14 @@ export class LocalAiService {
       });
     }
 
+    // Writes must remain false in Phase 2
+    if (this.flags.LocalAIWritesEnabled) {
+      throw Object.assign(
+        new Error('LocalAIWritesEnabled must remain false in Phase 2'),
+        { status: 403, code: 'writes_not_allowed' },
+      );
+    }
+
     if (job.processingStatus === 'Pending') {
       this.queueJob(aiJobId);
     } else if (
@@ -251,26 +360,32 @@ export class LocalAiService {
     if (current.processingStatus === 'Returned for Revision') {
       current = this.queueJob(aiJobId);
     }
+    if (current.cancelled) {
+      throw Object.assign(new Error('Job was cancelled'), { status: 409, code: 'cancelled' });
+    }
 
     const prev = current.processingStatus;
     current.processingStatus = 'In Progress';
     current.startedDate = current.startedDate || nowIso();
     this.repo.upsertJob(current);
+
+    const useOllama = current.executorMode === 'ollama';
     this.repo.appendAudit({
       auditCorrelationId: current.auditCorrelationId,
       aiJobId: current.aiJobId,
       at: nowIso(),
       actor: LOCAL_AI_OWNER,
-      action: 'mock_worker_started',
-      detail: `Mock scenario=${current.mockScenario}; Ollama not called`,
+      action: useOllama ? 'ollama_executor_started' : 'mock_worker_started',
+      detail: useOllama
+        ? `Ollama model=${this.ollamaConfig.model || 'unset'}; loopback only; prompt content not logged`
+        : `Mock scenario=${current.mockScenario}; Ollama not called`,
       previousStatus: prev,
       nextStatus: 'In Progress',
     });
 
-    // Attempt prohibited autonomous completion is always blocked & audited
     const gate = evaluateAiActionAttempt(current.requestedOperation, {
       mannyApproved: false,
-      writesEnabled: this.flags.LocalAIWritesEnabled,
+      writesEnabled: false,
     });
     if (!gate.allowed) {
       this.repo.recordBlockedAuthoritativeWrite({
@@ -290,6 +405,122 @@ export class LocalAiService {
       });
     }
 
+    if (useOllama) {
+      return this.processWithOllama(aiJobId);
+    }
+    return this.processWithMock(aiJobId);
+  }
+
+  private async processWithOllama(aiJobId: string): Promise<AiJobRecord> {
+    let current = this.requireJob(aiJobId);
+    const source =
+      current.redactedSourceContent ||
+      `${SYNTHETIC_RECORD_BANNER}\nSynthetic placeholder content for ${current.sourceRecordType}/${current.sourceRecordId}`;
+
+    const result = await runOllamaExecutor({
+      job: current,
+      sourceContent: source,
+      cfg: this.ollamaConfig,
+      client: this.ollamaClient,
+    });
+
+    current = this.requireJob(aiJobId);
+    current.processingDurationMs = result.durationMs;
+    current.redactionSummary = {
+      policyVersion: result.redaction.policyVersion,
+      fieldsRedacted: result.redaction.fieldsRedacted,
+      redactionCount: result.redaction.redactionCount,
+      manualReviewRequired: result.redaction.manualReviewRequired,
+      blocked: result.redaction.blocked,
+      blockReason: result.redaction.blockReason,
+    };
+    current.redactionStatus =
+      result.redaction.redactionCount > 0 ? 'Redacted' : current.redactionStatus;
+    current.injectionWarnings = result.injection.warnings;
+    current.ollamaMetrics = result.metrics;
+    current.wroteAuthoritativeBusinessRecord = false;
+
+    if (result.cancelled) {
+      current.processingStatus = 'Cancelled';
+      current.cancelled = true;
+      current.errorType = 'Cancelled';
+      current.errorDetail = result.errorDetail;
+      current.completedDate = nowIso();
+      this.repo.upsertJob(current);
+      this.repo.appendAudit({
+        auditCorrelationId: current.auditCorrelationId,
+        aiJobId: current.aiJobId,
+        at: nowIso(),
+        actor: LOCAL_AI_OWNER,
+        action: 'job_cancelled',
+        detail: result.errorDetail || 'cancelled',
+        previousStatus: 'In Progress',
+        nextStatus: 'Cancelled',
+      });
+      return current;
+    }
+
+    if (!result.ok) {
+      current.processingStatus =
+        result.errorType === 'ValidationFailed' || result.errorType === 'MalformedResponse'
+          ? 'Validation Failed'
+          : 'Processing Failed';
+      current.validationStatus =
+        current.processingStatus === 'Validation Failed' ? 'Failed' : 'NotStarted';
+      current.errorType = result.errorType;
+      current.errorDetail = result.errorDetail;
+      current.outputSummary = result.outputSummary;
+      current.completedDate = nowIso();
+      this.repo.upsertJob(current);
+      this.repo.appendAudit({
+        auditCorrelationId: current.auditCorrelationId,
+        aiJobId: current.aiJobId,
+        at: nowIso(),
+        actor: LOCAL_AI_OWNER,
+        action: 'ollama_executor_failed',
+        detail: `${result.errorType}: ${result.errorDetail}`,
+        previousStatus: 'In Progress',
+        nextStatus: current.processingStatus,
+      });
+      return current;
+    }
+
+    current.validationStatus = 'Passed';
+    current.outputPayload = result.outputPayload;
+    current.outputSummary = result.outputSummary;
+    current.decisionPackage = result.decisionPackage;
+    current.confidence = result.confidence;
+    current.errorType = null;
+    current.errorDetail = null;
+    current.requiresMannyApproval = result.requiresMannyApproval;
+    current.mannyDecision = result.requiresMannyApproval ? 'Pending' : current.mannyDecision;
+    current.recommendedNextAction = result.requiresMannyApproval
+      ? 'Waiting on Manny approval'
+      : 'Review draft';
+    current.processingStatus = result.requiresMannyApproval ? 'Waiting on Manny' : 'Draft Ready';
+    if ((result.confidence ?? 1) < 0.5) {
+      current.processingStatus = 'Waiting on Manny';
+      current.requiresMannyApproval = true;
+      current.mannyDecision = 'Pending';
+      current.recommendedNextAction = 'Low confidence — Manny review required';
+    }
+
+    this.repo.upsertJob(current);
+    this.repo.appendAudit({
+      auditCorrelationId: current.auditCorrelationId,
+      aiJobId: current.aiJobId,
+      at: nowIso(),
+      actor: LOCAL_AI_OWNER,
+      action: 'ollama_output_validated',
+      detail: `${SYNTHETIC_AI_OUTPUT_BANNER}; status=${current.processingStatus}; durationMs=${result.durationMs}`,
+      previousStatus: 'In Progress',
+      nextStatus: current.processingStatus,
+    });
+    return current;
+  }
+
+  private processWithMock(aiJobId: string): AiJobRecord {
+    let current = this.requireJob(aiJobId);
     const result = runMockWorker(current);
     current = this.requireJob(aiJobId);
 
@@ -354,7 +585,6 @@ export class LocalAiService {
       return current;
     }
 
-    // Validated synthetic output — never write business records
     current.validationStatus = 'Passed';
     current.outputPayload = result.outputPayload;
     current.outputSummary = result.outputSummary;
@@ -374,7 +604,6 @@ export class LocalAiService {
       current.processingStatus = 'Draft Ready';
     }
 
-    // Low confidence still waits on Manny when gated; otherwise Draft Ready with flag in summary
     if (result.lowConfidence && !current.requiresMannyApproval) {
       current.processingStatus = 'Waiting on Manny';
       current.requiresMannyApproval = true;
@@ -397,7 +626,32 @@ export class LocalAiService {
     return current;
   }
 
-  retryJob(aiJobId: string, opts?: { force?: boolean }): AiJobRecord {
+  cancelJob(aiJobId: string): AiJobRecord {
+    const job = this.requireJob(aiJobId);
+    cancelOllamaJob(aiJobId);
+    if (job.processingStatus === 'In Progress' || job.processingStatus === 'Queued') {
+      const prev = job.processingStatus;
+      job.cancelled = true;
+      job.processingStatus = 'Cancelled';
+      job.completedDate = nowIso();
+      job.errorType = 'Cancelled';
+      job.errorDetail = 'Cancelled by operator';
+      this.repo.upsertJob(job);
+      this.repo.appendAudit({
+        auditCorrelationId: job.auditCorrelationId,
+        aiJobId: job.aiJobId,
+        at: nowIso(),
+        actor: MANNY_OWNER,
+        action: 'job_cancelled',
+        detail: 'Operator cancelled job',
+        previousStatus: prev,
+        nextStatus: 'Cancelled',
+      });
+    }
+    return this.requireJob(aiJobId);
+  }
+
+  async retryJob(aiJobId: string, opts?: { force?: boolean }): Promise<AiJobRecord> {
     const job = this.requireJob(aiJobId);
     if (
       job.processingStatus !== 'Processing Failed' &&
@@ -420,6 +674,7 @@ export class LocalAiService {
     job.errorDetail = null;
     job.validationStatus = 'NotStarted';
     job.completedDate = null;
+    job.cancelled = false;
     this.repo.upsertJob(job);
     this.repo.appendAudit({
       auditCorrelationId: job.auditCorrelationId,

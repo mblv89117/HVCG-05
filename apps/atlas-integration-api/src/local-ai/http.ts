@@ -115,6 +115,8 @@ export async function handleLocalAiRoutes(opts: {
         idempotencyKey: String(body.idempotencyKey || ''),
         mockScenario: body.mockScenario as never,
         assignedAiRole: body.assignedAiRole as never,
+        sourceContent: body.sourceContent ? String(body.sourceContent) : undefined,
+        executorMode: body.executorMode as 'mock' | 'ollama' | undefined,
       });
       send(res, result.duplicate ? 200 : 201, result, origin);
       return true;
@@ -132,7 +134,7 @@ export async function handleLocalAiRoutes(opts: {
       await requirePrincipal(req, cfg);
       const body = await readJson(req);
       const force = Boolean(body.force);
-      send(res, 200, { job: localAi.processJob(processMatch[1], { force }) }, origin);
+      send(res, 200, { job: await localAi.processJob(processMatch[1], { force }) }, origin);
       return true;
     }
 
@@ -140,7 +142,33 @@ export async function handleLocalAiRoutes(opts: {
     if (method === 'POST' && retryMatch) {
       await requirePrincipal(req, cfg);
       const body = await readJson(req);
-      send(res, 200, { job: localAi.retryJob(retryMatch[1], { force: Boolean(body.force) }) }, origin);
+      send(
+        res,
+        200,
+        { job: await localAi.retryJob(retryMatch[1], { force: Boolean(body.force) }) },
+        origin,
+      );
+      return true;
+    }
+
+    const cancelMatch = path.match(/^\/api\/local-ai\/jobs\/([^/]+)\/cancel$/);
+    if (method === 'POST' && cancelMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { job: localAi.cancelJob(cancelMatch[1]) }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/ollama/discovery') {
+      await requirePrincipal(req, cfg);
+      const snap = await localAi.refreshOllamaDiscovery(false);
+      send(res, 200, { discovery: snap, executor: localAi.safetyStatus().executor }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/fixtures') {
+      await requirePrincipal(req, cfg);
+      const { SYNTHETIC_FIXTURES } = await import('./syntheticFixtures.ts');
+      send(res, 200, { fixtures: SYNTHETIC_FIXTURES }, origin);
       return true;
     }
 

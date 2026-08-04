@@ -1,5 +1,5 @@
 /**
- * AI Operations Queue — Phase 1 governed job view (mock worker only).
+ * AI Operations Queue — Phase 2 local Ollama read-only draft mode.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -17,12 +17,18 @@ import { ModuleScaffold } from '../shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../../microsoft/auth/AuthProvider';
 import { useHubAuth } from '../../integrations/hub/useHubAuth';
 import {
+  cancelLocalAiJob,
   fetchLocalAiFlags,
   fetchLocalAiJob,
   fetchLocalAiJobs,
+  fetchLocalAiOllamaDiscovery,
   postLocalAiMannyDecision,
+  processLocalAiJob,
+  retryLocalAiJob,
   type LocalAiJob,
 } from '../../integrations/hub/api';
+
+type Discovery = Awaited<ReturnType<typeof fetchLocalAiOllamaDiscovery>>;
 
 export function AiOperationsQueuePage() {
   const { account } = useMicrosoftAuth();
@@ -30,6 +36,7 @@ export function AiOperationsQueuePage() {
   const signedIn = Boolean(account && hubAuth.userId);
   const [jobs, setJobs] = useState<LocalAiJob[]>([]);
   const [flags, setFlags] = useState<Record<string, boolean> | null>(null);
+  const [discovery, setDiscovery] = useState<Discovery | null>(null);
   const [selected, setSelected] = useState<{ job: LocalAiJob; audit: unknown[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,9 +50,14 @@ export function AiOperationsQueuePage() {
     setLoading(true);
     setError(null);
     try {
-      const [j, f] = await Promise.all([fetchLocalAiJobs(hubAuth), fetchLocalAiFlags(hubAuth)]);
+      const [j, f, d] = await Promise.all([
+        fetchLocalAiJobs(hubAuth),
+        fetchLocalAiFlags(hubAuth),
+        fetchLocalAiOllamaDiscovery(hubAuth).catch(() => null),
+      ]);
       setJobs(j.jobs);
       setFlags(f.flags);
+      setDiscovery(d);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -84,19 +96,66 @@ export function AiOperationsQueuePage() {
     }
   }
 
+  async function runAction(kind: 'process' | 'retry' | 'cancel') {
+    if (!signedIn || !selected) return;
+    setBusy(true);
+    try {
+      if (kind === 'process') await processLocalAiJob(hubAuth, selected.job.aiJobId, true);
+      if (kind === 'retry') await retryLocalAiJob(hubAuth, selected.job.aiJobId, true);
+      if (kind === 'cancel') await cancelLocalAiJob(hubAuth, selected.job.aiJobId);
+      await refresh();
+      await openJob(selected.job.aiJobId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const disc = discovery?.discovery;
+  const exec = discovery?.executor;
+
   return (
     <ModuleScaffold
       title="AI Operations Queue"
-      subtitle="Governed Local AI jobs — mock worker only; no Ollama; no authoritative writes"
+      subtitle="Phase 2 — local Ollama read-only drafts; no business writes; no external communications"
       showPendingBanner={false}
     >
-      <MessageBar intent="info">
+      <MessageBar intent="warning">
         <MessageBarBody>
-          <MessageBarTitle>Phase 1 control plane</MessageBarTitle>
-          All outputs are labeled TEST — SYNTHETIC AI OUTPUT — DO NOT SEND. Feature flags default Off.
-          EVA intake and client emails remain disabled.
+          <MessageBarTitle>LOCAL DEVELOPMENT ONLY</MessageBarTitle>
+          NO BUSINESS RECORD WRITES · NO EXTERNAL COMMUNICATIONS · EVA intake disabled · Outputs labeled
+          TEST — SYNTHETIC AI OUTPUT — DO NOT SEND
         </MessageBarBody>
       </MessageBar>
+
+      <AtlasCard title="Executor status" subtitle="Loopback Ollama" style={{ marginTop: 12 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+          <StatusChip
+            tone={disc?.healthy ? 'success' : 'danger'}
+            label={`Ollama ${disc?.healthy ? 'healthy' : 'unavailable'}`}
+          />
+          <StatusChip tone="info" label={`Model: ${disc?.selectedModel || 'unset'}`} />
+          <StatusChip
+            tone="neutral"
+            label={`Local-only: ${String(exec?.loopbackOnly ?? true)}`}
+          />
+          <StatusChip tone="warning" label="Writes: Off" />
+          <StatusChip tone="warning" label="External msgs: Off" />
+        </div>
+        <Caption1>
+          Base URL: {disc?.baseUrl || '—'} · Version: {disc?.version || '—'} · Models available:{' '}
+          {disc?.models?.length ?? 0}
+          {disc?.models?.[0]?.contextLength
+            ? ` · Context: ${disc.models[0].contextLength}`
+            : ''}
+        </Caption1>
+        <Caption1 style={{ display: 'block', marginTop: 4 }}>
+          {disc?.openWebUiNote ||
+            'Open WebUI is optional and not used by the Atlas executor.'}
+        </Caption1>
+        {disc?.error ? <Caption1 style={{ display: 'block' }}>Discovery error: {disc.error}</Caption1> : null}
+      </AtlasCard>
 
       {flags ? (
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
@@ -122,7 +181,10 @@ export function AiOperationsQueuePage() {
 
       <AtlasCard title="Jobs" subtitle={`${jobs.length} governed AI jobs`}>
         {jobs.length === 0 ? (
-          <Text>No AI jobs yet. Create via Integration Hub `/api/local-ai/jobs` (synthetic only).</Text>
+          <Text>
+            No AI jobs yet. Create via Integration Hub `/api/local-ai/jobs` with synthetic fixtures
+            (TEST — DO NOT CONTACT).
+          </Text>
         ) : (
           <DataTable
             columns={[
@@ -169,24 +231,55 @@ export function AiOperationsQueuePage() {
         <AtlasCard title="Job detail + audit" subtitle={selected.job.aiJobId} style={{ marginTop: 16 }}>
           <StatusChip tone="info" label={selected.job.processingStatus} />
           <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            Disposition: {selected.job.recommendedNextAction || '—'} · Audit{' '}
-            {selected.job.auditCorrelationId} · Authoritative write:{' '}
+            Schema validation: {selected.job.validationStatus} · Confidence:{' '}
+            {selected.job.confidence === null ? '—' : selected.job.confidence.toFixed(2)} · Manny
+            approval required: {String(selected.job.requiresMannyApproval)} · Authoritative write:{' '}
             {String(selected.job.wroteAuthoritativeBusinessRecord)}
           </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Executor: {selected.job.executorMode || '—'} · Duration:{' '}
+            {selected.job.processingDurationMs != null
+              ? `${selected.job.processingDurationMs} ms`
+              : '—'}{' '}
+            · Metrics: {JSON.stringify(selected.job.ollamaMetrics || {})}
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Redaction: {JSON.stringify(selected.job.redactionSummary || {})}
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Injection warnings:{' '}
+            {(selected.job.injectionWarnings || []).length
+              ? selected.job.injectionWarnings!.join('; ')
+              : 'none'}
+          </Caption1>
           <Caption1 style={{ display: 'block', marginTop: 4 }}>{selected.job.outputSummary}</Caption1>
-          {selected.job.processingStatus === 'Waiting on Manny' ? (
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <Button appearance="primary" disabled={busy} onClick={() => void decide('Approved')}>
-                Manny Approve
-              </Button>
-              <Button disabled={busy} onClick={() => void decide('Rejected')}>
-                Reject
-              </Button>
-              <Button disabled={busy} onClick={() => void decide('Returned for Revision')}>
-                Return for revision
-              </Button>
-            </div>
-          ) : null}
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Output preview: {JSON.stringify(selected.job.outputPayload)?.slice(0, 400) || '—'}
+          </Caption1>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            <Button disabled={busy} onClick={() => void runAction('process')}>
+              Process / force
+            </Button>
+            <Button disabled={busy} onClick={() => void runAction('retry')}>
+              Retry
+            </Button>
+            <Button disabled={busy} onClick={() => void runAction('cancel')}>
+              Cancel
+            </Button>
+            {selected.job.processingStatus === 'Waiting on Manny' ? (
+              <>
+                <Button appearance="primary" disabled={busy} onClick={() => void decide('Approved')}>
+                  Manny Approve
+                </Button>
+                <Button disabled={busy} onClick={() => void decide('Rejected')}>
+                  Reject
+                </Button>
+                <Button disabled={busy} onClick={() => void decide('Returned for Revision')}>
+                  Return for revision
+                </Button>
+              </>
+            ) : null}
+          </div>
           <pre style={{ marginTop: 12, fontSize: 12, whiteSpace: 'pre-wrap' }}>
             {JSON.stringify(selected.audit, null, 2)}
           </pre>

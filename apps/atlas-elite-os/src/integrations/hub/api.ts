@@ -608,6 +608,7 @@ export interface LocalAiJob {
   validationStatus: string;
   confidence: number | null;
   outputSummary: string | null;
+  outputPayload?: unknown;
   requiresMannyApproval: boolean;
   mannyDecision: string;
   retryCount: number;
@@ -615,6 +616,11 @@ export interface LocalAiJob {
   auditCorrelationId: string;
   wroteAuthoritativeBusinessRecord: boolean;
   syntheticBanner: string;
+  executorMode?: string;
+  processingDurationMs?: number | null;
+  injectionWarnings?: string[];
+  redactionSummary?: unknown;
+  ollamaMetrics?: unknown;
 }
 
 export interface LocalAiCommandCenter {
@@ -681,4 +687,53 @@ export async function postLocalAiMannyDecision(
 export async function fetchLocalAiOperationsQueue(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/local-ai/operations-queue`, { headers: headers(auth) });
   return parse(res) as Promise<{ items: unknown[] }>;
+}
+
+export async function fetchLocalAiOllamaDiscovery(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/ollama/discovery`, { headers: headers(auth) });
+  return parse(res) as Promise<{
+    discovery: {
+      healthy: boolean;
+      version?: string;
+      baseUrl: string;
+      selectedModel: string | null;
+      models: Array<{ name: string; contextLength?: number; parameterSize?: string }>;
+      openWebUiDetected: boolean;
+      openWebUiNote: string;
+      loopbackBound: boolean;
+      error?: string;
+    };
+    executor: Record<string, unknown>;
+  }>;
+}
+
+export async function processLocalAiJob(
+  auth: AtlasHubAuthHeaders,
+  aiJobId: string,
+  force = false,
+) {
+  const res = await fetch(`${base()}/api/local-ai/jobs/${encodeURIComponent(aiJobId)}/process`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify({ force }),
+  });
+  return parse(res) as Promise<{ job: LocalAiJob }>;
+}
+
+export async function cancelLocalAiJob(auth: AtlasHubAuthHeaders, aiJobId: string) {
+  const res = await fetch(`${base()}/api/local-ai/jobs/${encodeURIComponent(aiJobId)}/cancel`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify({}),
+  });
+  return parse(res) as Promise<{ job: LocalAiJob }>;
+}
+
+export async function retryLocalAiJob(auth: AtlasHubAuthHeaders, aiJobId: string, force = false) {
+  const res = await fetch(`${base()}/api/local-ai/jobs/${encodeURIComponent(aiJobId)}/retry`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify({ force }),
+  });
+  return parse(res) as Promise<{ job: LocalAiJob }>;
 }

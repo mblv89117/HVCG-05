@@ -32,6 +32,15 @@ export function startServer() {
   const repo = new IntegrationRepository(cfg.dataDir, cfg.tokenEncryptionKeyB64);
   const pm = new PmRepository(cfg.dataDir);
   const localAi = createLocalAiService(join(cfg.dataDir, 'local-ai'));
+  void localAi.refreshOllamaDiscovery(true).catch((err) => {
+    console.warn(
+      JSON.stringify({
+        level: 'warn',
+        msg: 'ollama discovery failed at startup',
+        detail: String(err),
+      }),
+    );
+  });
   const app = buildRegistry(cfg, repo);
 
   const server = createServer((req, res) => {

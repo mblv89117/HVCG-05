@@ -68,7 +68,18 @@ export interface AiJobRecord {
   assignedAiRole: ConfigurableOwner;
   workValueTier: WorkValueTier;
   inputPayloadReference: string;
+  /** Redacted source only — never log unredacted originals. */
+  redactedSourceContent?: string | null;
   redactionStatus: AiRedactionStatus;
+  redactionSummary?: {
+    policyVersion: string;
+    fieldsRedacted: Array<{ type: string; count: number }>;
+    redactionCount: number;
+    manualReviewRequired: boolean;
+    blocked: boolean;
+    blockReason?: string;
+  } | null;
+  injectionWarnings?: string[];
   processingStatus: AiJobStatus;
   validationStatus: AiValidationStatus;
   confidence: number | null;
@@ -88,12 +99,22 @@ export interface AiJobRecord {
   auditCorrelationId: string;
   idempotencyKey: string;
   mockScenario: MockScenario;
+  executorMode?: 'mock' | 'ollama';
   decisionPackage: ExecutiveDecisionPackage | null;
   syntheticBanner: typeof SYNTHETIC_AI_OUTPUT_BANNER;
-  /** Never true for Phase 1 mock — authoritative writes are blocked. */
+  /** Never true while LocalAIWritesEnabled=false. */
   wroteAuthoritativeBusinessRecord: boolean;
   policyVersion: string | null;
   killSwitchEngaged: boolean;
+  cancelled?: boolean;
+  processingDurationMs?: number | null;
+  ollamaMetrics?: {
+    model?: string;
+    promptChars?: number;
+    responseChars?: number;
+    evalCount?: number;
+    evalDurationNs?: number;
+  } | null;
 }
 
 export interface AiAuditEvent {
@@ -115,12 +136,16 @@ export interface CreateAiJobRequest {
   requestedBy?: string;
   workValueTier?: WorkValueTier;
   inputPayloadReference?: string;
+  /** Untrusted source text — redacted before persistence. */
+  sourceContent?: string;
   requiresMannyApproval?: boolean;
   idempotencyKey: string;
   mockScenario?: MockScenario;
   assignedAiRole?: ConfigurableOwner;
+  executorMode?: 'mock' | 'ollama';
 }
 
 export const AI_JOB_SCHEMA_VERSION = '1.0.0-phase1';
 export const DEFAULT_MAX_RETRIES = 2;
 export const DEFAULT_JOB_TIMEOUT_MS = 5_000;
+export const DEFAULT_OLLAMA_JOB_TIMEOUT_MS = 120_000;

@@ -75,7 +75,7 @@ describe('local-ai Phase 1 service', () => {
     cleanup();
   });
 
-  it('produces successful mock output with validation', () => {
+  it('produces successful mock output with validation', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Task',
@@ -85,7 +85,7 @@ describe('local-ai Phase 1 service', () => {
       mockScenario: 'success',
       requiresMannyApproval: false,
     });
-    const processed = service.processJob(job.aiJobId, { force: true });
+    const processed = await service.processJob(job.aiJobId, { force: true });
     assert.equal(processed.validationStatus, 'Passed');
     assert.equal(processed.processingStatus, 'Draft Ready');
     assert.ok(String(processed.outputSummary || '').includes(SYNTHETIC_AI_OUTPUT_BANNER));
@@ -93,7 +93,7 @@ describe('local-ai Phase 1 service', () => {
     cleanup();
   });
 
-  it('handles malformed mock output', () => {
+  it('handles malformed mock output', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Task',
@@ -102,13 +102,13 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'bad-1',
       mockScenario: 'malformed',
     });
-    const processed = service.processJob(job.aiJobId, { force: true });
+    const processed = await service.processJob(job.aiJobId, { force: true });
     assert.equal(processed.processingStatus, 'Validation Failed');
     assert.equal(processed.validationStatus, 'Failed');
     cleanup();
   });
 
-  it('handles timeout', () => {
+  it('handles timeout', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Task',
@@ -117,13 +117,13 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'to-1',
       mockScenario: 'timeout',
     });
-    const processed = service.processJob(job.aiJobId, { force: true });
+    const processed = await service.processJob(job.aiJobId, { force: true });
     assert.equal(processed.processingStatus, 'Processing Failed');
     assert.equal(processed.errorType, 'Timeout');
     cleanup();
   });
 
-  it('handles processing failure and retry', () => {
+  it('handles processing failure and retry', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Task',
@@ -132,17 +132,17 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'fail-1',
       mockScenario: 'failure',
     });
-    const failed = service.processJob(job.aiJobId, { force: true });
+    const failed = await service.processJob(job.aiJobId, { force: true });
     assert.equal(failed.processingStatus, 'Processing Failed');
     // Change scenario via retry after manually flipping — recreate with success by updating store
     // Retry keeps same scenario; verify retry increments then still fails
-    const retried = service.retryJob(job.aiJobId, { force: true });
+    const retried = await service.retryJob(job.aiJobId, { force: true });
     assert.equal(retried.retryCount, 1);
     assert.equal(retried.processingStatus, 'Processing Failed');
     cleanup();
   });
 
-  it('handles low-confidence response', () => {
+  it('handles low-confidence response', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Task',
@@ -152,13 +152,13 @@ describe('local-ai Phase 1 service', () => {
       mockScenario: 'low_confidence',
       requiresMannyApproval: false,
     });
-    const processed = service.processJob(job.aiJobId, { force: true });
+    const processed = await service.processJob(job.aiJobId, { force: true });
     assert.ok((processed.confidence ?? 1) < 0.5);
     assert.equal(processed.processingStatus, 'Waiting on Manny');
     cleanup();
   });
 
-  it('requires Manny approval for gated pricing jobs', () => {
+  it('requires Manny approval for gated pricing jobs', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Opportunity',
@@ -168,13 +168,13 @@ describe('local-ai Phase 1 service', () => {
       mockScenario: 'success',
     });
     assert.equal(job.requiresMannyApproval, true);
-    const processed = service.processJob(job.aiJobId, { force: true });
+    const processed = await service.processJob(job.aiJobId, { force: true });
     assert.equal(processed.processingStatus, 'Waiting on Manny');
     assert.equal(processed.wroteAuthoritativeBusinessRecord, false);
     cleanup();
   });
 
-  it('blocks unauthorized approval', () => {
+  it('blocks unauthorized approval', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Opportunity',
@@ -183,7 +183,7 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'price-2',
       mockScenario: 'success',
     });
-    service.processJob(job.aiJobId, { force: true });
+    await service.processJob(job.aiJobId, { force: true });
     assert.throws(
       () => service.mannyDecide(job.aiJobId, 'Approved', LOCAL_AI_OWNER),
       (err: Error & { status?: number }) => err.status === 403,
@@ -191,7 +191,7 @@ describe('local-ai Phase 1 service', () => {
     cleanup();
   });
 
-  it('supports Manny approval without authoritative writes', () => {
+  it('supports Manny approval without authoritative writes', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Opportunity',
@@ -200,7 +200,7 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'price-3',
       mockScenario: 'success',
     });
-    service.processJob(job.aiJobId, { force: true });
+    await service.processJob(job.aiJobId, { force: true });
     const approved = service.mannyDecide(job.aiJobId, 'Approved', MANNY_OWNER);
     assert.equal(approved.mannyDecision, 'Approved');
     assert.equal(approved.processingStatus, 'Completed');
@@ -209,7 +209,7 @@ describe('local-ai Phase 1 service', () => {
     cleanup();
   });
 
-  it('supports Manny rejection and return for revision', () => {
+  it('supports Manny rejection and return for revision', async () => {
     const { service, cleanup } = tempService();
     const a = service.createJob({
       sourceRecordType: 'Opportunity',
@@ -218,7 +218,7 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'cap-1',
       mockScenario: 'success',
     });
-    service.processJob(a.job.aiJobId, { force: true });
+    await service.processJob(a.job.aiJobId, { force: true });
     const rejected = service.mannyDecide(a.job.aiJobId, 'Rejected', MANNY_OWNER);
     assert.equal(rejected.processingStatus, 'Manny Rejected');
 
@@ -229,7 +229,7 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'scope-1',
       mockScenario: 'success',
     });
-    service.processJob(b.job.aiJobId, { force: true });
+    await service.processJob(b.job.aiJobId, { force: true });
     const returned = service.mannyDecide(b.job.aiJobId, 'Returned for Revision', MANNY_OWNER);
     assert.equal(returned.processingStatus, 'Returned for Revision');
     cleanup();
@@ -293,7 +293,7 @@ describe('local-ai Phase 1 service', () => {
     cleanup();
   });
 
-  it('preserves complete audit history', () => {
+  it('preserves complete audit history', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Task',
@@ -302,7 +302,7 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'audit-1',
       mockScenario: 'success',
     });
-    service.processJob(job.aiJobId, { force: true });
+    await service.processJob(job.aiJobId, { force: true });
     service.mannyDecide(job.aiJobId, 'Approved', MANNY_OWNER);
     const events = service.listAudit(job.aiJobId);
     assert.ok(events.length >= 3);
@@ -310,7 +310,7 @@ describe('local-ai Phase 1 service', () => {
     cleanup();
   });
 
-  it('does not change authoritative business records before approval', () => {
+  it('does not change authoritative business records before approval', async () => {
     const { service, cleanup } = tempService();
     const { job } = service.createJob({
       sourceRecordType: 'Client',
@@ -319,7 +319,7 @@ describe('local-ai Phase 1 service', () => {
       idempotencyKey: 'biz-1',
       mockScenario: 'success',
     });
-    const processed = service.processJob(job.aiJobId, { force: true });
+    const processed = await service.processJob(job.aiJobId, { force: true });
     assert.equal(processed.wroteAuthoritativeBusinessRecord, false);
     assert.equal(processed.processingStatus, 'Waiting on Manny');
     cleanup();

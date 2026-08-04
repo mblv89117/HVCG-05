@@ -15,6 +15,11 @@ config/environments/development.json
 config/environments/test.json
 config/environments/production.json
 
+# Local AI Operations — machine-specific discovery / env (never commit)
+.secrets/local-ai.env
+.secrets/local-ai.discovery.json
+**/local-ai-operations.json
+
 # HVS inventory bulk dumps (keep summaries in reports)
 deployment/reports/hvs-onedrive-inventory/inventory-*.json
 deployment/reports/hvs-onedrive-inventory/inventory-*.csv

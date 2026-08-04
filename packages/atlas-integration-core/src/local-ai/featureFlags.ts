@@ -54,10 +54,13 @@ export function assertSafetyFlagsOff(flags: LocalAiFeatureFlags): {
   violations: string[];
 } {
   const violations: string[] = [];
-  if (flags.EvaIntakeEnabled) violations.push('EvaIntakeEnabled must be false in Phase 1');
-  if (flags.ClientEmailsEnabled) violations.push('ClientEmailsEnabled must be false in Phase 1');
+  if (flags.EvaIntakeEnabled) violations.push('EvaIntakeEnabled must be false');
+  if (flags.ClientEmailsEnabled) violations.push('ClientEmailsEnabled must be false');
   if (flags.LocalAIExternalMessagesEnabled) {
-    violations.push('LocalAIExternalMessagesEnabled must be false in Phase 1');
+    violations.push('LocalAIExternalMessagesEnabled must be false');
+  }
+  if (flags.LocalAIWritesEnabled) {
+    violations.push('LocalAIWritesEnabled must be false for Phase 2 read-only draft mode');
   }
   return { ok: violations.length === 0, violations };
 }
