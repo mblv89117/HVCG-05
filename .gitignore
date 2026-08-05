@@ -19,6 +19,8 @@ config/environments/production.json
 .secrets/local-ai.env
 .secrets/local-ai.discovery.json
 **/local-ai-operations.json
+.data/local-ai-document-staging/
+**/local-ai-document-staging/
 
 # HVS inventory bulk dumps (keep summaries in reports)
 deployment/reports/hvs-onedrive-inventory/inventory-*.json

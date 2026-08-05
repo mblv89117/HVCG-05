@@ -65,6 +65,8 @@ import {
   loadModelRoutingFromEnv,
   resolveJobModel,
 } from './phase3Workflow.ts';
+import { DocumentReviewService, createSyntheticTestBytes } from './documentReviewService.ts';
+import type { DocumentReviewDecision } from '@hvcg/atlas-integration-core';
 
 export interface LocalAiServiceDeps {
   repo: LocalAiRepository;
@@ -76,6 +78,8 @@ export interface LocalAiServiceDeps {
   defaultExecutorMode?: 'mock' | 'ollama';
   /** Test hook: override secrets file env (model profiles). */
   secretsFileEnv?: Record<string, string>;
+  /** Test hook: override document staging root (Phase 4B-1). */
+  documentStagingRoot?: string;
 }
 
 function nowIso() {
@@ -103,6 +107,7 @@ export class LocalAiService {
   private lastDiscovery: Awaited<ReturnType<typeof discoverOllama>> | null = null;
   private modelRouting: ModelRoutingConfig;
   private secretsFileEnv: Record<string, string>;
+  private documentReview: DocumentReviewService;
 
   constructor(deps: LocalAiServiceDeps) {
     this.repo = deps.repo;
@@ -124,6 +129,16 @@ export class LocalAiService {
       process.env,
       this.secretsFileEnv,
       [],
+    );
+    this.documentReview = new DocumentReviewService(
+      deps.documentStagingRoot || findRepoRootFromApi() || process.cwd(),
+      deps.documentStagingRoot
+        ? {
+            ...this.secretsFileEnv,
+            ...process.env,
+            LOCAL_AI_DOCUMENT_STAGING_DIR: deps.documentStagingRoot,
+          }
+        : { ...this.secretsFileEnv, ...process.env },
     );
   }
 
@@ -156,8 +171,9 @@ export class LocalAiService {
         externalCommunications: false,
         modelRouting: this.getModelRouting(),
       },
-      phase: 'phase4a-fast-model-routing',
+      phase: 'phase4b1-document-intake-ocr',
       syntheticBanner: SYNTHETIC_AI_OUTPUT_BANNER,
+      documentStaging: this.documentReview.staging.getConfig(),
     };
   }
 
@@ -1462,6 +1478,121 @@ export class LocalAiService {
       operationsOpen: queue.filter((i) => i.status === 'Open' || i.status === 'Assigned').length,
       syntheticNotice: SYNTHETIC_RECORD_BANNER,
     };
+  }
+
+  // --- Phase 4B-1 document intake ---
+  listStagedDocuments() {
+    return this.documentReview.list();
+  }
+
+  getStagedDocument(id: string) {
+    return this.documentReview.get(id);
+  }
+
+  stageDocument(input: {
+    originalFilename: string;
+    contentBase64: string;
+    declaredMime?: string;
+  }) {
+    if (this.flags.LocalAIWritesEnabled) {
+      throw Object.assign(new Error('Writes must remain disabled'), {
+        status: 403,
+        code: 'writes_not_allowed',
+      });
+    }
+    const bytes = Buffer.from(input.contentBase64, 'base64');
+    const rec = this.documentReview.stage({
+      originalFilename: input.originalFilename,
+      bytes,
+      declaredMime: input.declaredMime,
+    });
+    this.repo.appendAudit({
+      auditCorrelationId: rec.correlationId,
+      aiJobId: rec.stagedFileId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: 'document_staged',
+      detail: `Staged ${rec.originalFilename} size=${rec.sizeBytes} checksum=${rec.checksumSha256.slice(0, 12)}…; no file movement`,
+    });
+    return rec;
+  }
+
+  async processStagedDocument(opts: {
+    stagedFileId: string;
+    clientLabel?: string;
+    projectLabel?: string | null;
+    forceOcr?: boolean;
+  }) {
+    const rec = await this.documentReview.process(opts);
+    this.repo.appendAudit({
+      auditCorrelationId: rec.correlationId,
+      aiJobId: rec.stagedFileId,
+      at: nowIso(),
+      actor: LOCAL_AI_OWNER,
+      action: 'document_processed',
+      detail: `status=${rec.status}; type=${rec.reviewPackage?.classification.proposedType}; ocrPages=${rec.extraction?.ocr?.pagesProcessed ?? 0}; draftOnly`,
+    });
+    return rec;
+  }
+
+  cancelStagedDocumentProcess(stagedFileId: string) {
+    const r = this.documentReview.cancel(stagedFileId);
+    this.repo.appendAudit({
+      auditCorrelationId: this.documentReview.get(stagedFileId).correlationId,
+      aiJobId: stagedFileId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: 'document_process_cancel_requested',
+      detail: `cancelled=${r.cancelled}`,
+    });
+    return r;
+  }
+
+  decideStagedDocument(
+    stagedFileId: string,
+    decision: DocumentReviewDecision,
+    corrections?: Record<string, unknown>,
+  ) {
+    const before = this.documentReview.get(stagedFileId);
+    const rec = this.documentReview.decide(stagedFileId, decision, corrections);
+    this.repo.appendAudit({
+      auditCorrelationId: rec.correlationId,
+      aiJobId: stagedFileId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: `document_decision_${decision.toLowerCase().replace(/\s+/g, '_')}`,
+      detail: `Decision=${decision}; fileRenamed=false; fileMoved=false; writes=false; priorStatus=${before.status}`,
+    });
+    return rec;
+  }
+
+  purgeStagedDocument(stagedFileId: string) {
+    const rec = this.documentReview.purge(stagedFileId);
+    this.repo.appendAudit({
+      auditCorrelationId: rec.correlationId,
+      aiJobId: stagedFileId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: 'document_purged',
+      detail: 'Staged file purged from local staging; no business-record write',
+    });
+    return rec;
+  }
+
+  listDocumentFixtures() {
+    return (['txt', 'csv', 'pdf_text', 'injection', 'missing_signature', 'png_placeholder'] as const).map(
+      (kind) => {
+        const f = createSyntheticTestBytes(kind);
+        return {
+          kind,
+          filename: f.filename,
+          mime: f.mime,
+          sizeBytes: f.bytes.length,
+          contentBase64: f.bytes.toString('base64'),
+          banner: 'TEST — SYNTHETIC DOCUMENT',
+        };
+      },
+    );
   }
 
   private requireJob(aiJobId: string): AiJobRecord {

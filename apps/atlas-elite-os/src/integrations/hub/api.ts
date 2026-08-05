@@ -851,3 +851,127 @@ export interface LocalAiContentPack {
   injectionPreview?: unknown;
   linkedAiJobId?: string | null;
 }
+
+/** Phase 4B-1 staged document (draft review only — no file movement). */
+export interface LocalAiStagedDocument {
+  stagedFileId: string;
+  correlationId: string;
+  status: string;
+  originalFilename: string;
+  safeFilename: string;
+  extension: string;
+  sizeBytes: number;
+  checksumSha256: string;
+  createdAt: string;
+  expiresAt: string;
+  malwareScanStatus: string;
+  malwareScanNote?: string;
+  extraction?: {
+    method?: string;
+    embeddedTextChars?: number;
+    ocrTextChars?: number;
+    pageCount?: number | null;
+    warnings?: string[];
+    pages?: Array<{
+      page: number;
+      sourceKind: string;
+      confidence: number | null;
+      text?: string;
+    }>;
+    ocr?: {
+      engine: string;
+      version: string;
+      pagesProcessed: number;
+      pagesSkipped: number;
+      averageConfidence: number | null;
+      failedPages: number[];
+      durationMs: number;
+      disclaimer: string;
+    } | null;
+  } | null;
+  reviewPackage?: Record<string, unknown> | null;
+  mannyDecision?: string | null;
+  errorDetail?: string | null;
+  draftOnly?: true;
+}
+
+export async function fetchLocalAiStagedDocuments(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/documents`, { headers: headers(auth) });
+  return parse(res) as Promise<{ documents: LocalAiStagedDocument[] }>;
+}
+
+export async function fetchLocalAiStagedDocument(auth: AtlasHubAuthHeaders, stagedFileId: string) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ document: LocalAiStagedDocument }>;
+}
+
+export async function stageLocalAiDocument(
+  auth: AtlasHubAuthHeaders,
+  body: { originalFilename: string; contentBase64: string; declaredMime?: string },
+) {
+  const res = await fetch(`${base()}/api/local-ai/documents/stage`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ document: LocalAiStagedDocument }>;
+}
+
+export async function processLocalAiStagedDocument(
+  auth: AtlasHubAuthHeaders,
+  stagedFileId: string,
+  body?: { clientLabel?: string; projectLabel?: string | null; forceOcr?: boolean },
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}/process`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify(body || {}),
+    },
+  );
+  return parse(res) as Promise<{ document: LocalAiStagedDocument }>;
+}
+
+export async function cancelLocalAiStagedDocument(auth: AtlasHubAuthHeaders, stagedFileId: string) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}/cancel`,
+    { method: 'POST', headers: headers(auth), body: '{}' },
+  );
+  return parse(res) as Promise<{ cancelled: boolean }>;
+}
+
+export async function decideLocalAiStagedDocument(
+  auth: AtlasHubAuthHeaders,
+  stagedFileId: string,
+  decision: string,
+  corrections?: Record<string, unknown>,
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}/decision`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify({ decision, corrections }),
+    },
+  );
+  return parse(res) as Promise<{ document: LocalAiStagedDocument }>;
+}
+
+export async function purgeLocalAiStagedDocument(auth: AtlasHubAuthHeaders, stagedFileId: string) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}/purge`,
+    { method: 'POST', headers: headers(auth), body: '{}' },
+  );
+  return parse(res) as Promise<{ document: LocalAiStagedDocument }>;
+}
+
+export async function fetchLocalAiDocumentFixtures(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/documents/fixtures`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ fixtures: unknown[] }>;
+}

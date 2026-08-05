@@ -17,7 +17,12 @@ import { LocalAiService } from '../src/local-ai/service.ts';
 function tempService(flags = { ...DEFAULT_LOCAL_AI_FEATURE_FLAGS, LocalAIEnabled: true }) {
   const dir = mkdtempSync(join(tmpdir(), 'atlas-local-ai-'));
   const repo = new LocalAiRepository(dir);
-  const service = new LocalAiService({ repo, flags });
+  const service = new LocalAiService({
+    repo,
+    flags,
+    secretsFileEnv: {},
+    documentStagingRoot: join(dir, 'staging'),
+  });
   return {
     dir,
     service,

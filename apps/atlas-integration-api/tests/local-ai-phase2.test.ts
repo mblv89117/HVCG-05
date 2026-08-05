@@ -126,6 +126,7 @@ function tempService(
     ollamaConfig: fake.getConfig(),
     defaultExecutorMode: 'ollama',
     secretsFileEnv: {},
+    documentStagingRoot: join(dir, 'staging'),
   });
   return { dir, service, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 }

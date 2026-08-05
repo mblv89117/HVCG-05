@@ -120,6 +120,7 @@ function tempService(
     },
     defaultExecutorMode: 'ollama',
     secretsFileEnv: secrets,
+    documentStagingRoot: join(dir, 'staging'),
   });
   // Seed discovery so installed models include fast+deep
   (service as unknown as { lastDiscovery: unknown }).lastDiscovery = {

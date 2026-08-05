@@ -24,3 +24,5 @@ export * from './documentReviewPack.ts';
 export * from './meetingWorkflow.ts';
 export * from './clientOperationsPack.ts';
 export * from './performanceMetrics.ts';
+export * from './documentIntake.ts';
+export * from './documentPolicies.ts';

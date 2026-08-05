@@ -1,10 +1,10 @@
-# Phase 4B Recommendation (do not start without authorization)
+# Phase 4B Recommendation (historical pointer)
 
-Possible next steps after Phase 4A:
+Phase 4B-1 (manual local document intake / OCR / draft review) was authorized and implemented on `feature/atlas-local-ai-operations`.
 
-1. OCR / document text extraction for manually uploaded files (still redaction-gated)
-2. SharePoint approval-queue synchronization (still no authoritative writes unless separately authorized)
-3. Broader Fast coverage tuning / confidence calibration
-4. Keep LocalAIWritesEnabled / EVA / client emails Off unless separately authorized
+See:
 
-**Do not begin OCR, SharePoint sync, writes, EVA, or external emails without explicit authorization.**
+- `PHASE4B1_ARCHITECTURE.md`
+- `PHASE4B2_RECOMMENDATION.md` for next steps (requires separate authorization)
+
+**Do not begin SharePoint sync, authoritative writes, EVA, or external communications without explicit authorization.**

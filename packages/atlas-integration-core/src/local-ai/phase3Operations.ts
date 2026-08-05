@@ -16,6 +16,14 @@ export const PHASE3_NEW_OPERATIONS = [
   'prepare_client_operations_pack',
   'complex_client_review',
   'strategic_issue_analysis',
+  'classify_document',
+  'recommend_document_filename',
+  'recommend_document_folder',
+  'review_routine_invoice',
+  'review_routine_bank_statement',
+  'review_routine_document',
+  'review_complex_agreement',
+  'review_financing_document',
 ] as const;
 
 export type Phase3NewOperation = (typeof PHASE3_NEW_OPERATIONS)[number];

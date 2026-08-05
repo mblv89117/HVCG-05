@@ -172,6 +172,78 @@ export async function handleLocalAiRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/local-ai/documents') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { documents: localAi.listStagedDocuments() }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/documents/fixtures') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { fixtures: localAi.listDocumentFixtures() }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/documents/stage') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const rec = localAi.stageDocument({
+        originalFilename: String(body.originalFilename || ''),
+        contentBase64: String(body.contentBase64 || ''),
+        declaredMime: body.declaredMime ? String(body.declaredMime) : undefined,
+      });
+      send(res, 201, { document: rec }, origin);
+      return true;
+    }
+
+    const docMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)$/);
+    if (method === 'GET' && docMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { document: localAi.getStagedDocument(docMatch[1]) }, origin);
+      return true;
+    }
+
+    const docProcessMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/process$/);
+    if (method === 'POST' && docProcessMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const document = await localAi.processStagedDocument({
+        stagedFileId: docProcessMatch[1],
+        clientLabel: body.clientLabel ? String(body.clientLabel) : undefined,
+        projectLabel: body.projectLabel ? String(body.projectLabel) : null,
+        forceOcr: Boolean(body.forceOcr),
+      });
+      send(res, 200, { document }, origin);
+      return true;
+    }
+
+    const docCancelMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/cancel$/);
+    if (method === 'POST' && docCancelMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.cancelStagedDocumentProcess(docCancelMatch[1]), origin);
+      return true;
+    }
+
+    const docDecideMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/decision$/);
+    if (method === 'POST' && docDecideMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const document = localAi.decideStagedDocument(
+        docDecideMatch[1],
+        String(body.decision || '') as never,
+        (body.corrections as Record<string, unknown>) || undefined,
+      );
+      send(res, 200, { document }, origin);
+      return true;
+    }
+
+    const docPurgeMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/purge$/);
+    if (method === 'POST' && docPurgeMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { document: localAi.purgeStagedDocument(docPurgeMatch[1]) }, origin);
+      return true;
+    }
+
     if (method === 'GET' && path === '/api/local-ai/model-routing') {
       await requirePrincipal(req, cfg);
       await localAi.refreshOllamaDiscovery(false);
