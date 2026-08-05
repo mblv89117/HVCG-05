@@ -187,7 +187,7 @@ export async function handleLocalAiRoutes(opts: {
     if (method === 'POST' && path === '/api/local-ai/documents/stage') {
       await requirePrincipal(req, cfg);
       const body = await readJson(req);
-      const rec = localAi.stageDocument({
+      const rec = await localAi.stageDocument({
         originalFilename: String(body.originalFilename || ''),
         contentBase64: String(body.contentBase64 || ''),
         declaredMime: body.declaredMime ? String(body.declaredMime) : undefined,
@@ -228,12 +228,36 @@ export async function handleLocalAiRoutes(opts: {
     if (method === 'POST' && docDecideMatch) {
       await requirePrincipal(req, cfg);
       const body = await readJson(req);
-      const document = localAi.decideStagedDocument(
+      const document = await localAi.decideStagedDocument(
         docDecideMatch[1],
         String(body.decision || '') as never,
         (body.corrections as Record<string, unknown>) || undefined,
       );
       send(res, 200, { document }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/documents/compare') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const comparison = localAi.compareStagedDocumentVersions(
+        String(body.leftStagedFileId || ''),
+        String(body.rightStagedFileId || ''),
+      );
+      send(res, 200, { comparison }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/documents/multi-pack') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const pack = localAi.createMultiDocumentReview({
+        stagedFileIds: Array.isArray(body.stagedFileIds)
+          ? body.stagedFileIds.map(String)
+          : [],
+        clientLabel: String(body.clientLabel || 'Unknown Client'),
+      });
+      send(res, 201, { pack }, origin);
       return true;
     }
 

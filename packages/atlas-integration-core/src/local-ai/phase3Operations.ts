@@ -24,6 +24,15 @@ export const PHASE3_NEW_OPERATIONS = [
   'review_routine_document',
   'review_complex_agreement',
   'review_financing_document',
+  // Phase 4B-2 document AI operations
+  'summarize_document',
+  'extract_document_fields',
+  'identify_document_obligations',
+  'identify_document_deadlines',
+  'identify_missing_signatures',
+  'identify_missing_pages',
+  'compare_document_versions',
+  'prepare_document_decision_package',
 ] as const;
 
 export type Phase3NewOperation = (typeof PHASE3_NEW_OPERATIONS)[number];

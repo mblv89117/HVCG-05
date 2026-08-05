@@ -21,7 +21,9 @@ import { useHubAuth } from '../../integrations/hub/useHubAuth';
 import {
   cancelLocalAiJob,
   cancelLocalAiStagedDocument,
+  compareLocalAiStagedDocuments,
   createLocalAiContentPack,
+  createLocalAiMultiDocumentPack,
   decideLocalAiContentPackRedaction,
   decideLocalAiStagedDocument,
   fetchLocalAiApprovalQueue,
@@ -78,6 +80,9 @@ export function AiOperationsQueuePage() {
   const [docs, setDocs] = useState<LocalAiStagedDocument[]>([]);
   const [selectedDoc, setSelectedDoc] = useState<LocalAiStagedDocument | null>(null);
   const [docClient, setDocClient] = useState('Synthetic Client');
+  const [compareDocId, setCompareDocId] = useState('');
+  const [versionCompare, setVersionCompare] = useState<Record<string, unknown> | null>(null);
+  const [multiPack, setMultiPack] = useState<Record<string, unknown> | null>(null);
   const [paste, setPaste] = useState('');
   const [editedRedaction, setEditedRedaction] = useState('');
   const [compare, setCompare] = useState<Record<string, unknown> | null>(null);
@@ -324,7 +329,7 @@ export function AiOperationsQueuePage() {
   return (
     <ModuleScaffold
       title="AI Operations Queue"
-      subtitle="Phase 4B-1 — local document review drafts + Phase 3 content packs; no business writes"
+      subtitle="Phase 4B-2 — local document enrichment drafts + Phase 3 content packs; no business writes"
       showPendingBanner={false}
     >
       <MessageBar intent="warning">
@@ -507,7 +512,18 @@ export function AiOperationsQueuePage() {
               {selectedDoc.originalFilename} → safe {selectedDoc.safeFilename} · checksum{' '}
               {selectedDoc.checksumSha256.slice(0, 16)}… · expires {selectedDoc.expiresAt} ·
               malware: {selectedDoc.malwareScanStatus}
+              {selectedDoc.malwareScanNote ? ` (${selectedDoc.malwareScanNote.slice(0, 120)})` : ''}
             </Caption1>
+            {(selectedDoc as { malwareScan?: { scannerVersion?: string } }).malwareScan
+              ?.scannerVersion ? (
+              <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                Scanner:{' '}
+                {
+                  (selectedDoc as { malwareScan?: { scannerVersion?: string } }).malwareScan
+                    ?.scannerVersion
+                }
+              </Caption1>
+            ) : null}
             {selectedDoc.extraction ? (
               <Caption1 style={{ display: 'block', marginTop: 4 }}>
                 Extraction: {selectedDoc.extraction.method} · embedded chars{' '}
@@ -563,6 +579,13 @@ export function AiOperationsQueuePage() {
                   Fields: {JSON.stringify(pack.structuredFields || []).slice(0, 600)}
                 </Caption1>
                 <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                  Enrichment: {String(pack.enrichmentStatus || '—')} · conflicts{' '}
+                  {JSON.stringify(pack.conflicts || []).slice(0, 300)}
+                </Caption1>
+                <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                  AI enrichment preview: {JSON.stringify(pack.enrichment || {}).slice(0, 800)}
+                </Caption1>
+                <Caption1 style={{ display: 'block', marginTop: 4 }}>
                   Decision: {selectedDoc.mannyDecision || 'Pending'} · next:{' '}
                   {String(pack.recommendedNextAction || '')}
                 </Caption1>
@@ -576,6 +599,9 @@ export function AiOperationsQueuePage() {
             <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
               {(
                 [
+                  'Approve Redacted Content',
+                  'Edit Redactions',
+                  'Cancel Enrichment',
                   'Approve Draft',
                   'Reject Draft',
                   'Return for Revision',
@@ -587,14 +613,85 @@ export function AiOperationsQueuePage() {
               ).map((d) => (
                 <Button
                   key={d}
-                  appearance={d === 'Approve Draft' ? 'primary' : 'secondary'}
-                  disabled={busy || (!pack && d !== 'Purge Staged File')}
+                  appearance={
+                    d === 'Approve Redacted Content' || d === 'Approve Draft'
+                      ? 'primary'
+                      : 'secondary'
+                  }
+                  disabled={
+                    busy ||
+                    (!pack && d !== 'Purge Staged File') ||
+                    (d === 'Approve Redacted Content' &&
+                      selectedDoc.status !== 'AwaitingRedactionApproval')
+                  }
                   onClick={() => void docDecision(d)}
                 >
                   {d}
                 </Button>
               ))}
             </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Input
+                value={compareDocId}
+                onChange={(_, d) => setCompareDocId(d.value)}
+                placeholder="Other stagedFileId for version compare"
+                style={{ minWidth: 260 }}
+              />
+              <Button
+                disabled={busy || !selectedDoc || !compareDocId.trim()}
+                onClick={() => {
+                  void (async () => {
+                    setBusy(true);
+                    try {
+                      const res = await compareLocalAiStagedDocuments(
+                        hubAuth,
+                        selectedDoc!.stagedFileId,
+                        compareDocId.trim(),
+                      );
+                      setVersionCompare(res.comparison);
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
+                }}
+              >
+                Compare versions
+              </Button>
+              <Button
+                disabled={busy || docs.length < 2}
+                onClick={() => {
+                  void (async () => {
+                    setBusy(true);
+                    try {
+                      const ids = docs.slice(0, 5).map((d) => d.stagedFileId);
+                      const res = await createLocalAiMultiDocumentPack(hubAuth, {
+                        stagedFileIds: ids,
+                        clientLabel: docClient || 'Synthetic Client',
+                      });
+                      setMultiPack(res.pack);
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
+                }}
+              >
+                Multi-document pack (selected list)
+              </Button>
+            </div>
+            {versionCompare ? (
+              <pre style={{ marginTop: 8, fontSize: 12, whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(versionCompare, null, 2)}
+              </pre>
+            ) : null}
+            {multiPack ? (
+              <pre style={{ marginTop: 8, fontSize: 12, whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(multiPack, null, 2)}
+              </pre>
+            ) : null}
           </div>
         ) : null}
       </AtlasCard>

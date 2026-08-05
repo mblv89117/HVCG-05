@@ -866,6 +866,7 @@ export interface LocalAiStagedDocument {
   expiresAt: string;
   malwareScanStatus: string;
   malwareScanNote?: string;
+  malwareScan?: Record<string, unknown> | null;
   extraction?: {
     method?: string;
     embeddedTextChars?: number;
@@ -959,6 +960,31 @@ export async function decideLocalAiStagedDocument(
     },
   );
   return parse(res) as Promise<{ document: LocalAiStagedDocument }>;
+}
+
+export async function compareLocalAiStagedDocuments(
+  auth: AtlasHubAuthHeaders,
+  leftStagedFileId: string,
+  rightStagedFileId: string,
+) {
+  const res = await fetch(`${base()}/api/local-ai/documents/compare`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify({ leftStagedFileId, rightStagedFileId }),
+  });
+  return parse(res) as Promise<{ comparison: Record<string, unknown> }>;
+}
+
+export async function createLocalAiMultiDocumentPack(
+  auth: AtlasHubAuthHeaders,
+  body: { stagedFileIds: string[]; clientLabel: string },
+) {
+  const res = await fetch(`${base()}/api/local-ai/documents/multi-pack`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ pack: Record<string, unknown> }>;
 }
 
 export async function purgeLocalAiStagedDocument(auth: AtlasHubAuthHeaders, stagedFileId: string) {

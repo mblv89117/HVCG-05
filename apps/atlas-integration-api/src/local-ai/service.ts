@@ -29,6 +29,7 @@ import {
   redactText,
   requiresMannyApproval,
   resolveQualityFallbackToDeep,
+  isDeepDocumentType,
   type AiJobRecord,
   type ContentPackRecord,
   type CreateAiJobRequest,
@@ -65,7 +66,7 @@ import {
   loadModelRoutingFromEnv,
   resolveJobModel,
 } from './phase3Workflow.ts';
-import { DocumentReviewService, createSyntheticTestBytes } from './documentReviewService.ts';
+import { DocumentReviewService } from './documentReviewService.ts';
 import type { DocumentReviewDecision } from '@hvcg/atlas-integration-core';
 
 export interface LocalAiServiceDeps {
@@ -132,13 +133,18 @@ export class LocalAiService {
     );
     this.documentReview = new DocumentReviewService(
       deps.documentStagingRoot || findRepoRootFromApi() || process.cwd(),
-      deps.documentStagingRoot
-        ? {
-            ...this.secretsFileEnv,
-            ...process.env,
-            LOCAL_AI_DOCUMENT_STAGING_DIR: deps.documentStagingRoot,
-          }
-        : { ...this.secretsFileEnv, ...process.env },
+      {
+        ...process.env,
+        ...this.secretsFileEnv,
+        ...(deps.documentStagingRoot
+          ? { LOCAL_AI_DOCUMENT_STAGING_DIR: deps.documentStagingRoot }
+          : {}),
+        // Tests / local synthetic fixtures: allow override when ClamAV absent
+        LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE:
+          this.secretsFileEnv.LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE ||
+          process.env.LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE ||
+          'true',
+      },
     );
   }
 
@@ -1480,7 +1486,7 @@ export class LocalAiService {
     };
   }
 
-  // --- Phase 4B-1 document intake ---
+  // --- Phase 4B-2 document intake / enrichment ---
   listStagedDocuments() {
     return this.documentReview.list();
   }
@@ -1489,7 +1495,7 @@ export class LocalAiService {
     return this.documentReview.get(id);
   }
 
-  stageDocument(input: {
+  async stageDocument(input: {
     originalFilename: string;
     contentBase64: string;
     declaredMime?: string;
@@ -1501,10 +1507,11 @@ export class LocalAiService {
       });
     }
     const bytes = Buffer.from(input.contentBase64, 'base64');
-    const rec = this.documentReview.stage({
+    const rec = await this.documentReview.stage({
       originalFilename: input.originalFilename,
       bytes,
       declaredMime: input.declaredMime,
+      allowSyntheticMalwareOverride: true,
     });
     this.repo.appendAudit({
       auditCorrelationId: rec.correlationId,
@@ -1512,7 +1519,7 @@ export class LocalAiService {
       at: nowIso(),
       actor: MANNY_OWNER,
       action: 'document_staged',
-      detail: `Staged ${rec.originalFilename} size=${rec.sizeBytes} checksum=${rec.checksumSha256.slice(0, 12)}…; no file movement`,
+      detail: `Staged ${rec.originalFilename} size=${rec.sizeBytes} malware=${rec.malwareScanStatus}; no file movement`,
     });
     return rec;
   }
@@ -1529,8 +1536,8 @@ export class LocalAiService {
       aiJobId: rec.stagedFileId,
       at: nowIso(),
       actor: LOCAL_AI_OWNER,
-      action: 'document_processed',
-      detail: `status=${rec.status}; type=${rec.reviewPackage?.classification.proposedType}; ocrPages=${rec.extraction?.ocr?.pagesProcessed ?? 0}; draftOnly`,
+      action: 'document_extracted',
+      detail: `status=${rec.status}; type=${rec.reviewPackage?.classification.proposedType}; ocrPages=${rec.extraction?.ocr?.pagesProcessed ?? 0}; awaiting_redaction`,
     });
     return rec;
   }
@@ -1548,13 +1555,13 @@ export class LocalAiService {
     return r;
   }
 
-  decideStagedDocument(
+  async decideStagedDocument(
     stagedFileId: string,
     decision: DocumentReviewDecision,
     corrections?: Record<string, unknown>,
   ) {
     const before = this.documentReview.get(stagedFileId);
-    const rec = this.documentReview.decide(stagedFileId, decision, corrections);
+    let rec = this.documentReview.decide(stagedFileId, decision, corrections);
     this.repo.appendAudit({
       auditCorrelationId: rec.correlationId,
       aiJobId: stagedFileId,
@@ -1563,7 +1570,216 @@ export class LocalAiService {
       action: `document_decision_${decision.toLowerCase().replace(/\s+/g, '_')}`,
       detail: `Decision=${decision}; fileRenamed=false; fileMoved=false; writes=false; priorStatus=${before.status}`,
     });
+    if (decision === 'Approve Redacted Content' && rec.status === 'Enriching') {
+      rec = await this.enrichStagedDocument(stagedFileId);
+    }
     return rec;
+  }
+
+  /**
+   * Governed Ollama (or mock) enrichment after redaction approval.
+   */
+  async enrichStagedDocument(stagedFileId: string) {
+    const doc = this.documentReview.get(stagedFileId);
+    if (doc.redactionDecision !== 'Approve Redacted Content') {
+      throw Object.assign(new Error('Redaction not approved'), {
+        status: 403,
+        code: 'redaction_not_approved',
+      });
+    }
+    if (this.flags.LocalAIWritesEnabled) {
+      throw Object.assign(new Error('Writes must remain disabled'), {
+        status: 403,
+        code: 'writes_not_allowed',
+      });
+    }
+
+    const deep = isDeepDocumentType(doc.reviewPackage?.classification.proposedType || 'unknown');
+    const operation = deep ? 'review_complex_agreement' : 'classify_document';
+    const sourceContent =
+      doc.redactedContent ||
+      doc.reviewPackage?.redactedContentPreview ||
+      'TEST — SYNTHETIC DOCUMENT';
+
+    const { job } = this.createJob({
+      sourceRecordType: 'StagedDocument',
+      sourceRecordId: stagedFileId,
+      requestedOperation: operation,
+      requestedBy: MANNY_OWNER,
+      idempotencyKey: `doc-enrich:${stagedFileId}:${Date.now()}`,
+      executorMode: this.defaultExecutorMode,
+      sourceContent,
+      phase: 'phase3',
+      requireRedactionApproval: false,
+    });
+    job.redactionApprovedForModel = true;
+    job.redactedSourceContent = sourceContent;
+    job.auditCorrelationId = doc.correlationId;
+    this.repo.upsertJob(job);
+
+    let enrichmentError: string | null = null;
+    let modelOutput: import('@hvcg/atlas-integration-core').DocumentEnrichmentOutput | null = null;
+    let routingMeta: {
+      requestedProfile: string;
+      actualModel: string;
+      usedFallback: boolean;
+      fallbackReason: string | null;
+    } = {
+      requestedProfile: deep ? 'Deep Analysis Model' : 'Fast Operations Model',
+      actualModel: 'mock',
+      usedFallback: false,
+      fallbackReason: null,
+    };
+
+    try {
+      if (this.defaultExecutorMode === 'ollama') {
+        const processed = await this.processJob(job.aiJobId, { force: true });
+        routingMeta = {
+          requestedProfile: String(
+            (processed.modelRouting as { requestedProfile?: string } | undefined)
+              ?.requestedProfile || routingMeta.requestedProfile,
+          ),
+          actualModel: String(
+            (processed.modelRouting as { actualModel?: string } | undefined)?.actualModel ||
+              processed.executorModel ||
+              'ollama',
+          ),
+          usedFallback: Boolean(
+            (processed.modelRouting as { usedFallback?: boolean } | undefined)?.usedFallback,
+          ),
+          fallbackReason:
+            ((processed.modelRouting as { fallbackReason?: string | null } | undefined)
+              ?.fallbackReason as string | null) || null,
+        };
+        const payload = processed.outputPayload as Record<string, unknown> | null;
+        if (payload) {
+          const { validateDocumentEnrichmentOutput, mergeDeterministicAndModel } =
+            await import('@hvcg/atlas-integration-core');
+          // Map Phase2 payload into enrichment shape
+          const candidate = {
+            review_id: stagedFileId,
+            job_id: job.aiJobId,
+            document_type:
+              doc.reviewPackage?.classification.proposedType ||
+              String(payload.operation || 'unknown'),
+            document_type_confidence: Number(payload.confidence || 0.5),
+            alternative_document_types: [],
+            executive_summary: String(payload.executive_summary || ''),
+            facts: payload.facts || [],
+            inferences: payload.inferences || [],
+            parties: [],
+            dates: [],
+            amounts: [],
+            payment_terms: [],
+            obligations: [],
+            deliverables: [],
+            deadlines: [],
+            renewal_terms: [],
+            termination_terms: [],
+            default_terms: [],
+            governing_law: null,
+            confidentiality_terms: [],
+            signatures: { expected: [], present: [], missing: [], uncertain: [] },
+            missing_pages: [],
+            referenced_exhibits: [],
+            missing_exhibits: [],
+            risks: payload.risks || [],
+            missing_information: payload.missing_information || [],
+            proposed_filename: doc.reviewPackage?.naming.proposedFilename || '',
+            proposed_folder: doc.reviewPackage?.folder.proposedFolderPath || '',
+            duplicate_status: doc.reviewPackage?.duplicate.status || 'unable_to_determine',
+            recommended_next_action: String(payload.recommended_next_action || ''),
+            recommended_owner: String(payload.recommended_owner || 'Manny'),
+            work_value_tier: String(payload.work_value_tier || ''),
+            requires_manny_approval: true,
+            estimated_manny_review_minutes: 8,
+            estimated_manny_time_saved_minutes: 15,
+            confidence: Number(payload.confidence || 0.5),
+            warnings: payload.warnings || [],
+            source_references: [],
+          };
+          const validated = validateDocumentEnrichmentOutput(candidate, {
+            expectedJobId: job.aiJobId,
+            expectedReviewId: stagedFileId,
+          });
+          modelOutput = validated.output || null;
+          if (!validated.ok) {
+            enrichmentError = validated.errors.join('; ');
+          }
+          void mergeDeterministicAndModel;
+        } else {
+          enrichmentError = processed.errorDetail || 'No model payload';
+        }
+      } else {
+        // Mock enrichment — deterministic merge only (schema-valid draft)
+        const { mergeDeterministicAndModel } = await import('@hvcg/atlas-integration-core');
+        const snap = doc.reviewPackage?.deterministicSnapshot as {
+          documentType: string;
+          documentTypeConfidence: number;
+          alternatives: Array<{ type: string; confidence: number }>;
+          proposedFilename: string;
+          proposedFolder: string;
+          duplicateStatus: string;
+          dates: string[];
+          amounts: string[];
+          obligations: string[];
+          deadlines: string[];
+          facts: string[];
+        };
+        modelOutput = mergeDeterministicAndModel({
+          reviewId: stagedFileId,
+          jobId: job.aiJobId,
+          deterministic: snap,
+          model: null,
+        });
+        routingMeta.actualModel = 'mock-deterministic-enrichment';
+      }
+    } catch (err) {
+      enrichmentError = err instanceof Error ? err.message : String(err);
+    }
+
+    const updated = this.documentReview.applyEnrichment({
+      stagedFileId,
+      jobId: job.aiJobId,
+      modelRouting: routingMeta,
+      modelOutput,
+      enrichmentError,
+    });
+    this.repo.appendAudit({
+      auditCorrelationId: updated.correlationId,
+      aiJobId: job.aiJobId,
+      at: nowIso(),
+      actor: LOCAL_AI_OWNER,
+      action: 'document_enriched',
+      detail: `model=${routingMeta.actualModel}; fallback=${routingMeta.usedFallback}; err=${enrichmentError || 'none'}; draftOnly`,
+    });
+    return updated;
+  }
+
+  compareStagedDocumentVersions(leftId: string, rightId: string) {
+    const cmp = this.documentReview.compareVersions(leftId, rightId);
+    this.repo.appendAudit({
+      auditCorrelationId: randomUUID(),
+      aiJobId: leftId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: 'document_version_compare',
+      detail: `left=${leftId}; right=${rightId}; sameFamily=${cmp.likelySameDocumentFamily}; filesDeleted=false`,
+    });
+    return cmp;
+  }
+
+  createMultiDocumentReview(opts: { stagedFileIds: string[]; clientLabel: string }) {
+    const pack = this.documentReview.createMultiDocumentPack(opts);
+    this.repo.appendAudit({
+      auditCorrelationId: pack.packId,
+      aiJobId: pack.packId,
+      at: nowIso(),
+      actor: MANNY_OWNER,
+      action: 'multi_document_pack_created',
+      detail: `files=${pack.stagedFileIds.length}; aggregateBytes=${pack.aggregateSizeBytes}; draftOnly`,
+    });
+    return pack;
   }
 
   purgeStagedDocument(stagedFileId: string) {
@@ -1580,19 +1796,10 @@ export class LocalAiService {
   }
 
   listDocumentFixtures() {
-    return (['txt', 'csv', 'pdf_text', 'injection', 'missing_signature', 'png_placeholder'] as const).map(
-      (kind) => {
-        const f = createSyntheticTestBytes(kind);
-        return {
-          kind,
-          filename: f.filename,
-          mime: f.mime,
-          sizeBytes: f.bytes.length,
-          contentBase64: f.bytes.toString('base64'),
-          banner: 'TEST — SYNTHETIC DOCUMENT',
-        };
-      },
-    );
+    return this.documentReview.listFixtures().map((f) => ({
+      ...f,
+      contentBase64: undefined,
+    }));
   }
 
   private requireJob(aiJobId: string): AiJobRecord {
@@ -1603,6 +1810,7 @@ export class LocalAiService {
     return { ...job };
   }
 }
+
 
 export function createLocalAiService(dataDir: string, flags?: LocalAiFeatureFlags) {
   return new LocalAiService({

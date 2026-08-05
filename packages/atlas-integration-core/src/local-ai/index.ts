@@ -26,3 +26,5 @@ export * from './clientOperationsPack.ts';
 export * from './performanceMetrics.ts';
 export * from './documentIntake.ts';
 export * from './documentPolicies.ts';
+export * from './documentEnrichment.ts';
+export * from './documentPhase4b2.ts';

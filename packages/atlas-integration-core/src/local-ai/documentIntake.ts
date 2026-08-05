@@ -65,8 +65,11 @@ export type DuplicateStatus = (typeof DUPLICATE_STATUSES)[number];
 
 export const STAGED_FILE_STATUSES = [
   'Staged',
+  'MalwareBlocked',
   'Extracting',
   'OcrInProgress',
+  'AwaitingRedactionApproval',
+  'Enriching',
   'ReadyForReview',
   'ReviewComplete',
   'Purged',
@@ -87,10 +90,13 @@ export const DOCUMENT_REVIEW_DECISIONS = [
   'Mark Unique',
   'Archive Review Result',
   'Purge Staged File',
+  'Approve Redacted Content',
+  'Edit Redactions',
+  'Cancel Enrichment',
 ] as const;
 export type DocumentReviewDecision = (typeof DOCUMENT_REVIEW_DECISIONS)[number];
 
-export const TEXT_SOURCE_KINDS = ['embedded', 'ocr', 'model_inference'] as const;
+export const TEXT_SOURCE_KINDS = ['embedded', 'ocr', 'model_inference', 'deterministic'] as const;
 export type TextSourceKind = (typeof TEXT_SOURCE_KINDS)[number];
 
 export const DEFAULT_MAX_STAGED_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -98,7 +104,9 @@ export const DEFAULT_MAX_OCR_PAGES = 40;
 export const DEFAULT_STAGED_FILE_TTL_HOURS = 24;
 export const DEFAULT_MAX_IMAGE_PIXELS = 40_000_000;
 export const OCR_ENGINE_NAME = 'tesseract';
-export const DOCUMENT_STAGING_SCHEMA_VERSION = '1.0.0-phase4b1';
+export const DOCUMENT_STAGING_SCHEMA_VERSION = '1.1.0-phase4b2';
+export const CLAMAV_RECOMMENDED_INSTALL =
+  'brew install clamav && brew services start clamav (or run freshclam once after configuring /opt/homebrew/etc/clamav/freshclam.conf)';
 
 export interface ExtractedField {
   key: string;
@@ -106,6 +114,10 @@ export interface ExtractedField {
   confidence: number;
   sourcePage: number | null;
   sourceKind: TextSourceKind;
+  sheet?: string | null;
+  cellRange?: string | null;
+  paragraph?: number | null;
+  imageRef?: string | null;
   notes?: string;
 }
 
@@ -114,8 +126,14 @@ export interface PageTextBlock {
   text: string;
   sourceKind: TextSourceKind;
   confidence: number | null;
+  confidenceBand?: string;
   skipped?: boolean;
   skipReason?: string;
+  preprocessing?: string[];
+  originalDimensions?: { width: number; height: number } | null;
+  processedDimensions?: { width: number; height: number } | null;
+  retryCount?: number;
+  failedRegions?: string[];
 }
 
 export interface OcrRunSummary {
@@ -124,10 +142,13 @@ export interface OcrRunSummary {
   pagesProcessed: number;
   pagesSkipped: number;
   averageConfidence: number | null;
+  confidenceBand: string;
   failedPages: number[];
   durationMs: number;
   cancelled: boolean;
   timedOut: boolean;
+  preprocessingApplied: string[];
+  wordLevelConfidenceAvailable: boolean;
   disclaimer: 'OCR-derived text is not guaranteed accurate';
 }
 
@@ -228,6 +249,11 @@ export interface DocumentReviewPackage {
     usedFallback: boolean;
     fallbackReason: string | null;
   } | null;
+  enrichment: unknown | null;
+  enrichmentStatus: 'pending' | 'awaiting_redaction' | 'complete' | 'failed' | 'skipped';
+  deterministicSnapshot: unknown | null;
+  conflicts: unknown[];
+  redactedContentPreview: string | null;
   draftOnly: true;
   noFileMovement: true;
   noRecordWrites: true;
@@ -252,14 +278,18 @@ export interface StagedDocumentRecord {
   updatedAt: string;
   expiresAt: string;
   initiatedBy: 'Manny';
-  malwareScanStatus: 'not_configured' | 'skipped' | 'clean' | 'blocked';
+  malwareScanStatus: string;
   malwareScanNote: string;
+  malwareScan: unknown | null;
   extraction: ExtractionSummary | null;
   reviewPackage: DocumentReviewPackage | null;
   linkedAiJobId: string | null;
+  redactionDecision: 'Pending' | 'Approve Redacted Content' | 'Edit Redactions' | 'Cancel Enrichment' | null;
+  redactedContent: string | null;
   mannyDecision: DocumentReviewDecision | 'Pending' | null;
   mannyDecisionAt: string | null;
   mannyCorrections: Record<string, unknown> | null;
+  correctionLog: unknown[];
   errorDetail: string | null;
   purgedAt: string | null;
   draftOnly: true;

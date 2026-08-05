@@ -12,6 +12,7 @@ import {
   DEFAULT_MAX_OCR_PAGES,
   DEFAULT_MAX_IMAGE_PIXELS,
   OCR_ENGINE_NAME,
+  classifyOcrConfidence,
   type ExtractionSummary,
   type OcrRunSummary,
   type PageTextBlock,
@@ -76,27 +77,216 @@ export async function getTesseractVersion(): Promise<string> {
   }
 }
 
+async function detectOrientationDegrees(imagePath: string, opts?: ExtractOptions): Promise<number> {
+  try {
+    const r = await runCmd('tesseract', [imagePath, 'stdout', '--psm', '0'], {
+      timeoutMs: 30_000,
+      signal: opts?.signal,
+    });
+    const m = (r.stdout || r.stderr).match(/Rotate:\s*(\d+)/i);
+    return m ? Number(m[1]) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function preprocessImageForOcr(
+  imagePath: string,
+  opts?: ExtractOptions,
+): Promise<{ path: string; preprocessing: string[]; original: { width: number; height: number } | null; processed: { width: number; height: number } | null; tmpDir: string }> {
+  const preprocessing: string[] = [];
+  const tmpDir = mkdtempSync(join(tmpdir(), 'ocr-prep-'));
+  let current = imagePath;
+  let original: { width: number; height: number } | null = null;
+  let processed: { width: number; height: number } | null = null;
+
+  // Dimensions via sips
+  try {
+    const dim = await runCmd('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', current], {
+      timeoutMs: 10_000,
+      signal: opts?.signal,
+    });
+    const w = Number((dim.stdout.match(/pixelWidth:\s*(\d+)/) || [])[1] || 0);
+    const h = Number((dim.stdout.match(/pixelHeight:\s*(\d+)/) || [])[1] || 0);
+    if (w && h) original = { width: w, height: h };
+  } catch {
+    /* ignore */
+  }
+
+  const rotate = await detectOrientationDegrees(current, opts);
+  if (rotate && rotate !== 0) {
+    const rotated = join(tmpDir, 'rotated.png');
+    await runCmd('sips', ['--rotate', String(rotate), current, '--out', rotated], {
+      timeoutMs: 30_000,
+      signal: opts?.signal,
+    });
+    current = rotated;
+    preprocessing.push(`rotate_${rotate}`);
+  }
+
+  // Grayscale + normalize contrast via sips
+  const gray = join(tmpDir, 'gray.png');
+  try {
+    await runCmd('sips', ['-s', 'format', 'png', '-s', 'formatOptions', 'default', current, '--out', gray], {
+      timeoutMs: 30_000,
+      signal: opts?.signal,
+    });
+    // macOS sips doesn't do true deskew; mark as grayscale/normalize attempt
+    await runCmd('sips', ['--matchTo', '/System/Library/ColorSync/Profiles/Generic Gray Profile.icc', gray, '--out', gray], {
+      timeoutMs: 30_000,
+      signal: opts?.signal,
+    }).catch(() => undefined);
+    current = gray;
+    preprocessing.push('grayscale', 'contrast_normalize_attempt', 'deskew_unavailable_sips');
+  } catch {
+    preprocessing.push('preprocess_skipped');
+  }
+
+  // Resolution normalize: if very large, downsample
+  if (original && original.width * original.height > 8_000_000) {
+    const scaled = join(tmpDir, 'scaled.png');
+    await runCmd('sips', ['--resampleWidth', '2000', current, '--out', scaled], {
+      timeoutMs: 30_000,
+      signal: opts?.signal,
+    });
+    current = scaled;
+    preprocessing.push('resolution_normalize');
+  }
+
+  try {
+    const dim2 = await runCmd('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', current], {
+      timeoutMs: 10_000,
+      signal: opts?.signal,
+    });
+    const w = Number((dim2.stdout.match(/pixelWidth:\s*(\d+)/) || [])[1] || 0);
+    const h = Number((dim2.stdout.match(/pixelHeight:\s*(\d+)/) || [])[1] || 0);
+    if (w && h) processed = { width: w, height: h };
+  } catch {
+    /* ignore */
+  }
+
+  return { path: current, preprocessing, original, processed, tmpDir };
+}
+
+function parseTsvConfidence(tsv: string): { avg: number | null; lowRegions: string[] } {
+  const lines = tsv.split(/\r?\n/).slice(1);
+  const confs: number[] = [];
+  const lowRegions: string[] = [];
+  for (const line of lines) {
+    const cols = line.split('\t');
+    if (cols.length < 12) continue;
+    const conf = Number(cols[10]);
+    const text = cols[11] || '';
+    if (!Number.isFinite(conf) || conf < 0) continue;
+    if (!text.trim()) continue;
+    confs.push(conf / 100);
+    if (conf < 50) lowRegions.push(text.slice(0, 40));
+  }
+  if (!confs.length) return { avg: null, lowRegions };
+  return { avg: confs.reduce((a, b) => a + b, 0) / confs.length, lowRegions: lowRegions.slice(0, 20) };
+}
+
 async function ocrImageFile(
   imagePath: string,
   opts?: ExtractOptions,
-): Promise<{ text: string; confidence: number | null }> {
+): Promise<{
+  text: string;
+  confidence: number | null;
+  preprocessing: string[];
+  originalDimensions: { width: number; height: number } | null;
+  processedDimensions: { width: number; height: number } | null;
+  retryCount: number;
+  failedRegions: string[];
+  wordLevelConfidenceAvailable: boolean;
+}> {
+  const prep = await preprocessImageForOcr(imagePath, opts);
   const outBase = join(mkdtempSync(join(tmpdir(), 'ocr-out-')), 'out');
+  let retryCount = 0;
   try {
-    const r = await runCmd(
+    let r = await runCmd(
       'tesseract',
-      [imagePath, outBase, '-l', 'eng', '--psm', '3'],
+      [prep.path, outBase, '-l', 'eng', '--psm', '3', 'tsv'],
       { timeoutMs: opts?.ocrTimeoutMs || 120_000, signal: opts?.signal },
     );
     if (r.code !== 0) {
-      throw Object.assign(new Error(`tesseract failed: ${r.stderr}`), { code: 'ocr_failed' });
+      retryCount = 1;
+      r = await runCmd(
+        'tesseract',
+        [prep.path, outBase, '-l', 'eng', '--psm', '6'],
+        { timeoutMs: opts?.ocrTimeoutMs || 120_000, signal: opts?.signal },
+      );
+      if (r.code !== 0) {
+        throw Object.assign(new Error(`tesseract failed: ${r.stderr}`), { code: 'ocr_failed' });
+      }
     }
-    const text = readFileSync(`${outBase}.txt`, 'utf8');
-    // tesseract CLI does not always emit confidence; approximate from length heuristics
-    const confidence = text.trim() ? 0.7 : 0.2;
-    return { text, confidence };
+    const textPath = existsSync(`${outBase}.txt`) ? `${outBase}.txt` : null;
+    const tsvPath = existsSync(`${outBase}.tsv`) ? `${outBase}.tsv` : null;
+    // tesseract tsv mode writes .tsv; also try reading tsv as primary
+    let text = textPath ? readFileSync(textPath, 'utf8') : '';
+    let confidence: number | null = null;
+    let failedRegions: string[] = [];
+    let wordLevel = false;
+    if (tsvPath) {
+      const tsv = readFileSync(tsvPath, 'utf8');
+      const parsed = parseTsvConfidence(tsv);
+      confidence = parsed.avg;
+      failedRegions = parsed.lowRegions;
+      wordLevel = parsed.avg != null;
+      if (!text.trim()) {
+        // reconstruct from tsv words
+        text = tsv
+          .split(/\r?\n/)
+          .slice(1)
+          .map((l) => l.split('\t')[11] || '')
+          .filter(Boolean)
+          .join(' ');
+      }
+    }
+    if (confidence == null) {
+      confidence = text.trim() ? 0.55 : 0.15;
+    }
+    // Low confidence retry with PSM 4
+    if (confidence < 0.45 && retryCount === 0) {
+      retryCount = 1;
+      const retryBase = join(mkdtempSync(join(tmpdir(), 'ocr-retry-')), 'out');
+      const rr = await runCmd(
+        'tesseract',
+        [prep.path, retryBase, '-l', 'eng', '--psm', '4', 'tsv'],
+        { timeoutMs: opts?.ocrTimeoutMs || 120_000, signal: opts?.signal },
+      );
+      if (rr.code === 0 && existsSync(`${retryBase}.tsv`)) {
+        const parsed = parseTsvConfidence(readFileSync(`${retryBase}.tsv`, 'utf8'));
+        if ((parsed.avg || 0) > (confidence || 0)) {
+          confidence = parsed.avg;
+          failedRegions = parsed.lowRegions;
+          wordLevel = true;
+          if (existsSync(`${retryBase}.txt`)) text = readFileSync(`${retryBase}.txt`, 'utf8');
+        }
+      }
+      try {
+        rmSync(join(retryBase, '..'), { recursive: true, force: true });
+      } catch {
+        /* ignore */
+      }
+    }
+    return {
+      text,
+      confidence,
+      preprocessing: prep.preprocessing,
+      originalDimensions: prep.original,
+      processedDimensions: prep.processed,
+      retryCount,
+      failedRegions,
+      wordLevelConfidenceAvailable: wordLevel,
+    };
   } finally {
     try {
       rmSync(join(outBase, '..'), { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
+    try {
+      rmSync(prep.tmpDir, { recursive: true, force: true });
     } catch {
       /* ignore */
     }
@@ -248,6 +438,8 @@ export async function extractDocument(opts: {
       let confSum = 0;
       let cancelled = false;
       let timedOut = false;
+      let preprocessingApplied: string[] = [];
+      let wordLevel = false;
       try {
         const images = await pdfToPngPages(opts.absolutePath, maxPages, opts.extractOpts?.signal);
         skipped = Math.max(0, (pageCount || images.length) - images.length);
@@ -258,16 +450,32 @@ export async function extractDocument(opts: {
             break;
           }
           try {
-            const { text, confidence } = await ocrImageFile(images[i], opts.extractOpts);
+            const ocr = await ocrImageFile(images[i], opts.extractOpts);
             processed += 1;
-            confSum += confidence || 0;
-            ocrParts.push(text);
-            pages.push({
-              page: i + 1,
-              text,
-              sourceKind: 'ocr',
-              confidence,
-            });
+            confSum += ocr.confidence || 0;
+            ocrParts.push(ocr.text);
+            preprocessingApplied = [...new Set([...preprocessingApplied, ...ocr.preprocessing])];
+            wordLevel = wordLevel || ocr.wordLevelConfidenceAvailable;
+            // Do not replace strong embedded text with weaker OCR on same page
+            const embConf = pages.find((p) => p.page === i + 1 && p.sourceKind === 'embedded')?.confidence;
+            if (embConf != null && embConf >= 0.7 && (ocr.confidence || 0) < embConf) {
+              warnings.push(
+                `Page ${i + 1}: kept embedded text over lower-confidence OCR (${ocr.confidence})`,
+              );
+            } else {
+              pages.push({
+                page: i + 1,
+                text: ocr.text,
+                sourceKind: 'ocr',
+                confidence: ocr.confidence,
+                confidenceBand: classifyOcrConfidence(ocr.confidence),
+                preprocessing: ocr.preprocessing,
+                originalDimensions: ocr.originalDimensions,
+                processedDimensions: ocr.processedDimensions,
+                retryCount: ocr.retryCount,
+                failedRegions: ocr.failedRegions,
+              });
+            }
           } catch (err) {
             const code = (err as { code?: string }).code;
             if (code === 'cancelled') cancelled = true;
@@ -276,7 +484,6 @@ export async function extractDocument(opts: {
           }
         }
         ocrText = ocrParts.join('\n\n');
-        // cleanup temp images parent
         if (images[0]) {
           try {
             rmSync(join(images[0], '..'), { recursive: true, force: true });
@@ -287,16 +494,20 @@ export async function extractDocument(opts: {
       } catch (err) {
         warnings.push(`OCR pipeline error: ${err instanceof Error ? err.message : String(err)}`);
       }
+      const avg = processed ? confSum / processed : null;
       ocrSummary = {
         engine: OCR_ENGINE_NAME,
         version: await getTesseractVersion(),
         pagesProcessed: processed,
         pagesSkipped: skipped,
-        averageConfidence: processed ? confSum / processed : null,
+        averageConfidence: avg,
+        confidenceBand: classifyOcrConfidence(avg),
         failedPages,
         durationMs: Date.now() - started,
         cancelled,
         timedOut,
+        preprocessingApplied,
+        wordLevelConfidenceAvailable: wordLevel,
         disclaimer: 'OCR-derived text is not guaranteed accurate',
       };
     } else if (needsOcr) {
@@ -333,20 +544,34 @@ export async function extractDocument(opts: {
     writeFileSync(tmp, opts.bytes);
     const started = Date.now();
     try {
-      const { text, confidence } = await ocrImageFile(tmp, opts.extractOpts);
-      ocrText = text;
+      const ocr = await ocrImageFile(tmp, opts.extractOpts);
+      ocrText = ocr.text;
       pageCount = 1;
-      pages.push({ page: 1, text, sourceKind: 'ocr', confidence });
+      pages.push({
+        page: 1,
+        text: ocr.text,
+        sourceKind: 'ocr',
+        confidence: ocr.confidence,
+        confidenceBand: classifyOcrConfidence(ocr.confidence),
+        preprocessing: ocr.preprocessing,
+        originalDimensions: ocr.originalDimensions,
+        processedDimensions: ocr.processedDimensions,
+        retryCount: ocr.retryCount,
+        failedRegions: ocr.failedRegions,
+      });
       ocrSummary = {
         engine: OCR_ENGINE_NAME,
         version: await getTesseractVersion(),
         pagesProcessed: 1,
         pagesSkipped: 0,
-        averageConfidence: confidence,
+        averageConfidence: ocr.confidence,
+        confidenceBand: classifyOcrConfidence(ocr.confidence),
         failedPages: [],
         durationMs: Date.now() - started,
         cancelled: false,
         timedOut: false,
+        preprocessingApplied: ocr.preprocessing,
+        wordLevelConfidenceAvailable: ocr.wordLevelConfidenceAvailable,
         disclaimer: 'OCR-derived text is not guaranteed accurate',
       };
     } finally {

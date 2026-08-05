@@ -50,10 +50,13 @@ export const DEEP_ONLY_OPERATIONS = [
   'strategic_issue_analysis',
   'review_complex_agreement',
   'review_financing_document',
+  'compare_document_versions',
+  'prepare_document_decision_package',
+  'identify_document_obligations',
 ] as const;
 
 export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
-  // Fast Operations (Phase 4A / 4B-1 routine document)
+  // Fast Operations (Phase 4A / 4B document routine)
   classify_work_value: 'Fast Operations Model',
   identify_missing_information: 'Fast Operations Model',
   summarize_text: 'Fast Operations Model',
@@ -64,6 +67,11 @@ export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
   summarize_meeting_outcomes: 'Fast Operations Model',
   draft_internal_task_plan: 'Fast Operations Model',
   classify_document: 'Fast Operations Model',
+  summarize_document: 'Fast Operations Model',
+  extract_document_fields: 'Fast Operations Model',
+  identify_document_deadlines: 'Fast Operations Model',
+  identify_missing_signatures: 'Fast Operations Model',
+  identify_missing_pages: 'Fast Operations Model',
   recommend_document_filename: 'Fast Operations Model',
   recommend_document_folder: 'Fast Operations Model',
   review_routine_invoice: 'Fast Operations Model',
@@ -78,6 +86,9 @@ export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
   strategic_issue_analysis: 'Deep Analysis Model',
   review_complex_agreement: 'Deep Analysis Model',
   review_financing_document: 'Deep Analysis Model',
+  compare_document_versions: 'Deep Analysis Model',
+  prepare_document_decision_package: 'Deep Analysis Model',
+  identify_document_obligations: 'Deep Analysis Model',
 };
 
 /** Owner-facing recommendations when no distinct fast model is installed. */

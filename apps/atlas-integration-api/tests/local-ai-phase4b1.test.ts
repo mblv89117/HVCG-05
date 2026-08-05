@@ -24,7 +24,7 @@ function tempService() {
     repo: new LocalAiRepository(join(dir, 'repo')),
     flags: { ...DEFAULT_LOCAL_AI_FEATURE_FLAGS, LocalAIEnabled: true },
     defaultExecutorMode: 'mock',
-    secretsFileEnv: {},
+    secretsFileEnv: { LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE: 'true' },
     documentStagingRoot: staging,
     ollamaClient: {
       getConfig: () => ({
@@ -65,9 +65,9 @@ describe('phase4b1 document policies', () => {
 });
 
 describe('phase4b1 staging and extraction', () => {
-  it('rejects unsupported types and oversized payloads', () => {
+  it('rejects unsupported types and oversized payloads', async () => {
     const { service, cleanup } = tempService();
-    assert.throws(() =>
+    await assert.rejects(() =>
       service.stageDocument({
         originalFilename: 'x.exe',
         contentBase64: Buffer.from('MZ').toString('base64'),
@@ -79,7 +79,7 @@ describe('phase4b1 staging and extraction', () => {
   it('stages txt, extracts, detects injection, never moves file', async () => {
     const { service, staging, cleanup } = tempService();
     const fx = createSyntheticTestBytes('injection');
-    const staged = service.stageDocument({
+    const staged = await service.stageDocument({
       originalFilename: fx.filename,
       contentBase64: fx.bytes.toString('base64'),
       declaredMime: fx.mime,
@@ -90,7 +90,7 @@ describe('phase4b1 staging and extraction', () => {
       stagedFileId: staged.stagedFileId,
       clientLabel: 'Synthetic Client',
     });
-    assert.equal(processed.status, 'ReadyForReview');
+    assert.equal(processed.status, 'AwaitingRedactionApproval');
     assert.ok(processed.reviewPackage);
     assert.equal(processed.reviewPackage!.draftOnly, true);
     assert.equal(processed.reviewPackage!.noFileMovement, true);
@@ -98,7 +98,6 @@ describe('phase4b1 staging and extraction', () => {
     assert.ok((processed.reviewPackage!.injectionWarnings || []).length >= 1);
     assert.equal(processed.reviewPackage!.naming.fileRenamed, false);
     assert.equal(processed.reviewPackage!.folder.fileMoved, false);
-    // original still present under safe name only
     assert.ok(existsSync(join(staging, 'files', staged.safeFilename)));
     cleanup();
   });
@@ -106,7 +105,7 @@ describe('phase4b1 staging and extraction', () => {
   it('extracts CSV safely and PDF embedded text', async () => {
     const { service, cleanup } = tempService();
     const csv = createSyntheticTestBytes('csv');
-    const stagedCsv = service.stageDocument({
+    const stagedCsv = await service.stageDocument({
       originalFilename: csv.filename,
       contentBase64: csv.bytes.toString('base64'),
       declaredMime: csv.mime,
@@ -118,7 +117,7 @@ describe('phase4b1 staging and extraction', () => {
     assert.ok(csvDoc.extraction?.warnings.some((w) => /formula/i.test(w)));
 
     const pdf = createSyntheticTestBytes('pdf_text');
-    const stagedPdf = service.stageDocument({
+    const stagedPdf = await service.stageDocument({
       originalFilename: pdf.filename,
       contentBase64: pdf.bytes.toString('base64'),
       declaredMime: pdf.mime,
@@ -136,13 +135,14 @@ describe('phase4b1 staging and extraction', () => {
   it('detects exact duplicate by checksum and supports purge + approve draft', async () => {
     const { service, staging, cleanup } = tempService();
     const fx = createSyntheticTestBytes('txt');
-    const a = service.stageDocument({
+    const a = await service.stageDocument({
       originalFilename: fx.filename,
       contentBase64: fx.bytes.toString('base64'),
       declaredMime: fx.mime,
     });
     await service.processStagedDocument({ stagedFileId: a.stagedFileId, clientLabel: 'A' });
-    const b = service.stageDocument({
+    await service.decideStagedDocument(a.stagedFileId, 'Approve Redacted Content');
+    const b = await service.stageDocument({
       originalFilename: 'copy-' + fx.filename,
       contentBase64: fx.bytes.toString('base64'),
       declaredMime: fx.mime,
@@ -153,7 +153,7 @@ describe('phase4b1 staging and extraction', () => {
     });
     assert.equal(bDoc.reviewPackage?.duplicate.status, 'exact_duplicate');
 
-    const approved = service.decideStagedDocument(a.stagedFileId, 'Approve Draft');
+    const approved = await service.decideStagedDocument(a.stagedFileId, 'Approve Draft');
     assert.equal(approved.mannyDecision, 'Approve Draft');
     assert.equal(approved.reviewPackage?.naming.fileRenamed, false);
     assert.equal(approved.reviewPackage?.folder.fileMoved, false);
@@ -170,11 +170,10 @@ describe('phase4b1 staging and extraction', () => {
     cleanup();
   });
 
-  it('rejects MIME mismatch', () => {
+  it('rejects MIME mismatch', async () => {
     const { service, cleanup } = tempService();
-    // PNG bytes with .pdf extension
     const png = createSyntheticTestBytes('png_placeholder');
-    assert.throws(() =>
+    await assert.rejects(() =>
       service.stageDocument({
         originalFilename: 'fake.pdf',
         contentBase64: png.bytes.toString('base64'),
