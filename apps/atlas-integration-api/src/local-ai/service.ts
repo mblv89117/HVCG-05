@@ -67,6 +67,7 @@ import {
   resolveJobModel,
 } from './phase3Workflow.ts';
 import { DocumentReviewService } from './documentReviewService.ts';
+import { resolveClamscanPath } from './malwareScanner.ts';
 import type { DocumentReviewDecision } from '@hvcg/atlas-integration-core';
 
 export interface LocalAiServiceDeps {
@@ -139,11 +140,16 @@ export class LocalAiService {
         ...(deps.documentStagingRoot
           ? { LOCAL_AI_DOCUMENT_STAGING_DIR: deps.documentStagingRoot }
           : {}),
-        // Tests / local synthetic fixtures: allow override when ClamAV absent
+        // Synthetic override only when ClamAV is unavailable (local TEST fixtures)
         LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE:
           this.secretsFileEnv.LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE ||
           process.env.LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE ||
-          'true',
+          (resolveClamscanPath({
+            ...process.env,
+            ...this.secretsFileEnv,
+          })
+            ? 'false'
+            : 'true'),
       },
     );
   }

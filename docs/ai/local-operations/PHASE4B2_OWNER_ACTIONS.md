@@ -1,8 +1,8 @@
-# Phase 4B-2 Owner Actions Required
+# Phase 4B-2 Owner Actions Required (post-hardening)
 
-1. Review Document Review UI: malware status → extract → Approve Redacted Content → enrichment.  
-2. Authorize ClamAV install if desired: `brew install clamav` (+ freshclam). Until then, keep synthetic override local-only.  
-3. Optionally run a live Ollama enrich against `qwen2.5:7b-instruct` / `glm-4.7-flash:q4_K_M` and record latencies.  
-4. Do not enable Writes / ExternalMessages / EVA / ClientEmails without separate authorization.  
-5. Do not push/merge/deploy this branch until authorized.  
-6. Purge non-synthetic staged files after review.
+1. Review `PHASE4B2_FINAL_ACCEPTANCE_REPORT.md` and live benchmark JSON.  
+2. Keep ClamAV definitions updated periodically: `freshclam`.  
+3. Do **not** start Phase 4C without separate authorization.  
+4. Do **not** push/merge/deploy this branch until authorized.  
+5. Keep Writes / ExternalMessages / EVA / ClientEmails **Off**.  
+6. Purge any non-synthetic staged files after manual reviews.

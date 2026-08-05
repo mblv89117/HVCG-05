@@ -1,18 +1,20 @@
-# Phase 4B-2 Fixture Inventory
+# Phase 4B-2 Fixture Inventory (hardening)
 
-Generated in-memory by `documentFixtures.ts` (not committed as binary blobs). All labeled `TEST — DO NOT CONTACT` / `TEST — SYNTHETIC DOCUMENT`.
+Generators: `apps/atlas-integration-api/src/local-ai/documentFixtures.ts`  
+Labels: `TEST — DO NOT CONTACT` / `TEST — SYNTHETIC DOCUMENT`  
+No real client data. EICAR generated only in tests (not committed).
 
-| Kind | Description |
+| Kind | Improvement |
 | --- | --- |
 | pdf_text | Embedded-text invoice PDF |
-| pdf_*_placeholder | Near-empty PDFs for OCR paths |
-| pdf_encrypted | `/Encrypt` PDF (rejected at staging) |
-| docx_agreement / docx_missing_signature | OOXML agreements |
-| docx_password_marker | Non-standard protected marker |
-| xlsx_financial / formulas / external_link | Workbooks (no macro exec) |
-| csv / csv_formula | Transactions + formula injection |
-| png/jpg placeholders | Image OCR |
-| injection / missing_page / prior_version / duplicate | Text scenarios |
-| malformed | Invalid PDF bytes |
-
-EICAR string helper available in `malwareScanner.ts` for when ClamAV is installed.
+| pdf_scanned | **Real** image-only PDF via pdftoppm → JPEG embed |
+| pdf_rotated | **Real** rotated scan (sips rotate) |
+| pdf_poor | **Real** low-DPI (36) scan |
+| pdf_mixed | Scanned/mixed path binary |
+| docx_agreement / missing_signature | Real OOXML |
+| xlsx_financial / formulas / external_link | Real workbooks |
+| csv_formula | Formula-injection CSV |
+| jpg/png invoice & rotated | Rasterized synthetic invoice images |
+| png_lowres | Tiny PNG |
+| agreement_deep / financing_deep | Deep-routing text fixtures |
+| prior_version / missing_page | Text scenarios |

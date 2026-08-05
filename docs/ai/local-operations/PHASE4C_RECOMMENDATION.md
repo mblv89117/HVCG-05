@@ -1,11 +1,11 @@
 # Phase 4C Recommendation (do not start without authorization)
 
-Possible next steps:
+Phase 4B-2 hardening is complete on the feature branch. Possible **Phase 4C** candidates (each requires separate written authorization):
 
-1. Owner-authorized ClamAV install + EICAR live scan evidence  
-2. Durable multi-document packs + richer comparison UX  
-3. Measured live Fast/Deep enrichment benchmarks on Mac mini  
-4. SharePoint approval-queue sync (**still no authoritative writes** unless separately authorized)  
-5. Keep Writes / EVA / external messages / client emails Off unless separately authorized  
+1. Durable multi-document review packs + richer comparison UX  
+2. SharePoint **approval-queue synchronization only** (still no authoritative business-record writes unless separately authorized)  
+3. Optional local `clamd` socket (still no public network listener) for faster warm scans  
+4. Broader OCR deskew tooling if owner authorizes ImageMagick/Pillow  
+5. Keep `LocalAIWritesEnabled` / `LocalAIExternalMessagesEnabled` / `EvaIntakeEnabled` / `ClientEmailsEnabled` **Off** unless separately authorized  
 
-**Do not begin SharePoint synchronization, automatic filing, authoritative writes, EVA, or external communications without separate authorization.**
+**Do not begin SharePoint synchronization, automatic filing, authoritative writes, EVA activation, or external communications without separate authorization.**

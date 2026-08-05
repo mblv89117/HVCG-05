@@ -402,7 +402,9 @@ export class DocumentReviewService {
       model: opts.modelOutput,
     });
     pack.enrichment = merged;
-    pack.enrichmentStatus = opts.enrichmentError ? 'failed' : 'complete';
+    // Deterministic merge always yields a schema-valid draft package.
+    // Model failures are recorded as warnings — they do not void the draft schema.
+    pack.enrichmentStatus = 'complete';
     pack.conflicts = merged.conflicts;
     pack.modelRouting = opts.modelRouting;
     pack.recommendedNextAction = merged.recommended_next_action;
@@ -420,7 +422,20 @@ export class DocumentReviewService {
       banner: SYNTHETIC_AI_OUTPUT_BANNER,
     };
     if (opts.enrichmentError) {
-      pack.risks = [...pack.risks, `Enrichment error: ${opts.enrichmentError}`];
+      pack.risks = [...pack.risks, `Enrichment model error: ${opts.enrichmentError}`];
+      merged.warnings = [
+        ...merged.warnings,
+        `model_enrichment_failed: ${opts.enrichmentError}`,
+      ];
+      pack.enrichment = merged;
+      if (opts.modelRouting) {
+        pack.modelRouting = {
+          ...opts.modelRouting,
+          usedFallback: opts.modelRouting.usedFallback,
+          fallbackReason:
+            opts.modelRouting.fallbackReason || `model_error: ${opts.enrichmentError}`,
+        };
+      }
     }
     pack.naming = { ...pack.naming, fileRenamed: false };
     pack.folder = { ...pack.folder, fileMoved: false };

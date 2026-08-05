@@ -1,9 +1,9 @@
-# Phase 4B-2 Known Limitations
+# Phase 4B-2 Known Limitations (post-hardening)
 
-1. **ClamAV not installed** — gate blocks unless synthetic-test override; owner must authorize `brew install clamav`.  
-2. Live Ollama enrichment path exists but automated tests use **mock** enrichment.  
-3. True deskew limited on macOS without ImageMagick/PIL.  
-4. Scanned/rotated/poor PDF fixtures are placeholders (near-empty PDFs) for path coverage.  
-5. Password-protected Office is a marker fixture, not a full ECMA crypto round-trip.  
-6. Page thumbnails in UI are not rendered (confidence/text metadata only).  
-7. Multi-doc packs are in-memory (process lifetime), not durable store.
+1. Cold ClamAV database load can make the first scans slow (tens of seconds).  
+2. Deep model latency is host-load dependent; budget up to several minutes under contention.  
+3. Password-protected Office crypto round-trip is still a marker, not full ECMA encryption.  
+4. Multi-document packs are process-memory only.  
+5. Page thumbnails are not rendered in Elite UI.  
+6. `freshclam` may log `NULL X509 store` warnings on this Homebrew install; CVD tests still passed.  
+7. ClamAV config/definitions live outside the repo and must be maintained on the machine.
