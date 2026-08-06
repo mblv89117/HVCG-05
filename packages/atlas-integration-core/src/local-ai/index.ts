@@ -29,3 +29,4 @@ export * from './documentPolicies.ts';
 export * from './documentEnrichment.ts';
 export * from './documentPhase4b2.ts';
 export * from './documentDurable.ts';
+export * from './documentPhase4c2.ts';

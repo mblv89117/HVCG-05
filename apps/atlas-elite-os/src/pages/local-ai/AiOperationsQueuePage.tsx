@@ -43,6 +43,12 @@ import {
   fetchLocalAiRetentionPreview,
   backupLocalAiDocumentStore,
   searchLocalAiDocuments,
+  createLocalAiRetentionBatch,
+  fetchLocalAiDocumentHolds,
+  fetchLocalAiIntegrityCheck,
+  fetchLocalAiRetentionPolicies,
+  analyzeLocalAiPack,
+  fetchLocalAiPackWorkspace,
   postLocalAiMannyDecision,
   postLocalAiModelCompare,
   processLocalAiContentPack,
@@ -97,6 +103,11 @@ export function AiOperationsQueuePage() {
     [],
   );
   const [backupInfo, setBackupInfo] = useState<Record<string, unknown> | null>(null);
+  const [backupProfile, setBackupProfile] = useState('Metadata Only');
+  const [backupEncrypted, setBackupEncrypted] = useState(false);
+  const [retentionPolicies, setRetentionPolicies] = useState<Array<Record<string, unknown>>>([]);
+  const [holds, setHolds] = useState<Array<Record<string, unknown>>>([]);
+  const [packWorkspace, setPackWorkspace] = useState<Record<string, unknown> | null>(null);
   const [paste, setPaste] = useState('');
   const [editedRedaction, setEditedRedaction] = useState('');
   const [compare, setCompare] = useState<Record<string, unknown> | null>(null);
@@ -113,20 +124,35 @@ export function AiOperationsQueuePage() {
     setLoading(true);
     setError(null);
     try {
-      const [j, f, d, r, p, packsRes, docsRes, multiRes, recoveryRes, healthRes, retentionRes] =
-        await Promise.all([
-          fetchLocalAiJobs(hubAuth),
-          fetchLocalAiFlags(hubAuth),
-          fetchLocalAiOllamaDiscovery(hubAuth).catch(() => null),
-          fetchLocalAiModelRouting(hubAuth).catch(() => null),
-          fetchLocalAiPerformance(hubAuth).catch(() => null),
-          fetchLocalAiContentPacks(hubAuth).catch(() => ({ packs: [] })),
-          fetchLocalAiStagedDocuments(hubAuth).catch(() => ({ documents: [] })),
-          fetchLocalAiMultiDocumentPacks(hubAuth).catch(() => ({ packs: [] })),
-          fetchLocalAiDocumentRecovery(hubAuth).catch(() => ({ interrupted: [] })),
-          fetchLocalAiDocumentStorageHealth(hubAuth).catch(() => null),
-          fetchLocalAiRetentionPreview(hubAuth).catch(() => ({ candidates: [] })),
-        ]);
+      const [
+        j,
+        f,
+        d,
+        r,
+        p,
+        packsRes,
+        docsRes,
+        multiRes,
+        recoveryRes,
+        healthRes,
+        retentionRes,
+        policiesRes,
+        holdsRes,
+      ] = await Promise.all([
+        fetchLocalAiJobs(hubAuth),
+        fetchLocalAiFlags(hubAuth),
+        fetchLocalAiOllamaDiscovery(hubAuth).catch(() => null),
+        fetchLocalAiModelRouting(hubAuth).catch(() => null),
+        fetchLocalAiPerformance(hubAuth).catch(() => null),
+        fetchLocalAiContentPacks(hubAuth).catch(() => ({ packs: [] })),
+        fetchLocalAiStagedDocuments(hubAuth).catch(() => ({ documents: [] })),
+        fetchLocalAiMultiDocumentPacks(hubAuth).catch(() => ({ packs: [] })),
+        fetchLocalAiDocumentRecovery(hubAuth).catch(() => ({ interrupted: [] })),
+        fetchLocalAiDocumentStorageHealth(hubAuth).catch(() => null),
+        fetchLocalAiRetentionPreview(hubAuth).catch(() => ({ candidates: [] })),
+        fetchLocalAiRetentionPolicies(hubAuth).catch(() => ({ policies: [] })),
+        fetchLocalAiDocumentHolds(hubAuth).catch(() => ({ holds: [] })),
+      ]);
       setJobs(j.jobs);
       setFlags(f.flags);
       setDiscovery(d);
@@ -138,8 +164,9 @@ export function AiOperationsQueuePage() {
       setInterrupted(recoveryRes.interrupted || []);
       setStorageHealth(healthRes?.health || null);
       setRetentionCandidates(retentionRes.candidates || []);
+      setRetentionPolicies(policiesRes.policies || []);
+      setHolds(holdsRes.holds || []);
       await fetchLocalAiApprovalQueue(hubAuth).catch(() => null);
-    } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
@@ -472,8 +499,8 @@ export function AiOperationsQueuePage() {
       </AtlasCard>
 
       <AtlasCard
-        title="Multi-Document Packs"
-        subtitle="Manually selected reviews only · no folder/system access"
+        title="Multi-Document Pack Workspace"
+        subtitle="Manual selection · ordering · relationships · pack analysis (draft only)"
         style={{ marginTop: 12 }}
       >
         {multiPacks.length ? (
@@ -495,14 +522,36 @@ export function AiOperationsQueuePage() {
                 render: (r: Record<string, unknown>) =>
                   String((r.stagedFileIds as string[] | undefined)?.length || 0),
               },
+              {
+                key: 'act',
+                header: '',
+                render: (r: Record<string, unknown>) => (
+                  <Button
+                    size="small"
+                    disabled={busy}
+                    onClick={() =>
+                      void Promise.all([
+                        fetchLocalAiPackWorkspace(hubAuth, String(r.packId)),
+                        analyzeLocalAiPack(hubAuth, String(r.packId)),
+                      ]).then(([w]) => setPackWorkspace(w.workspace))
+                    }
+                  >
+                    Open workspace
+                  </Button>
+                ),
+              },
             ]}
             rows={multiPacks}
             getRowKey={(r: Record<string, unknown>) => String(r.packId)}
           />
         ) : (
-          <Caption1>No multi-document packs yet.</Caption1>
+          <Caption1>No multi-document packs yet. Create from Document Review.</Caption1>
         )}
-        {multiPack ? (
+        {packWorkspace ? (
+          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(packWorkspace, null, 2)}
+          </pre>
+        ) : multiPack ? (
           <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
             {JSON.stringify(multiPack, null, 2)}
           </pre>
@@ -510,12 +559,12 @@ export function AiOperationsQueuePage() {
       </AtlasCard>
 
       <AtlasCard
-        title="Recovery"
-        subtitle="Interrupted jobs after restart — manual resume/cancel only"
+        title="Recovery Center"
+        subtitle="Checkpoints · reusable stages · manual resume only"
         style={{ marginTop: 12 }}
       >
         <Caption1 style={{ display: 'block', marginBottom: 8 }}>
-          No automatic reprocess. {interrupted.length} interrupted job(s).
+          No automatic reprocess after restart. {interrupted.length} interrupted job(s).
         </Caption1>
         {interrupted.length ? (
           <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
@@ -525,35 +574,98 @@ export function AiOperationsQueuePage() {
       </AtlasCard>
 
       <AtlasCard
-        title="Local Storage"
-        subtitle="SQLite health · retention · backup (local only)"
+        title="Retention Center"
+        subtitle="Preview · holds · Manny-confirmed purge batches"
+        style={{ marginTop: 12 }}
+      >
+        <Caption1 style={{ display: 'block', marginBottom: 8 }}>
+          Policies {retentionPolicies.length} · holds {holds.length} · purge candidates{' '}
+          {retentionCandidates.length}
+        </Caption1>
+        <Button
+          disabled={busy || !signedIn}
+          onClick={() =>
+            void createLocalAiRetentionBatch(hubAuth, 'UI proposed batch').then(() => refresh())
+          }
+        >
+          Create proposed purge batch
+        </Button>
+        {retentionCandidates.length ? (
+          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(retentionCandidates.slice(0, 5), null, 2)}
+          </pre>
+        ) : null}
+      </AtlasCard>
+
+      <AtlasCard
+        title="Local Storage / Backup & Restore"
+        subtitle="Profiles · encryption · dry run · integrity (local only)"
         style={{ marginTop: 12 }}
       >
         <Caption1 style={{ display: 'block', marginBottom: 8 }}>
           Schema {String(storageHealth?.schemaVersion ?? '—')} · reviews{' '}
           {String(storageHealth?.reviewCount ?? '—')} · DB bytes{' '}
-          {String(storageHealth?.dbBytes ?? '—')} · purge candidates {retentionCandidates.length}
+          {String(storageHealth?.dbBytes ?? '—')} · journal{' '}
+          {String(storageHealth?.journalMode ?? '—')}
         </Caption1>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <select
+            value={backupProfile}
+            onChange={(e) => setBackupProfile(e.target.value)}
+            disabled={busy}
+          >
+            <option>Metadata Only</option>
+            <option>Metadata Plus Extracted Content</option>
+            <option>Full Local Review Backup</option>
+          </select>
+          <label style={{ fontSize: 12 }}>
+            <input
+              type="checkbox"
+              checked={backupEncrypted}
+              onChange={(e) => setBackupEncrypted(e.target.checked)}
+            />{' '}
+            Encrypted (AES-256-GCM)
+          </label>
           <Button
             disabled={busy || !signedIn}
             onClick={() =>
-              void backupLocalAiDocumentStore(hubAuth, { dryRun: true }).then((r) =>
-                setBackupInfo(r.backup),
-              )
+              void backupLocalAiDocumentStore(hubAuth, {
+                dryRun: true,
+                profile: backupProfile,
+                encrypted: backupEncrypted,
+              }).then((r) => setBackupInfo(r.backup))
             }
           >
             Backup dry-run
           </Button>
           <Button
             disabled={busy || !signedIn}
+            onClick={() => {
+              if (
+                backupProfile === 'Full Local Review Backup' &&
+                !window.confirm('WARNING: Full backup may include staged originals. Continue?')
+              ) {
+                return;
+              }
+              void backupLocalAiDocumentStore(hubAuth, {
+                dryRun: false,
+                profile: backupProfile,
+                encrypted: backupEncrypted,
+                includeStagedOriginals: backupProfile === 'Full Local Review Backup',
+              }).then((r) => setBackupInfo(r.backup));
+            }}
+          >
+            Create local backup
+          </Button>
+          <Button
+            disabled={busy || !signedIn}
             onClick={() =>
-              void backupLocalAiDocumentStore(hubAuth, { dryRun: false }).then((r) =>
-                setBackupInfo(r.backup),
+              void fetchLocalAiIntegrityCheck(hubAuth).then((r) =>
+                setBackupInfo({ integrity: r.report }),
               )
             }
           >
-            Create local backup
+            Integrity check
           </Button>
           <Button disabled={loading || !signedIn} onClick={() => void refresh()}>
             Refresh storage
@@ -562,11 +674,6 @@ export function AiOperationsQueuePage() {
         {backupInfo ? (
           <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
             {JSON.stringify(backupInfo, null, 2)}
-          </pre>
-        ) : null}
-        {retentionCandidates.length ? (
-          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
-            {JSON.stringify(retentionCandidates.slice(0, 5), null, 2)}
           </pre>
         ) : null}
       </AtlasCard>

@@ -237,9 +237,33 @@ export async function handleLocalAiRoutes(opts: {
         res,
         200,
         {
-          health: localAi.documentDatabaseHealth(),
+          health: localAi.storageHealthExtended(),
           migration: localAi.documentMigrationStatus(),
         },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/integrity') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { report: localAi.documentIntegrityCheck() }, origin);
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/repair-dry-run') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.documentRepairDryRun(), origin);
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/repair') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        localAi.documentAuthorizedRepair({
+          authorized: Boolean(body.authorized),
+          action: body.action ? String(body.action) : 'note_only',
+        }),
         origin,
       );
       return true;
@@ -249,13 +273,107 @@ export async function handleLocalAiRoutes(opts: {
       send(res, 200, { candidates: localAi.retentionPreviewDocuments() }, origin);
       return true;
     }
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/retention-policies') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { policies: localAi.listRetentionPolicies() }, origin);
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/retention-batch') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        201,
+        { batch: localAi.createRetentionBatch(body.notes ? String(body.notes) : undefined) },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/retention-batch/approve') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        {
+          batch: localAi.approveRetentionBatch(String(body.batchId || ''), {
+            authorized: Boolean(body.authorized),
+            execute: Boolean(body.execute),
+          }),
+        },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/retention-batches') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { batches: localAi.listRetentionBatches() }, origin);
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/holds') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        201,
+        {
+          hold: localAi.createDocumentHold({
+            reviewId: body.reviewId ? String(body.reviewId) : null,
+            packId: body.packId ? String(body.packId) : null,
+            holdType: String(body.holdType || 'Manny Hold') as never,
+            reason: String(body.reason || 'Manny hold'),
+            expiresAt: body.expiresAt ? String(body.expiresAt) : null,
+          }),
+        },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/holds') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { holds: localAi.listDocumentHolds(true) }, origin);
+      return true;
+    }
+    const holdRelease = path.match(/^\/api\/local-ai\/documents\/storage\/holds\/([^/]+)\/release$/);
+    if (method === 'POST' && holdRelease) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { hold: localAi.releaseDocumentHold(holdRelease[1]) }, origin);
+      return true;
+    }
     if (method === 'POST' && path === '/api/local-ai/documents/storage/backup') {
       await requirePrincipal(req, cfg);
       const body = await readJson(req);
       send(
         res,
         200,
-        { backup: localAi.backupDocumentReviews({ dryRun: Boolean(body.dryRun) }) },
+        {
+          backup: localAi.backupDocumentReviews({
+            dryRun: Boolean(body.dryRun),
+            profile: body.profile || 'Metadata Only',
+            encrypted: Boolean(body.encrypted),
+            passphrase: body.passphrase ? String(body.passphrase) : undefined,
+            includeStagedOriginals: Boolean(body.includeStagedOriginals),
+          }),
+        },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/backups') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { backups: localAi.listDocumentBackups() }, origin);
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/backup-verify') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        localAi.verifyDocumentBackup(
+          String(body.manifestPath || body.backupPath || ''),
+          body.passphrase ? String(body.passphrase) : undefined,
+        ),
         origin,
       );
       return true;
@@ -280,6 +398,9 @@ export async function handleLocalAiRoutes(opts: {
         localAi.restoreDocumentReviews(String(body.backupPath || ''), {
           dryRun: Boolean(body.dryRun),
           authorized: Boolean(body.authorized),
+          confirmOverwrite: Boolean(body.confirmOverwrite),
+          passphrase: body.passphrase ? String(body.passphrase) : undefined,
+          tempValidationOnly: Boolean(body.tempValidationOnly),
         }),
         origin,
       );
@@ -341,6 +462,98 @@ export async function handleLocalAiRoutes(opts: {
         body.notes ? String(body.notes) : undefined,
       );
       send(res, 200, { pack }, origin);
+      return true;
+    }
+
+    const packWorkspace = path.match(/^\/api\/local-ai\/documents\/multi-pack\/([^/]+)\/workspace$/);
+    if (method === 'GET' && packWorkspace) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { workspace: localAi.getPackWorkspace(packWorkspace[1]) }, origin);
+      return true;
+    }
+    if (method === 'POST' && packWorkspace) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        { workspace: localAi.configurePackWorkspace(packWorkspace[1], body || {}) },
+        origin,
+      );
+      return true;
+    }
+    const packAnalyze = path.match(/^\/api\/local-ai\/documents\/multi-pack\/([^/]+)\/analyze$/);
+    if (method === 'POST' && packAnalyze) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { analysis: localAi.analyzeMultiDocumentPack(packAnalyze[1]) }, origin);
+      return true;
+    }
+    const packRel = path.match(/^\/api\/local-ai\/documents\/multi-pack\/([^/]+)\/relationships$/);
+    if (method === 'POST' && packRel) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        201,
+        {
+          relationship: localAi.upsertPackRelationship(packRel[1], {
+            relationshipId: body.relationshipId ? String(body.relationshipId) : undefined,
+            fromReviewId: String(body.fromReviewId || ''),
+            toReviewId: body.toReviewId ? String(body.toReviewId) : null,
+            relationshipType: String(body.relationshipType || 'relationship unknown') as never,
+            label: body.label ? String(body.label) : null,
+            historyNote: body.historyNote ? String(body.historyNote) : undefined,
+          }),
+        },
+        origin,
+      );
+      return true;
+    }
+    const packRelDel = path.match(
+      /^\/api\/local-ai\/documents\/multi-pack\/relationships\/([^/]+)$/,
+    );
+    if (method === 'DELETE' && packRelDel) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.deletePackRelationship(packRelDel[1]), origin);
+      return true;
+    }
+
+    const resumeElig = path.match(
+      /^\/api\/local-ai\/documents\/([^/]+)\/resume-eligibility$/,
+    );
+    if (method === 'GET' && resumeElig) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { eligibility: localAi.documentResumeEligibility(resumeElig[1]) }, origin);
+      return true;
+    }
+    const checkpoints = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/checkpoints$/);
+    if (method === 'GET' && checkpoints) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { checkpoints: localAi.listDocumentCheckpoints(checkpoints[1]) }, origin);
+      return true;
+    }
+    const resumeJob = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/resume$/);
+    if (method === 'POST' && resumeJob) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { document: await localAi.resumeDocumentFromCheckpoint(resumeJob[1]) }, origin);
+      return true;
+    }
+    const restartJob = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/restart$/);
+    if (method === 'POST' && restartJob) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { document: await localAi.restartDocumentReview(restartJob[1]) }, origin);
+      return true;
+    }
+    const malwareFp = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/malware-fingerprint$/);
+    if (method === 'GET' && malwareFp) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.getMalwareFingerprint(malwareFp[1]), origin);
+      return true;
+    }
+    const extractFp = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/extraction-fingerprint$/);
+    if (method === 'GET' && extractFp) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.getExtractionFingerprint(extractFp[1]), origin);
       return true;
     }
 

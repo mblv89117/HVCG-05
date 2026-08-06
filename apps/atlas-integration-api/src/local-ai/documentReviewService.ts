@@ -5,7 +5,16 @@
  */
 
 import { createHash, randomUUID } from 'node:crypto';
-import { resolve } from 'node:path';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
+import { join, resolve } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import {
   DOCUMENT_STAGING_SCHEMA_VERSION,
   SYNTHETIC_AI_OUTPUT_BANNER,
@@ -23,7 +32,12 @@ import {
   DEFAULT_MULTI_DOC_MAX_BYTES,
   DEFAULT_MULTI_DOC_MAX_FILES,
   toDurableStatus,
+  SCAN_POLICY_VERSION,
+  EXTRACTION_POLICY_VERSION,
+  OCR_PREPROCESS_VERSION,
+  type BackupCreateOptions,
   type DocumentEnrichmentOutput,
+  type DocumentRelationshipType,
   type DocumentReviewDecision,
   type DocumentReviewPackage,
   type DocumentVersionComparison,
@@ -31,8 +45,10 @@ import {
   type DurableDecisionRecord,
   type DurableMultiDocPack,
   type FieldCorrectionRecord,
+  type HoldType,
   type MalwareScanResult,
   type MultiDocumentReviewPack,
+  type PackMemberMeta,
   type ReviewSearchFilters,
   type StagedDocumentRecord,
 } from '@hvcg/atlas-integration-core';
@@ -42,13 +58,29 @@ import {
   resolveDocumentStagingConfig,
 } from './documentStaging.ts';
 import { combinedExtractedText, extractDocument } from './documentExtraction.ts';
-import { malwareQuarantineDir, scanFileLocally } from './malwareScanner.ts';
+import {
+  getClamavVersions,
+  malwareQuarantineDir,
+  resolveClamscanPath,
+  scanFileLocally,
+} from './malwareScanner.ts';
 import { createFixture, type FixtureKind } from './documentFixtures.ts';
 import {
   DocumentReviewDatabase,
   resolveDocumentReviewDbPath,
   assertSafeBackupPath,
 } from './documentReviewDb.ts';
+import { analyzeMultiDocumentPack } from './packAnalysis.ts';
+import {
+  backupDirBytes,
+  estimateBackupSize,
+  listBackupManifests,
+  resolveBackupPassphrase,
+  verifyBackupBundle,
+  writeBackupBundle,
+  decryptBuffer,
+} from './encryptedBackup.ts';
+import { sumDirBytes } from './phase4c2Store.ts';
 
 export class DocumentReviewService {
   readonly staging: DocumentStagingStore;
@@ -162,14 +194,80 @@ export class DocumentReviewService {
       input.bytes.includes(Buffer.from('TEST — DO NOT CONTACT')) ||
       Boolean(input.allowSyntheticMalwareOverride);
 
-    const scan = await scanFileLocally({
-      absolutePath: this.staging.absolutePath(rec),
-      checksumSha256: rec.checksumSha256,
-      quarantineDir: malwareQuarantineDir(this.staging.getConfig().rootDir),
-      env: this.env,
-      allowSyntheticOverride: true,
-      isSyntheticTestFile: isSynthetic,
+    const stageCp = this.durable.c2.startCheckpoint({
+      reviewId: rec.stagedFileId,
+      stage: 'staging',
+      correlationId: rec.correlationId,
     });
+    this.durable.c2.completeCheckpoint(stageCp.checkpointId, 'completed');
+
+    const clam = resolveClamscanPath(this.env);
+    const versions = clam
+      ? await getClamavVersions(clam)
+      : { scannerVersion: null, definitionVersion: null, definitionDate: null };
+    const reuse = this.durable.c2.findReusableMalwareScan({
+      reviewId: rec.stagedFileId,
+      checksumSha256: rec.checksumSha256,
+      clamavVersion: versions.scannerVersion,
+      dailyDefinitionVersion: versions.definitionVersion,
+    });
+
+    const malwareCp = this.durable.c2.startCheckpoint({
+      reviewId: rec.stagedFileId,
+      stage: 'malware_scan',
+      correlationId: rec.correlationId,
+    });
+
+    let scan: MalwareScanResult;
+    if (reuse.reusable && reuse.fingerprint) {
+      scan = {
+        status: 'clean',
+        engine: 'clamav',
+        scannerVersion: reuse.fingerprint.clamavVersion,
+        definitionVersion: reuse.fingerprint.dailyDefinitionVersion,
+        definitionDate: reuse.fingerprint.definitionUpdateTimestamp,
+        checksumSha256: rec.checksumSha256,
+        detail: `Reused prior clean scan (${reuse.reason})`,
+        durationMs: 0,
+        quarantined: false,
+        blocked: false,
+        overrideUsed: false,
+        overrideReason: null,
+      };
+      this.durable.c2.completeCheckpoint(malwareCp.checkpointId, 'skipped_reuse', {
+        reusableResultRef: reuse.fingerprint.fingerprintId,
+      });
+    } else {
+      scan = await scanFileLocally({
+        absolutePath: this.staging.absolutePath(rec),
+        checksumSha256: rec.checksumSha256,
+        quarantineDir: malwareQuarantineDir(this.staging.getConfig().rootDir),
+        env: this.env,
+        allowSyntheticOverride: true,
+        isSyntheticTestFile: isSynthetic,
+      });
+      const clean = !scan.blocked && scan.status !== 'unavailable' && scan.status !== 'error';
+      this.durable.c2.saveMalwareFingerprint({
+        fingerprintId: randomUUID(),
+        reviewId: rec.stagedFileId,
+        checksumSha256: rec.checksumSha256,
+        clamavVersion: scan.scannerVersion,
+        dailyDefinitionVersion: scan.definitionVersion,
+        mainDefinitionVersion: scan.definitionVersion,
+        bytecodeDefinitionVersion: null,
+        definitionUpdateTimestamp: scan.definitionDate,
+        scanPolicyVersion: SCAN_POLICY_VERSION,
+        scanResult: scan.status,
+        scanTimestamp: new Date().toISOString(),
+        clean,
+        reusableUntil: null,
+      });
+      this.durable.c2.completeCheckpoint(
+        malwareCp.checkpointId,
+        scan.blocked ? 'failed' : 'completed',
+        { failureReason: scan.blocked ? scan.detail : undefined },
+      );
+    }
 
     rec.malwareScan = scan;
     rec.malwareScanStatus = scan.status;
@@ -236,6 +334,22 @@ export class DocumentReviewService {
         rec.status === 'ReadyForReview' ||
         rec.status === 'ReviewComplete')
     ) {
+      return this.publicView(rec, true);
+    }
+
+    const extractReuse = this.durable.c2.findReusableExtraction({
+      sourceChecksum: rec.checksumSha256,
+      extractionLibraryVersion: 'atlas-local-extract-1',
+    });
+    if (!opts.forceOcr && extractReuse.reusable && rec.extraction && rec.reviewPackage) {
+      const cp = this.durable.c2.startCheckpoint({
+        reviewId: rec.stagedFileId,
+        stage: 'extraction',
+        correlationId: rec.correlationId,
+      });
+      this.durable.c2.completeCheckpoint(cp.checkpointId, 'skipped_reuse', {
+        reusableResultRef: extractReuse.fingerprint?.fingerprintId,
+      });
       return this.publicView(rec, true);
     }
 
@@ -443,6 +557,37 @@ export class DocumentReviewService {
         correlationId: latest.correlationId,
         result: { status: latest.status, checksum: latest.checksumSha256 },
       });
+      const conf = latest.extraction?.ocr?.averageConfidence ?? null;
+      this.durable.c2.saveExtractionFingerprint({
+        fingerprintId: randomUUID(),
+        reviewId: latest.stagedFileId,
+        sourceChecksum: latest.checksumSha256,
+        extractionLibrary: 'atlas-local-extract',
+        extractionLibraryVersion: 'atlas-local-extract-1',
+        extractionPolicyVersion: EXTRACTION_POLICY_VERSION,
+        ocrEngine: latest.extraction?.ocr ? 'tesseract' : null,
+        ocrEngineVersion: latest.extraction?.ocr?.version || null,
+        ocrPreprocessingVersion: OCR_PREPROCESS_VERSION,
+        pageCount: latest.extraction?.pageCount ?? null,
+        extractionTimestamp: new Date().toISOString(),
+        confidenceSummary: conf,
+        outcome:
+          conf != null && conf < 0.4 ? 'low_confidence' : latest.status === 'Failed' ? 'failed' : 'ok',
+      });
+      const extractCp = this.durable.c2.startCheckpoint({
+        reviewId: latest.stagedFileId,
+        stage: 'extraction',
+        correlationId: latest.correlationId,
+      });
+      this.durable.c2.completeCheckpoint(extractCp.checkpointId, 'completed', {
+        reusableResultRef: latest.checksumSha256,
+      });
+      const redCp = this.durable.c2.startCheckpoint({
+        reviewId: latest.stagedFileId,
+        stage: 'redaction',
+        correlationId: latest.correlationId,
+      });
+      this.durable.c2.completeCheckpoint(redCp.checkpointId, 'completed');
       return this.publicView(latest, true);
     } catch (err) {
       const latest = this.require(opts.stagedFileId);
@@ -632,6 +777,7 @@ export class DocumentReviewService {
     projectLabel?: string | null;
     purpose?: string | null;
     sensitivity?: string;
+    expectedChecklist?: string[];
   }): MultiDocumentReviewPack {
     if (opts.stagedFileIds.length < 2) {
       throw Object.assign(new Error('Select at least two files'), { status: 400 });
@@ -698,6 +844,21 @@ export class DocumentReviewService {
       sensitivity: opts.sensitivity || 'Confidential',
     });
     this.durable.upsertPack(durablePack);
+    const members: PackMemberMeta[] = opts.stagedFileIds.map((id, i) => ({
+      reviewId: id,
+      stagedFileId: id,
+      orderIndex: i,
+      relationshipType: (i === 0 ? 'primary document' : 'supporting evidence') as DocumentRelationshipType,
+      versionLabel: null,
+      amendmentLabel: null,
+      designation: (i === 0 ? 'primary' : 'supporting') as PackMemberMeta['designation'],
+      expectedChecklistItem: null,
+    }));
+    this.durable.c2.setPackMembers(pack.packId, members);
+    if (opts.expectedChecklist?.length) {
+      this.durable.c2.setExpectedChecklist(pack.packId, opts.expectedChecklist);
+    }
+    this.analyzePack(pack.packId);
     this.durable.appendAudit({
       correlationId: pack.packId,
       reviewId: null,
@@ -1009,19 +1170,25 @@ export class DocumentReviewService {
   }
 
   resumeInterruptedJob(id: string) {
+    const jobs = this.durable.listInterrupted();
+    const job = jobs.find((j) => String(j.id) === id);
     this.durable.resolveInterrupted(id, 'resumed');
+    const reviewId = job ? String(job.review_id) : null;
+    const eligibility = reviewId
+      ? this.durable.c2.resumeEligibility(reviewId, job ? String(job.operation) : null)
+      : null;
     this.durable.appendAudit({
       correlationId: id,
-      reviewId: null,
+      reviewId,
       packId: null,
       at: new Date().toISOString(),
       actor: 'Manny',
       action: 'interrupted_job_resumed',
-      detail: 'Manual resume marked; no automatic reprocess',
+      detail: 'Manual resume marked; no automatic reprocess — use resumeReviewFromCheckpoint',
       fromStatus: 'interrupted',
       toStatus: 'resumed',
     });
-    return { id, status: 'resumed', autoReprocessed: false };
+    return { id, status: 'resumed', autoReprocessed: false, eligibility };
   }
 
   cancelInterruptedJob(id: string) {
@@ -1029,11 +1196,140 @@ export class DocumentReviewService {
     return { id, status: 'cancelled' };
   }
 
+  listCheckpoints(reviewId: string) {
+    return this.durable.c2.listCheckpoints(reviewId);
+  }
+
+  resumeEligibility(reviewId: string) {
+    const interrupted = this.durable
+      .listInterrupted()
+      .find((j) => String(j.review_id) === reviewId && String(j.status) === 'interrupted');
+    return this.durable.c2.resumeEligibility(
+      reviewId,
+      interrupted ? String(interrupted.operation) : null,
+    );
+  }
+
+  /**
+   * Manual resume from safe checkpoint — reuses fingerprints; does not auto-run AI.
+   * Manny must still approve redaction / trigger enrichment as needed.
+   */
+  async resumeReviewFromCheckpoint(reviewId: string) {
+    const eligibility = this.resumeEligibility(reviewId);
+    if (!eligibility.canResume) {
+      throw Object.assign(new Error('Not eligible for resume'), {
+        status: 409,
+        code: 'not_resume_eligible',
+      });
+    }
+    const rec = this.require(reviewId);
+    // If extraction incomplete, run process (idempotent / fingerprint-aware)
+    if (eligibility.stagesRequiringRerun.includes('extraction') || !rec.extraction) {
+      return this.process({ stagedFileId: reviewId });
+    }
+    return this.publicView(rec, true);
+  }
+
+  async restartReviewFromBeginning(reviewId: string) {
+    const rec = this.require(reviewId);
+    this.durable.c2.startCheckpoint({
+      reviewId,
+      stage: 'staging',
+      correlationId: rec.correlationId,
+    });
+    // Force re-extract by using a unique operation key
+    return this.process({
+      stagedFileId: reviewId,
+      forceOcr: true,
+      operationKey: `restart:${reviewId}:${Date.now()}`,
+    });
+  }
+
+  archiveInterruptedJob(id: string) {
+    this.durable.resolveInterrupted(id, 'cancelled');
+    this.durable.appendAudit({
+      correlationId: id,
+      reviewId: null,
+      packId: null,
+      at: new Date().toISOString(),
+      actor: 'Manny',
+      action: 'interrupted_job_archived',
+      detail: 'Archived interrupted job; prior attempts preserved in checkpoints',
+      fromStatus: 'interrupted',
+      toStatus: 'archived',
+    });
+    return { id, status: 'archived' };
+  }
+
   retentionPreview() {
     return this.durable.retentionPreview();
   }
 
+  listRetentionPolicies() {
+    return this.durable.c2.listRetentionPolicies();
+  }
+
+  createRetentionBatch(notes?: string) {
+    const preview = this.retentionPreview();
+    return this.durable.c2.createRetentionBatch(
+      preview.map((p) => p.reviewId),
+      preview,
+      notes,
+    );
+  }
+
+  approveRetentionBatch(batchId: string, opts?: { execute?: boolean; authorized?: boolean }) {
+    if (!opts?.authorized) {
+      throw Object.assign(new Error('Retention batch approval requires authorization'), {
+        status: 403,
+        code: 'retention_unauthorized',
+      });
+    }
+    const batch = this.durable.c2.approveRetentionBatch(batchId);
+    if (opts.execute) {
+      for (const id of batch.candidateReviewIds) {
+        if (this.durable.c2.isHeld(id)) continue;
+        try {
+          this.purge(id, `Retention batch ${batchId}`);
+        } catch {
+          /* continue */
+        }
+      }
+      this.durable.c2.markRetentionBatchExecuted(batchId);
+      return this.durable.c2.getRetentionBatch(batchId);
+    }
+    return batch;
+  }
+
+  listRetentionBatches() {
+    return this.durable.c2.listRetentionBatches();
+  }
+
+  createHold(opts: {
+    reviewId?: string | null;
+    packId?: string | null;
+    holdType: HoldType;
+    reason: string;
+    expiresAt?: string | null;
+  }) {
+    return this.durable.c2.createHold(opts);
+  }
+
+  releaseHold(holdId: string) {
+    return this.durable.c2.releaseHold(holdId);
+  }
+
+  listHolds(activeOnly = true) {
+    return this.durable.c2.listHolds(activeOnly);
+  }
+
   purge(stagedFileId: string, reason = 'Manual purge') {
+    if (this.durable.c2.isHeld(stagedFileId)) {
+      throw Object.assign(new Error('Review is on hold and cannot be purged'), {
+        status: 403,
+        code: 'held_not_purgeable',
+      });
+    }
     const purgedStaging = this.staging.purge(stagedFileId, reason);
     const correlationId = purgedStaging.correlationId || randomUUID();
     const purged = this.durable.purgeReview(stagedFileId, reason, correlationId) || purgedStaging;
@@ -1047,16 +1343,104 @@ export class DocumentReviewService {
     return this.publicView(purged, true);
   }
 
-  createBackup(opts?: { dryRun?: boolean }) {
-    return this.durable.createBackup(this.backupRoot, Boolean(opts?.dryRun));
+  createBackup(opts?: BackupCreateOptions | { dryRun?: boolean }) {
+    const profile =
+      opts && 'profile' in opts && opts.profile ? opts.profile : ('Metadata Only' as const);
+    const encrypted = Boolean(opts && 'encrypted' in opts && opts.encrypted);
+    const dryRun = Boolean(opts?.dryRun);
+    const includeStagedOriginals = Boolean(
+      opts && 'includeStagedOriginals' in opts && opts.includeStagedOriginals,
+    );
+    if (includeStagedOriginals && profile !== 'Full Local Review Backup') {
+      throw Object.assign(new Error('Staged originals require Full Local Review Backup'), {
+        status: 400,
+        code: 'invalid_backup_profile',
+      });
+    }
+    try {
+      this.durable.walCheckpoint();
+    } catch {
+      /* ignore */
+    }
+    const health = this.durable.health();
+    const stagingBytes = sumDirBytes(join(this.staging.getConfig().rootDir, 'files'));
+    const est = estimateBackupSize({
+      dbBytes: health.dbBytes,
+      profile,
+      stagedOriginalBytes: includeStagedOriginals ? stagingBytes : 0,
+      extractedBytes: profile === 'Metadata Only' ? 0 : Math.floor(health.dbBytes * 0.1),
+    });
+    const passphrase =
+      encrypted
+        ? resolveBackupPassphrase(
+            this.env,
+            opts && 'passphrase' in opts ? opts.passphrase : undefined,
+          )
+        : null;
+    const dest =
+      opts && 'destinationDir' in opts && opts.destinationDir
+        ? resolve(opts.destinationDir)
+        : this.backupRoot;
+    mkdirSync(dest, { recursive: true, mode: 0o700 });
+    const manifest = writeBackupBundle({
+      backupDir: dest,
+      backupId: randomUUID(),
+      dbPath: this.durable.dbPath,
+      schemaVersion: health.schemaVersion,
+      profile,
+      encrypted,
+      passphrase,
+      dryRun,
+      includeStagedOriginals,
+      reviewCount: health.reviewCount,
+      packCount: health.packCount,
+      auditCount: health.auditCount,
+      estimatedBytes: est.estimatedBytes,
+      fileCount: est.fileCount,
+      warning: est.warning,
+    });
+    if (!dryRun) {
+      this.durable.c2.noteMaintenance('backup_created', manifest.backupId);
+    }
+    return manifest;
+  }
+
+  verifyBackup(manifestPath: string, passphrase?: string) {
+    const safe = assertSafeBackupPath(manifestPath, this.backupRoot);
+    const result = verifyBackupBundle({
+      manifestPathOrDir: safe,
+      passphrase: resolveBackupPassphrase(this.env, passphrase),
+    });
+    if (result.ok) this.durable.c2.noteMaintenance('backup_verified', safe);
+    return result;
+  }
+
+  listBackups() {
+    return listBackupManifests(this.backupRoot);
   }
 
   validateRestore(backupPath: string) {
     const safe = assertSafeBackupPath(backupPath, this.backupRoot);
+    // Encrypted .enc cannot validate via sqlite open — verify manifest instead
+    if (safe.endsWith('.enc') || safe.endsWith('.manifest.json')) {
+      return verifyBackupBundle({
+        manifestPathOrDir: safe,
+        passphrase: resolveBackupPassphrase(this.env),
+      });
+    }
     return this.durable.validateRestore(safe);
   }
 
-  restoreBackup(backupPath: string, opts?: { dryRun?: boolean; authorized?: boolean }) {
+  restoreBackup(
+    backupPath: string,
+    opts?: {
+      dryRun?: boolean;
+      authorized?: boolean;
+      confirmOverwrite?: boolean;
+      passphrase?: string;
+      tempValidationOnly?: boolean;
+    },
+  ) {
     if (!opts?.authorized) {
       throw Object.assign(new Error('Restore requires explicit authorization'), {
         status: 403,
@@ -1064,11 +1448,296 @@ export class DocumentReviewService {
       });
     }
     const safe = assertSafeBackupPath(backupPath, this.backupRoot);
-    // Always create a safety backup of current DB first when not dry-run
-    if (!opts.dryRun) {
-      this.durable.createBackup(this.backupRoot, false);
+    if (opts.tempValidationOnly || opts.dryRun) {
+      const validation = this.validateRestore(safe);
+      const health = this.durable.health();
+      return {
+        restored: false,
+        dryRun: true,
+        validation,
+        activeSchemaVersion: health.schemaVersion,
+        activeReviewCount: health.reviewCount,
+        compareNote: 'Dry-run / temp validation only — active DB not overwritten',
+      };
     }
-    return this.durable.restoreFromBackup(safe, { dryRun: opts.dryRun });
+    if (!opts.confirmOverwrite) {
+      throw Object.assign(
+        new Error('Restore requires confirmOverwrite=true to replace active database'),
+        { status: 400, code: 'restore_confirmation_required' },
+      );
+    }
+    // Safety backup first
+    this.createBackup({ profile: 'Metadata Only', encrypted: false, dryRun: false });
+
+    let sqlitePath = safe;
+    if (safe.endsWith('.enc')) {
+      const passphrase = resolveBackupPassphrase(this.env, opts.passphrase);
+      if (!passphrase) {
+        throw Object.assign(new Error('Passphrase required for encrypted restore'), {
+          status: 400,
+          code: 'backup_passphrase_required',
+        });
+      }
+      const verified = verifyBackupBundle({ manifestPathOrDir: safe, passphrase });
+      if (!verified.ok || !verified.manifest?.encryption) {
+        throw Object.assign(new Error(verified.errors.join('; ')), {
+          status: 400,
+          code: 'restore_validation_failed',
+        });
+      }
+      const data = readFileSync(safe);
+      const plain = decryptBuffer(
+        data,
+        passphrase,
+        Buffer.from(verified.manifest.encryption.saltB64, 'base64'),
+        Buffer.from(verified.manifest.encryption.ivB64, 'base64'),
+        Buffer.from(verified.manifest.encryption.authTagB64, 'base64'),
+      );
+      sqlitePath = join(this.backupRoot, `restore-temp-${randomUUID()}.sqlite`);
+      writeFileSync(sqlitePath, plain, { mode: 0o600 });
+    }
+    return this.durable.restoreFromBackup(sqlitePath, { dryRun: false });
+  }
+
+  storageHealthReport() {
+    const health = this.durable.health();
+    const pragma = this.durable.c2.pragmaInfo();
+    const stagingRoot = this.staging.getConfig().rootDir;
+    const filesDir = join(stagingRoot, 'files');
+    const stagedFiles = existsSync(filesDir) ? readdirSync(filesDir) : [];
+    const bak = backupDirBytes(this.backupRoot);
+    const preview = this.retentionPreview();
+    const held = this.durable.c2.listHolds(true).length;
+    const manifests = listBackupManifests(this.backupRoot);
+    return {
+      ok: health.ok,
+      databaseAvailable: true,
+      schemaVersion: health.schemaVersion,
+      schemaLabel: health.schemaLabel,
+      dbBytes: health.dbBytes,
+      journalMode: pragma.journalMode,
+      synchronous: String(pragma.synchronous),
+      foreignKeys: pragma.foreignKeys,
+      walOrJournalStatus: pragma.journalMode,
+      stagedFileCount: stagedFiles.length,
+      stagedFileBytes: sumDirBytes(filesDir),
+      extractedContentBytes: 0,
+      ocrContentBytes: 0,
+      thumbnailBytes: 0,
+      backupCount: bak.count,
+      backupBytes: bak.bytes,
+      orphanedFiles: 0,
+      metadataWithoutFiles: 0,
+      filesWithoutMetadata: 0,
+      expiredItems: preview.filter((p) => p.reason.includes('TTL')).length,
+      heldItems: held,
+      purgeCandidates: preview.length,
+      interruptedJobs: health.interruptedCount,
+      failedMigrations: 0,
+      lastSuccessfulBackup: this.durable.c2.lastMaintenance('backup_created'),
+      lastVerifiedBackup: this.durable.c2.lastMaintenance('backup_verified'),
+      lastRetentionReview: this.durable.c2.lastMaintenance('retention_review'),
+      lastClamavDefinitionUpdate: null,
+      reviewCount: health.reviewCount,
+      packCount: health.packCount,
+      auditCount: health.auditCount,
+      recentBackups: manifests.slice(0, 5),
+    };
+  }
+
+  integrityCheck() {
+    const reviews = this.durable.listReviews(5000);
+    const filesDir = join(this.staging.getConfig().rootDir, 'files');
+    const onDisk = existsSync(filesDir)
+      ? readdirSync(filesDir).map((f) => f.replace(/\.[^.]+$/, ''))
+      : [];
+    // staged files use safeFilename; map via staging list
+    const stagedIds = this.staging.list().map((r) => r.stagedFileId);
+    return this.durable.c2.integrityCheck({
+      stagingRoot: this.staging.getConfig().rootDir,
+      knownReviewIds: reviews.map((r) => r.stagedFileId),
+      stagedFileIdsOnDisk: stagedIds,
+    });
+  }
+
+  repairDryRun() {
+    const report = this.integrityCheck();
+    return {
+      authorized: false,
+      dryRun: true,
+      report,
+      note: 'No records deleted or rewritten. Authorize repair action explicitly.',
+    };
+  }
+
+  authorizedRepair(opts: { authorized?: boolean; action?: string }) {
+    if (!opts?.authorized) {
+      throw Object.assign(new Error('Repair requires explicit Manny authorization'), {
+        status: 403,
+        code: 'repair_unauthorized',
+      });
+    }
+    if (opts.action === 'integrity_check') {
+      return { repaired: false, report: this.integrityCheck() };
+    }
+    if (opts.action === 'note_only') {
+      this.durable.c2.noteMaintenance('repair_authorized', opts.action);
+      return { repaired: false, note: 'Authorization recorded; no silent deletes' };
+    }
+    throw Object.assign(new Error('Unknown or unsupported repair action'), {
+      status: 400,
+      code: 'unsupported_repair',
+    });
+  }
+
+  // --- Pack workspace ---
+  configurePackWorkspace(
+    packId: string,
+    opts: {
+      members?: PackMemberMeta[];
+      expectedChecklist?: string[];
+      title?: string;
+      purpose?: string;
+      projectLabel?: string | null;
+      sensitivity?: string;
+    },
+  ) {
+    const pack = this.getMultiDocumentPack(packId);
+    if (opts.members) {
+      if (opts.members.length > DEFAULT_MULTI_DOC_MAX_FILES) {
+        throw Object.assign(new Error(`Max ${DEFAULT_MULTI_DOC_MAX_FILES} files`), { status: 400 });
+      }
+      for (const m of opts.members) this.require(m.stagedFileId);
+      this.durable.c2.setPackMembers(packId, opts.members);
+      pack.stagedFileIds = opts.members
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .map((m) => m.stagedFileId);
+    }
+    if (opts.expectedChecklist) {
+      this.durable.c2.setExpectedChecklist(packId, opts.expectedChecklist);
+    }
+    const durable = this.durable.getPack(packId);
+    if (durable) {
+      if (opts.title) durable.title = opts.title;
+      if (opts.purpose !== undefined) durable.purpose = opts.purpose;
+      if (opts.projectLabel !== undefined) durable.projectLabel = opts.projectLabel;
+      if (opts.sensitivity) durable.sensitivity = opts.sensitivity;
+      durable.stagedFileIds = pack.stagedFileIds;
+      durable.updatedAt = new Date().toISOString();
+      this.durable.upsertPack(durable);
+    }
+    this.multiPacks.set(packId, pack);
+    return this.getPackWorkspace(packId);
+  }
+
+  upsertPackRelationship(
+    packId: string,
+    opts: {
+      relationshipId?: string;
+      fromReviewId: string;
+      toReviewId?: string | null;
+      relationshipType: DocumentRelationshipType;
+      label?: string | null;
+      historyNote?: string;
+    },
+  ) {
+    this.getMultiDocumentPack(packId);
+    const now = new Date().toISOString();
+    const rel = {
+      relationshipId: opts.relationshipId || randomUUID(),
+      packId,
+      fromReviewId: opts.fromReviewId,
+      toReviewId: opts.toReviewId ?? null,
+      relationshipType: opts.relationshipType,
+      label: opts.label ?? null,
+      correctedBy: 'Manny' as const,
+      correctedAt: now,
+      active: true,
+      createdAt: now,
+      historyNote: opts.historyNote || 'Manny relationship correction',
+    };
+    this.durable.c2.upsertRelationship(rel);
+    return rel;
+  }
+
+  deletePackRelationship(relationshipId: string) {
+    this.durable.c2.deleteRelationship(relationshipId);
+    return { deleted: true, relationshipId };
+  }
+
+  analyzePack(packId: string) {
+    const pack = this.getMultiDocumentPack(packId);
+    let members = this.durable.c2.getPackMembers(packId);
+    if (!members.length) {
+      members = pack.stagedFileIds.map((id, i) => ({
+        reviewId: id,
+        stagedFileId: id,
+        orderIndex: i,
+        relationshipType: (i === 0 ? 'primary document' : 'supporting evidence') as DocumentRelationshipType,
+        versionLabel: null,
+        amendmentLabel: null,
+        designation: (i === 0 ? 'primary' : 'supporting') as PackMemberMeta['designation'],
+        expectedChecklistItem: null,
+      }));
+      this.durable.c2.setPackMembers(packId, members);
+    }
+    const reviews = pack.stagedFileIds.map((id) => this.require(id));
+    const analysis = analyzeMultiDocumentPack({
+      packId,
+      members,
+      reviews,
+      expectedChecklist: this.durable.c2.getExpectedChecklist(packId),
+    });
+    this.durable.c2.savePackAnalysis(analysis);
+    const durable = this.durable.getPack(packId);
+    if (durable) {
+      durable.packRecommendation = analysis.packRecommendation;
+      durable.crossDocumentConflicts = analysis.conflictingTerms;
+      durable.missingDocuments = analysis.missingDocuments;
+      durable.missingExhibits = analysis.missingExhibits;
+      durable.missingSignatures = analysis.missingSignatures;
+      durable.comparisonFindings = analysis;
+      durable.updatedAt = new Date().toISOString();
+      this.durable.upsertPack(durable);
+    }
+    return analysis;
+  }
+
+  getPackWorkspace(packId: string) {
+    const pack = this.getMultiDocumentPack(packId);
+    const durable = this.durable.getPack(packId);
+    return {
+      pack,
+      durable,
+      members: this.durable.c2.getPackMembers(packId),
+      relationships: this.durable.c2.listRelationships(packId),
+      expectedChecklist: this.durable.c2.getExpectedChecklist(packId),
+      analysis: this.durable.c2.getPackAnalysis(packId),
+      banners: {
+        localDocumentReview: true,
+        draftOnly: true,
+        noFileMovement: true,
+        noRecordWrites: true,
+        noExternalCommunications: true,
+      },
+    };
+  }
+
+  getScanFingerprint(reviewId: string) {
+    return this.durable.c2.findReusableMalwareScan({
+      reviewId,
+      checksumSha256: this.require(reviewId).checksumSha256,
+      clamavVersion: null,
+      dailyDefinitionVersion: null,
+    });
+  }
+
+  getExtractionFingerprint(reviewId: string) {
+    const rec = this.require(reviewId);
+    return this.durable.c2.findReusableExtraction({
+      sourceChecksum: rec.checksumSha256,
+      extractionLibraryVersion: 'atlas-local-extract-1',
+    });
   }
 
   authorizedPurge(stagedFileId: string, opts?: { authorized?: boolean; reason?: string }) {

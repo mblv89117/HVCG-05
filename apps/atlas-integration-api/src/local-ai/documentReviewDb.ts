@@ -33,6 +33,7 @@ import {
   type ReviewSearchFilters,
 } from '@hvcg/atlas-integration-core';
 import type { StagedDocumentRecord } from '@hvcg/atlas-integration-core';
+import { Phase4c2Store } from './phase4c2Store.ts';
 
 export const DOCUMENT_REVIEW_DB_FILENAME = 'document-reviews.sqlite';
 
@@ -243,6 +244,153 @@ CREATE TABLE IF NOT EXISTS purge_tombstones (
 );
 `,
   },
+  {
+    version: 2,
+    sql: `
+CREATE TABLE IF NOT EXISTS pack_members_meta (
+  id TEXT PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  review_id TEXT NOT NULL,
+  staged_file_id TEXT NOT NULL,
+  order_index INTEGER NOT NULL DEFAULT 0,
+  relationship_type TEXT NOT NULL DEFAULT 'relationship unknown',
+  version_label TEXT,
+  amendment_label TEXT,
+  designation TEXT NOT NULL DEFAULT 'other',
+  expected_checklist_item TEXT,
+  UNIQUE(pack_id, staged_file_id)
+);
+
+CREATE TABLE IF NOT EXISTS pack_relationships (
+  relationship_id TEXT PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  from_review_id TEXT NOT NULL,
+  to_review_id TEXT,
+  relationship_type TEXT NOT NULL,
+  label TEXT,
+  corrected_by TEXT,
+  corrected_at TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL,
+  history_note TEXT,
+  history_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS pack_analysis (
+  pack_id TEXT PRIMARY KEY,
+  analyzed_at TEXT NOT NULL,
+  analysis_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS review_holds (
+  hold_id TEXT PRIMARY KEY,
+  review_id TEXT,
+  pack_id TEXT,
+  hold_type TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  created_by TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  expires_at TEXT,
+  released_by TEXT,
+  released_at TEXT,
+  active INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS malware_fingerprints (
+  fingerprint_id TEXT PRIMARY KEY,
+  review_id TEXT NOT NULL,
+  checksum_sha256 TEXT NOT NULL,
+  clamav_version TEXT,
+  daily_definition_version TEXT,
+  main_definition_version TEXT,
+  bytecode_definition_version TEXT,
+  definition_update_timestamp TEXT,
+  scan_policy_version TEXT NOT NULL,
+  scan_result TEXT NOT NULL,
+  scan_timestamp TEXT NOT NULL,
+  clean INTEGER NOT NULL DEFAULT 0,
+  reusable_until TEXT,
+  fingerprint_key TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_malware_fp_key ON malware_fingerprints(fingerprint_key);
+CREATE INDEX IF NOT EXISTS idx_malware_fp_review ON malware_fingerprints(review_id);
+
+CREATE TABLE IF NOT EXISTS extraction_fingerprints (
+  fingerprint_id TEXT PRIMARY KEY,
+  review_id TEXT NOT NULL,
+  source_checksum TEXT NOT NULL,
+  extraction_library TEXT NOT NULL,
+  extraction_library_version TEXT NOT NULL,
+  extraction_policy_version TEXT NOT NULL,
+  ocr_engine TEXT,
+  ocr_engine_version TEXT,
+  ocr_preprocessing_version TEXT,
+  page_count INTEGER,
+  extraction_timestamp TEXT NOT NULL,
+  confidence_summary REAL,
+  outcome TEXT NOT NULL,
+  fingerprint_key TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_extract_fp_key ON extraction_fingerprints(fingerprint_key);
+
+CREATE TABLE IF NOT EXISTS job_checkpoints (
+  checkpoint_id TEXT PRIMARY KEY,
+  review_id TEXT NOT NULL,
+  stage TEXT NOT NULL,
+  attempt_number INTEGER NOT NULL DEFAULT 1,
+  started_at TEXT NOT NULL,
+  completed_at TEXT,
+  outcome TEXT NOT NULL,
+  correlation_id TEXT NOT NULL,
+  duration_ms INTEGER,
+  reusable_result_ref TEXT,
+  failure_reason TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_checkpoints_review ON job_checkpoints(review_id);
+
+CREATE TABLE IF NOT EXISTS retention_policies (
+  policy_id TEXT PRIMARY KEY,
+  policy_version TEXT NOT NULL,
+  item_type TEXT NOT NULL,
+  age_threshold_hours INTEGER,
+  size_threshold_bytes INTEGER,
+  status_requirement TEXT,
+  exclusion_rules_json TEXT,
+  legal_hold_flag INTEGER NOT NULL DEFAULT 1,
+  client_hold_flag INTEGER NOT NULL DEFAULT 1,
+  manny_hold_flag INTEGER NOT NULL DEFAULT 1,
+  active INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE IF NOT EXISTS retention_batches (
+  batch_id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL,
+  status TEXT NOT NULL,
+  candidate_review_ids_json TEXT NOT NULL,
+  preview_json TEXT NOT NULL,
+  approved_by TEXT,
+  approved_at TEXT,
+  executed_at TEXT,
+  notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS maintenance_events (
+  event_id TEXT PRIMARY KEY,
+  at TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  detail TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pack_expected_checklist (
+  id TEXT PRIMARY KEY,
+  pack_id TEXT NOT NULL,
+  item TEXT NOT NULL
+);
+`,
+  },
 ];
 
 function j(v: unknown): string {
@@ -261,6 +409,7 @@ export class DocumentReviewDatabase {
   readonly dbPath: string;
   private db: DatabaseSync;
   private retention = { ...DEFAULT_RETENTION };
+  readonly c2: Phase4c2Store;
 
   constructor(dbPath: string, retentionPartial?: Partial<typeof DEFAULT_RETENTION>) {
     this.dbPath = dbPath;
@@ -272,9 +421,13 @@ export class DocumentReviewDatabase {
     } catch {
       /* ignore on some FS */
     }
-    this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+    this.db.exec(
+      'PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;',
+    );
     this.runMigrations();
+    this.c2 = new Phase4c2Store(this.db);
     if (retentionPartial) this.retention = { ...this.retention, ...retentionPartial };
+    this.c2.ensureDefaultRetentionPolicies();
   }
 
   close() {
@@ -885,6 +1038,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   }
 
   retentionPreview(now = Date.now()): RetentionPreviewItem[] {
+    const held = this.c2.heldReviewIds();
     const rows = this.db
       .prepare(
         `SELECT review_id, original_filename, durable_status, expires_at, purged_at, record_json
@@ -893,6 +1047,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
       .all() as Array<Record<string, unknown>>;
     const out: RetentionPreviewItem[] = [];
     for (const r of rows) {
+      const reviewId = String(r.review_id);
+      if (held.has(reviewId)) continue;
       const expiresAt = r.expires_at ? String(r.expires_at) : null;
       const status = String(r.durable_status);
       let reason = '';
@@ -912,7 +1068,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
       }
       if (would) {
         out.push({
-          reviewId: String(r.review_id),
+          reviewId,
           originalFilename: String(r.original_filename),
           status,
           reason,
@@ -984,6 +1140,14 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
       toStatus: 'Purged',
     });
     return purged;
+  }
+
+  walCheckpoint() {
+    try {
+      this.db.exec('PRAGMA wal_checkpoint(TRUNCATE);');
+    } catch {
+      /* ignore */
+    }
   }
 
   createBackup(backupDir: string, dryRun = false): BackupManifest {
@@ -1073,7 +1237,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     chmodSync(this.dbPath, 0o600);
     // Re-open
     (this as { db: DatabaseSync }).db = new DatabaseSync(this.dbPath);
-    this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+    this.db.exec(
+      'PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;',
+    );
+    (this as { c2: Phase4c2Store }).c2 = new Phase4c2Store(this.db);
     return { restored: true, dryRun: false, validation };
   }
 }

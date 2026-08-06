@@ -1791,6 +1791,8 @@ export class LocalAiService {
     title?: string;
     projectLabel?: string | null;
     purpose?: string | null;
+    sensitivity?: string;
+    expectedChecklist?: string[];
   }) {
     const pack = this.documentReview.createMultiDocumentPack(opts);
     this.repo.appendAudit({
@@ -1863,8 +1865,28 @@ export class LocalAiService {
     return this.documentReview.migrationStatus();
   }
 
-  backupDocumentReviews(opts?: { dryRun?: boolean }) {
-    return this.documentReview.createBackup(opts);
+  backupDocumentReviews(opts?: {
+    dryRun?: boolean;
+    profile?: import('@hvcg/atlas-integration-core').BackupProfile;
+    encrypted?: boolean;
+    passphrase?: string;
+    includeStagedOriginals?: boolean;
+  }) {
+    return this.documentReview.createBackup({
+      profile: opts?.profile || 'Metadata Only',
+      encrypted: Boolean(opts?.encrypted),
+      passphrase: opts?.passphrase,
+      dryRun: Boolean(opts?.dryRun),
+      includeStagedOriginals: Boolean(opts?.includeStagedOriginals),
+    });
+  }
+
+  verifyDocumentBackup(manifestPath: string, passphrase?: string) {
+    return this.documentReview.verifyBackup(manifestPath, passphrase);
+  }
+
+  listDocumentBackups() {
+    return this.documentReview.listBackups();
   }
 
   validateDocumentRestore(backupPath: string) {
@@ -1873,9 +1895,122 @@ export class LocalAiService {
 
   restoreDocumentReviews(
     backupPath: string,
-    opts: { dryRun?: boolean; authorized?: boolean },
+    opts: {
+      dryRun?: boolean;
+      authorized?: boolean;
+      confirmOverwrite?: boolean;
+      passphrase?: string;
+      tempValidationOnly?: boolean;
+    },
   ) {
     return this.documentReview.restoreBackup(backupPath, opts);
+  }
+
+  storageHealthExtended() {
+    return this.documentReview.storageHealthReport();
+  }
+
+  documentIntegrityCheck() {
+    return this.documentReview.integrityCheck();
+  }
+
+  documentRepairDryRun() {
+    return this.documentReview.repairDryRun();
+  }
+
+  documentAuthorizedRepair(opts: { authorized?: boolean; action?: string }) {
+    return this.documentReview.authorizedRepair(opts);
+  }
+
+  listRetentionPolicies() {
+    return this.documentReview.listRetentionPolicies();
+  }
+
+  createRetentionBatch(notes?: string) {
+    return this.documentReview.createRetentionBatch(notes);
+  }
+
+  approveRetentionBatch(
+    batchId: string,
+    opts: { execute?: boolean; authorized?: boolean },
+  ) {
+    return this.documentReview.approveRetentionBatch(batchId, opts);
+  }
+
+  listRetentionBatches() {
+    return this.documentReview.listRetentionBatches();
+  }
+
+  createDocumentHold(opts: {
+    reviewId?: string | null;
+    packId?: string | null;
+    holdType: import('@hvcg/atlas-integration-core').HoldType;
+    reason: string;
+    expiresAt?: string | null;
+  }) {
+    return this.documentReview.createHold(opts);
+  }
+
+  releaseDocumentHold(holdId: string) {
+    return this.documentReview.releaseHold(holdId);
+  }
+
+  listDocumentHolds(activeOnly = true) {
+    return this.documentReview.listHolds(activeOnly);
+  }
+
+  getPackWorkspace(packId: string) {
+    return this.documentReview.getPackWorkspace(packId);
+  }
+
+  configurePackWorkspace(
+    packId: string,
+    opts: Parameters<DocumentReviewService['configurePackWorkspace']>[1],
+  ) {
+    return this.documentReview.configurePackWorkspace(packId, opts);
+  }
+
+  analyzeMultiDocumentPack(packId: string) {
+    return this.documentReview.analyzePack(packId);
+  }
+
+  upsertPackRelationship(
+    packId: string,
+    opts: Parameters<DocumentReviewService['upsertPackRelationship']>[1],
+  ) {
+    return this.documentReview.upsertPackRelationship(packId, opts);
+  }
+
+  deletePackRelationship(relationshipId: string) {
+    return this.documentReview.deletePackRelationship(relationshipId);
+  }
+
+  listDocumentCheckpoints(reviewId: string) {
+    return this.documentReview.listCheckpoints(reviewId);
+  }
+
+  documentResumeEligibility(reviewId: string) {
+    return this.documentReview.resumeEligibility(reviewId);
+  }
+
+  resumeDocumentFromCheckpoint(reviewId: string) {
+    return this.documentReview.resumeReviewFromCheckpoint(reviewId);
+  }
+
+  restartDocumentReview(reviewId: string) {
+    return this.documentReview.restartReviewFromBeginning(reviewId);
+  }
+
+  archiveInterruptedDocumentJob(id: string) {
+    return this.documentReview.archiveInterruptedJob(id);
+  }
+
+  getMalwareFingerprint(reviewId: string) {
+    return this.documentReview.getScanFingerprint(reviewId);
+  }
+
+  getExtractionFingerprint(reviewId: string) {
+    return this.documentReview.getExtractionFingerprint(reviewId);
   }
 
   purgeStagedDocument(stagedFileId: string, opts?: { authorized?: boolean; reason?: string }) {

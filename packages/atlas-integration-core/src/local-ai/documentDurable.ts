@@ -3,8 +3,8 @@
  * Local drafts only — never authoritative.
  */
 
-export const DOCUMENT_DURABLE_SCHEMA_VERSION = 1;
-export const DOCUMENT_DURABLE_SCHEMA_LABEL = '1.0.0-phase4c1';
+export const DOCUMENT_DURABLE_SCHEMA_VERSION = 2;
+export const DOCUMENT_DURABLE_SCHEMA_LABEL = '2.0.0-phase4c2';
 
 /** Canonical durable review statuses (Phase 4C-1). */
 export const DURABLE_REVIEW_STATUSES = [
