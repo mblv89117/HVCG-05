@@ -1144,3 +1144,106 @@ export async function fetchLocalAiDocumentDecisions(
   );
   return parse(res) as Promise<{ decisions: Array<Record<string, unknown>> }>;
 }
+
+/** Phase 5A — Local synthetic EVA sandbox (EvaIntakeEnabled remains false). */
+export async function fetchLocalAiEvaSandbox(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/eva/sandbox`, { headers: headers(auth) });
+  return parse(res) as Promise<{
+    banner: Record<string, unknown>;
+    flags: Record<string, boolean>;
+    scenarios: Array<{ kind: string; banners: Record<string, string> }>;
+  }>;
+}
+
+export async function fetchLocalAiEvaScenarios(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/eva/scenarios`, { headers: headers(auth) });
+  return parse(res) as Promise<{ scenarios: Array<{ kind: string; payload: Record<string, unknown> }> }>;
+}
+
+export async function fetchLocalAiEvaSubmissions(auth: AtlasHubAuthHeaders, status?: string) {
+  const q = status ? `?status=${encodeURIComponent(status)}` : '';
+  const res = await fetch(`${base()}/api/local-ai/eva/submissions${q}`, { headers: headers(auth) });
+  return parse(res) as Promise<{ submissions: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchLocalAiEvaSubmission(auth: AtlasHubAuthHeaders, submissionId: string) {
+  const res = await fetch(
+    `${base()}/api/local-ai/eva/submissions/${encodeURIComponent(submissionId)}`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ submission: Record<string, unknown> }>;
+}
+
+export async function submitLocalAiEvaIntake(
+  auth: AtlasHubAuthHeaders,
+  body: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/local-ai/eva/intake`, {
+    method: 'POST',
+    headers: { ...headers(auth), 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{
+    ok: boolean;
+    duplicate?: boolean;
+    submission?: Record<string, unknown> | null;
+    error?: string | null;
+    errors?: string[];
+    correlationId: string;
+  }>;
+}
+
+export async function decideLocalAiEvaSubmission(
+  auth: AtlasHubAuthHeaders,
+  submissionId: string,
+  decision: string,
+  notes?: string,
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/eva/submissions/${encodeURIComponent(submissionId)}/decision`,
+    {
+      method: 'POST',
+      headers: { ...headers(auth), 'content-type': 'application/json' },
+      body: JSON.stringify({ decision, notes }),
+    },
+  );
+  return parse(res) as Promise<{ submission: Record<string, unknown> }>;
+}
+
+export async function fetchLocalAiEvaQueue(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/eva/queue`, { headers: headers(auth) });
+  return parse(res) as Promise<{
+    queue: Array<Record<string, unknown>>;
+    banner: Record<string, unknown>;
+  }>;
+}
+
+export async function fetchLocalAiEvaPerformance(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/eva/performance`, { headers: headers(auth) });
+  return parse(res) as Promise<{ performance: Record<string, unknown> }>;
+}
+
+export async function fetchLocalAiEvaAudit(auth: AtlasHubAuthHeaders, submissionId?: string) {
+  const q = submissionId ? `?submissionId=${encodeURIComponent(submissionId)}` : '';
+  const res = await fetch(`${base()}/api/local-ai/eva/audit${q}`, { headers: headers(auth) });
+  return parse(res) as Promise<{
+    events: Array<Record<string, unknown>>;
+    failures: Array<Record<string, unknown>>;
+  }>;
+}
+
+export async function cancelLocalAiEvaSubmission(auth: AtlasHubAuthHeaders, submissionId: string) {
+  const res = await fetch(
+    `${base()}/api/local-ai/eva/submissions/${encodeURIComponent(submissionId)}/cancel`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ submission: Record<string, unknown> }>;
+}
+
+export async function retryLocalAiEvaAi(auth: AtlasHubAuthHeaders, submissionId: string) {
+  const res = await fetch(
+    `${base()}/api/local-ai/eva/submissions/${encodeURIComponent(submissionId)}/retry-ai`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ submission: Record<string, unknown> }>;
+}

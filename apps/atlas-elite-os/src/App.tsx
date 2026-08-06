@@ -34,6 +34,7 @@ import { ConnectionsCenterPage } from './pages/ConnectionsCenterPage';
 import { AutomationsPage, KnowledgePage, ReportsPage } from './pages/PlatformModules';
 import { ModuleScaffold } from './pages/shared/ModuleScaffold';
 import { AiOperationsQueuePage } from './pages/local-ai/AiOperationsQueuePage';
+import { EvaSandboxPage } from './pages/local-ai/EvaSandboxPage';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
@@ -313,6 +314,14 @@ export function App() {
                 element={
                   <PrivateRoute>
                     <AiOperationsQueuePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="ai-operations/eva"
+                element={
+                  <PrivateRoute>
+                    <EvaSandboxPage />
                   </PrivateRoute>
                 }
               />

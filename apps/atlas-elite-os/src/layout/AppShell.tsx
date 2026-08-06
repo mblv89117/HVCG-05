@@ -81,6 +81,7 @@ const allSections: NavSection[] = [
       { id: 'automations', label: 'Automation', to: '/automations', icon: <BotRegular /> },
       { id: 'ai', label: 'AI Agents', to: '/ai', icon: <SparkleRegular /> },
       { id: 'ai-operations', label: 'AI Operations', to: '/ai-operations', icon: <FlashRegular /> },
+      { id: 'eva-sandbox', label: 'EVA Sandbox', to: '/ai-operations/eva', icon: <FlashRegular /> },
     ],
   },
   {
@@ -106,6 +107,7 @@ const catalog: SearchResult[] = [
   { id: 's8', title: 'Capital Advisory', category: 'Navigation', to: '/capital' },
   { id: 's9', title: 'AI Agents', category: 'Navigation', to: '/ai' },
   { id: 's9b', title: 'AI Operations Queue', category: 'Navigation', to: '/ai-operations' },
+  { id: 's9c', title: 'LOCAL EVA SANDBOX', category: 'Navigation', to: '/ai-operations/eva' },
   { id: 's10', title: 'Documents', category: 'Navigation', to: '/documents' },
   { id: 's11', title: 'Accounting', category: 'Navigation', to: '/accounting' },
   { id: 's12', title: 'Projects', category: 'Navigation', to: '/projects' },
@@ -135,6 +137,7 @@ const routeLabels: Record<string, string> = {
   '/automations': 'Automation',
   '/ai': 'AI Agents',
   '/ai-operations': 'AI Operations',
+  '/ai-operations/eva': 'EVA Sandbox',
   '/reports': 'Reports',
   '/settings': 'Settings',
   '/connections': 'Connections Center',

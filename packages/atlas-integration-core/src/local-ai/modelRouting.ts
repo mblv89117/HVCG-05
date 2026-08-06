@@ -44,6 +44,7 @@ export interface ModelResolution {
 export const DEEP_ONLY_OPERATIONS = [
   'prepare_decision_package',
   'summarize_synthetic_eva',
+  'review_eva_submission',
   'prepare_document_review_pack',
   'prepare_client_operations_pack',
   'complex_client_review',
@@ -80,6 +81,7 @@ export const DEFAULT_OPERATION_PROFILES: Record<string, ModelProfile> = {
   // Deep Analysis
   prepare_decision_package: 'Deep Analysis Model',
   summarize_synthetic_eva: 'Deep Analysis Model',
+  review_eva_submission: 'Deep Analysis Model',
   prepare_document_review_pack: 'Deep Analysis Model',
   prepare_client_operations_pack: 'Deep Analysis Model',
   complex_client_review: 'Deep Analysis Model',

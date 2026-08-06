@@ -12,7 +12,7 @@
 
 **Fast:** `classify_work_value`, `identify_missing_information`, `summarize_text`, `summarize_meeting_notes`, `draft_internal_status_update`, `prepare_meeting_agenda`, `prepare_meeting_brief`, `summarize_meeting_outcomes`, `draft_internal_task_plan`
 
-**Deep:** `prepare_decision_package`, `summarize_synthetic_eva`, `prepare_document_review_pack`, `prepare_client_operations_pack`, `complex_client_review`, `strategic_issue_analysis`
+**Deep:** `prepare_decision_package`, `summarize_synthetic_eva`, `review_eva_submission`, `prepare_document_review_pack`, `prepare_client_operations_pack`, `complex_client_review`, `strategic_issue_analysis`
 
 Override per pack via `modelProfileOverride`.
 

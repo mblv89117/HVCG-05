@@ -25,6 +25,9 @@ config/environments/production.json
 **/local-ai-document-reviews/
 .data/local-ai-document-backups/
 **/local-ai-document-backups/
+# Phase 5A local synthetic EVA store (never commit)
+.data/local-ai-eva/
+**/local-ai-eva/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm

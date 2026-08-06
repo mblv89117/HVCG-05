@@ -69,6 +69,7 @@ import {
 import { DocumentReviewService } from './documentReviewService.ts';
 import { resolveClamscanPath } from './malwareScanner.ts';
 import type { DocumentReviewDecision } from '@hvcg/atlas-integration-core';
+import { EvaService } from './evaService.ts';
 
 export interface LocalAiServiceDeps {
   repo: LocalAiRepository;
@@ -84,6 +85,8 @@ export interface LocalAiServiceDeps {
   documentStagingRoot?: string;
   /** Test hook: override durable review DB path (Phase 4C-1). */
   documentReviewDbPath?: string;
+  /** Test hook: override Phase 5A EVA SQLite path */
+  evaDbPath?: string;
 }
 
 function nowIso() {
@@ -112,6 +115,7 @@ export class LocalAiService {
   private modelRouting: ModelRoutingConfig;
   private secretsFileEnv: Record<string, string>;
   private documentReview: DocumentReviewService;
+  private eva: EvaService;
 
   constructor(deps: LocalAiServiceDeps) {
     this.repo = deps.repo;
@@ -134,8 +138,9 @@ export class LocalAiService {
       this.secretsFileEnv,
       [],
     );
+    const repoRoot = deps.documentStagingRoot || findRepoRootFromApi() || process.cwd();
     this.documentReview = new DocumentReviewService(
-      deps.documentStagingRoot || findRepoRootFromApi() || process.cwd(),
+      repoRoot,
       {
         ...process.env,
         ...this.secretsFileEnv,
@@ -162,6 +167,27 @@ export class LocalAiService {
             : 'true'),
       },
     );
+    this.eva = new EvaService({
+      repoRoot,
+      env: {
+        ...process.env,
+        ...this.secretsFileEnv,
+        ...(deps.evaDbPath ? { LOCAL_AI_EVA_DB: deps.evaDbPath } : {}),
+        ...(deps.documentStagingRoot && !deps.evaDbPath
+          ? { LOCAL_AI_EVA_DB: `${deps.documentStagingRoot}/../eva-intake.sqlite` }
+          : {}),
+      },
+      ollamaClient: this.defaultExecutorMode === 'ollama' ? this.ollamaClient : null,
+      deepModel:
+        this.secretsFileEnv.OLLAMA_DEEP_MODEL ||
+        process.env.OLLAMA_DEEP_MODEL ||
+        this.ollamaConfig.model ||
+        'glm-4.7-flash:q4_K_M',
+      fastModel:
+        this.secretsFileEnv.OLLAMA_FAST_MODEL || process.env.OLLAMA_FAST_MODEL || null,
+      localAiEnabled: this.flags.LocalAIEnabled && !this.killSwitch,
+      dbPath: deps.evaDbPath,
+    });
   }
 
   getFlags(): LocalAiFeatureFlags {
@@ -1475,8 +1501,9 @@ export class LocalAiService {
       revenueOpportunities: queue.filter((i) =>
         /revenue|pricing|proposal|opportunity/i.test(i.title + i.description),
       ),
-      evaSubmissionsAwaitingReview: [], // EVA intake disabled — empty by design
+      evaSubmissionsAwaitingReview: this.eva.approvalQueue(), // Phase 5A local sandbox only — EvaIntakeEnabled remains false
       evaIntakeEnabled: this.flags.EvaIntakeEnabled,
+      evaSandbox: this.eva.safetyBanner(),
       aiDraftsAwaitingApproval: awaitingManny,
       highValueClientDecisions: awaitingManny.filter((j) =>
         requiresMannyApproval(j.requestedOperation),
@@ -2040,6 +2067,98 @@ export class LocalAiService {
       ...f,
       contentBase64: undefined,
     }));
+  }
+
+  // --- Phase 5A local synthetic EVA sandbox ---
+  evaSafetyBanner() {
+    return this.eva.safetyBanner();
+  }
+
+  listEvaScenarios() {
+    return this.eva.listScenarios();
+  }
+
+  listEvaSubmissions(status?: string) {
+    return this.eva.store.listSubmissions(status);
+  }
+
+  getEvaSubmission(id: string) {
+    const s = this.eva.store.getSubmission(id);
+    if (!s) {
+      throw Object.assign(new Error('EVA submission not found'), {
+        status: 404,
+        code: 'not_found',
+      });
+    }
+    return s;
+  }
+
+  listEvaProspects() {
+    return this.eva.store.listProspects();
+  }
+
+  listEvaCompanies() {
+    return this.eva.store.listCompanies();
+  }
+
+  listEvaContacts() {
+    return this.eva.store.listContacts();
+  }
+
+  listEvaAudit(submissionId?: string) {
+    return this.eva.store.listAudit(submissionId);
+  }
+
+  listEvaFailures() {
+    return this.eva.store.listFailures();
+  }
+
+  evaPerformance() {
+    return this.eva.store.performanceSnapshot();
+  }
+
+  evaApprovalQueue() {
+    return this.eva.approvalQueue();
+  }
+
+  async intakeEvaSubmission(opts: {
+    body: unknown;
+    origin?: string | null;
+    correlationId?: string;
+    clientKey?: string;
+    skipAi?: boolean;
+    forceOfflineModel?: boolean;
+  }) {
+    // Production EVA flag must remain false — sandbox proceeds under LocalAI only
+    if (this.flags.EvaIntakeEnabled) {
+      throw Object.assign(
+        new Error('EvaIntakeEnabled must remain false in Phase 5A'),
+        { status: 503, code: 'eva_intake_flag_must_remain_false' },
+      );
+    }
+    this.eva.setLocalAiEnabled(this.flags.LocalAIEnabled && !this.killSwitch);
+    if (this.defaultExecutorMode === 'ollama') {
+      this.eva.setOllama(this.ollamaClient);
+    } else {
+      this.eva.setOllama(null);
+    }
+    return this.eva.intake(opts);
+  }
+
+  decideEvaSubmission(submissionId: string, decision: string, notes?: string) {
+    return this.eva.decide(submissionId, decision, notes);
+  }
+
+  async retryEvaAi(submissionId: string) {
+    this.eva.setLocalAiEnabled(this.flags.LocalAIEnabled && !this.killSwitch);
+    if (this.defaultExecutorMode === 'ollama') {
+      this.eva.setOllama(this.ollamaClient);
+    }
+    return this.eva.retryAi(submissionId);
+  }
+
+  cancelEvaSubmission(submissionId: string) {
+    return this.eva.cancel(submissionId);
   }
 
   private requireJob(aiJobId: string): AiJobRecord {

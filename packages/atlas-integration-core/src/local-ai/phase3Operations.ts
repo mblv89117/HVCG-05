@@ -33,6 +33,8 @@ export const PHASE3_NEW_OPERATIONS = [
   'identify_missing_pages',
   'compare_document_versions',
   'prepare_document_decision_package',
+  // Phase 5A — local synthetic EVA review (never Production intake)
+  'review_eva_submission',
 ] as const;
 
 export type Phase3NewOperation = (typeof PHASE3_NEW_OPERATIONS)[number];

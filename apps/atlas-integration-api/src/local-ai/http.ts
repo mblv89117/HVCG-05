@@ -825,6 +825,160 @@ export async function handleLocalAiRoutes(opts: {
       return true;
     }
 
+    // --- Phase 5A Local EVA Sandbox (synthetic only; EvaIntakeEnabled must stay false) ---
+    if (method === 'GET' && path === '/api/local-ai/eva/sandbox') {
+      await requirePrincipal(req, cfg);
+      send(
+        res,
+        200,
+        {
+          banner: localAi.evaSafetyBanner(),
+          flags: localAi.getFlags(),
+          scenarios: localAi.listEvaScenarios().map((s) => ({
+            kind: s.kind,
+            banners: s.banners,
+          })),
+        },
+        origin,
+      );
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/eva/scenarios') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { scenarios: localAi.listEvaScenarios() }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/eva/submissions') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const status = url.searchParams.get('status') || undefined;
+      send(res, 200, { submissions: localAi.listEvaSubmissions(status) }, origin);
+      return true;
+    }
+
+    const evaSubMatch = path.match(/^\/api\/local-ai\/eva\/submissions\/([^/]+)$/);
+    if (method === 'GET' && evaSubMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { submission: localAi.getEvaSubmission(evaSubMatch[1]) }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/eva/intake') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const result = await localAi.intakeEvaSubmission({
+        body,
+        origin: origin || (req.headers.origin as string | undefined) || null,
+        correlationId: body.correlationId ? String(body.correlationId) : undefined,
+        clientKey: String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'local'),
+        skipAi: body.skipAi === true,
+        forceOfflineModel: body.forceOfflineModel === true,
+      });
+      send(
+        res,
+        result.status,
+        {
+          ok: result.ok,
+          duplicate: result.duplicate || false,
+          submission: result.submission || null,
+          error: result.error || null,
+          errors: result.errors || [],
+          correlationId: result.correlationId,
+          banners: localAi.evaSafetyBanner(),
+          noEmail: true,
+          noProductionRecords: true,
+          noClientActivation: true,
+          EvaIntakeEnabled: false,
+        },
+        origin,
+      );
+      return true;
+    }
+
+    const evaDecideMatch = path.match(
+      /^\/api\/local-ai\/eva\/submissions\/([^/]+)\/decision$/,
+    );
+    if (method === 'POST' && evaDecideMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const submission = localAi.decideEvaSubmission(
+        evaDecideMatch[1],
+        String(body.decision || ''),
+        body.notes ? String(body.notes) : undefined,
+      );
+      send(
+        res,
+        200,
+        {
+          submission,
+          noEmail: true,
+          noClientActivation: true,
+          noProductionRecords: true,
+        },
+        origin,
+      );
+      return true;
+    }
+
+    const evaRetryMatch = path.match(/^\/api\/local-ai\/eva\/submissions\/([^/]+)\/retry-ai$/);
+    if (method === 'POST' && evaRetryMatch) {
+      await requirePrincipal(req, cfg);
+      const submission = await localAi.retryEvaAi(evaRetryMatch[1]);
+      send(res, 200, { submission }, origin);
+      return true;
+    }
+
+    const evaCancelMatch = path.match(/^\/api\/local-ai\/eva\/submissions\/([^/]+)\/cancel$/);
+    if (method === 'POST' && evaCancelMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { submission: localAi.cancelEvaSubmission(evaCancelMatch[1]) }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/eva/queue') {
+      await requirePrincipal(req, cfg);
+      send(
+        res,
+        200,
+        {
+          queue: localAi.evaApprovalQueue(),
+          banner: localAi.evaSafetyBanner(),
+        },
+        origin,
+      );
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/eva/performance') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { performance: localAi.evaPerformance() }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/eva/prospects') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { prospects: localAi.listEvaProspects() }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/eva/audit') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const submissionId = url.searchParams.get('submissionId') || undefined;
+      send(
+        res,
+        200,
+        {
+          events: localAi.listEvaAudit(submissionId),
+          failures: localAi.listEvaFailures(),
+        },
+        origin,
+      );
+      return true;
+    }
+
     send(res, 404, { error: 'not_found', message: `No local-ai route ${method} ${path}` }, origin);
     return true;
   } catch (err) {

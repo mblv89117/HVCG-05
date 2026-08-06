@@ -3,6 +3,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AtlasCard, DataTable, StatusChip } from '@hvcg/atlas-design-system';
 import {
   Button,
@@ -398,6 +399,18 @@ export function AiOperationsQueuePage() {
           selection only · Durable local SQLite store survives Hub/machine restarts
         </MessageBarBody>
       </MessageBar>
+
+      <AtlasCard title="Phase 5A — Local EVA Sandbox" subtitle="Synthetic only" style={{ marginTop: 12 }}>
+        <MessageBar intent="warning">
+          <MessageBarBody>
+            LOCAL EVA SANDBOX · SYNTHETIC TEST DATA ONLY · NO PRODUCTION RECORDS · NO EMAILS · NO
+            CLIENT ACTIVATION · EvaIntakeEnabled remains false
+          </MessageBarBody>
+        </MessageBar>
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>
+          <Link to="/ai-operations/eva">Open LOCAL EVA SANDBOX →</Link>
+        </Caption1>
+      </AtlasCard>
 
       <AtlasCard title="Executor + model routing" subtitle="Loopback Ollama" style={{ marginTop: 12 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
