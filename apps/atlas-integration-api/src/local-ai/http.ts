@@ -196,6 +196,165 @@ export async function handleLocalAiRoutes(opts: {
       return true;
     }
 
+    if (method === 'POST' && path === '/api/local-ai/documents/search') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(res, 200, { documents: localAi.searchStagedDocuments(body || {}) }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/documents/recovery') {
+      await requirePrincipal(req, cfg);
+      send(
+        res,
+        200,
+        {
+          interrupted: localAi.listInterruptedDocumentJobs(),
+          recoveryNote: 'Interrupted jobs are not auto-reprocessed',
+        },
+        origin,
+      );
+      return true;
+    }
+    const resumeMatchEarly = path.match(/^\/api\/local-ai\/documents\/recovery\/([^/]+)\/resume$/);
+    if (method === 'POST' && resumeMatchEarly) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.resumeInterruptedDocumentJob(resumeMatchEarly[1]), origin);
+      return true;
+    }
+    const cancelRecMatchEarly = path.match(
+      /^\/api\/local-ai\/documents\/recovery\/([^/]+)\/cancel$/,
+    );
+    if (method === 'POST' && cancelRecMatchEarly) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, localAi.cancelInterruptedDocumentJob(cancelRecMatchEarly[1]), origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/health') {
+      await requirePrincipal(req, cfg);
+      send(
+        res,
+        200,
+        {
+          health: localAi.documentDatabaseHealth(),
+          migration: localAi.documentMigrationStatus(),
+        },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'GET' && path === '/api/local-ai/documents/storage/retention-preview') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { candidates: localAi.retentionPreviewDocuments() }, origin);
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/backup') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        { backup: localAi.backupDocumentReviews({ dryRun: Boolean(body.dryRun) }) },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/restore-validate') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        { validation: localAi.validateDocumentRestore(String(body.backupPath || '')) },
+        origin,
+      );
+      return true;
+    }
+    if (method === 'POST' && path === '/api/local-ai/documents/storage/restore') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        localAi.restoreDocumentReviews(String(body.backupPath || ''), {
+          dryRun: Boolean(body.dryRun),
+          authorized: Boolean(body.authorized),
+        }),
+        origin,
+      );
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/documents/multi-pack') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const pack = localAi.createMultiDocumentReview({
+        stagedFileIds: Array.isArray(body.stagedFileIds)
+          ? body.stagedFileIds.map(String)
+          : [],
+        clientLabel: String(body.clientLabel || 'Unknown Client'),
+        title: body.title ? String(body.title) : undefined,
+        projectLabel: body.projectLabel ? String(body.projectLabel) : null,
+        purpose: body.purpose ? String(body.purpose) : null,
+      });
+      send(res, 201, { pack }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/local-ai/documents/multi-pack') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { packs: localAi.listMultiDocumentReviews() }, origin);
+      return true;
+    }
+
+    const packMatchEarly = path.match(/^\/api\/local-ai\/documents\/multi-pack\/([^/]+)$/);
+    if (method === 'GET' && packMatchEarly) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { pack: localAi.getMultiDocumentReview(packMatchEarly[1]) }, origin);
+      return true;
+    }
+    if (method === 'PATCH' && packMatchEarly) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const pack = localAi.updateMultiDocumentReview(packMatchEarly[1], {
+        addStagedFileIds: Array.isArray(body.addStagedFileIds)
+          ? body.addStagedFileIds.map(String)
+          : undefined,
+        removeStagedFileIds: Array.isArray(body.removeStagedFileIds)
+          ? body.removeStagedFileIds.map(String)
+          : undefined,
+        title: body.title ? String(body.title) : undefined,
+      });
+      send(res, 200, { pack }, origin);
+      return true;
+    }
+    const packDecideMatchEarly = path.match(
+      /^\/api\/local-ai\/documents\/multi-pack\/([^/]+)\/decision$/,
+    );
+    if (method === 'POST' && packDecideMatchEarly) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const pack = localAi.decideMultiDocumentReview(
+        packDecideMatchEarly[1],
+        String(body.decision || 'No Action'),
+        body.notes ? String(body.notes) : undefined,
+      );
+      send(res, 200, { pack }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/local-ai/documents/compare') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const comparison = localAi.compareStagedDocumentVersions(
+        String(body.leftStagedFileId || ''),
+        String(body.rightStagedFileId || ''),
+      );
+      send(res, 200, { comparison }, origin);
+      return true;
+    }
+
     const docMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)$/);
     if (method === 'GET' && docMatch) {
       await requirePrincipal(req, cfg);
@@ -237,34 +396,34 @@ export async function handleLocalAiRoutes(opts: {
       return true;
     }
 
-    if (method === 'POST' && path === '/api/local-ai/documents/compare') {
+    const corrMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/corrections$/);
+    if (method === 'GET' && corrMatch) {
       await requirePrincipal(req, cfg);
-      const body = await readJson(req);
-      const comparison = localAi.compareStagedDocumentVersions(
-        String(body.leftStagedFileId || ''),
-        String(body.rightStagedFileId || ''),
-      );
-      send(res, 200, { comparison }, origin);
+      send(res, 200, { corrections: localAi.listDocumentCorrections(corrMatch[1]) }, origin);
       return true;
     }
-
-    if (method === 'POST' && path === '/api/local-ai/documents/multi-pack') {
+    const decHistMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/decisions$/);
+    if (method === 'GET' && decHistMatch) {
       await requirePrincipal(req, cfg);
-      const body = await readJson(req);
-      const pack = localAi.createMultiDocumentReview({
-        stagedFileIds: Array.isArray(body.stagedFileIds)
-          ? body.stagedFileIds.map(String)
-          : [],
-        clientLabel: String(body.clientLabel || 'Unknown Client'),
-      });
-      send(res, 201, { pack }, origin);
+      send(res, 200, { decisions: localAi.listDocumentDecisions(decHistMatch[1]) }, origin);
       return true;
     }
 
     const docPurgeMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/purge$/);
     if (method === 'POST' && docPurgeMatch) {
       await requirePrincipal(req, cfg);
-      send(res, 200, { document: localAi.purgeStagedDocument(docPurgeMatch[1]) }, origin);
+      const body = await readJson(req).catch(() => ({}));
+      send(
+        res,
+        200,
+        {
+          document: localAi.purgeStagedDocument(docPurgeMatch[1], {
+            authorized: body.authorized !== false,
+            reason: body.reason ? String(body.reason) : undefined,
+          }),
+        },
+        origin,
+      );
       return true;
     }
 

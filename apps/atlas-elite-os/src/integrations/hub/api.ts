@@ -1001,3 +1001,83 @@ export async function fetchLocalAiDocumentFixtures(auth: AtlasHubAuthHeaders) {
   });
   return parse(res) as Promise<{ fixtures: unknown[] }>;
 }
+
+export async function searchLocalAiDocuments(
+  auth: AtlasHubAuthHeaders,
+  filters: Record<string, unknown>,
+) {
+  const res = await fetch(`${base()}/api/local-ai/documents/search`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(filters),
+  });
+  return parse(res) as Promise<{ documents: LocalAiStagedDocument[] }>;
+}
+
+export async function fetchLocalAiMultiDocumentPacks(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/documents/multi-pack`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ packs: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchLocalAiDocumentRecovery(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/documents/recovery`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{
+    interrupted: Array<Record<string, unknown>>;
+    recoveryNote: string;
+  }>;
+}
+
+export async function fetchLocalAiDocumentStorageHealth(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/documents/storage/health`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{
+    health: Record<string, unknown>;
+    migration: Record<string, unknown>;
+  }>;
+}
+
+export async function fetchLocalAiRetentionPreview(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/local-ai/documents/storage/retention-preview`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ candidates: Array<Record<string, unknown>> }>;
+}
+
+export async function backupLocalAiDocumentStore(
+  auth: AtlasHubAuthHeaders,
+  body?: { dryRun?: boolean },
+) {
+  const res = await fetch(`${base()}/api/local-ai/documents/storage/backup`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body || {}),
+  });
+  return parse(res) as Promise<{ backup: Record<string, unknown> }>;
+}
+
+export async function fetchLocalAiDocumentCorrections(
+  auth: AtlasHubAuthHeaders,
+  stagedFileId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}/corrections`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ corrections: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchLocalAiDocumentDecisions(
+  auth: AtlasHubAuthHeaders,
+  stagedFileId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/local-ai/documents/${encodeURIComponent(stagedFileId)}/decisions`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ decisions: Array<Record<string, unknown>> }>;
+}

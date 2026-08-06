@@ -37,6 +37,12 @@ import {
   fetchLocalAiPerformance,
   fetchLocalAiStagedDocument,
   fetchLocalAiStagedDocuments,
+  fetchLocalAiDocumentRecovery,
+  fetchLocalAiDocumentStorageHealth,
+  fetchLocalAiMultiDocumentPacks,
+  fetchLocalAiRetentionPreview,
+  backupLocalAiDocumentStore,
+  searchLocalAiDocuments,
   postLocalAiMannyDecision,
   postLocalAiModelCompare,
   processLocalAiContentPack,
@@ -83,6 +89,14 @@ export function AiOperationsQueuePage() {
   const [compareDocId, setCompareDocId] = useState('');
   const [versionCompare, setVersionCompare] = useState<Record<string, unknown> | null>(null);
   const [multiPack, setMultiPack] = useState<Record<string, unknown> | null>(null);
+  const [multiPacks, setMultiPacks] = useState<Array<Record<string, unknown>>>([]);
+  const [docFilter, setDocFilter] = useState('');
+  const [interrupted, setInterrupted] = useState<Array<Record<string, unknown>>>([]);
+  const [storageHealth, setStorageHealth] = useState<Record<string, unknown> | null>(null);
+  const [retentionCandidates, setRetentionCandidates] = useState<Array<Record<string, unknown>>>(
+    [],
+  );
+  const [backupInfo, setBackupInfo] = useState<Record<string, unknown> | null>(null);
   const [paste, setPaste] = useState('');
   const [editedRedaction, setEditedRedaction] = useState('');
   const [compare, setCompare] = useState<Record<string, unknown> | null>(null);
@@ -99,15 +113,20 @@ export function AiOperationsQueuePage() {
     setLoading(true);
     setError(null);
     try {
-      const [j, f, d, r, p, packsRes, docsRes] = await Promise.all([
-        fetchLocalAiJobs(hubAuth),
-        fetchLocalAiFlags(hubAuth),
-        fetchLocalAiOllamaDiscovery(hubAuth).catch(() => null),
-        fetchLocalAiModelRouting(hubAuth).catch(() => null),
-        fetchLocalAiPerformance(hubAuth).catch(() => null),
-        fetchLocalAiContentPacks(hubAuth).catch(() => ({ packs: [] })),
-        fetchLocalAiStagedDocuments(hubAuth).catch(() => ({ documents: [] })),
-      ]);
+      const [j, f, d, r, p, packsRes, docsRes, multiRes, recoveryRes, healthRes, retentionRes] =
+        await Promise.all([
+          fetchLocalAiJobs(hubAuth),
+          fetchLocalAiFlags(hubAuth),
+          fetchLocalAiOllamaDiscovery(hubAuth).catch(() => null),
+          fetchLocalAiModelRouting(hubAuth).catch(() => null),
+          fetchLocalAiPerformance(hubAuth).catch(() => null),
+          fetchLocalAiContentPacks(hubAuth).catch(() => ({ packs: [] })),
+          fetchLocalAiStagedDocuments(hubAuth).catch(() => ({ documents: [] })),
+          fetchLocalAiMultiDocumentPacks(hubAuth).catch(() => ({ packs: [] })),
+          fetchLocalAiDocumentRecovery(hubAuth).catch(() => ({ interrupted: [] })),
+          fetchLocalAiDocumentStorageHealth(hubAuth).catch(() => null),
+          fetchLocalAiRetentionPreview(hubAuth).catch(() => ({ candidates: [] })),
+        ]);
       setJobs(j.jobs);
       setFlags(f.flags);
       setDiscovery(d);
@@ -115,6 +134,10 @@ export function AiOperationsQueuePage() {
       setPerf(p?.dashboard || null);
       setPacks(packsRes.packs || []);
       setDocs(docsRes.documents || []);
+      setMultiPacks(multiRes.packs || []);
+      setInterrupted(recoveryRes.interrupted || []);
+      setStorageHealth(healthRes?.health || null);
+      setRetentionCandidates(retentionRes.candidates || []);
       await fetchLocalAiApprovalQueue(hubAuth).catch(() => null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -344,7 +367,7 @@ export function AiOperationsQueuePage() {
         <MessageBarBody>
           <MessageBarTitle>LOCAL DOCUMENT REVIEW · DRAFT ONLY</MessageBarTitle>
           NO FILE MOVEMENT · NO RECORD WRITES · NO EXTERNAL COMMUNICATIONS · Explicit Manny file
-          selection only
+          selection only · Durable local SQLite store survives Hub/machine restarts
         </MessageBarBody>
       </MessageBar>
 
@@ -415,6 +438,138 @@ export function AiOperationsQueuePage() {
           <MessageBarBody>{error}</MessageBarBody>
         </MessageBar>
       ) : null}
+
+      <AtlasCard
+        title="Document Review Library"
+        subtitle="Persisted reviews · filters · decisions · expiration"
+        style={{ marginTop: 12 }}
+      >
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+          <Input
+            value={docFilter}
+            onChange={(_, d) => setDocFilter(d.value)}
+            placeholder="Filter filename / status / client"
+            style={{ minWidth: 240 }}
+          />
+          <Button
+            disabled={busy || !signedIn}
+            onClick={() =>
+              void searchLocalAiDocuments(hubAuth, {
+                originalFilename: docFilter || undefined,
+                status: docFilter || undefined,
+                clientLabel: docFilter || undefined,
+              })
+                .then((r) => setDocs(r.documents || []))
+                .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+            }
+          >
+            Search library
+          </Button>
+        </div>
+        <Caption1>
+          {docs.length} review(s) · malware / duplicate / model / decision columns in Open detail
+        </Caption1>
+      </AtlasCard>
+
+      <AtlasCard
+        title="Multi-Document Packs"
+        subtitle="Manually selected reviews only · no folder/system access"
+        style={{ marginTop: 12 }}
+      >
+        {multiPacks.length ? (
+          <DataTable
+            columns={[
+              {
+                key: 'id',
+                header: 'Pack',
+                render: (r: Record<string, unknown>) => String(r.packId || '').slice(0, 8),
+              },
+              {
+                key: 'client',
+                header: 'Client',
+                render: (r: Record<string, unknown>) => String(r.clientLabel || ''),
+              },
+              {
+                key: 'n',
+                header: 'Files',
+                render: (r: Record<string, unknown>) =>
+                  String((r.stagedFileIds as string[] | undefined)?.length || 0),
+              },
+            ]}
+            rows={multiPacks}
+            getRowKey={(r: Record<string, unknown>) => String(r.packId)}
+          />
+        ) : (
+          <Caption1>No multi-document packs yet.</Caption1>
+        )}
+        {multiPack ? (
+          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(multiPack, null, 2)}
+          </pre>
+        ) : null}
+      </AtlasCard>
+
+      <AtlasCard
+        title="Recovery"
+        subtitle="Interrupted jobs after restart — manual resume/cancel only"
+        style={{ marginTop: 12 }}
+      >
+        <Caption1 style={{ display: 'block', marginBottom: 8 }}>
+          No automatic reprocess. {interrupted.length} interrupted job(s).
+        </Caption1>
+        {interrupted.length ? (
+          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(interrupted.slice(0, 10), null, 2)}
+          </pre>
+        ) : null}
+      </AtlasCard>
+
+      <AtlasCard
+        title="Local Storage"
+        subtitle="SQLite health · retention · backup (local only)"
+        style={{ marginTop: 12 }}
+      >
+        <Caption1 style={{ display: 'block', marginBottom: 8 }}>
+          Schema {String(storageHealth?.schemaVersion ?? '—')} · reviews{' '}
+          {String(storageHealth?.reviewCount ?? '—')} · DB bytes{' '}
+          {String(storageHealth?.dbBytes ?? '—')} · purge candidates {retentionCandidates.length}
+        </Caption1>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button
+            disabled={busy || !signedIn}
+            onClick={() =>
+              void backupLocalAiDocumentStore(hubAuth, { dryRun: true }).then((r) =>
+                setBackupInfo(r.backup),
+              )
+            }
+          >
+            Backup dry-run
+          </Button>
+          <Button
+            disabled={busy || !signedIn}
+            onClick={() =>
+              void backupLocalAiDocumentStore(hubAuth, { dryRun: false }).then((r) =>
+                setBackupInfo(r.backup),
+              )
+            }
+          >
+            Create local backup
+          </Button>
+          <Button disabled={loading || !signedIn} onClick={() => void refresh()}>
+            Refresh storage
+          </Button>
+        </div>
+        {backupInfo ? (
+          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(backupInfo, null, 2)}
+          </pre>
+        ) : null}
+        {retentionCandidates.length ? (
+          <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>
+            {JSON.stringify(retentionCandidates.slice(0, 5), null, 2)}
+          </pre>
+        ) : null}
+      </AtlasCard>
 
       <AtlasCard
         title="Document Review"

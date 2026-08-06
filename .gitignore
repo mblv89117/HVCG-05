@@ -21,6 +21,13 @@ config/environments/production.json
 **/local-ai-operations.json
 .data/local-ai-document-staging/
 **/local-ai-document-staging/
+.data/local-ai-document-reviews/
+**/local-ai-document-reviews/
+.data/local-ai-document-backups/
+**/local-ai-document-backups/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 
 # HVS inventory bulk dumps (keep summaries in reports)
 deployment/reports/hvs-onedrive-inventory/inventory-*.json

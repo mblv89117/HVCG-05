@@ -4,7 +4,8 @@
  * Never moves/renames/uploads files. Never writes authoritative records.
  */
 
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
+import { resolve } from 'node:path';
 import {
   DOCUMENT_STAGING_SCHEMA_VERSION,
   SYNTHETIC_AI_OUTPUT_BANNER,
@@ -21,13 +22,18 @@ import {
   scanForInjection,
   DEFAULT_MULTI_DOC_MAX_BYTES,
   DEFAULT_MULTI_DOC_MAX_FILES,
+  toDurableStatus,
   type DocumentEnrichmentOutput,
   type DocumentReviewDecision,
   type DocumentReviewPackage,
   type DocumentVersionComparison,
+  type DurableCorrectionRecord,
+  type DurableDecisionRecord,
+  type DurableMultiDocPack,
   type FieldCorrectionRecord,
   type MalwareScanResult,
   type MultiDocumentReviewPack,
+  type ReviewSearchFilters,
   type StagedDocumentRecord,
 } from '@hvcg/atlas-integration-core';
 import {
@@ -38,25 +44,79 @@ import {
 import { combinedExtractedText, extractDocument } from './documentExtraction.ts';
 import { malwareQuarantineDir, scanFileLocally } from './malwareScanner.ts';
 import { createFixture, type FixtureKind } from './documentFixtures.ts';
+import {
+  DocumentReviewDatabase,
+  resolveDocumentReviewDbPath,
+  assertSafeBackupPath,
+} from './documentReviewDb.ts';
 
 export class DocumentReviewService {
   readonly staging: DocumentStagingStore;
+  readonly durable: DocumentReviewDatabase;
+  readonly recoveryActions: string[] = [];
   private activeAbort = new Map<string, AbortController>();
   private multiPacks = new Map<string, MultiDocumentReviewPack>();
   private env: Record<string, string | undefined>;
+  private repoRoot: string;
+  private backupRoot: string;
 
   constructor(repoRoot: string, env: Record<string, string | undefined> = process.env) {
     this.env = env;
+    this.repoRoot = repoRoot;
     this.staging = new DocumentStagingStore(resolveDocumentStagingConfig(env, repoRoot));
+    const dbPath = resolveDocumentReviewDbPath(env, repoRoot);
+    this.durable = new DocumentReviewDatabase(dbPath);
+    this.backupRoot = resolve(
+      (env.LOCAL_AI_DOCUMENT_BACKUP_DIR || '').trim() ||
+        resolve(repoRoot, '.data', 'local-ai-document-backups'),
+    );
+    // Hydrate staging → durable for any pre-4C-1 records still on disk
+    for (const rec of this.staging.list()) {
+      if (!this.durable.getReview(rec.stagedFileId)) {
+        this.durable.upsertReviewFromStaged(rec, { actor: 'LocalAI' });
+      }
+    }
+    for (const pack of this.durable.listPacks()) {
+      this.multiPacks.set(pack.packId, this.fromDurablePack(pack));
+    }
+    const recovery = this.durable.recoverOnStartup('LocalAI');
+    this.recoveryActions.push(...recovery.actions);
+  }
+
+  private persist(
+    rec: StagedDocumentRecord,
+    opts?: { clientLabel?: string; projectLabel?: string | null; actor?: string },
+  ) {
+    this.staging.upsert(rec);
+    this.durable.upsertReviewFromStaged(rec, opts);
   }
 
   list() {
     this.staging.expireDue();
+    const durable = this.durable.listReviews(500);
+    if (durable.length) return durable.map((r) => this.publicView(r));
     return this.staging.list().map((r) => this.publicView(r));
+  }
+
+  search(filters: ReviewSearchFilters) {
+    this.staging.expireDue();
+    return this.durable.searchReviews(filters).map((r) => this.publicView(r));
   }
 
   get(id: string) {
     return this.publicView(this.require(id), true);
+  }
+
+  dbHealth() {
+    return this.durable.health();
+  }
+
+  migrationStatus() {
+    return {
+      schemaVersion: this.durable.getSchemaVersion(),
+      schemaLabel: this.durable.getSchemaLabel(),
+      dbPath: this.durable.dbPath,
+    };
   }
 
   async stage(input: {
@@ -64,8 +124,29 @@ export class DocumentReviewService {
     bytes: Buffer;
     declaredMime?: string;
     allowSyntheticMalwareOverride?: boolean;
+    operationKey?: string;
   }): Promise<StagedDocumentRecord> {
     this.staging.expireDue();
+    const checksum = createHash('sha256').update(input.bytes).digest('hex');
+    const opKey =
+      input.operationKey || `stage:${checksum}:${input.originalFilename.toLowerCase()}`;
+    const prior = this.durable.getIdempotent(opKey);
+    if (prior) {
+      const existing =
+        this.staging.get(prior.resourceId) || this.durable.getReview(prior.resourceId);
+      if (existing) {
+        // Skip duplicate malware scan when checksum + prior clean scan present
+        if (
+          existing.checksumSha256 === checksum &&
+          existing.malwareScan &&
+          !(existing.malwareScan as MalwareScanResult).blocked
+        ) {
+          return this.publicView(existing);
+        }
+        return this.publicView(existing);
+      }
+    }
+
     const ext = input.originalFilename.split('.').pop()?.toLowerCase() || '';
     const detectedMime = detectMimeFromBuffer(input.bytes, ext);
     const rec = this.staging.stageFile({
@@ -98,7 +179,14 @@ export class DocumentReviewService {
       rec.errorDetail = scan.detail;
     }
     rec.updatedAt = new Date().toISOString();
-    this.staging.upsert(rec);
+    this.persist(rec, { actor: 'LocalAI' });
+    this.durable.putIdempotent({
+      operationKey: opKey,
+      operation: 'staging',
+      resourceId: rec.stagedFileId,
+      correlationId: rec.correlationId,
+      result: { stagedFileId: rec.stagedFileId, checksum },
+    });
     return this.publicView(rec);
   }
 
@@ -114,6 +202,7 @@ export class DocumentReviewService {
     clientLabel?: string;
     projectLabel?: string | null;
     forceOcr?: boolean;
+    operationKey?: string;
   }): Promise<StagedDocumentRecord> {
     const rec = this.require(opts.stagedFileId);
     if (rec.status === 'Purged' || rec.status === 'Expired') {
@@ -136,18 +225,36 @@ export class DocumentReviewService {
       });
     }
 
+    const extractKey =
+      opts.operationKey ||
+      `extract:${rec.stagedFileId}:${rec.checksumSha256}:ocr=${opts.forceOcr ? 1 : 0}`;
+    if (
+      !opts.forceOcr &&
+      this.durable.getIdempotent(extractKey) &&
+      rec.extraction &&
+      (rec.status === 'AwaitingRedactionApproval' ||
+        rec.status === 'ReadyForReview' ||
+        rec.status === 'ReviewComplete')
+    ) {
+      return this.publicView(rec, true);
+    }
+
     const controller = new AbortController();
     this.activeAbort.set(rec.stagedFileId, controller);
     rec.status = 'Extracting';
     rec.updatedAt = new Date().toISOString();
-    this.staging.upsert(rec);
+    this.persist(rec, {
+      clientLabel: opts.clientLabel,
+      projectLabel: opts.projectLabel,
+      actor: 'LocalAI',
+    });
 
     try {
       const bytes = this.staging.readBytes(rec);
       const abs = this.staging.absolutePath(rec);
       if (['png', 'jpg', 'jpeg', 'pdf'].includes(String(rec.extension))) {
         rec.status = 'OcrInProgress';
-        this.staging.upsert(rec);
+        this.persist(rec, { clientLabel: opts.clientLabel, projectLabel: opts.projectLabel });
       }
 
       const extraction = await extractDocument({
@@ -162,6 +269,10 @@ export class DocumentReviewService {
         },
       });
       this.staging.updateExtraction(rec.stagedFileId, extraction, 'Extracting');
+      this.durable.upsertReviewFromStaged(this.require(rec.stagedFileId), {
+        clientLabel: opts.clientLabel,
+        projectLabel: opts.projectLabel,
+      });
 
       const rawText = combinedExtractedText(extraction);
       const bannerPrefixed = rawText.includes('TEST —')
@@ -320,14 +431,25 @@ export class DocumentReviewService {
       latest.redactionDecision = 'Pending';
       latest.status = 'AwaitingRedactionApproval';
       latest.updatedAt = new Date().toISOString();
-      this.staging.upsert(latest);
+      this.persist(latest, {
+        clientLabel: opts.clientLabel,
+        projectLabel: opts.projectLabel,
+        actor: 'LocalAI',
+      });
+      this.durable.putIdempotent({
+        operationKey: extractKey,
+        operation: 'extraction',
+        resourceId: latest.stagedFileId,
+        correlationId: latest.correlationId,
+        result: { status: latest.status, checksum: latest.checksumSha256 },
+      });
       return this.publicView(latest, true);
     } catch (err) {
       const latest = this.require(opts.stagedFileId);
       latest.status = 'Failed';
       latest.errorDetail = err instanceof Error ? err.message : String(err);
       latest.updatedAt = new Date().toISOString();
-      this.staging.upsert(latest);
+      this.persist(latest);
       throw err;
     } finally {
       this.activeAbort.delete(opts.stagedFileId);
@@ -350,7 +472,7 @@ export class DocumentReviewService {
       rec.redactionDecision = decision;
       rec.status = 'ReviewComplete';
       rec.updatedAt = new Date().toISOString();
-      this.staging.upsert(rec);
+      this.persist(rec);
       return this.publicView(rec, true);
     }
     if (decision === 'Edit Redactions' && editedRedactedContent != null) {
@@ -360,13 +482,13 @@ export class DocumentReviewService {
       }
       rec.redactionDecision = 'Pending';
       rec.updatedAt = new Date().toISOString();
-      this.staging.upsert(rec);
+      this.persist(rec);
       return this.publicView(rec, true);
     }
     rec.redactionDecision = 'Approve Redacted Content';
     rec.status = 'Enriching';
     rec.updatedAt = new Date().toISOString();
-    this.staging.upsert(rec);
+    this.persist(rec);
     return this.publicView(rec, true);
   }
 
@@ -443,7 +565,14 @@ export class DocumentReviewService {
     rec.linkedAiJobId = opts.jobId;
     rec.status = 'ReadyForReview';
     rec.updatedAt = new Date().toISOString();
-    this.staging.upsert(rec);
+    this.persist(rec);
+    this.durable.putIdempotent({
+      operationKey: `enrich:${opts.stagedFileId}:${opts.jobId}`,
+      operation: 'ai_enrichment',
+      resourceId: opts.stagedFileId,
+      correlationId: rec.correlationId,
+      result: { jobId: opts.jobId, status: rec.status },
+    });
     return this.publicView(rec, true);
   }
 
@@ -499,6 +628,10 @@ export class DocumentReviewService {
   createMultiDocumentPack(opts: {
     stagedFileIds: string[];
     clientLabel: string;
+    title?: string;
+    projectLabel?: string | null;
+    purpose?: string | null;
+    sensitivity?: string;
   }): MultiDocumentReviewPack {
     if (opts.stagedFileIds.length < 2) {
       throw Object.assign(new Error('Select at least two files'), { status: 400 });
@@ -527,10 +660,11 @@ export class DocumentReviewService {
       .filter(([, ids]) => ids.length > 1)
       .map(([c, ids]) => `exact_duplicate checksum ${c.slice(0, 12)}… → ${ids.join(',')}`);
 
+    const now = new Date().toISOString();
     const pack: MultiDocumentReviewPack = {
       packId: randomUUID(),
       stagedFileIds: opts.stagedFileIds,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
       clientLabel: opts.clientLabel,
       relationshipAnalysis: [
         'Manny-selected multi-document pack — draft relationship analysis only',
@@ -547,7 +681,6 @@ export class DocumentReviewService {
       aggregateSizeBytes: aggregate,
     };
 
-    // Cross-doc amount/date conflicts (heuristic)
     if (docs.length >= 2 && docs[0].reviewPackage && docs[1].reviewPackage) {
       const a = docs[0].reviewPackage.amounts;
       const b = docs[1].reviewPackage.amounts;
@@ -558,20 +691,126 @@ export class DocumentReviewService {
       }
     }
     this.multiPacks.set(pack.packId, pack);
+    const durablePack = this.toDurablePack(pack, {
+      title: opts.title || `Pack ${opts.clientLabel}`,
+      projectLabel: opts.projectLabel ?? null,
+      purpose: opts.purpose ?? null,
+      sensitivity: opts.sensitivity || 'Confidential',
+    });
+    this.durable.upsertPack(durablePack);
+    this.durable.appendAudit({
+      correlationId: pack.packId,
+      reviewId: null,
+      packId: pack.packId,
+      at: now,
+      actor: 'Manny',
+      action: 'multi_document_pack_created',
+      detail: `files=${pack.stagedFileIds.length}; draftOnly`,
+      fromStatus: null,
+      toStatus: 'Open',
+    });
     return pack;
   }
 
+  updateMultiDocumentPack(
+    packId: string,
+    opts: { addStagedFileIds?: string[]; removeStagedFileIds?: string[]; title?: string },
+  ): MultiDocumentReviewPack {
+    const pack = this.getMultiDocumentPack(packId);
+    let ids = [...pack.stagedFileIds];
+    for (const rem of opts.removeStagedFileIds || []) {
+      ids = ids.filter((x) => x !== rem);
+    }
+    for (const add of opts.addStagedFileIds || []) {
+      this.require(add);
+      if (!ids.includes(add)) ids.push(add);
+    }
+    if (ids.length > DEFAULT_MULTI_DOC_MAX_FILES) {
+      throw Object.assign(new Error(`Max ${DEFAULT_MULTI_DOC_MAX_FILES} files`), { status: 400 });
+    }
+    if (ids.length < 1) {
+      throw Object.assign(new Error('Pack must retain at least one file'), { status: 400 });
+    }
+    const docs = ids.map((id) => this.require(id));
+    pack.stagedFileIds = ids;
+    pack.aggregateSizeBytes = docs.reduce((s, d) => s + d.sizeBytes, 0);
+    pack.sourceCitations = docs.map((d) => ({
+      stagedFileId: d.stagedFileId,
+      note: d.originalFilename,
+    }));
+    this.multiPacks.set(pack.packId, pack);
+    const existing = this.durable.getPack(packId);
+    this.durable.upsertPack(
+      this.toDurablePack(pack, {
+        title: opts.title || existing?.title || `Pack ${pack.clientLabel}`,
+        projectLabel: existing?.projectLabel ?? null,
+        purpose: existing?.purpose ?? null,
+        sensitivity: existing?.sensitivity || 'Confidential',
+      }),
+    );
+    return pack;
+  }
+
+  listMultiDocumentPacks() {
+    return this.durable.listPacks().map((p) => this.fromDurablePack(p));
+  }
+
+  decideMultiDocumentPack(packId: string, decision: string, notes?: string) {
+    const pack = this.getMultiDocumentPack(packId);
+    const durable = this.durable.getPack(packId);
+    if (!durable) throw Object.assign(new Error('Pack not found'), { status: 404 });
+    durable.mannyDecision = decision;
+    durable.mannyDecisionAt = new Date().toISOString();
+    durable.status = 'Decided';
+    durable.updatedAt = durable.mannyDecisionAt;
+    durable.packDecisionPackage = {
+      decision,
+      notes: notes || null,
+      draftOnly: true,
+      fileMoved: false,
+      fileRenamed: false,
+      authoritativeWrite: false,
+      externalCommunication: false,
+    };
+    this.durable.upsertPack(durable);
+    this.durable.appendAudit({
+      correlationId: packId,
+      reviewId: null,
+      packId,
+      at: durable.mannyDecisionAt,
+      actor: 'Manny',
+      action: 'pack_decision',
+      detail: `decision=${decision}; notes=${notes || ''}; no side effects`,
+      fromStatus: 'Open',
+      toStatus: 'Decided',
+    });
+    this.multiPacks.set(packId, this.fromDurablePack(durable));
+    return this.fromDurablePack(durable);
+  }
+
   getMultiDocumentPack(packId: string) {
-    const p = this.multiPacks.get(packId);
-    if (!p) throw Object.assign(new Error('Multi-doc pack not found'), { status: 404 });
-    return p;
+    const fromMem = this.multiPacks.get(packId);
+    if (fromMem) return fromMem;
+    const fromDb = this.durable.getPack(packId);
+    if (!fromDb) throw Object.assign(new Error('Multi-doc pack not found'), { status: 404 });
+    const pack = this.fromDurablePack(fromDb);
+    this.multiPacks.set(packId, pack);
+    return pack;
   }
 
   decide(
     stagedFileId: string,
     decision: DocumentReviewDecision,
     corrections?: Record<string, unknown>,
+    operationKey?: string,
   ): StagedDocumentRecord {
+    const decideKey = operationKey || `decision:${stagedFileId}:${decision}:${JSON.stringify(corrections || {})}`;
+    const prior = this.durable.getIdempotent(decideKey);
+    if (prior) {
+      const existing = this.require(prior.resourceId);
+      if (existing.mannyDecision === decision) return this.publicView(existing, true);
+    }
+
     const rec = this.require(stagedFileId);
     if (
       !rec.reviewPackage &&
@@ -587,31 +826,52 @@ export class DocumentReviewService {
     }
 
     if (decision === 'Purge Staged File') {
-      return this.publicView(this.staging.purge(stagedFileId, 'Manny purge'), true);
+      return this.purge(stagedFileId, 'Manny purge');
     }
     if (
       decision === 'Approve Redacted Content' ||
       decision === 'Edit Redactions' ||
       decision === 'Cancel Enrichment'
     ) {
-      return this.decideRedaction(
+      const out = this.decideRedaction(
         stagedFileId,
         decision,
         corrections?.redactedContent ? String(corrections.redactedContent) : undefined,
       );
+      this.recordDecision(stagedFileId, decision, corrections?.notes ? String(corrections.notes) : null);
+      return out;
     }
 
     const pack = { ...rec.reviewPackage! };
     const log = [...((rec.correctionLog as FieldCorrectionRecord[]) || [])];
     const pushCorrection = (field: string, original: unknown, corrected: unknown) => {
+      const corr: DurableCorrectionRecord = {
+        correctionId: randomUUID(),
+        reviewId: stagedFileId,
+        field,
+        originalValue: original,
+        correctedValue: corrected,
+        correctionType: decision,
+        correctedBy: 'Manny',
+        correctedAt: new Date().toISOString(),
+        reason: String(corrections?.reason || 'Manny correction'),
+        sourceReference: corrections?.sourceReference
+          ? String(corrections.sourceReference)
+          : null,
+        origin: 'manny',
+        ruleImprovementCandidate: Boolean(corrections?.informFutureDeterministicRules),
+        active: true,
+        supersededCorrectionId: null,
+      };
+      this.durable.addCorrection(corr);
       log.push({
         field,
         originalValue: original,
         correctedValue: corrected,
         correctedBy: 'Manny',
-        correctedAt: new Date().toISOString(),
-        reason: String(corrections?.reason || 'Manny correction'),
-        informFutureDeterministicRules: Boolean(corrections?.informFutureDeterministicRules),
+        correctedAt: corr.correctedAt,
+        reason: corr.reason,
+        informFutureDeterministicRules: corr.ruleImprovementCandidate,
       });
     };
 
@@ -681,16 +941,144 @@ export class DocumentReviewService {
     rec.status =
       decision === 'Archive Review Result' ||
       decision === 'Approve Draft' ||
-      decision === 'Reject Draft'
+      decision === 'Reject Draft' ||
+      decision === 'Eliminate' ||
+      decision === 'No Action'
         ? 'ReviewComplete'
         : 'ReadyForReview';
+    if (decision === 'Return for Revision') {
+      rec.status = 'ReadyForReview';
+    }
+    if (decision === 'Archive Review Result') {
+      // durable maps ReviewComplete → Approved Draft; archive via decision audit
+    }
     rec.updatedAt = new Date().toISOString();
-    this.staging.upsert(rec);
+    this.persist(rec, { actor: 'Manny' });
+    this.recordDecision(stagedFileId, decision, corrections?.notes ? String(corrections.notes) : null);
+    this.durable.putIdempotent({
+      operationKey: decideKey,
+      operation: 'manny_decision',
+      resourceId: stagedFileId,
+      correlationId: rec.correlationId,
+      result: { decision },
+    });
     return this.publicView(rec, true);
   }
 
-  purge(stagedFileId: string) {
-    return this.publicView(this.staging.purge(stagedFileId, 'Manual purge'), true);
+  private recordDecision(reviewId: string, decision: string, notes: string | null) {
+    const d: DurableDecisionRecord = {
+      decisionId: randomUUID(),
+      reviewId,
+      decision,
+      decidedBy: 'Manny',
+      decidedAt: new Date().toISOString(),
+      notes,
+      fileMoved: false,
+      fileRenamed: false,
+      authoritativeWrite: false,
+      externalCommunication: false,
+    };
+    this.durable.addDecision(d);
+    this.durable.appendAudit({
+      correlationId: this.require(reviewId).correlationId,
+      reviewId,
+      packId: null,
+      at: d.decidedAt,
+      actor: 'Manny',
+      action: 'manny_decision',
+      detail: `decision=${decision}; fileMoved=false; writes=false; external=false`,
+      fromStatus: null,
+      toStatus: null,
+    });
+  }
+
+  listCorrections(reviewId: string) {
+    return this.durable.listCorrections(reviewId);
+  }
+
+  listDecisions(reviewId: string) {
+    return this.durable.listDecisions(reviewId);
+  }
+
+  listAudit(reviewId?: string) {
+    return this.durable.listAudit(reviewId);
+  }
+
+  listInterruptedJobs() {
+    return this.durable.listInterrupted();
+  }
+
+  resumeInterruptedJob(id: string) {
+    this.durable.resolveInterrupted(id, 'resumed');
+    this.durable.appendAudit({
+      correlationId: id,
+      reviewId: null,
+      packId: null,
+      at: new Date().toISOString(),
+      actor: 'Manny',
+      action: 'interrupted_job_resumed',
+      detail: 'Manual resume marked; no automatic reprocess',
+      fromStatus: 'interrupted',
+      toStatus: 'resumed',
+    });
+    return { id, status: 'resumed', autoReprocessed: false };
+  }
+
+  cancelInterruptedJob(id: string) {
+    this.durable.resolveInterrupted(id, 'cancelled');
+    return { id, status: 'cancelled' };
+  }
+
+  retentionPreview() {
+    return this.durable.retentionPreview();
+  }
+
+  purge(stagedFileId: string, reason = 'Manual purge') {
+    const purgedStaging = this.staging.purge(stagedFileId, reason);
+    const correlationId = purgedStaging.correlationId || randomUUID();
+    const purged = this.durable.purgeReview(stagedFileId, reason, correlationId) || purgedStaging;
+    this.durable.putIdempotent({
+      operationKey: `purge:${stagedFileId}`,
+      operation: 'purge',
+      resourceId: stagedFileId,
+      correlationId,
+      result: { purgedAt: purged.purgedAt },
+    });
+    return this.publicView(purged, true);
+  }
+
+  createBackup(opts?: { dryRun?: boolean }) {
+    return this.durable.createBackup(this.backupRoot, Boolean(opts?.dryRun));
+  }
+
+  validateRestore(backupPath: string) {
+    const safe = assertSafeBackupPath(backupPath, this.backupRoot);
+    return this.durable.validateRestore(safe);
+  }
+
+  restoreBackup(backupPath: string, opts?: { dryRun?: boolean; authorized?: boolean }) {
+    if (!opts?.authorized) {
+      throw Object.assign(new Error('Restore requires explicit authorization'), {
+        status: 403,
+        code: 'restore_unauthorized',
+      });
+    }
+    const safe = assertSafeBackupPath(backupPath, this.backupRoot);
+    // Always create a safety backup of current DB first when not dry-run
+    if (!opts.dryRun) {
+      this.durable.createBackup(this.backupRoot, false);
+    }
+    return this.durable.restoreFromBackup(safe, { dryRun: opts.dryRun });
+  }
+
+  authorizedPurge(stagedFileId: string, opts?: { authorized?: boolean; reason?: string }) {
+    if (!opts?.authorized) {
+      throw Object.assign(new Error('Purge requires explicit authorization'), {
+        status: 403,
+        code: 'purge_unauthorized',
+      });
+    }
+    return this.purge(stagedFileId, opts.reason || 'Authorized purge');
   }
 
   listFixtures() {
@@ -717,8 +1105,67 @@ export class DocumentReviewService {
     });
   }
 
+  private toDurablePack(
+    pack: MultiDocumentReviewPack,
+    meta: {
+      title: string;
+      projectLabel: string | null;
+      purpose: string | null;
+      sensitivity: string;
+    },
+  ): DurableMultiDocPack {
+    return {
+      packId: pack.packId,
+      title: meta.title,
+      clientLabel: pack.clientLabel,
+      projectLabel: meta.projectLabel,
+      purpose: meta.purpose,
+      sensitivity: meta.sensitivity,
+      createdAt: pack.createdAt,
+      updatedAt: new Date().toISOString(),
+      stagedFileIds: pack.stagedFileIds,
+      relationshipAnalysis: pack.relationshipAnalysis,
+      versionRelationships: [],
+      duplicateRelationships: pack.duplicateNotes,
+      comparisonFindings: null,
+      crossDocumentConflicts: pack.crossDocumentConflicts,
+      missingDocuments: pack.crossDocumentMissingInformation,
+      missingExhibits: [],
+      missingSignatures: [],
+      packRecommendation: null,
+      packDecisionPackage: null,
+      mannyDecision: null,
+      mannyDecisionAt: null,
+      corrections: [],
+      aggregateSizeBytes: pack.aggregateSizeBytes,
+      maxFiles: pack.maxFiles,
+      draftOnly: true,
+      status: 'Open',
+    };
+  }
+
+  private fromDurablePack(p: DurableMultiDocPack): MultiDocumentReviewPack {
+    return {
+      packId: p.packId,
+      stagedFileIds: p.stagedFileIds,
+      createdAt: p.createdAt,
+      clientLabel: p.clientLabel,
+      relationshipAnalysis: p.relationshipAnalysis,
+      crossDocumentConflicts: p.crossDocumentConflicts,
+      crossDocumentMissingInformation: p.missingDocuments,
+      duplicateNotes: p.duplicateRelationships,
+      sourceCitations: p.stagedFileIds.map((id) => ({
+        stagedFileId: id,
+        note: this.durable.getReview(id)?.originalFilename || id,
+      })),
+      draftOnly: true,
+      maxFiles: p.maxFiles,
+      aggregateSizeBytes: p.aggregateSizeBytes,
+    };
+  }
+
   private require(id: string): StagedDocumentRecord {
-    const rec = this.staging.get(id);
+    const rec = this.staging.get(id) || this.durable.getReview(id);
     if (!rec) {
       throw Object.assign(new Error('Staged document not found'), {
         status: 404,

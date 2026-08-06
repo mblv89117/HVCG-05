@@ -82,6 +82,8 @@ export interface LocalAiServiceDeps {
   secretsFileEnv?: Record<string, string>;
   /** Test hook: override document staging root (Phase 4B-1). */
   documentStagingRoot?: string;
+  /** Test hook: override durable review DB path (Phase 4C-1). */
+  documentReviewDbPath?: string;
 }
 
 function nowIso() {
@@ -140,6 +142,14 @@ export class LocalAiService {
         ...(deps.documentStagingRoot
           ? { LOCAL_AI_DOCUMENT_STAGING_DIR: deps.documentStagingRoot }
           : {}),
+        ...(deps.documentReviewDbPath
+          ? { LOCAL_AI_DOCUMENT_REVIEW_DB: deps.documentReviewDbPath }
+          : deps.documentStagingRoot
+            ? {
+                LOCAL_AI_DOCUMENT_REVIEW_DB: `${deps.documentStagingRoot}/../document-reviews.sqlite`,
+                LOCAL_AI_DOCUMENT_BACKUP_DIR: `${deps.documentStagingRoot}/../document-backups`,
+              }
+            : {}),
         // Synthetic override only when ClamAV is unavailable (local TEST fixtures)
         LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE:
           this.secretsFileEnv.LOCAL_AI_MALWARE_SCAN_SYNTHETIC_OVERRIDE ||
@@ -1775,7 +1785,13 @@ export class LocalAiService {
     return cmp;
   }
 
-  createMultiDocumentReview(opts: { stagedFileIds: string[]; clientLabel: string }) {
+  createMultiDocumentReview(opts: {
+    stagedFileIds: string[];
+    clientLabel: string;
+    title?: string;
+    projectLabel?: string | null;
+    purpose?: string | null;
+  }) {
     const pack = this.documentReview.createMultiDocumentPack(opts);
     this.repo.appendAudit({
       auditCorrelationId: pack.packId,
@@ -1788,8 +1804,91 @@ export class LocalAiService {
     return pack;
   }
 
-  purgeStagedDocument(stagedFileId: string) {
-    const rec = this.documentReview.purge(stagedFileId);
+  updateMultiDocumentReview(
+    packId: string,
+    opts: { addStagedFileIds?: string[]; removeStagedFileIds?: string[]; title?: string },
+  ) {
+    return this.documentReview.updateMultiDocumentPack(packId, opts);
+  }
+
+  listMultiDocumentReviews() {
+    return this.documentReview.listMultiDocumentPacks();
+  }
+
+  getMultiDocumentReview(packId: string) {
+    return this.documentReview.getMultiDocumentPack(packId);
+  }
+
+  decideMultiDocumentReview(packId: string, decision: string, notes?: string) {
+    return this.documentReview.decideMultiDocumentPack(packId, decision, notes);
+  }
+
+  searchStagedDocuments(filters: import('@hvcg/atlas-integration-core').ReviewSearchFilters) {
+    return this.documentReview.search(filters);
+  }
+
+  listDocumentCorrections(reviewId: string) {
+    return this.documentReview.listCorrections(reviewId);
+  }
+
+  listDocumentDecisions(reviewId: string) {
+    return this.documentReview.listDecisions(reviewId);
+  }
+
+  listDocumentReviewAudit(reviewId?: string) {
+    return this.documentReview.listAudit(reviewId);
+  }
+
+  listInterruptedDocumentJobs() {
+    return this.documentReview.listInterruptedJobs();
+  }
+
+  resumeInterruptedDocumentJob(id: string) {
+    return this.documentReview.resumeInterruptedJob(id);
+  }
+
+  cancelInterruptedDocumentJob(id: string) {
+    return this.documentReview.cancelInterruptedJob(id);
+  }
+
+  retentionPreviewDocuments() {
+    return this.documentReview.retentionPreview();
+  }
+
+  documentDatabaseHealth() {
+    return this.documentReview.dbHealth();
+  }
+
+  documentMigrationStatus() {
+    return this.documentReview.migrationStatus();
+  }
+
+  backupDocumentReviews(opts?: { dryRun?: boolean }) {
+    return this.documentReview.createBackup(opts);
+  }
+
+  validateDocumentRestore(backupPath: string) {
+    return this.documentReview.validateRestore(backupPath);
+  }
+
+  restoreDocumentReviews(
+    backupPath: string,
+    opts: { dryRun?: boolean; authorized?: boolean },
+  ) {
+    return this.documentReview.restoreBackup(backupPath, opts);
+  }
+
+  purgeStagedDocument(stagedFileId: string, opts?: { authorized?: boolean; reason?: string }) {
+    if (opts && opts.authorized === false) {
+      throw Object.assign(new Error('Purge requires explicit authorization'), {
+        status: 403,
+        code: 'purge_unauthorized',
+      });
+    }
+    const rec =
+      opts?.authorized === true
+        ? this.documentReview.authorizedPurge(stagedFileId, opts)
+        : this.documentReview.purge(stagedFileId, opts?.reason || 'Manual purge');
     this.repo.appendAudit({
       auditCorrelationId: rec.correlationId,
       aiJobId: stagedFileId,
