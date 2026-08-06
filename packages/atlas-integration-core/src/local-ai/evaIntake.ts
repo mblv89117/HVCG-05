@@ -127,6 +127,55 @@ export interface EvaSubmissionPayload {
   scenarioLabel?: string;
 }
 
+/** Explicit Phase 5A acceptance modes — never silent skipAi. */
+export const EVA_REVIEW_MODES = [
+  'Deterministic Intake Test',
+  'Full Local AI End-to-End Test',
+] as const;
+export type EvaReviewMode = (typeof EVA_REVIEW_MODES)[number];
+
+export interface EvaModelRoutingEvidence {
+  requestedProfile: 'Fast Operations Model' | 'Deep Analysis Model' | 'Deterministic Local';
+  requestedModel: string | null;
+  actualProfile: 'Fast Operations Model' | 'Deep Analysis Model' | 'Deterministic Local' | 'Fallback Model';
+  actualModel: string;
+  fallbackReason: string | null;
+  queueDurationMs: number | null;
+  generationDurationMs: number | null;
+  totalDurationMs: number | null;
+  schemaResult: 'Passed' | 'Failed' | 'Skipped';
+  confidence: number | null;
+  retryCount: number;
+}
+
+export interface EvaPerformanceTimings {
+  intakeValidationMs: number | null;
+  matchingMs: number | null;
+  fastPreliminaryMs: number | null;
+  deepReviewMs: number | null;
+  totalEndToEndMs: number | null;
+  mannyReviewEstimateMinutes: number | null;
+  estimatedTimeSavedMinutes: number | null;
+}
+
+export interface EvaUatChecklist {
+  intakeAccepted: boolean;
+  submissionPersisted: boolean;
+  companyMatchCompleted: boolean;
+  contactMatchCompleted: boolean;
+  prospectCreated: boolean;
+  aiJobCreated: boolean;
+  aiProcessingCompleted: boolean;
+  schemaValidated: boolean;
+  prohibitedClaimsCleared: boolean;
+  mannyPackageCreated: boolean;
+  decisionRecorded: boolean;
+  auditComplete: boolean;
+  noExternalActionsOccurred: boolean;
+  overall: 'PASS' | 'PASS WITH WARNINGS' | 'FAIL';
+  warnings: string[];
+}
+
 export interface EvaSubmissionRecord {
   submissionId: string;
   correlationId: string;
@@ -142,7 +191,13 @@ export interface EvaSubmissionRecord {
   contactId: string | null;
   prospectId: string | null;
   aiJobId: string | null;
+  /** Prevents duplicate auto-submit of a second model job without idempotency. */
+  aiJobIdempotencyKey: string | null;
+  reviewMode: EvaReviewMode | null;
   modelUsed: string | null;
+  modelRouting: EvaModelRoutingEvidence[] | null;
+  performanceTimings: EvaPerformanceTimings | null;
+  uatChecklist: EvaUatChecklist | null;
   processingDurationMs: number | null;
   reviewOutput: EvaReviewOutput | null;
   mannyDecision: EvaMannyDecision | null;
@@ -693,6 +748,35 @@ export function buildDeterministicEvaReview(
   };
 }
 
+/** Prohibited AI claims for Phase 5A acceptance — any match fails validation. */
+export const EVA_PROHIBITED_CLAIM_PHRASES = [
+  'prospect approved',
+  'approved the prospect',
+  'client created',
+  'client activated',
+  'client accepted',
+  'financing guaranteed',
+  'guaranteed financing',
+  'guaranteed approval',
+  'financing approved',
+  'lender contacted',
+  'lender commitment',
+  'email sent',
+  'consultation scheduled',
+  'meeting scheduled',
+  'pricing approved',
+  'agreement executed',
+  'payment received',
+  'atlas production updated',
+  'production records created',
+  'production record created',
+] as const;
+
+export function findProhibitedEvaClaims(value: unknown): string[] {
+  const blob = JSON.stringify(value || {}).toLowerCase();
+  return EVA_PROHIBITED_CLAIM_PHRASES.filter((p) => blob.includes(p));
+}
+
 export function validateEvaReviewOutput(
   value: unknown,
   expectedSubmissionId: string,
@@ -706,20 +790,127 @@ export function validateEvaReviewOutput(
     errors.push('submission_id mismatch');
   }
   if (v.requires_manny_approval !== true) errors.push('requires_manny_approval must be true');
-  const forbiddenClaims = JSON.stringify(v).toLowerCase();
-  for (const bad of [
-    'email sent',
-    'client created',
-    'client activated',
-    'financing approved',
-    'guaranteed approval',
-    'lender commitment',
-  ]) {
-    if (forbiddenClaims.includes(bad)) errors.push(`forbidden_claim:${bad}`);
+
+  const requiredTop = [
+    'prospect_summary',
+    'company_profile',
+    'strengths',
+    'risks',
+    'missing_information',
+    'recommended_hvcg_services',
+    'recommended_next_action',
+    'confidence',
+    'facts',
+    'inferences',
+    'warnings',
+    'decision_package',
+  ];
+  for (const key of requiredTop) {
+    if (v[key] === undefined || v[key] === null) errors.push(`missing_field:${key}`);
   }
+
+  const dp = (v.decision_package || {}) as Record<string, unknown>;
+  for (const key of [
+    'decision',
+    'recommendation',
+    'why',
+    'alternatives',
+    'risks',
+    'required_review_minutes',
+    'source_records',
+    'confidence',
+    'missing_information',
+  ]) {
+    if (dp[key] === undefined || dp[key] === null) errors.push(`missing_decision_package:${key}`);
+  }
+  const sources = Array.isArray(dp.source_records) ? dp.source_records : [];
+  if (sources.length === 0) errors.push('missing_decision_package:source_records_empty');
+
+  const prohibited = findProhibitedEvaClaims(v);
+  for (const p of prohibited) errors.push(`forbidden_claim:${p}`);
+
+  if (typeof v.confidence === 'number' && (v.confidence < 0 || v.confidence > 1)) {
+    errors.push('confidence_out_of_range');
+  }
+
   if (errors.length) return { ok: false, errors, output: null };
-  // Prefer deterministic wrapper if partial
   return { ok: true, errors: [], output: v as unknown as EvaReviewOutput };
+}
+
+export function buildEvaUatChecklist(submission: EvaSubmissionRecord): EvaUatChecklist {
+  const warnings: string[] = [];
+  const auditComplete = Boolean(submission.submissionId && submission.correlationId);
+  const schemaOk =
+    submission.status === 'Waiting on Manny' ||
+    submission.status === 'Qualified' ||
+    submission.status === 'Needs More Information' ||
+    submission.status === 'Not a Fit' ||
+    submission.status === 'Hold' ||
+    submission.status === 'Duplicate' ||
+    submission.status === 'Archived' ||
+    (submission.reviewMode === 'Deterministic Intake Test' &&
+      submission.reviewOutput != null &&
+      submission.status !== 'Failed');
+  const prohibitedCleared =
+    submission.status !== 'Failed' &&
+    !String(submission.errorDetail || '').includes('forbidden_claim');
+  const aiCompleted =
+    submission.reviewMode === 'Deterministic Intake Test'
+      ? Boolean(submission.reviewOutput)
+      : submission.status === 'Waiting on Manny' ||
+        Boolean(submission.mannyDecision) ||
+        (submission.reviewOutput != null && prohibitedCleared && schemaOk);
+
+  if (submission.status === 'Failed') warnings.push('AI review failed — not ready for Manny');
+  if (
+    submission.reviewOutput &&
+    typeof submission.reviewOutput.confidence === 'number' &&
+    submission.reviewOutput.confidence < 0.5
+  ) {
+    warnings.push('low_confidence_output');
+  }
+  if (submission.matchClass === 'conflict requiring Manny') {
+    warnings.push('company_match_conflict');
+  }
+
+  const checklist: EvaUatChecklist = {
+    intakeAccepted: true,
+    submissionPersisted: true,
+    companyMatchCompleted: submission.matchClass != null,
+    contactMatchCompleted: submission.matchEvidence.some((e) => e.startsWith('contact:')),
+    prospectCreated: Boolean(submission.prospectId),
+    aiJobCreated:
+      submission.reviewMode === 'Deterministic Intake Test'
+        ? Boolean(submission.reviewOutput)
+        : Boolean(submission.aiJobId),
+    aiProcessingCompleted: aiCompleted && submission.status !== 'Failed',
+    schemaValidated: schemaOk && prohibitedCleared && submission.status !== 'Failed',
+    prohibitedClaimsCleared: prohibitedCleared,
+    mannyPackageCreated: Boolean(submission.reviewOutput?.decision_package),
+    decisionRecorded: Boolean(submission.mannyDecision),
+    auditComplete,
+    noExternalActionsOccurred:
+      submission.noEmail && submission.noClientActivation && submission.noProductionRecords,
+    overall: 'FAIL',
+    warnings,
+  };
+
+  const corePass =
+    checklist.intakeAccepted &&
+    checklist.submissionPersisted &&
+    checklist.companyMatchCompleted &&
+    checklist.prospectCreated &&
+    checklist.mannyPackageCreated &&
+    checklist.prohibitedClaimsCleared &&
+    checklist.noExternalActionsOccurred &&
+    checklist.schemaValidated &&
+    submission.status !== 'Failed';
+
+  if (!corePass) checklist.overall = 'FAIL';
+  else if (warnings.length) checklist.overall = 'PASS WITH WARNINGS';
+  else checklist.overall = 'PASS';
+
+  return checklist;
 }
 
 /** Synthetic scenario fixtures for Phase 5A tests / sandbox. */

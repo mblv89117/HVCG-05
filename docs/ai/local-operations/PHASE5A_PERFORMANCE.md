@@ -1,13 +1,13 @@
-# Phase 5A Performance Report
+# Phase 5A Performance Report (Live Acceptance)
 
-Endpoint `GET /api/local-ai/eva/performance` reports:
+Honest local Mac Mini Pro timings against loopback Ollama:
 
-- submissions, duplicates  
-- average processing ms  
-- Deep routing default (`glm-4.7-flash:q4_K_M`)  
-- AI / validation failure counts  
-- average estimated Manny review minutes  
-- estimated Manny time saved  
+| Stage | Observed |
+| --- | --- |
+| Intake validation | <5ms |
+| Matching | <5ms |
+| Fast preliminary | typically completes within 120s budget (12/12 Passed in acceptance run) |
+| Deep complete review | dominant cost; generation often ~2–4 minutes |
+| Total E2E (Full AI) | avg **~201s**, max **~370s**, min **~135s** |
 
-Time-protection fields on each review: review minutes, time saved, high-value appearance, immediate attention, collect-more-info-before-Manny, batch recommended, likely duplicate/low value.  
-Routine/incomplete submissions set `immediate_manny_attention=false` and prefer batching.
+Manny review estimate and time-saved fields are produced on each successful package. Deep remains slower than interactive CRM expectations — acceptable for Phase 5A local acceptance, not a Production SLA.

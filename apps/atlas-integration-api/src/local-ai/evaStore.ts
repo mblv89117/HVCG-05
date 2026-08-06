@@ -510,6 +510,7 @@ export function newSubmissionShell(opts: {
   payloadHash: string;
   idempotencyKey: string;
   correlationId: string;
+  reviewMode?: EvaSubmissionRecord['reviewMode'];
 }): EvaSubmissionRecord {
   const now = new Date().toISOString();
   return {
@@ -527,7 +528,12 @@ export function newSubmissionShell(opts: {
     contactId: null,
     prospectId: null,
     aiJobId: null,
+    aiJobIdempotencyKey: null,
+    reviewMode: opts.reviewMode || null,
     modelUsed: null,
+    modelRouting: null,
+    performanceTimings: null,
+    uatChecklist: null,
     processingDurationMs: null,
     reviewOutput: null,
     mannyDecision: null,

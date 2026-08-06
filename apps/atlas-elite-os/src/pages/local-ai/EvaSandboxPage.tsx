@@ -128,6 +128,7 @@ export function EvaSandboxPage() {
   >([]);
   const [form, setForm] = useState(emptyForm);
   const [queue, setQueue] = useState<Array<Record<string, unknown>>>([]);
+  const [revisionQueue, setRevisionQueue] = useState<Array<Record<string, unknown>>>([]);
   const [submissions, setSubmissions] = useState<Array<Record<string, unknown>>>([]);
   const [perf, setPerf] = useState<Record<string, unknown> | null>(null);
   const [audit, setAudit] = useState<Array<Record<string, unknown>>>([]);
@@ -136,6 +137,9 @@ export function EvaSandboxPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState('');
+  const [reviewMode, setReviewMode] = useState<
+    'Deterministic Intake Test' | 'Full Local AI End-to-End Test'
+  >('Full Local AI End-to-End Test');
 
   const refresh = useCallback(async () => {
     if (!signedIn) return;
@@ -151,6 +155,7 @@ export function EvaSandboxPage() {
     setFlags(fl.flags);
     setScenarios(sc.scenarios);
     setQueue(q.queue);
+    setRevisionQueue(q.revisionQueue || []);
     setSubmissions(subs.submissions);
     setPerf(pf.performance);
     setAudit(au.events);
@@ -227,9 +232,10 @@ export function EvaSandboxPage() {
     });
   };
 
-  const submit = async () => {
+  const submit = async (mode: 'Deterministic Intake Test' | 'Full Local AI End-to-End Test') => {
     setBusy(true);
     setError(null);
+    setReviewMode(mode);
     try {
       const body = {
         company: {
@@ -257,7 +263,7 @@ export function EvaSandboxPage() {
         ),
         consent: form.consent,
         idempotencyKey: form.idempotencyKey || undefined,
-        skipAi: true,
+        reviewMode: mode,
       };
       const result = await submitLocalAiEvaIntake(hubAuth, body);
       setLastResult(result as unknown as Record<string, unknown>);
@@ -458,21 +464,42 @@ export function EvaSandboxPage() {
           onChange={(_, d) => setForm((f) => ({ ...f, idempotencyKey: d.value }))}
         />
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
-          <Button appearance="primary" disabled={busy || !signedIn} onClick={() => void submit()}>
-            Submit synthetic EVA
+        <Caption1 style={{ display: 'block', marginTop: 12 }}>
+          Selected acceptance mode: <strong>{reviewMode}</strong> (recorded in audit history)
+        </Caption1>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Button
+            appearance="secondary"
+            disabled={busy || !signedIn}
+            onClick={() => void submit('Deterministic Intake Test')}
+          >
+            Deterministic Intake Test
+          </Button>
+          <Button
+            appearance="primary"
+            disabled={busy || !signedIn}
+            onClick={() => void submit('Full Local AI End-to-End Test')}
+          >
+            Run Live Local AI Review
           </Button>
           {busy ? <Spinner size="tiny" /> : null}
           <StatusChip tone="warning" label="TEST — DO NOT CONTACT" />
           <StatusChip tone="warning" label="TEST — SYNTHETIC EVA" />
         </div>
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>
+          Full Local AI End-to-End uses Fast ({`qwen2.5:7b-instruct`}) preliminary + Deep (
+          {`glm-4.7-flash:q4_K_M`}) complete review. Deterministic mode skips Ollama for fast intake
+          tests only.
+        </Caption1>
       </AtlasCard>
 
       {lastResult ? (
         <AtlasCard title="Submission result" style={{ marginTop: 12 }}>
           <Caption1>
             ok={String(lastResult.ok)} · duplicate={String(lastResult.duplicate)} · correlationId=
-            {String(lastResult.correlationId)} · error={String(lastResult.error || 'none')}
+            {String(lastResult.correlationId)} · reviewMode=
+            {String(lastResult.reviewMode || (lastResult.submission as { reviewMode?: string })?.reviewMode || '—')}{' '}
+            · error={String(lastResult.error || 'none')}
           </Caption1>
           {(lastResult.errors as string[] | undefined)?.length ? (
             <Caption1 style={{ display: 'block', color: 'crimson' }}>
@@ -490,7 +517,59 @@ export function EvaSandboxPage() {
         </AtlasCard>
       ) : null}
 
-      <AtlasCard title="EVA Review Queue" subtitle="Manny local decisions only" style={{ marginTop: 12 }}>
+      <AtlasCard title="Local UAT checklist" subtitle="Phase 5A acceptance" style={{ marginTop: 12 }}>
+        {(() => {
+          const uat = (selected?.uatChecklist ||
+            (lastResult?.submission as { uatChecklist?: Record<string, unknown> } | null)
+              ?.uatChecklist) as Record<string, unknown> | undefined;
+          if (!uat) {
+            return <Caption1>Submit a synthetic EVA to populate the checklist.</Caption1>;
+          }
+          const rows: Array<[string, unknown]> = [
+            ['intake accepted', uat.intakeAccepted],
+            ['submission persisted', uat.submissionPersisted],
+            ['company match completed', uat.companyMatchCompleted],
+            ['contact match completed', uat.contactMatchCompleted],
+            ['prospect created', uat.prospectCreated],
+            ['AI job created', uat.aiJobCreated],
+            ['AI processing completed', uat.aiProcessingCompleted],
+            ['schema validated', uat.schemaValidated],
+            ['prohibited claims cleared', uat.prohibitedClaimsCleared],
+            ['Manny package created', uat.mannyPackageCreated],
+            ['decision recorded', uat.decisionRecorded],
+            ['audit complete', uat.auditComplete],
+            ['no external actions occurred', uat.noExternalActionsOccurred],
+          ];
+          return (
+            <>
+              <StatusChip
+                tone={
+                  uat.overall === 'PASS'
+                    ? 'success'
+                    : uat.overall === 'PASS WITH WARNINGS'
+                      ? 'warning'
+                      : 'danger'
+                }
+                label={`Overall: ${String(uat.overall)}`}
+              />
+              <ul>
+                {rows.map(([label, val]) => (
+                  <li key={label}>
+                    <Caption1>
+                      {val ? '✓' : '✗'} {label}
+                    </Caption1>
+                  </li>
+                ))}
+              </ul>
+              {(uat.warnings as string[] | undefined)?.length ? (
+                <Caption1>Warnings: {JSON.stringify(uat.warnings)}</Caption1>
+              ) : null}
+            </>
+          );
+        })()}
+      </AtlasCard>
+
+      <AtlasCard title="EVA Review Queue" subtitle="Manny ready — Failed excluded" style={{ marginTop: 12 }}>
         {queue.length === 0 ? <Caption1>No items awaiting Manny.</Caption1> : null}
         {queue.map((item) => (
           <div
@@ -571,6 +650,32 @@ export function EvaSandboxPage() {
                 Cancel
               </Button>
             </div>
+          </div>
+        ))}
+      </AtlasCard>
+
+      <AtlasCard
+        title="Revision / recovery queue"
+        subtitle="Failed & pending — not ready for Manny until corrected"
+        style={{ marginTop: 12 }}
+      >
+        {revisionQueue.length === 0 ? <Caption1>No revision items.</Caption1> : null}
+        {revisionQueue.map((item) => (
+          <div key={String(item.submissionId)} style={{ padding: '8px 0' }}>
+            <Caption1>
+              {String(item.company)} · status={String(item.status)} · error=
+              {String(item.errorDetail || '—')} · mode={String(item.reviewMode || '—')}
+            </Caption1>
+            <Button
+              size="small"
+              onClick={() => {
+                void retryLocalAiEvaAi(hubAuth, String(item.submissionId))
+                  .then(() => refresh())
+                  .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+              }}
+            >
+              Governed Retry AI
+            </Button>
           </div>
         ))}
       </AtlasCard>

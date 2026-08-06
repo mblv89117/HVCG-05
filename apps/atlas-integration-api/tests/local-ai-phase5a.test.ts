@@ -116,7 +116,9 @@ class FakeOllama {
           risks: [],
           deadline: null,
           required_review_minutes: 8,
-          source_records: [],
+          source_records: [
+            { type: 'EvaSubmission', id: submissionId, title: 'Synthetic' },
+          ],
           confidence,
           missing_information: [],
         },
@@ -188,12 +190,13 @@ describe('Phase 5A local EVA intake', () => {
     const svc = service();
     const payload = buildEvaScenario('strong_concrete_contractor') as Record<string, unknown>;
     const result = await svc.intakeEvaSubmission({
-      body: { ...payload, skipAi: true },
+      body: payload,
       origin: 'http://127.0.0.1:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.equal(result.ok, true);
     assert.ok(result.submission);
+    assert.equal(result.submission!.reviewMode, 'Deterministic Intake Test');
     assert.equal(result.submission!.noClientActivation, true);
     assert.equal(result.submission!.noEmail, true);
     assert.equal(result.submission!.prospectId != null, true);
@@ -215,12 +218,12 @@ describe('Phase 5A local EVA intake', () => {
     const a = await svc.intakeEvaSubmission({
       body: payload,
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const b = await svc.intakeEvaSubmission({
       body: payload,
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.equal(a.ok, true);
     assert.equal(b.ok, true);
@@ -234,7 +237,7 @@ describe('Phase 5A local EVA intake', () => {
     await svc.intakeEvaSubmission({
       body: buildEvaScenario('strong_concrete_contractor'),
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const dupCo = await svc.intakeEvaSubmission({
       body: {
@@ -242,7 +245,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'dup-co-2',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.ok(
       ['exact match', 'probable match'].includes(String(dupCo.submission!.matchClass)),
@@ -254,7 +257,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'dup-ct-3',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.ok(dupCt.submission!.matchEvidence.some((e) => e.includes('contact:exact email')));
   });
@@ -264,7 +267,7 @@ describe('Phase 5A local EVA intake', () => {
     await svc.intakeEvaSubmission({
       body: buildEvaScenario('strong_concrete_contractor'),
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const conflict = await svc.intakeEvaSubmission({
       body: {
@@ -272,7 +275,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'conflict-1',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.equal(conflict.submission!.matchClass, 'conflict requiring Manny');
     assert.ok(
@@ -286,7 +289,7 @@ describe('Phase 5A local EVA intake', () => {
     await svc.intakeEvaSubmission({
       body: buildEvaScenario('strong_concrete_contractor'),
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const next = await svc.intakeEvaSubmission({
       body: {
@@ -294,7 +297,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'new-contact-1',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.ok(next.submission!.contactId);
     assert.ok(next.submission!.companyId);
@@ -309,12 +312,17 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'deep-1',
       },
       origin: 'http://localhost:5180',
+      reviewMode: 'Full Local AI End-to-End Test',
     });
     assert.equal(result.ok, true);
     assert.equal(result.submission!.status, 'Waiting on Manny');
+    assert.equal(result.submission!.reviewMode, 'Full Local AI End-to-End Test');
     assert.ok(String(result.submission!.modelUsed).includes('glm') || result.submission!.modelUsed);
     assert.equal(result.submission!.reviewOutput?.requires_manny_approval, true);
     assert.ok(result.submission!.reviewOutput?.time_protection);
+    assert.ok((result.submission!.modelRouting || []).length >= 1);
+    assert.ok(result.submission!.uatChecklist);
+    assert.ok(['PASS', 'PASS WITH WARNINGS'].includes(result.submission!.uatChecklist!.overall));
   });
 
   it('malformed AI output does not claim success', async () => {
@@ -325,11 +333,20 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'malformed-ai-1',
       },
       origin: 'http://localhost:5180',
+      reviewMode: 'Full Local AI End-to-End Test',
     });
     assert.equal(result.ok, true); // intake accepted
     assert.equal(result.submission!.status, 'Failed');
     assert.ok(result.submission!.errorDetail);
     assert.ok(svc.listEvaFailures().length >= 1);
+    assert.equal(
+      svc.evaApprovalQueue().some((q) => q.submissionId === result.submission!.submissionId),
+      false,
+    );
+    assert.equal(
+      svc.evaRevisionQueue().some((q) => q.submissionId === result.submission!.submissionId),
+      true,
+    );
   });
 
   it('model offline failure preserves submission', async () => {
@@ -384,7 +401,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'manny-1',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const id = result.submission!.submissionId;
     for (const decision of [
@@ -409,7 +426,7 @@ describe('Phase 5A local EVA intake', () => {
           },
         },
         origin: 'http://localhost:5180',
-        skipAi: true,
+        reviewMode: 'Deterministic Intake Test',
       });
       const decided = s.decideEvaSubmission(r.submission!.submissionId, decision, 'local note');
       assert.equal(decided.mannyDecision, decision);
@@ -430,7 +447,7 @@ describe('Phase 5A local EVA intake', () => {
     const result = await svc.intakeEvaSubmission({
       body: buildEvaScenario('auto_repair'),
       origin: 'https://zealous-rock-0090c7e1e.7.azurestaticapps.net',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 403);
@@ -458,7 +475,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'queue-1',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const queue = svc.evaApprovalQueue();
     assert.ok(queue.length >= 1);
@@ -525,7 +542,7 @@ describe('Phase 5A local EVA intake', () => {
         idempotencyKey: 'restart-1',
       },
       origin: 'http://localhost:5180',
-      skipAi: true,
+      reviewMode: 'Deterministic Intake Test',
     });
     const s2 = new LocalAiService({
       repo: new LocalAiRepository(dir),
@@ -538,5 +555,110 @@ describe('Phase 5A local EVA intake', () => {
     const loaded = s2.getEvaSubmission(r.submission!.submissionId);
     assert.equal(loaded.submissionId, r.submission!.submissionId);
     assert.equal(loaded.payload.company.legalCompanyName, 'OneClient Services LLC');
+  });
+
+  it('deferAi + restart then governed retry without duplicate prospect', async () => {
+    const dir = tempDir();
+    const evaDb = join(dir, 'eva.sqlite');
+    const fake = new FakeOllama('success');
+    const s1 = new LocalAiService({
+      repo: new LocalAiRepository(dir),
+      flags: { ...DEFAULT_LOCAL_AI_FEATURE_FLAGS, LocalAIEnabled: true },
+      ollamaClient: fake as unknown as OllamaClient,
+      defaultExecutorMode: 'ollama',
+      documentStagingRoot: join(dir, 'staging'),
+      documentReviewDbPath: join(dir, 'docs.sqlite'),
+      evaDbPath: evaDb,
+      ollamaConfig: {
+        baseUrl: 'http://127.0.0.1:11434',
+        model: 'glm-4.7-flash:q4_K_M',
+        timeoutMs: 1000,
+        maxRetries: 1,
+        allowNonLoopback: false,
+        formatJson: true,
+      },
+    });
+    const deferred = await s1.intakeEvaSubmission({
+      body: {
+        ...(buildEvaScenario('dental_growth_capital') as object),
+        idempotencyKey: 'defer-1',
+      },
+      origin: 'http://localhost:5180',
+      reviewMode: 'Full Local AI End-to-End Test',
+      deferAi: true,
+    });
+    assert.equal(deferred.submission!.status, 'AI Review Pending');
+    const prospects = s1.listEvaProspects().length;
+    const s2 = new LocalAiService({
+      repo: new LocalAiRepository(dir),
+      flags: { ...DEFAULT_LOCAL_AI_FEATURE_FLAGS, LocalAIEnabled: true },
+      ollamaClient: fake as unknown as OllamaClient,
+      defaultExecutorMode: 'ollama',
+      documentStagingRoot: join(dir, 'staging'),
+      documentReviewDbPath: join(dir, 'docs.sqlite'),
+      evaDbPath: evaDb,
+      ollamaConfig: {
+        baseUrl: 'http://127.0.0.1:11434',
+        model: 'glm-4.7-flash:q4_K_M',
+        timeoutMs: 1000,
+        maxRetries: 1,
+        allowNonLoopback: false,
+        formatJson: true,
+      },
+    });
+    const done = await s2.retryEvaAi(deferred.submission!.submissionId);
+    assert.equal(done.status, 'Waiting on Manny');
+    assert.equal(s2.listEvaProspects().length, prospects);
+  });
+
+  it('rejects expanded prohibited claims in AI output', async () => {
+    const { findProhibitedEvaClaims, validateEvaReviewOutput } = await import(
+      '@hvcg/atlas-integration-core'
+    );
+    for (const phrase of [
+      'consultation scheduled',
+      'pricing approved',
+      'payment received',
+      'atlas production updated',
+    ]) {
+      const found = findProhibitedEvaClaims({ note: phrase });
+      assert.ok(found.length >= 1, phrase);
+      const v = validateEvaReviewOutput(
+        {
+          submission_id: 'x',
+          requires_manny_approval: true,
+          prospect_summary: phrase,
+          company_profile: {
+            industry: 'a',
+            business_model: 'b',
+            revenue_profile: 'c',
+            operating_profile: 'd',
+            management_profile: 'e',
+          },
+          strengths: [],
+          risks: [],
+          missing_information: [],
+          recommended_hvcg_services: [],
+          recommended_next_action: 'r',
+          confidence: 0.5,
+          facts: [],
+          inferences: [],
+          warnings: [],
+          decision_package: {
+            decision: 'd',
+            recommendation: 'r',
+            why: [],
+            alternatives: [],
+            risks: [],
+            required_review_minutes: 1,
+            source_records: [{ type: 'EvaSubmission', id: 'x', title: 't' }],
+            confidence: 0.5,
+            missing_information: [],
+          },
+        },
+        'x',
+      );
+      assert.equal(v.ok, false);
+    }
   });
 });

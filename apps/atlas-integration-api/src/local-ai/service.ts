@@ -2127,6 +2127,8 @@ export class LocalAiService {
     correlationId?: string;
     clientKey?: string;
     skipAi?: boolean;
+    reviewMode?: string;
+    deferAi?: boolean;
     forceOfflineModel?: boolean;
   }) {
     // Production EVA flag must remain false — sandbox proceeds under LocalAI only
@@ -2159,6 +2161,10 @@ export class LocalAiService {
 
   cancelEvaSubmission(submissionId: string) {
     return this.eva.cancel(submissionId);
+  }
+
+  evaRevisionQueue() {
+    return this.eva.revisionQueue();
   }
 
   private requireJob(aiJobId: string): AiJobRecord {

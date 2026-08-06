@@ -874,6 +874,8 @@ export async function handleLocalAiRoutes(opts: {
         correlationId: body.correlationId ? String(body.correlationId) : undefined,
         clientKey: String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'local'),
         skipAi: body.skipAi === true,
+        reviewMode: body.reviewMode ? String(body.reviewMode) : undefined,
+        deferAi: body.deferAi === true,
         forceOfflineModel: body.forceOfflineModel === true,
       });
       send(
@@ -886,6 +888,7 @@ export async function handleLocalAiRoutes(opts: {
           error: result.error || null,
           errors: result.errors || [],
           correlationId: result.correlationId,
+          reviewMode: result.submission?.reviewMode || body.reviewMode || null,
           banners: localAi.evaSafetyBanner(),
           noEmail: true,
           noProductionRecords: true,
@@ -944,6 +947,7 @@ export async function handleLocalAiRoutes(opts: {
         200,
         {
           queue: localAi.evaApprovalQueue(),
+          revisionQueue: localAi.evaRevisionQueue(),
           banner: localAi.evaSafetyBanner(),
         },
         origin,

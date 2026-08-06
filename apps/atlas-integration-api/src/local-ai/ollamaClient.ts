@@ -55,6 +55,11 @@ export class OllamaClient {
     user: string;
     signal?: AbortSignal;
     model?: string;
+    /** Override client default timeout for this call */
+    timeoutMs?: number;
+    /** Cap generation length (Ollama num_predict) */
+    numPredict?: number;
+    temperature?: number;
   }): Promise<OllamaChatResult> {
     const model = opts.model || this.cfg.model;
     if (!model) {
@@ -64,8 +69,9 @@ export class OllamaClient {
       });
     }
 
+    const timeoutMs = opts.timeoutMs ?? this.cfg.timeoutMs;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort('timeout'), this.cfg.timeoutMs);
+    const timer = setTimeout(() => controller.abort('timeout'), timeoutMs);
     const onAbort = () => controller.abort('cancelled');
     opts.signal?.addEventListener('abort', onAbort);
 
@@ -83,7 +89,8 @@ export class OllamaClient {
             { role: 'user', content: opts.user },
           ],
           options: {
-            temperature: 0.2,
+            temperature: opts.temperature ?? 0.2,
+            ...(opts.numPredict != null ? { num_predict: opts.numPredict } : {}),
           },
         }),
       });

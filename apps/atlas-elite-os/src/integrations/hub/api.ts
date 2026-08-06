@@ -1190,6 +1190,7 @@ export async function submitLocalAiEvaIntake(
     error?: string | null;
     errors?: string[];
     correlationId: string;
+    reviewMode?: string | null;
   }>;
 }
 
@@ -1214,6 +1215,7 @@ export async function fetchLocalAiEvaQueue(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/local-ai/eva/queue`, { headers: headers(auth) });
   return parse(res) as Promise<{
     queue: Array<Record<string, unknown>>;
+    revisionQueue?: Array<Record<string, unknown>>;
     banner: Record<string, unknown>;
   }>;
 }
