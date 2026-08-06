@@ -153,7 +153,9 @@ describe('phase4c1 durable store', () => {
       });
       await service.decideStagedDocument(d1.stagedFileId, 'Approve Redacted Content');
       const ready = await service.enrichStagedDocument(d1.stagedFileId);
-      assert.ok(ready.status === 'ReadyForReview' || ready.status === 'Draft Ready');
+      assert.ok(
+        ready.status === 'ReadyForReview' || String(ready.status) === 'Draft Ready',
+      );
 
       await service.decideStagedDocument(d1.stagedFileId, 'Correct Classification', {
         proposedType: 'invoice',

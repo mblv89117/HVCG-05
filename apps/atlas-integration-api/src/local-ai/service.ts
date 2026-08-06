@@ -690,7 +690,7 @@ export class LocalAiService {
       if (payload.requires_manny_approval === false) {
         payload.requires_manny_approval = true;
         result.requiresMannyApproval = true;
-        result.outputPayload = payload;
+        result.outputPayload = payload as typeof result.outputPayload;
       }
     }
 
@@ -1657,7 +1657,7 @@ export class LocalAiService {
           ),
           actualModel: String(
             (processed.modelRouting as { actualModel?: string } | undefined)?.actualModel ||
-              processed.executorModel ||
+              (processed as { executorModel?: string }).executorModel ||
               'ollama',
           ),
           usedFallback: Boolean(

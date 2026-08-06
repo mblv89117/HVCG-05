@@ -572,7 +572,11 @@ export class DocumentReviewService {
         extractionTimestamp: new Date().toISOString(),
         confidenceSummary: conf,
         outcome:
-          conf != null && conf < 0.4 ? 'low_confidence' : latest.status === 'Failed' ? 'failed' : 'ok',
+          conf != null && conf < 0.4
+            ? 'low_confidence'
+            : String(latest.status) === 'Failed'
+              ? 'failed'
+              : 'ok',
       });
       const extractCp = this.durable.c2.startCheckpoint({
         reviewId: latest.stagedFileId,

@@ -349,7 +349,10 @@ export async function handleLocalAiRoutes(opts: {
         {
           backup: localAi.backupDocumentReviews({
             dryRun: Boolean(body.dryRun),
-            profile: body.profile || 'Metadata Only',
+            profile: (String(body.profile || 'Metadata Only') as
+              | 'Metadata Only'
+              | 'Metadata Plus Extracted Content'
+              | 'Full Local Review Backup'),
             encrypted: Boolean(body.encrypted),
             passphrase: body.passphrase ? String(body.passphrase) : undefined,
             includeStagedOriginals: Boolean(body.includeStagedOriginals),
@@ -625,7 +628,7 @@ export async function handleLocalAiRoutes(opts: {
     const docPurgeMatch = path.match(/^\/api\/local-ai\/documents\/([^/]+)\/purge$/);
     if (method === 'POST' && docPurgeMatch) {
       await requirePrincipal(req, cfg);
-      const body = await readJson(req).catch(() => ({}));
+      const body = (await readJson(req).catch(() => ({}))) as Record<string, unknown>;
       send(
         res,
         200,

@@ -167,6 +167,7 @@ export function AiOperationsQueuePage() {
       setRetentionPolicies(policiesRes.policies || []);
       setHolds(holdsRes.holds || []);
       await fetchLocalAiApprovalQueue(hubAuth).catch(() => null);
+    } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);

@@ -107,7 +107,7 @@ describe('phase4b2 enrichment schema', () => {
         conflicts: [],
         schemaVersion: '1.0.0-phase4b2',
         draftOnly: true,
-        banner: 'TEST — SYNTHETIC AI OUTPUT',
+        banner: 'TEST — SYNTHETIC AI OUTPUT — DO NOT SEND',
       },
     });
     assert.equal(merged.document_type, 'invoice');

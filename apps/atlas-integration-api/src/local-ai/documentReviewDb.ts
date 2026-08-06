@@ -807,7 +807,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     const limit = Math.min(Math.max(filters.limit || 100, 1), 500);
     const offset = Math.max(filters.offset || 0, 0);
     const sql = `SELECT record_json, durable_status FROM document_reviews WHERE ${clauses.join(' AND ')} ORDER BY updated_at DESC LIMIT ? OFFSET ?`;
-    const rows = this.db.prepare(sql).all(...args, limit, offset) as Array<{
+    const rows = this.db.prepare(sql).all(...(args as never[]), limit, offset) as Array<{
       record_json: string;
       durable_status: string;
     }>;
@@ -1236,11 +1236,11 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     renameSync(tmp, this.dbPath);
     chmodSync(this.dbPath, 0o600);
     // Re-open
-    (this as { db: DatabaseSync }).db = new DatabaseSync(this.dbPath);
+    (this as unknown as { db: DatabaseSync }).db = new DatabaseSync(this.dbPath);
     this.db.exec(
       'PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;',
     );
-    (this as { c2: Phase4c2Store }).c2 = new Phase4c2Store(this.db);
+    (this as unknown as { c2: Phase4c2Store }).c2 = new Phase4c2Store(this.db);
     return { restored: true, dryRun: false, validation };
   }
 }

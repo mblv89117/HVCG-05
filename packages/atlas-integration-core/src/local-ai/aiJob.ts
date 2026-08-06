@@ -143,7 +143,7 @@ export interface AiJobRecord {
   timeProtection?: import('./timeProtectionOutput.ts').MannyTimeProtectionOutput | null;
   /** Linked controlled live-content pack */
   contentPackId?: string | null;
-  phase?: 'phase1' | 'phase2' | 'phase3';
+  phase?: 'phase1' | 'phase2' | 'phase3' | 'phase4a';
   documentReviewPack?: unknown | null;
   meetingDraft?: unknown | null;
   clientOperationsPack?: unknown | null;
@@ -178,7 +178,7 @@ export interface CreateAiJobRequest {
   executorMode?: 'mock' | 'ollama';
   contentPackId?: string;
   modelProfileOverride?: string;
-  phase?: 'phase1' | 'phase2' | 'phase3';
+  phase?: 'phase1' | 'phase2' | 'phase3' | 'phase4a';
   /** When true, processJob refuses until redactionApprovedForModel. */
   requireRedactionApproval?: boolean;
 }
