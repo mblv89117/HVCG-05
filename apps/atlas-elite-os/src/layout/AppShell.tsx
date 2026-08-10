@@ -32,6 +32,7 @@ import {
   ShieldRegular,
   PlugConnectedRegular,
   FlashRegular,
+  GlobeRegular,
 } from '@fluentui/react-icons';
 import { Button, Caption1, Dropdown, Option } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -82,6 +83,7 @@ const allSections: NavSection[] = [
       { id: 'ai', label: 'AI Agents', to: '/ai', icon: <SparkleRegular /> },
       { id: 'ai-operations', label: 'AI Operations', to: '/ai-operations', icon: <FlashRegular /> },
       { id: 'eva-sandbox', label: 'EVA Sandbox', to: '/ai-operations/eva', icon: <FlashRegular /> },
+      { id: 'website-studio', label: 'Website Studio', to: '/website-studio', icon: <GlobeRegular /> },
     ],
   },
   {
@@ -108,6 +110,7 @@ const catalog: SearchResult[] = [
   { id: 's9', title: 'AI Agents', category: 'Navigation', to: '/ai' },
   { id: 's9b', title: 'AI Operations Queue', category: 'Navigation', to: '/ai-operations' },
   { id: 's9c', title: 'LOCAL EVA SANDBOX', category: 'Navigation', to: '/ai-operations/eva' },
+  { id: 's9d', title: 'Website Studio', category: 'Navigation', to: '/website-studio' },
   { id: 's10', title: 'Documents', category: 'Navigation', to: '/documents' },
   { id: 's11', title: 'Accounting', category: 'Navigation', to: '/accounting' },
   { id: 's12', title: 'Projects', category: 'Navigation', to: '/projects' },
@@ -138,6 +141,7 @@ const routeLabels: Record<string, string> = {
   '/ai': 'AI Agents',
   '/ai-operations': 'AI Operations',
   '/ai-operations/eva': 'EVA Sandbox',
+  '/website-studio': 'Website Studio',
   '/reports': 'Reports',
   '/settings': 'Settings',
   '/connections': 'Connections Center',

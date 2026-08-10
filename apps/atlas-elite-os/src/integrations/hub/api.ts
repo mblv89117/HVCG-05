@@ -1249,3 +1249,192 @@ export async function retryLocalAiEvaAi(auth: AtlasHubAuthHeaders, submissionId:
   );
   return parse(res) as Promise<{ submission: Record<string, unknown> }>;
 }
+
+/** Phase 6A — Website Studio control plane (no Production deploy). */
+export async function fetchWebsiteStudioHealth(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/health`, { headers: headers(auth) });
+  return parse(res) as Promise<Record<string, unknown>>;
+}
+
+export async function fetchWebsiteStudioDashboard(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/dashboard`, { headers: headers(auth) });
+  return parse(res) as Promise<{ dashboard: Record<string, unknown> }>;
+}
+
+export async function fetchWebsiteStudioWebsites(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/websites`, { headers: headers(auth) });
+  return parse(res) as Promise<{ websites: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioPages(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/pages`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ pages: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioBlocks(
+  auth: AtlasHubAuthHeaders,
+  websiteId: string,
+  pageId?: string,
+) {
+  const q = pageId ? `?pageId=${encodeURIComponent(pageId)}` : '';
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/blocks${q}`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ blocks: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioMedia(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/media`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ media: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioForms(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/forms`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ forms: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioSeo(
+  auth: AtlasHubAuthHeaders,
+  websiteId: string,
+  pageId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/pages/${encodeURIComponent(pageId)}/seo`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ seo: Record<string, unknown>; issues: unknown[] }>;
+}
+
+export async function fetchWebsiteStudioChangeRequests(
+  auth: AtlasHubAuthHeaders,
+  websiteId?: string,
+) {
+  const q = websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : '';
+  const res = await fetch(`${base()}/api/website-studio/change-requests${q}`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{ changeRequests: Array<Record<string, unknown>> }>;
+}
+
+export async function postWebsiteStudioNaturalLanguage(
+  auth: AtlasHubAuthHeaders,
+  body: { text: string; websiteId?: string; pageId?: string },
+) {
+  const res = await fetch(`${base()}/api/website-studio/natural-language`, {
+    method: 'POST',
+    headers: { ...headers(auth), 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{
+    changeRequest: Record<string, unknown>;
+    filesModified: boolean;
+  }>;
+}
+
+export async function postWebsiteStudioAiAssist(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    websiteId: string;
+    operation: string;
+    content?: string;
+    changeRequestId?: string;
+  },
+) {
+  const res = await fetch(`${base()}/api/website-studio/ai/assist`, {
+    method: 'POST',
+    headers: { ...headers(auth), 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{
+    proposal: string;
+    changeRequest: Record<string, unknown>;
+    mayDeploy: boolean;
+    mayPush: boolean;
+  }>;
+}
+
+export async function decideWebsiteStudioChangeRequest(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  decision: 'approve' | 'reject' | 'cancel',
+  notes?: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/decision`,
+    {
+      method: 'POST',
+      headers: { ...headers(auth), 'content-type': 'application/json' },
+      body: JSON.stringify({ decision, notes }),
+    },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown> }>;
+}
+
+export async function applyWebsiteStudioLocal(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  body?: { sandboxRoot?: string; repoPath?: string },
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/apply-local`,
+    {
+      method: 'POST',
+      headers: { ...headers(auth), 'content-type': 'application/json' },
+      body: JSON.stringify(body || {}),
+    },
+  );
+  return parse(res) as Promise<{
+    applied: boolean;
+    pushed: boolean;
+    deployed: boolean;
+    diff: string | null;
+    changeRequest: Record<string, unknown>;
+  }>;
+}
+
+export async function postWebsiteStudioPreview(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/preview`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ preview: Record<string, unknown> }>;
+}
+
+export async function scaffoldWebsiteStudioDeployment(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/deployment-scaffold`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ deployment: Record<string, unknown>; executed: boolean }>;
+}
+
+export async function fetchWebsiteStudioDeployments(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/deployments`, { headers: headers(auth) });
+  return parse(res) as Promise<{ deployments: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioRollbacks(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/rollbacks`, { headers: headers(auth) });
+  return parse(res) as Promise<{ rollbacks: Array<Record<string, unknown>> }>;
+}
+
+export async function fetchWebsiteStudioAudit(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/audit`, { headers: headers(auth) });
+  return parse(res) as Promise<{ audit: Array<Record<string, unknown>> }>;
+}
