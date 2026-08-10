@@ -61,7 +61,7 @@ const SECTIONS = [
 type Section = (typeof SECTIONS)[number];
 
 export function WebsiteStudioPage() {
-  const { account } = useMicrosoftAuth();
+  const { account, devOwnerActive } = useMicrosoftAuth();
   const hubAuth = useHubAuth();
   const [params, setParams] = useSearchParams();
   const section = (params.get('section') as Section) || 'Websites';
@@ -343,7 +343,8 @@ export function WebsiteStudioPage() {
     }
   };
 
-  if (!account) {
+  // Local Owner (Dev) is an approved non-Production UAT identity; do not require MSAL account.
+  if (!account && !devOwnerActive) {
     return (
       <ModuleScaffold title="Website Studio" subtitle="Sign in required">
         <Text>Microsoft sign-in required.</Text>
