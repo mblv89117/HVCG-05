@@ -911,6 +911,19 @@ export class WebsiteStudioService {
     return this.phase6b.commitPilot(changeRequestId, message);
   }
 
+  phase6bRecordAutomatedQa(
+    changeRequestId: string,
+    opts: {
+      buildResult: string;
+      testResult: string;
+      previewUrl: string | null;
+      diff: string | null;
+      warnings?: string[];
+    },
+  ) {
+    return this.phase6b.recordAutomatedQa(changeRequestId, opts);
+  }
+
   phase6bAuthorizePush(changeRequestId: string, approved: boolean) {
     return this.phase6b.authorizePush(changeRequestId, approved);
   }
@@ -946,7 +959,11 @@ export class WebsiteStudioService {
       testResult: cr.testResult,
       seoResult: cr.seoImpact,
       previewUrl: cr.previewUrl,
-      visualQaState: cr.visualQaConfirmedByManny ? 'Confirmed by Manny' : 'Pending Manny visual QA',
+      visualQaState: cr.visualQaConfirmedByManny
+        ? 'Confirmed by Manny'
+        : cr.qaStatus === 'WAITING ON MANNY'
+          ? 'WAITING ON MANNY'
+          : 'Pending Manny visual QA',
       risk: cr.riskLevel,
       estimatedReviewMinutes: cr.timeProtection.estimatedReviewMinutes,
       estimatedTimeSavedMinutes: cr.timeProtection.estimatedTimeSavedMinutes,

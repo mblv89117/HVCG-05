@@ -756,10 +756,11 @@ export class Phase6bPilotController {
         code: 'not_applied',
       });
     }
-    if (!cr.visualQaConfirmedByManny) {
-      throw Object.assign(new Error('Manny visual QA confirmation required before commit'), {
+    // Automated QA must pass; Manny visual QA may still be pending (WAITING ON MANNY)
+    if (cr.buildResult === 'FAIL' || cr.testResult === 'FAIL') {
+      throw Object.assign(new Error('Automated QA failed — refuse commit'), {
         status: 403,
-        code: 'visual_qa_required',
+        code: 'automated_qa_failed',
       });
     }
     const worktree = assertAllowedRepoPath(cr.worktreePath || HVCG_WORKTREE_PATH);
@@ -772,6 +773,8 @@ export class Phase6bPilotController {
     cr.gitBranch = result.branch;
     cr.status = 'Committed';
     cr.phase6aNoPush = true;
+    cr.visualQaConfirmedByManny = false;
+    cr.qaStatus = 'WAITING ON MANNY';
     cr.updatedAt = nowIso();
     this.store.upsertChangeRequest(cr);
     this.store.audit({
@@ -779,9 +782,50 @@ export class Phase6bPilotController {
       action: 'phase6b_pilot_committed',
       correlationId: cr.auditCorrelationId,
       detail: result.commit,
-      payload: { pushed: false, branch: result.branch },
+      payload: {
+        pushed: false,
+        branch: result.branch,
+        visualQa: 'WAITING ON MANNY',
+        automatedQa: cr.testResult || cr.buildResult,
+      },
     });
     return result;
+  }
+
+  recordAutomatedQa(
+    changeRequestId: string,
+    opts: {
+      buildResult: string;
+      testResult: string;
+      previewUrl: string | null;
+      diff: string | null;
+      warnings?: string[];
+    },
+  ) {
+    const cr = this.store.getChangeRequest(changeRequestId)!;
+    cr.buildResult = opts.buildResult;
+    cr.testResult = opts.testResult;
+    cr.previewUrl = opts.previewUrl;
+    cr.previewStatus = opts.previewUrl ? 'Ready for Preview' : cr.previewStatus;
+    cr.qaStatus = 'WAITING ON MANNY';
+    cr.visualQaConfirmedByManny = false;
+    cr.updatedAt = nowIso();
+    this.store.upsertChangeRequest(cr);
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'phase6b_automated_qa_recorded',
+      correlationId: cr.auditCorrelationId,
+      detail: opts.testResult,
+      payload: {
+        buildResult: opts.buildResult,
+        testResult: opts.testResult,
+        previewUrl: opts.previewUrl,
+        visualQa: 'WAITING ON MANNY',
+        warnings: opts.warnings || [],
+        diffChars: opts.diff?.length || 0,
+      },
+    });
+    return cr;
   }
 
   confirmVisualQa(changeRequestId: string, confirmed: boolean) {
