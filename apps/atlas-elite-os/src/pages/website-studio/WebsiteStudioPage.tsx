@@ -173,6 +173,8 @@ export function WebsiteStudioPage() {
   const [threeOptions, setThreeOptions] = useState<Array<Record<string, unknown>> | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
   const [approvedResult, setApprovedResult] = useState<Record<string, unknown> | null>(null);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectedResult, setRejectedResult] = useState<Record<string, unknown> | null>(null);
   const [localSystemStatus, setLocalSystemStatus] = useState<{
     checkedAt?: string;
     owner?: Record<string, string>;
@@ -205,9 +207,11 @@ export function WebsiteStudioPage() {
 
   const openReview = (changeRequestId: string, mode: ReviewPreviewMode = 'compare') => {
     setApprovedResult(null);
+    setRejectedResult(null);
     setThreeOptions(null);
     setEditOpen(false);
     setApproveOpen(false);
+    setRejectOpen(false);
     setPreviewMode(mode);
     setView('review', { cr: changeRequestId, mode });
   };
@@ -307,29 +311,31 @@ export function WebsiteStudioPage() {
     if (!hubAuth || !selectedWebsiteId) return;
     void (async () => {
       try {
-        const [p, m, f, b] = await Promise.all([
+        const [p, m, f] = await Promise.all([
           fetchWebsiteStudioPages(hubAuth, selectedWebsiteId),
           fetchWebsiteStudioMedia(hubAuth, selectedWebsiteId),
           fetchWebsiteStudioForms(hubAuth, selectedWebsiteId),
-          fetchWebsiteStudioBlocks(hubAuth, selectedWebsiteId),
         ]);
         setPages(p.pages);
         setMedia(m.media);
         setForms(f.forms);
-        setBlocks(b.blocks);
+        // Do not load all-website blocks here — that races page-scoped editor context back to Home.
         const home =
           p.pages.find((x) => x.route === '/') ||
           p.pages.find((x) => /home/i.test(String(x.pageTitle))) ||
           p.pages.find((x) => String(x.pageId).includes('home')) ||
           p.pages[0];
-        const pageId = selectedPageId || (home?.pageId ? String(home.pageId) : '');
-        if (pageId && pageId !== selectedPageId) setSelectedPageId(pageId);
+        if (!selectedPageId && home?.pageId) {
+          setSelectedPageId(String(home.pageId));
+        }
         void refreshPreviewHealth();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
-  }, [hubAuth, selectedWebsiteId, selectedPageId, refreshPreviewHealth]);
+    // selectedPageId intentionally omitted — page changes must not re-fetch inventory / overwrite blocks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hubAuth, selectedWebsiteId, refreshPreviewHealth]);
 
   useEffect(() => {
     void refreshPreviewHealth();
@@ -589,6 +595,17 @@ export function WebsiteStudioPage() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const selectPage = (pageId: string, opts?: { analyze?: boolean; view?: StudioNavId }) => {
+    setSelectedPageId(pageId);
+    setSelectedBlockId(null);
+    setDraftText('');
+    setAnalysis(null);
+    setBlocks([]);
+    setSeo(null);
+    if (opts?.view) setView(opts.view);
+    if (opts?.analyze !== false) void analyzePage(pageId);
   };
 
   const analyzeSite = async () => {
@@ -919,9 +936,12 @@ export function WebsiteStudioPage() {
                 options={threeOptions}
                 approveOpen={approveOpen}
                 approvedResult={approvedResult}
+                rejectOpen={rejectOpen}
+                rejectedResult={rejectedResult}
                 onBack={() => setView('home')}
                 onRefresh={() => {
                   setApprovedResult(null);
+                  setRejectedResult(null);
                   void refresh();
                   if (hubAuth && reviewCrId) {
                     void fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId).then((r) =>
@@ -989,13 +1009,38 @@ export function WebsiteStudioPage() {
                     await refresh();
                   })()
                 }
-                onReject={() =>
+                onOpenReject={() => setRejectOpen(true)}
+                onCloseReject={() => setRejectOpen(false)}
+                onConfirmReject={() =>
                   void (async () => {
                     if (!hubAuth || !reviewCrId) return;
-                    await decideWebsiteStudioChangeRequest(hubAuth, reviewCrId, 'reject');
-                    setNotice('Change rejected.');
-                    setView('home');
-                    await refresh();
+                    setBusy(true);
+                    try {
+                      const res = await decideWebsiteStudioChangeRequest(
+                        hubAuth,
+                        reviewCrId,
+                        'reject',
+                      );
+                      const cr = (res.changeRequest || res) as Record<string, unknown>;
+                      setRejectOpen(false);
+                      setRejectedResult(cr);
+                      setOwnerReview((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              ownerStatus: 'Rejected',
+                              status: 'Rejected',
+                              changeRequestId: reviewCrId,
+                            }
+                          : prev,
+                      );
+                      setNotice('Change rejected — draft preserved. Production unchanged.');
+                      await refresh();
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    } finally {
+                      setBusy(false);
+                    }
                   })()
                 }
                 onOpenApprove={() => setApproveOpen(true)}
@@ -1034,15 +1079,27 @@ export function WebsiteStudioPage() {
                 onSearch={setPageSearch}
                 onFilter={setPageFilter}
                 previewUrl={previewUrl}
-                onEdit={(pageId) => {
-                  setSelectedPageId(pageId);
-                  setView('editor');
-                  void analyzePage(pageId);
-                }}
-                onSeo={(pageId) => {
-                  setSelectedPageId(pageId);
-                  setView('seo');
-                }}
+                onEdit={(pageId) => selectPage(pageId, { view: 'editor' })}
+                onSeo={(pageId) => selectPage(pageId, { view: 'seo', analyze: false })}
+                onPreviewPage={(pageId) =>
+                  void (async () => {
+                    if (!hubAuth || !selectedWebsiteId) return;
+                    selectPage(pageId, { analyze: false });
+                    try {
+                      const pageUrl = await fetchWebsiteStudioPreviewPage(
+                        hubAuth,
+                        selectedWebsiteId,
+                        pageId,
+                      );
+                      if (pageUrl.url) {
+                        setPagePreviewUrl(pageUrl.url);
+                        window.open(pageUrl.url, '_blank', 'noopener,noreferrer');
+                      }
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    }
+                  })()
+                }
               />
             ) : null}
 
@@ -1062,9 +1119,8 @@ export function WebsiteStudioPage() {
                 rightMode={rightMode}
                 advancedMode={advancedMode}
                 onSelectPage={(pageId) => {
-                  setSelectedPageId(pageId);
                   setRightMode('advisor');
-                  void analyzePage(pageId);
+                  selectPage(pageId, { view: 'editor' });
                 }}
                 onSelectBlock={(id) => {
                   setSelectedBlockId(id);
@@ -1157,7 +1213,7 @@ export function WebsiteStudioPage() {
                 pages={pages}
                 seo={seo}
                 selectedPageId={selectedPageId}
-                onSelectPage={(id) => setSelectedPageId(id)}
+                onSelectPage={(id) => selectPage(id, { analyze: false, view: 'seo' })}
                 onImprove={(kind) => void runAiAction(kind === 'title' ? 'Improve SEO' : 'Give Me 3 Options')}
               />
             ) : null}
@@ -1203,7 +1259,15 @@ export function WebsiteStudioPage() {
 
             {nav === 'history' ? (
               <HistoryView
-                changeRequests={ownerInbox?.all || websiteCrs}
+                changeRequests={
+                  // Full enriched CR list (includes Rejected synthetics). Do not use inbox.all —
+                  // that filter only keeps pilot/worktree actionable drafts.
+                  [...websiteCrs].sort((a, b) =>
+                    String(b.updatedAt || b.createdAt || '').localeCompare(
+                      String(a.updatedAt || a.createdAt || ''),
+                    ),
+                  )
+                }
                 advancedMode={advancedMode}
                 onReview={(id) => openReview(id)}
               />

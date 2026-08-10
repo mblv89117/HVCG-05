@@ -271,6 +271,34 @@ describe('website-studio owner approval workflow', () => {
     cleanup();
   });
 
+  it('reject persists ownerStatus=Rejected and preserves draft/audit evidence', () => {
+    const worktree = makePilotFixture();
+    const { service, cleanup } = tempService(worktree);
+    const boot = service.bootstrapPhase6bPilot({ worktreePath: worktree });
+    const id = boot.changeRequest.changeRequestId;
+    const before = service.getChangeRequest(id);
+    before.ownerStatus = 'Waiting for Your Review';
+    before.proposedContent = AFTER;
+    before.originalContent = CURRENT_H1;
+    service.store.upsertChangeRequest(before);
+
+    const rejected = service.decideChangeRequest(id, 'reject', 'owner rejected draft');
+    assert.equal(rejected.status, 'Rejected');
+    assert.equal(rejected.ownerStatus, 'Rejected');
+    assert.equal(ownerFriendlyStatus(rejected as any), 'Rejected');
+    assert.equal(rejected.proposedContent, AFTER);
+    assert.equal(rejected.originalContent, CURRENT_H1);
+
+    const listed = service.listOwnerChangeRequests(HVCG_PILOT_WEBSITE_ID);
+    const row = listed.find((c) => c.changeRequestId === id)!;
+    assert.equal(row.ownerStatus, 'Rejected');
+    assert.equal(
+      service.ownerInbox(HVCG_PILOT_WEBSITE_ID).needsReview.some((c) => c.changeRequestId === id),
+      false,
+    );
+    cleanup();
+  });
+
   it('device review and mismatch block approval', async () => {
     const worktree = makePilotFixture();
     const { service, cleanup } = tempService(worktree);

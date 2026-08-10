@@ -174,7 +174,10 @@ export function analyzePage(input: {
     conversion -= 8;
     opportunities.push({
       id: 'rec_headline_missing',
-      recommendation: 'Add a clear, outcome-driven homepage headline',
+      recommendation:
+        pageName === 'Home'
+          ? 'Add a clear, outcome-driven homepage headline'
+          : `Add a clear, outcome-driven ${pageName} headline`,
       category: 'Messaging',
       impact: 'High',
       effort: 'Low',

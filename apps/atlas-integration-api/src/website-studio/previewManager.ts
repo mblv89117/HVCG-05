@@ -114,8 +114,13 @@ export function buildPreviewPageUrl(
   if (!page) return base;
   const route = String(page.route || '/');
   if (route === '/' || route === '') return base;
-  const source = String(page.sourceFile || '');
+  const source = String(page.sourceFile || '').replace(/\\/g, '/');
   if (/\.html?$/i.test(source)) {
+    const stagingIdx = source.lastIndexOf('staging/');
+    if (stagingIdx >= 0) {
+      // Keep nested staging paths: tools/roi-calculator.html, about.html
+      return `${base}${source.slice(stagingIdx + 'staging/'.length)}`;
+    }
     const file = source.split('/').pop()!;
     return `${base}${file}`;
   }

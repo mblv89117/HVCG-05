@@ -287,6 +287,7 @@ export function PageManagerView(props: {
   onFilter: (v: string) => void;
   onEdit: (pageId: string) => void;
   onSeo: (pageId: string) => void;
+  onPreviewPage: (pageId: string) => void;
   previewUrl: string | null;
 }) {
   const pendingIds = new Set(
@@ -363,10 +364,7 @@ export function PageManagerView(props: {
                 </Button>
                 <Button
                   size="small"
-                  onClick={() => {
-                    if (props.previewUrl) window.open(props.previewUrl, '_blank', 'noopener,noreferrer');
-                  }}
-                  disabled={!props.previewUrl}
+                  onClick={() => props.onPreviewPage(String(p.pageId))}
                 >
                   Preview
                 </Button>
@@ -1281,7 +1279,7 @@ export function HistoryView(props: {
             <Text weight="semibold">{String(cr.ownerTitle || ownerChangeTitle(cr))}</Text>
             <Caption1 style={{ display: 'block' }}>
               {String(cr.updatedAt || cr.createdAt || '').slice(0, 10)} ·{' '}
-              {String(cr.ownerStatus || ownerChangeStatus(cr))}
+              {ownerChangeStatus(cr)}
             </Caption1>
             <Caption1 style={{ display: 'block' }}>
               Approved by Manny:{' '}
@@ -1404,8 +1402,11 @@ export function QaReadinessPanel(props: {
   const badge = String(props.readiness?.badge || 'NOT READY FOR REVIEW');
   const ready = gate === 'READY FOR MANNY';
   const failed = gate === 'FAILED QA';
+  const testing = gate === 'TESTING';
+  const ownerApproved = gate === 'OWNER APPROVED';
   const latest = props.readiness?.latestRun || null;
   const defects = (latest?.defects as Array<Record<string, unknown>>) || [];
+  const categories = ['NOT TESTED', 'TESTING', 'FAILED QA', 'READY FOR MANNY', 'OWNER APPROVED'];
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <AtlasCard>
@@ -1413,17 +1414,46 @@ export function QaReadinessPanel(props: {
           Website Studio Readiness
         </Text>
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
-          <span style={{ color: ready ? '#2f6b3a' : failed ? '#8a1f1f' : muted }}>●</span>{' '}
-          {ready ? 'Automated QA Passed' : failed ? 'QA Failed' : badge}
+          <span style={{ color: ready || ownerApproved ? '#2f6b3a' : failed ? '#8a1f1f' : muted }}>
+            ●
+          </span>{' '}
+          {ready
+            ? 'Automated QA Passed'
+            : failed
+              ? 'QA Failed'
+              : testing
+                ? 'QA Testing in progress'
+                : ownerApproved
+                  ? 'Owner approved draft (not published)'
+                  : badge}
         </Caption1>
-        {ready ? (
-          <StatusChip label="READY FOR MANNY" tone="success" />
-        ) : (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+          {categories.map((c) => (
+            <StatusChip
+              key={c}
+              label={c}
+              tone={
+                gate === c
+                  ? c === 'FAILED QA'
+                    ? 'danger'
+                    : c === 'READY FOR MANNY' || c === 'OWNER APPROVED'
+                      ? 'success'
+                      : 'warning'
+                  : 'neutral'
+              }
+            />
+          ))}
+        </div>
+        <Caption1 style={{ display: 'block', marginTop: 8 }} data-testid="ws-qa-gate-active">
+          Active gate: {gate}
+        </Caption1>
+        {!ready && !ownerApproved ? (
           <StatusChip label="NOT READY FOR REVIEW" tone="warning" />
-        )}
+        ) : null}
         {failed ? (
           <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            {defects.length || 'Some'} issues need to be fixed before your review.
+            {defects.length || 'Some'} issues need to be fixed before your review. Defects escalate —
+            READY FOR MANNY is blocked until retest passes.
           </Caption1>
         ) : null}
         {props.readiness?.testedCommit ? (

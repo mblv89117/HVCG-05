@@ -201,56 +201,84 @@ export function inventoryHvcgFromWorktree(
 } {
   const staging = join(worktreePath, 'website', 'staging');
   const indexPath = join(staging, 'index.html');
-  const html = readFileSync(indexPath, 'utf8');
-  const h1 = extractH1(html) || CURRENT_H1;
-  const titleMatch = /<title>([^<]*)<\/title>/i.exec(html);
-  const metaMatch = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i.exec(html);
+  const homeHtml = existsSync(indexPath) ? readFileSync(indexPath, 'utf8') : '';
+  const homeH1 = extractH1(homeHtml) || CURRENT_H1;
   const now = nowIso();
   const pageFiles = listHtmlPages(staging);
-  const pages: WebsitePageRecord[] = pageFiles.map((rel, i) => {
+  const pages: WebsitePageRecord[] = [];
+  const blocks: ContentBlockRecord[] = [];
+
+  for (const rel of pageFiles) {
     const isHome = rel === 'index.html' || rel === './index.html';
-    return {
-      pageId: isHome ? 'pg_hvcg_home_real' : `pg_hvcg_${hashContent(rel)}`,
+    const full = join(staging, rel);
+    let html = '';
+    try {
+      html = readFileSync(full, 'utf8');
+    } catch {
+      html = '';
+    }
+    const pageH1 = extractH1(html) || (isHome ? homeH1 : null);
+    const titleMatch = /<title>([^<]*)<\/title>/i.exec(html);
+    const metaMatch =
+      /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i.exec(html) ||
+      /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i.exec(html);
+    const route = isHome
+      ? '/'
+      : `/${rel.replace(/index\.html$/i, '').replace(/\.html$/i, '').replace(/\/$/, '')}`;
+    const pageId = isHome ? 'pg_hvcg_home_real' : `pg_hvcg_${hashContent(rel)}`;
+    const pageTitle = isHome
+      ? 'Home | High Value Capital Group'
+      : (titleMatch?.[1] || rel).trim();
+    pages.push({
+      pageId,
       websiteId,
-      route: isHome ? '/' : `/${rel.replace(/index\.html$/i, '').replace(/\.html$/i, '')}`,
-      pageTitle: isHome ? 'Home | High Value Capital Group' : rel,
+      route,
+      pageTitle,
       pageType: isHome ? 'home' : 'page',
       sourceFile: `website/staging/${rel}`,
       layout: 'website/staging shared chrome',
       status: 'Published',
       lastModified: now,
-      seoTitle: isHome ? titleMatch?.[1] || null : null,
-      metaDescription: isHome ? metaMatch?.[1] || null : null,
+      seoTitle: titleMatch?.[1] || null,
+      metaDescription: metaMatch?.[1] || null,
       canonicalUrl: isHome ? HVCG_PRODUCTION_URL : null,
-      h1: isHome ? h1 : null,
-      majorSections: isHome ? ['Hero', 'Services', 'Trust', 'CTA'] : [],
+      h1: pageH1,
+      majorSections: isHome
+        ? ['Hero', 'Services', 'Trust', 'CTA']
+        : pageH1
+          ? ['Hero']
+          : [],
       ctaLabels: isHome ? ['Enterprise Value Assessment', 'Book appointment'] : [],
       formsPresent: [],
       imagesUsed: [],
-      schemaMarkupPresent: isHome && html.includes('application/ld+json'),
+      schemaMarkupPresent: html.includes('application/ld+json'),
       structuredDataType: isHome ? 'Organization' : null,
       publishState: 'Baseline captured — not edited',
-    };
-  });
+    });
 
-  const blocks: ContentBlockRecord[] = [
-    {
-      blockId: 'blk_hvcg_home_h1',
-      websiteId,
-      pageId: 'pg_hvcg_home_real',
-      blockType: 'headline',
-      sourceFile: 'website/scripts/generate_pages.py',
-      sourceLocation: 'homepage H1 template + staging/preview mirrors',
-      currentValue: h1,
-      proposedValue: null,
-      characterCount: h1.length,
-      lastModified: now,
-      changeRequestId: null,
-      aiGenerated: false,
-      mannyApproved: false,
-      validationStatus: 'Valid',
-    },
-  ];
+    if (pageH1) {
+      blocks.push({
+        blockId: isHome ? 'blk_hvcg_home_h1' : `blk_hvcg_${hashContent(rel)}_h1`,
+        websiteId,
+        pageId,
+        blockType: 'headline',
+        sourceFile: `website/staging/${rel}`,
+        sourceLocation: isHome
+          ? 'homepage H1 template + staging/preview mirrors'
+          : `${rel} H1`,
+        currentValue: pageH1,
+        proposedValue: null,
+        characterCount: pageH1.length,
+        lastModified: now,
+        changeRequestId: null,
+        aiGenerated: false,
+        mannyApproved: false,
+        validationStatus: 'Valid',
+      });
+    }
+  }
+
+  const h1 = homeH1;
 
   const mediaDir = join(staging, 'assets');
   const media: MediaAssetRecord[] = [];

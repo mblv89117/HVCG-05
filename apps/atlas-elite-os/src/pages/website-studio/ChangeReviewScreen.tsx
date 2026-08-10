@@ -38,6 +38,8 @@ export function ChangeReviewScreen(props: {
   options: Array<Record<string, unknown>> | null;
   approveOpen: boolean;
   approvedResult: Record<string, unknown> | null;
+  rejectOpen: boolean;
+  rejectedResult: Record<string, unknown> | null;
   onBack: () => void;
   onRefresh: () => void;
   onPreviewMode: (m: ReviewPreviewMode) => void;
@@ -50,7 +52,9 @@ export function ChangeReviewScreen(props: {
   onShowOptions: () => void;
   onUseOption: (text: string) => void;
   onSaveForLater: () => void;
-  onReject: () => void;
+  onOpenReject: () => void;
+  onCloseReject: () => void;
+  onConfirmReject: () => void;
   onOpenApprove: () => void;
   onCloseApprove: () => void;
   onConfirmApprove: () => void;
@@ -85,6 +89,34 @@ export function ChangeReviewScreen(props: {
   const afterUrl = props.previewUrlAfter || previewUrls.after || null;
   const beforePort = previewUrls.beforePort || 8766;
   const afterPort = previewUrls.afterPort || 8765;
+
+  if (props.rejectedResult) {
+    return (
+      <AtlasCard>
+        <Text weight="semibold" size={600} data-testid="ws-change-rejected">
+          CHANGE REJECTED
+        </Text>
+        <Text style={{ display: 'block', marginTop: 8 }}>{String(r.ownerTitle)}</Text>
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>Rejected by: Manny</Caption1>
+        <Caption1 style={{ display: 'block' }}>Status: Rejected</Caption1>
+        <Caption1 style={{ display: 'block' }}>
+          Draft wording and audit history were preserved — nothing was published.
+        </Caption1>
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>Production: UNCHANGED</Caption1>
+        <MessageBar intent="warning" style={{ marginTop: 12 }}>
+          <MessageBarBody>
+            This change will not move forward. You can find it under History with status Rejected.
+          </MessageBarBody>
+        </MessageBar>
+        <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+          <Button appearance="primary" onClick={props.onBack}>
+            Back to Website Home
+          </Button>
+          <Button onClick={props.onRefresh}>Refresh</Button>
+        </div>
+      </AtlasCard>
+    );
+  }
 
   if (props.approvedResult) {
     return (
@@ -329,7 +361,7 @@ export function ChangeReviewScreen(props: {
             <Button disabled={props.busy} onClick={props.onSaveForLater}>
               Save for Later
             </Button>
-            <Button disabled={props.busy} onClick={props.onReject}>
+            <Button disabled={props.busy} onClick={props.onOpenReject} data-testid="ws-reject-open">
               Reject
             </Button>
             <Button disabled title="Production publishing will be enabled in a later approved phase.">
@@ -463,6 +495,45 @@ export function ChangeReviewScreen(props: {
           </div>
         </AtlasCard>
       ) : null}
+
+      <Dialog open={props.rejectOpen} onOpenChange={(_, d) => !d.open && props.onCloseReject()}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Reject this website change?</DialogTitle>
+            <DialogContent>
+              <Text weight="semibold">WHAT REJECTION WILL DO</Text>
+              <Caption1 style={{ display: 'block', marginTop: 6 }}>
+                Mark <strong>{String(r.ownerTitle)}</strong> as Rejected, keep it in History, and stop
+                the approval path for this draft.
+              </Caption1>
+              <MessageBar intent="info" style={{ marginTop: 12 }}>
+                <MessageBarBody>
+                  Draft wording, before/after evidence, and audit history are preserved. Rejection does
+                  not delete the change request.
+                </MessageBarBody>
+              </MessageBar>
+              <MessageBar intent="warning" style={{ marginTop: 8 }}>
+                <MessageBarBody>
+                  Rejection will NOT publish, merge, deploy, or modify Production.
+                </MessageBarBody>
+              </MessageBar>
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={props.onCloseReject}>
+                Cancel
+              </Button>
+              <Button
+                appearance="primary"
+                disabled={props.busy}
+                onClick={props.onConfirmReject}
+                data-testid="ws-yes-reject-change"
+              >
+                Yes, Reject Change
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
       <Dialog open={props.approveOpen} onOpenChange={(_, d) => !d.open && props.onCloseApprove()}>
         <DialogSurface>

@@ -42,7 +42,7 @@ import {
 } from '@hvcg/atlas-integration-core';
 import { discoverLocalRepository } from './discovery.ts';
 import { WebsiteGitAdapter } from './gitAdapter.ts';
-import { Phase6bPilotController } from './phase6b.ts';
+import { inventoryHvcgFromWorktree, Phase6bPilotController } from './phase6b.ts';
 import { WebsiteStudioStore, resolveWebsiteStudioDbPath } from './store.ts';
 import {
   advisorChatReply,
@@ -228,13 +228,57 @@ export class WebsiteStudioService {
     return result;
   }
 
+  /**
+   * Refresh per-page H1/SEO/blocks from worktree when inventory is Home-only.
+   * Never touches Production; upserts local Studio inventory only.
+   */
+  ensurePageInventory(websiteId: string) {
+    const website = this.getWebsite(websiteId);
+    if (website.synthetic || !website.localRepositoryPath) return;
+    const pages = this.store.listPages(websiteId);
+    const blocks = this.store.listBlocks(websiteId);
+    const pageIdsWithBlocks = new Set(blocks.map((b) => b.pageId));
+    const sparse = pages.length > 1 && pageIdsWithBlocks.size < Math.min(8, pages.length);
+    if (!sparse && pages.every((p) => p.route === '/' || p.h1 || p.seoTitle)) return;
+    try {
+      const inv = inventoryHvcgFromWorktree(website.localRepositoryPath, websiteId);
+      for (const p of inv.pages) this.store.upsertPage(p);
+      for (const b of inv.blocks) {
+        const existing = this.store.listBlocks(websiteId, b.pageId).find((x) => x.blockId === b.blockId);
+        // Preserve pilot/home draft linkage on the known home H1 block.
+        if (existing?.changeRequestId) {
+          this.store.upsertBlock({
+            ...b,
+            currentValue: existing.currentValue,
+            proposedValue: existing.proposedValue,
+            changeRequestId: existing.changeRequestId,
+            aiGenerated: existing.aiGenerated,
+            mannyApproved: existing.mannyApproved,
+          });
+        } else {
+          this.store.upsertBlock(b);
+        }
+      }
+      this.store.audit({
+        actor: AUTOMATION_OWNER,
+        action: 'page_inventory_synced',
+        detail: websiteId,
+        payload: { pages: inv.pages.length, blocks: inv.blocks.length },
+      });
+    } catch {
+      /* inventory refresh is best-effort */
+    }
+  }
+
   listPages(websiteId: string) {
     this.getWebsite(websiteId);
+    this.ensurePageInventory(websiteId);
     return this.store.listPages(websiteId);
   }
 
   listBlocks(websiteId: string, pageId?: string) {
     this.getWebsite(websiteId);
+    this.ensurePageInventory(websiteId);
     return this.store.listBlocks(websiteId, pageId);
   }
 
@@ -579,8 +623,12 @@ export class WebsiteStudioService {
     if (decision === 'reject') {
       cr.status = 'Rejected';
       cr.mannyApproval = false;
+      cr.savedForLater = false;
+      cr.ownerStatus = 'Rejected';
+      // Keep draft/original content + audit trail; rejection must not destroy evidence.
     } else if (decision === 'cancel') {
       cr.status = 'Cancelled';
+      cr.savedForLater = false;
     } else {
       if (cr.tier.startsWith('Tier D')) {
         throw Object.assign(
@@ -599,10 +647,16 @@ export class WebsiteStudioService {
       action: `change_request_${decision}`,
       correlationId: cr.auditCorrelationId,
       detail: notes || decision,
-      payload: { status: cr.status, noPush: true, noDeploy: true },
+      payload: {
+        status: cr.status,
+        ownerStatus: cr.ownerStatus,
+        noPush: true,
+        noDeploy: true,
+        contentPreserved: Boolean(cr.proposedContent || cr.originalContent),
+      },
     });
     this.refreshOpenCrCount(cr.websiteId);
-    return cr;
+    return this.enrichChangeRequest(cr);
   }
 
   /**
@@ -1220,8 +1274,14 @@ export class WebsiteStudioService {
       port: BASELINE_PREVIEW_PORT,
     });
 
-    const beforeUrl = baseline.url;
-    const afterUrl = pilot.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
+    const page =
+      (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
+      this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
+      null;
+    const beforeBase = baseline.url;
+    const afterBase = pilot.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
+    const beforeUrl = buildPreviewPageUrl(beforeBase, page) || beforeBase;
+    const afterUrl = buildPreviewPageUrl(afterBase, page) || afterBase;
     const expectedBefore = String(cr.originalContent || '');
     const expectedAfter = exactDraftContent(cr);
 

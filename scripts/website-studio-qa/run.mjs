@@ -51,7 +51,11 @@ async function main() {
       defects.push({
         id: `DEF-${defects.length + 1}`,
         title: name,
-        severity: /before|after|safety|production|approve/i.test(name) ? 'CRITICAL' : 'HIGH',
+        severity: /before|after|safety|production|approve|page|reject|multi-page|decision/i.test(
+          name,
+        )
+          ? 'CRITICAL'
+          : 'HIGH',
         ownerWorkflowStep: name,
         expected: 'PASS',
         actual: detail || 'FAIL',
@@ -220,12 +224,14 @@ async function main() {
       });
     }
 
-    // Direct asset probes (fail closed)
+    // Direct asset probes (fail closed) — always from preview origin root, not page HTML path
+    const beforeOrigin = beforeUrl ? new URL(beforeUrl).origin + '/' : 'http://127.0.0.1:8766/';
+    const afterOrigin = afterUrl ? new URL(afterUrl).origin + '/' : 'http://127.0.0.1:8765/';
     for (const [label, url] of [
-      ['before-styles', `${beforeUrl}styles.css`],
-      ['after-styles', `${afterUrl}styles.css`],
-      ['before-logo', `${beforeUrl}assets/brand/hvcg-logo-nav.png`],
-      ['after-logo', `${afterUrl}assets/brand/hvcg-logo-nav.png`],
+      ['before-styles', `${beforeOrigin}styles.css`],
+      ['after-styles', `${afterOrigin}styles.css`],
+      ['before-logo', `${beforeOrigin}assets/brand/hvcg-logo-nav.png`],
+      ['after-logo', `${afterOrigin}assets/brand/hvcg-logo-nav.png`],
     ]) {
       const res = await fetch(url);
       const text = label.includes('styles') ? await res.text() : '';
@@ -310,6 +316,140 @@ async function main() {
     new Set(options.options.map((o) => o.text)).size === 3;
   addCheck('ai-three-options', 'Advisor 3 options (deterministic)', threeOk ? 'PASS' : 'FAIL');
 
+  // Multi-page preview routing (Home + required pages) — CRITICAL if Home fallback persists
+  try {
+    const pagesBody = await hub(`/api/website-studio/websites/${FIXTURE.websiteId}/pages`);
+    const pages = pagesBody.pages || [];
+    const required = [
+      { route: '/', mustEnd: /8765\/?$/ },
+      { route: '/about', mustInclude: 'about.html' },
+      { route: '/funding', mustInclude: 'funding.html' },
+      { route: '/faq', mustInclude: 'faq.html' },
+      { route: '/contact', mustInclude: 'contact.html' },
+      { route: '/book-appointment', mustInclude: 'book-appointment.html' },
+      { route: '/accessibility', mustInclude: 'accessibility.html' },
+    ];
+    let pageRouteOk = true;
+    const pageDetails = [];
+    for (const reqPage of required) {
+      const page = pages.find((p) => p.route === reqPage.route);
+      if (!page) {
+        pageRouteOk = false;
+        pageDetails.push(`missing ${reqPage.route}`);
+        continue;
+      }
+      const preview = await hub(
+        `/api/website-studio/websites/${FIXTURE.websiteId}/preview-page?pageId=${encodeURIComponent(page.pageId)}`,
+      );
+      const url = String(preview.url || '');
+      const blocks = await hub(
+        `/api/website-studio/websites/${FIXTURE.websiteId}/blocks?pageId=${encodeURIComponent(page.pageId)}`,
+      );
+      const blockCount = (blocks.blocks || []).length;
+      const ok =
+        (reqPage.mustEnd ? reqPage.mustEnd.test(url) : url.includes(reqPage.mustInclude)) &&
+        (reqPage.route === '/' || blockCount > 0);
+      if (!ok) pageRouteOk = false;
+      pageDetails.push(`${reqPage.route}→${url} blocks=${blockCount}`);
+    }
+    addCheck(
+      'multi-page-preview-routing',
+      'Multi-page preview routing + page blocks',
+      pageRouteOk ? 'PASS' : 'FAIL',
+      pageDetails.join(' | '),
+    );
+    if (!pageRouteOk) {
+      defects.push({
+        id: 'DEF-PAGE-FALLBACK-HOME',
+        title: 'Non-Home pages fall back to Home editor/preview context',
+        severity: 'CRITICAL',
+        ownerWorkflowStep: 'Pages → Edit',
+        expected: 'Selected page drives preview URL, blocks, SEO, Advisor',
+        actual: pageDetails.join(' | '),
+        affectedComponent: 'WebsiteStudioPage/previewPageUrl',
+        suggestedFix: 'Wire selectedPageId through preview-page + page-scoped blocks inventory',
+        retestRequired: true,
+      });
+    }
+  } catch (e) {
+    addCheck('multi-page-preview-routing', 'Multi-page preview routing + page blocks', 'FAIL', String(e));
+    defects.push({
+      id: 'DEF-PAGE-FALLBACK-HOME',
+      title: 'Multi-page routing check failed',
+      severity: 'CRITICAL',
+      ownerWorkflowStep: 'Pages → Edit',
+      expected: 'Page-scoped preview URLs',
+      actual: String(e),
+      affectedComponent: 'previewPageUrl',
+      suggestedFix: 'Repair preview-page API and inventory sync',
+      retestRequired: true,
+    });
+  }
+
+  // Reject persistence on synthetic CR — never mutate live pilot for destructive reject
+  try {
+    const pagesBody = await hub(`/api/website-studio/websites/${FIXTURE.websiteId}/pages`);
+    const about = (pagesBody.pages || []).find((p) => p.route === '/about');
+    const created = await hub('/api/website-studio/natural-language', {
+      method: 'POST',
+      body: JSON.stringify({
+        text: 'QA gate synthetic reject target — About clarity',
+        websiteId: FIXTURE.websiteId,
+        pageId: about?.pageId,
+      }),
+    });
+    const syntheticId = created.changeRequest.changeRequestId;
+    if (syntheticId === FIXTURE.changeRequestId) {
+      throw new Error('Synthetic CR unexpectedly reused pilot id');
+    }
+    const decided = await hub(`/api/website-studio/change-requests/${syntheticId}/decision`, {
+      method: 'POST',
+      body: JSON.stringify({ decision: 'reject', notes: 'qa-gate reject persistence' }),
+    });
+    const fetched = await hub(`/api/website-studio/change-requests/${syntheticId}`);
+    const rejectOk =
+      decided?.changeRequest?.status === 'Rejected' &&
+      decided?.changeRequest?.ownerStatus === 'Rejected' &&
+      fetched?.changeRequest?.ownerStatus === 'Rejected' &&
+      Boolean(fetched?.changeRequest?.reason || fetched?.changeRequest?.proposedContent);
+    addCheck(
+      'reject-persistence',
+      'Reject persistence (synthetic CR)',
+      rejectOk ? 'PASS' : 'FAIL',
+      JSON.stringify({
+        syntheticId,
+        status: fetched?.changeRequest?.status,
+        ownerStatus: fetched?.changeRequest?.ownerStatus,
+      }),
+    );
+    if (!rejectOk) {
+      defects.push({
+        id: 'DEF-REJECT-NOT-PERSISTED',
+        title: 'Reject does not persist Rejected owner state',
+        severity: 'HIGH',
+        ownerWorkflowStep: 'Change Review → Reject',
+        expected: 'ownerStatus=Rejected, History shows Rejected, draft preserved',
+        actual: JSON.stringify(fetched?.changeRequest || {}),
+        affectedComponent: 'decideChangeRequest/ChangeReviewScreen',
+        suggestedFix: 'Persist ownerStatus=Rejected and show CHANGE REJECTED confirmation UI',
+        retestRequired: true,
+      });
+    }
+  } catch (e) {
+    addCheck('reject-persistence', 'Reject persistence (synthetic CR)', 'FAIL', String(e));
+    defects.push({
+      id: 'DEF-REJECT-NOT-PERSISTED',
+      title: 'Reject persistence check failed',
+      severity: 'HIGH',
+      ownerWorkflowStep: 'Change Review → Reject',
+      expected: 'Rejected state persists',
+      actual: String(e),
+      affectedComponent: 'decideChangeRequest',
+      suggestedFix: 'Fix reject decision enrichment',
+      retestRequired: true,
+    });
+  }
+
   // Install playwright if needed + run browser flow
   const install = spawnSync('npm', ['install'], { cwd: HERE, encoding: 'utf8' });
   if (install.status !== 0) {
@@ -338,6 +478,43 @@ async function main() {
   const journeyPath = join(evidenceDir, 'owner-journey-result.json');
   if (existsSync(journeyPath)) {
     journey = JSON.parse(readFileSync(journeyPath, 'utf8'));
+  }
+  const multiPagePath = join(evidenceDir, 'multi-page-results.json');
+  if (existsSync(multiPagePath)) {
+    const mp = JSON.parse(readFileSync(multiPagePath, 'utf8'));
+    const failedPages = (mp.results || []).filter((r) => !r.pass);
+    addCheck(
+      'browser-multi-page',
+      'Browser multi-page identity',
+      failedPages.length === 0 ? 'PASS' : 'FAIL',
+      JSON.stringify(failedPages.slice(0, 5)),
+    );
+    if (failedPages.length) {
+      defects.push({
+        id: 'DEF-PAGE-IDENTITY-BROWSER',
+        title: 'Browser multi-page identity failed',
+        severity: 'CRITICAL',
+        ownerWorkflowStep: 'Pages → Edit',
+        expected: 'Editor/preview/Advisor scoped to selected page',
+        actual: JSON.stringify(failedPages.slice(0, 5)),
+        affectedComponent: 'WebsiteStudioPage',
+        suggestedFix: 'Fix selectedPageId wiring and page inventory blocks',
+        retestRequired: true,
+      });
+    }
+  } else if (pw.status === 0) {
+    addCheck('browser-multi-page', 'Browser multi-page identity', 'FAIL', 'multi-page-results.json missing');
+  }
+  const decisionsPath = join(evidenceDir, 'decision-actions-results.json');
+  if (existsSync(decisionsPath)) {
+    const dec = JSON.parse(readFileSync(decisionsPath, 'utf8'));
+    const ok = Boolean(dec.syntheticRejectId && dec.syntheticRejectId !== FIXTURE.changeRequestId);
+    addCheck(
+      'browser-decision-actions',
+      'Browser decision actions (synthetic)',
+      ok ? 'PASS' : 'FAIL',
+      JSON.stringify(dec),
+    );
   }
 
   // Approval persistence + invalidation (API), then restore for Manny

@@ -1,0 +1,44 @@
+{
+  "results": [
+    {
+      "page": "Home",
+      "pass": true,
+      "detail": "http://127.0.0.1:8765/"
+    },
+    {
+      "page": "about",
+      "pass": true,
+      "detail": "src=http://127.0.0.1:8765/about.html; option=About Us; top=TOP RECOMMENDATION\nAdd a primary call-to-action on this page\nHigh Impact · Low E"
+    },
+    {
+      "page": "funding",
+      "pass": true,
+      "detail": "src=http://127.0.0.1:8765/funding.html; option=Funding; top=TOP RECOMMENDATION\nAdd a clear, outcome-driven Funding | High Value Capital Grou"
+    },
+    {
+      "page": "faq",
+      "pass": true,
+      "detail": "src=http://127.0.0.1:8765/faq.html; option=FAQ; top=TOP RECOMMENDATION\nAdd a primary call-to-action on this page\nHigh Impact · Low E"
+    },
+    {
+      "page": "contact",
+      "pass": true,
+      "detail": "src=http://127.0.0.1:8765/contact.html; option=Contact; top=TOP RECOMMENDATION\nAdd a clear, outcome-driven Contact | High Value Capital Grou"
+    },
+    {
+      "page": "book",
+      "pass": true,
+      "detail": "src=http://127.0.0.1:8765/book-appointment.html; option=Book a Strategy Call; top=TOP RECOMMENDATION\nAdd a primary call-to-action on this page\nHigh Impact · Low E"
+    },
+    {
+      "page": "accessibility",
+      "pass": true,
+      "detail": "src=http://127.0.0.1:8765/accessibility.html; option=Accessibility; top=TOP RECOMMENDATION\nAdd a clear, outcome-driven Accessibility | High Value Capita"
+    },
+    {
+      "page": "random:/services/business-growth",
+      "pass": true,
+      "detail": "http://127.0.0.1:8765/services/business-growth.html"
+    }
+  ]
+}

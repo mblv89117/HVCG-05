@@ -31,6 +31,20 @@ describe('website-studio preview lifecycle', () => {
       }),
       'http://127.0.0.1:8765/about.html',
     );
+    assert.equal(
+      buildPreviewPageUrl('http://127.0.0.1:8765/', {
+        route: '/about',
+        sourceFile: 'website/staging/about.html',
+      }),
+      'http://127.0.0.1:8765/about.html',
+    );
+    assert.equal(
+      buildPreviewPageUrl('http://127.0.0.1:8766/', {
+        route: '/tools/roi-calculator',
+        sourceFile: 'website/staging/tools/roi-calculator.html',
+      }),
+      'http://127.0.0.1:8766/tools/roi-calculator.html',
+    );
   });
 
   it('resolves preview cwd to website/ package when present', () => {

@@ -134,13 +134,22 @@ export function ownerChangeTitle(cr: Record<string, unknown>): string {
 }
 
 export function ownerChangeStatus(cr: Record<string, unknown>): string {
+  const status = String(cr.status || '');
+  // Authoritative terminal states must win over stale persisted ownerStatus.
+  if (status === 'Rejected') return 'Rejected';
+  if (status === 'Cancelled') return 'Cancelled';
+  if (cr.savedForLater) return 'Saved for Later';
+  if (cr.ownerStatus && String(cr.ownerStatus) === 'Rejected') return 'Rejected';
   if (cr.phase6bPilot || cr.changeRequestId === 'wcr_96016971141f') {
+    if (status === 'Rejected') return 'Rejected';
     if (cr.visualQaConfirmedByManny) return 'Visual Approval Complete';
     if (cr.status === 'Committed' || cr.qaStatus === 'WAITING ON MANNY') {
       return 'Waiting for Visual Approval';
     }
   }
-  const status = String(cr.status || '');
+  if (cr.ownerStatus && String(cr.ownerStatus).trim()) {
+    return String(cr.ownerStatus);
+  }
   const map: Record<string, string> = {
     Draft: 'Draft',
     'AI Preparing': 'AI Preparing',

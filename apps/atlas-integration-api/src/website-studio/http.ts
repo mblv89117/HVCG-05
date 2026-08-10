@@ -451,7 +451,8 @@ export async function handleWebsiteStudioRoutes(opts: {
       await requirePrincipal(req, cfg);
       const url = new URL(req.url || '', 'http://local');
       const websiteId = url.searchParams.get('websiteId') || undefined;
-      send(res, 200, { changeRequests: ws.listChangeRequests(websiteId) }, origin);
+      // Enrich so ownerStatus stays authoritative for History / Rejected persistence.
+      send(res, 200, { changeRequests: ws.listOwnerChangeRequests(websiteId) }, origin);
       return true;
     }
 
@@ -503,7 +504,7 @@ export async function handleWebsiteStudioRoutes(opts: {
     const crMatch = path.match(/^\/api\/website-studio\/change-requests\/([^/]+)$/);
     if (method === 'GET' && crMatch) {
       await requirePrincipal(req, cfg);
-      const cr = ws.getChangeRequest(crMatch[1]);
+      const cr = ws.enrichChangeRequest(ws.getChangeRequest(crMatch[1]));
       send(res, 200, { changeRequest: cr, qa: ws.getQa(cr.changeRequestId) }, origin);
       return true;
     }
