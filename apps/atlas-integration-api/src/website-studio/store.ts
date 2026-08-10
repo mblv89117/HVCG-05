@@ -18,6 +18,7 @@ import {
   type WebsiteChangeRequest,
   type WebsiteDiscoveryResult,
   type WebsitePageRecord,
+  type WebsiteProductionBaseline,
   type WebsiteRegistryRecord,
 } from '@hvcg/atlas-integration-core';
 
@@ -131,6 +132,22 @@ CREATE TABLE IF NOT EXISTS audit (
       this.db
         .prepare('INSERT INTO schema_migrations(version, applied_at, label) VALUES (1, ?, ?)')
         .run(new Date().toISOString(), WEBSITE_STUDIO_SCHEMA_VERSION);
+    }
+    const row2 = this.db
+      .prepare('SELECT MAX(version) AS v FROM schema_migrations')
+      .get() as { v: number | null } | undefined;
+    if ((row2?.v ?? 0) < 2) {
+      this.db.exec(`
+CREATE TABLE IF NOT EXISTS baselines (
+  baseline_id TEXT PRIMARY KEY,
+  website_id TEXT NOT NULL,
+  record_json TEXT NOT NULL,
+  captured_at TEXT NOT NULL
+);
+`);
+      this.db
+        .prepare('INSERT INTO schema_migrations(version, applied_at, label) VALUES (2, ?, ?)')
+        .run(new Date().toISOString(), 'phase6b-baselines');
     }
   }
 
@@ -384,6 +401,32 @@ CREATE TABLE IF NOT EXISTS audit (
         record_json: string;
       }>
     ).map((r) => JSON.parse(r.record_json) as RollbackRecord);
+  }
+
+  upsertBaseline(rec: WebsiteProductionBaseline) {
+    this.db
+      .prepare(
+        `INSERT INTO baselines(baseline_id, website_id, record_json, captured_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT(baseline_id) DO UPDATE SET record_json=excluded.record_json, captured_at=excluded.captured_at`,
+      )
+      .run(rec.baselineId, rec.websiteId, JSON.stringify(rec), rec.capturedAt);
+  }
+
+  listBaselines(websiteId?: string): WebsiteProductionBaseline[] {
+    const rows = websiteId
+      ? (this.db
+          .prepare(
+            'SELECT record_json FROM baselines WHERE website_id = ? ORDER BY captured_at DESC',
+          )
+          .all(websiteId) as Array<{ record_json: string }>)
+      : (this.db
+          .prepare('SELECT record_json FROM baselines ORDER BY captured_at DESC')
+          .all() as Array<{ record_json: string }>);
+    return rows.map((r) => JSON.parse(r.record_json) as WebsiteProductionBaseline);
+  }
+
+  latestBaseline(websiteId: string): WebsiteProductionBaseline | null {
+    return this.listBaselines(websiteId)[0] || null;
   }
 
   exists(): boolean {

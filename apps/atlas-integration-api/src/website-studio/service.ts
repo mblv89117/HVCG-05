@@ -8,12 +8,15 @@ import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
   AUTOMATION_OWNER,
+  HVCG_PILOT_WEBSITE_ID,
   LOCAL_AI_OWNER,
   MANNY_OWNER,
+  PRODUCTION_DEPLOY_GATE,
   WEBSITE_STUDIO_ACCESS,
   WEBSITE_STUDIO_BANNER,
   WEBSITE_STUDIO_NO_DEPLOY,
   WEBSITE_STUDIO_NO_PUSH,
+  WEBSITE_STUDIO_PHASE6B_BANNER,
   assertWebsiteAiAllowed,
   buildDefaultQaChecklist,
   classifyWebsiteChange,
@@ -26,7 +29,6 @@ import {
   syntheticWebsiteFixtures,
   validateSeoFields,
   type ChangeRequestStatus,
-  type ContentBlockRecord,
   type DeploymentRecord,
   type PreviewSession,
   type QaChecklistItem,
@@ -40,6 +42,7 @@ import {
 } from '@hvcg/atlas-integration-core';
 import { discoverLocalRepository } from './discovery.ts';
 import { WebsiteGitAdapter } from './gitAdapter.ts';
+import { Phase6bPilotController } from './phase6b.ts';
 import { WebsiteStudioStore, resolveWebsiteStudioDbPath } from './store.ts';
 
 function nowIso() {
@@ -48,12 +51,14 @@ function nowIso() {
 
 export class WebsiteStudioService {
   readonly store: WebsiteStudioStore;
+  readonly phase6b: Phase6bPilotController;
   private seedDone = false;
 
   constructor(opts: { repoRoot: string; env?: Record<string, string | undefined>; dbPath?: string }) {
     const env = opts.env || process.env;
     const dbPath = opts.dbPath || resolveWebsiteStudioDbPath(env, opts.repoRoot);
     this.store = new WebsiteStudioStore(dbPath);
+    this.phase6b = new Phase6bPilotController(this.store);
     this.ensureSyntheticSeed();
   }
 
@@ -81,7 +86,9 @@ export class WebsiteStudioService {
       studio: WEBSITE_STUDIO_BANNER,
       noDeploy: WEBSITE_STUDIO_NO_DEPLOY,
       noPush: WEBSITE_STUDIO_NO_PUSH,
-      phase: '6A',
+      phase6b: WEBSITE_STUDIO_PHASE6B_BANNER,
+      productionDeployGate: PRODUCTION_DEPLOY_GATE,
+      phase: '6B',
       access: WEBSITE_STUDIO_ACCESS,
     };
   }
@@ -858,6 +865,94 @@ export class WebsiteStudioService {
         noDeploy: WEBSITE_STUDIO_NO_DEPLOY,
         noPush: WEBSITE_STUDIO_NO_PUSH,
       },
+    };
+  }
+
+  /** Phase 6B — register Candidate A, discover, baseline, create pilot CR (no file edits). */
+  bootstrapPhase6bPilot(opts?: { naturalLanguage?: string; worktreePath?: string }) {
+    const registered = this.phase6b.registerAndDiscover({ worktreePath: opts?.worktreePath });
+    const baseline = this.phase6b.captureBaseline(HVCG_PILOT_WEBSITE_ID);
+    const changeRequest = this.phase6b.createPilotHomepagePilot({
+      naturalLanguage: opts?.naturalLanguage,
+    });
+    const qa = buildDefaultQaChecklist(changeRequest);
+    this.store.saveQa(changeRequest.changeRequestId, qa);
+    return {
+      registered,
+      baseline,
+      changeRequest,
+      qa,
+      filesModified: false,
+      productionDeployAuthorized: false,
+      candidateBRegistered: false,
+    };
+  }
+
+  phase6bSetFinalWording(
+    changeRequestId: string,
+    opts: { selectedVariantId?: string | null; customWording?: string | null; rejectAll?: boolean },
+  ) {
+    return this.phase6b.setMannyFinalWording(changeRequestId, opts);
+  }
+
+  phase6bApproveFinalWording(changeRequestId: string) {
+    return this.phase6b.approveFinalWording(changeRequestId);
+  }
+
+  phase6bApply(changeRequestId: string) {
+    return this.phase6b.applyPilotChange(changeRequestId);
+  }
+
+  phase6bConfirmVisualQa(changeRequestId: string, confirmed: boolean) {
+    return this.phase6b.confirmVisualQa(changeRequestId, confirmed);
+  }
+
+  phase6bCommit(changeRequestId: string, message?: string) {
+    return this.phase6b.commitPilot(changeRequestId, message);
+  }
+
+  phase6bAuthorizePush(changeRequestId: string, approved: boolean) {
+    return this.phase6b.authorizePush(changeRequestId, approved);
+  }
+
+  phase6bPush(changeRequestId: string) {
+    return this.phase6b.pushPilot(changeRequestId);
+  }
+
+  phase6bRejectMerge() {
+    return this.phase6b.rejectMergeOrDeploy('merge');
+  }
+
+  listBaselines(websiteId?: string) {
+    return this.store.listBaselines(websiteId);
+  }
+
+  getPilotReviewPanel(changeRequestId: string) {
+    const cr = this.getChangeRequest(changeRequestId);
+    return {
+      request: cr.naturalLanguageRequest || cr.reason,
+      originalContent: cr.originalContent,
+      aiProposals: cr.aiProposals || [],
+      recommendedVariantId: cr.recommendedVariantId,
+      mannyFinalWording: cr.mannyFinalWording,
+      finalWordingApproved: cr.finalWordingApproved,
+      filesModified: cr.filesModified === true,
+      gitDiff: null as string | null,
+      filesChanged: cr.filesExpectedToChange,
+      branch: cr.gitBranch,
+      baselineCommit: cr.baselineCommit,
+      changeSha: cr.commit,
+      buildResult: cr.buildResult,
+      testResult: cr.testResult,
+      seoResult: cr.seoImpact,
+      previewUrl: cr.previewUrl,
+      visualQaState: cr.visualQaConfirmedByManny ? 'Confirmed by Manny' : 'Pending Manny visual QA',
+      risk: cr.riskLevel,
+      estimatedReviewMinutes: cr.timeProtection.estimatedReviewMinutes,
+      estimatedTimeSavedMinutes: cr.timeProtection.estimatedTimeSavedMinutes,
+      rollbackPoint: cr.rollbackReference,
+      productionDeployment: PRODUCTION_DEPLOY_GATE,
+      deployDisabled: true,
     };
   }
 }

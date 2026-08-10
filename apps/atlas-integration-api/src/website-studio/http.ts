@@ -322,6 +322,113 @@ export async function handleWebsiteStudioRoutes(opts: {
       return true;
     }
 
+    if (method === 'POST' && path === '/api/website-studio/phase6b/bootstrap') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const result = ws.bootstrapPhase6bPilot({
+        naturalLanguage: body.naturalLanguage ? String(body.naturalLanguage) : undefined,
+        worktreePath: body.worktreePath ? String(body.worktreePath) : undefined,
+      });
+      send(res, 201, result, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/website-studio/baselines') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const websiteId = url.searchParams.get('websiteId') || undefined;
+      send(res, 200, { baselines: ws.listBaselines(websiteId) }, origin);
+      return true;
+    }
+
+    const reviewMatch = path.match(/^\/api\/website-studio\/change-requests\/([^/]+)\/review-panel$/);
+    if (method === 'GET' && reviewMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { panel: ws.getPilotReviewPanel(reviewMatch[1]) }, origin);
+      return true;
+    }
+
+    const finalMatch = path.match(/^\/api\/website-studio\/change-requests\/([^/]+)\/final-wording$/);
+    if (method === 'POST' && finalMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const cr = ws.phase6bSetFinalWording(finalMatch[1], {
+        selectedVariantId: body.selectedVariantId != null ? String(body.selectedVariantId) : null,
+        customWording: body.customWording != null ? String(body.customWording) : null,
+        rejectAll: Boolean(body.rejectAll),
+      });
+      send(res, 200, { changeRequest: cr, filesModified: false }, origin);
+      return true;
+    }
+
+    const approveFinalMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/approve-final-wording$/,
+    );
+    if (method === 'POST' && approveFinalMatch) {
+      await requirePrincipal(req, cfg);
+      const cr = ws.phase6bApproveFinalWording(approveFinalMatch[1]);
+      send(res, 200, { changeRequest: cr, filesModified: false }, origin);
+      return true;
+    }
+
+    const applyPilotMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/apply-pilot$/,
+    );
+    if (method === 'POST' && applyPilotMatch) {
+      await requirePrincipal(req, cfg);
+      const result = ws.phase6bApply(applyPilotMatch[1]);
+      send(res, 200, { ...result, pushed: false, deployed: false }, origin);
+      return true;
+    }
+
+    const visualQaMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/visual-qa$/,
+    );
+    if (method === 'POST' && visualQaMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const cr = ws.phase6bConfirmVisualQa(visualQaMatch[1], Boolean(body.confirmed));
+      send(res, 200, { changeRequest: cr }, origin);
+      return true;
+    }
+
+    const commitPilotMatch = path.match(/^\/api\/website-studio\/change-requests\/([^/]+)\/commit$/);
+    if (method === 'POST' && commitPilotMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const result = ws.phase6bCommit(
+        commitPilotMatch[1],
+        body.message ? String(body.message) : undefined,
+      );
+      send(res, 200, { ...result, pushed: false }, origin);
+      return true;
+    }
+
+    const pushAuthMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/authorize-push$/,
+    );
+    if (method === 'POST' && pushAuthMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const cr = ws.phase6bAuthorizePush(pushAuthMatch[1], Boolean(body.approved));
+      send(res, 200, { changeRequest: cr }, origin);
+      return true;
+    }
+
+    const pushMatch = path.match(/^\/api\/website-studio\/change-requests\/([^/]+)\/push$/);
+    if (method === 'POST' && pushMatch) {
+      await requirePrincipal(req, cfg);
+      const result = ws.phase6bPush(pushMatch[1]);
+      send(res, 200, result, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/website-studio/forbidden/merge') {
+      await requirePrincipal(req, cfg);
+      ws.phase6bRejectMerge();
+      return true;
+    }
+
     send(res, 404, { error: 'not_found', message: `Unknown Website Studio route: ${path}` }, origin);
     return true;
   } catch (err) {

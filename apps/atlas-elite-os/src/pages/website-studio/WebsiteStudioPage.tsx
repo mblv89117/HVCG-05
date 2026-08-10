@@ -22,6 +22,8 @@ import { useMicrosoftAuth } from '../../microsoft/auth/AuthProvider';
 import { useHubAuth } from '../../integrations/hub/useHubAuth';
 import {
   applyWebsiteStudioLocal,
+  approveWebsiteStudioFinalWording,
+  bootstrapWebsiteStudioPhase6b,
   decideWebsiteStudioChangeRequest,
   fetchWebsiteStudioBlocks,
   fetchWebsiteStudioChangeRequests,
@@ -31,6 +33,7 @@ import {
   fetchWebsiteStudioHealth,
   fetchWebsiteStudioMedia,
   fetchWebsiteStudioPages,
+  fetchWebsiteStudioReviewPanel,
   fetchWebsiteStudioRollbacks,
   fetchWebsiteStudioSeo,
   fetchWebsiteStudioWebsites,
@@ -38,6 +41,7 @@ import {
   postWebsiteStudioNaturalLanguage,
   postWebsiteStudioPreview,
   scaffoldWebsiteStudioDeployment,
+  setWebsiteStudioFinalWording,
 } from '../../integrations/hub/api';
 
 const SECTIONS = [
@@ -77,10 +81,12 @@ export function WebsiteStudioPage() {
   const [rollbacks, setRollbacks] = useState<Array<Record<string, unknown>>>([]);
   const [seo, setSeo] = useState<Record<string, unknown> | null>(null);
   const [nlText, setNlText] = useState(
-    'Change the homepage headline to emphasize capital advisory.',
+    'Update the HVCG homepage headline to emphasize strategic capital advisory and business growth.',
   );
   const [busy, setBusy] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
+  const [customWording, setCustomWording] = useState('');
+  const [pilotPanel, setPilotPanel] = useState<Record<string, unknown> | null>(null);
 
   const setSection = (s: Section) => {
     const next = new URLSearchParams(params);
@@ -253,6 +259,90 @@ export function WebsiteStudioPage() {
     }
   };
 
+  const bootstrapPhase6b = async () => {
+    if (!hubAuth) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await bootstrapWebsiteStudioPhase6b(hubAuth, { naturalLanguage: nlText });
+      const cr = res.changeRequest as Record<string, unknown>;
+      setLastResult(
+        `Phase 6B bootstrap complete — CR ${String(cr.changeRequestId)} — filesModified=false`,
+      );
+      const panel = await fetchWebsiteStudioReviewPanel(hubAuth, String(cr.changeRequestId));
+      setPilotPanel(panel.panel);
+      setSection('Change Requests');
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const selectVariant = async (crId: string, variantId: string) => {
+    if (!hubAuth) return;
+    setBusy(true);
+    try {
+      await setWebsiteStudioFinalWording(hubAuth, crId, { selectedVariantId: variantId });
+      const panel = await fetchWebsiteStudioReviewPanel(hubAuth, crId);
+      setPilotPanel(panel.panel);
+      setLastResult(`Staged variant ${variantId} — files still unmodified`);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const stageCustom = async (crId: string) => {
+    if (!hubAuth) return;
+    setBusy(true);
+    try {
+      await setWebsiteStudioFinalWording(hubAuth, crId, { customWording });
+      const panel = await fetchWebsiteStudioReviewPanel(hubAuth, crId);
+      setPilotPanel(panel.panel);
+      setLastResult('Custom final wording staged — approve exact wording next');
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const approveFinal = async (crId: string) => {
+    if (!hubAuth) return;
+    setBusy(true);
+    try {
+      const res = await approveWebsiteStudioFinalWording(hubAuth, crId);
+      setLastResult(
+        `Final wording approved (filesModified=${String(res.filesModified)}) — apply still separate`,
+      );
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const rejectAllProposals = async (crId: string) => {
+    if (!hubAuth) return;
+    setBusy(true);
+    try {
+      await setWebsiteStudioFinalWording(hubAuth, crId, { rejectAll: true });
+      setLastResult('All proposals rejected — no files modified');
+      setPilotPanel(null);
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!account) {
     return (
       <ModuleScaffold title="Website Studio" subtitle="Sign in required">
@@ -269,11 +359,25 @@ export function WebsiteStudioPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <MessageBar intent="warning">
           <MessageBarBody>
-            <MessageBarTitle>LOCAL CONTROL PLANE ONLY</MessageBarTitle>
-            No Production website edits, no push, no merge, no deploy in Phase 6A. Manny remains
-            final approval authority.
+            <MessageBarTitle>PHASE 6B — HVCG PILOT (NO PRODUCTION DEPLOY)</MessageBarTitle>
+            Candidate A only. No Production website edits on main. No merge/deploy/DNS/secrets.
+            Deploy remains gated: PRODUCTION DEPLOYMENT REQUIRES SEPARATE MANNY AUTHORIZATION.
           </MessageBarBody>
         </MessageBar>
+
+        <AtlasCard>
+          <Text weight="semibold">Phase 6B HVCG bootstrap</Text>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Registers Candidate A from the clean pilot worktree, captures baseline, and creates a
+            Tier A homepage headline change request with 3 AI variants. Does not modify website
+            files.
+          </Caption1>
+          <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button appearance="primary" disabled={busy} onClick={() => void bootstrapPhase6b()}>
+              Bootstrap HVCG Phase 6B pilot
+            </Button>
+          </div>
+        </AtlasCard>
 
         {error ? (
           <MessageBar intent="error">
@@ -457,6 +561,90 @@ export function WebsiteStudioPage() {
 
         {section === 'Change Requests' || section === 'Preview & QA' ? (
           <>
+            {pilotPanel ? (
+              <AtlasCard>
+                <Text weight="semibold">Pilot change review panel</Text>
+                <Caption1 style={{ display: 'block' }}>
+                  Original: {String(pilotPanel.originalContent || '')}
+                </Caption1>
+                <Caption1 style={{ display: 'block' }}>
+                  Deploy: {String(pilotPanel.productionDeployment)} (button disabled)
+                </Caption1>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  {((pilotPanel.aiProposals as Array<Record<string, unknown>>) || []).map((v) => (
+                    <li
+                      key={String(v.variantId)}
+                      style={{
+                        borderTop: '1px solid var(--colorNeutralStroke2)',
+                        padding: '10px 0',
+                      }}
+                    >
+                      <Text weight="semibold">
+                        {String(v.label)}
+                        {v.recommended ? ' ★ recommended' : ''}
+                      </Text>
+                      <div>{String(v.text)}</div>
+                      <Caption1>{String(v.recommendationReason || v.brandConsistencyNotes)}</Caption1>
+                      <Button
+                        size="small"
+                        style={{ marginTop: 6 }}
+                        disabled={busy}
+                        onClick={() => {
+                          const pilotCr = changeRequests.find((c) => c.phase6bPilot);
+                          if (pilotCr) void selectVariant(String(pilotCr.changeRequestId), String(v.variantId));
+                        }}
+                      >
+                        Select this variant
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+                <Textarea
+                  value={customWording}
+                  onChange={(_, d) => setCustomWording(d.value)}
+                  placeholder="Or write/combine your own final wording"
+                  style={{ width: '100%', minHeight: 70, marginTop: 8 }}
+                />
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  <Button
+                    size="small"
+                    disabled={busy || !customWording.trim()}
+                    onClick={() => {
+                      const pilotCr = changeRequests.find((c) => c.phase6bPilot);
+                      if (pilotCr) void stageCustom(String(pilotCr.changeRequestId));
+                    }}
+                  >
+                    Stage custom wording
+                  </Button>
+                  <Button
+                    size="small"
+                    appearance="primary"
+                    disabled={busy}
+                    onClick={() => {
+                      const pilotCr = changeRequests.find((c) => c.phase6bPilot);
+                      if (pilotCr) void approveFinal(String(pilotCr.changeRequestId));
+                    }}
+                  >
+                    Approve exact final wording
+                  </Button>
+                  <Button
+                    size="small"
+                    disabled={busy}
+                    onClick={() => {
+                      const pilotCr = changeRequests.find((c) => c.phase6bPilot);
+                      if (pilotCr) void rejectAllProposals(String(pilotCr.changeRequestId));
+                    }}
+                  >
+                    Reject all proposals
+                  </Button>
+                </div>
+                <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                  Files are not modified until you approve exact final wording and a separate apply
+                  step runs on the pilot worktree only.
+                </Caption1>
+              </AtlasCard>
+            ) : null}
+
             <AtlasCard>
               <Text weight="semibold">Natural-language edit</Text>
               <Caption1>

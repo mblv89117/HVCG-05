@@ -1,0 +1,24 @@
+{
+  "phase": "6B",
+  "results": {
+    "website-studio-phase6a.test.ts": {
+      "pass": 11,
+      "fail": 0
+    },
+    "website-studio-phase6b.test.ts": {
+      "pass": 4,
+      "fail": 0
+    }
+  },
+  "bootstrap": {
+    "changeRequestId": "wcr_96016971141f",
+    "baselineCommit": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+    "filesModified": false,
+    "websitePush": "not authorized",
+    "productionDeploy": false
+  },
+  "secretScan": "clean",
+  "ranAt": "2026-08-10T00:23:19.806162+00:00",
+  "verdictCandidate": "PHASE 6B READY WITH NON-BLOCKING ITEMS",
+  "awaiting": "Manny exact final wording approval before file apply"
+}

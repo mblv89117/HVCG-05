@@ -1438,3 +1438,54 @@ export async function fetchWebsiteStudioAudit(auth: AtlasHubAuthHeaders) {
   const res = await fetch(`${base()}/api/website-studio/audit`, { headers: headers(auth) });
   return parse(res) as Promise<{ audit: Array<Record<string, unknown>> }>;
 }
+
+/** Phase 6B — HVCG real-repo pilot */
+export async function bootstrapWebsiteStudioPhase6b(
+  auth: AtlasHubAuthHeaders,
+  body?: { naturalLanguage?: string; worktreePath?: string },
+) {
+  const res = await fetch(`${base()}/api/website-studio/phase6b/bootstrap`, {
+    method: 'POST',
+    headers: { ...headers(auth), 'content-type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  return parse(res) as Promise<Record<string, unknown>>;
+}
+
+export async function fetchWebsiteStudioReviewPanel(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/review-panel`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ panel: Record<string, unknown> }>;
+}
+
+export async function setWebsiteStudioFinalWording(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  body: { selectedVariantId?: string | null; customWording?: string | null; rejectAll?: boolean },
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/final-wording`,
+    {
+      method: 'POST',
+      headers: { ...headers(auth), 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown>; filesModified: boolean }>;
+}
+
+export async function approveWebsiteStudioFinalWording(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/approve-final-wording`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown>; filesModified: boolean }>;
+}

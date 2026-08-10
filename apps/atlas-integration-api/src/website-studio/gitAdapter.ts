@@ -142,7 +142,36 @@ export class WebsiteGitAdapter {
       head: this.status().currentBranch,
       draft: true,
       created: false,
-      phase6aNote: 'PR metadata prepared only — no push/create in Phase 6A',
+      phase6aNote: 'PR metadata prepared only — create requires separate Manny authorization',
+    };
+  }
+
+  /**
+   * Phase 6B: push only the current website-studio/* feature branch.
+   * Never force, never push main/master, never merge.
+   */
+  pushFeatureBranch(remote = 'origin') {
+    const st = this.status();
+    if (st.currentBranch === 'main' || st.currentBranch === 'master') {
+      throw Object.assign(new Error('Refusing to push production branch'), {
+        status: 403,
+        code: 'production_push_forbidden',
+      });
+    }
+    if (!st.currentBranch.startsWith('website-studio/')) {
+      throw Object.assign(new Error('Push only allowed for website-studio/* branches'), {
+        status: 403,
+        code: 'branch_not_website_studio',
+      });
+    }
+    run(this.repoPath, ['push', '-u', remote, st.currentBranch]);
+    return {
+      pushed: true,
+      remoteBranch: `${remote}/${st.currentBranch}`,
+      branch: st.currentBranch,
+      commit: this.status().head,
+      merge: false,
+      deploy: false,
     };
   }
 }

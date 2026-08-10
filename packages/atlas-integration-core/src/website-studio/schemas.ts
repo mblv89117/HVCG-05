@@ -6,10 +6,16 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { MANNY_OWNER, LOCAL_AI_OWNER, FUTURE_OPERATOR_OWNER, AUTOMATION_OWNER } from '../local-ai/ownership.ts';
 
-export const WEBSITE_STUDIO_SCHEMA_VERSION = '1.0.0-phase6a';
+export const WEBSITE_STUDIO_SCHEMA_VERSION = '1.1.0-phase6b';
 export const WEBSITE_STUDIO_BANNER = 'WEBSITE STUDIO — LOCAL CONTROL PLANE ONLY';
-export const WEBSITE_STUDIO_NO_DEPLOY = 'NO PRODUCTION DEPLOY IN PHASE 6A';
+export const WEBSITE_STUDIO_NO_DEPLOY = 'NO PRODUCTION DEPLOY IN PHASE 6A/6B';
 export const WEBSITE_STUDIO_NO_PUSH = 'NO PUSH / MERGE / PRODUCTION BRANCH EDIT';
+export const WEBSITE_STUDIO_PHASE6B_BANNER =
+  'PHASE 6B — HVCG REAL REPO PILOT (NO PRODUCTION DEPLOY)';
+export const HVCG_PILOT_WEBSITE_ID = 'ws_hvcg_real';
+export const HVCG_PILOT_BRANCH = 'website-studio/hvcg-pilot';
+export const PRODUCTION_DEPLOY_GATE =
+  'PRODUCTION DEPLOYMENT REQUIRES SEPARATE MANNY AUTHORIZATION';
 
 export const WEBSITE_FRAMEWORKS = [
   'Next.js',
@@ -309,6 +315,37 @@ export interface FormInventoryRecord {
   endpointIsHighRisk: boolean;
 }
 
+export interface AiCopyProposalVariant {
+  variantId: string;
+  label: string;
+  text: string;
+  recommended: boolean;
+  recommendationReason: string | null;
+  brandConsistencyNotes: string;
+  seoImplications: string;
+  ctaImplications: string;
+  readabilityNotes: string;
+  risks: string[];
+  factualClaimsNeedingVerification: string[];
+}
+
+export interface WebsiteProductionBaseline {
+  baselineId: string;
+  websiteId: string;
+  productionBranch: string;
+  baselineCommit: string;
+  pageInventoryCount: number;
+  seoInventoryCount: number;
+  formInventoryCount: number;
+  mediaInventoryCount: number;
+  deploymentConfigFingerprint: string;
+  buildResult: string | null;
+  capturedAt: string;
+  worktreePath: string | null;
+  pilotBranch: string | null;
+  notes: string[];
+}
+
 export interface WebsiteChangeRequest {
   changeRequestId: string;
   websiteId: string;
@@ -349,8 +386,25 @@ export interface WebsiteChangeRequest {
   };
   createdAt: string;
   updatedAt: string;
-  phase6aNoPush: true;
+  /** Default true; Phase 6B may set false only after explicit Manny push approval. */
+  phase6aNoPush: boolean;
   phase6aNoDeploy: true;
+  /** Phase 6B pilot extensions */
+  phase6bPilot?: boolean;
+  aiProposals?: AiCopyProposalVariant[];
+  recommendedVariantId?: string | null;
+  selectedVariantId?: string | null;
+  mannyFinalWording?: string | null;
+  finalWordingApproved?: boolean;
+  filesModified?: boolean;
+  baselineCommit?: string | null;
+  worktreePath?: string | null;
+  previewUrl?: string | null;
+  buildResult?: string | null;
+  testResult?: string | null;
+  visualQaConfirmedByManny?: boolean;
+  mannyPushApproved?: boolean;
+  productionDeploymentAuthorized?: false;
 }
 
 export interface QaChecklistItem {
@@ -460,13 +514,16 @@ export function classifyWebsiteChange(input: {
   const reasons: string[] = [];
   const highRisk =
     input.touchesHighRisk ||
-    HIGH_RISK_CHANGE_KEYWORDS.some((k) => blob.includes(k));
-  if (highRisk || /dns|secret|\.env|auth provider|payment provider|migration/.test(blob)) {
+    HIGH_RISK_CHANGE_KEYWORDS.some((k) => {
+      const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(blob);
+    });
+  if (highRisk || /\b(dns|secret|\.env|auth provider|payment provider|migration)\b/.test(blob)) {
     reasons.push('Restricted / high-risk keywords detected');
     return { tier: 'Tier D — Restricted Production Change', riskLevel: 'Critical', reasons };
   }
   if (
-    /api|integration|webhook|database|authentication|payment|deploy|hosting config/.test(blob) ||
+    /\b(api|integration|webhook|database|authentication|payment|deploy|hosting config)\b/.test(blob) ||
     input.requestType === 'developer'
   ) {
     reasons.push('Developer-style code/integration change');
@@ -577,6 +634,64 @@ export function newChangeRequestId(): string {
 
 export function newWebsiteId(): string {
   return `ws_${randomUUID().replace(/-/g, '').slice(0, 10)}`;
+}
+
+export function newBaselineId(): string {
+  return `wbl_${randomUUID().replace(/-/g, '').slice(0, 12)}`;
+}
+
+export function buildHeadlinePilotProposals(original: string): {
+  variants: AiCopyProposalVariant[];
+  recommendedVariantId: string;
+} {
+  const v1: AiCopyProposalVariant = {
+    variantId: 'variant_a',
+    label: 'Variant A — Strategic growth emphasis',
+    text: 'Strategic capital advisory that helps your business grow, qualify for capital, and increase enterprise value.',
+    recommended: false,
+    recommendationReason: null,
+    brandConsistencyNotes:
+      'Keeps HVCG capital + growth language; slightly more advisory tone than the diagnostic original.',
+    seoImplications:
+      'Adds “strategic capital advisory” and “enterprise value” phrases useful for advisory intent queries; longer than current H1.',
+    ctaImplications:
+      'Supports EVA / consultation CTAs by framing advisory outcomes rather than only a diagnostic question.',
+    readabilityNotes: 'Single sentence, clear benefit stack; moderate length.',
+    risks: ['Slightly less “curiosity gap” than the current question-form H1'],
+    factualClaimsNeedingVerification: [],
+  };
+  const v2: AiCopyProposalVariant = {
+    variantId: 'variant_b',
+    label: 'Variant B — Recommended (balanced)',
+    text: 'Strategic capital advisory for business growth — find what is holding you back from capital and higher enterprise value.',
+    recommended: true,
+    recommendationReason:
+      'Balances brand diagnostic voice with explicit strategic capital advisory and growth framing Manny requested, without inventing credentials or outcomes.',
+    brandConsistencyNotes:
+      'Preserves HVCG “find what is holding you back” motif while elevating strategic capital advisory.',
+    seoImplications:
+      'Targets strategic capital advisory + business growth + enterprise value; should not change title/meta unless separately requested.',
+    ctaImplications:
+      'Pairs well with Schedule / EVA CTAs; does not alter CTA labels.',
+    readabilityNotes: 'Readable at a glance; em dash separates promise and diagnostic hook.',
+    risks: ['Em dash may wrap awkwardly on very small mobile widths'],
+    factualClaimsNeedingVerification: [],
+  };
+  const v3: AiCopyProposalVariant = {
+    variantId: 'variant_c',
+    label: 'Variant C — Concise advisory',
+    text: 'Strategic capital advisory to grow your business and increase enterprise value.',
+    recommended: false,
+    recommendationReason: null,
+    brandConsistencyNotes: 'Most concise; drops the diagnostic question style of the current homepage.',
+    seoImplications: 'Strong head-term focus; may reduce long-tail “what is preventing” query overlap.',
+    ctaImplications: 'More declarative; CTA must carry the diagnostic invitation.',
+    readabilityNotes: 'Short and scannable; good mobile fit.',
+    risks: ['Largest departure from the proven current H1 pattern'],
+    factualClaimsNeedingVerification: [],
+  };
+  void original;
+  return { variants: [v1, v2, v3], recommendedVariantId: v2.variantId };
 }
 
 export { MANNY_OWNER, LOCAL_AI_OWNER, FUTURE_OPERATOR_OWNER, AUTOMATION_OWNER };
