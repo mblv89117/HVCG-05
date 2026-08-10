@@ -1348,6 +1348,7 @@ export async function postWebsiteStudioAiAssist(
     operation: string;
     content?: string;
     changeRequestId?: string;
+    pageId?: string;
   },
 ) {
   const res = await fetch(`${base()}/api/website-studio/ai/assist`, {

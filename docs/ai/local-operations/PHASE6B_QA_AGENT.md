@@ -38,6 +38,9 @@ READY FOR MANNY requires:
 - Draft preview (`:8765`) and baseline preview (`:8766`) must resolve page-specific paths (not always `/`)
 - Advisor must not recommend “homepage headline” while a non-Home page is selected
 - Randomized extra-page smoke is required on RELEASE GATE
+- **Owner click-path gate (mandatory):** Pages → About/Funding/FAQ/Contact → Edit → Draft → Review must keep that page (URL `?page=`, review trail, iframe src). Select-option-only or API-injected review URLs alone are a **FALSE POSITIVE**.
+- RELEASE GATE requires ≥50% non-Home page coverage in nav evidence and **must include About + Funding**
+- Prior READY FOR MANNY without this evidence is revoked as `FAILED QA — FALSE POSITIVE`
 
 ### Decision actions
 

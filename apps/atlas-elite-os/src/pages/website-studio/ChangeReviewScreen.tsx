@@ -79,6 +79,10 @@ export function ChangeReviewScreen(props: {
   const baseline = String(r.baselineCommit || '').slice(0, 12);
   const pilot = String(r.pilotCommit || '').slice(0, 12);
   const sameHeadline = beforeText.trim() === afterText.trim();
+  const pageMeta = (r.page || {}) as { pageName?: string; route?: string; pageId?: string };
+  const pageName = String(pageMeta.pageName || '').trim() || 'Page';
+  const pageRoute = String(pageMeta.route || '').trim();
+  const changeLabel = String(r.ownerTitle || `${pageName} Headline`);
   const previewUrls = (r.previewUrls || {}) as {
     before?: string | null;
     after?: string | null;
@@ -89,6 +93,10 @@ export function ChangeReviewScreen(props: {
   const afterUrl = props.previewUrlAfter || previewUrls.after || null;
   const beforePort = previewUrls.beforePort || 8766;
   const afterPort = previewUrls.afterPort || 8765;
+  // Guard: non-Home page review must not silently show root `/` iframes.
+  const pagePreviewMismatch =
+    Boolean(pageRoute && pageRoute !== '/') &&
+    ((beforeUrl && /:8766\/?$/i.test(beforeUrl)) || (afterUrl && /:8765\/?$/i.test(afterUrl)));
 
   if (props.rejectedResult) {
     return (
@@ -154,9 +162,9 @@ export function ChangeReviewScreen(props: {
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
             Website: {String((r.website as { websiteName?: string })?.websiteName)}
           </Caption1>
-          <Caption1 style={{ display: 'block' }}>
-            {String((r.page as { pageName?: string })?.pageName || 'Home')} → {String(r.section || 'Hero')} →{' '}
-            {String(r.ownerTitle)}
+          <Caption1 style={{ display: 'block' }} data-testid="ws-review-page-trail">
+            {pageName}
+            {pageRoute ? ` (${pageRoute})` : ''} → {String(r.section || 'Hero')} → {changeLabel}
           </Caption1>
           <Caption1 style={{ display: 'block' }}>
             Element: Main Headline · Risk: {String(r.risk || 'Low')}
@@ -171,8 +179,19 @@ export function ChangeReviewScreen(props: {
         </div>
       </div>
 
+      {pagePreviewMismatch ? (
+        <MessageBar intent="error">
+          <MessageBarBody>
+            Page context mismatch — review preview fell back to Home (`/`) while page is {pageName}.
+            Do not approve until Before/After URLs include this page path.
+          </MessageBarBody>
+        </MessageBar>
+      ) : null}
+
       <AtlasCard>
-        <Text weight="semibold">Homepage Headline</Text>
+        <Text weight="semibold" data-testid="ws-review-change-label">
+          {changeLabel}
+        </Text>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 12 }}>
           <div style={{ borderLeft: '4px solid #888', paddingLeft: 10 }}>
             <Caption1>BEFORE — Production baseline</Caption1>
@@ -420,8 +439,8 @@ export function ChangeReviewScreen(props: {
               }
               subtitle={
                 props.previewMode === 'before'
-                  ? `Baseline ${baseline} · ${String((r.website as { websiteName?: string })?.websiteName)} · Home → Homepage Headline · 127.0.0.1:${beforePort}`
-                  : `Draft ${String(r.changeRequestId)} · Pilot ${pilot} · NOT LIVE · 127.0.0.1:${afterPort}`
+                  ? `Baseline ${baseline} · ${String((r.website as { websiteName?: string })?.websiteName)} · ${pageName} → ${changeLabel} · 127.0.0.1:${beforePort}`
+                  : `Draft ${String(r.changeRequestId)} · ${pageName} · NOT LIVE · 127.0.0.1:${afterPort}`
               }
               src={props.previewMode === 'before' ? beforeUrl : afterUrl}
               frameKey={
@@ -446,8 +465,10 @@ export function ChangeReviewScreen(props: {
 
       {props.editOpen ? (
         <AtlasCard>
-          <Text weight="semibold">Edit · {String(r.ownerTitle)}</Text>
-          <Caption1 style={{ display: 'block', marginTop: 6 }}>Homepage → Hero → Headline</Caption1>
+          <Text weight="semibold">Edit · {changeLabel}</Text>
+          <Caption1 style={{ display: 'block', marginTop: 6 }}>
+            {pageName} → Hero → Headline
+          </Caption1>
           <Textarea
             value={props.editText}
             onChange={(_, d) => props.onEditText(d.value)}

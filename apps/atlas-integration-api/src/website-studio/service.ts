@@ -350,11 +350,21 @@ export class WebsiteStudioService {
     }
 
     const pages = this.store.listPages(website.websiteId);
+    // Prefer explicit pageId. Do not treat "headline" as Home. Do not fall back to pages[0]
+    // (often About alphabetically) or Home when the caller bound another page.
     let page =
       (opts.pageId && pages.find((p) => p.pageId === opts.pageId)) ||
-      pages.find((p) => /homepage|home page|hero/i.test(text) && p.route === '/') ||
-      pages.find((p) => /about/i.test(text) && /about/i.test(p.route)) ||
-      pages.find((p) => /service/i.test(text) && /service/i.test(p.route)) ||
+      pages.find((p) => /\babout\b/i.test(text) && /about/i.test(p.route)) ||
+      pages.find((p) => /\bfunding\b/i.test(text) && /funding/i.test(p.route)) ||
+      pages.find((p) => /\bfaq\b/i.test(text) && /faq/i.test(p.route)) ||
+      pages.find((p) => /\bcontact\b/i.test(text) && /contact/i.test(p.route)) ||
+      pages.find(
+        (p) =>
+          (/\bhomepage\b|\bhome page\b/i.test(text) ||
+            (/\bhome\b/i.test(text) && !/\babout\b|\bfunding\b|\bfaq\b|\bcontact\b/i.test(text))) &&
+          p.route === '/',
+      ) ||
+      pages.find((p) => p.route === '/') ||
       pages[0];
 
     const blocks = this.store.listBlocks(website.websiteId, page?.pageId);
@@ -466,6 +476,9 @@ export class WebsiteStudioService {
             files: input.filesExpectedToChange,
           });
     const now = nowIso();
+    const website = this.getWebsite(input.websiteId);
+    const baselineCommit =
+      website.lastRollbackPoint || this.store.latestBaseline(input.websiteId)?.baselineCommit || null;
     const cr: WebsiteChangeRequest = {
       changeRequestId: newChangeRequestId(),
       websiteId: input.websiteId,
@@ -495,7 +508,10 @@ export class WebsiteStudioService {
       commit: null,
       prUrl: null,
       deploymentStatus: 'Blocked — Phase 6A',
-      rollbackReference: null,
+      // Inherit website baseline + worktree so non-Home draft reviews keep page-scoped Before/After.
+      rollbackReference: baselineCommit,
+      baselineCommit,
+      worktreePath: website.localRepositoryPath || null,
       mannyApproval: null,
       productionApproval: null,
       status: input.status || 'Draft',
@@ -540,6 +556,7 @@ export class WebsiteStudioService {
     websiteId: string;
     operation: string;
     content?: string;
+    pageId?: string;
   }) {
     const op = assertWebsiteAiAllowed(opts.operation);
     const source =
@@ -552,6 +569,7 @@ export class WebsiteStudioService {
         ? this.store.getChangeRequest(opts.changeRequestId)!
         : this.createChangeRequest({
             websiteId: opts.websiteId,
+            pageId: opts.pageId || null,
             requestType: 'ai_patch',
             reason: `AI assist: ${op}`,
             originalContent: source,
@@ -1185,8 +1203,16 @@ export class WebsiteStudioService {
 
   enrichChangeRequest(cr: WebsiteChangeRequest): WebsiteChangeRequest & Record<string, unknown> {
     const enriched = cr as WebsiteChangeRequest & Record<string, unknown>;
-    enriched.ownerTitle = ownerChangeTitle(cr);
+    const page =
+      (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) || null;
+    enriched.ownerTitle = ownerChangeTitle(cr, page);
     enriched.ownerStatus = ownerFriendlyStatus(enriched);
+    enriched.pageRoute = page?.route || null;
+    enriched.pageName = page
+      ? page.route === '/'
+        ? 'Home'
+        : String(page.pageTitle || page.route || '')
+      : null;
     enriched.ownerQaGate = String(cr.ownerQaGate || 'NOT TESTED');
     enriched.contentFingerprint = fingerprintContent(exactDraftContent(cr));
     try {
@@ -1218,14 +1244,18 @@ export class WebsiteStudioService {
   getOwnerReview(changeRequestId: string) {
     const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
     const website = this.getWebsite(cr.websiteId);
+    // Never substitute Home when the CR is bound to another pageId.
     const page =
       (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
-      this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
-      null;
-    // Ensure preview is considered for identity
+      (!cr.pageId
+        ? this.store.listPages(cr.websiteId).find((p) => p.route === '/') || null
+        : null);
+    // Ensure preview is considered for identity — always page-scoped, never silent `/`.
     const health = websitePreviewManager.getState(cr.websiteId);
-    const afterUrl = health?.url || cr.previewUrl || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
-    const beforeUrl = `http://127.0.0.1:${BASELINE_PREVIEW_PORT}/`;
+    const afterBase = health?.url || cr.previewUrl || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
+    const beforeBase = `http://127.0.0.1:${BASELINE_PREVIEW_PORT}/`;
+    const afterUrl = buildPreviewPageUrl(afterBase, page) || afterBase;
+    const beforeUrl = buildPreviewPageUrl(beforeBase, page) || beforeBase;
     const previewIdentity = verifyPreviewIdentity({
       cr,
       website,
@@ -1260,24 +1290,36 @@ export class WebsiteStudioService {
         code: 'worktree_missing',
       });
     }
-    if (!cr.baselineCommit) {
+    const baselineCommit =
+      cr.baselineCommit ||
+      website.lastRollbackPoint ||
+      this.store.latestBaseline(cr.websiteId)?.baselineCommit ||
+      null;
+    if (!baselineCommit) {
       throw Object.assign(new Error('Baseline commit required for BEFORE preview'), {
         status: 400,
         code: 'baseline_commit_missing',
       });
     }
+    if (!cr.baselineCommit) {
+      (cr as WebsiteChangeRequest & { baselineCommit?: string | null }).baselineCommit =
+        baselineCommit;
+      this.store.upsertChangeRequest(cr);
+    }
 
     const pilot = await websitePreviewManager.start(website);
     const baseline = await ensureBaselinePreviewServer({
       worktreePath: worktree,
-      baselineCommit: cr.baselineCommit,
+      baselineCommit,
       port: BASELINE_PREVIEW_PORT,
     });
 
+    // Never fall back to Home when CR has an explicit non-Home pageId.
     const page =
       (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
-      this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
-      null;
+      (!cr.pageId
+        ? this.store.listPages(cr.websiteId).find((p) => p.route === '/') || null
+        : null);
     const beforeBase = baseline.url;
     const afterBase = pilot.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
     const beforeUrl = buildPreviewPageUrl(beforeBase, page) || beforeBase;
@@ -1290,7 +1332,7 @@ export class WebsiteStudioService {
         mode: 'before',
         url: beforeUrl,
         port: BASELINE_PREVIEW_PORT,
-        commit: cr.baselineCommit,
+        commit: baselineCommit,
         expectedH1: expectedBefore,
         documentRoot: baseline.documentRoot,
       }),
@@ -1307,8 +1349,22 @@ export class WebsiteStudioService {
     if (beforeProbe.port === afterProbe.port) {
       mismatches.push('BEFORE and AFTER must use different localhost ports');
     }
-    if (beforeProbe.h1 && afterProbe.h1 && beforeProbe.h1.trim() === afterProbe.h1.trim()) {
+    // Only enforce distinct H1 for Home pilot CRs — non-Home drafts may not rewrite H1 yet.
+    if (
+      (!page || page.route === '/') &&
+      beforeProbe.h1 &&
+      afterProbe.h1 &&
+      beforeProbe.h1.trim() === afterProbe.h1.trim()
+    ) {
       mismatches.push('BEFORE and AFTER rendered H1 are identical — false visual pass blocked');
+    }
+    // Fail closed if a non-Home CR still landed on `/` preview URLs.
+    if (page && page.route && page.route !== '/') {
+      if (/:8765\/?$/i.test(afterUrl) || /:8766\/?$/i.test(beforeUrl)) {
+        mismatches.push(
+          `Page-bound CR (${page.route}) must not preview at site root — got before=${beforeUrl} after=${afterUrl}`,
+        );
+      }
     }
 
     this.store.audit({
@@ -1319,8 +1375,10 @@ export class WebsiteStudioService {
       payload: {
         beforeUrl,
         afterUrl,
-        baselineCommit: cr.baselineCommit,
+        baselineCommit,
         pilotCommit: cr.commit,
+        pageId: page?.pageId || null,
+        route: page?.route || null,
         visualRenderOk: mismatches.length === 0,
         mismatches,
       },
@@ -1330,7 +1388,7 @@ export class WebsiteStudioService {
       before: {
         url: beforeUrl,
         port: BASELINE_PREVIEW_PORT,
-        commit: cr.baselineCommit,
+        commit: baselineCommit,
         healthOk: beforeProbe.healthOk,
         mode: 'before',
       },
@@ -1358,21 +1416,29 @@ export class WebsiteStudioService {
   async getOwnerReviewLive(changeRequestId: string) {
     const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
     const website = this.getWebsite(cr.websiteId);
+    // Exact substitution point (prior false positive): fallback to Home `/` when pageId unset OR
+    // when compare failed — that made About/Funding review iframes show Home. Page-scope always.
     const page =
       (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
-      this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
-      null;
+      (!cr.pageId
+        ? this.store.listPages(cr.websiteId).find((p) => p.route === '/') || null
+        : null);
 
     let compare: ComparePreviewUrls | null = null;
     try {
       compare = await this.ensureComparePreviews(changeRequestId);
     } catch (e) {
       const health = await websitePreviewManager.health(website);
+      const afterBase = health.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
+      const beforeBase = `http://127.0.0.1:${BASELINE_PREVIEW_PORT}/`;
+      const afterUrl = buildPreviewPageUrl(afterBase, page) || afterBase;
+      const beforeUrl = buildPreviewPageUrl(beforeBase, page) || beforeBase;
       const previewIdentity = verifyPreviewIdentity({
         cr,
         website,
         previewHealthStatus: health.status === 'running' ? 'running' : 'offline',
-        previewUrl: health.url,
+        previewUrl: afterUrl,
+        baselinePreviewUrl: beforeUrl,
         baselinePreviewHealthStatus: 'offline',
         visualRenderOk: false,
         visualRenderMismatches: [
@@ -1386,8 +1452,8 @@ export class WebsiteStudioService {
         page,
         previewIdentity,
         previewUrls: {
-          before: `http://127.0.0.1:${BASELINE_PREVIEW_PORT}/`,
-          after: health.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`,
+          before: beforeUrl,
+          after: afterUrl,
           beforePort: BASELINE_PREVIEW_PORT,
           afterPort: PILOT_PREVIEW_PORT,
         },

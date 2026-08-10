@@ -1,0 +1,18 @@
+{
+  "label": "05-faq-editor",
+  "url": "http://127.0.0.1:5180/website-studio?view=editor",
+  "pageLabel": "FAQ",
+  "selected": "ws_hvcg_real",
+  "selectedLabel": "High Value Capital Group",
+  "iframeSrc": "http://127.0.0.1:8765/faq.html",
+  "frameText": "Skip to content\nHome\nServices\nAI\nCapital\nAtlas\nAssessments\nResources\nBook Appointment\nContact\nClient Portal\n\nFAQ\n\nFrequently asked questions\nWhat is the EVA?\n\nA free Enterprise Value and Business Readiness Assessment that produces education",
+  "reviewingSnippet": null,
+  "hasHomeInReview": false,
+  "bodyHints": {
+    "about": true,
+    "funding": true,
+    "faq": true,
+    "contact": true,
+    "home": false
+  }
+}

@@ -86,6 +86,7 @@ export function WebsiteStudioPage() {
   const [params, setParams] = useSearchParams();
 
   const nav = (params.get('view') as StudioNavId) || 'home';
+  const pageParam = params.get('page') || '';
   const [advancedMode, setAdvancedMode] = useState(() => {
     try {
       return sessionStorage.getItem(MODE_KEY) === '1';
@@ -123,7 +124,7 @@ export function WebsiteStudioPage() {
   const [showFullHealth, setShowFullHealth] = useState(false);
   const previewAutoStarted = useRef(false);
 
-  const [selectedPageId, setSelectedPageId] = useState('');
+  const [selectedPageId, setSelectedPageId] = useState(pageParam);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [draftText, setDraftText] = useState('');
   const [pageSearch, setPageSearch] = useState('');
@@ -184,12 +185,19 @@ export function WebsiteStudioPage() {
   const setView = (view: StudioNavId, extra?: Record<string, string>) => {
     const next = new URLSearchParams(params);
     next.set('view', view);
+    // Persist page identity across all studio transitions (refresh / back / forward).
+    const pageId = extra?.page || selectedPageId;
+    if (pageId) next.set('page', pageId);
+    else next.delete('page');
     if (view !== 'review') {
       next.delete('cr');
       next.delete('mode');
     }
     if (extra) {
-      for (const [k, v] of Object.entries(extra)) next.set(k, v);
+      for (const [k, v] of Object.entries(extra)) {
+        if (v) next.set(k, v);
+        else next.delete(k);
+      }
     }
     setParams(next);
   };
@@ -201,6 +209,7 @@ export function WebsiteStudioPage() {
       next.set('view', 'review');
       next.set('cr', reviewCrId);
       next.set('mode', mode);
+      if (selectedPageId) next.set('page', selectedPageId);
       setParams(next);
     }
   };
@@ -213,7 +222,18 @@ export function WebsiteStudioPage() {
     setApproveOpen(false);
     setRejectOpen(false);
     setPreviewMode(mode);
-    setView('review', { cr: changeRequestId, mode });
+    const cr =
+      changeRequests.find((c) => String(c.changeRequestId) === changeRequestId) ||
+      ownerInbox?.all?.find((c) => String(c.changeRequestId) === changeRequestId) ||
+      ownerInbox?.needsReview?.find((c) => String(c.changeRequestId) === changeRequestId) ||
+      null;
+    const crPageId = cr?.pageId ? String(cr.pageId) : selectedPageId;
+    if (crPageId) setSelectedPageId(crPageId);
+    setView('review', {
+      cr: changeRequestId,
+      mode,
+      ...(crPageId ? { page: crPageId } : {}),
+    });
   };
 
   const selectedWebsite = useMemo(
@@ -320,12 +340,21 @@ export function WebsiteStudioPage() {
         setMedia(m.media);
         setForms(f.forms);
         // Do not load all-website blocks here — that races page-scoped editor context back to Home.
+        // Prefer URL ?page=… over defaulting to Home (Manny refresh must stay on About/Funding/etc).
+        const fromUrl =
+          (pageParam && p.pages.find((x) => String(x.pageId) === pageParam)) ||
+          (selectedPageId && p.pages.find((x) => String(x.pageId) === selectedPageId)) ||
+          null;
         const home =
           p.pages.find((x) => x.route === '/') ||
           p.pages.find((x) => /home/i.test(String(x.pageTitle))) ||
           p.pages.find((x) => String(x.pageId).includes('home')) ||
           p.pages[0];
-        if (!selectedPageId && home?.pageId) {
+        if (fromUrl?.pageId) {
+          if (String(fromUrl.pageId) !== selectedPageId) {
+            setSelectedPageId(String(fromUrl.pageId));
+          }
+        } else if (!selectedPageId && home?.pageId) {
           setSelectedPageId(String(home.pageId));
         }
         void refreshPreviewHealth();
@@ -335,7 +364,7 @@ export function WebsiteStudioPage() {
     })();
     // selectedPageId intentionally omitted — page changes must not re-fetch inventory / overwrite blocks
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hubAuth, selectedWebsiteId, refreshPreviewHealth]);
+  }, [hubAuth, selectedWebsiteId, refreshPreviewHealth, pageParam]);
 
   useEffect(() => {
     void refreshPreviewHealth();
@@ -346,6 +375,13 @@ export function WebsiteStudioPage() {
       setPreviewMode(modeParam);
     }
   }, [modeParam]);
+
+  // Keep React page selection aligned with URL for back/forward/refresh.
+  useEffect(() => {
+    if (pageParam && pageParam !== selectedPageId) {
+      setSelectedPageId(pageParam);
+    }
+  }, [pageParam, selectedPageId]);
 
   useEffect(() => {
     if (!hubAuth || nav !== 'review' || !reviewCrId) {
@@ -365,6 +401,19 @@ export function WebsiteStudioPage() {
         const res = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
         setOwnerReview(res.review);
         setEditText(String(res.review.after || ''));
+        const reviewPage = (res.review.page || {}) as { pageId?: string };
+        if (reviewPage.pageId) {
+          const boundPageId = String(reviewPage.pageId);
+          setSelectedPageId(boundPageId);
+          if (pageParam !== boundPageId) {
+            const next = new URLSearchParams(window.location.search);
+            next.set('view', 'review');
+            next.set('cr', reviewCrId);
+            next.set('page', boundPageId);
+            if (modeParam) next.set('mode', modeParam);
+            setParams(next, { replace: true });
+          }
+        }
         const devices = (res.review.deviceReviews || {}) as Record<string, boolean>;
         setDeviceChecks({
           Desktop: Boolean(devices.Desktop),
@@ -563,6 +612,7 @@ export function WebsiteStudioPage() {
         websiteId: selectedWebsiteId,
         operation: op,
         content: draftText || undefined,
+        pageId: selectedPageId || undefined,
       });
       const proposal = String(
         (res as { proposal?: string; changeRequest?: { proposedContent?: string } }).proposal ||
@@ -589,7 +639,8 @@ export function WebsiteStudioPage() {
     try {
       const res = await analyzeWebsiteStudioPage(hubAuth, selectedWebsiteId, pageId);
       setAnalysis(res.analysis);
-      setView('editor');
+      // Always re-assert page identity — setView must not fall back to a stale Home selection.
+      setView('editor', { page: pageId });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -604,7 +655,7 @@ export function WebsiteStudioPage() {
     setAnalysis(null);
     setBlocks([]);
     setSeo(null);
-    if (opts?.view) setView(opts.view);
+    setView(opts?.view || nav, { page: pageId });
     if (opts?.analyze !== false) void analyzePage(pageId);
   };
 
@@ -938,7 +989,9 @@ export function WebsiteStudioPage() {
                 approvedResult={approvedResult}
                 rejectOpen={rejectOpen}
                 rejectedResult={rejectedResult}
-                onBack={() => setView('home')}
+                onBack={() =>
+                  setView('drafts', selectedPageId ? { page: selectedPageId } : undefined)
+                }
                 onRefresh={() => {
                   setApprovedResult(null);
                   setRejectedResult(null);

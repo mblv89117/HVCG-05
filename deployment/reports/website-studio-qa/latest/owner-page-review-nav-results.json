@@ -1,0 +1,180 @@
+{
+  "results": [
+    {
+      "page": "about",
+      "beforeEdit": {
+        "url": "http://127.0.0.1:5180/website-studio?view=pages&page=pg_hvcg_home_real",
+        "pageLabel": null,
+        "iframeSrc": null,
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "editorState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=editor&page=pg_hvcg_2212b84a2a6ffe23",
+        "pageLabel": "About Us",
+        "iframeSrc": "http://127.0.0.1:8765/about.html",
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "reviewState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_3707757761ef&mode=compare&page=pg_hvcg_2212b84a2a6ffe23",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/about.html",
+        "trail": "About Us (/about) → Hero → About Us Headline",
+        "changeLabel": "About Us Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "afterRefresh": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_3707757761ef&mode=compare&page=pg_hvcg_2212b84a2a6ffe23",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/about.html",
+        "trail": "About Us (/about) → Hero → About Us Headline",
+        "changeLabel": "About Us Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "iframeSrcs": [
+        "http://127.0.0.1:8766/about.html",
+        "http://127.0.0.1:8765/about.html"
+      ],
+      "pass": true
+    },
+    {
+      "page": "funding",
+      "beforeEdit": {
+        "url": "http://127.0.0.1:5180/website-studio?view=pages&page=pg_hvcg_2212b84a2a6ffe23",
+        "pageLabel": null,
+        "iframeSrc": null,
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "editorState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=editor&page=pg_hvcg_707b204101997d4f",
+        "pageLabel": "Funding",
+        "iframeSrc": "http://127.0.0.1:8765/funding.html",
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "reviewState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_7d732f941683&mode=compare&page=pg_hvcg_707b204101997d4f",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/funding.html",
+        "trail": "Funding (/funding) → Hero → Funding Headline",
+        "changeLabel": "Funding Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "afterRefresh": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_7d732f941683&mode=compare&page=pg_hvcg_707b204101997d4f",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/funding.html",
+        "trail": "Funding (/funding) → Hero → Funding Headline",
+        "changeLabel": "Funding Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "iframeSrcs": [
+        "http://127.0.0.1:8766/funding.html",
+        "http://127.0.0.1:8765/funding.html"
+      ],
+      "pass": true
+    },
+    {
+      "page": "faq",
+      "beforeEdit": {
+        "url": "http://127.0.0.1:5180/website-studio?view=pages&page=pg_hvcg_707b204101997d4f",
+        "pageLabel": null,
+        "iframeSrc": null,
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "editorState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=editor&page=pg_hvcg_4fb239f7021e7cf9",
+        "pageLabel": "FAQ",
+        "iframeSrc": "http://127.0.0.1:8765/faq.html",
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "reviewState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_6e7e87248a88&mode=compare&page=pg_hvcg_4fb239f7021e7cf9",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/faq.html",
+        "trail": "FAQ (/faq) → Hero → FAQ Headline",
+        "changeLabel": "FAQ Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "afterRefresh": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_6e7e87248a88&mode=compare&page=pg_hvcg_4fb239f7021e7cf9",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/faq.html",
+        "trail": "FAQ (/faq) → Hero → FAQ Headline",
+        "changeLabel": "FAQ Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "iframeSrcs": [
+        "http://127.0.0.1:8766/faq.html",
+        "http://127.0.0.1:8765/faq.html"
+      ],
+      "pass": true
+    },
+    {
+      "page": "contact",
+      "beforeEdit": {
+        "url": "http://127.0.0.1:5180/website-studio?view=pages&page=pg_hvcg_4fb239f7021e7cf9",
+        "pageLabel": null,
+        "iframeSrc": null,
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "editorState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=editor&page=pg_hvcg_eb5639ef0321321f",
+        "pageLabel": "Contact",
+        "iframeSrc": "http://127.0.0.1:8765/contact.html",
+        "trail": "",
+        "changeLabel": "",
+        "hasHomepageHardcode": false,
+        "reviewing": false
+      },
+      "reviewState": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_01816696336f&mode=compare&page=pg_hvcg_eb5639ef0321321f",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/contact.html",
+        "trail": "Contact (/contact) → Hero → Contact Headline",
+        "changeLabel": "Contact Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "afterRefresh": {
+        "url": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_01816696336f&mode=compare&page=pg_hvcg_eb5639ef0321321f",
+        "pageLabel": null,
+        "iframeSrc": "http://127.0.0.1:8766/contact.html",
+        "trail": "Contact (/contact) → Hero → Contact Headline",
+        "changeLabel": "Contact Headline",
+        "hasHomepageHardcode": false,
+        "reviewing": true
+      },
+      "iframeSrcs": [
+        "http://127.0.0.1:8766/contact.html",
+        "http://127.0.0.1:8765/contact.html"
+      ],
+      "pass": true
+    }
+  ]
+}

@@ -125,7 +125,20 @@ export function ownerChangeTitle(cr: Record<string, unknown>): string {
   if (cr.phase6bPilot || cr.changeRequestId === 'wcr_96016971141f') {
     return 'Homepage Headline Updated';
   }
+  const route = String(cr.pageRoute || cr.route || '');
+  const pageName = friendlyPageName({
+    route: route || undefined,
+    pageTitle: cr.pageName || cr.pageTitle,
+  });
   const reason = String(cr.reason || cr.naturalLanguageRequest || 'Website change');
+  // Bound non-Home pages must never be titled as Homepage*.
+  if (route && route !== '/') {
+    if (/headline|h1/i.test(reason)) return `${pageName} Headline`;
+    if (/meta description/i.test(reason)) return `${pageName} SEO Meta Description`;
+    if (/cta/i.test(reason)) return `${pageName} Call-to-Action`;
+    if (/faq/i.test(reason)) return 'FAQ Update';
+    return `${pageName} update`;
+  }
   if (/headline|h1/i.test(reason)) return 'Homepage Hero Headline';
   if (/meta description/i.test(reason)) return 'SEO Meta Description';
   if (/cta/i.test(reason)) return 'Call-to-Action Update';

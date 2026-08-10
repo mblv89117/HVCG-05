@@ -517,6 +517,141 @@ async function main() {
     );
   }
 
+  // Mandatory: real owner click-path page-review nav (About + Funding release gate; ≥50% non-Home)
+  const navPath = join(evidenceDir, 'owner-page-review-nav-results.json');
+  if (existsSync(navPath)) {
+    const nav = JSON.parse(readFileSync(navPath, 'utf8'));
+    const rows = nav.results || [];
+    const nonHome = rows.filter((r) => r.page && r.page !== 'home');
+    const aboutOk = rows.some((r) => r.page === 'about' && r.pass);
+    const fundingOk = rows.some((r) => r.page === 'funding' && r.pass);
+    const ratio = nonHome.length / Math.max(rows.length, 1);
+    const navOk = aboutOk && fundingOk && ratio >= 0.5 && rows.every((r) => r.pass);
+    addCheck(
+      'owner-page-review-nav',
+      'Owner click-path page-review navigation (About+Funding gate)',
+      navOk ? 'PASS' : 'FAIL',
+      JSON.stringify({
+        aboutOk,
+        fundingOk,
+        nonHomeRatio: ratio,
+        pages: rows.map((r) => ({ page: r.page, pass: r.pass })),
+      }),
+    );
+    if (!navOk) {
+      defects.push({
+        id: 'DEF-OWNER-PAGE-REVIEW-NAV',
+        title: 'FAILED QA — FALSE POSITIVE: owner page-review nav falls back to Home',
+        severity: 'CRITICAL',
+        ownerWorkflowStep: 'Pages → About/Funding → Review',
+        expected:
+          'Selecting About/Funding/FAQ/Contact keeps that page through editor + review + refresh',
+        actual: JSON.stringify(rows.slice(0, 6)),
+        affectedComponent: 'WebsiteStudioPage/ChangeReviewScreen/getOwnerReviewLive',
+        suggestedFix:
+          'Carry pageId in URL; page-scope preview URLs on compare fallback; never hardcode Homepage in review UI',
+        retestRequired: true,
+      });
+    }
+  } else if (RUN_TYPE === 'RELEASE GATE') {
+    addCheck(
+      'owner-page-review-nav',
+      'Owner click-path page-review navigation (About+Funding gate)',
+      'FAIL',
+      'owner-page-review-nav-results.json missing — prior READY FOR MANNY treated as FALSE POSITIVE',
+    );
+    defects.push({
+      id: 'DEF-OWNER-PAGE-REVIEW-NAV',
+      title: 'FAILED QA — FALSE POSITIVE: missing owner page-review nav evidence',
+      severity: 'CRITICAL',
+      ownerWorkflowStep: 'Pages → Review',
+      expected: 'Playwright click-path evidence for About+Funding review persistence',
+      actual: 'Evidence file missing',
+      affectedComponent: 'website-studio-qa',
+      suggestedFix: 'Run owner-page-review-nav.spec.ts in RELEASE GATE',
+      retestRequired: true,
+    });
+  }
+
+  // API proof: synthetic About/Funding owner-review preview URLs must not be bare `/`
+  try {
+    const pagesBody = await hub(`/api/website-studio/websites/${FIXTURE.websiteId}/pages`);
+    const about = (pagesBody.pages || []).find((p) => p.route === '/about');
+    const funding = (pagesBody.pages || []).find((p) => p.route === '/funding');
+    const aboutCr = await hub('/api/website-studio/natural-language', {
+      method: 'POST',
+      body: JSON.stringify({
+        text: 'QA gate About review URL binding',
+        websiteId: FIXTURE.websiteId,
+        pageId: about?.pageId,
+      }),
+    });
+    const fundingCr = await hub('/api/website-studio/natural-language', {
+      method: 'POST',
+      body: JSON.stringify({
+        text: 'QA gate Funding review URL binding',
+        websiteId: FIXTURE.websiteId,
+        pageId: funding?.pageId,
+      }),
+    });
+    const aboutReview = await hub(
+      `/api/website-studio/change-requests/${aboutCr.changeRequest.changeRequestId}/owner-review`,
+    );
+    const fundingReview = await hub(
+      `/api/website-studio/change-requests/${fundingCr.changeRequest.changeRequestId}/owner-review`,
+    );
+    const aboutUrls = aboutReview?.review?.previewUrls || {};
+    const fundingUrls = fundingReview?.review?.previewUrls || {};
+    const aboutPage = aboutReview?.review?.page || {};
+    const fundingPage = fundingReview?.review?.page || {};
+    const reviewBindOk =
+      aboutPage.route === '/about' &&
+      fundingPage.route === '/funding' &&
+      String(aboutUrls.after || '').includes('about') &&
+      String(fundingUrls.after || '').includes('funding') &&
+      !/:8765\/?$/i.test(String(aboutUrls.after || '')) &&
+      !/:8765\/?$/i.test(String(fundingUrls.after || ''));
+    addCheck(
+      'api-review-page-binding',
+      'API owner-review page binding (About+Funding)',
+      reviewBindOk ? 'PASS' : 'FAIL',
+      JSON.stringify({
+        aboutPage,
+        fundingPage,
+        aboutUrls,
+        fundingUrls,
+        aboutTitle: aboutReview?.review?.ownerTitle,
+        fundingTitle: fundingReview?.review?.ownerTitle,
+      }),
+    );
+    if (!reviewBindOk) {
+      defects.push({
+        id: 'DEF-REVIEW-HOME-SUBSTITUTION',
+        title: 'Owner review substitutes Home `/` for non-Home page CRs',
+        severity: 'CRITICAL',
+        ownerWorkflowStep: 'Change Review',
+        expected: 'previewUrls.after/before include page path (about.html / funding.html)',
+        actual: JSON.stringify({ aboutUrls, fundingUrls, aboutPage, fundingPage }),
+        affectedComponent: 'getOwnerReviewLive/buildPreviewPageUrl',
+        suggestedFix: 'Always buildPreviewPageUrl(page) even on compare fallback paths',
+        retestRequired: true,
+      });
+    }
+  } catch (e) {
+    addCheck('api-review-page-binding', 'API owner-review page binding (About+Funding)', 'FAIL', String(e));
+    defects.push({
+      id: 'DEF-REVIEW-HOME-SUBSTITUTION',
+      title: 'Owner review page-binding check failed',
+      severity: 'CRITICAL',
+      ownerWorkflowStep: 'Change Review',
+      expected: 'About/Funding review URLs page-scoped',
+      actual: String(e),
+      affectedComponent: 'getOwnerReviewLive',
+      suggestedFix: 'Repair page-scoped compare preview URLs',
+      retestRequired: true,
+    });
+  }
+
   // Approval persistence + invalidation (API), then restore for Manny
   let approval = {
     confirmationOk: pw.status === 0,

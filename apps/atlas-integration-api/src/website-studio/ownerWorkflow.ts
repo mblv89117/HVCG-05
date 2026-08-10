@@ -81,9 +81,60 @@ export function fingerprintContent(text: string | null | undefined): string {
     .slice(0, 24);
 }
 
-export function ownerChangeTitle(cr: WebsiteChangeRequest): string {
+const ROUTE_LABELS: Record<string, string> = {
+  '/': 'Home',
+  '/about': 'About Us',
+  '/funding': 'Funding',
+  '/faq': 'FAQ',
+  '/contact': 'Contact',
+  '/book-appointment': 'Book a Strategy Call',
+  '/book-strategy-call': 'Book a Strategy Call',
+  '/accessibility': 'Accessibility',
+  '/capital-advisory': 'Capital Advisory',
+  '/case-studies': 'Case Studies',
+};
+
+/** Owner-facing page label — never silently invent Home for a non-Home route. */
+export function friendlyPageName(page?: {
+  route?: string | null;
+  pageTitle?: string | null;
+} | null): string {
+  const route = String(page?.route || '').trim() || '/';
+  if (ROUTE_LABELS[route]) return ROUTE_LABELS[route];
+  const title = String(page?.pageTitle || '')
+    .replace(/\s*\|\s*High Value Capital Group\s*$/i, '')
+    .replace(/\.html$/i, '')
+    .trim();
+  if (title && title !== route) {
+    return title
+      .split(/[-_/ ]+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+  const slug = route.replace(/^\//, '') || 'Home';
+  return slug
+    .split(/[-_/]/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+export function ownerChangeTitle(
+  cr: WebsiteChangeRequest,
+  page?: { route?: string | null; pageTitle?: string | null } | null,
+): string {
   if (cr.phase6bPilot || cr.changeRequestId === 'wcr_96016971141f') return 'Homepage Headline';
+  const pageName = friendlyPageName(page || { route: null });
   const reason = cr.naturalLanguageRequest || cr.reason || 'Website change';
+  // Prefer explicit page binding over "homepage" wording inferred from "headline".
+  if (page?.route && page.route !== '/') {
+    if (/headline|h1/i.test(reason)) return `${pageName} Headline`;
+    if (/cta/i.test(reason)) return `${pageName} Call-to-Action`;
+    if (/meta description/i.test(reason)) return `${pageName} SEO Meta Description`;
+    if (/faq/i.test(reason)) return 'FAQ Update';
+    return `${pageName} update`;
+  }
   if (/headline|h1/i.test(reason)) return 'Homepage Headline';
   if (/cta/i.test(reason)) return 'Call-to-Action';
   if (/meta description/i.test(reason)) return 'SEO Meta Description';
@@ -352,9 +403,13 @@ export function buildOwnerReviewPayload(opts: {
   const approval = cr.ownerApproval as OwnerApprovalRecord | undefined;
   const alreadyApproved = Boolean(approval?.approvedAt && !approval.invalidated);
   const visualOk = opts.visualRender?.ok !== false && previewIdentity.visualRenderOk !== false;
+  const pageName = friendlyPageName(
+    page || (cr.pageId ? { route: null, pageTitle: null } : { route: '/', pageTitle: 'Home' }),
+  );
+  const pageRoute = page?.route || (cr.pageId ? null : '/');
   return {
     changeRequestId: cr.changeRequestId,
-    ownerTitle: ownerChangeTitle(cr),
+    ownerTitle: ownerChangeTitle(cr, page),
     ownerStatus: ownerFriendlyStatus(cr),
     ownerQaGate: String(cr.ownerQaGate || 'NOT TESTED'),
     qaStatus: cr.qaStatus || null,
@@ -365,8 +420,8 @@ export function buildOwnerReviewPayload(opts: {
     },
     page: {
       pageId: page?.pageId || cr.pageId,
-      pageName: page?.route === '/' ? 'Home' : page?.pageTitle || 'Home',
-      route: page?.route || '/',
+      pageName: page ? pageName : cr.pageId ? 'Unknown page' : 'Home',
+      route: pageRoute || (cr.pageId ? 'unknown' : '/'),
     },
     section: 'Hero',
     blockLabel: 'Main Headline',

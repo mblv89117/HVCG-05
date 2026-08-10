@@ -1,0 +1,41 @@
+{
+  "id": "DEF-OWNER-PAGE-REVIEW-NAV",
+  "severity": "CRITICAL",
+  "gate": "FAILED QA — FALSE POSITIVE",
+  "revokes": "READY FOR MANNY (commit 3b68b68)",
+  "title": "Selecting About/Funding/FAQ/Contact for review still showed Home",
+  "ownerWorkflowStep": "Pages → Edit → Draft → Review",
+  "reproduced": true,
+  "exactSubstitutionPoints": [
+    {
+      "file": "apps/atlas-integration-api/src/website-studio/service.ts",
+      "symbol": "getOwnerReviewLive catch path",
+      "lineHint": "previewUrls.before/after hardcoded to http://127.0.0.1:8766/ and :8765/",
+      "effect": "Even when CR.pageId was About, iframes loaded Home"
+    },
+    {
+      "file": "apps/atlas-integration-api/src/website-studio/service.ts",
+      "symbol": "getOwnerReview / ensureComparePreviews page fallback",
+      "lineHint": "|| listPages().find(route === '/')",
+      "effect": "Missing/unresolved pageId substituted Home"
+    },
+    {
+      "file": "apps/atlas-elite-os/src/pages/website-studio/ChangeReviewScreen.tsx",
+      "symbol": "hardcoded Homepage Headline / Home → Homepage Headline",
+      "effect": "UI labeled non-Home reviews as Home"
+    },
+    {
+      "file": "apps/atlas-elite-os/src/pages/website-studio/ownerHelpers.ts",
+      "symbol": "ownerChangeTitle /headline|h1/ → Homepage Hero Headline",
+      "effect": "About/Funding headline drafts titled as Homepage"
+    },
+    {
+      "file": "apps/atlas-elite-os/src/pages/website-studio/WebsiteStudioPage.tsx",
+      "symbol": "selectedPageId not in URL; openReview omitted page",
+      "effect": "Refresh/back and review transitions lost page identity → Home default"
+    }
+  ],
+  "falsePositiveReason": "Prior RELEASE GATE (3b68b68) passed selectOption editor smoke + API-injected decision URLs without asserting Pages→About→Review click path or page-scoped review iframe URLs",
+  "expected": "About/Funding/FAQ/Contact stay bound through editor, review trail, preview iframes (:8765/:8766 page paths), refresh, and decision destinations",
+  "fix": "Page-scope buildPreviewPageUrl on all review paths; inherit baseline for synthetic CRs; URL ?page= persistence; page-aware titles; owner-page-review-nav Playwright gate"
+}

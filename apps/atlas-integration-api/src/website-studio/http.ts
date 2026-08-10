@@ -496,6 +496,7 @@ export async function handleWebsiteStudioRoutes(opts: {
         changeRequestId: body.changeRequestId ? String(body.changeRequestId) : undefined,
         operation: String(body.operation || ''),
         content: body.content != null ? String(body.content) : undefined,
+        pageId: body.pageId ? String(body.pageId) : undefined,
       });
       send(res, 200, result, origin);
       return true;
