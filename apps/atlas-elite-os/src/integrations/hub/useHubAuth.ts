@@ -10,7 +10,7 @@ import type { AtlasHubAuthHeaders } from './api';
  * Signed-in: MSAL Bearer + scope headers after identity is proven server-side.
  */
 export function useHubAuth(): AtlasHubAuthHeaders {
-  const { account } = useMicrosoftAuth();
+  const { account, devOwnerActive } = useMicrosoftAuth();
   const { role } = useAtlasRole();
   const [accessToken, setAccessToken] = useState<string | undefined>();
 
@@ -34,7 +34,7 @@ export function useHubAuth(): AtlasHubAuthHeaders {
   }, [account]);
 
   return useMemo(() => {
-    if (!account) {
+    if (!account && !devOwnerActive) {
       return {
         userId: '',
         organizationId: 'org-hvcg',
@@ -42,13 +42,23 @@ export function useHubAuth(): AtlasHubAuthHeaders {
         roles: ['Guest'],
       };
     }
+    // Local Owner (Dev) — approved local UAT identity; never used when Production/staging env.
+    if (!account && devOwnerActive) {
+      return {
+        userId: 'manny',
+        organizationId: 'org-hvcg',
+        clientIds: ['*'],
+        email: 'local-owner@dev',
+        roles: [role === 'Unauthenticated' ? 'HVCG Owner' : role],
+      };
+    }
     return {
-      userId: account.localAccountId || account.homeAccountId || '',
+      userId: account!.localAccountId || account!.homeAccountId || '',
       organizationId: 'org-hvcg',
       clientIds: ['*'],
-      email: account.username,
+      email: account!.username,
       roles: [role === 'Unauthenticated' ? 'Guest' : role],
       accessToken,
     };
-  }, [account, role, accessToken]);
+  }, [account, role, accessToken, devOwnerActive]);
 }

@@ -1,0 +1,34 @@
+{
+  "phase": "6B-UX",
+  "fix": "before-after-preview",
+  "at": "2026-08-10T17:54:48Z",
+  "changeRequestId": "wcr_96016971141f",
+  "baselineSha": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+  "pilotSha": "fd4e05d1a634d53a5442d9865487ec76b7a21258",
+  "ownerUrl": "http://127.0.0.1:5180/website-studio?view=review&cr=wcr_96016971141f&mode=compare",
+  "rootCause": "React updated iframe srcDoc without remounting; compare was toggle-only so Before/After looked identical.",
+  "fixes": [
+    "Load both before and after HTML via Promise.all",
+    "Force iframe remount with mode/key",
+    "Side-by-side COMPARE mode",
+    "Stronger PRODUCTION BASELINE vs DRAFT PREVIEW banners and H1 highlight callouts"
+  ],
+  "h1Checks": {
+    "before": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+    "after": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+    "compare": ["before H1", "after H1"],
+    "previewIdentityOk": true
+  },
+  "screenshots": [
+    "01-change-review.png",
+    "02-before-preview.png",
+    "03-after-preview.png",
+    "04-compare-mode.png",
+    "05-draft-preview-not-live.png",
+    "06-review-and-approve-entry.png"
+  ],
+  "tests": {
+    "website-studio-owner-approval": "5/5 passed",
+    "eliteTscAndBuild": "passed"
+  }
+}

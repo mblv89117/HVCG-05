@@ -1,0 +1,30 @@
+{
+  "id": "DEFECT_A",
+  "severity": "CRITICAL",
+  "title": "Selecting non-Home pages still shows Home editor/preview context",
+  "rootCauseCandidates": [
+    "WebsiteStudioPage inventory useEffect depends on selectedPageId and setBlocks(all blocks), racing page-scoped blocks",
+    "PageManager Preview opens currently selected previewUrl (Home) instead of card page",
+    "ensureComparePreviews returns base / URLs without page path"
+  ],
+  "apiProof": {
+    "aboutPreviewUrl": {
+      "url": "http://127.0.0.1:8765/about.html",
+      "baseUrl": "http://127.0.0.1:8765/",
+      "pageId": "pg_hvcg_2212b84a2a6ffe23",
+      "route": "/about"
+    },
+    "homePreviewUrl": {
+      "url": "http://127.0.0.1:8765/",
+      "baseUrl": "http://127.0.0.1:8765/",
+      "pageId": "pg_hvcg_home_real",
+      "route": "/"
+    },
+    "blocksAllCount": 1,
+    "blocksAboutCount": 0,
+    "aboutPageId": "pg_hvcg_2212b84a2a6ffe23",
+    "note": "API preview-page resolves about.html correctly; UI race/overwrite still binds Home context"
+  },
+  "expected": "Editor label, iframe src, blocks, SEO, Advisor scoped to selected page",
+  "reproduced": true
+}

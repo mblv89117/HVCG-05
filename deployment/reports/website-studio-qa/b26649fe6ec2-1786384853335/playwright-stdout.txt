@@ -1,0 +1,50 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 tests/owner-journey.spec.ts:86:1 › HVCG Website Studio owner journey RELEASE GATE (12.1s)
+
+
+  1) tests/owner-journey.spec.ts:86:1 › HVCG Website Studio owner journey RELEASE GATE ─────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/Approve this website change|WHAT IS BEING APPROVED|WHAT HAPPENS NEXT/i)
+    Expected: visible
+    Error: strict mode violation: getByText(/Approve this website change|WHAT IS BEING APPROVED|WHAT HAPPENS NEXT/i) resolved to 2 elements:
+        1) <h2 id="atlasdialog-title-_r_f_" class="fui-DialogTitle rxjm636 ___mh25s00_kwrsjh0 fsyjsko">Approve this website change?</h2> aka getByRole('heading', { name: 'Approve this website change?' })
+        2) <span class="fui-Text ___g0or4u0_dhwpsw0 fk6fouc fkhj508 f1i3iumi fl43uef fpgzoln f1w7gpdv f6juhto f1gl81tg f2jf649">WHAT IS BEING APPROVED</span> aka getByText('WHAT IS BEING APPROVED')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 20000ms
+      - waiting for getByText(/Approve this website change|WHAT IS BEING APPROVED|WHAT HAPPENS NEXT/i)
+
+
+      286 |   // Approval dialog
+      287 |   await page.getByRole('button', { name: /Review & Approve/i }).click();
+    > 288 |   await expect(page.getByText(/Approve this website change|WHAT IS BEING APPROVED|WHAT HAPPENS NEXT/i)).toBeVisible();
+          |                                                                                                         ^
+      289 |   await expect(page.getByText(/will NOT publish|NOT publish|will not publish/i)).toBeVisible();
+      290 |   await shot(page, '13-approval-confirmation', screenshots);
+      291 |   mark('Approval confirmation dialog', true);
+        at /Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/scripts/website-studio-qa/tests/owner-journey.spec.ts:288:105
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/owner-journey.spec.ts:86:1 › HVCG Website Studio owner journey RELEASE GATE ──────────────

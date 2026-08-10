@@ -1,0 +1,150 @@
+DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS · LOCAL OWNER SESSION (DEV ONLY)
+HV
+HIGH VALUE
+CAPITAL GROUP
+High Value Capital Group
+End Local Owner
+LO
+EXECUTIVE
+Command Center
+My Work
+Portfolio
+Projects
+Universal Inbox
+Team & Agents
+Clients
+Approvals
+Analytics
+Capital Advisory
+INTELLIGENCE
+Financial Intelligence
+Banking
+Accounting
+Reports
+WORKSPACE
+Knowledge
+Documents
+Automation
+AI Agents
+AI Operations
+EVA Sandbox
+Website Studio
+SYSTEM
+Administration
+Connections
+Settings
+FAVORITES
+Banking
+Module
+RECENT
+Website Studio
+Navigation
+Command Center
+Navigation
+Website StudioManage your websites, content, SEO, and updates from one place.
+Owner Mode (default)
+Advanced Mode
+Website
+High Value Capital Group
+Edit Website
+Ask AI to Make a Change
+Create New Content
+Refresh
+Websites
+3
+Draft Changes
+3
+SEO Opportunities
+87
+Needs My Approval
+3
+Ready to Preview
+2
+Time Saved (min)
+110
+OVERVIEW
+Website Home
+EDIT
+Pages
+Content
+Media
+Blog
+GROWTH
+SEO
+Forms
+Analytics
+CHANGES
+Draft Changes
+Approvals
+Publishing
+History
+TOOLS
+AI Website Assistant
+ADVANCEDDeveloper Details
+REVIEW WEBSITE CHANGE
+Website: High Value Capital Group
+Page: Home · Section: Hero
+Change: Homepage Headline
+Approved — Not Published
+APPROVED — NOT LIVE
+Back
+YOU ASKED
+“Update the HVCG homepage headline to emphasize strategic capital advisory and business growth.”
+CURRENT WEBSITE
+Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.
+PROPOSED CHANGE
+Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.
+WHAT WILL CHANGE
+Home → Hero → Main Headline
+1 content change
+No forms changed
+No navigation changed
+No integrations changed
+No SEO metadata changed
+No analytics changed
+Risk: Low
+Preview identity verified for draft wcr_96016971141f · NOT LIVE
+YOU ARE REVIEWING
+Homepage Headline
+Before
+“Find out what is preventing your business from growing, qualifying for capital, or becomin…”
+After
+“Strategic capital advisory to help your business grow, qualify for capital, and build ente…”
+Status: Draft — Not Live
+View Before
+View After
+Compare (toggle)
+Device review
+Desktop
+✓ Looks Good
+Tablet
+Looks Good
+Mobile
+Looks Good
+Preview This Change
+Review & Approve
+Edit
+Show Me 3 Options
+Save for Later
+Reject
+Publish (disabled)
+Developer Details
+DRAFT PREVIEW — NOT LIVE
+High Value Capital Group · Home → Homepage Headline · Draft: wcr_96016971141f
+Show Me 3 Options
+Option 1 · RECOMMENDED
+Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.
+WHY: Clearest outcome-driven positioning for business owners seeking capital and enterprise value.
+Use This
+Option 2
+Strategic capital advisory that helps business owners grow, secure the right capital, and increase enterprise value.
+WHY: Slightly more explicit about “business owners” and capital fit.
+Use This
+Option 3
+Grow your business, qualify for capital, and build lasting enterprise value with strategic capital advisory.
+WHY: Leads with outcomes first; still advisory-positioned without inventing claims.
+Use This
+Try Again
+Edit
+← AI Operations · Production publishing always requires separate Manny authorization.
+Atlas Integration · local · SHA local-dev · built 2026-08-10T05:25:41.551Z · role HVCG Owner · client High Value Capital Group

@@ -1,0 +1,85 @@
+DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS · LOCAL OWNER SESSION (DEV ONLY)
+HV
+HIGH VALUE
+CAPITAL GROUP
+High Value Capital Group
+End Local Owner
+LO
+EXECUTIVE
+Command Center
+My Work
+Portfolio
+Projects
+Universal Inbox
+Team & Agents
+Clients
+Approvals
+Analytics
+Capital Advisory
+INTELLIGENCE
+Financial Intelligence
+Banking
+Accounting
+Reports
+WORKSPACE
+Knowledge
+Documents
+Automation
+AI Agents
+AI Operations
+EVA Sandbox
+Website Studio
+SYSTEM
+Administration
+Connections
+Settings
+FAVORITES
+Banking
+Module
+RECENT
+Website Studio
+Navigation
+Command Center
+Navigation
+Website StudioGoverned content & SEO control plane — Phase 6A (no Production deploy)
+Verified financial data not yet connectedFields show pending labels only. No fabricated figures are displayed.
+PHASE 6B — HVCG PILOT (NO PRODUCTION DEPLOY)Candidate A only. No Production website edits on main. No merge/deploy/DNS/secrets. Deploy remains gated: PRODUCTION DEPLOYMENT REQUIRES SEPARATE MANNY AUTHORIZATION.
+Phase 6B HVCG bootstrap
+Registers Candidate A from the clean pilot worktree, captures baseline, and creates a Tier A homepage headline change request with 3 AI variants. Does not modify website files.
+Bootstrap HVCG Phase 6B pilot
+Websites
+Pages
+Content
+SEO
+Media
+Forms
+Change Requests
+Preview & QA
+Deployments
+Rollback History
+Settings
+Refresh
+Websites
+3
+Open CRs
+0
+SEO issues
+87
+Manny approvals
+0
+Preview ready
+1
+Time saved (min)
+35
+Active website
+High Value Capital Group
+High Value Capital Group (Synthetic)
+Las Vegas Appraisal Company (Synthetic)
+Static HTML · Discovered · synthetic=false
+Websites
+Multi-website registry. Real repositories require Manny confirmation. Phase: 6A
+High Value Capital Group — High Value Capital Group — open CRs: 0
+High Value Capital Group (Synthetic) — High Value Capital Group — open CRs: 0
+Las Vegas Appraisal Company (Synthetic) — Las Vegas Appraisal Company — open CRs: 0
+← AI Operations · Hub: Integration API /api/website-studio/*
+Atlas Integration · local · SHA local-dev · built 2026-08-10T00:38:20.711Z · role HVCG Owner · client High Value Capital Group

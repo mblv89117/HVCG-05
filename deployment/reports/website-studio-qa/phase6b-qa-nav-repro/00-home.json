@@ -1,0 +1,18 @@
+{
+  "label": "00-home",
+  "url": "http://127.0.0.1:5180/website-studio",
+  "pageLabel": null,
+  "selected": "",
+  "selectedLabel": null,
+  "iframeSrc": null,
+  "frameText": "",
+  "reviewingSnippet": null,
+  "hasHomeInReview": false,
+  "bodyHints": {
+    "about": false,
+    "funding": false,
+    "faq": false,
+    "contact": false,
+    "home": false
+  }
+}

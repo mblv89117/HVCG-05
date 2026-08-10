@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "runId": "4f839f49-d5ca-4105-bcb7-7c55107a644d",
+  "runType": "RELEASE GATE",
+  "gate": "READY FOR MANNY",
+  "verdict": "WEBSITE STUDIO QA GATE — READY FOR MANNY",
+  "testedCommit": "639e5b0ef09d46cc16f61fa91c60c0940fcc14c3",
+  "startedAt": "2026-08-10T18:02:26.826Z",
+  "finishedAt": "2026-08-10T18:02:44.191Z",
+  "durationMs": 17365,
+  "changeRequestId": "wcr_96016971141f",
+  "websiteId": "ws_hvcg_real",
+  "checks": [
+    {
+      "id": "svc-elite",
+      "name": "Elite OS :5180",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "svc-hub",
+      "name": "Integration Hub :8790",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "svc-ollama",
+      "name": "Ollama (optional for deterministic advisor)",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "preview-running",
+      "name": "Preview running on loopback",
+      "status": "PASS",
+      "detail": "running",
+      "durationMs": 6
+    },
+    {
+      "id": "api-before-after",
+      "name": "API Before/After H1 identity",
+      "status": "PASS",
+      "detail": "before=Find out what is preventing your business from growing, qualifying for capital,  | after=Strategic capital advisory to help your business grow, qualify for capital, and "
+    },
+    {
+      "id": "safety-flags",
+      "name": "Safety feature flags",
+      "status": "PASS",
+      "detail": "{\"elite\":{\"port\":5180,\"bind\":\"127.0.0.1\",\"healthUrl\":\"http://127.0.0.1:5180/\"},\"hub\":{\"port\":8790,\"bind\":\"127.0.0.1\",\"healthUrl\":\"http://127.0.0.1:8790/health\"},\"preview\":{\"port\":8765,\"onDemand\":true,\"note\":\"Start from Website Studio — not LaunchAgent-managed\"},\"ollama\":{\"baseUrl\":\"http://127.0.0.1:11434\"},\"sqlitePathPresent\":true,\"clamscan\":true,\"safety\":{\"LocalAIWritesEnabled\":false,\"LocalAIExternalMessagesEnabled\":false,\"EvaIntakeEnabled\":false,\"ClientEmailsEnabled\":false},\"logsDir\":\"~/Library/Logs/HVCG-Atlas\"}"
+    },
+    {
+      "id": "ai-three-options",
+      "name": "Advisor 3 options (deterministic)",
+      "status": "PASS"
+    },
+    {
+      "id": "browser-owner-flow",
+      "name": "Browser owner journey",
+      "status": "PASS",
+      "detail": "\nRunning 1 test using 1 worker\n\n  ✓  1 tests/owner-journey.spec.ts:86:1 › HVCG Website Studio owner journey RELEASE GATE (14.9s)\n\n  1 passed (15.3s)\n",
+      "durationMs": 15682
+    },
+    {
+      "id": "approval-persistence",
+      "name": "Approval persistence",
+      "status": "PASS"
+    },
+    {
+      "id": "approval-invalidation",
+      "name": "Approval invalidation",
+      "status": "PASS"
+    },
+    {
+      "id": "restore-for-manny",
+      "name": "Restore CR for owner UAT",
+      "status": "PASS",
+      "detail": "Waiting for Your Review"
+    }
+  ],
+  "defects": [],
+  "buttonInventory": {
+    "total": 14,
+    "functional": 13,
+    "disabledWithExplanation": 1,
+    "comingLater": 0,
+    "failures": []
+  },
+  "beforeAfter": {
+    "baselineCommit": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+    "pilotCommit": "fd4e05d1a634d53a5442d9865487ec76b7a21258",
+    "beforeH1": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+    "afterH1": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+    "visualDifferenceVerified": true
+  },
+  "aiAdvisor": {
+    "mode": "deterministic",
+    "threeOptionsOk": true,
+    "failures": []
+  },
+  "approval": {
+    "confirmationOk": true,
+    "persistenceOk": true,
+    "invalidationOk": true,
+    "productionUnchanged": true
+  },
+  "safety": {
+    "localAiWritesEnabled": false,
+    "localAiExternalMessagesEnabled": false,
+    "evaIntakeEnabled": false,
+    "clientEmailsEnabled": false,
+    "productionChanged": false,
+    "unexpectedExternalHosts": []
+  },
+  "performance": {
+    "ownerFlowMs": 15682,
+    "previewStartupMs": 6,
+    "aiOperationMs": 1,
+    "pageLoadMs": 0,
+    "retries": 0,
+    "retestCount": 0
+  },
+  "evidenceDir": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838",
+  "screenshots": [
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/01-home.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/02-hvcg-selected.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/03-home-editor.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/04-advisor.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/06-change-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/07-before.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/08-after.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/09-compare.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/10-draft-not-live.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/11-desktop-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/11-tablet-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/11-mobile-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/05-ai-three-options.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/13-approval-confirmation.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/14-approved-not-published.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/15-approvals-page.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/639e5b0ef09d-1786384946838/16-draft-changes-page.png"
+  ],
+  "traces": [],
+  "summary": {
+    "Build": "PASS",
+    "Browser Flow": "PASS",
+    "Preview Identity": "PASS",
+    "Before / After": "PASS",
+    "AI Advisor": "PASS",
+    "Buttons": "13/14",
+    "Approval Persistence": "PASS",
+    "Approval Invalidation": "PASS",
+    "Console Errors": "0 blocking",
+    "Safety": "PASS",
+    "Production Changed": "NO"
+  },
+  "ownerPackage": {
+    "title": "READY FOR YOUR REVIEW",
+    "website": "High Value Capital Group",
+    "change": "Homepage headline",
+    "estimatedReviewMinutes": 1,
+    "openReviewPath": "/website-studio?view=review&cr=wcr_96016971141f&mode=compare",
+    "lines": [
+      "Automated QA: Passed",
+      "Browser owner flow: Passed",
+      "Before / After: Verified",
+      "Preview: Verified",
+      "AI Advisor: Passed",
+      "Desktop / Tablet / Mobile: Passed",
+      "Approval workflow: Passed",
+      "Production changed: No",
+      "",
+      "Manny's only task:",
+      "Look at the draft and decide whether you like it."
+    ]
+  }
+}

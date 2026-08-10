@@ -1,0 +1,51 @@
+{
+  "original": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+  "recommendedVariantId": "variant_b",
+  "variants": [
+    {
+      "variantId": "variant_a",
+      "label": "Variant A — Strategic growth emphasis",
+      "text": "Strategic capital advisory that helps your business grow, qualify for capital, and increase enterprise value.",
+      "recommended": false,
+      "recommendationReason": null,
+      "brandConsistencyNotes": "Keeps HVCG capital + growth language; slightly more advisory tone than the diagnostic original.",
+      "seoImplications": "Adds “strategic capital advisory” and “enterprise value” phrases useful for advisory intent queries; longer than current H1.",
+      "ctaImplications": "Supports EVA / consultation CTAs by framing advisory outcomes rather than only a diagnostic question.",
+      "readabilityNotes": "Single sentence, clear benefit stack; moderate length.",
+      "risks": [
+        "Slightly less “curiosity gap” than the current question-form H1"
+      ],
+      "factualClaimsNeedingVerification": []
+    },
+    {
+      "variantId": "variant_b",
+      "label": "Variant B — Recommended (balanced)",
+      "text": "Strategic capital advisory for business growth — find what is holding you back from capital and higher enterprise value.",
+      "recommended": true,
+      "recommendationReason": "Balances brand diagnostic voice with explicit strategic capital advisory and growth framing Manny requested, without inventing credentials or outcomes.",
+      "brandConsistencyNotes": "Preserves HVCG “find what is holding you back” motif while elevating strategic capital advisory.",
+      "seoImplications": "Targets strategic capital advisory + business growth + enterprise value; should not change title/meta unless separately requested.",
+      "ctaImplications": "Pairs well with Schedule / EVA CTAs; does not alter CTA labels.",
+      "readabilityNotes": "Readable at a glance; em dash separates promise and diagnostic hook.",
+      "risks": [
+        "Em dash may wrap awkwardly on very small mobile widths"
+      ],
+      "factualClaimsNeedingVerification": []
+    },
+    {
+      "variantId": "variant_c",
+      "label": "Variant C — Concise advisory",
+      "text": "Strategic capital advisory to grow your business and increase enterprise value.",
+      "recommended": false,
+      "recommendationReason": null,
+      "brandConsistencyNotes": "Most concise; drops the diagnostic question style of the current homepage.",
+      "seoImplications": "Strong head-term focus; may reduce long-tail “what is preventing” query overlap.",
+      "ctaImplications": "More declarative; CTA must carry the diagnostic invitation.",
+      "readabilityNotes": "Short and scannable; good mobile fit.",
+      "risks": [
+        "Largest departure from the proven current H1 pattern"
+      ],
+      "factualClaimsNeedingVerification": []
+    }
+  ]
+}

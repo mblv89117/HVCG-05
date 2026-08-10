@@ -1,0 +1,46 @@
+{
+  "startedAt": "2026-08-04T01:09:15.731Z",
+  "model": "glm-4.7-flash:q4_K_M",
+  "baseUrl": "http://127.0.0.1:11434",
+  "cases": [
+    {
+      "name": "summarize_dental",
+      "fixture": "dental_practice_prospect",
+      "operation": "summarize_text",
+      "ok": true,
+      "durationMs": 114745,
+      "processingStatus": "Waiting on Manny",
+      "validationStatus": "Passed",
+      "confidence": 0.85,
+      "requiresMannyApproval": true,
+      "wroteAuthoritativeBusinessRecord": false,
+      "outputSummaryPreview": "TEST — SYNTHETIC AI OUTPUT — DO NOT SEND: Bright Smile Dental is a prospect interested in capital advisory for equipment refresh. The owner has requested a decision package for Manny review. Critical missing documentation includes tax retur",
+      "errorType": null,
+      "validationErrors": []
+    },
+    {
+      "name": "decision_concrete",
+      "fixture": "concrete_contractor",
+      "operation": "prepare_decision_package",
+      "ok": true,
+      "durationMs": 99516,
+      "processingStatus": "Waiting on Manny",
+      "validationStatus": "Passed",
+      "confidence": 0.8,
+      "requiresMannyApproval": true,
+      "wroteAuthoritativeBusinessRecord": false,
+      "outputSummaryPreview": "TEST — SYNTHETIC AI OUTPUT — DO NOT SEND: SolidPath Concrete LLC requires working capital for bonded municipal projects. Key risks include seasonal cash flow gaps and an incomplete bonding package. Critical missing documentation includes WI",
+      "errorType": null,
+      "validationErrors": []
+    }
+  ],
+  "health": {
+    "ok": true,
+    "version": "0.32.5"
+  },
+  "models": [
+    "glm-4.7-flash:q4_K_M"
+  ],
+  "finishedAt": "2026-08-04T01:12:50.027Z",
+  "verdict": "PASS"
+}

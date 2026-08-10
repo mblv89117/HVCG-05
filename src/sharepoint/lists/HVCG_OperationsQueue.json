@@ -1,0 +1,130 @@
+{
+  "title": "HVCG_OperationsQueue",
+  "description": "Role-neutral operations queue for Local AI Operations Phase 1 (schema only — not deployed to Production)",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Assignee",
+      "displayName": "Assignee",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Manny",
+        "Local AI Operations Agent",
+        "Unassigned Operations",
+        "Future Human Operator",
+        "Automation"
+      ],
+      "default": "Unassigned Operations"
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": ["Critical", "High", "Medium", "Low"],
+      "default": "Medium"
+    },
+    {
+      "internalName": "Deadline",
+      "displayName": "Deadline",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true
+    },
+    {
+      "internalName": "WorkValueTier",
+      "displayName": "WorkValueTier",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "Tier 1 — Manny Only",
+        "Tier 2 — Advanced Delegate",
+        "Tier 3 — Administrative Delegate",
+        "Tier 4 — Automate",
+        "Tier 5 — Eliminate",
+        "Unclassified"
+      ],
+      "default": "Unclassified"
+    },
+    {
+      "internalName": "QueueStatus",
+      "displayName": "QueueStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Open",
+        "Assigned",
+        "In Progress",
+        "Blocked",
+        "Waiting on Manny",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Open"
+    },
+    {
+      "internalName": "EscalationReason",
+      "displayName": "EscalationReason",
+      "type": "Note",
+      "required": false,
+      "indexed": false
+    },
+    {
+      "internalName": "DependencyIds",
+      "displayName": "DependencyIds",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON array of dependency queue item IDs"
+    },
+    {
+      "internalName": "SourceRecordType",
+      "displayName": "SourceRecordType",
+      "type": "Text",
+      "required": false,
+      "indexed": true
+    },
+    {
+      "internalName": "SourceRecordId",
+      "displayName": "SourceRecordId",
+      "type": "Text",
+      "required": false,
+      "indexed": true
+    },
+    {
+      "internalName": "RequiresMannyApproval",
+      "displayName": "RequiresMannyApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "default": false
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true
+    }
+  ]
+}

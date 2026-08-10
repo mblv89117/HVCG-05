@@ -1,0 +1,30 @@
+{
+  "id": "DEFECT_B",
+  "severity": "HIGH",
+  "title": "Reject does not persist rejection \u2014 returns to start without clear Rejected state",
+  "syntheticChangeRequestId": "wcr_ac736ad6e934",
+  "pilotUntouched": "wcr_96016971141f",
+  "apiProof": {
+    "decisionResponse": {
+      "status": "Rejected",
+      "ownerStatus": null
+    },
+    "getById": {
+      "status": "Rejected",
+      "ownerStatus": null,
+      "proposedContentPreserved": true
+    },
+    "listEndpoint": {
+      "status": "Rejected",
+      "ownerStatus": null
+    }
+  },
+  "uiGaps": [
+    "No Reject confirmation dialog",
+    "No CHANGE REJECTED result screen",
+    "onReject navigates setView(home)",
+    "History prefers stale ownerStatus over status=Rejected"
+  ],
+  "expected": "Confirm dialog + persisted ownerStatus=Rejected + History Rejected + CHANGE REJECTED result; draft/audit preserved",
+  "reproduced": true
+}

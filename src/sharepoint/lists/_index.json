@@ -426,7 +426,7 @@
     {
       "name": "HVCG_AIJobs",
       "path": "src/sharepoint/lists/HVCG_AIJobs.json",
-      "columnCount": 34,
+      "columnCount": 50,
       "description": "AI \u2014 Orchestrated AI jobs (human-gated)"
     },
     {
@@ -494,6 +494,12 @@
       "path": "src/sharepoint/lists/HVCG_AuditEvents.json",
       "columnCount": 6,
       "description": "Significant business audit events"
+    },
+    {
+      "name": "HVCG_OperationsQueue",
+      "path": "src/sharepoint/lists/HVCG_OperationsQueue.json",
+      "columnCount": 13,
+      "description": "Role-neutral operations queue (Local AI Operations Phase 1 schema \u2014 not deployed)"
     }
   ],
   "productVersion": "1.1.0"

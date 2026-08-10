@@ -1,0 +1,140 @@
+DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS · LOCAL OWNER SESSION (DEV ONLY)
+HV
+HIGH VALUE
+CAPITAL GROUP
+High Value Capital Group
+End Local Owner
+LO
+EXECUTIVE
+Command Center
+My Work
+Portfolio
+Projects
+Universal Inbox
+Team & Agents
+Clients
+Approvals
+Analytics
+Capital Advisory
+INTELLIGENCE
+Financial Intelligence
+Banking
+Accounting
+Reports
+WORKSPACE
+Knowledge
+Documents
+Automation
+AI Agents
+AI Operations
+EVA Sandbox
+Website Studio
+SYSTEM
+Administration
+Connections
+Settings
+FAVORITES
+Banking
+Module
+RECENT
+Website Studio
+Navigation
+Command Center
+Navigation
+Website StudioManage your websites, content, SEO, and updates from one place.
+Owner Mode (default)
+Advanced Mode
+Website
+High Value Capital Group
+Edit Website
+Ask AI to Make a Change
+Create New Content
+Refresh
+Websites
+3
+Draft Changes
+4
+SEO Opportunities
+87
+Needs My Approval
+1
+Ready to Preview
+2
+Time Saved (min)
+110
+OVERVIEW
+Website Home
+EDIT
+Pages
+Content
+Media
+Blog
+GROWTH
+SEO
+Forms
+Analytics
+CHANGES
+Draft Changes
+Approvals
+Publishing
+History
+TOOLS
+AI Website Assistant
+ADVANCEDDeveloper Details
+REVIEWING CHANGE
+Website: High Value Capital Group
+Home → Hero → Homepage Headline
+Element: Main Headline · Risk: Low
+Changes Requested
+DRAFT — NOT LIVE
+Back
+Homepage Headline
+BEFORE — Production baseline
+Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.
+AFTER — Proposed draft (NOT LIVE)
+Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.
+Changed: 1 text block
+Unchanged: Navigation · Forms · SEO metadata · Analytics · Integrations
+YOU ASKED
+“Update the HVCG homepage headline to emphasize strategic capital advisory and business growth.”
+WHAT WILL CHANGE
+Home → Hero → Main Headline
+1 content change
+No forms changed
+No navigation changed
+No integrations changed
+No SEO metadata changed
+No analytics changed
+Preview identity verified for draft wcr_96016971141f · Baseline 97e3a913bc2e · Pilot fd4e05d1a634 · NOT LIVE
+BEFORE
+Production baseline
+AFTER
+Proposed draft
+COMPARE
+Side by side
+YOU ARE REVIEWING
+Homepage Headline
+Selected view
+AFTER — Draft (not live)
+Baseline: 97e3a913bc2e
+Pilot: fd4e05d1a634
+Draft: wcr_96016971141f
+Device review
+Desktop
+✓ Looks Good
+Tablet
+Looks Good
+Mobile
+Looks Good
+Preview This Change
+Review & Approve
+Edit
+Show Me 3 Options
+Save for Later
+Reject
+Publish (disabled)
+Developer Details
+DRAFT PREVIEW — NOT LIVE
+Draft wcr_96016971141f · Pilot fd4e05d1a634 · NOT LIVE
+← AI Operations · Production publishing always requires separate Manny authorization.
+Atlas Integration · local · SHA local-dev · built 2026-08-10T17:54:12.343Z · role HVCG Owner · client High Value Capital Group

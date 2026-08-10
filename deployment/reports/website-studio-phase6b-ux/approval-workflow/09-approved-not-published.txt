@@ -1,0 +1,95 @@
+DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS · LOCAL OWNER SESSION (DEV ONLY)
+HV
+HIGH VALUE
+CAPITAL GROUP
+High Value Capital Group
+End Local Owner
+LO
+EXECUTIVE
+Command Center
+My Work
+Portfolio
+Projects
+Universal Inbox
+Team & Agents
+Clients
+Approvals
+Analytics
+Capital Advisory
+INTELLIGENCE
+Financial Intelligence
+Banking
+Accounting
+Reports
+WORKSPACE
+Knowledge
+Documents
+Automation
+AI Agents
+AI Operations
+EVA Sandbox
+Website Studio
+SYSTEM
+Administration
+Connections
+Settings
+FAVORITES
+Banking
+Module
+RECENT
+Website Studio
+Navigation
+Command Center
+Navigation
+Website StudioManage your websites, content, SEO, and updates from one place.
+Owner Mode (default)
+Advanced Mode
+Change approved — not published. Production unchanged.
+Website
+High Value Capital Group
+Edit Website
+Ask AI to Make a Change
+Create New Content
+Refresh
+Websites
+3
+Draft Changes
+3
+SEO Opportunities
+87
+Needs My Approval
+3
+Ready to Preview
+2
+Time Saved (min)
+110
+OVERVIEW
+Website Home
+EDIT
+Pages
+Content
+Media
+Blog
+GROWTH
+SEO
+Forms
+Analytics
+CHANGES
+Draft Changes
+Approvals
+Publishing
+History
+TOOLS
+AI Website Assistant
+ADVANCEDDeveloper Details
+CHANGE APPROVED
+Homepage Headline
+Approved by: Manny
+Status: Approved — Not Published
+Next step: Ready for Publishing Review
+Production: UNCHANGED
+This approved the draft only. It did not publish, merge, deploy, or change Production.
+View Approved Change
+Return to Website Studio
+← AI Operations · Production publishing always requires separate Manny authorization.
+Atlas Integration · local · SHA local-dev · built 2026-08-10T05:25:19.792Z · role HVCG Owner · client High Value Capital Group

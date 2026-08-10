@@ -15,6 +15,23 @@ config/environments/development.json
 config/environments/test.json
 config/environments/production.json
 
+# Local AI Operations — machine-specific discovery / env (never commit)
+.secrets/local-ai.env
+.secrets/local-ai.discovery.json
+**/local-ai-operations.json
+.data/local-ai-document-staging/
+**/local-ai-document-staging/
+.data/local-ai-document-reviews/
+**/local-ai-document-reviews/
+.data/local-ai-document-backups/
+**/local-ai-document-backups/
+# Phase 5A local synthetic EVA store (never commit)
+.data/local-ai-eva/
+**/local-ai-eva/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
 # HVS inventory bulk dumps (keep summaries in reports)
 deployment/reports/hvs-onedrive-inventory/inventory-*.json
 deployment/reports/hvs-onedrive-inventory/inventory-*.csv

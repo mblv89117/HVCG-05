@@ -1,0 +1,154 @@
+{
+  "approvedH1": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+  "changeRequestId": "wcr_96016971141f",
+  "filesChanged": [
+    "website/scripts/generate_pages.py",
+    "website/staging/index.html",
+    "website/preview/index.html"
+  ],
+  "diffSummary": [
+    "diff --git a/website/preview/index.html b/website/preview/index.html",
+    "--- a/website/preview/index.html",
+    "+++ b/website/preview/index.html",
+    "-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>",
+    "+    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>",
+    "diff --git a/website/scripts/generate_pages.py b/website/scripts/generate_pages.py",
+    "--- a/website/scripts/generate_pages.py",
+    "+++ b/website/scripts/generate_pages.py",
+    "-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>",
+    "+    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>",
+    "diff --git a/website/staging/index.html b/website/staging/index.html",
+    "--- a/website/staging/index.html",
+    "+++ b/website/staging/index.html",
+    "-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>",
+    "+    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>",
+    "-<script src=\"js/attribution.js\" defer></script>"
+  ],
+  "diff": "diff --git a/website/preview/index.html b/website/preview/index.html\nindex 12f31a7..9fe8298 100644\n--- a/website/preview/index.html\n+++ b/website/preview/index.html\n@@ -68,7 +68,7 @@\n   </div>\n   <div class=\"hero__content\">\n     <p class=\"brand-hero\">High Value Capital Group</p>\n-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>\n+    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>\n     <p class=\"lead\">Take the free Enterprise Value and Business Readiness Assessment — a practical diagnostic for owners who want clarity before their next growth, capital, or value decision.</p>\n     <div class=\"cta-row\">\n       <a class=\"cta\" href=\"assessments/eva.html\">Complete the Free Assessment</a>\ndiff --git a/website/scripts/generate_pages.py b/website/scripts/generate_pages.py\nindex 0bf5767..bb5688a 100644\n--- a/website/scripts/generate_pages.py\n+++ b/website/scripts/generate_pages.py\n@@ -178,7 +178,7 @@ PAGES[\"index.html\"] = (\n   </div>\n   <div class=\"hero__content\">\n     <p class=\"brand-hero\">High Value Capital Group</p>\n-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>\n+    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>\n     <p class=\"lead\">Take the free Enterprise Value and Business Readiness Assessment — a practical diagnostic for owners who want clarity before their next growth, capital, or value decision.</p>\n     <div class=\"cta-row\">\n       <a class=\"cta\" href=\"assessments/eva.html\">Complete the Free Assessment</a>\ndiff --git a/website/staging/index.html b/website/staging/index.html\nindex 4ca2eea..9fe8298 100644\n--- a/website/staging/index.html\n+++ b/website/staging/index.html\n@@ -68,7 +68,7 @@\n   </div>\n   <div class=\"hero__content\">\n     <p class=\"brand-hero\">High Value Capital Group</p>\n-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>\n+    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>\n     <p class=\"lead\">Take the free Enterprise Value and Business Readiness Assessment — a practical diagnostic for owners who want clarity before their next growth, capital, or value decision.</p>\n     <div class=\"cta-row\">\n       <a class=\"cta\" href=\"assessments/eva.html\">Complete the Free Assessment</a>\n@@ -210,7 +210,6 @@\n <a class=\"sticky-cta\" href=\"assessments/eva.html\">Start free EVA</a>\n <a class=\"back-to-top\" href=\"#main\">Back to top</a>\n <script src=\"js/config.js\" defer></script>\n-<script src=\"js/attribution.js\" defer></script>\n <script src=\"js/site.js\" defer></script>\n <script src=\"js/legal.js\" defer></script>\n <script src=\"js/hero-canvas.js\" defer></script>\n",
+  "generate": {
+    "ok": true,
+    "output": "\n> hvcg-public-website@1.0.0 generate\n> python3 scripts/generate_pages.py\n\nwrote index.html\nwrote about.html\nwrote services.html\nwrote services/capital-advisory.html\nwrote services/ai-implementation.html\nwrote services/fractional-cfo.html\nwrote services/business-growth.html\nwrote services/business-valuation.html\nwrote atlas.html\nwrote assessments/eva/confirmation.html\nwrote methodology.html\nwrote careers.html\nwrote tools/roi-calculator.html\nwrote pricing.html\nwrote process.html\nwrote contact.html\nwrote book-appointment.html\nwrote book-strategy-call.html\nwrote resources.html\nwrote blog.html\nwrote podcast.html\nwrote newsletter.html\nwrote knowledge-center.html\nwrote faq.html\nwrote case-studies.html\nwrote client-portal.html\nwrote secure-upload.html\nwrote funding.html\nwrote assessments/eva.html\nwrote assessments/capital-readiness.html\nwrote assessments/funding-strategy.html\nwrote funnels/proposal.html\nwrote funnels/client-onboarding.html\nwrote privacy.html\nwrote terms.html\nwrote terms-of-use.html\nwrote privacy-policy.html\nwrote disclaimer.html\nwrote accessibility.html\ndone 39 pages\n"
+  },
+  "validate": {
+    "ok": true,
+    "output": "\n> hvcg-public-website@1.0.0 validate:eva\n> python3 scripts/validate_eva_crm.py\n\nPASS: EVA CRM schemaOnly shape OK\nband= C sku= SKU-CAP-CORE\n"
+  },
+  "smoke": {
+    "ok": false,
+    "output": "Command failed: npm run smoke\nTraceback (most recent call last):\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 1321, in do_open\n    h.request(req.get_method(), req.selector, req.data, headers,\n    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n              encode_chunked=req.has_header('Transfer-encoding'))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1367, in request\n    self._send_request(method, url, body, headers, encode_chunked)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1413, in _send_request\n    self.endheaders(body, encode_chunked=encode_chunked)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1362, in endheaders\n    self._send_output(message_body, encode_chunked=encode_chunked)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1122, in _send_output\n    self.send(msg)\n    ~~~~~~~~~^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1066, in send\n    self.connect()\n    ~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1032, in connect\n    self.sock = self._create_connection(\n                ~~~~~~~~~~~~~~~~~~~~~~~^\n        (self.host,self.port), self.timeout, self.source_address)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py\", line 874, in create_connection\n    raise exceptions[0]\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py\", line 859, in create_connection\n    sock.connect(sa)\n    ~~~~~~~~~~~~^^^^\nTimeoutError: timed out\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/Volumes/MacMiniPro2TB/.worktrees/hvcg-website-studio-pilot/website/scripts/smoke_http.py\", line 64, in <module>\n    main()\n    ~~~~^^\n  File \"/Volumes/MacMiniPro2TB/.worktrees/hvcg-website-studio-pilot/website/scripts/smoke_http.py\", line 41, in main\n    with urlopen(f\"http://127.0.0.1:{PORT}{r}\", timeout=3) as res:\n         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 187, in urlopen\n    return opener.open(url, data, timeout)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 487, in open\n    response = self._open(req, data)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 504, in _open\n    result = self._call_chain(self.handle_open, protocol, protocol +\n                              '_open', req)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 464, in _call_chain\n    result = func(*args)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 1350, in http_open\n    return self.do_open(http.client.HTTPConnection, req)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 1324, in do_open\n    raise URLError(err)\nurllib.error.URLError: <urlopen error timed out>\n\n\n> hvcg-public-website@1.0.0 smoke\n> python3 scripts/smoke_http.py\n\n\nTraceback (most recent call last):\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 1321, in do_open\n    h.request(req.get_method(), req.selector, req.data, headers,\n    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n              encode_chunked=req.has_header('Transfer-encoding'))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1367, in request\n    self._send_request(method, url, body, headers, encode_chunked)\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1413, in _send_request\n    self.endheaders(body, encode_chunked=encode_chunked)\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1362, in endheaders\n    self._send_output(message_body, encode_chunked=encode_chunked)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1122, in _send_output\n    self.send(msg)\n    ~~~~~~~~~^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1066, in send\n    self.connect()\n    ~~~~~~~~~~~~^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py\", line 1032, in connect\n    self.sock = self._create_connection(\n                ~~~~~~~~~~~~~~~~~~~~~~~^\n        (self.host,self.port), self.timeout, self.source_address)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py\", line 874, in create_connection\n    raise exceptions[0]\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py\", line 859, in create_connection\n    sock.connect(sa)\n    ~~~~~~~~~~~~^^^^\nTimeoutError: timed out\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/Volumes/MacMiniPro2TB/.worktrees/hvcg-website-studio-pilot/website/scripts/smoke_http.py\", line 64, in <module>\n    main()\n    ~~~~^^\n  File \"/Volumes/MacMiniPro2TB/.worktrees/hvcg-website-studio-pilot/website/scripts/smoke_http.py\", line 41, in main\n    with urlopen(f\"http://127.0.0.1:{PORT}{r}\", timeout=3) as res:\n         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 187, in urlopen\n    return opener.open(url, data, timeout)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 487, in open\n    response = self._open(req, data)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 504, in _open\n    result = self._call_chain(self.handle_open, protocol, protocol +\n                              '_open', req)\n  File \"/opt/homebrew/Cellar/python@3.14/3.14.6/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py\", line 464, in _call_chain\n    result = func("
+  },
+  "buildResult": "PASS WITH WARNINGS",
+  "testResult": "FAIL",
+  "previewUrl": "http://127.0.0.1:8765/",
+  "previewPid": 23511,
+  "previewFetchOk": false,
+  "layoutQa": {
+    "desktop": "WAITING ON MANNY",
+    "tablet": "WAITING ON MANNY",
+    "mobile": "WAITING ON MANNY"
+  },
+  "checks": {
+    "h1Ok": true,
+    "titlePreserved": true,
+    "metaPreserved": true,
+    "jsonLdPreserved": true,
+    "unexpectedFiles": [
+      "website/staging/book-appointment.html",
+      "website/staging/contact.html"
+    ],
+    "mainCheckoutBranch": "main",
+    "pilotBranch": "website-studio/hvcg-pilot",
+    "productionMainUntouched": true
+  },
+  "visualQaState": "WAITING ON MANNY",
+  "pilotCommitSha": null,
+  "commitError": null,
+  "websiteWorkingTree": "## website-studio/hvcg-pilot\n M website/preview/index.html\n M website/scripts/generate_pages.py\n M website/staging/book-appointment.html\n M website/staging/contact.html\n M website/staging/index.html",
+  "atlasChangeRequestStatus": "Approved for Git",
+  "rollbackPoint": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+  "estimatedMannyTimeSavedMinutes": 35,
+  "warnings": [
+    "smoke failed",
+    "unexpected files: website/staging/book-appointment.html, website/staging/contact.html",
+    "preview fetch failed: fetch failed",
+    "automated QA did not pass — commit skipped"
+  ],
+  "panel": {
+    "request": "Update the HVCG homepage headline to emphasize strategic capital advisory and business growth.",
+    "originalContent": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+    "aiProposals": [
+      {
+        "variantId": "variant_a",
+        "label": "Variant A — Strategic growth emphasis",
+        "text": "Strategic capital advisory that helps your business grow, qualify for capital, and increase enterprise value.",
+        "recommended": false,
+        "recommendationReason": null,
+        "brandConsistencyNotes": "Keeps HVCG capital + growth language; slightly more advisory tone than the diagnostic original.",
+        "seoImplications": "Adds “strategic capital advisory” and “enterprise value” phrases useful for advisory intent queries; longer than current H1.",
+        "ctaImplications": "Supports EVA / consultation CTAs by framing advisory outcomes rather than only a diagnostic question.",
+        "readabilityNotes": "Single sentence, clear benefit stack; moderate length.",
+        "risks": [
+          "Slightly less “curiosity gap” than the current question-form H1"
+        ],
+        "factualClaimsNeedingVerification": []
+      },
+      {
+        "variantId": "variant_b",
+        "label": "Variant B — Recommended (balanced)",
+        "text": "Strategic capital advisory for business growth — find what is holding you back from capital and higher enterprise value.",
+        "recommended": true,
+        "recommendationReason": "Balances brand diagnostic voice with explicit strategic capital advisory and growth framing Manny requested, without inventing credentials or outcomes.",
+        "brandConsistencyNotes": "Preserves HVCG “find what is holding you back” motif while elevating strategic capital advisory.",
+        "seoImplications": "Targets strategic capital advisory + business growth + enterprise value; should not change title/meta unless separately requested.",
+        "ctaImplications": "Pairs well with Schedule / EVA CTAs; does not alter CTA labels.",
+        "readabilityNotes": "Readable at a glance; em dash separates promise and diagnostic hook.",
+        "risks": [
+          "Em dash may wrap awkwardly on very small mobile widths"
+        ],
+        "factualClaimsNeedingVerification": []
+      },
+      {
+        "variantId": "variant_c",
+        "label": "Variant C — Concise advisory",
+        "text": "Strategic capital advisory to grow your business and increase enterprise value.",
+        "recommended": false,
+        "recommendationReason": null,
+        "brandConsistencyNotes": "Most concise; drops the diagnostic question style of the current homepage.",
+        "seoImplications": "Strong head-term focus; may reduce long-tail “what is preventing” query overlap.",
+        "ctaImplications": "More declarative; CTA must carry the diagnostic invitation.",
+        "readabilityNotes": "Short and scannable; good mobile fit.",
+        "risks": [
+          "Largest departure from the proven current H1 pattern"
+        ],
+        "factualClaimsNeedingVerification": []
+      }
+    ],
+    "recommendedVariantId": "variant_b",
+    "mannyFinalWording": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+    "finalWordingApproved": true,
+    "filesModified": true,
+    "gitDiff": null,
+    "filesChanged": [
+      "website/scripts/generate_pages.py",
+      "website/staging/index.html",
+      "website/preview/index.html"
+    ],
+    "branch": "website-studio/hvcg-pilot",
+    "baselineCommit": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+    "changeSha": null,
+    "buildResult": "PASS WITH WARNINGS",
+    "testResult": "FAIL",
+    "seoResult": "H1 wording only — title/meta/canonical/JSON-LD unchanged unless separately requested",
+    "previewUrl": "http://127.0.0.1:8765/",
+    "visualQaState": "WAITING ON MANNY",
+    "risk": "Low",
+    "estimatedReviewMinutes": 4,
+    "estimatedTimeSavedMinutes": 35,
+    "rollbackPoint": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+    "productionDeployment": "PRODUCTION DEPLOYMENT REQUIRES SEPARATE MANNY AUTHORIZATION",
+    "deployDisabled": true
+  },
+  "pushed": false,
+  "prCreated": false,
+  "deployed": false
+}

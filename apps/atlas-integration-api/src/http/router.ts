@@ -18,12 +18,18 @@ import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
+import type { LocalAiService } from '../local-ai/service.ts';
+import { handleLocalAiRoutes } from '../local-ai/http.ts';
+import type { WebsiteStudioService } from '../website-studio/service.ts';
+import { handleWebsiteStudioRoutes } from '../website-studio/http.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
   repo: IntegrationRepository;
   app: AppRegistry;
   pm: PmRepository;
+  localAi: LocalAiService;
+  websiteStudio: WebsiteStudioService;
 }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
@@ -118,6 +124,32 @@ export async function handleRequest(
   const method = req.method || 'GET';
 
   try {
+    if (path.startsWith('/api/local-ai')) {
+      const handled = await handleLocalAiRoutes({
+        cfg,
+        localAi: deps.localAi,
+        req,
+        res,
+        method,
+        path,
+        origin,
+      });
+      if (handled) return;
+    }
+
+    if (path.startsWith('/api/website-studio')) {
+      const handled = await handleWebsiteStudioRoutes({
+        cfg,
+        websiteStudio: deps.websiteStudio,
+        req,
+        res,
+        method,
+        path,
+        origin,
+      });
+      if (handled) return;
+    }
+
     if (path.startsWith('/api/pm')) {
       const handled = await handlePmRoutes({
         cfg,

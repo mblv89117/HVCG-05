@@ -1,0 +1,18 @@
+{
+  "label": "01-pages",
+  "url": "http://127.0.0.1:5180/website-studio?view=pages",
+  "pageLabel": null,
+  "selected": "ws_hvcg_real",
+  "selectedLabel": "High Value Capital Group",
+  "iframeSrc": null,
+  "frameText": "",
+  "reviewingSnippet": null,
+  "hasHomeInReview": false,
+  "bodyHints": {
+    "about": true,
+    "funding": true,
+    "faq": true,
+    "contact": true,
+    "home": false
+  }
+}

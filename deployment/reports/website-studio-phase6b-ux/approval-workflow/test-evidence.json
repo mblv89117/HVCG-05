@@ -1,0 +1,27 @@
+{
+  "phase": "6B-UX-approval-workflow",
+  "capturedAt": "2026-08-10T05:25:00Z",
+  "changeRequestId": "wcr_96016971141f",
+  "websiteId": "ws_hvcg_real",
+  "baselineCommit": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+  "pilotBranch": "website-studio/hvcg-pilot",
+  "pilotCommit": "fd4e05d1a634d53a5442d9865487ec76b7a21258",
+  "before": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+  "after": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+  "approvalStateAfterCapture": "Approved — Not Published",
+  "production": "UNCHANGED",
+  "screenshots": [
+    "01-home-needs-review.png",
+    "02-change-review.png",
+    "03-before-state.png",
+    "04-after-state.png",
+    "05-draft-preview-not-live.png",
+    "06-desktop-review.png",
+    "07-mobile-review.png",
+    "08-approval-confirmation.png",
+    "09-approved-not-published.png",
+    "10-approvals-page.png",
+    "11-draft-changes-page.png",
+    "12-ai-three-options.png"
+  ]
+}

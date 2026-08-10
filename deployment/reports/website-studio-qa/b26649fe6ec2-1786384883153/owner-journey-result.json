@@ -1,0 +1,213 @@
+{
+  "ok": true,
+  "beforeH1": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+  "afterH1": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+  "compareBefore": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+  "compareAfter": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+  "screenshots": [
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/01-home.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/02-hvcg-selected.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/03-home-editor.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/04-advisor.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/06-change-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/07-before.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/08-after.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/09-compare.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/10-draft-not-live.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/11-desktop-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/11-tablet-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/11-mobile-review.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/05-ai-three-options.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/13-approval-confirmation.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/14-approved-not-published.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/15-approvals-page.png",
+    "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384883153/16-draft-changes-page.png"
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "networkSuspects": [],
+  "buttonReport": [
+    {
+      "label": "/^BEFORE/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/^AFTER/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/^COMPARE/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/Preview This Change/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/Review & Approve/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/^Edit$/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/Show Me 3 Options/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/Save for Later/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/^Reject$/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/Publish \\(disabled\\)/i",
+      "classification": "DISABLED WITH EXPLANATION",
+      "ok": true,
+      "note": "Production publishing will be enabled in a later approved phase."
+    },
+    {
+      "label": "/^Desktop$/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/^Tablet$/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/^Mobile$/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    },
+    {
+      "label": "/Looks Good/i",
+      "classification": "FUNCTIONAL",
+      "ok": true
+    }
+  ],
+  "stepResults": [
+    {
+      "step": "Open Website Studio",
+      "result": "PASS"
+    },
+    {
+      "step": "Select HVCG",
+      "result": "PASS"
+    },
+    {
+      "step": "Open Home editor",
+      "result": "PASS"
+    },
+    {
+      "step": "Advisor panel",
+      "result": "PASS"
+    },
+    {
+      "step": "Open Change Review",
+      "result": "PASS"
+    },
+    {
+      "step": "BEFORE H1",
+      "result": "PASS",
+      "detail": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable."
+    },
+    {
+      "step": "AFTER H1",
+      "result": "PASS",
+      "detail": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value."
+    },
+    {
+      "step": "Before/After differ",
+      "result": "PASS",
+      "detail": "Find out what is preventing your busines… vs Strategic capital advisory to help your …"
+    },
+    {
+      "step": "COMPARE side-by-side",
+      "result": "PASS",
+      "detail": "before=Find out what is preventing your business from g after=Strategic capital advisory to help your business"
+    },
+    {
+      "step": "Draft preview identity banner",
+      "result": "PASS"
+    },
+    {
+      "step": "Device reviews",
+      "result": "PASS"
+    },
+    {
+      "step": "AI 3 options",
+      "result": "PASS"
+    },
+    {
+      "step": "Approval confirmation dialog",
+      "result": "PASS"
+    },
+    {
+      "step": "Approved — Not Published",
+      "result": "PASS"
+    },
+    {
+      "step": "Inbox pages",
+      "result": "PASS"
+    },
+    {
+      "step": "Console gate",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "Network safety",
+      "result": "PASS",
+      "detail": ""
+    },
+    {
+      "step": "Button inventory",
+      "result": "PASS",
+      "detail": ""
+    }
+  ]
+}

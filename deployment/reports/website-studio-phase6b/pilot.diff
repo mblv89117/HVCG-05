@@ -1,0 +1,47 @@
+diff --git a/website/preview/index.html b/website/preview/index.html
+index 12f31a7..9fe8298 100644
+--- a/website/preview/index.html
++++ b/website/preview/index.html
+@@ -68,7 +68,7 @@
+   </div>
+   <div class="hero__content">
+     <p class="brand-hero">High Value Capital Group</p>
+-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>
++    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>
+     <p class="lead">Take the free Enterprise Value and Business Readiness Assessment — a practical diagnostic for owners who want clarity before their next growth, capital, or value decision.</p>
+     <div class="cta-row">
+       <a class="cta" href="assessments/eva.html">Complete the Free Assessment</a>
+diff --git a/website/scripts/generate_pages.py b/website/scripts/generate_pages.py
+index 0bf5767..bb5688a 100644
+--- a/website/scripts/generate_pages.py
++++ b/website/scripts/generate_pages.py
+@@ -178,7 +178,7 @@ PAGES["index.html"] = (
+   </div>
+   <div class="hero__content">
+     <p class="brand-hero">High Value Capital Group</p>
+-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>
++    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>
+     <p class="lead">Take the free Enterprise Value and Business Readiness Assessment — a practical diagnostic for owners who want clarity before their next growth, capital, or value decision.</p>
+     <div class="cta-row">
+       <a class="cta" href="assessments/eva.html">Complete the Free Assessment</a>
+diff --git a/website/staging/index.html b/website/staging/index.html
+index 4ca2eea..9fe8298 100644
+--- a/website/staging/index.html
++++ b/website/staging/index.html
+@@ -68,7 +68,7 @@
+   </div>
+   <div class="hero__content">
+     <p class="brand-hero">High Value Capital Group</p>
+-    <h1>Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.</h1>
++    <h1>Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.</h1>
+     <p class="lead">Take the free Enterprise Value and Business Readiness Assessment — a practical diagnostic for owners who want clarity before their next growth, capital, or value decision.</p>
+     <div class="cta-row">
+       <a class="cta" href="assessments/eva.html">Complete the Free Assessment</a>
+@@ -210,7 +210,6 @@
+ <a class="sticky-cta" href="assessments/eva.html">Start free EVA</a>
+ <a class="back-to-top" href="#main">Back to top</a>
+ <script src="js/config.js" defer></script>
+-<script src="js/attribution.js" defer></script>
+ <script src="js/site.js" defer></script>
+ <script src="js/legal.js" defer></script>
+ <script src="js/hero-canvas.js" defer></script>

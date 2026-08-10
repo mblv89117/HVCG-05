@@ -1,0 +1,18 @@
+{
+  "label": "06-contact-editor",
+  "url": "http://127.0.0.1:5180/website-studio?view=editor",
+  "pageLabel": "Contact",
+  "selected": "ws_hvcg_real",
+  "selectedLabel": "High Value Capital Group",
+  "iframeSrc": "http://127.0.0.1:8765/contact.html",
+  "frameText": "Skip to content\nHome\nServices\nAI\nCapital\nAtlas\nAssessments\nResources\nBook Appointment\nContact\nClient Portal\n\nCONTACT\n\nContact\n\nGeneral inquiries. For the fastest diagnostic path, start with the free EVA.\n\nName\nEmail\nPhone\nCompany\nMessage\nI ",
+  "reviewingSnippet": null,
+  "hasHomeInReview": false,
+  "bodyHints": {
+    "about": true,
+    "funding": true,
+    "faq": true,
+    "contact": true,
+    "home": false
+  }
+}

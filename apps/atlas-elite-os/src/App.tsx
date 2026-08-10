@@ -33,6 +33,9 @@ import { AccountingConnectionsPage } from './pages/AccountingConnectionsPage';
 import { ConnectionsCenterPage } from './pages/ConnectionsCenterPage';
 import { AutomationsPage, KnowledgePage, ReportsPage } from './pages/PlatformModules';
 import { ModuleScaffold } from './pages/shared/ModuleScaffold';
+import { AiOperationsQueuePage } from './pages/local-ai/AiOperationsQueuePage';
+import { EvaSandboxPage } from './pages/local-ai/EvaSandboxPage';
+import { WebsiteStudioPage } from './pages/website-studio/WebsiteStudioPage';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
@@ -304,6 +307,30 @@ export function App() {
                 element={
                   <PrivateRoute>
                     <AiInsightsPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="ai-operations"
+                element={
+                  <PrivateRoute>
+                    <AiOperationsQueuePage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="ai-operations/eva"
+                element={
+                  <PrivateRoute>
+                    <EvaSandboxPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="website-studio"
+                element={
+                  <PrivateRoute>
+                    <WebsiteStudioPage />
                   </PrivateRoute>
                 }
               />

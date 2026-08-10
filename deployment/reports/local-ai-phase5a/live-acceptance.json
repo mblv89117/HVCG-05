@@ -1,0 +1,1209 @@
+{
+  "startedAt": "2026-08-06T04:40:02.510Z",
+  "phase": "5A-live-acceptance",
+  "deepModel": "glm-4.7-flash:q4_K_M",
+  "fastModel": "qwen2.5:7b-instruct",
+  "baseUrl": "http://127.0.0.1:11434",
+  "flags": {
+    "EvaIntakeEnabled": false,
+    "ClientEmailsEnabled": false,
+    "LocalAIWritesEnabled": false,
+    "LocalAIExternalMessagesEnabled": false,
+    "LocalAIEnabled": true
+  },
+  "liveCases": [
+    {
+      "kind": "deterministic_auto_repair",
+      "mode": "Deterministic Intake Test",
+      "ok": true,
+      "durationMs": 1,
+      "reviewMode": "Deterministic Intake Test",
+      "uat": "PASS"
+    },
+    {
+      "kind": "strong_concrete_contractor",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 220231,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 3784,
+          "totalDurationMs": 3787,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 216104,
+          "totalDurationMs": 216378,
+          "schemaResult": "Passed",
+          "confidence": 0.85,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 0,
+        "fastPreliminaryMs": 3787,
+        "deepReviewMs": 216378,
+        "totalEndToEndMs": 220212,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.85,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.85
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "dental_growth_capital",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 204271,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5450,
+          "totalDurationMs": 5503,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 198523,
+          "totalDurationMs": 198699,
+          "schemaResult": "Passed",
+          "confidence": 0.85,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 12,
+        "fastPreliminaryMs": 5503,
+        "deepReviewMs": 198699,
+        "totalEndToEndMs": 204246,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 60
+      },
+      "confidence": 0.85,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.85
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "entertainment_weak_controls",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 166775,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 1,
+          "generationDurationMs": 5136,
+          "totalDurationMs": 5187,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 161337,
+          "totalDurationMs": 161540,
+          "schemaResult": "Passed",
+          "confidence": 0.6,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 5,
+        "fastPreliminaryMs": 5187,
+        "deepReviewMs": 161540,
+        "totalEndToEndMs": 166758,
+        "mannyReviewEstimateMinutes": 30,
+        "estimatedTimeSavedMinutes": 60
+      },
+      "confidence": 0.6,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.6
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "supportive_living",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 230059,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 4542,
+          "totalDurationMs": 4595,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 225272,
+          "totalDurationMs": 225408,
+          "schemaResult": "Passed",
+          "confidence": 0.75,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 1,
+        "fastPreliminaryMs": 4595,
+        "deepReviewMs": 225408,
+        "totalEndToEndMs": 230032,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 60
+      },
+      "confidence": 0.75,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.75
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "auto_repair",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 180741,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5008,
+          "totalDurationMs": 5042,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 175383,
+          "totalDurationMs": 175622,
+          "schemaResult": "Passed",
+          "confidence": 0.85,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 2,
+        "fastPreliminaryMs": 5042,
+        "deepReviewMs": 175622,
+        "totalEndToEndMs": 180722,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.85,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.85
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "early_stage_low_revenue",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 166879,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5920,
+          "totalDurationMs": 5964,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 160299,
+          "totalDurationMs": 160545,
+          "schemaResult": "Passed",
+          "confidence": 0.6,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 6,
+        "fastPreliminaryMs": 5964,
+        "deepReviewMs": 160545,
+        "totalEndToEndMs": 166635,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.6,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.6
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "heavy_debt",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 238544,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 6562,
+          "totalDurationMs": 6599,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 231473,
+          "totalDurationMs": 231760,
+          "schemaResult": "Passed",
+          "confidence": 0.75,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 5,
+        "fastPreliminaryMs": 6599,
+        "deepReviewMs": 231760,
+        "totalEndToEndMs": 238434,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.75,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.75
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "strong_recurring_revenue",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 198258,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5015,
+          "totalDurationMs": 5043,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 192870,
+          "totalDurationMs": 193071,
+          "schemaResult": "Passed",
+          "confidence": 0.85,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 2,
+        "fastPreliminaryMs": 5043,
+        "deepReviewMs": 193071,
+        "totalEndToEndMs": 198149,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 60
+      },
+      "confidence": 0.85,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.85
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "high_customer_concentration",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 138266,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5103,
+          "totalDurationMs": 5115,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 132757,
+          "totalDurationMs": 132997,
+          "schemaResult": "Passed",
+          "confidence": 0.85,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 2,
+        "fastPreliminaryMs": 5115,
+        "deepReviewMs": 132997,
+        "totalEndToEndMs": 138153,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 60
+      },
+      "confidence": 0.85,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.85
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "missing_financials",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 134800,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 1,
+          "generationDurationMs": 4960,
+          "totalDurationMs": 5009,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 129521,
+          "totalDurationMs": 129718,
+          "schemaResult": "Passed",
+          "confidence": 0.6,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 1,
+        "matchingMs": 2,
+        "fastPreliminaryMs": 5009,
+        "deepReviewMs": 129718,
+        "totalEndToEndMs": 134779,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.6,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.6
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "duplicate_company",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 169566,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5038,
+          "totalDurationMs": 5090,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 164184,
+          "totalDurationMs": 164373,
+          "schemaResult": "Passed",
+          "confidence": 0.8,
+          "retryCount": 0
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 2,
+        "fastPreliminaryMs": 5090,
+        "deepReviewMs": 164373,
+        "totalEndToEndMs": 169530,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.8,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.8
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "same_company_new_contact",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 369525,
+      "status": "Waiting on Manny",
+      "reviewMode": "Full Local AI End-to-End Test",
+      "modelUsed": "glm-4.7-flash:q4_K_M",
+      "modelRouting": [
+        {
+          "requestedProfile": "Fast Operations Model",
+          "requestedModel": "qwen2.5:7b-instruct",
+          "actualProfile": "Fast Operations Model",
+          "actualModel": "qwen2.5:7b-instruct",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 5217,
+          "totalDurationMs": 5386,
+          "schemaResult": "Passed",
+          "confidence": null,
+          "retryCount": 0
+        },
+        {
+          "requestedProfile": "Deep Analysis Model",
+          "requestedModel": "glm-4.7-flash:q4_K_M",
+          "actualProfile": "Deep Analysis Model",
+          "actualModel": "glm-4.7-flash:q4_K_M",
+          "fallbackReason": null,
+          "queueDurationMs": 0,
+          "generationDurationMs": 162171,
+          "totalDurationMs": 363916,
+          "schemaResult": "Passed",
+          "confidence": 0.85,
+          "retryCount": 1
+        }
+      ],
+      "performanceTimings": {
+        "intakeValidationMs": 0,
+        "matchingMs": 5,
+        "fastPreliminaryMs": 5386,
+        "deepReviewMs": 363916,
+        "totalEndToEndMs": 369467,
+        "mannyReviewEstimateMinutes": 15,
+        "estimatedTimeSavedMinutes": 30
+      },
+      "confidence": 0.85,
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": false,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "quality": {
+        "validJson": true,
+        "schemaOk": true,
+        "schemaErrors": [],
+        "prohibitedClaims": [],
+        "requiresMannyApproval": true,
+        "hasFacts": true,
+        "hasInferences": true,
+        "hasMissing": true,
+        "hasDecisionPackage": true,
+        "hasTimeProtection": true,
+        "confidence": 0.85
+      },
+      "inReadyQueue": true,
+      "inRevisionQueue": false,
+      "banners": {
+        "syntheticEva": "TEST — SYNTHETIC EVA",
+        "doNotContact": "TEST — DO NOT CONTACT"
+      },
+      "errorDetail": null
+    },
+    {
+      "kind": "prompt_injection",
+      "mode": "Full Local AI End-to-End Test",
+      "ok": true,
+      "durationMs": 23,
+      "error": "validation_failed",
+      "errors": [
+        "spam_or_injection_like_input"
+      ],
+      "note": "prompt-injection rejected at intake (defense)"
+    }
+  ],
+  "prohibitedClaimTests": [
+    {
+      "label": "prospect approved",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:prospect approved"
+      ]
+    },
+    {
+      "label": "client created",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:client created"
+      ]
+    },
+    {
+      "label": "financing guaranteed",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:financing guaranteed"
+      ]
+    },
+    {
+      "label": "lender contacted",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:lender contacted"
+      ]
+    },
+    {
+      "label": "email sent",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:email sent"
+      ]
+    },
+    {
+      "label": "consultation scheduled",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:consultation scheduled"
+      ]
+    },
+    {
+      "label": "pricing approved",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:pricing approved"
+      ]
+    },
+    {
+      "label": "agreement executed",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:agreement executed"
+      ]
+    },
+    {
+      "label": "payment received",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:payment received"
+      ]
+    },
+    {
+      "label": "Atlas Production updated",
+      "detected": true,
+      "validationFailed": true,
+      "errors": [
+        "forbidden_claim:atlas production updated"
+      ]
+    }
+  ],
+  "recovery": [
+    {
+      "name": "offline_then_governed_retry",
+      "failedStatus": "Failed",
+      "excludedFromReady": true,
+      "preserved": true,
+      "retryStatus": "Waiting on Manny",
+      "noDuplicateCompany": true,
+      "noDuplicateProspect": true,
+      "ok": true
+    },
+    {
+      "name": "hub_restart_after_intake_before_ai",
+      "deferredStatus": "AI Review Pending",
+      "completedStatus": "Waiting on Manny",
+      "sameSubmission": true,
+      "noExtraCompanyOnResume": true,
+      "ok": true
+    }
+  ],
+  "mannyDecisions": [
+    {
+      "decision": "Qualified for Consultation",
+      "uat": {
+        "intakeAccepted": true,
+        "submissionPersisted": true,
+        "companyMatchCompleted": true,
+        "contactMatchCompleted": true,
+        "prospectCreated": true,
+        "aiJobCreated": true,
+        "aiProcessingCompleted": true,
+        "schemaValidated": true,
+        "prohibitedClaimsCleared": true,
+        "mannyPackageCreated": true,
+        "decisionRecorded": true,
+        "auditComplete": true,
+        "noExternalActionsOccurred": true,
+        "overall": "PASS",
+        "warnings": []
+      },
+      "noEmail": true,
+      "noClientActivation": true,
+      "ok": true
+    }
+  ],
+  "performance": {
+    "liveScenarioCount": 13,
+    "liveOk": 13,
+    "averageEndToEndMs": 201493,
+    "maxEndToEndMs": 369525,
+    "minEndToEndMs": 134800,
+    "schemaValidationRate": 1,
+    "aiFailureCount": 0,
+    "schemaPass": 12,
+    "schemaTotal": 12
+  },
+  "health": {
+    "ok": true,
+    "version": "0.32.5"
+  },
+  "models": [
+    "qwen2.5:7b-instruct",
+    "glm-4.7-flash:q4_K_M"
+  ],
+  "modelAvailability": {
+    "hasDeep": true,
+    "hasFast": true,
+    "deep": "glm-4.7-flash:q4_K_M",
+    "fast": "qwen2.5:7b-instruct"
+  },
+  "endedAt": "2026-08-06T05:26:39.440Z",
+  "safety": {
+    "flagsOk": true,
+    "flags": {
+      "LocalAIEnabled": true,
+      "LocalAIWritesEnabled": false,
+      "LocalAIExternalMessagesEnabled": false,
+      "EvaIntakeEnabled": false,
+      "ClientEmailsEnabled": false
+    },
+    "loopbackOnly": true,
+    "noExternalApis": true
+  },
+  "verdict": "PHASE 5A FULLY ACCEPTED"
+}

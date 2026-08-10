@@ -80,3 +80,6 @@ export {
   DEFAULT_RETRY,
 } from './sync/engine.ts';
 export type { RetryOptions, SyncCheckpoint, RecordProcessor } from './sync/engine.ts';
+
+export * from './local-ai/index.ts';
+export * from './website-studio/index.ts';

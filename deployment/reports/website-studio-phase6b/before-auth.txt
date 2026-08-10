@@ -1,0 +1,12 @@
+DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS
+HV
+HIGH VALUE
+CAPITAL GROUP
+Local Owner (Dev)
+G
+Access deniedRole matrix enforcement
+Sign-in required
+You must sign in with Microsoft before Atlas will show clients, portfolios, or other private data. Local Owner (Dev) is disabled in Production. Sign in with your HVCG Entra account to continue.
+Continue as Local Owner (Dev)
+Return home
+Atlas Integration · local · SHA local-dev · built 2026-08-10T00:37:28.946Z · role Unauthenticated

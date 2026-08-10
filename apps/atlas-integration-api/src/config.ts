@@ -34,8 +34,13 @@ function resolveEncryptionKey(): string {
 
 export function loadConfig() {
   const isLocal = (process.env.NODE_ENV || 'development') !== 'production';
+  const port = Number(process.env.INTEGRATION_API_PORT || 8790);
+  // Local-first bind. Override with INTEGRATION_API_HOST=0.0.0.0 only if separately authorized.
+  const host = (process.env.INTEGRATION_API_HOST || '127.0.0.1').trim() || '127.0.0.1';
+  const publicBaseUrl = process.env.PUBLIC_BASE_URL || `http://${host === '0.0.0.0' ? '127.0.0.1' : host}:${port}`;
   return {
-    port: Number(process.env.INTEGRATION_API_PORT || 8790),
+    port,
+    host,
     tokenEncryptionKeyB64: resolveEncryptionKey(),
     dataDir: process.env.INTEGRATION_DATA_DIR || defaultDataDir(),
     requireAuth: process.env.INTEGRATION_REQUIRE_AUTH
@@ -69,21 +74,21 @@ export function loadConfig() {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
-    publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:8790',
+    publicBaseUrl,
     microsoft: {
       tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
       clientId: process.env.MICROSOFT_CLIENT_ID || '',
       clientSecret: process.env.MICROSOFT_CLIENT_SECRET || '',
       redirectUri:
         process.env.MICROSOFT_REDIRECT_URI ||
-        `${process.env.PUBLIC_BASE_URL || 'http://localhost:8790'}/api/oauth/microsoft/callback`,
+        `${publicBaseUrl}/api/oauth/microsoft/callback`,
     },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
       redirectUri:
         process.env.GOOGLE_REDIRECT_URI ||
-        `${process.env.PUBLIC_BASE_URL || 'http://localhost:8790'}/api/oauth/google/callback`,
+        `${publicBaseUrl}/api/oauth/google/callback`,
     },
     github: {
       appId: process.env.GITHUB_APP_ID || '',
@@ -93,7 +98,7 @@ export function loadConfig() {
       webhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
       redirectUri:
         process.env.GITHUB_REDIRECT_URI ||
-        `${process.env.PUBLIC_BASE_URL || 'http://localhost:8790'}/api/oauth/github/callback`,
+        `${publicBaseUrl}/api/oauth/github/callback`,
     },
   };
 }
