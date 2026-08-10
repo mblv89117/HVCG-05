@@ -1,0 +1,6 @@
+
+Running 1 test using 1 worker
+
+  ✓  1 tests/owner-journey.spec.ts:86:1 › HVCG Website Studio owner journey RELEASE GATE (14.9s)
+
+  1 passed (15.3s)

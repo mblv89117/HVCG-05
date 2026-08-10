@@ -14,6 +14,7 @@
     "dev:integration-api": "npm run start -w @hvcg/atlas-integration-api",
     "test:integration-api": "npm run test -w @hvcg/atlas-integration-api",
     "test:recovery": "npm run test:recovery -w @hvcg/atlas-elite-os",
+    "qa:website-studio": "npm run qa:gate --prefix scripts/website-studio-qa",
     "storybook": "npm run storybook -w @hvcg/atlas-design-system",
     "build-storybook": "npm run build-storybook -w @hvcg/atlas-design-system"
   }

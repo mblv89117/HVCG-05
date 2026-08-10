@@ -222,7 +222,7 @@ export class WebsitePreviewManager {
       env: { ...process.env, HOST: '127.0.0.1' },
       detached: false,
       stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    }) as unknown as import('node:child_process').ChildProcessWithoutNullStreams;
     state.child = child;
     state.pid = child.pid ?? null;
     state.startedAt = nowIso();

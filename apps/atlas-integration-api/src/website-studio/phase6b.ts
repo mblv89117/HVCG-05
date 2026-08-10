@@ -316,7 +316,7 @@ export class Phase6bPilotController {
         { status: 409, code: 'wrong_pilot_branch' },
       );
     }
-    if (st.currentBranch === HVCG_PRODUCTION_BRANCH) {
+    if (String(st.currentBranch) === String(HVCG_PRODUCTION_BRANCH)) {
       throw Object.assign(new Error('Refusing to operate on production branch'), {
         status: 403,
         code: 'production_branch_edit_forbidden',

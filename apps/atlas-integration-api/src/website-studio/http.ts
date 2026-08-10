@@ -203,6 +203,65 @@ export async function handleWebsiteStudioRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/website-studio/qa/readiness') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const websiteId = url.searchParams.get('websiteId') || undefined;
+      send(res, 200, ws.getWebsiteStudioReadiness(websiteId), origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/website-studio/qa/latest') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const websiteId = url.searchParams.get('websiteId') || undefined;
+      send(res, 200, { result: ws.getLatestQaResult(websiteId) }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/website-studio/qa/runs') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const websiteId = url.searchParams.get('websiteId') || undefined;
+      send(res, 200, { runs: ws.listQaRuns(websiteId) }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/website-studio/qa/begin') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      send(
+        res,
+        200,
+        ws.beginQaRun({
+          websiteId: body.websiteId ? String(body.websiteId) : undefined,
+          changeRequestId: body.changeRequestId ? String(body.changeRequestId) : undefined,
+          runType: body.runType ? String(body.runType) : undefined,
+        }),
+        origin,
+      );
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/website-studio/qa/record') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const sealed = ws.recordQaResult(body as never);
+      send(res, 200, { result: sealed }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/website-studio/qa/restore-pilot') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const changeRequest = ws.restorePilotForOwnerReview(
+        body.changeRequestId ? String(body.changeRequestId) : 'wcr_96016971141f',
+        body.ownerQaGate ? { ownerQaGate: String(body.ownerQaGate) } : undefined,
+      );
+      send(res, 200, { changeRequest }, origin);
+      return true;
+    }
+
     if (method === 'GET' && path === '/api/website-studio/local-system-status') {
       await requirePrincipal(req, cfg);
       send(res, 200, await ws.localSystemStatus(), origin);

@@ -1599,10 +1599,29 @@ export async function fetchWebsiteStudioOwnerInbox(
   const res = await fetch(`${base()}/api/website-studio/owner/inbox${q}`, { headers: headers(auth) });
   return parse(res) as Promise<{
     needsReview: Array<Record<string, unknown>>;
+    notReadyForReview?: Array<Record<string, unknown>>;
     readyPreview: Array<Record<string, unknown>>;
     saved: Array<Record<string, unknown>>;
     approved: Array<Record<string, unknown>>;
     all: Array<Record<string, unknown>>;
+    readiness?: Record<string, unknown>;
+  }>;
+}
+
+export async function fetchWebsiteStudioQaReadiness(
+  auth: AtlasHubAuthHeaders,
+  websiteId?: string,
+) {
+  const q = websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : '';
+  const res = await fetch(`${base()}/api/website-studio/qa/readiness${q}`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{
+    gate: string;
+    badge: string;
+    latestRun: Record<string, unknown> | null;
+    testedCommit: string | null;
+    ownerPackage: Record<string, unknown> | null;
   }>;
 }
 

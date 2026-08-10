@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "runId": "53eb2601-ec55-4896-a0aa-53307b29b15f",
+  "runType": "RELEASE GATE",
+  "gate": "TESTING",
+  "verdict": "WEBSITE STUDIO QA GATE — FAILED",
+  "testedCommit": "b26649fe6ec287fc3b335caaf620890917cd5738",
+  "startedAt": "2026-08-10T17:59:35.532Z",
+  "finishedAt": "2026-08-10T18:00:12.705Z",
+  "durationMs": 37172,
+  "changeRequestId": "wcr_96016971141f",
+  "websiteId": "ws_hvcg_real",
+  "checks": [
+    {
+      "id": "svc-elite",
+      "name": "Elite OS :5180",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "svc-hub",
+      "name": "Integration Hub :8790",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "svc-ollama",
+      "name": "Ollama (optional for deterministic advisor)",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "preview-running",
+      "name": "Preview running on loopback",
+      "status": "PASS",
+      "detail": "running",
+      "durationMs": 1066
+    },
+    {
+      "id": "api-before-after",
+      "name": "API Before/After H1 identity",
+      "status": "PASS",
+      "detail": "before=Find out what is preventing your business from growing, qualifying for capital,  | after=Strategic capital advisory to help your business grow, qualify for capital, and "
+    },
+    {
+      "id": "safety-flags",
+      "name": "Safety feature flags",
+      "status": "PASS",
+      "detail": "{\"elite\":{\"port\":5180,\"bind\":\"127.0.0.1\",\"healthUrl\":\"http://127.0.0.1:5180/\"},\"hub\":{\"port\":8790,\"bind\":\"127.0.0.1\",\"healthUrl\":\"http://127.0.0.1:8790/health\"},\"preview\":{\"port\":8765,\"onDemand\":true,\"note\":\"Start from Website Studio — not LaunchAgent-managed\"},\"ollama\":{\"baseUrl\":\"http://127.0.0.1:11434\"},\"sqlitePathPresent\":true,\"clamscan\":true,\"safety\":{\"LocalAIWritesEnabled\":false,\"LocalAIExternalMessagesEnabled\":false,\"EvaIntakeEnabled\":false,\"ClientEmailsEnabled\":false},\"logsDir\":\"~/Library/Logs/HVCG-Atlas\"}"
+    },
+    {
+      "id": "ai-three-options",
+      "name": "Advisor 3 options (deterministic)",
+      "status": "PASS"
+    },
+    {
+      "id": "browser-owner-flow",
+      "name": "Browser owner journey",
+      "status": "FAIL",
+      "detail": "──────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/video.webm\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/error-context.md\n\n    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n    Usage:\n\n        npx playwright show-trace artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n  1 failed\n    tests/owner-journey.spec.ts:59:1 › HVCG Website Studio owner journey RELEASE GATE ──────────────\n",
+      "durationMs": 34548
+    },
+    {
+      "id": "approval-flow",
+      "name": "Approval API flow",
+      "status": "FAIL",
+      "detail": "TypeError: fetch failed"
+    },
+    {
+      "id": "restore-for-manny",
+      "name": "Restore CR for owner UAT",
+      "status": "PASS",
+      "detail": "Waiting for Your Review"
+    }
+  ],
+  "defects": [
+    {
+      "id": "DEF-1",
+      "title": "Browser owner journey",
+      "severity": "HIGH",
+      "ownerWorkflowStep": "Browser owner journey",
+      "expected": "PASS",
+      "actual": "──────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/video.webm\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/error-context.md\n\n    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n    Usage:\n\n        npx playwright show-trace artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n  1 failed\n    tests/owner-journey.spec.ts:59:1 › HVCG Website Studio owner journey RELEASE GATE ──────────────\n",
+      "affectedComponent": "Website Studio",
+      "suggestedFix": "See QA evidence and fix Phase 6B blocker",
+      "retestRequired": true
+    },
+    {
+      "id": "DEF-2",
+      "title": "Approval API flow",
+      "severity": "HIGH",
+      "ownerWorkflowStep": "Approval API flow",
+      "expected": "PASS",
+      "actual": "TypeError: fetch failed",
+      "affectedComponent": "Website Studio",
+      "suggestedFix": "See QA evidence and fix Phase 6B blocker",
+      "retestRequired": true
+    }
+  ],
+  "buttonInventory": {
+    "total": 0,
+    "functional": 0,
+    "disabledWithExplanation": 0,
+    "comingLater": 0,
+    "failures": []
+  },
+  "beforeAfter": {
+    "baselineCommit": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+    "pilotCommit": "fd4e05d1a634d53a5442d9865487ec76b7a21258",
+    "beforeH1": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+    "afterH1": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+    "visualDifferenceVerified": false
+  },
+  "aiAdvisor": {
+    "mode": "deterministic",
+    "threeOptionsOk": true,
+    "failures": []
+  },
+  "approval": {
+    "confirmationOk": false,
+    "persistenceOk": false,
+    "invalidationOk": false,
+    "productionUnchanged": true
+  },
+  "safety": {
+    "localAiWritesEnabled": false,
+    "localAiExternalMessagesEnabled": false,
+    "evaIntakeEnabled": false,
+    "clientEmailsEnabled": false,
+    "productionChanged": false,
+    "unexpectedExternalHosts": []
+  },
+  "performance": {
+    "ownerFlowMs": 34548,
+    "previewStartupMs": 1066,
+    "aiOperationMs": 18,
+    "pageLoadMs": 0,
+    "retries": 0,
+    "retestCount": 0
+  },
+  "evidenceDir": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/b26649fe6ec2-1786384775547",
+  "screenshots": [],
+  "traces": [],
+  "summary": {
+    "Build": "FAIL",
+    "Browser Flow": "FAIL",
+    "Preview Identity": "FAIL",
+    "Before / After": "PASS",
+    "AI Advisor": "PASS",
+    "Buttons": "0/?",
+    "Approval Persistence": "FAIL",
+    "Approval Invalidation": "WARN",
+    "Console Errors": "see evidence",
+    "Safety": "PASS",
+    "Production Changed": "NO"
+  }
+}

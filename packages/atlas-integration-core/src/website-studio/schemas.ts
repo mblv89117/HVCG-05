@@ -408,6 +408,8 @@ export interface WebsiteChangeRequest {
   /** Phase 6B-UX owner workflow */
   ownerStatus?: string;
   ownerTitle?: string;
+  /** Phase 6B-QA release gate — NOT TESTED | TESTING | FAILED QA | READY FOR MANNY | OWNER APPROVED */
+  ownerQaGate?: string | null;
   contentFingerprint?: string | null;
   savedForLater?: boolean;
   deviceReviews?: {

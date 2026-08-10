@@ -46,6 +46,7 @@ import {
   postWebsiteStudioSaveForLater,
   postWebsiteStudioThreeOptions,
   fetchWebsiteStudioLocalSystemStatus,
+  fetchWebsiteStudioQaReadiness,
   restartWebsiteStudioPreview,
   startWebsiteStudioPreview,
 } from '../../integrations/hub/api';
@@ -67,6 +68,7 @@ import {
   NaturalLanguageBar,
   PageManagerView,
   PublishingView,
+  QaReadinessPanel,
   SeoDashboardView,
   StudioSidebar,
   VisualEditorView,
@@ -141,10 +143,19 @@ export function WebsiteStudioPage() {
   const [aiOptions, setAiOptions] = useState<string[]>([]);
   const [ownerInbox, setOwnerInbox] = useState<{
     needsReview: Array<Record<string, unknown>>;
+    notReadyForReview?: Array<Record<string, unknown>>;
     readyPreview: Array<Record<string, unknown>>;
     saved: Array<Record<string, unknown>>;
     approved: Array<Record<string, unknown>>;
     all: Array<Record<string, unknown>>;
+    readiness?: Record<string, unknown>;
+  } | null>(null);
+  const [qaReadiness, setQaReadiness] = useState<{
+    gate?: string;
+    badge?: string;
+    testedCommit?: string | null;
+    ownerPackage?: Record<string, unknown> | null;
+    latestRun?: Record<string, unknown> | null;
   } | null>(null);
   const reviewCrId = params.get('cr') || '';
   const modeParam = params.get('mode');
@@ -260,8 +271,18 @@ export function WebsiteStudioPage() {
       try {
         const inbox = await fetchWebsiteStudioOwnerInbox(hubAuth, selectedWebsiteId || undefined);
         setOwnerInbox(inbox);
+        if (inbox.readiness) setQaReadiness(inbox.readiness);
       } catch {
         setOwnerInbox(null);
+      }
+      try {
+        const readiness = await fetchWebsiteStudioQaReadiness(
+          hubAuth,
+          selectedWebsiteId || undefined,
+        );
+        setQaReadiness(readiness);
+      } catch {
+        /* optional until Hub restarted */
       }
       const preferred =
         selectedWebsiteId ||
@@ -320,10 +341,16 @@ export function WebsiteStudioPage() {
   }, [modeParam]);
 
   useEffect(() => {
-    if (!hubAuth || nav !== 'review' || !reviewCrId) return;
+    if (!hubAuth || nav !== 'review' || !reviewCrId) {
+      setPreviewHtmlBefore(null);
+      setPreviewHtmlAfter(null);
+      return;
+    }
     void (async () => {
       setBusy(true);
       setError(null);
+      setPreviewHtmlBefore(null);
+      setPreviewHtmlAfter(null);
       try {
         const res = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
         setOwnerReview(res.review);
@@ -776,10 +803,32 @@ export function WebsiteStudioPage() {
           <div style={{ flex: 1, padding: '16px 18px 28px', minWidth: 0 }}>
             {selectedWebsite && nav === 'home' ? (
               <>
+                {qaReadiness?.badge ? (
+                  <MessageBar
+                    intent={qaReadiness.gate === 'READY FOR MANNY' ? 'success' : 'warning'}
+                    style={{ marginBottom: 8 }}
+                  >
+                    <MessageBarBody>
+                      Website Studio Readiness:{' '}
+                      {qaReadiness.gate === 'READY FOR MANNY'
+                        ? 'READY FOR MANNY'
+                        : String(qaReadiness.badge || 'NOT READY FOR REVIEW')}
+                    </MessageBarBody>
+                  </MessageBar>
+                ) : null}
                 <NeedsReviewHomeCards
                   items={ownerInbox?.needsReview || []}
                   onReview={(id) => openReview(id)}
                 />
+                {(ownerInbox?.notReadyForReview?.length || 0) > 0 ? (
+                  <NeedsReviewHomeCards
+                    title="NOT READY FOR REVIEW"
+                    tone="not-ready"
+                    items={ownerInbox?.notReadyForReview || []}
+                    actionLabel="View (QA pending)"
+                    onReview={(id) => openReview(id)}
+                  />
+                ) : null}
                 {(ownerInbox?.readyPreview?.length || 0) > 0 ? (
                   <NeedsReviewHomeCards
                     title="READY TO PREVIEW"
@@ -1104,6 +1153,14 @@ export function WebsiteStudioPage() {
 
             {nav === 'analytics' && selectedWebsite ? (
               <AnalyticsView website={selectedWebsite} advancedMode={advancedMode} />
+            ) : null}
+
+            {nav === 'qa' ? (
+              <QaReadinessPanel
+                readiness={qaReadiness}
+                advancedMode={advancedMode}
+                onOpenReview={() => openReview('wcr_96016971141f', 'compare')}
+              />
             ) : null}
 
             {nav === 'drafts' || nav === 'approvals' ? (

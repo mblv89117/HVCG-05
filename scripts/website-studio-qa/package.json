@@ -1,0 +1,17 @@
+{
+  "name": "website-studio-qa",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "qa": "node ./run.mjs",
+    "qa:smoke": "node ./run.mjs --run-type SMOKE",
+    "qa:full": "node ./run.mjs --run-type \"FULL OWNER QA\"",
+    "qa:gate": "node ./run.mjs --run-type \"RELEASE GATE\"",
+    "test": "playwright test",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
+}

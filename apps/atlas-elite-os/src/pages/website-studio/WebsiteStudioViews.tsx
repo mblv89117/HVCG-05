@@ -1382,6 +1382,102 @@ export function AdvancedPanel(props: {
   );
 }
 
+export function QaReadinessPanel(props: {
+  readiness: {
+    gate?: string;
+    badge?: string;
+    testedCommit?: string | null;
+    ownerPackage?: {
+      title?: string;
+      website?: string;
+      change?: string;
+      estimatedReviewMinutes?: number;
+      openReviewPath?: string;
+      lines?: string[];
+    } | null;
+    latestRun?: Record<string, unknown> | null;
+  } | null;
+  advancedMode: boolean;
+  onOpenReview?: () => void;
+}) {
+  const gate = String(props.readiness?.gate || 'NOT TESTED');
+  const badge = String(props.readiness?.badge || 'NOT READY FOR REVIEW');
+  const ready = gate === 'READY FOR MANNY';
+  const failed = gate === 'FAILED QA';
+  const latest = props.readiness?.latestRun || null;
+  const defects = (latest?.defects as Array<Record<string, unknown>>) || [];
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <AtlasCard>
+        <Text weight="semibold" size={500}>
+          Website Studio Readiness
+        </Text>
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>
+          <span style={{ color: ready ? '#2f6b3a' : failed ? '#8a1f1f' : muted }}>●</span>{' '}
+          {ready ? 'Automated QA Passed' : failed ? 'QA Failed' : badge}
+        </Caption1>
+        {ready ? (
+          <StatusChip label="READY FOR MANNY" tone="success" />
+        ) : (
+          <StatusChip label="NOT READY FOR REVIEW" tone="warning" />
+        )}
+        {failed ? (
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            {defects.length || 'Some'} issues need to be fixed before your review.
+          </Caption1>
+        ) : null}
+        {props.readiness?.testedCommit ? (
+          <Caption1 style={{ display: 'block', marginTop: 8, color: muted }}>
+            Tested commit: {String(props.readiness.testedCommit).slice(0, 12)}
+          </Caption1>
+        ) : null}
+        {ready && props.onOpenReview ? (
+          <Button appearance="primary" style={{ marginTop: 12 }} onClick={props.onOpenReview}>
+            Open Review
+          </Button>
+        ) : null}
+      </AtlasCard>
+
+      {ready && props.readiness?.ownerPackage ? (
+        <AtlasCard>
+          <Text weight="semibold">{String(props.readiness.ownerPackage.title || 'READY FOR YOUR REVIEW')}</Text>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            Website: {String(props.readiness.ownerPackage.website)}
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>
+            Change: {String(props.readiness.ownerPackage.change)}
+          </Caption1>
+          {(props.readiness.ownerPackage.lines || []).map((line) => (
+            <Caption1 key={line} style={{ display: 'block', marginTop: line ? 2 : 8 }}>
+              {line}
+            </Caption1>
+          ))}
+        </AtlasCard>
+      ) : null}
+
+      {props.advancedMode && latest ? (
+        <AtlasCard>
+          <Text weight="semibold">Advanced QA evidence</Text>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            Run: {String(latest.runId || '—')} · {String(latest.runType || '')}
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>
+            Verdict: {String(latest.verdict || '—')}
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>
+            Evidence: {String(latest.evidenceDir || '—')}
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>
+            Defects: {defects.length} · Buttons:{' '}
+            {String((latest.buttonInventory as { functional?: number })?.functional ?? '—')}/
+            {String((latest.buttonInventory as { total?: number })?.total ?? '—')}
+          </Caption1>
+        </AtlasCard>
+      ) : null}
+    </div>
+  );
+}
+
 export function LocalSystemStatusPanel(props: {
   status: {
     checkedAt?: string;

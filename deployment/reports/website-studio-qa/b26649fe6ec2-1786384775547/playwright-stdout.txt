@@ -1,0 +1,49 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 tests/owner-journey.spec.ts:59:1 › HVCG Website Studio owner journey RELEASE GATE (33.7s)
+
+
+  1) tests/owner-journey.spec.ts:59:1 › HVCG Website Studio owner journey RELEASE GATE ─────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/Website Studio|Website Home|High Value Capital Group/i).first()
+    Expected: visible
+    Timeout: 30000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 30000ms
+      - waiting for getByText(/Website Studio|Website Home|High Value Capital Group/i).first()
+
+
+      91 |   await page.goto('/website-studio');
+      92 |   await ensureDevOwner(page);
+    > 93 |   await expect(page.getByText(/Website Studio|Website Home|High Value Capital Group/i).first()).toBeVisible({
+         |                                                                                                 ^
+      94 |     timeout: 30_000,
+      95 |   });
+      96 |   await shot(page, '01-home', screenshots);
+        at /Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/scripts/website-studio-qa/tests/owner-journey.spec.ts:93:97
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip
+    Usage:
+
+        npx playwright show-trace artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests/owner-journey.spec.ts:59:1 › HVCG Website Studio owner journey RELEASE GATE ──────────────

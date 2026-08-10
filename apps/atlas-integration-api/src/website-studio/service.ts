@@ -68,6 +68,11 @@ import {
   type OwnerDeviceReviews,
 } from './ownerWorkflow.ts';
 import { collectLocalSystemStatus } from './localSystemStatus.ts';
+import {
+  computeGateFromResult,
+  ownerPackageForPass,
+  type WebsiteStudioQaResult,
+} from './qaGate.ts';
 
 function nowIso() {
   return new Date().toISOString();
@@ -1121,6 +1126,7 @@ export class WebsiteStudioService {
     const enriched = cr as WebsiteChangeRequest & Record<string, unknown>;
     enriched.ownerTitle = ownerChangeTitle(cr);
     enriched.ownerStatus = ownerFriendlyStatus(enriched);
+    enriched.ownerQaGate = String(cr.ownerQaGate || 'NOT TESTED');
     enriched.contentFingerprint = fingerprintContent(exactDraftContent(cr));
     try {
       enriched.websiteName = this.getWebsite(cr.websiteId).websiteName;
@@ -1128,6 +1134,7 @@ export class WebsiteStudioService {
       enriched.websiteName = 'Website';
     }
     const status = String(enriched.ownerStatus);
+    const gate = String(enriched.ownerQaGate);
     enriched.nextAction =
       status === 'Approved — Not Published'
         ? 'Ready for Publishing Review'
@@ -1135,7 +1142,11 @@ export class WebsiteStudioService {
           ? 'Resume review'
           : status === 'Ready to Preview'
             ? 'Preview This Change'
-            : 'Review & Approve';
+            : gate !== 'READY FOR MANNY' &&
+                (status === 'Waiting for Your Review' || status === 'Changes Requested')
+              ? 'NOT READY FOR REVIEW — automated QA required'
+              : 'Review & Approve';
+    enriched.readyForManny = gate === 'READY FOR MANNY';
     return enriched;
   }
 
@@ -1297,6 +1308,7 @@ export class WebsiteStudioService {
     cr.mannyApproval = true;
     cr.visualQaConfirmedByManny = true;
     cr.qaStatus = 'QA Passed';
+    cr.ownerQaGate = 'OWNER APPROVED';
     cr.updatedAt = nowIso();
     this.store.upsertChangeRequest(cr);
     this.store.audit({
@@ -1420,15 +1432,191 @@ export class WebsiteStudioService {
     const crs = this.listOwnerChangeRequests(websiteId);
     const actionable = (c: WebsiteChangeRequest & Record<string, unknown>) =>
       Boolean(c.phase6bPilot || c.commit || c.worktreePath);
+    const reviewable = (c: WebsiteChangeRequest & Record<string, unknown>) =>
+      actionable(c) &&
+      (c.ownerStatus === 'Waiting for Your Review' || c.ownerStatus === 'Changes Requested');
+    /** Manny only sees NEEDS YOUR REVIEW after automated QA gate passes. */
     const needsReview = crs.filter(
+      (c) => reviewable(c) && String(c.ownerQaGate || '') === 'READY FOR MANNY',
+    );
+    const notReadyForReview = crs.filter(
       (c) =>
-        actionable(c) &&
-        (c.ownerStatus === 'Waiting for Your Review' || c.ownerStatus === 'Changes Requested'),
+        reviewable(c) &&
+        String(c.ownerQaGate || 'NOT TESTED') !== 'READY FOR MANNY' &&
+        String(c.ownerQaGate || '') !== 'OWNER APPROVED',
     );
     const readyPreview = crs.filter((c) => c.ownerStatus === 'Ready to Preview' && actionable(c));
     const saved = crs.filter((c) => c.ownerStatus === 'Saved for Later');
     const approved = crs.filter((c) => c.ownerStatus === 'Approved — Not Published');
-    return { needsReview, readyPreview, saved, approved, all: crs.filter(actionable) };
+    return {
+      needsReview,
+      notReadyForReview,
+      readyPreview,
+      saved,
+      approved,
+      all: crs.filter(actionable),
+      readiness: this.getWebsiteStudioReadiness(websiteId),
+    };
+  }
+
+  getWebsiteStudioReadiness(websiteId?: string) {
+    const latest = this.getLatestQaResult(websiteId);
+    const pilot = this.store
+      .listChangeRequests()
+      .find((c) => c.changeRequestId === 'wcr_96016971141f' || c.phase6bPilot);
+    const gate = String(
+      (websiteId
+        ? this.listChangeRequests(websiteId).find((c) => c.changeRequestId === pilot?.changeRequestId)
+        : pilot
+      )?.ownerQaGate ||
+        latest?.gate ||
+        'NOT TESTED',
+    );
+    return {
+      gate,
+      badge:
+        gate === 'READY FOR MANNY'
+          ? 'READY FOR MANNY'
+          : gate === 'FAILED QA'
+            ? 'NOT READY FOR REVIEW'
+            : gate === 'TESTING'
+              ? 'TESTING'
+              : gate === 'OWNER APPROVED'
+                ? 'OWNER APPROVED'
+                : 'NOT READY FOR REVIEW',
+      latestRun: latest,
+      testedCommit: latest?.testedCommit || null,
+      ownerPackage: latest?.ownerPackage || null,
+    };
+  }
+
+  getLatestQaResult(websiteId?: string): WebsiteStudioQaResult | null {
+    const key = websiteId ? `qa:latest:${websiteId}` : 'qa:latest:ws_hvcg_real';
+    return this.store.getOwnerPref<WebsiteStudioQaResult>(key);
+  }
+
+  listQaRuns(websiteId?: string): WebsiteStudioQaResult[] {
+    const key = websiteId ? `qa:runs:${websiteId}` : 'qa:runs:ws_hvcg_real';
+    return this.store.getOwnerPref<WebsiteStudioQaResult[]>(key) || [];
+  }
+
+  beginQaRun(opts: { websiteId?: string; changeRequestId?: string; runType?: string }) {
+    const websiteId = opts.websiteId || 'ws_hvcg_real';
+    const changeRequestId = opts.changeRequestId || 'wcr_96016971141f';
+    try {
+      const cr = this.getChangeRequest(changeRequestId);
+      cr.ownerQaGate = 'TESTING';
+      cr.updatedAt = nowIso();
+      this.store.upsertChangeRequest(cr);
+    } catch {
+      /* CR may be missing in empty DBs */
+    }
+    this.store.setOwnerPref(`qa:state:${websiteId}`, {
+      gate: 'TESTING',
+      startedAt: nowIso(),
+      runType: opts.runType || 'RELEASE GATE',
+      changeRequestId,
+    });
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'website_studio_qa_testing',
+      detail: changeRequestId,
+      payload: { websiteId, runType: opts.runType || 'RELEASE GATE' },
+    });
+    return { gate: 'TESTING' as const, websiteId, changeRequestId };
+  }
+
+  recordQaResult(result: WebsiteStudioQaResult) {
+    const websiteId = result.websiteId || 'ws_hvcg_real';
+    const computed = computeGateFromResult(result);
+    const sealed: WebsiteStudioQaResult = {
+      ...result,
+      gate: computed.gate,
+      verdict: computed.verdict,
+      ownerPackage:
+        computed.gate === 'READY FOR MANNY'
+          ? result.ownerPackage ||
+            ownerPackageForPass({
+              changeRequestId: result.changeRequestId,
+              websiteName: 'High Value Capital Group',
+            })
+          : result.ownerPackage,
+    };
+    this.store.setOwnerPref(`qa:latest:${websiteId}`, sealed);
+    const runs = this.listQaRuns(websiteId);
+    runs.unshift(sealed);
+    this.store.setOwnerPref(`qa:runs:${websiteId}`, runs.slice(0, 25));
+    try {
+      const cr = this.getChangeRequest(result.changeRequestId);
+      cr.ownerQaGate = sealed.gate;
+      if (sealed.gate === 'READY FOR MANNY') {
+        cr.qaStatus = 'WAITING ON MANNY';
+      } else if (sealed.gate === 'FAILED QA') {
+        cr.qaStatus = 'QA Failed';
+      }
+      cr.updatedAt = nowIso();
+      this.store.upsertChangeRequest(cr);
+    } catch {
+      /* ignore */
+    }
+    this.store.setOwnerPref(`qa:state:${websiteId}`, {
+      gate: sealed.gate,
+      finishedAt: sealed.finishedAt,
+      runId: sealed.runId,
+      verdict: sealed.verdict,
+    });
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action:
+        sealed.gate === 'READY FOR MANNY'
+          ? 'website_studio_qa_ready_for_manny'
+          : sealed.gate === 'FAILED QA'
+            ? 'website_studio_qa_failed'
+            : 'website_studio_qa_recorded',
+      detail: result.changeRequestId,
+      payload: {
+        gate: sealed.gate,
+        verdict: sealed.verdict,
+        testedCommit: sealed.testedCommit,
+        defectCount: sealed.defects.length,
+      },
+    });
+    return sealed;
+  }
+
+  /**
+   * Restore HVCG pilot CR to Waiting for Your Review for owner UAT / QA.
+   * Clears rejected/saved/invalidated approval state without touching Production files.
+   */
+  restorePilotForOwnerReview(
+    changeRequestId = 'wcr_96016971141f',
+    opts?: { ownerQaGate?: string | null },
+  ) {
+    const cr = this.getChangeRequest(changeRequestId);
+    cr.savedForLater = false;
+    cr.ownerApproval = null;
+    cr.mannyApproval = false;
+    cr.visualQaConfirmedByManny = false;
+    cr.status = 'Waiting on Manny';
+    cr.qaStatus = 'WAITING ON MANNY';
+    cr.ownerStatus = 'Waiting for Your Review';
+    cr.previewStatus = cr.previewStatus || 'Ready for Preview';
+    cr.deviceReviews = { Desktop: false, Tablet: false, Mobile: false };
+    cr.updatedAt = nowIso();
+    if (opts?.ownerQaGate) {
+      cr.ownerQaGate = opts.ownerQaGate;
+    } else if (!cr.ownerQaGate || cr.ownerQaGate === 'OWNER APPROVED') {
+      cr.ownerQaGate = 'NOT TESTED';
+    }
+    this.store.upsertChangeRequest(cr);
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'pilot_restored_for_owner_review',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+      payload: { ownerStatus: 'Waiting for Your Review', productionUnchanged: true },
+    });
+    return this.enrichChangeRequest(cr);
   }
 
   async localSystemStatus() {

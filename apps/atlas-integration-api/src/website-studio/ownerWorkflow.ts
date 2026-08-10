@@ -307,6 +307,8 @@ export function buildOwnerReviewPayload(opts: {
     changeRequestId: cr.changeRequestId,
     ownerTitle: ownerChangeTitle(cr),
     ownerStatus: ownerFriendlyStatus(cr),
+    ownerQaGate: String(cr.ownerQaGate || 'NOT TESTED'),
+    qaStatus: cr.qaStatus || null,
     liveState: alreadyApproved ? 'APPROVED — NOT LIVE' : 'DRAFT — NOT LIVE',
     website: {
       websiteId: website.websiteId,

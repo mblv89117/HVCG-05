@@ -35,6 +35,7 @@ export type StudioNavId =
   | 'publishing'
   | 'history'
   | 'advisor'
+  | 'qa'
   | 'advanced'
   | 'settings'
   | 'editor'
@@ -71,7 +72,13 @@ export const STUDIO_NAV: Array<{
       { id: 'history', label: 'History' },
     ],
   },
-  { group: 'TOOLS', items: [{ id: 'advisor', label: 'AI Website Assistant' }] },
+  {
+    group: 'TOOLS',
+    items: [
+      { id: 'advisor', label: 'AI Website Assistant' },
+      { id: 'qa', label: 'QA / Readiness' },
+    ],
+  },
   {
     group: 'ADVANCED',
     items: [
