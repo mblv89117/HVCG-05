@@ -37,7 +37,8 @@ export type StudioNavId =
   | 'advisor'
   | 'advanced'
   | 'settings'
-  | 'editor';
+  | 'editor'
+  | 'review';
 
 export const STUDIO_NAV: Array<{
   group: string;

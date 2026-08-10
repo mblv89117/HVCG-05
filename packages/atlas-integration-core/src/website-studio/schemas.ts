@@ -405,6 +405,42 @@ export interface WebsiteChangeRequest {
   visualQaConfirmedByManny?: boolean;
   mannyPushApproved?: boolean;
   productionDeploymentAuthorized?: false;
+  /** Phase 6B-UX owner workflow */
+  ownerStatus?: string;
+  ownerTitle?: string;
+  contentFingerprint?: string | null;
+  savedForLater?: boolean;
+  deviceReviews?: {
+    Desktop?: boolean;
+    Tablet?: boolean;
+    Mobile?: boolean;
+  };
+  previewReviewedAt?: string | null;
+  ownerApproval?: {
+    approvedBy: string;
+    approvedAt: string;
+    exactApprovedContent: string;
+    contentFingerprint: string;
+    websiteId: string;
+    pageId: string | null;
+    section: string;
+    blockLabel: string;
+    baselineCommit: string | null;
+    pilotCommit: string | null;
+    previewCommit: string | null;
+    previewReviewed: boolean;
+    deviceReviews: {
+      Desktop?: boolean;
+      Tablet?: boolean;
+      Mobile?: boolean;
+    };
+    qaState: string | null;
+    auditCorrelationId: string;
+    productionImpact: 'NONE YET';
+    published: false;
+    invalidated?: boolean;
+    invalidatedReason?: string | null;
+  } | null;
 }
 
 export interface QaChecklistItem {

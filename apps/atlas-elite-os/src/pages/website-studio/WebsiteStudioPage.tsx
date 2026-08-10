@@ -21,7 +21,6 @@ import {
   analyzeWebsiteStudioPage,
   analyzeWebsiteStudioSite,
   bootstrapWebsiteStudioPhase6b,
-  confirmWebsiteStudioVisualQa,
   decideWebsiteStudioChangeRequest,
   fetchWebsiteStudioBlocks,
   fetchWebsiteStudioChangeRequests,
@@ -29,15 +28,23 @@ import {
   fetchWebsiteStudioForms,
   fetchWebsiteStudioHealth,
   fetchWebsiteStudioMedia,
+  fetchWebsiteStudioOwnerInbox,
+  fetchWebsiteStudioOwnerReview,
   fetchWebsiteStudioPages,
   fetchWebsiteStudioPreviewHealth,
   fetchWebsiteStudioPreviewPage,
+  fetchWebsiteStudioPreviewSnapshot,
   fetchWebsiteStudioSeo,
   fetchWebsiteStudioWebsites,
   postWebsiteStudioAdvisorChat,
   postWebsiteStudioAiAssist,
+  postWebsiteStudioDeviceReview,
+  postWebsiteStudioIgnoreRecommendation,
   postWebsiteStudioNaturalLanguage,
-  postWebsiteStudioPreview,
+  postWebsiteStudioOwnerApprove,
+  postWebsiteStudioOwnerEdit,
+  postWebsiteStudioSaveForLater,
+  postWebsiteStudioThreeOptions,
   restartWebsiteStudioPreview,
   startWebsiteStudioPreview,
 } from '../../integrations/hub/api';
@@ -46,10 +53,10 @@ import {
   previewUrlFromWebsite,
   type StudioNavId,
 } from './ownerHelpers';
+import { ChangeReviewScreen, NeedsReviewHomeCards, OwnerDecisionInbox } from './ChangeReviewScreen';
 import {
   AdvancedPanel,
   AnalyticsView,
-  ChangeReviewView,
   ExpertAdvisorPanel,
   FormsView,
   HistoryView,
@@ -130,14 +137,40 @@ export function WebsiteStudioPage() {
   const [chat, setChat] = useState<Array<{ role: 'user' | 'advisor'; text: string }>>([]);
   const [chatInput, setChatInput] = useState('');
   const [aiOptions, setAiOptions] = useState<string[]>([]);
+  const [ownerInbox, setOwnerInbox] = useState<{
+    needsReview: Array<Record<string, unknown>>;
+    readyPreview: Array<Record<string, unknown>>;
+    saved: Array<Record<string, unknown>>;
+    approved: Array<Record<string, unknown>>;
+    all: Array<Record<string, unknown>>;
+  } | null>(null);
+  const reviewCrId = params.get('cr') || '';
+  const [ownerReview, setOwnerReview] = useState<Record<string, unknown> | null>(null);
+  const [previewMode, setPreviewMode] = useState<'before' | 'after'>('after');
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [threeOptions, setThreeOptions] = useState<Array<Record<string, unknown>> | null>(null);
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [approvedResult, setApprovedResult] = useState<Record<string, unknown> | null>(null);
 
   const setView = (view: StudioNavId, extra?: Record<string, string>) => {
     const next = new URLSearchParams(params);
     next.set('view', view);
+    if (view !== 'review') next.delete('cr');
     if (extra) {
       for (const [k, v] of Object.entries(extra)) next.set(k, v);
     }
     setParams(next);
+  };
+
+  const openReview = (changeRequestId: string) => {
+    setApprovedResult(null);
+    setThreeOptions(null);
+    setEditOpen(false);
+    setApproveOpen(false);
+    setPreviewMode('after');
+    setView('review', { cr: changeRequestId });
   };
 
   const selectedWebsite = useMemo(
@@ -197,6 +230,12 @@ export function WebsiteStudioPage() {
       setDashboard(d.dashboard as Record<string, unknown>);
       setWebsites(w.websites);
       setChangeRequests(crs.changeRequests);
+      try {
+        const inbox = await fetchWebsiteStudioOwnerInbox(hubAuth, selectedWebsiteId || undefined);
+        setOwnerInbox(inbox);
+      } catch {
+        setOwnerInbox(null);
+      }
       const preferred =
         selectedWebsiteId ||
         w.websites.find((x) => x.websiteId === 'ws_hvcg_real')?.websiteId ||
@@ -246,6 +285,43 @@ export function WebsiteStudioPage() {
   useEffect(() => {
     void refreshPreviewHealth();
   }, [selectedPageId, refreshPreviewHealth]);
+
+  useEffect(() => {
+    if (!hubAuth || nav !== 'review' || !reviewCrId) return;
+    void (async () => {
+      setBusy(true);
+      setError(null);
+      try {
+        const res = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
+        setOwnerReview(res.review);
+        setEditText(String(res.review.after || ''));
+        const devices = (res.review.deviceReviews || {}) as Record<string, boolean>;
+        setDeviceChecks({
+          Desktop: Boolean(devices.Desktop),
+          Tablet: Boolean(devices.Tablet),
+          Mobile: Boolean(devices.Mobile),
+        });
+        const html = await fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, previewMode);
+        setPreviewHtml(html);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [hubAuth, nav, reviewCrId]);
+
+  useEffect(() => {
+    if (!hubAuth || nav !== 'review' || !reviewCrId) return;
+    void (async () => {
+      try {
+        const html = await fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, previewMode);
+        setPreviewHtml(html);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    })();
+  }, [hubAuth, nav, reviewCrId, previewMode]);
 
   useEffect(() => {
     if (!hubAuth || !selectedWebsiteId || !selectedPageId) return;
@@ -462,11 +538,52 @@ export function WebsiteStudioPage() {
   };
 
   const onRecAction = async (rec: Record<string, unknown>, action: string) => {
-    if (action === 'Ignore' || action === 'Save for Later') {
-      setNotice(`${action}: “${String(rec.recommendation)}”`);
+    if (action === 'Ignore') {
+      if (!hubAuth || !selectedWebsiteId) return;
+      const choice =
+        typeof window !== 'undefined'
+          ? window.prompt(
+              'Ignore this recommendation?\n\nType:\n  page — Ignore for this page (default)\n  permanent — Ignore permanently for this recommendation type\n  cancel — Cancel',
+              'page',
+            )
+          : 'page';
+      if (!choice || choice.toLowerCase() === 'cancel') return;
+      const scope = choice.toLowerCase().startsWith('perm') ? 'permanent' : 'page';
+      await postWebsiteStudioIgnoreRecommendation(hubAuth, {
+        websiteId: selectedWebsiteId,
+        recommendationId: String(rec.id || rec.recommendation),
+        scope,
+        pageId: selectedPageId || undefined,
+      });
+      setNotice(`Ignored recommendation (${scope}).`);
+      return;
+    }
+    if (action === 'Save for Later') {
+      const crId =
+        reviewCrId ||
+        String(ownerInbox?.needsReview?.[0]?.changeRequestId || changeRequests[0]?.changeRequestId || '');
+      if (hubAuth && crId) {
+        await postWebsiteStudioSaveForLater(hubAuth, crId);
+        setNotice('Saved for later.');
+        await refresh();
+      } else {
+        setNotice('Saved idea locally — open Draft Changes to continue.');
+      }
       return;
     }
     if (action === 'Show Me Options' || action === 'Fix This') {
+      const crId =
+        reviewCrId ||
+        String(
+          changeRequests.find((c) => c.phase6bPilot || c.changeRequestId === 'wcr_96016971141f')
+            ?.changeRequestId || '',
+        );
+      if (hubAuth && crId) {
+        openReview(crId);
+        const res = await postWebsiteStudioThreeOptions(hubAuth, crId);
+        setThreeOptions(res.options);
+        return;
+      }
       setDraftText(String(blocks.find((b) => b.blockType === 'headline')?.currentValue || draftText));
       await runAiAction('Give Me 3 Options');
       setView('editor');
@@ -621,7 +738,28 @@ export function WebsiteStudioPage() {
           />
           <div style={{ flex: 1, padding: '16px 18px 28px', minWidth: 0 }}>
             {selectedWebsite && nav === 'home' ? (
-              <WebsiteHomeView
+              <>
+                <NeedsReviewHomeCards
+                  items={ownerInbox?.needsReview || []}
+                  onReview={(id) => openReview(id)}
+                />
+                {(ownerInbox?.readyPreview?.length || 0) > 0 ? (
+                  <NeedsReviewHomeCards
+                    title="READY TO PREVIEW"
+                    items={ownerInbox?.readyPreview || []}
+                    actionLabel="Preview This Change"
+                    onReview={(id) => openReview(id)}
+                  />
+                ) : null}
+                {(ownerInbox?.saved?.length || 0) > 0 ? (
+                  <NeedsReviewHomeCards
+                    title="SAVED FOR LATER"
+                    items={ownerInbox?.saved || []}
+                    actionLabel="Resume Review"
+                    onReview={(id) => openReview(id)}
+                  />
+                ) : null}
+                <WebsiteHomeView
                 website={selectedWebsite}
                 pagesCount={pages.length}
                 draftCount={websiteCrs.length}
@@ -648,8 +786,132 @@ export function WebsiteStudioPage() {
                 onFirstRun={(action) => {
                   dismissWelcome();
                   if (action === 'editor') setView('editor');
-                  else setView(action);
+                  else if (action === 'drafts' && (ownerInbox?.needsReview?.[0]?.changeRequestId)) {
+                    openReview(String(ownerInbox.needsReview[0].changeRequestId));
+                  } else setView(action);
                 }}
+              />
+              </>
+            ) : null}
+
+            {nav === 'review' ? (
+              <ChangeReviewScreen
+                review={ownerReview}
+                busy={busy}
+                previewMode={previewMode}
+                previewHtml={previewHtml}
+                device={device}
+                editOpen={editOpen}
+                editText={editText}
+                options={threeOptions}
+                approveOpen={approveOpen}
+                approvedResult={approvedResult}
+                onBack={() => setView('home')}
+                onRefresh={() => {
+                  setApprovedResult(null);
+                  void refresh();
+                  if (hubAuth && reviewCrId) {
+                    void fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId).then((r) =>
+                      setOwnerReview(r.review),
+                    );
+                  }
+                }}
+                onPreviewMode={setPreviewMode}
+                onDevice={setDevice}
+                onLooksGood={(d) =>
+                  void (async () => {
+                    if (!hubAuth || !reviewCrId) return;
+                    await postWebsiteStudioDeviceReview(hubAuth, reviewCrId, {
+                      device: d,
+                      looksGood: true,
+                    });
+                    setDeviceChecks((prev) => ({ ...prev, [d]: true }));
+                    const r = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
+                    setOwnerReview(r.review);
+                    setNotice(`${d} marked Looks Good.`);
+                  })()
+                }
+                onOpenEdit={() => setEditOpen(true)}
+                onCloseEdit={() => setEditOpen(false)}
+                onEditText={setEditText}
+                onSaveEdit={() =>
+                  void (async () => {
+                    if (!hubAuth || !reviewCrId) return;
+                    setBusy(true);
+                    try {
+                      await postWebsiteStudioOwnerEdit(hubAuth, reviewCrId, editText);
+                      setEditOpen(false);
+                      setNotice('Draft updated — previous approval invalidated if any.');
+                      const r = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
+                      setOwnerReview(r.review);
+                      const html = await fetchWebsiteStudioPreviewSnapshot(
+                        hubAuth,
+                        reviewCrId,
+                        'after',
+                      );
+                      setPreviewHtml(html);
+                      setPreviewMode('after');
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    } finally {
+                      setBusy(false);
+                    }
+                  })()
+                }
+                onShowOptions={() =>
+                  void (async () => {
+                    if (!hubAuth || !reviewCrId) return;
+                    const res = await postWebsiteStudioThreeOptions(hubAuth, reviewCrId);
+                    setThreeOptions(res.options);
+                  })()
+                }
+                onUseOption={(text) => {
+                  setEditText(text);
+                  setEditOpen(true);
+                  setThreeOptions(null);
+                }}
+                onSaveForLater={() =>
+                  void (async () => {
+                    if (!hubAuth || !reviewCrId) return;
+                    await postWebsiteStudioSaveForLater(hubAuth, reviewCrId);
+                    setNotice('Saved for later.');
+                    setView('drafts');
+                    await refresh();
+                  })()
+                }
+                onReject={() =>
+                  void (async () => {
+                    if (!hubAuth || !reviewCrId) return;
+                    await decideWebsiteStudioChangeRequest(hubAuth, reviewCrId, 'reject');
+                    setNotice('Change rejected.');
+                    setView('home');
+                    await refresh();
+                  })()
+                }
+                onOpenApprove={() => setApproveOpen(true)}
+                onCloseApprove={() => setApproveOpen(false)}
+                onConfirmApprove={() =>
+                  void (async () => {
+                    if (!hubAuth || !reviewCrId) return;
+                    setBusy(true);
+                    try {
+                      const result = await postWebsiteStudioOwnerApprove(hubAuth, reviewCrId, {
+                        confirmed: true,
+                        previewReviewed: true,
+                        deviceReviews: deviceChecks,
+                      });
+                      setApproveOpen(false);
+                      setApprovedResult(result);
+                      setNotice('Change approved — not published. Production unchanged.');
+                      await refresh();
+                    } catch (e) {
+                      setError(e instanceof Error ? e.message : String(e));
+                    } finally {
+                      setBusy(false);
+                    }
+                  })()
+                }
+                onStartPreview={() => void startPreview()}
               />
             ) : null}
 
@@ -807,83 +1069,26 @@ export function WebsiteStudioPage() {
             ) : null}
 
             {nav === 'drafts' || nav === 'approvals' ? (
-              <ChangeReviewView
-                changeRequests={
-                  nav === 'approvals'
-                    ? websiteCrs.filter((c) =>
-                        ['Waiting on Manny', 'Committed', 'QA Required'].includes(String(c.status)),
-                      )
-                    : websiteCrs
-                }
-                advancedMode={advancedMode}
-                previewUrl={previewUrl}
-                deviceChecks={deviceChecks}
-                busy={busy}
-                onApprove={(id) =>
-                  void (async () => {
-                    setBusy(true);
-                    try {
-                      await decideWebsiteStudioChangeRequest(hubAuth, id, 'approve');
-                      await refresh();
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : String(e));
-                    } finally {
-                      setBusy(false);
-                    }
-                  })()
-                }
-                onReject={(id) =>
-                  void (async () => {
-                    setBusy(true);
-                    try {
-                      await decideWebsiteStudioChangeRequest(hubAuth, id, 'reject');
-                      await refresh();
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : String(e));
-                    } finally {
-                      setBusy(false);
-                    }
-                  })()
-                }
-                onPreview={(id) =>
-                  void (async () => {
-                    setBusy(true);
-                    try {
-                      await postWebsiteStudioPreview(hubAuth, id);
-                      if (previewUrl) window.open(previewUrl, '_blank', 'noopener,noreferrer');
-                      await refresh();
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : String(e));
-                    } finally {
-                      setBusy(false);
-                    }
-                  })()
-                }
-                onVisualApprove={(id) =>
-                  void (async () => {
-                    setBusy(true);
-                    try {
-                      await confirmWebsiteStudioVisualQa(hubAuth, id, true);
-                      setNotice('Visual approval recorded. Publishing remains separately gated.');
-                      await refresh();
-                    } catch (e) {
-                      setError(e instanceof Error ? e.message : String(e));
-                    } finally {
-                      setBusy(false);
-                    }
-                  })()
-                }
-                onEdit={() => setView('editor')}
-                onToggleDevice={(key) =>
-                  setDeviceChecks((prev) => ({ ...prev, [key]: !prev[key] }))
-                }
+              <OwnerDecisionInbox
+                mode={nav === 'approvals' ? 'approvals' : 'drafts'}
+                inbox={ownerInbox}
+                onReview={(id) => openReview(id)}
               />
             ) : null}
 
-            {nav === 'publishing' ? <PublishingView changeRequests={websiteCrs} /> : null}
+            {nav === 'publishing' ? (
+              <PublishingView
+                changeRequests={ownerInbox?.approved || websiteCrs}
+                onReview={(id) => openReview(id)}
+              />
+            ) : null}
 
             {nav === 'history' ? (
-              <HistoryView changeRequests={websiteCrs} advancedMode={advancedMode} />
+              <HistoryView
+                changeRequests={ownerInbox?.all || websiteCrs}
+                advancedMode={advancedMode}
+                onReview={(id) => openReview(id)}
+              />
             ) : null}
 
             {(nav === 'advanced' || nav === 'settings') && selectedWebsite ? (

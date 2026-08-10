@@ -195,6 +195,123 @@ export async function handleWebsiteStudioRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/website-studio/owner/inbox') {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const websiteId = url.searchParams.get('websiteId') || undefined;
+      send(res, 200, ws.ownerInbox(websiteId), origin);
+      return true;
+    }
+
+    const ownerReviewMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/owner-review$/,
+    );
+    if (method === 'GET' && ownerReviewMatch) {
+      await requirePrincipal(req, cfg);
+      const review = await ws.getOwnerReviewLive(ownerReviewMatch[1]);
+      send(res, 200, { review }, origin);
+      return true;
+    }
+
+    const ownerSnapshotMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/preview-snapshot$/,
+    );
+    if (method === 'GET' && ownerSnapshotMatch) {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const mode = url.searchParams.get('mode') === 'before' ? 'before' : 'after';
+      const html = ws.getChangePreviewHtml(ownerSnapshotMatch[1], mode);
+      const headers: Record<string, string> = {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+        'x-atlas-preview-mode': mode,
+        'x-atlas-not-live': 'true',
+      };
+      if (origin) {
+        headers['access-control-allow-origin'] = origin;
+        headers['access-control-allow-credentials'] = 'true';
+      }
+      res.writeHead(200, headers);
+      res.end(html);
+      return true;
+    }
+
+    const deviceReviewMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/device-review$/,
+    );
+    if (method === 'POST' && deviceReviewMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const device = String(body.device || '') as 'Desktop' | 'Tablet' | 'Mobile';
+      if (!['Desktop', 'Tablet', 'Mobile'].includes(device)) {
+        send(res, 400, { error: 'invalid_device', message: 'device must be Desktop|Tablet|Mobile' }, origin);
+        return true;
+      }
+      const changeRequest = ws.setDeviceReview(deviceReviewMatch[1], device, Boolean(body.looksGood));
+      send(res, 200, { changeRequest }, origin);
+      return true;
+    }
+
+    const ownerApproveMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/owner-approve$/,
+    );
+    if (method === 'POST' && ownerApproveMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const result = await ws.approveOwnerChange(ownerApproveMatch[1], {
+        previewReviewed: Boolean(body.previewReviewed),
+        confirmed: Boolean(body.confirmed),
+        deviceReviews: (body.deviceReviews as never) || undefined,
+      });
+      send(res, 200, { ...result, deployed: false, published: false, merged: false }, origin);
+      return true;
+    }
+
+    const ownerEditMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/owner-edit$/,
+    );
+    if (method === 'POST' && ownerEditMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const changeRequest = ws.updateOwnerDraftContent(
+        ownerEditMatch[1],
+        String(body.proposedContent || ''),
+      );
+      send(res, 200, { changeRequest, filesModified: false }, origin);
+      return true;
+    }
+
+    const threeOptionsMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/three-options$/,
+    );
+    if (method === 'POST' && threeOptionsMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, ws.showMeThreeOptions(threeOptionsMatch[1]), origin);
+      return true;
+    }
+
+    const saveLaterMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/save-for-later$/,
+    );
+    if (method === 'POST' && saveLaterMatch) {
+      await requirePrincipal(req, cfg);
+      send(res, 200, { changeRequest: ws.saveChangeForLater(saveLaterMatch[1]) }, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/website-studio/owner/ignore-recommendation') {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const result = ws.ignoreRecommendation({
+        websiteId: String(body.websiteId || ''),
+        recommendationId: String(body.recommendationId || ''),
+        scope: body.scope === 'permanent' ? 'permanent' : 'page',
+        pageId: body.pageId ? String(body.pageId) : undefined,
+      });
+      send(res, 200, result, origin);
+      return true;
+    }
+
     const pageAnalyzeMatch = path.match(
       /^\/api\/website-studio\/websites\/([^/]+)\/pages\/([^/]+)\/analyze$/,
     );

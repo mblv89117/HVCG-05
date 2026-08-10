@@ -1215,38 +1215,48 @@ export function AnalyticsView(props: { website: Record<string, unknown>; advance
   );
 }
 
-export function PublishingView(props: { changeRequests: Array<Record<string, unknown>> }) {
-  const ready = props.changeRequests.filter((c) =>
-    ['Committed', 'PR Open', 'Approved for Deployment'].includes(String(c.status)),
-  );
+export function PublishingView(props: {
+  changeRequests: Array<Record<string, unknown>>;
+  onReview: (id: string) => void;
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <MessageBar intent="warning">
         <MessageBarBody>
-          <MessageBarTitle>Production publishing requires Manny approval</MessageBarTitle>
-          Publish remains gated in this phase. No deployment is executed from Website Studio.
+          <MessageBarTitle>Production publishing is not enabled yet</MessageBarTitle>
+          Production publishing will be enabled in a later approved phase. Approving a draft does not
+          publish.
         </MessageBarBody>
       </MessageBar>
-      {ready.length === 0 ? (
+      {props.changeRequests.length === 0 ? (
         <AtlasCard>
-          <Caption1>No items ready to publish.</Caption1>
+          <Caption1>No approved drafts waiting for publishing review.</Caption1>
         </AtlasCard>
       ) : (
-        ready.map((cr) => (
+        props.changeRequests.map((cr) => (
           <AtlasCard key={String(cr.changeRequestId)}>
-            <Text weight="semibold">READY TO PUBLISH</Text>
-            <Text style={{ display: 'block', marginTop: 6 }}>{ownerChangeTitle(cr)}</Text>
-            <Caption1 style={{ display: 'block' }}>High Value Capital Group</Caption1>
-            <Caption1 style={{ display: 'block', marginTop: 6 }}>
-              Preview {cr.visualQaConfirmedByManny ? 'approved' : 'pending'} · QA{' '}
-              {String(cr.qaStatus || 'pending')}
+            <Text weight="semibold">Ready for Publishing Review</Text>
+            <Text style={{ display: 'block', marginTop: 6 }}>
+              {String(cr.ownerTitle || ownerChangeTitle(cr))}
+            </Text>
+            <Caption1 style={{ display: 'block' }}>
+              {String(cr.websiteName || 'High Value Capital Group')} · APPROVED — NOT LIVE
             </Caption1>
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <Button>Review</Button>
-              <Button appearance="primary" disabled title={String(cr.productionDeploymentAuthorized === false || true)}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+              <Button onClick={() => props.onReview(String(cr.changeRequestId))}>
+                View Approved Change
+              </Button>
+              <Button
+                appearance="primary"
+                disabled
+                title="Production publishing will be enabled in a later approved phase."
+              >
                 Publish
               </Button>
             </div>
+            <Caption1 style={{ display: 'block', marginTop: 8, color: muted }}>
+              Publish is disabled — Phase 6C remains separately authorized.
+            </Caption1>
           </AtlasCard>
         ))
       )}
@@ -1257,33 +1267,58 @@ export function PublishingView(props: { changeRequests: Array<Record<string, unk
 export function HistoryView(props: {
   changeRequests: Array<Record<string, unknown>>;
   advancedMode: boolean;
+  onReview: (id: string) => void;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {props.changeRequests.map((cr) => (
-        <AtlasCard key={String(cr.changeRequestId)}>
-          <Text weight="semibold">{ownerChangeTitle(cr)}</Text>
-          <Caption1 style={{ display: 'block' }}>
-            {String(cr.updatedAt || cr.createdAt || '').slice(0, 10)} · {ownerChangeStatus(cr)}
-          </Caption1>
-          <Caption1 style={{ display: 'block' }}>
-            Approved by Manny: {cr.mannyApproval || cr.finalWordingApproved ? 'Yes' : 'Pending'} ·
-            Previewed: {cr.previewStatus ? 'Yes' : '—'} ·{' '}
-            {cr.deploymentStatus === 'Deployed' ? 'Published' : 'Not yet published'}
-          </Caption1>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <Button size="small">View Change</Button>
-            <Button size="small">View Before/After</Button>
-            <Button size="small">Rollback Info</Button>
-          </div>
-          {props.advancedMode ? (
-            <details style={{ marginTop: 8 }}>
-              <summary>Technical commit information</summary>
-              <Caption1 style={{ display: 'block' }}>{String(cr.commit || '—')}</Caption1>
-            </details>
-          ) : null}
+      {props.changeRequests.length === 0 ? (
+        <AtlasCard>
+          <Caption1>No change history yet.</Caption1>
         </AtlasCard>
-      ))}
+      ) : (
+        props.changeRequests.map((cr) => (
+          <AtlasCard key={String(cr.changeRequestId)}>
+            <Text weight="semibold">{String(cr.ownerTitle || ownerChangeTitle(cr))}</Text>
+            <Caption1 style={{ display: 'block' }}>
+              {String(cr.updatedAt || cr.createdAt || '').slice(0, 10)} ·{' '}
+              {String(cr.ownerStatus || ownerChangeStatus(cr))}
+            </Caption1>
+            <Caption1 style={{ display: 'block' }}>
+              Approved by Manny:{' '}
+              {(cr.ownerApproval as { approvedAt?: string; invalidated?: boolean } | undefined)
+                ?.approvedAt &&
+              !(cr.ownerApproval as { invalidated?: boolean }).invalidated
+                ? 'Yes (draft only)'
+                : 'Pending'}{' '}
+              · Production: UNCHANGED unless Published
+            </Caption1>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <Button size="small" onClick={() => props.onReview(String(cr.changeRequestId))}>
+                View Change
+              </Button>
+              <Button size="small" onClick={() => props.onReview(String(cr.changeRequestId))}>
+                View Before/After
+              </Button>
+              <Button
+                size="small"
+                disabled
+                title="Rollback from Website Studio is not enabled in this phase."
+              >
+                Rollback (coming later)
+              </Button>
+            </div>
+            {props.advancedMode ? (
+              <details style={{ marginTop: 8 }}>
+                <summary>Technical commit information</summary>
+                <Caption1 style={{ display: 'block' }}>{String(cr.commit || '—')}</Caption1>
+                <Caption1 style={{ display: 'block' }}>
+                  Audit: {String(cr.auditCorrelationId || '—')}
+                </Caption1>
+              </details>
+            ) : null}
+          </AtlasCard>
+        ))
+      )}
     </div>
   );
 }

@@ -1591,3 +1591,132 @@ export async function fetchWebsiteStudioPreviewPage(
   return parse(res) as Promise<{ url: string | null; baseUrl: string | null; pageId: string | null }>;
 }
 
+export async function fetchWebsiteStudioOwnerInbox(
+  auth: AtlasHubAuthHeaders,
+  websiteId?: string,
+) {
+  const q = websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : '';
+  const res = await fetch(`${base()}/api/website-studio/owner/inbox${q}`, { headers: headers(auth) });
+  return parse(res) as Promise<{
+    needsReview: Array<Record<string, unknown>>;
+    readyPreview: Array<Record<string, unknown>>;
+    saved: Array<Record<string, unknown>>;
+    approved: Array<Record<string, unknown>>;
+    all: Array<Record<string, unknown>>;
+  }>;
+}
+
+export async function fetchWebsiteStudioOwnerReview(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/owner-review`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ review: Record<string, unknown> }>;
+}
+
+export async function fetchWebsiteStudioPreviewSnapshot(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  mode: 'before' | 'after',
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/preview-snapshot?mode=${mode}`,
+    { headers: headers(auth) },
+  );
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { message?: string }).message || res.statusText);
+  }
+  return res.text();
+}
+
+export async function postWebsiteStudioDeviceReview(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  body: { device: 'Desktop' | 'Tablet' | 'Mobile'; looksGood: boolean },
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/device-review`,
+    { method: 'POST', headers: headers(auth), body: JSON.stringify(body) },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown> }>;
+}
+
+export async function postWebsiteStudioOwnerApprove(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  body: {
+    confirmed: boolean;
+    previewReviewed: boolean;
+    deviceReviews?: Record<string, boolean>;
+  },
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/owner-approve`,
+    { method: 'POST', headers: headers(auth), body: JSON.stringify(body) },
+  );
+  return parse(res) as Promise<Record<string, unknown>>;
+}
+
+export async function postWebsiteStudioOwnerEdit(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  proposedContent: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/owner-edit`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify({ proposedContent }),
+    },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown>; filesModified: boolean }>;
+}
+
+export async function postWebsiteStudioThreeOptions(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/three-options`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{
+    changeRequestId: string;
+    recommendedId: string;
+    options: Array<{ id: string; label: string; text: string; recommended: boolean; why: string }>;
+  }>;
+}
+
+export async function postWebsiteStudioSaveForLater(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/save-for-later`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown> }>;
+}
+
+export async function postWebsiteStudioIgnoreRecommendation(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    websiteId: string;
+    recommendationId: string;
+    scope: 'page' | 'permanent';
+    pageId?: string;
+  },
+) {
+  const res = await fetch(`${base()}/api/website-studio/owner/ignore-recommendation`, {
+    method: 'POST',
+    headers: headers(auth),
+    body: JSON.stringify(body),
+  });
+  return parse(res) as Promise<{ ignored: boolean; scope: string }>;
+}
+

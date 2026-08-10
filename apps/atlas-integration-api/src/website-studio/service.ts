@@ -53,6 +53,19 @@ import {
   buildPreviewPageUrl,
   websitePreviewManager,
 } from './previewManager.ts';
+import {
+  buildOwnerReviewPayload,
+  buildThreeHeadlineOptions,
+  exactDraftContent,
+  fingerprintContent,
+  injectPreviewBanner,
+  ownerChangeTitle,
+  ownerFriendlyStatus,
+  readWorktreePageHtml,
+  verifyPreviewIdentity,
+  type OwnerApprovalRecord,
+  type OwnerDeviceReviews,
+} from './ownerWorkflow.ts';
 
 function nowIso() {
   return new Date().toISOString();
@@ -860,7 +873,7 @@ export class WebsiteStudioService {
       seoIssues,
       qaFailures: crs.filter((c) => c.status === 'QA Failed').length,
       previewReady: crs.filter((c) => c.previewStatus === 'Ready for Preview').length,
-      mannyApprovalsRequired: crs.filter((c) => c.status === 'Waiting on Manny').length,
+      mannyApprovalsRequired: this.ownerInbox().needsReview.length,
       pendingGitCommits: crs.filter((c) => c.status === 'Approved for Git').length,
       pendingPrs: crs.filter((c) => c.status === 'PR Open').length,
       deploymentReady: 0,
@@ -1098,6 +1111,309 @@ export class WebsiteStudioService {
       pageId: page?.pageId || null,
       route: page?.route || null,
     };
+  }
+
+  enrichChangeRequest(cr: WebsiteChangeRequest): WebsiteChangeRequest & Record<string, unknown> {
+    const enriched = cr as WebsiteChangeRequest & Record<string, unknown>;
+    enriched.ownerTitle = ownerChangeTitle(cr);
+    enriched.ownerStatus = ownerFriendlyStatus(enriched);
+    enriched.contentFingerprint = fingerprintContent(exactDraftContent(cr));
+    try {
+      enriched.websiteName = this.getWebsite(cr.websiteId).websiteName;
+    } catch {
+      enriched.websiteName = 'Website';
+    }
+    const status = String(enriched.ownerStatus);
+    enriched.nextAction =
+      status === 'Approved — Not Published'
+        ? 'Ready for Publishing Review'
+        : status === 'Saved for Later'
+          ? 'Resume review'
+          : status === 'Ready to Preview'
+            ? 'Preview This Change'
+            : 'Review & Approve';
+    return enriched;
+  }
+
+  listOwnerChangeRequests(websiteId?: string) {
+    return this.listChangeRequests(websiteId).map((c) => this.enrichChangeRequest(c));
+  }
+
+  getOwnerReview(changeRequestId: string) {
+    const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
+    const website = this.getWebsite(cr.websiteId);
+    const page =
+      (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
+      this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
+      null;
+    // Ensure preview is considered for identity
+    const health = websitePreviewManager.getState(cr.websiteId);
+    const previewIdentity = verifyPreviewIdentity({
+      cr,
+      website,
+      previewHealthStatus: health?.status === 'running' ? 'running' : 'offline',
+      previewUrl: health?.url || cr.previewUrl || null,
+    });
+    // Re-check live health asynchronously-ish via sync call pattern used elsewhere
+    return buildOwnerReviewPayload({ cr, website, page, previewIdentity });
+  }
+
+  async getOwnerReviewLive(changeRequestId: string) {
+    const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
+    const website = this.getWebsite(cr.websiteId);
+    const health = await websitePreviewManager.health(website);
+    const page =
+      (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
+      this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
+      null;
+    const previewIdentity = verifyPreviewIdentity({
+      cr,
+      website,
+      previewHealthStatus: health.status === 'running' ? 'running' : 'offline',
+      previewUrl: health.url,
+    });
+    return buildOwnerReviewPayload({ cr, website, page, previewIdentity });
+  }
+
+  getChangePreviewHtml(changeRequestId: string, mode: 'before' | 'after') {
+    const cr = this.getChangeRequest(changeRequestId);
+    const worktree = cr.worktreePath;
+    if (!worktree) {
+      throw Object.assign(new Error('No worktree registered for this change'), {
+        status: 400,
+        code: 'worktree_missing',
+      });
+    }
+    const html = readWorktreePageHtml({
+      worktreePath: worktree,
+      sourceFile: 'website/staging/index.html',
+      mode,
+      baselineCommit: cr.baselineCommit,
+    });
+    const title = ownerChangeTitle(cr);
+    const banner =
+      mode === 'before'
+        ? `BEFORE — Production baseline · ${title} · NOT the draft being approved`
+        : `DRAFT PREVIEW — NOT LIVE · ${title} · ${cr.changeRequestId}`;
+    this.store.audit({
+      actor: MANNY_OWNER,
+      action: mode === 'before' ? 'owner_view_before' : 'owner_view_after',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+    });
+    return injectPreviewBanner(html, banner);
+  }
+
+  setDeviceReview(
+    changeRequestId: string,
+    device: 'Desktop' | 'Tablet' | 'Mobile',
+    looksGood: boolean,
+  ) {
+    const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
+    const devices = { ...(cr.deviceReviews || {}) } as OwnerDeviceReviews;
+    devices[device] = looksGood;
+    cr.deviceReviews = devices;
+    if (looksGood) cr.previewReviewedAt = nowIso();
+    cr.updatedAt = nowIso();
+    this.store.upsertChangeRequest(cr);
+    this.store.audit({
+      actor: MANNY_OWNER,
+      action: `owner_device_${device.toLowerCase()}_${looksGood ? 'approved' : 'cleared'}`,
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+    });
+    return this.enrichChangeRequest(cr);
+  }
+
+  async approveOwnerChange(
+    changeRequestId: string,
+    opts: {
+      previewReviewed: boolean;
+      deviceReviews?: OwnerDeviceReviews;
+      confirmed: boolean;
+    },
+  ) {
+    if (!opts.confirmed) {
+      throw Object.assign(new Error('Confirmation required'), { status: 400, code: 'not_confirmed' });
+    }
+    if (!opts.previewReviewed) {
+      throw Object.assign(new Error('Preview must be reviewed before approval'), {
+        status: 400,
+        code: 'preview_not_reviewed',
+      });
+    }
+    const review = await this.getOwnerReviewLive(changeRequestId);
+    if (!review.previewIdentity.ok) {
+      throw Object.assign(
+        new Error(`PREVIEW VERSION MISMATCH: ${review.previewIdentity.mismatches.join('; ')}`),
+        { status: 409, code: 'preview_version_mismatch' },
+      );
+    }
+    const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
+    const exact = exactDraftContent(cr);
+    const fp = fingerprintContent(exact);
+    if (cr.ownerApproval?.approvedAt && !cr.ownerApproval.invalidated) {
+      if (cr.ownerApproval.contentFingerprint === fp) {
+        return { changeRequest: cr, alreadyApproved: true, published: false };
+      }
+    }
+    const approval: OwnerApprovalRecord = {
+      approvedBy: 'Manny',
+      approvedAt: nowIso(),
+      exactApprovedContent: exact,
+      contentFingerprint: fp,
+      websiteId: cr.websiteId,
+      pageId: cr.pageId,
+      section: 'Hero',
+      blockLabel: 'Main Headline',
+      baselineCommit: cr.baselineCommit || null,
+      pilotCommit: cr.commit || null,
+      previewCommit: review.previewIdentity.headCommit,
+      previewReviewed: true,
+      deviceReviews: { ...(cr.deviceReviews || {}), ...(opts.deviceReviews || {}) },
+      qaState: 'QA Passed',
+      auditCorrelationId: cr.auditCorrelationId,
+      productionImpact: 'NONE YET',
+      published: false,
+      invalidated: false,
+      invalidatedReason: null,
+    };
+    cr.ownerApproval = approval;
+    cr.contentFingerprint = fp;
+    cr.ownerStatus = 'Approved — Not Published';
+    cr.mannyApproval = true;
+    cr.visualQaConfirmedByManny = true;
+    cr.qaStatus = 'QA Passed';
+    cr.updatedAt = nowIso();
+    this.store.upsertChangeRequest(cr);
+    this.store.audit({
+      actor: MANNY_OWNER,
+      action: 'owner_approved_draft_not_published',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+      payload: {
+        contentFingerprint: fp,
+        pilotCommit: cr.commit,
+        baselineCommit: cr.baselineCommit,
+        published: false,
+        deployed: false,
+        merged: false,
+        productionUnchanged: true,
+      },
+    });
+    return {
+      changeRequest: this.enrichChangeRequest(cr),
+      alreadyApproved: false,
+      published: false,
+      productionUnchanged: true,
+      nextStep: 'Ready for Publishing Review',
+    };
+  }
+
+  updateOwnerDraftContent(changeRequestId: string, proposedContent: string) {
+    const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
+    const next = proposedContent.trim();
+    if (!next) {
+      throw Object.assign(new Error('Proposed content required'), { status: 400 });
+    }
+    const prevFp = fingerprintContent(exactDraftContent(cr));
+    cr.proposedContent = next;
+    cr.mannyFinalWording = next;
+    cr.contentFingerprint = fingerprintContent(next);
+    if (cr.ownerApproval?.approvedAt && cr.ownerApproval.contentFingerprint !== cr.contentFingerprint) {
+      cr.ownerApproval = {
+        ...cr.ownerApproval,
+        invalidated: true,
+        invalidatedReason: 'Draft content changed after approval — review required again',
+      };
+      cr.visualQaConfirmedByManny = false;
+      cr.ownerStatus = 'Changes Requested';
+    }
+    cr.savedForLater = false;
+    cr.updatedAt = nowIso();
+    this.store.upsertChangeRequest(cr);
+    this.store.audit({
+      actor: MANNY_OWNER,
+      action: 'owner_edited_draft',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+      payload: { previousFingerprint: prevFp, nextFingerprint: cr.contentFingerprint },
+    });
+    return this.enrichChangeRequest(cr);
+  }
+
+  showMeThreeOptions(changeRequestId: string) {
+    const cr = this.getChangeRequest(changeRequestId);
+    const options = buildThreeHeadlineOptions(exactDraftContent(cr) || String(cr.originalContent || ''));
+    this.store.audit({
+      actor: LOCAL_AI_OWNER,
+      action: 'owner_show_me_three_options',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+    });
+    return {
+      changeRequestId,
+      recommendedId: options.find((o) => o.recommended)?.id || options[0]?.id,
+      options,
+    };
+  }
+
+  saveChangeForLater(changeRequestId: string) {
+    const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
+    cr.savedForLater = true;
+    cr.ownerStatus = 'Saved for Later';
+    cr.updatedAt = nowIso();
+    this.store.upsertChangeRequest(cr);
+    this.store.audit({
+      actor: MANNY_OWNER,
+      action: 'owner_saved_for_later',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+    });
+    return this.enrichChangeRequest(cr);
+  }
+
+  ignoreRecommendation(opts: {
+    websiteId: string;
+    recommendationId: string;
+    scope: 'page' | 'permanent';
+    pageId?: string;
+  }) {
+    const key = `ignore:${opts.websiteId}`;
+    const current =
+      this.store.getOwnerPref<Array<{ id: string; scope: string; pageId?: string; at: string }>>(key) ||
+      [];
+    current.push({
+      id: opts.recommendationId,
+      scope: opts.scope,
+      pageId: opts.pageId,
+      at: nowIso(),
+    });
+    this.store.setOwnerPref(key, current);
+    this.store.audit({
+      actor: MANNY_OWNER,
+      action: 'owner_ignore_recommendation',
+      detail: opts.recommendationId,
+      payload: opts,
+    });
+    return { ignored: true, scope: opts.scope };
+  }
+
+  listIgnoredRecommendations(websiteId: string) {
+    return this.store.getOwnerPref(`ignore:${websiteId}`) || [];
+  }
+
+  ownerInbox(websiteId?: string) {
+    const crs = this.listOwnerChangeRequests(websiteId);
+    const actionable = (c: WebsiteChangeRequest & Record<string, unknown>) =>
+      Boolean(c.phase6bPilot || c.commit || c.worktreePath);
+    const needsReview = crs.filter(
+      (c) => c.ownerStatus === 'Waiting for Your Review' && actionable(c),
+    );
+    const readyPreview = crs.filter((c) => c.ownerStatus === 'Ready to Preview' && actionable(c));
+    const saved = crs.filter((c) => c.ownerStatus === 'Saved for Later');
+    const approved = crs.filter((c) => c.ownerStatus === 'Approved — Not Published');
+    return { needsReview, readyPreview, saved, approved, all: crs.filter(actionable) };
   }
 
   getPilotReviewPanel(changeRequestId: string) {

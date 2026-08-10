@@ -149,6 +149,21 @@ CREATE TABLE IF NOT EXISTS baselines (
         .prepare('INSERT INTO schema_migrations(version, applied_at, label) VALUES (2, ?, ?)')
         .run(new Date().toISOString(), 'phase6b-baselines');
     }
+    const row3 = this.db
+      .prepare('SELECT MAX(version) AS v FROM schema_migrations')
+      .get() as { v: number | null } | undefined;
+    if ((row3?.v ?? 0) < 3) {
+      this.db.exec(`
+CREATE TABLE IF NOT EXISTS owner_prefs (
+  pref_key TEXT PRIMARY KEY,
+  record_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+`);
+      this.db
+        .prepare('INSERT INTO schema_migrations(version, applied_at, label) VALUES (3, ?, ?)')
+        .run(new Date().toISOString(), 'phase6b-ux-owner-prefs');
+    }
   }
 
   close() {
@@ -427,6 +442,23 @@ CREATE TABLE IF NOT EXISTS baselines (
 
   latestBaseline(websiteId: string): WebsiteProductionBaseline | null {
     return this.listBaselines(websiteId)[0] || null;
+  }
+
+  setOwnerPref(key: string, value: unknown) {
+    this.db
+      .prepare(
+        `INSERT INTO owner_prefs(pref_key, record_json, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT(pref_key) DO UPDATE SET record_json=excluded.record_json, updated_at=excluded.updated_at`,
+      )
+      .run(key, JSON.stringify(value), new Date().toISOString());
+  }
+
+  getOwnerPref<T = unknown>(key: string): T | null {
+    const row = this.db
+      .prepare('SELECT record_json FROM owner_prefs WHERE pref_key = ?')
+      .get(key) as { record_json: string } | undefined;
+    if (!row) return null;
+    return JSON.parse(row.record_json) as T;
   }
 
   exists(): boolean {
