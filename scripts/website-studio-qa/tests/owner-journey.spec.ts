@@ -81,6 +81,45 @@ async function iframeH1(page: Page, titleIncludes: string): Promise<string> {
   return ((await h1.innerText()) || '').replace(/\s+/g, ' ').trim();
 }
 
+/** Assert iframe shows a real styled page — not browser-default unstyled HTML. */
+async function assertStyledIframe(page: Page, titleIncludes: string) {
+  const iframeEl = page.locator(`iframe[title*="${titleIncludes}"]`).first();
+  await expect(iframeEl).toBeVisible({ timeout: 15_000 });
+  const src = await iframeEl.getAttribute('src');
+  if (!src || !/127\.0\.0\.1:(8765|8766)/.test(src)) {
+    throw new Error(`iframe must use localhost preview src, got: ${src || '(empty/srcDoc)'}`);
+  }
+  const frame = page.frameLocator(`iframe[title*="${titleIncludes}"]`).first();
+  const h1 = frame.locator('h1').first();
+  await expect(h1).toBeVisible({ timeout: 15_000 });
+  const bg = await h1.evaluate((el) => {
+    const body = el.ownerDocument?.body;
+    const cs = el.ownerDocument?.defaultView?.getComputedStyle(el);
+    const bcs = body ? el.ownerDocument?.defaultView?.getComputedStyle(body) : null;
+    return {
+      color: cs?.color || '',
+      fontFamily: cs?.fontFamily || '',
+      bodyBg: bcs?.backgroundColor || '',
+      hasStylesheet: Boolean(
+        el.ownerDocument?.querySelector('link[rel="stylesheet"][href*="styles.css"]'),
+      ),
+    };
+  });
+  if (!bg.hasStylesheet) {
+    throw new Error('iframe document missing styles.css link — unstyled HTML');
+  }
+  // Browser-default black-on-white serif/system is a false pass — HVCG uses dark luxury.
+  const isBrowserDefault =
+    /rgb\(\s*0,\s*0,\s*0\s\)/.test(bg.color) &&
+    /rgb\(\s*255,\s*255,\s*255\s\)/.test(bg.bodyBg) &&
+    /Times|serif/i.test(bg.fontFamily) &&
+    !/Cormorant|Source Sans|sans-serif/i.test(bg.fontFamily);
+  if (isBrowserDefault) {
+    throw new Error(`iframe looks browser-default unstyled: ${JSON.stringify(bg)}`);
+  }
+  return { src, ...bg };
+}
+
 test.describe.configure({ mode: 'serial' });
 
 test('HVCG Website Studio owner journey RELEASE GATE', async ({ page }) => {
@@ -180,19 +219,25 @@ test('HVCG Website Studio owner journey RELEASE GATE', async ({ page }) => {
   await expect(page.getByText(BEFORE, { exact: false }).first()).toBeVisible();
   await expect(page.getByText(AFTER, { exact: false }).first()).toBeVisible();
 
-  // BEFORE
+  // BEFORE — real styled baseline preview (:8766)
   await page.getByRole('button', { name: /^BEFORE/i }).click();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(800);
+  const beforeStyle = await assertStyledIframe(page, 'PRODUCTION BASELINE');
+  mark('BEFORE styled real page', /8766/.test(beforeStyle.src), beforeStyle.src);
   const beforeH1 = await iframeH1(page, 'PRODUCTION BASELINE');
   await shot(page, '07-before', screenshots);
   mark('BEFORE H1', beforeH1.includes('preventing your business'), beforeH1);
+  await expect(page.getByRole('button', { name: /Open Before Full Screen/i }).first()).toBeVisible();
 
-  // AFTER
+  // AFTER — real styled pilot preview (:8765)
   await page.getByRole('button', { name: /^AFTER/i }).click();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(800);
+  const afterStyle = await assertStyledIframe(page, 'DRAFT PREVIEW');
+  mark('AFTER styled real page', /8765/.test(afterStyle.src), afterStyle.src);
   const afterH1 = await iframeH1(page, 'DRAFT PREVIEW');
   await shot(page, '08-after', screenshots);
   mark('AFTER H1', afterH1.includes('Strategic capital advisory'), afterH1);
+  await expect(page.getByRole('button', { name: /Open After Full Screen/i }).first()).toBeVisible();
 
   if (beforeH1 === afterH1) {
     mark('Before/After differ', false, 'Same H1 in both iframes');
@@ -200,9 +245,11 @@ test('HVCG Website Studio owner journey RELEASE GATE', async ({ page }) => {
     mark('Before/After differ', true, `${beforeH1.slice(0, 40)}… vs ${afterH1.slice(0, 40)}…`);
   }
 
-  // COMPARE
+  // COMPARE — side-by-side real iframes; headers outside iframe
   await page.getByRole('button', { name: /^COMPARE/i }).click();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(800);
+  await assertStyledIframe(page, 'PRODUCTION BASELINE');
+  await assertStyledIframe(page, 'DRAFT PREVIEW');
   const compareBefore = await iframeH1(page, 'PRODUCTION BASELINE');
   const compareAfter = await iframeH1(page, 'DRAFT PREVIEW');
   await shot(page, '09-compare', screenshots);
@@ -213,12 +260,25 @@ test('HVCG Website Studio owner journey RELEASE GATE', async ({ page }) => {
       compareAfter.includes('Strategic'),
     `before=${compareBefore.slice(0, 48)} after=${compareAfter.slice(0, 48)}`,
   );
+  await expect(page.getByText(/PRODUCTION BASELINE PREVIEW/i).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Open Before Full Screen/i }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Open After Full Screen/i }).first()).toBeVisible();
 
   await expect(page.getByText(/DRAFT PREVIEW — NOT LIVE|NOT LIVE/i).first()).toBeVisible();
   await shot(page, '10-draft-not-live', screenshots);
   mark('Draft preview identity banner', true);
 
-  // Devices + Looks Good
+  // Devices + Looks Good — capture Desktop/Mobile Before + After
+  for (const device of ['Desktop', 'Mobile'] as const) {
+    await page.getByRole('button', { name: new RegExp(`^${device}$`, 'i') }).click();
+    await page.waitForTimeout(200);
+    await page.getByRole('button', { name: /^BEFORE/i }).click();
+    await page.waitForTimeout(400);
+    await shot(page, `11-${device.toLowerCase()}-before`, screenshots);
+    await page.getByRole('button', { name: /^AFTER/i }).click();
+    await page.waitForTimeout(400);
+    await shot(page, `11-${device.toLowerCase()}-after`, screenshots);
+  }
   for (const device of ['Desktop', 'Tablet', 'Mobile'] as const) {
     await page.getByRole('button', { name: new RegExp(`^${device}$`, 'i') }).click();
     await page.waitForTimeout(200);

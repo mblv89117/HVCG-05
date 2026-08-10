@@ -1,6 +1,7 @@
 /**
  * Owner Change Review — Phase 6B-UX before/after approval workflow UI.
- * Before = Production baseline snapshot. After = pilot draft. Never the same iframe.
+ * BEFORE/AFTER/COMPARE use real localhost preview iframes (styled HVCG pages).
+ * Headers stay outside the iframe. Never srcDoc snapshots for owner review.
  */
 
 import { AtlasCard, StatusChip } from '@hvcg/atlas-design-system';
@@ -29,8 +30,8 @@ export function ChangeReviewScreen(props: {
   review: Record<string, unknown> | null;
   busy: boolean;
   previewMode: ReviewPreviewMode;
-  previewHtmlBefore: string | null;
-  previewHtmlAfter: string | null;
+  previewUrlBefore: string | null;
+  previewUrlAfter: string | null;
   device: 'Desktop' | 'Tablet' | 'Mobile';
   editOpen: boolean;
   editText: string;
@@ -65,14 +66,25 @@ export function ChangeReviewScreen(props: {
   }
 
   const identity = (r.previewIdentity || {}) as Record<string, unknown>;
+  const visualRender = (r.visualRender || {}) as Record<string, unknown>;
   const devices = (r.deviceReviews || {}) as Record<string, boolean>;
   const width = props.device === 'Mobile' ? 390 : props.device === 'Tablet' ? 768 : '100%';
-  const mismatch = identity.ok === false;
+  const mismatch = identity.ok === false || visualRender.ok === false;
   const beforeText = String(r.before || '');
   const afterText = String(r.after || '');
   const baseline = String(r.baselineCommit || '').slice(0, 12);
   const pilot = String(r.pilotCommit || '').slice(0, 12);
   const sameHeadline = beforeText.trim() === afterText.trim();
+  const previewUrls = (r.previewUrls || {}) as {
+    before?: string | null;
+    after?: string | null;
+    beforePort?: number | null;
+    afterPort?: number | null;
+  };
+  const beforeUrl = props.previewUrlBefore || previewUrls.before || null;
+  const afterUrl = props.previewUrlAfter || previewUrls.after || null;
+  const beforePort = previewUrls.beforePort || 8766;
+  const afterPort = previewUrls.afterPort || 8765;
 
   if (props.approvedResult) {
     return (
@@ -178,8 +190,12 @@ export function ChangeReviewScreen(props: {
         <MessageBar intent="error">
           <MessageBarBody>
             <MessageBarTitle>PREVIEW VERSION MISMATCH</MessageBarTitle>
-            {((identity.mismatches as string[]) || []).join(' · ')} Approval is blocked until preview
-            matches this change.
+            {(
+              ((identity.mismatches as string[]) || []).length
+                ? (identity.mismatches as string[])
+                : ((visualRender.mismatches as string[]) || [])
+            ).join(' · ') || 'Preview identity or FULL VISUAL RENDER failed.'}{' '}
+            Approval is blocked until preview matches this change.
             <div style={{ marginTop: 8 }}>
               <Button size="small" onClick={props.onStartPreview}>
                 Start / Repair Preview
@@ -191,7 +207,7 @@ export function ChangeReviewScreen(props: {
         <MessageBar intent="success">
           <MessageBarBody>
             Preview identity verified for draft {String(r.changeRequestId)} · Baseline {baseline} · Pilot{' '}
-            {pilot} · NOT LIVE
+            {pilot} · BEFORE :{beforePort} · AFTER :{afterPort} · FULL VISUAL RENDER · NOT LIVE
           </MessageBarBody>
         </MessageBar>
       )}
@@ -258,6 +274,10 @@ export function ChangeReviewScreen(props: {
           <Caption1 style={{ display: 'block', marginTop: 8 }}>Baseline: {baseline || '—'}</Caption1>
           <Caption1 style={{ display: 'block' }}>Pilot: {pilot || '—'}</Caption1>
           <Caption1 style={{ display: 'block' }}>Draft: {String(r.changeRequestId)}</Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            BEFORE preview: 127.0.0.1:{beforePort}
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>AFTER preview: 127.0.0.1:{afterPort}</Caption1>
 
           <Caption1 style={{ display: 'block', marginTop: 14 }}>Device review</Caption1>
           {(['Desktop', 'Tablet', 'Mobile'] as const).map((d) => (
@@ -328,6 +348,8 @@ export function ChangeReviewScreen(props: {
               Baseline: {String(r.baselineCommit || '—')}
             </Caption1>
             <Caption1 style={{ display: 'block' }}>Tier: {String(r.tier)}</Caption1>
+            <Caption1 style={{ display: 'block' }}>BEFORE URL: {beforeUrl || '—'}</Caption1>
+            <Caption1 style={{ display: 'block' }}>AFTER URL: {afterUrl || '—'}</Caption1>
           </details>
         </AtlasCard>
 
@@ -336,21 +358,25 @@ export function ChangeReviewScreen(props: {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <PreviewFrame
                 title="PRODUCTION BASELINE PREVIEW · NOT LIVE EDITING"
-                subtitle={`Baseline ${baseline} · BEFORE`}
-                html={props.previewHtmlBefore}
+                subtitle={`Baseline ${baseline} · BEFORE · 127.0.0.1:${beforePort}`}
+                src={beforeUrl}
                 frameKey={`before-${baseline}-${beforeText.slice(0, 24)}`}
                 width="100%"
                 height={520}
                 onStartPreview={props.onStartPreview}
+                onOpenFullScreen={() => beforeUrl && window.open(beforeUrl, '_blank', 'noopener,noreferrer')}
+                fullScreenLabel="Open Before Full Screen"
               />
               <PreviewFrame
                 title="DRAFT PREVIEW — NOT LIVE"
-                subtitle={`Draft ${String(r.changeRequestId)} · Pilot ${pilot} · AFTER`}
-                html={props.previewHtmlAfter}
+                subtitle={`Draft ${String(r.changeRequestId)} · Pilot ${pilot} · AFTER · 127.0.0.1:${afterPort}`}
+                src={afterUrl}
                 frameKey={`after-${pilot}-${afterText.slice(0, 24)}`}
                 width="100%"
                 height={520}
                 onStartPreview={props.onStartPreview}
+                onOpenFullScreen={() => afterUrl && window.open(afterUrl, '_blank', 'noopener,noreferrer')}
+                fullScreenLabel="Open After Full Screen"
               />
             </div>
           ) : (
@@ -362,10 +388,10 @@ export function ChangeReviewScreen(props: {
               }
               subtitle={
                 props.previewMode === 'before'
-                  ? `Baseline ${baseline} · ${String((r.website as { websiteName?: string })?.websiteName)} · Home → Homepage Headline`
-                  : `Draft ${String(r.changeRequestId)} · Pilot ${pilot} · NOT LIVE`
+                  ? `Baseline ${baseline} · ${String((r.website as { websiteName?: string })?.websiteName)} · Home → Homepage Headline · 127.0.0.1:${beforePort}`
+                  : `Draft ${String(r.changeRequestId)} · Pilot ${pilot} · NOT LIVE · 127.0.0.1:${afterPort}`
               }
-              html={props.previewMode === 'before' ? props.previewHtmlBefore : props.previewHtmlAfter}
+              src={props.previewMode === 'before' ? beforeUrl : afterUrl}
               frameKey={
                 props.previewMode === 'before'
                   ? `before-${baseline}-${beforeText.slice(0, 24)}`
@@ -374,6 +400,13 @@ export function ChangeReviewScreen(props: {
               width={width}
               height={560}
               onStartPreview={props.onStartPreview}
+              onOpenFullScreen={() => {
+                const u = props.previewMode === 'before' ? beforeUrl : afterUrl;
+                if (u) window.open(u, '_blank', 'noopener,noreferrer');
+              }}
+              fullScreenLabel={
+                props.previewMode === 'before' ? 'Open Before Full Screen' : 'Open After Full Screen'
+              }
             />
           )}
         </div>
@@ -491,11 +524,13 @@ export function ChangeReviewScreen(props: {
 function PreviewFrame(props: {
   title: string;
   subtitle: string;
-  html: string | null;
+  src: string | null;
   frameKey: string;
   width: string | number;
   height: number;
   onStartPreview: () => void;
+  onOpenFullScreen: () => void;
+  fullScreenLabel: string;
 }) {
   return (
     <div>
@@ -511,6 +546,17 @@ function PreviewFrame(props: {
       >
         <Text weight="semibold">{props.title}</Text>
         <Caption1 style={{ display: 'block', color: '#ddd' }}>{props.subtitle}</Caption1>
+        <div style={{ marginTop: 8 }}>
+          <Button
+            size="small"
+            appearance="secondary"
+            disabled={!props.src}
+            onClick={props.onOpenFullScreen}
+            data-testid="ws-open-fullscreen"
+          >
+            {props.fullScreenLabel}
+          </Button>
+        </div>
       </div>
       <div
         style={{
@@ -521,19 +567,19 @@ function PreviewFrame(props: {
           borderRadius: 12,
           overflow: 'hidden',
           minHeight: props.height,
-          background: '#fff',
+          background: '#050505',
         }}
       >
-        {props.html ? (
+        {props.src ? (
           <iframe
             key={props.frameKey}
             title={props.title}
-            srcDoc={props.html}
-            style={{ width: '100%', height: props.height, border: 'none' }}
+            src={props.src}
+            style={{ width: '100%', height: props.height, border: 'none', background: '#050505' }}
           />
         ) : (
-          <div style={{ padding: 24 }}>
-            <Caption1>Loading preview snapshot…</Caption1>
+          <div style={{ padding: 24, background: '#fff' }}>
+            <Caption1>Loading real local preview…</Caption1>
             <Button style={{ marginTop: 12 }} onClick={props.onStartPreview}>
               Start Preview
             </Button>

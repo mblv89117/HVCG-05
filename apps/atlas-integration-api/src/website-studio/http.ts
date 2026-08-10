@@ -285,12 +285,15 @@ export async function handleWebsiteStudioRoutes(opts: {
       await requirePrincipal(req, cfg);
       const url = new URL(req.url || '', 'http://local');
       const mode = url.searchParams.get('mode') === 'before' ? 'before' : 'after';
+      // Legacy text/HTML extract — owner UI must use preview-urls (real localhost renders).
       const html = ws.getChangePreviewHtml(ownerSnapshotMatch[1], mode);
       const headers: Record<string, string> = {
         'content-type': 'text/html; charset=utf-8',
         'cache-control': 'no-store',
         'x-atlas-preview-mode': mode,
         'x-atlas-not-live': 'true',
+        'x-atlas-preview-kind': 'legacy-srcdoc-snapshot',
+        'x-atlas-prefer-preview-urls': 'true',
       };
       if (origin) {
         headers['access-control-allow-origin'] = origin;
@@ -298,6 +301,26 @@ export async function handleWebsiteStudioRoutes(opts: {
       }
       res.writeHead(200, headers);
       res.end(html);
+      return true;
+    }
+
+    const previewUrlsMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/preview-urls$/,
+    );
+    if (method === 'GET' && previewUrlsMatch) {
+      await requirePrincipal(req, cfg);
+      const urls = await ws.getChangePreviewUrls(previewUrlsMatch[1]);
+      send(res, 200, { previewUrls: urls, source: 'local-preview-only' }, origin);
+      return true;
+    }
+
+    const ensureCompareMatch = path.match(
+      /^\/api\/website-studio\/change-requests\/([^/]+)\/ensure-compare-previews$/,
+    );
+    if (method === 'POST' && ensureCompareMatch) {
+      await requirePrincipal(req, cfg);
+      const urls = await ws.ensureComparePreviews(ensureCompareMatch[1]);
+      send(res, 200, { previewUrls: urls, source: 'local-preview-only' }, origin);
       return true;
     }
 

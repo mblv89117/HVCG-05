@@ -152,6 +152,113 @@ async function main() {
     previewStartupMs,
   );
 
+  // FULL VISUAL RENDER — real localhost pages with CSS/assets (not srcDoc snapshots)
+  let beforeH1 = '';
+  let afterH1 = '';
+  let fullVisualRenderOk = false;
+  let beforeUrl = null;
+  let afterUrl = null;
+  let beforePort = null;
+  let afterPort = null;
+  let criticalAsset404s = [];
+  let unstyledDetected = false;
+  try {
+    const urlsBody = await hub(
+      `/api/website-studio/change-requests/${FIXTURE.changeRequestId}/preview-urls`,
+    );
+    const pu = urlsBody.previewUrls || {};
+    beforeUrl = pu.before?.url || null;
+    afterUrl = pu.after?.url || null;
+    beforePort = pu.before?.port || null;
+    afterPort = pu.after?.port || null;
+    const vr = pu.visualRender || {};
+    beforeH1 = vr.before?.h1 || '';
+    afterH1 = vr.after?.h1 || '';
+    criticalAsset404s = [
+      ...(vr.before?.critical404s || []),
+      ...(vr.after?.critical404s || []),
+    ];
+    unstyledDetected = Boolean(vr.before?.unstyled || vr.after?.unstyled);
+    fullVisualRenderOk = Boolean(
+      vr.ok &&
+        beforePort === 8766 &&
+        afterPort === 8765 &&
+        beforePort !== afterPort &&
+        beforeH1 === FIXTURE.beforeH1 &&
+        afterH1 === FIXTURE.afterH1 &&
+        !unstyledDetected &&
+        criticalAsset404s.length === 0,
+    );
+    addCheck(
+      'full-visual-render',
+      'FULL VISUAL RENDER (styled localhost Before/After)',
+      fullVisualRenderOk ? 'PASS' : 'FAIL',
+      JSON.stringify({
+        beforeUrl,
+        afterUrl,
+        beforePort,
+        afterPort,
+        beforeH1: beforeH1.slice(0, 80),
+        afterH1: afterH1.slice(0, 80),
+        mismatches: vr.mismatches || [],
+        criticalAsset404s,
+        unstyledDetected,
+      }),
+    );
+    if (!fullVisualRenderOk) {
+      defects.push({
+        id: 'DEF-UNSTYLED-COMPARE',
+        title: 'Before/After shows unstyled HTML instead of real HVCG pages',
+        severity: 'CRITICAL',
+        ownerWorkflowStep: 'Before/After/Compare',
+        expected: 'Styled real HVCG pages on :8766 (BEFORE) and :8765 (AFTER)',
+        actual: JSON.stringify(vr.mismatches || ['visual render failed']),
+        affectedComponent: 'ChangeReviewScreen',
+        suggestedFix:
+          'Serve baseline git-archive on 8766 and pilot staging on 8765; use iframe src not srcDoc',
+        retestRequired: true,
+      });
+    }
+
+    // Direct asset probes (fail closed)
+    for (const [label, url] of [
+      ['before-styles', `${beforeUrl}styles.css`],
+      ['after-styles', `${afterUrl}styles.css`],
+      ['before-logo', `${beforeUrl}assets/brand/hvcg-logo-nav.png`],
+      ['after-logo', `${afterUrl}assets/brand/hvcg-logo-nav.png`],
+    ]) {
+      const res = await fetch(url);
+      const text = label.includes('styles') ? await res.text() : '';
+      const cssOk =
+        !label.includes('styles') ||
+        (res.ok && /--bg\s*:|font-family|:root/i.test(text) && !/<html/i.test(text));
+      addCheck(
+        `asset-${label}`,
+        `Asset ${label}`,
+        res.ok && cssOk ? 'PASS' : 'FAIL',
+        `${url} → ${res.status}`,
+      );
+      if (!res.ok || !cssOk) {
+        criticalAsset404s.push(label);
+        fullVisualRenderOk = false;
+      }
+    }
+  } catch (e) {
+    addCheck('full-visual-render', 'FULL VISUAL RENDER (styled localhost Before/After)', 'FAIL', String(e));
+    defects.push({
+      id: 'DEF-UNSTYLED-COMPARE',
+      title: 'Before/After shows unstyled HTML instead of real HVCG pages',
+      severity: 'CRITICAL',
+      ownerWorkflowStep: 'Before/After/Compare',
+      expected: 'Styled real HVCG pages on distinct localhost ports',
+      actual: String(e),
+      affectedComponent: 'ChangeReviewScreen',
+      suggestedFix: 'Repair compare preview servers',
+      retestRequired: true,
+    });
+  }
+
+  // Legacy snapshot H1 identity (text proof) — must still differ
   const beforeHtml = await fetch(
     `${HUB}/api/website-studio/change-requests/${FIXTURE.changeRequestId}/preview-snapshot?mode=before`,
     { headers: hubHeaders() },
@@ -160,8 +267,8 @@ async function main() {
     `${HUB}/api/website-studio/change-requests/${FIXTURE.changeRequestId}/preview-snapshot?mode=after`,
     { headers: hubHeaders() },
   ).then((r) => r.text());
-  const beforeH1 = extractH1(beforeHtml);
-  const afterH1 = extractH1(afterHtml);
+  if (!beforeH1) beforeH1 = extractH1(beforeHtml);
+  if (!afterH1) afterH1 = extractH1(afterHtml);
   const beforeAfterOk =
     beforeH1 === FIXTURE.beforeH1 && afterH1 === FIXTURE.afterH1 && beforeH1 !== afterH1;
   addCheck(
@@ -352,7 +459,16 @@ async function main() {
       pilotCommit: FIXTURE.pilotCommit,
       beforeH1,
       afterH1,
-      visualDifferenceVerified: Boolean(journey?.beforeH1 && journey?.afterH1 && journey.beforeH1 !== journey.afterH1),
+      visualDifferenceVerified: Boolean(
+        journey?.beforeH1 && journey?.afterH1 && journey.beforeH1 !== journey.afterH1,
+      ),
+      fullVisualRenderOk,
+      beforeUrl,
+      afterUrl,
+      beforePort,
+      afterPort,
+      criticalAsset404s,
+      unstyledDetected,
     },
     aiAdvisor: {
       mode: 'deterministic',
@@ -447,6 +563,7 @@ async function finish(ctx) {
       Build: ctx.browserOk ? 'PASS' : 'FAIL',
       'Browser Flow': ctx.checks.find((c) => c.id === 'browser-owner-flow')?.status || 'FAIL',
       'Preview Identity': ctx.beforeAfter.visualDifferenceVerified ? 'PASS' : 'FAIL',
+      'FULL VISUAL RENDER': ctx.beforeAfter.fullVisualRenderOk ? 'PASS' : 'FAIL',
       'Before / After': ctx.checks.find((c) => c.id === 'api-before-after')?.status || 'FAIL',
       'AI Advisor': ctx.aiAdvisor.threeOptionsOk ? 'PASS' : 'FAIL',
       Buttons: `${ctx.buttonInventory.functional}/${ctx.buttonInventory.total || '?'}`,

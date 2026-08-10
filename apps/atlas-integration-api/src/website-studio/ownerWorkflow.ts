@@ -67,6 +67,11 @@ export interface PreviewIdentityResult {
   contentFingerprintObserved: string | null;
   previewHealthStatus: string;
   previewUrl: string | null;
+  baselinePreviewUrl?: string | null;
+  baselinePreviewHealthStatus?: string;
+  afterPreviewUrl?: string | null;
+  visualRenderOk?: boolean;
+  visualRenderMismatches?: string[];
 }
 
 export function fingerprintContent(text: string | null | undefined): string {
@@ -223,18 +228,28 @@ export function verifyPreviewIdentity(opts: {
   website: WebsiteRegistryRecord;
   previewHealthStatus: string;
   previewUrl: string | null;
+  baselinePreviewUrl?: string | null;
+  baselinePreviewHealthStatus?: string;
+  visualRenderOk?: boolean;
+  visualRenderMismatches?: string[];
+  observedBeforeH1?: string | null;
+  observedAfterH1?: string | null;
 }): PreviewIdentityResult {
   const cr = opts.cr;
   const mismatches: string[] = [];
   const worktree = cr.worktreePath || opts.website.localRepositoryPath;
   const expectedContent = exactDraftContent(cr);
   const expectedFp = fingerprintContent(expectedContent);
+  const expectedBefore = String(cr.originalContent || '').trim();
   let branch: string | null = null;
   let headCommit: string | null = null;
-  let observedContent: string | null = null;
+  let observedContent: string | null = opts.observedAfterH1 || null;
 
   if (opts.previewHealthStatus !== 'running') {
-    mismatches.push('Preview server is not running');
+    mismatches.push('AFTER (pilot) preview server is not running');
+  }
+  if (opts.baselinePreviewHealthStatus != null && opts.baselinePreviewHealthStatus !== 'running') {
+    mismatches.push('BEFORE (baseline) preview server is not running');
   }
   if (!worktree || !existsSync(worktree)) {
     mismatches.push('Pilot worktree path missing');
@@ -245,15 +260,17 @@ export function verifyPreviewIdentity(opts: {
     } catch {
       mismatches.push('Unable to read git identity from pilot worktree');
     }
-    try {
-      const html = readWorktreePageHtml({
-        worktreePath: worktree,
-        sourceFile: 'website/staging/index.html',
-        mode: 'after',
-      });
-      observedContent = extractH1(html);
-    } catch {
-      mismatches.push('Unable to read preview page content');
+    if (!observedContent) {
+      try {
+        const html = readWorktreePageHtml({
+          worktreePath: worktree,
+          sourceFile: 'website/staging/index.html',
+          mode: 'after',
+        });
+        observedContent = extractH1(html);
+      } catch {
+        mismatches.push('Unable to read preview page content');
+      }
     }
   }
 
@@ -271,7 +288,21 @@ export function verifyPreviewIdentity(opts: {
     );
   }
   if (expectedContent && observedContent && observedContent.trim() !== expectedContent.trim()) {
-    mismatches.push('Preview content does not match the exact draft wording');
+    mismatches.push('AFTER preview content does not match the exact draft wording');
+  }
+  if (
+    expectedBefore &&
+    opts.observedBeforeH1 &&
+    opts.observedBeforeH1.trim() !== expectedBefore
+  ) {
+    mismatches.push('BEFORE preview content does not match the production baseline wording');
+  }
+  if (opts.visualRenderOk === false) {
+    mismatches.push(
+      ...(opts.visualRenderMismatches?.length
+        ? opts.visualRenderMismatches
+        : ['FULL VISUAL RENDER failed — Before/After must show real styled HVCG pages']),
+    );
   }
 
   return {
@@ -288,6 +319,11 @@ export function verifyPreviewIdentity(opts: {
     contentFingerprintObserved: fingerprintContent(observedContent),
     previewHealthStatus: opts.previewHealthStatus,
     previewUrl: opts.previewUrl,
+    baselinePreviewUrl: opts.baselinePreviewUrl || null,
+    baselinePreviewHealthStatus: opts.baselinePreviewHealthStatus,
+    afterPreviewUrl: opts.previewUrl,
+    visualRenderOk: opts.visualRenderOk,
+    visualRenderMismatches: opts.visualRenderMismatches || [],
   };
 }
 
@@ -296,6 +332,18 @@ export function buildOwnerReviewPayload(opts: {
   website: WebsiteRegistryRecord;
   page?: WebsitePageRecord | null;
   previewIdentity: PreviewIdentityResult;
+  previewUrls?: {
+    before: string | null;
+    after: string | null;
+    beforePort?: number | null;
+    afterPort?: number | null;
+  } | null;
+  visualRender?: {
+    ok: boolean;
+    mismatches: string[];
+    beforeUnstyled?: boolean;
+    afterUnstyled?: boolean;
+  } | null;
 }) {
   const { cr, website, page, previewIdentity } = opts;
   const after = exactDraftContent(cr);
@@ -303,6 +351,7 @@ export function buildOwnerReviewPayload(opts: {
   const change = whatWillChange(cr);
   const approval = cr.ownerApproval as OwnerApprovalRecord | undefined;
   const alreadyApproved = Boolean(approval?.approvedAt && !approval.invalidated);
+  const visualOk = opts.visualRender?.ok !== false && previewIdentity.visualRenderOk !== false;
   return {
     changeRequestId: cr.changeRequestId,
     ownerTitle: ownerChangeTitle(cr),
@@ -334,12 +383,27 @@ export function buildOwnerReviewPayload(opts: {
     pilotBranch: cr.gitBranch || null,
     worktreePath: cr.worktreePath || null,
     previewIdentity,
-    canApprove: previewIdentity.ok && !alreadyApproved,
+    previewUrls: {
+      before: opts.previewUrls?.before || previewIdentity.baselinePreviewUrl || null,
+      after: opts.previewUrls?.after || previewIdentity.afterPreviewUrl || previewIdentity.previewUrl || null,
+      beforePort: opts.previewUrls?.beforePort ?? 8766,
+      afterPort: opts.previewUrls?.afterPort ?? 8765,
+      source: 'local-preview-only' as const,
+    },
+    visualRender: opts.visualRender || {
+      ok: previewIdentity.visualRenderOk !== false,
+      mismatches: previewIdentity.visualRenderMismatches || [],
+    },
+    canApprove: previewIdentity.ok && visualOk && !alreadyApproved && before.trim() !== after.trim(),
     approvalBlockedReason: !previewIdentity.ok
       ? 'PREVIEW VERSION MISMATCH — fix preview before approval'
-      : alreadyApproved
-        ? 'Already approved — not published'
-        : null,
+      : !visualOk
+        ? 'FULL VISUAL RENDER FAILED — Before/After must show real styled pages'
+        : alreadyApproved
+          ? 'Already approved — not published'
+          : before.trim() === after.trim()
+            ? 'Before and After text are identical'
+            : null,
     deviceReviews: (cr.deviceReviews as OwnerDeviceReviews) || {},
     ownerApproval: approval || null,
     productionImpact: 'NONE YET' as const,

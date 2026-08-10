@@ -33,12 +33,13 @@ import {
   fetchWebsiteStudioPages,
   fetchWebsiteStudioPreviewHealth,
   fetchWebsiteStudioPreviewPage,
-  fetchWebsiteStudioPreviewSnapshot,
+  fetchWebsiteStudioPreviewUrls,
   fetchWebsiteStudioSeo,
   fetchWebsiteStudioWebsites,
   postWebsiteStudioAdvisorChat,
   postWebsiteStudioAiAssist,
   postWebsiteStudioDeviceReview,
+  postWebsiteStudioEnsureComparePreviews,
   postWebsiteStudioIgnoreRecommendation,
   postWebsiteStudioNaturalLanguage,
   postWebsiteStudioOwnerApprove,
@@ -165,8 +166,8 @@ export function WebsiteStudioPage() {
       : 'after';
   const [ownerReview, setOwnerReview] = useState<Record<string, unknown> | null>(null);
   const [previewMode, setPreviewMode] = useState<ReviewPreviewMode>(initialMode);
-  const [previewHtmlBefore, setPreviewHtmlBefore] = useState<string | null>(null);
-  const [previewHtmlAfter, setPreviewHtmlAfter] = useState<string | null>(null);
+  const [previewUrlBefore, setPreviewUrlBefore] = useState<string | null>(null);
+  const [previewUrlAfter, setPreviewUrlAfter] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [threeOptions, setThreeOptions] = useState<Array<Record<string, unknown>> | null>(null);
@@ -342,16 +343,19 @@ export function WebsiteStudioPage() {
 
   useEffect(() => {
     if (!hubAuth || nav !== 'review' || !reviewCrId) {
-      setPreviewHtmlBefore(null);
-      setPreviewHtmlAfter(null);
+      setPreviewUrlBefore(null);
+      setPreviewUrlAfter(null);
       return;
     }
     void (async () => {
       setBusy(true);
       setError(null);
-      setPreviewHtmlBefore(null);
-      setPreviewHtmlAfter(null);
+      setPreviewUrlBefore(null);
+      setPreviewUrlAfter(null);
       try {
+        const urls = await fetchWebsiteStudioPreviewUrls(hubAuth, reviewCrId);
+        setPreviewUrlBefore(urls.previewUrls.before.url);
+        setPreviewUrlAfter(urls.previewUrls.after.url);
         const res = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
         setOwnerReview(res.review);
         setEditText(String(res.review.after || ''));
@@ -361,12 +365,12 @@ export function WebsiteStudioPage() {
           Tablet: Boolean(devices.Tablet),
           Mobile: Boolean(devices.Mobile),
         });
-        const [beforeHtml, afterHtml] = await Promise.all([
-          fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'before'),
-          fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'after'),
-        ]);
-        setPreviewHtmlBefore(beforeHtml);
-        setPreviewHtmlAfter(afterHtml);
+        const fromReview = (res.review.previewUrls || {}) as {
+          before?: string | null;
+          after?: string | null;
+        };
+        if (fromReview.before) setPreviewUrlBefore(fromReview.before);
+        if (fromReview.after) setPreviewUrlAfter(fromReview.after);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -427,10 +431,32 @@ export function WebsiteStudioPage() {
   };
 
   const startPreview = async () => {
-    if (!hubAuth || !selectedWebsiteId) return;
+    if (!hubAuth) return;
     setPreviewBusy(true);
     setError(null);
     try {
+      if (nav === 'review' && reviewCrId) {
+        const ensured = await postWebsiteStudioEnsureComparePreviews(hubAuth, reviewCrId);
+        const pu = ensured.previewUrls as {
+          before?: { url?: string };
+          after?: { url?: string };
+          visualRender?: { ok?: boolean; mismatches?: string[] };
+        };
+        if (pu.before?.url) setPreviewUrlBefore(pu.before.url);
+        if (pu.after?.url) setPreviewUrlAfter(pu.after.url);
+        const review = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
+        setOwnerReview(review.review);
+        if (pu.visualRender?.ok === false) {
+          setError(
+            `FULL VISUAL RENDER failed: ${(pu.visualRender.mismatches || []).join('; ') || 'repair local previews'}`,
+          );
+        } else {
+          setNotice('BEFORE (:8766) and AFTER (:8765) local previews are running — real styled pages.');
+        }
+        await refreshPreviewHealth();
+        return;
+      }
+      if (!selectedWebsiteId) return;
       const res = await startWebsiteStudioPreview(hubAuth, selectedWebsiteId);
       setPreviewHealth({
         ...res.preview,
@@ -885,8 +911,8 @@ export function WebsiteStudioPage() {
                 review={ownerReview}
                 busy={busy}
                 previewMode={previewMode}
-                previewHtmlBefore={previewHtmlBefore}
-                previewHtmlAfter={previewHtmlAfter}
+                previewUrlBefore={previewUrlBefore}
+                previewUrlAfter={previewUrlAfter}
                 device={device}
                 editOpen={editOpen}
                 editText={editText}
@@ -931,12 +957,9 @@ export function WebsiteStudioPage() {
                       setNotice('Draft updated — previous approval invalidated if any.');
                       const r = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
                       setOwnerReview(r.review);
-                      const [beforeHtml, afterHtml] = await Promise.all([
-                        fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'before'),
-                        fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'after'),
-                      ]);
-                      setPreviewHtmlBefore(beforeHtml);
-                      setPreviewHtmlAfter(afterHtml);
+                      const urls = await fetchWebsiteStudioPreviewUrls(hubAuth, reviewCrId);
+                      setPreviewUrlBefore(urls.previewUrls.before.url);
+                      setPreviewUrlAfter(urls.previewUrls.after.url);
                       setReviewPreviewMode('after');
                     } catch (e) {
                       setError(e instanceof Error ? e.message : String(e));

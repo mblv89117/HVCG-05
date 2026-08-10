@@ -1652,6 +1652,45 @@ export async function fetchWebsiteStudioPreviewSnapshot(
   return res.text();
 }
 
+/** Real localhost preview URLs for BEFORE/AFTER (styled pages — not srcDoc snapshots). */
+export async function fetchWebsiteStudioPreviewUrls(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/preview-urls`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{
+    previewUrls: {
+      before: { url: string; port: number; commit: string | null; healthOk: boolean; mode: 'before' };
+      after: { url: string; port: number; commit: string | null; healthOk: boolean; mode: 'after' };
+      visualRender: {
+        ok: boolean;
+        mismatches: string[];
+        before: Record<string, unknown>;
+        after: Record<string, unknown>;
+      };
+      source: 'local-preview-only';
+    };
+    source: 'local-preview-only';
+  }>;
+}
+
+export async function postWebsiteStudioEnsureComparePreviews(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/ensure-compare-previews`,
+    { method: 'POST', headers: headers(auth), body: '{}' },
+  );
+  return parse(res) as Promise<{
+    previewUrls: Record<string, unknown>;
+    source: 'local-preview-only';
+  }>;
+}
+
 export async function postWebsiteStudioDeviceReview(
   auth: AtlasHubAuthHeaders,
   changeRequestId: string,

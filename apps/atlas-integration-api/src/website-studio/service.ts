@@ -67,6 +67,13 @@ import {
   type OwnerApprovalRecord,
   type OwnerDeviceReviews,
 } from './ownerWorkflow.ts';
+import {
+  BASELINE_PREVIEW_PORT,
+  PILOT_PREVIEW_PORT,
+  ensureBaselinePreviewServer,
+  probeVisualRender,
+  type ComparePreviewUrls,
+} from './visualRender.ts';
 import { collectLocalSystemStatus } from './localSystemStatus.ts';
 import {
   computeGateFromResult,
@@ -1163,31 +1170,205 @@ export class WebsiteStudioService {
       null;
     // Ensure preview is considered for identity
     const health = websitePreviewManager.getState(cr.websiteId);
+    const afterUrl = health?.url || cr.previewUrl || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
+    const beforeUrl = `http://127.0.0.1:${BASELINE_PREVIEW_PORT}/`;
     const previewIdentity = verifyPreviewIdentity({
       cr,
       website,
       previewHealthStatus: health?.status === 'running' ? 'running' : 'offline',
-      previewUrl: health?.url || cr.previewUrl || null,
+      previewUrl: afterUrl,
+      baselinePreviewUrl: beforeUrl,
+      baselinePreviewHealthStatus: 'offline',
     });
     // Re-check live health asynchronously-ish via sync call pattern used elsewhere
-    return buildOwnerReviewPayload({ cr, website, page, previewIdentity });
+    return buildOwnerReviewPayload({
+      cr,
+      website,
+      page,
+      previewIdentity,
+      previewUrls: {
+        before: beforeUrl,
+        after: afterUrl,
+        beforePort: BASELINE_PREVIEW_PORT,
+        afterPort: PILOT_PREVIEW_PORT,
+      },
+    });
+  }
+
+  /** Start pilot (8765) + baseline (8766) local previews and probe FULL VISUAL RENDER. */
+  async ensureComparePreviews(changeRequestId: string): Promise<ComparePreviewUrls> {
+    const cr = this.getChangeRequest(changeRequestId);
+    const website = this.getWebsite(cr.websiteId);
+    const worktree = cr.worktreePath || website.localRepositoryPath;
+    if (!worktree) {
+      throw Object.assign(new Error('No worktree registered for compare previews'), {
+        status: 400,
+        code: 'worktree_missing',
+      });
+    }
+    if (!cr.baselineCommit) {
+      throw Object.assign(new Error('Baseline commit required for BEFORE preview'), {
+        status: 400,
+        code: 'baseline_commit_missing',
+      });
+    }
+
+    const pilot = await websitePreviewManager.start(website);
+    const baseline = await ensureBaselinePreviewServer({
+      worktreePath: worktree,
+      baselineCommit: cr.baselineCommit,
+      port: BASELINE_PREVIEW_PORT,
+    });
+
+    const beforeUrl = baseline.url;
+    const afterUrl = pilot.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`;
+    const expectedBefore = String(cr.originalContent || '');
+    const expectedAfter = exactDraftContent(cr);
+
+    const [beforeProbe, afterProbe] = await Promise.all([
+      probeVisualRender({
+        mode: 'before',
+        url: beforeUrl,
+        port: BASELINE_PREVIEW_PORT,
+        commit: cr.baselineCommit,
+        expectedH1: expectedBefore,
+        documentRoot: baseline.documentRoot,
+      }),
+      probeVisualRender({
+        mode: 'after',
+        url: afterUrl,
+        port: pilot.port || PILOT_PREVIEW_PORT,
+        commit: cr.commit || null,
+        expectedH1: expectedAfter,
+      }),
+    ]);
+
+    const mismatches = [...beforeProbe.mismatches, ...afterProbe.mismatches];
+    if (beforeProbe.port === afterProbe.port) {
+      mismatches.push('BEFORE and AFTER must use different localhost ports');
+    }
+    if (beforeProbe.h1 && afterProbe.h1 && beforeProbe.h1.trim() === afterProbe.h1.trim()) {
+      mismatches.push('BEFORE and AFTER rendered H1 are identical — false visual pass blocked');
+    }
+
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'compare_previews_ensured',
+      correlationId: cr.auditCorrelationId,
+      detail: changeRequestId,
+      payload: {
+        beforeUrl,
+        afterUrl,
+        baselineCommit: cr.baselineCommit,
+        pilotCommit: cr.commit,
+        visualRenderOk: mismatches.length === 0,
+        mismatches,
+      },
+    });
+
+    return {
+      before: {
+        url: beforeUrl,
+        port: BASELINE_PREVIEW_PORT,
+        commit: cr.baselineCommit,
+        healthOk: beforeProbe.healthOk,
+        mode: 'before',
+      },
+      after: {
+        url: afterUrl,
+        port: afterProbe.port,
+        commit: cr.commit || null,
+        healthOk: afterProbe.healthOk,
+        mode: 'after',
+      },
+      visualRender: {
+        ok: mismatches.length === 0 && beforeProbe.ok && afterProbe.ok,
+        before: beforeProbe,
+        after: afterProbe,
+        mismatches,
+      },
+      source: 'local-preview-only',
+    };
+  }
+
+  async getChangePreviewUrls(changeRequestId: string): Promise<ComparePreviewUrls> {
+    return this.ensureComparePreviews(changeRequestId);
   }
 
   async getOwnerReviewLive(changeRequestId: string) {
     const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));
     const website = this.getWebsite(cr.websiteId);
-    const health = await websitePreviewManager.health(website);
     const page =
       (cr.pageId && this.store.listPages(cr.websiteId).find((p) => p.pageId === cr.pageId)) ||
       this.store.listPages(cr.websiteId).find((p) => p.route === '/') ||
       null;
+
+    let compare: ComparePreviewUrls | null = null;
+    try {
+      compare = await this.ensureComparePreviews(changeRequestId);
+    } catch (e) {
+      const health = await websitePreviewManager.health(website);
+      const previewIdentity = verifyPreviewIdentity({
+        cr,
+        website,
+        previewHealthStatus: health.status === 'running' ? 'running' : 'offline',
+        previewUrl: health.url,
+        baselinePreviewHealthStatus: 'offline',
+        visualRenderOk: false,
+        visualRenderMismatches: [
+          e instanceof Error ? e.message : String(e),
+          'FULL VISUAL RENDER unavailable — could not start compare previews',
+        ],
+      });
+      return buildOwnerReviewPayload({
+        cr,
+        website,
+        page,
+        previewIdentity,
+        previewUrls: {
+          before: `http://127.0.0.1:${BASELINE_PREVIEW_PORT}/`,
+          after: health.url || `http://127.0.0.1:${PILOT_PREVIEW_PORT}/`,
+          beforePort: BASELINE_PREVIEW_PORT,
+          afterPort: PILOT_PREVIEW_PORT,
+        },
+        visualRender: {
+          ok: false,
+          mismatches: previewIdentity.mismatches,
+        },
+      });
+    }
+
     const previewIdentity = verifyPreviewIdentity({
       cr,
       website,
-      previewHealthStatus: health.status === 'running' ? 'running' : 'offline',
-      previewUrl: health.url,
+      previewHealthStatus: compare.after.healthOk ? 'running' : 'offline',
+      previewUrl: compare.after.url,
+      baselinePreviewUrl: compare.before.url,
+      baselinePreviewHealthStatus: compare.before.healthOk ? 'running' : 'offline',
+      visualRenderOk: compare.visualRender.ok,
+      visualRenderMismatches: compare.visualRender.mismatches,
+      observedBeforeH1: compare.visualRender.before.h1,
+      observedAfterH1: compare.visualRender.after.h1,
     });
-    return buildOwnerReviewPayload({ cr, website, page, previewIdentity });
+
+    return buildOwnerReviewPayload({
+      cr,
+      website,
+      page,
+      previewIdentity,
+      previewUrls: {
+        before: compare.before.url,
+        after: compare.after.url,
+        beforePort: compare.before.port,
+        afterPort: compare.after.port,
+      },
+      visualRender: {
+        ok: compare.visualRender.ok,
+        mismatches: compare.visualRender.mismatches,
+        beforeUnstyled: compare.visualRender.before.unstyled,
+        afterUnstyled: compare.visualRender.after.unstyled,
+      },
+    });
   }
 
   getChangePreviewHtml(changeRequestId: string, mode: 'before' | 'after') {
@@ -1271,6 +1452,14 @@ export class WebsiteStudioService {
       throw Object.assign(
         new Error(`PREVIEW VERSION MISMATCH: ${review.previewIdentity.mismatches.join('; ')}`),
         { status: 409, code: 'preview_version_mismatch' },
+      );
+    }
+    if (review.visualRender && review.visualRender.ok === false) {
+      throw Object.assign(
+        new Error(
+          `FULL VISUAL RENDER FAILED: ${(review.visualRender.mismatches || []).join('; ')}`,
+        ),
+        { status: 409, code: 'full_visual_render_failed' },
       );
     }
     const cr = this.enrichChangeRequest(this.getChangeRequest(changeRequestId));

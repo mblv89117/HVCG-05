@@ -74,6 +74,13 @@ export interface WebsiteStudioQaResult {
     beforeH1: string;
     afterH1: string;
     visualDifferenceVerified: boolean;
+    fullVisualRenderOk?: boolean;
+    beforeUrl?: string | null;
+    afterUrl?: string | null;
+    beforePort?: number | null;
+    afterPort?: number | null;
+    criticalAsset404s?: string[];
+    unstyledDetected?: boolean;
   };
   aiAdvisor: {
     mode: 'live' | 'mock' | 'deterministic';
@@ -124,7 +131,32 @@ export function computeGateFromResult(result: Omit<WebsiteStudioQaResult, 'gate'
     ['BLOCKER', 'CRITICAL', 'HIGH'].includes(d.severity) && !d.fixed,
   );
   const failedChecks = result.checks.filter((c) => c.status === 'FAIL');
-  if (blockers.length || failedChecks.length || result.safety.productionChanged) {
+  const visualFail =
+    result.beforeAfter.fullVisualRenderOk === false ||
+    result.beforeAfter.unstyledDetected === true ||
+    (result.beforeAfter.criticalAsset404s || []).length > 0;
+  if (visualFail) {
+    const hasCriticalVisual = result.defects.some(
+      (d) =>
+        !d.fixed &&
+        ['BLOCKER', 'CRITICAL'].includes(d.severity) &&
+        /visual|unstyled|styles\.css|before\/after|render/i.test(`${d.title} ${d.affectedComponent}`),
+    );
+    if (!hasCriticalVisual) {
+      blockers.push({
+        id: 'DEF-FULL-VISUAL-RENDER',
+        title: 'FULL VISUAL RENDER required for READY FOR MANNY',
+        severity: 'CRITICAL',
+        ownerWorkflowStep: 'Before/After Compare',
+        expected: 'Styled real HVCG pages on distinct localhost preview ports',
+        actual: 'Unstyled or incomplete visual render',
+        affectedComponent: 'ChangeReviewScreen',
+        suggestedFix: 'Serve BEFORE on :8766 and AFTER on :8765 with CSS/fonts/images; never srcDoc snapshots',
+        retestRequired: true,
+      });
+    }
+  }
+  if (blockers.length || failedChecks.length || result.safety.productionChanged || visualFail) {
     return { gate: 'FAILED QA', verdict: 'WEBSITE STUDIO QA GATE — FAILED' };
   }
   const nonBlocking = result.defects.filter(
@@ -153,6 +185,7 @@ export function ownerPackageForPass(opts: {
       'Automated QA: Passed',
       'Browser owner flow: Passed',
       'Before / After: Verified',
+      'FULL VISUAL RENDER: Passed (real styled pages)',
       'Preview: Verified',
       'AI Advisor: Passed',
       'Desktop / Tablet / Mobile: Passed',
@@ -162,6 +195,23 @@ export function ownerPackageForPass(opts: {
       "Manny's only task:",
       'Look at the draft and decide whether you like it.',
     ],
+  };
+}
+
+/** Open CRITICAL defect for unstyled srcDoc/compare regressions. */
+export function unstyledCompareDefect(detail: string): QaDefect {
+  return {
+    id: 'DEF-UNSTYLED-COMPARE',
+    title: 'Before/After shows unstyled HTML instead of real HVCG pages',
+    severity: 'CRITICAL',
+    ownerWorkflowStep: 'Before/After/Compare',
+    expected:
+      'Fully styled local HVCG pages (CSS, fonts, layout, images, nav, hero) on distinct preview ports',
+    actual: detail,
+    affectedComponent: 'ChangeReviewScreen',
+    suggestedFix:
+      'Use iframe src to http://127.0.0.1:8766 (BEFORE baseline) and :8765 (AFTER pilot); ban srcDoc snapshots for owner review',
+    retestRequired: true,
   };
 }
 

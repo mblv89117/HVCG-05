@@ -35,7 +35,8 @@ function makePilotFixture() {
   mkdirSync(join(dir, 'website', 'staging'), { recursive: true });
   mkdirSync(join(dir, 'website', 'preview'), { recursive: true });
   mkdirSync(join(dir, 'website', 'scripts'), { recursive: true });
-  mkdirSync(join(dir, 'website', 'staging', 'assets'), { recursive: true });
+  mkdirSync(join(dir, 'website', 'staging', 'assets', 'brand'), { recursive: true });
+  mkdirSync(join(dir, 'website', 'staging', 'js'), { recursive: true });
   writeFileSync(
     join(dir, 'website', 'package.json'),
     JSON.stringify({
@@ -51,9 +52,19 @@ function makePilotFixture() {
   writeFileSync(join(dir, 'website', 'AZURE_SWA_DEPLOYMENT.md'), '# Azure SWA\n');
   const html = `<!doctype html><html><head><title>Home | High Value Capital Group</title>
 <meta name="description" content="HVCG helps owners increase enterprise value."/>
+<link rel="stylesheet" href="styles.css"/>
 <script type="application/ld+json">{"@type":"Organization"}</script>
-</head><body><h1>${CURRENT_H1}</h1></body></html>`;
+</head><body style="background:#050505;color:#f5e6c8"><h1>${CURRENT_H1}</h1>
+<img src="assets/brand/hvcg-logo-nav.png" alt="HVCG"/>
+<script src="js/site.js"></script>
+</body></html>`;
   writeFileSync(join(dir, 'website', 'staging', 'index.html'), html);
+  writeFileSync(
+    join(dir, 'website', 'staging', 'styles.css'),
+    ':root { --bg: #050505; } body { background: var(--bg); font-family: "Source Sans 3", sans-serif; }',
+  );
+  writeFileSync(join(dir, 'website', 'staging', 'js', 'site.js'), 'window.__HVCG=1;');
+  writeFileSync(join(dir, 'website', 'staging', 'assets', 'brand', 'hvcg-logo-nav.png'), 'png');
   writeFileSync(join(dir, 'website', 'preview', 'index.html'), html);
   writeFileSync(
     join(dir, 'website', 'scripts', 'generate_pages.py'),
@@ -93,13 +104,23 @@ function tempService(worktree: string) {
 async function serveStaging(worktree: string) {
   const root = join(worktree, 'website', 'staging');
   const server = createServer((req, res) => {
-    const file = join(root, req.url === '/' || !req.url ? 'index.html' : req.url.replace(/^\//, ''));
+    const rel = req.url === '/' || !req.url ? 'index.html' : req.url.replace(/^\//, '').split('?')[0];
+    const file = join(root, rel);
     if (!existsSync(file)) {
       res.writeHead(404);
       res.end('missing');
       return;
     }
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    const ext = file.split('.').pop() || '';
+    const type =
+      ext === 'css'
+        ? 'text/css; charset=utf-8'
+        : ext === 'js'
+          ? 'application/javascript; charset=utf-8'
+          : ext === 'png'
+            ? 'image/png'
+            : 'text/html; charset=utf-8';
+    res.writeHead(200, { 'content-type': type });
     res.end(readFileSync(file));
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
