@@ -1720,3 +1720,14 @@ export async function postWebsiteStudioIgnoreRecommendation(
   return parse(res) as Promise<{ ignored: boolean; scope: string }>;
 }
 
+export async function fetchWebsiteStudioLocalSystemStatus(auth: AtlasHubAuthHeaders) {
+  const res = await fetch(`${base()}/api/website-studio/local-system-status`, {
+    headers: headers(auth),
+  });
+  return parse(res) as Promise<{
+    checkedAt: string;
+    owner: Record<string, string>;
+    advanced: Record<string, unknown>;
+  }>;
+}
+

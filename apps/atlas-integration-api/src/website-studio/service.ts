@@ -66,6 +66,7 @@ import {
   type OwnerApprovalRecord,
   type OwnerDeviceReviews,
 } from './ownerWorkflow.ts';
+import { collectLocalSystemStatus } from './localSystemStatus.ts';
 
 function nowIso() {
   return new Date().toISOString();
@@ -75,10 +76,12 @@ export class WebsiteStudioService {
   readonly store: WebsiteStudioStore;
   readonly phase6b: Phase6bPilotController;
   private seedDone = false;
+  private readonly repoRoot: string;
 
   constructor(opts: { repoRoot: string; env?: Record<string, string | undefined>; dbPath?: string }) {
     const env = opts.env || process.env;
     const dbPath = opts.dbPath || resolveWebsiteStudioDbPath(env, opts.repoRoot);
+    this.repoRoot = opts.repoRoot;
     this.store = new WebsiteStudioStore(dbPath);
     this.phase6b = new Phase6bPilotController(this.store);
     this.ensureSyntheticSeed();
@@ -1414,6 +1417,10 @@ export class WebsiteStudioService {
     const saved = crs.filter((c) => c.ownerStatus === 'Saved for Later');
     const approved = crs.filter((c) => c.ownerStatus === 'Approved — Not Published');
     return { needsReview, readyPreview, saved, approved, all: crs.filter(actionable) };
+  }
+
+  async localSystemStatus() {
+    return collectLocalSystemStatus({ repoRoot: this.repoRoot });
   }
 
   getPilotReviewPanel(changeRequestId: string) {

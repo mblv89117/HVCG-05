@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.hvcg.atlas-hub</string>
+  <key>WorkingDirectory</key><string>__ATLAS_WORKTREE__</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>__ATLAS_WORKTREE__/scripts/local-ops/atlas-hub-launch.sh</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key><false/>
+  </dict>
+  <key>ThrottleInterval</key><integer>15</integer>
+  <key>ProcessType</key><string>Background</string>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/HVCG-Atlas/hub.out.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/HVCG-Atlas/hub.err.log</string>
+</dict>
+</plist>

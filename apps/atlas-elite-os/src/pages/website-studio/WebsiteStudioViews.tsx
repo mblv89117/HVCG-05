@@ -1381,3 +1381,77 @@ export function AdvancedPanel(props: {
     </AtlasCard>
   );
 }
+
+export function LocalSystemStatusPanel(props: {
+  status: {
+    checkedAt?: string;
+    owner?: Record<string, string>;
+    advanced?: Record<string, unknown>;
+  } | null;
+  advancedMode: boolean;
+  busy: boolean;
+  onRefresh: () => void;
+}) {
+  const owner = props.status?.owner || {};
+  const rows: Array<{ label: string; key: string }> = [
+    { label: 'Atlas UI', key: 'atlasUi' },
+    { label: 'Integration Hub', key: 'integrationHub' },
+    { label: 'Local AI / Ollama', key: 'localAi' },
+    { label: 'HVCG Preview', key: 'hvcgPreview' },
+    { label: 'ClamAV', key: 'clamAv' },
+    { label: 'SQLite', key: 'sqlite' },
+  ];
+  return (
+    <AtlasCard>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <Text weight="semibold">Local System</Text>
+        <Button size="small" disabled={props.busy} onClick={props.onRefresh}>
+          Refresh
+        </Button>
+      </div>
+      <Caption1 style={{ display: 'block', marginTop: 6, color: muted }}>
+        Informational only — no Production actions. Website preview starts on demand from Website Studio.
+      </Caption1>
+      {rows.map((r) => {
+        const value = owner[r.key] || 'Unknown';
+        const running = /Running|Healthy|Available/i.test(value);
+        return (
+          <div
+            key={r.key}
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 12,
+              borderTop: border,
+              padding: '10px 0',
+            }}
+          >
+            <Text>{r.label}</Text>
+            <Caption1>
+              <span style={{ color: running ? '#2f6b3a' : muted }}>●</span> {value}
+            </Caption1>
+          </div>
+        );
+      })}
+      {props.status?.checkedAt ? (
+        <Caption1 style={{ display: 'block', marginTop: 8, color: muted }}>
+          Checked: {String(props.status.checkedAt).replace('T', ' ').slice(0, 19)} UTC
+        </Caption1>
+      ) : null}
+      {props.advancedMode && props.status?.advanced ? (
+        <details style={{ marginTop: 12 }}>
+          <summary style={{ cursor: 'pointer' }}>Advanced local details</summary>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            Logs: {String((props.status.advanced as { logsDir?: string }).logsDir || '—')}
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>
+            Preview is on-demand (not LaunchAgent-managed).
+          </Caption1>
+          <Caption1 style={{ display: 'block' }}>
+            Safety flags remain false for writes / EVA / emails.
+          </Caption1>
+        </details>
+      ) : null}
+    </AtlasCard>
+  );
+}

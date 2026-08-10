@@ -45,6 +45,7 @@ import {
   postWebsiteStudioOwnerEdit,
   postWebsiteStudioSaveForLater,
   postWebsiteStudioThreeOptions,
+  fetchWebsiteStudioLocalSystemStatus,
   restartWebsiteStudioPreview,
   startWebsiteStudioPreview,
 } from '../../integrations/hub/api';
@@ -60,6 +61,7 @@ import {
   ExpertAdvisorPanel,
   FormsView,
   HistoryView,
+  LocalSystemStatusPanel,
   MediaLibraryView,
   MetricRow,
   NaturalLanguageBar,
@@ -153,6 +155,11 @@ export function WebsiteStudioPage() {
   const [threeOptions, setThreeOptions] = useState<Array<Record<string, unknown>> | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
   const [approvedResult, setApprovedResult] = useState<Record<string, unknown> | null>(null);
+  const [localSystemStatus, setLocalSystemStatus] = useState<{
+    checkedAt?: string;
+    owner?: Record<string, string>;
+    advanced?: Record<string, unknown>;
+  } | null>(null);
 
   const setView = (view: StudioNavId, extra?: Record<string, string>) => {
     const next = new URLSearchParams(params);
@@ -322,6 +329,18 @@ export function WebsiteStudioPage() {
       }
     })();
   }, [hubAuth, nav, reviewCrId, previewMode]);
+
+  useEffect(() => {
+    if (!hubAuth || (nav !== 'settings' && nav !== 'advanced')) return;
+    void (async () => {
+      try {
+        const status = await fetchWebsiteStudioLocalSystemStatus(hubAuth);
+        setLocalSystemStatus(status);
+      } catch {
+        setLocalSystemStatus(null);
+      }
+    })();
+  }, [hubAuth, nav]);
 
   useEffect(() => {
     if (!hubAuth || !selectedWebsiteId || !selectedPageId) return;
@@ -1092,7 +1111,28 @@ export function WebsiteStudioPage() {
             ) : null}
 
             {(nav === 'advanced' || nav === 'settings') && selectedWebsite ? (
-              <AdvancedPanel
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {nav === 'settings' ? (
+                  <LocalSystemStatusPanel
+                    status={localSystemStatus}
+                    advancedMode={advancedMode}
+                    busy={busy}
+                    onRefresh={() =>
+                      void (async () => {
+                        if (!hubAuth) return;
+                        setBusy(true);
+                        try {
+                          setLocalSystemStatus(await fetchWebsiteStudioLocalSystemStatus(hubAuth));
+                        } catch (e) {
+                          setError(e instanceof Error ? e.message : String(e));
+                        } finally {
+                          setBusy(false);
+                        }
+                      })()
+                    }
+                  />
+                ) : null}
+                <AdvancedPanel
                 website={selectedWebsite}
                 health={health}
                 busy={busy}
@@ -1111,6 +1151,7 @@ export function WebsiteStudioPage() {
                   })()
                 }
               />
+              </div>
             ) : null}
           </div>
         </div>

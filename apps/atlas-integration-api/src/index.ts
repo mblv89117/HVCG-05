@@ -33,7 +33,8 @@ export function startServer() {
   const repo = new IntegrationRepository(cfg.dataDir, cfg.tokenEncryptionKeyB64);
   const pm = new PmRepository(cfg.dataDir);
   const localAi = createLocalAiService(join(cfg.dataDir, 'local-ai'));
-  const websiteStudio = createWebsiteStudioService(process.cwd(), process.env);
+  const websiteStudioRoot = process.env.ATLAS_REPO_ROOT || process.cwd();
+  const websiteStudio = createWebsiteStudioService(websiteStudioRoot, process.env);
   void localAi.refreshOllamaDiscovery(true).catch((err) => {
     console.warn(
       JSON.stringify({
@@ -53,16 +54,16 @@ export function startServer() {
     });
   });
 
-  // Bind all local interfaces so both localhost and 127.0.0.1 work
-  // (Elite OS often loads on 127.0.0.1; Entra OAuth redirects use localhost).
-  server.listen(cfg.port, '0.0.0.0', () => {
+  // Default local bind is 127.0.0.1 (LaunchAgent / local ops). Override via INTEGRATION_API_HOST.
+  server.listen(cfg.port, cfg.host, () => {
     console.info(
       JSON.stringify({
         level: 'info',
         msg: 'atlas-integration-api listening',
         port: cfg.port,
-        host: '0.0.0.0',
+        host: cfg.host,
         dataDir: cfg.dataDir,
+        websiteStudioRoot,
         microsoftConfigured: Boolean(cfg.microsoft.clientId && cfg.microsoft.clientSecret),
       }),
     );

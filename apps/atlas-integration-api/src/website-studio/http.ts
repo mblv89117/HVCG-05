@@ -203,6 +203,12 @@ export async function handleWebsiteStudioRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/website-studio/local-system-status') {
+      await requirePrincipal(req, cfg);
+      send(res, 200, await ws.localSystemStatus(), origin);
+      return true;
+    }
+
     const ownerReviewMatch = path.match(
       /^\/api\/website-studio\/change-requests\/([^/]+)\/owner-review$/,
     );
