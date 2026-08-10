@@ -48,8 +48,11 @@ import {
   advisorChatReply,
   analyzePage as runPageAnalysis,
   analyzeWebsite as runWebsiteAnalysis,
-  checkPreviewHealth,
 } from './advisor.ts';
+import {
+  buildPreviewPageUrl,
+  websitePreviewManager,
+} from './previewManager.ts';
 
 function nowIso() {
   return new Date().toISOString();
@@ -1010,24 +1013,91 @@ export class WebsiteStudioService {
 
   async previewHealth(websiteId: string) {
     const website = this.getWebsite(websiteId);
-    const previews = this.store.listPreviews().filter((p) => p.websiteId === websiteId);
-    const fromPreview = previews.length ? previews[previews.length - 1].localUrl : null;
-    const fromCr = this.store
-      .listChangeRequests(websiteId)
-      .map((c) => c.previewUrl)
-      .filter(Boolean)
-      .pop();
-    // Prefer registered staging/local preview (e.g. HVCG 127.0.0.1:8765) over scaffold placeholders.
-    const staging = website.stagingUrl;
-    const url = fromCr || fromPreview || staging || null;
-    const health = await checkPreviewHealth(url);
+    const managed = await websitePreviewManager.health(website);
     this.store.audit({
       actor: AUTOMATION_OWNER,
       action: 'website_preview_health_check',
       detail: websiteId,
-      payload: { status: health.status, url: health.url },
+      payload: { status: managed.status, url: managed.url, pid: managed.pid },
     });
-    return { ...health, stagingUrl: staging, previewCommand: website.previewCommand };
+    return {
+      status: managed.status === 'running' ? 'running' : managed.status === 'starting' ? 'starting' : 'offline',
+      url: managed.url,
+      checkedAt: managed.lastHealthAt || new Date().toISOString(),
+      stagingUrl: website.stagingUrl,
+      previewCommand: website.previewCommand,
+      pid: managed.pid,
+      managedByStudio: managed.managedByStudio,
+      lastError: managed.lastError,
+      logTail: managed.logTail.slice(-20),
+      cwd: managed.cwd,
+    };
+  }
+
+  async startWebsitePreview(websiteId: string) {
+    const website = this.getWebsite(websiteId);
+    if (website.synthetic) {
+      throw Object.assign(new Error('Preview lifecycle is for registered real websites only'), {
+        status: 400,
+        code: 'preview_synthetic_blocked',
+      });
+    }
+    const state = await websitePreviewManager.start(website);
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'website_preview_start',
+      detail: websiteId,
+      payload: { status: state.status, pid: state.pid, url: state.url },
+    });
+    return state;
+  }
+
+  async stopWebsitePreview(websiteId: string) {
+    this.getWebsite(websiteId);
+    const state = await websitePreviewManager.stop(websiteId);
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'website_preview_stop',
+      detail: websiteId,
+      payload: { status: state.status },
+    });
+    return state;
+  }
+
+  async restartWebsitePreview(websiteId: string) {
+    const website = this.getWebsite(websiteId);
+    if (website.synthetic) {
+      throw Object.assign(new Error('Preview lifecycle is for registered real websites only'), {
+        status: 400,
+        code: 'preview_synthetic_blocked',
+      });
+    }
+    const state = await websitePreviewManager.restart(website);
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'website_preview_restart',
+      detail: websiteId,
+      payload: { status: state.status, pid: state.pid, url: state.url },
+    });
+    return state;
+  }
+
+  previewPageUrl(websiteId: string, pageId?: string) {
+    const website = this.getWebsite(websiteId);
+    const managed = websitePreviewManager.getState(websiteId);
+    const base =
+      managed?.url ||
+      (String(website.stagingUrl || '').match(/https?:\/\/127\.0\.0\.1:\d+\/?/) || [])[0] ||
+      null;
+    const page = pageId
+      ? this.store.listPages(websiteId).find((p) => p.pageId === pageId) || null
+      : this.store.listPages(websiteId).find((p) => p.route === '/') || null;
+    return {
+      url: buildPreviewPageUrl(base, page),
+      baseUrl: base,
+      pageId: page?.pageId || null,
+      route: page?.route || null,
+    };
   }
 
   getPilotReviewPanel(changeRequestId: string) {

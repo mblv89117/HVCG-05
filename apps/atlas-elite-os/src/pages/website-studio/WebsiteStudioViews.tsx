@@ -383,57 +383,127 @@ export function PageManagerView(props: {
 }
 
 export function VisualEditorView(props: {
+  websiteName: string;
+  pages: Array<Record<string, unknown>>;
   page: Record<string, unknown>;
   blocks: Array<Record<string, unknown>>;
   selectedBlockId: string | null;
   draftText: string;
   previewUrl: string | null;
+  previewStatus: string;
+  previewBusy: boolean;
   device: 'Desktop' | 'Tablet' | 'Mobile';
   analysis: Record<string, unknown> | null;
+  rightMode: 'advisor' | 'edit';
+  advancedMode: boolean;
+  onSelectPage: (pageId: string) => void;
   onSelectBlock: (id: string) => void;
   onDraftChange: (v: string) => void;
   onSaveDraft: () => void;
   onDevice: (d: 'Desktop' | 'Tablet' | 'Mobile') => void;
   onAiAction: (action: string) => void;
+  onRightMode: (m: 'advisor' | 'edit') => void;
+  onStartPreview: () => void;
+  onRestartPreview: () => void;
+  onOpenFullscreen: () => void;
   advisor: ReactNode;
 }) {
   const sections = inferSections(props.blocks);
   const selected = props.blocks.find((b) => b.blockId === props.selectedBlockId);
+  const pageName = friendlyPageName(props.page);
+  const running = props.previewStatus === 'running';
   const width = props.device === 'Mobile' ? 390 : props.device === 'Tablet' ? 768 : '100%';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 320px', gap: 14, minHeight: 520 }}>
-      <div style={{ borderRight: border, paddingRight: 8 }}>
-        <Text weight="semibold">{friendlyPageName(props.page).toUpperCase()}</Text>
-        <Caption1 style={{ display: 'block', margin: '10px 0 6px', color: muted }}>Sections</Caption1>
-        {sections.map((s) => (
-          <button
-            key={s}
-            type="button"
-            style={navBtn(selected ? sectionForBlock(selected) === s : s === 'Hero')}
-            onClick={() => {
-              const block = props.blocks.find((b) => sectionForBlock(b) === s);
-              if (block) props.onSelectBlock(String(block.blockId));
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(160px, 15%) minmax(0, 1fr) minmax(280px, 28%)',
+        gap: 12,
+        minHeight: 640,
+        alignItems: 'stretch',
+      }}
+    >
+      {/* Page / sections */}
+      <div style={{ borderRight: border, paddingRight: 10, minWidth: 0 }}>
+        <Caption1 style={{ color: muted }}>{props.websiteName}</Caption1>
+        <Text weight="semibold" style={{ display: 'block' }}>
+          › {pageName}
+        </Text>
+        <Caption1 style={{ display: 'block', marginTop: 4 }}>Page: {pageName}</Caption1>
+
+        <label style={{ display: 'block', marginTop: 14 }}>
+          <Caption1 style={{ color: muted }}>Page</Caption1>
+          <select
+            value={String(props.page.pageId)}
+            onChange={(e) => props.onSelectPage(e.target.value)}
+            style={{
+              width: '100%',
+              marginTop: 4,
+              padding: '8px 10px',
+              borderRadius: 8,
+              border,
+              background: 'var(--colorNeutralBackground1)',
+              fontWeight: 600,
             }}
           >
-            {s}
-          </button>
-        ))}
+            {props.pages.map((p) => (
+              <option key={String(p.pageId)} value={String(p.pageId)}>
+                {friendlyPageName(p)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <Caption1 style={{ display: 'block', margin: '14px 0 6px', color: muted }}>
+          Page Sections
+        </Caption1>
+        {sections.length === 0 ? (
+          <Caption1>No sections mapped yet.</Caption1>
+        ) : (
+          sections.map((s) => (
+            <button
+              key={s}
+              type="button"
+              style={navBtn(selected ? sectionForBlock(selected) === s : s === 'Hero')}
+              onClick={() => {
+                const block = props.blocks.find((b) => sectionForBlock(b) === s);
+                if (block) {
+                  props.onSelectBlock(String(block.blockId));
+                  props.onRightMode('edit');
+                }
+              }}
+            >
+              {s}
+            </button>
+          ))
+        )}
+
         <Caption1 style={{ display: 'block', marginTop: 14, color: muted }}>Blocks</Caption1>
-        {props.blocks.map((b) => (
-          <button
-            key={String(b.blockId)}
-            type="button"
-            style={navBtn(props.selectedBlockId === b.blockId)}
-            onClick={() => props.onSelectBlock(String(b.blockId))}
-          >
-            {String(b.blockType)}
-          </button>
-        ))}
+        {props.blocks.length === 0 ? (
+          <div style={{ marginTop: 6 }}>
+            <Caption1>No editable blocks mapped yet.</Caption1>
+          </div>
+        ) : (
+          props.blocks.map((b) => (
+            <button
+              key={String(b.blockId)}
+              type="button"
+              style={navBtn(props.selectedBlockId === b.blockId)}
+              onClick={() => {
+                props.onSelectBlock(String(b.blockId));
+                props.onRightMode('edit');
+              }}
+            >
+              {String(b.blockType)}
+            </button>
+          ))
+        )}
       </div>
 
-      <div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+      {/* Dominant preview */}
+      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {(['Desktop', 'Tablet', 'Mobile'] as const).map((d) => (
             <Button
               key={d}
@@ -441,101 +511,177 @@ export function VisualEditorView(props: {
               appearance={props.device === d ? 'primary' : 'subtle'}
               onClick={() => props.onDevice(d)}
             >
+              {d === 'Desktop' ? '🖥 ' : d === 'Tablet' ? '▦ ' : '▭ '}
               {d}
             </Button>
           ))}
+          <div style={{ flex: 1 }} />
+          {running ? (
+            <Caption1 style={{ color: muted }}>● Preview Running</Caption1>
+          ) : (
+            <Caption1 style={{ color: muted }}>○ Preview Offline</Caption1>
+          )}
+          <Button size="small" disabled={props.previewBusy} onClick={props.onStartPreview}>
+            Start Preview
+          </Button>
+          <Button size="small" disabled={props.previewBusy} onClick={props.onRestartPreview}>
+            Restart Preview
+          </Button>
+          <Button size="small" disabled={!running} onClick={props.onOpenFullscreen}>
+            Open Full Screen
+          </Button>
         </div>
+
         <div
           style={{
             margin: '0 auto',
             width,
             maxWidth: '100%',
+            flex: 1,
             border,
             borderRadius: 12,
             overflow: 'hidden',
-            background: '#fff',
-            color: '#111',
-            minHeight: 420,
+            background: '#f4f4f4',
+            minHeight: 560,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          {props.previewUrl ? (
+          {running && props.previewUrl ? (
             <iframe
               title="Website preview"
               src={props.previewUrl}
-              style={{ width: '100%', height: 480, border: 'none' }}
+              style={{ width: '100%', flex: 1, minHeight: 560, border: 'none', background: '#fff' }}
             />
           ) : (
-            <div style={{ padding: 24 }}>
-              <Caption1 style={{ color: '#666' }}>Visual preview (content map)</Caption1>
-              {props.blocks.map((b) => {
-                const active = props.selectedBlockId === b.blockId;
-                return (
-                  <button
-                    key={String(b.blockId)}
-                    type="button"
-                    onClick={() => props.onSelectBlock(String(b.blockId))}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      textAlign: 'left',
-                      border: active ? `2px solid ${gold}` : '1px solid #e5e5e5',
-                      borderRadius: 8,
-                      padding: 12,
-                      marginTop: 10,
-                      background: active ? '#fff8ef' : '#fafafa',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Caption1>{String(b.blockType)}</Caption1>
-                    <div style={{ marginTop: 4, fontSize: b.blockType === 'headline' ? 22 : 14, fontWeight: b.blockType === 'headline' ? 700 : 400 }}>
-                      {String(b.currentValue)}
-                    </div>
-                  </button>
-                );
-              })}
+            <div
+              style={{
+                flex: 1,
+                display: 'grid',
+                placeItems: 'center',
+                padding: 32,
+                textAlign: 'center',
+                background: '#fafafa',
+              }}
+            >
+              <div style={{ maxWidth: 420 }}>
+                <Text weight="semibold" size={500}>
+                  PREVIEW OFFLINE
+                </Text>
+                <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                  The local website preview is not currently running.
+                </Caption1>
+                <Button
+                  appearance="primary"
+                  style={{ marginTop: 16 }}
+                  disabled={props.previewBusy}
+                  onClick={props.onStartPreview}
+                >
+                  {props.previewBusy ? 'Starting…' : 'Start Preview'}
+                </Button>
+                {props.advancedMode ? (
+                  <Caption1 style={{ display: 'block', marginTop: 12, color: muted }}>
+                    Advanced: {props.previewUrl || 'http://127.0.0.1:8765/'}
+                  </Caption1>
+                ) : null}
+                {props.blocks.length > 0 ? (
+                  <div style={{ marginTop: 20, textAlign: 'left' }}>
+                    <Caption1>Content map (editable while preview starts)</Caption1>
+                    {props.blocks.slice(0, 4).map((b) => (
+                      <button
+                        key={String(b.blockId)}
+                        type="button"
+                        onClick={() => {
+                          props.onSelectBlock(String(b.blockId));
+                          props.onRightMode('edit');
+                        }}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          textAlign: 'left',
+                          border: '1px solid #e5e5e5',
+                          borderRadius: 8,
+                          padding: 10,
+                          marginTop: 8,
+                          background: '#fff',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Caption1>{String(b.blockType)}</Caption1>
+                        <div style={{ fontSize: 13 }}>{String(b.currentValue).slice(0, 120)}</div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </div>
           )}
         </div>
-
-        {selected ? (
-          <AtlasCard style={{ marginTop: 14 }}>
-            <Text weight="semibold">
-              {String(selected.blockType) === 'headline' ? 'Hero Heading' : String(selected.blockType)}
-            </Text>
-            <Caption1 style={{ display: 'block', marginTop: 6 }}>Current</Caption1>
-            <Text>{String(selected.currentValue)}</Text>
-            <Caption1 style={{ display: 'block', marginTop: 10 }}>Editable</Caption1>
-            <Textarea
-              value={props.draftText}
-              onChange={(_, d) => props.onDraftChange(d.value)}
-              style={{ width: '100%', minHeight: 90, marginTop: 4 }}
-            />
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-              <Button appearance="primary" onClick={props.onSaveDraft}>
-                Save Draft
-              </Button>
-              {['Improve This', 'Give Me 3 Options', 'Make Shorter', 'Make Stronger', 'Improve SEO', 'Rewrite'].map(
-                (a) => (
-                  <Button key={a} size="small" onClick={() => props.onAiAction(a)}>
-                    {a}
-                  </Button>
-                ),
-              )}
-            </div>
-          </AtlasCard>
-        ) : null}
-
-        {props.analysis ? (
-          <MessageBar intent="info" style={{ marginTop: 12 }}>
-            <MessageBarBody>
-              AI Advisor found {Array.isArray(props.analysis.opportunities) ? props.analysis.opportunities.length : 0}{' '}
-              opportunities on this page.
-            </MessageBarBody>
-          </MessageBar>
-        ) : null}
       </div>
 
-      <div>{props.advisor}</div>
+      {/* Right: Advisor | Edit */}
+      <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <Button
+            appearance={props.rightMode === 'advisor' ? 'primary' : 'secondary'}
+            onClick={() => props.onRightMode('advisor')}
+          >
+            AI Advisor
+          </Button>
+          <Button
+            appearance={props.rightMode === 'edit' ? 'primary' : 'secondary'}
+            onClick={() => props.onRightMode('edit')}
+          >
+            Edit
+          </Button>
+        </div>
+
+        {props.rightMode === 'advisor' ? (
+          props.advisor
+        ) : (
+          <AtlasCard>
+            {selected ? (
+              <>
+                <Text weight="semibold">
+                  {String(selected.blockType) === 'headline'
+                    ? 'Hero Heading'
+                    : String(selected.blockType)}
+                </Text>
+                <Caption1 style={{ display: 'block', marginTop: 6 }}>Current</Caption1>
+                <Text>{String(selected.currentValue)}</Text>
+                <Caption1 style={{ display: 'block', marginTop: 10 }}>Proposed</Caption1>
+                <Textarea
+                  value={props.draftText}
+                  onChange={(_, d) => props.onDraftChange(d.value)}
+                  style={{ width: '100%', minHeight: 110, marginTop: 4 }}
+                />
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                  <Button appearance="primary" onClick={props.onSaveDraft}>
+                    Save Draft
+                  </Button>
+                  {['Improve This', 'Give Me 3 Options', 'Make Shorter', 'Make Stronger'].map((a) => (
+                    <Button key={a} size="small" onClick={() => props.onAiAction(a)}>
+                      {a}
+                    </Button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <Text weight="semibold">Edit</Text>
+                <Caption1 style={{ display: 'block', marginTop: 8 }}>
+                  Select a section or content block to edit. Clicking mapped content opens this panel.
+                </Caption1>
+                {props.blocks.length === 0 ? (
+                  <Caption1 style={{ display: 'block', marginTop: 10 }}>
+                    No editable blocks mapped yet. Use AI Advisor → Analyze This Page.
+                  </Caption1>
+                ) : null}
+              </>
+            )}
+          </AtlasCard>
+        )}
+      </div>
     </div>
   );
 }
@@ -545,102 +691,149 @@ export function ExpertAdvisorPanel(props: {
   chat: Array<{ role: 'user' | 'advisor'; text: string }>;
   chatInput: string;
   showMore: boolean;
+  showFullHealth: boolean;
   busy: boolean;
   onChatInput: (v: string) => void;
   onSend: (msg?: string) => void;
   onAnalyze: () => void;
   onAnalyzeSite: () => void;
   onShowMore: () => void;
+  onToggleFullHealth: () => void;
   onRecAction: (rec: Record<string, unknown>, action: string) => void;
 }) {
   const health = (props.analysis?.health || {}) as Record<string, number>;
-  const opps = ((props.analysis?.opportunities as Array<Record<string, unknown>>) || []).slice(
-    0,
-    props.showMore ? 8 : 5,
-  );
+  const opps = ((props.analysis?.opportunities as Array<Record<string, unknown>>) || []) as Array<
+    Record<string, unknown>
+  >;
+  const top = opps[0];
+  const others = opps.slice(1, props.showMore ? 8 : 4);
+  const score = Number(props.analysis?.overallScore || 0);
+  const scoreLabel =
+    score >= 80 ? 'Good' : score >= 65 ? 'Needs Attention' : score > 0 ? 'Needs Attention' : '—';
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <AtlasCard>
-        <Text weight="semibold">EXPERT WEBSITE ADVISOR</Text>
-        {props.analysis ? (
-          <>
-            <Caption1 style={{ display: 'block', marginTop: 8 }}>AI Website Health Estimate</Caption1>
-            <Text weight="semibold" size={500}>
-              {String(props.analysis.overallScore)} / 100 — {String(props.analysis.label)}
-            </Text>
-            <Caption1 style={{ display: 'block', marginTop: 4, color: muted }}>
-              {String(props.analysis.estimateDisclaimer || 'AI Website Health Estimate')}
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+          <Text weight="semibold">Expert Website Advisor</Text>
+          {props.analysis ? (
+            <Caption1>
+              Page Health {score} / 100 · {scoreLabel}
             </Caption1>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
+          ) : null}
+        </div>
+        {props.analysis ? (
+          props.showFullHealth ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginTop: 8 }}>
               {Object.entries(health).map(([k, v]) => (
                 <Caption1 key={k}>
                   {k.charAt(0).toUpperCase() + k.slice(1)} {v}
                 </Caption1>
               ))}
             </div>
-          </>
+          ) : (
+            <Caption1 style={{ display: 'block', marginTop: 6 }}>
+              Messaging {health.messaging ?? '—'} · Conversion {health.conversion ?? '—'} · SEO{' '}
+              {health.seo ?? '—'}
+            </Caption1>
+          )
         ) : (
           <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            Analyze this page to get prioritized recommendations.
+            Analyze this page to get a prioritized “what should I change first?” recommendation.
           </Caption1>
         )}
         <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
           <Button appearance="primary" size="small" disabled={props.busy} onClick={props.onAnalyze}>
             Analyze This Page
           </Button>
-          <Button size="small" disabled={props.busy} onClick={props.onAnalyzeSite}>
-            Analyze Entire Website
+          <Button size="small" appearance="subtle" onClick={props.onToggleFullHealth}>
+            {props.showFullHealth ? 'Hide Full Analysis' : 'View Full Analysis'}
           </Button>
         </div>
       </AtlasCard>
 
-      <AtlasCard>
-        <Text weight="semibold">Top Recommendations</Text>
-        {opps.length === 0 ? (
-          <Caption1 style={{ display: 'block', marginTop: 8 }}>No recommendations yet.</Caption1>
-        ) : (
-          opps.map((r, idx) => (
-            <div key={String(r.id)} style={{ borderTop: border, padding: '10px 0' }}>
-              <Text weight="semibold">
-                {idx + 1}. {String(r.recommendation)}
-              </Text>
-              <Caption1 style={{ display: 'block' }}>
-                Impact: {String(r.impact)} · Effort: {String(r.effort)} · {String(r.category)}
-              </Caption1>
-              <Caption1 style={{ display: 'block', marginTop: 4 }}>{String(r.reason)}</Caption1>
-              <Caption1 style={{ display: 'block', marginTop: 2 }}>
-                Expected benefit: {String(r.expectedBusinessBenefit)}
-              </Caption1>
-              {r.verificationRequired ? (
-                <MessageBar intent="warning" style={{ marginTop: 6 }}>
-                  <MessageBarBody>
-                    <MessageBarTitle>VERIFICATION REQUIRED</MessageBarTitle>
-                    Do not publish factual claims until a source is verified.
-                  </MessageBarBody>
-                </MessageBar>
-              ) : null}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                {['Fix This', 'Show Me Options', 'Create Change Request', 'Ignore', 'Save for Later'].map(
-                  (a) => (
-                    <Button key={a} size="small" onClick={() => props.onRecAction(r, a)}>
-                      {a}
-                    </Button>
-                  ),
-                )}
+      {top ? (
+        <AtlasCard>
+          <Caption1 style={{ color: muted }}>TOP RECOMMENDATION</Caption1>
+          <Text weight="semibold" style={{ display: 'block', marginTop: 4 }}>
+            {String(top.recommendation)}
+          </Text>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            {String(top.impact)} Impact · {String(top.effort)} Effort
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>{String(top.reason)}</Caption1>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            <Button appearance="primary" onClick={() => props.onRecAction(top, 'Show Me Options')}>
+              Show Me 3 Options
+            </Button>
+            <Button size="small" onClick={() => props.onRecAction(top, 'Save for Later')}>
+              Save for Later
+            </Button>
+            <details>
+              <summary style={{ cursor: 'pointer', fontSize: 12 }}>More</summary>
+              <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                <Button size="small" onClick={() => props.onRecAction(top, 'Create Change Request')}>
+                  Create Change Request
+                </Button>
+                <Button size="small" onClick={() => props.onRecAction(top, 'Ignore')}>
+                  Ignore
+                </Button>
               </div>
+            </details>
+          </div>
+          <details style={{ marginTop: 10 }}>
+            <summary style={{ cursor: 'pointer' }}>View Details</summary>
+            <Caption1 style={{ display: 'block', marginTop: 6 }}>
+              Expected benefit: {String(top.expectedBusinessBenefit)}
+            </Caption1>
+            <Caption1 style={{ display: 'block' }}>Category: {String(top.category)}</Caption1>
+            <Caption1 style={{ display: 'block' }}>
+              Confidence: {Math.round(Number(top.confidence || 0) * 100)}%
+            </Caption1>
+          </details>
+        </AtlasCard>
+      ) : null}
+
+      {others.length > 0 ? (
+        <AtlasCard>
+          <Text weight="semibold">Other Opportunities ({others.length})</Text>
+          {others.map((r) => (
+            <div key={String(r.id)} style={{ borderTop: border, padding: '10px 0' }}>
+              <Text weight="semibold">{String(r.recommendation)}</Text>
+              <Caption1 style={{ display: 'block' }}>
+                {String(r.impact)} Impact · {String(r.effort)} Effort
+              </Caption1>
+              <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                {String(r.reason).slice(0, 140)}
+                {String(r.reason).length > 140 ? '…' : ''}
+              </Caption1>
+              <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                <Button size="small" appearance="primary" onClick={() => props.onRecAction(r, 'Show Me Options')}>
+                  Show Me Options
+                </Button>
+                <Button size="small" onClick={() => props.onRecAction(r, 'Save for Later')}>
+                  Save for Later
+                </Button>
+              </div>
+              <details style={{ marginTop: 6 }}>
+                <summary style={{ cursor: 'pointer' }}>View Details</summary>
+                <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                  {String(r.expectedBusinessBenefit)}
+                </Caption1>
+              </details>
             </div>
-          ))
-        )}
-        {!props.showMore && ((props.analysis?.opportunities as unknown[]) || []).length > 5 ? (
-          <Button appearance="subtle" size="small" onClick={props.onShowMore}>
-            Show More
-          </Button>
-        ) : null}
-      </AtlasCard>
+          ))}
+          {!props.showMore && opps.length > 5 ? (
+            <Button appearance="subtle" size="small" onClick={props.onShowMore}>
+              Show More
+            </Button>
+          ) : null}
+        </AtlasCard>
+      ) : null}
 
       <AtlasCard>
         <Text weight="semibold">Ask the Expert Website Advisor</Text>
-        <div style={{ maxHeight: 160, overflow: 'auto', marginTop: 8 }}>
+        <div style={{ maxHeight: 120, overflow: 'auto', marginTop: 8 }}>
           {props.chat.map((m, i) => (
             <Caption1 key={i} style={{ display: 'block', marginBottom: 6 }}>
               <strong>{m.role === 'user' ? 'You' : 'Advisor'}:</strong> {m.text}
@@ -648,7 +841,7 @@ export function ExpertAdvisorPanel(props: {
           ))}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
-          {ADVISOR_PROMPTS.slice(0, 4).map((p) => (
+          {ADVISOR_PROMPTS.slice(0, 3).map((p) => (
             <Button key={p} size="small" appearance="subtle" onClick={() => props.onSend(p)}>
               {p}
             </Button>
@@ -657,8 +850,8 @@ export function ExpertAdvisorPanel(props: {
         <Textarea
           value={props.chatInput}
           onChange={(_, d) => props.onChatInput(d.value)}
-          placeholder="Ask about conversion, SEO, messaging…"
-          style={{ width: '100%', minHeight: 64, marginTop: 8 }}
+          placeholder="What should I change first?"
+          style={{ width: '100%', minHeight: 56, marginTop: 8 }}
         />
         <Button
           appearance="primary"

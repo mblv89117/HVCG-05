@@ -154,6 +154,47 @@ export async function handleWebsiteStudioRoutes(opts: {
       return true;
     }
 
+    const previewStartMatch = path.match(
+      /^\/api\/website-studio\/websites\/([^/]+)\/preview\/start$/,
+    );
+    if (method === 'POST' && previewStartMatch) {
+      await requirePrincipal(req, cfg);
+      const preview = await ws.startWebsitePreview(previewStartMatch[1]);
+      send(res, 200, { preview }, origin);
+      return true;
+    }
+
+    const previewStopMatch = path.match(
+      /^\/api\/website-studio\/websites\/([^/]+)\/preview\/stop$/,
+    );
+    if (method === 'POST' && previewStopMatch) {
+      await requirePrincipal(req, cfg);
+      const preview = await ws.stopWebsitePreview(previewStopMatch[1]);
+      send(res, 200, { preview }, origin);
+      return true;
+    }
+
+    const previewRestartMatch = path.match(
+      /^\/api\/website-studio\/websites\/([^/]+)\/preview\/restart$/,
+    );
+    if (method === 'POST' && previewRestartMatch) {
+      await requirePrincipal(req, cfg);
+      const preview = await ws.restartWebsitePreview(previewRestartMatch[1]);
+      send(res, 200, { preview }, origin);
+      return true;
+    }
+
+    const previewPageMatch = path.match(
+      /^\/api\/website-studio\/websites\/([^/]+)\/preview-page$/,
+    );
+    if (method === 'GET' && previewPageMatch) {
+      await requirePrincipal(req, cfg);
+      const url = new URL(req.url || '', 'http://local');
+      const pageId = url.searchParams.get('pageId') || undefined;
+      send(res, 200, ws.previewPageUrl(previewPageMatch[1], pageId), origin);
+      return true;
+    }
+
     const pageAnalyzeMatch = path.match(
       /^\/api\/website-studio\/websites\/([^/]+)\/pages\/([^/]+)\/analyze$/,
     );

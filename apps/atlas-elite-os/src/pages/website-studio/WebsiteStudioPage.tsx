@@ -3,7 +3,7 @@
  * Route: /website-studio — governed CMS, not a competing app / not a full website builder.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Button,
@@ -31,12 +31,15 @@ import {
   fetchWebsiteStudioMedia,
   fetchWebsiteStudioPages,
   fetchWebsiteStudioPreviewHealth,
+  fetchWebsiteStudioPreviewPage,
   fetchWebsiteStudioSeo,
   fetchWebsiteStudioWebsites,
   postWebsiteStudioAdvisorChat,
   postWebsiteStudioAiAssist,
   postWebsiteStudioNaturalLanguage,
   postWebsiteStudioPreview,
+  restartWebsiteStudioPreview,
+  startWebsiteStudioPreview,
 } from '../../integrations/hub/api';
 import {
   friendlyPageName,
@@ -102,6 +105,11 @@ export function WebsiteStudioPage() {
   const [changeRequests, setChangeRequests] = useState<Array<Record<string, unknown>>>([]);
   const [seo, setSeo] = useState<Record<string, unknown> | null>(null);
   const [previewHealth, setPreviewHealth] = useState<Record<string, unknown> | null>(null);
+  const [pagePreviewUrl, setPagePreviewUrl] = useState<string | null>(null);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [rightMode, setRightMode] = useState<'advisor' | 'edit'>('advisor');
+  const [showFullHealth, setShowFullHealth] = useState(false);
+  const previewAutoStarted = useRef(false);
 
   const [selectedPageId, setSelectedPageId] = useState('');
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -143,10 +151,28 @@ export function WebsiteStudioPage() {
   );
 
   const previewUrl =
+    pagePreviewUrl ||
     (previewHealth?.url as string | undefined) ||
     previewUrlFromWebsite(selectedWebsite) ||
-    (changeRequests.find((c) => c.previewUrl)?.previewUrl as string | undefined) ||
     null;
+
+  const previewStatus = String(previewHealth?.status || 'offline');
+
+  const refreshPreviewHealth = useCallback(async () => {
+    if (!hubAuth || !selectedWebsiteId) return;
+    try {
+      const ph = await fetchWebsiteStudioPreviewHealth(hubAuth, selectedWebsiteId);
+      setPreviewHealth(ph.previewHealth);
+      const pageUrl = await fetchWebsiteStudioPreviewPage(
+        hubAuth,
+        selectedWebsiteId,
+        selectedPageId || undefined,
+      );
+      setPagePreviewUrl(pageUrl.url);
+    } catch {
+      setPreviewHealth({ status: 'offline' });
+    }
+  }, [hubAuth, selectedWebsiteId, selectedPageId]);
 
   const websiteCrs = useMemo(
     () =>
@@ -193,31 +219,33 @@ export function WebsiteStudioPage() {
     if (!hubAuth || !selectedWebsiteId) return;
     void (async () => {
       try {
-        const [p, m, f, b, ph] = await Promise.all([
+        const [p, m, f, b] = await Promise.all([
           fetchWebsiteStudioPages(hubAuth, selectedWebsiteId),
           fetchWebsiteStudioMedia(hubAuth, selectedWebsiteId),
           fetchWebsiteStudioForms(hubAuth, selectedWebsiteId),
           fetchWebsiteStudioBlocks(hubAuth, selectedWebsiteId),
-          fetchWebsiteStudioPreviewHealth(hubAuth, selectedWebsiteId).catch(() => ({
-            previewHealth: { status: 'unknown' },
-          })),
         ]);
         setPages(p.pages);
         setMedia(m.media);
         setForms(f.forms);
         setBlocks(b.blocks);
-        setPreviewHealth(ph.previewHealth);
         const home =
           p.pages.find((x) => x.route === '/') ||
           p.pages.find((x) => /home/i.test(String(x.pageTitle))) ||
+          p.pages.find((x) => String(x.pageId).includes('home')) ||
           p.pages[0];
         const pageId = selectedPageId || (home?.pageId ? String(home.pageId) : '');
         if (pageId && pageId !== selectedPageId) setSelectedPageId(pageId);
+        void refreshPreviewHealth();
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
     })();
-  }, [hubAuth, selectedWebsiteId]);
+  }, [hubAuth, selectedWebsiteId, selectedPageId, refreshPreviewHealth]);
+
+  useEffect(() => {
+    void refreshPreviewHealth();
+  }, [selectedPageId, refreshPreviewHealth]);
 
   useEffect(() => {
     if (!hubAuth || !selectedWebsiteId || !selectedPageId) return;
@@ -257,6 +285,53 @@ export function WebsiteStudioPage() {
       /* ignore */
     }
   };
+
+  const startPreview = async () => {
+    if (!hubAuth || !selectedWebsiteId) return;
+    setPreviewBusy(true);
+    setError(null);
+    try {
+      const res = await startWebsiteStudioPreview(hubAuth, selectedWebsiteId);
+      setPreviewHealth({
+        ...res.preview,
+        status: res.preview.status === 'running' ? 'running' : res.preview.status,
+      });
+      await refreshPreviewHealth();
+      if (String(res.preview.status) !== 'running') {
+        setError(String(res.preview.lastError || 'Preview did not become healthy'));
+      } else {
+        setNotice('Local preview is running.');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  const restartPreview = async () => {
+    if (!hubAuth || !selectedWebsiteId) return;
+    setPreviewBusy(true);
+    try {
+      await restartWebsiteStudioPreview(hubAuth, selectedWebsiteId);
+      await refreshPreviewHealth();
+      setNotice('Preview restarted.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPreviewBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (nav !== 'editor' || !selectedWebsiteId || previewAutoStarted.current || previewBusy) return;
+    if (previewStatus === 'running') {
+      previewAutoStarted.current = true;
+      return;
+    }
+    previewAutoStarted.current = true;
+    void startPreview();
+  }, [nav, selectedWebsiteId, previewStatus, previewBusy]);
 
   const runNl = async (textOverride?: string) => {
     const text = (textOverride ?? nlText).trim();
@@ -418,12 +493,14 @@ export function WebsiteStudioPage() {
       chat={chat}
       chatInput={chatInput}
       showMore={showMoreRecs}
+      showFullHealth={showFullHealth}
       busy={busy}
       onChatInput={setChatInput}
       onSend={(m) => void sendChat(m)}
       onAnalyze={() => void analyzePage()}
       onAnalyzeSite={() => void analyzeSite()}
       onShowMore={() => setShowMoreRecs(true)}
+      onToggleFullHealth={() => setShowFullHealth((v) => !v)}
       onRecAction={(r, a) => void onRecAction(r, a)}
     />
   );
@@ -495,7 +572,7 @@ export function WebsiteStudioPage() {
           </div>
         </div>
 
-        {dashboard ? (
+        {dashboard && nav !== 'editor' ? (
           <MetricRow
             items={[
               {
@@ -599,22 +676,40 @@ export function WebsiteStudioPage() {
 
             {nav === 'editor' && selectedPage ? (
               <VisualEditorView
+                websiteName={String(selectedWebsite?.websiteName || 'Website')}
+                pages={pages}
                 page={selectedPage}
                 blocks={blocks}
                 selectedBlockId={selectedBlockId}
                 draftText={draftText}
                 previewUrl={previewUrl}
+                previewStatus={previewStatus}
+                previewBusy={previewBusy}
                 device={device}
                 analysis={analysis}
+                rightMode={rightMode}
+                advancedMode={advancedMode}
+                onSelectPage={(pageId) => {
+                  setSelectedPageId(pageId);
+                  setRightMode('advisor');
+                  void analyzePage(pageId);
+                }}
                 onSelectBlock={(id) => {
                   setSelectedBlockId(id);
                   const b = blocks.find((x) => x.blockId === id);
                   setDraftText(String(b?.currentValue || ''));
+                  setRightMode('edit');
                 }}
                 onDraftChange={setDraftText}
                 onSaveDraft={() => void saveDraftFromEditor()}
                 onDevice={setDevice}
                 onAiAction={(a) => void runAiAction(a)}
+                onRightMode={setRightMode}
+                onStartPreview={() => void startPreview()}
+                onRestartPreview={() => void restartPreview()}
+                onOpenFullscreen={() => {
+                  if (previewUrl) window.open(previewUrl, '_blank', 'noopener,noreferrer');
+                }}
                 advisor={advisorPanel}
               />
             ) : null}

@@ -1554,3 +1554,40 @@ export async function confirmWebsiteStudioVisualQa(
   return parse(res) as Promise<{ changeRequest: Record<string, unknown> }>;
 }
 
+export async function startWebsiteStudioPreview(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/preview/start`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ preview: Record<string, unknown> }>;
+}
+
+export async function stopWebsiteStudioPreview(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/preview/stop`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ preview: Record<string, unknown> }>;
+}
+
+export async function restartWebsiteStudioPreview(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/preview/restart`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ preview: Record<string, unknown> }>;
+}
+
+export async function fetchWebsiteStudioPreviewPage(
+  auth: AtlasHubAuthHeaders,
+  websiteId: string,
+  pageId?: string,
+) {
+  const q = pageId ? `?pageId=${encodeURIComponent(pageId)}` : '';
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/preview-page${q}`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ url: string | null; baseUrl: string | null; pageId: string | null }>;
+}
+

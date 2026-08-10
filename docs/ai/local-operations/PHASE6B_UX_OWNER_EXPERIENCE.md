@@ -36,3 +36,12 @@ See `deployment/reports/website-studio-phase6b-ux/`.
 
 ## Safety
 No Production website edits, no website push, no Atlas deploy, no PR merge in this phase.
+
+## Owner action — LaunchAgents (do not auto-change)
+
+`~/Library/LaunchAgents/com.hvcg.atlas-elite.plist` and `com.hvcg.atlas-hub.plist` still point at
+`atlas-integration-release` (pre–Website Studio). They are currently unloaded for UAT.
+
+Recommended later owner action (separate authorization): retarget those LaunchAgents to
+`atlas-local-ai-operations` or keep starting Hub/Elite manually from that worktree for local UAT.
+Do not reload the old release agents while testing Website Studio.
