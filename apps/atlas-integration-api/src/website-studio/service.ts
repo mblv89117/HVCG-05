@@ -44,6 +44,12 @@ import { discoverLocalRepository } from './discovery.ts';
 import { WebsiteGitAdapter } from './gitAdapter.ts';
 import { Phase6bPilotController } from './phase6b.ts';
 import { WebsiteStudioStore, resolveWebsiteStudioDbPath } from './store.ts';
+import {
+  advisorChatReply,
+  analyzePage as runPageAnalysis,
+  analyzeWebsite as runWebsiteAnalysis,
+  checkPreviewHealth,
+} from './advisor.ts';
 
 function nowIso() {
   return new Date().toISOString();
@@ -87,8 +93,9 @@ export class WebsiteStudioService {
       noDeploy: WEBSITE_STUDIO_NO_DEPLOY,
       noPush: WEBSITE_STUDIO_NO_PUSH,
       phase6b: WEBSITE_STUDIO_PHASE6B_BANNER,
+      phase6bUx: 'PHASE 6B-UX — Expert Advisor & preview health (analysis only; no deploy)',
       productionDeployGate: PRODUCTION_DEPLOY_GATE,
-      phase: '6B',
+      phase: '6B-UX',
       access: WEBSITE_STUDIO_ACCESS,
     };
   }
@@ -938,6 +945,89 @@ export class WebsiteStudioService {
 
   listBaselines(websiteId?: string) {
     return this.store.listBaselines(websiteId);
+  }
+
+  analyzePage(websiteId: string, pageId: string) {
+    const website = this.getWebsite(websiteId);
+    const page = this.store.listPages(websiteId).find((p) => p.pageId === pageId);
+    if (!page) {
+      throw Object.assign(new Error('Page not found'), { status: 404, code: 'not_found' });
+    }
+    const blocks = this.store.listBlocks(websiteId, pageId);
+    const media = this.store.listMedia(websiteId);
+    const { seo } = this.seoForPage(websiteId, pageId);
+    const result = runPageAnalysis({ website, page, blocks, seo, media });
+    this.store.audit({
+      actor: LOCAL_AI_OWNER,
+      action: 'website_advisor_page_analysis',
+      detail: `${websiteId}/${pageId}`,
+      payload: { overallScore: result.overallScore, opportunityCount: result.opportunities.length },
+    });
+    return result;
+  }
+
+  analyzeWebsite(websiteId: string) {
+    const website = this.getWebsite(websiteId);
+    const pages = this.store.listPages(websiteId);
+    const blocks = this.store.listBlocks(websiteId);
+    const changeRequests = this.store.listChangeRequests(websiteId);
+    const media = this.store.listMedia(websiteId);
+    const result = runWebsiteAnalysis({ website, pages, blocks, changeRequests, media });
+    this.store.audit({
+      actor: LOCAL_AI_OWNER,
+      action: 'website_advisor_site_analysis',
+      detail: websiteId,
+      payload: { overallScore: result.overallScore, topRecommendations: result.prioritizedRecommendations.length },
+    });
+    return result;
+  }
+
+  advisorChat(websiteId: string, message: string, pageId?: string) {
+    const website = this.getWebsite(websiteId);
+    if (!message.trim()) {
+      throw Object.assign(new Error('Message required'), { status: 400, code: 'message_required' });
+    }
+    let page = null;
+    let blocks: ReturnType<WebsiteStudioStore['listBlocks']> = [];
+    let seo = null;
+    if (pageId) {
+      page = this.store.listPages(websiteId).find((p) => p.pageId === pageId) || null;
+      if (!page) {
+        throw Object.assign(new Error('Page not found'), { status: 404, code: 'not_found' });
+      }
+      blocks = this.store.listBlocks(websiteId, pageId);
+      seo = this.seoForPage(websiteId, pageId).seo;
+    }
+    const result = advisorChatReply(message, { website, page, blocks, seo });
+    this.store.audit({
+      actor: LOCAL_AI_OWNER,
+      action: 'website_advisor_chat',
+      detail: websiteId,
+      payload: { pageId: pageId || null, messageLength: message.length },
+    });
+    return result;
+  }
+
+  async previewHealth(websiteId: string) {
+    const website = this.getWebsite(websiteId);
+    const previews = this.store.listPreviews().filter((p) => p.websiteId === websiteId);
+    const fromPreview = previews.length ? previews[previews.length - 1].localUrl : null;
+    const fromCr = this.store
+      .listChangeRequests(websiteId)
+      .map((c) => c.previewUrl)
+      .filter(Boolean)
+      .pop();
+    // Prefer registered staging/local preview (e.g. HVCG 127.0.0.1:8765) over scaffold placeholders.
+    const staging = website.stagingUrl;
+    const url = fromCr || fromPreview || staging || null;
+    const health = await checkPreviewHealth(url);
+    this.store.audit({
+      actor: AUTOMATION_OWNER,
+      action: 'website_preview_health_check',
+      detail: websiteId,
+      payload: { status: health.status, url: health.url },
+    });
+    return { ...health, stagingUrl: staging, previewCommand: website.previewCommand };
   }
 
   getPilotReviewPanel(changeRequestId: string) {

@@ -1,0 +1,28 @@
+{
+  "hasWebsiteStudio": true,
+  "hasPhase6b": true,
+  "hasHVCG": true,
+  "hasWsId": false,
+  "hasWcr": true,
+  "hasApprovedH1": true,
+  "hasAccessDenied": false,
+  "sectionsPresent": {
+    "Websites": true,
+    "Pages": true,
+    "Content": true,
+    "SEO": true,
+    "Media": true,
+    "Forms": true,
+    "Change Requests": true,
+    "Preview & QA": true,
+    "Deployments": true,
+    "Rollback History": true,
+    "Settings": true
+  },
+  "roleLine": "role HVCG Owner · client High Value Capital Group",
+  "snippet": "DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS · LOCAL OWNER SESSION (DEV ONLY)\nHV\nHIGH VALUE\nCAPITAL GROUP\nHigh Value Capital Group\nEnd Local Owner\nLO\nEXECUTIVE\nCommand Center\nMy Work\nPortfolio\nProjects\nUniversal Inbox\nTeam & Agents\nClients\nApprovals\nAnalytics\nCapital Advisory\nINTELLIGENCE\nFinancial Intelligence\nBanking\nAccounting\nReports\nWORKSPACE\nKnowledge\nDocuments\nAutomation\nAI Agents\nAI Operations\nEVA Sandbox\nWebsite Studio\nSYSTEM\nAdministration\nConnections\nSettings\nFAVORITES\nBanking\nModule\nRECENT\nWebsite Studio\nNavigation\nCommand Center\nNavigation\nWebsite StudioGoverned content & SEO control plane — Phase 6A (no Production deploy)\nVerified financial data not yet connectedFields show pending labels only. No fabricated figures are displayed.\nPHASE 6B — HVCG PILOT (NO PRODUCTION DEPLOY)Candidate A only. No Production website edits on main. No merge/deploy/DNS/secrets. Deploy remains gated: PRODUCTION DEPLOYMENT REQUIRES SEPARATE MANNY AUTHORIZATION.\nPhase 6B HVCG bootstrap\nRegisters Candidate A from the clean pilot worktree, captures baseline, and creates a Tier A homepage headline change request with 3 AI variants. Does not modify website files.\nBootstrap HVCG Phase 6B pilot\nWebsi",
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failedRelevant": []
+}

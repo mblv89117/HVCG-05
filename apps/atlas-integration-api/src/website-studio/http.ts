@@ -144,6 +144,47 @@ export async function handleWebsiteStudioRoutes(opts: {
       return true;
     }
 
+    const previewHealthMatch = path.match(
+      /^\/api\/website-studio\/websites\/([^/]+)\/preview-health$/,
+    );
+    if (method === 'GET' && previewHealthMatch) {
+      await requirePrincipal(req, cfg);
+      const health = await ws.previewHealth(previewHealthMatch[1]);
+      send(res, 200, { previewHealth: health }, origin);
+      return true;
+    }
+
+    const pageAnalyzeMatch = path.match(
+      /^\/api\/website-studio\/websites\/([^/]+)\/pages\/([^/]+)\/analyze$/,
+    );
+    if (method === 'POST' && pageAnalyzeMatch) {
+      await requirePrincipal(req, cfg);
+      const analysis = ws.analyzePage(pageAnalyzeMatch[1], pageAnalyzeMatch[2]);
+      send(res, 200, { analysis }, origin);
+      return true;
+    }
+
+    const websiteAnalyzeMatch = path.match(/^\/api\/website-studio\/websites\/([^/]+)\/analyze$/);
+    if (method === 'POST' && websiteAnalyzeMatch) {
+      await requirePrincipal(req, cfg);
+      const analysis = ws.analyzeWebsite(websiteAnalyzeMatch[1]);
+      send(res, 200, { analysis }, origin);
+      return true;
+    }
+
+    const advisorChatMatch = path.match(/^\/api\/website-studio\/websites\/([^/]+)\/advisor\/chat$/);
+    if (method === 'POST' && advisorChatMatch) {
+      await requirePrincipal(req, cfg);
+      const body = await readJson(req);
+      const chat = ws.advisorChat(
+        advisorChatMatch[1],
+        String(body.message || ''),
+        body.pageId ? String(body.pageId) : undefined,
+      );
+      send(res, 200, { chat }, origin);
+      return true;
+    }
+
     if (method === 'POST' && path === '/api/website-studio/discover') {
       await requirePrincipal(req, cfg);
       const body = await readJson(req);

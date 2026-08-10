@@ -1489,3 +1489,68 @@ export async function approveWebsiteStudioFinalWording(
   );
   return parse(res) as Promise<{ changeRequest: Record<string, unknown>; filesModified: boolean }>;
 }
+
+/** Phase 6B-UX — Expert Website Advisor + preview health */
+export async function fetchWebsiteStudioPreviewHealth(
+  auth: AtlasHubAuthHeaders,
+  websiteId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/preview-health`,
+    { headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ previewHealth: Record<string, unknown> }>;
+}
+
+export async function analyzeWebsiteStudioPage(
+  auth: AtlasHubAuthHeaders,
+  websiteId: string,
+  pageId: string,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/pages/${encodeURIComponent(pageId)}/analyze`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ analysis: Record<string, unknown> }>;
+}
+
+export async function analyzeWebsiteStudioSite(auth: AtlasHubAuthHeaders, websiteId: string) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/analyze`,
+    { method: 'POST', headers: headers(auth) },
+  );
+  return parse(res) as Promise<{ analysis: Record<string, unknown> }>;
+}
+
+export async function postWebsiteStudioAdvisorChat(
+  auth: AtlasHubAuthHeaders,
+  websiteId: string,
+  body: { message: string; pageId?: string },
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/websites/${encodeURIComponent(websiteId)}/advisor/chat`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify(body),
+    },
+  );
+  return parse(res) as Promise<{ chat: { reply: string; suggestedFollowUps: string[] } }>;
+}
+
+export async function confirmWebsiteStudioVisualQa(
+  auth: AtlasHubAuthHeaders,
+  changeRequestId: string,
+  confirmed: boolean,
+) {
+  const res = await fetch(
+    `${base()}/api/website-studio/change-requests/${encodeURIComponent(changeRequestId)}/visual-qa`,
+    {
+      method: 'POST',
+      headers: headers(auth),
+      body: JSON.stringify({ confirmed }),
+    },
+  );
+  return parse(res) as Promise<{ changeRequest: Record<string, unknown> }>;
+}
+
