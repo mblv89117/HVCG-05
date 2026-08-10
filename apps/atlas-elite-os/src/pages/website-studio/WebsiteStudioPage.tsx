@@ -54,7 +54,7 @@ import {
   previewUrlFromWebsite,
   type StudioNavId,
 } from './ownerHelpers';
-import { ChangeReviewScreen, NeedsReviewHomeCards, OwnerDecisionInbox } from './ChangeReviewScreen';
+import { ChangeReviewScreen, NeedsReviewHomeCards, OwnerDecisionInbox, type ReviewPreviewMode } from './ChangeReviewScreen';
 import {
   AdvancedPanel,
   AnalyticsView,
@@ -147,9 +147,15 @@ export function WebsiteStudioPage() {
     all: Array<Record<string, unknown>>;
   } | null>(null);
   const reviewCrId = params.get('cr') || '';
+  const modeParam = params.get('mode');
+  const initialMode: ReviewPreviewMode =
+    modeParam === 'before' || modeParam === 'compare' || modeParam === 'after'
+      ? modeParam
+      : 'after';
   const [ownerReview, setOwnerReview] = useState<Record<string, unknown> | null>(null);
-  const [previewMode, setPreviewMode] = useState<'before' | 'after'>('after');
-  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<ReviewPreviewMode>(initialMode);
+  const [previewHtmlBefore, setPreviewHtmlBefore] = useState<string | null>(null);
+  const [previewHtmlAfter, setPreviewHtmlAfter] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [threeOptions, setThreeOptions] = useState<Array<Record<string, unknown>> | null>(null);
@@ -164,20 +170,34 @@ export function WebsiteStudioPage() {
   const setView = (view: StudioNavId, extra?: Record<string, string>) => {
     const next = new URLSearchParams(params);
     next.set('view', view);
-    if (view !== 'review') next.delete('cr');
+    if (view !== 'review') {
+      next.delete('cr');
+      next.delete('mode');
+    }
     if (extra) {
       for (const [k, v] of Object.entries(extra)) next.set(k, v);
     }
     setParams(next);
   };
 
-  const openReview = (changeRequestId: string) => {
+  const setReviewPreviewMode = (mode: ReviewPreviewMode) => {
+    setPreviewMode(mode);
+    if (nav === 'review' && reviewCrId) {
+      const next = new URLSearchParams(params);
+      next.set('view', 'review');
+      next.set('cr', reviewCrId);
+      next.set('mode', mode);
+      setParams(next);
+    }
+  };
+
+  const openReview = (changeRequestId: string, mode: ReviewPreviewMode = 'compare') => {
     setApprovedResult(null);
     setThreeOptions(null);
     setEditOpen(false);
     setApproveOpen(false);
-    setPreviewMode('after');
-    setView('review', { cr: changeRequestId });
+    setPreviewMode(mode);
+    setView('review', { cr: changeRequestId, mode });
   };
 
   const selectedWebsite = useMemo(
@@ -294,6 +314,12 @@ export function WebsiteStudioPage() {
   }, [selectedPageId, refreshPreviewHealth]);
 
   useEffect(() => {
+    if (modeParam === 'before' || modeParam === 'after' || modeParam === 'compare') {
+      setPreviewMode(modeParam);
+    }
+  }, [modeParam]);
+
+  useEffect(() => {
     if (!hubAuth || nav !== 'review' || !reviewCrId) return;
     void (async () => {
       setBusy(true);
@@ -308,8 +334,12 @@ export function WebsiteStudioPage() {
           Tablet: Boolean(devices.Tablet),
           Mobile: Boolean(devices.Mobile),
         });
-        const html = await fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, previewMode);
-        setPreviewHtml(html);
+        const [beforeHtml, afterHtml] = await Promise.all([
+          fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'before'),
+          fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'after'),
+        ]);
+        setPreviewHtmlBefore(beforeHtml);
+        setPreviewHtmlAfter(afterHtml);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -317,18 +347,6 @@ export function WebsiteStudioPage() {
       }
     })();
   }, [hubAuth, nav, reviewCrId]);
-
-  useEffect(() => {
-    if (!hubAuth || nav !== 'review' || !reviewCrId) return;
-    void (async () => {
-      try {
-        const html = await fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, previewMode);
-        setPreviewHtml(html);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
-    })();
-  }, [hubAuth, nav, reviewCrId, previewMode]);
 
   useEffect(() => {
     if (!hubAuth || (nav !== 'settings' && nav !== 'advanced')) return;
@@ -818,7 +836,8 @@ export function WebsiteStudioPage() {
                 review={ownerReview}
                 busy={busy}
                 previewMode={previewMode}
-                previewHtml={previewHtml}
+                previewHtmlBefore={previewHtmlBefore}
+                previewHtmlAfter={previewHtmlAfter}
                 device={device}
                 editOpen={editOpen}
                 editText={editText}
@@ -835,7 +854,7 @@ export function WebsiteStudioPage() {
                     );
                   }
                 }}
-                onPreviewMode={setPreviewMode}
+                onPreviewMode={setReviewPreviewMode}
                 onDevice={setDevice}
                 onLooksGood={(d) =>
                   void (async () => {
@@ -863,13 +882,13 @@ export function WebsiteStudioPage() {
                       setNotice('Draft updated — previous approval invalidated if any.');
                       const r = await fetchWebsiteStudioOwnerReview(hubAuth, reviewCrId);
                       setOwnerReview(r.review);
-                      const html = await fetchWebsiteStudioPreviewSnapshot(
-                        hubAuth,
-                        reviewCrId,
-                        'after',
-                      );
-                      setPreviewHtml(html);
-                      setPreviewMode('after');
+                      const [beforeHtml, afterHtml] = await Promise.all([
+                        fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'before'),
+                        fetchWebsiteStudioPreviewSnapshot(hubAuth, reviewCrId, 'after'),
+                      ]);
+                      setPreviewHtmlBefore(beforeHtml);
+                      setPreviewHtmlAfter(afterHtml);
+                      setReviewPreviewMode('after');
                     } catch (e) {
                       setError(e instanceof Error ? e.message : String(e));
                     } finally {

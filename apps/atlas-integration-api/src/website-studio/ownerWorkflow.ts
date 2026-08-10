@@ -193,6 +193,31 @@ export function injectPreviewBanner(html: string, bannerHtml: string): string {
   return bar + html;
 }
 
+/** Make the hero H1 impossible to miss during owner before/after review. */
+export function highlightPreviewHeadline(html: string, label: string): string {
+  if (!/<h1\b/i.test(html)) return html;
+  const callout = `<div id="atlas-ws-h1-callout" style="margin:12px 16px;padding:10px 12px;border:2px solid #b08d57;background:#fff8e7;color:#1a1a1a;font:600 12px/1.4 system-ui,sans-serif;">${label}</div>`;
+  let out = html.replace(/<h1([^>]*)>/i, '<h1$1 style="outline:4px solid #b08d57;outline-offset:4px;background:#fff8e7;padding:8px;border-radius:4px">');
+  if (/<body[^>]*>/i.test(out)) {
+    // Place callout after banner if present, else at body start
+    if (/id="atlas-ws-preview-banner"/i.test(out)) {
+      out = out.replace(
+        /(id="atlas-ws-preview-banner"[\s\S]*?<\/div>)/i,
+        `$1${callout}`,
+      );
+    } else {
+      out = out.replace(/<body([^>]*)>/i, `<body$1>${callout}`);
+    }
+  } else {
+    out = callout + out;
+  }
+  return out;
+}
+
+export function extractPreviewH1(html: string): string | null {
+  return extractH1(html);
+}
+
 export function verifyPreviewIdentity(opts: {
   cr: WebsiteChangeRequest;
   website: WebsiteRegistryRecord;

@@ -62,6 +62,7 @@ import {
   ownerChangeTitle,
   ownerFriendlyStatus,
   readWorktreePageHtml,
+  highlightPreviewHeadline,
   verifyPreviewIdentity,
   type OwnerApprovalRecord,
   type OwnerDeviceReviews,
@@ -1194,17 +1195,26 @@ export class WebsiteStudioService {
       baselineCommit: cr.baselineCommit,
     });
     const title = ownerChangeTitle(cr);
+    const baseline = String(cr.baselineCommit || '').slice(0, 12);
+    const pilot = String(cr.commit || '').slice(0, 12);
     const banner =
       mode === 'before'
-        ? `BEFORE — Production baseline · ${title} · NOT the draft being approved`
-        : `DRAFT PREVIEW — NOT LIVE · ${title} · ${cr.changeRequestId}`;
+        ? `PRODUCTION BASELINE PREVIEW · NOT LIVE EDITING · Baseline ${baseline || '—'} · ${title}`
+        : `DRAFT PREVIEW — NOT LIVE · Draft ${cr.changeRequestId} · Pilot ${pilot || '—'} · ${title}`;
+    const labeled = injectPreviewBanner(html, banner);
+    const highlighted = highlightPreviewHeadline(
+      labeled,
+      mode === 'before'
+        ? 'BEFORE — Production homepage headline (baseline)'
+        : 'AFTER — Proposed draft homepage headline (not live)',
+    );
     this.store.audit({
       actor: MANNY_OWNER,
       action: mode === 'before' ? 'owner_view_before' : 'owner_view_after',
       correlationId: cr.auditCorrelationId,
       detail: changeRequestId,
     });
-    return injectPreviewBanner(html, banner);
+    return highlighted;
   }
 
   setDeviceReview(
@@ -1411,7 +1421,9 @@ export class WebsiteStudioService {
     const actionable = (c: WebsiteChangeRequest & Record<string, unknown>) =>
       Boolean(c.phase6bPilot || c.commit || c.worktreePath);
     const needsReview = crs.filter(
-      (c) => c.ownerStatus === 'Waiting for Your Review' && actionable(c),
+      (c) =>
+        actionable(c) &&
+        (c.ownerStatus === 'Waiting for Your Review' || c.ownerStatus === 'Changes Requested'),
     );
     const readyPreview = crs.filter((c) => c.ownerStatus === 'Ready to Preview' && actionable(c));
     const saved = crs.filter((c) => c.ownerStatus === 'Saved for Later');

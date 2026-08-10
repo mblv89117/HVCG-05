@@ -197,8 +197,17 @@ describe('website-studio owner approval workflow', () => {
     assert.match(htmlAfter, /DRAFT PREVIEW — NOT LIVE/);
     assert.ok(htmlAfter.includes(AFTER));
     const htmlBefore = service.getChangePreviewHtml(id, 'before');
-    assert.match(htmlBefore, /BEFORE — Production baseline/);
+    assert.match(htmlBefore, /PRODUCTION BASELINE PREVIEW/);
     assert.ok(htmlBefore.includes(CURRENT_H1));
+    // Critical: before/after must not serve the same headline
+    assert.notEqual(
+      htmlBefore.includes(AFTER) && htmlAfter.includes(CURRENT_H1),
+      true,
+      'before and after snapshots must not both contain swapped headlines',
+    );
+    assert.ok(!htmlBefore.includes(AFTER), 'BEFORE preview must not contain draft H1');
+    assert.ok(!htmlAfter.includes(CURRENT_H1), 'AFTER preview must not contain baseline H1');
+    assert.notEqual(htmlBefore, htmlAfter);
 
     const options = service.showMeThreeOptions(id);
     assert.equal(options.options.length, 3);
