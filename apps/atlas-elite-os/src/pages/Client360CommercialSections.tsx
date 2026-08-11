@@ -179,3 +179,74 @@ export function Client360MigrationSection({ clientHint }: { clientHint?: string 
     </AtlasCard>
   );
 }
+
+export interface Client360CapitalSnapshot {
+  capitalNeed: string;
+  requestedAmount: string;
+  financingType: string;
+  diagnosticStatus: string;
+  readinessScore: string;
+  documentCompleteness: string;
+  keyConcerns: string[];
+  keyStrengths: string[];
+  recommendedFundingPath: string;
+  activeCapitalOpportunities: string[];
+  lenderPackageStatus: string;
+  fundingOutcome: string;
+}
+
+export function buildInternalCapitalSnapshot(clientHint?: string): Client360CapitalSnapshot {
+  const label = clientHint || 'Client';
+  return {
+    capitalNeed: 'Pending verified capital request',
+    requestedAmount: 'Awaiting verified source',
+    financingType: '—',
+    diagnosticStatus: 'Not started / bind Capital Diagnostic when authorized',
+    readinessScore: 'Not yet calculated',
+    documentCompleteness: 'Not yet calculated',
+    keyConcerns: [],
+    keyStrengths: [],
+    recommendedFundingPath: 'Pending human-approved recommendation',
+    activeCapitalOpportunities: [`See Capital workbench for ${label}`],
+    lenderPackageStatus: 'NotStarted (submit blocked)',
+    fundingOutcome: 'Not available',
+  };
+}
+
+export function Client360CapitalSection({ clientHint }: { clientHint?: string }) {
+  const snap = buildInternalCapitalSnapshot(clientHint);
+  return (
+    <AtlasCard title="Capital" subtitle="Internal Client 360 · readiness is advisory · not approval probability">
+      <Text size={300} style={{ display: 'block' }}>
+        Capital need: {snap.capitalNeed}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Requested amount: {snap.requestedAmount}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Financing type: {snap.financingType}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Diagnostic: {snap.diagnosticStatus}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Readiness score: {snap.readinessScore}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Document completeness: {snap.documentCompleteness}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Funding path: {snap.recommendedFundingPath}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Opportunities: {snap.activeCapitalOpportunities.join('; ')}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Lender package: {snap.lenderPackageStatus}
+      </Text>
+      <Caption1 style={{ display: 'block', marginTop: 10 }}>
+        Funding outcome: {snap.fundingOutcome} · HVCG does not guarantee financing approval
+      </Caption1>
+    </AtlasCard>
+  );
+}

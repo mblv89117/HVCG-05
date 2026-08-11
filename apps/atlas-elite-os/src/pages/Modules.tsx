@@ -26,6 +26,7 @@ import {
   workspaceCatalog,
 } from '../data/workspaces';
 import { PortfolioPage } from './PortfolioPage';
+import { CapitalReadinessWorkbench } from './CapitalReadinessWorkbench';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
 export { ClientsPage } from './LiveClientsPage';
@@ -430,21 +431,7 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
 }
 
 export function CapitalPage() {
-  return (
-    <ModuleScaffold
-      title="Capital Advisory"
-      subtitle="Financing workspace — funding pipeline and readiness when verified sources connect."
-      showPendingBanner={false}
-    >
-      <EmptyState
-        title="Not yet configured"
-        description="Intended source: Dataverse / SharePoint capital opportunities with verified financial packages. No fabricated opportunity counts or fee totals are shown."
-      />
-      <Caption1 style={{ display: 'block', marginTop: 12 }}>
-        Supported funding-type catalog remains documented for packaging once live opportunities bind.
-      </Caption1>
-    </ModuleScaffold>
-  );
+  return <CapitalReadinessWorkbench />;
 }
 
 export function EnterpriseValuePage() {

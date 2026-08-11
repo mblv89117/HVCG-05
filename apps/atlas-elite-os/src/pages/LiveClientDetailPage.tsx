@@ -41,7 +41,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
-import { Client360MigrationSection, Client360RevenueSection } from './Client360CommercialSections';
+import { Client360CapitalSection, Client360MigrationSection, Client360RevenueSection } from './Client360CommercialSections';
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const { account, ready } = useMicrosoftAuth();
@@ -200,6 +200,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <Tab value="financials">Financials</Tab>
         <Tab value="revenue">Revenue</Tab>
         <Tab value="migration">Migration</Tab>
+        <Tab value="capital">Capital</Tab>
         <Tab value="deliverables">Deliverables</Tab>
         <Tab value="approvals">Approvals</Tab>
         <Tab value="notes">Notes</Tab>
@@ -460,6 +461,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
       {tab === 'migration' ? (
         <Client360MigrationSection clientHint={client?.legalName || client?.displayName || clientId} />
+      ) : null}
+
+      {tab === 'capital' ? (
+        <Client360CapitalSection clientHint={client?.legalName || client?.displayName || clientId} />
       ) : null}
 
       {tab === 'deliverables' ? (
