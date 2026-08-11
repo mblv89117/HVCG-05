@@ -729,16 +729,17 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/offer-grid.json"
+        "config/business/offer-grid.json",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "offer-grid.json exists for sales/AI/training; not yet embedded in Elite UI."
+      "completionDate": "2026-08-11",
+      "notes": "Offer lookup embedded in Elite commercial structure panel from canonical catalog."
     },
     {
       "id": "HVCG-V2-OFF-017",
@@ -752,16 +753,18 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/revenue_conversion.py"
+        "config/business/revenue_conversion.py",
+        "config/business/offer-decision-engine.json",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Free Fit routes need \u2192 named offer codes (not free-form task quotes)."
     },
     {
       "id": "HVCG-V2-OFF-018",
@@ -922,14 +925,17 @@
       "owner": "Revenue",
       "sprint": "BA-B/I",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "apps/atlas-elite-os/src/commercial/baV2Commercial.ts (successFeeFoundation)",
+        "config/business/revenue_conversion.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Success-fee foundation fields only \u2014 full calculation engine deferred."
     },
     {
       "id": "HVCG-V2-PRC-007",
@@ -989,7 +995,7 @@
       "owner": "Owner / Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
@@ -997,11 +1003,13 @@
         "config/business/free-fit-assessment.json",
         "config/business/diagnostics.json",
         "config/business/revenue_conversion.py",
-        "ADR-BA-V2-002"
+        "ADR-BA-V2-002",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)",
+        "tests/unit/business/test_revenue_sprint4_integration.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "Policy + diagnostics config + conversion service exist; Elite Free Fit/Diagnostic UX not yet operational."
+      "completionDate": "2026-08-11",
+      "notes": "Free Fit qualification surface + paid diagnostic path in Elite Revenue workbench; substantive work blocked."
     },
     {
       "id": "HVCG-V2-DIAG-002",
@@ -1043,11 +1051,12 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/diagnostics.json"
+        "config/business/diagnostics.json",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Diagnostic types selectable; dedicated domain diagnostic engines still later."
     },
     {
       "id": "HVCG-V2-DIAG-004",
@@ -1061,16 +1070,19 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/revenue_conversion.py"
+        "config/business/revenue_conversion.py",
+        "config/business/offer-decision-engine.json",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)",
+        "tests/unit/business/test_revenue_sprint4_integration.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Need \u2192 diagnostic \u2192 offer \u2192 pricing \u2192 proposal path exercised in Dev integration test."
     },
     {
       "id": "HVCG-V2-REV-001",
@@ -1183,14 +1195,17 @@
       "owner": "Revenue",
       "sprint": "BA-K",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)",
+        "tests/unit/business/test_revenue_sprint4_integration.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Commercial ladder path usable in Elite; success-fee/enterprise reporting still later."
     },
     {
       "id": "HVCG-V2-REV-006",
@@ -1204,14 +1219,17 @@
       "owner": "Revenue / Marketing",
       "sprint": "BA-B/L",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/attribution-taxonomy.json",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)"
+      ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Lead Source taxonomy + Referral Partner separation in commercial attribution panel."
     },
     {
       "id": "HVCG-V2-REV-007",
@@ -1225,14 +1243,16 @@
       "owner": "Finance",
       "sprint": "BA-I/K",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx (atlas-usable-operating-layer)"
+      ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Client 360 Revenue section distinguishes Contracted/Invoiced/Collected/Proposed/Recommended/Pipeline."
     },
     {
       "id": "HVCG-V2-PROP-001",
@@ -1246,18 +1266,20 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/proposal-archetypes.json",
         "templates/proposals/",
-        "config/business/revenue_conversion.py"
+        "config/business/revenue_conversion.py",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)",
+        "tests/unit/business/test_revenue_sprint4_integration.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "Three archetypes + templates + draft service exist; Elite proposal UX/approval surface not operational."
+      "completionDate": "2026-08-11",
+      "notes": "Three archetypes selectable; draft body from canonical templates/catalogs."
     },
     {
       "id": "HVCG-V2-PROP-002",
@@ -1271,18 +1293,19 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "templates/proposals/STRUCTURED_OFFER.md",
         "config/business/revenue_conversion.py",
-        "templates/proposals/"
+        "templates/proposals/",
+        "apps/atlas-elite-os/src/commercial/baV2Commercial.ts (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "STRUCTURED_OFFER.md template exists; operational proposal workflow not complete."
+      "completionDate": "2026-08-11",
+      "notes": "Structured Offer draft/preview via catalog-driven body."
     },
     {
       "id": "HVCG-V2-PROP-003",
@@ -1296,18 +1319,19 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "templates/proposals/MONTHLY_RETAINER.md",
         "config/business/revenue_conversion.py",
-        "templates/proposals/"
+        "templates/proposals/",
+        "apps/atlas-elite-os/src/commercial/baV2Commercial.ts (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "MONTHLY_RETAINER.md template exists; operational proposal workflow not complete."
+      "completionDate": "2026-08-11",
+      "notes": "Monthly Retainer draft/preview via catalog-driven body."
     },
     {
       "id": "HVCG-V2-PROP-004",
@@ -1321,18 +1345,19 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "templates/proposals/PREMIUM_SPECIAL_PROJECT.md",
         "config/business/revenue_conversion.py",
-        "templates/proposals/"
+        "templates/proposals/",
+        "apps/atlas-elite-os/src/commercial/baV2Commercial.ts (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "PREMIUM_SPECIAL_PROJECT.md template exists; operational proposal workflow not complete."
+      "completionDate": "2026-08-11",
+      "notes": "Premium Special Project draft/preview via catalog-driven body."
     },
     {
       "id": "HVCG-V2-PROP-005",
@@ -1346,18 +1371,19 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/compliance-language.json",
         "templates/proposals/",
-        "config/business/revenue_conversion.py"
+        "config/business/revenue_conversion.py",
+        "apps/atlas-elite-os/src/commercial/baV2Commercial.ts (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "Out-of-scope language in compliance-language.json + templates; UI enforcement pending."
+      "completionDate": "2026-08-11",
+      "notes": "Out-of-scope/compliance language pulled from canonical config into proposal body."
     },
     {
       "id": "HVCG-V2-PROP-006",
@@ -1371,17 +1397,19 @@
       "owner": "AI / Revenue",
       "sprint": "BA-H",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": true,
       "evidence": [
         "config/business/revenue_conversion.py",
-        "BL-C1"
+        "BL-C1",
+        "apps/atlas-elite-os/src/pages/CommercialWorkbench.tsx (revenue-pipeline-product)",
+        "tests/unit/business/test_revenue_sprint4_integration.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Internal approval to APPROVED_TO_SEND; BL-C1 blocks SENT."
     },
     {
       "id": "HVCG-V2-MIG-001",
@@ -1395,17 +1423,18 @@
       "owner": "CS / Revenue",
       "sprint": "BA-A/J",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/client-migration-seed.json",
-        "src/sharepoint/lists/HVCG_ClientMigrations.json"
+        "src/sharepoint/lists/HVCG_ClientMigrations.json",
+        "apps/atlas-elite-os/src/pages/ClientMigrationPage.tsx (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Operational migration record UI with actions/state machine; REPRICE does not mutate contracted."
     },
     {
       "id": "HVCG-V2-MIG-002",
@@ -1448,11 +1477,12 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/client-migration-seed.json"
+        "config/business/client-migration-seed.json",
+        "apps/atlas-elite-os/src/pages/ClientMigrationPage.tsx (revenue-pipeline-product)"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Seed queue rendered in Migration UI; full priority ops still thin."
     },
     {
       "id": "HVCG-V2-MIG-004",
@@ -1489,16 +1519,19 @@
       "owner": "Owner / CS",
       "sprint": "BA-J",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "HVCG-V2-MIG-002"
       ],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "apps/atlas-elite-os/src/data/revenuePipeline.ts (opp-accg-expansion-001)",
+        "tests/unit/business/test_revenue_sprint4_integration.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "ACCG expansion fixture + contracted lock verified; multi-line package not fully operational."
     },
     {
       "id": "HVCG-V2-CAP-001",
@@ -2837,16 +2870,18 @@
       "owner": "Elite",
       "sprint": "BA-J",
       "priority": "P0",
-      "status": "EXISTING_REUSED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "Absolute GO Client 360"
+        "Absolute GO Client 360",
+        "apps/atlas-elite-os/src/pages/LiveClientDetailPage.tsx (atlas-usable-operating-layer)",
+        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx (atlas-usable-operating-layer)"
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
-      "notes": ""
+      "notes": "Revenue + Migration tabs added; Capital/Procurement/Risk/AI sections remain later."
     },
     {
       "id": "HVCG-V2-SYS-001",

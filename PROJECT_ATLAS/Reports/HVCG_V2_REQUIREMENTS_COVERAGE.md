@@ -1,41 +1,13 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-11 (Sprint 3 commit — honest status correction)  
+**As of:** 2026-08-11 (Sprint 4 Development — Revenue Experience + Client Migration)  
 **Source:** `config/business/hvcg-v2-requirements.json` (125 requirements)  
 **Traceability:** [../BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md](../BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md)
 
-## Honesty correction
-
-Before Sprint 3 commit, requirements that only had config/templates/service-level evidence (without operational Elite UI) were downgraded from `IMPLEMENTED` to `IN_PROGRESS` where appropriate. Coverage may decrease; accuracy is preferred.
-
-## Sprint delta (vs pre-correction Sprint 3 working set)
-
-| Metric | Before correction | After correction | Delta |
-|--------|------------------:|-----------------:|------:|
-| `IMPLEMENTED` | 50 | 43 | -7 |
-| `EXISTING_REUSED` | 13 | 13 | +0 |
-| `IN_PROGRESS` | 27 | 34 | +7 |
-| `PLANNED` | 33 | 33 | +0 |
-| `DEFERRED_OWNER_GATE` | 2 | 2 | +0 |
-| **Coverage %** | **50.4%** | **44.8%** | **-5.6 pp** |
-
-## Corrections
-
-| ID | From | To | Reason |
-|----|------|----|--------|
-| `HVCG-V2-DIAG-001` | `IMPLEMENTED` | `IN_PROGRESS` | Policy + diagnostics config + conversion service exist; Elite Free Fit/Diagnostic UX not yet operational. |
-| `HVCG-V2-PROP-001` | `IMPLEMENTED` | `IN_PROGRESS` | Three archetypes + templates + draft service exist; Elite proposal UX/approval surface not operational. |
-| `HVCG-V2-PROP-002` | `IMPLEMENTED` | `IN_PROGRESS` | STRUCTURED_OFFER.md template exists; operational proposal workflow not complete. |
-| `HVCG-V2-PROP-003` | `IMPLEMENTED` | `IN_PROGRESS` | MONTHLY_RETAINER.md template exists; operational proposal workflow not complete. |
-| `HVCG-V2-PROP-004` | `IMPLEMENTED` | `IN_PROGRESS` | PREMIUM_SPECIAL_PROJECT.md template exists; operational proposal workflow not complete. |
-| `HVCG-V2-PROP-005` | `IMPLEMENTED` | `IN_PROGRESS` | Out-of-scope language in compliance-language.json + templates; UI enforcement pending. |
-| `HVCG-V2-OFF-016` | `IMPLEMENTED` | `IN_PROGRESS` | offer-grid.json exists for sales/AI/training; not yet embedded in Elite UI. |
-
-## Overall
+## Sprint 3 commit baseline (honest correction)
 
 | Metric | Count |
 |--------|------:|
-| Total | 125 |
 | `IMPLEMENTED` | 43 |
 | `EXISTING_REUSED` | 13 |
 | `IN_PROGRESS` | 34 |
@@ -43,7 +15,58 @@ Before Sprint 3 commit, requirements that only had config/templates/service-leve
 | `DEFERRED_OWNER_GATE` | 2 |
 | **Coverage %** | **44.8%** |
 
-## Note
+## Sprint 4 current
 
-Sprint 3 delivers Development conversion services, Dev schemas, and tests. Elite operational UI is Sprint 4 in `revenue-pipeline-product`.
+| Metric | Previous (S3 commit) | Current (S4 Dev) | Delta |
+|--------|---------------------:|-----------------:|------:|
+| `IMPLEMENTED` | 43 | 56 | +13 |
+| `EXISTING_REUSED` | 13 | 12 | -1 |
+| `IN_PROGRESS` | 34 | 27 | -7 |
+| `PLANNED` | 33 | 28 | -5 |
+| `DEFERRED_OWNER_GATE` | 2 | 2 | 0 |
+| **Coverage %** | **44.8%** | **54.4%** | **+9.6 pp** |
 
+Coverage rose only where operational Elite surfaces + Dev integration tests exist. `HVCG-V2-C360-001` moved from `EXISTING_REUSED` → `IN_PROGRESS` because Revenue/Migration tabs are partial (not full Capital/Procurement/Risk/AI Client 360 expansion).
+
+## Exact requirement IDs changed (Sprint 4)
+
+| ID | From | To |
+|----|------|----|
+| `HVCG-V2-DIAG-001` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-DIAG-004` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PROP-001` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PROP-002` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PROP-003` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PROP-004` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PROP-005` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PROP-006` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-MIG-001` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-MIG-005` | PLANNED | IN_PROGRESS |
+| `HVCG-V2-REV-005` | PLANNED | IN_PROGRESS |
+| `HVCG-V2-REV-006` | PLANNED | IMPLEMENTED |
+| `HVCG-V2-REV-007` | PLANNED | IMPLEMENTED |
+| `HVCG-V2-C360-001` | EXISTING_REUSED | IN_PROGRESS |
+| `HVCG-V2-OFF-016` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-OFF-017` | IN_PROGRESS | IMPLEMENTED |
+| `HVCG-V2-PRC-006` | PLANNED | IN_PROGRESS |
+
+## Evidence (primary)
+
+| Capability | Module / worktree | Surface / test |
+|------------|-------------------|----------------|
+| Elite commercial path | `revenue-pipeline-product` | `CommercialWorkbench.tsx` on Opportunity detail |
+| Free Fit / Diagnostic / Bypass | `revenue-pipeline-product` | Qualification + Diagnostic panels |
+| Proposal draft/preview/approval | `revenue-pipeline-product` | Proposal panel; BL-C1 send blocked |
+| Offer / Service Line lookup | `revenue-pipeline-product` | Canonical JSON catalogs under `src/commercial/catalog/` |
+| Client Migration UI | `revenue-pipeline-product` | `/revenue/migrations` (`ClientMigrationPage.tsx`) |
+| Client 360 Revenue + Migration | `atlas-usable-operating-layer` | `LiveClientDetailPage` tabs + `Client360CommercialSections.tsx` |
+| Attribution taxonomy | BA V2 + Revenue UI | `attribution-taxonomy.json` + Attribution panel |
+| E2E commercial / bypass / legacy | BA V2 | `tests/unit/business/test_revenue_sprint4_integration.py` (32 BA tests OK) |
+
+## Explicit non-claims
+
+- Not Production deployed
+- Not auto-send / BL-C1 still active
+- Not High Value Founder launch
+- Not full success-fee engine
+- Not full Capital Readiness / CFO / Procurement / Risk engines

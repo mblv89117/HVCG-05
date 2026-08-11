@@ -17,7 +17,7 @@ The 2026-07-19 snapshot below reported Elite Production **NO-GO** / readiness **
 | Merged to `origin/main` | PR #2 @ `a3a945b` |
 | Production SWA / Hub live | Absolute GO URLs; post-tag usable-operating-layer redeploys |
 | Integration tip today | `.worktrees/atlas-integration-release` on `fix/atlas-production-hardening` @ `4b71b76` |
-| Written QA GO | Still **NOT ISSUED** as a formal QA artifact (Absolute GO ≠ Written QA GO) |
+| Written QA GO | Still **NOT ISSUED** as a formal QA artifact (Absolute GO ≠ Written QA GO) — see ADR-BA-V2-003 |
 | Track 1 freeze + BL-C1 emails Off | **Still in force** |
 
 **Elite Production SoR:** Absolute GO pack + tags — **not** the Jul-19 RC1 NO-GO narrative.  
@@ -29,9 +29,9 @@ The 2026-07-19 snapshot below reported Elite Production **NO-GO** / readiness **
 |------|--------|----------|
 | Elite Production | **LIVE** — Absolute GO `atlas-v1.0.1-production` | Absolute GO matrix; tag `dceea798` |
 | Post-tag SWA line | Advanced on usable-operating-layer | tip `2d7155d`; deploy stamp `6b4912a` |
-| Written QA GO | **NOT ISSUED** | RC1 RELEASE_STATUS + post-GO audit |
+| Written QA GO | **NOT ISSUED** (Absolute GO ≠ Written QA GO) | [ADR-BA-V2-003](Decisions/ADR-BA-V2-003-absolute-go-vs-written-qa-go.md) |
 | Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | deployment-engineer Track-1 package |
-| HVCG BA V2 | **OWNER ACCEPTED — Sprint 3 Revenue conversion (Dev)** | CR-HVCG-BA-V2-001 · Sprint 2 `16609c4` · [coverage](Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
+| HVCG BA V2 | **Sprint 3 committed · Sprint 4 Dev implemented (uncommitted across worktrees)** | Sprint 3 `71944e1` · [S4 handoff](Handoffs/HVCG_BA_V2_SPRINT4_HANDOFF.md) · [coverage](Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
 | Rate card current (new clients) | `HVCG-PRICE-2026-08-11-v2` (**CURRENT**) | ADR-BA-V2-002 |
 | Rate card historical | `HVCG-PRICE-2026-07-15-v1` (**HISTORICAL**, BL-P1 preserved) | PRICING_REGISTER / ADR |
 | Free Fit Assessment | SKU-FRA FREE — qualification/routing only | `config/business/free-fit-assessment.json` |
