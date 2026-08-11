@@ -1550,11 +1550,12 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "src/sharepoint/lists/HVCG_CapitalOpportunities.json"
+        "src/sharepoint/lists/HVCG_CapitalOpportunities.json",
+        "PROJECT_ATLAS/Reports/HVCG_V2_CAPITAL_OS_AUDIT_SPRINT5.md"
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
-      "notes": ""
+      "notes": "Capital Case domain reused; readiness fields extended in Dev schema."
     },
     {
       "id": "HVCG-V2-CAP-002",
@@ -1568,14 +1569,18 @@
       "owner": "Capital",
       "sprint": "BA-C",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/capital-readiness-scoring.json",
+        "config/business/capital_readiness.py",
+        "tests/unit/business/test_capital_readiness_sprint5.py"
+      ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Configurable explainable scoring engine + disclaimer wired from compliance-language.json."
     },
     {
       "id": "HVCG-V2-CAP-003",
@@ -1589,14 +1594,17 @@
       "owner": "Capital",
       "sprint": "BA-C",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": true,
-      "evidence": [],
+      "evidence": [
+        "config/business/capital_readiness.py#human_approve_readiness",
+        "config/business/hvcg-agents-v2.json"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Human approval required for readiness conclusion; lender-submit workflow still blocked (no external)."
     },
     {
       "id": "HVCG-V2-CAP-004",
@@ -1610,14 +1618,16 @@
       "owner": "Portal",
       "sprint": "BA-C/J",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/capital_readiness.py#build_financial_package_handoff"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Package handoff contract READY_FOR_PACKAGE_BUILD implemented; full data-room runtime remains portal package."
     },
     {
       "id": "HVCG-V2-CFO-001",
@@ -2881,7 +2891,7 @@
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
-      "notes": "Revenue + Migration tabs added; Capital/Procurement/Risk/AI sections remain later."
+      "notes": "Revenue + Migration + Capital tabs; Capital/Procurement/Risk/AI full depth still later."
     },
     {
       "id": "HVCG-V2-SYS-001",

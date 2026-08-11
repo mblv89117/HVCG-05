@@ -200,6 +200,99 @@
         "Other"
       ],
       "default": "Direct"
+    },
+    {
+      "internalName": "ReadinessScore",
+      "displayName": "ReadinessScore",
+      "type": "Number",
+      "required": false,
+      "indexed": true,
+      "description": "Explainable Capital Readiness Score 0\u2013100 (advisory; not approval probability)"
+    },
+    {
+      "internalName": "ReadinessBand",
+      "displayName": "ReadinessBand",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Score band from capital-readiness-scoring.json",
+      "choices": [
+        "CAPITAL_READY",
+        "READY_WITH_MINOR_CONDITIONS",
+        "READINESS_WORK_REQUIRED",
+        "NOT_YET_READY"
+      ]
+    },
+    {
+      "internalName": "ReadinessNextStep",
+      "displayName": "ReadinessNextStep",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Recommended next-step state after diagnostic",
+      "choices": [
+        "READY_FOR_LENDER_READY_PACKAGE",
+        "READY_WITH_CONDITIONS",
+        "FINANCIAL_CLEANUP_REQUIRED",
+        "DOCUMENTATION_REQUIRED",
+        "DEBT_RESTRUCTURE_REVIEW",
+        "CFO_SUPPORT_RECOMMENDED",
+        "RISK_REMEDIATION_REQUIRED",
+        "CAPITAL_STRATEGY_REVIEW",
+        "NOT_READY"
+      ]
+    },
+    {
+      "internalName": "DocumentCompletenessPct",
+      "displayName": "DocumentCompletenessPct",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Document completeness % \u2014 not the same as lender readiness"
+    },
+    {
+      "internalName": "ReadinessHumanApproval",
+      "displayName": "ReadinessHumanApproval",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Human approval status for readiness conclusion",
+      "choices": [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "CHANGES_REQUESTED"
+      ],
+      "default": "PENDING"
+    },
+    {
+      "internalName": "PackageHandoffStatus",
+      "displayName": "PackageHandoffStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Handoff to Lender-Ready Capital Package / AGT-FIN-PKG",
+      "choices": [
+        "NotStarted",
+        "READY_FOR_PACKAGE_BUILD",
+        "InBuild",
+        "ReadyForReview",
+        "SubmittedToLenderBlocked",
+        "Closed"
+      ],
+      "default": "NotStarted"
+    },
+    {
+      "internalName": "ReadinessJson",
+      "displayName": "ReadinessJson",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Serialized readiness summary + provenance (Dev). productionAuthorized path TBD."
     }
-  ]
+  ],
+  "provisioning": {
+    "productionAuthorized": false,
+    "note": "Sprint 5 readiness field extensions \u2014 Development schema only until Owner authorizes Production provision"
+  }
 }
