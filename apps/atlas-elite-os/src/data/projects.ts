@@ -95,6 +95,14 @@ export const notificationCatalog: NotificationItem[] = [
     href: '/clients/ws-ccb',
   },
   {
+    id: 'n-rev-ccb',
+    title: 'Colorado Craft Beef — Blueprint presentation ready',
+    body: 'Opportunity at Blueprint. Fees remain Pending verification. Referral: Randy Kamin — Generational Group.',
+    when: 'Today',
+    severity: 'Medium',
+    href: '/revenue/opportunities/opp-ccb-blueprint-001',
+  },
+  {
     id: 'n4',
     title: 'Dark mode available',
     body: 'Toggle theme from the command bar for executive presentation.',

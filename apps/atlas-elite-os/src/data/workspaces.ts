@@ -80,13 +80,13 @@ export function getWorkspace(id: string): WorkspaceSummary | undefined {
 
 /** Standard pending KPI set for Executive Home when Dataverse has no verified values */
 export const pendingExecutiveKpis: PendingField[] = [
-  { label: 'Revenue', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
+  { label: 'Revenue', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
   { label: 'Gross Profit', value: 'Not yet calculated', availability: 'Not yet calculated' },
-  { label: 'EBITDA', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
-  { label: 'Cash', value: 'Awaiting verified source', availability: 'Awaiting verified source' },
-  { label: 'Accounts Receivable', value: 'Data connection pending', availability: 'Data connection pending' },
+  { label: 'EBITDA', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
+  { label: 'Cash', value: 'Awaiting verified data', availability: 'Awaiting verified source' },
+  { label: 'Accounts Receivable', value: 'Pending verification', availability: 'Data connection pending' },
   { label: 'Working Capital', value: 'Not yet calculated', availability: 'Not yet calculated' },
-  { label: 'Active Pipeline', value: 'Data connection pending', availability: 'Data connection pending' },
+  { label: 'Active Pipeline', value: 'Pending verification', availability: 'Repository-derived' },
   {
     label: 'Enterprise Value Estimate',
     value: 'Not yet calculated',
@@ -222,6 +222,15 @@ export const actionCenterItems: ActionItem[] = [
     queue: 'Assigned',
     related: 'Colorado Craft Beef',
     due: 'Before client demo with figures',
+    priority: 'P0',
+    availability: 'Repository-derived',
+  },
+  {
+    id: 'act-ccb-blueprint',
+    title: 'Present Blueprint engagement package — Colorado Craft Beef',
+    queue: 'Assigned',
+    related: 'Revenue · opp-ccb-blueprint-001',
+    due: '2026-07-26',
     priority: 'P0',
     availability: 'Repository-derived',
   },

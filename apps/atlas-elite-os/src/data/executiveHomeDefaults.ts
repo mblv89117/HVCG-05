@@ -92,6 +92,12 @@ export const executiveHomeData = {
       severity: 'High' as const,
       category: 'unresolved owner approvals',
     },
+    {
+      id: 'al-rev-ccb',
+      title: 'Colorado Craft Beef at Blueprint — fee values pending verification',
+      severity: 'Medium' as const,
+      category: 'revenue / pipeline',
+    },
   ],
   initiatives: [
     {
@@ -136,7 +142,14 @@ export const executiveHomeData = {
       'Complete Owner UAT on Dev SWA link.',
     ],
     risks: ['Presenting sample dollars would mislead clients — blocked by design.'],
-    opportunities: ['Generational Group referral (Randy Kamin) for CCB growth capital.'],
-    decisionsAwaiting: ['Approve Sprint 14 Executive Dashboard UAT', 'Authorize verified finance connector'],
+    opportunities: [
+      'Colorado Craft Beef at Blueprint (Jeff Smith) — Generational Group / Randy Kamin attribution intact.',
+      'Weighted pipeline dollars remain Pending verification until Finance confirms fee sources.',
+    ],
+    decisionsAwaiting: [
+      'Approve Sprint 14 Executive Dashboard UAT',
+      'Authorize verified finance connector',
+      'Authorize Revenue Systems merge into Executive Dashboard release',
+    ],
   },
 };

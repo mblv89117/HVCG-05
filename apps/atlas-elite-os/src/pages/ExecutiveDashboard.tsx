@@ -16,6 +16,8 @@ import {
 import { Button, Text, Caption1, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
+import { executiveRevenueWidgets } from '../data/revenuePipeline';
+import { atlasRole, canRevenueCapability } from '../security/rbac';
 
 function alertTone(severity: string): 'danger' | 'warning' | 'neutral' | 'success' {
   if (severity === 'Critical' || severity === 'High') return 'danger';
@@ -64,7 +66,12 @@ export function ExecutiveDashboardPage() {
     connection,
   } = model;
 
-  const roleLabel = account ? 'HVCG Owner / Executive' : 'Signed out';
+  const roleLabel = account ? atlasRole() : 'Signed out';
+  const revenueRole = atlasRole();
+  const revenue = executiveRevenueWidgets();
+  const canSeeForecast = canRevenueCapability('forecastRevenue', revenueRole);
+  const canSeeStale = canRevenueCapability('identifyStale', revenueRole);
+  const canSeeWeighted = canRevenueCapability('viewWeightedPipeline', revenueRole);
 
   return (
     <PageLayout
@@ -150,6 +157,65 @@ export function ExecutiveDashboardPage() {
           </AtlasCard>
         ))}
       </ResponsiveGrid>
+
+      <AtlasCard
+        title="Revenue operating system"
+        subtitle="Pipeline visibility — fee dollars only when verified"
+        variant="glass"
+      >
+        <ResponsiveGrid dense>
+          <AtlasCard variant="quiet">
+            <Caption1>Open opportunities</Caption1>
+            <Text weight="semibold" size={500}>
+              {revenue.openOpportunities}
+            </Text>
+          </AtlasCard>
+          <AtlasCard variant="quiet">
+            <Caption1>Weighted pipeline</Caption1>
+            <Text weight="semibold" size={500}>
+              {canSeeForecast || canSeeWeighted ? revenue.activePipelineLabel : 'Restricted'}
+            </Text>
+          </AtlasCard>
+          <AtlasCard variant="quiet">
+            <Caption1>Stale alerts</Caption1>
+            <Text weight="semibold" size={500}>
+              {canSeeStale ? revenue.staleAlerts : '—'}
+            </Text>
+          </AtlasCard>
+          <AtlasCard variant="quiet">
+            <Caption1>Blueprint in flight</Caption1>
+            <Text weight="semibold" size={500}>
+              {revenue.blueprintInFlight}
+            </Text>
+            <Caption1>
+              Referral attribution{' '}
+              {revenue.referralAttributionIntact ? 'intact' : 'needs review'}
+            </Caption1>
+          </AtlasCard>
+        </ResponsiveGrid>
+        {revenue.highlightedOpportunity ? (
+          <div style={{ marginTop: 12, display: 'grid', gap: 6 }}>
+            <Text weight="semibold">Highlighted opportunity</Text>
+            <Text size={300}>
+              {revenue.highlightedOpportunity.organization} · {revenue.highlightedOpportunity.contact} ·{' '}
+              {revenue.highlightedOpportunity.stage}
+            </Text>
+            <Caption1>{revenue.highlightedOpportunity.nextAction}</Caption1>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+              <Link to={`/revenue/opportunities/${revenue.highlightedOpportunity.id}`}>
+                <Button appearance="primary" size="small">
+                  Open opportunity
+                </Button>
+              </Link>
+              <Link to="/revenue">
+                <Button appearance="secondary" size="small">
+                  Full pipeline
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : null}
+      </AtlasCard>
 
       <ResponsiveGrid dense>
         <GridSpan span={2}>

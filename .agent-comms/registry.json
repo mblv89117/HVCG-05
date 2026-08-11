@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-15T22:20:08Z",
+  "updatedAt": "2026-07-20T02:26:21Z",
   "agents": {
     "master-pm": {
       "agentId": "master-pm",
@@ -130,6 +130,24 @@
       "lastHeartbeat": "2026-07-15T22:19:45Z",
       "inboxPath": ".agent-comms/inbox/integration",
       "outboxPath": ".agent-comms/outbox/integration",
+      "escalationTarget": "master-pm"
+    },
+    "revenue-systems": {
+      "agentId": "revenue-systems",
+      "displayName": "Revenue Systems Engineer",
+      "branch": "cursor/revenue-pipeline-product",
+      "worktreePath": ".worktrees/revenue-pipeline-product",
+      "ownedPaths": [
+        "apps/atlas-elite-os/src/data/revenuePipeline.ts",
+        "apps/atlas-elite-os/src/pages/RevenuePage.tsx",
+        "apps/atlas-elite-os/src/pages/OpportunityDetailPage.tsx",
+        "docs/revenue/",
+        "tests/revenue/"
+      ],
+      "status": "READY",
+      "lastHeartbeat": "2026-07-20T02:26:21Z",
+      "inboxPath": ".agent-comms/inbox/revenue-systems",
+      "outboxPath": ".agent-comms/outbox/revenue-systems",
       "escalationTarget": "master-pm"
     }
   }

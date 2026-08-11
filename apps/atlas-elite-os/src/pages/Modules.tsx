@@ -14,7 +14,6 @@ import {
   documentCategories,
   fundingTypes,
   pendingExecutiveKpis,
-  pipelineStages,
   portfolioProjects,
   actionCenterItems,
   workspaceCatalog,
@@ -48,46 +47,7 @@ export function FinancialsPage() {
   );
 }
 
-export function RevenuePage() {
-  const stageRows = pipelineStages.map((stage, i) => ({
-    id: `stage-${i}`,
-    stage,
-    count: '—',
-    weighted: 'Awaiting verified source',
-    availability: 'Awaiting verified source' as const,
-  }));
-
-  return (
-    <ModuleScaffold
-      title="Revenue & Pipeline"
-      subtitle="Stages and referral tracking structures. No fabricated pipeline dollars."
-    >
-      <AtlasCard title="Pipeline stages" subtitle="Standard HVCG engagement stages">
-        <DataTable
-          ariaLabel="Pipeline stages"
-          getRowKey={(r) => r.id}
-          rows={stageRows}
-          columns={[
-            { key: 'stage', header: 'Stage', render: (r) => r.stage },
-            { key: 'count', header: 'Opportunities', render: (r) => r.count },
-            { key: 'weighted', header: 'Probability-weighted', render: (r) => r.weighted },
-            {
-              key: 'src',
-              header: 'Source',
-              render: (r) => <Caption1>{r.availability}</Caption1>,
-            },
-          ]}
-        />
-      </AtlasCard>
-      <AtlasCard title="Referral partners">
-        <Text>
-          Generational Group (Randy Kamin) is recorded as the Colorado Craft Beef referral source.
-          Opportunity records: Data connection pending.
-        </Text>
-      </AtlasCard>
-    </ModuleScaffold>
-  );
-}
+export { RevenuePage } from './RevenuePage';
 
 export function ClientsPage() {
   return (
@@ -313,8 +273,16 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
               <li>Open this workspace during the client meeting.</li>
               <li>Walk relationship history and capital-readiness checklist.</li>
               <li>Do not present dollar amounts until verified sources are connected.</li>
+              <li>Open the linked Revenue opportunity for Blueprint stage and referral attribution.</li>
               <li>Convert agreed actions into Tasks from the Tasks module.</li>
             </ol>
+            <div style={{ marginTop: 12 }}>
+              <Link to="/revenue/opportunities/opp-ccb-blueprint-001">
+                <Button appearance="primary" size="small">
+                  Open CCB Revenue opportunity
+                </Button>
+              </Link>
+            </div>
           </AtlasCard>
         </>
       ) : (
@@ -499,13 +467,39 @@ export function DocumentsPage() {
       showPendingBanner={false}
     >
       <Pendingish />
+      <AtlasCard title="Colorado Craft Beef — revenue intake" subtitle="From Revenue opportunity (verified status only)">
+        <DataTable
+          ariaLabel="CCB revenue documents"
+          getRowKey={(r) => r.id}
+          rows={[
+            { id: 'doc-ccb-corp', category: 'Corporate', title: 'Entity / formation package', status: 'Requested' },
+            { id: 'doc-ccb-fin', category: 'Financial', title: 'Financial package (verified)', status: 'Pending verification' },
+            { id: 'doc-ccb-re', category: 'Real Estate', title: 'Real estate schedule', status: 'Requested' },
+            { id: 'doc-ccb-debt', category: 'Debt', title: 'Debt schedule', status: 'Requested' },
+            { id: 'doc-ccb-cap', category: 'Capital', title: 'Capital needs brief', status: 'Pending verification' },
+          ]}
+          columns={[
+            { key: 'c', header: 'Category', render: (r) => r.category },
+            { key: 't', header: 'Document', render: (r) => r.title },
+            {
+              key: 's',
+              header: 'Status',
+              render: (r) => <StatusChip label={r.status} tone="warning" />,
+            },
+          ]}
+        />
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>
+          Linked opportunity:{' '}
+          <Link to="/revenue/opportunities/opp-ccb-blueprint-001">opp-ccb-blueprint-001</Link>
+        </Caption1>
+      </AtlasCard>
       <AtlasCard title="Categories">
         <DataTable
           ariaLabel="Document categories"
           getRowKey={(r) => r.category}
           rows={documentCategories.map((c) => ({
             category: c,
-            status: 'Data connection pending',
+            status: 'Pending verification',
           }))}
           columns={[
             { key: 'c', header: 'Category', render: (r) => r.category },
@@ -515,7 +509,8 @@ export function DocumentsPage() {
               render: (r) => <StatusChip label={r.status} tone="warning" />,
             },
           ]}
-        />      </AtlasCard>
+        />
+      </AtlasCard>
     </ModuleScaffold>
   );
 }

@@ -17,6 +17,8 @@ import {
   TasksPage,
 } from './pages/Modules';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
+import { OpportunityDetailPage } from './pages/OpportunityDetailPage';
+import { ClientMigrationPage } from './pages/ClientMigrationPage';
 import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
 import {
   AccessDeniedPage,
@@ -24,7 +26,7 @@ import {
   ErrorPage,
   LoadingDemoPage,
 } from './pages/SystemPages';
-import { canAccessAdmin } from './security/rbac';
+import { canAccessAdmin, canAccessRevenue } from './security/rbac';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
@@ -36,9 +38,29 @@ function ProjectDetailRoute() {
   return <ProjectDetailPage projectId={projectId} />;
 }
 
+function OpportunityDetailRoute() {
+  const { opportunityId = '' } = useParams();
+  return <OpportunityDetailPage opportunityId={opportunityId} />;
+}
+
 function AdminRoute() {
   if (!canAccessAdmin()) return <Navigate to="/access-denied" replace />;
   return <AdminPage />;
+}
+
+function RevenueRoute() {
+  if (!canAccessRevenue()) return <Navigate to="/access-denied" replace />;
+  return <RevenuePage />;
+}
+
+function RevenueOpportunityRoute() {
+  if (!canAccessRevenue()) return <Navigate to="/access-denied" replace />;
+  return <OpportunityDetailRoute />;
+}
+
+function RevenueMigrationRoute() {
+  if (!canAccessRevenue()) return <Navigate to="/access-denied" replace />;
+  return <ClientMigrationPage />;
 }
 
 export function App() {
@@ -49,7 +71,9 @@ export function App() {
           <Route element={<AppShell />}>
             <Route index element={<ExecutiveDashboardPage />} />
             <Route path="financials" element={<FinancialsPage />} />
-            <Route path="revenue" element={<RevenuePage />} />
+            <Route path="revenue" element={<RevenueRoute />} />
+            <Route path="revenue/opportunities/:opportunityId" element={<RevenueOpportunityRoute />} />
+            <Route path="revenue/migrations" element={<RevenueMigrationRoute />} />
             <Route path="clients" element={<ClientsPage />} />
             <Route path="clients/:workspaceId" element={<ClientDetailRoute />} />
             <Route path="projects" element={<ProjectsPage />} />
