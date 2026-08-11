@@ -4,7 +4,9 @@
 
 | Date | Change |
 |------|--------|
-| 2026-08-11 | Owner ADR-BA-V2-002: CR accepted; V2 rate card CURRENT for new clients; Free Fit Assessment policy; BL-C1/Track1/ACCG confirmed; HVF deferred. Sprint 2 commit authorized. |
+| 2026-08-11 | Sprint 3 commit: Revenue conversion engine (Free Fit/Diagnostics Dev schemas, pricing recommendation, proposal draft+BL-C1 lock, E2E service tests). Honest req status corrections (config≠UI). Coverage 50.4%→44.8%. **No Production / no merge.** |
+| 2026-08-11 | Sprint 3 (Dev): Revenue OS conversion path — Free Fit vs Paid Diagnostic, pricing recommendation (V2 new-client / legacy protected), proposal draft+internal approval (BL-C1 blocks send), FitAssessments/Diagnostics Dev schemas, 29 unit tests. Coverage 46.4%→50.4%. **No Production changes.** |
+| 2026-08-11 | Owner ADR-BA-V2-002: CR accepted; V2 rate card CURRENT for new clients; Free Fit Assessment policy; BL-C1/Track1/ACCG confirmed; HVF deferred. Sprint 2 commit `16609c4`. |
 | 2026-08-11 | BA V2 Sprint 2: requirements traceability ledger (125 reqs) + coverage report; commercial class/offer/pricing schema wiring; diagnostics, offer grid/decision engine, three proposal templates, compliance library, commercial playbook, progressive validation tests. **No Production changes.** |
 | 2026-08-11 | Opened [CR-HVCG-BA-V2-001](ChangeRequests/CR-HVCG-BA-V2-001.md): HVCG Business Architecture V2 integration. Added canonical [BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md](BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md), [Impact Analysis](Reports/HVCG_V2_IMPACT_ANALYSIS_2026-08-11.md), `config/business/*` catalog/pricing/migration seeds, Dev-only list schemas, foundation unit tests. Documented Absolute GO vs Jul-19 CURRENT_STATE discrepancy. **No Production changes.** |
 | 2026-07-19 | Master PM program audit: refreshed CURRENT_STATE / ROADMAP / NEXT_ACTIONS / indexes; designated Elite Integration **RC1** as release SoR; Revenue S4 marked COMPLETE (Dev/Staging); QBO tip recorded as unmerged; [EXECUTIVE_PROGRAM_STATUS_2026-07-19](Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md) published. |

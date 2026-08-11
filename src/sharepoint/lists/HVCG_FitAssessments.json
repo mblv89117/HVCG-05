@@ -1,0 +1,33 @@
+{
+  "title": "HVCG_FitAssessments",
+  "description": "Free Fit & Readiness Assessment records (SKU-FRA). Qualification/routing only — not substantive diagnostics. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "Assessment label" },
+    { "internalName": "AssessmentId", "displayName": "AssessmentId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "LeadId", "displayName": "LeadId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Leads", "description": "" },
+    { "internalName": "AssessmentDate", "displayName": "AssessmentDate", "type": "DateTime", "required": false, "indexed": true, "description": "" },
+    { "internalName": "AdvisorEmail", "displayName": "AdvisorEmail", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "NeedType", "displayName": "NeedType", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RevenueRange", "displayName": "RevenueRange", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "CapitalGoal", "displayName": "CapitalGoal", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Urgency", "displayName": "Urgency", "type": "Choice", "required": false, "indexed": false, "choices": ["Low", "Medium", "High", "Urgent"], "description": "" },
+    { "internalName": "ServiceFit", "displayName": "ServiceFit", "type": "Text", "required": false, "indexed": true, "description": "ServiceLineCode" },
+    { "internalName": "QualificationResult", "displayName": "QualificationResult", "type": "Choice", "required": true, "indexed": true, "choices": ["Qualified", "Disqualified", "Pending"], "description": "" },
+    { "internalName": "RecommendedDiagnostic", "displayName": "RecommendedDiagnostic", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RecommendedServiceLine", "displayName": "RecommendedServiceLine", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "RecommendedOffer", "displayName": "RecommendedOffer", "type": "Text", "required": false, "indexed": true, "description": "OfferCode" },
+    { "internalName": "DisqualificationReason", "displayName": "DisqualificationReason", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Source", "displayName": "Source", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "ReferralSource", "displayName": "ReferralSource", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "ConvertedToDiagnostic", "displayName": "ConvertedToDiagnostic", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ConvertedToOpportunity", "displayName": "ConvertedToOpportunity", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Notes", "displayName": "Notes", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "SkuCode", "displayName": "SkuCode", "type": "Text", "required": false, "indexed": false, "description": "SKU-FRA", "default": "SKU-FRA" }
+  ]
+}

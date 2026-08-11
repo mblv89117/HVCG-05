@@ -1,0 +1,35 @@
+{
+  "title": "HVCG_Diagnostics",
+  "description": "Paid diagnostic engagements. Distinct from Free Fit Assessment. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "DiagnosticId", "displayName": "DiagnosticId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "DiagnosticType", "displayName": "DiagnosticType", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "OpportunityId", "displayName": "OpportunityId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Opportunities", "description": "" },
+    { "internalName": "FitAssessmentId", "displayName": "FitAssessmentId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_FitAssessments", "description": "" },
+    { "internalName": "Fee", "displayName": "Fee", "type": "Currency", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PricingVersionId", "displayName": "PricingVersionId", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "indexed": true, "choices": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "BYPASSED", "CANCELLED"], "description": "" },
+    { "internalName": "RequiredDocuments", "displayName": "RequiredDocuments", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "DocumentsReceived", "displayName": "DocumentsReceived", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "FindingsFact", "displayName": "FindingsFact", "type": "Note", "required": false, "indexed": false, "description": "Verified facts only" },
+    { "internalName": "FindingsAiInference", "displayName": "FindingsAiInference", "type": "Note", "required": false, "indexed": false, "description": "AI inference — not facts" },
+    { "internalName": "FindingsAdvisorConclusion", "displayName": "FindingsAdvisorConclusion", "type": "Note", "required": false, "indexed": false, "description": "Human advisor conclusion" },
+    { "internalName": "Score", "displayName": "Score", "type": "Number", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RiskFlags", "displayName": "RiskFlags", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RecommendedOffer", "displayName": "RecommendedOffer", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "RecommendedPricingJson", "displayName": "RecommendedPricingJson", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "HumanApproval", "displayName": "HumanApproval", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "CompletionDate", "displayName": "CompletionDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ProposalTrigger", "displayName": "ProposalTrigger", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "DiagnosticBypass", "displayName": "DiagnosticBypass", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "BypassReason", "displayName": "BypassReason", "type": "Note", "required": false, "indexed": false, "description": "Required when bypassed" }
+  ]
+}

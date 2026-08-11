@@ -40,13 +40,20 @@
       "choices": [
         "Draft",
         "Internal Review",
+        "Owner Approval Required",
+        "Approved To Send",
         "Sent",
+        "Client Review",
         "Negotiation",
         "Accepted",
         "Rejected",
+        "Expired",
+        "Superseded",
         "Withdrawn"
       ],
-      "default": "Draft"
+      "default": "Draft",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "note": "BA V2 Sprint 3 extended states; BL-C1 blocks autonomous Sent"
     },
     {
       "internalName": "SentDate",
@@ -144,6 +151,102 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "CommercialClass",
+      "displayName": "CommercialClass",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": ["STRUCTURED_OFFER", "RECURRING_RETAINER", "PREMIUM_SPECIAL_PROJECT"],
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "OfferCode",
+      "displayName": "OfferCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "ServiceLineCode",
+      "displayName": "ServiceLineCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "PricingVersionId",
+      "displayName": "PricingVersionId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "ProposalArchetype",
+      "displayName": "ProposalArchetype",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": ["STRUCTURED_OFFER", "RECURRING_RETAINER", "PREMIUM_SPECIAL_PROJECT"],
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "RecommendedPricingJson",
+      "displayName": "RecommendedPricingJson",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "PricingOverrideJson",
+      "displayName": "PricingOverrideJson",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "MANUAL_PRICING_OVERRIDE audit payload",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "DraftBody",
+      "displayName": "DraftBody",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "BlC1SendBlocked",
+      "displayName": "BlC1SendBlocked",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "default": true,
+      "description": "True while BL-C1 active — no autonomous send",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "ReferralPartnerId",
+      "displayName": "ReferralPartnerId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "lookupList": "HVCG_ReferralPartners",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ]
 }

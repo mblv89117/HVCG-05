@@ -48,6 +48,9 @@
         "ExternalShare",
         "ClientCommunication",
         "ExecutiveDecision",
+        "Proposal",
+        "PricingOverride",
+        "DiagnosticBypass",
         "Other"
       ]
     },

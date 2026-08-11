@@ -4,7 +4,9 @@ Authority: [CR-HVCG-BA-V2-001](../../PROJECT_ATLAS/ChangeRequests/CR-HVCG-BA-V2-
 
 | File | Role |
 |------|------|
-| `hvcg-v2-requirements.json` | Requirements traceability machine SoR |
+| `revenue_conversion.py` | Sprint 3 conversion / pricing / proposal / BL-C1 services |
+| `free-fit-assessment.json` | SKU-FRA Free Fit policy (owner ADR-BA-V2-002) |
+| `elite-revenue-commercial-surface.json` | Elite UI progressive disclosure contract |
 | `service-lines.json` | Seven HVCG service lines |
 | `offer-catalog.json` | Thirteen productized offers (enriched) |
 | `offer-decision-engine.json` | Deterministic need → offer rules |

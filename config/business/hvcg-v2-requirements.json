@@ -108,7 +108,10 @@
       "dependencies": [],
       "productionGate": true,
       "externalContactGate": true,
-      "evidence": [],
+      "evidence": [
+        "config/business/content-and-acquisition.json",
+        "ADR-BA-V2-002"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
       "notes": ""
@@ -701,17 +704,18 @@
       "owner": "Revenue",
       "sprint": "BA-B S2-S3",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/offer-decision-engine.json",
-        "config/business/commercial_rules.py"
+        "config/business/commercial_rules.py",
+        "config/business/revenue_conversion.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "offer-decision-engine.json + recommend_offer/revenue_conversion."
     },
     {
       "id": "HVCG-V2-OFF-016",
@@ -725,7 +729,7 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
@@ -733,8 +737,8 @@
         "config/business/offer-grid.json"
       ],
       "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "completionDate": null,
+      "notes": "offer-grid.json exists for sales/AI/training; not yet embedded in Elite UI."
     },
     {
       "id": "HVCG-V2-OFF-017",
@@ -748,11 +752,13 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/revenue_conversion.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
       "notes": ""
@@ -839,19 +845,20 @@
       "owner": "Owner / Revenue",
       "sprint": "BA-A",
       "priority": "P0",
-      "status": "EXISTING_REUSED",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/pricing_policy.py",
-        "PROJECT_ATLAS/DECISIONS.md"
+        "PROJECT_ATLAS/DECISIONS.md",
+        "ADR-BA-V2-002"
       ],
       "testsAcceptance": [
         "active card is v1 unless activated"
       ],
       "completionDate": "2026-08-11",
-      "notes": ""
+      "notes": "ADR-BA-V2-002 activated V2 as CURRENT for new clients; v1 historical. Requirement wording superseded by owner decision."
     },
     {
       "id": "HVCG-V2-PRC-004",
@@ -865,16 +872,17 @@
       "owner": "Revenue",
       "sprint": "BA-A S1-S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/pricing_policy.py"
+        "config/business/pricing_policy.py",
+        "config/business/revenue_conversion.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Price-state model in pricing_policy + revenue_conversion."
     },
     {
       "id": "HVCG-V2-PRC-005",
@@ -981,14 +989,19 @@
       "owner": "Owner / Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/free-fit-assessment.json",
+        "config/business/diagnostics.json",
+        "config/business/revenue_conversion.py",
+        "ADR-BA-V2-002"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Conflict: BL-P1 SKU-FRA FREE vs V2 paid diagnostics \u2014 owner gate"
+      "notes": "Policy + diagnostics config + conversion service exist; Elite Free Fit/Diagnostic UX not yet operational."
     },
     {
       "id": "HVCG-V2-DIAG-002",
@@ -1011,7 +1024,7 @@
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
-      "notes": ""
+      "notes": "Diagnostic levels present in diagnostics.json (config evidence sufficient for this requirement)."
     },
     {
       "id": "HVCG-V2-DIAG-003",
@@ -1025,11 +1038,13 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/diagnostics.json"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
       "notes": ""
@@ -1046,11 +1061,13 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/revenue_conversion.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
       "notes": ""
@@ -1067,18 +1084,19 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "src/sharepoint/lists/HVCG_Opportunities.json",
         "config/business/commercial_rules.py",
-        "releases/migrations/20260811_001_hvcg_ba_v2_opportunity_commercial.json"
+        "releases/migrations/20260811_001_hvcg_ba_v2_opportunity_commercial.json",
+        "config/business/revenue_conversion.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "CommercialClass on Opportunities schema + commercial_rules validation tests."
     },
     {
       "id": "HVCG-V2-REV-002",
@@ -1092,17 +1110,19 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/commercial_rules.py",
-        "tests/unit/business/test_commercial_sprint2.py"
+        "tests/unit/business/test_commercial_sprint2.py",
+        "config/business/revenue_conversion.py",
+        "tests/unit/business/test_revenue_sprint3.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Progressive validation implemented in commercial_rules + revenue_conversion tests."
     },
     {
       "id": "HVCG-V2-REV-003",
@@ -1226,17 +1246,18 @@
       "owner": "Revenue",
       "sprint": "BA-B",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/proposal-archetypes.json",
-        "templates/proposals/"
+        "templates/proposals/",
+        "config/business/revenue_conversion.py"
       ],
       "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "completionDate": null,
+      "notes": "Three archetypes + templates + draft service exist; Elite proposal UX/approval surface not operational."
     },
     {
       "id": "HVCG-V2-PROP-002",
@@ -1250,16 +1271,18 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "templates/proposals/STRUCTURED_OFFER.md"
+        "templates/proposals/STRUCTURED_OFFER.md",
+        "config/business/revenue_conversion.py",
+        "templates/proposals/"
       ],
       "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "completionDate": null,
+      "notes": "STRUCTURED_OFFER.md template exists; operational proposal workflow not complete."
     },
     {
       "id": "HVCG-V2-PROP-003",
@@ -1273,16 +1296,18 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "templates/proposals/MONTHLY_RETAINER.md"
+        "templates/proposals/MONTHLY_RETAINER.md",
+        "config/business/revenue_conversion.py",
+        "templates/proposals/"
       ],
       "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "completionDate": null,
+      "notes": "MONTHLY_RETAINER.md template exists; operational proposal workflow not complete."
     },
     {
       "id": "HVCG-V2-PROP-004",
@@ -1296,16 +1321,18 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "templates/proposals/PREMIUM_SPECIAL_PROJECT.md"
+        "templates/proposals/PREMIUM_SPECIAL_PROJECT.md",
+        "config/business/revenue_conversion.py",
+        "templates/proposals/"
       ],
       "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "completionDate": null,
+      "notes": "PREMIUM_SPECIAL_PROJECT.md template exists; operational proposal workflow not complete."
     },
     {
       "id": "HVCG-V2-PROP-005",
@@ -1319,17 +1346,18 @@
       "owner": "Revenue",
       "sprint": "BA-A S2",
       "priority": "P0",
-      "status": "IMPLEMENTED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
         "config/business/compliance-language.json",
-        "templates/proposals/"
+        "templates/proposals/",
+        "config/business/revenue_conversion.py"
       ],
       "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "completionDate": null,
+      "notes": "Out-of-scope language in compliance-language.json + templates; UI enforcement pending."
     },
     {
       "id": "HVCG-V2-PROP-006",
@@ -1343,11 +1371,14 @@
       "owner": "AI / Revenue",
       "sprint": "BA-H",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": true,
-      "evidence": [],
+      "evidence": [
+        "config/business/revenue_conversion.py",
+        "BL-C1"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
       "notes": ""
@@ -1393,7 +1424,8 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "tests/unit/business/test_business_architecture_v2.py"
+        "tests/unit/business/test_business_architecture_v2.py",
+        "tests/unit/business/test_revenue_sprint3.py"
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",

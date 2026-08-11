@@ -572,6 +572,24 @@
       "domain": "BusinessCatalog",
       "changeRequest": "CR-HVCG-BA-V2-001",
       "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_FitAssessments",
+      "path": "src/sharepoint/lists/HVCG_FitAssessments.json",
+      "columnCount": 21,
+      "description": "Revenue OS \u2014 Free Fit & Readiness Assessment (Dev-only)",
+      "domain": "Revenue",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_Diagnostics",
+      "path": "src/sharepoint/lists/HVCG_Diagnostics.json",
+      "columnCount": 23,
+      "description": "Revenue OS \u2014 Paid diagnostics (Dev-only)",
+      "domain": "Revenue",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ],
   "productVersion": "1.1.0"

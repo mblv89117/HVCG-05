@@ -1,0 +1,62 @@
+{
+  "changed": [
+    {
+      "id": "HVCG-V2-DIAG-001",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "Policy + diagnostics config + conversion service exist; Elite Free Fit/Diagnostic UX not yet operational."
+    },
+    {
+      "id": "HVCG-V2-PROP-001",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "Three archetypes + templates + draft service exist; Elite proposal UX/approval surface not operational."
+    },
+    {
+      "id": "HVCG-V2-PROP-002",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "STRUCTURED_OFFER.md template exists; operational proposal workflow not complete."
+    },
+    {
+      "id": "HVCG-V2-PROP-003",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "MONTHLY_RETAINER.md template exists; operational proposal workflow not complete."
+    },
+    {
+      "id": "HVCG-V2-PROP-004",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "PREMIUM_SPECIAL_PROJECT.md template exists; operational proposal workflow not complete."
+    },
+    {
+      "id": "HVCG-V2-PROP-005",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "Out-of-scope language in compliance-language.json + templates; UI enforcement pending."
+    },
+    {
+      "id": "HVCG-V2-OFF-016",
+      "from": "IMPLEMENTED",
+      "to": "IN_PROGRESS",
+      "reason": "offer-grid.json exists for sales/AI/training; not yet embedded in Elite UI."
+    }
+  ],
+  "previous": {
+    "IN_PROGRESS": 27,
+    "PLANNED": 33,
+    "DEFERRED_OWNER_GATE": 2,
+    "IMPLEMENTED": 50,
+    "EXISTING_REUSED": 13
+  },
+  "current": {
+    "IN_PROGRESS": 34,
+    "PLANNED": 33,
+    "DEFERRED_OWNER_GATE": 2,
+    "IMPLEMENTED": 43,
+    "EXISTING_REUSED": 13
+  },
+  "previousCoverage": 50.4,
+  "currentCoverage": 44.800000000000004
+}

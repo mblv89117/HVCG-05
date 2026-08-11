@@ -7,8 +7,9 @@
 
 | Order | Milestone | Owner / Track | Gate |
 |-------|-----------|---------------|------|
-| 0 | **HVCG BA V2 Foundation** — service lines, offers, pricing versions, migration model | BA-A / this CR | Owner CR accept; no Prod |
+| 0 | **HVCG BA V2 Foundation + Sprint 3 conversion (Dev)** | BA-A/B | Owner CR accepted; no Prod |
 | 1 | **Protect Absolute GO Production** — no unauthorized Prod BA schema; Track 1 freeze | Integration & Release | Owner for Prod |
+| 2 | Elite Opportunity commercial surface wiring (`revenue-pipeline-product`) | BA-B / Elite | Use surface contract |
 | 2 | **Full QA** against RC1 → written Local UAT GO/NO-GO | QA | Written GO |
 | 3 | Owner Local UAT acceptance @ http://127.0.0.1:5180/ | Owner | CONDITIONAL GO path |
 | 4 | Plaid Sandbox secrets + live Link E2E | Owner + Plaid + Security | INT-001/002/005 |

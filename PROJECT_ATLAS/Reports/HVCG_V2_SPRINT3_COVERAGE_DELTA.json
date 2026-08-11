@@ -1,0 +1,70 @@
+{
+  "previous": {
+    "IMPLEMENTED": 44,
+    "EXISTING_REUSED": 14,
+    "IN_PROGRESS": 27,
+    "PLANNED": 38,
+    "DEFERRED_OWNER_GATE": 2
+  },
+  "previousCoverage": 46.400000000000006,
+  "current": {
+    "IN_PROGRESS": 27,
+    "PLANNED": 33,
+    "DEFERRED_OWNER_GATE": 2,
+    "IMPLEMENTED": 50,
+    "EXISTING_REUSED": 13
+  },
+  "currentCoverage": 50.4,
+  "changed": [
+    {
+      "id": "HVCG-V2-DIAG-001",
+      "from": "PLANNED",
+      "to": "IMPLEMENTED"
+    },
+    {
+      "id": "HVCG-V2-DIAG-003",
+      "from": "PLANNED",
+      "to": "IN_PROGRESS"
+    },
+    {
+      "id": "HVCG-V2-DIAG-004",
+      "from": "PLANNED",
+      "to": "IN_PROGRESS"
+    },
+    {
+      "id": "HVCG-V2-REV-001",
+      "from": "IN_PROGRESS",
+      "to": "IMPLEMENTED"
+    },
+    {
+      "id": "HVCG-V2-REV-002",
+      "from": "IN_PROGRESS",
+      "to": "IMPLEMENTED"
+    },
+    {
+      "id": "HVCG-V2-OFF-015",
+      "from": "IN_PROGRESS",
+      "to": "IMPLEMENTED"
+    },
+    {
+      "id": "HVCG-V2-OFF-017",
+      "from": "PLANNED",
+      "to": "IN_PROGRESS"
+    },
+    {
+      "id": "HVCG-V2-PROP-006",
+      "from": "PLANNED",
+      "to": "IN_PROGRESS"
+    },
+    {
+      "id": "HVCG-V2-PRC-003",
+      "from": "EXISTING_REUSED",
+      "to": "IMPLEMENTED"
+    },
+    {
+      "id": "HVCG-V2-PRC-004",
+      "from": "IN_PROGRESS",
+      "to": "IMPLEMENTED"
+    }
+  ]
+}

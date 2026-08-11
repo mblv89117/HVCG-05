@@ -31,7 +31,7 @@ The 2026-07-19 snapshot below reported Elite Production **NO-GO** / readiness **
 | Post-tag SWA line | Advanced on usable-operating-layer | tip `2d7155d`; deploy stamp `6b4912a` |
 | Written QA GO | **NOT ISSUED** | RC1 RELEASE_STATUS + post-GO audit |
 | Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | deployment-engineer Track-1 package |
-| HVCG BA V2 | **CR OPEN — Sprint 2 commercial wiring + requirements ledger** | CR-HVCG-BA-V2-001 · [traceability](BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md) · [coverage](Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
+| HVCG BA V2 | **OWNER ACCEPTED — Sprint 3 Revenue conversion (Dev)** | CR-HVCG-BA-V2-001 · Sprint 2 `16609c4` · [coverage](Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
 | Rate card current (new clients) | `HVCG-PRICE-2026-08-11-v2` (**CURRENT**) | ADR-BA-V2-002 |
 | Rate card historical | `HVCG-PRICE-2026-07-15-v1` (**HISTORICAL**, BL-P1 preserved) | PRICING_REGISTER / ADR |
 | Free Fit Assessment | SKU-FRA FREE — qualification/routing only | `config/business/free-fit-assessment.json` |

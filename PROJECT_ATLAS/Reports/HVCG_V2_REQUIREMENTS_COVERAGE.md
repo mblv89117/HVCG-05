@@ -1,59 +1,49 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-11  
+**As of:** 2026-08-11 (Sprint 3 commit — honest status correction)  
 **Source:** `config/business/hvcg-v2-requirements.json` (125 requirements)  
 **Traceability:** [../BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md](../BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md)
 
-## Definition
+## Honesty correction
 
-- **Coverage %** = (`IMPLEMENTED` + `EXISTING_REUSED`) / Total × 100
-- `IN_PROGRESS` and `PLANNED` do **not** count as implemented
-- Evidence required for `IMPLEMENTED` / `EXISTING_REUSED`
+Before Sprint 3 commit, requirements that only had config/templates/service-level evidence (without operational Elite UI) were downgraded from `IMPLEMENTED` to `IN_PROGRESS` where appropriate. Coverage may decrease; accuracy is preferred.
+
+## Sprint delta (vs pre-correction Sprint 3 working set)
+
+| Metric | Before correction | After correction | Delta |
+|--------|------------------:|-----------------:|------:|
+| `IMPLEMENTED` | 50 | 43 | -7 |
+| `EXISTING_REUSED` | 13 | 13 | +0 |
+| `IN_PROGRESS` | 27 | 34 | +7 |
+| `PLANNED` | 33 | 33 | +0 |
+| `DEFERRED_OWNER_GATE` | 2 | 2 | +0 |
+| **Coverage %** | **50.4%** | **44.8%** | **-5.6 pp** |
+
+## Corrections
+
+| ID | From | To | Reason |
+|----|------|----|--------|
+| `HVCG-V2-DIAG-001` | `IMPLEMENTED` | `IN_PROGRESS` | Policy + diagnostics config + conversion service exist; Elite Free Fit/Diagnostic UX not yet operational. |
+| `HVCG-V2-PROP-001` | `IMPLEMENTED` | `IN_PROGRESS` | Three archetypes + templates + draft service exist; Elite proposal UX/approval surface not operational. |
+| `HVCG-V2-PROP-002` | `IMPLEMENTED` | `IN_PROGRESS` | STRUCTURED_OFFER.md template exists; operational proposal workflow not complete. |
+| `HVCG-V2-PROP-003` | `IMPLEMENTED` | `IN_PROGRESS` | MONTHLY_RETAINER.md template exists; operational proposal workflow not complete. |
+| `HVCG-V2-PROP-004` | `IMPLEMENTED` | `IN_PROGRESS` | PREMIUM_SPECIAL_PROJECT.md template exists; operational proposal workflow not complete. |
+| `HVCG-V2-PROP-005` | `IMPLEMENTED` | `IN_PROGRESS` | Out-of-scope language in compliance-language.json + templates; UI enforcement pending. |
+| `HVCG-V2-OFF-016` | `IMPLEMENTED` | `IN_PROGRESS` | offer-grid.json exists for sales/AI/training; not yet embedded in Elite UI. |
 
 ## Overall
 
 | Metric | Count |
 |--------|------:|
 | Total | 125 |
-| `IMPLEMENTED` | 44 |
-| `EXISTING_REUSED` | 14 |
-| `IN_PROGRESS` | 27 |
-| `PLANNED` | 38 |
+| `IMPLEMENTED` | 43 |
+| `EXISTING_REUSED` | 13 |
+| `IN_PROGRESS` | 34 |
+| `PLANNED` | 33 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage %** | **46.4%** |
+| **Coverage %** | **44.8%** |
 
-## By domain
+## Note
 
-| Domain | Total | Implemented | Reused | In Progress | Planned | Deferred | Coverage % |
-|--------|------:|------------:|-------:|------------:|--------:|---------:|-----------:|
-| AI | 23 | 2 | 1 | 18 | 2 | 0 | 13% |
-| CFO | 3 | 0 | 1 | 0 | 1 | 1 | 33% |
-| Capital | 4 | 0 | 1 | 0 | 3 | 0 | 25% |
-| Client Experience | 1 | 0 | 1 | 0 | 0 | 0 | 100% |
-| Client Migration | 5 | 2 | 0 | 2 | 1 | 0 | 40% |
-| Compliance | 2 | 1 | 1 | 0 | 0 | 0 | 100% |
-| Diagnostics | 4 | 1 | 0 | 0 | 3 | 0 | 25% |
-| Documents | 3 | 1 | 1 | 0 | 1 | 0 | 67% |
-| Executive Support | 2 | 1 | 0 | 0 | 1 | 0 | 50% |
-| Governance | 3 | 2 | 1 | 0 | 0 | 0 | 100% |
-| Growth | 1 | 0 | 1 | 0 | 0 | 0 | 100% |
-| Marketing / Content | 4 | 1 | 0 | 1 | 2 | 0 | 25% |
-| Microsoft 365 | 10 | 0 | 3 | 0 | 7 | 0 | 30% |
-| Offers | 15 | 14 | 0 | 1 | 0 | 0 | 93% |
-| Positioning | 5 | 1 | 0 | 2 | 1 | 1 | 20% |
-| Pricing | 7 | 4 | 1 | 1 | 1 | 0 | 71% |
-| Procurement | 2 | 0 | 0 | 0 | 2 | 0 | 0% |
-| Proposals | 6 | 5 | 0 | 0 | 1 | 0 | 83% |
-| Referrals | 2 | 0 | 0 | 0 | 2 | 0 | 0% |
-| Reporting | 2 | 0 | 1 | 0 | 1 | 0 | 50% |
-| Revenue OS | 8 | 1 | 1 | 2 | 4 | 0 | 25% |
-| Risk | 2 | 0 | 0 | 0 | 2 | 0 | 0% |
-| Sales Enablement | 3 | 1 | 0 | 0 | 2 | 0 | 33% |
-| Service Architecture | 8 | 7 | 0 | 0 | 1 | 0 | 88% |
-
-## Honesty note
-
-AI agent requirements remain largely `IN_PROGRESS` (config stubs only). Opportunity CommercialClass schema + validation exists for Sprint 2, but Production provisioning is **not** authorized. Offer catalog entries are complete as configuration; Elite UI wiring remains BA-B.
-
-Website messaging is prepared (`website-messaging.json`) but **not published** (BL-PUBLISH-1).
+Sprint 3 delivers Development conversion services, Dev schemas, and tests. Elite operational UI is Sprint 4 in `revenue-pipeline-product`.
 
