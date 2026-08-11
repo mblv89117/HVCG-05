@@ -41,6 +41,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
+import { Client360MigrationSection, Client360RevenueSection } from './Client360CommercialSections';
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const { account, ready } = useMicrosoftAuth();
@@ -197,6 +198,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <Tab value="documents">Documents</Tab>
         <Tab value="meetings">Meetings</Tab>
         <Tab value="financials">Financials</Tab>
+        <Tab value="revenue">Revenue</Tab>
+        <Tab value="migration">Migration</Tab>
         <Tab value="deliverables">Deliverables</Tab>
         <Tab value="approvals">Approvals</Tab>
         <Tab value="notes">Notes</Tab>
@@ -449,6 +452,14 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             description="Atlas does not fabricate charts or balances. Connect Banking / Accounting when those sources are authorized."
           />
         </AtlasCard>
+      ) : null}
+
+      {tab === 'revenue' ? (
+        <Client360RevenueSection clientHint={client?.legalName || client?.displayName || clientId} />
+      ) : null}
+
+      {tab === 'migration' ? (
+        <Client360MigrationSection clientHint={client?.legalName || client?.displayName || clientId} />
       ) : null}
 
       {tab === 'deliverables' ? (
