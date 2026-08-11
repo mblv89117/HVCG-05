@@ -1,0 +1,24 @@
+{
+  "id": "20260811_001_hvcg_ba_v2_opportunity_commercial",
+  "title": "HVCG BA V2 Opportunity commercial fields (Dev-only additive)",
+  "changeRequest": "CR-HVCG-BA-V2-001",
+  "productionAuthorized": false,
+  "environments": ["Development"],
+  "destructive": false,
+  "lists": {
+    "HVCG_Opportunities": {
+      "addColumns": [
+        "CommercialClass",
+        "ServiceLineCode",
+        "OfferCode",
+        "OfferId",
+        "PricingVersionId",
+        "PricingBasis",
+        "QualificationFlag",
+        "ApprovedScope",
+        "ApprovedEconomics"
+      ]
+    }
+  },
+  "notes": "Additive only. Do not provision to Production under this CR."
+}

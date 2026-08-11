@@ -1,28 +1,26 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-19 (Master PM program audit)  
+**As of:** 2026-08-11 (BA V2 overlay on 2026-07-19 program actions)  
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
-## Now (program critical path)
+## Now (BA V2 + production protection)
 
-1. Keep Track 1 **frozen**.  
-2. Treat Elite **RC1** Release pack as sole product release SoR:  
-   `.worktrees/atlas-integration-release/PROJECT_ATLAS/Release/`  
-3. **Freeze** `cursor/atlas-integration-release` to stabilization / defect fixes only.  
-4. Assign **QA** to rebase onto RC1 and issue written Local UAT GO/NO-GO.  
-5. Assign **Documentation** to point status readers at RC1 + [CURRENT_STATE.md](CURRENT_STATE.md); stop treating root Maker OA `PROJECT_STATUS.md` as live program status.  
-6. Stop `track10` feature divergence from recovery/RC1 line.  
-7. Hold **QBO merge** until written QA ACK; tip remains `c892215` on `cursor/quickbooks-integration`.
+1. Keep Track 1 **frozen**; keep BL-C1 client emails **Off**.  
+2. Treat Elite Production SoR as **Absolute GO** / `atlas-v1.0.1-production`.  
+3. Owner: review/accept [CR-HVCG-BA-V2-001](ChangeRequests/CR-HVCG-BA-V2-001.md).  
+4. Use [requirements ledger](BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md) as the backlog SoR — nothing material may be IGNORED.  
+5. Continue BA-A/B Sprint 2–3 on `cursor/hvcg-business-architecture-v2` (Dev only).  
+6. Do **not** activate pricing V2 / paid-diagnostic CURRENT policy without resolving BL-P1 SKU-FRA FREE conflict.  
+7. Do **not** reprice ACCG or other legacy clients from V2 ranges.  
 
 ## Owner decisions
 
-1. Walk RC1 Local UAT at http://127.0.0.1:5180/ (nav, pending financials, Accounting BLOCKED).  
-2. Provide Plaid Sandbox + encryption secrets via `.secrets` / Key Vault — **never paste into chat**.  
-3. Provide / register Entra SPA client ID.  
-4. Accept or reject RC1 shell for continued stabilization.  
-5. QBO: merge-after-QA vs defer past RC1.  
-6. Confirm Track 1 freeze stands.  
-7. BL-C1 / DNS / pilot / canvas — remain closed unless explicitly opened.
+1. Accept or amend CR-HVCG-BA-V2-001 scope.  
+2. Reconcile **paid diagnostic front door** vs **BL-P1 SKU-FRA FREE**.  
+3. Decide whether `HVCG-PRICE-2026-08-11-v2` becomes CURRENT for new clients.  
+4. Confirm Track 1 freeze + BL-C1 still stand.  
+5. High Value Founder public launch remains owner-gated.  
+6. Any per-client migration reprice requires written agreement path.
 
 ## Next engineering candidates (gated)
 

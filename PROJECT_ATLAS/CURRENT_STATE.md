@@ -1,17 +1,50 @@
 # CURRENT_STATE
 
-**As of:** 2026-07-19 (Master PM program audit)  
+**As of:** 2026-08-11 (HVCG Business Architecture V2 audit + CR open)  
 **Status SoR:** this file  
-**Release SoR (Elite product):** `.worktrees/atlas-integration-release/PROJECT_ATLAS/Release/`  
-**Executive report:** [Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md](Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md)
+**Prior SoR stamp:** 2026-07-19 Master PM program audit (preserved below where still accurate)  
+**Executive report (Jul 19):** [Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md](Reports/EXECUTIVE_PROGRAM_STATUS_2026-07-19.md)  
+**BA V2 impact:** [Reports/HVCG_V2_IMPACT_ANALYSIS_2026-08-11.md](Reports/HVCG_V2_IMPACT_ANALYSIS_2026-08-11.md) · [CR-HVCG-BA-V2-001](ChangeRequests/CR-HVCG-BA-V2-001.md)
 
-## Snapshot
+## DISCREPANCY — Production Elite (resolved by later evidence)
+
+The 2026-07-19 snapshot below reported Elite Production **NO-GO** / readiness **44%** with RC1 tip `95ec0fa`. **Later repository evidence supersedes that Production verdict:**
+
+| Fact | Evidence |
+|------|----------|
+| Absolute GO **GO** (2026-07-22) | `.worktrees/atlas-integration-release/deployment/reports/ATLAS_V1_PRODUCTION_ABSOLUTE_GO.md` |
+| Tag `atlas-v1.0.1-production` → `dceea798` | git tag; Absolute GO release record |
+| Merged to `origin/main` | PR #2 @ `a3a945b` |
+| Production SWA / Hub live | Absolute GO URLs; post-tag usable-operating-layer redeploys |
+| Integration tip today | `.worktrees/atlas-integration-release` on `fix/atlas-production-hardening` @ `4b71b76` |
+| Written QA GO | Still **NOT ISSUED** as a formal QA artifact (Absolute GO ≠ Written QA GO) |
+| Track 1 freeze + BL-C1 emails Off | **Still in force** |
+
+**Elite Production SoR:** Absolute GO pack + tags — **not** the Jul-19 RC1 NO-GO narrative.  
+**BA V2 workstream:** `cursor/hvcg-business-architecture-v2` @ this branch — Development/docs only; **no Production mutation authorized**.
+
+## Snapshot (2026-08-11 overlay)
 
 | Area | Status | Evidence |
 |------|--------|----------|
-| Elite Integration **RC1** | **DESIGNATED** — CONDITIONAL GO local Owner UAT · **NO-GO** Production | `cursor/atlas-integration-release` @ `95ec0fa` (docs tip); product anchor `9a26e78` |
+| Elite Production | **LIVE** — Absolute GO `atlas-v1.0.1-production` | Absolute GO matrix; tag `dceea798` |
+| Post-tag SWA line | Advanced on usable-operating-layer | tip `2d7155d`; deploy stamp `6b4912a` |
+| Written QA GO | **NOT ISSUED** | RC1 RELEASE_STATUS + post-GO audit |
+| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | deployment-engineer Track-1 package |
+| HVCG BA V2 | **CR OPEN — Sprint 2 commercial wiring + requirements ledger** | CR-HVCG-BA-V2-001 · [traceability](BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md) · [coverage](Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
+| Rate card current (new clients) | `HVCG-PRICE-2026-08-11-v2` (**CURRENT**) | ADR-BA-V2-002 |
+| Rate card historical | `HVCG-PRICE-2026-07-15-v1` (**HISTORICAL**, BL-P1 preserved) | PRICING_REGISTER / ADR |
+| Free Fit Assessment | SKU-FRA FREE — qualification/routing only | `config/business/free-fit-assessment.json` |
+| ACCG contracted | **LOCKED $4,539/mo** | BL-ACCG-PRICE |
+| Main / BA branch cut | `cursor/hvcg-business-architecture-v2` from `fb38e42` | this worktree |
+
+## Snapshot (historical 2026-07-19 — do not use for Production Elite)
+
+| Area | Status | Evidence |
+|------|--------|----------|
+| Elite Integration **RC1** | Was DESIGNATED — CONDITIONAL GO local Owner UAT · then-reported **NO-GO** Production | `cursor/atlas-integration-release` @ `95ec0fa` (docs tip); product anchor `9a26e78` |
 | Local Owner UAT URL | **READY** | http://127.0.0.1:5180/ |
-| Production readiness | **44%** · **NO-GO** | RELEASE_CANDIDATE_1.md |
+| Production readiness (Jul 19 claim) | **44%** · **NO-GO** — **SUPERSEDED by Absolute GO** | RELEASE_CANDIDATE_1.md |
 | Written QA GO | **NOT ISSUED** | RELEASE_STATUS.md |
 | Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` |
 | Plaid / Banking | **Integrated in RC1** (code); live Sandbox E2E **BLOCKED** on owner secrets | Tips `6d78514` → path-carried into RC1 |

@@ -1,0 +1,98 @@
+{
+  "title": "HVCG_PricingVersions",
+  "description": "Versioned HVCG rate cards and price-state metadata. Dev-only until CR provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Human label"
+    },
+    {
+      "internalName": "VersionId",
+      "displayName": "VersionId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "e.g. HVCG-PRICE-2026-07-15-v1"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "PROPOSED",
+        "CURRENT_RATE_CARD",
+        "SUPERSEDED",
+        "RETIRED"
+      ],
+      "description": ""
+    },
+    {
+      "internalName": "EffectiveDate",
+      "displayName": "EffectiveDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ExpirationDate",
+      "displayName": "ExpirationDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerApproved",
+      "displayName": "OwnerApproved",
+      "type": "Boolean",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DecisionId",
+      "displayName": "DecisionId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "e.g. BL-P1"
+    },
+    {
+      "internalName": "ConfigPath",
+      "displayName": "ConfigPath",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Repository config path"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AppliesToNewClientsOnly",
+      "displayName": "AppliesToNewClientsOnly",
+      "type": "Boolean",
+      "required": true,
+      "indexed": false,
+      "description": "Never auto-apply to legacy contracted clients"
+    }
+  ]
+}

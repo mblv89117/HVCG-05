@@ -1,8 +1,29 @@
 # DECISIONS
 
-**As of:** 2026-07-16 04:10 UTC  
+**As of:** 2026-08-11 (Owner Decisions ADR-BA-V2-002)  
 **Detail SoR:** `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md`  
-**Also:** Track-1 gates in `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/README.md`
+**Also:** Track-1 gates in `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/README.md`  
+**BA V2:** [ChangeRequests/CR-HVCG-BA-V2-001.md](ChangeRequests/CR-HVCG-BA-V2-001.md) · [ADR-BA-V2-002](Decisions/ADR-BA-V2-002-owner-decisions-2026-08-11.md)
+
+## Closed this cycle (Owner 2026-08-11)
+
+| ID | Outcome | Source |
+|----|---------|--------|
+| **BA-V2-CR-ACCEPT** | CR-HVCG-BA-V2-001 → **OWNER_ACCEPTED / DEVELOPMENT_AUTHORIZED** | Owner directive |
+| **BA-V2-RATE-ACTIVATE** | `HVCG-PRICE-2026-08-11-v2` = **CURRENT for new HVCG clients**; BL-P1/v1 preserved as **HISTORICAL** | Owner directive |
+| **BA-V2-PAID-DIAG** | SKU-FRA FREE retained as **Free Fit & Readiness Assessment** (qualification only); substantive work → paid diagnostics | Owner directive |
+| **BA-V2-LEGACY** | No automatic legacy reprice; ACCG $4,539/mo remains protected | Owner directive |
+| **BA-V2-BL-C1** | BL-C1 confirmed — no autonomous external contact | Owner directive |
+| **BA-V2-TRACK1** | Track 1 confirmed **FROZEN — LIVE—INTERNAL** | Owner directive |
+| **BA-V2-HVF** | High Value Founder remains **DEFERRED_OWNER_GATE** (prepare only) | Owner directive |
+| **BA-V2-HR** | HR is supporting capability / premium special project — not 8th public service line | Owner directive |
+
+## Proposed / pending
+
+| ID | Ask | Conflict with | Recommended reconciliation |
+|----|-----|---------------|----------------------------|
+| Per-client reprice | Migrate any legacy retainer to V2 ranges | `BL-ACCG-PRICE` | Contracted vs Recommended display only; reprice requires agreement |
+| HVF public launch | Publish High Value Founder | BA-V2-HVF | Separate owner authorization |
 
 ## Closed (repository-backed)
 

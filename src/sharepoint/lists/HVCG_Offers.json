@@ -1,0 +1,226 @@
+{
+  "title": "HVCG_Offers",
+  "description": "Productized HVCG offers (Business Architecture V2). Dev-only until CR provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Offer name"
+    },
+    {
+      "internalName": "OfferCode",
+      "displayName": "OfferCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ServiceLineId",
+      "displayName": "ServiceLineId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "lookupList": "HVCG_ServiceLines",
+      "description": ""
+    },
+    {
+      "internalName": "ServiceLineCode",
+      "displayName": "ServiceLineCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Category",
+      "displayName": "Category",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "STRUCTURED_OFFER",
+        "RECURRING_RETAINER",
+        "PREMIUM_SPECIAL_PROJECT"
+      ],
+      "description": ""
+    },
+    {
+      "internalName": "PublicFacing",
+      "displayName": "PublicFacing",
+      "type": "Boolean",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Restricted",
+      "displayName": "Restricted",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Active",
+      "displayName": "Active",
+      "type": "Boolean",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IdealClient",
+      "displayName": "IdealClient",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PainPoint",
+      "displayName": "PainPoint",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Deliverables",
+      "displayName": "Deliverables",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SetupFeeMin",
+      "displayName": "SetupFeeMin",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SetupFeeTarget",
+      "displayName": "SetupFeeTarget",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SetupFeePremium",
+      "displayName": "SetupFeePremium",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MonthlyRetainerMin",
+      "displayName": "MonthlyRetainerMin",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MonthlyRetainerTarget",
+      "displayName": "MonthlyRetainerTarget",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MonthlyRetainerPremium",
+      "displayName": "MonthlyRetainerPremium",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SuccessFeeStructure",
+      "displayName": "SuccessFeeStructure",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MinimumTermMonths",
+      "displayName": "MinimumTermMonths",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ComplianceDisclaimer",
+      "displayName": "ComplianceDisclaimer",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OfferVersion",
+      "displayName": "OfferVersion",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EffectiveDate",
+      "displayName": "EffectiveDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExpirationDate",
+      "displayName": "ExpirationDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerApproved",
+      "displayName": "OwnerApproved",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PricingVersionId",
+      "displayName": "PricingVersionId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Links to rate card version id"
+    }
+  ]
+}

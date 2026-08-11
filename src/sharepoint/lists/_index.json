@@ -536,6 +536,42 @@
       "columnCount": 12,
       "description": "Marketing \u2014 channel registry",
       "domain": "Marketing"
+    },
+    {
+      "name": "HVCG_ServiceLines",
+      "path": "src/sharepoint/lists/HVCG_ServiceLines.json",
+      "columnCount": 7,
+      "description": "Business Architecture V2 \u2014 service line taxonomy (Dev-only until CR provisioned)",
+      "domain": "BusinessCatalog",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_Offers",
+      "path": "src/sharepoint/lists/HVCG_Offers.json",
+      "columnCount": 26,
+      "description": "Business Architecture V2 \u2014 productized offers (Dev-only until CR provisioned)",
+      "domain": "BusinessCatalog",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_PricingVersions",
+      "path": "src/sharepoint/lists/HVCG_PricingVersions.json",
+      "columnCount": 10,
+      "description": "Business Architecture V2 \u2014 versioned rate cards (Dev-only until CR provisioned)",
+      "domain": "BusinessCatalog",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_ClientMigrations",
+      "path": "src/sharepoint/lists/HVCG_ClientMigrations.json",
+      "columnCount": 19,
+      "description": "Business Architecture V2 \u2014 client migration queue (Dev-only until CR provisioned)",
+      "domain": "BusinessCatalog",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ],
   "productVersion": "1.1.0"

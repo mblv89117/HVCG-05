@@ -1,0 +1,68 @@
+{
+  "title": "HVCG_ServiceLines",
+  "description": "HVCG service line taxonomy (Business Architecture V2). Dev-only until CR provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Service line name"
+    },
+    {
+      "internalName": "ServiceLineCode",
+      "displayName": "ServiceLineCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable code e.g. SL-CAPITAL"
+    },
+    {
+      "internalName": "PublicFacing",
+      "displayName": "PublicFacing",
+      "type": "Boolean",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Restricted",
+      "displayName": "Restricted",
+      "type": "Boolean",
+      "required": true,
+      "indexed": true,
+      "description": "Need-to-know / owner support"
+    },
+    {
+      "internalName": "Active",
+      "displayName": "Active",
+      "type": "Boolean",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CatalogVersion",
+      "displayName": "CatalogVersion",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

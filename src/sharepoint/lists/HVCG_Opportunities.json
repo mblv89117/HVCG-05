@@ -336,6 +336,119 @@
       "required": false,
       "indexed": true,
       "description": "Idempotent automation key (e.g. lead|email or opp|id)"
+    },
+    {
+      "internalName": "CommercialClass",
+      "displayName": "CommercialClass",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "BA V2 commercial bucket. Required when Stage is Assessment+. Lead/Discovery may remain blank.",
+      "choices": [
+        "STRUCTURED_OFFER",
+        "RECURRING_RETAINER",
+        "PREMIUM_SPECIAL_PROJECT"
+      ],
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "ServiceLineCode",
+      "displayName": "ServiceLineCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "BA V2 service line code e.g. SL-CAPITAL. Required at Proposal+.",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "OfferCode",
+      "displayName": "OfferCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "BA V2 offer code e.g. OFF-CAP-DIAG. Required at Proposal+.",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "OfferId",
+      "displayName": "OfferId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "lookupList": "HVCG_Offers",
+      "description": "Lookup to HVCG_Offers when provisioned in Dev",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "PricingVersionId",
+      "displayName": "PricingVersionId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Rate card version id used for recommendation",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "PricingBasis",
+      "displayName": "PricingBasis",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Primary economics basis for proposal",
+      "choices": [
+        "DIAGNOSTIC",
+        "SETUP",
+        "MONTHLY_RETAINER",
+        "SUCCESS_FEE",
+        "PREMIUM_HOURLY",
+        "REPLENISHING_RETAINER",
+        "ENTERPRISE_NEGOTIATED",
+        "HYBRID"
+      ],
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "QualificationFlag",
+      "displayName": "QualificationFlag",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Human-reviewed sales qualification outcome",
+      "choices": [
+        "PASS",
+        "DECLINE_OR_PREMIUM_PRICE_REVIEW",
+        "PENDING"
+      ],
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "ApprovedScope",
+      "displayName": "ApprovedScope",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Required for Won/Engagement under BA V2 progressive validation",
+      "default": false,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "internalName": "ApprovedEconomics",
+      "displayName": "ApprovedEconomics",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "Required for Won/Engagement under BA V2 progressive validation",
+      "default": false,
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ]
 }

@@ -1,0 +1,197 @@
+{
+  "title": "HVCG_ClientMigrations",
+  "description": "Client migration / reprice queue. Never auto-executes pricing changes. Dev-only until CR provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Client display name"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "lookupList": "HVCG_Clients",
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Classification",
+      "displayName": "Classification",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "HVS_LEGACY_CLIENT",
+        "HVS_TRANSITIONING_CLIENT",
+        "HVCG_NEW_CLIENT",
+        "HVCG_PROSPECT",
+        "UNKNOWN",
+        "REQUIRES_VERIFICATION"
+      ],
+      "description": ""
+    },
+    {
+      "internalName": "ContractingEntity",
+      "displayName": "ContractingEntity",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CurrentServiceLine",
+      "displayName": "CurrentServiceLine",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RecommendedServiceLine",
+      "displayName": "RecommendedServiceLine",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ContractedCurrentPrice",
+      "displayName": "ContractedCurrentPrice",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "CONTRACTED_CURRENT only"
+    },
+    {
+      "internalName": "RecommendedFuturePrice",
+      "displayName": "RecommendedFuturePrice",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Never treat as contracted"
+    },
+    {
+      "internalName": "ConfirmedRevenue",
+      "displayName": "ConfirmedRevenue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ProposedRevenue",
+      "displayName": "ProposedRevenue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MigrationAction",
+      "displayName": "MigrationAction",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Retain",
+        "Reprice",
+        "Upsell",
+        "Re-engage",
+        "Archive",
+        "Transition",
+        "Decline"
+      ],
+      "description": ""
+    },
+    {
+      "internalName": "MigrationStatus",
+      "displayName": "MigrationStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "Not Proposed",
+        "Draft",
+        "Owner Approved",
+        "Client Proposed",
+        "Negotiating",
+        "Executed"
+      ],
+      "description": ""
+    },
+    {
+      "internalName": "OwnerApproval",
+      "displayName": "OwnerApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientApproval",
+      "displayName": "ClientApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AgreementRequired",
+      "displayName": "AgreementRequired",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FinalEffectiveDate",
+      "displayName": "FinalEffectiveDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VerificationStatus",
+      "displayName": "VerificationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "choices": [
+        "Verified",
+        "UNVERIFIED",
+        "UNKNOWN",
+        "REQUIRES_VERIFICATION",
+        "MISSING"
+      ],
+      "description": ""
+    }
+  ]
+}

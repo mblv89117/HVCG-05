@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-MKT-005", "HVCG-V2-POS-003"],
+  "status": "PREPARED_NOT_PUBLISHED",
+  "publishGate": "BL-PUBLISH-1",
+  "headline": "Capital. Contracts. Risk Reduction. AI Operating Systems for Founder-Led Companies.",
+  "positioning": "High Value Capital Group helps founder-led companies become capital-ready, contract-ready, risk-aware, and AI-enabled.",
+  "primaryCta": "Book a paid diagnostic",
+  "ctaOfferCode": "OFF-CAP-DIAG",
+  "doNot": [
+    "Offer undefined free complex consulting as primary CTA",
+    "Market Executive Owner Support as a public core service line",
+    "Publish conflicting rate cards"
+  ],
+  "sourceConfig": [
+    "config/business/positioning.json",
+    "config/business/offer-catalog.json",
+    "config/business/pricing-rate-card-v2.json"
+  ]
+}
