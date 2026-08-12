@@ -1,10 +1,12 @@
 /**
  * Auth + tenant isolation middleware.
- * Production (INTEGRATION_REQUIRE_AUTH=true): require a validated Entra
- * access token (Authorization: Bearer) issued for the Integration Hub API.
- * Client-supplied x-atlas-* headers may carry org/client scope AFTER identity
- * is proven — they are never authentication by themselves.
- * Dev (requireAuth=false): optional headers / anonymous admin principal for local work.
+ *
+ * When requireAuth is true (the default): Entra Hub API Bearer token is the
+ * trust anchor. Roles and client scope come only from verified JWT claims.
+ * Client-controlled x-atlas-* headers have zero authorization effect.
+ *
+ * When requireAuth is false: only explicit loopback insecure-development mode
+ * (validated in config) may use a local principal. That mode is never the default.
  */
 
 import type { IncomingMessage } from 'node:http';
@@ -28,6 +30,13 @@ function unauthorized(message: string, code = 'unauthorized'): never {
   throw err;
 }
 
+function forbidden(message: string, code = 'forbidden'): never {
+  const err = new Error(message) as AuthFailure;
+  err.status = 403;
+  err.code = code;
+  throw err;
+}
+
 const jwksByUrl = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 function jwksForUrl(url: string) {
@@ -41,9 +50,7 @@ function jwksForUrl(url: string) {
 
 function jwksCandidates(tenantId: string) {
   return [
-    // Entra ID token / v2 access tokens
     `https://login.microsoftonline.com/${tenantId}/discovery/v2.0/keys`,
-    // Azure AD v1 access tokens (e.g. Graph from some clients)
     `https://login.microsoftonline.com/${tenantId}/discovery/keys`,
   ].map(jwksForUrl);
 }
@@ -55,45 +62,84 @@ function bearerToken(headers: Headers): string | null {
   return m?.[1] || null;
 }
 
-function scopeFromHeaders(headers: Headers): {
-  organizationId: string;
-  allowedClientIds: string[];
-  roles: string[];
-  emailHint?: string;
-} {
-  const clients = headers.get('x-atlas-client-ids');
-  return {
-    organizationId: headers.get('x-atlas-organization-id') || 'org-hvcg',
-    allowedClientIds: clients
-      ? clients.split(',').map((s) => s.trim()).filter(Boolean)
-      : ['*'],
-    roles: (headers.get('x-atlas-roles') || 'Staff').split(',').map((s) => s.trim()).filter(Boolean),
-    emailHint: headers.get('x-atlas-user-email') || undefined,
-  };
+/**
+ * Canonical Hub roles accepted from verified token claims.
+ * Administrator is distinct from HVCG Owner.
+ * Unknown values are ignored (not elevated).
+ */
+export const HUB_ROLE_ALIASES: Record<string, string> = {
+  administrator: 'Administrator',
+  admin: 'Administrator',
+  'atlas administrator': 'Administrator',
+  atlas_administrator: 'Administrator',
+  'hvcg owner': 'HVCG Owner',
+  owner: 'HVCG Owner',
+  hvcg_owner: 'HVCG Owner',
+  'hvcg team member': 'HVCG Team Member',
+  'team member': 'HVCG Team Member',
+  hvcg_team_member: 'HVCG Team Member',
+  'client executive': 'Client Executive',
+  client_executive: 'Client Executive',
+  'client team member': 'Client Team Member',
+  client_team_member: 'Client Team Member',
+  'read-only advisor': 'Read-Only Advisor',
+  read_only_advisor: 'Read-Only Advisor',
+  advisor: 'Read-Only Advisor',
+  staff: 'Staff',
+};
+
+export function normalizeHubRole(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const key = raw.trim().toLowerCase();
+  if (!key) return null;
+  if (HUB_ROLE_ALIASES[key]) return HUB_ROLE_ALIASES[key];
+  const known = new Set(Object.values(HUB_ROLE_ALIASES));
+  const exact = [...known].find((r) => r.toLowerCase() === key);
+  return exact || null;
+}
+
+export function isHubAdministrator(principal: AtlasPrincipal): boolean {
+  return principal.roles.includes('Administrator');
+}
+
+export function assertAdministrator(principal: AtlasPrincipal): void {
+  if (!isHubAdministrator(principal)) {
+    forbidden('Administrator role required', 'forbidden');
+  }
 }
 
 /**
- * Header-only principal (dev / tests). Never used when requireAuth is true.
+ * Header-only principal for explicit insecure development mode.
+ * Never used when requireAuth is true.
  */
 export function parsePrincipal(headers: Headers): AtlasPrincipal | null {
   const userId = headers.get('x-atlas-user-id');
   const clients = headers.get('x-atlas-client-ids');
   if (!userId || !clients) return null;
+  const roles = (headers.get('x-atlas-roles') || '')
+    .split(',')
+    .map((s) => normalizeHubRole(s))
+    .filter((r): r is string => Boolean(r));
   return {
     userId,
     email: headers.get('x-atlas-user-email') || undefined,
     organizationId: headers.get('x-atlas-organization-id') || 'org-hvcg',
     allowedClientIds: clients.split(',').map((s) => s.trim()).filter(Boolean),
-    roles: (headers.get('x-atlas-roles') || 'ClientContact').split(','),
+    roles,
   };
 }
+
+export const INSECURE_DEV_PRINCIPAL: AtlasPrincipal = {
+  userId: 'dev-user',
+  organizationId: 'org-hvcg',
+  allowedClientIds: ['*'],
+  roles: ['Administrator'],
+};
 
 export function assertClientAccess(principal: AtlasPrincipal, clientId: string): void {
   if (principal.allowedClientIds.includes('*')) return;
   if (!principal.allowedClientIds.includes(clientId)) {
-    const err = new Error('Access denied: client not in principal scope') as AuthFailure;
-    err.status = 403;
-    throw err;
+    forbidden('Access denied: client not in principal scope', 'forbidden');
   }
 }
 
@@ -114,6 +160,62 @@ function claimString(payload: JWTPayload, ...keys: string[]): string | undefined
   return undefined;
 }
 
+function collectClaimValues(payload: JWTPayload, ...keys: string[]): unknown[] {
+  const out: unknown[] = [];
+  for (const key of keys) {
+    const v = payload[key];
+    if (v === undefined || v === null) continue;
+    if (Array.isArray(v)) out.push(...v);
+    else out.push(v);
+  }
+  return out;
+}
+
+/** Roles from verified token claims only. Unknown values ignored. Never defaults to Admin/Owner. */
+export function rolesFromVerifiedPayload(payload: JWTPayload): string[] {
+  const raw = collectClaimValues(payload, 'roles', 'extension_AtlasRole', 'atlas_role');
+  const roles = new Set<string>();
+  for (const item of raw) {
+    const n = normalizeHubRole(typeof item === 'string' ? item : String(item));
+    if (n) roles.add(n);
+  }
+  return [...roles];
+}
+
+/**
+ * Client IDs from verified token claims only.
+ * Wildcard '*' is never accepted. Missing claims → empty scope (fail closed).
+ */
+export function clientIdsFromVerifiedPayload(payload: JWTPayload): string[] {
+  const raw = collectClaimValues(
+    payload,
+    'extension_AtlasClientIds',
+    'atlas_client_ids',
+    'client_ids',
+  );
+  const ids = new Set<string>();
+  for (const item of raw) {
+    if (typeof item !== 'string') continue;
+    for (const part of item.split(',')) {
+      const id = part.trim();
+      if (id && id !== '*') ids.add(id);
+    }
+  }
+  return [...ids];
+}
+
+export function principalFromVerifiedPayload(payload: JWTPayload): AtlasPrincipal {
+  const userId = claimString(payload, 'oid', 'sub');
+  if (!userId) unauthorized('Token missing subject', 'missing_subject');
+  return {
+    userId,
+    email: claimString(payload, 'preferred_username', 'email', 'upn', 'unique_name'),
+    organizationId: 'org-hvcg',
+    allowedClientIds: clientIdsFromVerifiedPayload(payload),
+    roles: rolesFromVerifiedPayload(payload),
+  };
+}
+
 async function validateEntraJwt(token: string, cfg: AppConfig): Promise<JWTPayload> {
   const tenantId = cfg.microsoft.tenantId;
   if (!tenantId || tenantId === 'common') {
@@ -124,9 +226,6 @@ async function validateEntraJwt(token: string, cfg: AppConfig): Promise<JWTPaylo
     unauthorized('No accepted JWT audiences configured', 'audience_unconfigured');
   }
 
-  // Hub requires an access token for the Integration Hub API audience.
-  // Reject Microsoft Graph tokens (JWT header `nonce`) and SPA ID tokens
-  // (wrong audience — not listed in acceptedAudiences).
   try {
     const header = decodeProtectedHeader(token);
     if (header.nonce) {
@@ -182,32 +281,15 @@ function assertRequiredScope(payload: JWTPayload, cfg: AppConfig): void {
   const scp = claimString(payload, 'scp') || '';
   const scopes = scp.split(/\s+/).map((s) => s.trim()).filter(Boolean);
   if (scopes.includes(required)) return;
-
-  // Some tokens encode the full api://…/scope value in scp
   if (scopes.some((s) => s === required || s.endsWith(`/${required}`))) return;
 
   unauthorized(`Missing required API scope (${required})`, 'missing_scope');
 }
 
-function principalFromJwt(payload: JWTPayload, headers: Headers): AtlasPrincipal {
-  const userId = claimString(payload, 'oid', 'sub');
-  if (!userId) unauthorized('Token missing subject', 'missing_subject');
-  const scope = scopeFromHeaders(headers);
-  const email =
-    claimString(payload, 'preferred_username', 'email', 'upn', 'unique_name') || scope.emailHint;
-  return {
-    userId,
-    email,
-    organizationId: scope.organizationId,
-    allowedClientIds: scope.allowedClientIds,
-    roles: scope.roles,
-  };
-}
-
 /**
  * Resolve the caller principal.
- * - requireAuth=false: header principal or local admin bypass
- * - requireAuth=true: Entra Hub API access token required; x-atlas-* used only for scope
+ * - requireAuth=true: verified Entra Hub API access token; headers never authorize
+ * - requireAuth=false: explicit insecure-dev loopback principal only
  */
 export async function requirePrincipal(
   req: IncomingMessage,
@@ -216,14 +298,10 @@ export async function requirePrincipal(
   const headers = headersFromIncoming(req.headers);
 
   if (!cfg.requireAuth) {
-    return (
-      parsePrincipal(headers) || {
-        userId: 'dev-user',
-        organizationId: 'org-hvcg',
-        allowedClientIds: ['*'],
-        roles: ['Admin'],
-      }
-    );
+    if (!cfg.insecureDevAuth) {
+      unauthorized('Microsoft sign-in required (Bearer token missing)', 'missing_bearer');
+    }
+    return parsePrincipal(headers) || { ...INSECURE_DEV_PRINCIPAL };
   }
 
   const token = bearerToken(headers);
@@ -231,6 +309,8 @@ export async function requirePrincipal(
     unauthorized('Microsoft sign-in required (Bearer token missing)', 'missing_bearer');
   }
 
-  const payload = await validateEntraJwt(token, cfg);
-  return principalFromJwt(payload, headers);
+  const payload = cfg.verifyAccessToken
+    ? ((await cfg.verifyAccessToken(token)) as JWTPayload)
+    : await validateEntraJwt(token, cfg);
+  return principalFromVerifiedPayload(payload);
 }

@@ -41,15 +41,15 @@ export function startServer() {
     });
   });
 
-  // Bind all local interfaces so both localhost and 127.0.0.1 work
-  // (Elite OS often loads on 127.0.0.1; Entra OAuth redirects use localhost).
-  server.listen(cfg.port, '0.0.0.0', () => {
+  server.listen(cfg.port, cfg.host, () => {
     console.info(
       JSON.stringify({
         level: 'info',
         msg: 'atlas-integration-api listening',
         port: cfg.port,
-        host: '0.0.0.0',
+        host: cfg.host,
+        authRequired: cfg.requireAuth,
+        insecureDevAuth: cfg.insecureDevAuth,
         dataDir: cfg.dataDir,
         microsoftConfigured: Boolean(cfg.microsoft.clientId && cfg.microsoft.clientSecret),
       }),

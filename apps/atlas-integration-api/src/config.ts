@@ -32,15 +32,97 @@ function resolveEncryptionKey(): string {
   );
 }
 
+export class UnsafeHubConfigurationError extends Error {
+  readonly code = 'unsafe_hub_configuration';
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnsafeHubConfigurationError';
+  }
+}
+
+export type EnvMap = Record<string, string | undefined>;
+
+function parseEnvFlag(raw: string | undefined): boolean | undefined {
+  if (raw === undefined || raw === '') return undefined;
+  const v = raw.trim().toLowerCase();
+  if (v === 'true' || v === '1' || v === 'yes' || v === 'on') return true;
+  if (v === 'false' || v === '0' || v === 'no' || v === 'off') return false;
+  return undefined;
+}
+
+/** Loopback bind hosts that may host explicit insecure development auth. */
+export function isLoopbackBindHost(host: string): boolean {
+  const h = host.trim().toLowerCase().replace(/^\[|\]$/g, '');
+  return h === '127.0.0.1' || h === '::1' || h === 'localhost';
+}
+
+export interface HubRuntimeSecurity {
+  host: string;
+  requireAuth: boolean;
+  insecureDevAuth: boolean;
+  isProduction: boolean;
+}
+
+/**
+ * Fail-closed Hub bind + authentication policy.
+ * Auth is required by default. Production cannot disable auth.
+ * Insecure development auth requires an explicit opt-in and a loopback bind.
+ */
+export function resolveHubRuntimeSecurity(env: EnvMap = process.env): HubRuntimeSecurity {
+  const isProduction = (env.NODE_ENV || 'development') === 'production';
+  const host = (env.INTEGRATION_HOST || '127.0.0.1').trim() || '127.0.0.1';
+  const loopback = isLoopbackBindHost(host);
+  const allowInsecureDev = parseEnvFlag(env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH) === true;
+  const requireAuthExplicit = parseEnvFlag(env.INTEGRATION_REQUIRE_AUTH);
+
+  if (isProduction) {
+    if (requireAuthExplicit === false) {
+      throw new UnsafeHubConfigurationError(
+        'Unsafe configuration: INTEGRATION_REQUIRE_AUTH=false is not allowed when NODE_ENV=production',
+      );
+    }
+    if (allowInsecureDev) {
+      throw new UnsafeHubConfigurationError(
+        'Unsafe configuration: INTEGRATION_ALLOW_INSECURE_DEV_AUTH is not allowed when NODE_ENV=production',
+      );
+    }
+    return { host, requireAuth: true, insecureDevAuth: false, isProduction };
+  }
+
+  const wantsInsecure = allowInsecureDev || requireAuthExplicit === false;
+  if (wantsInsecure) {
+    if (!allowInsecureDev) {
+      throw new UnsafeHubConfigurationError(
+        'Unsafe configuration: INTEGRATION_REQUIRE_AUTH=false requires INTEGRATION_ALLOW_INSECURE_DEV_AUTH=true',
+      );
+    }
+    if (!loopback) {
+      throw new UnsafeHubConfigurationError(
+        'Unsafe configuration: insecure development auth is only allowed on a loopback bind (INTEGRATION_HOST=127.0.0.1, ::1, or localhost)',
+      );
+    }
+    return { host, requireAuth: false, insecureDevAuth: true, isProduction };
+  }
+
+  return { host, requireAuth: true, insecureDevAuth: false, isProduction };
+}
+
 export function loadConfig() {
-  const isLocal = (process.env.NODE_ENV || 'development') !== 'production';
+  const security = resolveHubRuntimeSecurity();
   return {
     port: Number(process.env.INTEGRATION_API_PORT || 8790),
+    host: security.host,
     tokenEncryptionKeyB64: resolveEncryptionKey(),
     dataDir: process.env.INTEGRATION_DATA_DIR || defaultDataDir(),
-    requireAuth: process.env.INTEGRATION_REQUIRE_AUTH
-      ? process.env.INTEGRATION_REQUIRE_AUTH !== 'false'
-      : !isLocal,
+    requireAuth: security.requireAuth,
+    insecureDevAuth: security.insecureDevAuth,
+    /**
+     * Test-only JWT verifier. Production loadConfig never sets this.
+     * Authenticated identity still comes from the verified payload, never from request headers.
+     */
+    verifyAccessToken: undefined as
+      | ((token: string) => Promise<Record<string, unknown>>)
+      | undefined,
     allowedOrigins: (
       process.env.INTEGRATION_ALLOWED_ORIGINS ||
       [

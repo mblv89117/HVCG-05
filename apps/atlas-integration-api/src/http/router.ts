@@ -13,7 +13,7 @@ import type { AppRegistry } from '../connectors/registry.ts';
 import { completeOAuthForProvider, getProviderAdapter } from '../connectors/registry.ts';
 import { runDiscoveryForConnection } from '../discovery/discover.ts';
 import { runClient360Ingestion, buildExecutiveDashboard } from '../client360/ingest.ts';
-import { requirePrincipal } from '../middleware/auth.ts';
+import { assertAdministrator, requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
@@ -181,6 +181,8 @@ export async function handleRequest(
             reason: localAi.reason,
           },
           port: cfg.port,
+          authRequired: cfg.requireAuth,
+          insecureDevAuth: cfg.insecureDevAuth,
         },
         origin,
       );
@@ -326,7 +328,8 @@ export async function handleRequest(
 
     // GET /api/admin/dashboard
     if (method === 'GET' && path === '/api/admin/dashboard') {
-      await requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
+      assertAdministrator(principal);
       send(res, 200, { summary: repo.dashboardSummary(), ...repo.dashboardSummary() }, origin);
       return;
     }

@@ -14,6 +14,8 @@ import { loadConfig } from '../src/config.ts';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+process.env.INTEGRATION_HOST = '127.0.0.1';
+process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH = 'true';
 process.env.INTEGRATION_REQUIRE_AUTH = 'false';
 
 function mockRes() {
