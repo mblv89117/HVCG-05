@@ -44,3 +44,11 @@
 - `config/business/ai-governance-policy.json`
 - `tests/unit/business/test_ai_orchestrator_sprint11.py`
 - Elite: `AiOrchestrationWorkbench.tsx`
+
+## Sprint 12 maturity delta
+
+| Agent | Before (S11) | After (S12) |
+|-------|--------------|-------------|
+| AGT-INVOICE | SERVICE_RUNTIME | FULL_DEV_RUNTIME (PRODUCTION_GATED) |
+| AGT-REFERRAL | SERVICE_RUNTIME | FULL_DEV_RUNTIME (PRODUCTION_GATED) |
+| AGT-SECOND-BRAIN | FULL_DEV_RUNTIME | unchanged (consumes revenue truth) |

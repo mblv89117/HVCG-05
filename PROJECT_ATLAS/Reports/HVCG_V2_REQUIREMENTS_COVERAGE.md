@@ -1,70 +1,32 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-11 (Sprint 11 Development — AI Orchestration · mid-program)  
-**Source:** `config/business/hvcg-v2-requirements.json` (127 requirements)
+**As of:** 2026-08-11 (Sprint 12 Development — Revenue Truth)  
+**Source:** `config/business/hvcg-v2-requirements.json` (128 requirements)
 
-## Program totals (current)
+## Totals
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 11 |
-| `IN_PROGRESS` | 38 |
-| `PLANNED` | 18 |
+| `IN_PROGRESS` | 40 |
+| `PLANNED` | 17 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage %** | **54.3%** |
+| **Coverage %** | **53.9%** |
 
-Truth over percentage. AI depth increased as IN_PROGRESS — not falsely IMPLEMENTED.
+Previous (S11): **54.3%** (127 reqs). Delta: −0.4% from adding REV-008 (truth over %).
 
-## Sprint 10 committed baseline
+## Changed IDs (Sprint 12)
 
-Coverage **54.3%** after Growth OS (GROW-001/002 IN_PROGRESS).
+| ID | Change |
+|----|--------|
+| `HVCG-V2-REV-008` | **NEW** IN_PROGRESS — Revenue Event + reconciliation |
+| `HVCG-V2-PRC-007` / REV-00x / AI-014 / AI-015 | Evidence → revenue_truth; IN_PROGRESS where planned |
 
-## Sprint 11 deltas
+## Evidence
 
-| Change | Effect |
-|--------|--------|
-| AI-001…AI-018 evidence → orchestrator | Remain IN_PROGRESS |
-| AI-021 Second Brain PLANNED → IN_PROGRESS | +0 coverage (honest) |
-| AI-022 routing PLANNED → IN_PROGRESS | +0 coverage |
-| AI-019/020 evidence extended | Governance plane reused |
+`revenue_truth.py`, `revenue-truth-policy.json`, `HVCG_Payments`, `HVCG_RevenueEvents`, `test_revenue_truth_sprint12.py`, `RevenueTruthWorkbench.tsx`
 
-## Coverage by business capability
+## Production gaps
 
-| Capability | Total | Done* | % |
-|------------|------:|------:|--:|
-| Offers / Catalog | 30 | 28 | 93.3 |
-| Revenue (+ OS) | 22 | 18 | 81.8 |
-| Capital | 4 | 3 | 75.0 |
-| Documents | 3 | 2 | 66.7 |
-| Governance | 3 | 3 | 100 |
-| CFO | 4 | 1 | 25.0 |
-| Growth | 2 | 0 | 0 |
-| Procurement | 2 | 0 | 0 |
-| Risk | 2 | 0 | 0 |
-| AI | 21 | 2 | 9.5 |
-| Second Brain | 1 | 0 | 0 |
-| Referrals | 2 | 0 | 0 |
-| M365 | 10 | 3 | 30.0 |
-| Executive Intelligence | 4 | 2 | 50.0 |
-| Client 360 | 1 | 0 | 0 |
-
-\*Done = IMPLEMENTED + EXISTING_REUSED
-
-## Evidence (Sprint 11)
-
-| Artifact | Path |
-|----------|------|
-| Orchestrator | `config/business/ai_orchestrator.py` |
-| Tools | `config/business/ai_tools.json` |
-| Policy | `config/business/ai-governance-policy.json` |
-| Tests | `tests/unit/business/test_ai_orchestrator_sprint11.py` |
-| Maturity matrix | `Reports/HVCG_V2_AI_CAPABILITY_COVERAGE_SPRINT11.md` |
-| Governance audit | `Reports/HVCG_V2_AI_GOVERNANCE_AUDIT_SPRINT11.md` |
-| Elite | `AiOrchestrationWorkbench.tsx` |
-
-## Remaining gated
-
-- GATE-RISK-ELEVATED-ACL-PROD  
-- Production AI / external sends / live submissions  
-- Sprint 12 (Owner choice)  
+Authoritative payment/invoice sources, payout ops, Production ACL, QBO/Plaid live, monitoring — see S12 handoff.

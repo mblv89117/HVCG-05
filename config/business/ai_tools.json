@@ -237,7 +237,8 @@
       "clientScope": "OPTIONAL",
       "approvalRequired": false,
       "productionAvailability": "DISABLED",
-      "sideEffects": false
+      "sideEffects": false,
+      "runtime": "config/business/revenue_truth.py#run_referral_agent"
     },
     {
       "toolId": "TOOL-INVOICE-RECONCILE-READ",
@@ -245,11 +246,25 @@
       "domain": "Billing",
       "mode": "READ",
       "sensitivity": "Confidential",
-      "requiredRole": ["Owner", "Finance"],
+      "requiredRole": ["Owner", "Finance", "Advisor"],
       "clientScope": "OPTIONAL",
       "approvalRequired": false,
       "productionAvailability": "DISABLED",
-      "sideEffects": false
+      "sideEffects": false,
+      "runtime": "config/business/revenue_truth.py#run_invoice_agent"
+    },
+    {
+      "toolId": "TOOL-REVENUE-TRUTH-READ",
+      "name": "Revenue Truth Read",
+      "domain": "Billing",
+      "mode": "READ",
+      "sensitivity": "Confidential",
+      "requiredRole": ["Advisor", "Owner", "Finance"],
+      "clientScope": "REQUIRED",
+      "approvalRequired": false,
+      "productionAvailability": "DISABLED",
+      "sideEffects": false,
+      "runtime": "config/business/revenue_truth.py#client_revenue_truth"
     },
     {
       "toolId": "TOOL-PRICING-MUTATE",

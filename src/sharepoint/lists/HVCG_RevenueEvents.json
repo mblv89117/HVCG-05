@@ -1,0 +1,50 @@
+{
+  "title": "HVCG_RevenueEvents",
+  "description": "Canonical HVCG revenue event log — operational truth, not a second GL.",
+  "template": "genericList",
+  "domain": "Finance",
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+    { "internalName": "EventId", "displayName": "EventId", "type": "Text", "required": true, "indexed": true },
+    {
+      "internalName": "EventType",
+      "displayName": "EventType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "choices": [
+        "CONTRACT_EXECUTED",
+        "RETAINER_STARTED",
+        "INVOICE_CREATED",
+        "INVOICE_DUE",
+        "PAYMENT_RECEIVED",
+        "PARTIAL_PAYMENT",
+        "PAYMENT_FAILED",
+        "CREDIT_APPLIED",
+        "REFUND",
+        "WRITE_OFF",
+        "SUCCESS_TRIGGER_OCCURRED",
+        "SUCCESS_FEE_EARNED",
+        "SUCCESS_FEE_INVOICED",
+        "SUCCESS_FEE_COLLECTED",
+        "REFERRAL_ELIGIBLE",
+        "REFERRAL_APPROVED",
+        "REFERRAL_PAID"
+      ]
+    },
+    { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+    { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "indexed": true },
+    { "internalName": "OfferCode", "displayName": "OfferCode", "type": "Text" },
+    { "internalName": "ServiceLine", "displayName": "ServiceLine", "type": "Text" },
+    { "internalName": "InvoiceId", "displayName": "InvoiceId", "type": "Text", "indexed": true },
+    { "internalName": "PaymentId", "displayName": "PaymentId", "type": "Text", "indexed": true },
+    { "internalName": "AgreementReference", "displayName": "AgreementReference", "type": "Text" },
+    { "internalName": "Amount", "displayName": "Amount", "type": "Currency" },
+    { "internalName": "Currency", "displayName": "Currency", "type": "Text", "default": "USD" },
+    { "internalName": "EventDate", "displayName": "EventDate", "type": "DateTime", "indexed": true },
+    { "internalName": "Source", "displayName": "Source", "type": "Text" },
+    { "internalName": "SourceReference", "displayName": "SourceReference", "type": "Text" },
+    { "internalName": "VerificationStatus", "displayName": "VerificationStatus", "type": "Text" },
+    { "internalName": "ReconciliationStatus", "displayName": "ReconciliationStatus", "type": "Text" }
+  ]
+}

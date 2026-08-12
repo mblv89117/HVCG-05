@@ -205,7 +205,25 @@
       "name": "HVCG_Invoices",
       "path": "src/sharepoint/lists/HVCG_Invoices.json",
       "columnCount": 15,
-      "description": "Finance \u2014 Operational invoices (not GL)"
+      "description": "Finance — Operational invoices (not GL)"
+    },
+    {
+      "name": "HVCG_Payments",
+      "path": "src/sharepoint/lists/HVCG_Payments.json",
+      "columnCount": 16,
+      "description": "HVCG internal payments (Dev) — not client AR / not GL",
+      "domain": "Finance",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_RevenueEvents",
+      "path": "src/sharepoint/lists/HVCG_RevenueEvents.json",
+      "columnCount": 18,
+      "description": "Canonical HVCG revenue events (Dev)",
+      "domain": "Finance",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     },
     {
       "name": "HVCG_FinancialMilestones",

@@ -338,16 +338,17 @@
       "riskLevel": "MEDIUM",
       "externalCommunicationAllowed": false,
       "humanApproval": "required_for_payouts",
-      "runtime": "config/business/ai_orchestrator.py#run_invoice_agent",
-      "policy": "config/business/ai-governance-policy.json",
+      "runtime": "config/business/revenue_truth.py#run_invoice_agent",
+      "policy": "config/business/revenue-truth-policy.json",
       "never": [
         "modify invoices",
         "issue refunds",
         "charge accounts",
         "approve payout without human",
-        "conflate client AR/AP with HVCG AR"
+        "conflate client AR/AP with HVCG AR",
+        "send collection notices without approval"
       ],
-      "note": "Sprint 11 Dev runtime. HVCG invoice / revenue tracking only. Do not conflate with client AR/AP under AGT-CFO-OPS."
+      "note": "Sprint 12 FULL_DEV_RUNTIME path — HVCG invoices/payments/reconciliation. PRODUCTION_GATED. Not PRODUCTION_READY."
     },
     {
       "agentCode": "AGT-REFERRAL",
@@ -355,10 +356,10 @@
       "riskLevel": "MEDIUM",
       "externalCommunicationAllowed": false,
       "humanApproval": "required_for_payouts",
-      "runtime": "config/business/ai_orchestrator.py#run_referral_agent",
-      "policy": "config/business/ai-governance-policy.json",
-      "never": ["approve payout without human", "create false referral activity"],
-      "note": "Sprint 11 Dev runtime. Payout requires human approval."
+      "runtime": "config/business/revenue_truth.py#run_referral_agent",
+      "policy": "config/business/revenue-truth-policy.json",
+      "never": ["approve payout without human", "issue payment", "create false referral activity", "auto partner communication"],
+      "note": "Sprint 12 FULL_DEV_RUNTIME path — eligibility + approval packet. Payout execution DISABLED. PRODUCTION_GATED."
     },
     {
       "agentCode": "AGT-CRM",

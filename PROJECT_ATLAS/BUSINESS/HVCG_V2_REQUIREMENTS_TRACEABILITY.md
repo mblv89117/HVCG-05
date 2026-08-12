@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-11 (Sprint 11 AI mid-program review) |
+| **As of** | 2026-08-11 (Sprint 12 Revenue Truth mid-program) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 127 |
+| **Total requirements** | 128 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,16 +22,18 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 11)
+## Status summary (mid-program · Sprint 12)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 11 |
-| `IN_PROGRESS` | 38 |
-| `PLANNED` | 18 |
+| `IN_PROGRESS` | 40 |
+| `PLANNED` | 17 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **54.3%** |
+| **Coverage (Implemented+Reused)** | **53.9%** |
+
+**Corrections this review:** Sprint 12 added REV-008 (Revenue Event truth). AGT-INVOICE/REFERRAL advanced to FULL_DEV_RUNTIME but remain PRODUCTION_GATED — never PRODUCTION_READY from Dev alone.
 
 **Corrections this review:** GROW-001 demoted from EXISTING_REUSED → IN_PROGRESS (honest Growth OS scope); GROW-002 added (KPI source truth / domain routing); RISK-002 annotated with Production ACL gate. Sprint 11: AI-001…018 evidence bound to orchestrator (remain IN_PROGRESS); AI-021/022 PLANNED → IN_PROGRESS. No silent IMPLEMENTED from stubs. No Agent 19.
 

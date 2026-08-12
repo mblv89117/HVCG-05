@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-11 | Sprint 12 Dev (pending commit): Revenue Truth — invoices/payments/reconciliation, success fees, referral eligibility/approval (STOP before payout), ACCG protected; Elite Revenue workbench. AGT-INVOICE/REFERRAL → FULL_DEV_RUNTIME (PRODUCTION_GATED). Coverage **53.9%**. **No Production / no Sprint 13.** |
+| 2026-08-11 | Sprint 11 commit: AI Orchestration + Second Brain (BA `f5f954c` · Elite `ee9641f`). Agents remain PRODUCTION_GATED. **No Production.** |
 | 2026-08-11 | Sprint 11 Dev (pending commit): AI Orchestration + Second Brain — `ai_orchestrator.py`, tool registry, governance policy, Approval Router, golden/negative tests; Elite `/ai` Ask Atlas + Client 360 AI. No PRODUCTION_READY agents. **No Production / no Sprint 12.** |
 | 2026-08-11 | Sprint 10 commit: Growth OS (BA `a8ba968` · Elite `e295839`). GROW-001/002 IN_PROGRESS. Risk ACL Production gate documented. **No Production / no Sprint 11 until authorized.** |
 | 2026-08-11 | Sprint 10 Dev (pending commit): Growth OS — `growth_os.py`, GrowthEngagements/90DayPlans, KPI source truth, domain routing, SOP lifecycle, AGT-SUCCESS/CRM/Second Brain prep; Elite `/growth` + Client 360 Growth + ECC summary. GROW-001/002 IN_PROGRESS. Mid-program coverage **54.3%** (truth over %). Risk ACL Production gate documented. **No Production / no Sprint 11.** |

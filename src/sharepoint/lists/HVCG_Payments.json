@@ -1,0 +1,24 @@
+{
+  "title": "HVCG_Payments",
+  "description": "HVCG internal payment records (not client AR). Operational — not GL.",
+  "template": "genericList",
+  "domain": "Finance",
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+    { "internalName": "PaymentId", "displayName": "PaymentId", "type": "Text", "required": true, "indexed": true },
+    { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+    { "internalName": "InvoiceId", "displayName": "InvoiceId", "type": "Text", "required": false, "indexed": true },
+    { "internalName": "PaymentDate", "displayName": "PaymentDate", "type": "DateTime", "required": true, "indexed": true },
+    { "internalName": "Amount", "displayName": "Amount", "type": "Currency", "required": true },
+    { "internalName": "PaymentMethod", "displayName": "PaymentMethod", "type": "Choice", "choices": ["ACH", "Wire", "Check", "Card", "Other"] },
+    { "internalName": "Source", "displayName": "Source", "type": "Choice", "choices": ["bank_transaction", "payment_processor", "accounting_system", "client_confirmation", "manually_verified"] },
+    { "internalName": "BankProcessorReference", "displayName": "BankProcessorReference", "type": "Text", "indexed": true },
+    { "internalName": "SourceTransactionId", "displayName": "SourceTransactionId", "type": "Text", "indexed": true },
+    { "internalName": "VerificationStatus", "displayName": "VerificationStatus", "type": "Choice", "choices": ["VERIFIED", "MANUALLY_VERIFIED", "REVIEW_REQUIRED", "UNVERIFIED"] },
+    { "internalName": "ReconciliationStatus", "displayName": "ReconciliationStatus", "type": "Choice", "choices": ["RECONCILED", "PARTIALLY_RECONCILED", "UNRECONCILED", "SOURCE_CONFLICT", "REVIEW_REQUIRED", "NOT_APPLICABLE"] },
+    { "internalName": "AppliedAmount", "displayName": "AppliedAmount", "type": "Currency" },
+    { "internalName": "UnappliedAmount", "displayName": "UnappliedAmount", "type": "Currency" },
+    { "internalName": "Fingerprint", "displayName": "Fingerprint", "type": "Text", "indexed": true },
+    { "internalName": "DuplicateFlag", "displayName": "DuplicateFlag", "type": "Boolean", "default": false }
+  ]
+}
