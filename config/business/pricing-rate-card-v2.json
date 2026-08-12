@@ -1,0 +1,188 @@
+{
+  "versionId": "HVCG-PRICE-2026-08-11-v2",
+  "status": "CURRENT_RATE_CARD",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "activationRequires": "Recorded \u2014 owner accepted 2026-08-11",
+  "currency": "USD",
+  "disclaimer": "CURRENT for new HVCG clients only. Does not change executed agreements or existing-client contracted pricing. BL-P1/v1 preserved historically.",
+  "feeTypes": [
+    "DIAGNOSTIC",
+    "SETUP",
+    "MONTHLY_RETAINER",
+    "SUCCESS_FEE",
+    "PREMIUM_HOURLY",
+    "REPLENISHING_RETAINER",
+    "REFERRAL_COMPENSATION",
+    "ENTERPRISE_NEGOTIATED",
+    "PASS_THROUGH",
+    "OPTIONAL_ADD_ON"
+  ],
+  "priceStates": [
+    "CONTRACTED_CURRENT",
+    "HISTORICAL",
+    "CURRENT_RATE_CARD",
+    "RECOMMENDED_FUTURE",
+    "PROPOSED",
+    "APPROVED_FUTURE",
+    "EFFECTIVE_NEW"
+  ],
+  "diagnostics": {
+    "basic": {
+      "min": 1500,
+      "max": 2500
+    },
+    "capitalOrRisk": {
+      "min": 3500,
+      "max": 5000
+    },
+    "executive": {
+      "min": 7500,
+      "max": 10000
+    },
+    "institutionalReadiness": {
+      "min": 10000,
+      "max": 15000
+    }
+  },
+  "setup": {
+    "lenderPackage": {
+      "min": 10000,
+      "max": 25000
+    },
+    "sbaPackage": {
+      "min": 15000,
+      "max": 35000
+    },
+    "dataRoom": {
+      "min": 7500,
+      "max": 20000
+    },
+    "financialPackage": {
+      "min": 7500,
+      "max": 25000
+    },
+    "contractReadiness": {
+      "min": 7500,
+      "max": 25000
+    },
+    "businessStrategicPlan": {
+      "min": 10000,
+      "max": 25000
+    },
+    "riskReview": {
+      "min": 5000,
+      "max": 20000
+    },
+    "aiSecondBrain": {
+      "min": 10000,
+      "max": 35000
+    },
+    "aiOperationsSystem": {
+      "min": 25000,
+      "max": null,
+      "note": "150000+ enterprise; open-ended premium"
+    }
+  },
+  "monthlyRetainers": {
+    "accessAdvisory": {
+      "min": 2500,
+      "max": 2500
+    },
+    "growthAdvisory": {
+      "min": 5000,
+      "max": 5000
+    },
+    "capitalReadiness": {
+      "min": 5000,
+      "max": 10000
+    },
+    "fractionalCfo": {
+      "min": 7500,
+      "max": 15000
+    },
+    "executiveOperatingPartner": {
+      "min": 12500,
+      "max": 25000
+    },
+    "aiOperations": {
+      "min": 5000,
+      "max": 15000
+    }
+  },
+  "successFeeGuidancePercent": {
+    "debtFinancing": {
+      "min": 1.5,
+      "max": 3
+    },
+    "sbaFinancing": {
+      "min": 2,
+      "max": 4
+    },
+    "locOrAr": {
+      "min": 1.5,
+      "max": 3
+    },
+    "bridgeFinancing": {
+      "min": 3,
+      "max": 5
+    },
+    "equity": {
+      "min": 3,
+      "max": 6,
+      "complianceNote": "Subject to licensing/compliance"
+    },
+    "acquisitionFinancing": {
+      "min": 2,
+      "max": 5
+    },
+    "contractProcurement": {
+      "min": 1,
+      "max": 5,
+      "complianceNote": "Where permitted"
+    },
+    "recoveryClaims": {
+      "min": 5,
+      "max": 20,
+      "complianceNote": "Where permitted"
+    },
+    "maExit": {
+      "min": 1,
+      "max": 3,
+      "complianceNote": "Subject to licensing/compliance"
+    }
+  },
+  "premiumHourly": {
+    "standardAdvisory": {
+      "min": 350,
+      "max": 500
+    },
+    "premiumOwnerSupport": {
+      "min": 500,
+      "max": 750
+    },
+    "urgentSpecialSituation": {
+      "min": 750,
+      "max": 1000
+    },
+    "specialProjectFloor": 500
+  },
+  "referralCompensationGuidance": {
+    "diagnostic": "10% of collected diagnostic fee",
+    "retainer": "10% of first 3 collected months",
+    "capitalAdvisory": "10%\u201320% of HVCG collected success fee",
+    "strategicChannel": "Custom",
+    "payoutBasis": "COLLECTED_CLEARED_REVENUE_ONLY",
+    "requiresHumanApproval": true
+  },
+  "lockedCurrentRateCard": {
+    "versionId": "HVCG-PRICE-2026-07-15-v1",
+    "status": "HISTORICAL",
+    "decision": "BL-P1",
+    "note": "Preserved historically; no longer CURRENT for new-client selling after ADR-BA-V2-002"
+  },
+  "appliesTo": "NEW_HVCG_CLIENTS_ONLY",
+  "ownerDecision": "ADR-BA-V2-002",
+  "ownerDecisionDate": "2026-08-11",
+  "doesNotSupersedeHistorical": "HVCG-PRICE-2026-07-15-v1"
+}
