@@ -28,6 +28,7 @@ import {
 import { PortfolioPage } from './PortfolioPage';
 import { CapitalReadinessWorkbench } from './CapitalReadinessWorkbench';
 import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
+import { ProcurementWorkbench } from './ProcurementWorkbench';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
 export { ClientsPage } from './LiveClientsPage';
@@ -421,6 +422,10 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
 
 export function CapitalPage() {
   return <CapitalReadinessWorkbench />;
+}
+
+export function ProcurementPage() {
+  return <ProcurementWorkbench />;
 }
 
 export function EnterpriseValuePage() {

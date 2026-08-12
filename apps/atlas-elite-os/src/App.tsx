@@ -15,6 +15,7 @@ import { AdminPage } from './pages/AdminPage';
 import {
   AiInsightsPage,
   CapitalPage,
+  ProcurementPage,
   ClientDetailPage as DemoClientDetailPage,
   EnterpriseValuePage,
   FinancialsPage,
@@ -244,6 +245,14 @@ export function App() {
                   <FinanceRoute>
                     <CapitalPage />
                   </FinanceRoute>
+                }
+              />
+              <Route
+                path="procurement"
+                element={
+                  <PrivateRoute>
+                    <ProcurementPage />
+                  </PrivateRoute>
                 }
               />
               <Route

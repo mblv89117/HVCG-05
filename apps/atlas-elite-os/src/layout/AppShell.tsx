@@ -60,6 +60,7 @@ const allSections: NavSection[] = [
       { id: 'tasks', label: 'Approvals', to: '/tasks', icon: <CheckboxCheckedRegular /> },
       { id: 'executive', label: 'Analytics', to: '/executive', icon: <DataBarVerticalRegular /> },
       { id: 'capital', label: 'Capital Advisory', to: '/capital', icon: <MoneyRegular /> },
+      { id: 'procurement', label: 'Procurement', to: '/procurement', icon: <ClipboardTaskRegular /> },
     ],
   },
   {
@@ -103,6 +104,7 @@ const catalog: SearchResult[] = [
   { id: 's6', title: 'Administration', category: 'Administration', subtitle: 'Dataverse SoR', to: '/admin' },
   { id: 's7', title: 'Knowledge', category: 'Navigation', to: '/knowledge' },
   { id: 's8', title: 'Capital Advisory', category: 'Navigation', to: '/capital' },
+  { id: 's8b', title: 'Procurement', category: 'Navigation', to: '/procurement' },
   { id: 's9', title: 'AI Agents', category: 'Navigation', to: '/ai' },
   { id: 's10', title: 'Documents', category: 'Navigation', to: '/documents' },
   { id: 's11', title: 'Accounting', category: 'Navigation', to: '/accounting' },
@@ -125,6 +127,7 @@ const routeLabels: Record<string, string> = {
   '/projects': 'Projects',
   '/tasks': 'Approvals',
   '/capital': 'Capital Advisory',
+  '/procurement': 'Contract Procurement',
   '/financials': 'Financial Intelligence',
   '/banking': 'Banking',
   '/accounting': 'Accounting',

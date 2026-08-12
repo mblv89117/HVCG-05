@@ -356,3 +356,82 @@ export function Client360FinanceSection({ clientHint }: { clientHint?: string })
     </AtlasCard>
   );
 }
+
+/** Sprint 8 — Client 360 Procurement (internal). */
+export interface Client360ProcurementSnapshot {
+  engagementStatus: string;
+  offerCodes: string;
+  readinessStatus: string;
+  registrationStatus: string;
+  activeNaics: string;
+  capabilityStatement: string;
+  certifications: string;
+  activePursuits: string;
+  proposalStatus: string;
+  contractAwards: string;
+  capitalCfoFlags: string;
+  nextActions: string[];
+  disclaimer: string;
+}
+
+export function buildInternalProcurementSnapshot(clientHint?: string): Client360ProcurementSnapshot {
+  const isAccg =
+    (clientHint || '').toUpperCase().includes('ACCG') ||
+    (clientHint || '').toLowerCase().includes('american capital');
+  return {
+    engagementStatus: isAccg ? 'Procurement upsell eligible — contracted economics protected' : 'No verified Procurement Engagement bound',
+    offerCodes: 'OFF-PROC-READY / OFF-GOV-SETUP',
+    readinessStatus: 'UNKNOWN until assessment',
+    registrationStatus: 'NOT_STARTED / gated',
+    activeNaics: 'Awaiting advisor + client confirmation',
+    capabilityStatement: 'No approved version',
+    certifications: 'Awaiting verified registry',
+    activePursuits: 'None verified',
+    proposalStatus: 'Not started',
+    contractAwards: 'None — forecast ≠ award',
+    capitalCfoFlags: 'None',
+    nextActions: ['Open Procurement workbench when engagement authorized'],
+    disclaimer: 'HVCG does not guarantee awards. Registration preparation ≠ submission. Internal bid strategy not portal-exposed.',
+  };
+}
+
+export function Client360ProcurementSection({ clientHint }: { clientHint?: string }) {
+  const snap = buildInternalProcurementSnapshot(clientHint);
+  return (
+    <AtlasCard title="Procurement" subtitle="Internal Client 360 · BL-C1 · submission gated">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <StatusChip label={snap.engagementStatus} tone="gold" />
+        <StatusChip label={snap.readinessStatus} tone="neutral" />
+        <StatusChip label={snap.registrationStatus} tone="warning" />
+      </div>
+      <Text size={300} style={{ display: 'block' }}>
+        Offers: {snap.offerCodes}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        NAICS: {snap.activeNaics}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Capability statement: {snap.capabilityStatement}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Certifications: {snap.certifications}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Active pursuits: {snap.activePursuits}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Proposal status: {snap.proposalStatus}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Awards: {snap.contractAwards}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Capital / CFO flags: {snap.capitalCfoFlags}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Next: {snap.nextActions.join('; ')}
+      </Text>
+      <Caption1 style={{ display: 'block', marginTop: 10 }}>{snap.disclaimer}</Caption1>
+    </AtlasCard>
+  );
+}
