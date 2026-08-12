@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-12 (Sprint 15 Integration Convergence mid-program) |
+| **As of** | 2026-08-12 (Sprint 16 Security Hardening mid-program) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 136 |
+| **Total requirements** | 138 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,20 +22,20 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 15)
+## Status summary (mid-program · Sprint 16)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 51 |
+| `IN_PROGRESS` | 53 |
 | `PLANNED` | 15 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **50.0%** |
+| **Coverage (Implemented+Reused)** | **49.3%** |
 
-**Corrections this review:** Sprint 15 added INT-001/002 (integration contracts + governance journey). Coverage fell honestly. Integration ≠ Production readiness.
+**Corrections this review:** Sprint 16 SEC-001/002 added. Dev security evidence ≠ Production gate OPEN. Coverage fell honestly.
 
-**Prior:** Sprint 14 OWN-002→005; AGT-CONCIERGE FULL_DEV_RUNTIME (PRODUCTION_GATED).
+**Prior:** Sprint 15 INT-001/002. Integration ≠ Production readiness.
 
 ## Acceptance checklist coverage (Control §47)
 

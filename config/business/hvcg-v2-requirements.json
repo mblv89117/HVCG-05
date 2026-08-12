@@ -3186,6 +3186,63 @@
       "notes": "AGT-CFO-OPS remains domain binding — not Agent 19."
     },
     {
+      "id": "HVCG-V2-SEC-001",
+      "masterPlanSection": "Security Hardening",
+      "requirement": "Fail-closed identity/client ACL, secure upload/download, Owner Support concealment, BL-C1 alternate-route blocks, config safety",
+      "category": "Security",
+      "businessPurpose": "Client A never sees Client B; Production gates remain non-bypassable in Dev",
+      "atlasModule": "Security / Hub",
+      "existingCapability": "document_os / eos / orchestrator ACLs",
+      "implementationMethod": "atlas_security.py + ba_bridge + Hub /api/ba/*",
+      "owner": "Security",
+      "sprint": "BA-K S16",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-INT-001", "HVCG-V2-INT-002"],
+      "productionGate": true,
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/atlas_security.py",
+        "config/business/ba_bridge.py",
+        "apps/atlas-integration-api/src/ba/",
+        "tests/unit/business/test_atlas_security_sprint16.py"
+      ],
+      "testsAcceptance": [
+        "Cases A–V",
+        "EB-A–H binding"
+      ],
+      "completionDate": null,
+      "notes": "IMPLEMENTED_IN_DEV — Production gate satisfaction still LIVE_VALIDATION_REQUIRED."
+    },
+    {
+      "id": "HVCG-V2-SEC-002",
+      "masterPlanSection": "Elite↔BA Binding",
+      "requirement": "Non-Production Elite Hub invokes BA engines via single API (no second architecture); context propagation + fail-closed",
+      "category": "Security",
+      "businessPurpose": "Security-sensitive UI not fixture-only",
+      "atlasModule": "Integration Hub",
+      "existingCapability": "atlas-integration-api",
+      "implementationMethod": "Hub /api/ba/* → ba_bridge.py → domain modules",
+      "owner": "Architecture / Security",
+      "sprint": "BA-K S16",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-SEC-001"],
+      "productionGate": false,
+      "externalContactGate": false,
+      "evidence": [
+        "apps/atlas-integration-api/src/ba/routes.ts",
+        "apps/atlas-elite-os/src/integrations/hub/baApi.ts",
+        "tests/unit/business/test_atlas_security_sprint16.py"
+      ],
+      "testsAcceptance": [
+        "EB-A–H",
+        "ba_bridge CLI"
+      ],
+      "completionDate": null,
+      "notes": "Dev binding proven via dispatch contract + bridge CLI. Live Hub process E2E labeled LIVE_VALIDATION_REQUIRED if env not running."
+    },
+    {
       "id": "HVCG-V2-MKT-001",
       "masterPlanSection": "Control \u00a731",
       "requirement": "Business Development / Content operating plan in Atlas (strategy/campaigns/CTA/attribution) \u2014 not a social platform",

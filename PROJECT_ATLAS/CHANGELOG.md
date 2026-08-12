@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-12 | Sprint 16 Dev (uncommitted): Security hardening — Elite↔BA Hub binding, atlas_security, upload/download ACL, gate evidence packs. Coverage **49.3%** (138). Gates remain CLOSED. **No Production / no Sprint 17.** |
+| 2026-08-12 | Sprint 15 commit: Integration Convergence (BA `3aa55f4`). Elite no S15 delta. **No Production.** |
 | 2026-08-12 | Sprint 15 Dev (uncommitted): Integration Convergence — shared contracts, domain ownership, dependency/shadow-SoR audits, Cases A–Q, Production gap inventory. Coverage **50.0%** (136 reqs). **No Production / no Sprint 16.** |
 | 2026-08-12 | Sprint 14 commit: Executive Owner Support (BA `0493765` · Elite `0d7c3f7`). AGT-CONCIERGE FULL_DEV_RUNTIME (PRODUCTION_GATED). **No Production.** |
 | 2026-08-12 | Sprint 14 Dev (uncommitted): Executive Owner Support + Intelligence — `executive_owner_support.py`, Concierge FULL_DEV_RUNTIME (PRODUCTION_GATED), Decision Intelligence, Owner Brief v2, Elite `/owner-support`. Coverage **50.7%** (134 reqs). **No Production / no Sprint 15.** |
