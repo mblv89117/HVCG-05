@@ -199,10 +199,22 @@
       "automatedEvidence": {
         "note": "Intake agent + Client OS modules present; Owner must judge usability"
       },
-      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "ownerResult": "OWNER_PASS",
       "defectId": null,
       "blocker": null,
-      "timestamp": "2026-08-12T17:51:31.905576+00:00"
+      "timestamp": "2026-08-12T18:48:55.455281+00:00",
+      "ownerResponseExact": "UAT-01 OWNER_PASS",
+      "findingClosed": "UAT-FIND-001",
+      "devLeadId": "LEAD-DEV-1D90927215",
+      "runtime": {
+        "eliteWorktree": "atlas-usable-operating-layer",
+        "eliteBranch": "fix/atlas-usable-operating-layer",
+        "eliteSha": "b92abf3f6effcc0c13073168730a1d97e44e87f6",
+        "elitePid": 5141,
+        "hub": "http://127.0.0.1:8792",
+        "auth": "Local Owner (Dev)",
+        "baSha": "2490989a1f47ac6a0f502be045c91cbbf8a34b5e"
+      }
     },
     {
       "uatId": "UAT-02",
@@ -513,18 +525,7 @@
       "timestamp": "2026-08-12T17:51:32.026289+00:00"
     }
   ],
-  "outcome": {
-    "outcome": "OWNER_UAT_PARTIAL",
-    "readyForWrittenQaReview": false,
-    "qaReason": "Automated prechecks green; Owner has not yet confirmed any workflow (OWNER_ACTION_REQUIRED)",
-    "counts": {
-      "ownerPass": 0,
-      "ownerFail": 0,
-      "ownerActionRequired": 18,
-      "precheckPass": 18,
-      "technicalFail": 0
-    }
-  },
+  "outcome": "OWNER_UAT_PARTIAL",
   "defects": [],
   "remediation": [],
   "externalDependencies": {
@@ -536,5 +537,14 @@
     "stagingInfrastructure": "UNAVAILABLE (using controlled Development runtime)"
   },
   "qboAuthoritativeSource": "OWNER_PENDING",
-  "gatesOpened": false
+  "gatesOpened": false,
+  "ownerPassCount": 1,
+  "ownerFailCount": 0,
+  "ownerActionRequired": 17,
+  "lastOwnerEvent": {
+    "uatId": "UAT-01",
+    "result": "OWNER_PASS",
+    "at": "2026-08-12T18:48:55.455281+00:00",
+    "leadId": "LEAD-DEV-1D90927215"
+  }
 }

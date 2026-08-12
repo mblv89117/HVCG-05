@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import os
+import sys
 import unittest
 import urllib.request
+from pathlib import Path
 
-import atlas_security as sec
-import atlas_staging_readiness as s17
-import document_os as docs
-import executive_owner_support as eos
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / "config" / "business"))
+
+import atlas_security as sec  # noqa: E402
+import atlas_staging_readiness as s17  # noqa: E402
+import document_os as docs  # noqa: E402
+import executive_owner_support as eos  # noqa: E402
 
 
 HUB = os.environ.get("ATLAS_HUB_E2E_URL", "http://127.0.0.1:8792")

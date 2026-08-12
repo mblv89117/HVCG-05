@@ -1,6 +1,6 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-12 (Sprint 17 Development — Staging Readiness)  
+**As of:** 2026-08-12 (UAT-FIND-001 intake remediation — uncommitted)  
 **Source:** `config/business/hvcg-v2-requirements.json` (140 requirements)
 
 ## Totals
@@ -9,20 +9,21 @@
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 55 |
-| `PLANNED` | 15 |
+| `IN_PROGRESS` | 56 |
+| `PLANNED` | 14 |
 | `DEFERRED_OWNER_GATE` | 2 |
 | **Coverage %** | **48.6%** |
 
-Previous (S16): **49.3%** (138). Delta: −0.7% from STG-001/002 (truth over %).
+Coverage = (`IMPLEMENTED` + `EXISTING_REUSED`) / 140. TRN-002 moved PLANNED → IN_PROGRESS (no coverage % change).
 
-## Added (Sprint 17)
+## Changed this remediation
 
-| ID | Status |
-|----|--------|
-| `HVCG-V2-STG-001` | IN_PROGRESS |
-| `HVCG-V2-STG-002` | IN_PROGRESS |
+| ID | Prior | New |
+|----|-------|-----|
+| `HVCG-V2-TRN-002` | PLANNED | IN_PROGRESS |
+
+No UAT-specific requirement ID added. Full intake forms library DoD still open.
 
 ## Note
 
-Staging ≠ Production. Live Hub E2E ≠ Entra Production. Mock AV ≠ Production AV.
+Development Owner-facing intake ≠ Production CRM. UI ≠ complete business capability.

@@ -14,7 +14,7 @@
 | secrets | LIVE_VALIDATION_PENDING | unchanged | Non-Prod secrets | Medium |
 | monitoring | LIVE_VALIDATION_PENDING | file sink | Alert channel | Medium |
 | migration | READY_WITH_OWNER_GATE | rehearsal OK | Prod migration auth | Medium |
-| Owner UAT | NOT_STARTED | **PARTIAL** (precheck only) | Manny confirmations | Blocking |
+| Owner UAT | NOT_STARTED | **PARTIAL** (1/18 OWNER_PASS — UAT-01) | UAT-02…18 pending | Blocking |
 | QA | NOT_STARTED | NOT_READY | Owner UAT incomplete | Blocking |
 | rollback | READY | unchanged | Prod rollback untested | Medium |
 | deployment | BLOCKED | BLOCKED | Owner+QA+RC | Blocking |

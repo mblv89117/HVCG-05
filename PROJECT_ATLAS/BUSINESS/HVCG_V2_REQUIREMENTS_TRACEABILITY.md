@@ -79,7 +79,7 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | Acquisition attribution | HVCG-V2-REV-006 | `PLANNED` |
 | Website messaging | HVCG-V2-MKT-005 | `IN_PROGRESS` |
 | Offer one-pagers | HVCG-V2-OFF-018 | `PLANNED` |
-| Intake forms | HVCG-V2-TRN-002 | `PLANNED` |
+| Intake forms | HVCG-V2-TRN-002 | `IN_PROGRESS` |
 | Sales playbook | HVCG-V2-TRN-001 | `IMPLEMENTED` |
 | Employee training | HVCG-V2-TRN-001 | `IMPLEMENTED` |
 | Executive dashboard | HVCG-V2-RPT-001 | `PLANNED` |
@@ -215,7 +215,7 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | `HVCG-V2-SYS-002` | Requirements traceability ledger + JSON + coverage report | Governance | Atlas | BA-A S2 | P0 | `IMPLEMENTED` | PROJECT_ATLAS/BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md; config/business/hvc |
 | `HVCG-V2-SYS-003` | No Production schema mutation / deploy under this CR without owner | Governance | Platform | Standing | P0 | `EXISTING_REUSED` |  |
 | `HVCG-V2-TRN-001` | HVCG commercial playbook so new employees can sell/classify/price/scope/AI safely | Training | Atlas Docs | BA-A S2 | P0 | `IMPLEMENTED` | PROJECT_ATLAS/BUSINESS/HVCG_COMMERCIAL_PLAYBOOK.md |
-| `HVCG-V2-TRN-002` | Intake form specs: General/Capital/CFO/Procurement/Risk/AI/Owner(restricted) | Training / Revenue | Revenue / Forms | BA-B/L | P1 | `PLANNED` |  |
+| `HVCG-V2-TRN-002` | Intake form specs: General/Capital/CFO/Procurement/Risk/AI/Owner(restricted) | Training / Revenue | Revenue / Forms | BA-B/L | P1 | `IN_PROGRESS` | UAT-FIND-001 Dev Elite intake only — forms library DoD incomplete |
 | `HVCG-V2-WF-001` | Workflow: Intake→Lead→workspace→internal alert | Microsoft 365 | Power Automate / Hub | BA-B/C/I/H | P1 | `EXISTING_REUSED` | HVCG_EvaFormCreateLead / CreateClientWorkspace |
 | `HVCG-V2-WF-002` | Workflow: Opportunity→checklist→tasks | Microsoft 365 | Power Automate / Hub | BA-B/C/I/H | P1 | `PLANNED` |  |
 | `HVCG-V2-WF-003` | Workflow: Document upload→checklist→review | Microsoft 365 | Power Automate / Hub | BA-B/C/I/H | P1 | `EXISTING_REUSED` | DocumentRequests + flows |

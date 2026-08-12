@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-12 | **UAT-01 OWNER_PASS** (Manny). UAT-FIND-001 CLOSED_OWNER_ACCEPTED. Dev Lead `LEAD-DEV-1D90927215`. TRN-002 remains IN_PROGRESS. Remediation **UNCOMMITTED_PENDING_OWNER_AUTHORIZATION**. UAT-02 not started. |
+| 2026-08-12 | UAT-FIND-001 Option 1 remediation (UNCOMMITTED): Dev Elite Prospect Intake `/clients/intake` + `DEV_LEAD_ADAPTER` (`lead_intake.py`). TRN-002 → IN_PROGRESS (not IMPLEMENTED). AGT-INTAKE remains CONFIG_ONLY. Track 1 unchanged. Finding `REMEDIATED_READY_FOR_RETEST`. |
 | 2026-08-12 | Owner UAT precheck: 18/18 PRECHECK_PASS; Owner results OWNER_ACTION_REQUIRED. Outcome OWNER_UAT_PARTIAL. QA entry NOT_READY. **No gate OPEN / no QA GO.** |
 | 2026-08-12 | Sprint 17 commit: Staging readiness (BA `698a554`). Elite no S17 delta. Gates CLOSED. **No Production.** |
 | 2026-08-12 | Sprint 17 Dev (uncommitted): Staging readiness — live Hub E2E, HR fields, finance staging adapter, migration rehearsal, monitoring sink, release/UAT/QA packs. Coverage **48.6%** (140). Gates remain CLOSED. **No Production / no UAT execution.** |

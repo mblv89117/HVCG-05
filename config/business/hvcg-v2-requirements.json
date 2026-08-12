@@ -2830,7 +2830,7 @@
         "tests/unit/business/test_document_os_sprint13.py"
       ],
       "testsAcceptance": [
-        "Case C ambiguous email → NEEDS_CLIENT_MATCH"
+        "Case C ambiguous email \u2192 NEEDS_CLIENT_MATCH"
       ],
       "completionDate": null,
       "notes": "Sprint 13 Dev workflow: no Production mail connectors; uncertain identity never auto-files into client folder."
@@ -2838,7 +2838,7 @@
     {
       "id": "HVCG-V2-DOC-003",
       "masterPlanSection": "Document Requests",
-      "requirement": "Extend Document Request statuses and completion %; checklist item ≠ document record",
+      "requirement": "Extend Document Request statuses and completion %; checklist item \u2260 document record",
       "category": "Documents",
       "businessPurpose": "Delivery control",
       "atlasModule": "Portal / SP",
@@ -2876,7 +2876,9 @@
       "sprint": "BA-J S13",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-DOC-001"],
+      "dependencies": [
+        "HVCG-V2-DOC-001"
+      ],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
@@ -2885,11 +2887,11 @@
         "tests/unit/business/test_document_os_sprint13.py"
       ],
       "testsAcceptance": [
-        "Cases A–N",
+        "Cases A\u2013N",
         "Document lifecycle E2E"
       ],
       "completionDate": null,
-      "notes": "RECEIVED ≠ ACCEPTED; draft ≠ final; no bulk destructive migration."
+      "notes": "RECEIVED \u2260 ACCEPTED; draft \u2260 final; no bulk destructive migration."
     },
     {
       "id": "HVCG-V2-DOC-005",
@@ -2904,7 +2906,10 @@
       "sprint": "BA-J S13",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-DOC-003", "HVCG-V2-DOC-004"],
+      "dependencies": [
+        "HVCG-V2-DOC-003",
+        "HVCG-V2-DOC-004"
+      ],
       "productionGate": true,
       "externalContactGate": true,
       "evidence": [
@@ -2917,14 +2922,14 @@
         "Client Portal E2E"
       ],
       "completionDate": null,
-      "notes": "GATE-CLIENT-PORTAL-PROD — Dev UI ≠ Production activation."
+      "notes": "GATE-CLIENT-PORTAL-PROD \u2014 Dev UI \u2260 Production activation."
     },
     {
       "id": "HVCG-V2-DOC-006",
       "masterPlanSection": "Second Brain M365 Documents",
       "requirement": "Permission-aware Second Brain document retrieval with citations, version/freshness, prompt-injection defense",
       "category": "AI / Documents",
-      "businessPurpose": "Governed evidence answers — not unrestricted file search",
+      "businessPurpose": "Governed evidence answers \u2014 not unrestricted file search",
       "atlasModule": "Second Brain / SP",
       "existingCapability": "ai_orchestrator.second_brain_query",
       "implementationMethod": "document_os.second_brain_document_query + orchestrator document layer",
@@ -2932,7 +2937,9 @@
       "sprint": "BA-J/H S13",
       "priority": "P1",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-DOC-004"],
+      "dependencies": [
+        "HVCG-V2-DOC-004"
+      ],
       "productionGate": true,
       "externalContactGate": false,
       "evidence": [
@@ -2945,7 +2952,7 @@
         "Cases F/G/H/I/J/K"
       ],
       "completionDate": null,
-      "notes": "GATE-M365-SECOND-BRAIN-PROD — fixture retrieval only; not Production RAG."
+      "notes": "GATE-M365-SECOND-BRAIN-PROD \u2014 fixture retrieval only; not Production RAG."
     },
     {
       "id": "HVCG-V2-COMP-001",
@@ -3030,7 +3037,9 @@
       "sprint": "BA-F",
       "priority": "P1",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-OWN-001"],
+      "dependencies": [
+        "HVCG-V2-OWN-001"
+      ],
       "productionGate": true,
       "externalContactGate": false,
       "evidence": [
@@ -3060,7 +3069,10 @@
       "sprint": "BA-F S14",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-OWN-001", "HVCG-V2-OWN-002"],
+      "dependencies": [
+        "HVCG-V2-OWN-001",
+        "HVCG-V2-OWN-002"
+      ],
       "productionGate": true,
       "externalContactGate": true,
       "evidence": [
@@ -3073,12 +3085,12 @@
         "Cases D/E permission parity + BL-C1 send block"
       ],
       "completionDate": null,
-      "notes": "FULL_DEV_RUNTIME · PRODUCTION_GATED — not PRODUCTION_READY."
+      "notes": "FULL_DEV_RUNTIME \u00b7 PRODUCTION_GATED \u2014 not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-OWN-004",
       "masterPlanSection": "Decision Intelligence",
-      "requirement": "First-class Owner Decision lifecycle extending HVCG_Decisions; AI recommendation ≠ Owner decision; outcome loop",
+      "requirement": "First-class Owner Decision lifecycle extending HVCG_Decisions; AI recommendation \u2260 Owner decision; outcome loop",
       "category": "Executive Support",
       "businessPurpose": "Record why decisions were made and whether they worked",
       "atlasModule": "ECC / Decisions",
@@ -3100,7 +3112,7 @@
         "Cases A/F/L decision vs recommendation + outcome loop"
       ],
       "completionDate": null,
-      "notes": "Extends existing decision register — no second decision platform."
+      "notes": "Extends existing decision register \u2014 no second decision platform."
     },
     {
       "id": "HVCG-V2-OWN-005",
@@ -3136,7 +3148,7 @@
       "category": "Integration",
       "businessPurpose": "One coherent Development operating system before hardening",
       "atlasModule": "Atlas Integration",
-      "existingCapability": "Per-domain engines S9–S14",
+      "existingCapability": "Per-domain engines S9\u2013S14",
       "implementationMethod": "atlas_integration + atlas-integration-contracts.json",
       "owner": "Architecture",
       "sprint": "BA-K S15",
@@ -3151,10 +3163,10 @@
         "tests/unit/business/test_atlas_integration_sprint15.py"
       ],
       "testsAcceptance": [
-        "Cases A–Q integration pack"
+        "Cases A\u2013Q integration pack"
       ],
       "completionDate": null,
-      "notes": "Integration ≠ Production readiness. Dual BA/Elite worktree baseline."
+      "notes": "Integration \u2260 Production readiness. Dual BA/Elite worktree baseline."
     },
     {
       "id": "HVCG-V2-INT-002",
@@ -3169,7 +3181,9 @@
       "sprint": "BA-K S15",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-INT-001"],
+      "dependencies": [
+        "HVCG-V2-INT-001"
+      ],
       "productionGate": true,
       "externalContactGate": true,
       "evidence": [
@@ -3183,7 +3197,7 @@
         "Case Q journey"
       ],
       "completionDate": null,
-      "notes": "AGT-CFO-OPS remains domain binding — not Agent 19."
+      "notes": "AGT-CFO-OPS remains domain binding \u2014 not Agent 19."
     },
     {
       "id": "HVCG-V2-SEC-001",
@@ -3198,7 +3212,10 @@
       "sprint": "BA-K S16",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-INT-001", "HVCG-V2-INT-002"],
+      "dependencies": [
+        "HVCG-V2-INT-001",
+        "HVCG-V2-INT-002"
+      ],
       "productionGate": true,
       "externalContactGate": true,
       "evidence": [
@@ -3208,26 +3225,28 @@
         "tests/unit/business/test_atlas_security_sprint16.py"
       ],
       "testsAcceptance": [
-        "Cases A–V",
-        "EB-A–H binding"
+        "Cases A\u2013V",
+        "EB-A\u2013H binding"
       ],
       "completionDate": null,
-      "notes": "IMPLEMENTED_IN_DEV — Production gate satisfaction still LIVE_VALIDATION_REQUIRED."
+      "notes": "IMPLEMENTED_IN_DEV \u2014 Production gate satisfaction still LIVE_VALIDATION_REQUIRED."
     },
     {
       "id": "HVCG-V2-SEC-002",
-      "masterPlanSection": "Elite↔BA Binding",
+      "masterPlanSection": "Elite\u2194BA Binding",
       "requirement": "Non-Production Elite Hub invokes BA engines via single API (no second architecture); context propagation + fail-closed",
       "category": "Security",
       "businessPurpose": "Security-sensitive UI not fixture-only",
       "atlasModule": "Integration Hub",
       "existingCapability": "atlas-integration-api",
-      "implementationMethod": "Hub /api/ba/* → ba_bridge.py → domain modules",
+      "implementationMethod": "Hub /api/ba/* \u2192 ba_bridge.py \u2192 domain modules",
       "owner": "Architecture / Security",
       "sprint": "BA-K S16",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-SEC-001"],
+      "dependencies": [
+        "HVCG-V2-SEC-001"
+      ],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
@@ -3236,7 +3255,7 @@
         "tests/unit/business/test_atlas_security_sprint16.py"
       ],
       "testsAcceptance": [
-        "EB-A–H",
+        "EB-A\u2013H",
         "ba_bridge CLI"
       ],
       "completionDate": null,
@@ -3255,7 +3274,10 @@
       "sprint": "BA-L S17",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-SEC-001", "HVCG-V2-SEC-002"],
+      "dependencies": [
+        "HVCG-V2-SEC-001",
+        "HVCG-V2-SEC-002"
+      ],
       "productionGate": true,
       "externalContactGate": false,
       "evidence": [
@@ -3263,14 +3285,16 @@
         "tests/unit/business/test_atlas_staging_sprint17.py",
         "PROJECT_ATLAS/Reports/HVCG_V2_STAGING_READINESS_SPRINT17.md"
       ],
-      "testsAcceptance": ["Cases A–Z"],
+      "testsAcceptance": [
+        "Cases A\u2013Z"
+      ],
       "completionDate": null,
       "notes": "Live Entra/Graph/AV/QBO still CREDENTIAL or EXTERNAL. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-STG-002",
       "masterPlanSection": "Release Preparation",
-      "requirement": "Release readiness matrix, Owner UAT package, QA evidence index, rollback plan prepared — not executed/approved",
+      "requirement": "Release readiness matrix, Owner UAT package, QA evidence index, rollback plan prepared \u2014 not executed/approved",
       "category": "Governance",
       "businessPurpose": "Enable Owner decision without false GO",
       "atlasModule": "Project Atlas",
@@ -3280,7 +3304,9 @@
       "sprint": "BA-L S17",
       "priority": "P0",
       "status": "IN_PROGRESS",
-      "dependencies": ["HVCG-V2-STG-001"],
+      "dependencies": [
+        "HVCG-V2-STG-001"
+      ],
       "productionGate": true,
       "externalContactGate": false,
       "evidence": [
@@ -3288,7 +3314,10 @@
         "PROJECT_ATLAS/Reports/HVCG_V2_OWNER_UAT_PACKAGE_SPRINT17.md",
         "PROJECT_ATLAS/Reports/HVCG_V2_QA_EVIDENCE_INDEX_SPRINT17.md"
       ],
-      "testsAcceptance": ["UAT package prepared", "QA index not GO"],
+      "testsAcceptance": [
+        "UAT package prepared",
+        "QA index not GO"
+      ],
       "completionDate": null,
       "notes": "Owner UAT NOT_STARTED; written QA GO false."
     },
@@ -3478,14 +3507,19 @@
       "owner": "Revenue",
       "sprint": "BA-B/L",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/lead_intake.py",
+        "tests/unit/business/test_lead_intake_uat_find001.py",
+        "apps/atlas-elite-os/src/pages/ClientIntakeWorkbench.tsx (atlas-usable-operating-layer)",
+        "PROJECT_ATLAS/Reports/HVCG_V2_UAT_FIND_001_INTAKE.md"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "UAT-FIND-001 Option 1: Owner-facing Development Elite Prospect Intake (/clients/intake) persists via DEV_LEAD_ADAPTER (canonical HVCG_Leads contract). Does NOT complete full Intake form specs library DoD (General/Capital/CFO/Procurement/Risk/AI/Owner). Not Production Track 1. AGT-INTAKE remains CONFIG_ONLY."
     },
     {
       "id": "HVCG-V2-C360-001",

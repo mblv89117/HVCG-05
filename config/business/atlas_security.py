@@ -452,8 +452,16 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
     payload = req.get("payload") or {}
     client = payload.get("client") or payload.get("clientId")
 
-    # Ops that require client
-    needs_client = op not in ("gates.registry", "security.ping", "contracts.load")
+    # Ops that require client (lead intake is pre-client — no clientId)
+    needs_client = op not in (
+        "gates.registry",
+        "security.ping",
+        "contracts.load",
+        "lead.create",
+        "lead.list",
+        "lead.get",
+        "lead.blc1",
+    )
     if needs_client:
         cc = require_client_context(mapped, client)
         if not cc.get("ok"):
@@ -464,6 +472,36 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
 
     if op == "gates.registry":
         return {"ok": True, "status": "SUCCESS", "gates": integ.production_gate_registry()}
+
+    if op in ("lead.create", "lead.list", "lead.get", "lead.blc1"):
+        import lead_intake as leads
+
+        if op == "lead.create":
+            out = leads.create_lead(
+                title=str(payload.get("title") or payload.get("Title") or ""),
+                contact_name=payload.get("contactName") or payload.get("ContactName"),
+                email=payload.get("email") or payload.get("Email"),
+                source=payload.get("source") or payload.get("Source"),
+                lead_source_detail=payload.get("leadSourceDetail") or payload.get("LeadSourceDetail"),
+                service_interest=payload.get("serviceInterest") or payload.get("ServiceInterest"),
+                business_need=payload.get("businessNeed") or payload.get("BusinessNeed"),
+                notes=payload.get("notes") or payload.get("Notes"),
+                force_duplicate=bool(payload.get("forceDistinct") or payload.get("forceDuplicate")),
+                actor=mapped.get("user"),
+            )
+            out["correlationId"] = correlation
+            return out
+        if op == "lead.list":
+            out = leads.list_leads()
+            out["correlationId"] = correlation
+            return out
+        if op == "lead.get":
+            out = leads.get_lead(str(payload.get("leadId") or ""))
+            out["correlationId"] = correlation
+            return out
+        out = leads.attempt_external_followup()
+        out["correlationId"] = correlation
+        return out
 
     if op == "doc.access":
         ctx = docs.establish_doc_context(
