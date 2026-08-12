@@ -27,26 +27,15 @@ import {
 } from '../data/workspaces';
 import { PortfolioPage } from './PortfolioPage';
 import { CapitalReadinessWorkbench } from './CapitalReadinessWorkbench';
+import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
 export { ClientsPage } from './LiveClientsPage';
 
 export function FinancialsPage() {
-  return (
-    <ModuleScaffold
-      title="Financial Intelligence"
-      subtitle="Verified cash, runway, and forecasting — no fabricated KPIs."
-      showPendingBanner={false}
-    >
-      <EmptyState
-        title="Not yet configured"
-        description="Intended source: Banking (Plaid) + Accounting (QuickBooks) once owner-authorized. Atlas will not invent balances or revenue figures."
-      />
-      <Caption1 style={{ display: 'block', marginTop: 12 }}>
-        Owner setup: connect Banking and Accounting under those modules, then return here.
-      </Caption1>
-    </ModuleScaffold>
-  );
+  // Sprint 7: Fractional CFO OS extends this surface — no second Finance SPA.
+  // Live QBO/Plaid remain PENDING_LIVE_SOURCE; workbench uses Dev fixtures only.
+  return <FractionalCfoWorkbench />;
 }
 
 export function RevenuePage() {

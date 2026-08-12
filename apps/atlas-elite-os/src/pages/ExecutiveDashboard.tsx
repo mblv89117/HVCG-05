@@ -73,6 +73,7 @@ export function ExecutiveDashboardPage() {
     alerts,
     initiatives,
     capitalReadiness,
+    cfoOperatingSummary,
     aiBrief,
     connection,
   } = model;
@@ -238,6 +239,22 @@ export function ExecutiveDashboardPage() {
               </div>
             ))}
           </div>
+        </AtlasCard>
+
+        <AtlasCard title="CFO operating summary" subtitle="Canonical Finance outputs · no fabricated live balances">
+          <div style={{ display: 'grid', gap: 10 }}>
+            {cfoOperatingSummary.map((c) => (
+              <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <Caption1>{c.label}</Caption1>
+                <Text size={300} weight="semibold">
+                  {c.value}
+                </Text>
+              </div>
+            ))}
+          </div>
+          <Caption1 style={{ display: 'block', marginTop: 10 }}>
+            Consumes Fractional CFO / Finance workbench — does not recalculate. PENDING_LIVE_SOURCE until adapters authorized.
+          </Caption1>
         </AtlasCard>
 
         <AtlasCard title="Today's priorities" subtitle="Upcoming deadlines">

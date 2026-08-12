@@ -125,6 +125,17 @@ export const executiveHomeData = {
     { label: 'Active financing opportunities', value: 'Data connection pending' },
     { label: 'Next financing milestone', value: 'Verify source import for CCB' },
   ],
+  /** Sprint 7 — consume canonical CFO outputs when approved; never invent balances. */
+  cfoOperatingSummary: [
+    { label: 'CFO Engagement', value: 'Awaiting verified binding' },
+    { label: 'Latest period', value: 'Awaiting verified source' },
+    { label: 'Cash (approved)', value: 'PENDING_LIVE_SOURCE' },
+    { label: '13-week forecast', value: 'Not started' },
+    { label: 'AR / AP', value: 'Awaiting verified aging' },
+    { label: 'Working capital', value: 'INSUFFICIENT_DATA' },
+    { label: 'Capital monitor', value: 'Not monitored' },
+    { label: 'Advisor review', value: 'None recorded' },
+  ],
   aiBrief: {
     generated: true,
     timestampLabel: 'Generated at page load — not a verified ledger',

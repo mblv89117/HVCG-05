@@ -41,7 +41,12 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
-import { Client360CapitalSection, Client360MigrationSection, Client360RevenueSection } from './Client360CommercialSections';
+import {
+  Client360CapitalSection,
+  Client360FinanceSection,
+  Client360MigrationSection,
+  Client360RevenueSection,
+} from './Client360CommercialSections';
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const { account, ready } = useMicrosoftAuth();
@@ -447,12 +452,15 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       ) : null}
 
       {tab === 'financials' ? (
-        <AtlasCard title="Financials">
-          <EmptyState
-            title="No verified financial figures for this client"
-            description="Atlas does not fabricate charts or balances. Connect Banking / Accounting when those sources are authorized."
-          />
-        </AtlasCard>
+        <div style={{ display: 'grid', gap: 16 }}>
+          <Client360FinanceSection clientHint={client?.legalName || client?.displayName || clientId} />
+          <AtlasCard title="Live balances">
+            <EmptyState
+              title="No verified live financial figures for this client"
+              description="PENDING_LIVE_SOURCE for QBO/Plaid. Atlas does not fabricate charts or balances. CFO cadence lives in Finance workbench (/financials)."
+            />
+          </AtlasCard>
+        </div>
       ) : null}
 
       {tab === 'revenue' ? (

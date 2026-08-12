@@ -253,3 +253,106 @@ export function Client360CapitalSection({ clientHint }: { clientHint?: string })
     </AtlasCard>
   );
 }
+
+/** Sprint 7 — Client 360 Finance / Fractional CFO (internal). No fabricated live balances. */
+export interface Client360FinanceSnapshot {
+  cfoEngagementStatus: string;
+  offerCode: string;
+  latestPeriod: string;
+  revenue: string;
+  cash: string;
+  forecastStatus: string;
+  forecastEndingCash: string;
+  ar: string;
+  ap: string;
+  debt: string;
+  workingCapital: string;
+  kpiStatus: string;
+  wip: string;
+  budgetVariance: string;
+  financialIssues: string[];
+  capitalReadinessMonitor: string;
+  latestAdvisorReview: string;
+  dataAdapterStatus: string;
+  disclaimer: string;
+}
+
+export function buildInternalFinanceSnapshot(clientHint?: string): Client360FinanceSnapshot {
+  const isAccg =
+    (clientHint || '').toUpperCase().includes('ACCG') ||
+    (clientHint || '').toLowerCase().includes('american capital');
+  return {
+    cfoEngagementStatus: isAccg ? 'Legacy retainer active — V2 CFO cadence optional / gated' : 'No verified CFO Engagement bound',
+    offerCode: 'OFF-FCFO-OP',
+    latestPeriod: 'Awaiting verified period close',
+    revenue: 'Awaiting verified source',
+    cash: 'PENDING_LIVE_SOURCE (bank / ledger)',
+    forecastStatus: 'Not started',
+    forecastEndingCash: '—',
+    ar: 'Awaiting verified AR aging',
+    ap: 'Awaiting verified AP aging',
+    debt: 'Awaiting debt schedule',
+    workingCapital: 'INSUFFICIENT_DATA until CA/CL verified',
+    kpiStatus: 'Targets not invented — require client/HVCG/sourced origin',
+    wip: isAccg ? 'NOT_APPLICABLE (service firm default)' : 'Conditional — set on engagement',
+    budgetVariance: 'No approved budget bound',
+    financialIssues: [],
+    capitalReadinessMonitor: 'Stable / not monitored until engagement enables it',
+    latestAdvisorReview: 'None recorded',
+    dataAdapterStatus: 'PENDING_LIVE_SOURCE — QBO/Plaid not represented as connected',
+    disclaimer: 'Advisory management view — not CPA attestation. HVCG invoice domain ≠ client AR/AP.',
+  };
+}
+
+export function Client360FinanceSection({ clientHint }: { clientHint?: string }) {
+  const snap = buildInternalFinanceSnapshot(clientHint);
+  return (
+    <AtlasCard title="Finance / Fractional CFO" subtitle="Internal Client 360 · provenance enforced · BL-C1">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <StatusChip label={snap.cfoEngagementStatus} tone="gold" />
+        <StatusChip label={snap.offerCode} tone="neutral" />
+        <StatusChip label={snap.dataAdapterStatus} tone="warning" />
+      </div>
+      <Text size={300} style={{ display: 'block' }}>
+        Latest period: {snap.latestPeriod}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Revenue: {snap.revenue}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Cash: {snap.cash}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        13-week forecast: {snap.forecastStatus} · ending cash {snap.forecastEndingCash}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        AR: {snap.ar} · AP: {snap.ap} · Debt: {snap.debt}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Working capital: {snap.workingCapital}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        KPIs: {snap.kpiStatus}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        WIP: {snap.wip}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Budget variance: {snap.budgetVariance}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Issues: {snap.financialIssues.length ? snap.financialIssues.join('; ') : 'None recorded'}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Capital Readiness monitor: {snap.capitalReadinessMonitor}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Latest advisor review: {snap.latestAdvisorReview}
+      </Text>
+      <Caption1 style={{ display: 'block', marginTop: 10 }}>{snap.disclaimer}</Caption1>
+      <Caption1 style={{ display: 'block', marginTop: 6 }}>
+        Pricing from canonical catalog — not hard-coded. No auto client / bookkeeper / CPA send.
+      </Caption1>
+    </AtlasCard>
+  );
+}
