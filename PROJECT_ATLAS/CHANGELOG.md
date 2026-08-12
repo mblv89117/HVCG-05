@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-12 | Sprint 15 Dev (uncommitted): Integration Convergence — shared contracts, domain ownership, dependency/shadow-SoR audits, Cases A–Q, Production gap inventory. Coverage **50.0%** (136 reqs). **No Production / no Sprint 16.** |
+| 2026-08-12 | Sprint 14 commit: Executive Owner Support (BA `0493765` · Elite `0d7c3f7`). AGT-CONCIERGE FULL_DEV_RUNTIME (PRODUCTION_GATED). **No Production.** |
 | 2026-08-12 | Sprint 14 Dev (uncommitted): Executive Owner Support + Intelligence — `executive_owner_support.py`, Concierge FULL_DEV_RUNTIME (PRODUCTION_GATED), Decision Intelligence, Owner Brief v2, Elite `/owner-support`. Coverage **50.7%** (134 reqs). **No Production / no Sprint 15.** |
 | 2026-08-12 | Sprint 13 commit: Documents/Portal/M365 (BA `d8804e5` · Elite `199c4b4`). GATE-CLIENT-PORTAL-PROD + GATE-M365-SECOND-BRAIN-PROD. **No Production.** |
 | 2026-08-11 | Sprint 13 Dev (pending commit): Documents / Client Portal / M365 — `document_os.py`, DocumentRecords, Request Center + Portal Dev UX, Second Brain document layer, GATE-CLIENT-PORTAL-PROD + GATE-M365-SECOND-BRAIN-PROD. AGT-DOC-CHECKLIST/SECOND-BRAIN deepened (PRODUCTION_GATED). Coverage **51.9%** (131 reqs; truth over %). **No Production / no Sprint 14.** |

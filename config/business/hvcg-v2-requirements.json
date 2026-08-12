@@ -3130,6 +3130,62 @@
       "notes": "Consumes domain SoRs; does not replace them."
     },
     {
+      "id": "HVCG-V2-INT-001",
+      "masterPlanSection": "Integration Convergence",
+      "requirement": "Shared Atlas contracts (IDs/enums/failure semantics) + domain ownership preserved across BA V2 modules; no shadow SoR",
+      "category": "Integration",
+      "businessPurpose": "One coherent Development operating system before hardening",
+      "atlasModule": "Atlas Integration",
+      "existingCapability": "Per-domain engines S9–S14",
+      "implementationMethod": "atlas_integration + atlas-integration-contracts.json",
+      "owner": "Architecture",
+      "sprint": "BA-K S15",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "productionGate": false,
+      "externalContactGate": false,
+      "evidence": [
+        "config/business/atlas_integration.py",
+        "config/business/atlas-integration-contracts.json",
+        "tests/unit/business/test_atlas_integration_sprint15.py"
+      ],
+      "testsAcceptance": [
+        "Cases A–Q integration pack"
+      ],
+      "completionDate": null,
+      "notes": "Integration ≠ Production readiness. Dual BA/Elite worktree baseline."
+    },
+    {
+      "id": "HVCG-V2-INT-002",
+      "masterPlanSection": "Integration Convergence",
+      "requirement": "System-wide BL-C1, permission parity, Production gate closure, and 18-agent governance plane survive cross-domain journey",
+      "category": "Integration",
+      "businessPurpose": "No bypass paths after convergence",
+      "atlasModule": "AI / Security",
+      "existingCapability": "Per-sprint gate tests",
+      "implementationMethod": "Integrated regression Cases H/I/O/P/Q",
+      "owner": "Security / Architecture",
+      "sprint": "BA-K S15",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-INT-001"],
+      "productionGate": true,
+      "externalContactGate": true,
+      "evidence": [
+        "tests/unit/business/test_atlas_integration_sprint15.py",
+        "PROJECT_ATLAS/Reports/HVCG_V2_INTEGRATION_CONVERGENCE_SPRINT15.md"
+      ],
+      "testsAcceptance": [
+        "Case I BL-C1",
+        "Case O 18 agents",
+        "Case P gates closed",
+        "Case Q journey"
+      ],
+      "completionDate": null,
+      "notes": "AGT-CFO-OPS remains domain binding — not Agent 19."
+    },
+    {
       "id": "HVCG-V2-MKT-001",
       "masterPlanSection": "Control \u00a731",
       "requirement": "Business Development / Content operating plan in Atlas (strategy/campaigns/CTA/attribution) \u2014 not a social platform",

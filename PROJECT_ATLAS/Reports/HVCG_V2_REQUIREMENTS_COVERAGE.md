@@ -1,7 +1,7 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-12 (Sprint 14 Development — Executive Owner Support)  
-**Source:** `config/business/hvcg-v2-requirements.json` (134 requirements)
+**As of:** 2026-08-12 (Sprint 15 Development — Integration Convergence)  
+**Source:** `config/business/hvcg-v2-requirements.json` (136 requirements)
 
 ## Totals
 
@@ -9,26 +9,24 @@
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 49 |
+| `IN_PROGRESS` | 51 |
 | `PLANNED` | 15 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage %** | **50.7%** |
+| **Coverage %** | **50.0%** |
 
-Previous (S13): **51.9%** (131 reqs). Delta: −1.2% from OWN-003/004/005 + OWN-002→IN_PROGRESS (truth over %).
+Previous (S14): **50.7%** (134 reqs). Delta: −0.7% from INT-001/002 (truth over %).
 
-## Changed IDs (Sprint 14)
+## Changed IDs (Sprint 15)
 
 | ID | Change |
 |----|--------|
-| `HVCG-V2-OWN-002` | PLANNED → **IN_PROGRESS** — restricted Owner Support ACL/docs |
-| `HVCG-V2-OWN-003` | **NEW** IN_PROGRESS — AGT-CONCIERGE governed runtime |
-| `HVCG-V2-OWN-004` | **NEW** IN_PROGRESS — Decision Intelligence |
-| `HVCG-V2-OWN-005` | **NEW** IN_PROGRESS — Executive Intelligence / Owner Brief |
+| `HVCG-V2-INT-001` | **NEW** IN_PROGRESS — shared contracts + domain ownership |
+| `HVCG-V2-INT-002` | **NEW** IN_PROGRESS — BL-C1 / gates / 18-agent governance survive journey |
 
 ## Evidence
 
-`executive_owner_support.py`, policy, `HVCG_OwnerSupportEngagements`, `test_executive_owner_support_sprint14.py`, `ExecutiveOwnerSupportWorkbench.tsx`, capability report S14
+`atlas_integration.py`, `atlas-integration-contracts.json`, `test_atlas_integration_sprint15.py`, integration + production-gap reports, S15 handoff
 
-## Production gaps
+## Note
 
-Live Owner Support SP ACLs, Production Concierge, Graph RAG, portal activation — gated.
+Integration ≠ Production readiness. Coverage intentionally does not inflate.

@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-12 (Sprint 14 Executive Owner Support mid-program) |
+| **As of** | 2026-08-12 (Sprint 15 Integration Convergence mid-program) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 134 |
+| **Total requirements** | 136 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,20 +22,20 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 14)
+## Status summary (mid-program · Sprint 15)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 49 |
+| `IN_PROGRESS` | 51 |
 | `PLANNED` | 15 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **50.7%** |
+| **Coverage (Implemented+Reused)** | **50.0%** |
 
-**Corrections this review:** Sprint 14 OWN-002→IN_PROGRESS; OWN-003/004/005 added. AGT-CONCIERGE → FULL_DEV_RUNTIME (PRODUCTION_GATED). Coverage % fell honestly.
+**Corrections this review:** Sprint 15 added INT-001/002 (integration contracts + governance journey). Coverage fell honestly. Integration ≠ Production readiness.
 
-**Prior:** Sprint 13 DOC-004/005/006; DOC-002/003 IN_PROGRESS. Portal/M365 Production gates recorded.
+**Prior:** Sprint 14 OWN-002→005; AGT-CONCIERGE FULL_DEV_RUNTIME (PRODUCTION_GATED).
 
 ## Acceptance checklist coverage (Control §47)
 
