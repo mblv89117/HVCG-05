@@ -2820,37 +2820,132 @@
       "owner": "Ops / AI",
       "sprint": "BA-J/H",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": true,
-      "evidence": [],
-      "testsAcceptance": [],
+      "evidence": [
+        "config/business/document_os.py#ingest_email_attachment",
+        "config/business/document_os.py#classify_client_match",
+        "tests/unit/business/test_document_os_sprint13.py"
+      ],
+      "testsAcceptance": [
+        "Case C ambiguous email → NEEDS_CLIENT_MATCH"
+      ],
       "completionDate": null,
-      "notes": ""
+      "notes": "Sprint 13 Dev workflow: no Production mail connectors; uncertain identity never auto-files into client folder."
     },
     {
       "id": "HVCG-V2-DOC-003",
       "masterPlanSection": "Document Requests",
-      "requirement": "Extend Document Request statuses and completion %",
+      "requirement": "Extend Document Request statuses and completion %; checklist item ≠ document record",
       "category": "Documents",
       "businessPurpose": "Delivery control",
       "atlasModule": "Portal / SP",
       "existingCapability": "HVCG_DocumentRequests",
-      "implementationMethod": "Status model alignment",
+      "implementationMethod": "Status model alignment + document_os request workflow",
       "owner": "Ops",
-      "sprint": "BA-J",
+      "sprint": "BA-J S13",
       "priority": "P1",
-      "status": "EXISTING_REUSED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "src/sharepoint/lists/HVCG_DocumentRequests.json"
+        "src/sharepoint/lists/HVCG_DocumentRequests.json",
+        "config/business/document_os.py#create_document_request",
+        "config/business/document-operating-policy.json"
       ],
-      "testsAcceptance": [],
-      "completionDate": "2026-08-11",
-      "notes": ""
+      "testsAcceptance": [
+        "Document lifecycle E2E",
+        "Waiver + BL-C1 send block"
+      ],
+      "completionDate": null,
+      "notes": "Sprint 13: request workflow operational in Dev; Production portal send remains gated."
+    },
+    {
+      "id": "HVCG-V2-DOC-004",
+      "masterPlanSection": "Canonical Document Record",
+      "requirement": "One Document Record metadata contract; SharePoint remains bytes SoR; originals immutable",
+      "category": "Documents",
+      "businessPurpose": "One governed document identity across domains",
+      "atlasModule": "Documents / SP",
+      "existingCapability": "Client libraries + DocumentRequests",
+      "implementationMethod": "HVCG_DocumentRecords + document_os",
+      "owner": "Ops / Eng",
+      "sprint": "BA-J S13",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-DOC-001"],
+      "productionGate": false,
+      "externalContactGate": false,
+      "evidence": [
+        "src/sharepoint/lists/HVCG_DocumentRecords.json",
+        "config/business/document_os.py#create_document_record",
+        "tests/unit/business/test_document_os_sprint13.py"
+      ],
+      "testsAcceptance": [
+        "Cases A–N",
+        "Document lifecycle E2E"
+      ],
+      "completionDate": null,
+      "notes": "RECEIVED ≠ ACCEPTED; draft ≠ final; no bulk destructive migration."
+    },
+    {
+      "id": "HVCG-V2-DOC-005",
+      "masterPlanSection": "Client Portal Documents",
+      "requirement": "Extend existing Client Portal for requests/upload/status/approved deliverables with server-side isolation",
+      "category": "Documents",
+      "businessPurpose": "Secure client document exchange without a second portal product",
+      "atlasModule": "Client Portal / Elite",
+      "existingCapability": "DocumentsOperatingPage + portal lists",
+      "implementationMethod": "DocumentLifecycleWorkbench + document_os portal gates",
+      "owner": "Eng / Ops",
+      "sprint": "BA-J S13",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-DOC-003", "HVCG-V2-DOC-004"],
+      "productionGate": true,
+      "externalContactGate": true,
+      "evidence": [
+        "apps/atlas-elite-os/src/pages/DocumentLifecycleWorkbench.tsx",
+        "PROJECT_ATLAS/Decisions/GATE-CLIENT-PORTAL-PROD.md",
+        "tests/unit/business/test_document_os_sprint13.py"
+      ],
+      "testsAcceptance": [
+        "Case B cross-client BLOCKED_PERMISSION",
+        "Client Portal E2E"
+      ],
+      "completionDate": null,
+      "notes": "GATE-CLIENT-PORTAL-PROD — Dev UI ≠ Production activation."
+    },
+    {
+      "id": "HVCG-V2-DOC-006",
+      "masterPlanSection": "Second Brain M365 Documents",
+      "requirement": "Permission-aware Second Brain document retrieval with citations, version/freshness, prompt-injection defense",
+      "category": "AI / Documents",
+      "businessPurpose": "Governed evidence answers — not unrestricted file search",
+      "atlasModule": "Second Brain / SP",
+      "existingCapability": "ai_orchestrator.second_brain_query",
+      "implementationMethod": "document_os.second_brain_document_query + orchestrator document layer",
+      "owner": "AI / Eng",
+      "sprint": "BA-J/H S13",
+      "priority": "P1",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-DOC-004"],
+      "productionGate": true,
+      "externalContactGate": false,
+      "evidence": [
+        "config/business/document_os.py#second_brain_document_query",
+        "config/business/ai_orchestrator.py#second_brain_query",
+        "PROJECT_ATLAS/Decisions/GATE-M365-SECOND-BRAIN-PROD.md"
+      ],
+      "testsAcceptance": [
+        "Second Brain document E2E",
+        "Cases F/G/H/I/J/K"
+      ],
+      "completionDate": null,
+      "notes": "GATE-M365-SECOND-BRAIN-PROD — fixture retrieval only; not Production RAG."
     },
     {
       "id": "HVCG-V2-COMP-001",

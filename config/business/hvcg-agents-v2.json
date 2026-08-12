@@ -35,10 +35,20 @@
       "riskLevel": "LOW",
       "externalCommunicationAllowed": false,
       "humanApproval": "conditional",
-      "runtime": "config/business/capital_readiness.py#build_document_checklist",
-      "triggers": ["Paid Capital Diagnostic", "Capital Request created"],
-      "inputs": ["financingType", "amount", "transactionHints"],
-      "outputs": ["conditionalDocumentChecklist"]
+      "runtime": "config/business/document_os.py#run_doc_checklist_agent",
+      "legacyRuntime": "config/business/capital_readiness.py#build_document_checklist",
+      "policy": "config/business/document-operating-policy.json",
+      "triggers": ["Paid Capital Diagnostic", "Capital Request created", "Document Request Center", "Engagement checklist"],
+      "inputs": ["financingType", "amount", "transactionHints", "serviceLine", "engagement", "domain", "documentRegistry"],
+      "outputs": ["conditionalDocumentChecklist", "draftDocumentRequests", "missingStaleSupersededFlags"],
+      "never": [
+        "mark sensitive documents legally sufficient",
+        "certify financial documents",
+        "accept legal/tax/insurance conclusions",
+        "send document requests externally without approval",
+        "delete original documents"
+      ],
+      "note": "Sprint 13: deepened document-system + portal request integration. Still PRODUCTION_GATED — not PRODUCTION_READY."
     },
     {
       "agentCode": "AGT-CAP-READY",
@@ -391,7 +401,7 @@
         "change pricing",
         "modify contracts"
       ],
-      "note": "Sprint 10 Growth operating-review support. BL-C1 active."
+      "note": "Sprint 10 Growth + Sprint 13 Document Request status consumption (overdue/missing). Draft follow-up only — no autonomous send (BL-C1)."
     },
     {
       "agentCode": "AGT-CONCIERGE",
@@ -411,9 +421,12 @@
       "externalCommunicationAllowed": false,
       "humanApproval": "permission_aware_retrieval",
       "runtime": "config/business/ai_orchestrator.py#second_brain_query",
+      "documentRuntime": "config/business/document_os.py#second_brain_document_query",
       "policy": "config/business/ai-governance-policy.json",
+      "documentPolicy": "config/business/document-operating-policy.json",
       "orchestrator": "config/business/ai_orchestrator.py",
-      "note": "Sprint 11 Development Second Brain — permission-aware retrieval, citations, conflicts, freshness. Not Production RAG."
+      "productionGate": "GATE-M365-SECOND-BRAIN-PROD",
+      "note": "Sprint 13: deepened document-record retrieval + citations via document_os. Fixture/local only — not Production RAG. Still PRODUCTION_GATED."
     }
   ]
 }

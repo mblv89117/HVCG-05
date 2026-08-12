@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-11 (Sprint 12 Revenue Truth mid-program) |
+| **As of** | 2026-08-11 (Sprint 13 Documents / Portal / M365 mid-program) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 128 |
+| **Total requirements** | 131 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,20 +22,20 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 12)
+## Status summary (mid-program · Sprint 13)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
-| `EXISTING_REUSED` | 11 |
-| `IN_PROGRESS` | 40 |
-| `PLANNED` | 17 |
+| `EXISTING_REUSED` | 10 |
+| `IN_PROGRESS` | 45 |
+| `PLANNED` | 16 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **53.9%** |
+| **Coverage (Implemented+Reused)** | **51.9%** |
 
-**Corrections this review:** Sprint 12 added REV-008 (Revenue Event truth). AGT-INVOICE/REFERRAL advanced to FULL_DEV_RUNTIME but remain PRODUCTION_GATED — never PRODUCTION_READY from Dev alone.
+**Corrections this review:** Sprint 13 added DOC-004/005/006; DOC-002/003 → IN_PROGRESS with document_os evidence. Coverage % fell honestly (new reqs + demotions). AGT-DOC-CHECKLIST / AGT-SECOND-BRAIN deepened but remain PRODUCTION_GATED — never PRODUCTION_READY from Dev alone. Portal/M365 Production gates recorded.
 
-**Corrections this review:** GROW-001 demoted from EXISTING_REUSED → IN_PROGRESS (honest Growth OS scope); GROW-002 added (KPI source truth / domain routing); RISK-002 annotated with Production ACL gate. Sprint 11: AI-001…018 evidence bound to orchestrator (remain IN_PROGRESS); AI-021/022 PLANNED → IN_PROGRESS. No silent IMPLEMENTED from stubs. No Agent 19.
+**Prior:** Sprint 12 added REV-008. AGT-INVOICE/REFERRAL FULL_DEV_RUNTIME (PRODUCTION_GATED). GROW/RISK/AI notes from S9–S11 retained.
 
 ## Acceptance checklist coverage (Control §47)
 
@@ -60,7 +60,7 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | 18 AI agents | HVCG-V2-AI-001…HVCG-V2-AI-018 | `IN_PROGRESS` |
 | AI governance | HVCG-V2-AI-019 | `EXISTING_REUSED` |
 | M365 workflows | HVCG-V2-WF-001…HVCG-V2-WF-010 | `EXISTING_REUSED`, `PLANNED` |
-| Document architecture | HVCG-V2-DOC-001 | `IMPLEMENTED` |
+| Document architecture | HVCG-V2-DOC-001…006 | `IMPLEMENTED` / `IN_PROGRESS` |
 | Capital Readiness | HVCG-V2-CAP-002 | `PLANNED` |
 | CFO system | HVCG-V2-CFO-001 / CFO-004 | `EXISTING_REUSED` / `IN_PROGRESS` |
 | Procurement | HVCG-V2-PROC-001 | `PLANNED` |
@@ -135,8 +135,11 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | `HVCG-V2-DIAG-003` | Domain diagnostics: CFO/Procurement/Risk/AI/Growth/Institutional | Diagnostics | Revenue | BA-B | P1 | `PLANNED` |  |
 | `HVCG-V2-DIAG-004` | Need → Diagnostic → Findings → Offer → Proposal mapping | Diagnostics / Revenue | Revenue OS | BA-B | P0 | `PLANNED` |  |
 | `HVCG-V2-DOC-001` | Reconcile client folder taxonomy with V2 00-13 model; preserve legacy 00-23 | Documents | SharePoint | BA-A S2 | P1 | `IMPLEMENTED` | config/business/folder-taxonomy-map.json |
-| `HVCG-V2-DOC-002` | Email attachment intake: identify→classify→SP→checklist→audit; no unsafe auto-file | Documents | Integration Hub / SP | BA-J/H | P1 | `PLANNED` |  |
-| `HVCG-V2-DOC-003` | Extend Document Request statuses and completion % | Documents | Portal / SP | BA-J | P1 | `EXISTING_REUSED` | src/sharepoint/lists/HVCG_DocumentRequests.json |
+| `HVCG-V2-DOC-002` | Email attachment intake: identify→classify→SP→checklist→audit; no unsafe auto-file | Documents | Integration Hub / SP | BA-J/H S13 | P1 | `IN_PROGRESS` | document_os ingest + client-match |
+| `HVCG-V2-DOC-003` | Extend Document Request statuses and completion %; checklist ≠ document | Documents | Portal / SP | BA-J S13 | P1 | `IN_PROGRESS` | DocumentRequests + document_os |
+| `HVCG-V2-DOC-004` | Canonical Document Record metadata; SharePoint bytes SoR | Documents | Documents / SP | BA-J S13 | P0 | `IN_PROGRESS` | HVCG_DocumentRecords + document_os |
+| `HVCG-V2-DOC-005` | Client Portal documents with server-side isolation (Prod gated) | Documents | Client Portal | BA-J S13 | P0 | `IN_PROGRESS` | DocumentLifecycleWorkbench + GATE-CLIENT-PORTAL-PROD |
+| `HVCG-V2-DOC-006` | Second Brain document retrieval + citations (Prod gated) | AI / Documents | Second Brain / SP | BA-J/H S13 | P1 | `IN_PROGRESS` | second_brain_document_query + GATE-M365-SECOND-BRAIN-PROD |
 | `HVCG-V2-GROW-001` | Growth OS via Ops Hub + Revenue — 90-day plans/KPIs/SOPs/cadence | Growth | Operations Hub | BA-G | P1 | `EXISTING_REUSED` |  |
 | `HVCG-V2-MIG-001` | Client migration workflow with full state fields (not just seed table) | Client Migration | Migration | BA-A/J | P0 | `IN_PROGRESS` | config/business/client-migration-seed.json; src/sharepoint/lists/HVCG_ClientMigr |
 | `HVCG-V2-MIG-002` | Never auto-reprice legacy clients | Client Migration | Migration | BA-A S1 | P0 | `IMPLEMENTED` | tests/unit/business/test_business_architecture_v2.py |

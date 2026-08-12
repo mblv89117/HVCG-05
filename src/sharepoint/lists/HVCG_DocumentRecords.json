@@ -1,0 +1,26 @@
+{
+  "title": "HVCG_DocumentRecords",
+  "description": "Canonical document metadata (not a second file store). Bytes remain in SharePoint client libraries.",
+  "template": "genericList",
+  "domain": "Documents",
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+    { "internalName": "DocumentId", "displayName": "DocumentId", "type": "Text", "required": true, "indexed": true },
+    { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+    { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "indexed": true },
+    { "internalName": "DocumentRequestId", "displayName": "DocumentRequestId", "type": "Text", "indexed": true },
+    { "internalName": "Domain", "displayName": "Domain", "type": "Text", "indexed": true },
+    { "internalName": "DocumentType", "displayName": "DocumentType", "type": "Text", "indexed": true },
+    { "internalName": "Status", "displayName": "Status", "type": "Text", "indexed": true },
+    { "internalName": "Visibility", "displayName": "Visibility", "type": "Text", "indexed": true },
+    { "internalName": "PortalVisibility", "displayName": "PortalVisibility", "type": "Text" },
+    { "internalName": "Version", "displayName": "Version", "type": "Number" },
+    { "internalName": "CurrentFlag", "displayName": "CurrentFlag", "type": "Boolean", "default": true },
+    { "internalName": "SharePointLocation", "displayName": "SharePointLocation", "type": "Text" },
+    { "internalName": "ContentHash", "displayName": "ContentHash", "type": "Text", "indexed": true },
+    { "internalName": "PeriodStart", "displayName": "PeriodStart", "type": "DateTime" },
+    { "internalName": "PeriodEnd", "displayName": "PeriodEnd", "type": "DateTime" },
+    { "internalName": "ExpirationDate", "displayName": "ExpirationDate", "type": "DateTime" },
+    { "internalName": "VerificationStatus", "displayName": "VerificationStatus", "type": "Text" }
+  ]
+}

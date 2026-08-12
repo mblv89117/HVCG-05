@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-11 | Sprint 13 Dev (pending commit): Documents / Client Portal / M365 — `document_os.py`, DocumentRecords, Request Center + Portal Dev UX, Second Brain document layer, GATE-CLIENT-PORTAL-PROD + GATE-M365-SECOND-BRAIN-PROD. AGT-DOC-CHECKLIST/SECOND-BRAIN deepened (PRODUCTION_GATED). Coverage **51.9%** (131 reqs; truth over %). **No Production / no Sprint 14.** |
+| 2026-08-11 | Sprint 12 commit: Revenue Truth (BA `fe00069` · Elite `0a28811`). AGT-INVOICE/REFERRAL FULL_DEV_RUNTIME (PRODUCTION_GATED). **No Production.** |
 | 2026-08-11 | Sprint 12 Dev (pending commit): Revenue Truth — invoices/payments/reconciliation, success fees, referral eligibility/approval (STOP before payout), ACCG protected; Elite Revenue workbench. AGT-INVOICE/REFERRAL → FULL_DEV_RUNTIME (PRODUCTION_GATED). Coverage **53.9%**. **No Production / no Sprint 13.** |
 | 2026-08-11 | Sprint 11 commit: AI Orchestration + Second Brain (BA `f5f954c` · Elite `ee9641f`). Agents remain PRODUCTION_GATED. **No Production.** |
 | 2026-08-11 | Sprint 11 Dev (pending commit): AI Orchestration + Second Brain — `ai_orchestrator.py`, tool registry, governance policy, Approval Router, golden/negative tests; Elite `/ai` Ask Atlas + Client 360 AI. No PRODUCTION_READY agents. **No Production / no Sprint 12.** |

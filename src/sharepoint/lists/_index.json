@@ -10,6 +10,15 @@
       "description": "Client master records"
     },
     {
+      "name": "HVCG_DocumentRecords",
+      "path": "src/sharepoint/lists/HVCG_DocumentRecords.json",
+      "columnCount": 18,
+      "description": "Canonical document metadata (Dev) — SharePoint remains bytes SoR",
+      "domain": "Documents",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
       "name": "HVCG_Contacts",
       "path": "src/sharepoint/lists/HVCG_Contacts.json",
       "columnCount": 12,

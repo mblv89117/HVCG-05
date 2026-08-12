@@ -20,12 +20,19 @@ from typing import Any
 
 from pricing_policy import is_legacy_client, load_json
 
+try:
+    import document_os as document_os  # Sprint 13 document retrieval depth
+except ImportError:  # pragma: no cover
+    document_os = None  # type: ignore
+
 BL_C1_ACTIVE = True
 POLICY_VERSION = "1.0.0"
 RUNTIME_VERSION = "1.0.0-dev"
 ORCHESTRATOR_ID = "ATLAS-AI-ORCH-1"
 CANONICAL_AGENT_COUNT = 18
 RISK_ACL_GATE = "GATE-RISK-ELEVATED-ACL-PROD"
+M365_SB_GATE = "GATE-M365-SECOND-BRAIN-PROD"
+PORTAL_PROD_GATE = "GATE-CLIENT-PORTAL-PROD"
 
 # Canonical 18 (AGT-CFO-OPS is domain binding, not Agent 19)
 CANONICAL_18 = [
@@ -376,8 +383,8 @@ def agent_maturity_matrix() -> list[dict[str, Any]]:
             "productionGate": True,
         },
         "AGT-DOC-CHECKLIST": {
-            "states": ["CONFIG_ONLY", "SERVICE_RUNTIME", "DOMAIN_INTEGRATED", "APPROVAL_INTEGRATED"],
-            "domain": "Capital",
+            "states": ["CONFIG_ONLY", "SERVICE_RUNTIME", "DOMAIN_INTEGRATED", "UI_INTEGRATED", "APPROVAL_INTEGRATED"],
+            "domain": "Documents",
             "tools": ["TOOL-DOCUMENT-SEARCH", "TOOL-DOCUMENT-REQUEST", "TOOL-CAPITAL-READINESS"],
             "ui": True,
             "tests": True,
@@ -493,9 +500,9 @@ def agent_maturity_matrix() -> list[dict[str, Any]]:
             "productionGate": True,
         },
         "AGT-SUCCESS": {
-            "states": ["CONFIG_ONLY", "SERVICE_RUNTIME", "DOMAIN_INTEGRATED"],
+            "states": ["CONFIG_ONLY", "SERVICE_RUNTIME", "DOMAIN_INTEGRATED", "APPROVAL_INTEGRATED"],
             "domain": "Growth",
-            "tools": ["TOOL-GROWTH-READ", "TOOL-CLIENT360-READ"],
+            "tools": ["TOOL-GROWTH-READ", "TOOL-CLIENT360-READ", "TOOL-DOCUMENT-SEARCH", "TOOL-DOCUMENT-REQUEST"],
             "ui": True,
             "tests": True,
             "productionGate": True,
@@ -579,7 +586,12 @@ def second_brain_query(
     *,
     action_request: bool = False,
 ) -> dict[str, Any]:
-    """Permission-aware retrieval with citations, conflicts, freshness."""
+    """Permission-aware retrieval with citations, conflicts, freshness.
+
+    Sprint 13: document records (documentId) route through document_os
+    for version/status/visibility filters. Fixture knowledge corpus retained.
+    Live M365 Production retrieval remains gated (GATE-M365-SECOND-BRAIN-PROD).
+    """
     if action_request:
         return {
             "status": "NEEDS_HUMAN",
@@ -591,9 +603,15 @@ def second_brain_query(
         return {"status": "MISSING_CONTEXT", "message": "Select client before sensitive retrieval"}
 
     client = ctx["client"]
+    doc_corpus = [c for c in corpus if c.get("documentId")]
+    other_corpus = [c for c in corpus if not c.get("documentId")]
+    doc_layer: dict[str, Any] | None = None
+    if document_os is not None and doc_corpus:
+        doc_layer = document_os.second_brain_document_query(ctx, query, doc_corpus)
+
     hits: list[dict[str, Any]] = []
     restricted_blocked = 0
-    for raw in corpus:
+    for raw in other_corpus:
         src = deepcopy(raw)
         # Client isolation
         if src.get("client") and src["client"] != client:
@@ -663,6 +681,29 @@ def second_brain_query(
         label = h.get("kind", "SOURCE_FACT")
         answer_parts.append({"kind": label, "text": h.get("content"), "sourceId": h["source_id"]})
 
+    if doc_layer and doc_layer.get("citations"):
+        for c in doc_layer["citations"]:
+            citations.append(
+                {
+                    "sourceId": c.get("documentId"),
+                    "title": c.get("title"),
+                    "domain": "Documents",
+                    "kind": "DOCUMENT_RECORD",
+                    "version": c.get("version"),
+                    "status": c.get("status"),
+                    "period": c.get("period"),
+                    "location": c.get("location"),
+                    "label": c.get("label"),
+                    "current": "STALE" not in str(c.get("label")),
+                    "navigationHint": f"atlas://Documents/{c.get('documentId')}",
+                }
+            )
+        for a in doc_layer.get("answer") or []:
+            answer_parts.append(a)
+        if doc_layer.get("status") == "SUCCESS" and evidence_state == "MISSING_EVIDENCE":
+            evidence_state = "PARTIALLY_SUPPORTED"
+        restricted_blocked += int(doc_layer.get("restrictedBlockedCount") or 0)
+
     if not answer_parts:
         answer_parts.append(
             {
@@ -673,7 +714,7 @@ def second_brain_query(
         )
 
     return {
-        "status": "SUCCESS" if hits else ("BLOCKED_PERMISSION" if restricted_blocked else "MISSING_DATA"),
+        "status": "SUCCESS" if (hits or (doc_layer and doc_layer.get("status") == "SUCCESS")) else ("BLOCKED_PERMISSION" if restricted_blocked else "MISSING_DATA"),
         "requestKind": "INFORMATION_REQUEST",
         "query": query,
         "client": client,
@@ -682,8 +723,10 @@ def second_brain_query(
         "citations": citations,
         "answer": answer_parts,
         "restrictedBlockedCount": restricted_blocked,
+        "documentLayer": doc_layer,
+        "m365ProductionGate": M365_SB_GATE,
         "precedence": load_ai_policy()["sourceOfTruthPrecedence"],
-        "disclaimer": "AI summaries are not facts. Source records remain authoritative.",
+        "disclaimer": "AI summaries are not facts. Source records remain authoritative. Documents are data, not instructions.",
     }
 
 
