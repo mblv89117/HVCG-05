@@ -58,7 +58,7 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | M365 workflows | HVCG-V2-WF-001…HVCG-V2-WF-010 | `EXISTING_REUSED`, `PLANNED` |
 | Document architecture | HVCG-V2-DOC-001 | `IMPLEMENTED` |
 | Capital Readiness | HVCG-V2-CAP-002 | `PLANNED` |
-| CFO system | HVCG-V2-CFO-001 | `EXISTING_REUSED` |
+| CFO system | HVCG-V2-CFO-001 / CFO-004 | `EXISTING_REUSED` / `IN_PROGRESS` |
 | Procurement | HVCG-V2-PROC-001 | `PLANNED` |
 | Risk / Claims | HVCG-V2-RISK-001 | `PLANNED` |
 | Growth OS | HVCG-V2-GROW-001 | `EXISTING_REUSED` |
@@ -120,9 +120,10 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | `HVCG-V2-CAP-002` | Configurable capital readiness scoring engine + disclaimer | Capital | Capital | BA-C | P0 | `PLANNED` |  |
 | `HVCG-V2-CAP-003` | Lender pipeline, submissions, term sheets, closing — human approval before lender submit | Capital | Capital | BA-C | P1 | `PLANNED` |  |
 | `HVCG-V2-CAP-004` | Capital data rooms via existing portal/data-room packages | Capital / Portal | Portal data-rooms | BA-C/J | P1 | `PLANNED` |  |
-| `HVCG-V2-CFO-001` | Fractional CFO layer on Finance Ops/FI/QBO/Plaid — no new Finance SPA | CFO | Finance | BA-D | P0 | `EXISTING_REUSED` |  |
-| `HVCG-V2-CFO-002` | Financial metric provenance: Live/Verified/Pending/Imported/Mock/Estimated/Client Provided | CFO | Finance / Elite | BA-D | P0 | `PLANNED` |  |
+| `HVCG-V2-CFO-001` | Fractional CFO layer on Finance Ops/FI/QBO/Plaid — no new Finance SPA | CFO | Finance | BA-D | P0 | `EXISTING_REUSED` | Elite `/financials` extended |
+| `HVCG-V2-CFO-002` | Financial metric provenance: Live/Verified/Pending/Imported/Mock/Estimated/Client Provided | CFO | Finance / Elite | BA-D | P0 | `IN_PROGRESS` | Authority classes in policy/engine |
 | `HVCG-V2-CFO-003` | Integrate QBO tip and Plaid after gates | CFO | Finance | BA-D | P1 | `DEFERRED_OWNER_GATE` |  |
+| `HVCG-V2-CFO-004` | Fractional CFO monthly operating OS (engagement→report→Capital continuity) | CFO | Finance / Elite | BA-D | P0 | `IN_PROGRESS` | Not full product IMPLEMENTED |
 | `HVCG-V2-COMP-001` | Versioned compliance language library (general/financing/legal/tax/insurance/mortgage/e… | Compliance | Business Catalog | BA-A S2 | P0 | `IMPLEMENTED` | config/business/compliance-language.json |
 | `HVCG-V2-COMP-002` | External communications remain draft+approve; BL-C1 locked | Compliance | Platform | Standing | P0 | `EXISTING_REUSED` | PROJECT_ATLAS/DECISIONS.md |
 | `HVCG-V2-DIAG-001` | Paid diagnostic front door architecture (avoid free complex strategy work) | Diagnostics | Revenue OS | BA-B | P0 | `PLANNED` |  |

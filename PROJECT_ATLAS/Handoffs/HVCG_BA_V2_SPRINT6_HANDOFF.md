@@ -12,7 +12,12 @@
 | BA V2 | `d7d2546804270a956fcb2a3b4afd1fa1f8f28fba` |
 | Usable-operating-layer | `0dde092fb9fb0a00276fb5a2f30e24151c2b40a4` |
 
-## Sprint 6 Development (pending Owner commit auth)
+## Sprint 6 Development — **COMMITTED**
+
+| Worktree | SHA |
+|----------|-----|
+| BA V2 | `80eb54fd8719c2e43b250dff6f2c055c4b88af71` |
+| Usable-operating-layer | `ec5566d708d118b3f81d346aa74a9e9b905fb814` |
 
 ### BA
 - `config/business/capital-package-policy.json`
@@ -30,8 +35,8 @@
 - Not Production provisioned
 - Not live lender submission
 - Not live QBO/Plaid facts in packages
-- Sprint 7 (full Fractional CFO) not started
+- Sprint 7 authorized after these commits (see Sprint 7 handoff)
 
 ## Owner next
-1. Authorize Sprint 6 commits  
-2. Review before Sprint 7
+1. ~~Authorize Sprint 6 commits~~ **done**  
+2. Review Sprint 7 results (pending commit auth)

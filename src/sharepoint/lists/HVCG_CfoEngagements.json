@@ -1,0 +1,36 @@
+{
+  "title": "HVCG_CfoEngagements",
+  "description": "Fractional CFO Operating Partner engagements (OFF-FCFO-OP). Extends Engagement model — Dev-only until provisioned. Not bookkeeping software; not CPA attestation.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "OfferCode", "displayName": "OfferCode", "type": "Text", "required": true, "indexed": true, "description": "Canonical OFF-FCFO-OP — pricing from catalog" },
+    { "internalName": "StartDate", "displayName": "StartDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "MinimumTermMonths", "displayName": "MinimumTermMonths", "type": "Number", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AssignedAdvisor", "displayName": "AssignedAdvisor", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "AccountingSystem", "displayName": "AccountingSystem", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Bookkeeper", "displayName": "Bookkeeper", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "CPA", "displayName": "CPA", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ReportingFrequency", "displayName": "ReportingFrequency", "type": "Choice", "required": false, "indexed": false, "choices": ["Monthly", "Biweekly", "Quarterly"], "description": "" },
+    { "internalName": "MonthlyReviewDate", "displayName": "MonthlyReviewDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "CashFlowCadence", "displayName": "CashFlowCadence", "type": "Choice", "required": false, "indexed": false, "choices": ["Weekly", "Biweekly"], "description": "" },
+    { "internalName": "BudgetStatus", "displayName": "BudgetStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "WipApplicable", "displayName": "WipApplicable", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ArReviewApplicable", "displayName": "ArReviewApplicable", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ApReviewApplicable", "displayName": "ApReviewApplicable", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "CapitalReadinessMonitoring", "displayName": "CapitalReadinessMonitoring", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "DataSourceStatus", "displayName": "DataSourceStatus", "type": "Text", "required": false, "indexed": true, "description": "PENDING_LIVE_SOURCE when adapters not live" },
+    { "internalName": "OnboardingState", "displayName": "OnboardingState", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "EngagementStatus", "displayName": "EngagementStatus", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientResponsibilities", "displayName": "ClientResponsibilities", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "InternalNotes", "displayName": "InternalNotes", "type": "Note", "required": false, "indexed": false, "description": "Internal only — never client portal" },
+    { "internalName": "LegacyPricingProtected", "displayName": "LegacyPricingProtected", "type": "Boolean", "required": false, "indexed": false, "description": "ACCG / legacy contracted economics" }
+  ]
+}

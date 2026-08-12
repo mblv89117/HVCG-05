@@ -1,50 +1,36 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-08-11 (post Owner ADR-BA-V2-002 + Sprint 3 Dev)  
+**As of:** 2026-08-11 (post Sprint 6 commits · Sprint 7 Dev ready for Owner review)  
 **Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
 
 ## Now (BA V2 + production protection)
 
 1. Keep Track 1 **frozen**; keep BL-C1 client emails **Off**.  
 2. Protect Absolute GO Production — no BA V2 Production provisioning.  
-3. Sprint 2 committed at `16609c4`.  
-4. Sprint 3 Dev conversion work is ready on branch (uncommitted until you authorize).  
-5. Wire Elite Opportunity progressive disclosure in `revenue-pipeline-product` using `config/business/elite-revenue-commercial-surface.json`.  
-6. Maintain requirements ledger at every sprint close.  
-7. Do **not** reprice ACCG or other legacy clients.  
-8. High Value Founder remains DEFERRED_OWNER_GATE.
+3. Sprint 6 committed: BA `80eb54f` · Elite `ec5566d`.  
+4. Sprint 7 Fractional CFO Dev is ready on branch (**uncommitted** until you authorize).  
+5. Maintain requirements ledger at every sprint close (coverage accuracy > percentage).  
+6. Do **not** reprice ACCG or other legacy clients.  
+7. High Value Founder remains DEFERRED_OWNER_GATE.  
+8. Do **not** start Sprint 8 until Owner authorizes.
 
 ## Owner decisions remaining
 
-1. Per-client legacy reprice (only with agreement).  
-2. High Value Founder public launch.  
-3. Any Production BA V2 provisioning (separate authorization).  
-4. Explicit authorization to send proposals (BL-C1).  
-5. Authorize Sprint 3 commit when ready.
+1. Review / authorize Sprint 7 commits.  
+2. Per-client legacy reprice (only with agreement).  
+3. High Value Founder public launch.  
+4. Any Production BA V2 provisioning (separate authorization).  
+5. Explicit authorization to send proposals / CFO reports (BL-C1).  
+6. Live QBO / Plaid activation (CFO-003).  
+7. CAP-003 live lender submission (intentionally gated).
 
 ## Next engineering candidates (gated)
 
 | Action | Track | Gate |
 |--------|-------|------|
-| Commit Sprint 3 Dev pack | BA-B | Owner |
-| Elite commercial surface wiring | Elite / revenue-pipeline-product | Surface contract |
-| Client 360 Migration/Revenue panels | BA-J | Sprint plan |
-| Capital readiness engine | BA-C | After Sprint 3 commit |
+| Commit Sprint 7 Dev pack | BA-D | Owner |
+| Sprint 8 (not defined here) | — | Owner after S7 review |
+| Live FI/QBO/Plaid adapters | Finance | Owner secrets + QA |
+| CAP-003 lender submit activation | Capital | Owner + BL-C1 exception |
 | Full QA written GO | QA / Release | Assignment |
-| Plaid Sandbox E2E | Banking | Owner secrets |
-| QBO tip merge | Accounting | QA ACK + Master PM |
-| Portal / Finance Ops / Ops / AI schema merge | Multi | Post gates |
-| Soft UAT conversion CTA | Track 2 | Human QA |
-| Hosted private website preview | Track 3 | Owner (not public DNS) |
-| Pilot import | Track 2 data | Owner |
-| Canvas publish | CRM | D-002 |
-| Public DNS | Track 3 | BL-PUBLISH-1 |
-| Portal invites | Track 4 | BL-C1 |
-
-## Explicit non-actions
-
-- Do not prepare unauthorized Production BA schema  
-- Do not auto-send proposals while BL-C1 active  
-- Do not reprice legacy clients from V2 card  
-- Do not publicly launch High Value Founder  
-- Do not push unless the human asks  
+| Portal / Finance Ops production provision | Multi | Post gates |

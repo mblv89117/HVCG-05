@@ -1,0 +1,26 @@
+{
+  "title": "HVCG_FinancialSources",
+  "description": "Authoritative registry of client financial sources for CFO / Capital. Never represent disconnected integrations as Connected. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "CfoEngagementId", "displayName": "CfoEngagementId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_CfoEngagements", "description": "" },
+    { "internalName": "SystemSource", "displayName": "SystemSource", "type": "Text", "required": true, "indexed": true, "description": "QBO / Plaid / Upload / Accountant / Bank / etc." },
+    { "internalName": "DataType", "displayName": "DataType", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ConnectionStatus", "displayName": "ConnectionStatus", "type": "Text", "required": true, "indexed": true, "description": "PENDING_LIVE_SOURCE / Manual / Connected / Disconnected" },
+    { "internalName": "Period", "displayName": "Period", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AsOfDate", "displayName": "AsOfDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ReceivedDate", "displayName": "ReceivedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "VerificationStatus", "displayName": "VerificationStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AuthorityClass", "displayName": "AuthorityClass", "type": "Choice", "required": true, "indexed": true, "choices": ["SOURCE_ACCOUNTING_DATA", "BANK_DATA", "CLIENT_PROVIDED_DATA", "HVCG_CALCULATION", "HVCG_FORECAST", "AI_INFERENCE", "ADVISOR_JUDGMENT"], "description": "" },
+    { "internalName": "Freshness", "displayName": "Freshness", "type": "Text", "required": false, "indexed": false, "description": "Policy-driven stale flag" },
+    { "internalName": "AdapterStatus", "displayName": "AdapterStatus", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "ReconciliationStatus", "displayName": "ReconciliationStatus", "type": "Choice", "required": false, "indexed": false, "choices": ["RECONCILED", "UNRECONCILED", "PARTIALLY_RECONCILED", "SOURCE_CONFLICT", "NOT_APPLICABLE"], "description": "Status metadata — not CPA certification" }
+  ]
+}

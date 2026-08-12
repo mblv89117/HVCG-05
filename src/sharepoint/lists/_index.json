@@ -590,6 +590,33 @@
       "domain": "Revenue",
       "changeRequest": "CR-HVCG-BA-V2-001",
       "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_CfoEngagements",
+      "path": "src/sharepoint/lists/HVCG_CfoEngagements.json",
+      "columnCount": 24,
+      "description": "Fractional CFO engagements OFF-FCFO-OP (Dev-only)",
+      "domain": "Finance",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_FinancialSources",
+      "path": "src/sharepoint/lists/HVCG_FinancialSources.json",
+      "columnCount": 14,
+      "description": "Authoritative client financial source registry (Dev-only)",
+      "domain": "Finance",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_CfoMonthlyCycles",
+      "path": "src/sharepoint/lists/HVCG_CfoMonthlyCycles.json",
+      "columnCount": 13,
+      "description": "CFO advisory monthly close cycles (Dev-only)",
+      "domain": "Finance",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ],
   "productVersion": "1.1.0"

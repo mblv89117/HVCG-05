@@ -81,6 +81,7 @@
       "handoffFrom": "AGT-CAP-READY",
       "handoffStatus": "READY_FOR_PACKAGE_BUILD",
       "policy": "config/business/capital-package-policy.json",
+      "reusableFrom": ["AGT-CFO-OPS"],
       "outputs": [
         "packageChecklist",
         "financialSummaryDraft",
@@ -103,7 +104,64 @@
         "guarantee lending outcomes",
         "auto submit SBA forms"
       ],
-      "note": "Sprint 6 runtime operational in Development. APPROVED_FOR_LENDER_SUBMISSION remains submission-gated (BL-C1)."
+      "note": "Sprint 6 runtime operational in Development. Sprint 7 reuses for CFO→lender packages with approval. APPROVED_FOR_LENDER_SUBMISSION remains submission-gated (BL-C1)."
+    },
+    {
+      "agentCode": "AGT-CFO-OPS",
+      "name": "Fractional CFO Operating Agent",
+      "riskLevel": "MEDIUM",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "required_for_advisor_conclusion_and_external",
+      "runtime": "config/business/fractional_cfo.py",
+      "policy": "config/business/cfo-operating-policy.json",
+      "offerCode": "OFF-FCFO-OP",
+      "triggers": ["CFO Engagement active", "Monthly period close", "Forecast refresh"],
+      "inputs": [
+        "Financial source registry",
+        "P&L / Balance Sheet (verified or manual)",
+        "AR / AP / WIP where applicable",
+        "Budget versions",
+        "13-week forecast inputs",
+        "Capital readiness scores when monitoring enabled"
+      ],
+      "outputs": [
+        "monthlyCycleState",
+        "cashForecastVersions",
+        "arApSummaries",
+        "budgetVariance",
+        "kpiScorecard",
+        "managementReportDraft",
+        "financialIssues",
+        "ownerDecisions",
+        "capitalMonitorStatus",
+        "capitalOpportunityRecommendationDraft"
+      ],
+      "may": [
+        "draft financial summaries",
+        "identify variances",
+        "flag missing data",
+        "suggest forecast inputs (pending human approval)",
+        "draft KPI commentary",
+        "draft meeting agendas",
+        "draft management reports"
+      ],
+      "never": [
+        "certify financials",
+        "modify accounting books",
+        "fabricate values",
+        "issue tax advice",
+        "perform audit or attestation",
+        "make bank transfers",
+        "approve distributions",
+        "execute payroll",
+        "commit client spending",
+        "send final financial interpretations automatically",
+        "email client / bookkeeper / CPA without human gate",
+        "contact lenders",
+        "overwrite approved budgets with forecasts",
+        "silently promote AI estimates to approved forecast inputs"
+      ],
+      "note": "Sprint 7 Development. Separates HVCG invoice domain (AGT-INVOICE) from client AR/AP. Reuses AGT-FIN-PKG / capital_readiness — no second Finance SPA."
     },
     { "agentCode": "AGT-PROCURE", "name": "Contract Procurement Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always_before_external" },
     { "agentCode": "AGT-GOV-REG", "name": "Government Registration Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always_before_submit" },
@@ -114,7 +172,14 @@
     { "agentCode": "AGT-HR-DOCS", "name": "HR / Workforce Documentation Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
     { "agentCode": "AGT-PROPOSAL", "name": "Proposal & Pricing Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "always_before_send" },
     { "agentCode": "AGT-CRM", "name": "CRM Update Agent", "riskLevel": "LOW", "externalCommunicationAllowed": false, "humanApproval": "conditional" },
-    { "agentCode": "AGT-INVOICE", "name": "Invoice & Payment Reconciliation Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "required_for_payouts" },
+    {
+      "agentCode": "AGT-INVOICE",
+      "name": "Invoice & Payment Reconciliation Agent",
+      "riskLevel": "MEDIUM",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "required_for_payouts",
+      "note": "HVCG invoice / revenue tracking only. Do not conflate with client AR/AP/accounting under AGT-CFO-OPS."
+    },
     { "agentCode": "AGT-REFERRAL", "name": "Referral Partner Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "required_for_payouts" },
     { "agentCode": "AGT-SUCCESS", "name": "Client Success Agent", "riskLevel": "LOW", "externalCommunicationAllowed": false, "humanApproval": "conditional" },
     { "agentCode": "AGT-CONCIERGE", "name": "Executive Concierge Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always", "restricted": true },

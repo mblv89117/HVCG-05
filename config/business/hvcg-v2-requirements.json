@@ -1653,10 +1653,15 @@
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "apps/atlas-elite-os/src/pages/FractionalCfoWorkbench.tsx (elite worktree)",
+        "apps/atlas-elite-os/src/pages/Modules.tsx#FinancialsPage",
+        "config/business/fractional_cfo.py",
+        "src/sharepoint/lists/HVCG_CfoEngagements.json"
+      ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": ""
+      "completionDate": "2026-08-11",
+      "notes": "Sprint 7: CFO OS extends Elite /financials \u2014 no second Finance SPA. Live QBO/Plaid still PENDING_LIVE_SOURCE."
     },
     {
       "id": "HVCG-V2-CFO-002",
@@ -1670,14 +1675,18 @@
       "owner": "Finance",
       "sprint": "BA-D",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/cfo-operating-policy.json#provenanceKinds",
+        "config/business/fractional_cfo.py",
+        "tests/unit/business/test_fractional_cfo_sprint7.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Authority classes enforced in Dev engine/policy. Full UI labeling across all finance tiles still completing."
     },
     {
       "id": "HVCG-V2-CFO-003",
@@ -1699,6 +1708,44 @@
       "testsAcceptance": [],
       "completionDate": null,
       "notes": ""
+    },
+    {
+      "id": "HVCG-V2-CFO-004",
+      "masterPlanSection": "Finance",
+      "requirement": "Fractional CFO monthly operating cadence: engagement, onboarding, sources, 13-week forecast, AR/AP/WIP/budget/KPI, management report, Capital continuity \u2014 Development",
+      "category": "CFO",
+      "businessPurpose": "Operational Fractional CFO Operating Partner",
+      "atlasModule": "Finance / Elite",
+      "existingCapability": "Finance Ops lists; FI engines; OFF-FCFO-OP",
+      "implementationMethod": "fractional_cfo engine + Elite workbench + Client 360 Finance",
+      "owner": "Finance",
+      "sprint": "BA-D",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "HVCG-V2-CFO-001",
+        "HVCG-V2-OFF-003"
+      ],
+      "productionGate": false,
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/fractional_cfo.py",
+        "config/business/cfo-operating-policy.json",
+        "config/business/hvcg-agents-v2.json#AGT-CFO-OPS",
+        "src/sharepoint/lists/HVCG_CfoEngagements.json",
+        "src/sharepoint/lists/HVCG_FinancialSources.json",
+        "src/sharepoint/lists/HVCG_CfoMonthlyCycles.json",
+        "tests/unit/business/test_fractional_cfo_sprint7.py",
+        "apps/atlas-elite-os/src/pages/FractionalCfoWorkbench.tsx",
+        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx#Client360FinanceSection"
+      ],
+      "testsAcceptance": [
+        "cases A\u2013J",
+        "E2E monthly cadence",
+        "CFO\u2192Capital cross-sell"
+      ],
+      "completionDate": null,
+      "notes": "Dev operating OS present. Not marked IMPLEMENTED: live adapters, production Planner bind, and full ECC live metric feed remain incomplete. BL-C1 blocks auto client/CPA/bookkeeper send. CAP-003 lender submit unchanged."
     },
     {
       "id": "HVCG-V2-PROC-001",

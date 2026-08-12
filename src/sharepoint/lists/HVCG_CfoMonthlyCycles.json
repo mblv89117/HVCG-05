@@ -1,0 +1,25 @@
+{
+  "title": "HVCG_CfoMonthlyCycles",
+  "description": "Advisory monthly close / review cycles for Fractional CFO. Not CPA attestation. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "CycleId", "displayName": "CycleId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "CfoEngagementId", "displayName": "CfoEngagementId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_CfoEngagements", "description": "" },
+    { "internalName": "Period", "displayName": "Period", "type": "Text", "required": true, "indexed": true, "description": "YYYY-MM" },
+    { "internalName": "State", "displayName": "State", "type": "Choice", "required": true, "indexed": true, "choices": ["WAITING_FOR_PERIOD_CLOSE", "DATA_COLLECTION", "DATA_VALIDATION", "FINANCIAL_REVIEW", "FORECAST_UPDATE", "KPI_REVIEW", "ADVISOR_INTERPRETATION", "CLIENT_REVIEW_READY", "MONTH_COMPLETE", "REOPENED"], "description": "" },
+    { "internalName": "Advisor", "displayName": "Advisor", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "FactsJson", "displayName": "FactsJson", "type": "Note", "required": false, "indexed": false, "description": "FACT statements only" },
+    { "internalName": "CalculationsJson", "displayName": "CalculationsJson", "type": "Note", "required": false, "indexed": false, "description": "HVCG_CALCULATION" },
+    { "internalName": "AiObservationsJson", "displayName": "AiObservationsJson", "type": "Note", "required": false, "indexed": false, "description": "AI_INFERENCE — not facts" },
+    { "internalName": "AdvisorConclusion", "displayName": "AdvisorConclusion", "type": "Note", "required": false, "indexed": false, "description": "ADVISOR_JUDGMENT — human required" },
+    { "internalName": "ReportVersion", "displayName": "ReportVersion", "type": "Number", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ClientSendAllowed", "displayName": "ClientSendAllowed", "type": "Boolean", "required": false, "indexed": false, "description": "Always false under BL-C1 unless separately authorized" },
+    { "internalName": "SourceSnapshotId", "displayName": "SourceSnapshotId", "type": "Text", "required": false, "indexed": false, "description": "" }
+  ]
+}

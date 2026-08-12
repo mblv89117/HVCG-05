@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-11 | Sprint 7 Dev (pending commit): Fractional CFO OS — `fractional_cfo.py`, source registry, monthly cycle, 13-week forecast, AR/AP/WIP/budget/KPI/report, Capital continuity; Elite Finance workbench + Client 360 Finance; AGT-CFO-OPS. Coverage 56.0%→55.6% (honest IN_PROGRESS, not full IMPLEMENTED). CAP-003 unchanged. **No Production / no Sprint 8.** |
+| 2026-08-11 | Sprint 6 commit: Lender-Ready Capital Package + AGT-FIN-PKG (BA `80eb54f` · Elite `ec5566d`). CAP-003 remains IN_PROGRESS (submission-gated). **No Production / no lender submit.** |
 | 2026-08-11 | Sprint 3 commit: Revenue conversion engine (Free Fit/Diagnostics Dev schemas, pricing recommendation, proposal draft+BL-C1 lock, E2E service tests). Honest req status corrections (config≠UI). Coverage 50.4%→44.8%. **No Production / no merge.** |
 | 2026-08-11 | Sprint 3 (Dev): Revenue OS conversion path — Free Fit vs Paid Diagnostic, pricing recommendation (V2 new-client / legacy protected), proposal draft+internal approval (BL-C1 blocks send), FitAssessments/Diagnostics Dev schemas, 29 unit tests. Coverage 46.4%→50.4%. **No Production changes.** |
 | 2026-08-11 | Owner ADR-BA-V2-002: CR accepted; V2 rate card CURRENT for new clients; Free Fit Assessment policy; BL-C1/Track1/ACCG confirmed; HVF deferred. Sprint 2 commit `16609c4`. |
