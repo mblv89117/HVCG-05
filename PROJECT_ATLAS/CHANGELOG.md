@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-11 | Sprint 8 Dev (pending commit): Contract Procurement & Government Readiness OS — `contract_procurement.py`, registrations, capability truth, bid/no-bid, Capital/CFO handoffs; Elite `/procurement` + Client 360. PROC-001/002 → IN_PROGRESS (not full IMPLEMENTED). **No Production / no Sprint 9.** |
+| 2026-08-11 | Sprint 7 commit: Fractional CFO OS (BA `fee9d69` · Elite `90f0138`). CFO-002/004 IN_PROGRESS; live QBO/Plaid remain gated. **No Production.** |
 | 2026-08-11 | Sprint 7 Dev (pending commit): Fractional CFO OS — `fractional_cfo.py`, source registry, monthly cycle, 13-week forecast, AR/AP/WIP/budget/KPI/report, Capital continuity; Elite Finance workbench + Client 360 Finance; AGT-CFO-OPS. Coverage 56.0%→55.6% (honest IN_PROGRESS, not full IMPLEMENTED). CAP-003 unchanged. **No Production / no Sprint 8.** |
 | 2026-08-11 | Sprint 6 commit: Lender-Ready Capital Package + AGT-FIN-PKG (BA `80eb54f` · Elite `ec5566d`). CAP-003 remains IN_PROGRESS (submission-gated). **No Production / no lender submit.** |
 | 2026-08-11 | Sprint 3 commit: Revenue conversion engine (Free Fit/Diagnostics Dev schemas, pricing recommendation, proposal draft+BL-C1 lock, E2E service tests). Honest req status corrections (config≠UI). Coverage 50.4%→44.8%. **No Production / no merge.** |

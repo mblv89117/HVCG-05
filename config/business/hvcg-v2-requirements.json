@@ -1754,19 +1754,34 @@
       "category": "Procurement",
       "businessPurpose": "Gov/private readiness",
       "atlasModule": "Procurement",
-      "existingCapability": "Missing",
+      "existingCapability": "Offers/diagnostics; now Dev engine + lists + Elite workbench",
       "implementationMethod": "New Dev lists + Elite routes",
       "owner": "Advisory",
       "sprint": "BA-E",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
-      "externalContactGate": false,
-      "evidence": [],
-      "testsAcceptance": [],
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/contract_procurement.py",
+        "config/business/procurement-operating-policy.json",
+        "src/sharepoint/lists/HVCG_ProcurementEngagements.json",
+        "src/sharepoint/lists/HVCG_ProcurementOpportunities.json",
+        "src/sharepoint/lists/HVCG_GovernmentRegistrations.json",
+        "src/sharepoint/lists/HVCG_PastPerformance.json",
+        "apps/atlas-elite-os/src/pages/ProcurementWorkbench.tsx",
+        "tests/unit/business/test_contract_procurement_sprint8.py"
+      ],
+      "testsAcceptance": [
+        "cases A\u2013J",
+        "E2E procurement",
+        "Gov setup",
+        "Proc\u2192Capital",
+        "Proc\u2192CFO"
+      ],
       "completionDate": null,
-      "notes": ""
+      "notes": "Sprint 8 Dev OS present. Not IMPLEMENTED: live SAM/vendor feeds, Production list provision, full Ops post-award depth."
     },
     {
       "id": "HVCG-V2-PROC-002",
@@ -1780,14 +1795,18 @@
       "owner": "AI",
       "sprint": "BA-E/H",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
-      "externalContactGate": false,
-      "evidence": [],
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/contract_procurement.py#attempt_external_procurement_action",
+        "config/business/hvcg-agents-v2.json#AGT-PROCURE",
+        "tests/unit/business/test_contract_procurement_sprint8.py"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "BL-C1 + submission gate enforced in Dev runtime. Live portal submit not activated."
     },
     {
       "id": "HVCG-V2-RISK-001",
@@ -1961,11 +1980,12 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/contract_procurement.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 8 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-006",
@@ -1984,11 +2004,12 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/contract_procurement.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 8 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-007",

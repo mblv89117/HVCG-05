@@ -55,7 +55,15 @@
         "CapitalPackage",
         "LenderMemo",
         "PackageQAOverride",
-        "LenderSubmission"
+        "LenderSubmission",
+        "ProcurementReadiness",
+        "RegistrationSubmission",
+        "BidNoBid",
+        "CapabilityStatement",
+        "ProposalPricing",
+        "ProposalSubmission",
+        "ContractException",
+        "PostAwardChange"
       ]
     },
     {

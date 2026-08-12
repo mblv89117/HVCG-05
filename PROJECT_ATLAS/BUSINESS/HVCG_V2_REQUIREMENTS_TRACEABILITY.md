@@ -177,8 +177,8 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | `HVCG-V2-PRC-006` | Success-fee structures with base/%/trigger/causation/exclusions/tail/due/collected/comp… | Pricing | Revenue / Capital | BA-B/I | P1 | `PLANNED` |  |
 | `HVCG-V2-PRC-007` | Referral payouts: 10% diagnostic collected; 10% first 3 retainer months; 10-20% collect… | Referrals | Referrals | BA-I | P1 | `PLANNED` |  |
 | `HVCG-V2-PRC-008` | Services not to sell cheaply guidance encoded | Pricing / Sales | Sales Enablement | BA-A S2 | P1 | `IMPLEMENTED` | config/business/do-not-sell-cheap.json |
-| `HVCG-V2-PROC-001` | Contractor Profile + Procurement Opportunity domains | Procurement | Procurement | BA-E | P1 | `PLANNED` |  |
-| `HVCG-V2-PROC-002` | AI may prepare but NEVER auto-submit bids | Procurement / AI | Procurement / AI | BA-E/H | P0 | `PLANNED` |  |
+| `HVCG-V2-PROC-001` | Contractor Profile + Procurement Opportunity domains | Procurement | Procurement | BA-E | P1 | `IN_PROGRESS` | Sprint 8 Dev engine + lists + Elite |
+| `HVCG-V2-PROC-002` | AI may prepare but NEVER auto-submit bids | Procurement / AI | Procurement / AI | BA-E/H | P0 | `IN_PROGRESS` | Submission gate + BL-C1 |
 | `HVCG-V2-PROP-001` | Three proposal archetypes only: Structured / Retainer / Premium Special | Proposals | Revenue / Proposals | BA-B | P0 | `IMPLEMENTED` | config/business/proposal-archetypes.json; templates/proposals/ |
 | `HVCG-V2-PROP-002` | Structured Offer required sections 1-10 | Proposals | Proposals | BA-A S2 | P0 | `IMPLEMENTED` | templates/proposals/STRUCTURED_OFFER.md |
 | `HVCG-V2-PROP-003` | Monthly Retainer required sections 1-11 | Proposals | Proposals | BA-A S2 | P0 | `IMPLEMENTED` | templates/proposals/MONTHLY_RETAINER.md |

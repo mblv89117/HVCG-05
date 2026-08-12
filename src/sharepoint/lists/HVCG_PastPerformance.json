@@ -1,0 +1,26 @@
+{
+  "title": "HVCG_PastPerformance",
+  "description": "Verified past performance registry for procurement. Do not invent. Confidential without authorization. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "ClientAgency", "displayName": "ClientAgency", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "Project", "displayName": "Project", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ContractType", "displayName": "ContractType", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Description", "displayName": "Description", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Period", "displayName": "Period", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ContractValue", "displayName": "ContractValue", "type": "Currency", "required": false, "indexed": false, "description": "Only when verified" },
+    { "internalName": "Scope", "displayName": "Scope", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PerformanceResult", "displayName": "PerformanceResult", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ReferenceContact", "displayName": "ReferenceContact", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PermissionToUse", "displayName": "PermissionToUse", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "SourceEvidence", "displayName": "SourceEvidence", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "VerificationStatus", "displayName": "VerificationStatus", "type": "Choice", "required": true, "indexed": true, "choices": ["Unverified", "Verified", "Disputed", "Withdrawn"], "description": "" }
+  ]
+}

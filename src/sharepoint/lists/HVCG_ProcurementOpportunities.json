@@ -1,0 +1,35 @@
+{
+  "title": "HVCG_ProcurementOpportunities",
+  "description": "Procurement opportunity pipeline (public/private). Distinct from HVCG commercial Opportunities but may link. Dev-only until provisioned. Do not fabricate.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "ProcurementEngagementId", "displayName": "ProcurementEngagementId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_ProcurementEngagements", "description": "" },
+    { "internalName": "RevenueOpportunityId", "displayName": "RevenueOpportunityId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Opportunities", "description": "Commercial lineage" },
+    { "internalName": "BuyerAgency", "displayName": "BuyerAgency", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "SolicitationNumber", "displayName": "SolicitationNumber", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "PublicPrivate", "displayName": "PublicPrivate", "type": "Choice", "required": true, "indexed": true, "choices": ["Public", "Private", "Government"], "description": "" },
+    { "internalName": "ContractType", "displayName": "ContractType", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ServiceCategory", "displayName": "ServiceCategory", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "NAICS", "displayName": "NAICS", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Location", "displayName": "Location", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "EstimatedValue", "displayName": "EstimatedValue", "type": "Currency", "required": false, "indexed": false, "description": "Estimated Opportunity Value only" },
+    { "internalName": "PostedDate", "displayName": "PostedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "QuestionsDue", "displayName": "QuestionsDue", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ProposalDue", "displayName": "ProposalDue", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Source", "displayName": "Source", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "SourceUrl", "displayName": "SourceUrl", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RetrievedAt", "displayName": "RetrievedAt", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "LastVerified", "displayName": "LastVerified", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AssignedOwner", "displayName": "AssignedOwner", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "Fit", "displayName": "Fit", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PursuitStatus", "displayName": "PursuitStatus", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "BidNoBidResult", "displayName": "BidNoBidResult", "type": "Choice", "required": false, "indexed": true, "choices": ["PURSUE", "PURSUE_WITH_CONDITIONS", "HOLD", "DECLINE", ""], "description": "" }
+  ]
+}

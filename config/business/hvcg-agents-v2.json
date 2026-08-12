@@ -163,14 +163,84 @@
       ],
       "note": "Sprint 7 Development. Separates HVCG invoice domain (AGT-INVOICE) from client AR/AP. Reuses AGT-FIN-PKG / capital_readiness — no second Finance SPA."
     },
-    { "agentCode": "AGT-PROCURE", "name": "Contract Procurement Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always_before_external" },
-    { "agentCode": "AGT-GOV-REG", "name": "Government Registration Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always_before_submit" },
+    {
+      "agentCode": "AGT-PROCURE",
+      "name": "Contract Procurement Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always_before_external",
+      "runtime": "config/business/contract_procurement.py#run_contract_procurement_agent",
+      "policy": "config/business/procurement-operating-policy.json",
+      "offerCodes": ["OFF-PROC-READY", "OFF-GOV-SETUP"],
+      "triggers": ["Procurement Engagement active", "Opportunity pursuit", "Readiness assessment"],
+      "outputs": [
+        "readinessAssessment",
+        "documentChecklist",
+        "capabilityStatementDraft",
+        "complianceMatrixDraft",
+        "pursuitRecommendation",
+        "proposalSectionDrafts",
+        "missingItems"
+      ],
+      "never": [
+        "submit bids",
+        "certify eligibility",
+        "invent past performance",
+        "commit final pricing",
+        "make legal compliance conclusions",
+        "accept contract terms",
+        "email contracting officers",
+        "guarantee awards"
+      ],
+      "note": "Sprint 8 Development runtime. APPROVED_TO_SUBMIT remains submission-gated (BL-C1)."
+    },
+    {
+      "agentCode": "AGT-GOV-REG",
+      "name": "Government Registration Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always_before_submit",
+      "runtime": "config/business/contract_procurement.py#run_government_registration_agent",
+      "policy": "config/business/procurement-operating-policy.json",
+      "offerCode": "OFF-GOV-SETUP",
+      "triggers": ["Government Contractor Setup", "Registration renewal"],
+      "outputs": [
+        "registrationChecklist",
+        "draftRegistrationInputs",
+        "missingInformation",
+        "renewalTasks"
+      ],
+      "never": [
+        "submit official SAM.gov registration",
+        "certify representations",
+        "attest to ownership",
+        "accept terms",
+        "provide false information",
+        "certify legal eligibility"
+      ],
+      "note": "Sprint 8 Development. Preparation only — external submission gated."
+    },
     { "agentCode": "AGT-TAX-APPEAL", "name": "Regulatory / Tax Appeal Support Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
     { "agentCode": "AGT-UE-CLAIM", "name": "Unemployment Claim Support Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
     { "agentCode": "AGT-INS-REVIEW", "name": "Risk / Insurance Review Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
     { "agentCode": "AGT-CLAIMS", "name": "Claims & Recovery Support Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
     { "agentCode": "AGT-HR-DOCS", "name": "HR / Workforce Documentation Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
-    { "agentCode": "AGT-PROPOSAL", "name": "Proposal & Pricing Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "always_before_send" },
+    {
+      "agentCode": "AGT-PROPOSAL",
+      "name": "Proposal & Pricing Agent",
+      "riskLevel": "MEDIUM",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always_before_send",
+      "runtime": "config/business/contract_procurement.py#draft_procurement_proposal",
+      "alsoUsedBy": ["Revenue OS commercial proposals", "Procurement bid support"],
+      "never": [
+        "commit final bid pricing without approval",
+        "promise pricing to buyer",
+        "submit a bid without approval",
+        "send client proposals without BL-C1 gate"
+      ],
+      "note": "Sprint 8 reuses existing proposal governance — no separate procurement proposal AI."
+    },
     { "agentCode": "AGT-CRM", "name": "CRM Update Agent", "riskLevel": "LOW", "externalCommunicationAllowed": false, "humanApproval": "conditional" },
     {
       "agentCode": "AGT-INVOICE",

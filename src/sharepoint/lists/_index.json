@@ -617,6 +617,42 @@
       "domain": "Finance",
       "changeRequest": "CR-HVCG-BA-V2-001",
       "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_ProcurementEngagements",
+      "path": "src/sharepoint/lists/HVCG_ProcurementEngagements.json",
+      "columnCount": 25,
+      "description": "Procurement / Gov Setup engagements (Dev-only)",
+      "domain": "Procurement",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_GovernmentRegistrations",
+      "path": "src/sharepoint/lists/HVCG_GovernmentRegistrations.json",
+      "columnCount": 17,
+      "description": "Government/vendor registration tracking — submission gated (Dev-only)",
+      "domain": "Procurement",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_ProcurementOpportunities",
+      "path": "src/sharepoint/lists/HVCG_ProcurementOpportunities.json",
+      "columnCount": 23,
+      "description": "Procurement opportunity pipeline (Dev-only)",
+      "domain": "Procurement",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_PastPerformance",
+      "path": "src/sharepoint/lists/HVCG_PastPerformance.json",
+      "columnCount": 14,
+      "description": "Verified past performance registry (Dev-only)",
+      "domain": "Procurement",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ],
   "productVersion": "1.1.0"

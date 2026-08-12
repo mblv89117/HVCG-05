@@ -12,7 +12,12 @@
 | BA V2 | `cursor/hvcg-business-architecture-v2` | `80eb54fd8719c2e43b250dff6f2c055c4b88af71` |
 | Usable-operating-layer | `fix/atlas-usable-operating-layer` | `ec5566d708d118b3f81d346aa74a9e9b905fb814` |
 
-## Sprint 7 Development (pending Owner commit auth)
+## Sprint 7 Development — **COMMITTED**
+
+| Worktree | SHA |
+|----------|-----|
+| BA V2 | `fee9d69bd8e1fb248e291e378da3a290746e13ca` |
+| Usable-operating-layer | `90f013839155ccb81d0e58c9ebef85d672a12b43` |
 
 ### BA worktree
 - `config/business/cfo-operating-policy.json`

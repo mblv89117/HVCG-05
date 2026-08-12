@@ -1,0 +1,37 @@
+{
+  "title": "HVCG_ProcurementEngagements",
+  "description": "Contract Procurement / Government Setup engagements (OFF-PROC-READY / OFF-GOV-SETUP). Dev-only until provisioned. Advisory — not contracting agency.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "OpportunityId", "displayName": "OpportunityId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Opportunities", "description": "Revenue OS lineage" },
+    { "internalName": "OfferCode", "displayName": "OfferCode", "type": "Choice", "required": true, "indexed": true, "choices": ["OFF-PROC-READY", "OFF-GOV-SETUP"], "description": "" },
+    { "internalName": "ProcurementType", "displayName": "ProcurementType", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PublicPrivate", "displayName": "PublicPrivate", "type": "Choice", "required": true, "indexed": true, "choices": ["Public", "Private", "Government", "Mixed"], "description": "" },
+    { "internalName": "GovernmentLevel", "displayName": "GovernmentLevel", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Industry", "displayName": "Industry", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ServiceCategories", "displayName": "ServiceCategories", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "NAICS", "displayName": "NAICS", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "GeographicScope", "displayName": "GeographicScope", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "TargetContractSize", "displayName": "TargetContractSize", "type": "Currency", "required": false, "indexed": false, "description": "" },
+    { "internalName": "TargetBuyers", "displayName": "TargetBuyers", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AssignedAdvisor", "displayName": "AssignedAdvisor", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "ReadinessStatus", "displayName": "ReadinessStatus", "type": "Choice", "required": true, "indexed": true, "choices": ["READY", "READY_WITH_GAPS", "REMEDIATION_REQUIRED", "NOT_READY", "UNKNOWN"], "description": "" },
+    { "internalName": "RegistrationStatus", "displayName": "RegistrationStatus", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "CapabilityStatementStatus", "displayName": "CapabilityStatementStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PastPerformanceStatus", "displayName": "PastPerformanceStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ComplianceStatus", "displayName": "ComplianceStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PipelineStatus", "displayName": "PipelineStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ProposalSupportStatus", "displayName": "ProposalSupportStatus", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "StartDate", "displayName": "StartDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "TargetReadinessDate", "displayName": "TargetReadinessDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "InternalNotes", "displayName": "InternalNotes", "type": "Note", "required": false, "indexed": false, "description": "Internal only" }
+  ]
+}

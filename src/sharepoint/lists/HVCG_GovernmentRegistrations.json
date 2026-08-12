@@ -1,0 +1,29 @@
+{
+  "title": "HVCG_GovernmentRegistrations",
+  "description": "Government / vendor registration tracking. Preparation only — external submission gated (BL-C1). Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "ProcurementEngagementId", "displayName": "ProcurementEngagementId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_ProcurementEngagements", "description": "" },
+    { "internalName": "RegistrationType", "displayName": "RegistrationType", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "AgencyPortal", "displayName": "AgencyPortal", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "Identifier", "displayName": "Identifier", "type": "Text", "required": false, "indexed": true, "description": "UEI / CAGE / vendor ID — minimize sensitive storage" },
+    { "internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "indexed": true, "choices": ["NOT_STARTED", "IN_PREPARATION", "READY_FOR_REVIEW", "APPROVED_TO_SUBMIT", "SUBMISSION_GATED", "SUBMITTED_EXTERNALLY", "ACTIVE", "RENEWAL_DUE", "EXPIRED"], "description": "" },
+    { "internalName": "StartedDate", "displayName": "StartedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "SubmittedDate", "displayName": "SubmittedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ApprovedDate", "displayName": "ApprovedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ExpirationDate", "displayName": "ExpirationDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RenewalDate", "displayName": "RenewalDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RequiredDocuments", "displayName": "RequiredDocuments", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AssignedOwner", "displayName": "AssignedOwner", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "SourceEvidence", "displayName": "SourceEvidence", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ExternalSubmissionApproval", "displayName": "ExternalSubmissionApproval", "type": "Boolean", "required": false, "indexed": false, "description": "Human gate — never auto-submit" },
+    { "internalName": "Notes", "displayName": "Notes", "type": "Note", "required": false, "indexed": false, "description": "Internal" }
+  ]
+}
