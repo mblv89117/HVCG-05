@@ -1,3 +1,5 @@
+import type { EvidenceOrigin, EvidenceStatus } from './evidenceProvenance';
+
 export type SourceKind = 'Repository-derived' | 'Development sample' | 'Unavailable' | 'Live';
 
 export interface HomeMetric {
@@ -8,6 +10,8 @@ export interface HomeMetric {
   trend: 'up' | 'down' | 'flat';
   trendLabel: string;
   source: SourceKind;
+  origin: EvidenceOrigin;
+  status: EvidenceStatus;
   spark: number[];
 }
 
@@ -18,6 +22,8 @@ export interface ApprovalRow {
   track: string;
   decision: string;
   source: SourceKind;
+  origin: EvidenceOrigin;
+  status: EvidenceStatus;
 }
 
 export interface ActivityItem {
@@ -25,6 +31,8 @@ export interface ActivityItem {
   title: string;
   when: string;
   source: SourceKind;
+  origin: EvidenceOrigin;
+  status: EvidenceStatus;
 }
 
 export interface DeadlineItem {

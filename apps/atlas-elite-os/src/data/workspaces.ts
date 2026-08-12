@@ -78,7 +78,7 @@ export function getWorkspace(id: string): WorkspaceSummary | undefined {
   return workspaceCatalog.find((w) => w.id === id);
 }
 
-/** Standard pending KPI set for Executive Home when Dataverse has no verified values */
+/** Fixture KPI labels for tests/UAT — not an operational Dataverse fallback. */
 export const pendingExecutiveKpis: PendingField[] = [
   { label: 'Revenue', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
   { label: 'Gross Profit', value: 'Not yet calculated', availability: 'Not yet calculated' },

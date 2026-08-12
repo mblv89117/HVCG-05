@@ -84,23 +84,32 @@ const useSource = makeStyles({
 export type SourceKind = 'Repository-derived' | 'Development sample' | 'Unavailable' | 'Live';
 
 export interface SourceBadgeProps {
-  kind: SourceKind;
-  /** Concise executive label. Defaults to `kind`. */
+  kind?: SourceKind;
+  /** Display status independent of origin. When set, drives tone and default label. */
+  status?: 'Live' | 'Not live' | 'Sample data' | 'Unavailable';
+  /** Concise executive label. Defaults to `status` or `kind`. */
   label?: string;
   detail?: string;
 }
 
-export function SourceBadge({ kind, label, detail }: SourceBadgeProps) {
+export function SourceBadge({ kind, status, label, detail }: SourceBadgeProps) {
   const s = useSource();
-  const tone: StatusTone =
-    kind === 'Live'
+  const tone: StatusTone = status
+    ? status === 'Live'
+      ? 'success'
+      : status === 'Unavailable'
+        ? 'danger'
+        : status === 'Sample data'
+          ? 'warning'
+          : 'info'
+    : kind === 'Live'
       ? 'success'
       : kind === 'Unavailable'
         ? 'danger'
         : kind === 'Development sample'
           ? 'warning'
           : 'info';
-  const display = label || kind;
+  const display = label || status || kind || 'Unavailable';
   return (
     <span className={s.root} title={detail || display} aria-label={detail ? `${display}. ${detail}` : display}>
       <StatusChip label={display} tone={tone} />

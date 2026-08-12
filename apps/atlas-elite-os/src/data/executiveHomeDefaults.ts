@@ -17,11 +17,13 @@ function pendingToMetric(
     trend: 'flat',
     trendLabel: source,
     source,
+    origin: source === 'Repository-derived' ? 'repository' : 'unknown',
+    status: source === 'Development sample' ? 'Sample data' : 'Unavailable',
     spark: [0, 0, 0, 0, 0, 0, 0],
   };
 }
 
-/** Fallback KPIs — never invent dollar amounts */
+/** Fixture KPI rows for tests — not used as an operational Dataverse fallback. */
 export const pendingHomeMetrics: HomeMetric[] = pendingExecutiveKpis.map((k, i) =>
   pendingToMetric(
     `kpi-${i}`,
@@ -32,37 +34,33 @@ export const pendingHomeMetrics: HomeMetric[] = pendingExecutiveKpis.map((k, i) 
 );
 
 export const executiveHomeData = {
-  metrics: pendingHomeMetrics,
-  approvals: [
-    {
-      id: 'a1',
-      title: 'Approve Elite OS Executive Dashboard UAT',
-      risk: 'High',
-      track: 'Sprint 14',
-      decision: 'Pending',
-      source: 'Repository-derived' as SourceKind,
-    },
-    {
-      id: 'a2',
-      title: 'Connect verified financial sources for KPI cards',
-      risk: 'High',
-      track: 'Finance',
-      decision: 'Pending',
-      source: 'Repository-derived' as SourceKind,
-    },
-  ],
+  metrics: [] as HomeMetric[],
+  approvals: [] as Array<{
+    id: string;
+    title: string;
+    risk: string;
+    track: string;
+    decision: string;
+    source: SourceKind;
+    origin: 'repository';
+    status: 'Not live';
+  }>,
   activity: [
     {
       id: 'act1',
       title: 'Executive Dashboard modules replaced placeholders',
       when: 'This session',
       source: 'Repository-derived' as SourceKind,
+      origin: 'repository' as const,
+      status: 'Not live' as const,
     },
     {
       id: 'act2',
       title: 'Colorado Craft Beef workspace scaffolded (pending finance)',
       when: 'This session',
       source: 'Repository-derived' as SourceKind,
+      origin: 'repository' as const,
+      status: 'Not live' as const,
     },
   ],
   deadlines: [

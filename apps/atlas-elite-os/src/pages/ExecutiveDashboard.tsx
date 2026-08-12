@@ -15,12 +15,13 @@ import {
   LoadingState,
   SparkBars,
   FavoritePin,
+  EmptyState,
 } from '@hvcg/atlas-design-system';
 import { Button, Text, Caption1, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
-import { executiveLabelForKind } from '../data/evidenceProvenance';
+import { statusLabel } from '../data/evidenceProvenance';
 import { ATLAS_BUILD } from '../buildInfo';
 import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
 
@@ -162,10 +163,14 @@ export function ExecutiveDashboardPage() {
         </div>
       </AtlasCard>
 
-      <MessageBar intent={connection.mode === 'dataverse' ? 'success' : 'warning'}>
+      <MessageBar intent={metrics.some((m) => m.status === 'Live') ? 'success' : 'warning'}>
         <MessageBarBody>
           <MessageBarTitle>
-            {connection.mode === 'dataverse' ? 'Dataverse connected' : 'Pending-safe mode'}
+            {metrics.some((m) => m.status === 'Live')
+              ? 'Live'
+              : connection.mode === 'dataverse'
+                ? 'Dataverse connected — not live'
+                : 'Unavailable'}
           </MessageBarTitle>
           {connection.detail}
           {connection.error ? ` — ${connection.error}` : ''}
@@ -173,6 +178,12 @@ export function ExecutiveDashboardPage() {
       </MessageBar>
 
       <SectionRail title="Executive KPIs" subtitle="Enterprise value, cash, growth, and capital readiness">
+        {metrics.length === 0 ? (
+          <EmptyState
+            title="Unavailable"
+            description="No usable executive KPI rows. Empty or failed Dataverse results are not replaced with sample business metrics."
+          />
+        ) : (
         <ResponsiveGrid className="atlas-stagger">
           {metrics.map((m) => (
             <KpiTile
@@ -185,13 +196,15 @@ export function ExecutiveDashboardPage() {
               sparkValues={m.spark}
               footer={
                 <SourceBadge
-                  kind={m.source}
-                  label={executiveLabelForKind(m.source)}
+                  status={m.status}
+                  label={statusLabel(m.status)}
+                  detail={`${m.origin}. ${m.status === 'Live' ? 'Proven live operational source' : 'Not a proven live operational source'}`}
                 />
               }
             />
           ))}
         </ResponsiveGrid>
+        )}
       </SectionRail>
 
       <ResponsiveGrid dense>
@@ -397,6 +410,12 @@ export function ExecutiveDashboardPage() {
 
         <GridSpan span={2}>
           <AtlasCard title="My Approvals" subtitle="Owner decision inbox">
+            {approvals.length === 0 ? (
+              <EmptyState
+                title="Unavailable"
+                description="No usable approval rows. Empty or failed Dataverse results are not replaced with sample approvals."
+              />
+            ) : (
             <DataTable
               ariaLabel="Approvals"
               getRowKey={(r) => r.id}
@@ -418,11 +437,12 @@ export function ExecutiveDashboardPage() {
                   key: 'source',
                   header: 'Source',
                   render: (r) => (
-                    <SourceBadge kind={r.source} label={executiveLabelForKind(r.source)} />
+                    <SourceBadge status={r.status} label={statusLabel(r.status)} detail={r.origin} />
                   ),
                 },
               ]}
             />
+            )}
           </AtlasCard>
         </GridSpan>
 
@@ -433,7 +453,7 @@ export function ExecutiveDashboardPage() {
                 <Text weight="semibold">{a.title}</Text>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                   <Caption1>{a.when}</Caption1>
-                  <SourceBadge kind={a.source} label={executiveLabelForKind(a.source)} />
+                  <SourceBadge status={a.status} label={statusLabel(a.status)} detail={a.origin} />
                 </div>
               </div>
             ))}

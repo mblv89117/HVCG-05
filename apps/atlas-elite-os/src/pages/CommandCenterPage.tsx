@@ -181,6 +181,7 @@ export function CommandCenterPage() {
     loadFailed: Boolean(error),
     hasPayload: Boolean(cc),
     provenLive: false,
+    origin: 'hub-snapshot',
   });
 
   return (
@@ -254,7 +255,7 @@ export function CommandCenterPage() {
                 </Caption1>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                <SourceBadge kind={evidence.kind} label={evidence.label} detail={evidence.detail} />
+                <SourceBadge status={evidence.status} label={evidence.label} detail={evidence.detail} />
                 <Badge appearance="filled" color="important">
                   {h?.overdueTasks ?? 0} overdue
                 </Badge>
