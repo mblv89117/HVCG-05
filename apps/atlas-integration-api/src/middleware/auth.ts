@@ -2,7 +2,8 @@
  * Auth + tenant isolation middleware.
  *
  * When requireAuth is true (the default): Entra Hub API Bearer token is the
- * trust anchor. Roles and client scope come only from verified JWT claims.
+ * trust anchor. Roles come from verified JWT claims. Staff client scope comes
+ * from server-side Entra HVCG-Client-* group membership for the verified oid.
  * Client-controlled x-atlas-* headers have zero authorization effect.
  *
  * When requireAuth is false: only explicit loopback insecure-development mode
@@ -12,6 +13,8 @@
 import type { IncomingMessage } from 'node:http';
 import { createRemoteJWKSet, jwtVerify, decodeProtectedHeader, type JWTPayload } from 'jose';
 import type { AppConfig } from '../config.ts';
+import { isCanonicalClientCode } from '../entitlements/clientCode.ts';
+import { resolveAllowedClientIdsFromConfig } from '../entitlements/resolver.ts';
 
 export interface AtlasPrincipal {
   userId: string;
@@ -138,6 +141,9 @@ export const INSECURE_DEV_PRINCIPAL: AtlasPrincipal = {
 
 export function assertClientAccess(principal: AtlasPrincipal, clientId: string): void {
   if (principal.allowedClientIds.includes('*')) return;
+  if (!isCanonicalClientCode(clientId) || clientId === '*') {
+    forbidden('Access denied: client not in principal scope', 'forbidden');
+  }
   if (!principal.allowedClientIds.includes(clientId)) {
     forbidden('Access denied: client not in principal scope', 'forbidden');
   }
@@ -183,8 +189,9 @@ export function rolesFromVerifiedPayload(payload: JWTPayload): string[] {
 }
 
 /**
- * Client IDs from verified token claims only.
- * Wildcard '*' is never accepted. Missing claims → empty scope (fail closed).
+ * Legacy JWT client-claim parser. Not an authorization path.
+ * Production staff client scope is server-resolved Entra group membership.
+ * Wildcard '*' is never accepted.
  */
 export function clientIdsFromVerifiedPayload(payload: JWTPayload): string[] {
   const raw = collectClaimValues(
@@ -211,7 +218,7 @@ export function principalFromVerifiedPayload(payload: JWTPayload): AtlasPrincipa
     userId,
     email: claimString(payload, 'preferred_username', 'email', 'upn', 'unique_name'),
     organizationId: 'org-hvcg',
-    allowedClientIds: clientIdsFromVerifiedPayload(payload),
+    allowedClientIds: [],
     roles: rolesFromVerifiedPayload(payload),
   };
 }
@@ -312,5 +319,8 @@ export async function requirePrincipal(
   const payload = cfg.verifyAccessToken
     ? ((await cfg.verifyAccessToken(token)) as JWTPayload)
     : await validateEntraJwt(token, cfg);
-  return principalFromVerifiedPayload(payload);
+  const principal = principalFromVerifiedPayload(payload);
+  const oid = claimString(payload, 'oid');
+  principal.allowedClientIds = await resolveAllowedClientIdsFromConfig(oid, cfg);
+  return principal;
 }

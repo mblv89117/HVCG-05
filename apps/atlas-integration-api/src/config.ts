@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import type { ProviderId } from '@hvcg/atlas-integration-core';
+import { isCanonicalClientCode } from './entitlements/clientCode.ts';
 
 function defaultDataDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -164,9 +165,61 @@ export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
   );
 }
 
+const GROUP_ID_RE =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+export interface HubClientEntitlement {
+  enabled: boolean;
+  groupPrefix: string;
+  /** Entra group object ID → canonical ClientCode. Runtime config, not a source roster. */
+  approvedGroups: Map<string, string>;
+  cacheTtlMs: number;
+  cacheMaxEntries: number;
+  graphTimeoutMs: number;
+}
+
+/**
+ * Parse `groupId:ClientCode,groupId:ClientCode`. Invalid pairs are dropped (fail closed).
+ * Does not accept '*'. Does not fold ClientCode case.
+ */
+export function parseApprovedClientGroups(raw: string | undefined): Map<string, string> {
+  const out = new Map<string, string>();
+  if (!raw || !raw.trim()) return out;
+  for (const part of raw.split(',')) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const colon = trimmed.indexOf(':');
+    if (colon <= 0) continue;
+    const groupId = trimmed.slice(0, colon).trim();
+    const code = trimmed.slice(colon + 1).trim();
+    if (!GROUP_ID_RE.test(groupId)) continue;
+    if (!isCanonicalClientCode(code) || code === '*') continue;
+    if (out.has(groupId) && out.get(groupId) !== code) continue;
+    out.set(groupId, code);
+  }
+  return out;
+}
+
+export function resolveClientEntitlement(env: EnvMap = process.env): HubClientEntitlement {
+  const enabled = parseEnvFlag(env.INTEGRATION_CLIENT_ENTITLEMENT_ENABLED) !== false;
+  const ttlRaw = Number(env.INTEGRATION_CLIENT_ENTITLEMENT_CACHE_TTL_MS);
+  const cacheTtlMs = Number.isFinite(ttlRaw) && ttlRaw >= 0 ? ttlRaw : 120_000;
+  const timeoutRaw = Number(env.INTEGRATION_CLIENT_ENTITLEMENT_GRAPH_TIMEOUT_MS);
+  const graphTimeoutMs = Number.isFinite(timeoutRaw) && timeoutRaw > 0 ? timeoutRaw : 3_000;
+  return {
+    enabled,
+    groupPrefix: (env.INTEGRATION_CLIENT_GROUP_PREFIX || 'HVCG-Client-').trim() || 'HVCG-Client-',
+    approvedGroups: parseApprovedClientGroups(env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS),
+    cacheTtlMs: Math.min(cacheTtlMs, 300_000),
+    cacheMaxEntries: 512,
+    graphTimeoutMs: Math.min(graphTimeoutMs, 10_000),
+  };
+}
+
 export function loadConfig() {
   const security = resolveHubRuntimeSecurity();
   const pmBackend = resolvePmBackend();
+  const clientEntitlement = resolveClientEntitlement();
   return {
     port: Number(process.env.INTEGRATION_API_PORT || 8790),
     host: security.host,
@@ -179,8 +232,16 @@ export function loadConfig() {
      * Test-only JWT verifier. Production loadConfig never sets this.
      * Authenticated identity still comes from the verified payload, never from request headers.
      */
+    clientEntitlement,
     verifyAccessToken: undefined as
       | ((token: string) => Promise<Record<string, unknown>>)
+      | undefined,
+    /**
+     * Test-only client-scope resolver. Production loadConfig never sets this.
+     * When unset, Hub resolves HVCG-Client-* membership via Graph using oid.
+     */
+    resolveAllowedClientIds: undefined as
+      | ((oid: string | undefined) => Promise<string[]>)
       | undefined,
     allowedOrigins: (
       process.env.INTEGRATION_ALLOWED_ORIGINS ||

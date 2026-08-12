@@ -115,7 +115,9 @@ def require_client_context(mapped: dict[str, Any], client: str | None) -> dict[s
     if not client:
         return {"ok": False, "status": "MISSING_CONTEXT", "message": "Client context required — fail closed"}
     allowed = mapped.get("allowed_clients") or []
-    if allowed and "*" not in allowed and client not in allowed:
+    if "*" in allowed:
+        return {"ok": True, "client": client}
+    if client not in allowed:
         return {"ok": False, "status": "WRONG_CLIENT", "message": "Client A must never see Client B", "leakage": False}
     return {"ok": True, "client": client}
 

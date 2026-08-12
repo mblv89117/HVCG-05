@@ -161,6 +161,12 @@ class TestSecurityAV(unittest.TestCase):
         no_id = sec.map_hub_principal({})
         self.assertEqual(no_id["status"], "UNAUTHORIZED")
 
+    def test_empty_allowed_clients_fails_closed(self):
+        mapped = sec.map_hub_principal(_principal(allowedClientIds=[]))
+        denied = sec.require_client_context(mapped, "ClientA")
+        self.assertFalse(denied.get("ok"))
+        self.assertEqual(denied["status"], "WRONG_CLIENT")
+
     def test_case_o_unsafe_production_config(self):
         bad = sec.validate_environment_config(
             {

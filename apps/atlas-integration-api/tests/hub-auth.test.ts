@@ -117,11 +117,14 @@ describe('verified JWT principal construction', () => {
     assert.deepEqual(clientIdsFromVerifiedPayload({ atlas_client_ids: '*' } as JWTPayload), []);
   });
 
-  it('verified client ids are accepted', () => {
-    assert.deepEqual(
-      clientIdsFromVerifiedPayload({ extension_AtlasClientIds: ['client-a', 'client-b'] } as JWTPayload),
-      ['client-a', 'client-b'],
-    );
+  it('JWT client claims do not become allowedClientIds', () => {
+    const p = principalFromVerifiedPayload({
+      oid: 'oid-1',
+      extension_AtlasClientIds: ['ACCG01'],
+      atlas_client_ids: '*',
+      client_ids: 'LIEN01',
+    } as JWTPayload);
+    assert.deepEqual(p.allowedClientIds, []);
   });
 });
 
@@ -148,34 +151,54 @@ describe('header spoofing cannot elevate a JWT principal', () => {
     assert.deepEqual(principal.allowedClientIds, []);
   });
 
-  it('x-atlas-client-ids cannot broaden verified scope', async () => {
+  it('x-atlas-client-ids cannot broaden server-resolved scope', async () => {
     process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
     delete process.env.INTEGRATION_REQUIRE_AUTH;
     delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
-    const cfg: AppConfig = { ...loadConfig(), verifyAccessToken: syntheticVerify };
+    const cfg: AppConfig = {
+      ...loadConfig(),
+      verifyAccessToken: syntheticVerify,
+      resolveAllowedClientIds: async (oid) => (oid === 'scoped-1' ? ['ACCG01'] : []),
+    };
     const principal = await requirePrincipal(
       mockReq({
         authorization: 'Bearer valid-scoped',
-        'x-atlas-client-ids': '*,client-z',
+        'x-atlas-client-ids': '*,LIEN01',
       }),
       cfg,
     );
-    assert.deepEqual(principal.allowedClientIds, ['client-a']);
+    assert.deepEqual(principal.allowedClientIds, ['ACCG01']);
   });
 });
 
 describe('client scope fail-closed', () => {
-  it('empty scope denies a specific client', () => {
+  it('empty scope denies a canonical client', () => {
     const p = principalFromVerifiedPayload({ oid: 'x' } as JWTPayload);
-    assert.throws(() => assertClientAccess(p, 'client-a'), (err: unknown) => (err as { status?: number }).status === 403);
+    assert.throws(() => assertClientAccess(p, 'ACCG01'), (err: unknown) => (err as { status?: number }).status === 403);
   });
 
-  it('verified client id is allowed', () => {
+  it('server-resolved canonical client id is allowed', async () => {
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    process.env.INTEGRATION_HOST = '127.0.0.1';
+    process.env.NODE_ENV = 'development';
+    delete process.env.INTEGRATION_REQUIRE_AUTH;
+    delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
+    const cfg: AppConfig = {
+      ...loadConfig(),
+      verifyAccessToken: syntheticVerify,
+      resolveAllowedClientIds: async (oid) => (oid === 'scoped-1' ? ['ACCG01'] : []),
+    };
+    const principal = await requirePrincipal(mockReq({ authorization: 'Bearer valid-scoped' }), cfg);
+    assert.deepEqual(principal.allowedClientIds, ['ACCG01']);
+    assertClientAccess(principal, 'ACCG01');
+  });
+
+  it('JWT client claims cannot satisfy assertClientAccess', () => {
     const p = principalFromVerifiedPayload({
       oid: 'x',
-      extension_AtlasClientIds: ['client-a'],
+      extension_AtlasClientIds: ['ACCG01'],
     } as JWTPayload);
-    assertClientAccess(p, 'client-a');
+    assert.throws(() => assertClientAccess(p, 'ACCG01'), (err: unknown) => (err as { status?: number }).status === 403);
   });
 });
 
@@ -187,7 +210,10 @@ describe('insecure development principal', () => {
   });
 });
 
-async function withAuthOnHub(fn: (base: string) => Promise<void>) {
+async function withAuthOnHub(
+  fn: (base: string) => Promise<void>,
+  opts?: { resolveAllowedClientIds?: AppConfig['resolveAllowedClientIds'] },
+) {
   const dir = mkdtempSync(join(tmpdir(), 'atlas-hub-auth-'));
   const prev = {
     NODE_ENV: process.env.NODE_ENV,
@@ -205,7 +231,11 @@ async function withAuthOnHub(fn: (base: string) => Promise<void>) {
   process.env.INTEGRATION_PM_BACKEND = 'development-json';
   delete process.env.INTEGRATION_REQUIRE_AUTH;
   delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
-  const cfg: AppConfig = { ...loadConfig(), verifyAccessToken: syntheticVerify };
+  const cfg: AppConfig = {
+    ...loadConfig(),
+    verifyAccessToken: syntheticVerify,
+    resolveAllowedClientIds: opts?.resolveAllowedClientIds,
+  };
   assert.equal(cfg.requireAuth, true);
   const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
   const pm = new PmRepository(dir);
@@ -358,9 +388,44 @@ describe('auth-on BA client scope', () => {
           'content-type': 'application/json',
           'x-atlas-client-ids': '*',
         },
-        body: JSON.stringify({ clientId: 'client-a' }),
+        body: JSON.stringify({ clientId: 'ACCG01' }),
       });
       assert.equal(res.status, 403);
     });
+  });
+
+  it('non-canonical client alias is denied even when a ClientCode is entitled', async () => {
+    await withAuthOnHub(
+      async (base) => {
+        const res = await fetch(`${base}/api/ba/documents/access`, {
+          method: 'POST',
+          headers: {
+            authorization: 'Bearer valid-scoped',
+            'content-type': 'application/json',
+            'x-atlas-client-ids': '*',
+          },
+          body: JSON.stringify({ clientId: 'client-a' }),
+        });
+        assert.equal(res.status, 403);
+      },
+      { resolveAllowedClientIds: async () => ['ACCG01'] },
+    );
+  });
+
+  it('unauthorized canonical ClientCode is 403', async () => {
+    await withAuthOnHub(
+      async (base) => {
+        const res = await fetch(`${base}/api/ba/documents/access`, {
+          method: 'POST',
+          headers: {
+            authorization: 'Bearer valid-scoped',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ clientId: 'LIEN01' }),
+        });
+        assert.equal(res.status, 403);
+      },
+      { resolveAllowedClientIds: async () => ['ACCG01'] },
+    );
   });
 });

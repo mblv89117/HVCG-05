@@ -3,6 +3,7 @@
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { assertClientAccess, requirePrincipal, type AtlasPrincipal } from '../middleware/auth.ts';
+import { isCanonicalClientCode } from '../entitlements/clientCode.ts';
 import type { AppConfig } from '../config.ts';
 import { httpStatusForBa, invokeBaBridge } from './invokePython.ts';
 
@@ -82,6 +83,15 @@ export async function handleBaRoutes(opts: {
     const body = await readJson(req);
     const clientId = String(body.clientId || body.client || '');
     if (clientId) {
+      if (!principal.allowedClientIds.includes('*') && !isCanonicalClientCode(clientId)) {
+        const err = new Error('Access denied: client not in principal scope') as Error & {
+          status: number;
+          code: string;
+        };
+        err.status = 403;
+        err.code = 'forbidden';
+        throw err;
+      }
       assertClientAccess(principal, clientId);
     }
 
