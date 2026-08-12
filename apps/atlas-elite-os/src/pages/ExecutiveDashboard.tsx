@@ -430,7 +430,7 @@ export function ExecutiveDashboardPage() {
             </Link>
             <Link to="/ai">
               <Button size="small" appearance="secondary">
-                AI conversation
+                Owner Brief / Ask Atlas
               </Button>
             </Link>
             <Link to="/reports">

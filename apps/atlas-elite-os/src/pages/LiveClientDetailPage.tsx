@@ -50,6 +50,7 @@ import {
   Client360RevenueSection,
   Client360RiskSection,
 } from './Client360CommercialSections';
+import { Client360AiAssist } from './AiOrchestrationWorkbench';
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const { account, ready } = useMicrosoftAuth();
@@ -212,6 +213,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <Tab value="procurement">Procurement</Tab>
         <Tab value="risk">Risk</Tab>
         <Tab value="growth">Growth</Tab>
+        <Tab value="ai">AI</Tab>
         <Tab value="deliverables">Deliverables</Tab>
         <Tab value="approvals">Approvals</Tab>
         <Tab value="notes">Notes</Tab>
@@ -491,6 +493,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
       {tab === 'growth' ? (
         <Client360GrowthSection clientHint={client?.legalName || client?.displayName || clientId} />
+      ) : null}
+
+      {tab === 'ai' ? (
+        <Client360AiAssist clientHint={client?.legalName || client?.displayName || clientId} />
       ) : null}
 
       {tab === 'deliverables' ? (

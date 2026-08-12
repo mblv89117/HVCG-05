@@ -469,17 +469,4 @@ export function EnterpriseValuePage() {
 
 export { DocumentsOperatingPage as DocumentsPage } from './DocumentsOperatingPage';
 
-export function AiInsightsPage() {
-  return (
-    <ModuleScaffold
-      title="AI Agents"
-      subtitle="Copilot experience — suggested prompts, history, and approval-ready actions."
-      showPendingBanner={false}
-    >
-      <EmptyState
-        title="Not yet configured"
-        description="Intended source: Knowledge Platform + Copilot connectors. Development stubs only — no live client actions."
-      />
-    </ModuleScaffold>
-  );
-}
+export { AiOrchestrationWorkbench as AiInsightsPage } from './AiOrchestrationWorkbench';
