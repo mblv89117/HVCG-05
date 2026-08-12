@@ -1600,11 +1600,15 @@
       "externalContactGate": true,
       "evidence": [
         "config/business/capital_readiness.py#human_approve_readiness",
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/financial_package.py",
+        "config/business/capital-package-policy.json",
+        "src/sharepoint/lists/HVCG_Approvals.json",
+        "tests/unit/business/test_financial_package_sprint6.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Human approval required for readiness conclusion; lender-submit workflow still blocked (no external)."
+      "notes": "Package approval + submission gate operational in Dev; live lender submit remains blocked (by design)."
     },
     {
       "id": "HVCG-V2-CAP-004",
@@ -1618,16 +1622,20 @@
       "owner": "Portal",
       "sprint": "BA-C/J",
       "priority": "P1",
-      "status": "IN_PROGRESS",
+      "status": "IMPLEMENTED",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/capital_readiness.py#build_financial_package_handoff"
+        "config/business/capital_readiness.py#build_financial_package_handoff",
+        "config/business/financial_package.py#build_data_room_index",
+        "config/business/financial_package.py#run_financial_package_agent",
+        "templates/projects/lender-package.json",
+        "tests/unit/business/test_financial_package_sprint6.py"
       ],
       "testsAcceptance": [],
-      "completionDate": null,
-      "notes": "Package handoff contract READY_FOR_PACKAGE_BUILD implemented; full data-room runtime remains portal package."
+      "completionDate": "2026-08-11",
+      "notes": "Lender-Ready Package + Data Room index + visibility classification in Development; reuses portal LenderPackage (external Off)."
     },
     {
       "id": "HVCG-V2-CFO-001",

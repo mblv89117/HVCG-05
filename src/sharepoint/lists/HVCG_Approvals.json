@@ -51,7 +51,11 @@
         "Proposal",
         "PricingOverride",
         "DiagnosticBypass",
-        "Other"
+        "Other",
+        "CapitalPackage",
+        "LenderMemo",
+        "PackageQAOverride",
+        "LenderSubmission"
       ]
     },
     {

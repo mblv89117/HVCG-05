@@ -77,10 +77,33 @@
       "riskLevel": "MEDIUM",
       "externalCommunicationAllowed": false,
       "humanApproval": "required_for_external",
-      "runtime": "config/business/capital_readiness.py#build_financial_package_handoff",
+      "runtime": "config/business/financial_package.py#run_financial_package_agent",
       "handoffFrom": "AGT-CAP-READY",
       "handoffStatus": "READY_FOR_PACKAGE_BUILD",
-      "note": "Sprint 5 implements handoff contract; full lender-package runtime may continue later."
+      "policy": "config/business/capital-package-policy.json",
+      "outputs": [
+        "packageChecklist",
+        "financialSummaryDraft",
+        "missingInformationList",
+        "conflictList",
+        "documentIndex",
+        "packageCompletenessScore",
+        "lenderMemoDraft",
+        "packageQaRecord"
+      ],
+      "never": [
+        "certify financial statements",
+        "modify source financial documents",
+        "invent financial figures",
+        "act as CPA",
+        "resolve conflicts silently",
+        "label unaudited as audited",
+        "label projections as historical fact",
+        "send package to lenders without human approval",
+        "guarantee lending outcomes",
+        "auto submit SBA forms"
+      ],
+      "note": "Sprint 6 runtime operational in Development. APPROVED_FOR_LENDER_SUBMISSION remains submission-gated (BL-C1)."
     },
     { "agentCode": "AGT-PROCURE", "name": "Contract Procurement Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always_before_external" },
     { "agentCode": "AGT-GOV-REG", "name": "Government Registration Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always_before_submit" },

@@ -1,52 +1,49 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-11 (Sprint 5 Development — Capital Readiness Engine)  
+**As of:** 2026-08-11 (Sprint 6 Development — Lender-Ready Capital Package)  
 **Source:** `config/business/hvcg-v2-requirements.json` (125 requirements)
 
-## Sprint 4 committed baseline
+## Sprint 5 committed baseline
 
 | Metric | Count |
 |--------|------:|
-| `IMPLEMENTED` | 56 |
+| `IMPLEMENTED` | 57 |
 | `EXISTING_REUSED` | 12 |
-| `IN_PROGRESS` | 27 |
-| `PLANNED` | 28 |
+| `IN_PROGRESS` | 29 |
+| `PLANNED` | 25 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage %** | **54.4%** |
+| **Coverage %** | **55.2%** |
 
-## Sprint 5 current (Dev — pending Owner commit)
+## Sprint 6 current (Dev — pending Owner commit)
 
-| Metric | Previous (S4) | Current (S5) | Delta |
+| Metric | Previous (S5) | Current (S6) | Delta |
 |--------|--------------:|-------------:|------:|
-| `IMPLEMENTED` | 56 | 57 | +1 |
+| `IMPLEMENTED` | 57 | 58 | +1 |
 | `EXISTING_REUSED` | 12 | 12 | 0 |
-| `IN_PROGRESS` | 27 | 29 | +2 |
-| `PLANNED` | 28 | 25 | −3 |
+| `IN_PROGRESS` | 29 | 28 | −1 |
+| `PLANNED` | 25 | 25 | 0 |
 | `DEFERRED_OWNER_GATE` | 2 | 2 | 0 |
-| **Coverage %** | **54.4%** | **55.2%** | **+0.8 pp** |
+| **Coverage %** | **55.2%** | **56.0%** | **+0.8 pp** |
 
-## Exact IDs changed (Sprint 5)
+## Exact IDs changed (Sprint 6)
 
 | ID | From | To |
 |----|------|----|
-| `HVCG-V2-CAP-002` | PLANNED | IMPLEMENTED |
-| `HVCG-V2-CAP-003` | PLANNED | IN_PROGRESS |
-| `HVCG-V2-CAP-004` | PLANNED | IN_PROGRESS |
+| `HVCG-V2-CAP-004` | IN_PROGRESS | IMPLEMENTED |
 
-CAP-001 remains `EXISTING_REUSED` (Capital Case domain). C360-001 remains `IN_PROGRESS` (Capital tab added; not full multi-domain Client 360).
+`HVCG-V2-CAP-003` remains **IN_PROGRESS** — package approval/submission gate exists; live lender submission intentionally not activated.
 
 ## Evidence
 
 | Capability | Evidence |
 |------------|----------|
-| Scoring engine | `capital_readiness.py`, `capital-readiness-scoring.json`, `test_capital_readiness_sprint5.py` |
-| Capital workbench | `CapitalReadinessWorkbench.tsx` (usable-operating-layer) |
-| Client 360 Capital | `Client360CommercialSections.tsx` |
-| Package handoff | `build_financial_package_handoff` → `READY_FOR_PACKAGE_BUILD` |
-| E2E | Fit → Diagnostic → Readiness → Approve → OFF-CAP-PKG → Proposal → APPROVED_TO_SEND → BL-C1 stop |
+| Financial Package Agent | `financial_package.py`, `hvcg-agents-v2.json`, Sprint 6 tests |
+| Package completeness / QA | `run_package_qa`, cases A–I |
+| Data Room index + visibility | `build_data_room_index` (OWNER_ONLY excluded) |
+| E2E | Fit → Readiness → Package → QA → gated approval → BL-C1 stop |
 
-## Non-claims
+## Remaining in progress (capital-related)
 
-- Lender submit not implemented (blocked)
-- Full FIN-PKG runtime not claimed IMPLEMENTED
-- No Production provision
+- CAP-003 lender-submit workflow (blocked by design)
+- Live FI/QBO/Plaid adapters
+- Full portal room provisioning bind
