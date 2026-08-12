@@ -40,6 +40,7 @@ import {
   type PmTask,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
+import { Client360DocumentsSection } from './DocumentLifecycleWorkbench';
 import { projectDetailPath } from '../routing/projectId';
 import {
   Client360CapitalSection,
@@ -394,7 +395,9 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       ) : null}
 
       {tab === 'documents' ? (
-        docs.length === 0 && !busy ? (
+        <>
+          <Client360DocumentsSection clientHint={client?.displayName || client?.legalName || clientId} />
+          {docs.length === 0 && !busy ? (
           <EmptyState
             title="No linked documents for this client."
             description="Upload in the approved SharePoint client library, then refresh Client 360 ingest."
@@ -440,7 +443,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               ]}
             />
           </AtlasCard>
-        )
+        )}
+        </>
       ) : null}
 
       {tab === 'meetings' ? (

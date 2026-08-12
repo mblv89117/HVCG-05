@@ -433,5 +433,12 @@ export function EnterpriseValuePage() {
 }
 
 export { DocumentsOperatingPage as DocumentsPage } from './DocumentsOperatingPage';
+export { DocumentLifecycleWorkbench } from './DocumentLifecycleWorkbench';
+import { DocumentLifecycleWorkbench as DocumentLifecycleWorkbenchPage } from './DocumentLifecycleWorkbench';
+
+/** Sprint 13 — Documents hub extends request center + portal Dev over existing operating surfaces. */
+export function DocumentsHubPage() {
+  return <DocumentLifecycleWorkbenchPage />;
+}
 
 export { AiOrchestrationWorkbench as AiInsightsPage } from './AiOrchestrationWorkbench';

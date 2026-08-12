@@ -25,6 +25,7 @@ import {
   TasksPage,
 } from './pages/Modules';
 import { DocumentsOperatingPage } from './pages/DocumentsOperatingPage';
+import { DocumentLifecycleWorkbench } from './pages/DocumentLifecycleWorkbench';
 import { ClientsPage } from './pages/LiveClientsPage';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
@@ -283,6 +284,14 @@ export function App() {
               />
               <Route
                 path="documents"
+                element={
+                  <PrivateRoute>
+                    <DocumentLifecycleWorkbench />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="documents/operating"
                 element={
                   <PrivateRoute>
                     <DocumentsOperatingPage />
