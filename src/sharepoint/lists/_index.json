@@ -671,6 +671,24 @@
       "domain": "Risk",
       "changeRequest": "CR-HVCG-BA-V2-001",
       "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_GrowthEngagements",
+      "path": "src/sharepoint/lists/HVCG_GrowthEngagements.json",
+      "columnCount": 15,
+      "description": "Growth OS engagements OFF-GROWTH-OS (Dev-only)",
+      "domain": "Growth",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_Growth90DayPlans",
+      "path": "src/sharepoint/lists/HVCG_Growth90DayPlans.json",
+      "columnCount": 15,
+      "description": "Versioned 90-day Growth plans (Dev-only)",
+      "domain": "Growth",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ],
   "productVersion": "1.1.0"

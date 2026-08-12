@@ -3,39 +3,28 @@
 **CR:** CR-HVCG-BA-V2-001  
 **Sprint:** 9 — BA-F Risk, Claims & Liability Reduction OS  
 **Date:** 2026-08-11  
-**Controls:** NO DEPLOY · NO AGENCY/INSURER/ATTORNEY AUTO-CONTACT · NO APPEAL/CLAIM AUTO-FILE · BL-C1 ACTIVE · NO SPRINT 10
+**Controls:** NO DEPLOY · NO AGENCY/INSURER/ATTORNEY AUTO-CONTACT · NO APPEAL/CLAIM AUTO-FILE · BL-C1 ACTIVE
 
-## Sprint 8 commits (prerequisite — done)
+## Sprint 9 commits (Owner authorized — done)
 
-| Worktree | SHA |
-|----------|-----|
-| BA V2 | `a0166e9f12ada81b281ad6774569a46993b19e73` |
-| Usable-operating-layer | `34b6f4f92bae07c158cea94decbe63b68b71672e` |
+| Worktree | Branch | SHA |
+|----------|--------|-----|
+| BA V2 | `cursor/hvcg-business-architecture-v2` | `4df8fe68e992f3f5e13fcfc999b16bca1d7f434c` |
+| Usable-operating-layer | `fix/atlas-usable-operating-layer` | `9e60dcabab63c77d060c469c991bbb553b2df320` |
 
-## Sprint 9 Development (pending Owner commit auth)
+Messages:
+- BA: `feat(risk): implement HVCG Risk Claims and Liability operating system [CR-HVCG-BA-V2-001]`
+- Elite: `feat(elite): add Risk workbench and Client 360 risk experience [CR-HVCG-BA-V2-001]`
 
-### BA
-- `config/business/risk-operating-policy.json`
-- `config/business/risk_claims.py`
-- Lists: `HVCG_RiskMatters`, `HVCG_RiskEvidence`
-- Approvals types extended
-- AGT-TAX-APPEAL / AGT-UE-CLAIM / AGT-INS-REVIEW / AGT-CLAIMS / AGT-HR-DOCS runtimes
-- Tests: `test_risk_claims_sprint9.py` (20 OK)
-- Audit + coverage + SoR
+## Production gate (Owner security rule)
 
-### Elite
-- `RiskClaimsWorkbench.tsx` at `/risk`
-- Client 360 Risk section
-- Nav wiring (Elite shell — no competing case app)
+[GATE-RISK-ELEVATED-ACL-PROD.md](../Decisions/GATE-RISK-ELEVATED-ACL-PROD.md)  
+Elevated Dev flags ≠ Production authorization. Does not block Growth Development.
 
 ## Honest non-claims
-- Risk product **not** fully `IMPLEMENTED` (live connectors, full ACL productization incomplete)
-- PROC-001/002 remain **IN_PROGRESS**
+- RISK-001 / RISK-002 remain **IN_PROGRESS** (not IMPLEMENTED)
 - No external filings/contacts
 - No Production mutation
-- Sprint 10 (Growth OS) **not** started
 
-## Owner next
-1. Review Sprint 9 results  
-2. Authorize Sprint 9 commits when ready  
-3. Do not begin Sprint 10 until authorized
+## Follow-on
+Sprint 10 Growth OS — see [HVCG_BA_V2_SPRINT10_HANDOFF.md](HVCG_BA_V2_SPRINT10_HANDOFF.md)

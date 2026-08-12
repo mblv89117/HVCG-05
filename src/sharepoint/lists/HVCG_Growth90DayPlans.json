@@ -1,0 +1,27 @@
+{
+  "title": "HVCG_Growth90DayPlans",
+  "description": "Versioned 90-day Growth plans. Do not rewrite history. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "GrowthEngagementId", "displayName": "GrowthEngagementId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_GrowthEngagements", "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "Version", "displayName": "Version", "type": "Number", "required": true, "indexed": true, "description": "" },
+    { "internalName": "PeriodStart", "displayName": "PeriodStart", "type": "DateTime", "required": true, "indexed": false, "description": "" },
+    { "internalName": "PeriodEnd", "displayName": "PeriodEnd", "type": "DateTime", "required": true, "indexed": false, "description": "" },
+    { "internalName": "PrimaryObjective", "displayName": "PrimaryObjective", "type": "Note", "required": true, "indexed": false, "description": "" },
+    { "internalName": "PrioritiesJson", "displayName": "PrioritiesJson", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "PriorityCount", "displayName": "PriorityCount", "type": "Number", "required": false, "indexed": false, "description": "Warn if >5" },
+    { "internalName": "FocusWarning", "displayName": "FocusWarning", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "indexed": true, "choices": ["DRAFT", "ACTIVE", "CLOSED", "SUPERSEDED"], "description": "" },
+    { "internalName": "CreatedBy", "displayName": "CreatedBy", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ApprovedBy", "displayName": "ApprovedBy", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "SupersededBy", "displayName": "SupersededBy", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ResultsJson", "displayName": "ResultsJson", "type": "Note", "required": false, "indexed": false, "description": "COMPLETED/PARTIAL/MISSED/CANCELLED/SUPERSEDED — no silent carry of missed" }
+  ]
+}

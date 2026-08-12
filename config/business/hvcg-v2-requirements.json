@@ -1855,7 +1855,7 @@
       "priority": "P0",
       "status": "IN_PROGRESS",
       "dependencies": [],
-      "productionGate": false,
+      "productionGate": true,
       "externalContactGate": true,
       "evidence": [
         "config/business/risk-operating-policy.json#elevatedAccess",
@@ -1864,7 +1864,7 @@
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Elevated/need-to-know flags + restricted evidence confidentiality choices in Dev. Full server-side ACL productization still completing."
+      "notes": "Elevated/need-to-know flags + restricted evidence confidentiality choices in Dev. Full server-side ACL productization still completing. PRODUCTION GATE: GATE-RISK-ELEVATED-ACL-PROD \u2014 Dev flags \u2260 Production auth."
     },
     {
       "id": "HVCG-V2-GROW-001",
@@ -1873,19 +1873,62 @@
       "category": "Growth",
       "businessPurpose": "Operating systems",
       "atlasModule": "Operations Hub",
-      "existingCapability": "Ops Hub packages",
+      "existingCapability": "Ops Hub packages + OFF-GROWTH-OS; now Growth engine + workbench",
       "implementationMethod": "Extend Ops Hub",
       "owner": "Ops",
       "sprint": "BA-G",
       "priority": "P1",
-      "status": "EXISTING_REUSED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
-      "externalContactGate": false,
-      "evidence": [],
-      "testsAcceptance": [],
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/growth_os.py",
+        "config/business/growth-operating-policy.json",
+        "src/sharepoint/lists/HVCG_GrowthEngagements.json",
+        "src/sharepoint/lists/HVCG_Growth90DayPlans.json",
+        "apps/atlas-elite-os/src/pages/GrowthOsWorkbench.tsx",
+        "tests/unit/business/test_growth_os_sprint10.py"
+      ],
+      "testsAcceptance": [
+        "cases A\u2013J",
+        "E2E Growth",
+        "cross-domain routing",
+        "SOP lifecycle",
+        "accountability"
+      ],
       "completionDate": null,
-      "notes": ""
+      "notes": "Sprint 10 Dev Growth OS present on Ops Hub + Elite. Not full IMPLEMENTED: Production Ops bind, live KPI feeds, Second Brain orchestration deferred."
+    },
+    {
+      "id": "HVCG-V2-GROW-002",
+      "masterPlanSection": "Growth",
+      "requirement": "Growth KPI source truth + domain routing (Revenue/CFO/Capital/Procurement/Risk/Ops) \u2014 no duplicated calculations",
+      "category": "Growth",
+      "businessPurpose": "Connect domains without duplication",
+      "atlasModule": "Growth / Ops Hub",
+      "existingCapability": "Domain engines S5\u2013S9",
+      "implementationMethod": "growth_os routing + scorecard sourceOfRecord",
+      "owner": "Ops",
+      "sprint": "BA-G",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": [
+        "HVCG-V2-GROW-001"
+      ],
+      "productionGate": false,
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/growth_os.py#kpi_scorecard",
+        "config/business/growth_os.py#route_cross_domain_issues",
+        "tests/unit/business/test_growth_os_sprint10.py"
+      ],
+      "testsAcceptance": [
+        "cross-domain routing",
+        "KPI NO_DATA"
+      ],
+      "completionDate": null,
+      "notes": "Added Sprint 10 mid-program \u2014 truth over coverage %."
     },
     {
       "id": "HVCG-V2-AI-001",
@@ -2192,7 +2235,8 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/growth_os.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
@@ -2261,7 +2305,8 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/growth_os.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
@@ -2307,7 +2352,8 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/growth_os.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,

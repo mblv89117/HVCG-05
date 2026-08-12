@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-11 |
+| **As of** | 2026-08-11 (Sprint 10 mid-program review) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 125 |
+| **Total requirements** | 127 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,16 +22,18 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary
+## Status summary (mid-program · Sprint 10)
 
 | Status | Count |
 |--------|------:|
-| `IMPLEMENTED` | 44 |
-| `EXISTING_REUSED` | 14 |
-| `IN_PROGRESS` | 27 |
-| `PLANNED` | 38 |
+| `IMPLEMENTED` | 58 |
+| `EXISTING_REUSED` | 11 |
+| `IN_PROGRESS` | 36 |
+| `PLANNED` | 20 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **46.4%** |
+| **Coverage (Implemented+Reused)** | **54.3%** |
+
+**Corrections this review:** GROW-001 demoted from EXISTING_REUSED → IN_PROGRESS (honest Growth OS scope); GROW-002 added (KPI source truth / domain routing); RISK-002 annotated with Production ACL gate. No silent IMPLEMENTED from stubs. Duplicate Growth/task shells not introduced.
 
 ## Acceptance checklist coverage (Control §47)
 

@@ -327,7 +327,6 @@
       ],
       "note": "Sprint 8 reuses existing proposal governance — no separate procurement proposal AI."
     },
-    { "agentCode": "AGT-CRM", "name": "CRM Update Agent", "riskLevel": "LOW", "externalCommunicationAllowed": false, "humanApproval": "conditional" },
     {
       "agentCode": "AGT-INVOICE",
       "name": "Invoice & Payment Reconciliation Agent",
@@ -337,8 +336,54 @@
       "note": "HVCG invoice / revenue tracking only. Do not conflate with client AR/AP/accounting under AGT-CFO-OPS."
     },
     { "agentCode": "AGT-REFERRAL", "name": "Referral Partner Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "required_for_payouts" },
-    { "agentCode": "AGT-SUCCESS", "name": "Client Success Agent", "riskLevel": "LOW", "externalCommunicationAllowed": false, "humanApproval": "conditional" },
-    { "agentCode": "AGT-CONCIERGE", "name": "Executive Concierge Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always", "restricted": true },
-    { "agentCode": "AGT-SECOND-BRAIN", "name": "AI Second Brain Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "permission_aware_retrieval" }
+    {
+      "agentCode": "AGT-CRM",
+      "name": "CRM Update Agent",
+      "riskLevel": "LOW",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "conditional",
+      "runtime": "config/business/growth_os.py#run_crm_update_agent",
+      "policy": "config/business/growth-operating-policy.json",
+      "never": [
+        "delete records",
+        "overwrite financial truth",
+        "alter contracted economics",
+        "create false activity"
+      ],
+      "note": "Sprint 10 Growth support. Revenue OS remains SoR for pipeline."
+    },
+    {
+      "agentCode": "AGT-SUCCESS",
+      "name": "Client Success Agent",
+      "riskLevel": "LOW",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "conditional",
+      "runtime": "config/business/growth_os.py#run_client_success_agent",
+      "policy": "config/business/growth-operating-policy.json",
+      "never": [
+        "send sensitive client messages autonomously",
+        "promise scope",
+        "change pricing",
+        "modify contracts"
+      ],
+      "note": "Sprint 10 Growth operating-review support. BL-C1 active."
+    },
+    {
+      "agentCode": "AGT-CONCIERGE",
+      "name": "Executive Concierge Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always",
+      "restricted": true
+    },
+    {
+      "agentCode": "AGT-SECOND-BRAIN",
+      "name": "AI Second Brain Agent",
+      "riskLevel": "MEDIUM",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "permission_aware_retrieval",
+      "runtime": "config/business/growth_os.py#second_brain_knowledge_candidates",
+      "note": "Sprint 10 prepares knowledge candidates from Growth OS. Full orchestration deferred to later sprint."
+    }
   ]
 }

@@ -1,0 +1,27 @@
+{
+  "title": "HVCG_GrowthEngagements",
+  "description": "Growth Operating System engagements (OFF-GROWTH-OS). Extends Engagement — not a second CRM/PM shell. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "OfferCode", "displayName": "OfferCode", "type": "Text", "required": true, "indexed": true, "description": "OFF-GROWTH-OS" },
+    { "internalName": "StartDate", "displayName": "StartDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "TargetEndDate", "displayName": "TargetEndDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AssignedAdvisor", "displayName": "AssignedAdvisor", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "ExecutiveSponsor", "displayName": "ExecutiveSponsor", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "BusinessObjective", "displayName": "BusinessObjective", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "RevenueGoal", "displayName": "RevenueGoal", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "OperationalGoal", "displayName": "OperationalGoal", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "GrowthStage", "displayName": "GrowthStage", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ReviewCadence", "displayName": "ReviewCadence", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "EngagementStatus", "displayName": "EngagementStatus", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "PriorityAreas", "displayName": "PriorityAreas", "type": "Note", "required": false, "indexed": false, "description": "" }
+  ]
+}

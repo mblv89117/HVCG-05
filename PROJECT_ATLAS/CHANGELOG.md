@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-11 | Sprint 10 Dev (pending commit): Growth OS — `growth_os.py`, GrowthEngagements/90DayPlans, KPI source truth, domain routing, SOP lifecycle, AGT-SUCCESS/CRM/Second Brain prep; Elite `/growth` + Client 360 Growth + ECC summary. GROW-001/002 IN_PROGRESS. Mid-program coverage **54.3%** (truth over %). Risk ACL Production gate documented. **No Production / no Sprint 11.** |
+| 2026-08-11 | Sprint 9 commit: Risk/Claims OS (BA `4df8fe6` · Elite `9e60dca`). RISK-001/002 remain IN_PROGRESS. GATE-RISK-ELEVATED-ACL-PROD recorded. **No Production / no external Risk actions.** |
 | 2026-08-11 | Sprint 9 Dev (pending commit): Risk/Claims OS — `risk_claims.py`, RiskMatters/Evidence, tax/UE/insurance/claims agents, CFO/Capital/Procurement signals; Elite `/risk` + Client 360. RISK-001/002 → IN_PROGRESS. **No Production / no Sprint 10.** |
 | 2026-08-11 | Sprint 8 commit: Procurement & Government Readiness OS (BA `a0166e9` · Elite `34b6f4f`). PROC-001/002 remain IN_PROGRESS. **No Production / no external submit.** |
 | 2026-08-11 | Sprint 8 Dev (pending commit): Contract Procurement & Government Readiness OS — `contract_procurement.py`, registrations, capability truth, bid/no-bid, Capital/CFO handoffs; Elite `/procurement` + Client 360. PROC-001/002 → IN_PROGRESS (not full IMPLEMENTED). **No Production / no Sprint 9.** |
