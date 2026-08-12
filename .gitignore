@@ -60,6 +60,7 @@ local.settings.json
 tmp/
 temp/
 .cache/
+.data/
 
 # Sample exports with real client data (never commit)
 sample-data/production/

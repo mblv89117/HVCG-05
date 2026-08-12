@@ -89,7 +89,7 @@ def can_view_document(ctx: dict[str, Any], doc: dict[str, Any]) -> dict[str, Any
             if vis != "CLIENT_UPLOAD" or doc.get("status") not in ("RECEIVED", "ACCEPTED", "APPROVED", "FINAL"):
                 if doc.get("portalVisibility") != "APPROVED_CLIENT_VISIBLE":
                     return {"ok": False, "status": "BLOCKED_PERMISSION", "message": "Portal exclusion"}
-    if vis == "RISK_ELEVATED" or doc.get("domain") == "Risk":
+    if vis == "RISK_ELEVATED" or vis == "RISK_RESTRICTED" or doc.get("domain") == "Risk":
         if not ctx.get("elevated_risk_access"):
             return {"ok": False, "status": "BLOCKED_PERMISSION", "gate": RISK_ACL_GATE, "message": "Risk elevated ACL required"}
     if vis == "HR_RESTRICTED" or doc.get("documentType") == "HR":

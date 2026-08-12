@@ -1,16 +1,17 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-08-12 (Sprint 15 committed · Sprint 16 Security Hardening Dev complete — uncommitted)
+**As of:** 2026-08-12 (Sprint 16 committed · Sprint 17 Staging Readiness Dev complete — uncommitted)
 
-1. Track 1 frozen; BL-C1 active for autonomous send.  
-2. No merge to `main` / no deploy.  
-3. Sprint 15 committed: BA `3aa55f45cbd9c0acd5a3556d30acbb0fe40b9647`.  
-4. Sprint 16 Development complete (**uncommitted** — BA + Elite Hub binding).  
-5. All Production gates remain CLOSED.  
-6. Do **not** start Sprint 17 until Owner authorizes.
+1. Track 1 frozen; BL-C1 active.  
+2. No merge to `main` / no deploy / no gate OPEN.  
+3. Sprint 16 SHAs: BA `75f6e1f` · Elite `b92abf3`.  
+4. Sprint 17 Development complete (**uncommitted**).  
+5. Do **not** start Owner UAT / QA GO / RC until Owner authorizes.
 
 ## Owner decisions
 
-1. Authorize Sprint 16 commits (BA + Elite).  
-2. Authorize Sprint 17 (Production Data / Integration Readiness) when ready.  
-3. Any Production gate OPEN (none recommended).  
+1. Authorize Sprint 17 commits.  
+2. Provide/approve non-Prod Entra + Graph + AV + alert credentials as needed.  
+3. Review gate evidence — OPEN only by explicit decision (none recommended automatically).  
+4. Authorize Owner UAT execution when ready.  
+5. Authorize written QA process when ready.  

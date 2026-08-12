@@ -3240,7 +3240,57 @@
         "ba_bridge CLI"
       ],
       "completionDate": null,
-      "notes": "Dev binding proven via dispatch contract + bridge CLI. Live Hub process E2E labeled LIVE_VALIDATION_REQUIRED if env not running."
+      "notes": "Dev binding + live non-Prod Hub HTTP E2E on :8792 (dev headers). Real Entra JWT still CREDENTIAL_REQUIRED."
+    },
+    {
+      "id": "HVCG-V2-STG-001",
+      "masterPlanSection": "Staging Readiness",
+      "requirement": "Non-Production Hub HTTP E2E, staging finance read adapter, migration rehearsal, file audit sink, AV mock/fail-safe, release/UAT/QA packages",
+      "category": "Integration",
+      "businessPurpose": "Production-like evidence without Production deploy",
+      "atlasModule": "Staging / Hub",
+      "existingCapability": "atlas_security + revenue_truth + document_os",
+      "implementationMethod": "atlas_staging_readiness.py + Hub :8792 E2E",
+      "owner": "Architecture",
+      "sprint": "BA-L S17",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-SEC-001", "HVCG-V2-SEC-002"],
+      "productionGate": true,
+      "externalContactGate": false,
+      "evidence": [
+        "config/business/atlas_staging_readiness.py",
+        "tests/unit/business/test_atlas_staging_sprint17.py",
+        "PROJECT_ATLAS/Reports/HVCG_V2_STAGING_READINESS_SPRINT17.md"
+      ],
+      "testsAcceptance": ["Cases A–Z"],
+      "completionDate": null,
+      "notes": "Live Entra/Graph/AV/QBO still CREDENTIAL or EXTERNAL. Not PRODUCTION_READY."
+    },
+    {
+      "id": "HVCG-V2-STG-002",
+      "masterPlanSection": "Release Preparation",
+      "requirement": "Release readiness matrix, Owner UAT package, QA evidence index, rollback plan prepared — not executed/approved",
+      "category": "Governance",
+      "businessPurpose": "Enable Owner decision without false GO",
+      "atlasModule": "Project Atlas",
+      "existingCapability": "Gate evidence packs",
+      "implementationMethod": "S17 reports + packages in atlas_staging_readiness",
+      "owner": "Owner / Master PM",
+      "sprint": "BA-L S17",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-STG-001"],
+      "productionGate": true,
+      "externalContactGate": false,
+      "evidence": [
+        "PROJECT_ATLAS/Reports/HVCG_V2_RELEASE_READINESS_MATRIX_SPRINT17.md",
+        "PROJECT_ATLAS/Reports/HVCG_V2_OWNER_UAT_PACKAGE_SPRINT17.md",
+        "PROJECT_ATLAS/Reports/HVCG_V2_QA_EVIDENCE_INDEX_SPRINT17.md"
+      ],
+      "testsAcceptance": ["UAT package prepared", "QA index not GO"],
+      "completionDate": null,
+      "notes": "Owner UAT NOT_STARTED; written QA GO false."
     },
     {
       "id": "HVCG-V2-MKT-001",

@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-12 (Sprint 16 Security Hardening mid-program) |
+| **As of** | 2026-08-12 (Sprint 17 Staging Readiness mid-program) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 138 |
+| **Total requirements** | 140 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,20 +22,20 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 16)
+## Status summary (mid-program · Sprint 17)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 53 |
+| `IN_PROGRESS` | 55 |
 | `PLANNED` | 15 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **49.3%** |
+| **Coverage (Implemented+Reused)** | **48.6%** |
 
-**Corrections this review:** Sprint 16 SEC-001/002 added. Dev security evidence ≠ Production gate OPEN. Coverage fell honestly.
+**Corrections this review:** Sprint 17 STG-001/002 added. Staging/live Hub ≠ Production. Coverage fell honestly.
 
-**Prior:** Sprint 15 INT-001/002. Integration ≠ Production readiness.
+**Prior:** Sprint 16 SEC-001/002. Dev security ≠ Production gate OPEN.
 
 ## Acceptance checklist coverage (Control §47)
 

@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-12 | Sprint 17 Dev (uncommitted): Staging readiness — live Hub E2E, HR fields, finance staging adapter, migration rehearsal, monitoring sink, release/UAT/QA packs. Coverage **48.6%** (140). Gates remain CLOSED. **No Production / no UAT execution.** |
+| 2026-08-12 | Sprint 16 commits: BA `75f6e1f` · Elite `b92abf3`. Security hardening. **No Production.** |
 | 2026-08-12 | Sprint 16 Dev (uncommitted): Security hardening — Elite↔BA Hub binding, atlas_security, upload/download ACL, gate evidence packs. Coverage **49.3%** (138). Gates remain CLOSED. **No Production / no Sprint 17.** |
 | 2026-08-12 | Sprint 15 commit: Integration Convergence (BA `3aa55f4`). Elite no S15 delta. **No Production.** |
 | 2026-08-12 | Sprint 15 Dev (uncommitted): Integration Convergence — shared contracts, domain ownership, dependency/shadow-SoR audits, Cases A–Q, Production gap inventory. Coverage **50.0%** (136 reqs). **No Production / no Sprint 16.** |
