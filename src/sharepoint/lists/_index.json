@@ -19,6 +19,15 @@
       "productionAuthorized": false
     },
     {
+      "name": "HVCG_OwnerSupportEngagements",
+      "path": "src/sharepoint/lists/HVCG_OwnerSupportEngagements.json",
+      "columnCount": 17,
+      "description": "Restricted Owner Support engagements (Dev) — DENY unless authorized",
+      "domain": "ExecutiveOwnerSupport",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
       "name": "HVCG_Contacts",
       "path": "src/sharepoint/lists/HVCG_Contacts.json",
       "columnCount": 12,

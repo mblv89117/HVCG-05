@@ -1,0 +1,27 @@
+{
+  "title": "HVCG_OwnerSupportEngagements",
+  "description": "Restricted Owner Support engagements (Dev) — DENY unless explicitly authorized",
+  "template": "genericList",
+  "domain": "ExecutiveOwnerSupport",
+  "changeRequest": "CR-HVCG-BA-V2-001",
+  "productionAuthorized": false,
+  "columns": [
+    {"internalName": "Title", "displayName": "Matter Name", "type": "Text", "required": true},
+    {"internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "required": true, "indexed": true},
+    {"internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "lookupList": "HVCG_Clients"},
+    {"internalName": "PrincipalIdentity", "displayName": "Principal", "type": "Text", "required": false},
+    {"internalName": "MatterType", "displayName": "Matter Type", "type": "Choice", "required": true, "choices": ["STRATEGIC_INITIATIVE", "SPECIAL_SITUATION", "OWNER_FINANCIAL_DOCS", "MORTGAGE_READINESS", "REAL_ESTATE_DOCS", "ESTATE_TRUST_COORDINATION", "PROFESSIONAL_REFERRAL", "BUSINESS_CONTINUITY", "CONFIDENTIAL_SPECIAL_PROJECT", "FOUNDER_DECISION_SUPPORT", "OWNER_ONLY_NOTES", "PREMIUM_PROJECT"]},
+    {"internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "choices": ["OPEN", "ACTIVE", "WAITING", "ON_HOLD", "CLOSED", "ARCHIVED"]},
+    {"internalName": "Confidentiality", "displayName": "Confidentiality", "type": "Choice", "required": true, "choices": ["OWNER_PRIVATE", "OWNER_SUPPORT_RESTRICTED", "INTERNAL_EXECUTIVE"]},
+    {"internalName": "AssignedInternalOwner", "displayName": "Assigned Owner", "type": "Text", "required": false},
+    {"internalName": "OpenedDate", "displayName": "Opened", "type": "DateTime", "required": false},
+    {"internalName": "TargetDate", "displayName": "Target", "type": "DateTime", "required": false},
+    {"internalName": "ClosedDate", "displayName": "Closed", "type": "DateTime", "required": false},
+    {"internalName": "CommercialClass", "displayName": "Commercial Class", "type": "Text", "required": false},
+    {"internalName": "ContractedEconomicsRef", "displayName": "Economics Ref", "type": "Text", "required": false},
+    {"internalName": "PortalVisible", "displayName": "Portal Visible", "type": "Boolean", "required": true, "default": false},
+    {"internalName": "GeneralClient360Visible", "displayName": "General C360 Visible", "type": "Boolean", "required": true, "default": false},
+    {"internalName": "GeneralSecondBrainEligible", "displayName": "General SB Eligible", "type": "Boolean", "required": true, "default": false},
+    {"internalName": "Notes", "displayName": "Internal Notes", "type": "Note", "required": false}
+  ]
+}

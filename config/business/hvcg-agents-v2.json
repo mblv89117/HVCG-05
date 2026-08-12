@@ -410,9 +410,21 @@
       "externalCommunicationAllowed": false,
       "humanApproval": "always",
       "restricted": true,
-      "policy": "config/business/ai-governance-policy.json",
-      "never": ["expose Owner Support via general Second Brain", "retrieve without explicit authorized scope"],
-      "note": "Sprint 11: remains CONFIG_ONLY / highly restricted. Explicit owner_support_scope required."
+      "runtime": "config/business/executive_owner_support.py#run_executive_concierge",
+      "policy": "config/business/executive-owner-support-policy.json",
+      "governancePolicy": "config/business/ai-governance-policy.json",
+      "orchestrator": "config/business/ai_orchestrator.py",
+      "tools": ["TOOL-OWNER-SUPPORT-READ", "TOOL-DOCUMENT-SEARCH", "TOOL-DOCUMENT-REQUEST", "TOOL-APPROVAL-REQUEST", "TOOL-SECOND-BRAIN-QUERY"],
+      "never": [
+        "expose Owner Support via general Second Brain",
+        "retrieve without explicit authorized scope",
+        "escalate permissions beyond invoking user",
+        "auto_send",
+        "alter contracted economics",
+        "legal/tax/insurance/investment conclusions",
+        "contact professionals externally without approval"
+      ],
+      "note": "Sprint 14: FULL_DEV_RUNTIME · PRODUCTION_GATED. Not a superuser. Permission parity with invoking human. BL-C1 active. Not PRODUCTION_READY."
     },
     {
       "agentCode": "AGT-SECOND-BRAIN",

@@ -1,7 +1,7 @@
 # HVCG V2 Requirements Coverage
 
-**As of:** 2026-08-11 (Sprint 13 Development — Documents / Portal / M365)  
-**Source:** `config/business/hvcg-v2-requirements.json` (131 requirements)
+**As of:** 2026-08-12 (Sprint 14 Development — Executive Owner Support)  
+**Source:** `config/business/hvcg-v2-requirements.json` (134 requirements)
 
 ## Totals
 
@@ -9,27 +9,26 @@
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 45 |
-| `PLANNED` | 16 |
+| `IN_PROGRESS` | 49 |
+| `PLANNED` | 15 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage %** | **51.9%** |
+| **Coverage %** | **50.7%** |
 
-Previous (S12): **53.9%** (128 reqs). Delta: −2.0% from adding DOC-004/005/006 and moving DOC-002/003 to honest IN_PROGRESS (truth over %).
+Previous (S13): **51.9%** (131 reqs). Delta: −1.2% from OWN-003/004/005 + OWN-002→IN_PROGRESS (truth over %).
 
-## Changed IDs (Sprint 13)
+## Changed IDs (Sprint 14)
 
 | ID | Change |
 |----|--------|
-| `HVCG-V2-DOC-002` | PLANNED → **IN_PROGRESS** — email intake + client-match gates |
-| `HVCG-V2-DOC-003` | EXISTING_REUSED → **IN_PROGRESS** — request workflow deepened |
-| `HVCG-V2-DOC-004` | **NEW** IN_PROGRESS — Canonical Document Record |
-| `HVCG-V2-DOC-005` | **NEW** IN_PROGRESS — Client Portal documents (Prod gated) |
-| `HVCG-V2-DOC-006` | **NEW** IN_PROGRESS — Second Brain document retrieval (Prod gated) |
+| `HVCG-V2-OWN-002` | PLANNED → **IN_PROGRESS** — restricted Owner Support ACL/docs |
+| `HVCG-V2-OWN-003` | **NEW** IN_PROGRESS — AGT-CONCIERGE governed runtime |
+| `HVCG-V2-OWN-004` | **NEW** IN_PROGRESS — Decision Intelligence |
+| `HVCG-V2-OWN-005` | **NEW** IN_PROGRESS — Executive Intelligence / Owner Brief |
 
 ## Evidence
 
-`document_os.py`, `document-operating-policy.json`, `HVCG_DocumentRecords`, `test_document_os_sprint13.py`, `DocumentLifecycleWorkbench.tsx`, GATE-CLIENT-PORTAL-PROD, GATE-M365-SECOND-BRAIN-PROD, `HVCG_V2_DOCUMENT_PORTAL_CAPABILITY_SPRINT13.md`
+`executive_owner_support.py`, policy, `HVCG_OwnerSupportEngagements`, `test_executive_owner_support_sprint14.py`, `ExecutiveOwnerSupportWorkbench.tsx`, capability report S14
 
 ## Production gaps
 
-Portal external auth, live Graph RAG, malware scanning, Production Risk exposure, autonomous notifications — see S13 handoff.
+Live Owner Support SP ACLs, Production Concierge, Graph RAG, portal activation — gated.

@@ -3029,14 +3029,105 @@
       "owner": "Security",
       "sprint": "BA-F",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-OWN-001"],
+      "productionGate": true,
+      "externalContactGate": false,
+      "evidence": [
+        "config/business/executive_owner_support.py",
+        "config/business/document_os.py",
+        "src/sharepoint/lists/HVCG_OwnerSupportEngagements.json",
+        "tests/unit/business/test_executive_owner_support_sprint14.py"
+      ],
+      "testsAcceptance": [
+        "Case C Owner Support restriction",
+        "Case N portal exclusion",
+        "Case M prompt injection"
+      ],
+      "completionDate": null,
+      "notes": "Sprint 14 Dev: DENY unless authorized; Production SP elevated ACL still gated."
+    },
+    {
+      "id": "HVCG-V2-OWN-003",
+      "masterPlanSection": "Executive Concierge",
+      "requirement": "AGT-CONCIERGE governed Development runtime with permission parity; not a superuser; BL-C1 blocks external send",
+      "category": "Executive Support",
+      "businessPurpose": "Private owner assistance within human permissions",
+      "atlasModule": "AI / Elite",
+      "existingCapability": "CONFIG_ONLY Concierge + TOOL-OWNER-SUPPORT-READ",
+      "implementationMethod": "executive_owner_support.run_executive_concierge + orchestrator route",
+      "owner": "Owner / AI",
+      "sprint": "BA-F S14",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": ["HVCG-V2-OWN-001", "HVCG-V2-OWN-002"],
+      "productionGate": true,
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/executive_owner_support.py#run_executive_concierge",
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "tests/unit/business/test_executive_owner_support_sprint14.py"
+      ],
+      "testsAcceptance": [
+        "Cases D/E permission parity + BL-C1 send block"
+      ],
+      "completionDate": null,
+      "notes": "FULL_DEV_RUNTIME · PRODUCTION_GATED — not PRODUCTION_READY."
+    },
+    {
+      "id": "HVCG-V2-OWN-004",
+      "masterPlanSection": "Decision Intelligence",
+      "requirement": "First-class Owner Decision lifecycle extending HVCG_Decisions; AI recommendation ≠ Owner decision; outcome loop",
+      "category": "Executive Support",
+      "businessPurpose": "Record why decisions were made and whether they worked",
+      "atlasModule": "ECC / Decisions",
+      "existingCapability": "HVCG_Decisions + Hub DecisionRecord",
+      "implementationMethod": "executive_owner_support decision APIs + Elite decisions panel",
+      "owner": "Owner",
+      "sprint": "BA-F S14",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
-      "testsAcceptance": [],
+      "evidence": [
+        "config/business/executive_owner_support.py",
+        "src/sharepoint/lists/HVCG_Decisions.json",
+        "tests/unit/business/test_executive_owner_support_sprint14.py"
+      ],
+      "testsAcceptance": [
+        "Cases A/F/L decision vs recommendation + outcome loop"
+      ],
       "completionDate": null,
-      "notes": ""
+      "notes": "Extends existing decision register — no second decision platform."
+    },
+    {
+      "id": "HVCG-V2-OWN-005",
+      "masterPlanSection": "Executive Intelligence / Owner Brief",
+      "requirement": "Cross-domain Owner Brief + ECC aggregation with provenance; no shadow SoR; truth-state distinctions preserved",
+      "category": "Executive Support",
+      "businessPurpose": "What needs Manny's attention now",
+      "atlasModule": "ECC / AI",
+      "existingCapability": "owner_brief + CommandCenter + ExecutiveDashboard",
+      "implementationMethod": "build_owner_brief_v2 + build_executive_intelligence",
+      "owner": "Owner",
+      "sprint": "BA-F S14",
+      "priority": "P0",
+      "status": "IN_PROGRESS",
+      "dependencies": [],
+      "productionGate": false,
+      "externalContactGate": false,
+      "evidence": [
+        "config/business/executive_owner_support.py",
+        "config/business/ai_orchestrator.py#owner_brief",
+        "apps/atlas-elite-os/src/pages/ExecutiveOwnerSupportWorkbench.tsx"
+      ],
+      "testsAcceptance": [
+        "Cases H/K/O revenue truth + brief + stale labels"
+      ],
+      "completionDate": null,
+      "notes": "Consumes domain SoRs; does not replace them."
     },
     {
       "id": "HVCG-V2-MKT-001",

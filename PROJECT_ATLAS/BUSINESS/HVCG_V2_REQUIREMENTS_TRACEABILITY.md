@@ -2,11 +2,11 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-11 (Sprint 13 Documents / Portal / M365 mid-program) |
+| **As of** | 2026-08-12 (Sprint 14 Executive Owner Support mid-program) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
-| **Total requirements** | 131 |
+| **Total requirements** | 134 |
 | **Master plan source** | OneDrive `Master Prompt Services and Pricing for HVCG.docx` (extracted for audit) |
 
 ## Status vocabulary
@@ -22,20 +22,20 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 13)
+## Status summary (mid-program · Sprint 14)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 10 |
-| `IN_PROGRESS` | 45 |
-| `PLANNED` | 16 |
+| `IN_PROGRESS` | 49 |
+| `PLANNED` | 15 |
 | `DEFERRED_OWNER_GATE` | 2 |
-| **Coverage (Implemented+Reused)** | **51.9%** |
+| **Coverage (Implemented+Reused)** | **50.7%** |
 
-**Corrections this review:** Sprint 13 added DOC-004/005/006; DOC-002/003 → IN_PROGRESS with document_os evidence. Coverage % fell honestly (new reqs + demotions). AGT-DOC-CHECKLIST / AGT-SECOND-BRAIN deepened but remain PRODUCTION_GATED — never PRODUCTION_READY from Dev alone. Portal/M365 Production gates recorded.
+**Corrections this review:** Sprint 14 OWN-002→IN_PROGRESS; OWN-003/004/005 added. AGT-CONCIERGE → FULL_DEV_RUNTIME (PRODUCTION_GATED). Coverage % fell honestly.
 
-**Prior:** Sprint 12 added REV-008. AGT-INVOICE/REFERRAL FULL_DEV_RUNTIME (PRODUCTION_GATED). GROW/RISK/AI notes from S9–S11 retained.
+**Prior:** Sprint 13 DOC-004/005/006; DOC-002/003 IN_PROGRESS. Portal/M365 Production gates recorded.
 
 ## Acceptance checklist coverage (Control §47)
 

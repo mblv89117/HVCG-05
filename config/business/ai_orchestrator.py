@@ -25,6 +25,11 @@ try:
 except ImportError:  # pragma: no cover
     document_os = None  # type: ignore
 
+try:
+    import executive_owner_support as executive_owner_support  # Sprint 14 Owner Support / Exec Intel
+except ImportError:  # pragma: no cover
+    executive_owner_support = None  # type: ignore
+
 BL_C1_ACTIVE = True
 POLICY_VERSION = "1.0.0"
 RUNTIME_VERSION = "1.0.0-dev"
@@ -508,10 +513,10 @@ def agent_maturity_matrix() -> list[dict[str, Any]]:
             "productionGate": True,
         },
         "AGT-CONCIERGE": {
-            "states": ["CONFIG_ONLY"],
+            "states": ["CONFIG_ONLY", "SERVICE_RUNTIME", "DOMAIN_INTEGRATED", "UI_INTEGRATED", "APPROVAL_INTEGRATED"],
             "domain": "Executive",
-            "tools": ["TOOL-OWNER-SUPPORT-READ"],
-            "ui": False,
+            "tools": ["TOOL-OWNER-SUPPORT-READ", "TOOL-DOCUMENT-SEARCH", "TOOL-DOCUMENT-REQUEST", "TOOL-APPROVAL-REQUEST", "TOOL-SECOND-BRAIN-QUERY"],
+            "ui": True,
             "tests": True,
             "productionGate": True,
         },
@@ -867,6 +872,28 @@ def orchestrate(
         run["end"] = _now()
         return run
 
+    if agent_code == "AGT-CONCIERGE" and executive_owner_support is not None:
+        eng = (domain_payload or {}).get("engagement")
+        concierge = executive_owner_support.run_executive_concierge(
+            ctx,
+            request,
+            engagement=eng,
+            corpus=corpus,
+            attempt_external_send=bool((domain_payload or {}).get("attemptExternalSend")),
+            attempt_prohibited=(domain_payload or {}).get("attemptProhibited"),
+        )
+        tool_res = call_tool(
+            "TOOL-OWNER-SUPPORT-READ",
+            ctx,
+            {"client": ctx.get("client"), "query": request},
+            _idempotency_seen=idem,
+        )
+        run["toolsCalled"].append(tool_res.get("audit"))
+        run["outputs"] = concierge
+        run["finalStatus"] = concierge.get("status", "SUCCESS")
+        run["end"] = _now()
+        return run
+
     # Information path → Second Brain
     if agent_code == "AGT-SECOND-BRAIN" or (not is_action and agent_code in ("AGT-SUCCESS", "AGT-INTAKE")):
         sb = second_brain_query(ctx, request, corpus or [], action_request=is_action)
@@ -1091,8 +1118,13 @@ def orchestrate(
     return run
 
 
-def owner_brief(domain_snapshots: dict[str, Any]) -> dict[str, Any]:
-    """Development Owner Brief — no fabricated totals."""
+def owner_brief(domain_snapshots: dict[str, Any], ctx: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Development Owner Brief — no fabricated totals. Sprint 14 extends via executive_owner_support."""
+    if executive_owner_support is not None:
+        return executive_owner_support.build_owner_brief_v2(
+            ctx or {"owner_support_scope": False, "elevated_risk_access": False},
+            domain_snapshots=domain_snapshots,
+        )
     sections = [
         "Revenue",
         "Cash / CFO",
@@ -1117,7 +1149,7 @@ def owner_brief(domain_snapshots: dict[str, Any]) -> dict[str, Any]:
                 "source": snap.get("source"),
                 "restricted": snap.get("restricted", False),
             }
-            if snap.get("restricted") and not domain_snapshots.get("_elevated_risk_access"):
+            if snap.get("restricted") and not (domain_snapshots.get("_elevated_risk_access") or (ctx or {}).get("elevated_risk_access")):
                 brief["sections"][sec] = {
                     "status": "RESTRICTED",
                     "items": [],
