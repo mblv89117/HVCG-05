@@ -47,6 +47,7 @@ import {
   Client360MigrationSection,
   Client360ProcurementSection,
   Client360RevenueSection,
+  Client360RiskSection,
 } from './Client360CommercialSections';
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
@@ -208,6 +209,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <Tab value="migration">Migration</Tab>
         <Tab value="capital">Capital</Tab>
         <Tab value="procurement">Procurement</Tab>
+        <Tab value="risk">Risk</Tab>
         <Tab value="deliverables">Deliverables</Tab>
         <Tab value="approvals">Approvals</Tab>
         <Tab value="notes">Notes</Tab>
@@ -479,6 +481,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
       {tab === 'procurement' ? (
         <Client360ProcurementSection clientHint={client?.legalName || client?.displayName || clientId} />
+      ) : null}
+
+      {tab === 'risk' ? (
+        <Client360RiskSection clientHint={client?.legalName || client?.displayName || clientId} />
       ) : null}
 
       {tab === 'deliverables' ? (

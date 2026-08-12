@@ -16,6 +16,7 @@ import {
   AiInsightsPage,
   CapitalPage,
   ProcurementPage,
+  RiskPage,
   ClientDetailPage as DemoClientDetailPage,
   EnterpriseValuePage,
   FinancialsPage,
@@ -252,6 +253,14 @@ export function App() {
                 element={
                   <PrivateRoute>
                     <ProcurementPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="risk"
+                element={
+                  <PrivateRoute>
+                    <RiskPage />
                   </PrivateRoute>
                 }
               />

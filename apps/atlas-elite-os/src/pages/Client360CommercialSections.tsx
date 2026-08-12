@@ -435,3 +435,75 @@ export function Client360ProcurementSection({ clientHint }: { clientHint?: strin
     </AtlasCard>
   );
 }
+
+/** Sprint 9 — Client 360 Risk (internal, elevated). Distinct from ops project risks. */
+export interface Client360RiskSnapshot {
+  openMatters: string;
+  riskLevel: string;
+  deadlines: string;
+  amountAtRisk: string;
+  documentStatus: string;
+  professionalReview: string;
+  claims: string;
+  recovery: string;
+  latestOutcome: string;
+  nextAction: string;
+  disclaimer: string;
+}
+
+export function buildInternalRiskSnapshot(clientHint?: string): Client360RiskSnapshot {
+  const hint = (clientHint || '').toLowerCase();
+  const isProdigy = hint.includes('prodigy');
+  const isKava = hint.includes('kava');
+  const isAccg = hint.includes('accg') || hint.includes('american capital');
+  return {
+    openMatters: isProdigy || isKava ? 'Candidate Risk engagement — verify before binding' : 'No verified Risk Matter bound',
+    riskLevel: 'UNKNOWN until assessment',
+    deadlines: 'None verified',
+    amountAtRisk: 'Awaiting verified source — do not invent',
+    documentStatus: 'Unknown',
+    professionalReview: 'Not started',
+    claims: isProdigy ? 'Risk/Recovery formalization candidate' : 'None',
+    recovery: 'Claimed ≠ Approved ≠ Paid ≠ Collected',
+    latestOutcome: 'None',
+    nextAction: isAccg
+      ? 'Any Risk engagement must preserve $4,539/mo contracted — no silent reprice'
+      : 'Open Risk workbench when engagement authorized',
+    disclaimer:
+      'Elevated access. HVCG is not counsel/CPA/insurer. Ops project Risks tab ≠ Risk Matters. Employee/legal materials need tighter permissions.',
+  };
+}
+
+export function Client360RiskSection({ clientHint }: { clientHint?: string }) {
+  const snap = buildInternalRiskSnapshot(clientHint);
+  return (
+    <AtlasCard title="Risk & Claims" subtitle="Internal · elevated · distinct from ops HVCG_Risks">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <StatusChip label={snap.openMatters} tone="gold" />
+        <StatusChip label={snap.riskLevel} tone="warning" />
+      </div>
+      <Text size={300} style={{ display: 'block' }}>
+        Deadlines: {snap.deadlines}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Amount at risk: {snap.amountAtRisk}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Documents: {snap.documentStatus}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Professional review: {snap.professionalReview}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Claims / recovery: {snap.claims} · {snap.recovery}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Latest outcome: {snap.latestOutcome}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Next: {snap.nextAction}
+      </Text>
+      <Caption1 style={{ display: 'block', marginTop: 10 }}>{snap.disclaimer}</Caption1>
+    </AtlasCard>
+  );
+}

@@ -61,6 +61,7 @@ const allSections: NavSection[] = [
       { id: 'executive', label: 'Analytics', to: '/executive', icon: <DataBarVerticalRegular /> },
       { id: 'capital', label: 'Capital Advisory', to: '/capital', icon: <MoneyRegular /> },
       { id: 'procurement', label: 'Procurement', to: '/procurement', icon: <ClipboardTaskRegular /> },
+      { id: 'risk', label: 'Risk & Claims', to: '/risk', icon: <ShieldRegular /> },
     ],
   },
   {
@@ -105,6 +106,7 @@ const catalog: SearchResult[] = [
   { id: 's7', title: 'Knowledge', category: 'Navigation', to: '/knowledge' },
   { id: 's8', title: 'Capital Advisory', category: 'Navigation', to: '/capital' },
   { id: 's8b', title: 'Procurement', category: 'Navigation', to: '/procurement' },
+  { id: 's8c', title: 'Risk & Claims', category: 'Navigation', to: '/risk' },
   { id: 's9', title: 'AI Agents', category: 'Navigation', to: '/ai' },
   { id: 's10', title: 'Documents', category: 'Navigation', to: '/documents' },
   { id: 's11', title: 'Accounting', category: 'Navigation', to: '/accounting' },
@@ -128,6 +130,7 @@ const routeLabels: Record<string, string> = {
   '/tasks': 'Approvals',
   '/capital': 'Capital Advisory',
   '/procurement': 'Contract Procurement',
+  '/risk': 'Risk & Claims',
   '/financials': 'Financial Intelligence',
   '/banking': 'Banking',
   '/accounting': 'Accounting',
