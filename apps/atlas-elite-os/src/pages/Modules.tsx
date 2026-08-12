@@ -442,3 +442,4 @@ export function DocumentsHubPage() {
 }
 
 export { AiOrchestrationWorkbench as AiInsightsPage } from './AiOrchestrationWorkbench';
+export { ExecutiveOwnerSupportWorkbench } from './ExecutiveOwnerSupportWorkbench';

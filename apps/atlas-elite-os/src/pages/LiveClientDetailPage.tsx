@@ -41,6 +41,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { Client360DocumentsSection } from './DocumentLifecycleWorkbench';
+import { Client360ExecutiveFlags } from './ExecutiveOwnerSupportWorkbench';
 import { projectDetailPath } from '../routing/projectId';
 import {
   Client360CapitalSection,
@@ -249,6 +250,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               <Text size={300}>No recommended actions yet.</Text>
             )}
           </AtlasCard>
+          <Client360ExecutiveFlags clientHint={client?.legalName || client?.displayName || clientId} />
         </div>
       ) : null}
 

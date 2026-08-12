@@ -26,6 +26,7 @@ import {
 } from './pages/Modules';
 import { DocumentsOperatingPage } from './pages/DocumentsOperatingPage';
 import { DocumentLifecycleWorkbench } from './pages/DocumentLifecycleWorkbench';
+import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWorkbench';
 import { ClientsPage } from './pages/LiveClientsPage';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
@@ -143,6 +144,14 @@ export function App() {
                 element={
                   <PrivateRoute>
                     <ExecutiveDashboardPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="owner-support"
+                element={
+                  <PrivateRoute>
+                    <ExecutiveOwnerSupportWorkbench />
                   </PrivateRoute>
                 }
               />
