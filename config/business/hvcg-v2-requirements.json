@@ -1947,11 +1947,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-002",
@@ -1970,11 +1974,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-003",
@@ -1993,11 +2001,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-004",
@@ -2016,11 +2028,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-005",
@@ -2040,11 +2056,15 @@
       "externalContactGate": false,
       "evidence": [
         "config/business/hvcg-agents-v2.json",
-        "config/business/contract_procurement.py"
+        "config/business/contract_procurement.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 8 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 8 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-006",
@@ -2064,11 +2084,15 @@
       "externalContactGate": false,
       "evidence": [
         "config/business/hvcg-agents-v2.json",
-        "config/business/contract_procurement.py"
+        "config/business/contract_procurement.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 8 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 8 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-007",
@@ -2089,11 +2113,15 @@
       "evidence": [
         "config/business/hvcg-agents-v2.json",
         "config/business/risk_claims.py",
-        "tests/unit/business/test_risk_claims_sprint9.py"
+        "tests/unit/business/test_risk_claims_sprint9.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-008",
@@ -2114,11 +2142,15 @@
       "evidence": [
         "config/business/hvcg-agents-v2.json",
         "config/business/risk_claims.py",
-        "tests/unit/business/test_risk_claims_sprint9.py"
+        "tests/unit/business/test_risk_claims_sprint9.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-009",
@@ -2139,11 +2171,15 @@
       "evidence": [
         "config/business/hvcg-agents-v2.json",
         "config/business/risk_claims.py",
-        "tests/unit/business/test_risk_claims_sprint9.py"
+        "tests/unit/business/test_risk_claims_sprint9.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-010",
@@ -2164,11 +2200,15 @@
       "evidence": [
         "config/business/hvcg-agents-v2.json",
         "config/business/risk_claims.py",
-        "tests/unit/business/test_risk_claims_sprint9.py"
+        "tests/unit/business/test_risk_claims_sprint9.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-011",
@@ -2189,11 +2229,15 @@
       "evidence": [
         "config/business/hvcg-agents-v2.json",
         "config/business/risk_claims.py",
-        "tests/unit/business/test_risk_claims_sprint9.py"
+        "tests/unit/business/test_risk_claims_sprint9.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development. Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-012",
@@ -2212,11 +2256,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-013",
@@ -2236,11 +2284,15 @@
       "externalContactGate": false,
       "evidence": [
         "config/business/hvcg-agents-v2.json",
-        "config/business/growth_os.py"
+        "config/business/growth_os.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-014",
@@ -2259,11 +2311,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-015",
@@ -2282,11 +2338,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-016",
@@ -2306,11 +2366,15 @@
       "externalContactGate": false,
       "evidence": [
         "config/business/hvcg-agents-v2.json",
-        "config/business/growth_os.py"
+        "config/business/growth_os.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-017",
@@ -2329,11 +2393,15 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-018",
@@ -2353,11 +2421,15 @@
       "externalContactGate": false,
       "evidence": [
         "config/business/hvcg-agents-v2.json",
-        "config/business/growth_os.py"
+        "config/business/growth_os.py",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 11: shared orchestrator/tool registry/approvals. Not PRODUCTION_READY."
     },
     {
       "id": "HVCG-V2-AI-019",
@@ -2376,11 +2448,13 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "docs/ai/AI_GOVERNANCE.md"
+        "docs/ai/AI_GOVERNANCE.md",
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json"
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
-      "notes": ""
+      "notes": "Single governance plane extended in Sprint 11 (orchestrator + tool registry). Not a competing system."
     },
     {
       "id": "HVCG-V2-AI-020",
@@ -2399,7 +2473,9 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/ai_orchestrator.py",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py"
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
@@ -2417,14 +2493,26 @@
       "owner": "AI",
       "sprint": "BA-H",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
-      "testsAcceptance": [],
+      "evidence": [
+        "config/business/ai_orchestrator.py",
+        "config/business/ai-governance-policy.json",
+        "config/business/ai_tools.json",
+        "config/business/hvcg-agents-v2.json",
+        "tests/unit/business/test_ai_orchestrator_sprint11.py",
+        "apps/atlas-elite-os/src/pages/AiOrchestrationWorkbench.tsx"
+      ],
+      "testsAcceptance": [
+        "second brain E2E",
+        "cross-client negative",
+        "source conflict",
+        "decision precedence"
+      ],
       "completionDate": null,
-      "notes": ""
+      "notes": "Sprint 11 Dev Second Brain operational (permission-aware, citations, conflicts). Not Production RAG / live SP corpus."
     },
     {
       "id": "HVCG-V2-AI-022",
@@ -2438,14 +2526,17 @@
       "owner": "AI",
       "sprint": "BA-H",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
       "externalContactGate": false,
-      "evidence": [],
+      "evidence": [
+        "config/business/ai_orchestrator.py#run_intake_route",
+        "config/business/ai_orchestrator.py#controlled_handoff"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Routing + controlled handoff present. Not all 18 fully sequenced end-to-end in Production."
     },
     {
       "id": "HVCG-V2-WF-001",

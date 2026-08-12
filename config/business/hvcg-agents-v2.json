@@ -2,7 +2,12 @@
   "version": "1.0.0",
   "asOf": "2026-08-11",
   "authority": "CR-HVCG-BA-V2-001",
-  "note": "Configurations on shared Atlas AI orchestration — not separate codebases. External communication defaults to false.",
+  "note": "Configurations on shared Atlas AI orchestration — not separate codebases. External communication defaults to false. Canonical 18 agents; AGT-CFO-OPS is Fractional CFO domain binding (not Agent 19).",
+  "orchestrator": "config/business/ai_orchestrator.py",
+  "toolRegistry": "config/business/ai_tools.json",
+  "governancePolicy": "config/business/ai-governance-policy.json",
+  "riskAclGate": "GATE-RISK-ELEVATED-ACL-PROD",
+  "blC1Active": true,
   "riskLevels": ["LOW", "MEDIUM", "HIGH"],
   "absoluteProhibitions": [
     "Guarantee financing",
@@ -333,9 +338,28 @@
       "riskLevel": "MEDIUM",
       "externalCommunicationAllowed": false,
       "humanApproval": "required_for_payouts",
-      "note": "HVCG invoice / revenue tracking only. Do not conflate with client AR/AP/accounting under AGT-CFO-OPS."
+      "runtime": "config/business/ai_orchestrator.py#run_invoice_agent",
+      "policy": "config/business/ai-governance-policy.json",
+      "never": [
+        "modify invoices",
+        "issue refunds",
+        "charge accounts",
+        "approve payout without human",
+        "conflate client AR/AP with HVCG AR"
+      ],
+      "note": "Sprint 11 Dev runtime. HVCG invoice / revenue tracking only. Do not conflate with client AR/AP under AGT-CFO-OPS."
     },
-    { "agentCode": "AGT-REFERRAL", "name": "Referral Partner Agent", "riskLevel": "MEDIUM", "externalCommunicationAllowed": false, "humanApproval": "required_for_payouts" },
+    {
+      "agentCode": "AGT-REFERRAL",
+      "name": "Referral Partner Agent",
+      "riskLevel": "MEDIUM",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "required_for_payouts",
+      "runtime": "config/business/ai_orchestrator.py#run_referral_agent",
+      "policy": "config/business/ai-governance-policy.json",
+      "never": ["approve payout without human", "create false referral activity"],
+      "note": "Sprint 11 Dev runtime. Payout requires human approval."
+    },
     {
       "agentCode": "AGT-CRM",
       "name": "CRM Update Agent",
@@ -374,7 +398,10 @@
       "riskLevel": "HIGH",
       "externalCommunicationAllowed": false,
       "humanApproval": "always",
-      "restricted": true
+      "restricted": true,
+      "policy": "config/business/ai-governance-policy.json",
+      "never": ["expose Owner Support via general Second Brain", "retrieve without explicit authorized scope"],
+      "note": "Sprint 11: remains CONFIG_ONLY / highly restricted. Explicit owner_support_scope required."
     },
     {
       "agentCode": "AGT-SECOND-BRAIN",
@@ -382,8 +409,10 @@
       "riskLevel": "MEDIUM",
       "externalCommunicationAllowed": false,
       "humanApproval": "permission_aware_retrieval",
-      "runtime": "config/business/growth_os.py#second_brain_knowledge_candidates",
-      "note": "Sprint 10 prepares knowledge candidates from Growth OS. Full orchestration deferred to later sprint."
+      "runtime": "config/business/ai_orchestrator.py#second_brain_query",
+      "policy": "config/business/ai-governance-policy.json",
+      "orchestrator": "config/business/ai_orchestrator.py",
+      "note": "Sprint 11 Development Second Brain — permission-aware retrieval, citations, conflicts, freshness. Not Production RAG."
     }
   ]
 }

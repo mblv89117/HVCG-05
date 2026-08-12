@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **As of** | 2026-08-11 (Sprint 10 mid-program review) |
+| **As of** | 2026-08-11 (Sprint 11 AI mid-program review) |
 | **Authority** | CR-HVCG-BA-V2-001 |
 | **Machine SoR** | `config/business/hvcg-v2-requirements.json` |
 | **Coverage report** | [../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md](../Reports/HVCG_V2_REQUIREMENTS_COVERAGE.md) |
@@ -22,18 +22,18 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 - CR-HVCG-BA-V2-001
 - PROJECT_ATLAS/BUSINESS/HVCG_BUSINESS_ARCHITECTURE_V2.md
 
-## Status summary (mid-program · Sprint 10)
+## Status summary (mid-program · Sprint 11)
 
 | Status | Count |
 |--------|------:|
 | `IMPLEMENTED` | 58 |
 | `EXISTING_REUSED` | 11 |
-| `IN_PROGRESS` | 36 |
-| `PLANNED` | 20 |
+| `IN_PROGRESS` | 38 |
+| `PLANNED` | 18 |
 | `DEFERRED_OWNER_GATE` | 2 |
 | **Coverage (Implemented+Reused)** | **54.3%** |
 
-**Corrections this review:** GROW-001 demoted from EXISTING_REUSED → IN_PROGRESS (honest Growth OS scope); GROW-002 added (KPI source truth / domain routing); RISK-002 annotated with Production ACL gate. No silent IMPLEMENTED from stubs. Duplicate Growth/task shells not introduced.
+**Corrections this review:** GROW-001 demoted from EXISTING_REUSED → IN_PROGRESS (honest Growth OS scope); GROW-002 added (KPI source truth / domain routing); RISK-002 annotated with Production ACL gate. Sprint 11: AI-001…018 evidence bound to orchestrator (remain IN_PROGRESS); AI-021/022 PLANNED → IN_PROGRESS. No silent IMPLEMENTED from stubs. No Agent 19.
 
 ## Acceptance checklist coverage (Control §47)
 
