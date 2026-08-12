@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-12 | Owner UAT precheck: 18/18 PRECHECK_PASS; Owner results OWNER_ACTION_REQUIRED. Outcome OWNER_UAT_PARTIAL. QA entry NOT_READY. **No gate OPEN / no QA GO.** |
+| 2026-08-12 | Sprint 17 commit: Staging readiness (BA `698a554`). Elite no S17 delta. Gates CLOSED. **No Production.** |
 | 2026-08-12 | Sprint 17 Dev (uncommitted): Staging readiness — live Hub E2E, HR fields, finance staging adapter, migration rehearsal, monitoring sink, release/UAT/QA packs. Coverage **48.6%** (140). Gates remain CLOSED. **No Production / no UAT execution.** |
 | 2026-08-12 | Sprint 16 commits: BA `75f6e1f` · Elite `b92abf3`. Security hardening. **No Production.** |
 | 2026-08-12 | Sprint 16 Dev (uncommitted): Security hardening — Elite↔BA Hub binding, atlas_security, upload/download ACL, gate evidence packs. Coverage **49.3%** (138). Gates remain CLOSED. **No Production / no Sprint 17.** |

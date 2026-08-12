@@ -1,17 +1,17 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-08-12 (Sprint 16 committed · Sprint 17 Staging Readiness Dev complete — uncommitted)
+**As of:** 2026-08-12 (Sprint 17 committed · Owner UAT precheck complete · awaiting Manny)
 
-1. Track 1 frozen; BL-C1 active.  
-2. No merge to `main` / no deploy / no gate OPEN.  
-3. Sprint 16 SHAs: BA `75f6e1f` · Elite `b92abf3`.  
-4. Sprint 17 Development complete (**uncommitted**).  
-5. Do **not** start Owner UAT / QA GO / RC until Owner authorizes.
+1. Track 1 frozen; BL-C1 active; gates CLOSED.  
+2. No merge to `main` / no deploy / no Sprint 18.  
+3. Sprint 17 BA SHA: `698a554f0cbb6ad1a12ee0fa8b34cd03e1c8f1fd`.  
+4. Elite: **NO SPRINT 17 DELTA** (remains `b92abf3`).  
+5. Owner UAT: `OWNER_UAT_PARTIAL` — confirm workflows UAT-01…18.  
+6. Written QA: **NOT_READY** until Owner acceptance.
 
-## Owner decisions
+## Owner decisions now
 
-1. Authorize Sprint 17 commits.  
-2. Provide/approve non-Prod Entra + Graph + AV + alert credentials as needed.  
-3. Review gate evidence — OPEN only by explicit decision (none recommended automatically).  
-4. Authorize Owner UAT execution when ready.  
-5. Authorize written QA process when ready.  
+1. Execute/confirm each UAT workflow PASS/FAIL.  
+2. Decide QBO authoritative source (`OWNER_PENDING`).  
+3. After UAT, authorize written QA process (separate).  
+4. Do not OPEN Production gates without explicit decision.  

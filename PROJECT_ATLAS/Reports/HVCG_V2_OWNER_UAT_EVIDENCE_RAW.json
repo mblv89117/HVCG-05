@@ -1,0 +1,540 @@
+{
+  "environment": {
+    "environmentType": "CONTROLLED_DEVELOPMENT_RUNTIME",
+    "note": "Dedicated staging pack UNAVAILABLE \u2014 using strongest controlled Development runtime",
+    "hubUrl": "http://127.0.0.1:8792",
+    "authHubUrl": "http://127.0.0.1:8793",
+    "authType": "dev_headers_x-atlas (Entra JWT CREDENTIAL_REQUIRED)",
+    "dataType": "sanitized_staging_internal",
+    "limitations": [
+      "Not a dedicated staging Azure environment",
+      "Dev-header auth \u2260 Entra Production-like identity",
+      "Live Graph / real AV / alert delivery / QBO live unavailable"
+    ],
+    "qboAuthoritativeSource": "OWNER_PENDING"
+  },
+  "preflight": [
+    {
+      "area": "Hub health",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "ok": true,
+        "status": 200
+      },
+      "blocker": null
+    },
+    {
+      "area": "BA health via Hub",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "http": 200,
+        "ok": true
+      },
+      "blocker": null
+    },
+    {
+      "area": "Identity fail-closed (requireAuth)",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "ok": false,
+        "status": "UNAUTHORIZED",
+        "code": "missing_bearer",
+        "message": "Microsoft sign-in required (Bearer token missing)",
+        "leakage": false
+      },
+      "blocker": "Entra JWT still CREDENTIAL_REQUIRED"
+    },
+    {
+      "area": "Agent orchestrator (18)",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "canonicalCount": 18
+      },
+      "blocker": null
+    },
+    {
+      "area": "BL-C1",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "status": "BLOCKED_POLICY",
+        "sent": false
+      },
+      "blocker": null
+    },
+    {
+      "area": "Revenue Truth / ACCG lock",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "ok": true,
+        "retainer": 4539.0,
+        "locked": 4539.0,
+        "importCannotOverwrite": true
+      },
+      "blocker": null
+    },
+    {
+      "area": "Audit sink",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "persisted": true,
+        "productionSink": false
+      },
+      "blocker": "Alert delivery DESIGNED_NOT_CONFIGURED"
+    },
+    {
+      "area": "Cross-client isolation",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "http": 403
+      },
+      "blocker": null
+    },
+    {
+      "area": "Client 360",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Documents",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Capital",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "CFO",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Procurement",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Risk",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Growth",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Executive Intelligence",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Owner Support",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Second Brain",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "note": "BA domain modules load; Elite UI fixtures available for Owner review"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Elite build",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "tsc": "validated_at_s17_commit"
+      },
+      "blocker": null
+    },
+    {
+      "area": "Elite\u2194BA route",
+      "result": "PRECHECK_PASS",
+      "evidence": {
+        "binding": "hub\u2192ba_bridge"
+      },
+      "blocker": null
+    }
+  ],
+  "scenarios": [
+    {
+      "uatId": "UAT-01",
+      "title": "Client Intake",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny understand who the prospect is, why they are in Atlas, and what should happen next?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "note": "Intake agent + Client OS modules present; Owner must judge usability"
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905576+00:00"
+    },
+    {
+      "uatId": "UAT-02",
+      "title": "Free Fit / Diagnostic Classification",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Does Atlas help Manny classify the opportunity without giving away uncontrolled consulting?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "commercialFrontDoor": "Free Fit \u2260 free consulting preserved in policy"
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905584+00:00"
+    },
+    {
+      "uatId": "UAT-03",
+      "title": "Proposal & Pricing",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny see recommended vs proposed vs contracted?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "distinction": "RECOMMENDED_PRICE \u2260 CONTRACTED_PRICE",
+        "pricingVersion": "HVCG-PRICE-2026-08-11-v2"
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905587+00:00"
+    },
+    {
+      "uatId": "UAT-04",
+      "title": "Contracted Economics",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Does Atlas protect contracted economics from future recommendations?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "accgRetainer": 4539.0,
+        "importOverwriteBlocked": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905727+00:00"
+    },
+    {
+      "uatId": "UAT-05",
+      "title": "Document Request / Upload",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny tell requested vs received vs missing vs current?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "requestId": "DREQ-A9592D4B24",
+        "checklistNeqDocument": true,
+        "receivedNeqAccepted": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905753+00:00"
+    },
+    {
+      "uatId": "UAT-06",
+      "title": "Capital",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Does Atlas tell Manny whether the client is ready for financing and why?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "submissionGated": true,
+        "noLenderSubmit": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905755+00:00"
+    },
+    {
+      "uatId": "UAT-07",
+      "title": "Fractional CFO",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny quickly understand financial operating condition and required action?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "actualNeqForecast": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905756+00:00"
+    },
+    {
+      "uatId": "UAT-08",
+      "title": "Procurement",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny see contract-readiness and next procurement action?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "opportunityNeqAward": true,
+        "awardNeqRevenue": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.905758+00:00"
+    },
+    {
+      "uatId": "UAT-09",
+      "title": "Risk Restricted Matter",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny manage sensitive Risk without broad visibility?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "unauthorizedDenied": true,
+        "sanitizedDataOnly": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": "Live Entra role mapping CREDENTIAL_REQUIRED for Production-like evidence",
+      "timestamp": "2026-08-12T17:51:31.946128+00:00"
+    },
+    {
+      "uatId": "UAT-10",
+      "title": "Growth OS",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny see commitments, late items, and blockers?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "cadenceVisible": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.946149+00:00"
+    },
+    {
+      "uatId": "UAT-11",
+      "title": "Client 360",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Does Client 360 provide useful context without becoming another SoR?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "ownerSupportExcludedFromOrdinary360": true,
+        "notSecondSoR": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.946156+00:00"
+    },
+    {
+      "uatId": "UAT-12",
+      "title": "Revenue Truth",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny trust earned / invoiced / collected distinctions?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "statesPreserved": true,
+        "partialPayment": true,
+        "moneyMovement": false,
+        "invoiceCount": 2
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": "QBO AUTHORITATIVE SOURCE = OWNER_PENDING",
+      "timestamp": "2026-08-12T17:51:31.946586+00:00"
+    },
+    {
+      "uatId": "UAT-13",
+      "title": "Executive Intelligence / Owner Brief",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Does Atlas tell Manny what deserves attention now?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "built": true,
+        "authorizationBypass": false
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.946651+00:00"
+    },
+    {
+      "uatId": "UAT-14",
+      "title": "Owner Decision",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny make and reconstruct an important decision from Atlas evidence?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "lifecycle": "Issue\u2192evidence\u2192options\u2192recommendation\u2192Owner decision\u2192follow-up"
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.946653+00:00"
+    },
+    {
+      "uatId": "UAT-15",
+      "title": "Executive Concierge",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Is Concierge useful without uncontrolled authority?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "noSuperuser": true,
+        "unauthorizedConcealed": true,
+        "blC1Active": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:31.984669+00:00"
+    },
+    {
+      "uatId": "UAT-16",
+      "title": "Second Brain / Ask Atlas",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Can Manny trust answers because evidence provenance is visible?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "provenanceRequired": true,
+        "liveGraph": false,
+        "atlasAuth": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": "Live Graph CREDENTIAL_REQUIRED",
+      "timestamp": "2026-08-12T17:51:31.984691+00:00"
+    },
+    {
+      "uatId": "UAT-17",
+      "title": "BL-C1 External Action Block",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Does Atlas help act faster without autonomous external action?",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "blocked": true,
+        "approvedToSendNeqAutoSend": true,
+        "sent": false
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:32.025293+00:00"
+    },
+    {
+      "uatId": "UAT-18",
+      "title": "Cross-Client Negative",
+      "environment": "CONTROLLED_DEVELOPMENT_RUNTIME",
+      "persona": "HVCG Owner (Manny)",
+      "testClient": "CLIENT-UAT-A / ACCG (sanitized)",
+      "startingState": "Controlled Dev runtime with sanitized staging data",
+      "acceptanceQuestion": "Client A must never see Client B \u2014 confirm blocked across paths.",
+      "automatedPrecheck": "PRECHECK_PASS",
+      "automatedEvidence": {
+        "blocked": true,
+        "mandatory": true
+      },
+      "ownerResult": "OWNER_ACTION_REQUIRED",
+      "defectId": null,
+      "blocker": null,
+      "timestamp": "2026-08-12T17:51:32.026289+00:00"
+    }
+  ],
+  "outcome": {
+    "outcome": "OWNER_UAT_PARTIAL",
+    "readyForWrittenQaReview": false,
+    "qaReason": "Automated prechecks green; Owner has not yet confirmed any workflow (OWNER_ACTION_REQUIRED)",
+    "counts": {
+      "ownerPass": 0,
+      "ownerFail": 0,
+      "ownerActionRequired": 18,
+      "precheckPass": 18,
+      "technicalFail": 0
+    }
+  },
+  "defects": [],
+  "remediation": [],
+  "externalDependencies": {
+    "Entra": "CREDENTIAL_REQUIRED",
+    "Graph": "CREDENTIAL_REQUIRED",
+    "AV": "EXTERNAL_DEPENDENCY",
+    "alerts": "DESIGNED_NOT_CONFIGURED",
+    "QBO": "AUTHORITATIVE_CANDIDATE \u2014 OWNER_CONFIRM_REQUIRED / OWNER_PENDING",
+    "stagingInfrastructure": "UNAVAILABLE (using controlled Development runtime)"
+  },
+  "qboAuthoritativeSource": "OWNER_PENDING",
+  "gatesOpened": false
+}
