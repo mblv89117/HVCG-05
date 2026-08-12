@@ -42,7 +42,9 @@ export function AccessDeniedPage() {
       : 'Insufficient Atlas permissions';
 
   const description = unauthenticated
-    ? 'You must sign in with Microsoft before Atlas will show clients, portfolios, or other private data. Local Owner (Dev) is disabled in Production. Sign in with your HVCG Entra account to continue.'
+    ? devOwnerLoginAllowed
+      ? 'Microsoft Entra is not required for controlled Development UAT. Use Local Owner (Dev) to continue, or sign in with Microsoft if Entra is configured. Local Owner is disabled in Production/Staging.'
+      : 'You must sign in with Microsoft before Atlas will show clients, portfolios, or other private data. Local Owner (Dev) is disabled in this environment (Production/Staging or not enabled). Sign in with your HVCG Entra account to continue.'
     : unresolved
       ? 'You are signed in, but your Entra token has no recognizable Atlas app role (HVCG Owner, HVCG Team Member, Client Executive, Client Team Member, Read-Only Advisor, or Administrator). There is no default Owner access.'
       : 'Your current Atlas role does not include this module. Contact an HVCG Owner to adjust Entra app role assignments.';

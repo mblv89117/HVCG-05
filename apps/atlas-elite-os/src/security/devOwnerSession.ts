@@ -9,10 +9,25 @@ import { normalizeRole, type AtlasRole } from './rbac';
 
 const STORAGE_KEY = 'atlas.devOwnerSession.v1';
 
+/**
+ * Local Owner (Dev) is allowed only in controlled non-Production runtimes.
+ *
+ * Enable when:
+ * - VITE_ALLOW_DEV_OWNER_LOGIN=true (explicit), OR
+ * - Vite DEV server (`import.meta.env.DEV`) on local/development Atlas env
+ *
+ * Never when environment is production or staging (even if flag is set).
+ * Missing VITE_ENTRA_CLIENT_ID must not block this path.
+ */
 export function isDevOwnerLoginAllowed(): boolean {
   const env = microsoftConfig.environment;
   if (env === 'production' || env === 'staging') return false;
-  return import.meta.env.VITE_ALLOW_DEV_OWNER_LOGIN === 'true';
+  if (import.meta.env.VITE_ALLOW_DEV_OWNER_LOGIN === 'true') return true;
+  // Vite local `npm run dev` — Production SWA builds have DEV=false.
+  if (import.meta.env.DEV === true && (env === 'local' || env === 'development')) {
+    return true;
+  }
+  return false;
 }
 
 export function readDevOwnerSessionActive(): boolean {

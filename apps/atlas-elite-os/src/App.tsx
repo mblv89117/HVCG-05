@@ -28,6 +28,7 @@ import { DocumentsOperatingPage } from './pages/DocumentsOperatingPage';
 import { DocumentLifecycleWorkbench } from './pages/DocumentLifecycleWorkbench';
 import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWorkbench';
 import { ClientsPage } from './pages/LiveClientsPage';
+import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
@@ -41,6 +42,10 @@ import { isValidProjectId } from './routing/projectId';
 
 function ClientDetailRoute() {
   const { workspaceId = '' } = useParams();
+  // Never treat the intake path segment as a client/workspace id.
+  if (workspaceId === 'intake') {
+    return <Navigate to="/clients/intake" replace />;
+  }
   // Prefer live Client 360 IDs; demo catalog detail remains at /clients/demo/:id
   if (workspaceId.startsWith('demo-') || workspaceId.startsWith('ws-')) {
     return <DemoClientDetailPage workspaceId={workspaceId} />;
@@ -216,6 +221,14 @@ export function App() {
                 element={
                   <ClientsRoute>
                     <ClientsPage />
+                  </ClientsRoute>
+                }
+              />
+              <Route
+                path="clients/intake"
+                element={
+                  <ClientsRoute>
+                    <ClientIntakeWorkbench />
                   </ClientsRoute>
                 }
               />

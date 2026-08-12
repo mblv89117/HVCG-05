@@ -8,7 +8,7 @@ import {
   FilterToolbar,
 } from '@hvcg/atlas-design-system';
 import { Button, Caption1, Input, Spinner, Text } from '@fluentui/react-components';
-import { ArrowSyncRegular, SearchRegular } from '@fluentui/react-icons';
+import { AddRegular, ArrowSyncRegular, SearchRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import {
@@ -108,10 +108,15 @@ export function ClientsPage() {
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Link to="/clients/intake">
+            <Button appearance="primary" icon={<AddRegular />}>
+              New Prospect
+            </Button>
+          </Link>
           <Button icon={<ArrowSyncRegular />} onClick={() => void refresh()} disabled={busy}>
             Refresh
           </Button>
-          <Button appearance="primary" onClick={() => void reinjest()} disabled={busy}>
+          <Button appearance="secondary" onClick={() => void reinjest()} disabled={busy}>
             Re-ingest Microsoft
           </Button>
         </div>
@@ -145,7 +150,14 @@ export function ClientsPage() {
       {clients.length === 0 && !busy ? (
         <EmptyState
           title="No Client 360 records yet"
-          description="Run Re-ingest Microsoft or open Connections Center and sync mailboxes first."
+          description="This list is Client 360 (discovered/active clients). Unqualified prospects are created under New Prospect — not mixed into this portfolio."
+          actions={
+            <Link to="/clients/intake">
+              <Button appearance="primary" icon={<AddRegular />}>
+                New Prospect
+              </Button>
+            </Link>
+          }
         />
       ) : (
         <AtlasCard title="Client portfolio (live)" variant="quiet">

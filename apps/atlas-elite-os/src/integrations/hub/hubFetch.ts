@@ -9,7 +9,7 @@ import type { AtlasHubAuthHeaders } from './api';
 
 const base = () =>
   (import.meta as ImportMeta & { env?: { VITE_INTEGRATION_API_BASE?: string } }).env
-    ?.VITE_INTEGRATION_API_BASE || 'http://127.0.0.1:8790';
+    ?.VITE_INTEGRATION_API_BASE || 'http://127.0.0.1:8792';
 
 export class HubHttpError extends Error {
   status: number;

@@ -92,6 +92,10 @@ export async function handleBaRoutes(opts: {
       '/api/ba/ai/orchestrate': 'ai.orchestrate',
       '/api/ba/executive/intelligence': 'exec.intelligence',
       '/api/ba/blc1/block': 'blc1.block',
+      '/api/ba/leads/create': 'lead.create',
+      '/api/ba/leads/list': 'lead.list',
+      '/api/ba/leads/get': 'lead.get',
+      '/api/ba/leads/blc1': 'lead.blc1',
     };
     const op = opMap[path];
     if (!op) {

@@ -128,6 +128,7 @@ const routeLabels: Record<string, string> = {
   '/team': 'Team & Agents',
   '/executive': 'Analytics',
   '/clients': 'Clients',
+  '/clients/intake': 'Prospect Intake',
   '/projects': 'Projects',
   '/tasks': 'Approvals',
   '/capital': 'Capital Advisory',
@@ -400,8 +401,10 @@ export function AppShell() {
                     appearance="secondary"
                     onClick={() =>
                       push({
-                        title: 'Entra SPA client ID missing',
-                        body: 'Set VITE_ENTRA_CLIENT_ID after app registration in HVCG tenant.',
+                        title: 'Microsoft sign-in unavailable',
+                        body: microsoftConfig.environment === 'production' || microsoftConfig.environment === 'staging'
+                          ? 'Entra SPA client ID required. Local Owner (Dev) is disabled outside Development.'
+                          : 'Entra SPA client ID not set. In Development, use Local Owner (Dev) for controlled UAT without Entra.',
                         tone: 'warning',
                       })
                     }
