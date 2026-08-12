@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   AtlasCard,
   StatusChip,
+  SourceBadge,
   ResponsiveGrid,
   GridSpan,
   EmptyState,
@@ -37,6 +38,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { QuickCaptureBar } from '../components/QuickCaptureBar';
+import { classifyExecutiveEvidence } from '../data/evidenceProvenance';
 
 
 function priorityTone(p: string): 'danger' | 'warning' | 'info' | 'success' | 'neutral' {
@@ -174,6 +176,12 @@ export function CommandCenterPage() {
   };
 
   const h = cc?.businessHealth;
+  const evidence = classifyExecutiveEvidence({
+    authenticated: auth.hasBearer,
+    loadFailed: Boolean(error),
+    hasPayload: Boolean(cc),
+    provenLive: false,
+  });
 
   return (
     <ModuleScaffold
@@ -245,7 +253,8 @@ export function CommandCenterPage() {
                   Business health · generated {new Date(cc.generatedAt).toLocaleString()}
                 </Caption1>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <SourceBadge kind={evidence.kind} label={evidence.label} detail={evidence.detail} />
                 <Badge appearance="filled" color="important">
                   {h?.overdueTasks ?? 0} overdue
                 </Badge>

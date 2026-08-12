@@ -85,10 +85,12 @@ export type SourceKind = 'Repository-derived' | 'Development sample' | 'Unavaila
 
 export interface SourceBadgeProps {
   kind: SourceKind;
+  /** Concise executive label. Defaults to `kind`. */
+  label?: string;
   detail?: string;
 }
 
-export function SourceBadge({ kind, detail }: SourceBadgeProps) {
+export function SourceBadge({ kind, label, detail }: SourceBadgeProps) {
   const s = useSource();
   const tone: StatusTone =
     kind === 'Live'
@@ -98,9 +100,10 @@ export function SourceBadge({ kind, detail }: SourceBadgeProps) {
         : kind === 'Development sample'
           ? 'warning'
           : 'info';
+  const display = label || kind;
   return (
-    <span className={s.root} title={detail || kind}>
-      <StatusChip label={kind} tone={tone} />
+    <span className={s.root} title={detail || display} aria-label={detail ? `${display}. ${detail}` : display}>
+      <StatusChip label={display} tone={tone} />
       {detail ? <Caption1>{detail}</Caption1> : null}
     </span>
   );

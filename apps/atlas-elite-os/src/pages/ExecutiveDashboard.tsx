@@ -20,6 +20,7 @@ import { Button, Text, Caption1, MessageBar, MessageBarBody, MessageBarTitle } f
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
 import { loadExecutiveHome, type ExecutiveHomeModel } from '../data/loadExecutiveHome';
+import { executiveLabelForKind } from '../data/evidenceProvenance';
 import { ATLAS_BUILD } from '../buildInfo';
 import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
 
@@ -183,9 +184,10 @@ export function ExecutiveDashboardPage() {
               trendLabel={m.trendLabel}
               sparkValues={m.spark}
               footer={
-                <Caption1>
-                  {m.source === 'Live' ? 'Live' : 'Pending'} · <SourceBadge kind={m.source} />
-                </Caption1>
+                <SourceBadge
+                  kind={m.source}
+                  label={executiveLabelForKind(m.source)}
+                />
               }
             />
           ))}
@@ -415,7 +417,9 @@ export function ExecutiveDashboardPage() {
                 {
                   key: 'source',
                   header: 'Source',
-                  render: (r) => <SourceBadge kind={r.source} />,
+                  render: (r) => (
+                    <SourceBadge kind={r.source} label={executiveLabelForKind(r.source)} />
+                  ),
                 },
               ]}
             />
@@ -429,7 +433,7 @@ export function ExecutiveDashboardPage() {
                 <Text weight="semibold">{a.title}</Text>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
                   <Caption1>{a.when}</Caption1>
-                  <SourceBadge kind={a.source} />
+                  <SourceBadge kind={a.source} label={executiveLabelForKind(a.source)} />
                 </div>
               </div>
             ))}

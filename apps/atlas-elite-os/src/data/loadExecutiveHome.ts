@@ -4,6 +4,7 @@ import { executiveHomeData, pendingHomeMetrics } from './executiveHome';
 import type { ApprovalRow, HomeMetric } from './executiveHome';
 import type { DataSourceKind } from '../microsoft/types';
 import { sanitizeFinancialDisplay } from './financeGuard';
+import { sourceKindFromAdapter } from './evidenceProvenance';
 
 export interface ExecutiveHomeModel {
   metrics: HomeMetric[];
@@ -37,8 +38,7 @@ function mapTrend(raw?: string): 'up' | 'down' | 'flat' {
 }
 
 function toSource(kind: DataSourceKind): HomeMetric['source'] {
-  if (kind === 'Dataverse' || kind === 'Live') return 'Live';
-  return 'Unavailable';
+  return sourceKindFromAdapter(kind);
 }
 
 function nowIso() {
@@ -92,7 +92,7 @@ export async function loadExecutiveHome(signedIn: boolean): Promise<ExecutiveHom
       risk: a.risk,
       track: a.track,
       decision: a.decision,
-      source: toSource(a.source) === 'Live' ? 'Live' : 'Unavailable',
+      source: sourceKindFromAdapter(a.source),
     }));
 
     const topBrief = brief.data[0];
