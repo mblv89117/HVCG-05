@@ -96,6 +96,12 @@ export async function handleBaRoutes(opts: {
       '/api/ba/leads/list': 'lead.list',
       '/api/ba/leads/get': 'lead.get',
       '/api/ba/leads/blc1': 'lead.blc1',
+      '/api/ba/freefit/definition': 'freefit.definition',
+      '/api/ba/freefit/complete': 'freefit.complete',
+      '/api/ba/freefit/get': 'freefit.get',
+      '/api/ba/freefit/by-lead': 'freefit.by_lead',
+      '/api/ba/freefit/owner-decision': 'freefit.owner_decision',
+      '/api/ba/freefit/blc1': 'freefit.blc1',
     };
     const op = opMap[path];
     if (!op) {

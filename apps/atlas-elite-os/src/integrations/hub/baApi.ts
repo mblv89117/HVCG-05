@@ -73,4 +73,28 @@ export async function baLeadGet(auth: AtlasHubAuthHeaders, leadId: string) {
   });
 }
 
+export async function baFreeFitDefinition(auth: AtlasHubAuthHeaders, includeRestricted = false) {
+  return hubFetchJson(auth, '/api/ba/freefit/definition', {
+    method: 'POST',
+    body: JSON.stringify({ includeRestricted }),
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
+export async function baFreeFitComplete(auth: AtlasHubAuthHeaders, body: Record<string, unknown>) {
+  return hubFetchJson(auth, '/api/ba/freefit/complete', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
+export async function baFreeFitGet(auth: AtlasHubAuthHeaders, assessmentId: string) {
+  return hubFetchJson(auth, '/api/ba/freefit/get', {
+    method: 'POST',
+    body: JSON.stringify({ assessmentId }),
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
 export type { HubHttpError };

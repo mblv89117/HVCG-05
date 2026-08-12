@@ -9,22 +9,24 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-/** Resolve BA config/business directory across worktree layouts. */
+/**
+ * Resolve canonical in-tree BA engines at config/business.
+ * Production must never search sibling worktrees or workstation paths.
+ * HVCG_BA_BUSINESS_DIR is an explicit override only (tests / exceptional local layouts).
+ */
 export function resolveBaBusinessDir(): string {
   const env = process.env.HVCG_BA_BUSINESS_DIR;
-  if (env && fs.existsSync(path.join(env, 'ba_bridge.py'))) return env;
-
-  const candidates = [
-    // Sibling worktree from atlas-usable-operating-layer
-    path.resolve(here, '../../../../../../hvcg-business-architecture-v2/config/business'),
-    path.resolve(here, '../../../../../hvcg-business-architecture-v2/config/business'),
-    path.resolve(process.cwd(), '../hvcg-business-architecture-v2/config/business'),
-    path.resolve(process.cwd(), '../../hvcg-business-architecture-v2/config/business'),
-  ];
-  for (const c of candidates) {
-    if (fs.existsSync(path.join(c, 'ba_bridge.py'))) return c;
+  if (env) {
+    const override = path.resolve(env);
+    if (fs.existsSync(path.join(override, 'ba_bridge.py'))) return override;
+    throw new Error(`HVCG_BA_BUSINESS_DIR is set but ba_bridge.py was not found in ${override}`);
   }
-  throw new Error('BA business dir not found — set HVCG_BA_BUSINESS_DIR');
+
+  const inTree = path.resolve(here, '../../../../config/business');
+  if (fs.existsSync(path.join(inTree, 'ba_bridge.py'))) return inTree;
+  throw new Error(
+    'Canonical BA engines not found at config/business/ba_bridge.py. Restore in-tree engines or set HVCG_BA_BUSINESS_DIR.',
+  );
 }
 
 export type BaBridgeRequest = {
