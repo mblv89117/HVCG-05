@@ -107,8 +107,66 @@ export function resolveHubRuntimeSecurity(env: EnvMap = process.env): HubRuntime
   return { host, requireAuth: true, insecureDevAuth: false, isProduction };
 }
 
+export type PmBackendMode = 'development-json' | 'unavailable';
+export type PmBackendClassification = 'development-local' | 'unavailable';
+
+export interface HubPmBackend {
+  mode: PmBackendMode;
+  classification: PmBackendClassification;
+  /** True only when local JSON is an explicit, non-production opt-in. */
+  localJsonAuthorized: boolean;
+}
+
+/**
+ * PM persistence mode.
+ *
+ * `pm-store.json` is development/local state only. It is not SharePoint, not
+ * production, and not an approved operational system of record.
+ *
+ * Approved values:
+ * - unset / `unavailable` / `none` — PM persistence is not configured
+ * - `development-json` or `local-json` — explicit local JSON (non-production only)
+ *
+ * Production plus local JSON is rejected at configuration time (fail closed).
+ * Unknown values, including unimplemented backends such as SharePoint, are rejected.
+ */
+export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
+  const isProduction = (env.NODE_ENV || 'development') === 'production';
+  const raw = (env.INTEGRATION_PM_BACKEND || '').trim().toLowerCase();
+  const localJsonRequested = raw === 'development-json' || raw === 'local-json';
+  const unavailableRequested =
+    raw === '' || raw === 'unavailable' || raw === 'none' || raw === 'not-configured';
+
+  if (isProduction && localJsonRequested) {
+    throw new UnsafeHubConfigurationError(
+      'Unsafe configuration: the development PM JSON store (INTEGRATION_PM_BACKEND=development-json) is not allowed when NODE_ENV=production. pm-store.json is development/local state only and is not an approved production operational system of record.',
+    );
+  }
+
+  if (localJsonRequested) {
+    return {
+      mode: 'development-json',
+      classification: 'development-local',
+      localJsonAuthorized: true,
+    };
+  }
+
+  if (unavailableRequested) {
+    return {
+      mode: 'unavailable',
+      classification: 'unavailable',
+      localJsonAuthorized: false,
+    };
+  }
+
+  throw new UnsafeHubConfigurationError(
+    `Unsafe configuration: INTEGRATION_PM_BACKEND=${raw} is not an approved PM backend. Approved values: development-json (non-production only), or unset/unavailable. SharePoint PM persistence is not implemented and must not be claimed.`,
+  );
+}
+
 export function loadConfig() {
   const security = resolveHubRuntimeSecurity();
+  const pmBackend = resolvePmBackend();
   return {
     port: Number(process.env.INTEGRATION_API_PORT || 8790),
     host: security.host,
@@ -116,6 +174,7 @@ export function loadConfig() {
     dataDir: process.env.INTEGRATION_DATA_DIR || defaultDataDir(),
     requireAuth: security.requireAuth,
     insecureDevAuth: security.insecureDevAuth,
+    pmBackend,
     /**
      * Test-only JWT verifier. Production loadConfig never sets this.
      * Authenticated identity still comes from the verified payload, never from request headers.

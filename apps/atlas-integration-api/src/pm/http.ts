@@ -15,6 +15,7 @@ import {
 import { listOperatingDocuments } from './documents.ts';
 import { isValidProjectId } from './projectId.ts';
 import { quickCapture } from './quickCapture.ts';
+import { pmBackendUnavailableBody } from './backend.ts';
 import type { PmRepository } from './repository.ts';
 import type {
   DecisionRecord,
@@ -52,20 +53,28 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
 export async function handlePmRoutes(opts: {
   cfg: AppConfig;
   repo: IntegrationRepository;
-  pm: PmRepository;
+  pm: PmRepository | null;
   req: IncomingMessage;
   res: ServerResponse;
   method: string;
   path: string;
   origin?: string | null;
 }): Promise<boolean> {
-  const { cfg, repo, pm, req, res, method, path, origin } = opts;
+  const { cfg, repo, req, res, method, path, origin } = opts;
   if (!path.startsWith('/api/pm')) return false;
+
+  // Authentication is evaluated before PM availability so 401 is never a 503.
+  const principal = await requirePrincipal(req, cfg);
+
+  if (cfg.pmBackend.mode !== 'development-json' || !opts.pm) {
+    send(res, 503, pmBackendUnavailableBody(), origin);
+    return true;
+  }
+
+  const pm = opts.pm;
 
   // GET routes
   if (method === 'GET') {
-    await requirePrincipal(req, cfg);
-
     if (path === '/api/pm/command-center') {
       send(res, 200, { commandCenter: buildCommandCenter(pm, repo) }, origin);
       return true;
@@ -287,7 +296,6 @@ export async function handlePmRoutes(opts: {
     return true;
   }
 
-  const principal = await requirePrincipal(req, cfg);
   const body = await readJson(req);
 
   if (path === '/api/pm/bootstrap') {

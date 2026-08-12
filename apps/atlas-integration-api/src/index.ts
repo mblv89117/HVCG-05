@@ -4,7 +4,7 @@ import { buildRegistry } from './connectors/registry.ts';
 import { handleRequest } from './http/router.ts';
 import { loadSecretsFile } from './loadSecrets.ts';
 import { createLocalAiAdapter } from './local-ai/adapter.ts';
-import { PmRepository } from './pm/repository.ts';
+import { createAuthorizedPmRepository } from './pm/backend.ts';
 import { IntegrationRepository } from './store/repository.ts';
 
 export function startServer() {
@@ -29,7 +29,7 @@ export function startServer() {
 
   const cfg = loadConfig();
   const repo = new IntegrationRepository(cfg.dataDir, cfg.tokenEncryptionKeyB64);
-  const pm = new PmRepository(cfg.dataDir);
+  const pm = createAuthorizedPmRepository(cfg);
   const localAi = createLocalAiAdapter();
   const app = buildRegistry(cfg, repo);
 
@@ -50,6 +50,8 @@ export function startServer() {
         host: cfg.host,
         authRequired: cfg.requireAuth,
         insecureDevAuth: cfg.insecureDevAuth,
+        pmBackend: cfg.pmBackend.mode,
+        pmClassification: cfg.pmBackend.classification,
         dataDir: cfg.dataDir,
         microsoftConfigured: Boolean(cfg.microsoft.clientId && cfg.microsoft.clientSecret),
       }),

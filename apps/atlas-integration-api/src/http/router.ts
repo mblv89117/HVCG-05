@@ -26,7 +26,7 @@ export interface RouterDeps {
   cfg: AppConfig;
   repo: IntegrationRepository;
   app: AppRegistry;
-  pm: PmRepository;
+  pm: PmRepository | null;
   localAi: LocalAiAdapter;
 }
 
@@ -183,6 +183,10 @@ export async function handleRequest(
           port: cfg.port,
           authRequired: cfg.requireAuth,
           insecureDevAuth: cfg.insecureDevAuth,
+          pmBackend: {
+            mode: cfg.pmBackend.mode,
+            classification: cfg.pmBackend.classification,
+          },
         },
         origin,
       );

@@ -196,11 +196,13 @@ async function withAuthOnHub(fn: (base: string) => Promise<void>) {
     HOST: process.env.INTEGRATION_HOST,
     KEY: process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY,
     TENANT: process.env.MICROSOFT_TENANT_ID,
+    PM: process.env.INTEGRATION_PM_BACKEND,
   };
   process.env.NODE_ENV = 'development';
   process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
   process.env.INTEGRATION_HOST = '127.0.0.1';
   process.env.MICROSOFT_TENANT_ID = '11111111-1111-1111-1111-111111111111';
+  process.env.INTEGRATION_PM_BACKEND = 'development-json';
   delete process.env.INTEGRATION_REQUIRE_AUTH;
   delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
   const cfg: AppConfig = { ...loadConfig(), verifyAccessToken: syntheticVerify };
@@ -237,6 +239,8 @@ async function withAuthOnHub(fn: (base: string) => Promise<void>) {
     else process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = prev.KEY;
     if (prev.TENANT === undefined) delete process.env.MICROSOFT_TENANT_ID;
     else process.env.MICROSOFT_TENANT_ID = prev.TENANT;
+    if (prev.PM === undefined) delete process.env.INTEGRATION_PM_BACKEND;
+    else process.env.INTEGRATION_PM_BACKEND = prev.PM;
   }
 }
 

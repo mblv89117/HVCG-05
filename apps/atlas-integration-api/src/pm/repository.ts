@@ -48,7 +48,16 @@ function empty(): PmStoreSnapshot {
   };
 }
 
+/**
+ * Development/local JSON PM store.
+ *
+ * This is not SharePoint, not production, and not an approved operational
+ * system of record. Construct only when INTEGRATION_PM_BACKEND=development-json
+ * (non-production). Do not use as a fallback for an unavailable production backend.
+ */
 export class PmRepository {
+  readonly backendMode = 'development-json' as const;
+  readonly classification = 'development-local' as const;
   private data: PmStoreSnapshot;
   private path: string;
 

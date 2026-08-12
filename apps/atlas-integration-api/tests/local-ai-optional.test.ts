@@ -11,7 +11,6 @@ import { buildRegistry } from '../src/connectors/registry.ts';
 import { handleRequest } from '../src/http/router.ts';
 import { createLocalAiAdapter, type LocalAiAdapter } from '../src/local-ai/adapter.ts';
 import { OllamaClient } from '../src/local-ai/ollamaClient.ts';
-import { PmRepository } from '../src/pm/repository.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
 
 process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
@@ -162,10 +161,9 @@ async function withTestHub(localAi: LocalAiAdapter, fn: (base: string) => Promis
   process.env.INTEGRATION_API_PORT = '0';
   const cfg = loadConfig();
   const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
-  const pm = new PmRepository(dir);
   const app = buildRegistry(cfg, repo);
   const server = createServer((req, res) => {
-    handleRequest({ cfg, repo, app, pm, localAi }, req, res).catch((err) => {
+    handleRequest({ cfg, repo, app, pm: null, localAi }, req, res).catch((err) => {
       res.writeHead(500, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: 'server_error', message: String(err) }));
     });
