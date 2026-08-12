@@ -18,6 +18,7 @@ import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
+import { handleBaRoutes } from '../ba/routes.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
@@ -118,6 +119,18 @@ export async function handleRequest(
   const method = req.method || 'GET';
 
   try {
+    if (path.startsWith('/api/ba')) {
+      const handled = await handleBaRoutes({
+        req,
+        res,
+        cfg,
+        path,
+        method,
+        origin,
+      });
+      if (handled) return;
+    }
+
     if (path.startsWith('/api/pm')) {
       const handled = await handlePmRoutes({
         cfg,
