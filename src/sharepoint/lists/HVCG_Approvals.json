@@ -63,7 +63,17 @@
         "ProposalPricing",
         "ProposalSubmission",
         "ContractException",
-        "PostAwardChange"
+        "PostAwardChange",
+        "RiskAssessment",
+        "AgencyResponse",
+        "TaxAppeal",
+        "UnemploymentResponse",
+        "InsuranceReview",
+        "ClaimSubmission",
+        "RecoveryCommunication",
+        "ProfessionalReferral",
+        "SettlementReview",
+        "SensitiveHRCommunication"
       ]
     },
     {

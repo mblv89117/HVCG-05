@@ -1815,19 +1815,31 @@
       "category": "Risk",
       "businessPurpose": "Sensitive matters",
       "atlasModule": "Risk",
-      "existingCapability": "HVCG_Risks ops only",
+      "existingCapability": "Ops HVCG_Risks + catalog; now RiskMatters domain",
       "implementationMethod": "New RiskMatters list + elevated access",
       "owner": "Advisory",
       "sprint": "BA-F",
       "priority": "P1",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
-      "externalContactGate": false,
-      "evidence": [],
-      "testsAcceptance": [],
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/risk_claims.py",
+        "config/business/risk-operating-policy.json",
+        "src/sharepoint/lists/HVCG_RiskMatters.json",
+        "src/sharepoint/lists/HVCG_RiskEvidence.json",
+        "apps/atlas-elite-os/src/pages/RiskClaimsWorkbench.tsx",
+        "tests/unit/business/test_risk_claims_sprint9.py"
+      ],
+      "testsAcceptance": [
+        "cases A\u2013N",
+        "E2E tax",
+        "E2E claims",
+        "cross-system"
+      ],
       "completionDate": null,
-      "notes": ""
+      "notes": "Sprint 9 Dev OS present. Distinct from ops HVCG_Risks. Not IMPLEMENTED: Production provision, live agency/insurer connectors, full elevated ACL productization."
     },
     {
       "id": "HVCG-V2-RISK-002",
@@ -1841,14 +1853,18 @@
       "owner": "Security",
       "sprint": "BA-F",
       "priority": "P0",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [],
       "productionGate": false,
-      "externalContactGate": false,
-      "evidence": [],
+      "externalContactGate": true,
+      "evidence": [
+        "config/business/risk-operating-policy.json#elevatedAccess",
+        "src/sharepoint/lists/HVCG_RiskMatters.json",
+        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx#Client360RiskSection"
+      ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": ""
+      "notes": "Elevated/need-to-know flags + restricted evidence confidentiality choices in Dev. Full server-side ACL productization still completing."
     },
     {
       "id": "HVCG-V2-GROW-001",
@@ -2028,11 +2044,13 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/risk_claims.py",
+        "tests/unit/business/test_risk_claims_sprint9.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-008",
@@ -2051,11 +2069,13 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/risk_claims.py",
+        "tests/unit/business/test_risk_claims_sprint9.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-009",
@@ -2074,11 +2094,13 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/risk_claims.py",
+        "tests/unit/business/test_risk_claims_sprint9.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-010",
@@ -2097,11 +2119,13 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/risk_claims.py",
+        "tests/unit/business/test_risk_claims_sprint9.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-011",
@@ -2120,11 +2144,13 @@
       "productionGate": false,
       "externalContactGate": false,
       "evidence": [
-        "config/business/hvcg-agents-v2.json"
+        "config/business/hvcg-agents-v2.json",
+        "config/business/risk_claims.py",
+        "tests/unit/business/test_risk_claims_sprint9.py"
       ],
       "testsAcceptance": [],
       "completionDate": null,
-      "notes": "Config stub only \u2014 not full agent implementation"
+      "notes": "Config stub only \u2014 not full agent implementation Sprint 9 runtime bound in Development."
     },
     {
       "id": "HVCG-V2-AI-012",
@@ -2963,11 +2989,12 @@
       "evidence": [
         "Absolute GO Client 360",
         "apps/atlas-elite-os/src/pages/LiveClientDetailPage.tsx (atlas-usable-operating-layer)",
-        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx (atlas-usable-operating-layer)"
+        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx (atlas-usable-operating-layer)",
+        "apps/atlas-elite-os/src/pages/Client360CommercialSections.tsx#Client360RiskSection"
       ],
       "testsAcceptance": [],
       "completionDate": "2026-08-11",
-      "notes": "Revenue + Migration + Capital tabs; Capital/Procurement/Risk/AI full depth still later."
+      "notes": "Revenue + Migration + Capital tabs; Capital/Procurement/Risk/AI full depth still later. Risk section added Sprint 9 Dev."
     },
     {
       "id": "HVCG-V2-SYS-001",

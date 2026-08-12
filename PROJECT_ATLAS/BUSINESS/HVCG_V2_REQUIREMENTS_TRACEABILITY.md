@@ -60,7 +60,7 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | Capital Readiness | HVCG-V2-CAP-002 | `PLANNED` |
 | CFO system | HVCG-V2-CFO-001 / CFO-004 | `EXISTING_REUSED` / `IN_PROGRESS` |
 | Procurement | HVCG-V2-PROC-001 | `PLANNED` |
-| Risk / Claims | HVCG-V2-RISK-001 | `PLANNED` |
+| Risk / Claims | HVCG-V2-RISK-001 / RISK-002 | `IN_PROGRESS` |
 | Growth OS | HVCG-V2-GROW-001 | `EXISTING_REUSED` |
 | Executive Owner Support | HVCG-V2-OWN-001 | `IMPLEMENTED` |
 | Second Brain | HVCG-V2-AI-021 | `PLANNED` |
@@ -192,8 +192,8 @@ Forbidden: `IGNORED`, `FORGOTTEN`.
 | `HVCG-V2-REV-005` | Sales ladder: Authority → Paid Diagnostic → Package → Retainer → Success → Premium/Ente… | Revenue / Reporting | Revenue / Exec | BA-K | P1 | `PLANNED` |  |
 | `HVCG-V2-REV-006` | Acquisition source attribution (podcast/linkedin/youtube/.../referral/etc.) | Revenue / Marketing | CRM / Leads | BA-B/L | P1 | `PLANNED` |  |
 | `HVCG-V2-REV-007` | Distinguish historical/billed/collected/outstanding/proposed/pipeline revenue types | Revenue | Finance / Revenue | BA-I/K | P1 | `PLANNED` |  |
-| `HVCG-V2-RISK-001` | Risk & Claims Matters domain (distinct from ops HVCG_Risks) | Risk | Risk | BA-F | P1 | `PLANNED` |  |
-| `HVCG-V2-RISK-002` | Elevated access for sensitive risk/claims/owner matters | Risk / Security | Security | BA-F | P0 | `PLANNED` |  |
+| `HVCG-V2-RISK-001` | Risk & Claims Matters domain (distinct from ops HVCG_Risks) | Risk | Risk | BA-F | P1 | `IN_PROGRESS` | Sprint 9 Dev engine + lists + Elite |
+| `HVCG-V2-RISK-002` | Elevated access for sensitive risk/claims/owner matters | Risk / Security | Security | BA-F | P0 | `IN_PROGRESS` | Elevated flags; full ACL productization incomplete |
 | `HVCG-V2-RPT-001` | Executive commercial dashboard views (acquisition/diagnostics/offers/revenue/expansion/… | Reporting | Elite / Exec | BA-K | P1 | `PLANNED` |  |
 | `HVCG-V2-RPT-002` | Never fabricate unavailable metrics | Reporting | Exec | Standing | P0 | `EXISTING_REUSED` |  |
 | `HVCG-V2-SVC-001` | Service line SL-CAPITAL: Capital Advisory & Lender Readiness (public) | Service Architecture | Business Catalog | BA-A S1 | P0 | `IMPLEMENTED` | config/business/service-lines.json; src/sharepoint/lists/HVCG_ServiceLines.json |

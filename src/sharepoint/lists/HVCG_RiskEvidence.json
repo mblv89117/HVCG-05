@@ -1,0 +1,28 @@
+{
+  "title": "HVCG_RiskEvidence",
+  "description": "Evidence register for Risk Matters. Originals immutable. AI summaries never replace source. Dev-only until provisioned.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "EvidenceId", "displayName": "EvidenceId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "MatterId", "displayName": "MatterId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_RiskMatters", "description": "" },
+    { "internalName": "EvidenceType", "displayName": "EvidenceType", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "Description", "displayName": "Description", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Source", "displayName": "Source", "type": "Text", "required": true, "indexed": false, "description": "" },
+    { "internalName": "EvidenceDate", "displayName": "EvidenceDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ReceivedDate", "displayName": "ReceivedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "FileRef", "displayName": "FileRef", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "Custodian", "displayName": "Custodian", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "VerificationStatus", "displayName": "VerificationStatus", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "Confidentiality", "displayName": "Confidentiality", "type": "Choice", "required": false, "indexed": true, "choices": ["Restricted", "Elevated", "OwnerOnly", "ProfessionalShared"], "description": "" },
+    { "internalName": "TruthClass", "displayName": "TruthClass", "type": "Choice", "required": true, "indexed": true, "choices": ["VERIFIED_FACT", "CLIENT_REPRESENTATION", "COUNTERPARTY_ALLEGATION", "AGENCY_STATEMENT", "CALCULATED", "AI_OBSERVATION", "ADVISOR_INTERPRETATION", "LICENSED_PROFESSIONAL_OPINION"], "description": "" },
+    { "internalName": "Checksum", "displayName": "Checksum", "type": "Text", "required": false, "indexed": false, "description": "Where architecture supports" },
+    { "internalName": "IncludedInResponse", "displayName": "IncludedInResponse", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "InternalNote", "displayName": "InternalNote", "type": "Note", "required": false, "indexed": false, "description": "Advisor annotation separate from AI extraction" }
+  ]
+}

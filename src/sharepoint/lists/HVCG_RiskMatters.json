@@ -1,0 +1,39 @@
+{
+  "title": "HVCG_RiskMatters",
+  "description": "Sensitive Risk/Claims/Tax/UE matters — DISTINCT from ops HVCG_Risks. Elevated access. Dev-only until provisioned. Not legal/tax/insurance opinions.",
+  "template": "genericList",
+  "provisioning": {
+    "environments": ["Development"],
+    "changeRequest": "CR-HVCG-BA-V2-001",
+    "productionAuthorized": false
+  },
+  "columns": [
+    { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "MatterId", "displayName": "MatterId", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Clients", "description": "" },
+    { "internalName": "EngagementId", "displayName": "EngagementId", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "OpportunityId", "displayName": "OpportunityId", "type": "Lookup", "required": false, "indexed": true, "lookupList": "HVCG_Opportunities", "description": "Revenue lineage" },
+    { "internalName": "OfferCode", "displayName": "OfferCode", "type": "Choice", "required": true, "indexed": true, "choices": ["OFF-RISK-REVIEW", "OFF-TAX-UE", "OFF-CLAIMS"], "description": "" },
+    { "internalName": "MatterType", "displayName": "MatterType", "type": "Choice", "required": true, "indexed": true, "choices": ["TAX_REGULATORY", "UNEMPLOYMENT_WORKFORCE", "INSURANCE_RISK", "CLAIMS_RECOVERY", "OTHER_SPECIAL"], "description": "Structured — no free-text bypass" },
+    { "internalName": "Subtype", "displayName": "Subtype", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "OpenDate", "displayName": "OpenDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "IncidentNoticeDate", "displayName": "IncidentNoticeDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AgencyCarrierCounterparty", "displayName": "AgencyCarrierCounterparty", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "Jurisdiction", "displayName": "Jurisdiction", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "AmountAtRisk", "displayName": "AmountAtRisk", "type": "Currency", "required": false, "indexed": false, "description": "Unknown allowed — do not invent" },
+    { "internalName": "PotentialRecovery", "displayName": "PotentialRecovery", "type": "Currency", "required": false, "indexed": false, "description": "" },
+    { "internalName": "VerifiedSavings", "displayName": "VerifiedSavings", "type": "Currency", "required": false, "indexed": false, "description": "Verified only" },
+    { "internalName": "Deadline", "displayName": "Deadline", "type": "DateTime", "required": false, "indexed": true, "description": "" },
+    { "internalName": "Severity", "displayName": "Severity", "type": "Choice", "required": true, "indexed": true, "choices": ["LOW", "MEDIUM", "HIGH", "CRITICAL"], "description": "Not equal to legal liability" },
+    { "internalName": "Status", "displayName": "Status", "type": "Text", "required": true, "indexed": true, "description": "" },
+    { "internalName": "AssignedAdvisor", "displayName": "AssignedAdvisor", "type": "Text", "required": false, "indexed": true, "description": "" },
+    { "internalName": "LicensedProfessionalRequired", "displayName": "LicensedProfessionalRequired", "type": "Boolean", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ProfessionalContact", "displayName": "ProfessionalContact", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ProfessionalReviewStatus", "displayName": "ProfessionalReviewStatus", "type": "Choice", "required": false, "indexed": true, "choices": ["NOT_REQUIRED", "RECOMMENDED", "REQUIRED_BEFORE_EXTERNAL_ACTION", "REQUESTED", "IN_REVIEW", "REVIEWED", "CLEARED", "ISSUES_RAISED"], "description": "" },
+    { "internalName": "EvidenceCompleteness", "displayName": "EvidenceCompleteness", "type": "Text", "required": false, "indexed": false, "description": "" },
+    { "internalName": "CommunicationGate", "displayName": "CommunicationGate", "type": "Text", "required": false, "indexed": false, "description": "BL-C1" },
+    { "internalName": "Resolution", "displayName": "Resolution", "type": "Note", "required": false, "indexed": false, "description": "" },
+    { "internalName": "ClosedDate", "displayName": "ClosedDate", "type": "DateTime", "required": false, "indexed": false, "description": "" },
+    { "internalName": "InternalNotes", "displayName": "InternalNotes", "type": "Note", "required": false, "indexed": false, "description": "Elevated / need-to-know" }
+  ]
+}

@@ -220,11 +220,97 @@
       ],
       "note": "Sprint 8 Development. Preparation only — external submission gated."
     },
-    { "agentCode": "AGT-TAX-APPEAL", "name": "Regulatory / Tax Appeal Support Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
-    { "agentCode": "AGT-UE-CLAIM", "name": "Unemployment Claim Support Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
-    { "agentCode": "AGT-INS-REVIEW", "name": "Risk / Insurance Review Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
-    { "agentCode": "AGT-CLAIMS", "name": "Claims & Recovery Support Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
-    { "agentCode": "AGT-HR-DOCS", "name": "HR / Workforce Documentation Agent", "riskLevel": "HIGH", "externalCommunicationAllowed": false, "humanApproval": "always" },
+    {
+      "agentCode": "AGT-TAX-APPEAL",
+      "name": "Regulatory / Tax Appeal Support Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always",
+      "runtime": "config/business/risk_claims.py#run_tax_appeal_agent",
+      "policy": "config/business/risk-operating-policy.json",
+      "offerCode": "OFF-TAX-UE",
+      "never": [
+        "provide a tax opinion",
+        "provide legal advice",
+        "submit an appeal",
+        "sign agency correspondence",
+        "represent the client",
+        "make unsupported conclusions"
+      ],
+      "note": "Sprint 9 Development. Professional review required before external action."
+    },
+    {
+      "agentCode": "AGT-UE-CLAIM",
+      "name": "Unemployment Claim Support Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always",
+      "runtime": "config/business/risk_claims.py#run_ue_claim_agent",
+      "policy": "config/business/risk-operating-policy.json",
+      "offerCode": "OFF-TAX-UE",
+      "never": [
+        "determine legal eligibility",
+        "submit appeals autonomously",
+        "represent the employer",
+        "contact employee/agency without approval",
+        "terminate employees",
+        "make protected-class decisions"
+      ],
+      "note": "Sprint 9 Development. Sensitive employee data restricted."
+    },
+    {
+      "agentCode": "AGT-INS-REVIEW",
+      "name": "Risk / Insurance Review Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always",
+      "runtime": "config/business/risk_claims.py#run_insurance_review_agent",
+      "policy": "config/business/risk-operating-policy.json",
+      "never": [
+        "sell insurance",
+        "bind coverage",
+        "make final coverage determinations",
+        "state a claim is covered",
+        "contact carrier/broker without approval"
+      ],
+      "note": "Sprint 9 Development. Questions only — not binding coverage opinions."
+    },
+    {
+      "agentCode": "AGT-CLAIMS",
+      "name": "Claims & Recovery Support Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always",
+      "runtime": "config/business/risk_claims.py#run_claims_agent",
+      "policy": "config/business/risk-operating-policy.json",
+      "offerCode": "OFF-CLAIMS",
+      "never": [
+        "send insurer communications",
+        "contact attorneys",
+        "settle claims",
+        "make binding coverage conclusions",
+        "admit liability",
+        "threaten counterparties",
+        "make legal claims autonomously"
+      ],
+      "note": "Sprint 9 Development. Claim-support packages remain DRAFT until human/professional approval."
+    },
+    {
+      "agentCode": "AGT-HR-DOCS",
+      "name": "HR / Workforce Documentation Agent",
+      "riskLevel": "HIGH",
+      "externalCommunicationAllowed": false,
+      "humanApproval": "always",
+      "runtime": "config/business/risk_claims.py#hr_boundary_check",
+      "policy": "config/business/risk-operating-policy.json",
+      "never": [
+        "terminate employees",
+        "determine protected-class status",
+        "make final employment-law conclusions",
+        "send legal-sensitive employee communications without approval"
+      ],
+      "note": "Sprint 9 Development. Documentation/process support only."
+    },
     {
       "agentCode": "AGT-PROPOSAL",
       "name": "Proposal & Pricing Agent",

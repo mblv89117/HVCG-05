@@ -653,6 +653,24 @@
       "domain": "Procurement",
       "changeRequest": "CR-HVCG-BA-V2-001",
       "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_RiskMatters",
+      "path": "src/sharepoint/lists/HVCG_RiskMatters.json",
+      "columnCount": 27,
+      "description": "Sensitive Risk/Claims matters — distinct from ops HVCG_Risks (Dev-only)",
+      "domain": "Risk",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
+    },
+    {
+      "name": "HVCG_RiskEvidence",
+      "path": "src/sharepoint/lists/HVCG_RiskEvidence.json",
+      "columnCount": 16,
+      "description": "Risk matter evidence register (Dev-only)",
+      "domain": "Risk",
+      "changeRequest": "CR-HVCG-BA-V2-001",
+      "productionAuthorized": false
     }
   ],
   "productVersion": "1.1.0"

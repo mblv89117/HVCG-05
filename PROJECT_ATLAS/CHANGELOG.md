@@ -4,6 +4,8 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-11 | Sprint 9 Dev (pending commit): Risk/Claims OS — `risk_claims.py`, RiskMatters/Evidence, tax/UE/insurance/claims agents, CFO/Capital/Procurement signals; Elite `/risk` + Client 360. RISK-001/002 → IN_PROGRESS. **No Production / no Sprint 10.** |
+| 2026-08-11 | Sprint 8 commit: Procurement & Government Readiness OS (BA `a0166e9` · Elite `34b6f4f`). PROC-001/002 remain IN_PROGRESS. **No Production / no external submit.** |
 | 2026-08-11 | Sprint 8 Dev (pending commit): Contract Procurement & Government Readiness OS — `contract_procurement.py`, registrations, capability truth, bid/no-bid, Capital/CFO handoffs; Elite `/procurement` + Client 360. PROC-001/002 → IN_PROGRESS (not full IMPLEMENTED). **No Production / no Sprint 9.** |
 | 2026-08-11 | Sprint 7 commit: Fractional CFO OS (BA `fee9d69` · Elite `90f0138`). CFO-002/004 IN_PROGRESS; live QBO/Plaid remain gated. **No Production.** |
 | 2026-08-11 | Sprint 7 Dev (pending commit): Fractional CFO OS — `fractional_cfo.py`, source registry, monthly cycle, 13-week forecast, AR/AP/WIP/budget/KPI/report, Capital continuity; Elite Finance workbench + Client 360 Finance; AGT-CFO-OPS. Coverage 56.0%→55.6% (honest IN_PROGRESS, not full IMPLEMENTED). CAP-003 unchanged. **No Production / no Sprint 8.** |

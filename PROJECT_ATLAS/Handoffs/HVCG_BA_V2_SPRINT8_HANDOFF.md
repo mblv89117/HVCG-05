@@ -12,7 +12,12 @@
 | BA V2 | `fee9d69bd8e1fb248e291e378da3a290746e13ca` |
 | Usable-operating-layer | `90f013839155ccb81d0e58c9ebef85d672a12b43` |
 
-## Sprint 8 Development (pending Owner commit auth)
+## Sprint 8 Development — **COMMITTED**
+
+| Worktree | SHA |
+|----------|-----|
+| BA V2 | `a0166e9f12ada81b281ad6774569a46993b19e73` |
+| Usable-operating-layer | `34b6f4f92bae07c158cea94decbe63b68b71672e` |
 
 ### BA
 - `config/business/procurement-operating-policy.json`
