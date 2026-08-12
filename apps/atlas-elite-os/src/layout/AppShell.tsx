@@ -62,6 +62,7 @@ const allSections: NavSection[] = [
       { id: 'capital', label: 'Capital Advisory', to: '/capital', icon: <MoneyRegular /> },
       { id: 'procurement', label: 'Procurement', to: '/procurement', icon: <ClipboardTaskRegular /> },
       { id: 'risk', label: 'Risk & Claims', to: '/risk', icon: <ShieldRegular /> },
+      { id: 'growth', label: 'Growth OS', to: '/growth', icon: <BoardRegular /> },
     ],
   },
   {
@@ -107,6 +108,7 @@ const catalog: SearchResult[] = [
   { id: 's8', title: 'Capital Advisory', category: 'Navigation', to: '/capital' },
   { id: 's8b', title: 'Procurement', category: 'Navigation', to: '/procurement' },
   { id: 's8c', title: 'Risk & Claims', category: 'Navigation', to: '/risk' },
+  { id: 's8d', title: 'Growth OS', category: 'Navigation', to: '/growth' },
   { id: 's9', title: 'AI Agents', category: 'Navigation', to: '/ai' },
   { id: 's10', title: 'Documents', category: 'Navigation', to: '/documents' },
   { id: 's11', title: 'Accounting', category: 'Navigation', to: '/accounting' },
@@ -131,6 +133,7 @@ const routeLabels: Record<string, string> = {
   '/capital': 'Capital Advisory',
   '/procurement': 'Contract Procurement',
   '/risk': 'Risk & Claims',
+  '/growth': 'Growth Operating System',
   '/financials': 'Financial Intelligence',
   '/banking': 'Banking',
   '/accounting': 'Accounting',

@@ -15,6 +15,7 @@ export interface ExecutiveHomeModel {
   initiatives: typeof executiveHomeData.initiatives;
   capitalReadiness: typeof executiveHomeData.capitalReadiness;
   cfoOperatingSummary: typeof executiveHomeData.cfoOperatingSummary;
+  growthOperatingSummary: typeof executiveHomeData.growthOperatingSummary;
   aiBrief: typeof executiveHomeData.aiBrief;
   aiRecommendations: string[];
   connection: {
@@ -128,6 +129,7 @@ export async function loadExecutiveHome(signedIn: boolean): Promise<ExecutiveHom
       initiatives: pending.initiatives,
       capitalReadiness: pending.capitalReadiness,
       cfoOperatingSummary: pending.cfoOperatingSummary,
+      growthOperatingSummary: pending.growthOperatingSummary,
       aiBrief,
       aiRecommendations: aiBrief.recommendations,
       connection: {

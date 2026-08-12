@@ -74,6 +74,7 @@ export function ExecutiveDashboardPage() {
     initiatives,
     capitalReadiness,
     cfoOperatingSummary,
+    growthOperatingSummary,
     aiBrief,
     connection,
   } = model;
@@ -254,6 +255,22 @@ export function ExecutiveDashboardPage() {
           </div>
           <Caption1 style={{ display: 'block', marginTop: 10 }}>
             Consumes Fractional CFO / Finance workbench — does not recalculate. PENDING_LIVE_SOURCE until adapters authorized.
+          </Caption1>
+        </AtlasCard>
+
+        <AtlasCard title="Growth operating summary" subtitle="Approved Growth outputs · domain SoRs preserved">
+          <div style={{ display: 'grid', gap: 10 }}>
+            {growthOperatingSummary.map((c) => (
+              <div key={c.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <Caption1>{c.label}</Caption1>
+                <Text size={300} weight="semibold">
+                  {c.value}
+                </Text>
+              </div>
+            ))}
+          </div>
+          <Caption1 style={{ display: 'block', marginTop: 10 }}>
+            Consumes Growth OS — does not duplicate Revenue/CFO/Capital/Procurement/Risk calculations.
           </Caption1>
         </AtlasCard>
 

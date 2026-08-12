@@ -30,6 +30,7 @@ import { CapitalReadinessWorkbench } from './CapitalReadinessWorkbench';
 import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
 import { ProcurementWorkbench } from './ProcurementWorkbench';
 import { RiskClaimsWorkbench } from './RiskClaimsWorkbench';
+import { GrowthOsWorkbench } from './GrowthOsWorkbench';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
 export { ClientsPage } from './LiveClientsPage';
@@ -431,6 +432,10 @@ export function ProcurementPage() {
 
 export function RiskPage() {
   return <RiskClaimsWorkbench />;
+}
+
+export function GrowthPage() {
+  return <GrowthOsWorkbench />;
 }
 
 export function EnterpriseValuePage() {

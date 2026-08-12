@@ -44,6 +44,7 @@ import { projectDetailPath } from '../routing/projectId';
 import {
   Client360CapitalSection,
   Client360FinanceSection,
+  Client360GrowthSection,
   Client360MigrationSection,
   Client360ProcurementSection,
   Client360RevenueSection,
@@ -210,6 +211,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <Tab value="capital">Capital</Tab>
         <Tab value="procurement">Procurement</Tab>
         <Tab value="risk">Risk</Tab>
+        <Tab value="growth">Growth</Tab>
         <Tab value="deliverables">Deliverables</Tab>
         <Tab value="approvals">Approvals</Tab>
         <Tab value="notes">Notes</Tab>
@@ -485,6 +487,10 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
       {tab === 'risk' ? (
         <Client360RiskSection clientHint={client?.legalName || client?.displayName || clientId} />
+      ) : null}
+
+      {tab === 'growth' ? (
+        <Client360GrowthSection clientHint={client?.legalName || client?.displayName || clientId} />
       ) : null}
 
       {tab === 'deliverables' ? (

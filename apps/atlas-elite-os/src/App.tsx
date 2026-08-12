@@ -17,6 +17,7 @@ import {
   CapitalPage,
   ProcurementPage,
   RiskPage,
+  GrowthPage,
   ClientDetailPage as DemoClientDetailPage,
   EnterpriseValuePage,
   FinancialsPage,
@@ -261,6 +262,14 @@ export function App() {
                 element={
                   <PrivateRoute>
                     <RiskPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="growth"
+                element={
+                  <PrivateRoute>
+                    <GrowthPage />
                   </PrivateRoute>
                 }
               />

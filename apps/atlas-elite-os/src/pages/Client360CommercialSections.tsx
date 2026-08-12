@@ -507,3 +507,70 @@ export function Client360RiskSection({ clientHint }: { clientHint?: string }) {
     </AtlasCard>
   );
 }
+
+/** Sprint 10 — Client 360 Growth OS (internal). */
+export interface Client360GrowthSnapshot {
+  engagementStatus: string;
+  plan: string;
+  topPriorities: string;
+  kpiHealth: string;
+  majorIssues: string;
+  commitments: string;
+  decisions: string;
+  sopStatus: string;
+  automationOpportunities: string;
+  crossDomain: string;
+  nextReview: string;
+  disclaimer: string;
+}
+
+export function buildInternalGrowthSnapshot(clientHint?: string): Client360GrowthSnapshot {
+  return {
+    engagementStatus: clientHint ? `No verified Growth Engagement bound for ${clientHint}` : 'No verified Growth Engagement bound',
+    plan: 'No active 90-day plan',
+    topPriorities: '—',
+    kpiHealth: 'NO_DATA until sources bound',
+    majorIssues: 'None recorded',
+    commitments: 'None recorded',
+    decisions: 'See Decisions register when bound',
+    sopStatus: 'Coverage unknown',
+    automationOpportunities: 'Candidates only — no auto-deploy',
+    crossDomain: 'Cash→CFO · Pipeline→Revenue · Capital · Procurement · Risk (restricted)',
+    nextReview: 'Not scheduled',
+    disclaimer: 'Growth OS orchestrates visibility. Domain SoRs remain authoritative. BL-C1 blocks auto client send.',
+  };
+}
+
+export function Client360GrowthSection({ clientHint }: { clientHint?: string }) {
+  const snap = buildInternalGrowthSnapshot(clientHint);
+  return (
+    <AtlasCard title="Growth Operating System" subtitle="Internal Client 360 · not a second Client 360">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+        <StatusChip label={snap.engagementStatus} tone="gold" />
+        <StatusChip label={snap.kpiHealth} tone="neutral" />
+      </div>
+      <Text size={300} style={{ display: 'block' }}>
+        90-day plan: {snap.plan}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Top priorities: {snap.topPriorities}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Issues / commitments: {snap.majorIssues} · {snap.commitments}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Decisions / SOPs: {snap.decisions} · {snap.sopStatus}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Automations: {snap.automationOpportunities}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Cross-domain: {snap.crossDomain}
+      </Text>
+      <Text size={300} style={{ display: 'block', marginTop: 6 }}>
+        Next operating review: {snap.nextReview}
+      </Text>
+      <Caption1 style={{ display: 'block', marginTop: 10 }}>{snap.disclaimer}</Caption1>
+    </AtlasCard>
+  );
+}

@@ -136,6 +136,17 @@ export const executiveHomeData = {
     { label: 'Capital monitor', value: 'Not monitored' },
     { label: 'Advisor review', value: 'None recorded' },
   ],
+  /** Sprint 10 — consume approved Growth summaries; never invent KPIs. */
+  growthOperatingSummary: [
+    { label: 'Growth Engagement', value: 'Awaiting verified binding' },
+    { label: '90-Day Plan', value: 'Not started' },
+    { label: 'Priority health', value: 'NO_DATA' },
+    { label: 'KPI health', value: 'NO_DATA' },
+    { label: 'Overdue commitments', value: '—' },
+    { label: 'Critical issues', value: '—' },
+    { label: 'SOP coverage', value: 'Unknown' },
+    { label: 'Next operating review', value: 'Not scheduled' },
+  ],
   aiBrief: {
     generated: true,
     timestampLabel: 'Generated at page load — not a verified ledger',
