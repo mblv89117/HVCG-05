@@ -208,15 +208,15 @@ export function buildInternalCapitalSnapshot(clientHint?: string): Client360Capi
     keyStrengths: [],
     recommendedFundingPath: 'Pending human-approved recommendation',
     activeCapitalOpportunities: [`See Capital workbench for ${label}`],
-    lenderPackageStatus: 'NotStarted (submit blocked)',
-    fundingOutcome: 'Not available',
+    lenderPackageStatus: 'Package version — Completeness — QA — Approval — Data Room (internal)',
+    fundingOutcome: 'Requested/Submitted/Approved/Funded distinctions enforced when available',
   };
 }
 
 export function Client360CapitalSection({ clientHint }: { clientHint?: string }) {
   const snap = buildInternalCapitalSnapshot(clientHint);
   return (
-    <AtlasCard title="Capital" subtitle="Internal Client 360 · readiness is advisory · not approval probability">
+    <AtlasCard title="Capital" subtitle="Internal · readiness + package · not portal-exposed strategy">
       <Text size={300} style={{ display: 'block' }}>
         Capital need: {snap.capitalNeed}
       </Text>
@@ -242,10 +242,13 @@ export function Client360CapitalSection({ clientHint }: { clientHint?: string })
         Opportunities: {snap.activeCapitalOpportunities.join('; ')}
       </Text>
       <Text size={300} style={{ display: 'block', marginTop: 6 }}>
-        Lender package: {snap.lenderPackageStatus}
+        Lender-Ready Package: {snap.lenderPackageStatus}
       </Text>
       <Caption1 style={{ display: 'block', marginTop: 10 }}>
-        Funding outcome: {snap.fundingOutcome} · HVCG does not guarantee financing approval
+        Funding outcome: {snap.fundingOutcome} · Approved ≠ Funded ≠ Collected · HVCG does not guarantee financing
+      </Caption1>
+      <Caption1 style={{ display: 'block', marginTop: 6 }}>
+        Internal-only: lender concerns, AI reasoning, pricing strategy, lender targeting — not client-portal default.
       </Caption1>
     </AtlasCard>
   );
