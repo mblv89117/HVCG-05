@@ -134,6 +134,19 @@ export function Client360RevenueSection({ clientHint }: { clientHint?: string })
           </div>
         ))}
       </AtlasCard>
+      <AtlasCard title="Success fees" subtitle="Potential · Earned · Invoiced · Collected — agreement governed">
+        <Caption1>Client funding / award / recovery ≠ HVCG collected fee.</Caption1>
+      </AtlasCard>
+      <AtlasCard title="Referral (internal)" subtitle="Not exposed on client portal">
+        <Caption1>Partner · Eligibility · Approved payable · Paid — ELIGIBLE ≠ PAID. Payouts gated.</Caption1>
+      </AtlasCard>
+      <AtlasCard title="Legacy pricing" subtitle="Protection status">
+        <Caption1>
+          {snap.clientCode === 'ACCG'
+            ? 'ACCG contracted $4,539/mo protected · V2 recommended future separate'
+            : 'Contracted economics preserved · recommended future separate when applicable'}
+        </Caption1>
+      </AtlasCard>
     </div>
   );
 }

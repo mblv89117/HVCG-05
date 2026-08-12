@@ -31,6 +31,7 @@ import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
 import { ProcurementWorkbench } from './ProcurementWorkbench';
 import { RiskClaimsWorkbench } from './RiskClaimsWorkbench';
 import { GrowthOsWorkbench } from './GrowthOsWorkbench';
+import { RevenueTruthWorkbench } from './RevenueTruthWorkbench';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
 export { ClientsPage } from './LiveClientsPage';
@@ -42,44 +43,8 @@ export function FinancialsPage() {
 }
 
 export function RevenuePage() {
-  const stageRows = pipelineStages.map((stage, i) => ({
-    id: `stage-${i}`,
-    stage,
-    count: '—',
-    weighted: 'Awaiting verified data',
-    availability: 'Awaiting verified data' as const,
-  }));
-
-  return (
-    <ModuleScaffold
-      title="Revenue & Pipeline"
-      subtitle="Stages and referral tracking structures. No fabricated pipeline dollars."
-    >
-      <AtlasCard title="Pipeline stages" subtitle="Standard HVCG engagement stages">
-        <DataTable
-          ariaLabel="Pipeline stages"
-          getRowKey={(r) => r.id}
-          rows={stageRows}
-          columns={[
-            { key: 'stage', header: 'Stage', render: (r) => r.stage },
-            { key: 'count', header: 'Opportunities', render: (r) => r.count },
-            { key: 'weighted', header: 'Probability-weighted', render: (r) => r.weighted },
-            {
-              key: 'src',
-              header: 'Source',
-              render: (r) => <Caption1>{r.availability}</Caption1>,
-            },
-          ]}
-        />
-      </AtlasCard>
-      <AtlasCard title="Referral partners">
-        <Text>
-          Generational Group (Randy Kamin) is recorded as the Colorado Craft Beef referral source.
-          Opportunity records: Data connection pending.
-        </Text>
-      </AtlasCard>
-    </ModuleScaffold>
-  );
+  // Sprint 12: Revenue Truth extends Revenue OS — no second billing shell.
+  return <RevenueTruthWorkbench />;
 }
 
 export function ClientsPageDemoCatalog() {

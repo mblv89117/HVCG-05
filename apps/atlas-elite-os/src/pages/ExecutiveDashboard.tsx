@@ -274,6 +274,26 @@ export function ExecutiveDashboardPage() {
           </Caption1>
         </AtlasCard>
 
+        <AtlasCard title="HVCG revenue truth" subtitle="Pipeline ≠ Proposed ≠ Contracted ≠ Invoiced ≠ Collected">
+          <div style={{ display: 'grid', gap: 8 }}>
+            {[
+              ['Pipeline', 'Pending verified source'],
+              ['Contracted', 'Engagement economics'],
+              ['Invoiced', 'HVCG invoices'],
+              ['Collected', 'Verified payments only'],
+              ['Referral payables', 'Approved ≠ Paid'],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <Caption1>{k}</Caption1>
+                <Text size={300}>{v}</Text>
+              </div>
+            ))}
+          </div>
+          <Caption1 style={{ display: 'block', marginTop: 10 }}>
+            Development labels — fixture totals are never presented as live HVCG financials.
+          </Caption1>
+        </AtlasCard>
+
         <AtlasCard title="Today's priorities" subtitle="Upcoming deadlines">
           <div style={{ display: 'grid', gap: 12 }}>
             {deadlines.map((d) => (
