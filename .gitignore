@@ -26,3 +26,20 @@ deployment/reports/hvs-onedrive-inventory/delta-link-*.txt
 
 # Production data exports (may contain operating records)
 deployment/reports/data/
+
+# Local AI — machine state / derived indexes (never commit)
+.secrets/local-ai.env
+.secrets/local-ai.discovery.json
+**/local-ai-operations.json
+.data/local-ai-document-staging/
+**/local-ai-document-staging/
+.data/local-ai-document-reviews/
+**/local-ai-document-reviews/
+.data/local-ai-document-backups/
+**/local-ai-document-backups/
+.data/local-ai-eva/
+**/local-ai-eva/
+.data/website-studio/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

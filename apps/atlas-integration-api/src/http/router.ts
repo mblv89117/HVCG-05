@@ -19,12 +19,15 @@ import type { PmRepository } from '../pm/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
 import { handleBaRoutes } from '../ba/routes.ts';
+import type { LocalAiAdapter } from '../local-ai/adapter.ts';
+import { handleLocalAiRoutes } from '../local-ai/http.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
   repo: IntegrationRepository;
   app: AppRegistry;
   pm: PmRepository;
+  localAi: LocalAiAdapter;
 }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
@@ -145,8 +148,22 @@ export async function handleRequest(
       if (handled) return;
     }
 
+    if (path.startsWith('/api/local-ai')) {
+      const handled = await handleLocalAiRoutes({
+        cfg,
+        localAi: deps.localAi,
+        req,
+        res,
+        method,
+        path,
+        origin,
+      });
+      if (handled) return;
+    }
+
     // GET /health
     if (method === 'GET' && path === '/health') {
+      const localAi = deps.localAi.snapshot();
       send(
         res,
         200,
@@ -156,6 +173,12 @@ export async function handleRequest(
             microsoft: isMicrosoftConfigured(cfg),
             google: isGoogleConfigured(cfg),
             github: isGitHubConfigured(cfg) || Boolean(cfg.github.clientId),
+          },
+          localAi: {
+            enabled: localAi.enabled,
+            available: localAi.available,
+            availability: localAi.availability,
+            reason: localAi.reason,
           },
           port: cfg.port,
         },
