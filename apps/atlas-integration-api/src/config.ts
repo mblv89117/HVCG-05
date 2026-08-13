@@ -286,7 +286,7 @@ export function loadConfig() {
     lookupUserBasic: undefined as UserBasicLookup | undefined,
     /** Test-only PM Graph transport. Production uses managed-identity Graph. */
     pmGraphTransport: undefined as PmGraphTransport | undefined,
-    /** Test-only PM token provider. Production uses IMDS managed identity. */
+    /** Test-only PM token provider. Production uses the App Service managed-identity local token endpoint. */
     pmTokenProvider: undefined as PmGraphTokenProvider | undefined,
     allowedOrigins: (
       process.env.INTEGRATION_ALLOWED_ORIGINS ||
