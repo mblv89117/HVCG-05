@@ -53,13 +53,33 @@ describe('canonical ClientCode validation', () => {
 });
 
 describe('approved group map parsing', () => {
-  it('keeps valid pairs and drops malformed/wildcard/unknown codes', () => {
-    const map = parseApprovedClientGroups(
-      `${GROUP_ACCG}:ACCG01,not-a-guid:LIEN01,${GROUP_LIEN}:lien01,${GROUP_JUNK}:*,${GROUP_LIEN}:LIEN01`,
-    );
+  it('keeps a valid 1:1 map', () => {
+    const map = parseApprovedClientGroups(`${GROUP_ACCG}:ACCG01,${GROUP_LIEN}:LIEN01`);
     assert.equal(map.get(GROUP_ACCG), 'ACCG01');
     assert.equal(map.get(GROUP_LIEN), 'LIEN01');
-    assert.equal(map.has(GROUP_JUNK), false);
+    assert.equal(map.size, 2);
+  });
+
+  it('malformed GUID, malformed ClientCode, or wildcard fail the entire map', () => {
+    assert.equal(parseApprovedClientGroups(`${GROUP_ACCG}:ACCG01,not-a-guid:LIEN01`).size, 0);
+    assert.equal(parseApprovedClientGroups(`${GROUP_ACCG}:ACCG01,${GROUP_LIEN}:lien01`).size, 0);
+    assert.equal(parseApprovedClientGroups(`${GROUP_ACCG}:ACCG01,${GROUP_JUNK}:*`).size, 0);
+  });
+
+  it('duplicate group IDs or duplicate ClientCodes fail closed', () => {
+    assert.equal(
+      parseApprovedClientGroups(`${GROUP_ACCG}:ACCG01,${GROUP_ACCG}:LIEN01`).size,
+      0,
+    );
+    assert.equal(
+      parseApprovedClientGroups(`${GROUP_ACCG}:ACCG01,${GROUP_LIEN}:ACCG01`).size,
+      0,
+    );
+  });
+
+  it('empty input is a valid empty map', () => {
+    assert.equal(parseApprovedClientGroups(undefined).size, 0);
+    assert.equal(parseApprovedClientGroups('').size, 0);
   });
 });
 
@@ -226,7 +246,7 @@ describe('Hub principal client scope from resolver', () => {
 });
 
 describe('Client 360 identifiers are not ClientCodes', () => {
-  it('random UUID client-360 path stays unscoped rather than matching Entra groups', async () => {
+  it('random UUID client-360 path is forbidden without a trusted mapping', async () => {
     process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
     process.env.INTEGRATION_HOST = '127.0.0.1';
     process.env.NODE_ENV = 'development';
@@ -257,9 +277,11 @@ describe('Client 360 identifiers are not ClientCodes', () => {
       const res = await fetch(`http://127.0.0.1:${port}/api/client360/${uuid}`, {
         headers: { authorization: 'Bearer t' },
       });
-      assert.notEqual(res.status, 401);
-      const body = (await res.json()) as { error?: string };
-      assert.equal(res.status === 404 || body.error === 'not_found' || res.status === 200, true);
+      const body = (await res.json()) as { error?: string; code?: string; client?: unknown };
+      assert.equal(res.status, 403);
+      assert.equal(body.error, 'forbidden');
+      assert.equal(body.code, 'client_identifier_unmapped');
+      assert.equal(body.client, undefined);
     } finally {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
       rmSync(dir, { recursive: true, force: true });

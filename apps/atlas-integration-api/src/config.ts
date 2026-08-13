@@ -179,23 +179,28 @@ export interface HubClientEntitlement {
 }
 
 /**
- * Parse `groupId:ClientCode,groupId:ClientCode`. Invalid pairs are dropped (fail closed).
- * Does not accept '*'. Does not fold ClientCode case.
+ * Parse `groupId:ClientCode,groupId:ClientCode`.
+ * Any malformed GUID, malformed ClientCode, wildcard, duplicate group ID,
+ * or duplicate ClientCode fails the entire map (empty). No last-write-wins.
+ * Does not fold ClientCode case. Empty/unset input is a valid empty map.
  */
 export function parseApprovedClientGroups(raw: string | undefined): Map<string, string> {
+  const empty = new Map<string, string>();
+  if (!raw || !raw.trim()) return empty;
   const out = new Map<string, string>();
-  if (!raw || !raw.trim()) return out;
+  const seenCodes = new Set<string>();
   for (const part of raw.split(',')) {
     const trimmed = part.trim();
     if (!trimmed) continue;
     const colon = trimmed.indexOf(':');
-    if (colon <= 0) continue;
+    if (colon <= 0) return empty;
     const groupId = trimmed.slice(0, colon).trim();
     const code = trimmed.slice(colon + 1).trim();
-    if (!GROUP_ID_RE.test(groupId)) continue;
-    if (!isCanonicalClientCode(code) || code === '*') continue;
-    if (out.has(groupId) && out.get(groupId) !== code) continue;
+    if (!GROUP_ID_RE.test(groupId)) return empty;
+    if (!isCanonicalClientCode(code) || code === '*') return empty;
+    if (out.has(groupId) || seenCodes.has(code)) return empty;
     out.set(groupId, code);
+    seenCodes.add(code);
   }
   return out;
 }

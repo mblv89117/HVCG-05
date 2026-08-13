@@ -12,7 +12,7 @@ import {
 import type { AppRegistry } from '../connectors/registry.ts';
 import { completeOAuthForProvider, getProviderAdapter } from '../connectors/registry.ts';
 import { runDiscoveryForConnection } from '../discovery/discover.ts';
-import { runClient360Ingestion, buildExecutiveDashboard } from '../client360/ingest.ts';
+import { CLIENT360_UNMAPPED_CODE } from '../client360/access.ts';
 import { assertAdministrator, requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
@@ -369,7 +369,6 @@ export async function handleRequest(
           discoveredByConnection: Object.fromEntries(
             connections.map((c) => [c.id, repo.listDiscoveredResources(c.id)]),
           ),
-          client360: repo.listClient360(),
           summary: repo.dashboardSummary(),
         },
         origin,
@@ -385,116 +384,11 @@ export async function handleRequest(
       return;
     }
 
-    // GET /api/client360
-    if (method === 'GET' && path === '/api/client360') {
+    // Client 360: no trusted UUID → ClientCode mapping. Fail closed without
+    // loading entities (avoids IDOR and existence leaks).
+    if (path === '/api/client360' || path.startsWith('/api/client360/')) {
       await requirePrincipal(req, cfg);
-      send(res, 200, { candidates: repo.listClient360() }, origin);
-      return;
-    }
-
-    // GET /api/client360/executive-dashboard
-    if (method === 'GET' && path === '/api/client360/executive-dashboard') {
-      await requirePrincipal(req, cfg);
-      send(res, 200, { dashboard: buildExecutiveDashboard(repo) }, origin);
-      return;
-    }
-
-    // GET /api/client360/migration/summary — HVS link-first migration status
-    if (method === 'GET' && path === '/api/client360/migration/summary') {
-      await requirePrincipal(req, cfg);
-      const records = repo.listAllSourceRecords(500_000).filter(
-        (r) => r.fields?.migrationStatus === 'link_only',
-      );
-      const byClient: Record<string, number> = {};
-      let restricted = 0;
-      for (const r of records) {
-        const name = String(r.fields.atlasClientName || 'Unknown');
-        byClient[name] = (byClient[name] || 0) + 1;
-        if (r.fields.sensitivityRestricted) restricted++;
-      }
-      send(
-        res,
-        200,
-        {
-          mode: 'link_first',
-          originalsUnchanged: true,
-          hvsMutated: false,
-          linkedDocuments: records.length,
-          restrictedDocuments: restricted,
-          byClient,
-        },
-        origin,
-      );
-      return;
-    }
-
-    // GET /api/client360/:id
-    const clientMatch = path.match(/^\/api\/client360\/([^/]+)$/);
-    if (method === 'GET' && clientMatch) {
-      await requirePrincipal(req, cfg);
-      const id = decodeURIComponent(clientMatch[1]);
-      const cand = repo.listClient360().find((c) => c.id === id);
-      if (!cand) {
-        send(res, 404, { error: 'client_not_found' }, origin);
-        return;
-      }
-      send(res, 200, { client: cand }, origin);
-      return;
-    }
-
-    // GET /api/client360/:id/documents — HVS link-first docs (restricted excluded from broad list)
-    const docsMatch = path.match(/^\/api\/client360\/([^/]+)\/documents$/);
-    if (method === 'GET' && docsMatch) {
-      await requirePrincipal(req, cfg);
-      const id = decodeURIComponent(docsMatch[1]);
-      const cand = repo.listClient360().find((c) => c.id === id);
-      if (!cand) {
-        send(res, 404, { error: 'client_not_found' }, origin);
-        return;
-      }
-      const includeRestricted = new URL(req.url || '', 'http://local').searchParams.get('includeRestricted') === '1';
-      const docIds = new Set(cand.associations.documents);
-      const hvsKeys = new Set(
-        cand.sourceRefs.filter((s) => s.businessEntity === 'HVS').map((s) => s.sourceRecordId),
-      );
-      const records = repo.listAllSourceRecords(500_000).filter((r) => {
-        if (docIds.has(r.id)) return true;
-        if (hvsKeys.has(r.provenance.sourceRecordId)) return true;
-        if (String(r.fields.atlasClientId || '') === id) return true;
-        const name = String(r.fields.atlasClientName || '').toLowerCase();
-        return name && name === (cand.displayName || '').toLowerCase();
-      });
-      const documents = records
-        .filter((r) => includeRestricted || !r.fields.sensitivityRestricted)
-        .slice(0, 500)
-        .map((r) => ({
-          id: r.id,
-          title: r.title,
-          kind: r.kind,
-          webUrl: r.fields.webUrl || r.provenance.sourceUrl,
-          path: r.fields.path,
-          classification: r.fields.atlasClassification || r.fields.documentClass,
-          sensitivityRestricted: Boolean(r.fields.sensitivityRestricted),
-          sensitivityReasons: r.fields.sensitivityReasons || [],
-          sourceTenant: r.fields.sourceTenant || 'highvaluesolution.com',
-          sourceAccount: r.fields.accountEmail || r.provenance.sourceAccount,
-          sourceRecordId: r.provenance.sourceRecordId,
-          migrationStatus: r.fields.migrationStatus || 'link_only',
-          modifiedAt: r.fields.occurredAt || r.provenance.originalModifiedAt,
-          searchVisible: r.fields.searchVisible !== false && !r.fields.sensitivityRestricted,
-        }));
-      send(
-        res,
-        200,
-        {
-          clientId: id,
-          displayName: cand.displayName,
-          count: documents.length,
-          restrictedOmitted: !includeRestricted,
-          documents,
-        },
-        origin,
-      );
+      send(res, 403, { error: 'forbidden', code: CLIENT360_UNMAPPED_CODE }, origin);
       return;
     }
 
@@ -505,27 +399,6 @@ export async function handleRequest(
     }
 
     const body = (await readJson(req)) as Record<string, unknown>;
-
-    // POST /api/client360/ingest-microsoft — deep sync ALL Microsoft accounts, then rebuild Client 360
-    if (path === '/api/client360/ingest-microsoft') {
-      const principal = await requirePrincipal(req, cfg);
-      const msIds = repo
-        .listConnections({ providerId: 'microsoft' })
-        .filter((c) => c.status === 'Connected')
-        .map((c) => c.id);
-      const jobs = await runBatchSync({ repo, app }, msIds);
-      const candidates = runClient360Ingestion(repo);
-      const dashboard = buildExecutiveDashboard(repo);
-      audit({
-        repo,
-        actorUserId: principal.userId,
-        action: 'client360_ingest_microsoft',
-        outcome: 'success',
-        detail: `synced ${msIds.length} microsoft connections → ${candidates.length} clients`,
-      });
-      send(res, 200, { jobs, candidates, dashboard, connectionIds: msIds }, origin);
-      return;
-    }
 
     // POST /api/connections/:provider/connect
     const connectMatch = path.match(/^\/api\/connections\/([^/]+)\/connect$/);
@@ -668,22 +541,6 @@ export async function handleRequest(
         detail: `synced ${ids.length} connections`,
       });
       send(res, 200, { jobs }, origin);
-      return;
-    }
-
-    // POST /api/client360/rebuild
-    if (path === '/api/client360/rebuild') {
-      const principal = await requirePrincipal(req, cfg);
-      const candidates = runClient360Ingestion(repo);
-      const dashboard = buildExecutiveDashboard(repo);
-      audit({
-        repo,
-        actorUserId: principal.userId,
-        action: 'client360_rebuild',
-        outcome: 'success',
-        detail: `${candidates.length} candidates`,
-      });
-      send(res, 200, { candidates, dashboard }, origin);
       return;
     }
 
