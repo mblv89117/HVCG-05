@@ -232,6 +232,7 @@ export function loadConfig() {
     dataDir: process.env.INTEGRATION_DATA_DIR || defaultDataDir(),
     requireAuth: security.requireAuth,
     insecureDevAuth: security.insecureDevAuth,
+    isProduction: security.isProduction,
     pmBackend,
     /**
      * Test-only JWT verifier. Production loadConfig never sets this.

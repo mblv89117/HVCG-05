@@ -93,7 +93,8 @@ export class IntegrationRepository {
 
   /**
    * List connections. Multi-account: does NOT collapse by provider.
-   * Omit ownerUserId to return every active connection (admin inventory).
+   * HTTP listing must always pass the authenticated principal's userId.
+   * Omit ownerUserId only for trusted Administrator aggregate counts.
    */
   listConnections(filter?: {
     ownerUserId?: string;
@@ -336,8 +337,11 @@ export class IntegrationRepository {
     this.persist();
   }
 
-  listAudit(limit = 100): AuditEventRecord[] {
-    return [...this.data.auditEvents].sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
+  listAudit(limit = 100, filter?: { actorUserId?: string }): AuditEventRecord[] {
+    return [...this.data.auditEvents]
+      .filter((e) => !filter?.actorUserId || e.actorUserId === filter.actorUserId)
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .slice(0, limit);
   }
 
   dashboardSummary() {

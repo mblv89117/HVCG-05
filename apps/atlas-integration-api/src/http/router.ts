@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { SOURCE_OF_TRUTH_RULES, type ProviderId } from '@hvcg/atlas-integration-core';
+import { SOURCE_OF_TRUTH_RULES, type ConnectionRecord, type ProviderId } from '@hvcg/atlas-integration-core';
 import { audit } from '../audit/auditLog.ts';
 import type { AppConfig } from '../config.ts';
 import {
@@ -11,6 +11,13 @@ import {
 } from '../config.ts';
 import type { AppRegistry } from '../connectors/registry.ts';
 import { completeOAuthForProvider, getProviderAdapter } from '../connectors/registry.ts';
+import {
+  CONNECTOR_SEARCH_DISABLED_IN_PRODUCTION,
+  CONNECTOR_SYNC_DISABLED_IN_PRODUCTION,
+  isConnectorSearchDisabled,
+  isConnectorSyncDisabled,
+} from '../connectors/contentPolicy.ts';
+import { getOwnedConnection } from '../connectors/ownership.ts';
 import { runDiscoveryForConnection } from '../discovery/discover.ts';
 import { CLIENT360_UNMAPPED_CODE } from '../client360/access.ts';
 import { assertAdministrator, requirePrincipal } from '../middleware/auth.ts';
@@ -70,6 +77,21 @@ function parseProvider(pathSegment: string): ProviderId | null {
     return pathSegment;
   }
   return null;
+}
+
+function sendOwnedOrNull(
+  res: ServerResponse,
+  origin: string | null,
+  repo: IntegrationRepository,
+  connectionId: string,
+  principalUserId: string,
+): ConnectionRecord | undefined {
+  const conn = getOwnedConnection(repo, connectionId, principalUserId);
+  if (!conn) {
+    send(res, 404, { error: 'not_found' }, origin);
+    return undefined;
+  }
+  return conn;
 }
 
 function connectionHealth(deps: RouterDeps, connectionId: string) {
@@ -207,15 +229,13 @@ export async function handleRequest(
       return;
     }
 
-    // GET /api/connections
+    // GET /api/connections — owner-scoped. Query ownerUserId cannot broaden.
     if (method === 'GET' && path === '/api/connections') {
-      await requirePrincipal(req, cfg);
-      // Multi-account inventory: return ALL active connections unless filtered.
-      const ownerUserId = url.searchParams.get('ownerUserId') || undefined;
+      const principal = await requirePrincipal(req, cfg);
       const providerId = url.searchParams.get('provider') as ProviderId | null;
       const businessEntity = url.searchParams.get('businessEntity') || undefined;
       const connections = repo.listConnections({
-        ownerUserId: ownerUserId || undefined,
+        ownerUserId: principal.userId,
         providerId: providerId || undefined,
         businessEntity,
       });
@@ -226,12 +246,9 @@ export async function handleRequest(
     // GET /api/connections/:id
     const connMatch = path.match(/^\/api\/connections\/([^/]+)$/);
     if (method === 'GET' && connMatch) {
-      await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(connMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, connMatch[1], principal.userId);
+      if (!conn) return;
       send(res, 200, { connection: conn }, origin);
       return;
     }
@@ -239,12 +256,10 @@ export async function handleRequest(
     // GET /api/connections/:id/health
     const healthMatch = path.match(/^\/api\/connections\/([^/]+)\/health$/);
     if (method === 'GET' && healthMatch) {
-      await requirePrincipal(req, cfg);
-      const health = connectionHealth(deps, healthMatch[1]);
-      if (!health) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, healthMatch[1], principal.userId);
+      if (!conn) return;
+      const health = connectionHealth(deps, conn.id);
       send(res, 200, health, origin);
       return;
     }
@@ -252,12 +267,9 @@ export async function handleRequest(
     // GET /api/connections/:id/resources
     const resourcesMatch = path.match(/^\/api\/connections\/([^/]+)\/resources$/);
     if (method === 'GET' && resourcesMatch) {
-      await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(resourcesMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, resourcesMatch[1], principal.userId);
+      if (!conn) return;
       const adapter = app.registry.getAdapter(conn.providerId);
       if (!adapter) {
         send(res, 503, { error: 'adapter_missing' }, origin);
@@ -276,16 +288,20 @@ export async function handleRequest(
     // GET /api/connections/:id/sync-jobs
     const syncJobsMatch = path.match(/^\/api\/connections\/([^/]+)\/sync-jobs$/);
     if (method === 'GET' && syncJobsMatch) {
-      await requirePrincipal(req, cfg);
-      send(res, 200, { jobs: repo.listSyncJobs(syncJobsMatch[1]) }, origin);
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, syncJobsMatch[1], principal.userId);
+      if (!conn) return;
+      send(res, 200, { jobs: repo.listSyncJobs(conn.id) }, origin);
       return;
     }
 
     // GET /api/connections/:id/errors
     const errorsMatch = path.match(/^\/api\/connections\/([^/]+)\/errors$/);
     if (method === 'GET' && errorsMatch) {
-      await requirePrincipal(req, cfg);
-      send(res, 200, { errors: repo.listSyncErrors(errorsMatch[1]) }, origin);
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, errorsMatch[1], principal.userId);
+      if (!conn) return;
+      send(res, 200, { errors: repo.listSyncErrors(conn.id) }, origin);
       return;
     }
 
@@ -322,11 +338,13 @@ export async function handleRequest(
       return;
     }
 
-    // GET /api/audit
+    // GET /api/audit — own actor events only. Records include connectionId
+    // and sourceAccount; global listing would leak other users' connector metadata.
     if (method === 'GET' && path === '/api/audit') {
-      await requirePrincipal(req, cfg);
+      const principal = await requirePrincipal(req, cfg);
       const limit = Number(url.searchParams.get('limit') || 100);
-      send(res, 200, { events: repo.listAudit(limit) }, origin);
+      const events = repo.listAudit(limit, { actorUserId: principal.userId });
+      send(res, 200, { events }, origin);
       return;
     }
 
@@ -338,10 +356,10 @@ export async function handleRequest(
       return;
     }
 
-    // GET /api/inventory — multi-account connection inventory for HVS/HVCG
+    // GET /api/inventory — owner-scoped connections/resources only
     if (method === 'GET' && path === '/api/inventory') {
-      await requirePrincipal(req, cfg);
-      const connections = repo.listConnections();
+      const principal = await requirePrincipal(req, cfg);
+      const connections = repo.listConnections({ ownerUserId: principal.userId });
       send(
         res,
         200,
@@ -369,7 +387,6 @@ export async function handleRequest(
           discoveredByConnection: Object.fromEntries(
             connections.map((c) => [c.id, repo.listDiscoveredResources(c.id)]),
           ),
-          summary: repo.dashboardSummary(),
         },
         origin,
       );
@@ -379,8 +396,10 @@ export async function handleRequest(
     // GET /api/connections/:id/discovered
     const discoveredMatch = path.match(/^\/api\/connections\/([^/]+)\/discovered$/);
     if (method === 'GET' && discoveredMatch) {
-      await requirePrincipal(req, cfg);
-      send(res, 200, { resources: repo.listDiscoveredResources(discoveredMatch[1]) }, origin);
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, discoveredMatch[1], principal.userId);
+      if (!conn) return;
+      send(res, 200, { resources: repo.listDiscoveredResources(conn.id) }, origin);
       return;
     }
 
@@ -473,11 +492,8 @@ export async function handleRequest(
     const disconnectMatch = path.match(/^\/api\/connections\/([^/]+)\/disconnect$/);
     if (disconnectMatch) {
       const principal = await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(disconnectMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const conn = sendOwnedOrNull(res, origin, repo, disconnectMatch[1], principal.userId);
+      if (!conn) return;
       const adapter = app.registry.getAdapter(conn.providerId);
       await adapter?.disconnect(conn.id);
       audit({
@@ -498,11 +514,8 @@ export async function handleRequest(
     const discoverMatch = path.match(/^\/api\/connections\/([^/]+)\/discover$/);
     if (discoverMatch) {
       const principal = await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(discoverMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const conn = sendOwnedOrNull(res, origin, repo, discoverMatch[1], principal.userId);
+      if (!conn) return;
       try {
         const resources = await runDiscoveryForConnection(repo, conn.id);
         audit({
@@ -528,10 +541,19 @@ export async function handleRequest(
       return;
     }
 
-    // POST /api/sync/all — each connection independently
+    // POST /api/sync/all — owned connections only; disabled in production
     if (path === '/api/sync/all') {
       const principal = await requirePrincipal(req, cfg);
-      const ids = repo.listConnections().map((c) => c.id);
+      if (isConnectorSyncDisabled(cfg.isProduction)) {
+        send(
+          res,
+          403,
+          { error: 'forbidden', code: CONNECTOR_SYNC_DISABLED_IN_PRODUCTION },
+          origin,
+        );
+        return;
+      }
+      const ids = repo.listConnections({ ownerUserId: principal.userId }).map((c) => c.id);
       const jobs = await runBatchSync({ repo, app }, ids);
       audit({
         repo,
@@ -548,11 +570,8 @@ export async function handleRequest(
     const reauthMatch = path.match(/^\/api\/connections\/([^/]+)\/reauthorize$/);
     if (reauthMatch) {
       const principal = await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(reauthMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const conn = sendOwnedOrNull(res, origin, repo, reauthMatch[1], principal.userId);
+      if (!conn) return;
       const adapter = app.registry.getAdapter(conn.providerId);
       if (!adapter) {
         send(res, 503, { error: 'adapter_missing' }, origin);
@@ -596,11 +615,8 @@ export async function handleRequest(
     const verifyMatch = path.match(/^\/api\/connections\/([^/]+)\/verify$/);
     if (verifyMatch) {
       const principal = await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(verifyMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const conn = sendOwnedOrNull(res, origin, repo, verifyMatch[1], principal.userId);
+      if (!conn) return;
       const adapter = app.registry.getAdapter(conn.providerId);
       const result = await adapter!.verifyConnection(conn.id);
       audit({
@@ -620,9 +636,15 @@ export async function handleRequest(
     const syncMatch = path.match(/^\/api\/connections\/([^/]+)\/sync$/);
     if (syncMatch) {
       const principal = await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(syncMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
+      const conn = sendOwnedOrNull(res, origin, repo, syncMatch[1], principal.userId);
+      if (!conn) return;
+      if (isConnectorSyncDisabled(cfg.isProduction)) {
+        send(
+          res,
+          403,
+          { error: 'forbidden', code: CONNECTOR_SYNC_DISABLED_IN_PRODUCTION },
+          origin,
+        );
         return;
       }
       audit({
@@ -650,11 +672,8 @@ export async function handleRequest(
     const selectMatch = path.match(/^\/api\/connections\/([^/]+)\/resources\/select$/);
     if (selectMatch) {
       const principal = await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(selectMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
-        return;
-      }
+      const conn = sendOwnedOrNull(res, origin, repo, selectMatch[1], principal.userId);
+      if (!conn) return;
       const selections = body.selections as Array<{
         resourceType: string;
         resourceId: string;
@@ -682,10 +701,16 @@ export async function handleRequest(
     // POST /api/connections/:id/search
     const searchMatch = path.match(/^\/api\/connections\/([^/]+)\/search$/);
     if (searchMatch) {
-      await requirePrincipal(req, cfg);
-      const conn = repo.getConnection(searchMatch[1]);
-      if (!conn) {
-        send(res, 404, { error: 'not_found' }, origin);
+      const principal = await requirePrincipal(req, cfg);
+      const conn = sendOwnedOrNull(res, origin, repo, searchMatch[1], principal.userId);
+      if (!conn) return;
+      if (isConnectorSearchDisabled(cfg.isProduction)) {
+        send(
+          res,
+          403,
+          { error: 'forbidden', code: CONNECTOR_SEARCH_DISABLED_IN_PRODUCTION },
+          origin,
+        );
         return;
       }
       const adapter = app.registry.getAdapter(conn.providerId);
