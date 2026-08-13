@@ -17,6 +17,8 @@ import { isValidProjectId } from './projectId.ts';
 import { quickCapture } from './quickCapture.ts';
 import { pmBackendUnavailableBody } from './backend.ts';
 import type { PmRepository } from './repository.ts';
+import { handleSharePointPmRoutes } from './sharepoint/http.ts';
+import type { SharePointPmService } from './sharepoint/repository.ts';
 import type {
   DecisionRecord,
   MilestoneRecord,
@@ -54,6 +56,7 @@ export async function handlePmRoutes(opts: {
   cfg: AppConfig;
   repo: IntegrationRepository;
   pm: PmRepository | null;
+  sharepoint?: SharePointPmService | null;
   req: IncomingMessage;
   res: ServerResponse;
   method: string;
@@ -65,6 +68,29 @@ export async function handlePmRoutes(opts: {
 
   // Authentication is evaluated before PM availability so 401 is never a 503.
   const principal = await requirePrincipal(req, cfg);
+
+  if (cfg.pmBackend.mode === 'sharepoint') {
+    if (!opts.sharepoint) {
+      send(res, 503, pmBackendUnavailableBody(), origin);
+      return true;
+    }
+    let body: Record<string, unknown> = {};
+    if (method !== 'GET' && method !== 'HEAD') {
+      body = await readJson(req);
+    }
+    return handleSharePointPmRoutes({
+      cfg,
+      repo,
+      service: opts.sharepoint,
+      principal,
+      req,
+      res,
+      method,
+      path,
+      origin,
+      body,
+    });
+  }
 
   if (cfg.pmBackend.mode !== 'development-json' || !opts.pm) {
     send(res, 503, pmBackendUnavailableBody(), origin);

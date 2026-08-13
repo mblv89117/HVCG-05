@@ -9,6 +9,11 @@ import { dirname, join } from 'node:path';
 
 import type { ProviderId } from '@hvcg/atlas-integration-core';
 import { isCanonicalClientCode } from './entitlements/clientCode.ts';
+import type { UserBasicLookup } from './entitlements/userLookup.ts';
+import type { PmGraphTransport } from './pm/sharepoint/graph.ts';
+import type { SharePointPmSettings } from './pm/sharepoint/settings.ts';
+import { resolveSharePointPmSettings, SharePointPmSettingsError } from './pm/sharepoint/settings.ts';
+import type { PmGraphTokenProvider } from './pm/sharepoint/token.ts';
 
 function defaultDataDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -108,14 +113,17 @@ export function resolveHubRuntimeSecurity(env: EnvMap = process.env): HubRuntime
   return { host, requireAuth: true, insecureDevAuth: false, isProduction };
 }
 
-export type PmBackendMode = 'development-json' | 'unavailable';
-export type PmBackendClassification = 'development-local' | 'unavailable';
+export type PmBackendMode = 'development-json' | 'unavailable' | 'sharepoint';
+export type PmBackendClassification = 'development-local' | 'unavailable' | 'sharepoint-graph';
 
 export interface HubPmBackend {
   mode: PmBackendMode;
   classification: PmBackendClassification;
   /** True only when local JSON is an explicit, non-production opt-in. */
   localJsonAuthorized: boolean;
+  sharepoint?: SharePointPmSettings;
+  credentialMode?: 'managed_identity' | 'none' | 'development-json';
+  configComplete?: boolean;
 }
 
 /**
@@ -127,9 +135,10 @@ export interface HubPmBackend {
  * Approved values:
  * - unset / `unavailable` / `none` — PM persistence is not configured
  * - `development-json` or `local-json` — explicit local JSON (non-production only)
+ * - `sharepoint` — production Graph repository when site/list/managed-identity IDs are valid
  *
  * Production plus local JSON is rejected at configuration time (fail closed).
- * Unknown values, including unimplemented backends such as SharePoint, are rejected.
+ * SharePoint is never selected silently and never falls back to JSON.
  */
 export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
   const isProduction = (env.NODE_ENV || 'development') === 'production';
@@ -137,6 +146,7 @@ export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
   const localJsonRequested = raw === 'development-json' || raw === 'local-json';
   const unavailableRequested =
     raw === '' || raw === 'unavailable' || raw === 'none' || raw === 'not-configured';
+  const sharepointRequested = raw === 'sharepoint';
 
   if (isProduction && localJsonRequested) {
     throw new UnsafeHubConfigurationError(
@@ -149,6 +159,8 @@ export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
       mode: 'development-json',
       classification: 'development-local',
       localJsonAuthorized: true,
+      credentialMode: 'development-json',
+      configComplete: true,
     };
   }
 
@@ -157,11 +169,32 @@ export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
       mode: 'unavailable',
       classification: 'unavailable',
       localJsonAuthorized: false,
+      credentialMode: 'none',
+      configComplete: false,
     };
   }
 
+  if (sharepointRequested) {
+    try {
+      const sharepoint = resolveSharePointPmSettings(env);
+      return {
+        mode: 'sharepoint',
+        classification: 'sharepoint-graph',
+        localJsonAuthorized: false,
+        sharepoint,
+        credentialMode: 'managed_identity',
+        configComplete: true,
+      };
+    } catch (err) {
+      if (err instanceof SharePointPmSettingsError) {
+        throw new UnsafeHubConfigurationError(err.message);
+      }
+      throw err;
+    }
+  }
+
   throw new UnsafeHubConfigurationError(
-    `Unsafe configuration: INTEGRATION_PM_BACKEND=${raw} is not an approved PM backend. Approved values: development-json (non-production only), or unset/unavailable. SharePoint PM persistence is not implemented and must not be claimed.`,
+    `Unsafe configuration: INTEGRATION_PM_BACKEND=${raw} is not an approved PM backend. Approved values: development-json (non-production only), sharepoint (explicit site/list IDs), or unset/unavailable.`,
   );
 }
 
@@ -249,6 +282,12 @@ export function loadConfig() {
     resolveAllowedClientIds: undefined as
       | ((oid: string | undefined) => Promise<string[]>)
       | undefined,
+    /** Test-only directory lookup. Production uses Hub confidential-client Graph. */
+    lookupUserBasic: undefined as UserBasicLookup | undefined,
+    /** Test-only PM Graph transport. Production uses managed-identity Graph. */
+    pmGraphTransport: undefined as PmGraphTransport | undefined,
+    /** Test-only PM token provider. Production uses IMDS managed identity. */
+    pmTokenProvider: undefined as PmGraphTokenProvider | undefined,
     allowedOrigins: (
       process.env.INTEGRATION_ALLOWED_ORIGINS ||
       [

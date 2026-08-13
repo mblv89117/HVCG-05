@@ -23,6 +23,7 @@ import { CLIENT360_UNMAPPED_CODE } from '../client360/access.ts';
 import { assertAdministrator, requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import type { PmRepository } from '../pm/repository.ts';
+import type { SharePointPmService } from '../pm/sharepoint/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
 import { handleBaRoutes } from '../ba/routes.ts';
@@ -34,6 +35,7 @@ export interface RouterDeps {
   repo: IntegrationRepository;
   app: AppRegistry;
   pm: PmRepository | null;
+  sharepoint?: SharePointPmService | null;
   localAi: LocalAiAdapter;
 }
 
@@ -161,6 +163,7 @@ export async function handleRequest(
         cfg,
         repo,
         pm: deps.pm,
+        sharepoint: deps.sharepoint,
         req,
         res,
         method,
@@ -208,6 +211,9 @@ export async function handleRequest(
           pmBackend: {
             mode: cfg.pmBackend.mode,
             classification: cfg.pmBackend.classification,
+            credentialMode: cfg.pmBackend.credentialMode || 'none',
+            configComplete: Boolean(cfg.pmBackend.configComplete),
+            listsConfigured: Boolean(cfg.pmBackend.sharepoint),
           },
         },
         origin,

@@ -42,13 +42,26 @@ export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
   }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`);
 }
 
+const DEV_OWNER_IDS = new Set(['person-manny']);
+const DEV_OWNER_NAMES = new Set(['Manny Barela']);
+
+/** Server derives owner from verified oid. Strip known development aliases. */
+function stripLegacyPmOwnerAliases(body: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...body };
+  if (typeof out.ownerId === 'string' && DEV_OWNER_IDS.has(out.ownerId)) delete out.ownerId;
+  if (typeof out.assigneeId === 'string' && DEV_OWNER_IDS.has(out.assigneeId)) delete out.assigneeId;
+  if (typeof out.ownerName === 'string' && DEV_OWNER_NAMES.has(out.ownerName)) delete out.ownerName;
+  if (typeof out.assigneeName === 'string' && DEV_OWNER_NAMES.has(out.assigneeName)) delete out.assigneeName;
+  return out;
+}
+
 export async function createPmProject(
   auth: AtlasHubAuthHeaders,
   body: Record<string, unknown>,
 ) {
   return hubFetchJson<{ project: PmProject }>(auth, '/api/pm/projects', {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify(stripLegacyPmOwnerAliases(body)),
   });
 }
 
@@ -59,7 +72,7 @@ export async function patchPmProject(
 ) {
   return hubFetchJson<{ project: PmProject }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`, {
     method: 'PATCH',
-    body: JSON.stringify(patch),
+    body: JSON.stringify(stripLegacyPmOwnerAliases(patch)),
   });
 }
 
@@ -77,7 +90,7 @@ export async function createPmTask(
 ) {
   return hubFetchJson<{ task: PmTask }>(auth, '/api/pm/tasks', {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify(stripLegacyPmOwnerAliases(body)),
   });
 }
 
@@ -87,7 +100,7 @@ export async function createPmMilestone(
 ) {
   return hubFetchJson(auth, '/api/pm/milestones', {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify(stripLegacyPmOwnerAliases(body)),
   });
 }
 

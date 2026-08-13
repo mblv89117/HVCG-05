@@ -1,13 +1,17 @@
 /**
  * PM persistence wiring.
  *
- * The JSON file store is development/local only. Production has no approved PM
- * backend in this gate. There is no SharePoint PM repository, no fallback from
- * an unavailable production backend to pm-store.json, and no silent substitution.
+ * JSON file store is development/local only. SharePoint Graph is the production
+ * repository and is selected only when INTEGRATION_PM_BACKEND=sharepoint and
+ * required IDs are valid. There is no JSON fallback from SharePoint.
  */
 
 import type { AppConfig } from '../config.ts';
+import { lookupUserBasic } from '../entitlements/userLookup.ts';
 import { PmRepository } from './repository.ts';
+import { createGraphTransport } from './sharepoint/graph.ts';
+import { SharePointPmService } from './sharepoint/repository.ts';
+import { createManagedIdentityTokenProvider } from './sharepoint/token.ts';
 
 export const PM_BACKEND_UNAVAILABLE = 'PM_BACKEND_UNAVAILABLE';
 
@@ -33,4 +37,14 @@ export function createAuthorizedPmRepository(
     return null;
   }
   return create(cfg.dataDir);
+}
+
+export function createSharePointPmService(cfg: AppConfig): SharePointPmService | null {
+  if (cfg.pmBackend.mode !== 'sharepoint' || !cfg.pmBackend.sharepoint) return null;
+  const settings = cfg.pmBackend.sharepoint;
+  const tokenProvider =
+    cfg.pmTokenProvider || createManagedIdentityTokenProvider(settings.managedIdentityClientId);
+  const graph = cfg.pmGraphTransport || createGraphTransport(settings.siteId, tokenProvider);
+  const lookup = cfg.lookupUserBasic || ((oid: string) => lookupUserBasic(cfg, oid));
+  return new SharePointPmService(settings, graph, lookup);
 }
