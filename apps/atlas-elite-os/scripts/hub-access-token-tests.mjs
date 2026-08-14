@@ -93,4 +93,13 @@ assert.match(hubFetch, /headers\.Authorization = `Bearer \$\{bearer\}`/);
 const hubCode = hubFetch.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
 assert.equal(/\bidToken\b/.test(hubCode), false);
 
+const connections = readFileSync(join(root, 'src/pages/ConnectionsCenterPage.tsx'), 'utf8');
+const baApi = readFileSync(join(root, 'src/integrations/hub/baApi.ts'), 'utf8');
+assert.match(baApi, /hubFetchJson\(auth, '\/api\/ba\/health'/);
+assert.match(connections, /baHealth\(/);
+assert.match(connections, /CORR-G11R-6H-ELITE-HUB-BA-PING/);
+assert.match(connections, /CORR-G11R-6H-HUB-BA-PING/);
+assert.doesNotMatch(connections, /app-atlas-ba\.azurewebsites\.net/);
+assert.doesNotMatch(baApi, /app-atlas-ba\.azurewebsites\.net/);
+
 console.log('PASS hub access-token + blank-page regression source tests');

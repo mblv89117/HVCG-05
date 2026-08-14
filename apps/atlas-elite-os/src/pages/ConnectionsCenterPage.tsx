@@ -57,6 +57,8 @@ import {
   type MailboxType,
 } from '../integrations/hub/api';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
+import { baHealth } from '../integrations/hub/baApi';
+import { HubHttpError } from '../integrations/hub/hubFetch';
 
 type CenterTab =
   | 'connections'
@@ -74,6 +76,29 @@ const BUSINESS_ENTITIES: { value: BusinessEntityId; label: string }[] = [
   { value: 'legacy', label: 'Legacy / pre-rebrand' },
   { value: 'unknown', label: 'Unknown — refine later' },
 ];
+
+type BaServiceCheck = {
+  label: 'Available' | 'Unavailable';
+  correlationId: string;
+  ok?: boolean;
+  status?: string;
+  binding?: string;
+  environment?: string;
+};
+
+function sanitizeBaHealth(result: Record<string, unknown>, fallbackCorrelation: string): BaServiceCheck {
+  const ok = result.ok === true;
+  const status = typeof result.status === 'string' ? result.status : undefined;
+  const available = ok && (status === 'SUCCESS' || status === 'OK' || !status);
+  return {
+    label: available ? 'Available' : 'Unavailable',
+    correlationId: typeof result.correlationId === 'string' ? result.correlationId : fallbackCorrelation,
+    ok,
+    status,
+    binding: typeof result.binding === 'string' ? result.binding : undefined,
+    environment: typeof result.environment === 'string' ? result.environment : undefined,
+  };
+}
 
 const PROVIDER_BLURBS: Record<
   HubProviderId,
@@ -139,6 +164,8 @@ export function ConnectionsCenterPage() {
   const [businessEntity, setBusinessEntity] = useState<BusinessEntityId>('HVCG');
   const [inventory, setInventory] = useState<InventoryResponse | null>(null);
   const [executiveDashboard, setExecutiveDashboard] = useState<ExecutiveDashboard | null>(null);
+  const [baCheck, setBaCheck] = useState<BaServiceCheck | null>(null);
+  const [baBusy, setBaBusy] = useState(false);
 
   const auth = useHubAuth();
 
@@ -196,6 +223,31 @@ export function ConnectionsCenterPage() {
       .then(setInventory)
       .catch(() => setInventory(null));
   }, [auth, tab, connections.length]);
+
+  const checkBusinessAnalyst = useCallback(async () => {
+    setBaBusy(true);
+    setError(null);
+    try {
+      await baHealth(auth, 'CORR-G11R-6H-HUB-BA-PING');
+      const correlationId = 'CORR-G11R-6H-ELITE-HUB-BA-PING';
+      const result = (await baHealth(auth, correlationId)) as Record<string, unknown>;
+      setBaCheck(sanitizeBaHealth(result, correlationId));
+    } catch (e) {
+      const body =
+        e instanceof HubHttpError && e.body && typeof e.body === 'object'
+          ? (e.body as Record<string, unknown>)
+          : {};
+      setBaCheck(
+        sanitizeBaHealth(
+          { ...body, ok: false, status: typeof body.status === 'string' ? body.status : 'UNAVAILABLE' },
+          'CORR-G11R-6H-ELITE-HUB-BA-PING',
+        ),
+      );
+      setError(e instanceof Error ? e.message : 'Business Analyst check failed');
+    } finally {
+      setBaBusy(false);
+    }
+  }, [auth]);
 
   const selected = connections.find((c) => c.id === selectedId) || null;
 
@@ -911,6 +963,30 @@ export function ConnectionsCenterPage() {
           <pre style={{ marginTop: 12, fontSize: 12, overflow: 'auto' }}>
             {JSON.stringify({ hub: hubHealth, dashboard, selected }, null, 2)}
           </pre>
+          <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
+            <Text weight="semibold">Business Analyst Service</Text>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Button appearance="primary" disabled={baBusy} onClick={() => void checkBusinessAnalyst()}>
+                {baBusy ? 'Checking…' : 'Check'}
+              </Button>
+              {baCheck ? (
+                <StatusChip
+                  label={baCheck.label}
+                  tone={baCheck.label === 'Available' ? 'success' : 'danger'}
+                />
+              ) : null}
+            </div>
+            {baCheck ? (
+              <Caption1>
+                {baCheck.status || 'no-status'}
+                {baCheck.binding ? ` · ${baCheck.binding}` : ''}
+                {baCheck.environment ? ` · ${baCheck.environment}` : ''}
+                {` · ${baCheck.correlationId}`}
+              </Caption1>
+            ) : (
+              <Caption1>Read-only Hub `/api/ba/health` ping. No business data.</Caption1>
+            )}
+          </div>
         </AtlasCard>
       ) : null}
     </ModuleScaffold>

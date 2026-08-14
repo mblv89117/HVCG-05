@@ -5,8 +5,10 @@
 import { hubFetchJson, type HubHttpError } from './hubFetch';
 import type { AtlasHubAuthHeaders } from './api';
 
-export async function baHealth(auth: AtlasHubAuthHeaders) {
-  return hubFetchJson(auth, '/api/ba/health');
+export async function baHealth(auth: AtlasHubAuthHeaders, correlationId?: string) {
+  return hubFetchJson(auth, '/api/ba/health', {
+    headers: correlationId ? { 'x-correlation-id': correlationId } : undefined,
+  });
 }
 
 export async function baDocumentAccess(
