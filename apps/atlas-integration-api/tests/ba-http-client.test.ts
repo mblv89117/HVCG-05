@@ -7,7 +7,13 @@ import { fileURLToPath } from 'node:url';
 import type { AddressInfo } from 'node:net';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { loadConfig, resolveBaClientSettings, UnsafeHubConfigurationError, type AppConfig } from '../src/config.ts';
+import {
+  loadConfig,
+  resolveBaClientSettings,
+  resolveProductionBaS2sToken,
+  UnsafeHubConfigurationError,
+  type AppConfig,
+} from '../src/config.ts';
 import { buildRegistry } from '../src/connectors/registry.ts';
 import { handleRequest } from '../src/http/router.ts';
 import { createLocalAiAdapter } from '../src/local-ai/adapter.ts';
@@ -294,6 +300,61 @@ describe('Hub BA HTTP client isolation', () => {
       { INTEGRATION_BA_S2S_TOKEN: 'must-not-be-used' },
     );
     assert.equal(token, undefined);
+  });
+
+  it('production BA URL without INTEGRATION_BA_RESOURCE fail-closes at config', () => {
+    assert.throws(
+      () =>
+        resolveProductionBaS2sToken({
+          NODE_ENV: 'production',
+          INTEGRATION_BA_BASE_URL: 'https://ba.example.invalid',
+          AZURE_CLIENT_ID: '2b9ca61d-2396-4caa-95cd-30200d2ff36a',
+        }),
+      (err: unknown) =>
+        err instanceof UnsafeHubConfigurationError && err.message.includes('INTEGRATION_BA_RESOURCE'),
+    );
+  });
+
+  it('production BA URL with invalid INTEGRATION_BA_RESOURCE fail-closes at config', () => {
+    assert.throws(
+      () =>
+        resolveProductionBaS2sToken({
+          NODE_ENV: 'production',
+          INTEGRATION_BA_BASE_URL: 'https://ba.example.invalid',
+          INTEGRATION_BA_RESOURCE: 'https://graph.microsoft.com',
+          AZURE_CLIENT_ID: '2b9ca61d-2396-4caa-95cd-30200d2ff36a',
+        }),
+      (err: unknown) =>
+        err instanceof UnsafeHubConfigurationError && err.message.includes('api:// application ID URI'),
+    );
+  });
+
+  it('production wires managed-identity baS2sToken when BASE_URL and RESOURCE are set', () => {
+    const hook = resolveProductionBaS2sToken({
+      NODE_ENV: 'production',
+      INTEGRATION_BA_BASE_URL: 'https://ba.example.invalid',
+      INTEGRATION_BA_RESOURCE: 'api://2bcfb552-6c82-488a-a487-246b162b8013',
+      AZURE_CLIENT_ID: '2b9ca61d-2396-4caa-95cd-30200d2ff36a',
+    });
+    assert.equal(typeof hook, 'function');
+  });
+
+  it('non-production and unset BA URL do not wire managed-identity baS2sToken', () => {
+    assert.equal(
+      resolveProductionBaS2sToken({
+        NODE_ENV: 'production',
+      }),
+      undefined,
+    );
+    assert.equal(
+      resolveProductionBaS2sToken({
+        NODE_ENV: 'development',
+        INTEGRATION_BA_BASE_URL: 'https://ba.example.invalid',
+        INTEGRATION_BA_RESOURCE: 'api://2bcfb552-6c82-488a-a487-246b162b8013',
+        AZURE_CLIENT_ID: '2b9ca61d-2396-4caa-95cd-30200d2ff36a',
+      }),
+      undefined,
+    );
   });
 
   it('unconfigured BA dispatch fails closed without contacting the network', async () => {

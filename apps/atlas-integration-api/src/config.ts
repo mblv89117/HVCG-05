@@ -13,7 +13,7 @@ import type { UserBasicLookup } from './entitlements/userLookup.ts';
 import type { PmGraphTransport } from './pm/sharepoint/graph.ts';
 import type { SharePointPmSettings } from './pm/sharepoint/settings.ts';
 import { resolveSharePointPmSettings, SharePointPmSettingsError } from './pm/sharepoint/settings.ts';
-import type { PmGraphTokenProvider } from './pm/sharepoint/token.ts';
+import { createManagedIdentityTokenProvider, type PmGraphTokenProvider } from './pm/sharepoint/token.ts';
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
@@ -152,6 +152,45 @@ export function resolveBaClientSettings(env: EnvMap = process.env): BaClientSett
     throw new UnsafeHubConfigurationError('INTEGRATION_BA_BASE_URL must be https in production');
   }
   return { baseUrl: raw, timeoutMs, healthTimeoutMs };
+}
+
+const BA_APPLICATION_ID_URI = /^api:\/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Production Hub→BA tokens come only from the App Service managed-identity endpoint
+ * for INTEGRATION_BA_RESOURCE (BA Application ID URI). Static INTEGRATION_BA_S2S_TOKEN
+ * is never used in production. Unset BA URL keeps the provider unset (fail closed at invoke).
+ */
+export function resolveProductionBaS2sToken(
+  env: EnvMap = process.env,
+  ba: BaClientSettings = resolveBaClientSettings(env),
+): (() => Promise<string | undefined>) | undefined {
+  const isProduction = (env.NODE_ENV || 'development') === 'production';
+  if (!isProduction || !ba.baseUrl) return undefined;
+
+  const resource = (env.INTEGRATION_BA_RESOURCE || '').trim();
+  const clientId = (env.AZURE_CLIENT_ID || '').trim();
+  if (!resource) {
+    throw new UnsafeHubConfigurationError(
+      'INTEGRATION_BA_RESOURCE is required when INTEGRATION_BA_BASE_URL is set in production',
+    );
+  }
+  if (!BA_APPLICATION_ID_URI.test(resource)) {
+    throw new UnsafeHubConfigurationError('INTEGRATION_BA_RESOURCE must be an api:// application ID URI');
+  }
+  if (!clientId) {
+    throw new UnsafeHubConfigurationError(
+      'AZURE_CLIENT_ID is required when INTEGRATION_BA_BASE_URL is set in production',
+    );
+  }
+  const provider = createManagedIdentityTokenProvider(clientId, { resource });
+  return async () => {
+    try {
+      return await provider.getToken();
+    } catch {
+      return undefined;
+    }
+  };
 }
 
 export type PmBackendMode = 'development-json' | 'unavailable' | 'sharepoint';
@@ -366,10 +405,10 @@ export function loadConfig() {
     publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:8790',
     ba,
     /**
-     * Test-only Hub→BA token provider. Production loadConfig never sets this.
-     * Production must not use INTEGRATION_BA_S2S_TOKEN. Future: managed identity.
+     * Production: App Service managed-identity token for INTEGRATION_BA_RESOURCE.
+     * Tests may replace this hook. Production never uses INTEGRATION_BA_S2S_TOKEN.
      */
-    baS2sToken: undefined as (() => Promise<string | undefined>) | undefined,
+    baS2sToken: resolveProductionBaS2sToken(process.env, ba),
     microsoft: {
       tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
       clientId: process.env.MICROSOFT_CLIENT_ID || '',

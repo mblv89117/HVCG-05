@@ -74,6 +74,23 @@ describe('App Service managed-identity token provider', () => {
     assert.equal(headers.get('Authorization'), null);
   });
 
+  it('requests a custom resource URI when provided (Hub→BA Application ID URI)', async () => {
+    const baResource = 'api://2bcfb552-6c82-488a-a487-246b162b8013';
+    const calls: string[] = [];
+    const provider = createManagedIdentityTokenProvider(CLIENT_ID, {
+      env: platformEnv(),
+      resource: baResource,
+      fetch: async (input) => {
+        calls.push(String(input));
+        return jsonResponse(200, { access_token: ACCESS_TOKEN, expires_on: expiresOn() });
+      },
+    });
+    await provider.getToken();
+    assert.equal(calls.length, 1);
+    assert.equal(new URL(calls[0]).searchParams.get('resource'), baResource);
+    assert.equal(new URL(calls[0]).searchParams.get('client_id'), CLIENT_ID);
+  });
+
   it('accepts the App Service Linux link-local token endpoint from IDENTITY_ENDPOINT', async () => {
     const calls: string[] = [];
     const provider = createManagedIdentityTokenProvider(CLIENT_ID, {

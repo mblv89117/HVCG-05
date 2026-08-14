@@ -38,7 +38,7 @@ export type BaHttpConfig = Pick<AppConfig, 'isProduction' | 'ba'> & {
   baS2sToken?: AppConfig['baS2sToken'];
 };
 
-/** Production never uses a static env token. Future: managed-identity token provider hook. */
+/** Production never uses a static env token. Production loadConfig wires managed identity via baS2sToken. */
 export async function resolveBaS2sToken(
   cfg: BaHttpConfig,
   env: Record<string, string | undefined> = process.env,

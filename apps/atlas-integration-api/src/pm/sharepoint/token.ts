@@ -30,6 +30,8 @@ export interface ManagedIdentityTokenProviderDeps {
   fetch?: typeof fetch;
   now?: () => number;
   timeoutMs?: number;
+  /** Token resource URI. Defaults to Microsoft Graph. Hub→BA uses the BA Application ID URI. */
+  resource?: string;
 }
 
 function acquisitionFailed(): never {
@@ -103,8 +105,11 @@ export function createManagedIdentityTokenProvider(
       const endpoint = parseIdentityEndpoint(endpointRaw);
       if (!endpoint) acquisitionFailed();
 
+      const resource = (deps.resource || GRAPH_TOKEN_RESOURCE).trim();
+      if (!resource) acquisitionFailed();
+
       endpoint.searchParams.set('api-version', APP_SERVICE_MSI_API_VERSION);
-      endpoint.searchParams.set('resource', GRAPH_TOKEN_RESOURCE);
+      endpoint.searchParams.set('resource', resource);
       endpoint.searchParams.set('client_id', id);
       endpoint.searchParams.delete('principal_id');
       endpoint.searchParams.delete('object_id');
