@@ -246,7 +246,8 @@ export function createGraphTransport(
         const params = new URLSearchParams();
         params.set('$expand', 'fields');
         params.set('$top', String(opts?.top && opts.top > 0 ? Math.min(opts.top, 100) : DEFAULT_TOP));
-        if (opts?.filter) params.set('$filter', opts.filter);
+        // Never send $filter to Graph. Lists.SelectedOperations.Selected treats
+        // fields/ filters as 403, which Elite surfaces as a token rejection.
         url = itemsCollectionUrl(listId, `?${params.toString()}`);
       }
       const { status, json } = await graphFetch(url, { method: 'GET' });

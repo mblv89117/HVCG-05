@@ -32,7 +32,7 @@ import {
   taskStatusToSharePoint,
   type MilestoneHubStatus,
 } from './mapping.ts';
-import { fieldsEq, fieldsEqTrue } from './odata.ts';
+import { fieldsEq, itemMatchesFieldsFilter } from './odata.ts';
 import type { SharePointPmSettings } from './settings.ts';
 
 export const DEFERRED_COLLECTIONS = [
@@ -94,11 +94,11 @@ export class SharePointPmService {
     const items: GraphListItem[] = [];
     let nextLink: string | undefined;
     do {
-      const page = await this.graph.listItems(listId, { filter, nextLink, top: 100 });
+      const page = await this.graph.listItems(listId, { nextLink, top: 100 });
       items.push(...page.items);
       nextLink = page.nextLink;
     } while (nextLink);
-    return items;
+    return filter ? items.filter((item) => itemMatchesFieldsFilter(item, filter)) : items;
   }
 
   private classifyItem(fields: Record<string, unknown>): ProjectClassification {
@@ -259,30 +259,23 @@ export class SharePointPmService {
   }
 
   async listAuthorizedProjects(principal: AtlasPrincipal): Promise<SharePointProject[]> {
-    const codes = entitledClientCodes(principal);
+    const codes = new Set(entitledClientCodes(principal));
     const seen = new Set<string>();
     const out: SharePointProject[] = [];
-    for (const code of codes) {
-      const items = await this.listAll(this.settings.projectsListId, fieldsEq('ClientCode', code));
-      for (const item of items) {
-        const project = this.mapProject(item);
-        if (!project || seen.has(project.id)) continue;
-        if (project.classification.kind !== 'client') continue;
-        if (project.classification.clientCode !== code) continue;
+    const items = await this.listAll(this.settings.projectsListId);
+    for (const item of items) {
+      const project = this.mapProject(item);
+      if (!project || seen.has(project.id)) continue;
+      if (project.classification.kind === 'client') {
+        if (!codes.has(project.classification.clientCode)) continue;
         if (!canAccessClassification(principal, project.classification)) continue;
-        seen.add(project.id);
-        out.push(project);
+      } else if (project.classification.kind === 'internal') {
+        if (!isInternalStaff(principal)) continue;
+      } else {
+        continue;
       }
-    }
-    if (isInternalStaff(principal)) {
-      const items = await this.listAll(this.settings.projectsListId, fieldsEqTrue('IsInternalProject'));
-      for (const item of items) {
-        const project = this.mapProject(item);
-        if (!project || seen.has(project.id)) continue;
-        if (project.classification.kind !== 'internal') continue;
-        seen.add(project.id);
-        out.push(project);
-      }
+      seen.add(project.id);
+      out.push(project);
     }
     return out;
   }
@@ -440,12 +433,9 @@ export class SharePointPmService {
       return this.filterTasksForProject(items, project);
     }
     const projects = await this.listAuthorizedProjects(principal);
+    const items = await this.listAll(this.settings.tasksListId);
     const out: SharePointTask[] = [];
     for (const project of projects) {
-      const items = await this.listAll(
-        this.settings.tasksListId,
-        `fields/ProjectIdLookupId eq ${Number(project.id)}`,
-      );
       out.push(...this.filterTasksForProject(items, project));
     }
     return out;

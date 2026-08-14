@@ -1,11 +1,13 @@
 # KNOWN_ISSUES
 
-**As of:** 2026-08-14 20:25 UTC
+**As of:** 2026-08-14 21:00 UTC
 
-## Current (post Gate 11)
+## Current (post Gate 11 / Command Center recovery)
 
 | Issue | Status | Notes |
 |-------|--------|-------|
+| Command Center “SharePoint PM permission or token was rejected” | **FIXED in source** — owner signed-in smoke pending | Graph `fields/` `$filter` + `Lists.SelectedOperations.Selected` → 403. Hub lists without `$filter`; entitlement filter is in-memory. |
+| Quick Capture / Initialize / Microsoft sync / Archive | **Honest-disabled** | Production SharePoint MVP returns `501 PM_OPERATION_NOT_IMPLEMENTED`. Elite no longer presents them as working. |
 | Client 360 source-container → ClientCode mapping | **DEFERRED POST-AUDIT FEATURE** | Fail-closed in `apps/atlas-integration-api/src/client360/access.ts`. Not an audit blocker. |
 | Gate 12 worktree/workspace retirement | **NOT STARTED** | Path exists; do not execute from Gate 11 |
 | GitHub `production` environment required reviewers | Residual | Not invented; `mblv89117` GitHub profile has no name/email to uniquely bind to Manny |

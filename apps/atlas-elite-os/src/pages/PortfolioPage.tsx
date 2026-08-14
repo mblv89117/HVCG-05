@@ -19,17 +19,13 @@ import {
 } from '@fluentui/react-components';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import {
-  archivePmProject,
   createPmProject,
   fetchPortfolio,
-  initializePm,
-  previewPmSync,
   patchPmProject,
   type PortfolioProject,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
-import { fetchClient360 } from '../integrations/hub/api';
 import {
   displayDueDate,
   displayHealth,
@@ -54,10 +50,8 @@ export function PortfolioPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [qualityFilter, setQualityFilter] = useState('all');
-  const [syncPreview, setSyncPreview] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editRow, setEditRow] = useState<PortfolioProject | null>(null);
-  const [archiveRow, setArchiveRow] = useState<PortfolioProject | null>(null);
   const [form, setForm] = useState({
     name: '',
     clientId: '',
@@ -80,16 +74,21 @@ export function PortfolioPage() {
     setLoading(true);
     setError(null);
     try {
-      const [res, c360] = await Promise.all([
-        fetchPortfolio(auth),
-        fetchClient360(auth).catch(() => ({ clients: [] as Array<{ id: string; displayName: string }> })),
-      ]);
+      const res = await fetchPortfolio(auth);
       setRows(res.portfolio || []);
+      const fromRows = (res.portfolio || [])
+        .map((p) => ({
+          id: String(p.clientId || '').trim(),
+          displayName: String(p.clientName || p.clientId || '').trim(),
+        }))
+        .filter((c) => /^[A-Z0-9]{2,12}$/.test(c.id));
+      const seen = new Set<string>();
       setClients(
-        (c360.clients || []).map((c: { id: string; displayName: string }) => ({
-          id: c.id,
-          displayName: c.displayName,
-        })),
+        fromRows.filter((c) => {
+          if (seen.has(c.id)) return false;
+          seen.add(c.id);
+          return true;
+        }),
       );
     } catch (err) {
       const status = (err as { status?: number }).status;
@@ -201,15 +200,13 @@ export function PortfolioPage() {
     if (!form.name.trim()) return;
     setBusy(true);
     try {
-      const client = clients.find((c) => c.id === form.clientId);
       const { project } = await createPmProject(auth, {
         name: form.name.trim(),
-        clientId: form.clientId || undefined,
-        clientName: client?.displayName || form.clientName || undefined,
+        ClientCode: form.clientId || undefined,
+        clientCode: form.clientId || undefined,
         ownerName: form.ownerName || 'Manny Barela',
-        ownerId: 'person-manny',
         priority: form.priority,
-        nextAction: form.nextAction || 'Define first milestone',
+        nextAction: form.nextAction || undefined,
         objective: form.objective || undefined,
       });
       setCreateOpen(false);
@@ -244,61 +241,6 @@ export function PortfolioPage() {
     }
   };
 
-  const confirmArchive = async () => {
-    if (!archiveRow) return;
-    setBusy(true);
-    try {
-      await archivePmProject(auth, archiveRow.id);
-      setArchiveRow(null);
-      await refresh();
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const initialize = async () => {
-    setBusy(true);
-    setError(null);
-    setSyncPreview(null);
-    try {
-      // Always dry-run first. Do not mutate until preview is clean of unexpected creates/dupes.
-      const previewRes = await previewPmSync(auth);
-      const p = previewRes.preview;
-      const summary = [
-        `Clients selected: ${p.clientsSelected}`,
-        `Projects to create: ${p.projectsToCreate.length}`,
-        `Projects to update: ${p.projectsToUpdate.length}`,
-        `Unchanged: ${p.projectsUnchanged}`,
-        `Duplicate candidates: ${p.duplicateCandidates.length}`,
-        `Ambiguous: ${p.ambiguousMappings.length}`,
-        `Docs linkable: ${p.documentsLinkable}`,
-        p.conflicts.length ? `Conflicts: ${p.conflicts.join('; ')}` : 'Conflicts: none',
-      ].join(' · ');
-      setSyncPreview(summary);
-      if (p.duplicateCandidates.length > 0 || p.projectsToCreate.length > 0 || p.conflicts.length > 0) {
-        setError(
-          'Sync preview blocked automatic apply. Resolve duplicate/owner-review items first, or confirm create list. Dry-run only — no records were changed.',
-        );
-        return;
-      }
-      // Safe path: second preview must stay idempotent (zero creates) before apply.
-      const second = await previewPmSync(auth);
-      if (second.preview.projectsToCreate.length !== 0) {
-        setError('Second dry-run was not idempotent (would create projects). Sync aborted.');
-        return;
-      }
-      await initializePm(auth);
-      await refresh();
-      setSyncPreview(`${summary} · Applied after two clean dry-runs.`);
-    } catch (err) {
-      setError(String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <ModuleScaffold
       title="Projects"
@@ -312,8 +254,8 @@ export function PortfolioPage() {
           <Button appearance="secondary" onClick={() => void refresh()} disabled={busy}>
             Refresh
           </Button>
-          <Button appearance="secondary" onClick={() => void initialize()} disabled={busy}>
-            Preview / Sync from Microsoft + Client 360
+          <Button appearance="secondary" disabled>
+            Sync from Microsoft is not implemented for SharePoint production
           </Button>
         </div>
       }
@@ -321,12 +263,6 @@ export function PortfolioPage() {
       {error ? (
         <AtlasCard title="Error">
           <Text>{error}</Text>
-        </AtlasCard>
-      ) : null}
-
-      {syncPreview ? (
-        <AtlasCard title="Sync dry-run preview">
-          <Text>{syncPreview}</Text>
         </AtlasCard>
       ) : null}
 
@@ -531,8 +467,8 @@ export function PortfolioPage() {
                   >
                     Edit
                   </Button>
-                  <Button size="small" appearance="secondary" onClick={() => setArchiveRow(r)}>
-                    Archive
+                  <Button size="small" appearance="secondary" disabled title="Archive is not implemented for SharePoint production">
+                    Archive not in MVP
                   </Button>
                 </div>
               ),
@@ -555,23 +491,35 @@ export function PortfolioPage() {
                     onChange={(_, d) => setForm((f) => ({ ...f, name: d.value }))}
                   />
                 </Field>
-                <Field label="Client">
+                <Field label="ClientCode">
                   <Dropdown
                     value={
-                      clients.find((c) => c.id === form.clientId)?.displayName || 'Select client'
+                      clients.find((c) => c.id === form.clientId)?.displayName ||
+                      form.clientId ||
+                      'Select ClientCode'
                     }
                     selectedOptions={[form.clientId || '']}
                     onOptionSelect={(_, d) =>
                       setForm((f) => ({ ...f, clientId: String(d.optionValue || '') }))
                     }
                   >
-                    <Option value="">Unassigned</Option>
                     {clients.map((c) => (
-                      <Option key={c.id} value={c.id}>
-                        {c.displayName}
+                      <Option key={c.id} value={c.id} text={c.id}>
+                        {c.id}
+                        {c.displayName && c.displayName !== c.id ? ` · ${c.displayName}` : ''}
                       </Option>
                     ))}
                   </Dropdown>
+                  <Caption1>
+                    Canonical SharePoint ClientCode is required. Client 360 identifiers are not used.
+                  </Caption1>
+                  {clients.length === 0 ? (
+                    <Input
+                      placeholder="e.g. ACCG01"
+                      value={form.clientId}
+                      onChange={(_, d) => setForm((f) => ({ ...f, clientId: d.value.trim().toUpperCase() }))}
+                    />
+                  ) : null}
                 </Field>
                 <Field label="Owner">
                   <Input
@@ -679,28 +627,6 @@ export function PortfolioPage() {
               </Button>
               <Button appearance="primary" disabled={busy} onClick={() => void submitEdit()}>
                 Save
-              </Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
-
-      <Dialog open={Boolean(archiveRow)} onOpenChange={(_, d) => !d.open && setArchiveRow(null)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>Archive project?</DialogTitle>
-            <DialogContent>
-              <Text>
-                Archive <strong>{archiveRow?.name}</strong>? It will leave the active portfolio. This
-                does not delete SharePoint or Client 360 records.
-              </Text>
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="secondary" onClick={() => setArchiveRow(null)}>
-                Cancel
-              </Button>
-              <Button appearance="primary" disabled={busy} onClick={() => void confirmArchive()}>
-                Archive
               </Button>
             </DialogActions>
           </DialogBody>

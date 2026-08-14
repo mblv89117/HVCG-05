@@ -74,6 +74,11 @@ describe('App Service managed-identity token provider', () => {
     assert.equal(headers.get('Authorization'), null);
   });
 
+  it('SharePoint production Graph token resource is Microsoft Graph, never the BA Application ID URI', () => {
+    assert.equal(GRAPH_TOKEN_RESOURCE, 'https://graph.microsoft.com');
+    assert.equal(GRAPH_TOKEN_RESOURCE.startsWith('api://'), false);
+  });
+
   it('requests a custom resource URI when provided (Hub→BA Application ID URI)', async () => {
     const baResource = 'api://2bcfb552-6c82-488a-a487-246b162b8013';
     const calls: string[] = [];

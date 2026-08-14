@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AtlasCard,
@@ -20,18 +20,13 @@ import {
 } from '@fluentui/react-components';
 import {
   ArrowSyncRegular,
-  FlashRegular,
   WarningRegular,
   CheckboxCheckedRegular,
 } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
-import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import { useAtlasRole } from '../security/RoleProvider';
-import { workspaceCatalog } from '../data/workspaces';
 import { projectDetailPath } from '../routing/projectId';
 import {
   fetchCommandCenter,
-  initializePm,
   patchPmTask,
   type CommandCenter,
   type PmTask,
@@ -122,9 +117,7 @@ export function CommandCenterPage() {
   const auth = useHubAuth();
   const [cc, setCc] = useState<CommandCenter | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -149,22 +142,6 @@ export function CommandCenterPage() {
     }
     void refresh();
   }, [refresh, auth.tokenReady, auth.hasBearer]);
-
-  const initialize = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await initializePm(auth);
-      setCc(res.commandCenter);
-      setInfo(
-        `Populated from Microsoft: ${String((res.populate as { realClientsSelected?: number })?.realClientsSelected ?? '—')} clients · ${String((res.populate as { projectsTotal?: number })?.projectsTotal ?? '—')} projects · ${String((res.populate as { tasksOpen?: number })?.tasksOpen ?? '—')} open tasks · ${String((res.populate as { deliverablesTotal?: number })?.deliverablesTotal ?? '—')} deliverables.`,
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Initialize failed');
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const completeTask = async (id: string) => {
     try {
@@ -192,17 +169,9 @@ export function CommandCenterPage() {
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button
-            appearance="primary"
-            icon={<FlashRegular />}
-            disabled={busy}
-            onClick={() => void initialize()}
-          >
-            Initialize / refresh from Microsoft
-          </Button>
-          <Button
             appearance="secondary"
             icon={<ArrowSyncRegular />}
-            disabled={busy || loading}
+            disabled={loading}
             onClick={() => void refresh()}
           >
             Refresh
@@ -224,11 +193,6 @@ export function CommandCenterPage() {
             <MessageBarTitle>Command Center</MessageBarTitle>
             {error}
           </MessageBarBody>
-        </MessageBar>
-      ) : null}
-      {info ? (
-        <MessageBar intent="success">
-          <MessageBarBody>{info}</MessageBarBody>
         </MessageBar>
       ) : null}
 
@@ -261,10 +225,6 @@ export function CommandCenterPage() {
                 </Badge>
                 <Badge appearance="outline">{h?.openTasks ?? 0} open tasks</Badge>
                 <Badge appearance="outline">{h?.activeProjects ?? 0} projects</Badge>
-                <Badge appearance="outline">{h?.decisionsNeeded ?? 0} decisions</Badge>
-                <Badge appearance="outline">
-                  Client 360 avg {h?.avgClientCompleteness ?? '—'}%
-                </Badge>
               </div>
             </div>
           </AtlasCard>
@@ -274,8 +234,7 @@ export function CommandCenterPage() {
               <AtlasCard title="Today’s top 3 priorities">
                 {(cc.topPriorities || []).length === 0 ? (
                   <Caption1>
-                    No priorities yet — click <strong>Initialize</strong> to seed projects and extract
-                    work from connected Microsoft accounts.
+                    No high-priority tasks in SharePoint HVCG_Tasks for your current client scope.
                   </Caption1>
                 ) : (
                   cc.topPriorities.map((t, i) => (
@@ -319,19 +278,19 @@ export function CommandCenterPage() {
           <ResponsiveGrid>
             <ListBlock
               title="Overdue"
-              items={cc.myDay.overdue}
+              items={cc.myDay?.overdue || []}
               empty="Nothing overdue"
               onComplete={completeTask}
             />
             <ListBlock
               title="Due today"
-              items={cc.myDay.dueToday}
+              items={cc.myDay?.dueToday || []}
               empty="Clear for today"
               onComplete={completeTask}
             />
             <ListBlock
               title="Critical tasks"
-              items={cc.myDay.criticalTasks}
+              items={cc.myDay?.criticalTasks || []}
               empty="No critical tasks"
               onComplete={completeTask}
             />
@@ -339,41 +298,13 @@ export function CommandCenterPage() {
 
           <ResponsiveGrid>
             <AtlasCard title="Meetings">
-              {(cc.myDay.meetings || []).length === 0 ? (
-                <Caption1>No upcoming meetings indexed</Caption1>
-              ) : (
-                cc.myDay.meetings.slice(0, 8).map((m) => (
-                  <div key={m.id} style={{ padding: '6px 0' }}>
-                    <Text weight="semibold">{m.title}</Text>
-                    <Caption1 style={{ display: 'block' }}>
-                      {m.at ? new Date(m.at).toLocaleString() : '—'}
-                    </Caption1>
-                  </div>
-                ))
-              )}
+              <Caption1>Meetings are not in the SharePoint production MVP.</Caption1>
             </AtlasCard>
             <AtlasCard title="Owner decisions">
-              {(cc.myDay.decisionsNeeded || []).length === 0 ? (
-                <Caption1>No open decisions</Caption1>
-              ) : (
-                cc.myDay.decisionsNeeded.map((d) => (
-                  <div key={d.id} style={{ padding: '6px 0' }}>
-                    <Text>{d.title}</Text>
-                  </div>
-                ))
-              )}
+              <Caption1>Decisions are not in the SharePoint production MVP.</Caption1>
             </AtlasCard>
             <AtlasCard title="Waiting follow-ups">
-              {(cc.myDay.waitingFollowUps || []).length === 0 ? (
-                <Caption1>No follow-ups due</Caption1>
-              ) : (
-                cc.myDay.waitingFollowUps.map((w) => (
-                  <div key={w.id} style={{ padding: '6px 0' }}>
-                    <Text weight="semibold">{w.whatIsNeeded}</Text>
-                    <Caption1 style={{ display: 'block' }}>Owed by {w.owedByName}</Caption1>
-                  </div>
-                ))
-              )}
+              <Caption1>Waiting items are not in the SharePoint production MVP.</Caption1>
             </AtlasCard>
           </ResponsiveGrid>
 
@@ -381,45 +312,22 @@ export function CommandCenterPage() {
             <GridSpan span={2}>
               <AtlasCard title="Client attention">
                 <Caption1 style={{ display: 'block', marginBottom: 8 }}>
-                  At risk · waiting · opportunities
+                  At-risk projects from SharePoint HVCG_Projects. Client 360 opportunities are not mapped.
                 </Caption1>
-                {(cc.clientAttention.atRisk || []).slice(0, 6).map((c) => (
-                  <div key={c.id} style={{ padding: '6px 0' }}>
-                    <Text weight="semibold">{c.name}</Text>
-                    <Caption1 style={{ display: 'block' }}>{c.reason}</Caption1>
-                  </div>
-                ))}
-                {(cc.clientAttention.opportunities || []).slice(0, 4).map((o) => (
-                  <div key={o.id} style={{ padding: '6px 0' }}>
-                    <Badge appearance="tint" color="success">
-                      Opportunity
-                    </Badge>{' '}
-                    <Text>{o.name}</Text>
-                    <Caption1 style={{ display: 'block' }}>{o.detail}</Caption1>
-                  </div>
-                ))}
+                {(cc.clientAttention?.atRisk || []).length === 0 ? (
+                  <Caption1>No at-risk client projects in scope</Caption1>
+                ) : (
+                  (cc.clientAttention?.atRisk || []).slice(0, 6).map((c) => (
+                    <div key={c.id} style={{ padding: '6px 0' }}>
+                      <Text weight="semibold">{c.name}</Text>
+                      <Caption1 style={{ display: 'block' }}>{c.reason}</Caption1>
+                    </div>
+                  ))
+                )}
               </AtlasCard>
             </GridSpan>
             <AtlasCard title="Team & agents">
-              {(cc.teamAndAgents.teamWorkload || []).map((t) => (
-                <div key={t.id} style={{ padding: '6px 0' }}>
-                  <Text weight="semibold">{t.name}</Text>
-                  <Caption1 style={{ display: 'block' }}>
-                    {t.openTasks} open · {t.overdue} overdue · {t.blocked} blocked
-                  </Caption1>
-                </div>
-              ))}
-              <Caption1 style={{ display: 'block', marginTop: 12 }}>Agents</Caption1>
-              {(cc.teamAndAgents.agentActivity || []).map((a) => (
-                <div key={a.id} style={{ padding: '4px 0' }}>
-                  <Text>
-                    {a.agentName} — {a.status}
-                  </Text>
-                  <Caption1 style={{ display: 'block' }}>
-                    {a.output || a.nextPlannedAction || '—'}
-                  </Caption1>
-                </div>
-              ))}
+              <Caption1>Team workload and agent activity are not in the SharePoint production MVP.</Caption1>
             </AtlasCard>
           </ResponsiveGrid>
 

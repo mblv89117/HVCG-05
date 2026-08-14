@@ -46,7 +46,16 @@ assert.match(display, /Not assessed/);
 assert.match(display, /No milestone established/);
 assert.match(display, /Next action required/);
 assert.match(display, /No due date/);
-assert.match(portfolio, /previewPmSync/);
+assert.match(portfolio, /not implemented for SharePoint production/);
+assert.match(portfolio, /ClientCode/);
+assert.match(
+  readFileSync(join(root, 'src/components/QuickCaptureBar.tsx'), 'utf8'),
+  /not implemented for SharePoint production/,
+);
+assert.doesNotMatch(
+  readFileSync(join(root, 'src/pages/CommandCenterPage.tsx'), 'utf8'),
+  /Initialize \/ refresh from Microsoft/,
+);
 assert.match(portfolio, /qualityFilter/);
 assert.match(portfolio, /sticky: 'right'/);
 assert.match(portfolio, /displayHealth/);

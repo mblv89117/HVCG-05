@@ -350,3 +350,44 @@ describe('PM Graph metadata surface absence', () => {
     );
   });
 });
+
+describe('PM Graph Selected-permission collection reads', () => {
+  it('does not send $filter to Graph even when a Hub field predicate is supplied', async () => {
+    const urls: string[] = [];
+    const transport = createGraphTransport(
+      ALLOWLIST,
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async (input) => {
+          urls.push(String(input));
+          return jsonResponse(200, { value: [] });
+        },
+      },
+    );
+    await transport.listItems(PROJECTS, { filter: "fields/ClientCode eq 'ACCG01'" });
+    assert.equal(urls.length, 1);
+    const url = new URL(urls[0]);
+    assert.equal(url.searchParams.get('$filter'), null);
+    assert.equal(url.searchParams.get('$expand'), 'fields');
+    assert.equal(urls[0].includes('$filter'), false);
+    assert.equal(urls[0].includes(ACCESS_TOKEN), false);
+  });
+
+  it('maps Graph 401 and 403 to a permission/token rejection without leaking the body', async () => {
+    for (const status of [401, 403]) {
+      const transport = createGraphTransport(
+        ALLOWLIST,
+        { getToken: async () => ACCESS_TOKEN },
+        {
+          fetch: async () => jsonResponse(status, { error: { code: 'accessDenied', message: ACCESS_TOKEN } }),
+        },
+      );
+      await assert.rejects(() => transport.listItems(PROJECTS), (err: unknown) => {
+        assertSanitized(err);
+        assert.equal((err as PmHttpError).status, 503);
+        assert.match((err as PmHttpError).message, /permission or token was rejected/);
+        return true;
+      });
+    }
+  });
+});

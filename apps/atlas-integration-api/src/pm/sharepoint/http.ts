@@ -10,7 +10,7 @@ import type { IntegrationRepository } from '../../store/repository.ts';
 import { isValidProjectId } from '../projectId.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
 import { isSharePointItemId } from './ids.ts';
-import { DEFERRED_COLLECTIONS, type SharePointPmService, type SharePointTask } from './repository.ts';
+import { DEFERRED_COLLECTIONS, type SharePointPmService, type SharePointProject, type SharePointTask } from './repository.ts';
 
 const DEFERRED_PATHS = [
   '/api/pm/inbox',
@@ -90,6 +90,84 @@ function deferredMeta() {
   const deferred: Record<string, string> = {};
   for (const key of DEFERRED_COLLECTIONS) deferred[key] = 'PM_COLLECTION_NOT_IN_MVP';
   return deferred;
+}
+
+function commandCenterPayload(
+  projects: SharePointProject[],
+  tasks: SharePointTask[],
+  milestones: Awaited<ReturnType<SharePointPmService['listAuthorizedMilestones']>>,
+) {
+  const today = new Date().toISOString().slice(0, 10);
+  const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
+  const overdue = openTasks.filter((t) => t.dueDate && t.dueDate.slice(0, 10) < today);
+  const dueToday = openTasks.filter((t) => t.dueDate && t.dueDate.slice(0, 10) === today);
+  const atRisk = projects.filter((p) => p.health === 'at_risk' || p.health === 'critical');
+  const ownerApprovals = openTasks.filter((t) => t.status === 'needs_owner_approval' || t.requiresApproval);
+  return {
+    generatedAt: new Date().toISOString(),
+    date: today,
+    businessHealth: {
+      activeProjects: projects.filter((p) => p.status === 'active').length,
+      atRiskProjects: atRisk.length,
+      openTasks: openTasks.length,
+      overdueTasks: overdue.length,
+      waitingItems: openTasks.filter((t) => t.status === 'waiting').length,
+      openCommitments: 0,
+      decisionsNeeded: 0,
+      clientsNeedingAttention: atRisk.length,
+    },
+    criticalAlerts: [
+      ...overdue.slice(0, 5).map((t) => ({
+        id: t.id,
+        severity: 'critical',
+        title: `Overdue: ${t.title}`,
+        href: '/my-work',
+      })),
+      ...atRisk.slice(0, 5).map((p) => ({
+        id: p.id,
+        severity: p.health === 'critical' ? 'critical' : 'high',
+        title: `Project ${p.health}: ${p.name}`,
+        href: `/projects/${p.id}`,
+      })),
+    ],
+    ownerApprovals,
+    topPriorities: openTasks
+      .filter((t) => t.priority === 'critical' || t.priority === 'high')
+      .slice(0, 10),
+    myDay: {
+      meetings: [] as Array<{ id: string; title: string; at?: string }>,
+      criticalTasks: openTasks.filter((t) => t.priority === 'critical'),
+      dueToday,
+      overdue,
+      waitingFollowUps: [] as Array<{ id: string; whatIsNeeded: string; owedByName: string }>,
+      decisionsNeeded: [] as Array<{ id: string; title: string }>,
+    },
+    clientAttention: {
+      atRisk: atRisk.map((p) => ({ id: p.id, name: p.name, reason: p.health })),
+      waitingOnUs: [] as Array<{ id: string; whatIsNeeded: string }>,
+      waitingOnClient: [] as Array<{ id: string; whatIsNeeded: string }>,
+      upcomingDeadlines: openTasks
+        .filter((t) => t.dueDate && t.dueDate.slice(0, 10) > today)
+        .slice(0, 10),
+      opportunities: [] as Array<{ id: string; name: string; detail: string }>,
+    },
+    teamAndAgents: {
+      teamWorkload: [] as Array<{ id: string; name: string; openTasks: number; overdue: number; blocked: number }>,
+      agentActivity: [] as Array<{ id: string; agentName: string; status: string }>,
+      lateTasks: overdue,
+      approvalRequests: ownerApprovals,
+    },
+    projects: {
+      atRisk,
+      upcomingMilestones: milestones
+        .filter((m) => m.status !== 'completed')
+        .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
+        .slice(0, 10),
+      noRecentActivity: [] as SharePointProject[],
+      lackingNextAction: projects.filter((p) => !p.nextAction),
+    },
+    deferred: deferredMeta(),
+  };
 }
 
 function myWorkPayload(tasks: SharePointTask[]) {
@@ -314,43 +392,11 @@ export async function handleSharePointPmRoutes(opts: {
     if (method === 'GET' && path === '/api/pm/command-center') {
       const projects = await service.listAuthorizedProjects(principal);
       const tasks = await service.listAuthorizedTasks(principal);
-      const today = new Date().toISOString().slice(0, 10);
-      const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
-      const overdue = openTasks.filter((t) => t.dueDate && t.dueDate.slice(0, 10) < today);
-      const atRisk = projects.filter((p) => p.health === 'at_risk' || p.health === 'critical');
       const milestones = [];
       for (const p of projects) {
         milestones.push(...(await service.listAuthorizedMilestones(principal, p.id)));
       }
-      send(
-        res,
-        200,
-        {
-          commandCenter: {
-            generatedAt: new Date().toISOString(),
-            date: today,
-            businessHealth: {
-              activeProjects: projects.filter((p) => p.status === 'active').length,
-              atRiskProjects: atRisk.length,
-              openTasks: openTasks.length,
-              overdueTasks: overdue.length,
-              waitingItems: openTasks.filter((t) => t.status === 'waiting').length,
-            },
-            projects: {
-              atRisk,
-              upcomingMilestones: milestones
-                .filter((m) => m.status !== 'completed')
-                .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
-                .slice(0, 10),
-            },
-            topPriorities: openTasks
-              .filter((t) => t.priority === 'critical' || t.priority === 'high')
-              .slice(0, 10),
-            deferred: deferredMeta(),
-          },
-        },
-        origin,
-      );
+      send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones) }, origin);
       return true;
     }
 

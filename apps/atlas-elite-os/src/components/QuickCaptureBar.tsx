@@ -8,16 +8,19 @@ import { quickCapturePm } from '../integrations/hub/pmApi';
 export function QuickCaptureBar({
   auth,
   onCreated,
+  supported = false,
 }: {
   auth: AtlasHubAuthHeaders;
   onCreated?: () => void;
+  /** Production SharePoint MVP does not implement /api/pm/quick-capture. */
+  supported?: boolean;
 }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const submit = async () => {
-    if (!text.trim()) return;
+    if (!supported || !text.trim()) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -31,6 +34,17 @@ export function QuickCaptureBar({
       setBusy(false);
     }
   };
+
+  if (!supported) {
+    return (
+      <AtlasCard>
+        <Caption1 style={{ display: 'block' }}>
+          Quick Capture is not implemented for SharePoint production. Create or complete a task from
+          a project instead.
+        </Caption1>
+      </AtlasCard>
+    );
+  }
 
   return (
     <AtlasCard>

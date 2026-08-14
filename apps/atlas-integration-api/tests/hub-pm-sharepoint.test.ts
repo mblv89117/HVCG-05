@@ -13,7 +13,7 @@ import { createLocalAiAdapter } from '../src/local-ai/adapter.ts';
 import { createAuthorizedPmRepository, createSharePointPmService } from '../src/pm/backend.ts';
 import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { createGraphTransport } from '../src/pm/sharepoint/graph.ts';
-import { fieldsEq } from '../src/pm/sharepoint/odata.ts';
+import { fieldsEq, fieldsEqTrue, itemMatchesFieldsFilter } from '../src/pm/sharepoint/odata.ts';
 import { classifyProjectFields, canAccessClassification, isInternalStaff } from '../src/pm/sharepoint/authz.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
@@ -269,6 +269,25 @@ describe('SharePoint PM unit: authz / odata / mapping safety', () => {
 
   it('OData escaping doubles quotes', () => {
     assert.equal(fieldsEq('OwnerEmail', "o'brien@hvcg.example"), "fields/OwnerEmail eq 'o''brien@hvcg.example'");
+  });
+
+  it('Hub matches field filters in memory without sending them to Graph', () => {
+    assert.equal(
+      itemMatchesFieldsFilter({ fields: { ClientCode: 'ACCG01' } }, fieldsEq('ClientCode', 'ACCG01')),
+      true,
+    );
+    assert.equal(
+      itemMatchesFieldsFilter({ fields: { ClientCode: 'PDG01' } }, fieldsEq('ClientCode', 'ACCG01')),
+      false,
+    );
+    assert.equal(
+      itemMatchesFieldsFilter({ fields: { IsInternalProject: true } }, fieldsEqTrue('IsInternalProject')),
+      true,
+    );
+    assert.equal(
+      itemMatchesFieldsFilter({ fields: { ProjectIdLookupId: 70 } }, 'fields/ProjectIdLookupId eq 70'),
+      true,
+    );
   });
 
   it('pagination nextLink off graph.microsoft.com is rejected', async () => {
@@ -652,12 +671,41 @@ describe('SharePoint PM HTTP', () => {
       const myBody = (await mine.json()) as { myWork: { today: unknown[]; overdue: unknown[] } };
       assert.equal(mine.status, 200);
       const cc = await fetch(`${base}/api/pm/command-center`, { headers: auth('a') });
-      const ccBody = (await cc.json()) as { commandCenter: { businessHealth: { activeProjects: number }; deferred: Record<string, string> } };
+      const ccBody = (await cc.json()) as {
+        commandCenter: {
+          businessHealth: { activeProjects: number };
+          deferred: Record<string, string>;
+          myDay: { overdue: unknown[] };
+          criticalAlerts: unknown[];
+        };
+      };
       assert.equal(ccBody.commandCenter.businessHealth.activeProjects, 1);
       assert.equal(ccBody.commandCenter.deferred.decisions, 'PM_COLLECTION_NOT_IN_MVP');
+      assert.ok(Array.isArray(ccBody.commandCenter.myDay.overdue));
+      assert.ok(Array.isArray(ccBody.commandCenter.criticalAlerts));
       const port = await fetch(`${base}/api/pm/portfolio`, { headers: auth('a') });
       const portBody = (await port.json()) as { portfolio: Array<{ id: string }> };
       assert.deepEqual(portBody.portfolio.map((p) => p.id), ['70']);
+    });
+  });
+
+  it('Command Center Graph 403 is a permission rejection, not an empty success', async () => {
+    class ForbiddenGraph extends MemoryGraph {
+      async listItems(): Promise<GraphListPage> {
+        throw new PmHttpError(
+          503,
+          'PM_BACKEND_UNAVAILABLE',
+          'SharePoint PM permission or token was rejected.',
+          'unavailable',
+        );
+      }
+    }
+    await withSpHub({ entitlements: () => ['ACCG01'], graph: new ForbiddenGraph() }, async ({ base }) => {
+      const res = await fetch(`${base}/api/pm/command-center`, { headers: auth('a') });
+      assert.equal(res.status, 503);
+      const body = (await res.json()) as { message?: string; code?: string };
+      assert.equal(body.code, 'PM_BACKEND_UNAVAILABLE');
+      assert.match(String(body.message), /permission or token was rejected/);
     });
   });
 

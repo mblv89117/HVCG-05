@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**As of:** 2026-08-14 20:25 UTC  
+**As of:** 2026-08-14 21:00 UTC  
 **Status SoR:** this file  
 **Canonical worktree:** `.worktrees/atlas-canonical-integration`  
 **Canonical branch:** `integration/atlas-canonical`  
@@ -10,18 +10,20 @@
 
 | Area | Status | Evidence |
 |------|--------|----------|
+| Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite repair deployed; owner signed-in smoke pending** | Graph `$filter` on `fields/` with `Lists.SelectedOperations.Selected` returned 403, surfaced as “SharePoint PM permission or token was rejected.” Hub now lists items without `$filter` and authorizes in memory. |
 | HVCG Master Architecture Audit — core production architecture | **GATE 11 — COMPLETE** | [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md) |
 | Canonical Atlas line | `integration/atlas-canonical` | Git; do not treat `origin/main` as the integration line |
 | `origin/main` | **UNCHANGED** `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Must not be modified without separate promotion authorization |
 | Atlas V1 system of record | SharePoint `HVCG_*` (CRM / clients / projects / tasks / HVCG finance ops) | Owner Decision 3; Hub `pmBackend.mode=sharepoint` |
 | Dynamics / Dataverse | **DEFERRED** — no migration | Owner Decision 3 |
+| Token paths | Elite → Hub → `id-atlas-prod` → Graph → SharePoint `HVCG_*`; Elite → Hub → MI → BA | Audiences not mixed (`https://graph.microsoft.com` vs `api://` BA URI) |
+| Client 360 mapping | **DEFERRED POST-AUDIT FEATURE** (fail-closed; not an audit blocker) | Owner Decision 5; `apps/atlas-integration-api/src/client360/access.ts` |
+| Gate 12 worktree/workspace retirement | **NOT STARTED** | Explicitly out of scope |
 | Seven-system architecture | Defined; commercial launches are **post-audit** | [docs/architecture/HVCG_SYSTEM_INDEX.md](../docs/architecture/HVCG_SYSTEM_INDEX.md); Owner Decision 1 |
 | GCC | Commercial CFO / financial-intelligence product; own app/data boundary; HVCG may be a tenant | Owner Decision 2 |
 | G11-F03 client entitlements | **COMPLETE** — Manny only on seven `HVCG-Client-*` groups | Entra tenant `3df46563-86f3-4414-87fd-84ba967741ef` |
 | G11-F07 GitHub main protection | **COMPLETE** | Branch protection on `main` |
 | G11-F08 Atlas CI / release control | **COMPLETE** | `.github/workflows/atlas-ci.yml`, `atlas-release-control.yml` |
-| Client 360 mapping | **DEFERRED POST-AUDIT FEATURE** (fail-closed; not an audit blocker) | Owner Decision 5; `apps/atlas-integration-api/src/client360/access.ts` |
-| Gate 12 worktree/workspace retirement | **NOT STARTED** | Explicitly out of scope for Gate 11 |
 | Worktree count | **27** | `git worktree list` (C1 already removed 19 Atlas checkouts; branches kept) |
 
 ## Canonical git (verify with `git rev-parse`; do not reuse chat SHAs)
@@ -32,15 +34,14 @@
 | `origin/main` | Protected production-promotion target; SHA must stay `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion |
 | Default GitHub branch | `cursor/v1.1.0-intelligence-ai-ops` (residual; not changed by Gate 11) |
 
-## Production Atlas (read-only this gate)
+## Production Atlas
 
 | Component | Status |
 |-----------|--------|
-| Elite SWA | Live (`https://zealous-rock-0090c7e1e.7.azurestaticapps.net`) |
-| Hub | Live `https://app-atlas-integration-hub.azurewebsites.net` — auth required; SharePoint PM via managed identity |
+| Elite SWA | Live (`https://zealous-rock-0090c7e1e.7.azurestaticapps.net`) — honesty UI for unimplemented ops |
+| Hub | Live `https://app-atlas-integration-hub.azurewebsites.net` — auth required; SharePoint PM via `id-atlas-prod` Graph (no `$filter`) |
 | BA | Configured and reachable through Hub; anonymous `/api/ba/health` is 401 |
 | Local AI | Disabled on production Hub |
-| Client business records | Not mutated by Gate 11 final closure |
 
 ## Entitlements (G11-F03)
 

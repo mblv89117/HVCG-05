@@ -1,11 +1,11 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-08-14 20:25 UTC  
+**As of:** 2026-08-14 21:00 UTC  
 **Ordered for owner / next engineer. Do not execute gated items without approval.**
 
 ## Now
 
-1. Treat **Gate 11 as COMPLETE**. Core production architecture is ready for the cleanup / retirement phase. Do not reopen completed findings without new contradictory evidence.
+1. Owner: sign in at production Elite, hard-refresh, confirm Command Center / My Work / Portfolio / Projects load SharePoint `HVCG_*` data (not the Graph token-rejection banner).
 2. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
 3. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.
 4. Leave Client 360 mapping fail-closed. Do not invent mappings.
