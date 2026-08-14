@@ -92,6 +92,7 @@ export function ProjectDetailPage({
   const [noteBody, setNoteBody] = useState('');
   const [milestoneTitle, setMilestoneTitle] = useState('');
   const [decisionTitle, setDecisionTitle] = useState('');
+  const [deferred, setDeferred] = useState<Record<string, string>>({});
 
   const refresh = useCallback(async () => {
     if (!isValidProjectId(projectId)) {
@@ -138,6 +139,7 @@ export function ProjectDetailPage({
       setWaiting((res.waiting as typeof waiting) || []);
       setNotes((res.notes as typeof notes) || []);
       setDocuments(res.documents || []);
+      setDeferred(res.deferred || {});
       setMessage('');
     } catch (err) {
       const status = err instanceof HubHttpError ? err.status : (err as { status?: number }).status;
@@ -176,8 +178,11 @@ export function ProjectDetailPage({
     void refresh();
   }, [refresh]);
 
-  const moveTask = async (taskId: string, column: keyof typeof BOARD_STATUS) => {
-    await patchPmTask(auth, taskId, { status: BOARD_STATUS[column] });
+  const moveTask = async (task: PmTask, column: keyof typeof BOARD_STATUS) => {
+    await patchPmTask(auth, task.id, {
+      status: BOARD_STATUS[column],
+      ...(task.etag ? { etag: task.etag } : {}),
+    });
     await refresh();
   };
 
@@ -317,7 +322,7 @@ export function ProjectDetailPage({
               )
                 .filter(([k]) => k !== column)
                 .map(([k, label]) => (
-                  <Button key={k} size="small" onClick={() => void moveTask(t.id, k)}>
+                  <Button key={k} size="small" onClick={() => void moveTask(t, k)}>
                     → {label}
                   </Button>
                 ))}
@@ -343,7 +348,7 @@ export function ProjectDetailPage({
           </Link>
           {project.clientId ? (
             <Link to={`/clients/${project.clientId}`}>
-              <Button appearance="secondary">Client 360</Button>
+              <Button appearance="secondary">Client</Button>
             </Link>
           ) : null}
         </div>
@@ -473,7 +478,10 @@ export function ProjectDetailPage({
                     <Button
                       size="small"
                       onClick={() =>
-                        void patchPmTask(auth, t.id, { status: 'completed' }).then(refresh)
+                        void patchPmTask(auth, t.id, {
+                          status: 'completed',
+                          ...(t.etag ? { etag: t.etag } : {}),
+                        }).then(refresh)
                       }
                     >
                       Complete
@@ -570,7 +578,11 @@ export function ProjectDetailPage({
       ) : null}
 
       {tab === 'documents' ? (
-        documents.length === 0 ? (
+        deferred.documents ? (
+          <AtlasCard title="Documents">
+            <Caption1>Documents are not in the SharePoint production MVP.</Caption1>
+          </AtlasCard>
+        ) : documents.length === 0 ? (
           <EmptyState
             title="No linked documents for this project"
             description="Documents come from authorized SharePoint / OneDrive links for the related client. Open Client 360 or the Documents module to browse."
@@ -607,6 +619,11 @@ export function ProjectDetailPage({
       ) : null}
 
       {tab === 'notes' ? (
+        deferred.notes || deferred.decisions ? (
+          <AtlasCard title="Notes & decisions">
+            <Caption1>Notes and decisions are not in the SharePoint production MVP.</Caption1>
+          </AtlasCard>
+        ) : (
         <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
           <AtlasCard title="Notes">
             <Field label="New note">
@@ -665,9 +682,15 @@ export function ProjectDetailPage({
             ))}
           </AtlasCard>
         </div>
+        )
       ) : null}
 
       {tab === 'risks' ? (
+        deferred.risks || deferred.waiting || deferred.commitments ? (
+          <AtlasCard title="Risks & waiting">
+            <Caption1>Risks, waiting items, and commitments are not in the SharePoint production MVP.</Caption1>
+          </AtlasCard>
+        ) : (
         <div
           style={{
             display: 'grid',
@@ -711,6 +734,7 @@ export function ProjectDetailPage({
             )}
           </AtlasCard>
         </div>
+        )
       ) : null}
     </ModuleScaffold>
   );

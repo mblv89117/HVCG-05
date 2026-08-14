@@ -7,6 +7,7 @@ import { audit } from '../../audit/auditLog.ts';
 import type { AppConfig } from '../../config.ts';
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import type { IntegrationRepository } from '../../store/repository.ts';
+import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isValidProjectId } from '../projectId.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
 import { isSharePointItemId } from './ids.ts';
@@ -72,7 +73,11 @@ function isDeferredPath(path: string): boolean {
   if (path.startsWith('/api/pm/owner-review/')) return true;
   if (path.startsWith('/api/pm/notes/')) return true;
   if (path.startsWith('/api/pm/decisions/')) return true;
-  if (path.startsWith('/api/pm/clients/')) return true;
+  if (path.startsWith('/api/pm/clients/')) {
+    const rest = decodeURIComponent(path.slice('/api/pm/clients/'.length));
+    if (!rest.includes('/') && isCanonicalClientCode(rest)) return false;
+    return true;
+  }
   if (path.startsWith('/api/pm/agents')) return true;
   return false;
 }
@@ -237,6 +242,31 @@ export async function handleSharePointPmRoutes(opts: {
   try {
     if (isDeferredPath(path)) {
       throw pmNotImplemented();
+    }
+
+    if (method === 'GET' && path === '/api/pm/clients') {
+      const clients = await service.listAuthorizedClients(principal);
+      send(res, 200, { clients, source: 'sharepoint' }, origin);
+      return true;
+    }
+
+    const clientOne = path.match(/^\/api\/pm\/clients\/([^/]+)$/);
+    if (method === 'GET' && clientOne) {
+      const rawCode = decodeURIComponent(clientOne[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const client = await service.authorizeClient(principal, rawCode);
+      if (client === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const projects = (await service.listAuthorizedProjects(principal)).filter(
+        (p) => p.clientCode === rawCode,
+      );
+      send(res, 200, { client, projects, deferred: deferredMeta() }, origin);
+      return true;
     }
 
     if (method === 'GET' && path === '/api/pm/projects') {

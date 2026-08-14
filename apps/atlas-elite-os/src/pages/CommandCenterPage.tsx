@@ -48,7 +48,7 @@ function TaskRow({
   onComplete,
 }: {
   task: PmTask;
-  onComplete?: (id: string) => void;
+  onComplete?: (task: PmTask) => void;
 }) {
   return (
     <div
@@ -81,7 +81,7 @@ function TaskRow({
             size="small"
             appearance="subtle"
             icon={<CheckboxCheckedRegular />}
-            onClick={() => onComplete(task.id)}
+            onClick={() => onComplete(task)}
           />
         ) : null}
       </div>
@@ -98,7 +98,7 @@ function ListBlock({
   title: string;
   items: PmTask[];
   empty: string;
-  onComplete?: (id: string) => void;
+  onComplete?: (task: PmTask) => void;
 }) {
   return (
     <AtlasCard>
@@ -143,9 +143,11 @@ export function CommandCenterPage() {
     void refresh();
   }, [refresh, auth.tokenReady, auth.hasBearer]);
 
-  const completeTask = async (id: string) => {
+  const completeTask = async (task: PmTask | string, etag?: string) => {
     try {
-      await patchPmTask(auth, id, { status: 'completed' });
+      const id = typeof task === 'string' ? task : task.id;
+      const match = typeof task === 'string' ? etag : task.etag;
+      await patchPmTask(auth, id, { status: 'completed', ...(match ? { etag: match } : {}) });
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Update failed');
@@ -246,7 +248,7 @@ export function CommandCenterPage() {
                           {t.clientName || 'HVCG'} · {t.dueDate || 'No due date'} · {t.priority}
                         </Caption1>
                       </div>
-                      <Button size="small" onClick={() => void completeTask(t.id)}>
+                      <Button size="small" onClick={() => void completeTask(t)}>
                         Done
                       </Button>
                     </div>

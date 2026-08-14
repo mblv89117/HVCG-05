@@ -36,7 +36,7 @@ function TaskList({
   onComplete,
 }: {
   tasks: PmTask[];
-  onComplete: (id: string) => void;
+  onComplete: (task: PmTask) => void;
 }) {
   if (!tasks.length) return <EmptyState title="Nothing here" description="Clear for this view." />;
   return (
@@ -66,7 +66,7 @@ function TaskList({
               label={t.status}
             />
             {t.status !== 'completed' ? (
-              <Button size="small" onClick={() => onComplete(t.id)}>
+              <Button size="small" onClick={() => onComplete(t)}>
                 Complete
               </Button>
             ) : null}
@@ -111,8 +111,8 @@ export function MyWorkPage() {
     );
   }
 
-  const complete = async (id: string) => {
-    await patchPmTask(auth, id, { status: 'completed' });
+  const complete = async (task: PmTask) => {
+    await patchPmTask(auth, task.id, { status: 'completed', ...(task.etag ? { etag: task.etag } : {}) });
     await refresh();
   };
 

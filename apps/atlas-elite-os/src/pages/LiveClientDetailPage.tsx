@@ -1,5 +1,5 @@
 /**
- * Live Client 360 detail — Microsoft-backed workspace with PM operating sections.
+ * SharePoint HVCG_Clients detail — ClientCode canonical. Client 360 is fail-closed / deferred.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -23,19 +23,14 @@ import {
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import {
-  fetchClient360Detail,
-  fetchClient360Documents,
-  type Client360Candidate,
-  type Client360Document,
-} from '../integrations/hub/api';
+import { type Client360Candidate, type Client360Document } from '../integrations/hub/api';
 import {
   createPmDecision,
   createPmNote,
   createPmProject,
   createPmTask,
   createPmMilestone,
-  fetchClientPmWorkspace,
+  fetchPmClient,
   type PmProject,
   type PmTask,
 } from '../integrations/hub/pmApi';
@@ -43,6 +38,7 @@ import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { Client360DocumentsSection } from './DocumentLifecycleWorkbench';
 import { Client360ExecutiveFlags } from './ExecutiveOwnerSupportWorkbench';
 import { projectDetailPath } from '../routing/projectId';
+import { isCanonicalClientCode } from '../security/clientCode';
 import {
   Client360CapitalSection,
   Client360FinanceSection,
@@ -81,38 +77,46 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const [decisionTitle, setDecisionTitle] = useState('');
   const [milestoneTitle, setMilestoneTitle] = useState('');
 
+  const [c360Deferred, setC360Deferred] = useState(false);
+
   const refresh = useCallback(async () => {
     setBusy(true);
     setError(null);
+    setC360Deferred(false);
     try {
-      const scoped = { ...auth, clientIds: [clientId] };
-      const detail = await fetchClient360Detail(scoped, clientId);
-      setClient(detail.client);
-      const d = await fetchClient360Documents(scoped, clientId);
-      setDocs(d.documents || []);
-      try {
-        const ws = (await fetchClientPmWorkspace(auth, clientId)) as {
-          workspace: {
-            projects?: PmProject[];
-            openTasks?: PmTask[];
-            notes?: Array<{ id: string; body: string }>;
-            ownerDecisions?: Array<{ id: string; title: string; status: string }>;
-            deliverables?: Array<{ id: string; name: string; status: string }>;
-            meetings?: Array<{ id?: string; title: string; at?: string; kind?: string }>;
-          };
-        };
-        const w = ws.workspace || {};
-        setProjects(w.projects || []);
-        setTasks(w.openTasks || []);
-        setNotes(w.notes || []);
-        setDecisions(w.ownerDecisions || []);
-        setDeliverables(w.deliverables || []);
-        setMeetings(w.meetings || []);
-        setApprovals((w.openTasks || []).filter((t) => t.status === 'needs_owner_approval'));
-      } catch {
+      if (!isCanonicalClientCode(clientId)) {
+        setClient(null);
+        setDocs([]);
         setProjects([]);
         setTasks([]);
+        setC360Deferred(true);
+        return;
       }
+      const scoped = { ...auth, clientIds: [clientId] };
+      const detail = await fetchPmClient(scoped, clientId);
+      setClient({
+        id: detail.client.clientCode,
+        displayName: detail.client.displayName,
+        legalName: detail.client.displayName,
+        lifecycle: 'active',
+        completenessScore: 0,
+        emails: [],
+        domains: [],
+        businessEntities: ['HVCG'],
+        recommendedNextActions: [],
+        timeline: [],
+        sourceRefs: [],
+        associations: { documents: [], emails: [] },
+      } as Client360Candidate);
+      setDocs([]);
+      const listed = detail.projects || [];
+      setProjects(listed);
+      setTasks([]);
+      setNotes([]);
+      setDecisions([]);
+      setDeliverables([]);
+      setMeetings([]);
+      setApprovals([]);
     } catch (err) {
       setError(String(err));
     } finally {
@@ -143,9 +147,27 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     [client],
   );
 
+  if (c360Deferred && !busy) {
+    return (
+      <ModuleScaffold title="Client" subtitle="Client 360 deferred" showPendingBanner={false}>
+        <AtlasCard title="Client 360 mapping is deferred">
+          <Text>
+            Client 360 identifiers are not mapped to HVCG_Clients.ClientCode. This route is fail-closed
+            and does not block the Clients directory.
+          </Text>
+          <Link to="/clients">
+            <Button appearance="primary" style={{ marginTop: 12 }}>
+              Back to SharePoint clients
+            </Button>
+          </Link>
+        </AtlasCard>
+      </ModuleScaffold>
+    );
+  }
+
   if (!client && !busy && error) {
     return (
-      <ModuleScaffold title="Client" subtitle="Client 360" showPendingBanner={false}>
+      <ModuleScaffold title="Client" subtitle="SharePoint HVCG_Clients" showPendingBanner={false}>
         <AtlasCard title="Error">
           <Text>{error}</Text>
           <Link to="/clients">
@@ -165,7 +187,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   return (
     <ModuleScaffold
       title={title}
-      subtitle="Live Client 360 · projects, tasks, documents, and operating work"
+      subtitle="SharePoint HVCG_Clients · ClientCode canonical · Client 360 deferred (fail-closed)"
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -194,7 +216,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
         <StatusChip label={`${projects.length} projects`} tone="gold" />
         <StatusChip label={`${docs.length} linked docs`} tone="gold" />
         {busy ? <Spinner size="tiny" /> : null}
-        <Caption1>Restricted files are omitted from document lists</Caption1>
+        <Caption1>SharePoint ClientCode directory · Client 360 sections below are deferred</Caption1>
       </FilterToolbar>
 
       <TabList
@@ -225,7 +247,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
       {tab === 'overview' ? (
         <div style={{ display: 'grid', gap: 16 }}>
-          <AtlasCard title="Identity" subtitle="Canonical Client 360">
+          <AtlasCard title="Identity" subtitle="Canonical SharePoint ClientCode">
             <Text>
               {client?.legalName || client?.displayName}
               {client?.domains?.length ? ` · ${client.domains.join(', ')}` : ''}
@@ -282,10 +304,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               onClick={() =>
                 void createPmProject(auth, {
                   name: projectName.trim(),
-                  clientId,
-                  clientName: title,
-                  ownerName: 'Manny Barela',
-                  ownerId: 'person-manny',
+                  ClientCode: clientId,
+                  clientCode: clientId,
                   nextAction: 'Define first milestone',
                 }).then(() => {
                   setProjectName('');

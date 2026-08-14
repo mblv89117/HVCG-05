@@ -102,4 +102,14 @@ assert.match(connections, /CORR-G11R-6H-HUB-BA-PING/);
 assert.doesNotMatch(connections, /app-atlas-ba\.azurewebsites\.net/);
 assert.doesNotMatch(baApi, /app-atlas-ba\.azurewebsites\.net/);
 
+const liveClients = readFileSync(join(root, 'src/pages/LiveClientsPage.tsx'), 'utf8');
+assert.match(liveClients, /fetchPmClients/);
+assert.match(liveClients, /HVCG_Clients/);
+assert.doesNotMatch(liveClients, /fetchClient360/);
+assert.doesNotMatch(liveClients, /ingestMicrosoftClient360/);
+
+const pmApiSrc = readFileSync(join(root, 'src/integrations/hub/pmApi.ts'), 'utf8');
+assert.match(pmApiSrc, /\/api\/pm\/clients/);
+assert.match(pmApiSrc, /If-Match/);
+
 console.log('PASS hub access-token + blank-page regression source tests');

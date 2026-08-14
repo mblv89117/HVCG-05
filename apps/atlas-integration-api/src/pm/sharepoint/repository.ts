@@ -60,6 +60,14 @@ export type SharePointTask = TaskRecord & {
 
 export type SharePointMilestone = MilestoneRecord & { etag: string; clientCode?: string };
 
+export type SharePointClient = {
+  id: string;
+  clientCode: string;
+  displayName: string;
+  itemId: string;
+  source: 'sharepoint';
+};
+
 function asString(v: unknown): string | undefined {
   if (typeof v === 'string' && v.trim()) return v.trim();
   if (typeof v === 'number' && Number.isFinite(v)) return String(v);
@@ -214,6 +222,51 @@ export class SharePointPmService {
       etag: item.etag,
       clientCode: asString(item.fields.ClientCode),
     };
+  }
+
+  async listAuthorizedClients(principal: AtlasPrincipal): Promise<SharePointClient[]> {
+    const codes = new Set(entitledClientCodes(principal));
+    const items = await this.listAll(this.settings.clientsListId);
+    const seen = new Set<string>();
+    const out: SharePointClient[] = [];
+    for (const item of items) {
+      const clientCode = asString(item.fields.ClientCode);
+      if (!clientCode || !isCanonicalClientCode(clientCode) || clientCode === '*') continue;
+      if (!codes.has(clientCode)) continue;
+      if (seen.has(clientCode)) continue;
+      seen.add(clientCode);
+      out.push({
+        id: clientCode,
+        clientCode,
+        displayName: asString(item.fields.Title) || clientCode,
+        itemId: item.id,
+        source: 'sharepoint',
+      });
+    }
+    return out.sort((a, b) => a.clientCode.localeCompare(b.clientCode));
+  }
+
+  async authorizeClient(
+    principal: AtlasPrincipal,
+    clientCode: string,
+  ): Promise<SharePointClient | 'not_found'> {
+    if (!isCanonicalClientCode(clientCode) || clientCode === '*') return 'not_found';
+    if (!principal.allowedClientIds.includes(clientCode)) return 'not_found';
+    try {
+      const resolved = await this.resolveClientByCode(clientCode);
+      return {
+        id: clientCode,
+        clientCode,
+        displayName: resolved.title,
+        itemId: resolved.itemId,
+        source: 'sharepoint',
+      };
+    } catch (err) {
+      if (err instanceof PmHttpError && (err.status === 400 || err.code === 'unknown_client_code')) {
+        return 'not_found';
+      }
+      throw err;
+    }
   }
 
   async resolveClientByCode(clientCode: string): Promise<{ itemId: string; title: string }> {

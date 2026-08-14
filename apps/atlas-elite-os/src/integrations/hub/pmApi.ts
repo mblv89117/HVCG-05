@@ -20,6 +20,18 @@ export async function fetchPmProjects(auth: AtlasHubAuthHeaders) {
   return hubFetchJson<{ projects: PmProject[] }>(auth, '/api/pm/projects');
 }
 
+export async function fetchPmClients(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{ clients: PmClient[]; source: string }>(auth, '/api/pm/clients');
+}
+
+export async function fetchPmClient(auth: AtlasHubAuthHeaders, clientCode: string) {
+  return hubFetchJson<{
+    client: PmClient;
+    projects: PmProject[];
+    deferred?: Record<string, string>;
+  }>(auth, `/api/pm/clients/${encodeURIComponent(clientCode)}`);
+}
+
 export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
   return hubFetchJson<{
     project: PmProject;
@@ -39,6 +51,7 @@ export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
     notes?: unknown[];
     activity?: unknown[];
     documents?: OperatingDocument[];
+    deferred?: Record<string, string>;
   }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`);
 }
 
@@ -70,8 +83,12 @@ export async function patchPmProject(
   id: string,
   patch: Record<string, unknown>,
 ) {
+  const etag = typeof patch.etag === 'string' ? patch.etag : undefined;
+  const headers: Record<string, string> = {};
+  if (etag) headers['If-Match'] = etag;
   return hubFetchJson<{ project: PmProject }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`, {
     method: 'PATCH',
+    headers,
     body: JSON.stringify(stripLegacyPmOwnerAliases(patch)),
   });
 }
@@ -238,8 +255,12 @@ export async function patchPmTask(
   id: string,
   patch: Record<string, unknown>,
 ) {
+  const etag = typeof patch.etag === 'string' ? patch.etag : undefined;
+  const headers: Record<string, string> = {};
+  if (etag) headers['If-Match'] = etag;
   return hubFetchJson<{ task: PmTask }>(auth, `/api/pm/tasks/${encodeURIComponent(id)}`, {
     method: 'PATCH',
+    headers,
     body: JSON.stringify(patch),
   });
 }
@@ -283,6 +304,15 @@ export interface PmTask {
   estimatedMinutes?: number;
   revenueImpact?: string;
   riskImpact?: string;
+  etag?: string;
+}
+
+export interface PmClient {
+  id: string;
+  clientCode: string;
+  displayName: string;
+  itemId?: string;
+  source: string;
 }
 
 export interface PmProject {
@@ -290,6 +320,7 @@ export interface PmProject {
   name: string;
   clientId?: string;
   clientName?: string;
+  clientCode?: string;
   businessEntity: string;
   projectType: string;
   status: string;
@@ -303,6 +334,7 @@ export interface PmProject {
   objective?: string;
   lastActivityAt?: string;
   teamMemberIds?: string[];
+  etag?: string;
 }
 
 export interface PortfolioProject extends PmProject {

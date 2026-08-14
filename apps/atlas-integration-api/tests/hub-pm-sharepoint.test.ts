@@ -709,6 +709,34 @@ describe('SharePoint PM HTTP', () => {
     });
   });
 
+  it('clients directory is SharePoint HVCG_Clients by ClientCode, not Client 360', async () => {
+    await withSpHub({ entitlements: (oid) => (oid === USER_A ? ['ACCG01'] : []) }, async ({ base }) => {
+      const listed = await fetch(`${base}/api/pm/clients`, { headers: auth('a') });
+      assert.equal(listed.status, 200);
+      const body = (await listed.json()) as {
+        source: string;
+        clients: Array<{ id: string; clientCode: string; displayName: string }>;
+      };
+      assert.equal(body.source, 'sharepoint');
+      assert.deepEqual(
+        body.clients.map((c) => c.clientCode),
+        ['ACCG01'],
+      );
+      assert.equal(body.clients[0].id, 'ACCG01');
+      assert.equal(body.clients[0].displayName, 'Alder & Co.');
+      const other = await fetch(`${base}/api/pm/clients/PDG01`, { headers: auth('a') });
+      assert.equal(other.status, 404);
+      const mine = await fetch(`${base}/api/pm/clients/ACCG01`, { headers: auth('a') });
+      assert.equal(mine.status, 200);
+      const mineBody = (await mine.json()) as { client: { clientCode: string } };
+      assert.equal(mineBody.client.clientCode, 'ACCG01');
+      const workspace = await fetch(`${base}/api/pm/clients/ACCG01/workspace`, { headers: auth('a') });
+      assert.equal(workspace.status, 501);
+      const c360 = await fetch(`${base}/api/client360`, { headers: auth('a') });
+      assert.equal(c360.status, 403);
+    });
+  });
+
   it('deferred routes are not implemented and do not fall back to JSON', async () => {
     await withSpHub({ entitlements: () => ['ACCG01'] }, async ({ base, dataDir }) => {
       for (const path of ['/api/pm/inbox', '/api/pm/notes', '/api/pm/populate', '/api/pm/quick-capture']) {

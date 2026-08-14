@@ -20,8 +20,10 @@ import {
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import {
   createPmProject,
+  fetchPmClients,
   fetchPortfolio,
   patchPmProject,
+  type PmClient,
   type PortfolioProject,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
@@ -40,7 +42,7 @@ export function PortfolioPage() {
   const auth = useHubAuth();
   const navigate = useNavigate();
   const [rows, setRows] = useState<PortfolioProject[]>([]);
-  const [clients, setClients] = useState<Array<{ id: string; displayName: string }>>([]);
+  const [clients, setClients] = useState<PmClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,20 +78,27 @@ export function PortfolioPage() {
     try {
       const res = await fetchPortfolio(auth);
       setRows(res.portfolio || []);
-      const fromRows = (res.portfolio || [])
-        .map((p) => ({
-          id: String(p.clientId || '').trim(),
-          displayName: String(p.clientName || p.clientId || '').trim(),
-        }))
-        .filter((c) => /^[A-Z0-9]{2,12}$/.test(c.id));
-      const seen = new Set<string>();
-      setClients(
-        fromRows.filter((c) => {
-          if (seen.has(c.id)) return false;
-          seen.add(c.id);
-          return true;
-        }),
-      );
+      try {
+        const listed = await fetchPmClients(auth);
+        setClients(listed.clients || []);
+      } catch {
+        const fromRows = (res.portfolio || [])
+          .map((p) => ({
+            id: String(p.clientId || p.clientCode || '').trim(),
+            clientCode: String(p.clientId || p.clientCode || '').trim(),
+            displayName: String(p.clientName || p.clientId || '').trim(),
+            source: 'sharepoint',
+          }))
+          .filter((c) => /^[A-Z][A-Z0-9]{2,15}$/.test(c.clientCode));
+        const seen = new Set<string>();
+        setClients(
+          fromRows.filter((c) => {
+            if (seen.has(c.clientCode)) return false;
+            seen.add(c.clientCode);
+            return true;
+          }),
+        );
+      }
     } catch (err) {
       const status = (err as { status?: number }).status;
       if (status === 401) {
@@ -231,6 +240,7 @@ export function PortfolioPage() {
         nextAction: form.nextAction,
         objective: form.objective,
         ownerName: form.ownerName,
+        ...(editRow.etag ? { etag: editRow.etag } : {}),
       });
       setEditRow(null);
       await refresh();
@@ -504,9 +514,9 @@ export function PortfolioPage() {
                     }
                   >
                     {clients.map((c) => (
-                      <Option key={c.id} value={c.id} text={c.id}>
-                        {c.id}
-                        {c.displayName && c.displayName !== c.id ? ` · ${c.displayName}` : ''}
+                      <Option key={c.clientCode || c.id} value={c.clientCode || c.id} text={c.clientCode || c.id}>
+                        {c.clientCode || c.id}
+                        {c.displayName && c.displayName !== (c.clientCode || c.id) ? ` · ${c.displayName}` : ''}
                       </Option>
                     ))}
                   </Dropdown>
