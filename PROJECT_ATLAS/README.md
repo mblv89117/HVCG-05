@@ -10,15 +10,17 @@
 
 1. [PROJECT_INDEX.md](PROJECT_INDEX.md) — map of the whole system (**required first**)  
 2. [CURRENT_STATE.md](CURRENT_STATE.md) — what is true right now  
-3. [AGENT_HANDOFF.md](AGENT_HANDOFF.md) — resume with zero chat history  
-4. [NEXT_ACTIONS.md](NEXT_ACTIONS.md) — ordered next work  
-5. [Releases/Release_Candidate_RC-1.md](Releases/Release_Candidate_RC-1.md) — pre-Sprint 4 checkpoint
-6. [VALIDATION_REPORT.md](VALIDATION_REPORT.md) — latest Atlas consistency check
+3. [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md) — how Manny uses the seven systems today  
+4. [AGENT_HANDOFF.md](AGENT_HANDOFF.md) — resume with zero chat history  
+5. [NEXT_ACTIONS.md](NEXT_ACTIONS.md) — ordered next work  
+6. [Releases/Release_Candidate_RC-1.md](Releases/Release_Candidate_RC-1.md) — pre-Sprint 4 checkpoint  
+7. [VALIDATION_REPORT.md](VALIDATION_REPORT.md) — latest Atlas consistency check
 
 ## Contents
 
 | File | Role |
 |------|------|
+| [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md) | Owner operating handoff (seven systems) |
 | [ROADMAP.md](ROADMAP.md) | Forward plan by track/sprint |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture **index** (links out; not a second SoR) |
 | [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md) | Dev / Prod / freeze status |

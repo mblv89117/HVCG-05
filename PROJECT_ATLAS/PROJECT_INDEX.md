@@ -27,6 +27,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | Need | Open |
 |------|------|
 | What is true now | [CURRENT_STATE.md](CURRENT_STATE.md) |
+| How Manny operates today | [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md) |
 | What to do next | [NEXT_ACTIONS.md](NEXT_ACTIONS.md) |
 | Who owns work | [OWNERSHIP.md](OWNERSHIP.md) · [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md) |
 | Resume cold | [AGENT_HANDOFF.md](AGENT_HANDOFF.md) |

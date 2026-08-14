@@ -54,6 +54,8 @@ Every engineer and AI must read these documents IN ORDER.
 
 4. PROJECT_ATLAS/CURRENT_STATE.md
 
+4b. PROJECT_ATLAS/HVCG_OWNER_OPERATING_GUIDE.md (owner operations; do not restart the architecture audit)
+
 5. PROJECT_ATLAS/ROADMAP.md
 
 6. PROJECT_ATLAS/TRACK_INDEX.md

@@ -2,9 +2,9 @@
 
 Documentation only. Not application source.
 
-Gate: **GATE 11 — COMPLETE** (2026-08-14). C1 checkout reductions are historical (see below).  
+Gate: **GATE 11 — COMPLETE** (2026-08-14). Owner recovery closeout complete. C1 checkout reductions are historical (see below).  
 Working architecture: seven real systems. Do not invent an eighth product from leftover folders.  
-Commercial launches are **after** the architecture audit.
+Commercial launches are **after** the architecture audit. Owner may conduct normal client operations. Worktree retirement is not an owner-operability blocker.
 
 Canonical Atlas line: `integration/atlas-canonical` (parent code/index SHA `9ca7023f23a721a724820e1bec144fb37f1d5456`; this Atlas continuity update follows).  
 `origin/main` remains `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.

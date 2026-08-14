@@ -1,7 +1,8 @@
 # DEPLOYMENT_STATUS
 
-**As of:** 2026-08-14 21:00 UTC  
+**As of:** 2026-08-14 21:25 UTC  
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)  
+**Owner guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)  
 **Historical July 16 snapshot:** [Archive/DEPLOYMENT_STATUS_2026-07-16.md](Archive/DEPLOYMENT_STATUS_2026-07-16.md)
 
 | Environment | Status | Notes |

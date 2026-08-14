@@ -1,7 +1,9 @@
 # ROADMAP
 
-**As of:** 2026-08-14 20:25 UTC  
-**Sources:** [CURRENT_STATE.md](CURRENT_STATE.md); [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md); owner decisions 2026-08-14
+**As of:** 2026-08-14 21:25 UTC  
+**Sources:** [CURRENT_STATE.md](CURRENT_STATE.md); [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md); [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md); owner decisions 2026-08-14
+
+Owner recovery is complete. Commercial launches and Gate 12 are **not** next owner-operability work. G11-F07/F08 are deferred engineering governance.
 
 ## Near-term (core architecture)
 
@@ -25,9 +27,10 @@
 
 - Seven-system boundaries accepted (Atlas OS, Autonomous Marketing, 360 Growth, GCC, Agent Copilot, Elevated Syndicate, Best Day; Hart = 360 tenant; EVA = funnel into Copilot)
 - G11-F01 through G11-F09 remediated / verified on canonical + production evidence
-- G11-F03 Manny-only client groups
-- G11-F07 `main` protection
-- G11-F08 Atlas CI + dry-run production release control
+- G11-F03 Manny-only client groups (Entra + Hub group map; Elite signed-in session is an owner browser check)
+- G11-F07 `main` protection — **DEFERRED ENGINEERING GOVERNANCE** (in place; do not change)
+- G11-F08 Atlas CI + dry-run production release control — **DEFERRED ENGINEERING GOVERNANCE** (in place; do not change)
+- Website → `HVCG_Leads` ingest verified (no second CRM)
 - Owner Decisions 1–5 recorded
 
 ## Historical July 16 roadmap

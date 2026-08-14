@@ -1,9 +1,12 @@
 # DECISIONS
 
-**As of:** 2026-08-14 20:25 UTC  
+**As of:** 2026-08-14 21:25 UTC  
 **Gate 11 owner decisions (authoritative for business architecture):** [Decisions/2026-08-14-GATE11-OWNER-DECISIONS.md](Decisions/2026-08-14-GATE11-OWNER-DECISIONS.md)  
+**Owner operating guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)  
 **Chronological log:** [CONTINUATION/DECISION_HISTORY.md](CONTINUATION/DECISION_HISTORY.md)  
 **Historical owner-interrupt file:** `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md`
+
+Manny-only G11-F03 is **executed** (Entra membership + Hub approved-group map). Do not re-ask. G11-F07/F08 remain **DEFERRED ENGINEERING GOVERNANCE** — do not change GitHub protection/CI unless immediate production risk.
 
 ## Closed — Gate 11 owner decisions (2026-08-14)
 

@@ -1,13 +1,13 @@
 # KNOWN_ISSUES
 
-**As of:** 2026-08-14 21:00 UTC
+**As of:** 2026-08-14 21:25 UTC
 
-## Current (post Gate 11 / Command Center recovery)
+## Current (post owner recovery closeout)
 
 | Issue | Status | Notes |
 |-------|--------|-------|
-| Command Center “SharePoint PM permission or token was rejected” | **FIXED in production Hub/Elite** — owner signed-in smoke pending | Graph `fields/` `$filter` + `Lists.SelectedOperations.Selected` → 403. Hub lists without `$filter`; entitlement filter is in-memory. Live Hub `/health` `pmBackend.mode=sharepoint`. |
-| Website leads stay `atlasSyncStatus=pending` | **FIXED** | Hub `POST /api/website/leads` live. SWA `ATLAS_INTAKE_URL` set. Buffered recovery rows replayed to `synced`. |
+| Command Center signed-in Elite smoke | **Owner browser** — not a Hub outage | Anonymous PM/BA 401 expected. Owner signs in at Elite. Hub `/health` SharePoint + BA live. |
+| Website leads stay `atlasSyncStatus=pending` | **FIXED / COMPLETE AND VERIFIED** | www contact → Table buffer → Hub `POST /api/website/leads` → `HVCG_Leads`. No second CRM. |
 | Quick Capture / Initialize / Microsoft sync / Archive | **Honest-disabled** | Production SharePoint MVP returns `501 PM_OPERATION_NOT_IMPLEMENTED`. Elite no longer presents them as working. |
 | Client 360 source-container → ClientCode mapping | **DEFERRED POST-AUDIT FEATURE** | Fail-closed in `apps/atlas-integration-api/src/client360/access.ts`. Not an audit blocker. |
 | Gate 12 worktree/workspace retirement | **NOT STARTED** | Path exists; do not execute from Gate 11 |

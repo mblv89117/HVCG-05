@@ -1,15 +1,18 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-08-14 21:00 UTC  
-**Ordered for owner / next engineer. Do not execute gated items without approval.**
+**As of:** 2026-08-14 21:25 UTC  
+**Ordered for owner / next engineer. Do not execute gated items without approval.**  
+**Owner guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)
+
+Architecture audit is finished. Do not restart it. Owner may conduct normal client operations.
 
 ## Now
 
-1. Owner: sign in at production Elite, hard-refresh, confirm Command Center / My Work / Portfolio / Projects load SharePoint `HVCG_*` data (not the Graph token-rejection banner).
-2. Marketing SWA `ATLAS_INTAKE_URL` is set to the Hub ingest URL. New www leads should upsert `HVCG_Leads` without a second CRM.
-3. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
-4. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.
-5. Leave Client 360 mapping fail-closed. Do not invent mappings.
+1. Owner: sign in at production Elite, hard-refresh, confirm Command Center / My Work / Portfolio / Projects load SharePoint `HVCG_*` data.
+2. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
+3. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.
+4. Leave Client 360 mapping fail-closed. Do not invent mappings.
+5. Website lead ingest is **COMPLETE AND VERIFIED** — do not rebuild it.
 
 ## Next (not started)
 

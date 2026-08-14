@@ -19,11 +19,11 @@ Commercial portfolio is **not** launched. Gate 12 is **not** started.
 |---------|-------------|--------------------|
 | G11-F01 SharePoint PM backend | **COMPLETE** | Live Hub `/health`: `pmBackend.mode=sharepoint`, `credentialMode=managed_identity`, `configComplete=true`, `listsConfigured=true` |
 | G11-F02 Hub role token issuance | **COMPLETE** | Prior Gate 11 live Elite→Hub Owner token proof; not re-run; no contradictory evidence |
-| G11-F03 Client entitlements | **COMPLETE** | Manny-only membership on seven groups; Graph `checkMemberGroups` returns all seven IDs |
+| G11-F03 Client entitlements | **COMPLETE** | Re-verified 2026-08-14 closeout: Manny sole member of seven groups; Hub app `checkMemberGroups` returns all seven IDs; Hub `INTEGRATION_CLIENT_ENTITLEMENT_GROUPS` maps the seven IDs. Elite signed-in session not proven without Manny’s browser. |
 | G11-F04/F05 Elite production Hub wiring | **COMPLETE** | Prior remediations; live Elite SWA HTTP 200; Hub live; not redeployed this gate |
 | G11-F06 BA production path | **COMPLETE** | Live Hub `/health` `ba.configured=true`, `ba.reachable=true`; anonymous `/api/ba/health` HTTP 401 |
-| G11-F07 GitHub main protection | **COMPLETE** | PR + 1 approval + dismiss stale + conversation resolution + 6 Atlas checks + no force-push + no deletion + `enforce_admins` |
-| G11-F08 Atlas CI / release control | **COMPLETE** | Workflows `atlas-ci.yml` + `atlas-release-control.yml`; green run on `70b6127` (jobs: elite, hub, business-analyst, business-engine, integration-core, sharepoint-validation) |
+| G11-F07 GitHub main protection | **DEFERRED ENGINEERING GOVERNANCE** | Already in place (read-back 2026-08-14). Do not change unless immediate production risk. |
+| G11-F08 Atlas CI / release control | **DEFERRED ENGINEERING GOVERNANCE** | Workflows `atlas-ci.yml` + `atlas-release-control.yml` already in place. Residual: `production` env reviewers not invented; default branch still `cursor/v1.1.0-intelligence-ai-ops`. |
 | G11-F09 Durable Hub encryption key | **COMPLETE** | Prior remediation; not reopened |
 | G11-F10 Hub delegated Microsoft OAuth redirect mismatch | **DEFERRED NON-BLOCKING** | Production PM uses managed identity, not delegated connector OAuth. Residual connector-login issue is not a core SoR blocker. |
 | Client 360 mapping | **DEFERRED POST-AUDIT FEATURE** | `resolveClient360ClientCode` always returns null; client-specific routes fail closed |

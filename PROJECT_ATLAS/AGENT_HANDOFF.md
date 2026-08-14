@@ -7,7 +7,7 @@
 ## 60-second orientation
 
 1. This repo is the **HVCG Project Management System** (High Value Capital Group platform).  
-2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only.  
+2. **PROJECT_ATLAS/** is the **canonical source of truth** — docs only. Owner operations: [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md). Do not restart the architecture audit.  
 3. **Track 1 is FROZEN — LIVE—INTERNAL** in HVCG Production. Do not change Prod without new owner approval.  
 4. **Revenue OS Sprints 1–3 are COMPLETE.** Revenue Systems Engineer is **COMPLETE**. Tip: `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31`.  
 5. Revenue Track is **READY TO START Sprint 4** — Sprint 4 is **NOT STARTED** until assigned.

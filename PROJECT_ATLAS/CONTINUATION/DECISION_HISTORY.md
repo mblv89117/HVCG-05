@@ -508,7 +508,7 @@ Immediate production client access is Manny only across HVCG-Client-ACCG01, CCB0
 
 Implementation Notes
 
-Entra object `e4835ea2-3c45-493a-95f5-472f6339661d` (`manny@highvaluecapitalgroup.com`) added as the sole direct member of all seven groups on 2026-08-14.
+Entra object `e4835ea2-3c45-493a-95f5-472f6339661d` (`manny@highvaluecapitalgroup.com`) added as the sole direct member of all seven groups on 2026-08-14. Owner recovery closeout re-read membership (Manny only; no unexpected extra users). Hub `INTEGRATION_CLIENT_ENTITLEMENT_GROUPS` set to the same seven group IDs so Elite/Hub can resolve ClientCodes. Signed-in Elite session was not proven without Manny’s browser.
 
 Can This Be Revisited?
 
