@@ -27,6 +27,7 @@ import type { SharePointPmService } from '../pm/sharepoint/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
 import { handleBaRoutes } from '../ba/routes.ts';
+import { probeBaHealth } from '../ba/client.ts';
 import type { LocalAiAdapter } from '../local-ai/adapter.ts';
 import { handleLocalAiRoutes } from '../local-ai/http.ts';
 
@@ -189,6 +190,7 @@ export async function handleRequest(
     // GET /health
     if (method === 'GET' && path === '/health') {
       const localAi = deps.localAi.snapshot();
+      const ba = await probeBaHealth(cfg);
       send(
         res,
         200,
@@ -204,6 +206,10 @@ export async function handleRequest(
             available: localAi.available,
             availability: localAi.availability,
             reason: localAi.reason,
+          },
+          ba: {
+            configured: ba.configured,
+            reachable: ba.reachable,
           },
           port: cfg.port,
           authRequired: cfg.requireAuth,

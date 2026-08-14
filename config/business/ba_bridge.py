@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""BA Hub bridge — stdin JSON → BA module call → stdout JSON.
+"""BA engine stdin bridge — JSON in, JSON out.
 
-Non-Production Elite↔BA binding entrypoint. Invoked by Integration Hub only.
-No second HTTP server. Fail-closed on missing identity/client/permission.
+Local/test engine entrypoint. Production HTTP hosting is
+apps/atlas-business-analyst-service (Hub is the only public API).
+Do not expose this stdin process on the network.
 """
 
 from __future__ import annotations

@@ -2,7 +2,9 @@
 
 Fail-closed. Extends existing BA modules — does not create a second security
 engine, file store, portal, or governance plane.
-Elite↔BA binding: Integration Hub invokes ba_bridge.py (one API architecture).
+Elite↔BA binding: Integration Hub is the only public API. Production invokes
+the dedicated BA HTTP service, which calls dispatch_ba_request(). stdin
+ba_bridge.py remains a local engine entrypoint for tests.
 Production gates remain CLOSED unless live evidence exists.
 """
 
@@ -16,6 +18,14 @@ from datetime import datetime, timezone
 from typing import Any
 
 from pricing_policy import ACCG_LOCKED_MONTHLY, load_json
+from runtime_env import (
+    PRODUCTION_GATED_OPS,
+    STATELESS_SAFE_OPS,
+    ProductionPersistBlocked,
+    is_production_runtime,
+    persist_blocked,
+    reports_dev_semantics,
+)
 
 import ai_orchestrator as ai
 import atlas_integration as integ
@@ -81,14 +91,36 @@ def security_audit_event(**kwargs: Any) -> dict[str, Any]:
 
 
 def map_hub_principal(principal: dict[str, Any] | None) -> dict[str, Any]:
-    """Map Integration Hub AtlasPrincipal → BA contexts. Fail closed if missing."""
+    """Map Integration Hub AtlasPrincipal → BA contexts. Fail closed if missing.
+
+    Owner/Admin roles do not expand to wildcard client access.
+    Production must send an explicit non-DEV environment and must not send '*'.
+    """
     if not principal or not principal.get("userId"):
         return {"ok": False, "status": "UNAUTHORIZED", "message": "Missing identity — fail closed"}
     roles = [str(r) for r in (principal.get("roles") or [])]
     role_l = " ".join(roles).lower()
     owner_scope = any(x in role_l for x in ("owner", "hvcg owner"))
     elevated = "risk-elevated" in role_l or "risk_elevated" in role_l
-    allowed = list(principal.get("allowedClientIds") or [])
+    allowed = [str(x) for x in (principal.get("allowedClientIds") or [])]
+    raw_env = principal.get("environment")
+    production_like = is_production_runtime() or persist_blocked(raw_env)
+    if production_like:
+        if reports_dev_semantics(raw_env):
+            return {
+                "ok": False,
+                "status": "FORBIDDEN",
+                "message": "production cannot report DEV environment semantics — fail closed",
+            }
+        if "*" in allowed:
+            return {
+                "ok": False,
+                "status": "FORBIDDEN",
+                "message": "wildcard client scope is not accepted — Owner/Admin is not all clients",
+            }
+        environment = str(raw_env).strip()
+    else:
+        environment = str(raw_env).strip() if raw_env else "DEV"
     return {
         "ok": True,
         "user": principal.get("email") or principal["userId"],
@@ -99,7 +131,7 @@ def map_hub_principal(principal: dict[str, Any] | None) -> dict[str, Any]:
         "elevated_risk_access": elevated,
         "hr_access": "hr" in role_l or "hr-" in role_l,
         "organizationId": principal.get("organizationId") or "org-hvcg",
-        "environment": principal.get("environment") or "DEV",
+        "environment": environment,
     }
 
 
@@ -116,6 +148,13 @@ def require_client_context(mapped: dict[str, Any], client: str | None) -> dict[s
         return {"ok": False, "status": "MISSING_CONTEXT", "message": "Client context required — fail closed"}
     allowed = mapped.get("allowed_clients") or []
     if "*" in allowed:
+        if persist_blocked(mapped.get("environment")):
+            return {
+                "ok": False,
+                "status": "FORBIDDEN",
+                "message": "wildcard client scope is not accepted — fail closed",
+                "leakage": False,
+            }
         return {"ok": True, "client": client}
     if client not in allowed:
         return {"ok": False, "status": "WRONG_CLIENT", "message": "Client A must never see Client B", "leakage": False}
@@ -444,6 +483,21 @@ def threat_model() -> list[dict[str, Any]]:
 
 def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
     """Hub → BA operations. Fail closed."""
+    try:
+        return _dispatch_ba_request_impl(req)
+    except ProductionPersistBlocked as exc:
+        correlation = (req or {}).get("correlationId") or _id("CORR")
+        return {
+            "ok": False,
+            "status": "PRODUCTION_GATED",
+            "message": str(exc)[:200],
+            "correlationId": correlation,
+            "persistence": False,
+        }
+
+
+def _dispatch_ba_request_impl(req: dict[str, Any]) -> dict[str, Any]:
+    """Hub → BA operations. Fail closed."""
     correlation = req.get("correlationId") or _id("CORR")
     principal = req.get("principal")
     mapped = map_hub_principal(principal)
@@ -453,6 +507,23 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
     op = req.get("op") or ""
     payload = req.get("payload") or {}
     client = payload.get("client") or payload.get("clientId")
+
+    if op not in STATELESS_SAFE_OPS and op not in PRODUCTION_GATED_OPS:
+        return {
+            "ok": False,
+            "status": "FORBIDDEN",
+            "message": f"Unknown op {op}",
+            "correlationId": correlation,
+        }
+
+    if op in PRODUCTION_GATED_OPS and persist_blocked(mapped.get("environment")):
+        return {
+            "ok": False,
+            "status": "PRODUCTION_GATED",
+            "message": f"{op} requires an approved existing-list adapter and is not a production .data/ SoR",
+            "correlationId": correlation,
+            "persistence": False,
+        }
 
     # Ops that require client (lead/free-fit intake is pre-client — no clientId)
     needs_client = op not in (
@@ -476,7 +547,14 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
             return {**cc, "correlationId": correlation}
 
     if op == "security.ping":
-        return {"ok": True, "status": "SUCCESS", "runtime": RUNTIME_VERSION, "binding": "hub→ba_bridge"}
+        return {
+            "ok": True,
+            "status": "SUCCESS",
+            "runtime": RUNTIME_VERSION,
+            "binding": "hub→ba_bridge",
+            "environment": mapped.get("environment"),
+            "correlationId": correlation,
+        }
 
     if op == "gates.registry":
         return {"ok": True, "status": "SUCCESS", "gates": integ.production_gate_registry()}

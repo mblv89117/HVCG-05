@@ -48,6 +48,9 @@ def _id() -> str:
 
 
 def store_path() -> Path:
+    from runtime_env import assert_persist_allowed
+
+    assert_persist_allowed("free_fit_runtime")
     STORE_DIR.mkdir(parents=True, exist_ok=True)
     return STORE_DIR / "assessments.json"
 

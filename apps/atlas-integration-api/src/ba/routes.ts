@@ -1,13 +1,17 @@
 /**
- * BA routes on Integration Hub — Phase 0 Elite↔BA non-Production binding.
+ * BA routes on Integration Hub.
+ * Elite/browser -> Hub /api/ba/* -> authenticated Hub-to-BA HTTP. Production does not start a local Python subprocess.
  */
+import { randomUUID } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { assertClientAccess, requirePrincipal, type AtlasPrincipal } from '../middleware/auth.ts';
 import { isCanonicalClientCode } from '../entitlements/clientCode.ts';
 import type { AppConfig } from '../config.ts';
-import { httpStatusForBa, invokeBaBridge } from './invokePython.ts';
+import { BaClientError, httpStatusForBa, invokeBaDispatch } from './client.ts';
 
-function send(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
+const MAX_BA_BODY_BYTES = 65_536;
+
+function send(res: ServerResponse, status: number, body: unknown, origin?: string | null, correlationId?: string) {
   const headers: Record<string, string> = {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
@@ -18,27 +22,62 @@ function send(res: ServerResponse, status: number, body: unknown, origin?: strin
     headers['access-control-allow-credentials'] = 'true';
     headers['vary'] = 'Origin';
   }
+  if (correlationId) headers['x-correlation-id'] = correlationId;
   res.writeHead(status, headers);
   res.end(JSON.stringify(body));
 }
 
-async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> {
+async function readJsonBounded(req: IncomingMessage, maxBytes: number): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
-  for await (const c of req) chunks.push(c as Buffer);
+  let size = 0;
+  for await (const c of req) {
+    const buf = c as Buffer;
+    size += buf.length;
+    if (size > maxBytes) {
+      const err = new Error('request body too large') as Error & { status: number; code: string };
+      err.status = 413;
+      err.code = 'payload_too_large';
+      throw err;
+    }
+    chunks.push(buf);
+  }
   const raw = Buffer.concat(chunks).toString('utf8');
   if (!raw) return {};
-  return JSON.parse(raw) as Record<string, unknown>;
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    const err = new Error('malformed json') as Error & { status: number; code: string };
+    err.status = 400;
+    err.code = 'malformed_json';
+    throw err;
+  }
 }
 
-function principalPayload(p: AtlasPrincipal): Record<string, unknown> {
+export function projectedBaEnvironment(cfg: AppConfig, env: NodeJS.ProcessEnv = process.env): string {
+  if (cfg.isProduction) return 'production';
+  const raw = (env.ATLAS_ENV || env.BA_ATLAS_ENV || 'development').trim().toLowerCase();
+  if (raw === 'staging' || raw === 'stage') return 'staging';
+  if (raw === 'test') return 'test';
+  return 'development';
+}
+
+function principalPayload(p: AtlasPrincipal, cfg: AppConfig, correlationId: string): Record<string, unknown> {
   return {
     userId: p.userId,
     email: p.email,
     organizationId: p.organizationId,
-    allowedClientIds: p.allowedClientIds,
+    allowedClientIds: p.allowedClientIds.filter((id) => id !== '*'),
     roles: p.roles,
-    environment: 'DEV',
+    environment: projectedBaEnvironment(cfg),
+    correlationId,
   };
+}
+
+function correlationFrom(req: IncomingMessage): string {
+  const header = req.headers['x-correlation-id'] || req.headers['x-request-id'];
+  const raw = Array.isArray(header) ? header[0] : header;
+  if (raw && String(raw).trim()) return String(raw).trim().slice(0, 128);
+  return `CORR-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
 }
 
 export async function handleBaRoutes(opts: {
@@ -51,36 +90,39 @@ export async function handleBaRoutes(opts: {
 }): Promise<boolean> {
   const { req, res, cfg, path, method, origin } = opts;
   if (!path.startsWith('/api/ba')) return false;
+  const correlationId = correlationFrom(req);
 
   try {
     const principal = await requirePrincipal(req, cfg);
 
     if (method === 'GET' && path === '/api/ba/health') {
-      const result = await invokeBaBridge({
+      const result = await invokeBaDispatch(cfg, {
         op: 'security.ping',
-        principal: principalPayload(principal),
+        principal: principalPayload(principal, cfg, correlationId),
         payload: {},
+        correlationId,
       });
-      send(res, httpStatusForBa(result), result, origin);
+      send(res, httpStatusForBa(result), result, origin, correlationId);
       return true;
     }
 
     if (method === 'GET' && path === '/api/ba/gates') {
-      const result = await invokeBaBridge({
+      const result = await invokeBaDispatch(cfg, {
         op: 'gates.registry',
-        principal: principalPayload(principal),
+        principal: principalPayload(principal, cfg, correlationId),
         payload: {},
+        correlationId,
       });
-      send(res, httpStatusForBa(result), result, origin);
+      send(res, httpStatusForBa(result), result, origin, correlationId);
       return true;
     }
 
     if (method !== 'POST') {
-      send(res, 405, { error: 'method_not_allowed' }, origin);
+      send(res, 405, { error: 'method_not_allowed' }, origin, correlationId);
       return true;
     }
 
-    const body = await readJson(req);
+    const body = await readJsonBounded(req, MAX_BA_BODY_BYTES);
     const clientId = String(body.clientId || body.client || '');
     if (clientId) {
       if (!principal.allowedClientIds.includes('*') && !isCanonicalClientCode(clientId)) {
@@ -115,20 +157,46 @@ export async function handleBaRoutes(opts: {
     };
     const op = opMap[path];
     if (!op) {
-      send(res, 404, { error: 'not_found', path }, origin);
+      send(res, 404, { error: 'not_found', path }, origin, correlationId);
       return true;
     }
 
-    const result = await invokeBaBridge({
+    const result = await invokeBaDispatch(cfg, {
       op,
-      principal: principalPayload(principal),
+      principal: principalPayload(principal, cfg, correlationId),
       payload: { ...body, client: clientId || body.client, clientId },
+      correlationId,
     });
-    send(res, httpStatusForBa(result), result, origin);
+    send(res, httpStatusForBa(result), result, origin, correlationId);
     return true;
   } catch (err) {
     const status = (err as { status?: number }).status || 500;
     const code = (err as { code?: string }).code;
+    if (err instanceof BaClientError || status === 503 || status === 502 || status === 413 || status === 400) {
+      const baStatus =
+        status === 413
+          ? 'FORBIDDEN'
+          : status === 400
+            ? 'FORBIDDEN'
+            : status === 502
+              ? 'BA_BAD_GATEWAY'
+              : 'BA_UNAVAILABLE';
+      send(
+        res,
+        status,
+        {
+          ok: false,
+          status: baStatus,
+          code,
+          message: (err as Error).message,
+          leakage: false,
+          correlationId,
+        },
+        origin,
+        correlationId,
+      );
+      return true;
+    }
     send(
       res,
       status,
@@ -138,8 +206,10 @@ export async function handleBaRoutes(opts: {
         code,
         message: (err as Error).message,
         leakage: false,
+        correlationId,
       },
       origin,
+      correlationId,
     );
     return true;
   }

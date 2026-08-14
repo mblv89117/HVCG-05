@@ -52,6 +52,9 @@ def lead_sources() -> list[str]:
 
 
 def store_path() -> Path:
+    from runtime_env import assert_persist_allowed
+
+    assert_persist_allowed("lead_intake")
     STORE_DIR.mkdir(parents=True, exist_ok=True)
     return STORE_DIR / "leads.json"
 

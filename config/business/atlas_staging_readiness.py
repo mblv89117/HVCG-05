@@ -423,6 +423,9 @@ def migration_rehearsal(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def ensure_audit_sink() -> Path:
+    from runtime_env import assert_persist_allowed
+
+    assert_persist_allowed("file_audit_sink")
     AUDIT_SINK_DIR.mkdir(parents=True, exist_ok=True)
     return AUDIT_SINK_DIR
 

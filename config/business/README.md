@@ -1,6 +1,6 @@
 # Business configuration (canonical)
 
-In-tree Atlas business-architecture engines. Integration Hub invokes `ba_bridge.py` from this directory. Do not resolve sibling worktrees.
+In-tree Atlas business-architecture engines. The Integration Hub is the only public API and calls the isolated Business Analyst HTTP service, which imports this directory. `ba_bridge.py` remains the local stdin engine entrypoint. Do not resolve sibling worktrees.
 
 Python: stdlib only. Target CI: Python 3.11. Local stores under `.data/` are development adapters, not production systems of record.
 

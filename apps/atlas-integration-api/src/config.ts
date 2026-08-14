@@ -15,6 +15,8 @@ import type { SharePointPmSettings } from './pm/sharepoint/settings.ts';
 import { resolveSharePointPmSettings, SharePointPmSettingsError } from './pm/sharepoint/settings.ts';
 import type { PmGraphTokenProvider } from './pm/sharepoint/token.ts';
 
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
 function defaultDataDir(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   return join(here, '..', '.data', 'integrations');
@@ -111,6 +113,45 @@ export function resolveHubRuntimeSecurity(env: EnvMap = process.env): HubRuntime
   }
 
   return { host, requireAuth: true, insecureDevAuth: false, isProduction };
+}
+
+export interface BaClientSettings {
+  baseUrl: string | null;
+  timeoutMs: number;
+  healthTimeoutMs: number;
+}
+
+/**
+ * BA HTTP client settings. Hub starts without a BA URL.
+ * Production cannot use localhost and cannot use http.
+ */
+export function resolveBaClientSettings(env: EnvMap = process.env): BaClientSettings {
+  const isProduction = (env.NODE_ENV || 'development') === 'production';
+  const raw = (env.INTEGRATION_BA_BASE_URL || '').trim().replace(/\/$/, '');
+  const timeoutMs = Math.min(Math.max(Number(env.INTEGRATION_BA_TIMEOUT_MS || 15_000) || 15_000, 1_000), 30_000);
+  const healthTimeoutMs = Math.min(
+    Math.max(Number(env.INTEGRATION_BA_HEALTH_TIMEOUT_MS || 800) || 800, 100),
+    5_000,
+  );
+  if (!raw) {
+    return { baseUrl: null, timeoutMs, healthTimeoutMs };
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new UnsafeHubConfigurationError('INTEGRATION_BA_BASE_URL is not a valid URL');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new UnsafeHubConfigurationError('INTEGRATION_BA_BASE_URL must be http or https');
+  }
+  if (isProduction && LOOPBACK_HOSTS.has(parsed.hostname.toLowerCase())) {
+    throw new UnsafeHubConfigurationError('INTEGRATION_BA_BASE_URL must not be localhost in production');
+  }
+  if (isProduction && parsed.protocol !== 'https:') {
+    throw new UnsafeHubConfigurationError('INTEGRATION_BA_BASE_URL must be https in production');
+  }
+  return { baseUrl: raw, timeoutMs, healthTimeoutMs };
 }
 
 export type PmBackendMode = 'development-json' | 'unavailable' | 'sharepoint';
@@ -258,6 +299,7 @@ export function loadConfig() {
   const security = resolveHubRuntimeSecurity();
   const pmBackend = resolvePmBackend();
   const clientEntitlement = resolveClientEntitlement();
+  const ba = resolveBaClientSettings();
   return {
     port: Number(process.env.INTEGRATION_API_PORT || 8790),
     host: security.host,
@@ -322,6 +364,12 @@ export function loadConfig() {
      */
     requiredScope: (process.env.INTEGRATION_REQUIRED_SCOPE || 'access_as_user').trim(),
     publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:8790',
+    ba,
+    /**
+     * Test-only Hub→BA token provider. Production loadConfig never sets this.
+     * Production must not use INTEGRATION_BA_S2S_TOKEN. Future: managed identity.
+     */
+    baS2sToken: undefined as (() => Promise<string | undefined>) | undefined,
     microsoft: {
       tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
       clientId: process.env.MICROSOFT_CLIENT_ID || '',

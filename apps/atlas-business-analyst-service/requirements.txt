@@ -1,0 +1,15 @@
+# BA SERVICE HOST DEPENDENCIES (pinned).
+# BA ENGINE DEPENDENCIES: none — canonical config/business is CPython 3.11 stdlib + in-tree JSON policy files.
+#
+# Production hosting is uvicorn (ASGI). Do not use python -m http.server.
+
+starlette==0.46.2
+uvicorn==0.34.3
+anyio==4.9.0
+PyJWT==2.10.1
+httpx==0.28.1
+h11==0.14.0
+click==8.1.8
+sniffio==1.3.1
+idna==3.10
+certifi==2025.1.31
