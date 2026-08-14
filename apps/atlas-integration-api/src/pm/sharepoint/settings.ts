@@ -50,6 +50,9 @@ export function resolveSharePointPmSettings(env: EnvMap): SharePointPmSettings {
     ['INTEGRATION_PM_CLIENTS_LIST_ID', clientsListId],
     ['AZURE_CLIENT_ID', managedIdentityClientId],
   ] as const) {
+    if (value === '*' || value.includes('*')) {
+      throw new SharePointPmSettingsError(`Unsafe configuration: ${name} must not be a wildcard.`);
+    }
     if (!isGuid(value)) {
       throw new SharePointPmSettingsError(`Unsafe configuration: ${name} is malformed.`);
     }

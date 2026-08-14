@@ -1,9 +1,17 @@
 /**
  * Narrow Microsoft Graph v1.0 transport for the four MVP PM lists.
- * Does not enumerate site lists. Does not follow nextLink off graph.microsoft.com.
+ *
+ * Defense-in-depth: even though a Lists.SelectedOperations.Selected token may
+ * observe unrelated Command Center catalog/schema metadata when used directly,
+ * this transport cannot enumerate site lists, read columns, read list metadata,
+ * call /permissions, or follow redirects. Only configured Projects/Tasks/
+ * Milestones/Clients item operations on the configured site are permitted.
+ *
+ * Does not follow nextLink off graph.microsoft.com or onto another list/site.
  */
 
 import { pmInfrastructureError, PmHttpError } from './errors.ts';
+import type { SharePointPmSettings } from './settings.ts';
 import type { PmGraphTokenProvider } from './token.ts';
 
 export interface GraphListItem {
@@ -32,28 +40,114 @@ export interface PmGraphTransport {
   ): Promise<GraphListItem>;
 }
 
-const GRAPH_ORIGIN = 'https://graph.microsoft.com';
-const GRAPH_HOST = 'graph.microsoft.com';
+export type PmGraphResourceAllowlist = Pick<
+  SharePointPmSettings,
+  'siteId' | 'projectsListId' | 'tasksListId' | 'milestonesListId' | 'clientsListId'
+>;
+
+export type PmListCapability = 'read' | 'write';
+
+export const GRAPH_ORIGIN = 'https://graph.microsoft.com';
+export const GRAPH_HOST = 'graph.microsoft.com';
+export const GRAPH_API_VERSION = 'v1.0';
+
 const DEFAULT_TOP = 100;
 const TIMEOUT_MS = 15_000;
 
-function assertSafeNextLink(nextLink: string, siteId: string): URL {
+export interface GraphTransportDeps {
+  fetch?: typeof fetch;
+  timeoutMs?: number;
+}
+
+function rejected(message: string): never {
+  throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', message);
+}
+
+function normalizeGuid(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+export function capabilityForPmList(
+  allowlist: PmGraphResourceAllowlist,
+  listId: string,
+): PmListCapability {
+  const id = normalizeGuid(listId);
+  if (!id) rejected('SharePoint PM list is not in the approved resource allowlist.');
+  if (id === normalizeGuid(allowlist.projectsListId)) return 'write';
+  if (id === normalizeGuid(allowlist.tasksListId)) return 'write';
+  if (id === normalizeGuid(allowlist.milestonesListId)) return 'write';
+  if (id === normalizeGuid(allowlist.clientsListId)) return 'read';
+  rejected('SharePoint PM list is not in the approved resource allowlist.');
+}
+
+function assertWritable(capability: PmListCapability): void {
+  if (capability !== 'write') {
+    rejected('SharePoint PM list does not allow this operation.');
+  }
+}
+
+function isForbiddenGraphSegment(segment: string): boolean {
+  const s = segment.toLowerCase();
+  return s === 'columns' || s === 'permissions' || s === 'drive' || s === 'sites';
+}
+
+/**
+ * Parse a Graph list-items URL. Returns null when the path is not an items
+ * collection/item URL on /v1.0/sites/{site}/lists/{list}/items.
+ */
+export function parsePmGraphListItemsUrl(raw: string): {
+  hostname: string;
+  protocol: string;
+  siteId: string;
+  listId: string;
+} | null {
   let url: URL;
   try {
-    url = new URL(nextLink);
+    url = new URL(raw);
   } catch {
-    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM pagination link was rejected.');
+    return null;
   }
-  if (url.protocol !== 'https:' || url.hostname !== GRAPH_HOST) {
-    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM pagination link was rejected.');
+  if (url.protocol !== 'https:') return null;
+  if (url.hostname.toLowerCase() !== GRAPH_HOST) return null;
+  if (url.port && url.port !== '443') return null;
+  if (url.username || url.password) return null;
+  const pathname = url.pathname;
+  const prefix = `/${GRAPH_API_VERSION}/sites/`;
+  if (!pathname.toLowerCase().startsWith(prefix)) return null;
+  const rest = pathname.slice(prefix.length);
+  const listsMarker = '/lists/';
+  const listsAt = rest.toLowerCase().indexOf(listsMarker);
+  if (listsAt < 0) return null;
+  let siteId: string;
+  let afterLists: string;
+  try {
+    siteId = decodeURIComponent(rest.slice(0, listsAt));
+    afterLists = decodeURIComponent(rest.slice(listsAt + listsMarker.length));
+  } catch {
+    return null;
   }
-  if (!url.pathname.startsWith('/v1.0/sites/')) {
-    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM pagination link was rejected.');
+  const segments = afterLists.split('/').filter(Boolean);
+  if (segments.length < 2) return null;
+  const listId = segments[0];
+  if (segments.some(isForbiddenGraphSegment)) return null;
+  if (segments[1].toLowerCase() !== 'items') return null;
+  if (!siteId || !listId) return null;
+  if (pathname.toLowerCase().includes('/columns') || pathname.toLowerCase().includes('/permissions')) {
+    return null;
   }
-  if (!decodeURIComponent(url.pathname).includes(siteId)) {
-    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM pagination link was rejected.');
+  return { hostname: url.hostname.toLowerCase(), protocol: url.protocol, siteId, listId };
+}
+
+function assertSafeNextLink(nextLink: string, siteId: string, listId: string): URL {
+  const parsed = parsePmGraphListItemsUrl(nextLink);
+  if (!parsed) rejected('SharePoint PM pagination link was rejected.');
+  if (normalizeGuid(parsed.siteId) !== normalizeGuid(siteId)) {
+    rejected('SharePoint PM pagination link was rejected.');
   }
-  return url;
+  if (normalizeGuid(parsed.listId) !== normalizeGuid(listId)) {
+    rejected('SharePoint PM pagination link was rejected.');
+  }
+  return new URL(nextLink);
 }
 
 function parseItem(raw: Record<string, unknown>): GraphListItem {
@@ -71,15 +165,25 @@ function parseItem(raw: Record<string, unknown>): GraphListItem {
 }
 
 export function createGraphTransport(
-  siteId: string,
+  allowlist: PmGraphResourceAllowlist,
   tokenProvider: PmGraphTokenProvider,
+  deps: GraphTransportDeps = {},
 ): PmGraphTransport {
+  const siteId = allowlist.siteId.trim();
+  const siteEnc = encodeURIComponent(siteId);
+  const doFetch = deps.fetch ?? fetch;
+  const timeoutMs = deps.timeoutMs ?? TIMEOUT_MS;
+
   async function graphFetch(url: string, init: RequestInit): Promise<{ status: number; json: unknown }> {
+    const parsed = parsePmGraphListItemsUrl(url);
+    if (!parsed || normalizeGuid(parsed.siteId) !== normalizeGuid(siteId)) {
+      rejected('SharePoint PM Graph request was rejected.');
+    }
     const token = await tokenProvider.getToken();
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const resp = await fetch(url, {
+      const resp = await doFetch(url, {
         ...init,
         headers: {
           authorization: `Bearer ${token}`,
@@ -88,7 +192,11 @@ export function createGraphTransport(
           ...(init.headers || {}),
         },
         signal: controller.signal,
+        redirect: 'manual',
       });
+      if (resp.status >= 300 && resp.status < 400) {
+        rejected('SharePoint PM Graph redirect was rejected.');
+      }
       const text = await resp.text();
       let json: unknown = {};
       if (text) {
@@ -100,8 +208,9 @@ export function createGraphTransport(
       }
       return { status: resp.status, json };
     } catch (err) {
-      if (err && typeof err === 'object' && 'code' in err) throw err;
-      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM Graph request failed.');
+      if (err instanceof PmHttpError) throw err;
+      if (err && typeof err === 'object' && 'code' in err && 'status' in err) throw err;
+      rejected('SharePoint PM Graph request failed.');
     } finally {
       clearTimeout(timer);
     }
@@ -123,19 +232,22 @@ export function createGraphTransport(
     throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM Graph request failed.');
   }
 
-  const siteEnc = encodeURIComponent(siteId);
+  function itemsCollectionUrl(listId: string, search: string): string {
+    return `${GRAPH_ORIGIN}/${GRAPH_API_VERSION}/sites/${siteEnc}/lists/${encodeURIComponent(listId)}/items${search}`;
+  }
 
   return {
     async listItems(listId, opts) {
+      capabilityForPmList(allowlist, listId);
       let url: string;
       if (opts?.nextLink) {
-        url = assertSafeNextLink(opts.nextLink, siteId).toString();
+        url = assertSafeNextLink(opts.nextLink, siteId, listId).toString();
       } else {
         const params = new URLSearchParams();
         params.set('$expand', 'fields');
         params.set('$top', String(opts?.top && opts.top > 0 ? Math.min(opts.top, 100) : DEFAULT_TOP));
         if (opts?.filter) params.set('$filter', opts.filter);
-        url = `${GRAPH_ORIGIN}/v1.0/sites/${siteEnc}/lists/${encodeURIComponent(listId)}/items?${params.toString()}`;
+        url = itemsCollectionUrl(listId, `?${params.toString()}`);
       }
       const { status, json } = await graphFetch(url, { method: 'GET' });
       if (status !== 200) mapStatus(status);
@@ -147,12 +259,13 @@ export function createGraphTransport(
         .filter((i) => i.id);
       const next =
         typeof body['@odata.nextLink'] === 'string' ? body['@odata.nextLink'] : undefined;
-      if (next) assertSafeNextLink(next, siteId);
+      if (next) assertSafeNextLink(next, siteId, listId);
       return { items, nextLink: next };
     },
 
     async getItem(listId, itemId) {
-      const url = `${GRAPH_ORIGIN}/v1.0/sites/${siteEnc}/lists/${encodeURIComponent(listId)}/items/${encodeURIComponent(itemId)}?$expand=fields`;
+      capabilityForPmList(allowlist, listId);
+      const url = itemsCollectionUrl(listId, `/${encodeURIComponent(itemId)}?$expand=fields`);
       const { status, json } = await graphFetch(url, { method: 'GET' });
       if (status === 404) return null;
       if (status !== 200) mapStatus(status);
@@ -161,7 +274,8 @@ export function createGraphTransport(
     },
 
     async createItem(listId, fields) {
-      const url = `${GRAPH_ORIGIN}/v1.0/sites/${siteEnc}/lists/${encodeURIComponent(listId)}/items`;
+      assertWritable(capabilityForPmList(allowlist, listId));
+      const url = itemsCollectionUrl(listId, '');
       const { status, json } = await graphFetch(url, {
         method: 'POST',
         body: JSON.stringify({ fields }),
@@ -175,10 +289,11 @@ export function createGraphTransport(
     },
 
     async patchItemFields(listId, itemId, fields, etag) {
+      assertWritable(capabilityForPmList(allowlist, listId));
       if (!etag || etag === '*') {
         throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
       }
-      const url = `${GRAPH_ORIGIN}/v1.0/sites/${siteEnc}/lists/${encodeURIComponent(listId)}/items/${encodeURIComponent(itemId)}/fields`;
+      const url = `${GRAPH_ORIGIN}/${GRAPH_API_VERSION}/sites/${siteEnc}/lists/${encodeURIComponent(listId)}/items/${encodeURIComponent(itemId)}/fields`;
       const { status, json } = await graphFetch(url, {
         method: 'PATCH',
         headers: { 'if-match': etag },

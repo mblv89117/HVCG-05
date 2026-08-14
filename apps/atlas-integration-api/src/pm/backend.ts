@@ -44,7 +44,7 @@ export function createSharePointPmService(cfg: AppConfig): SharePointPmService |
   const settings = cfg.pmBackend.sharepoint;
   const tokenProvider =
     cfg.pmTokenProvider || createManagedIdentityTokenProvider(settings.managedIdentityClientId);
-  const graph = cfg.pmGraphTransport || createGraphTransport(settings.siteId, tokenProvider);
+  const graph = cfg.pmGraphTransport || createGraphTransport(settings, tokenProvider);
   const lookup = cfg.lookupUserBasic || ((oid: string) => lookupUserBasic(cfg, oid));
   return new SharePointPmService(settings, graph, lookup);
 }

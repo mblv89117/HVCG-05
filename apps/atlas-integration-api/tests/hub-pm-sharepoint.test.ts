@@ -272,11 +272,27 @@ describe('SharePoint PM unit: authz / odata / mapping safety', () => {
   });
 
   it('pagination nextLink off graph.microsoft.com is rejected', async () => {
-    const transport = createGraphTransport(SITE, { getToken: async () => 'tok' });
+    let tokenCalls = 0;
+    const transport = createGraphTransport(
+      {
+        siteId: SITE,
+        projectsListId: PROJECTS,
+        tasksListId: TASKS,
+        milestonesListId: MILESTONES,
+        clientsListId: CLIENTS,
+      },
+      {
+        getToken: async () => {
+          tokenCalls += 1;
+          return 'tok';
+        },
+      },
+    );
     await assert.rejects(
       () => transport.listItems(PROJECTS, { nextLink: 'https://evil.example/v1.0/sites/x/lists/y/items' }),
       /pagination link was rejected/,
     );
+    assert.equal(tokenCalls, 0);
   });
 });
 
