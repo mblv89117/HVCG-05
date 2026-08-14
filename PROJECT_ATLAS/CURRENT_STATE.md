@@ -11,7 +11,7 @@
 | Area | Status | Evidence |
 |------|--------|----------|
 | Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite repair live; owner signed-in smoke pending** | Graph `$filter` on `fields/` with `Lists.SelectedOperations.Selected` returned 403, surfaced as “SharePoint PM permission or token was rejected.” Hub `3572500` zip-deploy RuntimeSuccessful; Elite SWA `index-CRgf6DAQ.js`. Anonymous PM/BA APIs remain 401. Owner hard-refresh still required to prove signed-in HVCG_* reads. |
-| Website → `HVCG_Leads` ingest | **YELLOW — Hub route live; AM `ATLAS_INTAKE_URL` must be set** | Keyed `POST /api/website/leads` upserts SharePoint `HVCG_Leads` via `id-atlas-prod` Graph (no `$filter`). Bearer does not grant this route. |
+| Website → `HVCG_Leads` ingest | **GREEN — Hub ingest live; buffered AM rows synced** | Keyed `POST /api/website/leads` upserts SharePoint `HVCG_Leads`. SWA `ATLAS_INTAKE_URL` set. Four Table buffer rows replayed to `atlasSyncStatus=synced`. |
 | HVCG Master Architecture Audit — core production architecture | **GATE 11 — COMPLETE** | [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md) |
 | Canonical Atlas line | `integration/atlas-canonical` | Git; do not treat `origin/main` as the integration line |
 | `origin/main` | **UNCHANGED** `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Must not be modified without separate promotion authorization |
