@@ -10,7 +10,7 @@
 
 | Area | Status | Evidence |
 |------|--------|----------|
-| Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite repair deployed; owner signed-in smoke pending** | Graph `$filter` on `fields/` with `Lists.SelectedOperations.Selected` returned 403, surfaced as “SharePoint PM permission or token was rejected.” Hub now lists items without `$filter` and authorizes in memory. |
+| Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite repair live; owner signed-in smoke pending** | Graph `$filter` on `fields/` with `Lists.SelectedOperations.Selected` returned 403, surfaced as “SharePoint PM permission or token was rejected.” Hub `3572500` zip-deploy RuntimeSuccessful; Elite SWA `index-CRgf6DAQ.js`. Anonymous PM/BA APIs remain 401. Owner hard-refresh still required to prove signed-in HVCG_* reads. |
 | HVCG Master Architecture Audit — core production architecture | **GATE 11 — COMPLETE** | [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md) |
 | Canonical Atlas line | `integration/atlas-canonical` | Git; do not treat `origin/main` as the integration line |
 | `origin/main` | **UNCHANGED** `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Must not be modified without separate promotion authorization |
