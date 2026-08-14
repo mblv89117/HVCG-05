@@ -7,6 +7,7 @@
 | Issue | Status | Notes |
 |-------|--------|-------|
 | Command Center “SharePoint PM permission or token was rejected” | **FIXED in production Hub/Elite** — owner signed-in smoke pending | Graph `fields/` `$filter` + `Lists.SelectedOperations.Selected` → 403. Hub lists without `$filter`; entitlement filter is in-memory. Live Hub `/health` `pmBackend.mode=sharepoint`. |
+| Website leads stay `atlasSyncStatus=pending` | **Hub ingest added** — set SWA `ATLAS_INTAKE_URL` | `POST https://app-atlas-integration-hub.azurewebsites.net/api/website/leads` with `x-website-intake-key`. Upserts `HVCG_Leads`. Replay buffered rows via AM `POST /api/ops/leads/{id}/replay`. |
 | Quick Capture / Initialize / Microsoft sync / Archive | **Honest-disabled** | Production SharePoint MVP returns `501 PM_OPERATION_NOT_IMPLEMENTED`. Elite no longer presents them as working. |
 | Client 360 source-container → ClientCode mapping | **DEFERRED POST-AUDIT FEATURE** | Fail-closed in `apps/atlas-integration-api/src/client360/access.ts`. Not an audit blocker. |
 | Gate 12 worktree/workspace retirement | **NOT STARTED** | Path exists; do not execute from Gate 11 |

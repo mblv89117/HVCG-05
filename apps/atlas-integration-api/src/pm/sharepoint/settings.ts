@@ -15,6 +15,8 @@ export interface SharePointPmSettings {
   tasksListId: string;
   milestonesListId: string;
   clientsListId: string;
+  /** Optional HVCG_Leads list for keyed website ingest. Unset keeps PM-only allowlist. */
+  leadsListId?: string;
   managedIdentityClientId: string;
 }
 
@@ -24,6 +26,7 @@ export function resolveSharePointPmSettings(env: EnvMap): SharePointPmSettings {
   const tasksListId = (env.INTEGRATION_PM_TASKS_LIST_ID || '').trim();
   const milestonesListId = (env.INTEGRATION_PM_MILESTONES_LIST_ID || '').trim();
   const clientsListId = (env.INTEGRATION_PM_CLIENTS_LIST_ID || '').trim();
+  const leadsListId = (env.INTEGRATION_PM_LEADS_LIST_ID || '').trim();
   const managedIdentityClientId = (env.AZURE_CLIENT_ID || '').trim();
 
   const missing: string[] = [];
@@ -58,6 +61,19 @@ export function resolveSharePointPmSettings(env: EnvMap): SharePointPmSettings {
     }
   }
   const ids = [projectsListId, tasksListId, milestonesListId, clientsListId];
+  if (leadsListId) {
+    if (leadsListId === '*' || leadsListId.includes('*')) {
+      throw new SharePointPmSettingsError(
+        'Unsafe configuration: INTEGRATION_PM_LEADS_LIST_ID must not be a wildcard.',
+      );
+    }
+    if (!isGuid(leadsListId)) {
+      throw new SharePointPmSettingsError(
+        'Unsafe configuration: INTEGRATION_PM_LEADS_LIST_ID is malformed.',
+      );
+    }
+    ids.push(leadsListId);
+  }
   if (new Set(ids).size !== ids.length) {
     throw new SharePointPmSettingsError(
       'Unsafe configuration: SharePoint PM list IDs must be distinct.',
@@ -69,6 +85,7 @@ export function resolveSharePointPmSettings(env: EnvMap): SharePointPmSettings {
     tasksListId,
     milestonesListId,
     clientsListId,
+    ...(leadsListId ? { leadsListId } : {}),
     managedIdentityClientId,
   };
 }

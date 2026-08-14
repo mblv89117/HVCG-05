@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-**As of:** 2026-08-14 21:00 UTC  
+**As of:** 2026-08-14 21:15 UTC  
 **Status SoR:** this file  
 **Canonical worktree:** `.worktrees/atlas-canonical-integration`  
 **Canonical branch:** `integration/atlas-canonical`  
@@ -11,6 +11,7 @@
 | Area | Status | Evidence |
 |------|--------|----------|
 | Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite repair live; owner signed-in smoke pending** | Graph `$filter` on `fields/` with `Lists.SelectedOperations.Selected` returned 403, surfaced as “SharePoint PM permission or token was rejected.” Hub `3572500` zip-deploy RuntimeSuccessful; Elite SWA `index-CRgf6DAQ.js`. Anonymous PM/BA APIs remain 401. Owner hard-refresh still required to prove signed-in HVCG_* reads. |
+| Website → `HVCG_Leads` ingest | **YELLOW — Hub route live; AM `ATLAS_INTAKE_URL` must be set** | Keyed `POST /api/website/leads` upserts SharePoint `HVCG_Leads` via `id-atlas-prod` Graph (no `$filter`). Bearer does not grant this route. |
 | HVCG Master Architecture Audit — core production architecture | **GATE 11 — COMPLETE** | [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md) |
 | Canonical Atlas line | `integration/atlas-canonical` | Git; do not treat `origin/main` as the integration line |
 | `origin/main` | **UNCHANGED** `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Must not be modified without separate promotion authorization |
@@ -39,7 +40,7 @@
 | Component | Status |
 |-----------|--------|
 | Elite SWA | Live (`https://zealous-rock-0090c7e1e.7.azurestaticapps.net`) — honesty UI for unimplemented ops |
-| Hub | Live `https://app-atlas-integration-hub.azurewebsites.net` — auth required; SharePoint PM via `id-atlas-prod` Graph (no `$filter`) |
+| Hub | Live `https://app-atlas-integration-hub.azurewebsites.net` — auth required; SharePoint PM via `id-atlas-prod` Graph (no `$filter`); keyed `POST /api/website/leads` → `HVCG_Leads` |
 | BA | Configured and reachable through Hub; anonymous `/api/ba/health` is 401 |
 | Local AI | Disabled on production Hub |
 

@@ -402,6 +402,15 @@ export function loadConfig() {
      * Empty disables scope claim checks (dev only).
      */
     requiredScope: (process.env.INTEGRATION_REQUIRED_SCOPE || 'access_as_user').trim(),
+    /**
+     * Shared secret for Autonomous Marketing POST /api/website/leads.
+     * Same value as SWA INTAKE_ADMIN_KEY. Empty disables the route (503).
+     * Does not grant Hub Bearer access and is not a Graph/BA token.
+     */
+    websiteIntakeKey: (process.env.INTEGRATION_WEBSITE_INTAKE_KEY || '').trim(),
+    websiteLeadOwnerEmail: (
+      process.env.INTEGRATION_WEBSITE_LEAD_OWNER_EMAIL || 'manny@highvaluecapitalgroup.com'
+    ).trim(),
     publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:8790',
     ba,
     /**

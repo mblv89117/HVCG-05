@@ -4,6 +4,7 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-14 21:15 UTC | **P1 website lead ingest.** Keyed `POST /api/website/leads` upserts SharePoint `HVCG_Leads` via existing Graph/MI path. No second CRM. Bearer auth not broadened. `origin/main` untouched. |
 | 2026-08-14 21:00 UTC | **P0 Command Center SharePoint 403 repair.** Hub Graph transport no longer sends `$filter` (Selected-permission 403 was masquerading as a token rejection). In-memory ClientCode/project authorization preserved. Elite hides unimplemented Initialize / Quick Capture / Microsoft sync / Archive. Graph vs BA audiences unchanged. `origin/main` untouched. Live: Hub zip `3572500` RuntimeSuccessful; Elite `index-CRgf6DAQ.js`. |
 | 2026-08-14 20:25 UTC | **Gate 11 FINAL CLOSURE.** Owner Decisions 1–5 recorded. G11-F03 Manny-only entitlements applied. G11-F07/F08 verified. Client 360 mapping deferred post-audit (fail-closed). Core production architecture ready for Gate 12 cleanup/retirement (not started). See [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md). |
 | 2026-08-14 | C1 seven-system index (`docs/architecture/HVCG_SYSTEM_INDEX.md`); 19 Atlas worktree checkouts removed (branches kept); empty `OllamaModels` archived. Gate 12 not started. |

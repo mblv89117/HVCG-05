@@ -99,6 +99,33 @@ describe('PM Graph transport resource allowlist', () => {
     assert.equal(tokenCalls, 0);
     assert.equal(fetchCalls, 0);
   });
+
+  it('allows HVCG_Leads write only when leadsListId is configured', async () => {
+    const LEADS = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2';
+    let fetchCalls = 0;
+    const withoutLeads = createGraphTransport(ALLOWLIST, { getToken: async () => ACCESS_TOKEN }, {
+      fetch: async () => {
+        fetchCalls += 1;
+        return jsonResponse(200, { value: [] });
+      },
+    });
+    await assert.rejects(() => withoutLeads.listItems(LEADS), /approved resource allowlist/);
+    assert.equal(fetchCalls, 0);
+
+    const withLeads = createGraphTransport(
+      { ...ALLOWLIST, leadsListId: LEADS },
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async () => {
+          fetchCalls += 1;
+          return jsonResponse(201, { id: '1', fields: { Title: 'Lead' } });
+        },
+      },
+    );
+    assert.equal(capabilityForPmList({ ...ALLOWLIST, leadsListId: LEADS }, LEADS), 'write');
+    await withLeads.createItem(LEADS, { Title: 'Lead' });
+    assert.equal(fetchCalls, 1);
+  });
 });
 
 describe('PM Graph transport capability matrix', () => {

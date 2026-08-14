@@ -6,9 +6,10 @@
 ## Now
 
 1. Owner: sign in at production Elite, hard-refresh, confirm Command Center / My Work / Portfolio / Projects load SharePoint `HVCG_*` data (not the Graph token-rejection banner).
-2. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
-3. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.
-4. Leave Client 360 mapping fail-closed. Do not invent mappings.
+2. Marketing SWA: set `ATLAS_INTAKE_URL=https://app-atlas-integration-hub.azurewebsites.net/api/website/leads` (same `INTAKE_ADMIN_KEY` already used as Hub `INTEGRATION_WEBSITE_INTAKE_KEY`). Replay pending Table rows via `/api/ops/leads/{id}/replay`.
+3. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
+4. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.
+5. Leave Client 360 mapping fail-closed. Do not invent mappings.
 
 ## Next (not started)
 

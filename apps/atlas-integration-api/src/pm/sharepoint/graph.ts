@@ -43,7 +43,9 @@ export interface PmGraphTransport {
 export type PmGraphResourceAllowlist = Pick<
   SharePointPmSettings,
   'siteId' | 'projectsListId' | 'tasksListId' | 'milestonesListId' | 'clientsListId'
->;
+> & {
+  leadsListId?: string;
+};
 
 export type PmListCapability = 'read' | 'write';
 
@@ -77,6 +79,7 @@ export function capabilityForPmList(
   if (id === normalizeGuid(allowlist.tasksListId)) return 'write';
   if (id === normalizeGuid(allowlist.milestonesListId)) return 'write';
   if (id === normalizeGuid(allowlist.clientsListId)) return 'read';
+  if (allowlist.leadsListId && id === normalizeGuid(allowlist.leadsListId)) return 'write';
   rejected('SharePoint PM list is not in the approved resource allowlist.');
 }
 

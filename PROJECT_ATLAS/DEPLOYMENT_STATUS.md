@@ -7,7 +7,7 @@
 | Environment | Status | Notes |
 |-------------|--------|-------|
 | Atlas Elite (production SWA) | Live — Command Center honesty UI | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-CRgf6DAQ.js` @ `3572500`; unimplemented Initialize / Quick Capture / sync / archive labeled |
-| Atlas Hub (production App Service) | Live — RuntimeSuccessful | SharePoint PM via `id-atlas-prod`; Graph collection reads without `$filter`; BA configured/reachable; anonymous `/api/pm/*` and `/api/ba/health` 401 |
+| Atlas Hub (production App Service) | Live — RuntimeSuccessful | SharePoint PM via `id-atlas-prod`; Graph collection reads without `$filter`; keyed `POST /api/website/leads` → `HVCG_Leads`; BA configured/reachable; anonymous `/api/pm/*` and `/api/ba/health` 401 |
 | Atlas BA (dedicated Python service) | Reachable through Hub | Anonymous BA/Hub APIs remain 401 |
 | GitHub Environment `production` | Exists | Approval/policy boundary; **no `main` promotion** |
 | `origin/main` | `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Protected; not promoted |

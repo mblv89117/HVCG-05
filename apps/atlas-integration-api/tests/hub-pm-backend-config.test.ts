@@ -159,6 +159,42 @@ describe('PM backend configuration', () => {
         err instanceof UnsafeHubConfigurationError && err.message.includes('must be distinct'),
     );
   });
+
+  it('sharepoint optional leads list is accepted when distinct', () => {
+    const backend = resolvePmBackend({
+      NODE_ENV: 'production',
+      INTEGRATION_PM_BACKEND: 'sharepoint',
+      INTEGRATION_PM_SHAREPOINT_SITE_ID:
+        'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022',
+      INTEGRATION_PM_PROJECTS_LIST_ID: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+      INTEGRATION_PM_TASKS_LIST_ID: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',
+      INTEGRATION_PM_MILESTONES_LIST_ID: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
+      INTEGRATION_PM_CLIENTS_LIST_ID: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd1',
+      INTEGRATION_PM_LEADS_LIST_ID: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2',
+      AZURE_CLIENT_ID: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
+    });
+    assert.equal(backend.sharepoint?.leadsListId, 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2');
+  });
+
+  it('sharepoint duplicate leads list ID is rejected', () => {
+    assert.throws(
+      () =>
+        resolvePmBackend({
+          NODE_ENV: 'production',
+          INTEGRATION_PM_BACKEND: 'sharepoint',
+          INTEGRATION_PM_SHAREPOINT_SITE_ID:
+            'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022',
+          INTEGRATION_PM_PROJECTS_LIST_ID: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+          INTEGRATION_PM_TASKS_LIST_ID: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1',
+          INTEGRATION_PM_MILESTONES_LIST_ID: 'cccccccc-cccc-4ccc-8ccc-ccccccccccc1',
+          INTEGRATION_PM_CLIENTS_LIST_ID: 'dddddddd-dddd-4ddd-8ddd-ddddddddddd1',
+          INTEGRATION_PM_LEADS_LIST_ID: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
+          AZURE_CLIENT_ID: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
+        }),
+      (err: unknown) =>
+        err instanceof UnsafeHubConfigurationError && err.message.includes('must be distinct'),
+    );
+  });
 });
 
 describe('authorized PM repository factory', () => {

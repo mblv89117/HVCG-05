@@ -30,6 +30,7 @@ import { handleBaRoutes } from '../ba/routes.ts';
 import { probeBaHealth } from '../ba/client.ts';
 import type { LocalAiAdapter } from '../local-ai/adapter.ts';
 import { handleLocalAiRoutes } from '../local-ai/http.ts';
+import { handleWebsiteLeadRoutes } from '../website/http.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
@@ -135,7 +136,7 @@ export async function handleRequest(
       'access-control-allow-origin': origin || '',
       'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS',
       'access-control-allow-headers':
-        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256',
+        'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles,x-hub-signature-256,x-website-intake-key',
       'access-control-max-age': '86400',
     });
     res.end();
@@ -187,6 +188,18 @@ export async function handleRequest(
       if (handled) return;
     }
 
+    if (path.startsWith('/api/website/')) {
+      const handled = await handleWebsiteLeadRoutes({
+        cfg,
+        req,
+        res,
+        method,
+        path,
+        origin,
+      });
+      if (handled) return;
+    }
+
     // GET /health
     if (method === 'GET' && path === '/health') {
       const localAi = deps.localAi.snapshot();
@@ -220,6 +233,11 @@ export async function handleRequest(
             credentialMode: cfg.pmBackend.credentialMode || 'none',
             configComplete: Boolean(cfg.pmBackend.configComplete),
             listsConfigured: Boolean(cfg.pmBackend.sharepoint),
+          },
+          websiteLeads: {
+            configured: Boolean(
+              cfg.websiteIntakeKey && cfg.pmBackend.sharepoint?.leadsListId,
+            ),
           },
         },
         origin,
