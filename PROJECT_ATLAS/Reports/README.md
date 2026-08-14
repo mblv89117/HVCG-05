@@ -4,6 +4,7 @@ Prefer linking to evidence rather than copying binaries.
 
 | Report class | Location |
 |--------------|----------|
+| Gate 11 final closure | [GATE11_FINAL_CLOSURE.md](GATE11_FINAL_CLOSURE.md) |
 | Track 1 Prod validation | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/validation/` |
 | Track 1 smoke | `.../smoke/` |
 | RC-1 validation/smoke | `releases/RC-1-Development-Baseline/validation/`, `smoke/` |

@@ -1,40 +1,43 @@
 # NEXT_ACTIONS
 
-**As of:** 2026-07-16 21:10 UTC
-**Ordered for Master PM / owner prioritization.** Do not execute gated items without approval.
+**As of:** 2026-08-14 20:25 UTC  
+**Ordered for owner / next engineer. Do not execute gated items without approval.**
 
 ## Now
 
-1. Keep Track 1 **frozen**.  
-2. Treat Revenue tip `origin/cursor/revenue-sprint3-conversion` @ `0073bf49411408cced88873805b432bce4eefb31` as Sprint 2–3 SoR.  
-3. Revenue Track is **READY TO START Sprint 4**; Sprint 4 remains **NOT STARTED** until assigned.
-4. Preserve [Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) commit anchors; do not include dirty working-tree files in the checkpoint.
-5. Execute [PARALLEL_WORKSTREAM_CONTROL](Reports/PARALLEL_WORKSTREAM_CONTROL.md): Ops Hub / AI Governance / Deployment Manager Sprint 1 Phase 1 — concurrent under exclusive paths; **no commit/push** without separate owner approval.
-6. **Ops remediation (blocking):** revert locked Atlas roots + remove `Sprint_FinanceOperations1.md` from Ops WT; see [OperationsHubSprint1_STOP_REMEDIATE](Handoffs/proposed/OperationsHubSprint1_STOP_REMEDIATE.md).
+1. Treat **Gate 11 as COMPLETE**. Core production architecture is ready for the cleanup / retirement phase. Do not reopen completed findings without new contradictory evidence.
+2. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
+3. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.
+4. Leave Client 360 mapping fail-closed. Do not invent mappings.
 
-## Owner decisions
+## Next (not started)
 
-1. Confirm Sprint 4 start (or defer).  
-2. Price cards: SKU-FCFO / SKU-EXIT / SKU-ACQ / SKU-MODEL (or keep OWNER REVIEW).  
-3. Phone routing for `725.577.6511` vs `702.906.6444`.  
+| Action | Gate | Notes |
+|--------|------|-------|
+| Gate 12 — controlled worktree/workspace retirement and final architecture closeout | **NOT STARTED** | Do not prune, archive systems, delete branches, or remove preservation from this file |
+| Execute duplicate-infra retirement path | Gate 12 | Path exists; execution is later |
 
-## Next engineering candidates (gated)
+## Post-audit (not core-audit work)
 
-| Action | Track | Gate |
-|--------|-------|------|
-| Sprint 4 conversion activation | Track 2 | Assignment + owner |
-| Soft UAT of conversion CTA copy | Track 2 | Human QA |
-| Wire live Dev HTTP URL for EVA POST (optional) | Track 2 | Dev only |
-| Hosted private website preview | Track 3 | Owner (not public DNS) |
-| Forms → CRM path retirement optional | Track 2/3 | After EVA parity |
-| Next Prod flow activation | Track 1/7 | New owner approval (freeze) |
-| Pilot import ACCG / Prodigy / Christie | Track 2 data | Owner |
-| Canvas publish | CRM product | D-002 |
-| Public DNS | Track 3 | BL-PUBLISH-1 / GL-PUBLISH-1 |
-| Portal invites | Track 4 | BL-C1 |
+| Action | Gate |
+|--------|------|
+| Client 360 trusted mapping | Post-audit feature |
+| Commercial product launches | Separate programs |
+| Anyone other than Manny on client groups | Explicit owner roster |
+| Dynamics / Dataverse | Future business case only |
 
 ## Explicit non-actions
 
-- Do not begin Sprint 4 until assigned  
-- Do not modify Track 1 Production freeze  
-- Do not push unless the human asks  
+- Do not start Gate 12 until assigned
+- Do not launch commercial products as part of architecture-audit completion
+- Do not promote `integration/atlas-canonical` to `main`
+- Do not change `origin/main` contents
+- Do not force push / rewrite history
+- Do not initiate Dynamics/Dataverse
+- Do not add users other than Manny to `HVCG-Client-*` groups
+- Do not weaken BA/Hub auth
+- Do not deploy production merely to test governance
+
+## Owner decisions already made (do not re-ask)
+
+See [DECISIONS.md](DECISIONS.md) and [Decisions/2026-08-14-GATE11-OWNER-DECISIONS.md](Decisions/2026-08-14-GATE11-OWNER-DECISIONS.md).

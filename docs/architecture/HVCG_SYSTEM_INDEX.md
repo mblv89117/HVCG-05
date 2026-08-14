@@ -2,10 +2,15 @@
 
 Documentation only. Not application source.
 
-Gate: **HVCG CONSOLIDATION GATE C1** (2026-08-14).  
-Working architecture: seven real systems. Do not invent an eighth product from leftover folders.
+Gate: **GATE 11 — COMPLETE** (2026-08-14). C1 checkout reductions are historical (see below).  
+Working architecture: seven real systems. Do not invent an eighth product from leftover folders.  
+Commercial launches are **after** the architecture audit.
 
-Canonical Atlas line: `integration/atlas-canonical` @ `70b6127ffb217f07091d1d54b5d660018617a563`.
+Canonical Atlas line: `integration/atlas-canonical` (parent code/index SHA `9ca7023f23a721a724820e1bec144fb37f1d5456`; this Atlas continuity update follows).  
+`origin/main` remains `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
+
+Atlas V1 SoR: SharePoint `HVCG_*` (CRM / clients / projects / tasks / HVCG finance ops). No Dynamics/Dataverse migration.  
+Client 360 mapping: **CLIENT 360 MAPPING — POST CORE AUDIT DEFERRED BACKLOG** (fail-closed).
 
 ---
 
@@ -19,8 +24,8 @@ Canonical Atlas line: `integration/atlas-canonical` @ `70b6127ffb217f07091d1d54b
 - **Repository:** `github.com/mblv89117/HVCG-05.git`
 - **Canonical branch:** `integration/atlas-canonical`
 - **Canonical worktree:** `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-canonical-integration`
-- **Primary system of record:** SharePoint lists / Microsoft 365 for Version 1 operating data; Hub for runtime APIs; BA engines in-tree at `config/business/`
-- **Production URL/status:** Azure production Elite/Hub (untouched by C1). Do not treat `origin/main` as the integration line.
+- **Primary system of record:** SharePoint `HVCG_*` lists for Version 1 CRM/clients/projects/tasks/HVCG finance ops; Hub for runtime APIs; BA engines in-tree at `config/business/`
+- **Production URL/status:** Azure production Elite/Hub (untouched by Gate 11 final closure). Do not treat `origin/main` as the integration line.
 - **Integrations:** Entra ID, SharePoint, Graph, optional Local AI / Ollama loopback, Plaid API in-tree (`apps/atlas-plaid-api`). QBO application package exists on `cursor/quickbooks-integration` (preserved on origin) and is **not** yet merged into canonical.
 
 ## 2. Autonomous Marketing
@@ -49,14 +54,14 @@ Canonical Atlas line: `integration/atlas-canonical` @ `70b6127ffb217f07091d1d54b
 
 ## 4. Growth Command Center
 
-- **Purpose:** Growth operations command center (RBAC, team/integration settings).
-- **Owner:** HVCG
-- **Classification:** Internal / commercial operations
+- **Purpose:** Commercial CFO / financial-intelligence product (not HVCG internal accounting).
+- **Owner:** HVCG (commercial product)
+- **Classification:** Commercial SaaS; own application and data boundary. HVCG may use GCC as a customer/tenant.
 - **Repository:** `github.com/mblv89117/growth-command-center.git`
 - **Canonical branch:** `main` @ `a69b3f5a8a35ddfcbadfc66a20ab27841bea32b5`
 - **Path:** `/Volumes/MacMiniPro2TB/Growth Command Center`
-- **Primary system of record:** GCC application data
-- **Production URL/status:** GCC production (untouched by C1)
+- **Primary system of record:** GCC application data (separate from Atlas SharePoint `HVCG_*`)
+- **Production URL/status:** GCC production (untouched by Gate 11). Commercial launch is post-audit.
 - **Integrations:** Distinct product; do not merge into Atlas because of similar dashboards
 
 ## 5. Agent Copilot
@@ -141,7 +146,7 @@ Worktree checkouts removed with `git worktree remove` only. **Local branches ret
 | sprint11-azure-production-migration | `cursor/sprint11-azure-production-migration` | `a386d816e77a` | origin | Azure migration history on origin; production not bound to this path |
 | track9-eos-sprint1 | `cursor/track9-eos-sprint1` | `6b36782265e9` | origin | EOS sprint 1 on origin |
 
-Registered Atlas worktrees after C1: **27** (root + canonical + 25 retained specialist checkouts).
+Registered Atlas worktrees after C1: **27** (root + canonical + 25 retained specialist checkouts). C1 did not change canonical HEAD (`70b6127` at that moment). Later Gate 11 docs/index commits advanced `integration/atlas-canonical` only. `origin/main` was not promoted.
 
 ## Duplicate HVCG copies
 
@@ -183,3 +188,6 @@ Registered Atlas worktrees after C1: **27** (root + canonical + 25 retained spec
 8. No new database when an authoritative system of record already exists.
 9. Atlas development happens on `integration/atlas-canonical` unless a later gate names a successor.
 10. Do not force-delete dirty worktrees. Do not delete remote `preservation/*` refs. Do not promote canonical to `main` from this index.
+11. Client 360 mapping is **POST CORE AUDIT DEFERRED BACKLOG**. Fail closed. Do not invent mappings.
+12. Immediate `HVCG-Client-*` membership is Manny only unless a later owner roster says otherwise.
+13. Gate 12 (worktree/workspace retirement) is **not started**. Do not execute retirement from this index.
