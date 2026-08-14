@@ -33,6 +33,8 @@ def _env(**overrides: str) -> dict[str, str]:
         "BA_ENTRA_TENANT_ID": TENANT,
         "BA_API_AUDIENCE": AUDIENCE,
         "BA_AUTHORIZED_AZP": AZP,
+        "BA_AUTHORIZED_CALLER_OID": "bbbbbbbb-cccc-4ddd-8eee-ffffffffffff",
+        "BA_REQUIRED_APP_ROLE": "Atlas.BA.Invoke",
         "BA_TEST_JWT_HS256_SECRET": HS_SECRET,
         "HVCG_BA_BUSINESS_DIR": str(BUSINESS),
         "LOCAL_AI_ENABLED": "false",

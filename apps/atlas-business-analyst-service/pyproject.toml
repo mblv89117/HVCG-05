@@ -13,6 +13,7 @@ dependencies = [
   "uvicorn==0.34.3",
   "anyio==4.9.0",
   "PyJWT==2.10.1",
+  "cryptography==44.0.2",
   "httpx==0.28.1",
   "h11==0.14.0",
   "click==8.1.8",
@@ -23,7 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # BA ENGINE DEPENDENCIES: none (canonical config/business is stdlib + in-tree JSON).
-# BA SERVICE HOST DEPENDENCIES: the list above (Starlette + uvicorn + PyJWT + httpx for tests).
+# BA SERVICE HOST DEPENDENCIES: the list above (Starlette + uvicorn + PyJWT + cryptography + httpx for tests).
 
 [project.scripts]
 atlas-ba-service = "atlas_ba_service.__main__:main"

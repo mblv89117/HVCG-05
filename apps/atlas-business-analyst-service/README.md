@@ -27,7 +27,7 @@ None beyond CPython 3.11 stdlib and in-tree JSON policy files under `config/busi
 
 ### BA service host dependencies
 
-Pinned in `requirements.txt`: Starlette, uvicorn, anyio, PyJWT, httpx (tests).
+Pinned in `requirements.txt`: Starlette, uvicorn, anyio, PyJWT, cryptography (RS256), httpx (tests).
 
 ## Local start
 
@@ -66,24 +66,30 @@ python3.11 -m unittest discover -s tests/unit/business -p 'test_*.py'
 | `HVCG_BA_BUSINESS_DIR` | Optional override for `config/business`. No workstation-absolute default. |
 | `BA_REQUIRE_AUTH` | Default true. Cannot be false in production/staging. |
 | `BA_ENTRA_TENANT_ID` | Placeholder until the infrastructure gate. Required in production. |
-| `BA_API_AUDIENCE` | Future BA API audience. Required in production. Do not invent an ID. |
-| `BA_AUTHORIZED_AZP` | Future Hub caller `azp`/`appid` (managed identity or Hub app). Required in production. |
-| `BA_JWKS_URL` | Optional. Defaults from tenant. |
+| `BA_API_AUDIENCE` | Future v2 BA API audience (API application ID GUID). Required in production. Do not invent an ID. |
+| `BA_AUTHORIZED_CALLER_OID` | Hub managed-identity **principal / service-principal object ID**. Required in production. Never authorize from `azp` alone. |
+| `BA_AUTHORIZED_AZP` | Optional v2 `azp` corroboration (managed-identity **client ID**). Never sufficient by itself. |
+| `BA_REQUIRED_APP_ROLE` | Production app role. Default `Atlas.BA.Invoke`. |
+| `BA_ACCESS_TOKEN_VERSION` | Production requires `2` / `2.0`. v1-shaped tokens are denied. |
+| `BA_REQUIRE_IDTYP` | Production requires `idtyp=app`. Cannot be disabled in production/staging. |
+| `BA_JWKS_URL` | Optional. Defaults to the tenant v2 JWKS URL. |
 | `BA_TEST_AUTH_TOKEN` | Local/test static bearer. **Production refuses to start if set.** |
 | `BA_TEST_JWT_HS256_SECRET` | Local/test HS256 JWT. **Production refuses to start if set.** |
 | `LOCAL_AI_ENABLED` | Must remain false. Production start fails if true. |
 | `BA_QBO_ENABLED` | Must remain false. Production start fails if true. |
 
-Production fails closed if tenant, audience, or authorized caller identity is missing.
+Production fails closed if tenant, audience, or `BA_AUTHORIZED_CALLER_OID` is missing. Static verify keys cannot be loaded from the environment.
 
 ## Authentication contract
+
+Selected access-token version: **v2.0**. Details: `IDENTITY.md`.
 
 Intended future trust (not provisioned here):
 
 ```
-Hub managed identity -> Entra access token -> BA API audience
-  -> this service validates token
-  -> this service accepts Hub principal projection
+Hub managed identity -> Entra v2 application-only access token -> BA API audience
+  -> this service validates signature, issuer, tenant, audience, idtyp=app, caller oid, Atlas.BA.Invoke
+  -> this service then fail-closes the Hub-supplied user principal projection
 ```
 
 The BA service does **not** trust:
@@ -97,7 +103,7 @@ The BA service does **not** trust:
 
 Local/test may use `BA_TEST_AUTH_TOKEN` or `BA_TEST_JWT_HS256_SECRET`. Those variables are rejected at startup when `BA_ATLAS_ENV` is `production` or `staging`.
 
-Entra JWKS validation is source-prepared. The BA API application registration does not exist yet; production hosting must not start until the infrastructure gate fills the placeholders.
+Entra JWKS validation is source-prepared. Production requires all of: valid RS256 signature, v2 issuer, exact tenant, exact audience, `ver=2.0`, `azp` present, `scp` absent, `idtyp=app`, exact caller oid, and `roles` containing `Atlas.BA.Invoke`. The BA API application registration does not exist yet; production hosting must not start until the infrastructure gate fills the placeholders and adds `idtyp` as a BA API access-token optional claim.
 
 ## Principal projection (Hub -> BA)
 
@@ -173,8 +179,8 @@ uvicorn atlas_ba_service.app:create_app --factory --host 0.0.0.0 --port 8000
 
 - Missing/invalid JSON → 400 fail closed
 - Oversized body → 413
-- Anonymous / wrong audience / wrong tenant → 401
-- Unauthorized Hub caller (`azp`) → 403
+- Anonymous / wrong audience / wrong tenant / delegated or non-app token → 401
+- Unauthorized Hub caller (oid/`azp`) or missing `Atlas.BA.Invoke` → 403
 - Invalid op / client mismatch → 403
 - Dispatch timeout → 504
 - Sanitized errors only; tokens and request bodies are not logged
