@@ -33,7 +33,6 @@ import { workspaceCatalog } from '../data/workspaces';
 import {
   disconnectConnection,
   discoverConnection,
-  fetchAdminDashboard,
   fetchAudit,
   fetchConnections,
   fetchHealth,
@@ -173,20 +172,16 @@ export function ConnectionsCenterPage() {
     setLoading(true);
     setError(null);
     try {
-      const [health, reg, conns, dash] = await Promise.all([
+      const [health, reg, conns] = await Promise.all([
         fetchHealth().catch(() => ({ ok: false })),
         fetchRegistry(auth),
         fetchConnections(auth),
-        fetchAdminDashboard(auth).catch(() => null),
       ]);
       setHubHealth(health);
       setRegistry(reg.providers || []);
       setConnections(conns.connections || []);
-      setDashboard(
-        dash && typeof dash === 'object' && 'summary' in (dash as object)
-          ? ((dash as { summary: Record<string, unknown> }).summary as Record<string, unknown>)
-          : (dash as Record<string, unknown> | null),
-      );
+      // Do not call /api/admin/dashboard here: HVCG Owner is not entitled (403) and
+      // the browser would log it on the supported BA Health workflow. Counts come from connections.
       setSelectedId((prev) => prev || conns.connections?.[0]?.id || null);
     } catch (e) {
       setError(

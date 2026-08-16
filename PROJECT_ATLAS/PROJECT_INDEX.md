@@ -1,5 +1,7 @@
 # PROJECT_INDEX
 
+> **Certification harness (non-product QA):** `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md` · [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md). Do not restart the portfolio / architecture audit.
+
 **As of:** 2026-07-16 19:01 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`  
 **Canonical SoR:** this Atlas. Begin here before any other work.
@@ -26,6 +28,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 
 | Need | Open |
 |------|------|
+| Seven-system certification (QA harness) | `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md` · [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md) |
 | What is true now | [CURRENT_STATE.md](CURRENT_STATE.md) |
 | How Manny operates today | [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md) |
 | What to do next | [NEXT_ACTIONS.md](NEXT_ACTIONS.md) |

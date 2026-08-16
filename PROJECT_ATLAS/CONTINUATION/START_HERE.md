@@ -46,6 +46,8 @@ Project Atlas is the authoritative source of truth.
 
 Every engineer and AI must read these documents IN ORDER.
 
+0. If certifying the seven systems (non-product QA): `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md` — do not restart the architecture audit.
+
 1. PROJECT_ATLAS/CONTINUATION/START_HERE.md
 
 2. PROJECT_ATLAS/CONTINUATION/PROJECT_PHILOSOPHY.md

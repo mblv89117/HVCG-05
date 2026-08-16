@@ -125,6 +125,79 @@
       "indexed": false,
       "description": "",
       "default": false
+    },
+    {
+      "internalName": "SourceMessageId",
+      "displayName": "SourceMessageId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Graph message id. Additive 2026-08-14 Client Workspace V1. Do not copy mailbox bodies."
+    },
+    {
+      "internalName": "ConversationId",
+      "displayName": "ConversationId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Outlook conversation/thread id. Additive 2026-08-14."
+    },
+    {
+      "internalName": "InternetMessageId",
+      "displayName": "InternetMessageId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "RFC internet message id. Additive 2026-08-14."
+    },
+    {
+      "internalName": "OutlookWebLink",
+      "displayName": "OutlookWebLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": "Open the source message in Outlook. Additive 2026-08-14."
+    },
+    {
+      "internalName": "Participants",
+      "displayName": "Participants",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Semicolon-separated participants. Additive 2026-08-14. Not mailbox body."
+    },
+    {
+      "internalName": "LastActivityAt",
+      "displayName": "LastActivityAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Last thread activity. Additive 2026-08-14."
+    },
+    {
+      "internalName": "ProvenanceSource",
+      "displayName": "ProvenanceSource",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Durable source system label e.g. outlook-graph. Additive 2026-08-14."
+    },
+    {
+      "internalName": "SourceOrg",
+      "displayName": "SourceOrg",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "HVS vs HVCG origin. Additive 2026-08-14. Do not rewrite HVS as HVCG.",
+      "choices": ["HVCG", "HVS", "Unknown"]
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Migration/index idempotency. Additive 2026-08-14."
     }
   ]
 }

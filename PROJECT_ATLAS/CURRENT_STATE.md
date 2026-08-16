@@ -1,5 +1,7 @@
 # CURRENT_STATE
 
+> **Certification harness (non-product QA, not owner-ready):** `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md` · [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md). Do not restart the architecture audit.
+
 **As of:** 2026-08-14 21:25 UTC  
 **Status SoR:** this file  
 **Canonical worktree:** `.worktrees/atlas-canonical-integration`  

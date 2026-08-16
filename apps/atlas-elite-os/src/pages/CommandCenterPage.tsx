@@ -166,7 +166,7 @@ export function CommandCenterPage() {
   return (
     <ModuleScaffold
       title="Daily Command Center"
-      subtitle="What needs Manny’s attention — priorities, clients, team, agents, and next actions."
+      subtitle="What needs your attention — priorities, clients, team, agents, and next actions. Queue is scoped to the signed-in Microsoft identity."
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

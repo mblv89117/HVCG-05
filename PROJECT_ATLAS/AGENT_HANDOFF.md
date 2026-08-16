@@ -1,5 +1,7 @@
 # AGENT_HANDOFF
 
+> **Non-product QA — read this harness first if certifying the seven systems:** [`/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md`](/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md) · pointer: [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md). Do not restart the architecture audit. Do not merge products. Do not start Gate 12. Do not promote `main`.
+
 **Audience:** New Cursor agent · new ChatGPT conversation · new engineer  
 **As of:** 2026-07-16 19:01 UTC
 **Goal:** Resume with **zero** prior chat history.

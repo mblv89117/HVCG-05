@@ -8,6 +8,7 @@
 
 ## Start here
 
+0. **Seven-system certification (non-product QA):** [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md) → `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md`. Do not restart the architecture audit.
 1. [PROJECT_INDEX.md](PROJECT_INDEX.md) — map of the whole system (**required first**)  
 2. [CURRENT_STATE.md](CURRENT_STATE.md) — what is true right now  
 3. [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md) — how Manny uses the seven systems today  
@@ -20,6 +21,7 @@
 
 | File | Role |
 |------|------|
+| [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md) | Pointer to non-product QA harness (`HVCG_SYSTEM_CERTIFICATION/STATUS.md`) |
 | [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md) | Owner operating handoff (seven systems) |
 | [ROADMAP.md](ROADMAP.md) | Forward plan by track/sprint |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture **index** (links out; not a second SoR) |

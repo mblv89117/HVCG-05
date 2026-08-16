@@ -5,6 +5,8 @@
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)  
 **Do not** start Gate 12, promote `main`, launch commercial products, or reopen the architecture audit.
 
+Seven-system certification (non-product QA, not owner-ready): `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md` — [SYSTEM_CERTIFICATION_HARNESS.md](SYSTEM_CERTIFICATION_HARNESS.md).
+
 The seven-system architecture is settled. Atlas owner recovery is complete. Normal client operations run on Atlas + the live HVCG website. Everything else below is either a supporting product or explicitly deferred.
 
 Sign in to Atlas with **Manny’s Microsoft account only**. Owner role is not a substitute for client-group membership.

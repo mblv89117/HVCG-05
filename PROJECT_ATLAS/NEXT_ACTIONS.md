@@ -8,6 +8,7 @@ Architecture audit is finished. Do not restart it. Owner may conduct normal clie
 
 ## Now
 
+0. AI sessions doing seven-system certification: read `/Volumes/MacMiniPro2TB/HVCG_SYSTEM_CERTIFICATION/STATUS.md` first ([pointer](SYSTEM_CERTIFICATION_HARNESS.md)). Do not restart the architecture audit. Do not start Gate 12. Do not promote `main`.
 1. Owner: sign in at production Elite, hard-refresh, confirm Command Center / My Work / Portfolio / Projects load SharePoint `HVCG_*` data.
 2. Keep `origin/main` at `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion.
 3. Keep client entitlements **Manny-only** on the seven `HVCG-Client-*` groups.

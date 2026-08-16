@@ -52,9 +52,11 @@ assert.match(portfolio, /projectDetailPath/);
 assert.match(portfolio, /Sync from Microsoft \+ Client 360/);
 
 const live = readFileSync(join(root, 'src/pages/LiveClientDetailPage.tsx'), 'utf8');
-assert.match(live, /Create project/);
-assert.match(live, /No projects have been created for this client/);
+assert.match(live, /Client Workspace V1/);
+assert.match(live, /Client 360 mapping is deferred/);
 assert.match(live, /projectDetailPath/);
+assert.match(live, /PARTIAL — SOURCE DATA NOT FOUND/);
+assert.doesNotMatch(live, /Client360FinanceSection/);
 
 const docs = readFileSync(join(root, 'src/pages/DocumentsOperatingPage.tsx'), 'utf8');
 assert.match(docs, /fetchPmDocuments/);

@@ -12,6 +12,11 @@ import { isValidProjectId } from '../projectId.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
 import { isSharePointItemId } from './ids.ts';
 import { DEFERRED_COLLECTIONS, type SharePointPmService, type SharePointProject, type SharePointTask } from './repository.ts';
+import { searchSharePointPm } from './search.ts';
+import { buildSharePointClientWorkspace } from './workspace.ts';
+import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './token.ts';
+import { createFabricGraphClient } from './fabric/graph.ts';
+import { runFabricSync } from './fabric/sync.ts';
 
 const DEFERRED_PATHS = [
   '/api/pm/inbox',
@@ -76,8 +81,12 @@ function isDeferredPath(path: string): boolean {
   if (path.startsWith('/api/pm/clients/')) {
     const rest = decodeURIComponent(path.slice('/api/pm/clients/'.length));
     if (!rest.includes('/') && isCanonicalClientCode(rest)) return false;
+    const [code, tail] = rest.split('/');
+    if (isCanonicalClientCode(code) && (tail === 'workspace' || tail === 'brief')) return false;
     return true;
   }
+  if (path === '/api/pm/search') return false;
+  if (path === '/api/pm/fabric/sync') return false;
   if (path.startsWith('/api/pm/agents')) return true;
   return false;
 }
@@ -250,7 +259,54 @@ export async function handleSharePointPmRoutes(opts: {
       return true;
     }
 
+    if (method === 'POST' && path === '/api/pm/clients') {
+      const client = await service.createVerifiedHistoricalClient(
+        principal,
+        body,
+        idempotencyKey(req, body),
+      );
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: 'pm_client_create_manny',
+        outcome: 'success',
+        detail: `list=HVCG_Clients client=${client.clientCode} item=${client.itemId}`,
+      });
+      send(
+        res,
+        200,
+        {
+          client,
+          entitlementGroup: {
+            displayName: `HVCG-Client-${client.clientCode}`,
+            provisioned: false,
+            note: 'Manny-only Entra group must be provisioned and added to INTEGRATION_CLIENT_ENTITLEMENT_GROUPS. Owner role is not all-client access.',
+          },
+        },
+        origin,
+      );
+      return true;
+    }
+
     const clientOne = path.match(/^\/api\/pm\/clients\/([^/]+)$/);
+    if (method === 'PATCH' && clientOne) {
+      const rawCode = decodeURIComponent(clientOne[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const client = await service.patchVerifiedClient(principal, rawCode, body, readEtag(req, body));
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: 'pm_client_patch_manny',
+        outcome: 'success',
+        detail: `list=HVCG_Clients client=${client.clientCode} item=${client.itemId}`,
+      });
+      send(res, 200, { client }, origin);
+      return true;
+    }
+
     if (method === 'GET' && clientOne) {
       const rawCode = decodeURIComponent(clientOne[1]);
       if (!isCanonicalClientCode(rawCode)) {
@@ -266,6 +322,45 @@ export async function handleSharePointPmRoutes(opts: {
         (p) => p.clientCode === rawCode,
       );
       send(res, 200, { client, projects, deferred: deferredMeta() }, origin);
+      return true;
+    }
+
+    const clientWorkspace = path.match(/^\/api\/pm\/clients\/([^/]+)\/(workspace|brief)$/);
+    if ((method === 'GET' || method === 'POST') && clientWorkspace) {
+      const rawCode = decodeURIComponent(clientWorkspace[1]);
+      const workspace = await buildSharePointClientWorkspace(service, principal, rawCode);
+      send(res, 200, { workspace }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/pm/search') {
+      const url = new URL(req.url || '', 'http://local');
+      const found = await searchSharePointPm(service, principal, url.searchParams.get('q') || '');
+      send(res, 200, found, origin);
+      return true;
+    }
+
+    if (method === 'POST' && path === '/api/pm/fabric/sync') {
+      const tokenProvider =
+        opts.cfg.pmTokenProvider ||
+        createManagedIdentityTokenProvider(opts.cfg.pmBackend.sharepoint?.managedIdentityClientId || '', {
+          resource: GRAPH_TOKEN_RESOURCE,
+        });
+      const fabric = createFabricGraphClient(tokenProvider);
+      const result = await runFabricSync({
+        principal,
+        service,
+        fabric,
+        dataDir: opts.cfg.dataDir,
+      });
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: 'pm_fabric_sync',
+        outcome: 'success',
+        detail: `mail=${result.indexed.mailThreads} meetings=${result.indexed.meetings} files=${result.indexed.files} skipped=${result.indexed.skipped}`,
+      });
+      send(res, 200, { fabric: result }, origin);
       return true;
     }
 

@@ -139,7 +139,7 @@ export function MyWorkPage() {
   return (
     <ModuleScaffold
       title="My Work"
-      subtitle="Manny’s personalized operating queue — overdue, today, waiting, approvals, and delegated work."
+      subtitle="Your operating queue — overdue, today, waiting, approvals, and delegated work. Identity comes from the signed-in Microsoft oid."
       showPendingBanner={false}
     >
       <QuickCaptureBar auth={auth} onCreated={() => void refresh()} />

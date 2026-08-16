@@ -40,6 +40,8 @@ import { useAtlasRole } from '../security/RoleProvider';
 import { useWorkspaceContext } from '../state/WorkspaceContext';
 import { workspaceCatalog } from '../data/workspaces';
 import { ATLAS_BUILD } from '../buildInfo';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
+import { searchPm, type PmSearchHit } from '../integrations/hub/pmApi';
 
 const ATLAS_SCHEME_KEY = 'atlas.colorScheme';
 const ATLAS_FAVORITES_KEY = 'atlas.favorites';
@@ -190,7 +192,9 @@ export function AppShell() {
     clearDevOwner,
   } = useMicrosoftAuth();
   const { role, can } = useAtlasRole();
+  const hubAuth = useHubAuth();
   const { workspaceId, setWorkspaceId, workspaceName } = useWorkspaceContext();
+  const [hubHits, setHubHits] = useState<PmSearchHit[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
   const [scheme, setScheme] = useState<AtlasColorScheme>(readScheme);
@@ -279,17 +283,48 @@ export function AppShell() {
     [signedIn, recentItems, can],
   );
 
+  useEffect(() => {
+    const q = query.trim();
+    if (!signedIn || !hubAuth.hasBearer || q.length < 2) {
+      setHubHits([]);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void searchPm(hubAuth, q)
+        .then((data) => {
+          if (!cancelled) setHubHits(data.results || []);
+        })
+        .catch(() => {
+          if (!cancelled) setHubHits([]);
+        });
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, signedIn, hubAuth]);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const pool = signedIn ? catalog : catalog.filter((r) => r.category === 'Navigation' || r.category === 'Administration');
-    if (!q) return pool;
-    return pool.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q) ||
-        (r.subtitle || '').toLowerCase().includes(q),
-    );
-  }, [query, signedIn]);
+    const nav = !q
+      ? pool
+      : pool.filter(
+          (r) =>
+            r.title.toLowerCase().includes(q) ||
+            r.category.toLowerCase().includes(q) ||
+            (r.subtitle || '').toLowerCase().includes(q),
+        );
+    const entitled = hubHits.map((h) => ({
+      id: `hub-${h.kind}-${h.id}`,
+      title: h.title,
+      category: h.kind === 'client' ? 'Client' : h.kind === 'project' ? 'Project' : h.kind === 'task' ? 'Task' : 'Record',
+      subtitle: `${h.source}${h.clientCode ? ` · ${h.clientCode}` : ''}`,
+      to: h.href,
+    }));
+    return [...entitled, ...nav].slice(0, 40);
+  }, [query, signedIn, hubHits]);
 
   const userName = displayName;
   const notificationCount = items.length;

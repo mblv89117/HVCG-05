@@ -37,6 +37,7 @@ import {
   isBootstrapMilestoneTitle,
   isBootstrapNextAction,
 } from '../operating/projectDisplay';
+import { isCanonicalClientCode } from '../security/clientCode';
 
 export function PortfolioPage() {
   const auth = useHubAuth();
@@ -58,7 +59,7 @@ export function PortfolioPage() {
     name: '',
     clientId: '',
     clientName: '',
-    ownerName: 'Manny Barela',
+    ownerName: '',
     priority: 'normal',
     nextAction: '',
     objective: '',
@@ -196,7 +197,7 @@ export function PortfolioPage() {
       name: '',
       clientId: '',
       clientName: '',
-      ownerName: 'Manny Barela',
+      ownerName: '',
       priority: 'normal',
       nextAction: '',
       objective: '',
@@ -206,14 +207,14 @@ export function PortfolioPage() {
   };
 
   const submitCreate = async () => {
-    if (!form.name.trim()) return;
+    if (!form.name.trim() || !isCanonicalClientCode(form.clientId)) return;
     setBusy(true);
     try {
       const { project } = await createPmProject(auth, {
         name: form.name.trim(),
         ClientCode: form.clientId || undefined,
         clientCode: form.clientId || undefined,
-        ownerName: form.ownerName || 'Manny Barela',
+        ownerName: form.ownerName || undefined,
         priority: form.priority,
         nextAction: form.nextAction || undefined,
         objective: form.objective || undefined,
@@ -509,9 +510,11 @@ export function PortfolioPage() {
                       'Select ClientCode'
                     }
                     selectedOptions={[form.clientId || '']}
-                    onOptionSelect={(_, d) =>
-                      setForm((f) => ({ ...f, clientId: String(d.optionValue || '') }))
-                    }
+                    onOptionSelect={(_, d) => {
+                      const raw = String(d.optionValue || d.optionText || '');
+                      const code = raw.split('·')[0].trim().toUpperCase();
+                      setForm((f) => ({ ...f, clientId: isCanonicalClientCode(code) ? code : '' }));
+                    }}
                   >
                     {clients.map((c) => (
                       <Option key={c.clientCode || c.id} value={c.clientCode || c.id} text={c.clientCode || c.id}>
@@ -569,7 +572,11 @@ export function PortfolioPage() {
               <Button appearance="secondary" onClick={() => setCreateOpen(false)}>
                 Cancel
               </Button>
-              <Button appearance="primary" disabled={busy} onClick={() => void submitCreate()}>
+              <Button
+                appearance="primary"
+                disabled={busy || !form.name.trim() || !isCanonicalClientCode(form.clientId)}
+                onClick={() => void submitCreate()}
+              >
                 Create
               </Button>
             </DialogActions>

@@ -1,7 +1,8 @@
 /**
- * SharePoint HVCG_Clients detail — ClientCode canonical. Client 360 is fail-closed / deferred.
+ * Client Workspace V1 — ClientCode canonical. Not Client 360.
+ * Empty / ungranted sections are labeled, not presented as working.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AtlasCard,
@@ -10,73 +11,48 @@ import {
   EmptyState,
   FilterToolbar,
 } from '@hvcg/atlas-design-system';
-import {
-  Button,
-  Caption1,
-  Spinner,
-  Text,
-  Tab,
-  TabList,
-  Input,
-  Field,
-} from '@fluentui/react-components';
+import { Button, Caption1, Spinner, Text, Tab, TabList } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import { type Client360Candidate, type Client360Document } from '../integrations/hub/api';
 import {
-  createPmDecision,
-  createPmNote,
-  createPmProject,
-  createPmTask,
-  createPmMilestone,
-  fetchPmClient,
-  type PmProject,
-  type PmTask,
+  fetchClientWorkspace,
+  refreshClientBrief,
+  type ClientWorkspace,
+  type CompletenessCell,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
-import { Client360DocumentsSection } from './DocumentLifecycleWorkbench';
-import { Client360ExecutiveFlags } from './ExecutiveOwnerSupportWorkbench';
 import { projectDetailPath } from '../routing/projectId';
 import { isCanonicalClientCode } from '../security/clientCode';
-import {
-  Client360CapitalSection,
-  Client360FinanceSection,
-  Client360GrowthSection,
-  Client360MigrationSection,
-  Client360ProcurementSection,
-  Client360RevenueSection,
-  Client360RiskSection,
-} from './Client360CommercialSections';
-import { Client360AiAssist } from './AiOrchestrationWorkbench';
+
+function toneFor(status?: CompletenessCell['status']): 'success' | 'warning' | 'info' {
+  if (status === 'COMPLETE') return 'success';
+  if (status === 'BLOCKED_AMBIGUOUS_IDENTITY') return 'warning';
+  return 'warning';
+}
+
+function labelFor(status?: CompletenessCell['status']): string {
+  if (status === 'COMPLETE') return 'COMPLETE';
+  if (status === 'BLOCKED_AMBIGUOUS_IDENTITY') return 'BLOCKED — AMBIGUOUS IDENTITY';
+  return 'PARTIAL — SOURCE DATA NOT FOUND';
+}
+
+function SectionEmpty({ title, reason }: { title: string; reason?: string }) {
+  return (
+    <EmptyState
+      title={title}
+      description={reason || 'This section is not populated. It is not a working empty panel.'}
+    />
+  );
+}
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const { account, ready } = useMicrosoftAuth();
   const auth = useHubAuth();
   const [tab, setTab] = useState('overview');
-  const [client, setClient] = useState<Client360Candidate | null>(null);
-  const [docs, setDocs] = useState<Client360Document[]>([]);
-  const [projects, setProjects] = useState<PmProject[]>([]);
-  const [tasks, setTasks] = useState<PmTask[]>([]);
-  const [notes, setNotes] = useState<Array<{ id: string; body: string }>>([]);
-  const [decisions, setDecisions] = useState<Array<{ id: string; title: string; status: string }>>(
-    [],
-  );
-  const [deliverables, setDeliverables] = useState<Array<{ id: string; name: string; status: string }>>(
-    [],
-  );
-  const [meetings, setMeetings] = useState<Array<{ id?: string; title: string; at?: string; kind?: string }>>(
-    [],
-  );
-  const [approvals, setApprovals] = useState<PmTask[]>([]);
+  const [workspace, setWorkspace] = useState<ClientWorkspace | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [projectName, setProjectName] = useState('');
-  const [taskTitle, setTaskTitle] = useState('');
-  const [noteBody, setNoteBody] = useState('');
-  const [decisionTitle, setDecisionTitle] = useState('');
-  const [milestoneTitle, setMilestoneTitle] = useState('');
-
   const [c360Deferred, setC360Deferred] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -85,40 +61,15 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     setC360Deferred(false);
     try {
       if (!isCanonicalClientCode(clientId)) {
-        setClient(null);
-        setDocs([]);
-        setProjects([]);
-        setTasks([]);
+        setWorkspace(null);
         setC360Deferred(true);
         return;
       }
-      const scoped = { ...auth, clientIds: [clientId] };
-      const detail = await fetchPmClient(scoped, clientId);
-      setClient({
-        id: detail.client.clientCode,
-        displayName: detail.client.displayName,
-        legalName: detail.client.displayName,
-        lifecycle: 'active',
-        completenessScore: 0,
-        emails: [],
-        domains: [],
-        businessEntities: ['HVCG'],
-        recommendedNextActions: [],
-        timeline: [],
-        sourceRefs: [],
-        associations: { documents: [], emails: [] },
-      } as Client360Candidate);
-      setDocs([]);
-      const listed = detail.projects || [];
-      setProjects(listed);
-      setTasks([]);
-      setNotes([]);
-      setDecisions([]);
-      setDeliverables([]);
-      setMeetings([]);
-      setApprovals([]);
+      const data = await fetchClientWorkspace({ ...auth, clientIds: [clientId] }, clientId);
+      setWorkspace(data.workspace);
     } catch (err) {
       setError(String(err));
+      setWorkspace(null);
     } finally {
       setBusy(false);
     }
@@ -127,8 +78,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   useEffect(() => {
     if (!ready) return;
     if (!account) {
-      setClient(null);
-      setDocs([]);
+      setWorkspace(null);
       setError(null);
       setBusy(false);
       return;
@@ -136,16 +86,6 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     if (!auth.accessToken) return;
     void refresh();
   }, [refresh, ready, account, auth.accessToken]);
-
-  const hvsTimeline = useMemo(
-    () =>
-      (client?.timeline || []).filter((t) =>
-        (client?.sourceRefs || []).some(
-          (s) => s.sourceRecordId === t.sourceRecordId && s.businessEntity === 'HVS',
-        ),
-      ),
-    [client],
-  );
 
   if (c360Deferred && !busy) {
     return (
@@ -165,9 +105,9 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     );
   }
 
-  if (!client && !busy && error) {
+  if (!workspace && !busy && error) {
     return (
-      <ModuleScaffold title="Client" subtitle="SharePoint HVCG_Clients" showPendingBanner={false}>
+      <ModuleScaffold title="Client" subtitle="Client Workspace V1" showPendingBanner={false}>
         <AtlasCard title="Error">
           <Text>{error}</Text>
           <Link to="/clients">
@@ -180,14 +120,14 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     );
   }
 
-  const title = client?.displayName || client?.legalName || 'Client';
-  const sharePointClients =
-    'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients';
+  const title = workspace?.overview.displayName || workspace?.client.displayName || 'Client';
+  const code = workspace?.overview.clientCode || clientId;
+  const completeness = workspace?.completeness || {};
 
   return (
     <ModuleScaffold
       title={title}
-      subtitle="SharePoint HVCG_Clients · ClientCode canonical · Client 360 deferred (fail-closed)"
+      subtitle={`Client Workspace V1 · ${code} · Client 360 fail-closed`}
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -196,10 +136,12 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
           </Button>
           <Button
             appearance="secondary"
-            icon={<OpenRegular />}
-            onClick={() => window.open(sharePointClients, '_blank', 'noopener,noreferrer')}
+            disabled={busy || !workspace}
+            onClick={() =>
+              void refreshClientBrief(auth, clientId).then((data) => setWorkspace(data.workspace))
+            }
           >
-            Open SharePoint workspace
+            Refresh AI brief
           </Button>
           <Link to="/clients">
             <Button appearance="secondary">All clients</Button>
@@ -208,124 +150,87 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       }
     >
       <FilterToolbar>
-        <StatusChip label={client?.lifecycle || '…'} tone="info" />
-        <StatusChip
-          label={`${Math.round(client?.completenessScore || 0)}% complete`}
-          tone="success"
-        />
-        <StatusChip label={`${projects.length} projects`} tone="gold" />
-        <StatusChip label={`${docs.length} linked docs`} tone="gold" />
+        <StatusChip label={code} tone="info" />
+        <StatusChip label={workspace?.overview.clientStage || 'stage unknown'} tone="info" />
+        <StatusChip label={`${workspace?.projects.length || 0} projects`} tone="gold" />
+        <StatusChip label={`${workspace?.tasks.length || 0} open tasks`} tone="gold" />
         {busy ? <Spinner size="tiny" /> : null}
-        <Caption1>SharePoint ClientCode directory · Client 360 sections below are deferred</Caption1>
+        <Caption1>Evidence from entitled HVCG_* lists. Ungranted sources are labeled, not faked.</Caption1>
       </FilterToolbar>
 
-      <TabList
-        selectedValue={tab}
-        onTabSelect={(_, d) => setTab(String(d.value))}
-        aria-label="Client sections"
-      >
+      <TabList selectedValue={tab} onTabSelect={(_, d) => setTab(String(d.value))} aria-label="Client workspace">
         <Tab value="overview">Overview</Tab>
-        <Tab value="health">Health</Tab>
         <Tab value="projects">Projects</Tab>
         <Tab value="tasks">Tasks</Tab>
         <Tab value="documents">Documents</Tab>
+        <Tab value="communications">Communications</Tab>
         <Tab value="meetings">Meetings</Tab>
-        <Tab value="financials">Financials</Tab>
-        <Tab value="revenue">Revenue</Tab>
-        <Tab value="migration">Migration</Tab>
-        <Tab value="capital">Capital</Tab>
-        <Tab value="procurement">Procurement</Tab>
-        <Tab value="risk">Risk</Tab>
-        <Tab value="growth">Growth</Tab>
-        <Tab value="ai">AI</Tab>
+        <Tab value="engagements">Engagements</Tab>
         <Tab value="deliverables">Deliverables</Tab>
-        <Tab value="approvals">Approvals</Tab>
-        <Tab value="notes">Notes</Tab>
-        <Tab value="decisions">Decisions</Tab>
-        <Tab value="activity">Activity</Tab>
+        <Tab value="decisions">Decisions / Risks</Tab>
+        <Tab value="timeline">Timeline</Tab>
+        <Tab value="brief">AI brief</Tab>
       </TabList>
 
       {tab === 'overview' ? (
         <div style={{ display: 'grid', gap: 16 }}>
-          <AtlasCard title="Identity" subtitle="Canonical SharePoint ClientCode">
+          <AtlasCard title="Identity" subtitle="HVCG_Clients.ClientCode">
             <Text>
-              {client?.legalName || client?.displayName}
-              {client?.domains?.length ? ` · ${client.domains.join(', ')}` : ''}
+              {title}
+              {workspace?.overview.dba ? ` · DBA ${workspace.overview.dba}` : ''}
             </Text>
             <Caption1 style={{ display: 'block', marginTop: 8 }}>
-              Emails: {(client?.emails || []).slice(0, 5).join(', ') || '—'}
+              Industry: {workspace?.overview.industry || '—'} · Engagement:{' '}
+              {workspace?.overview.engagementType || '—'} · Health:{' '}
+              {workspace?.overview.overallHealth || '—'}
             </Caption1>
             <Caption1 style={{ display: 'block', marginTop: 4 }}>
-              Entities: {(client?.businessEntities || []).join(', ') || '—'}
+              Source org: {workspace?.overview.sourceOrg || 'HVCG (unlabeled)'} · Last contact:{' '}
+              {workspace?.overview.lastMeaningfulContact?.slice(0, 10) || '—'}
             </Caption1>
           </AtlasCard>
-          <AtlasCard title="Next actions">
-            {(client?.recommendedNextActions || []).length ? (
+          <AtlasCard title="Completeness dashboard">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {Object.entries(completeness).map(([key, cell]) => (
+                <StatusChip
+                  key={key}
+                  label={`${key}: ${labelFor(cell.status)} (${cell.count})`}
+                  tone={toneFor(cell.status)}
+                />
+              ))}
+            </div>
+          </AtlasCard>
+          <AtlasCard title="Next actions" subtitle="Traced to Atlas evidence">
+            {(workspace?.nextActions || []).length ? (
               <ul>
-                {(client?.recommendedNextActions || []).map((a) => (
-                  <li key={a}>
-                    <Text size={300}>{a}</Text>
+                {(workspace?.nextActions || []).map((a) => (
+                  <li key={`${a.text}-${a.evidence[0]?.id || ''}`}>
+                    <Text size={300}>{a.text}</Text>
+                    <Caption1 style={{ display: 'block' }}>
+                      {a.evidence.map((e) => `${e.source} ${e.field || ''}`.trim()).join(' · ')}
+                    </Caption1>
                   </li>
                 ))}
               </ul>
             ) : (
-              <Text size={300}>No recommended actions yet.</Text>
+              <SectionEmpty title="No evidenced next actions" />
             )}
           </AtlasCard>
-          <Client360ExecutiveFlags clientHint={client?.legalName || client?.displayName || clientId} />
         </div>
       ) : null}
 
-      {tab === 'health' ? (
-        <AtlasCard title="Client health">
-          <Text>
-            Completeness {Math.round(client?.completenessScore || 0)}%. Missing information:{' '}
-            {(client?.missingInformation || []).join('; ') || 'None listed'}.
-          </Text>
-          <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            Open projects: {projects.length} · Open tasks: {tasks.length} · Linked documents:{' '}
-            {docs.length}
-          </Caption1>
-        </AtlasCard>
-      ) : null}
-
       {tab === 'projects' ? (
-        <AtlasCard title="Projects">
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <Input
-              placeholder="New project name"
-              value={projectName}
-              onChange={(_, d) => setProjectName(d.value)}
-              style={{ flex: 1 }}
-            />
-            <Button
-              appearance="primary"
-              disabled={!projectName.trim() || busy}
-              onClick={() =>
-                void createPmProject(auth, {
-                  name: projectName.trim(),
-                  ClientCode: clientId,
-                  clientCode: clientId,
-                  nextAction: 'Define first milestone',
-                }).then(() => {
-                  setProjectName('');
-                  return refresh();
-                })
-              }
-            >
-              Create project
-            </Button>
-          </div>
-          {projects.length === 0 ? (
-            <EmptyState
-              title="No projects have been created for this client."
-              description="Create a project to begin tracking milestones, tasks, and deliverables."
+        <AtlasCard title="Projects" subtitle="HVCG_Projects">
+          {!workspace?.projects.length ? (
+            <SectionEmpty
+              title="No entitled projects for this ClientCode"
+              reason="HVCG_Projects was queried. No project rows matched this client."
             />
           ) : (
             <DataTable
               ariaLabel="Client projects"
               getRowKey={(r) => r.id}
-              rows={projects}
+              rows={workspace.projects}
               columns={[
                 {
                   key: 'name',
@@ -335,81 +240,26 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
                     return path ? <Link to={path}>{r.name}</Link> : r.name;
                   },
                 },
-                { key: 'owner', header: 'Owner', render: (r) => r.ownerName },
-                {
-                  key: 'status',
-                  header: 'Status',
-                  render: (r) => <StatusChip label={r.status} tone="info" />,
-                },
+                { key: 'status', header: 'Status', render: (r) => <StatusChip label={r.status} tone="info" /> },
                 { key: 'next', header: 'Next action', render: (r) => r.nextAction || '—' },
               ]}
             />
           )}
-          {projects[0] ? (
-            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-              <Input
-                placeholder="Milestone for first project"
-                value={milestoneTitle}
-                onChange={(_, d) => setMilestoneTitle(d.value)}
-              />
-              <Button
-                disabled={!milestoneTitle.trim()}
-                onClick={() =>
-                  void createPmMilestone(auth, {
-                    projectId: projects[0].id,
-                    title: milestoneTitle,
-                  }).then(() => {
-                    setMilestoneTitle('');
-                    return refresh();
-                  })
-                }
-              >
-                Add milestone
-              </Button>
-            </div>
-          ) : null}
         </AtlasCard>
       ) : null}
 
       {tab === 'tasks' ? (
-        <AtlasCard title="Tasks">
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <Input
-              placeholder="Task title"
-              value={taskTitle}
-              onChange={(_, d) => setTaskTitle(d.value)}
-              style={{ flex: 1 }}
-            />
-            <Button
-              disabled={!taskTitle.trim()}
-              onClick={() =>
-                void createPmTask(auth, {
-                  title: taskTitle,
-                  clientId,
-                  clientName: title,
-                  projectId: projects[0]?.id,
-                  assigneeName: 'Manny Barela',
-                  assigneeId: 'person-manny',
-                  status: 'ready',
-                }).then(() => {
-                  setTaskTitle('');
-                  return refresh();
-                })
-              }
-            >
-              Create task
-            </Button>
-          </div>
-          {tasks.length === 0 ? (
-            <EmptyState
-              title="No open tasks for this client."
-              description="Create a task with an owner and due date to drive next actions."
+        <AtlasCard title="Open tasks" subtitle="HVCG_Tasks — current/open only">
+          {!workspace?.tasks.length ? (
+            <SectionEmpty
+              title="No open tasks"
+              reason="HVCG_Tasks was queried. Past completed work is history, not this queue."
             />
           ) : (
-            tasks.map((t) => (
+            workspace.tasks.map((t) => (
               <Caption1 key={t.id} style={{ display: 'block', padding: '6px 0' }}>
-                {t.title} · {t.status} · {t.assigneeName || 'Unassigned'}
-                {t.dueDate ? ` · due ${t.dueDate}` : ''}
+                {t.title} · {t.status}
+                {t.dueDate ? ` · due ${t.dueDate.slice(0, 10)}` : ''}
               </Caption1>
             ))
           )}
@@ -417,166 +267,89 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       ) : null}
 
       {tab === 'documents' ? (
-        <>
-          <Client360DocumentsSection clientHint={client?.displayName || client?.legalName || clientId} />
-          {docs.length === 0 && !busy ? (
-          <EmptyState
-            title="No linked documents for this client."
-            description="Upload in the approved SharePoint client library, then refresh Client 360 ingest."
-          />
-        ) : (
-          <AtlasCard
-            title="Authorized document links"
-            subtitle="Opens original SharePoint / OneDrive file — Atlas does not move or delete source files"
-            variant="quiet"
-          >
-            <DataTable
-              ariaLabel="Client documents"
-              getRowKey={(r) => r.id}
-              rows={docs}
-              columns={[
-                {
-                  key: 'title',
-                  header: 'File',
-                  render: (r) => (
-                    <span style={{ fontWeight: 600 }}>
-                      {r.webUrl ? (
-                        <a href={String(r.webUrl)} target="_blank" rel="noreferrer">
-                          {r.title} <OpenRegular />
-                        </a>
-                      ) : (
-                        r.title
-                      )}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'class',
-                  header: 'Classification',
-                  render: (r) => String(r.classification || r.kind || '—'),
-                },
-                {
-                  key: 'status',
-                  header: 'Migration',
-                  render: (r) => (
-                    <StatusChip label={String(r.migrationStatus || 'link_only')} tone="info" />
-                  ),
-                },
-              ]}
-            />
-          </AtlasCard>
-        )}
-        </>
+        <AtlasCard title="Documents" subtitle="M365 remains SoR — Atlas indexes links only">
+          {!workspace?.documents.items.length ? (
+            <SectionEmpty title="No document links" reason={workspace?.documents.reason} />
+          ) : (
+            workspace.documents.items.map((d) => (
+              <Caption1 key={d.id} style={{ display: 'block', padding: '6px 0' }}>
+                {d.webUrl ? (
+                  <a href={d.webUrl} target="_blank" rel="noreferrer">
+                    {d.title} <OpenRegular />
+                  </a>
+                ) : (
+                  d.title
+                )}{' '}
+                · {d.source}
+              </Caption1>
+            ))
+          )}
+          {workspace?.documents.reason ? (
+            <Caption1 style={{ display: 'block', marginTop: 8 }}>{workspace.documents.reason}</Caption1>
+          ) : null}
+        </AtlasCard>
+      ) : null}
+
+      {tab === 'communications' ? (
+        <AtlasCard title="Communications" subtitle="Outlook remains email SoR — Atlas is an index">
+          {!workspace?.communications.queried ? (
+            <SectionEmpty title="Communications index not available" reason={workspace?.communications.reason} />
+          ) : !workspace.communications.items.length ? (
+            <SectionEmpty title="No indexed communications" reason="HVCG_Communications was queried." />
+          ) : (
+            workspace.communications.items.map((row) => (
+              <Caption1 key={String(row.id)} style={{ display: 'block', padding: '6px 0' }}>
+                {String(row.title || 'Communication')}
+                {row.date ? ` · ${String(row.date).slice(0, 10)}` : ''}
+              </Caption1>
+            ))
+          )}
+        </AtlasCard>
       ) : null}
 
       {tab === 'meetings' ? (
-        meetings.length === 0 ? (
-          <EmptyState
-            title="No meetings linked for this client."
-            description="Calendar items appear after Microsoft sync associates them to this client."
-          />
-        ) : (
-          meetings.map((m, i) => (
-            <Caption1 key={m.id || `${m.title}-${i}`} style={{ display: 'block', padding: '4px 0' }}>
-              {m.title}
-              {m.at ? ` · ${m.at}` : ''}
-            </Caption1>
-          ))
-        )
+        <AtlasCard title="Meetings" subtitle="HVCG_Meetings + calendar reconcile when granted">
+          {!workspace?.meetings.queried ? (
+            <SectionEmpty title="Meetings source not available" reason={workspace?.meetings.reason} />
+          ) : !workspace.meetings.items.length ? (
+            <SectionEmpty title="No meetings recorded" reason="HVCG_Meetings was queried." />
+          ) : (
+            workspace.meetings.items.map((row) => (
+              <Caption1 key={String(row.id)} style={{ display: 'block', padding: '6px 0' }}>
+                {String(row.title || 'Meeting')}
+                {row.date ? ` · ${String(row.date).slice(0, 10)}` : ''}
+              </Caption1>
+            ))
+          )}
+        </AtlasCard>
       ) : null}
 
-      {tab === 'financials' ? (
-        <div style={{ display: 'grid', gap: 16 }}>
-          <Client360FinanceSection clientHint={client?.legalName || client?.displayName || clientId} />
-          <AtlasCard title="Live balances">
-            <EmptyState
-              title="No verified live financial figures for this client"
-              description="PENDING_LIVE_SOURCE for QBO/Plaid. Atlas does not fabricate charts or balances. CFO cadence lives in Finance workbench (/financials)."
-            />
-          </AtlasCard>
-        </div>
-      ) : null}
-
-      {tab === 'revenue' ? (
-        <Client360RevenueSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'migration' ? (
-        <Client360MigrationSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'capital' ? (
-        <Client360CapitalSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'procurement' ? (
-        <Client360ProcurementSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'risk' ? (
-        <Client360RiskSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'growth' ? (
-        <Client360GrowthSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'ai' ? (
-        <Client360AiAssist clientHint={client?.legalName || client?.displayName || clientId} />
+      {tab === 'engagements' ? (
+        <AtlasCard title="Engagements" subtitle="HVCG_Engagements">
+          {!workspace?.engagements.queried ? (
+            <SectionEmpty title="Engagements source not available" reason={workspace?.engagements.reason} />
+          ) : !workspace.engagements.items.length ? (
+            <SectionEmpty title="No engagements recorded" reason="HVCG_Engagements was queried." />
+          ) : (
+            workspace.engagements.items.map((row) => (
+              <Caption1 key={String(row.id)} style={{ display: 'block', padding: '6px 0' }}>
+                {String(row.title || 'Engagement')} {row.status ? `· ${String(row.status)}` : ''}
+              </Caption1>
+            ))
+          )}
+        </AtlasCard>
       ) : null}
 
       {tab === 'deliverables' ? (
-        deliverables.length === 0 ? (
-          <EmptyState title="No deliverables recorded for this client." description="Deliverables appear from project work and classified Microsoft sources." />
-        ) : (
-          deliverables.map((d) => (
-            <Caption1 key={d.id} style={{ display: 'block', padding: '4px 0' }}>
-              {d.name} ({d.status})
-            </Caption1>
-          ))
-        )
-      ) : null}
-
-      {tab === 'approvals' ? (
-        approvals.length === 0 ? (
-          <EmptyState title="No pending approvals for this client." description="Owner approval tasks will appear here when flagged." />
-        ) : (
-          approvals.map((t) => (
-            <Caption1 key={t.id} style={{ display: 'block', padding: '4px 0' }}>
-              {t.title}
-            </Caption1>
-          ))
-        )
-      ) : null}
-
-      {tab === 'notes' ? (
-        <AtlasCard title="Notes">
-          <Field label="Record a note">
-            <Input value={noteBody} onChange={(_, d) => setNoteBody(d.value)} />
-          </Field>
-          <Button
-            style={{ marginTop: 8 }}
-            disabled={!noteBody.trim()}
-            onClick={() =>
-              void createPmNote(auth, {
-                body: noteBody,
-                clientId,
-                clientName: title,
-                projectId: projects[0]?.id,
-              }).then(() => {
-                setNoteBody('');
-                return refresh();
-              })
-            }
-          >
-            Save note
-          </Button>
-          {notes.length === 0 ? (
-            <Caption1 style={{ display: 'block', marginTop: 12 }}>No notes yet.</Caption1>
+        <AtlasCard title="Deliverables" subtitle="HVCG_Deliverables">
+          {!workspace?.deliverables.queried ? (
+            <SectionEmpty title="Deliverables source not available" reason={workspace?.deliverables.reason} />
+          ) : !workspace.deliverables.items.length ? (
+            <SectionEmpty title="No deliverables recorded" reason="HVCG_Deliverables was queried." />
           ) : (
-            notes.map((n) => (
-              <Caption1 key={n.id} style={{ display: 'block', marginTop: 8 }}>
-                {n.body}
+            workspace.deliverables.items.map((row) => (
+              <Caption1 key={String(row.id)} style={{ display: 'block', padding: '6px 0' }}>
+                {String(row.title || 'Deliverable')} {row.status ? `· ${String(row.status)}` : ''}
               </Caption1>
             ))
           )}
@@ -584,55 +357,50 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       ) : null}
 
       {tab === 'decisions' ? (
-        <AtlasCard title="Decisions">
-          <Field label="Record a decision">
-            <Input value={decisionTitle} onChange={(_, d) => setDecisionTitle(d.value)} />
-          </Field>
-          <Button
-            style={{ marginTop: 8 }}
-            disabled={!decisionTitle.trim()}
-            onClick={() =>
-              void createPmDecision(auth, {
-                title: decisionTitle,
-                decision: decisionTitle,
-                clientId,
-                clientName: title,
-                projectId: projects[0]?.id,
-              }).then(() => {
-                setDecisionTitle('');
-                return refresh();
-              })
-            }
-          >
-            Save decision
-          </Button>
-          {decisions.length === 0 ? (
-            <Caption1 style={{ display: 'block', marginTop: 12 }}>No decisions recorded.</Caption1>
+        <AtlasCard title="Decisions / Risks" subtitle="Evidence only — not invented">
+          {!workspace?.decisionsRisks.queried ? (
+            <SectionEmpty title="Decisions and risks not available" reason={workspace?.decisionsRisks.reason} />
+          ) : !workspace.decisionsRisks.items.length ? (
+            <SectionEmpty title="No evidenced decisions or risks" reason="Granted registers were queried." />
           ) : (
-            decisions.map((d) => (
-              <Caption1 key={d.id} style={{ display: 'block', marginTop: 8 }}>
-                {d.title} ({d.status})
+            workspace.decisionsRisks.items.map((row) => (
+              <Caption1 key={String(row.id)} style={{ display: 'block', padding: '6px 0' }}>
+                {String(row.title || 'Item')} {row.status ? `· ${String(row.status)}` : ''}
               </Caption1>
             ))
           )}
         </AtlasCard>
       ) : null}
 
-      {tab === 'activity' ? (
-        hvsTimeline.length === 0 ? (
-          <EmptyState
-            title="No activity timeline yet"
-            description="Timeline events appear after Microsoft sources are associated to this client."
-          />
-        ) : (
-          <AtlasCard title="Activity">
-            {hvsTimeline.slice(0, 40).map((t) => (
-              <Caption1 key={`${t.sourceRecordId}-${t.at}`} style={{ display: 'block', padding: '4px 0' }}>
-                {t.at?.slice(0, 10)} · {t.kind} · {t.title}
+      {tab === 'timeline' ? (
+        <AtlasCard title="Timeline" subtitle="Origin labeled from Atlas lists">
+          {!workspace?.timeline.length ? (
+            <SectionEmpty title="No timeline events" reason="No dated project or task activity for this ClientCode." />
+          ) : (
+            workspace.timeline.map((t) => (
+              <Caption1 key={`${t.source}-${t.id}-${t.at}`} style={{ display: 'block', padding: '4px 0' }}>
+                {t.at.slice(0, 10)} · {t.kind} · {t.title} · {t.source}
               </Caption1>
-            ))}
-          </AtlasCard>
-        )
+            ))
+          )}
+        </AtlasCard>
+      ) : null}
+
+      {tab === 'brief' ? (
+        <AtlasCard title="AI current-state brief" subtitle="Derived · refreshable · not an authorization record">
+          <Caption1 style={{ display: 'block', marginBottom: 8 }}>
+            Generated {workspace?.brief.generatedAt || '—'} · Every statement traces to Atlas/M365 evidence
+          </Caption1>
+          {(workspace?.brief.statements || []).map((s, i) => (
+            <div key={`${i}-${s.text.slice(0, 24)}`} style={{ marginBottom: 10 }}>
+              <Text size={300}>{s.text}</Text>
+              <Caption1 style={{ display: 'block' }}>
+                {s.evidence.map((e) => `${e.source}${e.field ? '.' + e.field : ''}#${e.id}`).join(' · ') ||
+                  'no evidence'}
+              </Caption1>
+            </div>
+          ))}
+        </AtlasCard>
       ) : null}
     </ModuleScaffold>
   );

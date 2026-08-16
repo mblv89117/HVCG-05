@@ -32,6 +32,26 @@ export async function fetchPmClient(auth: AtlasHubAuthHeaders, clientCode: strin
   }>(auth, `/api/pm/clients/${encodeURIComponent(clientCode)}`);
 }
 
+export async function fetchClientWorkspace(auth: AtlasHubAuthHeaders, clientCode: string) {
+  return hubFetchJson<{ workspace: ClientWorkspace }>(
+    auth,
+    `/api/pm/clients/${encodeURIComponent(clientCode)}/workspace`,
+  );
+}
+
+export async function refreshClientBrief(auth: AtlasHubAuthHeaders, clientCode: string) {
+  return hubFetchJson<{ workspace: ClientWorkspace }>(
+    auth,
+    `/api/pm/clients/${encodeURIComponent(clientCode)}/brief`,
+    { method: 'POST', body: '{}' },
+  );
+}
+
+export async function searchPm(auth: AtlasHubAuthHeaders, q: string) {
+  const qs = new URLSearchParams({ q });
+  return hubFetchJson<{ query: string; results: PmSearchHit[] }>(auth, `/api/pm/search?${qs}`);
+}
+
 export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
   return hubFetchJson<{
     project: PmProject;
@@ -284,7 +304,90 @@ export async function fetchWeeklyReview(auth: AtlasHubAuthHeaders) {
 }
 
 export async function fetchClientPmWorkspace(auth: AtlasHubAuthHeaders, clientId: string) {
-  return hubFetchJson(auth, `/api/pm/clients/${encodeURIComponent(clientId)}/workspace`);
+  return fetchClientWorkspace(auth, clientId);
+}
+
+export interface CompletenessCell {
+  status: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND' | 'BLOCKED_AMBIGUOUS_IDENTITY';
+  queried: boolean;
+  count: number;
+  reason?: string;
+}
+
+export interface EvidenceRef {
+  source: string;
+  kind: string;
+  id: string;
+  field?: string;
+}
+
+export interface WorkspaceSection<T = Record<string, unknown>> {
+  status: CompletenessCell['status'];
+  queried: boolean;
+  items: T[];
+  reason?: string;
+}
+
+export interface ClientWorkspace {
+  kind: 'client_workspace_v1';
+  client: PmClient & {
+    industry?: string;
+    clientStage?: string;
+    engagementType?: string;
+    overallHealth?: string;
+    dba?: string;
+    website?: string;
+    sourceOrg?: string;
+    lastMeaningfulContact?: string;
+    sharePointLibraryUrl?: string;
+  };
+  completeness: Record<string, CompletenessCell>;
+  overview: {
+    clientCode: string;
+    displayName: string;
+    industry?: string;
+    clientStage?: string;
+    engagementType?: string;
+    overallHealth?: string;
+    dba?: string;
+    website?: string;
+    sourceOrg?: string;
+    lastMeaningfulContact?: string;
+    sharePointLibraryUrl?: string;
+  };
+  projects: PmProject[];
+  tasks: PmTask[];
+  documents: WorkspaceSection<{
+    id: string;
+    title: string;
+    webUrl?: string;
+    kind: string;
+    source: string;
+  }>;
+  communications: WorkspaceSection;
+  meetings: WorkspaceSection;
+  engagements: WorkspaceSection;
+  deliverables: WorkspaceSection;
+  decisionsRisks: WorkspaceSection;
+  contacts: WorkspaceSection;
+  timeline: Array<{ at: string; kind: string; title: string; source: string; id: string }>;
+  brief: {
+    generatedAt: string;
+    refreshable: true;
+    authorizationRecord: false;
+    statements: Array<{ text: string; evidence: EvidenceRef[] }>;
+  };
+  nextActions: Array<{ text: string; evidence: EvidenceRef[] }>;
+  source: string;
+}
+
+export interface PmSearchHit {
+  kind: 'client' | 'project' | 'task' | 'communication' | 'document';
+  id: string;
+  clientCode?: string;
+  title: string;
+  href: string;
+  source: string;
 }
 
 export interface PmTask {

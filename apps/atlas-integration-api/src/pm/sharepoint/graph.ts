@@ -1,5 +1,5 @@
 /**
- * Narrow Microsoft Graph v1.0 transport for the four MVP PM lists.
+ * Narrow Microsoft Graph v1.0 transport for configured Atlas HVCG_* lists.
  *
  * Defense-in-depth: even though a Lists.SelectedOperations.Selected token may
  * observe unrelated Command Center catalog/schema metadata when used directly,
@@ -42,9 +42,23 @@ export interface PmGraphTransport {
 
 export type PmGraphResourceAllowlist = Pick<
   SharePointPmSettings,
-  'siteId' | 'projectsListId' | 'tasksListId' | 'milestonesListId' | 'clientsListId'
+  | 'siteId'
+  | 'projectsListId'
+  | 'tasksListId'
+  | 'milestonesListId'
+  | 'clientsListId'
 > & {
   leadsListId?: string;
+  communicationsListId?: string;
+  meetingsListId?: string;
+  engagementsListId?: string;
+  deliverablesListId?: string;
+  decisionsListId?: string;
+  risksListId?: string;
+  contactsListId?: string;
+  vendorsListId?: string;
+  referralsListId?: string;
+  opportunitiesListId?: string;
 };
 
 export type PmListCapability = 'read' | 'write';
@@ -78,8 +92,21 @@ export function capabilityForPmList(
   if (id === normalizeGuid(allowlist.projectsListId)) return 'write';
   if (id === normalizeGuid(allowlist.tasksListId)) return 'write';
   if (id === normalizeGuid(allowlist.milestonesListId)) return 'write';
-  if (id === normalizeGuid(allowlist.clientsListId)) return 'read';
+  if (id === normalizeGuid(allowlist.clientsListId)) return 'write';
   if (allowlist.leadsListId && id === normalizeGuid(allowlist.leadsListId)) return 'write';
+  const selectedWrite = [
+    allowlist.communicationsListId,
+    allowlist.meetingsListId,
+    allowlist.engagementsListId,
+    allowlist.deliverablesListId,
+    allowlist.decisionsListId,
+    allowlist.risksListId,
+    allowlist.contactsListId,
+    allowlist.vendorsListId,
+    allowlist.referralsListId,
+    allowlist.opportunitiesListId,
+  ];
+  if (selectedWrite.some((listId) => listId && id === normalizeGuid(listId))) return 'write';
   rejected('SharePoint PM list is not in the approved resource allowlist.');
 }
 

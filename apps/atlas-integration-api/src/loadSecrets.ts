@@ -8,12 +8,22 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+function moduleDir(): string {
+  try {
+    const url = import.meta.url;
+    if (typeof url === 'string' && url.startsWith('file:')) return dirname(fileURLToPath(url));
+  } catch {
+    /* bundled CJS has no import.meta.url */
+  }
+  return process.cwd();
+}
+
 const CANDIDATES = [
   // repo root .secrets (preferred)
-  join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '.secrets', 'integration.env'),
+  join(moduleDir(), '..', '..', '..', '.secrets', 'integration.env'),
   // app-local override
-  join(dirname(fileURLToPath(import.meta.url)), '..', '.secrets', 'integration.env'),
-  join(dirname(fileURLToPath(import.meta.url)), '..', '.env'),
+  join(moduleDir(), '..', '.secrets', 'integration.env'),
+  join(moduleDir(), '..', '.env'),
 ];
 
 export function loadSecretsFile(): { loadedFrom: string | null; keysLoaded: number } {

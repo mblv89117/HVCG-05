@@ -499,6 +499,32 @@
       "required": false,
       "indexed": false,
       "description": "Curated summary for Copilot grounding"
+    },
+    {
+      "internalName": "SourceOrg",
+      "displayName": "SourceOrg",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "HVS vs HVCG origin. Additive 2026-08-14 Client Workspace V1. Do not rewrite HVS work as HVCG.",
+      "choices": ["HVCG", "HVS", "Unknown"]
+    },
+    {
+      "internalName": "HistoricalStatus",
+      "displayName": "HistoricalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Historical vs current relationship. Additive 2026-08-14. Existing ClientCodes are never renamed.",
+      "choices": ["Current", "Historical", "Unknown"]
+    },
+    {
+      "internalName": "ProvenanceSource",
+      "displayName": "ProvenanceSource",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Durable source attribution for reconstructed history. Additive 2026-08-14."
     }
   ],
   "views": [

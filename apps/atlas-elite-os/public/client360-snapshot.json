@@ -1,1 +1,6 @@
-{"generatedAt":null,"source":"disabled-in-production","clients":[],"note":"Snapshot fallback is disabled. Sign in with Microsoft for live Client 360."}
+{
+  "generatedAt": null,
+  "source": "disabled-in-production",
+  "clients": [],
+  "note": "Snapshot fallback is disabled. Sign in with Microsoft for live Client 360."
+}

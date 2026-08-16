@@ -6,7 +6,7 @@
     {
       "name": "HVCG_Clients",
       "path": "src/sharepoint/lists/HVCG_Clients.json",
-      "columnCount": 52,
+      "columnCount": 55,
       "description": "Client master records"
     },
     {
@@ -114,7 +114,7 @@
     {
       "name": "HVCG_Communications",
       "path": "src/sharepoint/lists/HVCG_Communications.json",
-      "columnCount": 13,
+      "columnCount": 22,
       "description": "Significant communications log"
     },
     {

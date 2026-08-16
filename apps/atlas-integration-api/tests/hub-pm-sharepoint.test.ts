@@ -731,7 +731,30 @@ describe('SharePoint PM HTTP', () => {
       const mineBody = (await mine.json()) as { client: { clientCode: string } };
       assert.equal(mineBody.client.clientCode, 'ACCG01');
       const workspace = await fetch(`${base}/api/pm/clients/ACCG01/workspace`, { headers: auth('a') });
-      assert.equal(workspace.status, 501);
+      assert.equal(workspace.status, 200);
+      const wsBody = (await workspace.json()) as {
+        workspace: {
+          kind: string;
+          client: { clientCode: string };
+          completeness: Record<string, { status: string; queried: boolean }>;
+          communications: { queried: boolean; status: string };
+        };
+      };
+      assert.equal(wsBody.workspace.kind, 'client_workspace_v1');
+      assert.equal(wsBody.workspace.client.clientCode, 'ACCG01');
+      assert.equal(wsBody.workspace.completeness.identity.status, 'COMPLETE');
+      assert.equal(wsBody.workspace.communications.queried, false);
+      assert.equal(wsBody.workspace.communications.status, 'PARTIAL_SOURCE_DATA_NOT_FOUND');
+      const leaked = await fetch(`${base}/api/pm/clients/PDG01/workspace`, { headers: auth('a') });
+      assert.equal(leaked.status, 404);
+      const searchMine = await fetch(`${base}/api/pm/search?q=Alder`, { headers: auth('a') });
+      assert.equal(searchMine.status, 200);
+      const searchBody = (await searchMine.json()) as { results: Array<{ clientCode?: string; kind: string }> };
+      assert.ok(searchBody.results.every((r) => !r.clientCode || r.clientCode === 'ACCG01'));
+      assert.ok(searchBody.results.some((r) => r.kind === 'client' && r.clientCode === 'ACCG01'));
+      const searchOther = await fetch(`${base}/api/pm/search?q=PDG`, { headers: auth('a') });
+      const otherBody = (await searchOther.json()) as { results: Array<{ clientCode?: string }> };
+      assert.equal(otherBody.results.some((r) => r.clientCode === 'PDG01'), false);
       const c360 = await fetch(`${base}/api/client360`, { headers: auth('a') });
       assert.equal(c360.status, 403);
     });

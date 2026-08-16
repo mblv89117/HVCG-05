@@ -78,7 +78,7 @@ describe('PM Graph transport resource allowlist', () => {
     assert.equal(capabilityForPmList(ALLOWLIST, PROJECTS), 'write');
     assert.equal(capabilityForPmList(ALLOWLIST, TASKS), 'write');
     assert.equal(capabilityForPmList(ALLOWLIST, MILESTONES), 'write');
-    assert.equal(capabilityForPmList(ALLOWLIST, CLIENTS), 'read');
+    assert.equal(capabilityForPmList(ALLOWLIST, CLIENTS), 'write');
 
     await transport.listItems(PROJECTS);
     await transport.listItems(TASKS);
@@ -129,7 +129,7 @@ describe('PM Graph transport resource allowlist', () => {
 });
 
 describe('PM Graph transport capability matrix', () => {
-  it('permits Projects/Tasks/Milestones writes and rejects Clients writes before Graph', async () => {
+  it('permits Projects/Tasks/Milestones/Clients selected-list writes and rejects unknown lists', async () => {
     const calls: Array<{ url: string; method: string }> = [];
     const transport = createGraphTransport(
       ALLOWLIST,
@@ -164,22 +164,21 @@ describe('PM Graph transport capability matrix', () => {
     await transport.listItems(CLIENTS);
     await transport.getItem(CLIENTS, '1');
 
+    await transport.createItem(CLIENTS, { Title: 'c' });
+    await transport.patchItemFields(CLIENTS, '1', { Title: 'c2' }, '"etag"');
+
     const writeCalls = calls.filter((c) => c.method === 'POST' || c.method === 'PATCH');
-    assert.equal(writeCalls.some((c) => c.url.includes(CLIENTS)), false);
+    assert.equal(writeCalls.some((c) => c.url.includes(CLIENTS)), true);
     assert.equal(writeCalls.some((c) => c.url.includes(PROJECTS)), true);
     assert.equal(writeCalls.some((c) => c.url.includes(TASKS)), true);
     assert.equal(writeCalls.some((c) => c.url.includes(MILESTONES)), true);
 
     const before = calls.length;
-    await assert.rejects(() => transport.createItem(CLIENTS, { Title: 'nope' }), (err: unknown) => {
+    await assert.rejects(() => transport.createItem(RISKS, { Title: 'nope' }), (err: unknown) => {
       assertSanitized(err);
-      assert.match(err.message, /does not allow this operation/);
+      assert.match(err.message, /approved resource input|approved resource allowlist/);
       return true;
     });
-    await assert.rejects(
-      () => transport.patchItemFields(CLIENTS, '1', { Title: 'nope' }, '"etag"'),
-      /does not allow this operation/,
-    );
     assert.equal(calls.length, before);
   });
 });

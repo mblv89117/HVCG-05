@@ -8,6 +8,7 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import type { UserBasicLookup } from '../../entitlements/userLookup.ts';
 import { ownerEmailFromProfile } from '../../entitlements/userLookup.ts';
+import { assertMannyOnly } from './manny.ts';
 import type { MilestoneRecord, ProjectHealth, ProjectRecord, ProjectStatus, TaskPriority, TaskRecord, TaskStatus } from '../types.ts';
 import {
   canAccessClassification,
@@ -32,6 +33,7 @@ import {
   taskStatusToSharePoint,
   type MilestoneHubStatus,
 } from './mapping.ts';
+import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
 import { fieldsEq, itemMatchesFieldsFilter } from './odata.ts';
 import type { SharePointPmSettings } from './settings.ts';
 
@@ -66,6 +68,22 @@ export type SharePointClient = {
   displayName: string;
   itemId: string;
   source: 'sharepoint';
+  industry?: string;
+  clientStage?: string;
+  engagementType?: string;
+  overallHealth?: string;
+  dba?: string;
+  website?: string;
+  sourceOrg?: string;
+  lastMeaningfulContact?: string;
+  sharePointLibraryUrl?: string;
+};
+
+export type WorkspaceCollectionResult = {
+  status: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND';
+  queried: boolean;
+  items: Array<Record<string, unknown>>;
+  reason?: string;
 };
 
 function asString(v: unknown): string | undefined {
@@ -207,6 +225,136 @@ export class SharePointPmService {
     };
   }
 
+  private urlField(v: unknown): string | undefined {
+    if (typeof v === 'string' && /^https:\/\//i.test(v.trim())) return v.trim();
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      const href = asString((v as { Url?: unknown; url?: unknown }).Url ?? (v as { url?: unknown }).url);
+      if (href && /^https:\/\//i.test(href)) return href;
+    }
+    return undefined;
+  }
+
+  private mapClient(item: GraphListItem): SharePointClient | null {
+    const clientCode = asString(item.fields.ClientCode);
+    if (!clientCode || !isCanonicalClientCode(clientCode) || clientCode === '*') return null;
+    return {
+      id: clientCode,
+      clientCode,
+      displayName: asString(item.fields.Title) || clientCode,
+      itemId: item.id,
+      source: 'sharepoint',
+      industry: asString(item.fields.Industry),
+      clientStage: asString(item.fields.ClientStage),
+      engagementType: asString(item.fields.EngagementTypePrimary),
+      overallHealth: asString(item.fields.OverallHealth),
+      dba: asString(item.fields.DBA),
+      website: this.urlField(item.fields.Website),
+      sourceOrg: asString(item.fields.SourceOrg),
+      lastMeaningfulContact: isoDate(item.fields.LastMeaningfulContact),
+      sharePointLibraryUrl: this.urlField(item.fields.SharePointLibraryUrl),
+    };
+  }
+
+  private ungranted(listName: string): WorkspaceCollectionResult {
+    return {
+      status: 'PARTIAL_SOURCE_DATA_NOT_FOUND',
+      queried: false,
+      items: [],
+      reason: `${listName} is not in the Hub Graph Selected allowlist. Section is not working until the list is granted and configured.`,
+    };
+  }
+
+  private mapWorkspaceItems(items: GraphListItem[], clientCode: string): Array<Record<string, unknown>> {
+    const out: Array<Record<string, unknown>> = [];
+    for (const item of items) {
+      const code = asString(item.fields.ClientCode);
+      if (code !== clientCode) continue;
+      out.push({
+        id: item.id,
+        title: asString(item.fields.Title) || item.id,
+        clientCode: code,
+        date:
+          isoDate(item.fields.CommunicationDate) ||
+          isoDate(item.fields.MeetingDate) ||
+          isoDate(item.fields.StartDate) ||
+          isoDate(item.fields.DeliveryDate) ||
+          isoDate(item.fields.DecisionDate) ||
+          isoDate(item.fields.Modified),
+        summary: asString(item.fields.Summary) || asString(item.fields.Scope) || asString(item.fields.Background),
+        status:
+          asString(item.fields.EngagementStatus) ||
+          asString(item.fields.DeliverableStatus) ||
+          asString(item.fields.DecisionStatus) ||
+          asString(item.fields.RiskStatus),
+        webUrl:
+          this.urlField(item.fields.OutlookWebLink) ||
+          this.urlField(item.fields.FileLink) ||
+          this.urlField(item.fields.OutlookEventLink) ||
+          extractSourceUrl(asString(item.fields.Summary) || ''),
+        sourceItemId: asString(item.fields.SourceMessageId) || asString(item.fields.SourceItemId),
+        channel: asString(item.fields.Channel),
+      });
+    }
+    return out;
+  }
+
+  async listWorkspaceCollections(
+    principal: AtlasPrincipal,
+    clientCode: string,
+  ): Promise<{
+    communications: WorkspaceCollectionResult;
+    meetings: WorkspaceCollectionResult;
+    engagements: WorkspaceCollectionResult;
+    deliverables: WorkspaceCollectionResult;
+    decisionsRisks: WorkspaceCollectionResult;
+    contacts: WorkspaceCollectionResult;
+  }> {
+    if (!isCanonicalClientCode(clientCode) || !principal.allowedClientIds.includes(clientCode)) {
+      const denied = this.ungranted('entitlement');
+      return {
+        communications: denied,
+        meetings: denied,
+        engagements: denied,
+        deliverables: denied,
+        decisionsRisks: denied,
+        contacts: denied,
+      };
+    }
+    const load = async (
+      listId: string | undefined,
+      listName: string,
+    ): Promise<WorkspaceCollectionResult> => {
+      if (!listId) return this.ungranted(listName);
+      const items = this.mapWorkspaceItems(await this.listAll(listId), clientCode);
+      return { status: 'COMPLETE', queried: true, items };
+    };
+    const [communications, meetings, engagements, deliverables, decisions, risks, contacts] = await Promise.all([
+      load(this.settings.communicationsListId, 'HVCG_Communications'),
+      load(this.settings.meetingsListId, 'HVCG_Meetings'),
+      load(this.settings.engagementsListId, 'HVCG_Engagements'),
+      load(this.settings.deliverablesListId, 'HVCG_Deliverables'),
+      load(this.settings.decisionsListId, 'HVCG_Decisions'),
+      load(this.settings.risksListId, 'HVCG_Risks'),
+      load(this.settings.contactsListId, 'HVCG_Contacts'),
+    ]);
+    const decisionItems = [...decisions.items, ...risks.items];
+    const decisionsRisks: WorkspaceCollectionResult =
+      decisions.queried || risks.queried
+        ? {
+            status: 'COMPLETE',
+            queried: true,
+            items: decisionItems,
+            reason:
+              !decisions.queried || !risks.queried
+                ? [!decisions.queried ? decisions.reason : '', !risks.queried ? risks.reason : '']
+                    .filter(Boolean)
+                    .join(' ')
+                : undefined,
+          }
+        : this.ungranted('HVCG_Decisions / HVCG_Risks');
+    return { communications, meetings, engagements, deliverables, decisionsRisks, contacts };
+  }
+
   private mapMilestone(item: GraphListItem): SharePointMilestone | null {
     const title = asString(item.fields.Title);
     const status = milestoneStatusFromSharePoint(asString(item.fields.Status));
@@ -224,24 +372,29 @@ export class SharePointPmService {
     };
   }
 
+  async listClientHints(): Promise<Array<{ clientCode: string; displayName: string; dba?: string }>> {
+    const items = await this.listAll(this.settings.clientsListId);
+    const out: Array<{ clientCode: string; displayName: string; dba?: string }> = [];
+    const seen = new Set<string>();
+    for (const item of items) {
+      const mapped = this.mapClient(item);
+      if (!mapped || seen.has(mapped.clientCode)) continue;
+      seen.add(mapped.clientCode);
+      out.push({ clientCode: mapped.clientCode, displayName: mapped.displayName, dba: mapped.dba });
+    }
+    return out;
+  }
+
   async listAuthorizedClients(principal: AtlasPrincipal): Promise<SharePointClient[]> {
     const codes = new Set(entitledClientCodes(principal));
     const items = await this.listAll(this.settings.clientsListId);
     const seen = new Set<string>();
     const out: SharePointClient[] = [];
     for (const item of items) {
-      const clientCode = asString(item.fields.ClientCode);
-      if (!clientCode || !isCanonicalClientCode(clientCode) || clientCode === '*') continue;
-      if (!codes.has(clientCode)) continue;
-      if (seen.has(clientCode)) continue;
-      seen.add(clientCode);
-      out.push({
-        id: clientCode,
-        clientCode,
-        displayName: asString(item.fields.Title) || clientCode,
-        itemId: item.id,
-        source: 'sharepoint',
-      });
+      const mapped = this.mapClient(item);
+      if (!mapped || !codes.has(mapped.clientCode) || seen.has(mapped.clientCode)) continue;
+      seen.add(mapped.clientCode);
+      out.push(mapped);
     }
     return out.sort((a, b) => a.clientCode.localeCompare(b.clientCode));
   }
@@ -253,14 +406,17 @@ export class SharePointPmService {
     if (!isCanonicalClientCode(clientCode) || clientCode === '*') return 'not_found';
     if (!principal.allowedClientIds.includes(clientCode)) return 'not_found';
     try {
-      const resolved = await this.resolveClientByCode(clientCode);
-      return {
-        id: clientCode,
-        clientCode,
-        displayName: resolved.title,
-        itemId: resolved.itemId,
-        source: 'sharepoint',
-      };
+      const items = await this.listAll(this.settings.clientsListId, fieldsEq('ClientCode', clientCode));
+      const matches = items.map((i) => this.mapClient(i)).filter((c): c is SharePointClient => Boolean(c && c.clientCode === clientCode));
+      if (matches.length === 0) return 'not_found';
+      if (matches.length > 1) {
+        throw new PmHttpError(
+          409,
+          'PM_CLIENTCODE_AMBIGUOUS',
+          'ClientCode resolved to more than one SharePoint client record.',
+        );
+      }
+      return matches[0];
     } catch (err) {
       if (err instanceof PmHttpError && (err.status === 400 || err.code === 'unknown_client_code')) {
         return 'not_found';
@@ -468,11 +624,16 @@ export class SharePointPmService {
   }
 
   private async findByIdempotency(listId: string, key: string): Promise<GraphListItem | null> {
-    const items = await this.listAll(listId, fieldsEq('HVCG_IdempotencyKey', key));
-    if (items.length > 1) {
+    const items = await this.listAll(listId);
+    const matches = items.filter((item) => {
+      if (asString(item.fields.HVCG_IdempotencyKey) === key) return true;
+      const summary = asString(item.fields.Summary) || '';
+      return Boolean(key) && summary.includes(`Key:${key}`);
+    });
+    if (matches.length > 1) {
       throw new PmHttpError(409, 'PM_IDEMPOTENCY_CONFLICT', 'Idempotency key already used.');
     }
-    return items[0] || null;
+    return matches[0] || null;
   }
 
   async listAuthorizedTasks(
@@ -649,6 +810,279 @@ export class SharePointPmService {
     const mapped = this.mapMilestone(created);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created milestone could not be mapped.');
     return mapped;
+  }
+
+  async createVerifiedHistoricalClient(
+    principal: AtlasPrincipal,
+    body: Record<string, unknown>,
+    idempotencyKey?: string,
+  ): Promise<SharePointClient> {
+    assertMannyOnly(principal, 'HVCG_Clients create');
+    if (body.ownerId || body.OwnerEmail || body.RelationshipOwnerEmail || body.allowedClientIds) {
+      throw new PmHttpError(400, 'owner_override_forbidden', 'Caller-provided owner override is not allowed.');
+    }
+    const clientCode = asString(body.ClientCode) || asString(body.clientCode);
+    const title = asString(body.Title) || asString(body.displayName);
+    if (!clientCode || !isCanonicalClientCode(clientCode) || clientCode === '*') {
+      throw new PmHttpError(400, 'invalid_client_code', 'Canonical ClientCode is required.');
+    }
+    if (!title) throw new PmHttpError(400, 'invalid_input', 'Client display name is required.');
+    const existing = await this.listAll(this.settings.clientsListId, fieldsEq('ClientCode', clientCode));
+    const matches = existing.filter((i) => asString(i.fields.ClientCode) === clientCode);
+    if (matches.length > 0) {
+      const mapped = this.mapClient(matches[0]);
+      if (mapped) return mapped;
+    }
+    if (idempotencyKey) {
+      const prior = await this.findByIdempotency(this.settings.clientsListId, idempotencyKey);
+      if (prior) {
+        const mapped = this.mapClient(prior);
+        if (mapped) return mapped;
+      }
+    }
+    const fields: Record<string, unknown> = {
+      Title: title,
+      ClientCode: clientCode,
+      IsActive: true,
+      InternalNotes: `Verified historical client. Provenance=${asString(body.provenanceSource) || 'manual'}. SourceOrg=${asString(body.sourceOrg) || 'HVCG'}. Created by Manny-only path.`,
+    };
+    if (asString(body.industry)) fields.Industry = asString(body.industry);
+    if (asString(body.dba)) fields.DBA = asString(body.dba);
+    if (asString(body.clientStage)) fields.ClientStage = asString(body.clientStage);
+    if (idempotencyKey) fields.HVCG_IdempotencyKey = idempotencyKey;
+    const created = await this.graph.createItem(this.settings.clientsListId, fields);
+    const mapped = this.mapClient(created);
+    if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
+    return mapped;
+  }
+
+  async patchVerifiedClient(
+    principal: AtlasPrincipal,
+    clientCode: string,
+    body: Record<string, unknown>,
+    etag: string | undefined,
+  ): Promise<SharePointClient> {
+    assertMannyOnly(principal, 'HVCG_Clients update');
+    if (!etag) throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
+    if (body.ownerId || body.allowedClientIds || body.ClientCode || body.clientCode) {
+      throw new PmHttpError(400, 'immutable_field', 'ClientCode and owner override cannot be changed via PATCH.');
+    }
+    const current = await this.authorizeClient(principal, clientCode);
+    if (current === 'not_found') throw new PmHttpError(404, 'not_found', 'not_found');
+    const fields: Record<string, unknown> = {};
+    if ('displayName' in body || 'Title' in body) {
+      const title = asString(body.displayName) || asString(body.Title);
+      if (!title) throw new PmHttpError(400, 'invalid_input', 'Client display name is required.');
+      fields.Title = title;
+    }
+    if ('industry' in body) fields.Industry = asString(body.industry) || '';
+    if ('dba' in body) fields.DBA = asString(body.dba) || '';
+    if ('clientStage' in body) fields.ClientStage = asString(body.clientStage) || '';
+    if ('website' in body) fields.Website = asString(body.website) || '';
+    if (Object.keys(fields).length === 0) return current;
+    const patched = await this.graph.patchItemFields(this.settings.clientsListId, current.itemId, fields, etag);
+    const mapped = this.mapClient(patched);
+    if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched client could not be mapped.');
+    return mapped;
+  }
+
+  async upsertVendor(fields: {
+    title: string;
+    category?: string;
+    email?: string;
+    notes?: string;
+    status?: string;
+    idempotencyKey: string;
+  }): Promise<{ id: string; title: string } | null> {
+    if (!this.settings.vendorsListId) return null;
+    const prior = await this.findByIdempotency(this.settings.vendorsListId, fields.idempotencyKey);
+    if (prior) return { id: prior.id, title: asString(prior.fields.Title) || fields.title };
+    const payload: Record<string, unknown> = {
+      Title: fields.title,
+      VendorCategory: fields.category || 'Professional Services',
+      Email: fields.email || '',
+      Status: fields.status || 'Active',
+      Notes: fields.notes || '',
+      HVCG_IdempotencyKey: fields.idempotencyKey,
+    };
+    try {
+      const created = await this.graph.createItem(this.settings.vendorsListId, payload);
+      return { id: created.id, title: asString(created.fields.Title) || fields.title };
+    } catch {
+      delete payload.HVCG_IdempotencyKey;
+      const created = await this.graph.createItem(this.settings.vendorsListId, payload);
+      return { id: created.id, title: asString(created.fields.Title) || fields.title };
+    }
+  }
+
+  async upsertCommunicationIndex(row: {
+    title: string;
+    summary?: string;
+    clientCode?: string;
+    date?: string;
+    channel?: string;
+    direction?: string;
+    webUrl?: string;
+    sourceMessageId?: string;
+    conversationId?: string;
+    classification?: string;
+    provenanceSource?: string;
+    sourceOrg?: string;
+    idempotencyKey: string;
+  }): Promise<void> {
+    if (!this.settings.communicationsListId) return;
+    const prior = await this.findByIdempotency(this.settings.communicationsListId, row.idempotencyKey);
+    if (prior) return;
+    const summary = (row.summary || '').includes(`Key:${row.idempotencyKey}`)
+      ? row.summary || ''
+      : `${row.summary || ''} Key:${row.idempotencyKey}`.trim();
+    const fields: Record<string, unknown> = {
+      Title: row.title.slice(0, 255),
+      Summary: summary.slice(0, 2000),
+      Channel: row.channel || 'Email',
+      Direction: row.direction || 'Inbound',
+      HVCG_IdempotencyKey: row.idempotencyKey,
+    };
+    if (row.clientCode && isCanonicalClientCode(row.clientCode)) fields.ClientCode = row.clientCode;
+    if (row.date) fields.CommunicationDate = row.date;
+    if (row.sourceMessageId) fields.SourceMessageId = row.sourceMessageId;
+    if (row.conversationId) fields.ConversationId = row.conversationId;
+    if (row.webUrl) fields.OutlookWebLink = row.webUrl;
+    if (row.classification) fields.Classification = row.classification;
+    if (row.provenanceSource) fields.ProvenanceSource = row.provenanceSource;
+    if (row.sourceOrg) fields.SourceOrg = row.sourceOrg;
+    try {
+      await this.graph.createItem(this.settings.communicationsListId, fields);
+    } catch {
+      delete fields.SourceMessageId;
+      delete fields.ConversationId;
+      delete fields.OutlookWebLink;
+      delete fields.Classification;
+      delete fields.ProvenanceSource;
+      delete fields.SourceOrg;
+      await this.graph.createItem(this.settings.communicationsListId, fields);
+    }
+  }
+
+  async upsertMeetingIndex(row: {
+    title: string;
+    summary?: string;
+    clientCode?: string;
+    date?: string;
+    webUrl?: string;
+    sourceEventId?: string;
+    classification?: string;
+    provenanceSource?: string;
+    idempotencyKey: string;
+  }): Promise<void> {
+    if (!this.settings.meetingsListId) return;
+    const prior = await this.findByIdempotency(this.settings.meetingsListId, row.idempotencyKey);
+    if (prior) return;
+    const fields: Record<string, unknown> = {
+      Title: row.title.slice(0, 255),
+      Summary: (row.summary || '').slice(0, 2000),
+      HVCG_IdempotencyKey: row.idempotencyKey,
+    };
+    if (row.clientCode && isCanonicalClientCode(row.clientCode)) fields.ClientCode = row.clientCode;
+    if (row.date) fields.MeetingDate = row.date;
+    if (row.webUrl) fields.OutlookEventLink = row.webUrl;
+    try {
+      await this.graph.createItem(this.settings.meetingsListId, fields);
+    } catch {
+      delete fields.HVCG_IdempotencyKey;
+      await this.graph.createItem(this.settings.meetingsListId, fields);
+    }
+  }
+
+  async upsertContactIndex(row: {
+    title: string;
+    email?: string;
+    clientCode: string;
+    jobTitle?: string;
+    sourceContactId?: string;
+    provenanceSource?: string;
+    idempotencyKey: string;
+  }): Promise<void> {
+    if (!this.settings.contactsListId) return;
+    if (!isCanonicalClientCode(row.clientCode)) return;
+    const prior = await this.findByIdempotency(this.settings.contactsListId, row.idempotencyKey);
+    if (prior) return;
+    const existing = await this.listAll(this.settings.contactsListId);
+    if (
+      row.email &&
+      existing.some(
+        (i) =>
+          asString(i.fields.Email)?.toLowerCase() === row.email!.toLowerCase() &&
+          asString(i.fields.ClientCode) === row.clientCode,
+      )
+    ) {
+      return;
+    }
+    await this.graph.createItem(this.settings.contactsListId, {
+      Title: row.title.slice(0, 255),
+      Email: row.email || '',
+      ClientCode: row.clientCode,
+      JobTitle: row.jobTitle || '',
+      IsActive: true,
+      HVCG_IdempotencyKey: row.idempotencyKey,
+    });
+  }
+
+  async listVendors(): Promise<Array<{ id: string; title: string; category?: string; notes?: string }>> {
+    if (!this.settings.vendorsListId) return [];
+    const items = await this.listAll(this.settings.vendorsListId);
+    return items
+      .map((i) => ({
+        id: i.id,
+        title: asString(i.fields.Title) || i.id,
+        category: asString(i.fields.VendorCategory),
+        notes: asString(i.fields.Notes),
+      }))
+      .filter((v) => v.title);
+  }
+
+  async listOpportunities(): Promise<
+    Array<{ id: string; title: string; clientCode?: string; notes?: string }>
+  > {
+    if (!this.settings.opportunitiesListId) return [];
+    const items = await this.listAll(this.settings.opportunitiesListId);
+    return items
+      .map((i) => ({
+        id: i.id,
+        title: asString(i.fields.Title) || i.id,
+        clientCode: asString(i.fields.ClientCode) || undefined,
+        notes: asString(i.fields.Notes) || asString(i.fields.Summary),
+      }))
+      .filter((v) => v.title);
+  }
+
+  async listIndexedFiles(): Promise<
+    Array<{ id: string; title: string; clientCode?: string; webUrl?: string; summary?: string }>
+  > {
+    if (!this.settings.communicationsListId) return [];
+    const items = await this.listAll(this.settings.communicationsListId);
+    const out: Array<{
+      id: string;
+      title: string;
+      clientCode?: string;
+      webUrl?: string;
+      summary?: string;
+    }> = [];
+    for (const item of items) {
+      const mapped = {
+        id: item.id,
+        title: asString(item.fields.Title) || item.id,
+        clientCode: asString(item.fields.ClientCode) || undefined,
+        webUrl:
+          this.urlField(item.fields.OutlookWebLink) || extractSourceUrl(asString(item.fields.Summary) || ''),
+        summary: asString(item.fields.Summary),
+        sourceItemId: asString(item.fields.SourceMessageId),
+        channel: asString(item.fields.Channel),
+      };
+      if (!isFileIndexRow(mapped)) continue;
+      out.push(mapped);
+    }
+    return out;
   }
 
   async myWorkTasks(principal: AtlasPrincipal): Promise<SharePointTask[]> {

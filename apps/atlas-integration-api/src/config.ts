@@ -18,8 +18,15 @@ import { createManagedIdentityTokenProvider, type PmGraphTokenProvider } from '.
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
 function defaultDataDir(): string {
-  const here = dirname(fileURLToPath(import.meta.url));
-  return join(here, '..', '.data', 'integrations');
+  try {
+    const url = import.meta.url;
+    if (typeof url === 'string' && url.startsWith('file:')) {
+      return join(dirname(fileURLToPath(url)), '..', '.data', 'integrations');
+    }
+  } catch {
+    /* bundled CJS has no import.meta.url */
+  }
+  return join(process.cwd(), '.data', 'integrations');
 }
 
 function resolveEncryptionKey(): string {
