@@ -14,7 +14,7 @@ Matching is decision support for Manny. It is not a credit decision, not an allo
 | Grain | List | Used for matching |
 |-------|------|-------------------|
 | Organization | `HVCG_Lenders` | Name, `LenderType`, `RelationshipStatus`, `RelationshipOwner`, `Geography`, `LastVerifiedAt`, `CriteriaFreshness`, `VerificationSource`. `PreferredProducts` / `TypicalAdvanceRate` / `CovenantStyle` / `Notes` stay unstructured sourced text. |
-| Product | `HVCG_LenderProducts` | Stated numeric/flag criteria only (`MinAmount`, `MaxAmount`, `MinRevenue`, `TimeInBusinessMonths`, industries, geography, appetite booleans). Blank = unknown, not “no restriction.” |
+| Product | In-app `LenderProduct` (live `HVCG_LenderProducts` **not provisioned**) | Stated numeric/flag criteria only when a product row exists. Blank = unknown, not “no restriction.” Org-only live lenders stay `UNKNOWN`. |
 | Outreach | `HVCG_LenderOutreach` | Historical HVCG experience. Context. Never an automatic fit. |
 
 `Do Not Contact` is excluded before scoring (`RelationshipStatus`). Inactive/Prospect remain in the universe.

@@ -83,14 +83,27 @@ function asNumber(v: unknown): number | null {
   return null;
 }
 
-/** Draft-only: any send-like flag is a client-request attempt, not only boolean true. */
+const CLIENT_SEND_KEYS = new Set(['send', 'sendtoclient', 'externalsend']);
+
+function truthySendValue(v: unknown): boolean {
+  if (v == null || v === false || v === 0) return false;
+  if (typeof v === 'string' && /^(false|0|no)?$/i.test(v.trim())) return false;
+  return true;
+}
+
+function recordHasSendFlag(body: Record<string, unknown>): boolean {
+  for (const [key, v] of Object.entries(body)) {
+    if (CLIENT_SEND_KEYS.has(key.toLowerCase()) && truthySendValue(v)) return true;
+  }
+  return false;
+}
+
+/** Draft-only: case-insensitive send flags, including `{ options: { send } }`. */
 function requestedClientSend(body: Record<string, unknown>): boolean {
-  for (const key of ['send', 'sendToClient', 'externalSend'] as const) {
-    if (!Object.prototype.hasOwnProperty.call(body, key)) continue;
-    const v = body[key];
-    if (v == null || v === false || v === 0) continue;
-    if (typeof v === 'string' && /^(false|0|no)?$/i.test(v.trim())) continue;
-    return true;
+  if (recordHasSendFlag(body)) return true;
+  const nested = body.options;
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    return recordHasSendFlag(nested as Record<string, unknown>);
   }
   return false;
 }

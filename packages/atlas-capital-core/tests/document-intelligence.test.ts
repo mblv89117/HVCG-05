@@ -247,3 +247,275 @@ describe('document intelligence pipeline', () => {
     assert.ok(report.documents[0].review.conflicts.some((c) => /sourceRef required/i.test(c)));
   });
 });
+
+function vsStatus(rows: CompletenessVsRequestRow[], documentId: string) {
+  return rows.find((r) => r.documentId === documentId)?.status;
+}
+
+function aiFact(field: string, value: number): ExtractedFact {
+  return {
+    field,
+    value,
+    verification: 'VERIFIED',
+    confidence: 0.92,
+    sourceRef: { sourceSystem: 'ai', capturedAt: SYNTHETIC_AS_OF, field },
+  };
+}
+
+describe('document classification — valid / wrong type / UNKNOWN / low-confidence', () => {
+  it('classifies a valid P&L from filename as pnl with derived confidence', () => {
+    const classified = classifyDocumentName(SYN.validPnl.fileName);
+    assert.equal(classified.documentType, 'pnl');
+    assert.ok(classified.confidence >= CLASSIFICATION_LOW_CONFIDENCE);
+    const { report, completenessVsRequest, checklist: patched } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.validPnl)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    const hit = report.documents[0];
+    assert.equal(hit.classification.documentType, 'pnl');
+    assert.equal(hit.classification.verification, 'DERIVED');
+    assert.equal(hit.extraction.ocr, OCR_STUBBED);
+    assert.equal(hit.extraction.verification, 'MISSING');
+    assert.equal(vsStatus(completenessVsRequest, SYN.validPnl.id), 'SATISFIED');
+    assert.ok(report.completeness.percent < 100);
+    assert.ok(patched.every((i) => i.status !== 'ACCEPTED'));
+    assert.ok(patched.every((i) => i.verification !== 'VERIFIED'));
+  });
+
+  it('flags a P&L associated to the bank-statement request as NOT_MATCHED', () => {
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.wrongTypePnlAsBank)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].classification.documentType, 'pnl');
+    assert.equal(report.documents[0].collection.checklistItemId, 'chk-bank-3mo');
+    assert.equal(report.documents[0].collection.suggestedItemKey, 'fin-pl-ytd');
+    assert.equal(vsStatus(completenessVsRequest, SYN.wrongTypePnlAsBank.id), 'NOT_MATCHED');
+  });
+
+  it('maps unmatched filenames to UNKNOWN classification and UNKNOWN completeness', () => {
+    const classified = classifyDocumentName(SYN.unknownScan.fileName);
+    assert.equal(classified.documentType, 'other');
+    assert.ok(classified.confidence < CLASSIFICATION_LOW_CONFIDENCE);
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.unknownScan)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].classification.documentType, 'UNKNOWN');
+    assert.equal(report.documents[0].classification.verification, 'UNVERIFIED');
+    assert.equal(vsStatus(completenessVsRequest, SYN.unknownScan.id), 'UNKNOWN');
+  });
+
+  it('treats low-confidence scans as UNKNOWN, not a guessed type', () => {
+    const classified = classifyDocumentName(SYN.lowConfidence.fileName);
+    assert.ok(classified.confidence < CLASSIFICATION_LOW_CONFIDENCE);
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.lowConfidence)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].classification.documentType, 'UNKNOWN');
+    assert.ok(report.documents[0].classification.confidence < CLASSIFICATION_LOW_CONFIDENCE);
+    assert.equal(vsStatus(completenessVsRequest, SYN.lowConfidence.id), 'UNKNOWN');
+    assert.equal(report.documents[0].extraction.facts.length, 0);
+  });
+});
+
+describe('document intelligence — wrong entity / wrong period / stale / duplicate', () => {
+  it('flags a foreign SYN* entity as WRONG_ENTITY', () => {
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.wrongEntity)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].entity.matchesOpportunity, false);
+    assert.ok(report.conflicts.some((c) => c.field === 'entityName' && c.verification === 'CONFLICTING'));
+    assert.equal(vsStatus(completenessVsRequest, SYN.wrongEntity.id), 'WRONG_ENTITY');
+  });
+
+  it('flags a 2024 YTD P&L against a 2026 request as WRONG_PERIOD', () => {
+    const checklist = generateChecklist({ transactionType: 'working_capital_loc' });
+    const pl = checklist.find((i) => i.itemKey === 'fin-pl-ytd');
+    assert.ok(pl);
+    pl.currentThrough = '2026-07-31';
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist,
+      documents: [doc(SYN.wrongPeriodPnl)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].classification.documentType, 'pnl');
+    assert.equal(report.documents[0].period.periodEnd, '2024-06-30');
+    assert.equal(vsStatus(completenessVsRequest, SYN.wrongPeriodPnl.id), 'WRONG_PERIOD');
+  });
+
+  it('marks a January 2026 bank statement stale as of August 2026 (OUTDATED)', () => {
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.staleBank)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].freshness.stale, true);
+    assert.equal(report.documents[0].freshness.verification, 'DERIVED');
+    assert.equal(vsStatus(completenessVsRequest, SYN.staleBank.id), 'OUTDATED');
+    const bank = report.documents[0];
+    assert.notEqual(evaluateCompletenessVsRequest({ result: bank }), 'SATISFIED');
+  });
+
+  it('flags duplicates instead of dropping them (LIKELY_SATISFIED_NEEDS_REVIEW)', () => {
+    const { report, completenessVsRequest, checklist: patched } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.duplicateOriginal), doc(SYN.duplicateCopy)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    const copy = report.documents.find((d) => d.documentId === SYN.duplicateCopy.id);
+    assert.equal(copy?.collection.duplicateOf, SYN.duplicateOriginal.id);
+    assert.equal(vsStatus(completenessVsRequest, SYN.duplicateCopy.id), 'LIKELY_SATISFIED_NEEDS_REVIEW');
+    assert.ok(patched.every((i) => i.status !== 'ACCEPTED'));
+  });
+});
+
+describe('document intelligence — SATISFIED vs OUTDATED vs CONFLICTING completeness', () => {
+  it('SATISFIED does not auto-accept, verify, or invent revenue', () => {
+    const { report, completenessVsRequest, checklist: patched } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.validFormation)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(vsStatus(completenessVsRequest, SYN.validFormation.id), 'SATISFIED');
+    assert.equal(report.documents[0].extraction.facts.length, 0);
+    assert.equal(report.completeness.verification, 'DERIVED');
+    assert.ok(report.completeness.percent < 100);
+    assert.equal(report.usedUnverifiedFacts, true);
+    assert.ok(patched.every((i) => i.status !== 'ACCEPTED'));
+    assert.ok(patched.every((i) => i.verification !== 'VERIFIED'));
+  });
+
+  it('keeps AI revenue UNVERIFIED and grades the request CONFLICTING when it disagrees with Atlas', () => {
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.conflictPnlLeft), doc(SYN.conflictPnlRight)],
+      incomingFactsByDocumentId: {
+        [SYN.conflictPnlLeft.id]: [aiFact('revenue', 1_000_000)],
+        [SYN.conflictPnlRight.id]: [aiFact('revenue', 2_000_000)],
+      },
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(vsStatus(completenessVsRequest, SYN.conflictPnlLeft.id), 'CONFLICTING');
+    assert.equal(vsStatus(completenessVsRequest, SYN.conflictPnlRight.id), 'CONFLICTING');
+    for (const d of report.documents) {
+      assert.equal(d.extraction.facts[0].verification, 'CONFLICTING');
+      assert.notEqual(d.extraction.facts[0].value, 3_500_000);
+    }
+    assert.ok(report.conflicts.some((c) => c.field === 'revenue' && c.verification === 'CONFLICTING'));
+    assert.equal(report.usedUnverifiedFacts, true);
+  });
+
+  it('grades aligned but unverified AI extraction as LIKELY_SATISFIED_NEEDS_REVIEW, not SATISFIED', () => {
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.validPnl)],
+      incomingFactsByDocumentId: {
+        [SYN.validPnl.id]: [aiFact('revenue', 3_500_000)],
+      },
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(report.documents[0].extraction.facts[0].verification, 'UNVERIFIED');
+    assert.equal(vsStatus(completenessVsRequest, SYN.validPnl.id), 'LIKELY_SATISFIED_NEEDS_REVIEW');
+    assert.notEqual(vsStatus(completenessVsRequest, SYN.validPnl.id), 'SATISFIED');
+  });
+
+  it('grades a single current bank month as INCOMPLETE against the 3-month request', () => {
+    const { completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.validBankJuly)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    assert.equal(vsStatus(completenessVsRequest, SYN.validBankJuly.id), 'INCOMPLETE');
+  });
+});
+
+describe('document intelligence — prompt-injection filename is content, not authority', () => {
+  it('classifies "ignore instructions" as UNKNOWN and does not invent revenue', () => {
+    assert.equal(isPromptInjectionFileName(SYN.promptInjection.fileName), true);
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.promptInjection), doc(SYN.promptInjectionRevenue)],
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    for (const d of report.documents) {
+      assert.equal(d.classification.documentType, 'UNKNOWN');
+      assert.equal(d.classification.verification, 'UNVERIFIED');
+      assert.equal(d.extraction.facts.length, 0);
+      assert.equal(vsStatus(completenessVsRequest, d.documentId), 'UNKNOWN');
+      assert.equal(
+        d.extraction.facts.some((f) => f.field === 'revenue'),
+        false,
+      );
+    }
+    assert.equal(report.clientRequestSendAttempted, false);
+  });
+
+  it('still reads type tokens as content, but never SATISFIES from an injection filename', () => {
+    const classified = classifyDocumentName(SYN.promptInjectionWithType.fileName);
+    assert.equal(classified.documentType, 'bank_statement');
+    const { report, completenessVsRequest } = runDocumentIntelligence({
+      opportunity: opp(),
+      checklist: generateChecklist({ transactionType: 'working_capital_loc' }),
+      documents: [doc(SYN.promptInjectionWithType)],
+      incomingFactsByDocumentId: {
+        [SYN.promptInjectionWithType.id]: [aiFact('revenue', 99_000_000)],
+      },
+      includeUnderwriting: false,
+      createdBy: 'qa',
+      asOf: SYNTHETIC_AS_OF,
+    });
+    const hit = report.documents[0];
+    assert.equal(hit.classification.documentType, 'bank_statement');
+    assert.equal(vsStatus(completenessVsRequest, SYN.promptInjectionWithType.id), 'UNKNOWN');
+    assert.notEqual(hit.extraction.facts[0]?.verification, 'VERIFIED');
+    assert.notEqual(vsStatus(completenessVsRequest, SYN.promptInjectionWithType.id), 'SATISFIED');
+    assert.equal(report.clientRequestSendAttempted, false);
+  });
+});

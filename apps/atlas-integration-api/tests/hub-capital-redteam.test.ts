@@ -369,7 +369,14 @@ describe('Capital red team', () => {
   it('rejects send / sendToClient / externalSend on document-intelligence (draft only)', async () => {
     await withCapitalHub(async ({ base }) => {
       const syn = await createSyn(base, 'syn-send-block');
-      for (const payload of [{ send: true }, { sendToClient: true }, { externalSend: true }, { send: 'true' }]) {
+      for (const payload of [
+        { send: true },
+        { sendToClient: true },
+        { externalSend: true },
+        { send: 'true' },
+        { Send: true },
+        { options: { send: true } },
+      ]) {
         const res = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/document-intelligence`, {
           method: 'POST',
           headers: headers('valid-member'),
