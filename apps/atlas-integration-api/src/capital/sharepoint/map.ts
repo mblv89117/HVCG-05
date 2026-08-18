@@ -58,17 +58,26 @@ export const ADDITIVE_OPPORTUNITY_FIELDS = [
   'Industry',
 ] as const;
 
-export const CORE_CHECKLIST_FIELDS = ['Title', 'ClientCode', 'CapitalOpportunityIdLookupId', 'RequestStatus'] as const;
+export const CORE_CHECKLIST_FIELDS = [
+  'Title',
+  'ClientCode',
+  'CapitalOpportunityIdLookupId',
+  'RequestStatus',
+  'TemplateItemKey',
+  'HVCG_IdempotencyKey',
+] as const;
 export const ADDITIVE_CHECKLIST_FIELDS = ['ChecklistItemKey', 'ChecklistStatus'] as const;
 
 export const CORE_SUBMISSION_FIELDS = [
   'Title',
   'CapitalOpportunityIdLookupId',
+  'LenderIdLookupId',
   'OwnerEmail',
   'Notes',
   'OutreachDate',
   'Response',
   'NextAction',
+  'HVCG_IdempotencyKey',
 ] as const;
 export const ADDITIVE_SUBMISSION_FIELDS = [
   'SubmissionMethod',
@@ -362,6 +371,8 @@ export function checklistItemToFields(
   put(out, 'ClientCode', clientCode, 'core', opts);
   put(out, 'CapitalOpportunityIdLookupId', Number(opportunityItemId) || opportunityItemId, 'core', opts);
   put(out, 'RequestStatus', requestStatusFromChecklist(item.status), 'core', opts);
+  put(out, 'TemplateItemKey', item.itemKey, 'core', opts);
+  put(out, 'HVCG_IdempotencyKey', `cap-chk|${opportunityItemId}|${item.itemKey}`, 'core', opts);
   put(out, 'ChecklistItemKey', item.itemKey, 'additive', opts);
   put(out, 'ChecklistStatus', item.status, 'additive', opts);
   return out;
@@ -369,7 +380,11 @@ export function checklistItemToFields(
 
 export function checklistItemFromItem(item: GraphListItem, fallback?: Partial<ChecklistItem>): ChecklistItem | null {
   if (!item.id) return null;
-  const key = asString(item.fields.ChecklistItemKey) || fallback?.itemKey || `item-${item.id}`;
+  const key =
+    asString(item.fields.ChecklistItemKey) ||
+    asString(item.fields.TemplateItemKey) ||
+    fallback?.itemKey ||
+    `item-${item.id}`;
   const statusRaw = asString(item.fields.ChecklistStatus);
   const status: ChecklistStatus =
     statusRaw &&
@@ -418,6 +433,10 @@ export function submissionToFields(
   const out: Record<string, unknown> = {};
   put(out, 'Title', `Recorded submission ${sub.lenderId}`, 'core', opts);
   put(out, 'CapitalOpportunityIdLookupId', Number(opportunityItemId) || opportunityItemId, 'core', opts);
+  const lenderLookup = Number(sub.lenderId);
+  if (Number.isFinite(lenderLookup) && lenderLookup > 0) {
+    put(out, 'LenderIdLookupId', lenderLookup, 'core', opts);
+  }
   put(out, 'OwnerEmail', opts.ownerEmail || sub.submittedBy || '', 'core', opts);
   put(out, 'Notes', sub.notes || 'Record only — no external portal submit. BL-C1.', 'core', opts);
   put(out, 'OutreachDate', sub.submittedAt || new Date().toISOString(), 'core', opts);
@@ -427,6 +446,13 @@ export function submissionToFields(
   put(out, 'SubmissionStatus', sub.status, 'additive', opts);
   put(out, 'SubmittedAt', sub.submittedAt || '', 'additive', opts);
   put(out, 'SubmittedBy', sub.submittedBy || '', 'additive', opts);
+  put(
+    out,
+    'HVCG_IdempotencyKey',
+    `cap-sub|${opportunityItemId}|${sub.lenderId}|${sub.packageVersion || 'v1'}`,
+    'core',
+    opts,
+  );
   put(out, 'ConfirmationNumber', sub.confirmationNumber || '', 'additive', opts);
   put(out, 'PackageVersion', sub.packageVersion || '', 'additive', opts);
   return out;

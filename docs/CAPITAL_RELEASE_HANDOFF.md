@@ -23,13 +23,13 @@ Inspected on Command Center site `highvaluecapitalgroup.sharepoint.com,92b2d35f-
 
 **Not created (deferred):** HVCG_CapitalStrategies, LenderProducts, CapitalProfiles, CapitalOffers, ClosingConditions, FeeRecords, CapitalDocumentReviews.
 
-**Live columns are still thin.** `Stage`, `NextAction`, `MannyStrategyApproval`, `ChecklistItemKey`, `SubmissionStatus` are **not** on the tenant lists yet. Hub mapper can persist `Title`, `ClientCode`, `TargetAmount`, `FundingStatus`, `Notes`, `HVCG_IdempotencyKey` immediately; pipeline fields need additive columns.
+**Live columns are still thin.** See [docs/CAPITAL_PRODUCTION_ENABLEMENT.md](CAPITAL_PRODUCTION_ENABLEMENT.md) for the owner-runnable package. Do **not** add `ChecklistItemKey`. Reuse `TemplateItemKey` / `RequestStatus`.
 
 ---
 
 ## Hub configuration (do not hard-code in application defaults)
 
-Set on `app-atlas-integration-hub` **after** this branch is deployed:
+Set on `app-atlas-integration-hub` **after** this branch is deployed, using `deployment/scripts/Set-HVCGCapitalHubAppSettings.ps1`:
 
 ```
 INTEGRATION_CAPITAL_BACKEND=sharepoint
@@ -38,6 +38,7 @@ INTEGRATION_CAPITAL_DOCUMENT_REQUESTS_LIST_ID=89a421e9-3086-47ef-80c3-214500d3d9
 INTEGRATION_CAPITAL_LENDER_OUTREACH_LIST_ID=c49d02bb-eab5-44b5-8232-714e30867887
 INTEGRATION_CAPITAL_LENDERS_LIST_ID=6b759f97-d074-4cc0-b3c7-c62c947fb74e
 INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH=false
+INTEGRATION_CAPITAL_OPTIONAL_COLUMNS=Stage,StageEnteredAt,NextAction,NextActionOwner,MannyStrategyApproval,MannyShortlistApproval,SubmissionStatus
 ```
 
 Site ID and clients list ID reuse `INTEGRATION_PM_SHAREPOINT_SITE_ID` and `INTEGRATION_PM_CLIENTS_LIST_ID`. Identity remains `AZURE_CLIENT_ID` (`id-atlas-prod`).
@@ -48,15 +49,15 @@ Until those settings exist, Hub capital routes return **503 `CAPITAL_BACKEND_UNA
 
 ## OWNER ACTION REQUIRED
 
-**Action:** Add the additive min-slice columns on the three existing lists above; grant list-level **write** Selected permissions on those lists to Hub managed identity `id-atlas-prod` (app id `2b9ca61d-2396-4caa-95cd-30200d2ff36a`); after this branch is deployed, set the App Settings listed above.
+**Action:** Run `deployment/scripts/Enable-HVCGCapitalMinSlice.ps1` (review) then `-Apply`. That script adds the min-slice columns, grants list-level **write** Selected permissions on the three capital lists to Hub managed identity `id-atlas-prod` (app id `2b9ca61d-2396-4caa-95cd-30200d2ff36a`), creates labeled SYN01, and creates Entra `HVCG-Client-SYN01` (Manny only). Then tell Cursor to deploy Hub.
 
-**Why required:** Hub identity has `Lists.SelectedOperations.Selected` and `Sites.Read.All` — it **cannot** create lists or columns (`Sites.Manage.All` is absent). Autonomous Graph column create from this agent was attempted only if the signed-in owner token allows it; Selected grants and production App Settings remain owner-gated because they change production Hub behavior.
+**Why required:** Hub identity has `Lists.SelectedOperations.Selected` and `Sites.Read.All` — it **cannot** create lists or columns (`Sites.Manage.All` is absent and must stay absent). SYN01 SharePoint row without the Entra group would 403 on Hub QA and push operators onto live ACCG/PDG clients.
 
-**What automation already attempted:** Tenant list inventory (7 of 14 requested titles exist). Column inventory (thin V1 schema). Graph `POST .../columns` for `Stage` as the signed-in owner → **403 accessDenied**. Hub Graph adapter + separate allowlist implemented in this branch. Mocked create/read/update/checklist/submission tests. Elite 401/403 fail-closed. No duplicate lists created. Production App Settings **not** switched.
+**What automation already attempted:** Tenant list inventory. Column inventory (thin V1 schema). Graph `POST .../columns` for `Stage` as the signed-in owner → **403 accessDenied**. Hub Graph adapter + separate allowlist implemented. Mocked create/read/update/checklist/submission tests. Elite 401/403 fail-closed. No duplicate lists created. Production App Settings **not** switched. Hub **not** deployed in this checkpoint.
 
-**Exact permission/consent needed:** SharePoint list manage (columns) + list permissions (Selected write) + App Service configuration for Hub.
+**Exact permission/consent needed:** SharePoint list manage (columns) + list permissions (Selected write) + Entra group create (`HVCG-Client-SYN01`) + App Service configuration for Hub (Cursor after this script).
 
-**Risk/cost:** Additive columns only. No list deletes. No Dataverse. Brief Hub restart when App Settings are saved.
+**Risk/cost:** Additive columns only. No list deletes. No Dataverse. Brief Hub restart when App Settings are saved later.
 
 **What continues in parallel:** Elite Command Center, Hub JSON local mode, core matching/AI drafts, documentation.
 

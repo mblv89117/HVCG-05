@@ -221,6 +221,24 @@ export class CapitalService {
     opp.updatedAt = t;
     opp.lastMeaningfulActivityAt = t;
     opp.capitalTypeLegacy = STAGE_TO_LEGACY_FUNDING_STATUS[opp.stage];
+    const next = asString(body.nextAction);
+    if (next) opp.nextAction = next;
+    const nextOwner = asString(body.nextActionOwner);
+    if (nextOwner) opp.nextActionOwner = nextOwner;
+    await this.store.save(state);
+    return { opportunity: opp };
+  }
+
+  async updateNextAction(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const next = asString(body.nextAction);
+    if (!next) unprocessable('nextAction required');
+    opp.nextAction = next;
+    const nextOwner = asString(body.nextActionOwner);
+    if (nextOwner) opp.nextActionOwner = nextOwner;
+    opp.updatedAt = nowIso();
+    opp.lastMeaningfulActivityAt = opp.updatedAt;
     await this.store.save(state);
     return { opportunity: opp };
   }
@@ -247,7 +265,7 @@ export class CapitalService {
     }
     opp.updatedAt = nowIso();
     await this.store.save(state);
-    return { checklist: items };
+    return { checklist: state.checklists[id] || items };
   }
 
   async checklist(principal: AtlasPrincipal, id: string) {
@@ -514,6 +532,18 @@ export class CapitalService {
     const state = await this.store.load();
     const opp = requireOpp(state, principal, id);
     void body.externalSubmit;
+    const lenderId = asString(body.lenderId) || 'unknown';
+    const packageVersion = asString(body.packageVersion) || 'v1';
+    const existing = state.submissions.find(
+      (s) =>
+        s.capitalOpportunityId === id &&
+        s.lenderId === lenderId &&
+        (s.packageVersion || 'v1') === packageVersion &&
+        s.status === 'submitted',
+    );
+    if (existing) {
+      return { submission: existing, recordedOnly: true, externalSubmitAttempted: false, externalSubmit: false, created: false };
+    }
     if (
       opp.mannyStrategyApproval !== 'APPROVED' ||
       opp.mannyShortlistApproval !== 'APPROVED' ||
@@ -524,13 +554,13 @@ export class CapitalService {
     const sub = {
       id: `sub-${randomUUID()}`,
       capitalOpportunityId: id,
-      lenderId: asString(body.lenderId) || 'unknown',
+      lenderId,
       method: 'package' as const,
       status: 'submitted' as const,
       submittedAt: nowIso(),
       submittedBy: principal.email || principal.userId,
       confirmationNumber: asString(body.confirmationNumber) || undefined,
-      packageVersion: asString(body.packageVersion) || 'v1',
+      packageVersion,
       documentIds: state.documents.filter((d) => d.capitalOpportunityId === id).map((d) => d.id),
       notes: 'Record only — no external portal submit. BL-C1.',
     };

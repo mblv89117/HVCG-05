@@ -45,3 +45,9 @@ deployment/reports/data/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+
+# Hub deploy artifacts and previous production binaries (never commit)
+deployment/artifacts/hub-build/
+deployment/artifacts/hub-rollback/
+deployment/artifacts/hub-*.zip
+

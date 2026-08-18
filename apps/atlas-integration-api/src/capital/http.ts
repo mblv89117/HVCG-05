@@ -96,6 +96,17 @@ export async function handleCapitalRoutes(opts: {
         sendOk(result);
         return true;
       }
+      if (method === 'POST' && rest === 'next-action') {
+        const result = await service.updateNextAction(principal, id, body);
+        audit({
+          action: 'capital_next_action_update',
+          actorUserId: principal.userId,
+          outcome: 'success',
+          detail: `id=${id}`,
+        });
+        sendOk(result);
+        return true;
+      }
       if (method === 'POST' && rest === 'checklist/generate') {
         sendOk(await service.generateChecklist(principal, id));
         return true;

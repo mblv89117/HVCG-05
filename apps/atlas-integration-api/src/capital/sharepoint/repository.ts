@@ -150,7 +150,9 @@ export class GraphCapitalStore {
     );
     const byKey = new Map<string, GraphListItem>();
     for (const row of existing) {
-      const key = String(row.fields.ChecklistItemKey || row.fields.Title || '');
+      const key = String(
+        row.fields.TemplateItemKey || row.fields.ChecklistItemKey || row.fields.Title || '',
+      ).trim();
       if (key) byKey.set(key, row);
     }
     const out: ChecklistItem[] = [];
@@ -181,11 +183,27 @@ export class GraphCapitalStore {
   async createSubmission(sub: LenderSubmission, ownerEmail?: string): Promise<LenderSubmission> {
     const opp = await this.getOpportunity(sub.capitalOpportunityId);
     this.assertGraphWriteAllowed({ clientCode: opp?.clientCode, title: opp?.title });
+    const idempotencyKey = `cap-sub|${sub.capitalOpportunityId}|${sub.lenderId}|${sub.packageVersion || 'v1'}`;
+    const existing = (await this.listAll(this.settings.lenderOutreachListId)).find(
+      (row) => String(row.fields.HVCG_IdempotencyKey || '').trim() === idempotencyKey,
+    );
     const fields = pickWritableFields(
       submissionToFields(sub, sub.capitalOpportunityId, { ...this.writeOpts, ownerEmail }),
       this.writeOpts,
     );
-    const item = await this.graph.createItem(this.settings.lenderOutreachListId, fields);
+    let item: GraphListItem;
+    if (existing) {
+      const etag = existing.etag || this.requireEtag(this.settings.lenderOutreachListId, existing.id);
+      this.remember(this.settings.lenderOutreachListId, existing);
+      item = await this.graph.patchItemFields(
+        this.settings.lenderOutreachListId,
+        existing.id,
+        fields,
+        etag,
+      );
+    } else {
+      item = await this.graph.createItem(this.settings.lenderOutreachListId, fields);
+    }
     this.remember(this.settings.lenderOutreachListId, item);
     const mapped = submissionFromItem(item);
     if (!mapped) {

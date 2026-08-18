@@ -252,14 +252,34 @@ describe('Capital Graph live slice (in-memory)', () => {
       });
       assert.equal(step.status, 200);
 
+      const nextAction = await fetch(`${base}/api/capital/opportunities/${id}/next-action`, {
+        method: 'POST',
+        headers: auth('member'),
+        body: JSON.stringify({
+          nextAction: 'Collect initial qualification documents',
+          nextActionOwner: 'user-a@hvcg.test',
+        }),
+      });
+      assert.equal(nextAction.status, 200);
+      assert.equal(graph.lists.get(OPPORTUNITIES)?.[0]?.fields.NextAction, 'Collect initial qualification documents');
+
       const gen = await fetch(`${base}/api/capital/opportunities/${id}/checklist/generate`, {
         method: 'POST',
         headers: auth('member'),
         body: '{}',
       });
       assert.equal(gen.status, 200);
-      assert.ok((graph.lists.get(DOCUMENT_REQUESTS) || []).length > 0);
-      assert.equal((graph.lists.get(DOCUMENT_REQUESTS) || [])[0].fields.CapitalOpportunityIdLookupId, Number(id) || id);
+      const docsAfterGen = graph.lists.get(DOCUMENT_REQUESTS) || [];
+      assert.ok(docsAfterGen.length > 0);
+      assert.equal(docsAfterGen[0].fields.CapitalOpportunityIdLookupId, Number(id) || id);
+      assert.ok(String(docsAfterGen[0].fields.TemplateItemKey || ''));
+      const genAgain = await fetch(`${base}/api/capital/opportunities/${id}/checklist/generate`, {
+        method: 'POST',
+        headers: auth('member'),
+        body: '{}',
+      });
+      assert.equal(genAgain.status, 200);
+      assert.equal((graph.lists.get(DOCUMENT_REQUESTS) || []).length, docsAfterGen.length);
 
       const strat = await fetch(`${base}/api/capital/opportunities/${id}/strategy`, {
         method: 'POST',
@@ -305,7 +325,18 @@ describe('Capital Graph live slice (in-memory)', () => {
       assert.equal(subBody.recordedOnly, true);
       assert.equal(subBody.externalSubmitAttempted, false);
       assert.equal(subBody.externalSubmit, false);
-      assert.ok((graph.lists.get(LENDER_OUTREACH) || []).some((row) => row.fields.SubmissionStatus === 'submitted'));
+      const outreachAfterSubmit = graph.lists.get(LENDER_OUTREACH) || [];
+      assert.ok(outreachAfterSubmit.some((row) => row.fields.SubmissionStatus === 'submitted'));
+      assert.ok(
+        outreachAfterSubmit.some((row) => row.fields.LenderIdLookupId === 10 || row.fields.LenderIdLookupId === '10'),
+      );
+      const replaySub = await fetch(`${base}/api/capital/opportunities/${id}/submissions`, {
+        method: 'POST',
+        headers: auth('member'),
+        body: JSON.stringify({ lenderId: '10', externalSubmit: true }),
+      });
+      assert.equal(replaySub.status, 200);
+      assert.equal((graph.lists.get(LENDER_OUTREACH) || []).length, outreachAfterSubmit.length);
       assert.equal(
         (graph.lists.get(LENDERS) || []).some((row) => String(row.fields.Title || '').includes('SYNTHETIC')),
         false,

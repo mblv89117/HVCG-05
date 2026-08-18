@@ -10,7 +10,8 @@
  *   HVCG_Clients = INTEGRATION_PM_CLIENTS_LIST_ID f60a7d4e-74d9-4b57-8c98-1a7b75d76104
  *
  * LIVE tenant columns are still thin. Stage / NextAction / Manny* /
- * ChecklistItemKey / SubmissionStatus may be missing until the owner adds them.
+ * SubmissionStatus may be missing until the owner adds them.
+ * Checklist identity reuses TemplateItemKey (do not add ChecklistItemKey).
  * Do not create HVCG_CapitalStrategies or other new lists.
  */
 
