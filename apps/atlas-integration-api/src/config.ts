@@ -11,6 +11,7 @@ import type { ProviderId } from '@hvcg/atlas-integration-core';
 import { isCanonicalClientCode } from './entitlements/clientCode.ts';
 import type { UserBasicLookup } from './entitlements/userLookup.ts';
 import type { CapitalGraphTransport } from './capital/sharepoint/graph.ts';
+import type { CapitalFileSource } from './capital/sharepoint/files.ts';
 import type { SharePointCapitalSettings } from './capital/sharepoint/settings.ts';
 import {
   resolveSharePointCapitalSettings,
@@ -470,6 +471,8 @@ export function loadConfig() {
     pmGraphTransport: undefined as PmGraphTransport | undefined,
     /** Test-only capital Graph transport. Production uses managed-identity Graph. */
     capitalGraphTransport: undefined as CapitalGraphTransport | undefined,
+    /** Test-only SharePoint file ingest source. Production uses managed-identity Graph drive GET. */
+    capitalFileSource: undefined as CapitalFileSource | undefined,
     /** Test-only PM token provider. Production uses the App Service managed-identity local token endpoint. */
     pmTokenProvider: undefined as PmGraphTokenProvider | undefined,
     allowedOrigins: (

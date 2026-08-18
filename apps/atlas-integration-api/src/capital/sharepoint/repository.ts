@@ -288,6 +288,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
     | 'copilotHandoffs'
     | 'underwriting'
     | 'products'
+    | 'checklists'
   > | null = null;
 
   constructor(private readonly graph: GraphCapitalStore) {}
@@ -307,6 +308,11 @@ export class AsyncCapitalStore implements CapitalPersistence {
       state.underwriting = this.overlay.underwriting;
       for (const product of this.overlay.products) {
         if (!state.products.some((p) => p.id === product.id)) state.products.push(product);
+      }
+      if (this.overlay.checklists) {
+        for (const [id, items] of Object.entries(this.overlay.checklists)) {
+          if (items?.length) state.checklists[id] = items;
+        }
       }
     }
     this.snapshot = cloneState(state);
@@ -346,8 +352,21 @@ export class AsyncCapitalStore implements CapitalPersistence {
       const prev = snap.checklists[id] || [];
       if (!sameJson(prev, next) && next.length) {
         const opp = state.opportunities.find((o) => o.id === id);
-        const persisted = await this.graph.replaceChecklist(id, opp?.clientCode || '', next);
-        state.checklists[id] = persisted;
+        if (isSyntheticCapitalRecord({ clientCode: opp?.clientCode, title: opp?.title })) {
+          try {
+            const persisted = await this.graph.replaceChecklist(id, opp?.clientCode || '', next);
+            state.checklists[id] = persisted;
+          } catch (err) {
+            if (err instanceof CapitalHttpError && err.status === 403) {
+              /* SYN* Graph writes stay closed; checklist remains Hub overlay. */
+            } else {
+              throw err;
+            }
+          }
+        } else {
+          const persisted = await this.graph.replaceChecklist(id, opp?.clientCode || '', next);
+          state.checklists[id] = persisted;
+        }
       }
     }
 
@@ -370,6 +389,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
       copilotHandoffs: state.copilotHandoffs,
       underwriting: state.underwriting,
       products: state.products,
+      checklists: state.checklists,
     };
     this.snapshot = cloneState(state);
   }

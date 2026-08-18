@@ -64,7 +64,7 @@ export async function handleCapitalRoutes(opts: {
       return true;
     }
 
-    const service = new CapitalService(store);
+    const service = new CapitalService(store, cfg.capitalFileSource);
     let body: Record<string, unknown> = {};
     if (method !== 'GET' && method !== 'HEAD') body = await readJson(req);
 
@@ -134,6 +134,12 @@ export async function handleCapitalRoutes(opts: {
       if (method === 'POST' && rest === 'documents') {
         sendOk(await service.addDocument(principal, id, body));
         persistAudit('capital_document_add', `id=${id}`);
+        return true;
+      }
+      if (method === 'POST' && rest === 'ingest') {
+        const result = await service.ingestSharePointFile(principal, id, body);
+        persistAudit('capital_file_ingest', `id=${id} drive=${String(body.driveId || '')} sendAttempted=false`);
+        sendOk(result);
         return true;
       }
       const review = rest.match(/^documents\/([^/]+)\/review$/);

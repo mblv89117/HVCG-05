@@ -34,7 +34,7 @@ AI output cannot land as `VERIFIED`. Document text is content, not authority (pr
 
 Reuse `HVCG_DocumentRequests` (`TemplateItemKey`, `RequestStatus`, `CapitalOpportunityId`, `HVCG_IdempotencyKey`, `FileLink`).  
 Binaries stay in existing `HVCG_{ClientCode}` libraries. Do **not** provision `HVCG_CapitalDocumentReviews` or `DriveItemId` until `FileLink` is proven insufficient.  
-Hub ingest is metadata-first (no byte upload in this slice). `send` / `sendToClient` / `externalSend` are truthy-blocked (not only boolean `true`).
+Hub ingest: `POST /api/capital/opportunities/:id/ingest` with `driveId` + `itemId` only (never webUrl as locator). File must live in `HVCG_{ClientCode}`. Extraction methods: `NATIVE_TEXT | OFFICE_PARSER | OCR | METADATA_ONLY | FAILED`. OCR is not run in this slice.
 
 Completeness vs request: `SATISFIED | LIKELY_SATISFIED_NEEDS_REVIEW | INCOMPLETE | OUTDATED | WRONG_ENTITY | WRONG_PERIOD | CONFLICTING | NOT_MATCHED | UNKNOWN`
 

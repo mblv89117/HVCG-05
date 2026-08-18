@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   applyMannyDecision,
   assertTransition,
@@ -11,6 +11,8 @@ import {
   createFeeRecord,
   defaultClosingConditions,
   detectDuplicate,
+  extractCapitalDocumentContent,
+  ingestTypeAllowed,
   draftStrategy,
   evaHandoffAllowed,
   FINANCING_DISCLAIMER,
@@ -44,8 +46,13 @@ import {
 } from '@hvcg/atlas-capital-core';
 import type { AtlasPrincipal } from '../middleware/auth.ts';
 import { canAccessClient } from './authz.ts';
-import { conflict, forbidden, notFound, unprocessable } from './errors.ts';
+import { CAPITAL_BACKEND_UNAVAILABLE, CapitalHttpError, conflict, forbidden, notFound, unprocessable } from './errors.ts';
 import type { CapitalPersistence, CapitalState } from './store.ts';
+import {
+  assertFileBelongsToClient,
+  assertSafeDriveIds,
+  type CapitalFileSource,
+} from './sharepoint/files.ts';
 
 const TRANSACTION_TYPES: TransactionType[] = [
   'conventional_bank_loan',
@@ -125,7 +132,10 @@ function requireOpp(state: CapitalState, principal: AtlasPrincipal, id: string):
 }
 
 export class CapitalService {
-  constructor(private readonly store: CapitalPersistence) {}
+  constructor(
+    private readonly store: CapitalPersistence,
+    private readonly files?: CapitalFileSource,
+  ) {}
 
   async commandCenter(principal: AtlasPrincipal) {
     const state = await this.store.load();
@@ -422,6 +432,120 @@ export class CapitalService {
     }
     await this.store.save(state);
     return { document: doc, duplicate: false, duplicateOf: undefined };
+  }
+
+  async ingestSharePointFile(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    if (requestedClientSend(body)) {
+      unprocessable('Client document requests are drafts only — no auto-send');
+    }
+    if (asString(body.webUrl) && !asString(body.driveId) && !asString(body.itemId)) {
+      unprocessable('webUrl is not an ingest locator — supply driveId and itemId');
+    }
+    if (!this.files) {
+      throw new CapitalHttpError(
+        503,
+        CAPITAL_BACKEND_UNAVAILABLE,
+        'SharePoint file ingest is not configured',
+      );
+    }
+    const driveId = asString(body.driveId);
+    const itemId = asString(body.itemId);
+    assertSafeDriveIds(driveId, itemId);
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const meta = await this.files.getItem(driveId, itemId);
+    assertFileBelongsToClient(meta, opp.clientCode);
+    if (!ingestTypeAllowed(meta.name, meta.mimeType)) {
+      unprocessable('File type is not allowed for capital ingest');
+    }
+    const bytes = await this.files.getContent(driveId, itemId);
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const dup = detectDuplicate(state.documents.filter((d) => d.capitalOpportunityId === id), {
+      sha256,
+      fileName: meta.name,
+    });
+    const capturedAt = nowIso();
+    const extracted = extractCapitalDocumentContent({
+      fileName: meta.name,
+      bytes,
+      mimeType: meta.mimeType,
+      capturedAt,
+      sourceRecordId: `${driveId}:${itemId}`,
+    });
+    if (dup) {
+      return {
+        document: state.documents.find((d) => d.id === dup),
+        duplicate: true,
+        duplicateOf: dup,
+        extraction: extracted,
+        clientRequestSendAttempted: false as const,
+      };
+    }
+    const doc = {
+      id: `doc-${randomUUID()}`,
+      capitalOpportunityId: id,
+      clientCode: opp.clientCode,
+      documentType: classifyDocumentName(meta.name).documentType,
+      fileName: meta.name,
+      contentType: meta.mimeType || 'application/octet-stream',
+      sizeBytes: bytes.length,
+      sha256,
+      version: 1,
+      source: 'sharepoint-library',
+      associatedAt: capturedAt,
+      associatedBy: principal.email || principal.userId,
+      originalPreserved: true as const,
+      webUrl: meta.webUrl,
+      driveId,
+      itemId,
+      extractionMethod: extracted.method,
+    };
+    state.documents.push(doc);
+    const intelligence = runDocumentIntelligence({
+      opportunity: opp,
+      checklist: state.checklists[id] || [],
+      documents: state.documents.filter((d) => d.capitalOpportunityId === id),
+      incomingFactsByDocumentId: extracted.facts.length ? { [doc.id]: extracted.facts } : undefined,
+      incomingExtractionByDocumentId: {
+        [doc.id]: { method: extracted.method, promptInjection: extracted.promptInjection },
+      },
+      includeUnderwriting: body.includeUnderwriting !== false,
+      createdBy: principal.email || principal.userId,
+    });
+    state.checklists[id] = intelligence.checklist;
+    for (const next of intelligence.reviews) {
+      state.reviews = state.reviews.filter((r) => r.documentId !== next.documentId);
+      state.reviews.push(next);
+    }
+    if (intelligence.report.underwriting) {
+      state.underwriting = state.underwriting.filter((u) => u.capitalOpportunityId !== id);
+      state.underwriting.push(intelligence.report.underwriting);
+    }
+    await this.store.save(state);
+    return {
+      document: doc,
+      duplicate: false,
+      file: {
+        driveId,
+        itemId,
+        fileName: meta.name,
+        mimeType: meta.mimeType,
+        size: bytes.length,
+        sha256,
+        webUrl: meta.webUrl,
+        libraryClientCode: meta.libraryClientCode,
+      },
+      extraction: {
+        method: extracted.method,
+        promptInjection: extracted.promptInjection,
+        factCount: extracted.facts.length,
+        error: extracted.error,
+      },
+      report: intelligence.report,
+      checklist: intelligence.checklist,
+      clientRequest: intelligence.report.clientRequest,
+      clientRequestSendAttempted: false as const,
+    };
   }
 
   async review(principal: AtlasPrincipal, id: string, docId: string, body: Record<string, unknown>) {

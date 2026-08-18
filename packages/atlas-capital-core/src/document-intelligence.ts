@@ -5,7 +5,8 @@
  * CURRENT/STALE → COMPLETENESS → CONFLICTS → MISSING DOCS →
  * CLIENT REQUEST (draft only) → UNDERWRITING SUMMARY
  *
- * Filename / metadata heuristics only. OCR is stubbed. AI facts cannot
+ * Filename heuristics plus optional native/Office extraction. OCR is not run
+ * unless a labeled OCR result is supplied. AI facts cannot land as VERIFIED.
  * land as VERIFIED. Every derived/extracted fact carries SourceRef.
  * No client or lender side effects.
  */
@@ -34,6 +35,7 @@ import type {
   DocumentReview,
   EntityDetection,
   ExtractedFact,
+  ExtractionMethod,
   FreshnessDetection,
   PeriodDetection,
   SourceRef,
@@ -652,11 +654,15 @@ export function analyzeDocument(opts: {
   checklist: ChecklistItem[];
   existingDocuments: CapitalDocument[];
   extractedFacts?: ExtractedFact[];
+  extractionMethod?: ExtractionMethod;
+  promptInjection?: boolean;
   incompletePages?: boolean;
   asOf: Date;
 }): DocumentIntelligenceDocumentResult {
   const capturedAt = opts.document.associatedAt || opts.asOf.toISOString();
-  const classified = normalizeClassification(classifyDocumentName(opts.document.fileName));
+  const classified = opts.promptInjection
+    ? { documentType: 'UNKNOWN', confidence: 0 }
+    : normalizeClassification(classifyDocumentName(opts.document.fileName));
   const suggested = suggestedChecklistItemKey(classified.documentType);
   const matched = matchChecklistItem(opts.checklist, suggested, opts.document.checklistItemId);
   const others = opts.existingDocuments.filter((d) => d.id !== opts.document.id);
@@ -671,9 +677,11 @@ export function analyzeDocument(opts: {
     sourceRecordId: opts.document.id,
     expiration: matched?.expiration,
   });
-  const facts = (opts.extractedFacts || [])
-    .filter((f) => hasSourceRef(f.sourceRef))
-    .map((f) => ensureFactProvenance(f, opts.document, capturedAt));
+  const facts = opts.promptInjection
+    ? []
+    : (opts.extractedFacts || [])
+        .filter((f) => hasSourceRef(f.sourceRef))
+        .map((f) => ensureFactProvenance(f, opts.document, capturedAt));
   const atlasConflicts: string[] = [];
   const dropped = (opts.extractedFacts || []).filter((f) => !hasSourceRef(f.sourceRef));
   for (const f of dropped) {
@@ -698,7 +706,11 @@ export function analyzeDocument(opts: {
       period.periodLabel ? `Period ${period.periodLabel} (${period.verification}).` : 'Period MISSING.',
       entity.entityName ? `Entity ${entity.entityName} (${entity.verification}).` : 'Entity MISSING.',
       freshness.stale ? `STALE: ${freshness.reason}` : freshness.determined ? 'Freshness current (derived).' : 'Freshness not determined.',
-      'OCR not run. Extracted values are unverified until a human confirms the source document.',
+      opts.promptInjection
+        ? 'Document text treated as untrusted content, not authority.'
+        : opts.extractionMethod && opts.extractionMethod !== 'METADATA_ONLY' && opts.extractionMethod !== 'FAILED'
+          ? `Extraction method ${opts.extractionMethod}. Values are unverified until a human confirms the source document.`
+          : 'Native content was not extracted. Values are unverified until a human confirms the source document.',
     ].join(' '),
   });
 
@@ -725,7 +737,7 @@ export function analyzeDocument(opts: {
     },
     extraction: {
       facts,
-      ocr: OCR_STUBBED,
+      ocr: opts.extractionMethod || opts.document.extractionMethod || OCR_STUBBED,
       verification: facts.length ? 'UNVERIFIED' : 'MISSING',
     },
     period,
@@ -741,6 +753,7 @@ export interface DocumentIntelligenceInput {
   checklist: ChecklistItem[];
   documents: CapitalDocument[];
   incomingFactsByDocumentId?: Record<string, ExtractedFact[]>;
+  incomingExtractionByDocumentId?: Record<string, { method: ExtractionMethod; promptInjection?: boolean }>;
   incompletePagesByDocumentId?: Record<string, boolean>;
   includeUnderwriting?: boolean;
   createdBy: string;
@@ -764,6 +777,8 @@ export function runDocumentIntelligence(input: DocumentIntelligenceInput): Docum
       checklist: input.checklist,
       existingDocuments: input.documents,
       extractedFacts: input.incomingFactsByDocumentId?.[document.id],
+      extractionMethod: input.incomingExtractionByDocumentId?.[document.id]?.method,
+      promptInjection: input.incomingExtractionByDocumentId?.[document.id]?.promptInjection,
       incompletePages: input.incompletePagesByDocumentId?.[document.id],
       asOf,
     }),

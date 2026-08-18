@@ -10,6 +10,7 @@
 import type { AppConfig } from '../config.ts';
 import { CAPITAL_BACKEND_UNAVAILABLE } from './errors.ts';
 import { createCapitalGraphTransport } from './sharepoint/graph.ts';
+import { createGraphCapitalFileSource } from './sharepoint/files.ts';
 import { AsyncCapitalStore, GraphCapitalStore } from './sharepoint/repository.ts';
 import { CapitalStore, type CapitalPersistence } from './store.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../pm/sharepoint/token.ts';
@@ -46,5 +47,8 @@ export function createSharePointCapitalService(cfg: AppConfig): CapitalPersisten
       resource: GRAPH_TOKEN_RESOURCE,
     });
   const graph = cfg.capitalGraphTransport || createCapitalGraphTransport(settings, tokenProvider);
+  if (!cfg.capitalFileSource) {
+    cfg.capitalFileSource = createGraphCapitalFileSource(tokenProvider);
+  }
   return new AsyncCapitalStore(new GraphCapitalStore(settings, graph));
 }

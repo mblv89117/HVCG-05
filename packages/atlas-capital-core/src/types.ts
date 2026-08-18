@@ -265,6 +265,11 @@ export interface ChecklistItem {
   overrideAt?: string;
 }
 
+export const EXTRACTION_METHODS = ['NATIVE_TEXT', 'OFFICE_PARSER', 'OCR', 'METADATA_ONLY', 'FAILED'] as const;
+export type ExtractionMethod = (typeof EXTRACTION_METHODS)[number];
+export const OCR_STATUS = ['STUBBED_NOT_RUN', 'UNAVAILABLE', ...EXTRACTION_METHODS] as const;
+export type OcrStatus = (typeof OCR_STATUS)[number];
+
 export interface CapitalDocument {
   id: string;
   capitalOpportunityId: string;
@@ -281,6 +286,9 @@ export interface CapitalDocument {
   associatedBy: string;
   originalPreserved: true;
   webUrl?: string;
+  driveId?: string;
+  itemId?: string;
+  extractionMethod?: ExtractionMethod;
 }
 
 export interface ExtractedFact {
@@ -312,9 +320,6 @@ export interface DocumentReview {
   createdAt: string;
   disclaimer: string;
 }
-
-export const OCR_STATUS = ['STUBBED_NOT_RUN', 'UNAVAILABLE'] as const;
-export type OcrStatus = (typeof OCR_STATUS)[number];
 
 export interface PeriodDetection {
   periodLabel: string | null;
