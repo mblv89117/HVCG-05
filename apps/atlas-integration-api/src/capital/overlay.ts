@@ -38,6 +38,7 @@ export type CapitalOverlay = Pick<
   | 'documents'
   | 'reviews'
   | 'applications'
+  | 'submissions'
   | 'offers'
   | 'closing'
   | 'fees'
@@ -63,6 +64,7 @@ export function emptyOverlay(): CapitalOverlay {
     documents: s.documents,
     reviews: s.reviews,
     applications: s.applications,
+    submissions: s.submissions,
     offers: s.offers,
     closing: s.closing,
     fees: s.fees,
@@ -201,6 +203,15 @@ export function applyOverlayToState(state: CapitalState, overlay: CapitalOverlay
   state.documents = overlay.documents || [];
   state.reviews = overlay.reviews || [];
   state.applications = overlay.applications || [];
+  if (Array.isArray(overlay.submissions) && overlay.submissions.length) {
+    const seen = new Set(state.submissions.map((s) => s.id));
+    for (const row of overlay.submissions) {
+      if (!seen.has(row.id)) {
+        state.submissions.push(row);
+        seen.add(row.id);
+      }
+    }
+  }
   state.offers = overlay.offers || [];
   state.closing = overlay.closing || {};
   state.fees = overlay.fees || [];
@@ -251,6 +262,7 @@ export function overlayFromState(state: CapitalState): CapitalOverlay {
     documents: state.documents,
     reviews: state.reviews,
     applications: state.applications,
+    submissions: state.submissions || [],
     offers: state.offers,
     closing: state.closing,
     fees: state.fees,
