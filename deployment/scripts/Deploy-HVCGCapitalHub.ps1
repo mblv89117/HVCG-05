@@ -43,6 +43,8 @@ $buildDir = Join-Path $artifactRoot 'hub-build'
 $rollbackDir = Join-Path $artifactRoot 'hub-rollback'
 New-Item -ItemType Directory -Force -Path $buildDir, $rollbackDir | Out-Null
 
+$outfile = Join-Path $buildDir 'server.js'
+$entry = Join-Path $RepoRoot 'apps/atlas-integration-api/src/index.ts'
 $esbuild = Get-Command esbuild -ErrorAction SilentlyContinue
 Write-Host "Bundling $entry -> $outfile (commit $sha)"
 Push-Location $RepoRoot
