@@ -83,6 +83,18 @@ function asNumber(v: unknown): number | null {
   return null;
 }
 
+/** Draft-only: any send-like flag is a client-request attempt, not only boolean true. */
+function requestedClientSend(body: Record<string, unknown>): boolean {
+  for (const key of ['send', 'sendToClient', 'externalSend'] as const) {
+    if (!Object.prototype.hasOwnProperty.call(body, key)) continue;
+    const v = body[key];
+    if (v == null || v === false || v === 0) continue;
+    if (typeof v === 'string' && /^(false|0|no)?$/i.test(v.trim())) continue;
+    return true;
+  }
+  return false;
+}
+
 export function assertCapitalAccess(principal: AtlasPrincipal, clientCode: string): void {
   if (!canAccessClient(principal, clientCode)) {
     forbidden();
@@ -400,7 +412,7 @@ export class CapitalService {
   }
 
   async review(principal: AtlasPrincipal, id: string, docId: string, body: Record<string, unknown>) {
-    if (body.send === true || body.sendToClient === true || body.externalSend === true) {
+    if (requestedClientSend(body)) {
       unprocessable('Client document requests are drafts only — no auto-send');
     }
     const state = await this.store.load();
@@ -446,7 +458,7 @@ export class CapitalService {
   }
 
   async documentIntelligence(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
-    if (body.send === true || body.sendToClient === true || body.externalSend === true) {
+    if (requestedClientSend(body)) {
       unprocessable('Client document requests are drafts only — no auto-send');
     }
     const state = await this.store.load();

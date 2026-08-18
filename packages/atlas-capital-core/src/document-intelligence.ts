@@ -70,7 +70,7 @@ export interface CompletenessVsRequestRow {
 }
 
 const PROMPT_INJECTION_RE =
-  /ignore\s+(all\s+)?(previous\s+)?instructions|disregard\s+(all\s+)?(previous|prior|these)\s+instructions|you\s+are\s+now\b/i;
+  /ignore\s+(?:[\w]+\s+)*instructions|disregard\s+(all\s+)?(previous|prior|these)\s+instructions|you\s+are\s+now\b/i;
 
 const PERIOD_SENSITIVE_TYPES = new Set([
   'bank_statement',

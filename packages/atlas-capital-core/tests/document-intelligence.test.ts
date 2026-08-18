@@ -2,18 +2,23 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   applyIntelligenceToChecklist,
+  CLASSIFICATION_LOW_CONFIDENCE,
   classifyDocumentName,
   detectEntityFromFileName,
   detectFreshness,
   detectPeriodFromFileName,
+  evaluateCompletenessVsRequest,
   generateChecklist,
+  isPromptInjectionFileName,
   OCR_STUBBED,
   runDocumentIntelligence,
   verifiedValue,
   type CapitalDocument,
   type CapitalOpportunity,
+  type CompletenessVsRequestRow,
   type ExtractedFact,
 } from '../src/index.ts';
+import { SYNTHETIC_AS_OF, SYNTHETIC_DOCUMENTS as SYN } from './fixtures/synthetic-documents.ts';
 
 function opp(over: Partial<CapitalOpportunity> = {}): CapitalOpportunity {
   const now = '2026-08-17T00:00:00.000Z';

@@ -32,8 +32,9 @@ AI output cannot land as `VERIFIED`. Document text is content, not authority (pr
 
 ## Documents
 
-Reuse `HVCG_DocumentRequests` (`TemplateItemKey`, `RequestStatus`, `CapitalOpportunityId`, `HVCG_IdempotencyKey`).  
-No new lists unless existing structures are proven inadequate.
+Reuse `HVCG_DocumentRequests` (`TemplateItemKey`, `RequestStatus`, `CapitalOpportunityId`, `HVCG_IdempotencyKey`, `FileLink`).  
+Binaries stay in existing `HVCG_{ClientCode}` libraries. Do **not** provision `HVCG_CapitalDocumentReviews` or `DriveItemId` until `FileLink` is proven insufficient.  
+Hub ingest is metadata-first (no byte upload in this slice). `send` / `sendToClient` / `externalSend` are truthy-blocked (not only boolean `true`).
 
 Completeness vs request: `SATISFIED | LIKELY_SATISFIED_NEEDS_REVIEW | INCOMPLETE | OUTDATED | WRONG_ENTITY | WRONG_PERIOD | CONFLICTING | NOT_MATCHED | UNKNOWN`
 

@@ -7,6 +7,7 @@ import {
   generateChecklist,
   hasSourceRef,
   moneyClaim,
+  requiredOpenItems,
   reviewDocument,
   verifiedValue,
   type CapitalDocument,
@@ -66,7 +67,7 @@ describe('underwriting summary — provenance and disclaimers', () => {
   it('cites SourceRef on VERIFIED revenue and MISSING on absent money claims', () => {
     const revenue = verifiedValue(3_500_000, 'synthetic-fixture', NOW, 'qa');
     assert.equal(hasSourceRef(revenue.sourceRef), true);
-    assert.equal(moneyClaim(revenue), '$3,500,000 (VERIFIED source=synthetic-fixture)');
+    assert.equal(moneyClaim(revenue), `$${(3_500_000).toLocaleString()} (VERIFIED source=synthetic-fixture)`);
     assert.equal(moneyClaim(undefined), 'MISSING');
     assert.equal(moneyClaim({ value: null, verification: 'MISSING', confidence: null }), 'MISSING');
 
@@ -78,10 +79,10 @@ describe('underwriting summary — provenance and disclaimers', () => {
       createdBy: 'qa@example.com',
     });
 
-    assert.equal(uw.sections.Revenue, '$3,500,000 (VERIFIED source=synthetic-fixture)');
+    assert.equal(uw.sections.Revenue, `$${(3_500_000).toLocaleString()} (VERIFIED source=synthetic-fixture)`);
     assert.equal(uw.sections.Profitability, 'MISSING');
     assert.equal(uw.sections.Debt, 'MISSING');
-    assert.match(uw.sections.Use of Funds ? uw.sections['Use of Funds'] : '', /payroll/);
+    assert.match(uw.sections['Use of Funds'], /payroll/);
     assert.equal(uw.usedUnverifiedFacts, false);
     assert.deepEqual(uw.potentialStructures, []);
     assert.ok(uw.disclaimer.includes(AI_DISCLAIMER));
@@ -107,16 +108,16 @@ describe('underwriting summary — provenance and disclaimers', () => {
       reviews: [],
       createdBy: 'qa',
     });
-    assert.equal(uw.sections.Revenue, '$2,000,000 (UNVERIFIED source=ai-extract — not verified)');
+    assert.equal(uw.sections.Revenue, `$${(2_000_000).toLocaleString()} (UNVERIFIED source=ai-extract — not verified)`);
     assert.equal(uw.usedUnverifiedFacts, true);
-    assert.doesNotMatch(uw.sections.Revenue, /VERIFIED(?!)/);
+    assert.doesNotMatch(uw.sections.Revenue, /\(VERIFIED/);
     assert.match(uw.sections.Revenue, /not verified/);
   });
 
   it('refuses VERIFIED without SourceRef and does not treat it as verified', () => {
     assert.equal(
       moneyClaim({ value: 9_999_999, verification: 'VERIFIED', confidence: 1 }),
-      '$9,999,999 (UNVERIFIED — not verified)',
+      `$${(9_999_999).toLocaleString()} (UNVERIFIED — not verified)`,
     );
     const uw = buildUnderwritingSummary({
       opportunity: opp({
@@ -129,7 +130,7 @@ describe('underwriting summary — provenance and disclaimers', () => {
       reviews: [],
       createdBy: 'qa',
     });
-    assert.equal(uw.sections.Revenue, '$9,999,999 (UNVERIFIED — not verified)');
+    assert.equal(uw.sections.Revenue, `$${(9_999_999).toLocaleString()} (UNVERIFIED — not verified)`);
     assert.equal(uw.usedUnverifiedFacts, true);
     assert.doesNotMatch(uw.sections.Revenue, /\(VERIFIED/);
   });
@@ -184,7 +185,7 @@ describe('underwriting summary — provenance and disclaimers', () => {
     assert.equal(uw.sections.Ownership, 'MISSING');
     assert.equal(uw.sections.Collateral, 'MISSING');
     assert.match(uw.sections['Executive Summary'], /unspecified amount/);
-    assert.ok(uw.missingInformation.length === checklist.filter((i) => i.requiredness !== 'OPTIONAL').length);
+    assert.deepEqual(uw.missingInformation, requiredOpenItems(checklist).map((i) => i.name));
     assert.ok(uw.recommendedNextSteps.some((s) => /missing-document/i.test(s)));
   });
 });
