@@ -15,13 +15,13 @@ This file is the operator record of **what is live** versus **what is in git**. 
 |------|--------|
 | App | `app-atlas-integration-hub` / `rg-atlas-prod` |
 | URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| **Running Hub SHA** | `b02f705f4fa28469e54d33f5f82f850817e79e43` |
-| **Azure deployment ID** | `ba7ab14e-1883-4f09-bb26-92e2e3b20fb1` |
-| Commit message (that SHA) | `fix(atlas): create /home/data overlay dir on App Service` |
+| **Running Hub SHA** | `e49be659e8d7d0c7f6079cd505b73469398f2d4c` |
+| **Azure deployment ID** | `6fc7a842-1ab5-4750-9d43-1b498b099d5c` |
+| Commit message (that SHA) | `Make capital overlay health, strategy gates, and BEST_FIT honest.` |
 | Runtime-critical ancestor | `e878f7e` (durable overlay + ingest identity + sourced catalog) |
-| Prior running zip | `ff59068da0f8aa8876656e023f71fd48fd6f4bef` (deployment `52310dd4-1b23-4e33-9e9b-08211b110f1f`) |
+| Prior running zip | `b02f705f4fa28469e54d33f5f82f850817e79e43` (deployment `ba7ab14e-1883-4f09-bb26-92e2e3b20fb1`) |
 
-That SHA is the zip that was deployed. Overlay facts persist under `INTEGRATION_DATA_DIR=/home/webapp_data/integrations/capital-overlay` (App Service `/home`, survives recycle and zip `--clean` of wwwroot). Health `overlay.recycleSurvivable` currently reports false because `HOME` is not literally `/home`; the data directory is still durable.
+That SHA is the zip that was deployed. Overlay facts persist under `INTEGRATION_DATA_DIR=/home/webapp_data/integrations/capital-overlay` (App Service `/home`, survives recycle and zip `--clean` of wwwroot). Health now observes that path: `recycleSurvivable=true`, `redeploySurvivable=true`, `multiInstanceSafe=false`. Built-in Linux `NODE\|22-lts`, plan B1 capacity 1, autoscale none, `WEBSITE_RUN_FROM_PACKAGE=0`. `WEBSITES_ENABLE_APP_SERVICE_STORAGE` is unset (default persistent `/home`).
 
 GitHub workflows do **not** deploy Hub.
 
@@ -34,7 +34,7 @@ GitHub workflows do **not** deploy Hub.
 Treat them as two facts:
 
 1. **Worktree HEAD** — local / branch tip. Changes here do nothing to production until an explicit Hub deploy.
-2. **Running Hub SHA** — `b02f705f4fa28469e54d33f5f82f850817e79e43` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
+2. **Running Hub SHA** — `e49be659e8d7d0c7f6079cd505b73469398f2d4c` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
 
 Do not infer production from:
 
@@ -57,7 +57,7 @@ deployment/artifacts/hub-rollback/
 
 That directory is **gitignored** (with `deployment/artifacts/hub-build/` and `deployment/artifacts/hub-*.zip`). Do not commit rollback binaries, Kudu copies, or publish credentials.
 
-Restore with `deployment/scripts/Rollback-HVCGCapitalHub.ps1` (defaults to the newest `pre-*.zip` in that folder). Current rollback zip from this deploy: `deployment/artifacts/hub-rollback/pre-b02f705f4fa28469e54d33f5f82f850817e79e43-20260817-222605.zip`. That archive is the previous production zip (`77a573a`, itself after `ff59068`). Rollback restores the archived zip and does not delete SharePoint lists/columns. Overlay JSON under `/home/webapp_data` is not in the zip; rolling back code does not wipe that overlay.
+Restore with `deployment/scripts/Rollback-HVCGCapitalHub.ps1` (defaults to the newest `pre-*.zip` in that folder). Current rollback zip from this deploy: `deployment/artifacts/hub-rollback/pre-e49be659e8d7d0c7f6079cd505b73469398f2d4c-20260818-053438.zip`. That archive is the previous production zip (`b02f705`). Rollback restores the archived zip and does not delete SharePoint lists/columns. Overlay JSON under `/home/webapp_data` is not in the zip; rolling back code does not wipe that overlay.
 
 ---
 
