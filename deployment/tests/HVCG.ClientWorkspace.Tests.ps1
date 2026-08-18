@@ -149,6 +149,12 @@ Assert-HVCG 'Script WHATIF no ready' ($out -notmatch 'Client workspace ready:')
 Assert-HVCG 'Script WHATIF zsh one-liner' ($out -match 'cd "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-capital-operations" && pwsh -File')
 Assert-HVCG 'Script WHATIF no backtick continuation' ($out -notmatch '`\r?\n')
 
+$accgScript = Join-Path $RepoRoot 'deployment/scripts/Prepare-HVCGAccg01AclRemediation.ps1'
+$accgOut = pwsh -NoProfile -File $accgScript -Apply 2>&1 | Out-String
+Assert-HVCG 'ACCG01 apply refused without change window' ($accgOut -match 'APPLY REFUSED')
+Assert-HVCG 'ACCG01 apply not run' ($accgOut -match 'APPLY: NOT RUN')
+Assert-HVCG 'ACCG01 unique target' ($accgOut -match 'unique')
+
 if ($failed -gt 0) {
   Write-Host "FAILED $failed"
   exit 1

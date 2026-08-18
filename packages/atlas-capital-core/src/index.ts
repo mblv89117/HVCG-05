@@ -6,3 +6,6 @@ export * from './intelligence.ts';
 export * from './authz.ts';
 export * from './document-intelligence.ts';
 export * from './content-extract.ts';
+export * from './evidence-review.ts';
+export * from './financing-structures.ts';
+export * from './lender-catalog.ts';

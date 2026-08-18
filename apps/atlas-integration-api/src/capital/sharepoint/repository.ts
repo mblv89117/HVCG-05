@@ -12,7 +12,7 @@ import type {
   FinancingStrategy,
   LenderSubmission,
 } from '@hvcg/atlas-capital-core';
-import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord } from '@hvcg/atlas-capital-core';
+import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord, mergeSourcedLenderCatalog } from '@hvcg/atlas-capital-core';
 import { CapitalHttpError, capitalInfrastructureError, forbidden } from '../errors.ts';
 import { emptyState, type CapitalPersistence, type CapitalState } from '../store.ts';
 import type { CapitalGraphTransport, GraphListItem } from './graph.ts';
@@ -289,6 +289,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
     | 'underwriting'
     | 'products'
     | 'checklists'
+    | 'factReviews'
   > | null = null;
 
   constructor(private readonly graph: GraphCapitalStore) {}
@@ -314,7 +315,9 @@ export class AsyncCapitalStore implements CapitalPersistence {
           if (items?.length) state.checklists[id] = items;
         }
       }
+      if (this.overlay.factReviews?.length) state.factReviews = this.overlay.factReviews;
     }
+    mergeSourcedLenderCatalog(state);
     this.snapshot = cloneState(state);
     return state;
   }
@@ -390,6 +393,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
       underwriting: state.underwriting,
       products: state.products,
       checklists: state.checklists,
+      factReviews: state.factReviews,
     };
     this.snapshot = cloneState(state);
   }

@@ -197,6 +197,7 @@ export function applyClientCapitalProfile(
           ? opportunity.capitalProfile.monthlyDebtService
           : profile.monthlyDebtService,
       collateral: opportunity.capitalProfile.collateral || profile.collateral?.value || undefined,
+      cash: opportunity.capitalProfile.cash?.value != null ? opportunity.capitalProfile.cash : profile.cash,
       ar: opportunity.capitalProfile.ar?.value != null ? opportunity.capitalProfile.ar : profile.ar,
       inventory:
         opportunity.capitalProfile.inventory?.value != null

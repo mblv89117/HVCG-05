@@ -18,12 +18,14 @@ import {
   requiredOpenItems,
 } from './checklist.ts';
 import {
+  classifyDocument,
   classifyDocumentName,
   detectDuplicate,
   hasSourceRef,
   reviewDocument,
   buildUnderwritingSummary,
 } from './intelligence.ts';
+import { identifyFacts, preserveHumanReviewedFacts } from './evidence-review.ts';
 import { AI_DISCLAIMER, FINANCING_DISCLAIMER } from './types.ts';
 import type {
   CapitalDocument,
@@ -55,6 +57,7 @@ export const CLASSIFICATION_LOW_CONFIDENCE = 0.5;
 export const COMPLETENESS_VS_REQUEST = [
   'SATISFIED',
   'LIKELY_SATISFIED_NEEDS_REVIEW',
+  'PARTIAL_SUPPORT_ONLY',
   'INCOMPLETE',
   'OUTDATED',
   'WRONG_ENTITY',
@@ -109,6 +112,7 @@ export const CLASSIFICATION_TO_ITEM_KEY: Record<string, string> = {
   ar_aging: 'ar-aging',
   ap_aging: 'ap-aging',
   debt_schedule: 'debt-schedule',
+  loan_statement: 'loan-statement',
   personal_financial_statement: 'pfs',
   sba_document: 'sba-1919',
   purchase_agreement: 're-psa',
@@ -156,6 +160,7 @@ const STALE_DAYS: Record<string, number> = {
   ar_aging: 45,
   ap_aging: 45,
   debt_schedule: 90,
+  loan_statement: 90,
   insurance: 365,
 };
 
@@ -244,6 +249,12 @@ export function evaluateCompletenessVsRequest(opts: {
     return 'UNKNOWN';
   }
   if (result.entity.matchesOpportunity === false) return 'WRONG_ENTITY';
+  if (type === 'loan_statement' && requestedKey === 'debt-schedule') {
+    const hasBalance = result.extraction.facts.some(
+      (f) => (f.field === 'debt' || f.field === 'existingDebt') && f.value != null,
+    );
+    return hasBalance ? 'PARTIAL_SUPPORT_ONLY' : 'LIKELY_SATISFIED_NEEDS_REVIEW';
+  }
   if (requestedKey && classifiedKey && !itemKeysCompatible(classifiedKey, requestedKey)) return 'NOT_MATCHED';
   if (!requestedKey && !classifiedKey) return 'NOT_MATCHED';
   if (item && periodYearMismatch(item, result.period, type)) return 'WRONG_PERIOD';
@@ -525,7 +536,23 @@ export function applyIntelligenceToChecklist(
     const matches = results.filter(
       (r) => r.collection.checklistItemId === item.id || r.collection.suggestedItemKey === item.itemKey,
     );
-    if (!matches.length) return item;
+    if (!matches.length) {
+      if (item.itemKey === 'debt-schedule') {
+        const loanStatements = results.filter((r) => r.classification.documentType === 'loan_statement');
+        if (loanStatements.length && (item.status === 'MISSING' || item.status === 'REQUESTED' || item.status === 'RECEIVED')) {
+          return {
+            ...item,
+            status: 'NEEDS_REVIEW',
+            receivedAt: item.receivedAt || loanStatements[0].review.createdAt,
+            deficiency: 'Loan statement provides partial support only — not a complete debt schedule',
+            verification: item.verification === 'MISSING' ? 'UNVERIFIED' : item.verification,
+            fileId: loanStatements[0].documentId,
+            fileLink: loanStatements[0].collection.webUrl || item.fileLink,
+          };
+        }
+      }
+      return item;
+    }
     let next: ChecklistItem = { ...item };
     const conflicted = conflicts.some((c) => matches.some((m) => m.documentId === c.left.documentId || m.documentId === c.right.documentId));
     const staleHit = matches.find((m) => m.freshness.stale);
@@ -650,10 +677,12 @@ function detectConflicts(opts: {
 
 export function analyzeDocument(opts: {
   document: CapitalDocument;
-  opportunity: Pick<CapitalOpportunity, 'id' | 'clientCode' | 'title'>;
+  opportunity: Pick<CapitalOpportunity, 'id' | 'clientCode' | 'title' | 'transactionType' | 'need'>;
   checklist: ChecklistItem[];
   existingDocuments: CapitalDocument[];
   extractedFacts?: ExtractedFact[];
+  existingFacts?: ExtractedFact[];
+  extractedText?: string;
   extractionMethod?: ExtractionMethod;
   promptInjection?: boolean;
   incompletePages?: boolean;
@@ -662,7 +691,13 @@ export function analyzeDocument(opts: {
   const capturedAt = opts.document.associatedAt || opts.asOf.toISOString();
   const classified = opts.promptInjection
     ? { documentType: 'UNKNOWN', confidence: 0 }
-    : normalizeClassification(classifyDocumentName(opts.document.fileName));
+    : normalizeClassification(
+        classifyDocument({
+          fileName: opts.document.fileName,
+          text: opts.extractedText,
+          opportunity: opts.opportunity,
+        }),
+      );
   const suggested = suggestedChecklistItemKey(classified.documentType);
   const matched = matchChecklistItem(opts.checklist, suggested, opts.document.checklistItemId);
   const others = opts.existingDocuments.filter((d) => d.id !== opts.document.id);
@@ -677,11 +712,16 @@ export function analyzeDocument(opts: {
     sourceRecordId: opts.document.id,
     expiration: matched?.expiration,
   });
+  const incomingFacts = opts.extractedFacts?.length ? opts.extractedFacts : opts.existingFacts || [];
   const facts = opts.promptInjection
     ? []
-    : (opts.extractedFacts || [])
-        .filter((f) => hasSourceRef(f.sourceRef))
-        .map((f) => ensureFactProvenance(f, opts.document, capturedAt));
+    : identifyFacts(
+        opts.document.id,
+        preserveHumanReviewedFacts(
+          incomingFacts.filter((f) => hasSourceRef(f.sourceRef)).map((f) => ensureFactProvenance(f, opts.document, capturedAt)),
+          opts.existingFacts,
+        ),
+      );
   const atlasConflicts: string[] = [];
   const dropped = (opts.extractedFacts || []).filter((f) => !hasSourceRef(f.sourceRef));
   for (const f of dropped) {
@@ -701,8 +741,11 @@ export function analyzeDocument(opts: {
     stale: freshness.stale,
     inconsistentPeriod: period.verification === 'UNVERIFIED',
     duplicateOf,
+    classifiedType: classified.documentType,
+    classifiedConfidence: classified.confidence,
+    extractedText: opts.extractedText,
     summary: [
-      `Classified as ${classified.documentType} (${classified.confidence}) from file name.`,
+      `Classified as ${classified.documentType} (${classified.confidence}) from file name and content.`,
       period.periodLabel ? `Period ${period.periodLabel} (${period.verification}).` : 'Period MISSING.',
       entity.entityName ? `Entity ${entity.entityName} (${entity.verification}).` : 'Entity MISSING.',
       freshness.stale ? `STALE: ${freshness.reason}` : freshness.determined ? 'Freshness current (derived).' : 'Freshness not determined.',
@@ -753,7 +796,8 @@ export interface DocumentIntelligenceInput {
   checklist: ChecklistItem[];
   documents: CapitalDocument[];
   incomingFactsByDocumentId?: Record<string, ExtractedFact[]>;
-  incomingExtractionByDocumentId?: Record<string, { method: ExtractionMethod; promptInjection?: boolean }>;
+  incomingExtractionByDocumentId?: Record<string, { method: ExtractionMethod; promptInjection?: boolean; text?: string }>;
+  existingReviews?: DocumentReview[];
   incompletePagesByDocumentId?: Record<string, boolean>;
   includeUnderwriting?: boolean;
   createdBy: string;
@@ -770,6 +814,7 @@ export interface DocumentIntelligenceOutput {
 export function runDocumentIntelligence(input: DocumentIntelligenceInput): DocumentIntelligenceOutput {
   const asOf = input.asOf instanceof Date ? input.asOf : new Date(input.asOf || Date.now());
   const capturedAt = asOf.toISOString();
+  const existingByDoc = new Map((input.existingReviews || []).map((r) => [r.documentId, r]));
   const results = input.documents.map((document) =>
     analyzeDocument({
       document,
@@ -777,6 +822,8 @@ export function runDocumentIntelligence(input: DocumentIntelligenceInput): Docum
       checklist: input.checklist,
       existingDocuments: input.documents,
       extractedFacts: input.incomingFactsByDocumentId?.[document.id],
+      existingFacts: existingByDoc.get(document.id)?.extractedFacts,
+      extractedText: input.incomingExtractionByDocumentId?.[document.id]?.text,
       extractionMethod: input.incomingExtractionByDocumentId?.[document.id]?.method,
       promptInjection: input.incomingExtractionByDocumentId?.[document.id]?.promptInjection,
       incompletePages: input.incompletePagesByDocumentId?.[document.id],
@@ -876,7 +923,10 @@ export function runDocumentIntelligence(input: DocumentIntelligenceInput): Docum
   const completenessVsRequest: CompletenessVsRequestRow[] = results.map((r) => {
     const item =
       checklist.find((i) => i.id === r.collection.checklistItemId) ||
-      checklist.find((i) => i.itemKey === r.collection.suggestedItemKey);
+      checklist.find((i) => i.itemKey === r.collection.suggestedItemKey) ||
+      (r.classification.documentType === 'loan_statement'
+        ? checklist.find((i) => i.itemKey === 'debt-schedule')
+        : undefined);
     return {
       documentId: r.documentId,
       itemKey: item?.itemKey || r.collection.suggestedItemKey,

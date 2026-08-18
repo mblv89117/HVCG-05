@@ -1,20 +1,22 @@
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type {
-  ApplicationPackage,
-  Attribution,
-  CapitalDocument,
-  CapitalOpportunity,
-  ChecklistItem,
-  ClosingCondition,
-  DocumentReview,
-  FeeRecord,
-  FinancingStrategy,
-  LenderOrganization,
-  LenderProduct,
-  LenderSubmission,
-  TermSheetOffer,
-  UnderwritingSummary,
+import {
+  mergeSourcedLenderCatalog,
+  type ApplicationPackage,
+  type Attribution,
+  type CapitalDocument,
+  type CapitalOpportunity,
+  type ChecklistItem,
+  type ClosingCondition,
+  type DocumentReview,
+  type FactReviewAudit,
+  type FeeRecord,
+  type FinancingStrategy,
+  type LenderOrganization,
+  type LenderProduct,
+  type LenderSubmission,
+  type TermSheetOffer,
+  type UnderwritingSummary,
 } from '@hvcg/atlas-capital-core';
 
 export interface CopilotHandoffRecord {
@@ -43,6 +45,7 @@ export interface CapitalState {
   attributions: Attribution[];
   copilotHandoffs: CopilotHandoffRecord[];
   underwriting: UnderwritingSummary[];
+  factReviews: FactReviewAudit[];
 }
 
 /** JSON store is sync; Graph persistence is async. `await` works on both. */
@@ -73,6 +76,7 @@ export function emptyState(): CapitalState {
     attributions: [],
     copilotHandoffs: [],
     underwriting: [],
+    factReviews: [],
   };
 }
 
@@ -129,13 +133,14 @@ export class CapitalStore implements CapitalPersistence {
     if (!existsSync(path)) {
       const state = emptyState();
       if (this.options.seedSyntheticLenders) seedLenders(state);
+      mergeSourcedLenderCatalog(state);
       this.save(state);
       return state;
     }
     const parsed = JSON.parse(readFileSync(path, 'utf8')) as CapitalState;
     const state = { ...emptyState(), ...parsed };
     if (this.options.seedSyntheticLenders) seedLenders(state);
-    return state;
+    return mergeSourcedLenderCatalog(state);
   }
 
   save(state: CapitalState): void {

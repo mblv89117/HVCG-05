@@ -84,7 +84,8 @@ describe('underwriting summary — provenance and disclaimers', () => {
     assert.equal(uw.sections.Debt, 'MISSING');
     assert.match(uw.sections['Use of Funds'], /payroll/);
     assert.equal(uw.usedUnverifiedFacts, false);
-    assert.deepEqual(uw.potentialStructures, []);
+    assert.ok(uw.potentialStructures.some((s) => /Working Capital LOC/i.test(s)));
+    assert.ok(uw.potentialStructures.every((s) => !/BEST_FIT|guaranteed/i.test(s)));
     assert.ok(uw.disclaimer.includes(AI_DISCLAIMER));
     assert.ok(uw.disclaimer.includes(FINANCING_DISCLAIMER));
     assert.match(uw.disclaimer.toLowerCase(), /does not guarantee/);
@@ -160,8 +161,8 @@ describe('underwriting summary — provenance and disclaimers', () => {
 
     assert.equal(uw.usedUnverifiedFacts, true);
     assert.equal(uw.sections.Revenue, 'MISSING');
-    assert.deepEqual(uw.potentialStructures, []);
     assert.match(uw.sections['Potential Financing Structures'], /Manny strategy approval/);
+    assert.ok(uw.potentialStructures.every((s) => /INSUFFICIENT_DATA|NOT_RECOMMENDED|PRELIMINARY/i.test(s)));
     assert.match(uw.disclaimer.toLowerCase(), /does not guarantee/);
     assert.doesNotMatch(uw.disclaimer.toLowerCase(), /guaranteed funding/);
     const joined = Object.values(uw.sections).join(' ');

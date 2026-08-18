@@ -6,8 +6,19 @@
 
 import type { CapitalStage } from './stages.ts';
 
-export const VERIFICATION_STATES = ['VERIFIED', 'DERIVED', 'UNVERIFIED', 'CONFLICTING', 'MISSING'] as const;
+export const VERIFICATION_STATES = [
+  'VERIFIED',
+  'DERIVED',
+  'UNVERIFIED',
+  'CONFLICTING',
+  'MISSING',
+  'REJECTED',
+  'CORRECTED',
+] as const;
 export type VerificationState = (typeof VERIFICATION_STATES)[number];
+
+export const FACT_REVIEW_DECISIONS = ['VERIFY', 'CORRECT', 'REJECT'] as const;
+export type FactReviewDecision = (typeof FACT_REVIEW_DECISIONS)[number];
 
 export const LENDER_FRESHNESS = ['CURRENT', 'STALE', 'UNKNOWN'] as const;
 export type LenderFreshness = (typeof LENDER_FRESHNESS)[number];
@@ -146,6 +157,7 @@ export interface CapitalProfileSnapshot {
   existingDebt?: ProvenancedValue<number>;
   monthlyDebtService?: ProvenancedValue<number>;
   collateral?: string;
+  cash?: ProvenancedValue<number>;
   ar?: ProvenancedValue<number>;
   inventory?: ProvenancedValue<number>;
   realEstate?: string;
@@ -224,6 +236,7 @@ export interface CapitalProfile {
   naics?: ProvenancedValue<string>;
   revenue?: ProvenancedValue<number>;
   profitability?: ProvenancedValue<number>;
+  cash?: ProvenancedValue<number>;
   employees?: ProvenancedValue<number>;
   existingDebt?: ProvenancedValue<number>;
   monthlyDebtService?: ProvenancedValue<number>;
@@ -292,13 +305,125 @@ export interface CapitalDocument {
 }
 
 export interface ExtractedFact {
+  id?: string;
   field: string;
   value: string | number | null;
+  originalValue?: string | number | null;
   verification: VerificationState;
   confidence: number;
   sourceRef: SourceRef;
   period?: string;
   entityName?: string;
+  evidenceSnippet?: string;
+  pageNumber?: number;
+  section?: string;
+  tableRow?: string;
+  extractionMethod?: ExtractionMethod;
+  extractionTimestamp?: string;
+  conflictState?: 'NONE' | 'CONFLICTING';
+  reviewer?: string;
+  reviewedAt?: string;
+  reviewerDecision?: FactReviewDecision;
+  correctedValue?: string | number | null;
+  documentType?: string;
+  fileName?: string;
+  driveId?: string;
+  itemId?: string;
+}
+
+export interface EvidenceReviewCard {
+  factId: string;
+  field: string;
+  extractedValue: string | number | null;
+  originalValue?: string | number | null;
+  correctedValue?: string | number | null;
+  verificationState: VerificationState;
+  confidence: number;
+  documentType: string;
+  fileName: string;
+  sourceRef: SourceRef;
+  driveId?: string;
+  itemId?: string;
+  pageNumber?: number;
+  section?: string;
+  tableRow?: string;
+  evidenceSnippet?: string;
+  extractionMethod?: ExtractionMethod;
+  extractionTimestamp?: string;
+  conflictState: 'NONE' | 'CONFLICTING';
+  reviewer?: string;
+  reviewedAt?: string;
+  reviewerDecision?: FactReviewDecision;
+  actions: FactReviewDecision[];
+}
+
+export interface FactReviewAudit {
+  id: string;
+  factId: string;
+  clientCode: string;
+  capitalOpportunityId: string;
+  previousState: VerificationState;
+  newState: VerificationState;
+  originalValue: string | number | null;
+  finalValue: string | number | null;
+  sourceRef: SourceRef;
+  reviewer: string;
+  timestamp: string;
+  decision: FactReviewDecision;
+  reason?: string;
+}
+
+export interface FounderWorkloadMetric {
+  documentsManuallyOpened: number;
+  valuesManuallyLocated: number;
+  manualTranscription: number;
+  mannyDecisions: number;
+  estimatedClicks: number;
+  target: {
+    documentsManuallyOpened: 0;
+    manualTranscription: 0;
+    manualSearch: 0;
+  };
+}
+
+export const FINANCING_STRUCTURE_STATUSES = ['POTENTIAL', 'NOT_RECOMMENDED', 'INSUFFICIENT_DATA'] as const;
+export type FinancingStructureStatus = (typeof FINANCING_STRUCTURE_STATUSES)[number];
+
+export interface FinancingStructure {
+  id: string;
+  name: string;
+  category: string;
+  status: FinancingStructureStatus;
+  confidenceLabel: 'PRELIMINARY' | 'GROUNDED';
+  basedOn: string[];
+  why: string;
+  missingData: string[];
+  unverifiedInputs: string[];
+  mannyReview: string;
+}
+
+export const LENDER_SOURCE_TYPES = [
+  'official_website',
+  'official_product_doc',
+  'sba_government',
+  'hvcg_communication',
+  'hvcg_historical',
+] as const;
+export type LenderSourceType = (typeof LENDER_SOURCE_TYPES)[number];
+
+export interface LenderCriterionRecord {
+  lenderId: string;
+  lenderName: string;
+  productId: string;
+  productName: string;
+  criterion: string;
+  value: string | number | boolean | null;
+  sourceRef: SourceRef;
+  sourceType: LenderSourceType;
+  sourceDate: string;
+  lastVerified: string;
+  confidence: number;
+  freshness: LenderFreshness;
 }
 
 export interface DocumentReview {

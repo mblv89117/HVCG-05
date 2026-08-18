@@ -157,6 +157,24 @@ export async function handleCapitalRoutes(opts: {
         sendOk(await service.missingRequest(principal, id));
         return true;
       }
+      if (method === 'GET' && rest === 'evidence-review') {
+        sendOk(await service.evidenceReview(principal, id));
+        return true;
+      }
+      const factReview = rest.match(/^facts\/([^/]+)\/review$/);
+      if (method === 'POST' && factReview) {
+        const result = await service.reviewFact(principal, id, decodeURIComponent(factReview[1]), body);
+        persistAudit(
+          'capital_fact_review',
+          `id=${id} fact=${factReview[1]} decision=${String(body.decision || '')} client=${String((result as { audit?: { clientCode?: string } }).audit?.clientCode || '')}`,
+        );
+        sendOk(result);
+        return true;
+      }
+      if (method === 'GET' && rest === 'structures') {
+        sendOk(await service.structures(principal, id));
+        return true;
+      }
       if (method === 'POST' && rest === 'underwriting') {
         sendOk(await service.underwrite(principal, id));
         return true;

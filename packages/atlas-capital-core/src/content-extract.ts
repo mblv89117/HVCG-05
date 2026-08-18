@@ -103,42 +103,61 @@ export function extractCapitalDocumentContent(opts: {
   }
 }
 
+function snippetAround(text: string, index: number, length: number): string | undefined {
+  const start = Math.max(0, index - 48);
+  const end = Math.min(text.length, index + length + 48);
+  const raw = text.slice(start, end).replace(/\s+/g, ' ').trim();
+  if (!raw) return undefined;
+  return raw
+    .replace(/https?:\/\/\S*(graph\.microsoft\.com|sharepoint\.com|sharepointonline\.com|tempauth|download\.aspx)\S*/gi, '[redacted-url]')
+    .replace(/https?:\/\/\S+/gi, '[redacted-url]')
+    .slice(0, 240);
+}
+
 export function extractFactsFromText(text: string, capturedAt: string, sourceRecordId: string): ExtractedFact[] {
   const facts: ExtractedFact[] = [];
-  const push = (field: string, value: number | string | null) => {
+  const push = (field: string, value: number | string | null, snippet?: string) => {
     const ref = sourceRef(capturedAt, sourceRecordId, field);
     if (!hasSourceRef(ref)) return;
     facts.push({
       field,
       value,
+      originalValue: value,
       verification: 'UNVERIFIED',
       confidence: 0.45,
       sourceRef: ref,
+      evidenceSnippet: snippet,
+      extractionMethod: 'NATIVE_TEXT',
+      extractionTimestamp: capturedAt,
+      conflictState: 'NONE',
     });
   };
-  const money = (label: RegExp): number | null => {
-    const m = text.match(label);
+  const money = (label: RegExp): { value: number; snippet?: string } | null => {
+    const m = label.exec(text);
     if (!m) return null;
     const raw = m[1].replace(/,/g, '');
     const n = Number(raw);
-    return Number.isFinite(n) ? n : null;
+    if (!Number.isFinite(n)) return null;
+    return { value: n, snippet: snippetAround(text, m.index, m[0].length) };
   };
-  const revenue = money(/\b(?:total\s+)?revenue[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (revenue != null) push('revenue', revenue);
+  const revenue = money(/\b(?:total\s+)?revenue(?:\s*\/\s*net\s+sales)?[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
+  if (revenue) push('revenue', revenue.value, revenue.snippet);
   const net = money(/\bnet\s+income[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (net != null) push('netIncome', net);
+  if (net) push('netIncome', net.value, net.snippet);
   const gp = money(/\bgross\s+profit[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (gp != null) push('grossProfit', gp);
+  if (gp) push('grossProfit', gp.value, gp.snippet);
   const cash = money(/\bcash[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (cash != null) push('cash', cash);
+  if (cash) push('cash', cash.value, cash.snippet);
   const ar = money(/\b(?:accounts\s+receivable|ar)[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (ar != null) push('ar', ar);
+  if (ar) push('ar', ar.value, ar.snippet);
   const assets = money(/\btotal\s+assets[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (assets != null) push('totalAssets', assets);
+  if (assets) push('totalAssets', assets.value, assets.snippet);
   const liab = money(/\btotal\s+liabilities[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (liab != null) push('totalLiabilities', liab);
-  const debt = money(/\b(?:outstanding\s+)?(?:loan\s+balance|total\s+debt|debt)[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i);
-  if (debt != null) push('debt', debt);
+  if (liab) push('totalLiabilities', liab.value, liab.snippet);
+  const debt = money(
+    /\b(?:outstanding\s+principal|principal\s+balance|(?:outstanding\s+)?(?:loan\s+balance|total\s+debt)|(?<!service\s)debt)[:\s]+\$?\s*([\d,]+(?:\.\d+)?)/i,
+  );
+  if (debt) push('debt', debt.value, debt.snippet);
   return facts;
 }
 
