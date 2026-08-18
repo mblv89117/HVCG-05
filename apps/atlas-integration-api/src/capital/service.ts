@@ -37,6 +37,7 @@ import {
   type CapitalOpportunity,
   type CapitalStage,
   type ChecklistItem,
+  type ExtractedFact,
   type LenderFreshness,
   type LenderProduct,
   type TransactionType,
@@ -406,20 +407,23 @@ export class CapitalService {
     const opp = requireOpp(state, principal, id);
     const doc = state.documents.find((d) => d.id === docId && d.capitalOpportunityId === id);
     if (!doc) notFound('Document not found');
-    const facts = Array.isArray(body.extractedFacts)
-      ? (body.extractedFacts as Array<{
-          field: string;
-          value: string | number | null;
-          verification: 'VERIFIED' | 'UNVERIFIED' | 'DERIVED' | 'CONFLICTING' | 'MISSING';
-          confidence: number;
-          sourceRef?: { sourceSystem: string; capturedAt: string; field?: string };
-        }>).map((f) => ({
-          field: f.field,
-          value: f.value,
-          verification: f.verification,
-          confidence: f.confidence,
-          sourceRef: f.sourceRef,
-        }))
+    const facts: ExtractedFact[] = Array.isArray(body.extractedFacts)
+      ? body.extractedFacts.map((row) => {
+          const f = asRecord(row);
+          const src = asRecord(f.sourceRef);
+          return {
+            field: asString(f.field) || 'unknown',
+            value: typeof f.value === 'number' ? f.value : asString(f.value) || null,
+            verification: 'UNVERIFIED' as const,
+            confidence: asNumber(f.confidence) ?? 0,
+            sourceRef: {
+              sourceSystem: asString(src.sourceSystem),
+              capturedAt: asString(src.capturedAt),
+              field: asString(src.field) || asString(f.field) || 'unknown',
+              sourceRecordId: asString(src.sourceRecordId) || undefined,
+            },
+          };
+        })
       : [];
     const intelligence = runDocumentIntelligence({
       opportunity: opp,

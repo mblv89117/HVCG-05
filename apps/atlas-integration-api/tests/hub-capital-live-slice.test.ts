@@ -426,4 +426,48 @@ describe('Capital Graph live slice (in-memory)', () => {
     });
     assert.ok(created.id);
   });
+
+  it('ALLOW_SYNTHETIC_GRAPH is captured at Graph store construction — env mutation is not enough', async () => {
+    const graph = new MemoryGraph();
+    graph.seed(CLIENTS, { Title: 'SYNTHETIC QA Client', ClientCode: 'SYN01' }, '1');
+    const store = new GraphCapitalStore(
+      {
+        siteId: SITE,
+        opportunitiesListId: OPPORTUNITIES,
+        documentRequestsListId: DOCUMENT_REQUESTS,
+        lenderOutreachListId: LENDER_OUTREACH,
+        clientsListId: CLIENTS,
+        managedIdentityClientId: MI,
+        allowSyntheticGraph: false,
+      },
+      graph,
+    );
+    process.env.INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH = 'true';
+    await assert.rejects(
+      () =>
+        store.createOpportunity({
+          id: 'cap-boot',
+          title: 'SYNTHETIC should still be blocked',
+          clientId: 'SYN01',
+          clientCode: 'SYN01',
+          transactionType: 'working_capital_loc',
+          need: { requestedAmount: 1 },
+          business: {},
+          capitalProfile: {},
+          transaction: {},
+          stage: 'NeedIdentified',
+          stageEnteredAt: new Date().toISOString(),
+          ownerEmail: 'qa@example.com',
+          submissionReadiness: false,
+          closingReadiness: false,
+          lastMeaningfulActivityAt: new Date().toISOString(),
+          clientApproval: 'NOT_REQUIRED',
+          mannyStrategyApproval: 'NOT_REQUIRED',
+          mannyShortlistApproval: 'NOT_REQUIRED',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
+      /Synthetic capital records cannot be written/,
+    );
+  });
 });

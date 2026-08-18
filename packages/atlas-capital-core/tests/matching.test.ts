@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   applyClientCapitalProfile,
   CRITERIA_STALE_DAYS,
+  FINANCING_DISCLAIMER,
   filterLenderUniverse,
   matchLenders,
   organizationFreshness,
@@ -12,6 +13,7 @@ import {
   verifiedValue,
   type CapitalOpportunity,
   type CapitalProfile,
+  type LenderMatch,
   type LenderOrganization,
   type LenderProduct,
   type LenderSubmission,
@@ -78,7 +80,19 @@ function assertEveryExplanationSourced(matches: ReturnType<typeof matchLenders>)
       assert.ok(e.sourceRef.field, `explanation ${e.criterion} missing field`);
     }
     assert.equal(m.reviewStatus, 'PENDING_MANNY');
+    assertNoFakePercentScore(m);
   }
+}
+
+function assertNoFakePercentScore(match: LenderMatch): void {
+  assert.equal('score' in match, false);
+  assert.equal('percent' in match, false);
+  assert.equal('fitPercent' in match, false);
+  assert.equal('matchPercent' in match, false);
+  assert.equal('confidence' in match, false);
+  const blob = `${match.band} ${match.reasons.join(' ')} ${match.explanations.map((e) => e.statement).join(' ')}`;
+  assert.equal(/\b\d{1,3}\s*%\s*(fit|match|score)\b/i.test(blob), false);
+  assert.equal(/\b(fit|match)\s*score\b/i.test(blob), false);
 }
 
 describe('lender freshness', () => {

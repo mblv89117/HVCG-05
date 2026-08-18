@@ -40,12 +40,23 @@ Completeness vs request: `SATISFIED | LIKELY_SATISFIED_NEEDS_REVIEW | INCOMPLETE
 HVCG readiness rules ≠ lender-specific rules. Do not invent universal lender policy.
 
 Hub: `POST /api/capital/opportunities/:id/document-intelligence`  
-`send` / `sendToClient` / `externalSend` → 422. Draft client request only.
+`send` / `sendToClient` / `externalSend` → 422. Draft client request only.  
+`includeUnderwriting` defaults true. OCR is `STUBBED_NOT_RUN`. Facts without `SourceRef` are dropped.
+
+## Underwriting (advisory)
+
+`buildUnderwritingSummary` → `UnderwritingSummary`. Also `POST …/underwriting`.  
+Money claims (revenue / EBITDA / debt): `ProvenancedValue` + `SourceRef` citation, or section text `MISSING`. AI cannot `VERIFIED`.  
+`usedUnverifiedFacts` when a non-verified money claim or extracted fact was used.  
+`potentialStructures` is `[]` until Manny strategy. Disclaimer = `AI_DISCLAIMER` + `FINANCING_DISCLAIMER`. No financing guarantees.
 
 ## Lenders
 
 Reuse `HVCG_Lenders` + `HVCG_LenderOutreach`. Matching bands: `BEST_FIT | POSSIBLE | LOW_FIT | INELIGIBLE | UNKNOWN`.  
 Stale/unknown criteria cannot produce `BEST_FIT`. No fake percent scores. Structures before lender shortlist.
+
+Do **not** provision `HVCG_LenderProducts` or `HVCG_CapitalProfiles`. Live org rows without sourced product criteria stay `UNKNOWN`.  
+`GET /api/capital/lenders` is a Manny catalog (read-only Graph on `HVCG_Lenders`).
 
 ## File ownership (avoid merge fights)
 
@@ -56,6 +67,7 @@ Stale/unknown criteria cannot produce `BEST_FIT`. No fake percent scores. Struct
 | `packages/atlas-capital-core/src/types.ts` | Orchestrator only |
 | Hub `capital/http.ts` `capital/service.ts` | Orchestrator / D1 |
 | Tests `tests/document-*.test.ts` | A2/A3/C |
+| Tests `tests/underwriting-summary.test.ts` | A5 |
 | Tests `tests/matching.test.ts` | B |
 | Tests `hub-capital-*.test.ts` new files | C |
 | `docs/CAPITAL_*` | D3 + owning stream |

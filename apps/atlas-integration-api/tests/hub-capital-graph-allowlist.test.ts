@@ -162,4 +162,22 @@ describe('Capital Graph allowlist', () => {
     assert.throws(() => capabilityForCapitalList(ALLOWLIST, PM_PROJECTS));
     assert.equal(`${GRAPH_ORIGIN}/v1.0`.startsWith('https://'), true);
   });
+
+  it('never grants Sites.Manage.All — Hub capital Graph stays Selected + Sites.Read.All', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join, dirname } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
+    const graphSrc = readFileSync(join(root, 'apps/atlas-integration-api/src/capital/sharepoint/graph.ts'), 'utf8');
+    const enable = readFileSync(join(root, 'deployment/scripts/Enable-HVCGCapitalMinSlice.ps1'), 'utf8');
+    const verify = readFileSync(join(root, 'deployment/artifacts/verify-capital-enablement.ps1'), 'utf8');
+    const recycle = readFileSync(join(root, 'deployment/scripts/Set-HVCGCapitalHubAppSettings.ps1'), 'utf8');
+    assert.doesNotMatch(graphSrc, /Sites\.Manage\.All/);
+    assert.match(enable, /Does not grant Sites\.Manage\.All/);
+    assert.match(verify, /Sites\.Manage\.All/);
+    assert.match(verify, /BANNED ROLE/);
+    assert.match(recycle, /az webapp stop/);
+    assert.match(recycle, /az webapp start/);
+    assert.match(recycle, /INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH/);
+  });
 });

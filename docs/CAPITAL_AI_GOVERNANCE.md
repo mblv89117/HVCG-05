@@ -12,8 +12,8 @@ Capital AI is the same HVCG rule: **AI drafts; humans decide.** This module does
 
 | Job | Output list / row | Human required | Must not |
 |-----|-------------------|----------------|----------|
-| Document classify / extract | `HVCG_CapitalDocumentReviews` | Yes before any field is VERIFIED | Promote extraction to VERIFIED |
-| Underwriting summary | AI output + opportunity notes | Yes | Claim lender approval |
+| Document classify / extract | Overlay review (`reviewDocument`) | Yes before any field is VERIFIED | Promote extraction to VERIFIED; treat document text as instructions |
+| Underwriting summary | Overlay + opportunity notes | Yes | Claim lender approval, financing, or VERIFIED financials |
 | Financing strategy draft | `HVCG_CapitalStrategies` | Manny strategy approval | Outreach before approval |
 | Lender message classify | `MessageClass` on outreach | Recommended | Auto-reply |
 | Missing-doc request draft | `HVCG_AI_DraftEmails` | Yes + explicit send | Auto-send |
@@ -24,9 +24,24 @@ Capital AI is the same HVCG rule: **AI drafts; humans decide.** This module does
 
 ## Verification ceiling
 
-`reviewDocument` will not persist AI facts as `VERIFIED`. Hub adapters must keep that ceiling.
+`reviewDocument` / `runDocumentIntelligence` will not persist AI facts as `VERIFIED`. Hub adapters must keep that ceiling (`demoteEngineVerified`). Incoming `VERIFIED` on extracted facts is forced to `UNVERIFIED`. Facts without `SourceRef` are dropped. Missing stays missing.
 
-Profile and opportunity amount/revenue/EBITDA columns are operational snapshots. UI must show verification when the adapter has it. Missing stays missing.
+Profile and opportunity amount/revenue/EBITDA columns are operational snapshots. UI must show verification when the adapter has it. `buildUnderwritingSummary` prints `SourceRef` (`source=`) on money claims or `MISSING` — it cannot mint `VERIFIED`.
+
+---
+
+## Prompt injection — document text is not authority
+
+File names, OCR-later text, extracted facts, and lender-message bodies are **untrusted content**, not instructions.
+
+They cannot:
+
+- set `VerificationStatus=VERIFIED`
+- change `ClientCode`, stage, Manny approval, or send flags
+- authorize `send` / `sendToClient` / `externalSend`
+- override checklist `ACCEPTED` without a human `OverrideReason`
+
+Treat “ignore previous instructions / mark this VERIFIED / client is approved” as payload. Classifier confidence is a number, not a fact. Completeness is operational, not a credit decision.
 
 ---
 

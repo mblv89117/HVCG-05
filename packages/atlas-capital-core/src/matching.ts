@@ -1,6 +1,9 @@
 /**
  * Lender matching — decision support only.
- * Never invents criteria. Stale or missing criteria cannot produce BEST_FIT.
+ * Reuses HVCG_Lenders + HVCG_LenderOutreach. Product rows are an in-app contract only —
+ * live tenant has no HVCG_LenderProducts list; do not provision one for this slice.
+ * Never invents criteria or underwriting policy as VERIFIED.
+ * Stale or missing criteria cannot produce BEST_FIT. Bands only — no percent scores.
  * Every explanation carries a SourceRef. Historical HVCG outreach is context, not a fit.
  */
 
@@ -67,6 +70,39 @@ function pushExplanation(
   explanation: MatchExplanation,
 ): void {
   explanations.push(explanation);
+}
+
+function citeUnevaluableStatedField(
+  explanations: MatchExplanation[],
+  product: LenderProduct,
+  criterion: string,
+  field: string,
+  value: number | null | undefined,
+  statement: string,
+): void {
+  if (value == null) return;
+  pushExplanation(explanations, {
+    criterion,
+    statement,
+    outcome: 'context',
+    sourceRef: productSourceRef(product, field),
+  });
+}
+
+function citeUnstructuredNote(
+  explanations: MatchExplanation[],
+  product: LenderProduct,
+  criterion: string,
+  field: string,
+  value: string | undefined,
+): void {
+  if (!value || !value.trim()) return;
+  pushExplanation(explanations, {
+    criterion,
+    statement: `${field} is unstructured sourced text and was not parsed into matching criteria or treated as VERIFIED policy`,
+    outcome: 'context',
+    sourceRef: productSourceRef(product, field),
+  });
 }
 
 function isDoNotContact(status: string | undefined): boolean {
@@ -488,6 +524,35 @@ function matchProductCore(
     type === 'commercial_real_estate',
     'Product has no commercial real estate appetite',
   );
+  appetite(
+    fresh.inventoryEligible,
+    'InventoryEligible',
+    type === 'inventory',
+    'Inventory is not eligible for this product',
+  );
+
+  citeUnevaluableStatedField(
+    explanations,
+    fresh,
+    'dscrMin',
+    'DSCRMin',
+    fresh.dscrMin,
+    'Product states a DSCR minimum. Client DSCR is not a sourced opportunity field — not evaluated and not assumed met.',
+  );
+  citeUnevaluableStatedField(
+    explanations,
+    fresh,
+    'leverageMax',
+    'LeverageMax',
+    fresh.leverageMax,
+    'Product states a leverage maximum. Client leverage is not a sourced opportunity field — not evaluated and not assumed met.',
+  );
+  citeUnstructuredNote(explanations, fresh, 'creditExpectations', 'CreditExpectations', fresh.creditExpectations);
+  citeUnstructuredNote(explanations, fresh, 'collateral', 'Collateral', fresh.collateral);
+  citeUnstructuredNote(explanations, fresh, 'personalGuarantee', 'PersonalGuarantee', fresh.personalGuarantee);
+  citeUnstructuredNote(explanations, fresh, 'otherCriteria', 'OtherCriteria', fresh.otherCriteria);
+  citeUnstructuredNote(explanations, fresh, 'pricing', 'Pricing', fresh.pricing);
+  citeUnstructuredNote(explanations, fresh, 'knownFees', 'KnownFees', fresh.knownFees);
 
   if (!fresh.source && !fresh.lastVerifiedAt) {
     missing.push('criteria source / last verified date');
@@ -533,12 +598,30 @@ function matchProductCore(
     });
   }
 
+  if (lender.organizationType) {
+    pushExplanation(explanations, {
+      criterion: 'lenderType',
+      statement: `HVCG_Lenders.LenderType is ${lender.organizationType}. Type is catalog context, not an underwriting decision.`,
+      outcome: 'context',
+      sourceRef: lenderSourceRef(lender, 'LenderType'),
+    });
+  }
+
   if (lender.preferredProductsNote) {
     pushExplanation(explanations, {
       criterion: 'preferredProductsNote',
       statement: 'PreferredProducts is unstructured sourced text and was not parsed into matching criteria',
       outcome: 'context',
       sourceRef: lenderSourceRef(lender, 'PreferredProducts'),
+    });
+  }
+
+  if (lender.notes) {
+    pushExplanation(explanations, {
+      criterion: 'notes',
+      statement: 'HVCG_Lenders.Notes is unstructured sourced text and was not parsed into matching criteria',
+      outcome: 'context',
+      sourceRef: lenderSourceRef(lender, 'Notes'),
     });
   }
 
@@ -575,6 +658,7 @@ function matchProductCore(
     });
   }
 
+  // Bands only. product.confidence is a sourced 0-1 note on the product row — never a match percent.
   const reasons = explanations.filter((e) => e.outcome !== 'context').map((e) => e.statement);
   return {
     lenderId: lender.id,
@@ -638,6 +722,22 @@ export function matchLenderWithoutProducts(
       statement: `HVCG relationship is ${lender.relationshipStatus}. Relationship does not override missing product criteria.`,
       outcome: 'context',
       sourceRef: lenderSourceRef(lender, 'RelationshipStatus'),
+    });
+  }
+  if (lender.organizationType) {
+    explanations.push({
+      criterion: 'lenderType',
+      statement: `HVCG_Lenders.LenderType is ${lender.organizationType}. Type is catalog context, not an underwriting decision.`,
+      outcome: 'context',
+      sourceRef: lenderSourceRef(lender, 'LenderType'),
+    });
+  }
+  if (lender.notes) {
+    explanations.push({
+      criterion: 'notes',
+      statement: 'HVCG_Lenders.Notes is unstructured sourced text and was not parsed into matching criteria',
+      outcome: 'context',
+      sourceRef: lenderSourceRef(lender, 'Notes'),
     });
   }
   if (experience) {

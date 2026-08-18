@@ -2,7 +2,8 @@
 
 **As of:** 2026-08-17  
 **Code:** `packages/atlas-capital-core/src/matching.ts`  
-**Lists:** `HVCG_Lenders`, `HVCG_LenderProducts`, `HVCG_CapitalSources`  
+**Live lists:** `HVCG_Lenders` (read), `HVCG_LenderOutreach`  
+**Designed, not provisioned:** `HVCG_LenderProducts`, `HVCG_CapitalSources`, `HVCG_CapitalOffers` — do not create them in this sprint. Org-only live matching returns `UNKNOWN`.  
 **Rule:** Never invent criteria. Stale or missing criteria cannot produce `BEST_FIT`.
 
 This is decision support for Manny. It is not an automated allocator and not a credit decision.

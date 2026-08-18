@@ -48,9 +48,7 @@ assert.match(api, /\/api\/capital\/opportunities/);
 assert.match(api, /hubFetchJson/);
 assert.match(api, /HVCG is not a lender/);
 assert.match(api, /isAuthorizationFailure/);
-assert.match(api, /Authenticated access required/);
-assert.match(api, /Synthetic demonstration data is not shown/);
-assert.match(api, /kind === 'mutate' \|\| kind === 'read-item'/);
+assert.match(api, /from '\.\/capitalAccess'/);
 assert.doesNotMatch(api, /if \(status === 401 \|\| status === 404 \|\| status === 501 \|\| status === 503\) return true/);
 assert.match(synthetic, /Synthetic demonstration data — not a live client\. Not production facts\./);
 assert.match(synthetic, /not a live client/);
@@ -58,5 +56,20 @@ assert.match(command, /Authenticated access required/);
 assert.match(command, /Synthetic demonstration data is never used to conceal a 401 or 403/);
 assert.doesNotMatch(api, /client_secret|CLIENT_SECRET/);
 assert.doesNotMatch(command, /client_secret|CLIENT_SECRET/);
+
+const access = readFileSync(join(root, 'src/pages/capital/capitalAccess.ts'), 'utf8');
+assert.match(access, /status === 401 \|\| status === 403/);
+assert.match(access, /isAuthorizationFailure\(err\)\) return false/);
+assert.match(access, /Synthetic demonstration data is not shown/);
+assert.match(access, /Authenticated access required/);
+assert.match(access, /kind === 'mutate' \|\| kind === 'read-item'/);
+
+const msConfig = readFileSync(join(root, 'src/microsoft/config.ts'), 'utf8');
+assert.match(msConfig, /49d20328-fe3c-40ec-9d0e-99f57e4646e4/);
+assert.match(msConfig, /ELITE_SPA_CLIENT_ID/);
+assert.match(msConfig, /Azure CLI is not a substitute/);
+
+const envExample = readFileSync(join(root, '.env.example'), 'utf8');
+assert.match(envExample, /49d20328-fe3c-40ec-9d0e-99f57e4646e4/);
 
 console.log('PASS capital command center route + provenance source tests');

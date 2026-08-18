@@ -95,6 +95,8 @@ Added: `LastVerifiedAt`, `CriteriaFreshness`, `VerificationSource`.
 | HVCG_FeeRecords | Fee / tail tracking. Not GL. `LegalComplianceReviewRequired` for regulated/success/tail types. | Engagement, opportunity, lender |
 | HVCG_CapitalDocumentReviews | AI/human review. Extracted facts cannot be stored as VERIFIED by AI. | Opportunity, document request |
 
+**Live Hub slice:** `HVCG_CapitalDocumentReviews` and `HVCG_LenderProducts` are **not provisioned**. Advisory reviews stay in the Hub overlay. Checklist writes reuse `HVCG_DocumentRequests`. Matching uses in-app `LenderProduct` rows when present; live `HVCG_Lenders` without products stay UNKNOWN. Do not create those lists for v1.
+
 ---
 
 ## Provenance

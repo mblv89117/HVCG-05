@@ -43,6 +43,61 @@ import type {
 export const DOCUMENT_INTELLIGENCE_SOURCE = 'atlas-document-intelligence';
 export const OCR_STUBBED: DocumentIntelligenceDocumentResult['extraction']['ocr'] = 'STUBBED_NOT_RUN';
 
+/** Filename / metadata classification below this is not a type match. */
+export const CLASSIFICATION_LOW_CONFIDENCE = 0.5;
+
+/**
+ * Completeness of one file vs the requested checklist row (contracts).
+ * Distinct from checklist RequestStatus and from completenessPercent.
+ */
+export const COMPLETENESS_VS_REQUEST = [
+  'SATISFIED',
+  'LIKELY_SATISFIED_NEEDS_REVIEW',
+  'INCOMPLETE',
+  'OUTDATED',
+  'WRONG_ENTITY',
+  'WRONG_PERIOD',
+  'CONFLICTING',
+  'NOT_MATCHED',
+  'UNKNOWN',
+] as const;
+export type CompletenessVsRequest = (typeof COMPLETENESS_VS_REQUEST)[number];
+
+export interface CompletenessVsRequestRow {
+  documentId: string;
+  itemKey?: string;
+  status: CompletenessVsRequest;
+}
+
+const PROMPT_INJECTION_RE =
+  /ignore\s+(all\s+)?(previous\s+)?instructions|disregard\s+(all\s+)?(previous|prior|these)\s+instructions|you\s+are\s+now\b/i;
+
+const PERIOD_SENSITIVE_TYPES = new Set([
+  'bank_statement',
+  'pnl',
+  'balance_sheet',
+  'cash_flow',
+  'tax_return',
+  'ar_aging',
+  'ap_aging',
+  'debt_schedule',
+]);
+
+export function isPromptInjectionFileName(fileName: string): boolean {
+  return PROMPT_INJECTION_RE.test(fileName);
+}
+
+/** `other` from the name heuristic is UNKNOWN — not a guessed type. */
+export function normalizeClassification(classified: {
+  documentType: string;
+  confidence: number;
+}): { documentType: string; confidence: number } {
+  if (classified.documentType === 'other') {
+    return { documentType: 'UNKNOWN', confidence: classified.confidence };
+  }
+  return classified;
+}
+
 export const CLASSIFICATION_TO_ITEM_KEY: Record<string, string> = {
   bank_statement: 'bank-3mo',
   pnl: 'fin-pl-ytd',
@@ -129,7 +184,7 @@ export function demoteEngineVerified(state: VerificationState): VerificationStat
   return state === 'VERIFIED' ? 'UNVERIFIED' : state;
 }
 
-export function ensureFactProvenance(fact: ExtractedFact, document: CapitalDocument, capturedAt: string): ExtractedFact {
+export function ensureFactProvenance(fact: ExtractedFact, document: CapitalDocument, _capturedAt: string): ExtractedFact {
   if (!hasSourceRef(fact.sourceRef)) {
     return {
       ...fact,
@@ -151,6 +206,59 @@ export function ensureFactProvenance(fact: ExtractedFact, document: CapitalDocum
 
 export function suggestedChecklistItemKey(documentType: string): string | undefined {
   return CLASSIFICATION_TO_ITEM_KEY[documentType];
+}
+
+function itemKeysCompatible(classifiedKey: string | undefined, requestedKey: string | undefined): boolean {
+  if (!classifiedKey || !requestedKey) return false;
+  if (classifiedKey === requestedKey) return true;
+  return (classifiedKey === 'pfs' && requestedKey === 'sba-413') || (classifiedKey === 'sba-413' && requestedKey === 'pfs');
+}
+
+function periodYearMismatch(item: ChecklistItem, period: PeriodDetection, documentType: string): boolean {
+  if (!item.currentThrough || !period.determined || !period.periodEnd) return false;
+  if (documentType === 'tax_return') return false;
+  const wantYear = item.currentThrough.slice(0, 4);
+  const gotYear = String(period.taxYear ?? period.periodEnd.slice(0, 4));
+  return Boolean(wantYear && gotYear && wantYear !== gotYear);
+}
+
+/**
+ * Fail-closed: a file does not SATISFY a request unless type, entity, and
+ * period heuristics align. Prompt-injection filenames are content, not authority.
+ */
+export function evaluateCompletenessVsRequest(opts: {
+  result: DocumentIntelligenceDocumentResult;
+  item?: ChecklistItem;
+  conflicts?: ConflictFinding[];
+  bankStatementMonths?: string[];
+}): CompletenessVsRequest {
+  const { result, item, conflicts = [], bankStatementMonths } = opts;
+  const type = result.classification.documentType;
+  const classifiedKey = suggestedChecklistItemKey(type) || result.collection.suggestedItemKey;
+  const requestedKey = item?.itemKey;
+
+  if (isPromptInjectionFileName(result.collection.fileName)) return 'UNKNOWN';
+  if (type === 'UNKNOWN' || type === 'other' || result.classification.confidence < CLASSIFICATION_LOW_CONFIDENCE) {
+    return 'UNKNOWN';
+  }
+  if (result.entity.matchesOpportunity === false) return 'WRONG_ENTITY';
+  if (requestedKey && classifiedKey && !itemKeysCompatible(classifiedKey, requestedKey)) return 'NOT_MATCHED';
+  if (!requestedKey && !classifiedKey) return 'NOT_MATCHED';
+  if (item && periodYearMismatch(item, result.period, type)) return 'WRONG_PERIOD';
+  if (result.freshness.stale) return 'OUTDATED';
+  if (conflicts.some((c) => c.left.documentId === result.documentId || c.right.documentId === result.documentId)) {
+    return 'CONFLICTING';
+  }
+  if (result.incompletePages) return 'INCOMPLETE';
+  const months = bankStatementMonths;
+  if ((requestedKey === 'bank-3mo' || type === 'bank_statement') && months && months.length > 0 && months.length < 3) {
+    return 'INCOMPLETE';
+  }
+  if (PERIOD_SENSITIVE_TYPES.has(type) && !result.period.determined) return 'INCOMPLETE';
+  if (result.collection.duplicateOf) return 'LIKELY_SATISFIED_NEEDS_REVIEW';
+  if (result.entity.matchesOpportunity !== true) return 'LIKELY_SATISFIED_NEEDS_REVIEW';
+  if (result.extraction.facts.some((f) => f.verification !== 'VERIFIED')) return 'LIKELY_SATISFIED_NEEDS_REVIEW';
+  return 'SATISFIED';
 }
 
 export function detectPeriodFromFileName(
@@ -548,7 +656,7 @@ export function analyzeDocument(opts: {
   asOf: Date;
 }): DocumentIntelligenceDocumentResult {
   const capturedAt = opts.document.associatedAt || opts.asOf.toISOString();
-  const classified = classifyDocumentName(opts.document.fileName);
+  const classified = normalizeClassification(classifyDocumentName(opts.document.fileName));
   const suggested = suggestedChecklistItemKey(classified.documentType);
   const matched = matchChecklistItem(opts.checklist, suggested, opts.document.checklistItemId);
   const others = opts.existingDocuments.filter((d) => d.id !== opts.document.id);
@@ -600,7 +708,7 @@ export function analyzeDocument(opts: {
     collection: {
       associated: true,
       checklistItemId: matched?.id || opts.document.checklistItemId,
-      suggestedItemKey: matched?.itemKey || suggested,
+      suggestedItemKey: suggested || matched?.itemKey,
       duplicateOf,
       fileName: opts.document.fileName,
       webUrl: opts.document.webUrl,
@@ -609,7 +717,10 @@ export function analyzeDocument(opts: {
     classification: {
       documentType: classified.documentType,
       confidence: classified.confidence,
-      verification: classified.documentType === 'other' ? 'UNVERIFIED' : 'DERIVED',
+      verification:
+        classified.documentType === 'UNKNOWN' || classified.confidence < CLASSIFICATION_LOW_CONFIDENCE
+          ? 'UNVERIFIED'
+          : 'DERIVED',
       sourceRef: classificationRef,
     },
     extraction: {
@@ -640,6 +751,7 @@ export interface DocumentIntelligenceOutput {
   report: DocumentIntelligenceReport;
   checklist: ChecklistItem[];
   reviews: DocumentReview[];
+  completenessVsRequest: CompletenessVsRequestRow[];
 }
 
 export function runDocumentIntelligence(input: DocumentIntelligenceInput): DocumentIntelligenceOutput {
@@ -716,8 +828,8 @@ export function runDocumentIntelligence(input: DocumentIntelligenceInput): Docum
   const reviews = results.map((r) => r.review);
   const usedUnverifiedFacts = results.some(
     (r) =>
+      r.extraction.ocr === OCR_STUBBED ||
       r.extraction.facts.some((f) => f.verification !== 'VERIFIED') ||
-      r.classification.verification !== 'VERIFIED' ||
       r.period.verification === 'DERIVED' ||
       r.freshness.verification === 'DERIVED',
   );
@@ -746,5 +858,21 @@ export function runDocumentIntelligence(input: DocumentIntelligenceInput): Docum
     disclaimer: `${AI_DISCLAIMER} ${FINANCING_DISCLAIMER}`,
   };
 
-  return { report, checklist, reviews };
+  const completenessVsRequest: CompletenessVsRequestRow[] = results.map((r) => {
+    const item =
+      checklist.find((i) => i.id === r.collection.checklistItemId) ||
+      checklist.find((i) => i.itemKey === r.collection.suggestedItemKey);
+    return {
+      documentId: r.documentId,
+      itemKey: item?.itemKey || r.collection.suggestedItemKey,
+      status: evaluateCompletenessVsRequest({
+        result: r,
+        item,
+        conflicts,
+        bankStatementMonths: months,
+      }),
+    };
+  });
+
+  return { report, checklist, reviews, completenessVsRequest };
 }

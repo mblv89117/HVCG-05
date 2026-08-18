@@ -42,6 +42,8 @@ export interface AtlasMicrosoftConfig {
 }
 
 const HVCG_TENANT = '3df46563-86f3-4414-87fd-84ba967741ef';
+/** Public Elite OS SPA. Must remain pre-authorized on Hub `access_as_user`. Azure CLI is not a substitute. */
+export const ELITE_SPA_CLIENT_ID = '49d20328-fe3c-40ec-9d0e-99f57e4646e4';
 const DEV_DATAVERSE = 'https://org1131a2b0.crm.dynamics.com';
 
 function env(name: string, fallback = ''): string {

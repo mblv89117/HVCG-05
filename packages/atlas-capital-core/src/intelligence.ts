@@ -161,6 +161,23 @@ function section(title: string, body: string): [string, string] {
   return [title, body];
 }
 
+/** Material numeric claim: SourceRef citation, or MISSING. VERIFIED without SourceRef is not VERIFIED. */
+export function moneyClaim(pv: ProvenancedValue<number> | undefined): string {
+  if (pv?.value == null) return 'MISSING';
+  const amount = `$${pv.value.toLocaleString()}`;
+  const sourced = hasSourceRef(pv.sourceRef);
+  const src = sourced ? ` source=${pv.sourceRef.sourceSystem}` : '';
+  if (pv.verification === 'VERIFIED' && sourced) return `${amount} (VERIFIED${src})`;
+  const grade = pv.verification === 'VERIFIED' && !sourced ? 'UNVERIFIED' : pv.verification;
+  return `${amount} (${grade}${src} — not verified)`;
+}
+
+function usedUnverifiedMoney(pv: ProvenancedValue<number> | undefined): boolean {
+  if (!pv || pv.value == null || pv.verification === 'MISSING') return false;
+  if (pv.verification === 'VERIFIED' && hasSourceRef(pv.sourceRef)) return false;
+  return true;
+}
+
 export function buildUnderwritingSummary(opts: {
   opportunity: CapitalOpportunity;
   checklist: ChecklistItem[];
@@ -170,12 +187,8 @@ export function buildUnderwritingSummary(opts: {
   const o = opts.opportunity;
   const missing = requiredOpenItems(opts.checklist).map((i) => i.name);
   const revenue = o.business.annualRevenue;
-  const revenueText =
-    revenue?.verification === 'VERIFIED' && revenue.value != null
-      ? `$${revenue.value.toLocaleString()} (VERIFIED)`
-      : revenue?.value != null
-        ? `$${revenue.value.toLocaleString()} (${revenue.verification} — not verified)`
-        : 'MISSING';
+  const ebitda = o.business.ebitda;
+  const debt = o.capitalProfile.existingDebt;
 
   const sections = Object.fromEntries([
     section('Executive Summary', `${o.clientCode} requests ${o.need.requestedAmount != null ? `$${o.need.requestedAmount.toLocaleString()}` : 'an unspecified amount'} for ${o.need.purpose || o.transactionType}. Stage: ${o.stage}.`),
@@ -183,17 +196,19 @@ export function buildUnderwritingSummary(opts: {
     section('Use of Funds', o.need.useOfFunds || 'MISSING'),
     section('Business Overview', [o.business.industry, o.business.naics].filter(Boolean).join(' / ') || 'MISSING'),
     section('Ownership', o.business.ownership || 'MISSING'),
-    section('Revenue', revenueText),
-    section('Profitability', o.business.ebitda?.value != null ? `$${o.business.ebitda.value.toLocaleString()} (${o.business.ebitda.verification})` : 'MISSING'),
-    section('Debt', o.capitalProfile.existingDebt?.value != null ? `$${o.capitalProfile.existingDebt.value.toLocaleString()} (${o.capitalProfile.existingDebt.verification})` : 'MISSING'),
+    section('Revenue', moneyClaim(revenue)),
+    section('Profitability', moneyClaim(ebitda)),
+    section('Debt', moneyClaim(debt)),
     section('Collateral', o.capitalProfile.collateral || 'MISSING'),
     section('Missing Information', missing.length ? missing.join('; ') : 'No required checklist items open'),
     section('Potential Financing Structures', 'Draft only — requires Manny strategy approval before it is an HVCG recommendation.'),
   ]);
 
   const usedUnverified = Boolean(
-    (revenue && revenue.verification !== 'VERIFIED' && revenue.verification !== 'MISSING') ||
-      opts.reviews.some((r) => r.extractedFacts.some((f) => f.verification !== 'VERIFIED')),
+    usedUnverifiedMoney(revenue) ||
+      usedUnverifiedMoney(ebitda) ||
+      usedUnverifiedMoney(debt) ||
+      opts.reviews.some((r) => r.extractedFacts.some((f) => f.verification !== 'VERIFIED' || !hasSourceRef(f.sourceRef))),
   );
 
   return {
