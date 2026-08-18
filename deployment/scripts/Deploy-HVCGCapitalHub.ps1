@@ -91,8 +91,16 @@ try {
 }
 Write-Host "Artifact: $zipPath"
 
+function Get-HVCGCapitalBackendMode($Health) {
+  $prop = $Health.PSObject.Properties['capitalBackend']
+  if (-not $prop -or $null -eq $prop.Value) { return 'absent' }
+  $mode = $prop.Value.PSObject.Properties['mode']
+  if (-not $mode -or $null -eq $mode.Value) { return 'absent' }
+  return [string]$mode.Value
+}
+
 $health = Invoke-RestMethod -Method GET -Uri "$HubBase/health"
-Write-Host "Current Hub health ok=$($health.ok) pmBackend=$($health.pmBackend.mode) capitalBackend=$(if ($health.capitalBackend) { $health.capitalBackend.mode } else { 'absent' })"
+Write-Host "Current Hub health ok=$($health.ok) pmBackend=$($health.pmBackend.mode) capitalBackend=$(Get-HVCGCapitalBackendMode $health)"
 
 Write-Host "Mode: $(if ($Apply) { 'APPLY az webapp deploy' } else { 'WHATIF (bundle only)' })"
 Write-Host "Target: $AppName / $ResourceGroup"
@@ -130,7 +138,7 @@ for ($i = 0; $i -lt 18; $i++) {
   try {
     $h = Invoke-RestMethod -Method GET -Uri "$HubBase/health"
     if ($h.ok) {
-      Write-Host "Health ok. pmBackend=$($h.pmBackend.mode) capitalBackend=$(if ($h.capitalBackend) { $h.capitalBackend.mode } else { 'absent-until-app-settings' })"
+      Write-Host "Health ok. pmBackend=$($h.pmBackend.mode) capitalBackend=$(Get-HVCGCapitalBackendMode $h)"
       $ok = $true
       break
     }
