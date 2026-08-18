@@ -7,17 +7,24 @@ This is **not** a new platform. No new SharePoint lists. No `Sites.Manage.All` o
 
 ---
 
-## What Manny runs (one batch)
+## What Manny runs (PnP app first — not Enable -Apply)
 
 ```powershell
 cd "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-capital-operations"
 
-# 1. Review (no writes)
-pwsh -File ./deployment/scripts/Enable-HVCGCapitalMinSlice.ps1
+# 1. Review the provisioning app (no Entra mutation)
+pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1
 
-# 2. Apply additive columns + list-level write grants + labeled SYN01 client + HVCG-Client-SYN01 (Manny only)
-pwsh -File ./deployment/scripts/Enable-HVCGCapitalMinSlice.ps1 -Apply
+# 2. Register it (interactive + MFA, Client ID only into gitignored development.json)
+pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -Apply -UpdateConfig
+
+# 3. Complete Capital WhatIf (no production writes)
+pwsh -File ./deployment/scripts/Enable-HVCGCapitalMinSlice.ps1
 ```
+
+Do **not** run Enable `-Apply` until step 3 prints a complete WHATIF summary.
+
+The PnP app is `HVCG-PnP-Capital-Provisioning` (single-tenant public client, `AllSites.Manage` + Graph `User.Read`). It is not `id-atlas-prod`. See [docs/deployment/PNP_AUTHENTICATION.md](deployment/PNP_AUTHENTICATION.md).
 
 Prerequisites: `az login` as `manny@highvaluecapitalgroup.com` on HVCG Production, and HVCG PnP interactive login (same as other Command Center scripts).
 

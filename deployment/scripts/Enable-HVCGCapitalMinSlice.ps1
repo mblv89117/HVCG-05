@@ -72,6 +72,34 @@ function Test-HVCGFieldExists {
   }
 }
 
+function Get-HVCGGraphHeaders {
+  $graphToken = (az account get-access-token --resource https://graph.microsoft.com --query accessToken -o tsv)
+  if (-not $graphToken) { throw 'Could not acquire Graph token via az.' }
+  return @{ Authorization = "Bearer $graphToken"; 'Content-Type' = 'application/json' }
+}
+
+function Get-HVCGGraphList {
+  param($Headers, [string]$SiteId, [string]$ListId)
+  Invoke-RestMethod -Method GET -Uri "https://graph.microsoft.com/v1.0/sites/$SiteId/lists/$ListId" -Headers $Headers
+}
+
+function Get-HVCGGraphColumnNames {
+  param($Headers, [string]$SiteId, [string]$ListId)
+  $names = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+  $url = "https://graph.microsoft.com/v1.0/sites/$SiteId/lists/$ListId/columns?`$select=name,displayName"
+  do {
+    $page = Invoke-RestMethod -Method GET -Uri $url -Headers $Headers
+    foreach ($col in @($page.value)) {
+      if ($col.name) { [void]$names.Add([string]$col.name) }
+    }
+    $url = $null
+    if ($page.PSObject.Properties.Name -contains '@odata.nextLink') {
+      $url = [string]$page.'@odata.nextLink'
+    }
+  } while ($url)
+  return $names
+}
+
 $acctRaw = az account show -o json
 if (-not $acctRaw) { throw 'az account show failed. Sign in with az login first.' }
 $acct = $acctRaw | ConvertFrom-Json
@@ -106,36 +134,66 @@ $Config = if (Test-Path $cfgPath) {
 } else {
   [pscustomobject]@{ authentication = [pscustomobject]@{} }
 }
-$null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
-Connect-HVCGPnPOnline -Url $SiteUrl -Config $Config -Report $Report
 
-$web = Get-PnPWeb
-if ($web.Url -notlike '*HVCG-CommandCenter*') {
-  throw "Connected to unexpected web $($web.Url)"
+$headers = Get-HVCGGraphHeaders
+$pnpClientId = Resolve-HVCGPnPClientId -Config $Config
+if ($pnpClientId -eq $HubAppId) {
+  throw 'PnP Client ID resolved to id-atlas-prod. Set authentication.pnpEntraAppClientId to HVCG-PnP-Capital-Provisioning, not the Hub MI.'
 }
 
-foreach ($name in $Lists.Keys) {
-  $list = Get-PnPList -Identity $name -ErrorAction Stop
-  $got = ([string]$list.Id).ToLowerInvariant()
-  $want = $Lists[$name].ToLowerInvariant()
-  if ($got -ne $want) {
+if ($Apply) {
+  if (-not $pnpClientId) {
+    throw @"
+-Apply requires the PnP provisioning app Client ID (not id-atlas-prod).
+
+  pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1
+  pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -Apply -UpdateConfig
+  pwsh -File ./deployment/scripts/Enable-HVCGCapitalMinSlice.ps1
+Then only after a complete WHATIF: -Apply
+"@
+  }
+  $null = Initialize-HVCGPnPAuth -Config $Config -Report $Report
+  Connect-HVCGPnPOnline -Url $SiteUrl -Config $Config -Report $Report
+  $web = Get-PnPWeb
+  if ($web.Url -notlike '*HVCG-CommandCenter*') {
+    throw "Connected to unexpected web $($web.Url)"
+  }
+} elseif ($pnpClientId) {
+  Write-Host "PnP Client ID present ($($pnpClientId.Substring(0,8))…). WHATIF uses Graph inventory; PnP login is not required until -Apply."
+} else {
+  Write-Host 'PnP Client ID not configured. WHATIF continues via Graph/az. -Apply will require Register-HVCGPnPEntraApp.ps1 first.'
+}
+
+$listIdByName = @{}
+$targetListNames = @('HVCG_CapitalOpportunities', 'HVCG_DocumentRequests', 'HVCG_LenderOutreach', 'HVCG_Clients')
+foreach ($name in $targetListNames) {
+  $want = if ($name -eq 'HVCG_Clients') { $ClientsListId } else { $Lists[$name] }
+  $meta = Get-HVCGGraphList -Headers $headers -SiteId $SiteId -ListId $want
+  $got = ([string]$meta.id).ToLowerInvariant()
+  $display = [string]$meta.displayName
+  if ($got -ne $want.ToLowerInvariant()) {
     throw "List $name id $got does not match expected $want. Aborting to avoid wrong target."
   }
+  if ($display -and $display -ne $name) {
+    Write-Host "WARN: list display name '$display' for id $got (expected title $name)"
+  }
+  $listIdByName[$name] = $want
   Write-Host "List OK: $name $got"
 }
 
-$clientsList = Get-PnPList -Identity 'HVCG_Clients' -ErrorAction Stop
-$clientsGot = ([string]$clientsList.Id).ToLowerInvariant()
-if ($clientsGot -ne $ClientsListId) {
-  throw "HVCG_Clients id $clientsGot does not match expected $ClientsListId. Aborting."
+$columnCache = @{}
+foreach ($name in @('HVCG_CapitalOpportunities', 'HVCG_LenderOutreach', 'HVCG_DocumentRequests')) {
+  $columnCache[$name] = Get-HVCGGraphColumnNames -Headers $headers -SiteId $SiteId -ListId $listIdByName[$name]
 }
-Write-Host "List OK: HVCG_Clients $clientsGot"
 
 $made = [System.Collections.Generic.List[string]]::new()
 $skipped = [System.Collections.Generic.List[string]]::new()
 
 foreach ($col in $Columns) {
-  $exists = Test-HVCGFieldExists -ListTitle $col.List -InternalName $col.InternalName
+  $exists = $columnCache[$col.List].Contains($col.InternalName)
+  if (-not $exists -and $Apply) {
+    $exists = Test-HVCGFieldExists -ListTitle $col.List -InternalName $col.InternalName
+  }
   if ($exists) {
     $skipped.Add("column $($col.List).$($col.InternalName) already exists") | Out-Null
     continue
@@ -160,10 +218,6 @@ foreach ($col in $Columns) {
   $made.Add($plan) | Out-Null
   Write-Host "CREATED $plan"
 }
-
-$graphToken = (az account get-access-token --resource https://graph.microsoft.com --query accessToken -o tsv)
-if (-not $graphToken) { throw 'Could not acquire Graph token via az.' }
-$headers = @{ Authorization = "Bearer $graphToken"; 'Content-Type' = 'application/json' }
 
 foreach ($name in @('HVCG_CapitalOpportunities','HVCG_DocumentRequests','HVCG_LenderOutreach')) {
   $listId = $Lists[$name]
@@ -198,10 +252,12 @@ foreach ($name in @('HVCG_CapitalOpportunities','HVCG_DocumentRequests','HVCG_Le
   Write-Host "CREATED $plan"
 }
 
-$synItems = Get-PnPListItem -List 'HVCG_Clients' -Query "<View><Query><Where><Eq><FieldRef Name='ClientCode'/><Value Type='Text'>SYN01</Value></Eq></Where></Query></View>"
-if ($synItems) {
+$synFilter = "https://graph.microsoft.com/v1.0/sites/$SiteId/lists/$ClientsListId/items?`$filter=fields/ClientCode eq 'SYN01'&`$expand=fields&`$select=id"
+$synPage = Invoke-RestMethod -Method GET -Uri $synFilter -Headers $headers
+$synItems = @($synPage.value)
+if ($synItems.Count -gt 0) {
   $skipped.Add('SYN01 client already exists') | Out-Null
-  Write-Host "SYN01 already present (item $($synItems[0].Id))"
+  Write-Host "SYN01 already present (item $($synItems[0].id))"
 } elseif (-not $Apply) {
   $skipped.Add('WHATIF create SYN01 labeled QA client') | Out-Null
   Write-Host 'WHATIF create HVCG_Clients SYN01 (SYNTHETIC QA — Atlas Capital Operations)'
@@ -262,5 +318,5 @@ Write-Host "Skipped/existing/whatif: $($skipped.Count)"
 $skipped | ForEach-Object { Write-Host "  = $_" }
 Write-Host 'Runtime Hub identity was not granted Sites.Manage.All.'
 if (-not $Apply) {
-  Write-Host 'Re-run with -Apply to execute the planned additive changes.'
+  Write-Host 'Re-run Enable -Apply only after this WHATIF summary is complete and reviewed. Do not skip the PnP app registration step.'
 }

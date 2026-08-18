@@ -253,7 +253,7 @@ function Resolve-HVCGPnPClientId {
     $fromCfg = [string](Get-HVCGPropertyValue -Object $auth -Name 'pnpEntraAppClientId' -Default '')
     if (-not [string]::IsNullOrWhiteSpace($fromCfg)) { $candidates += $fromCfg.Trim() }
   }
-  foreach ($envName in @('ENTRAID_CLIENT_ID', 'ENTRAID_APP_ID', 'AZURE_CLIENT_ID', 'HVCG_PNP_CLIENT_ID')) {
+  foreach ($envName in @('HVCG_PNP_CLIENT_ID', 'ENTRAID_CLIENT_ID', 'ENTRAID_APP_ID')) {
     $v = [Environment]::GetEnvironmentVariable($envName)
     if (-not [string]::IsNullOrWhiteSpace($v)) { $candidates += $v.Trim() }
   }
@@ -307,17 +307,15 @@ function Initialize-HVCGPnPAuth {
   $id = Resolve-HVCGPnPClientId -Config $Config
   if (-not $id) {
     $msg = @"
-PnP.PowerShell interactive auth requires your own Entra app Client ID (mandatory since Sept 2024).
+PnP.PowerShell interactive auth requires a dedicated provisioning Entra app Client ID (not id-atlas-prod).
 
-Register once (writes development.json when -UpdateConfig is set):
+Review, then register (interactive + MFA, no secret):
 
-  pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -UpdateConfig
+  pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1
+  pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -Apply -UpdateConfig
 
 Or set authentication.pnpEntraAppClientId in config/environments/development.json
-(or export ENTRAID_CLIENT_ID).
-
-Manual Entra path: App registrations → New registration → Mobile and desktop → redirect http://localhost
-→ API permissions: SharePoint delegated AllSites.FullControl (+ User.Read.All as needed); Graph delegated Group.ReadWrite.All / Directory.Read.All / Sites.FullControl.All → Grant admin consent.
+(or export HVCG_PNP_CLIENT_ID / ENTRAID_CLIENT_ID). Do not use AZURE_CLIENT_ID (Hub MI).
 
 See: docs/deployment/PNP_AUTHENTICATION.md
 https://pnp.github.io/powershell/articles/registerapplication.html
@@ -378,8 +376,9 @@ function Connect-HVCGPnPOnline {
   $cid = Resolve-HVCGPnPClientId -Config $Config -ClientId $ClientId
   if (-not $cid) {
     throw @"
-Connect-HVCGPnPOnline: no Entra Client ID. Call Initialize-HVCGPnPAuth first, or set authentication.pnpEntraAppClientId / ENTRAID_CLIENT_ID.
-Register: pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -UpdateConfig
+Connect-HVCGPnPOnline: no Entra Client ID. Call Initialize-HVCGPnPAuth first, or set authentication.pnpEntraAppClientId / HVCG_PNP_CLIENT_ID.
+Register: pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1
+Then:     pwsh -File ./deployment/scripts/Register-HVCGPnPEntraApp.ps1 -Apply -UpdateConfig
 "@
   }
   $script:HVCGPnPClientId = $cid
