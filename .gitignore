@@ -50,4 +50,9 @@ deployment/reports/data/
 deployment/artifacts/hub-build/
 deployment/artifacts/hub-rollback/
 deployment/artifacts/hub-*.zip
+deployment/artifacts/*.ps1
+
+# Dated local deploy report copies (latest.md/json remain tracked)
+deployment/reports/HVCG-Dev-Deploy-20*.json
+deployment/reports/HVCG-Dev-Deploy-20*.md
 

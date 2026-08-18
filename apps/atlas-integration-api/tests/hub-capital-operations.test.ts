@@ -127,7 +127,7 @@ const SYN_OPP = {
   need: { requestedAmount: 500_000, purpose: 'working capital', useOfFunds: 'payroll and inventory' },
   business: {
     industry: 'manufacturing',
-    annualRevenue: { value: 4_200_000, verification: 'VERIFIED', confidence: 1 },
+    annualRevenue: { value: 4_200_000, verification: 'VERIFIED', confidence: 1, sourceRef: { sourceSystem: 'synthetic-fixture', capturedAt: '2026-08-01T00:00:00.000Z' } },
   },
   transaction: { workingCapitalComponent: true },
   idempotencyKey: 'syn-cap-001',
@@ -140,6 +140,22 @@ describe('Hub capital operations API', () => {
       assert.equal(res.status, 401);
       const body = (await res.json()) as { error: string };
       assert.equal(body.error, 'unauthorized');
+    });
+  });
+
+  it('returns 400 for malformed JSON without leaking a stack', async () => {
+    await withCapitalHub(async ({ base }) => {
+      const res = await fetch(`${base}/api/capital/opportunities`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: '{"title":',
+      });
+      assert.equal(res.status, 400);
+      const body = (await res.json()) as { error: string; code?: string; stack?: string };
+      assert.equal(body.error, 'malformed_json');
+      assert.equal(body.code, 'malformed_json');
+      assert.equal(body.stack, undefined);
+      assert.doesNotMatch(JSON.stringify(body), /at /);
     });
   });
 
@@ -297,6 +313,26 @@ describe('Hub capital operations API', () => {
       assert.ok(reviewBody.review.disclaimer.includes('unverified'));
       assert.ok(AI_DISCLAIMER.length > 10);
 
+      const intel = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/document-intelligence`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ includeUnderwriting: true }),
+      });
+      assert.equal(intel.status, 200);
+      const intelBody = (await intel.json()) as {
+        report: { clientRequest?: { sendAttempted?: boolean }; underwriting?: { disclaimer?: string } };
+        clientRequestSendAttempted: boolean;
+      };
+      assert.equal(intelBody.clientRequestSendAttempted, false);
+      assert.ok(intelBody.report.underwriting?.disclaimer);
+
+      const sendBlocked = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/document-intelligence`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ send: true }),
+      });
+      assert.equal(sendBlocked.status, 422);
+
       const uw = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/underwriting`, {
         method: 'POST',
         headers: headers('valid-member'),
@@ -337,9 +373,27 @@ describe('Hub capital operations API', () => {
       });
       assert.equal(match.status, 200);
       const matchBody = (await match.json()) as {
-        matches: Array<{ band: string; stale: boolean; lenderName: string }>;
+        matches: Array<{
+          band: string;
+          stale: boolean;
+          lenderName: string;
+          explanations?: Array<{ sourceRef?: { sourceSystem?: string } }>;
+        }>;
+        review?: { status: string };
       };
       assert.ok(matchBody.matches.some((m) => m.band === 'BEST_FIT' && m.lenderName.includes('SYNTHETIC')));
+      assert.equal(matchBody.review?.status, 'PENDING_MANNY');
+      const best = matchBody.matches.find((m) => m.band === 'BEST_FIT');
+      assert.ok(best?.explanations?.every((e) => e.sourceRef?.sourceSystem));
+
+      const catalog = await fetch(`${base}/api/capital/lenders`, { headers: headers('valid-member') });
+      assert.equal(catalog.status, 200);
+      const catalogBody = (await catalog.json()) as {
+        lenders: Array<{ name: string; products: Array<{ freshness: string }>; historicalExperience?: unknown }>;
+        inventedCriteria: boolean;
+      };
+      assert.equal(catalogBody.inventedCriteria, false);
+      assert.ok(catalogBody.lenders.some((l) => l.name.includes('SYNTHETIC') && l.products.length > 0));
 
       const staleLender = await fetch(`${base}/api/capital/lenders`, {
         method: 'POST',
@@ -376,6 +430,8 @@ describe('Hub capital operations API', () => {
       assert.ok(staleHit);
       assert.equal(staleHit.stale, true);
       assert.notEqual(staleHit.band, 'BEST_FIT');
+      assert.notEqual(staleHit.band, 'POSSIBLE');
+      assert.equal(staleHit.band, 'UNKNOWN');
 
       const shortlistStaff = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/shortlist/decision`, {
         method: 'POST',
@@ -619,6 +675,89 @@ describe('Hub capital operations API', () => {
         body: JSON.stringify({ clientCode: 'SYN01' }),
       });
       assert.equal(memberAttr.status, 403);
+    });
+  });
+
+  it('runs document intelligence as a draft-only, fail-closed package review', async () => {
+    await withCapitalHub(async ({ base }) => {
+      const created = await fetch(`${base}/api/capital/opportunities`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ ...SYN_OPP, idempotencyKey: 'syn-cap-docint' }),
+      });
+      assert.equal(created.status, 200);
+      const { opportunity } = (await created.json()) as { opportunity: { id: string } };
+
+      const gen = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/checklist/generate`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: '{}',
+      });
+      assert.equal(gen.status, 200);
+
+      const doc = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/documents`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({
+          fileName: 'SYN01 Bank Statement 2024-01.pdf',
+          contentType: 'application/pdf',
+          sizeBytes: 20,
+          sha256: 'docint-1',
+        }),
+      });
+      assert.equal(doc.status, 200);
+      const docBody = (await doc.json()) as { document: { id: string; documentType: string } };
+      assert.equal(docBody.document.documentType, 'bank_statement');
+
+      const blockedSend = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/document-intelligence`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ sendToClient: true }),
+      });
+      assert.equal(blockedSend.status, 422);
+
+      const intel = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/document-intelligence`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({
+          extractedFactsByDocumentId: {
+            [docBody.document.id]: [
+              {
+                field: 'endingBalance',
+                value: 12_000,
+                verification: 'VERIFIED',
+                confidence: 0.8,
+                sourceRef: { sourceSystem: 'ai', capturedAt: '2026-08-17T00:00:00.000Z', field: 'endingBalance' },
+              },
+            ],
+          },
+        }),
+      });
+      assert.equal(intel.status, 200);
+      const intelBody = (await intel.json()) as {
+        clientRequestSendAttempted: boolean;
+        report: {
+          documents: Array<{
+            classification: { documentType: string; verification: string; sourceRef: { field?: string } };
+            extraction: { facts: Array<{ verification: string; sourceRef: { sourceSystem: string } }>; ocr: string };
+            freshness: { stale: boolean; verification: string };
+          }>;
+          missingDocuments: Array<{ itemKey: string }>;
+          clientRequestSendAttempted: false;
+          disclaimer: string;
+        };
+        checklist: Array<{ status: string; verification: string }>;
+      };
+      assert.equal(intelBody.clientRequestSendAttempted, false);
+      assert.equal(intelBody.report.documents[0].classification.documentType, 'bank_statement');
+      assert.equal(intelBody.report.documents[0].extraction.ocr, 'STUBBED_NOT_RUN');
+      assert.equal(intelBody.report.documents[0].extraction.facts[0].verification, 'UNVERIFIED');
+      assert.ok(intelBody.report.documents[0].extraction.facts[0].sourceRef.sourceSystem);
+      assert.equal(intelBody.report.documents[0].freshness.stale, true);
+      assert.ok(intelBody.report.missingDocuments.length > 0);
+      assert.ok(intelBody.report.disclaimer.toLowerCase().includes('unverified'));
+      assert.ok(intelBody.checklist.every((i) => i.verification !== 'VERIFIED'));
+      assert.ok(intelBody.checklist.every((i) => i.status !== 'ACCEPTED'));
     });
   });
 

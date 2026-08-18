@@ -25,6 +25,7 @@ import {
   type LenderMessageClass,
   type ProvenancedValue,
   type QueueItem,
+  type SourceRef,
   type TermSheetOffer,
   type UnderwritingSummary,
   type VerificationState,
@@ -47,17 +48,24 @@ export function verifiedValue<T>(value: T, sourceSystem: string, capturedAt: str
   };
 }
 
-export function derivedValue<T>(value: T, sourceSystem: string, capturedAt: string): ProvenancedValue<T> {
+export function derivedValue<T>(value: T, sourceSystem: string, capturedAt: string, field?: string): ProvenancedValue<T> {
   return {
     value,
     verification: 'DERIVED',
     confidence: 0.5,
-    sourceRef: { sourceSystem, capturedAt },
+    sourceRef: { sourceSystem, capturedAt, field },
   };
 }
 
 export function cannotPromoteToVerified(state: VerificationState): boolean {
   return state !== 'VERIFIED';
+}
+
+/** VERIFIED financials and extracted facts require a SourceRef. Missing stays missing. */
+export function hasSourceRef(ref: SourceRef | null | undefined): ref is SourceRef {
+  if (!ref || typeof ref.sourceSystem !== 'string' || !ref.sourceSystem.trim()) return false;
+  if (!ref.capturedAt || ref.capturedAt === 'MISSING') return false;
+  return true;
 }
 
 export function classifyDocumentName(fileName: string): { documentType: string; confidence: number } {
@@ -106,12 +114,28 @@ export function reviewDocument(input: {
   summary?: string;
   incompletePages?: boolean;
   atlasConflicts?: string[];
+  stale?: boolean;
+  inconsistentPeriod?: boolean;
+  duplicateOf?: string;
 }): DocumentReview {
   const classified = classifyDocumentName(input.document.fileName);
-  const facts = (input.extractedFacts || []).map((f) => ({
-    ...f,
-    verification: (f.verification === 'VERIFIED' ? 'UNVERIFIED' : f.verification) as VerificationState,
-  }));
+  const conflicts = [...(input.atlasConflicts || [])];
+  const facts: ExtractedFact[] = [];
+  for (const f of input.extractedFacts || []) {
+    if (!hasSourceRef(f.sourceRef)) {
+      conflicts.push(`Dropped ${f.field || 'fact'}: sourceRef required — missing stays missing`);
+      continue;
+    }
+    facts.push({
+      ...f,
+      verification: (f.verification === 'VERIFIED' ? 'UNVERIFIED' : f.verification) as VerificationState,
+      sourceRef: {
+        ...f.sourceRef,
+        field: f.sourceRef.field || f.field,
+        sourceRecordId: f.sourceRef.sourceRecordId || input.document.id,
+      },
+    });
+  }
   return {
     id: `rev-${input.document.id}`,
     documentId: input.document.id,
@@ -122,9 +146,10 @@ export function reviewDocument(input: {
     summary: input.summary,
     extractedFacts: facts,
     incompletePages: Boolean(input.incompletePages),
-    stale: false,
-    inconsistentPeriod: false,
-    conflicts: input.atlasConflicts || [],
+    stale: Boolean(input.stale),
+    duplicateOf: input.duplicateOf,
+    inconsistentPeriod: Boolean(input.inconsistentPeriod),
+    conflicts,
     confidence: classified.confidence,
     reviewer: 'ai',
     createdAt: new Date().toISOString(),

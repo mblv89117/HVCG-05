@@ -10,7 +10,6 @@ import type {
   CapitalOpportunity,
   ChecklistItem,
   FinancingStrategy,
-  LenderOrganization,
   LenderSubmission,
 } from '@hvcg/atlas-capital-core';
 import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord } from '@hvcg/atlas-capital-core';
@@ -20,6 +19,7 @@ import type { CapitalGraphTransport, GraphListItem } from './graph.ts';
 import {
   checklistItemFromItem,
   checklistItemToFields,
+  lenderFromItem,
   lookupIdFromFields,
   opportunityFromItem,
   opportunityToFields,
@@ -238,16 +238,10 @@ export class GraphCapitalStore {
     if (this.settings.lendersListId) {
       const lenders = await this.listAll(this.settings.lendersListId);
       for (const row of lenders) {
-        const name = String(row.fields.Title || '').trim();
-        if (!name) continue;
-        if (name.toUpperCase().includes('SYNTHETIC')) continue;
-        const lender: LenderOrganization = {
-          id: row.id,
-          name,
-          organizationType: String(row.fields.LenderType || '') || undefined,
-          geography: String(row.fields.Geography || '') || undefined,
-        };
-        state.lenders.push(lender);
+        const mapped = lenderFromItem(row);
+        if (!mapped) continue;
+        if (mapped.name.toUpperCase().includes('SYNTHETIC')) continue;
+        state.lenders.push(mapped);
       }
     }
 

@@ -40,6 +40,10 @@ export function unprocessable(message: string): never {
   throw new CapitalHttpError(422, 'unprocessable', message);
 }
 
+export function badRequest(message: string, code = 'malformed_json'): never {
+  throw new CapitalHttpError(400, code, message);
+}
+
 export function toCapitalErrorBody(err: CapitalHttpError): Record<string, unknown> {
   return {
     error: err.code,

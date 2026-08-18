@@ -46,7 +46,22 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   for await (const c of req) chunks.push(c as Buffer);
   const raw = Buffer.concat(chunks).toString('utf8');
   if (!raw) return {};
-  return JSON.parse(raw) as Record<string, unknown>;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      const err = new Error('Request body must be a JSON object') as Error & { status: number; code: string };
+      err.status = 400;
+      err.code = 'malformed_json';
+      throw err;
+    }
+    return parsed as Record<string, unknown>;
+  } catch (err) {
+    if ((err as { status?: number }).status === 400) throw err;
+    const bad = new Error('Request body is not valid JSON') as Error & { status: number; code: string };
+    bad.status = 400;
+    bad.code = 'malformed_json';
+    throw bad;
+  }
 }
 
 /**

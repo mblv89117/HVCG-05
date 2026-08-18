@@ -17,6 +17,7 @@ import {
   type CapitalStage,
   type ChecklistItem,
   type ChecklistStatus,
+  type LenderOrganization,
   type LenderSubmission,
   type TransactionType,
 } from '@hvcg/atlas-capital-core';
@@ -65,6 +66,11 @@ export const CORE_CHECKLIST_FIELDS = [
   'RequestStatus',
   'TemplateItemKey',
   'HVCG_IdempotencyKey',
+  'DocumentCategory',
+  'IsStale',
+  'ExpirationDate',
+  'DateReceived',
+  'FileLink',
 ] as const;
 export const ADDITIVE_CHECKLIST_FIELDS = ['ChecklistItemKey', 'ChecklistStatus'] as const;
 
@@ -128,6 +134,20 @@ function asBool(v: unknown): boolean {
   return v === true || v === 1 || v === '1' || v === 'true';
 }
 
+function asUrl(v: unknown): string | undefined {
+  if (typeof v === 'string' && v.trim()) return v.trim();
+  if (v && typeof v === 'object' && !Array.isArray(v) && 'Url' in v) {
+    return asString((v as { Url: unknown }).Url);
+  }
+  return undefined;
+}
+
+function asFreshness(v: unknown): 'CURRENT' | 'STALE' | 'UNKNOWN' | undefined {
+  const s = asString(v);
+  if (s === 'CURRENT' || s === 'STALE' || s === 'UNKNOWN') return s;
+  return undefined;
+}
+
 export function mapHandoffSource(raw: string | undefined | null): HandoffSourceChoice {
   const v = (raw || '').trim();
   if ((HANDOFF_SOURCE_CHOICES as readonly string[]).includes(v)) return v as HandoffSourceChoice;
@@ -142,6 +162,31 @@ export function capitalTypeFromTransaction(tx: string | undefined): string {
   if (t === 'working_capital_loc' || t === 'ar_financing' || t === 'inventory') return 'Working Capital';
   if (t === 'acquisition' || t === 'recapitalization' || t === 'bridge') return 'Private Credit';
   if (t === 'conventional_bank_loan' || t === 'refinance' || t === 'asset_based_lending') return 'Debt';
+  return 'Other';
+}
+
+export const LIVE_DOCUMENT_CATEGORIES = [
+  'Engagement Administration',
+  'Corporate',
+  'Ownership',
+  'Historical Financials',
+  'Current Financials',
+  'Tax Returns',
+  'Bank Statements',
+  'Debt Schedule',
+  'AR',
+  'AP',
+  'Payroll',
+  'Contracts',
+  'Real Estate',
+  'Insurance',
+  'Legal',
+  'Other',
+] as const;
+
+export function mapDocumentCategory(category: string | undefined): string {
+  if (category && (LIVE_DOCUMENT_CATEGORIES as readonly string[]).includes(category)) return category;
+  if (category === 'SBA') return 'Other';
   return 'Other';
 }
 
@@ -373,6 +418,11 @@ export function checklistItemToFields(
   put(out, 'RequestStatus', requestStatusFromChecklist(item.status), 'core', opts);
   put(out, 'TemplateItemKey', item.itemKey, 'core', opts);
   put(out, 'HVCG_IdempotencyKey', `cap-chk|${opportunityItemId}|${item.itemKey}`, 'core', opts);
+  put(out, 'DocumentCategory', mapDocumentCategory(item.category), 'core', opts);
+  put(out, 'IsStale', item.status === 'OUTDATED', 'core', opts);
+  put(out, 'ExpirationDate', item.expiration || undefined, 'core', opts);
+  put(out, 'DateReceived', item.receivedAt || undefined, 'core', opts);
+  put(out, 'FileLink', item.fileLink ? { Url: item.fileLink, Description: item.name || item.itemKey } : undefined, 'core', opts);
   put(out, 'ChecklistItemKey', item.itemKey, 'additive', opts);
   put(out, 'ChecklistStatus', item.status, 'additive', opts);
   return out;
@@ -386,7 +436,7 @@ export function checklistItemFromItem(item: GraphListItem, fallback?: Partial<Ch
     fallback?.itemKey ||
     `item-${item.id}`;
   const statusRaw = asString(item.fields.ChecklistStatus);
-  const status: ChecklistStatus =
+  let status: ChecklistStatus =
     statusRaw &&
     [
       'MISSING',
@@ -400,19 +450,23 @@ export function checklistItemFromItem(item: GraphListItem, fallback?: Partial<Ch
     ].includes(statusRaw)
       ? (statusRaw as ChecklistStatus)
       : checklistStatusFromRequest(asString(item.fields.RequestStatus));
+  if (asBool(item.fields.IsStale) && status === 'ACCEPTED') status = 'OUTDATED';
   return {
     id: item.id,
     itemKey: key,
     name: asString(item.fields.Title) || fallback?.name || key,
-    category: fallback?.category || 'Corporate',
+    category: fallback?.category || asString(item.fields.DocumentCategory) || 'Corporate',
     transactionTypes: fallback?.transactionTypes || [],
     requiredness: fallback?.requiredness || 'REQUIRED',
     condition: fallback?.condition,
     responsibleParty: fallback?.responsibleParty || 'client',
     status,
     requestedAt: fallback?.requestedAt,
+    receivedAt: asString(item.fields.DateReceived) || fallback?.receivedAt,
     notes: fallback?.notes,
     verification: fallback?.verification || 'MISSING',
+    fileLink: asUrl(item.fields.FileLink) || fallback?.fileLink,
+    expiration: asString(item.fields.ExpirationDate) || fallback?.expiration,
     overrideReason: fallback?.overrideReason,
     overrideBy: fallback?.overrideBy,
     overrideAt: fallback?.overrideAt,
@@ -488,5 +542,27 @@ export function submissionFromItem(item: GraphListItem): LenderSubmission | null
     packageVersion: asString(item.fields.PackageVersion),
     documentIds: [],
     notes: asString(item.fields.Notes),
+  };
+}
+
+/** Read-only map from HVCG_Lenders. Never invents product criteria from PreferredProducts. */
+export function lenderFromItem(item: GraphListItem): LenderOrganization | null {
+  const name = asString(item.fields.Title);
+  if (!item.id || !name) return null;
+  return {
+    id: item.id,
+    name,
+    organizationType: asString(item.fields.LenderType),
+    website: asUrl(item.fields.Website),
+    geography: asString(item.fields.Geography),
+    relationshipStatus: asString(item.fields.RelationshipStatus),
+    relationshipOwner: asString(item.fields.RelationshipOwner) || asString(item.fields.OwnerEmail),
+    notes: asString(item.fields.Notes),
+    capitalSourceId: lookupIdFromFields(item.fields, 'CapitalSourceId'),
+    preferredProductsNote: asString(item.fields.PreferredProducts),
+    lastVerifiedAt: asString(item.fields.LastVerifiedAt),
+    freshness: asFreshness(item.fields.CriteriaFreshness),
+    verificationSource: asString(item.fields.VerificationSource),
+    lastContactDate: asString(item.fields.LastContactDate),
   };
 }

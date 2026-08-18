@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { audit } from '../audit/auditLog.ts';
 import type { AppConfig } from '../config.ts';
 import { requirePrincipal } from '../middleware/auth.ts';
+import type { IntegrationRepository } from '../store/repository.ts';
 import { capitalBackendUnavailableBody } from './backend.ts';
 import { CapitalHttpError, toCapitalErrorBody } from './errors.ts';
 import { assertClientScope } from './authz.ts';
@@ -26,12 +27,22 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   for await (const c of req) chunks.push(c as Buffer);
   const raw = Buffer.concat(chunks).toString('utf8');
   if (!raw) return {};
-  return JSON.parse(raw) as Record<string, unknown>;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new CapitalHttpError(400, 'malformed_json', 'Request body is not valid JSON');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new CapitalHttpError(400, 'malformed_json', 'Request body must be a JSON object');
+  }
+  return parsed as Record<string, unknown>;
 }
 
 export async function handleCapitalRoutes(opts: {
   cfg: AppConfig;
   capital?: CapitalPersistence | null;
+  repo?: IntegrationRepository;
   req: IncomingMessage;
   res: ServerResponse;
   method: string;
@@ -41,8 +52,10 @@ export async function handleCapitalRoutes(opts: {
   const { cfg, req, res, method, path, origin } = opts;
   if (!path.startsWith('/api/capital')) return false;
 
+  let actorUserId: string | undefined;
   try {
     const principal = await requirePrincipal(req, cfg);
+    actorUserId = principal.userId;
     assertClientScope(principal);
 
     const store = opts.capital;
@@ -56,6 +69,14 @@ export async function handleCapitalRoutes(opts: {
     if (method !== 'GET' && method !== 'HEAD') body = await readJson(req);
 
     const sendOk = (payload: unknown) => send(res, 200, payload, origin);
+    const persistAudit = (action: string, detail: string, outcome: 'success' | 'denied' = 'success') =>
+      audit({
+        repo: opts.repo,
+        action,
+        actorUserId: principal.userId,
+        outcome,
+        detail,
+      });
 
     if (method === 'GET' && path === '/api/capital/command-center') {
       sendOk(await service.commandCenter(principal));
@@ -67,12 +88,10 @@ export async function handleCapitalRoutes(opts: {
     }
     if (method === 'POST' && path === '/api/capital/opportunities') {
       const result = await service.create(principal, body);
-      audit({
-        action: 'capital_opportunity_create',
-        actorUserId: principal.userId,
-        outcome: 'success',
-        detail: `client=${result.opportunity.clientCode} id=${result.opportunity.id} created=${result.created}`,
-      });
+      persistAudit(
+        'capital_opportunity_create',
+        `client=${result.opportunity.clientCode} id=${result.opportunity.id} created=${result.created}`,
+      );
       send(res, 200, result, origin);
       return true;
     }
@@ -87,23 +106,13 @@ export async function handleCapitalRoutes(opts: {
       }
       if (method === 'POST' && rest === 'transition') {
         const result = await service.transition(principal, id, body);
-        audit({
-          action: 'capital_opportunity_transition',
-          actorUserId: principal.userId,
-          outcome: 'success',
-          detail: `id=${id} to=${result.opportunity.stage}`,
-        });
+        persistAudit('capital_opportunity_transition', `id=${id} to=${result.opportunity.stage}`);
         sendOk(result);
         return true;
       }
       if (method === 'POST' && rest === 'next-action') {
         const result = await service.updateNextAction(principal, id, body);
-        audit({
-          action: 'capital_next_action_update',
-          actorUserId: principal.userId,
-          outcome: 'success',
-          detail: `id=${id}`,
-        });
+        persistAudit('capital_next_action_update', `id=${id}`);
         sendOk(result);
         return true;
       }
@@ -118,22 +127,24 @@ export async function handleCapitalRoutes(opts: {
       const override = rest.match(/^checklist\/([^/]+)\/override$/);
       if (method === 'POST' && override) {
         const result = await service.overrideItem(principal, id, decodeURIComponent(override[1]), body);
-        audit({
-          action: 'capital_checklist_override',
-          actorUserId: principal.userId,
-          outcome: 'success',
-          detail: `id=${id} item=${override[1]}`,
-        });
+        persistAudit('capital_checklist_override', `id=${id} item=${override[1]}`);
         sendOk(result);
         return true;
       }
       if (method === 'POST' && rest === 'documents') {
         sendOk(await service.addDocument(principal, id, body));
+        persistAudit('capital_document_add', `id=${id}`);
         return true;
       }
       const review = rest.match(/^documents\/([^/]+)\/review$/);
       if (method === 'POST' && review) {
         sendOk(await service.review(principal, id, decodeURIComponent(review[1]), body));
+        persistAudit('capital_document_review', `id=${id} doc=${review[1]}`);
+        return true;
+      }
+      if (method === 'POST' && rest === 'document-intelligence') {
+        sendOk(await service.documentIntelligence(principal, id, body));
+        persistAudit('capital_document_intelligence', `id=${id} sendAttempted=false`);
         return true;
       }
       if (method === 'GET' && rest === 'missing-request') {
@@ -150,27 +161,21 @@ export async function handleCapitalRoutes(opts: {
       }
       if (method === 'POST' && rest === 'strategy/decision') {
         const result = await service.strategyDecision(principal, id, body);
-        audit({
-          action: 'capital_strategy_decision',
-          actorUserId: principal.userId,
-          outcome: 'success',
-          detail: `id=${id} decision=${String(body.decision || '')}`,
-        });
+        persistAudit('capital_strategy_decision', `id=${id} decision=${String(body.decision || '')}`);
         sendOk(result);
         return true;
       }
+      if (method === 'GET' && rest === 'match') {
+        sendOk(await service.match(principal, id, { persistShortlistPending: false }));
+        return true;
+      }
       if (method === 'POST' && rest === 'match') {
-        sendOk(await service.match(principal, id));
+        sendOk(await service.match(principal, id, { persistShortlistPending: true }));
         return true;
       }
       if (method === 'POST' && rest === 'shortlist/decision') {
         const result = await service.shortlistDecision(principal, id, body);
-        audit({
-          action: 'capital_shortlist_decision',
-          actorUserId: principal.userId,
-          outcome: 'success',
-          detail: `id=${id} decision=${String(body.decision || '')}`,
-        });
+        persistAudit('capital_shortlist_decision', `id=${id} decision=${String(body.decision || '')}`);
         sendOk(result);
         return true;
       }
@@ -180,12 +185,7 @@ export async function handleCapitalRoutes(opts: {
       }
       if (method === 'POST' && rest === 'submissions') {
         const result = await service.submission(principal, id, body);
-        audit({
-          action: 'capital_submission',
-          actorUserId: principal.userId,
-          outcome: 'success',
-          detail: `id=${id} recordedOnly=true externalSubmit=false`,
-        });
+        persistAudit('capital_submission', `id=${id} recordedOnly=true externalSubmit=false`);
         sendOk(result);
         return true;
       }
@@ -207,6 +207,10 @@ export async function handleCapitalRoutes(opts: {
       }
     }
 
+    if (method === 'GET' && path === '/api/capital/lenders') {
+      sendOk(await service.listLenders(principal));
+      return true;
+    }
     if (method === 'POST' && path === '/api/capital/lenders') {
       sendOk(await service.addLender(principal, body));
       return true;
@@ -218,6 +222,7 @@ export async function handleCapitalRoutes(opts: {
     }
     if (method === 'POST' && path === '/api/capital/fees') {
       sendOk(await service.fee(principal, body));
+      persistAudit('capital_fee_record', `client=${String(body.clientCode || '')}`);
       return true;
     }
     if (method === 'POST' && path === '/api/capital/handoffs/eva') {
@@ -237,6 +242,15 @@ export async function handleCapitalRoutes(opts: {
     return true;
   } catch (err) {
     if (err instanceof CapitalHttpError) {
+      if (err.status === 401 || err.status === 403) {
+        audit({
+          repo: opts.repo,
+          action: 'capital_access_denied',
+          actorUserId,
+          outcome: 'denied',
+          detail: `${method} ${path} ${err.code}`,
+        });
+      }
       send(res, err.status, toCapitalErrorBody(err), origin);
       return true;
     }

@@ -259,6 +259,7 @@ export interface ChecklistItem {
   notes?: string;
   verification: VerificationState;
   fileId?: string;
+  fileLink?: string;
   overrideReason?: string;
   overrideBy?: string;
   overrideAt?: string;
@@ -312,6 +313,109 @@ export interface DocumentReview {
   disclaimer: string;
 }
 
+export const OCR_STATUS = ['STUBBED_NOT_RUN', 'UNAVAILABLE'] as const;
+export type OcrStatus = (typeof OCR_STATUS)[number];
+
+export interface PeriodDetection {
+  periodLabel: string | null;
+  periodStart?: string;
+  periodEnd?: string;
+  taxYear?: number;
+  determined: boolean;
+  verification: VerificationState;
+  sourceRef: SourceRef;
+}
+
+export interface EntityDetection {
+  entityName: string | null;
+  matchesOpportunity: boolean | null;
+  verification: VerificationState;
+  sourceRef: SourceRef;
+}
+
+export interface FreshnessDetection {
+  stale: boolean;
+  determined: boolean;
+  reason?: string;
+  currentThrough?: string;
+  asOf: string;
+  verification: VerificationState;
+  sourceRef: SourceRef;
+}
+
+export interface ConflictFinding {
+  field: string;
+  left: { documentId: string; value: string | number | null; sourceRef: SourceRef };
+  right: { documentId: string | 'atlas'; value: string | number | null; sourceRef: SourceRef };
+  verification: 'CONFLICTING';
+}
+
+export interface CompletenessResult {
+  percent: number;
+  requiredCount: number;
+  acceptedCount: number;
+  blockingItems: Array<{ itemKey: string; name: string; status: ChecklistStatus }>;
+  bankStatementMonths?: string[];
+  verification: 'DERIVED';
+  sourceRef: SourceRef;
+}
+
+export interface DocumentIntelligenceCollection {
+  associated: true;
+  checklistItemId?: string;
+  suggestedItemKey?: string;
+  duplicateOf?: string;
+  fileName: string;
+  webUrl?: string;
+  originalPreserved: true;
+}
+
+export interface DocumentIntelligenceDocumentResult {
+  documentId: string;
+  collection: DocumentIntelligenceCollection;
+  classification: {
+    documentType: string;
+    confidence: number;
+    verification: 'DERIVED' | 'UNVERIFIED';
+    sourceRef: SourceRef;
+  };
+  extraction: {
+    facts: ExtractedFact[];
+    ocr: OcrStatus;
+    verification: VerificationState;
+  };
+  period: PeriodDetection;
+  entity: EntityDetection;
+  freshness: FreshnessDetection;
+  incompletePages: boolean;
+  review: DocumentReview;
+}
+
+export interface DocumentIntelligenceReport {
+  capitalOpportunityId: string;
+  clientCode: string;
+  asOf: string;
+  documents: DocumentIntelligenceDocumentResult[];
+  completeness: CompletenessResult;
+  conflicts: ConflictFinding[];
+  missingDocuments: Array<{
+    itemKey: string;
+    name: string;
+    status: ChecklistStatus;
+    requiredness: string;
+    deficiency?: string;
+  }>;
+  clientRequest: {
+    subject: string;
+    items: Array<{ name: string; category: string; status: ChecklistStatus; deficiency?: string }>;
+    body: string;
+  } | null;
+  clientRequestSendAttempted: false;
+  underwriting?: UnderwritingSummary;
+  usedUnverifiedFacts: boolean;
+  disclaimer: string;
+}
+
 export interface LenderOrganization {
   id: string;
   name: string;
@@ -322,6 +426,50 @@ export interface LenderOrganization {
   relationshipOwner?: string;
   notes?: string;
   capitalSourceId?: string;
+  /** Unstructured sourced note from HVCG_Lenders.PreferredProducts — never parsed into numeric criteria. */
+  preferredProductsNote?: string;
+  lastVerifiedAt?: string;
+  freshness?: LenderFreshness;
+  verificationSource?: string;
+  lastContactDate?: string;
+}
+
+export type MatchExplanationOutcome = 'met' | 'not_met' | 'ineligible' | 'unknown' | 'degraded' | 'context';
+
+export interface MatchExplanation {
+  criterion: string;
+  statement: string;
+  outcome: MatchExplanationOutcome;
+  sourceRef: SourceRef;
+}
+
+export interface HvcgLenderExperience {
+  outreachCount: number;
+  submittedCount: number;
+  declinedCount: number;
+  offerCount: number;
+  fundedCount: number;
+  lastOutreachAt?: string;
+  lastResponse?: string;
+  lastSubmissionStatus?: string;
+  sourceRefs: SourceRef[];
+}
+
+export interface LenderFilterRecord {
+  lenderId: string;
+  lenderName: string;
+  reason: string;
+  sourceRef: SourceRef;
+}
+
+export interface LenderMatchRun {
+  matches: LenderMatch[];
+  filteredOut: LenderFilterRecord[];
+  review: {
+    status: 'PENDING_MANNY';
+    disclaimer: string;
+  };
+  generatedAt: string;
 }
 
 export interface LenderProduct {
@@ -368,8 +516,13 @@ export interface LenderMatch {
   productName?: string;
   band: MatchBand;
   reasons: string[];
+  explanations: MatchExplanation[];
   missingCriteria: string[];
   stale: boolean;
+  freshness: LenderFreshness;
+  sourceRef: SourceRef;
+  historicalExperience?: HvcgLenderExperience;
+  reviewStatus: 'PENDING_MANNY';
 }
 
 export interface UnderwritingSummary {

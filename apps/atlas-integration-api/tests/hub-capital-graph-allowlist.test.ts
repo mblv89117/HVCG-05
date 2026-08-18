@@ -6,7 +6,7 @@ import {
   createCapitalGraphTransport,
   type CapitalGraphResourceAllowlist,
 } from '../src/capital/sharepoint/graph.ts';
-import { mapHandoffSource } from '../src/capital/sharepoint/map.ts';
+import { mapHandoffSource, lenderFromItem } from '../src/capital/sharepoint/map.ts';
 import { GRAPH_ORIGIN } from '../src/pm/sharepoint/graph.ts';
 import { capabilityForPmList } from '../src/pm/sharepoint/graph.ts';
 
@@ -50,6 +50,31 @@ describe('Capital Graph allowlist', () => {
     assert.equal(mapHandoffSource('EVA'), 'Other');
     assert.equal(mapHandoffSource('SalesWin'), 'SalesWin');
     assert.equal(mapHandoffSource('mystery'), 'Other');
+  });
+
+  it('maps HVCG_Lenders read-only without inventing product criteria from PreferredProducts', () => {
+    const mapped = lenderFromItem({
+      id: '6',
+      etag: '"1"',
+      fields: {
+        Title: 'First National',
+        LenderType: 'Bank',
+        Website: { Url: 'https://example.invalid', Description: 'site' },
+        Geography: 'US',
+        RelationshipStatus: 'Active',
+        PreferredProducts: 'WC 100k-1M — do not parse',
+        LastVerifiedAt: '2024-01-01T00:00:00.000Z',
+        CriteriaFreshness: 'STALE',
+        VerificationSource: 'relationship-call',
+      },
+    });
+    assert.ok(mapped);
+    assert.equal(mapped.name, 'First National');
+    assert.equal(mapped.website, 'https://example.invalid');
+    assert.equal(mapped.preferredProductsNote, 'WC 100k-1M — do not parse');
+    assert.equal(mapped.freshness, 'STALE');
+    assert.equal(mapped.lastVerifiedAt, '2024-01-01T00:00:00.000Z');
+    assert.equal('minAmount' in mapped, false);
   });
 
   it('accepts configured capital lists and rejects random and PM list IDs', async () => {

@@ -26,6 +26,7 @@ import {
   reviewDocument,
   toQueueItem,
   verifiedValue,
+  hasSourceRef,
   type CapitalDocument,
   type CapitalOpportunity,
   type LenderOrganization,
@@ -209,6 +210,80 @@ describe('AI governance', () => {
     assert.ok(review.disclaimer.includes('unverified'));
     assert.ok(AI_DISCLAIMER.length > 10);
     assert.equal(classifyDocumentName('Bank Statement June.pdf').documentType, 'bank_statement');
+  });
+
+  it('drops extracted facts with missing SourceRefs and never promotes them', () => {
+    const doc: CapitalDocument = {
+      id: 'doc-nosrc',
+      capitalOpportunityId: 'cap-syn-001',
+      clientCode: 'SYN01',
+      documentType: 'pnl',
+      fileName: 'P&L YTD.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 12,
+      version: 1,
+      source: 'client-upload',
+      associatedAt: '2026-08-01T00:00:00.000Z',
+      associatedBy: 'qa',
+      originalPreserved: true,
+    };
+    const review = reviewDocument({
+      document: doc,
+      extractedFacts: [
+        {
+          field: 'revenue',
+          value: 99_000_000,
+          verification: 'VERIFIED',
+          confidence: 0.99,
+          sourceRef: { sourceSystem: '', capturedAt: '' },
+        },
+      ],
+    });
+    assert.equal(review.extractedFacts.length, 0);
+    assert.ok(review.conflicts.some((c) => /sourceRef required/i.test(c)));
+    assert.equal(hasSourceRef({ sourceSystem: '', capturedAt: '' }), false);
+  });
+
+  it('does not treat hallucinated UNVERIFIED revenue as current financials', () => {
+    const lender: LenderOrganization = { id: 'ln-1', name: 'SYNTHETIC Bank' };
+    const current: LenderProduct = {
+      id: 'pr-1',
+      lenderId: 'ln-1',
+      productName: 'WC LOC',
+      minAmount: 100_000,
+      maxAmount: 1_000_000,
+      minRevenue: 2_000_000,
+      freshness: 'CURRENT',
+      lastVerifiedAt: '2026-06-01T00:00:00.000Z',
+      source: 'lender-sheet-synthetic',
+      verifiedBy: 'qa',
+      confidence: 0.8,
+    };
+    const hallucinated = opp({
+      business: {
+        industry: 'manufacturing',
+        annualRevenue: { value: 50_000_000, verification: 'UNVERIFIED', confidence: 0.9 },
+      },
+    });
+    const [m] = matchLenders(hallucinated, [lender], [current], new Date('2026-07-01'));
+    assert.notEqual(m.band, 'BEST_FIT');
+    assert.ok(m.missingCriteria.some((c) => /revenue/i.test(c)));
+  });
+
+  it('does not invent lender min/max when criteria are blank', () => {
+    const lender: LenderOrganization = { id: 'ln-1', name: 'SYNTHETIC Bank' };
+    const invented: LenderProduct = {
+      id: 'pr-blank',
+      lenderId: 'ln-1',
+      productName: 'Blank product',
+      freshness: 'UNKNOWN',
+      confidence: null,
+    };
+    const [m] = matchLenders(opp(), [lender], [invented]);
+    assert.equal(m.band, 'UNKNOWN');
+    assert.equal(invented.minAmount, undefined);
+    assert.equal(invented.maxAmount, undefined);
+    assert.ok(!m.reasons.some((r) => /meets stated minimum \(100/.test(r)));
   });
 
   it('detects duplicate hashes', () => {

@@ -49,7 +49,14 @@ async function readJson(req: IncomingMessage): Promise<unknown> {
   for await (const c of req) chunks.push(c as Buffer);
   const raw = Buffer.concat(chunks).toString('utf8');
   if (!raw) return {};
-  return JSON.parse(raw);
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const err = new Error('Request body is not valid JSON') as Error & { status: number; code: string };
+    err.status = 400;
+    err.code = 'malformed_json';
+    throw err;
+  }
 }
 
 async function readRawBody(req: IncomingMessage): Promise<string> {
@@ -167,6 +174,7 @@ export async function handleRequest(
       const handled = await handleCapitalRoutes({
         cfg,
         capital: deps.capital,
+        repo,
         req,
         res,
         method,
@@ -840,12 +848,30 @@ export async function handleRequest(
 
     send(res, 404, { error: 'not_found' }, origin);
   } catch (err) {
+    if (err instanceof SyntaxError) {
+      send(
+        res,
+        400,
+        { error: 'malformed_json', code: 'malformed_json', message: 'Request body is not valid JSON' },
+        origin,
+      );
+      return;
+    }
     const status = (err as { status?: number }).status || 500;
+    const code = (err as { code?: string }).code;
     send(
       res,
       status,
       {
-        error: status === 401 ? 'unauthorized' : status === 403 ? 'forbidden' : 'server_error',
+        error:
+          status === 401
+            ? 'unauthorized'
+            : status === 403
+              ? 'forbidden'
+              : status === 400
+                ? code || 'malformed_json'
+                : 'server_error',
+        code: status === 400 ? code || 'malformed_json' : undefined,
         message: status < 500 ? (err as Error).message : 'Internal error',
       },
       origin,

@@ -3,6 +3,7 @@ import {
   applyMannyDecision,
   assertTransition,
   buildUnderwritingSummary,
+  classifyDocumentName,
   classifyLenderMessage,
   commandKpis,
   compareOffers,
@@ -12,23 +13,32 @@ import {
   detectDuplicate,
   draftStrategy,
   evaHandoffAllowed,
+  FINANCING_DISCLAIMER,
   generateChecklist,
+  hasSourceRef,
   InvalidStageTransitionError,
   isCapitalClientCode,
   isCapitalStage,
   isMannyApprover,
   matchLenders,
   missingValue,
+  organizationFreshness,
   overrideChecklistItem,
   prepareApplication,
   preserveAttribution,
+  productFreshness,
   reviewDocument,
+  runDocumentIntelligence,
+  runLenderMatch,
   STAGE_TO_LEGACY_FUNDING_STATUS,
+  summarizeHvcgExperience,
   toQueueItem,
   type Attribution,
   type CapitalOpportunity,
   type CapitalStage,
   type ChecklistItem,
+  type LenderFreshness,
+  type LenderProduct,
   type TransactionType,
 } from '@hvcg/atlas-capital-core';
 import type { AtlasPrincipal } from '../middleware/auth.ts';
@@ -147,7 +157,20 @@ export class CapitalService {
     const revenueRaw = asRecord(business.annualRevenue);
     const revenueValue = asNumber(revenueRaw.value) ?? asNumber(body.annualRevenue);
     const revenueVerification = asString(revenueRaw.verification) || asString(body.revenueVerification);
+    const revenueSource = asRecord(revenueRaw.sourceRef);
     const t = nowIso();
+    if (revenueVerification === 'VERIFIED') {
+      const sourceRef = {
+        sourceSystem: asString(revenueSource.sourceSystem),
+        capturedAt: asString(revenueSource.capturedAt),
+        sourceRecordId: asString(revenueSource.sourceRecordId) || undefined,
+        capturedBy: asString(revenueSource.capturedBy) || undefined,
+        field: asString(revenueSource.field) || 'annualRevenue',
+      };
+      if (!hasSourceRef(sourceRef) || revenueValue == null) {
+        unprocessable('VERIFIED financials require sourceRef (sourceSystem + capturedAt)');
+      }
+    }
     const opportunity: CapitalOpportunity = {
       id: `cap-${randomUUID()}`,
       title: asString(body.title) || `${clientCode} capital need`,
@@ -170,8 +193,35 @@ export class CapitalService {
           revenueValue != null
             ? {
                 value: revenueValue,
-                verification: revenueVerification === 'VERIFIED' ? 'VERIFIED' : revenueVerification === 'MISSING' ? 'MISSING' : 'UNVERIFIED',
-                confidence: revenueVerification === 'VERIFIED' ? 1 : 0.4,
+                verification:
+                  revenueVerification === 'VERIFIED' &&
+                  hasSourceRef({
+                    sourceSystem: asString(revenueSource.sourceSystem),
+                    capturedAt: asString(revenueSource.capturedAt),
+                  })
+                    ? 'VERIFIED'
+                    : revenueVerification === 'MISSING'
+                      ? 'MISSING'
+                      : 'UNVERIFIED',
+                confidence:
+                  revenueVerification === 'VERIFIED' &&
+                  hasSourceRef({
+                    sourceSystem: asString(revenueSource.sourceSystem),
+                    capturedAt: asString(revenueSource.capturedAt),
+                  })
+                    ? 1
+                    : 0.4,
+                ...(asString(revenueSource.sourceSystem)
+                  ? {
+                      sourceRef: {
+                        sourceSystem: asString(revenueSource.sourceSystem),
+                        capturedAt: asString(revenueSource.capturedAt) || t,
+                        sourceRecordId: asString(revenueSource.sourceRecordId) || undefined,
+                        capturedBy: asString(revenueSource.capturedBy) || undefined,
+                        field: asString(revenueSource.field) || 'annualRevenue',
+                      },
+                    }
+                  : {}),
               }
             : missingValue<number>(),
       },
@@ -314,7 +364,7 @@ export class CapitalService {
       capitalOpportunityId: id,
       clientCode: opp.clientCode,
       checklistItemId: asString(body.checklistItemId) || undefined,
-      documentType: asString(body.documentType) || 'other',
+      documentType: asString(body.documentType) || classifyDocumentName(fileName).documentType,
       fileName,
       contentType: asString(body.contentType) || 'application/pdf',
       sizeBytes: asNumber(body.sizeBytes) || 0,
@@ -327,32 +377,132 @@ export class CapitalService {
       webUrl: asString(body.webUrl) || undefined,
     };
     state.documents.push(doc);
+    if (doc.checklistItemId) {
+      const items = state.checklists[id] || [];
+      const idx = items.findIndex((i) => i.id === doc.checklistItemId);
+      if (idx >= 0) {
+        const cur = items[idx];
+        if (cur.status === 'MISSING' || cur.status === 'REQUESTED') {
+          items[idx] = {
+            ...cur,
+            status: 'RECEIVED',
+            receivedAt: doc.associatedAt,
+            fileId: doc.id,
+            fileLink: doc.webUrl,
+            verification: cur.verification === 'MISSING' ? 'UNVERIFIED' : cur.verification,
+          };
+        }
+      }
+    }
     await this.store.save(state);
     return { document: doc, duplicate: false, duplicateOf: undefined };
   }
 
   async review(principal: AtlasPrincipal, id: string, docId: string, body: Record<string, unknown>) {
+    if (body.send === true || body.sendToClient === true || body.externalSend === true) {
+      unprocessable('Client document requests are drafts only — no auto-send');
+    }
     const state = await this.store.load();
-    requireOpp(state, principal, id);
+    const opp = requireOpp(state, principal, id);
     const doc = state.documents.find((d) => d.id === docId && d.capitalOpportunityId === id);
     if (!doc) notFound('Document not found');
-    const review = reviewDocument({
-      document: doc,
-      summary: asString(body.summary) || undefined,
-      extractedFacts: Array.isArray(body.extractedFacts)
-        ? (body.extractedFacts as Array<{
-            field: string;
-            value: string | number | null;
-            verification: 'VERIFIED';
-            confidence: number;
-            sourceRef: { sourceSystem: string; capturedAt: string };
-          }>)
-        : [],
+    const facts = Array.isArray(body.extractedFacts)
+      ? (body.extractedFacts as Array<{
+          field: string;
+          value: string | number | null;
+          verification: 'VERIFIED' | 'UNVERIFIED' | 'DERIVED' | 'CONFLICTING' | 'MISSING';
+          confidence: number;
+          sourceRef?: { sourceSystem: string; capturedAt: string; field?: string };
+        }>).map((f) => ({
+          field: f.field,
+          value: f.value,
+          verification: f.verification,
+          confidence: f.confidence,
+          sourceRef: f.sourceRef,
+        }))
+      : [];
+    const intelligence = runDocumentIntelligence({
+      opportunity: opp,
+      checklist: state.checklists[id] || [],
+      documents: state.documents.filter((d) => d.capitalOpportunityId === id),
+      incomingFactsByDocumentId: facts.length ? { [docId]: facts } : undefined,
+      includeUnderwriting: false,
+      createdBy: principal.email || principal.userId,
     });
-    state.reviews = state.reviews.filter((r) => r.documentId !== docId);
-    state.reviews.push(review);
+    state.checklists[id] = intelligence.checklist;
+    for (const next of intelligence.reviews) {
+      state.reviews = state.reviews.filter((r) => r.documentId !== next.documentId);
+      state.reviews.push(next);
+    }
     await this.store.save(state);
-    return { review };
+    const review =
+      intelligence.reviews.find((r) => r.documentId === docId) ||
+      reviewDocument({ document: doc, extractedFacts: facts });
+    return { review, intelligence: intelligence.report };
+  }
+
+  async documentIntelligence(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    if (body.send === true || body.sendToClient === true || body.externalSend === true) {
+      unprocessable('Client document requests are drafts only — no auto-send');
+    }
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const incoming = asRecord(body.extractedFactsByDocumentId);
+    const incomingFactsByDocumentId: Record<
+      string,
+      Array<{
+        field: string;
+        value: string | number | null;
+        verification: 'UNVERIFIED';
+        confidence: number;
+        sourceRef: { sourceSystem: string; capturedAt: string; field?: string };
+      }>
+    > = {};
+    for (const [docId, raw] of Object.entries(incoming)) {
+      if (!Array.isArray(raw)) continue;
+      incomingFactsByDocumentId[docId] = raw.flatMap((row) => {
+        const f = asRecord(row);
+        const sourceRef = {
+          sourceSystem: asString(asRecord(f.sourceRef).sourceSystem),
+          capturedAt: asString(asRecord(f.sourceRef).capturedAt),
+          field: asString(asRecord(f.sourceRef).field) || asString(f.field) || 'unknown',
+        };
+        if (!hasSourceRef(sourceRef)) return [];
+        return [
+          {
+            field: asString(f.field) || 'unknown',
+            value: (typeof f.value === 'number' ? f.value : asString(f.value) || null) as string | number | null,
+            verification: 'UNVERIFIED' as const,
+            confidence: asNumber(f.confidence) ?? 0.4,
+            sourceRef,
+          },
+        ];
+      });
+    }
+    const intelligence = runDocumentIntelligence({
+      opportunity: opp,
+      checklist: state.checklists[id] || [],
+      documents: state.documents.filter((d) => d.capitalOpportunityId === id),
+      incomingFactsByDocumentId,
+      includeUnderwriting: body.includeUnderwriting !== false,
+      createdBy: principal.email || principal.userId,
+    });
+    state.checklists[id] = intelligence.checklist;
+    for (const next of intelligence.reviews) {
+      state.reviews = state.reviews.filter((r) => r.documentId !== next.documentId);
+      state.reviews.push(next);
+    }
+    if (intelligence.report.underwriting) {
+      state.underwriting = state.underwriting.filter((u) => u.capitalOpportunityId !== id);
+      state.underwriting.push(intelligence.report.underwriting);
+    }
+    await this.store.save(state);
+    return {
+      report: intelligence.report,
+      checklist: intelligence.checklist,
+      clientRequest: intelligence.report.clientRequest,
+      clientRequestSendAttempted: false as const,
+    };
   }
 
   async missingRequest(principal: AtlasPrincipal, id: string) {
@@ -387,8 +537,10 @@ export class CapitalService {
         reviews: [],
         createdBy: principal.email || principal.userId,
       });
-    const matches = matchLenders(opp, state.lenders, state.products);
-    const strat = draftStrategy({ opportunity: opp, matches, underwriting: uw });
+    const run = runLenderMatch(opp, state.lenders, state.products, new Date(), {
+      outreach: state.submissions,
+    });
+    const strat = draftStrategy({ opportunity: opp, matches: run.matches, underwriting: uw });
     state.strategies = state.strategies.filter((s) => s.capitalOpportunityId !== id);
     state.strategies.push(strat);
     opp.stage = 'AwaitingMannyStrategyApproval';
@@ -441,40 +593,68 @@ export class CapitalService {
     return { lender };
   }
 
+  async listLenders(_principal: AtlasPrincipal) {
+    const state = await this.store.load();
+    return {
+      lenders: state.lenders.map((lender) => ({
+        ...lender,
+        freshness: organizationFreshness(lender),
+        products: state.products.filter((p) => p.lenderId === lender.id).map((p) => productFreshness(p)),
+        historicalExperience: summarizeHvcgExperience(state.submissions, lender.id),
+      })),
+      review: { status: 'PENDING_MANNY' as const, disclaimer: FINANCING_DISCLAIMER },
+      inventedCriteria: false,
+    };
+  }
+
   async addProduct(principal: AtlasPrincipal, lenderId: string, body: Record<string, unknown>) {
     if (!isMannyApprover(principal.roles)) forbidden('HVCG Owner approval required');
     const state = await this.store.load();
     if (!state.lenders.some((l) => l.id === lenderId)) notFound('Lender not found');
-    const product = {
+    const freshnessRaw = asString(body.freshness);
+    const freshness: LenderFreshness =
+      freshnessRaw === 'CURRENT' || freshnessRaw === 'STALE' || freshnessRaw === 'UNKNOWN' ? freshnessRaw : 'UNKNOWN';
+    const product: LenderProduct = {
       id: `pr-${randomUUID()}`,
       lenderId,
       productName: asString(body.productName) || 'Product',
       minAmount: asNumber(body.minAmount),
       maxAmount: asNumber(body.maxAmount),
       minRevenue: asNumber(body.minRevenue),
-      freshness: (asString(body.freshness) as 'CURRENT' | 'STALE' | 'UNKNOWN') || 'UNKNOWN',
+      freshness,
       lastVerifiedAt: asString(body.lastVerifiedAt) || undefined,
       source: asString(body.source) || undefined,
       verifiedBy: asString(body.verifiedBy) || undefined,
       confidence: asNumber(body.confidence),
-      sbaParticipation: body.sbaParticipation === true,
+      ...(typeof body.sbaParticipation === 'boolean' ? { sbaParticipation: body.sbaParticipation } : {}),
     };
     state.products.push(product);
     await this.store.save(state);
     return { product };
   }
 
-  async match(principal: AtlasPrincipal, id: string) {
+  async match(principal: AtlasPrincipal, id: string, opts: { persistShortlistPending?: boolean } = {}) {
     const state = await this.store.load();
     const opp = requireOpp(state, principal, id);
-    const matches = matchLenders(opp, state.lenders, state.products);
-    if (opp.stage === 'StrategyApproved' || opp.stage === 'LenderVendorResearch') {
+    const run = runLenderMatch(opp, state.lenders, state.products, new Date(), {
+      outreach: state.submissions,
+    });
+    if (
+      opts.persistShortlistPending !== false &&
+      (opp.stage === 'StrategyApproved' || opp.stage === 'LenderVendorResearch')
+    ) {
       opp.stage = 'AwaitingMannyShortlistApproval';
       opp.stageEnteredAt = nowIso();
       opp.mannyShortlistApproval = 'PENDING';
+      await this.store.save(state);
     }
-    await this.store.save(state);
-    return { matches, opportunity: opp };
+    return {
+      matches: run.matches,
+      filteredOut: run.filteredOut,
+      review: run.review,
+      generatedAt: run.generatedAt,
+      opportunity: opp,
+    };
   }
 
   async shortlistDecision(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {

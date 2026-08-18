@@ -140,7 +140,7 @@ const ACCG_OPP = {
   clientId: 'ACCG01',
   transactionType: 'working_capital_loc',
   need: { requestedAmount: 500_000, purpose: 'working capital', useOfFunds: 'payroll' },
-  business: { industry: 'manufacturing', annualRevenue: { value: 4_200_000, verification: 'VERIFIED', confidence: 1 } },
+  business: { industry: 'manufacturing', annualRevenue: { value: 4_200_000, verification: 'VERIFIED', confidence: 1, sourceRef: { sourceSystem: 'synthetic-fixture', capturedAt: '2026-08-01T00:00:00.000Z' } } },
   idempotencyKey: 'accg-cap-001',
   handoffSource: 'EVA',
 };
@@ -298,11 +298,37 @@ describe('Capital Graph live slice (in-memory)', () => {
       });
       assert.equal(approve.status, 200);
 
-      await fetch(`${base}/api/capital/opportunities/${id}/match`, {
+      const catalog = await fetch(`${base}/api/capital/lenders`, { headers: auth('member') });
+      assert.equal(catalog.status, 200);
+      const catalogBody = (await catalog.json()) as {
+        lenders: Array<{ id: string; name: string; products: unknown[]; freshness: string }>;
+        inventedCriteria: boolean;
+      };
+      assert.equal(catalogBody.inventedCriteria, false);
+      assert.ok(catalogBody.lenders.some((l) => l.id === '10' && l.name === 'First National' && l.products.length === 0));
+      assert.equal((graph.lists.get(LENDERS) || []).length, 1);
+
+      const match = await fetch(`${base}/api/capital/opportunities/${id}/match`, {
         method: 'POST',
         headers: auth('member'),
         body: '{}',
       });
+      assert.equal(match.status, 200);
+      const matchBody = (await match.json()) as {
+        matches: Array<{
+          lenderId: string;
+          band: string;
+          explanations: Array<{ sourceRef?: { sourceSystem?: string; field?: string } }>;
+        }>;
+        review: { status: string };
+      };
+      assert.equal(matchBody.review.status, 'PENDING_MANNY');
+      const firstNational = matchBody.matches.find((m) => m.lenderId === '10');
+      assert.ok(firstNational);
+      assert.equal(firstNational.band, 'UNKNOWN');
+      assert.ok(firstNational.explanations.every((e) => e.sourceRef?.sourceSystem));
+      assert.equal((graph.lists.get(LENDERS) || []).length, 1);
+
       const shortlist = await fetch(`${base}/api/capital/opportunities/${id}/shortlist/decision`, {
         method: 'POST',
         headers: auth('owner'),
