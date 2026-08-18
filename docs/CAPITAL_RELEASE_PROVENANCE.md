@@ -15,11 +15,11 @@ This file is the operator record of **what is live** versus **what is in git**. 
 |------|--------|
 | App | `app-atlas-integration-hub` / `rg-atlas-prod` |
 | URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| **Running Hub SHA** | `65b7438f8697e244d903f88039e6be659e9215fd` |
-| **Azure deployment ID** | `96c553ba-911c-4c1a-90aa-d4453ee23119` |
-| Commit message (that SHA) | `fix(atlas): tolerate missing capitalBackend on current Hub /health` |
+| **Running Hub SHA** | `ea1889a93f644197603a8572f3cf948f2fc2d750` |
+| **Azure deployment ID** | `b4b1f047-91a5-4b7e-be75-67a405df632b` |
+| Commit message (that SHA) | `feat(atlas): ingest authorized SharePoint files and extract native document text` |
 
-That SHA is the zip that was deployed. Later commits on this branch (including Phase 2 matching and document-intelligence) exist in the worktree and are **not** production until a later `Deploy-HVCGCapitalHub.ps1 -Apply`.
+That SHA is the zip that was deployed. Kudu `ATLAS_HUB_COMMIT.txt` matches. Prior zip was `65b7438f8697e244d903f88039e6be659e9215fd` (deployment `96c553ba-911c-4c1a-90aa-d4453ee23119`).
 
 GitHub workflows do **not** deploy Hub.
 
@@ -32,7 +32,7 @@ GitHub workflows do **not** deploy Hub.
 Treat them as two facts:
 
 1. **Worktree HEAD** — local / branch tip. Changes here do nothing to production until an explicit Hub deploy.
-2. **Running Hub SHA** — `65b7438f8697e244d903f88039e6be659e9215fd` until the next successful `az webapp deploy`.
+2. **Running Hub SHA** — `ea1889a93f644197603a8572f3cf948f2fc2d750` until the next successful `az webapp deploy`.
 
 Do not infer production from:
 
@@ -55,7 +55,7 @@ deployment/artifacts/hub-rollback/
 
 That directory is **gitignored** (with `deployment/artifacts/hub-build/` and `deployment/artifacts/hub-*.zip`). Do not commit rollback binaries, Kudu copies, or publish credentials.
 
-Restore with `deployment/scripts/Rollback-HVCGCapitalHub.ps1` (defaults to the newest `pre-*.zip` in that folder). Rollback restores the archived zip and removes `INTEGRATION_CAPITAL_*` settings as a set. It does not delete SharePoint lists/columns.
+Restore with `deployment/scripts/Rollback-HVCGCapitalHub.ps1` (defaults to the newest `pre-*.zip` in that folder). Current rollback zip from this deploy: `deployment/artifacts/hub-rollback/pre-ea1889a93f644197603a8572f3cf948f2fc2d750-20260817-212130.zip`. Rollback restores the archived zip and removes `INTEGRATION_CAPITAL_*` settings as a set. It does not delete SharePoint lists/columns.
 
 ---
 
