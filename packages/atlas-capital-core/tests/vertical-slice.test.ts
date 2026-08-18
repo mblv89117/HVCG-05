@@ -35,6 +35,7 @@ function syntheticOpp(): CapitalOpportunity {
     business: {
       industry: 'wholesale',
       annualRevenue: verifiedValue(3_500_000, 'synthetic-fixture', now, 'qa'),
+      yearsInBusiness: verifiedValue(5, 'synthetic-fixture', now, 'qa'),
     },
     capitalProfile: {},
     transaction: { workingCapitalComponent: true },
@@ -124,6 +125,7 @@ describe('first vertical slice (synthetic)', () => {
       minAmount: 50_000,
       maxAmount: 1_000_000,
       minRevenue: 2_000_000,
+      timeInBusinessMonths: 24,
       sbaParticipation: true,
       freshness: 'CURRENT',
       lastVerifiedAt: '2026-07-01T00:00:00.000Z',

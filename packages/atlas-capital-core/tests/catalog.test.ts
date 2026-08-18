@@ -13,6 +13,8 @@ import {
   sourcedLenderCatalog,
   summarizeHistoricalLenderIntelligence,
   verifiedValue,
+  buildOutreachHistorySnapshot,
+  deriveHistoricalOutcome,
   type CapitalOpportunity,
   type LenderSubmission,
 } from '../src/index.ts';
@@ -50,10 +52,10 @@ function synOpp(over: Partial<CapitalOpportunity> = {}): CapitalOpportunity {
 }
 
 describe('sourced lender catalog quality', () => {
-  it('stays inside a high-quality 10–20 product band with sourced criteria', () => {
+  it('stays inside a high-quality 20–30 product band with sourced criteria', () => {
     const catalog = sourcedLenderCatalog();
-    assert.ok(catalog.products.length >= 10);
-    assert.ok(catalog.products.length <= 20);
+    assert.ok(catalog.products.length >= 20);
+    assert.ok(catalog.products.length <= 30);
     assert.equal(catalog.products.length, SOURCED_PRODUCTS.length);
     assert.equal(catalog.lenders.length, SOURCED_LENDERS.length);
     assert.ok(catalog.criteria.length >= catalog.products.length);
@@ -88,7 +90,8 @@ describe('sourced lender catalog quality', () => {
       catalog.products.some((p) => /newtek/i.test(p.productName) && p.productCategory === 'sba'),
       false,
     );
-    assert.ok(CATALOG_RESEARCH_REJECTIONS.length >= 5);
+    assert.ok(CATALOG_RESEARCH_REJECTIONS.length >= 10);
+    assert.ok(CATALOG_RESEARCH_REJECTIONS.some((r) => /invent.*FICO|FICO.*invent|Refused to invent FICO/i.test(`${r.name} ${r.reason}`)));
   });
 
   it('keeps existing official SBA / Live Oak / JPM rows', () => {
@@ -109,11 +112,17 @@ describe('catalog matching honesty', () => {
     const celtic = run.matches.find((m) => m.productId === 'pr-catalog-celtic-7a');
     assert.ok(celtic);
     assert.equal(celtic.freshness, 'CURRENT');
-    assert.ok(celtic.band === 'BEST_FIT' || celtic.band === 'POSSIBLE');
+    assert.notEqual(celtic.band, 'BEST_FIT');
+    assert.equal(celtic.band, 'POSSIBLE');
+    assert.ok(celtic.unknownCriticalCriteria.includes('timeInBusinessMonths'));
+    assert.ok(celtic.unknownCriticalCriteria.includes('minRevenue'));
+    assert.ok(celtic.supportedCriteria.includes('minAmount'));
+    assert.equal(celtic.disqualifiers.length, 0);
+    assert.ok(celtic.criticalCriteriaCoverage.unknown >= 2);
     assert.equal(celtic.reviewStatus, 'PENDING_MANNY');
   });
 
-  it('can score BEST_FIT on Live Oak Express when amount, years, and revenue are verified', () => {
+  it('does not BEST_FIT Live Oak Express when official min revenue is unstated', () => {
     const catalog = sourcedLenderCatalog();
     const run = runLenderMatch(
       synOpp({
@@ -122,12 +131,28 @@ describe('catalog matching honesty', () => {
       }),
       catalog.lenders,
       catalog.products,
-      new Date('2026-08-17'),
+      new Date('2026-08-18'),
     );
     const express = run.matches.find((m) => m.productId === 'pr-catalog-liveoak-express');
     assert.ok(express);
-    assert.equal(express.band, 'BEST_FIT');
+    assert.notEqual(express.band, 'BEST_FIT');
     assert.equal(express.freshness, 'CURRENT');
+    assert.ok(express.unknownCriticalCriteria.includes('minRevenue'));
+    assert.ok(express.supportedCriteria.includes('timeInBusinessMonths'));
+  });
+
+  it('can BEST_FIT Bank of America unsecured LOC when amount, TIB, and revenue are CURRENT and verified', () => {
+    const catalog = sourcedLenderCatalog();
+    const run = runLenderMatch(synOpp(), catalog.lenders, catalog.products, new Date('2026-08-18'));
+    const bofa = run.matches.find((m) => m.productId === 'pr-catalog-bofa-unsecured-loc');
+    assert.ok(bofa);
+    assert.equal(bofa.band, 'BEST_FIT');
+    assert.equal(bofa.freshness, 'CURRENT');
+    assert.equal(bofa.unknownCriticalCriteria.length, 0);
+    assert.equal(bofa.disqualifiers.length, 0);
+    assert.ok(bofa.supportedCriteria.includes('minRevenue'));
+    assert.ok(bofa.supportedCriteria.includes('timeInBusinessMonths'));
+    assert.ok(bofa.criticalCriteriaCoverage.supported >= 2);
   });
 
   it('never ranks STALE catalog criteria as BEST_FIT', () => {
@@ -226,8 +251,128 @@ describe('historical lender intelligence', () => {
     assert.equal(/SECRET_CLIENT|8,400,000|Confidential Title|ACCG01/i.test(blob), false);
     assert.equal(celtic.historicalIntelligence?.sameClient.outreachCount, 0);
     assert.equal(celtic.historicalIntelligence?.lenderAggregate.outreachCount, 1);
-    assert.ok(celtic.band === 'BEST_FIT' || celtic.band === 'POSSIBLE');
+    assert.ok(celtic.band === 'POSSIBLE');
+    assert.notEqual(celtic.band, 'BEST_FIT');
     assert.equal(celtic.explanations.some((e) => e.criterion === 'hvcgExperience' && e.outcome === 'met'), false);
+  });
+
+  it('joins SharePoint numeric lender lookup to catalog by sourced display name', () => {
+    const catalog = sourcedLenderCatalog();
+    const outreach: LenderSubmission[] = [
+      {
+        id: 'sub-lookup',
+        capitalOpportunityId: 'cap-syn-001',
+        lenderId: '5',
+        lenderName: 'Celtic Bank',
+        method: 'package',
+        status: 'submitted',
+        response: 'None',
+        submittedAt: '2026-06-01T00:00:00.000Z',
+        notes: 'SECRET_CLIENT do not copy',
+        documentIds: [],
+      },
+    ];
+    const intel = summarizeHistoricalLenderIntelligence({
+      outreach,
+      lenderId: 'ln-catalog-celtic',
+      lenderName: 'Celtic Bank',
+      viewingClientCode: 'SYN01',
+      opportunityClientIndex: [{ id: 'cap-syn-001', clientCode: 'SYN01', requestedAmount: 250_000 }],
+    });
+    assert.equal(intel?.contacted, true);
+    assert.equal(intel?.sameClient.outreachCount, 1);
+    assert.equal(intel?.sameClient.lastOutcome, 'unknown');
+    assert.equal(intel?.sameClient.requestSizeKnown, true);
+    assert.equal(intel?.sameClient.requestedAmount, 250_000);
+    assert.equal(intel?.lenderAggregate.requestSizeKnown, false);
+    assert.equal(intel?.lenderAggregate.productKnown, false);
+    assert.equal(intel?.notAStatisticalClaim, true);
+    assert.match(intel?.explanation || '', /too small for rates/i);
+    assert.equal(/SECRET_CLIENT|250,000/.test(intel?.explanation || ''), false);
+
+    const run = runLenderMatch(synOpp(), catalog.lenders, catalog.products, new Date('2026-08-17'), {
+      outreach,
+      opportunityClientIndex: [{ id: 'cap-syn-001', clientCode: 'SYN01', requestedAmount: 250_000 }],
+    });
+    const celtic = run.matches.find((m) => m.productId === 'pr-catalog-celtic-7a');
+    assert.equal(celtic?.historicalIntelligence?.contacted, true);
+    assert.equal(celtic?.historicalExperience?.fundedCount, 0);
+  });
+
+  it('does not copy notes as a decline reason and keeps conflicting signals unknown', () => {
+    const intel = summarizeHistoricalLenderIntelligence({
+      outreach: [
+        {
+          id: 'sub-conflict',
+          capitalOpportunityId: 'cap-syn-001',
+          lenderId: 'ln-catalog-celtic',
+          method: 'package',
+          status: 'offer',
+          response: 'Declined',
+          messageClass: 'FUNDED',
+          notes: 'Declined because DSCR — do not copy',
+          submittedAt: '2026-06-02T00:00:00.000Z',
+          documentIds: [],
+        },
+      ],
+      lenderId: 'ln-catalog-celtic',
+      viewingClientCode: 'SYN01',
+      opportunityClientIndex: [{ id: 'cap-syn-001', clientCode: 'SYN01' }],
+    });
+    assert.equal(intel?.sameClient.lastOutcome, 'unknown');
+    assert.equal(intel?.lenderAggregate.declineReasonKnown, false);
+    assert.equal(intel?.lenderAggregate.fundedOutcome, 'funded');
+    assert.equal(/DSCR|do not copy/i.test(intel?.explanation || ''), false);
+  });
+});
+
+describe('outreach history snapshot', () => {
+  it('counts unresolved SharePoint lookup rows without client identifiers or notes', () => {
+    const snap = buildOutreachHistorySnapshot({
+      outreach: [
+        {
+          id: 'sub-unresolved',
+          capitalOpportunityId: 'cap-live',
+          lenderId: '5',
+          method: 'package',
+          status: 'submitted',
+          notes: 'SECRET_CLIENT $9,999,999',
+          submittedAt: '2026-06-01T00:00:00.000Z',
+          documentIds: [],
+        },
+        {
+          id: 'sub-named',
+          capitalOpportunityId: 'cap-syn-001',
+          lenderId: '5',
+          lenderName: 'Celtic Bank',
+          method: 'package',
+          status: 'rfi',
+          messageClass: 'MISSING_DOCUMENT',
+          submittedAt: '2026-06-02T00:00:00.000Z',
+          documentIds: [],
+        },
+      ],
+      lenders: [{ id: 'ln-catalog-celtic', name: 'Celtic Bank' }],
+    });
+    assert.equal(snap.rowCount, 2);
+    assert.equal(snap.mappedRowCount, 1);
+    assert.equal(snap.unresolvedRowCount, 1);
+    assert.equal(snap.lendersWithOutreach, 1);
+    assert.equal(snap.isolation.notesOmitted, true);
+    assert.equal(snap.isolation.amountsOmitted, true);
+    const celtic = snap.lenders.find((l) => l.lenderId === 'ln-catalog-celtic');
+    assert.equal(celtic?.signals.extraDocsRequestedCount, 1);
+    assert.equal(celtic?.signals.lastOutcome, 'unknown');
+    assert.equal(deriveHistoricalOutcome({
+      id: 'x',
+      capitalOpportunityId: 'c',
+      lenderId: 'l',
+      method: 'package',
+      status: 'submitted',
+      documentIds: [],
+    }), 'unknown');
+    const blob = JSON.stringify(snap);
+    assert.equal(/SECRET_CLIENT|9,999,999|cap-live|cap-syn-001/i.test(blob), false);
   });
 });
 
@@ -241,6 +386,9 @@ describe('Manny strategy package', () => {
     assert.equal(pack.disclaimer, FINANCING_DISCLAIMER);
     assert.equal(pack.need.requestedAmount, 250_000);
     assert.equal(pack.useOfFunds, 'payroll and inventory');
+    assert.equal(pack.mannyWorkflow.externalSubmit, false);
+    assert.equal(pack.mannyWorkflow.approve, 'APPROVED');
+    assert.ok(pack.risks.length > 0);
     assert.ok(pack.facts.verified.some((f) => f.field === 'annualRevenue'));
     assert.ok(pack.facts.missing.includes('cash'));
     assert.ok(pack.structures.length > 0);

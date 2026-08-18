@@ -20,6 +20,7 @@ import {
   overlayFromState,
   readCapitalOverlay,
   resolveCapitalOverlayDir,
+  withOverlayWriteLock,
   writeCapitalOverlay,
   type CapitalOverlay,
 } from '../overlay.ts';
@@ -253,6 +254,13 @@ export class GraphCapitalStore {
       }
     }
 
+    const lendersById = new Map(state.lenders.map((l) => [l.id, l.name]));
+    for (const sub of state.submissions) {
+      if (sub.lenderName) continue;
+      const fromLive = lendersById.get(sub.lenderId);
+      if (fromLive) sub.lenderName = fromLive;
+    }
+
     for (const opp of state.opportunities) {
       if (opp.mannyStrategyApproval === 'NOT_REQUIRED') continue;
       if (state.strategies.some((s) => s.capitalOpportunityId === opp.id)) continue;
@@ -330,8 +338,16 @@ export class AsyncCapitalStore implements CapitalPersistence {
         continue;
       }
       if (!sameJson(prior, opp)) {
-        const patched = await this.graph.patchOpportunity(opp);
-        opp.updatedAt = patched.updatedAt;
+        try {
+          const patched = await this.graph.patchOpportunity(opp);
+          opp.updatedAt = patched.updatedAt;
+        } catch (err) {
+          if (err instanceof CapitalHttpError && err.status === 403 && isSyntheticCapitalRecord(opp)) {
+            /* SYN* Graph writes stay closed; stage/strategy remain Hub overlay. */
+          } else {
+            throw err;
+          }
+        }
       }
     }
 
@@ -367,7 +383,9 @@ export class AsyncCapitalStore implements CapitalPersistence {
     }
 
     this.overlay = overlayFromState(state);
-    writeCapitalOverlay(this.overlayDir, this.overlay);
+    await withOverlayWriteLock(this.overlayDir, () => {
+      writeCapitalOverlay(this.overlayDir, this.overlay!);
+    });
     this.snapshot = cloneState(state);
   }
 }

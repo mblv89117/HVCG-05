@@ -17,9 +17,13 @@ import {
   type CapitalStage,
   type ChecklistItem,
   type ChecklistStatus,
+  type LenderMessageClass,
   type LenderOrganization,
+  type LenderOutreachResponse,
   type LenderSubmission,
   type TransactionType,
+  LENDER_MESSAGE_CLASSES,
+  LENDER_OUTREACH_RESPONSES,
 } from '@hvcg/atlas-capital-core';
 import type { GraphListItem } from './graph.ts';
 
@@ -92,6 +96,7 @@ export const ADDITIVE_SUBMISSION_FIELDS = [
   'SubmittedBy',
   'ConfirmationNumber',
   'PackageVersion',
+  'MessageClass',
 ] as const;
 
 const ATLAS_NOTES_MARKER = 'ATLAS_CAPITAL_STATE:';
@@ -139,6 +144,29 @@ function asUrl(v: unknown): string | undefined {
   if (v && typeof v === 'object' && !Array.isArray(v) && 'Url' in v) {
     return asString((v as { Url: unknown }).Url);
   }
+  return undefined;
+}
+
+function asLookupName(v: unknown): string | undefined {
+  const direct = asString(v);
+  if (direct && !/^\d+$/.test(direct)) return direct;
+  if (Array.isArray(v) && v[0]) return asLookupName(v[0]);
+  if (v && typeof v === 'object' && !Array.isArray(v)) {
+    const rec = v as Record<string, unknown>;
+    return asLookupName(rec.LookupValue ?? rec.Title ?? rec.label ?? rec.displayName);
+  }
+  return undefined;
+}
+
+function asOutreachResponse(v: unknown): LenderOutreachResponse | undefined {
+  const s = asString(v);
+  if (s && (LENDER_OUTREACH_RESPONSES as readonly string[]).includes(s)) return s as LenderOutreachResponse;
+  return undefined;
+}
+
+function asMessageClass(v: unknown): LenderMessageClass | undefined {
+  const s = asString(v);
+  if (s && (LENDER_MESSAGE_CLASSES as readonly string[]).includes(s)) return s as LenderMessageClass;
   return undefined;
 }
 
@@ -517,10 +545,13 @@ export function submissionFromItem(item: GraphListItem): LenderSubmission | null
   const oppId = lookupIdFromFields(item.fields, 'CapitalOpportunityId') || '';
   const statusRaw = asString(item.fields.SubmissionStatus) || 'submitted';
   const methodRaw = asString(item.fields.SubmissionMethod) || 'package';
+  const lenderLookupId = asString(item.fields.LenderIdLookupId);
+  const lenderName = asLookupName(item.fields.LenderId);
   return {
     id: item.id,
     capitalOpportunityId: oppId,
-    lenderId: asString(item.fields.LenderIdLookupId) || asString(item.fields.LenderId) || 'unknown',
+    lenderId: lenderLookupId || (lenderName ? lenderName : 'unknown'),
+    lenderName,
     method: (['package', 'email', 'portal_instructions', 'approved_api'].includes(methodRaw)
       ? methodRaw
       : 'package') as LenderSubmission['method'],
@@ -542,6 +573,8 @@ export function submissionFromItem(item: GraphListItem): LenderSubmission | null
     packageVersion: asString(item.fields.PackageVersion),
     documentIds: [],
     notes: asString(item.fields.Notes),
+    response: asOutreachResponse(item.fields.Response),
+    messageClass: asMessageClass(item.fields.MessageClass),
   };
 }
 

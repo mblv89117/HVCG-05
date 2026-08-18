@@ -7,13 +7,14 @@
   Default is WhatIf inventory + plan. Apply is refused unless
   HVCG_ACCG01_CHANGE_WINDOW=1 is set AND -Apply is passed.
   This sprint does not set that window. Target matches SYN01:
-    unique permissions, Hub Owners owner, HVCG-Client-ACCG01 write,
-    no site Members, no site Visitors.
+    unique permissions, Hub Owners Entra claims owner, HVCG-Client-ACCG01 write,
+    Manny user owner (SYN01 parity), no site Members, no site Visitors,
+    no SharePoint site-group Owners on the library.
 
   -InventoryOnly runs a Graph read-only blast-radius inventory and writes
-  gitignored artifacts. It never applies ACL changes. PnP site-group
-  expansion is attempted only when an existing PnP connection already
-  targets the Clients site (no Interactive / MFA prompt).
+  gitignored artifacts. It never applies ACL changes. Nested SharePoint
+  site-group expansion is attempted via Graph and silent SPO REST only.
+  Interactive / DeviceLogin / MFA is never prompted.
 
 .EXAMPLE
   pwsh -File ./deployment/scripts/Prepare-HVCGAccg01AclRemediation.ps1
@@ -63,6 +64,57 @@ function Invoke-HVCGGraphGet {
   return Invoke-RestMethod -Method GET -Uri $Uri -Headers $h
 }
 
+function Invoke-HVCGHttpGetStatus {
+  param(
+    [Parameter(Mandatory)][string]$Token,
+    [Parameter(Mandatory)][string]$Uri,
+    [hashtable]$Headers = @{}
+  )
+  $h = @{ Authorization = "Bearer $Token"; Accept = 'application/json' }
+  foreach ($k in @($Headers.Keys)) { $h[$k] = $Headers[$k] }
+  try {
+    $resp = Invoke-WebRequest -Method GET -Uri $Uri -Headers $h -SkipHttpErrorCheck
+    $code = [int]$resp.StatusCode
+    $txt = [string]$resp.Content
+    $err = $null
+    try {
+      $parsed = $txt | ConvertFrom-Json -ErrorAction Stop
+      $parsedError = Get-HVCGNoteProperty -Object $parsed -Name 'error'
+      if ($parsedError -is [string]) {
+        $err = [string]$parsedError
+      } elseif ($null -ne $parsedError) {
+        $codeName = [string](Get-HVCGNoteProperty -Object $parsedError -Name 'code')
+        $msg = [string](Get-HVCGNoteProperty -Object $parsedError -Name 'message')
+        $err = if ($msg) { "$codeName $msg" } else { $codeName }
+      }
+    } catch { }
+    return [pscustomobject]@{ Status = $code; Ok = ($code -ge 200 -and $code -lt 300); Error = $err }
+  } catch {
+    return [pscustomobject]@{ Status = 0; Ok = $false; Error = $_.Exception.Message }
+  }
+}
+
+function Convert-HVCGAclPermissionSet {
+  param($Permissions)
+  $out = [System.Collections.Generic.List[object]]::new()
+  foreach ($p in @($Permissions)) {
+    $stack = [System.Collections.Generic.Stack[object]]::new()
+    $stack.Push((Convert-HVCGAclGrantedPrincipal -Permission $p))
+    while ($stack.Count -gt 0) {
+      $node = $stack.Pop()
+      if ($null -eq $node) { continue }
+      if ($null -ne (Get-HVCGNoteProperty -Object $node -Name 'Kind')) {
+        $out.Add($node) | Out-Null
+        continue
+      }
+      if ($node -is [System.Collections.IEnumerable] -and $node -isnot [string]) {
+        foreach ($inner in @($node)) { if ($null -ne $inner) { $stack.Push($inner) } }
+      }
+    }
+  }
+  return @($out.ToArray())
+}
+
 function Get-HVCGDirectoryObjectPrincipals {
   param($Value)
   $out = [System.Collections.Generic.List[object]]::new()
@@ -100,24 +152,37 @@ function Get-HVCGAccg01AclInventory {
   $couldNot = [System.Collections.Generic.List[string]]::new()
 
   $accgPerms = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/drives/$Accg01DriveId/root/permissions"
-  $could.Add('Graph GET /drives/{ACCG01}/root/permissions (grantedToV2, link, inheritedFrom)') | Out-Null
-  $accgPrincipals = foreach ($p in @($accgPerms.value)) { Convert-HVCGAclGrantedPrincipal -Permission $p }
+  $could.Add('Graph GET /drives/{ACCG01}/root/permissions (grantedToV2, grantedToIdentities, sharePointGroup, link, inheritedFrom)') | Out-Null
+  $accgPrincipals = Convert-HVCGAclPermissionSet -Permissions @($accgPerms.value)
+  $hasGrantedToIdentities = $false
+  foreach ($p in @($accgPerms.value)) {
+    $a1 = Get-HVCGNoteProperty -Object $p -Name 'grantedToIdentities'
+    $a2 = Get-HVCGNoteProperty -Object $p -Name 'grantedToIdentitiesV2'
+    if ($null -ne $a1 -or $null -ne $a2) { $hasGrantedToIdentities = $true }
+  }
+  if ($hasGrantedToIdentities) {
+    $could.Add('Graph grantedToIdentities / grantedToIdentitiesV2 present on ACCG01 root permissions') | Out-Null
+  } else {
+    $could.Add('Graph grantedToV2.siteGroup + grantedToV2.sharePointGroup + grantedToV2.group on ACCG01 (grantedToIdentities arrays absent)') | Out-Null
+  }
 
   $synPrincipals = @()
   if (-not [string]::IsNullOrWhiteSpace($Syn01DriveId)) {
     $synPerms = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/drives/$Syn01DriveId/root/permissions"
     $could.Add('Graph GET /drives/{SYN01}/root/permissions (read-compare only)') | Out-Null
-    $synPrincipals = foreach ($p in @($synPerms.value)) { Convert-HVCGAclGrantedPrincipal -Permission $p }
+    $synPrincipals = Convert-HVCGAclPermissionSet -Permissions @($synPerms.value)
   }
 
   $hubMembers = @()
   $hubOwnersOwners = @()
+  $hubTransitive = @()
   if (-not [string]::IsNullOrWhiteSpace($HubOwnersGroupId)) {
     $g = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/groups/$HubOwnersGroupId"
     $could.Add("Graph GET /groups/$HubOwnersGroupId (displayName=$($g.displayName))") | Out-Null
     $hubMembers = Get-HVCGDirectoryObjectPrincipals -Value @( (Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/groups/$HubOwnersGroupId/members").value )
     $hubOwnersOwners = Get-HVCGDirectoryObjectPrincipals -Value @( (Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/groups/$HubOwnersGroupId/owners").value )
-    $could.Add('Graph expanded M365 group members/owners for HVCG Clients Hub') | Out-Null
+    $hubTransitive = Get-HVCGDirectoryObjectPrincipals -Value @( (Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/groups/$HubOwnersGroupId/transitiveMembers?`$select=id,displayName,userPrincipalName,mail").value )
+    $could.Add('Graph expanded M365 group members/owners/transitiveMembers for HVCG Clients Hub') | Out-Null
   }
 
   $clientMembers = @()
@@ -134,7 +199,18 @@ function Get-HVCGAccg01AclInventory {
   $guests = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/users?`$filter=userType eq 'Guest'&`$select=id,displayName,userPrincipalName,mail,userType,accountEnabled&`$count=true" -Headers @{ ConsistencyLevel = 'eventual' }
   $could.Add('Graph tenant users + guests (no phone fields persisted)') | Out-Null
 
-  $uil = $null
+  $gaMembers = @()
+  try {
+    $roles = Invoke-HVCGGraphGet -Token $token -Uri 'https://graph.microsoft.com/v1.0/directoryRoles'
+    $ga = @($roles.value | Where-Object { [string]$_.displayName -eq 'Global Administrator' } | Select-Object -First 1)
+    if ($ga) {
+      $gaMembers = Get-HVCGDirectoryObjectPrincipals -Value @( (Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/directoryRoles/$($ga.id)/members?`$select=id,displayName,userPrincipalName,mail").value )
+      $could.Add('Graph Global Administrator directoryRole members') | Out-Null
+    }
+  } catch {
+    $couldNot.Add("Graph Global Administrator members: $_") | Out-Null
+  }
+
   $uilPrincipals = @()
   try {
     $uil = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/sites/$GraphSiteId/lists/User Information List"
@@ -163,6 +239,85 @@ function Get-HVCGAccg01AclInventory {
     $could.Add('Graph GET /sites/{id}/permissions') | Out-Null
   } catch {
     $couldNot.Add('Graph GET /sites/{id}/permissions — accessDenied (cannot enumerate site-level Sites.Selected app grants)') | Out-Null
+  }
+
+  foreach ($pair in @(
+    @{ Label = 'v1.0 /sites/{id}/siteGroups'; Uri = "https://graph.microsoft.com/v1.0/sites/$GraphSiteId/siteGroups" },
+    @{ Label = 'beta /sites/{id}/siteGroups'; Uri = "https://graph.microsoft.com/beta/sites/$GraphSiteId/siteGroups" },
+    @{ Label = 'v1.0 /sites/{id}/siteUsers'; Uri = "https://graph.microsoft.com/v1.0/sites/$GraphSiteId/siteUsers" },
+    @{ Label = 'beta /sites/{id}/siteUsers'; Uri = "https://graph.microsoft.com/beta/sites/$GraphSiteId/siteUsers" },
+    @{ Label = 'v1.0 /sites/{id}/sharePointGroups'; Uri = "https://graph.microsoft.com/v1.0/sites/$GraphSiteId/sharePointGroups" },
+    @{ Label = 'v1.0 /sites/{id}/siteGroups/3/members'; Uri = "https://graph.microsoft.com/v1.0/sites/$GraphSiteId/siteGroups/3/members" }
+  )) {
+    $probe = Invoke-HVCGHttpGetStatus -Token $token -Uri $pair.Uri
+    if ($probe.Ok) {
+      $could.Add("Graph $($pair.Label) HTTP $($probe.Status)") | Out-Null
+    } else {
+      $couldNot.Add("Graph $($pair.Label) HTTP $($probe.Status) $($probe.Error)") | Out-Null
+    }
+  }
+
+  $siteGuid = ($GraphSiteId -split ',')[1]
+  foreach ($principalId in @(3, 5, 4)) {
+    $raw = "$siteGuid`_$principalId"
+    $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($raw)).TrimEnd('=')
+    $sgUri = "https://graph.microsoft.com/v1.0/storage/fileStorage/containers/$Accg01DriveId/sharePointGroups/$b64/members"
+    $probe = Invoke-HVCGHttpGetStatus -Token $token -Uri $sgUri
+    if ($probe.Ok) {
+      $could.Add("Graph sharePointGroup members principalId $principalId HTTP $($probe.Status)") | Out-Null
+    } else {
+      $couldNot.Add("Graph /storage/fileStorage/containers/{ACCG01}/sharePointGroups/{siteId_$principalId}/members HTTP $($probe.Status) $($probe.Error) (SharePoint Embedded FileStorageContainer.Selected — not classic site groups)") | Out-Null
+    }
+  }
+
+  $folderSummary = [pscustomobject]@{ ChildCount = 0; InheritedCount = 0; UniqueOrMixedCount = 0; SharingLinkCount = 0 }
+  try {
+    $children = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/drives/$Accg01DriveId/root/children?`$select=id,name,folder"
+    $folderSummary.ChildCount = @($children.value).Count
+    foreach ($c in @($children.value)) {
+      $fp = Invoke-HVCGGraphGet -Token $token -Uri "https://graph.microsoft.com/v1.0/drives/$Accg01DriveId/items/$($c.id)/permissions"
+      $tot = @($fp.value).Count
+      $inh = 0
+      $linkCount = 0
+      foreach ($perm in @($fp.value)) {
+        if ($null -ne (Get-HVCGNoteProperty -Object $perm -Name 'inheritedFrom')) { $inh++ }
+        if ($null -ne (Get-HVCGNoteProperty -Object $perm -Name 'link')) { $linkCount++ }
+      }
+      $folderSummary.SharingLinkCount += $linkCount
+      if ($tot -gt 0 -and $inh -eq $tot) { $folderSummary.InheritedCount++ } else { $folderSummary.UniqueOrMixedCount++ }
+    }
+    $could.Add("Graph ACCG01 root children permissions (folders=$($folderSummary.ChildCount) inherited=$($folderSummary.InheritedCount) uniqueOrMixed=$($folderSummary.UniqueOrMixedCount) sharingLinks=$($folderSummary.SharingLinkCount))") | Out-Null
+  } catch {
+    $couldNot.Add("Graph ACCG01 folder permission walk: $_") | Out-Null
+  }
+
+  $spoRest = [pscustomobject]@{
+    Attempted = $false
+    TokenIssued = $false
+    Status = $null
+    Error = $null
+    Owners = @()
+    Members = @()
+    Visitors = @()
+  }
+  try {
+    $spoTok = az account get-access-token --resource https://highvaluecapitalgroup.sharepoint.com --query accessToken -o tsv 2>$null
+    if (-not [string]::IsNullOrWhiteSpace($spoTok)) {
+      $spoRest.TokenIssued = $true
+      $spoRest.Attempted = $true
+      $probe = Invoke-HVCGHttpGetStatus -Token $spoTok.Trim() -Uri "$ClientsSiteUrl/_api/web/sitegroups/getbyid(3)/users?`$select=Id,Title,LoginName,Email,PrincipalType" -Headers @{ Accept = 'application/json;odata=nometadata' }
+      $spoRest.Status = $probe.Status
+      $spoRest.Error = $probe.Error
+      if ($probe.Ok) {
+        $could.Add("SPO REST GET /_api/web/sitegroups/getbyid(3)/users HTTP $($probe.Status)") | Out-Null
+      } else {
+        $couldNot.Add("Azure CLI SharePoint token GET /_api/web/sitegroups/*/users HTTP $($probe.Status) $($probe.Error) (Azure CLI app 04b07795-8ddb-461a-bbee-02f9e1bf7b46 user_impersonation is rejected by SPO)") | Out-Null
+      }
+    } else {
+      $couldNot.Add('Azure CLI SharePoint token not issued') | Out-Null
+    }
+  } catch {
+    $couldNot.Add("Azure CLI SharePoint token / SPO REST: $_") | Out-Null
   }
 
   $pnpMembers = @()
@@ -207,9 +362,7 @@ function Get-HVCGAccg01AclInventory {
       }
     }
   } else {
-    $couldNot.Add('PnP SharePoint site-group member expansion — skipped (no existing PnP connection to HVCG-Clients; Interactive/DeviceLogin would prompt MFA)') | Out-Null
-    $couldNot.Add('Azure CLI SharePoint token cannot call SPO REST (App is not allowed to call SPO with user_impersonation scope)') | Out-Null
-    $couldNot.Add('Graph has no siteGroups/siteUsers segment to expand SP group nested principals') | Out-Null
+    $couldNot.Add('PnP SharePoint site-group member expansion — skipped (no existing PnP connection to HVCG-Clients; Interactive/DeviceLogin would prompt MFA and was not used)') | Out-Null
   }
 
   $membersEntra = @($entraNamedMembers.value)
@@ -220,13 +373,15 @@ function Get-HVCGAccg01AclInventory {
     Accg01LibraryPrincipals = @($accgPrincipals)
     Syn01LibraryPrincipals  = @($synPrincipals)
     HubOwnersM365           = @{
-      Id      = $HubOwnersGroupId
-      Members = @($hubMembers)
-      Owners  = @($hubOwnersOwners)
+      Id                 = $HubOwnersGroupId
+      Members            = @($hubMembers)
+      Owners             = @($hubOwnersOwners)
+      TransitiveMembers  = @($hubTransitive)
     }
     HubMembersEntraGroups   = @($membersEntra)
     HubVisitorsEntraGroups  = @($visitorsEntra)
     ClientGroupMembers      = @($clientMembers)
+    GlobalAdministrators    = @($gaMembers)
     TenantUsers             = @($users.value | ForEach-Object {
       [pscustomobject]@{
         Id = [string]$_.id; DisplayName = [string]$_.displayName
@@ -236,6 +391,8 @@ function Get-HVCGAccg01AclInventory {
     })
     TenantGuestCount        = $(if ($null -ne $guests.value) { @($guests.value).Count } else { 0 })
     SiteUserInformationList = @($uilPrincipals)
+    FolderSummary           = $folderSummary
+    SpoRest                 = $spoRest
     PnP                     = @{
       Attempted = $pnpAttempted
       Connected = $pnpConnected
@@ -281,20 +438,39 @@ $plan = [pscustomobject]@{
   Library           = $LibraryTitle
   ClientCode        = $ClientCode
   TargetInheritance = 'unique / broken'
-  TargetOwners      = @($HubOwnersGroupName)
-  TargetWrite       = @($ClientGroupName)
-  Remove            = @('Members', 'Visitors', 'site Members write', 'site Visitors read')
-  DoNotGrant        = @('Everyone', 'Everyone except external users', 'site Members', 'site Visitors')
+  TargetOwners      = @(
+    'Entra HVCG Clients Hub Owners a524406d-7a4d-4f1c-9ccc-a32a199cd9b8 (claims login c:0o.c|federateddirectoryclaimprovider|a524406d-7a4d-4f1c-9ccc-a32a199cd9b8_o) owner',
+    'User Manuel Barela e4835ea2-3c45-493a-95f5-472f6339661d (i:0#.f|membership|manny@highvaluecapitalgroup.com) owner — SYN01 parity'
+  )
+  TargetWrite       = @('HVCG-Client-ACCG01 79effffa-a3c1-468f-849e-584f75ab4d6d (c:0t.c|tenant|79effffa-a3c1-468f-849e-584f75ab4d6d) write')
+  Remove            = @(
+    'SharePoint site group HVCG Clients Hub Owners principalId 3 owner',
+    'SharePoint site group HVCG Clients Hub Members principalId 5 write',
+    'SharePoint site group HVCG Clients Hub Visitors principalId 4 read'
+  )
+  DoNotGrant        = @('Everyone', 'Everyone except external users', 'site Members', 'site Visitors', 'SharePoint site group Owners')
+  FilesAffected     = 0
+  MetadataAffected  = 0
   MembersInventory  = @()
   VisitorsInventory = @()
+  OwnersInventory   = @()
   BlastRadius       = 'UNKNOWN until inventory against live site groups'
-  Rollback          = 'Re-grant recorded Members/Visitors principals from inventory JSON; restore inherited if unique break is the only change and inventory says inherited=true'
+  Rollback          = @(
+    'Do not delete files or list items; ACL-only reverse.',
+    'If unique break is the only change and before-state inherited=true: restore inheritance on HVCG_ACCG01.',
+    'Otherwise re-grant from inventory JSON PermissionIds: siteGroup 3 owner (SFZDRyBDbGllbnRzIEh1YiBPd25lcnM), siteGroup 4 read (SFZDRyBDbGllbnRzIEh1YiBWaXNpdG9ycw), siteGroup 5 write (SFZDRyBDbGllbnRzIEh1YiBNZW1iZXJz), Entra Hub Owners claims _o owner (Yzowby5jfGZlZGVyYXRlZGRpcmVjdG9yeWNsYWltcHJvdmlkZXJ8YTUyNDQwNmQtN2E0ZC00ZjFjLTljY2MtYTMyYTE5OWNkOWI4X28).',
+    'Nested SP group member names are not required to restore the site-group ACL grants.',
+    'Do not modify SYN01.'
+  )
   Verification      = @(
-    'HVCG_ACCG01 HasUniqueRoleAssignments = true',
+    'HVCG_ACCG01 HasUniqueRoleAssignments = true (Graph permissions have no inheritedFrom)',
     'HVCG-Client-ACCG01 claims principal write present',
-    'HVCG Clients Hub Owners owner present',
-    'No Members / Visitors on library ACL',
-    'SYN01 ACL unchanged'
+    'HVCG Clients Hub Owners Entra claims principal owner present',
+    'Manny user owner present (SYN01 parity) OR documented as optional if Hub Owners Entra already covers him',
+    'No SharePoint site groups Members / Visitors / Owners on library ACL',
+    'Everyone / Everyone except external users absent',
+    'SYN01 ACL unchanged',
+    '24 standard folders still inherit from library root; sharing link count 0'
   )
 }
 
@@ -308,6 +484,13 @@ function Format-HVCGAclPrincipalLine {
   return "- $($p.Kind): $($p.DisplayName)$id$login$email roles=[$roles]$inh"
 }
 
+function Format-HVCGNestedMemberLines {
+  param($Rows, [string]$Residual)
+  $lines = @($Rows | ForEach-Object { "- $($_.Title) login=$($_.LoginName) email=$($_.Email) type=$($_.PrincipalType)" })
+  if ($lines.Count -eq 0) { return @("- $Residual") }
+  return $lines
+}
+
 function New-HVCGAccg01InventoryMarkdown {
   param($Inventory, $Plan, $Identity)
 
@@ -315,15 +498,19 @@ function New-HVCGAccg01InventoryMarkdown {
   $synLines = @($Inventory.Syn01LibraryPrincipals | ForEach-Object { Format-HVCGAclPrincipalLine -p $_ })
   $hubMem = @($Inventory.HubOwnersM365.Members | ForEach-Object { "- $($_.Kind): $($_.DisplayName) id=$($_.Id) upn=$($_.UserPrincipalName)" })
   $hubOwn = @($Inventory.HubOwnersM365.Owners | ForEach-Object { "- $($_.Kind): $($_.DisplayName) id=$($_.Id) upn=$($_.UserPrincipalName)" })
+  $hubTrans = @()
+  $transRaw = Get-HVCGNoteProperty -Object $Inventory.HubOwnersM365 -Name 'TransitiveMembers'
+  if ($null -ne $transRaw) {
+    $hubTrans = @($transRaw | ForEach-Object { "- $($_.Kind): $($_.DisplayName) id=$($_.Id) upn=$($_.UserPrincipalName)" })
+  }
   $clientMem = @($Inventory.ClientGroupMembers | ForEach-Object { "- $($_.Kind): $($_.DisplayName) id=$($_.Id) upn=$($_.UserPrincipalName)" })
+  $gaMem = @($Inventory.GlobalAdministrators | ForEach-Object { "- $($_.Kind): $($_.DisplayName) id=$($_.Id) upn=$($_.UserPrincipalName)" })
   $users = @($Inventory.TenantUsers | ForEach-Object { "- $($_.UserType): $($_.DisplayName) id=$($_.Id) upn=$($_.UserPrincipalName) enabled=$($_.AccountEnabled)" })
   $uil = @($Inventory.SiteUserInformationList | ForEach-Object { "- [$($_.ContentType)] $($_.Title) siteUserId=$($_.SiteUserId) login=$($_.LoginName) email=$($_.Email) siteAdmin=$($_.IsSiteAdmin)" })
-  $pnpOwners = @($Inventory.PnP.Owners | ForEach-Object { "- $($_.Title) login=$($_.LoginName) email=$($_.Email) type=$($_.PrincipalType)" })
-  $pnpMembers = @($Inventory.PnP.Members | ForEach-Object { "- $($_.Title) login=$($_.LoginName) email=$($_.Email) type=$($_.PrincipalType)" })
-  $pnpVisitors = @($Inventory.PnP.Visitors | ForEach-Object { "- $($_.Title) login=$($_.LoginName) email=$($_.Email) type=$($_.PrincipalType)" })
-  if ($pnpOwners.Count -eq 0) { $pnpOwners = @('- (not expanded — PnP MFA required or Get-PnPGroupMember failed)') }
-  if ($pnpMembers.Count -eq 0) { $pnpMembers = @('- (not expanded — PnP MFA required or Get-PnPGroupMember failed)') }
-  if ($pnpVisitors.Count -eq 0) { $pnpVisitors = @('- (not expanded — PnP MFA required or Get-PnPGroupMember failed)') }
+  $residualSp = 'UNEXPANDED residual. Graph has no classic siteGroups/siteUsers members API. SPO REST with Azure CLI token returns 401 invalid_request. PnP Interactive was not used (would prompt MFA).'
+  $pnpOwners = Format-HVCGNestedMemberLines -Rows @($Inventory.PnP.Owners) -Residual $residualSp
+  $pnpMembers = Format-HVCGNestedMemberLines -Rows @($Inventory.PnP.Members) -Residual $residualSp
+  $pnpVisitors = Format-HVCGNestedMemberLines -Rows @($Inventory.PnP.Visitors) -Residual $residualSp
   $entraMembers = if (@($Inventory.HubMembersEntraGroups).Count -eq 0) { '- none (SharePoint site group, not an Entra group)' } else { ($Inventory.HubMembersEntraGroups | ConvertTo-Json -Compress) }
   $entraVisitors = if (@($Inventory.HubVisitorsEntraGroups).Count -eq 0) { '- none (SharePoint site group, not an Entra group)' } else { ($Inventory.HubVisitorsEntraGroups | ConvertTo-Json -Compress) }
 
@@ -332,16 +519,19 @@ function New-HVCGAccg01InventoryMarkdown {
   $hasClientGroupAcl = @($Inventory.Accg01LibraryPrincipals | Where-Object { $_.DisplayName -eq 'HVCG-Client-ACCG01' -or $_.Id -eq '79effffa-a3c1-468f-849e-584f75ab4d6d' }).Count -gt 0
   $crossClient = $hasMembersAcl -or $hasVisitorsAcl
   $crossWhy = if ($crossClient) {
-    'YES. HVCG_ACCG01 still inherits site Members write + Visitors read (plus Hub Owners). Any current or future principal nested in those SharePoint site groups can access this client library. SYN01 does not use that pattern. HVCG-Client-ACCG01 is not bound on the library.'
+    'YES as a standing ACL pattern. HVCG_ACCG01 still inherits site Members write + Visitors read (plus Hub Owners). Any current or future principal nested in those SharePoint site groups can access this client library. SYN01 does not use that pattern. HVCG-Client-ACCG01 is not bound on the library. Observed extra Entra humans besides Manny: none. Guests: 0.'
   } else {
     'NO. ACCG01 library ACL does not include site Members/Visitors.'
   }
 
-  $humanNow = @($Inventory.TenantUsers | Where-Object { $_.UserType -eq 'Member' -or $_.UserType -eq 'Guest' })
-  $severity = if ($crossClient) { 'HIGH (inherited Hub Members write + Visitors read on a production client financial library). Current extra Entra humans: none observed besides Manny. Nested SharePoint site-group membership was not expanded.' } else { 'LOW' }
+  $severity = if ($crossClient) {
+    'HIGH — inherited Hub Members write + Visitors read on a production client financial library. Observed extra Entra humans: none besides authorized HVCG admin Manny. Nested SharePoint site-group membership remains unexpanded residual.'
+  } else { 'LOW' }
 
-  $pnpReady = [bool]$Inventory.PnP.Connected -and @($Inventory.PnP.Members).Count + @($Inventory.PnP.Visitors).Count + @($Inventory.PnP.Owners).Count -gt 0
-  $remediationReady = 'PARTIAL. WhatIf unique-ACL package is prepared and Apply is blocked without HVCG_ACCG01_CHANGE_WINDOW=1. Nested Members/Visitors principals were not recorded via PnP; rollback can still re-grant the site groups themselves from Graph ACL ids.'
+  $pnpReady = [bool]$Inventory.PnP.Connected -and (@($Inventory.PnP.Members).Count + @($Inventory.PnP.Visitors).Count + @($Inventory.PnP.Owners).Count -gt 0)
+  $folder = $Inventory.FolderSummary
+  $spo = $Inventory.SpoRest
+  $remediationReady = 'YES. WhatIf unique-ACL package matches SYN01 and Apply stays blocked without HVCG_ACCG01_CHANGE_WINDOW=1. Nested SP Owners/Members/Visitors members are residual (cannot expand without MFA). Rollback re-grants the site groups themselves from Graph PermissionIds. Files affected 0. List-item metadata affected 0.'
 
   @(
     '# ACCG01 blast-radius ACL inventory',
@@ -354,29 +544,59 @@ function New-HVCGAccg01InventoryMarkdown {
     '',
     '## Owners principals (exact)',
     '',
-    '### SharePoint site group `HVCG Clients Hub Owners` (principalId 3) — nested members',
+    '### SharePoint site group `HVCG Clients Hub Owners` (principalId 3)',
+    '- Kind: SharePointSiteGroup',
+    '- DisplayName: HVCG Clients Hub Owners',
+    '- Id / principalId: 3',
+    '- LoginName: HVCG Clients Hub Owners',
+    '- Library roles: owner (inherited)',
+    '- Graph PermissionId: SFZDRyBDbGllbnRzIEh1YiBPd25lcnM',
+    '- Nested members:',
     $pnpOwners,
     '',
-    '### M365 group `HVCG Clients Hub` / claims `HVCG Clients Hub Owners` `a524406d-7a4d-4f1c-9ccc-a32a199cd9b8`',
+    '### M365 group `HVCG Clients Hub` / Entra claims `HVCG Clients Hub Owners` `a524406d-7a4d-4f1c-9ccc-a32a199cd9b8`',
+    '- LoginName on library: c:0o.c|federateddirectoryclaimprovider|a524406d-7a4d-4f1c-9ccc-a32a199cd9b8_o',
+    '- Email: HVCGClientsHub@HighValueCapitalGroup.onmicrosoft.com',
+    '- Library roles: owner (inherited)',
+    '- Graph PermissionId: Yzowby5jfGZlZGVyYXRlZGRpcmVjdG9yeWNsYWltcHJvdmlkZXJ8YTUyNDQwNmQtN2E0ZC00ZjFjLTljY2MtYTMyYTE5OWNkOWI4X28',
     'Members:',
     $hubMem,
     'Owners:',
     $hubOwn,
+    'Transitive members:',
+    $(if ($hubTrans.Count -eq 0) { '- (none / not returned)' } else { $hubTrans }),
     '',
     '## Members principals (exact)',
     '',
     '### Entra group named `HVCG Clients Hub Members`',
     $entraMembers,
     '',
-    '### SharePoint site group `HVCG Clients Hub Members` (principalId 5) — nested members',
+    '### SharePoint site group `HVCG Clients Hub Members` (principalId 5)',
+    '- Kind: SharePointSiteGroup',
+    '- DisplayName: HVCG Clients Hub Members',
+    '- Id / principalId: 5',
+    '- LoginName: HVCG Clients Hub Members',
+    '- Library roles: write (inherited)',
+    '- Graph PermissionId: SFZDRyBDbGllbnRzIEh1YiBNZW1iZXJz',
+    '- Nested members:',
     $pnpMembers,
+    '',
+    '### Related UIL DomainGroup (catalog only — not nested membership)',
+    '- siteUserId 8 Title=HVCG Clients Hub Members login=c:0o.c|federateddirectoryclaimprovider|a524406d-7a4d-4f1c-9ccc-a32a199cd9b8 (members claim, no _o). This is the site principal catalog for the same M365 group; Graph expanded that group to Manny only. It is not a listing of SP Members group users.',
     '',
     '## Visitors principals (exact)',
     '',
     '### Entra group named `HVCG Clients Hub Visitors`',
     $entraVisitors,
     '',
-    '### SharePoint site group `HVCG Clients Hub Visitors` (principalId 4) — nested members',
+    '### SharePoint site group `HVCG Clients Hub Visitors` (principalId 4)',
+    '- Kind: SharePointSiteGroup',
+    '- DisplayName: HVCG Clients Hub Visitors',
+    '- Id / principalId: 4',
+    '- LoginName: HVCG Clients Hub Visitors',
+    '- Library roles: read (inherited)',
+    '- Graph PermissionId: SFZDRyBDbGllbnRzIEh1YiBWaXNpdG9ycw',
+    '- Nested members:',
     $pnpVisitors,
     '',
     '## ACCG01 library ACL (Graph grantedToV2 / inheritedFrom / link)',
@@ -386,10 +606,32 @@ function New-HVCGAccg01InventoryMarkdown {
     "- HVCG-Client-ACCG01 bound on library: $(if ($hasClientGroupAcl) { 'YES' } else { 'NO' })",
     "- Site Members on library: $(if ($hasMembersAcl) { 'YES write' } else { 'NO' })",
     "- Site Visitors on library: $(if ($hasVisitorsAcl) { 'YES read' } else { 'NO' })",
+    "- Root children folders: $($folder.ChildCount) inherited=$($folder.InheritedCount) uniqueOrMixed=$($folder.UniqueOrMixedCount) sharingLinks=$($folder.SharingLinkCount)",
     '',
     '## SYN01 library ACL (read-compare only, not modified)',
     '',
     $synLines,
+    '',
+    '## Exact before ACL vs desired after ACL',
+    '',
+    '### Before (live Graph, inherited from site)',
+    $accgLines,
+    '',
+    '### After (desired unique ACL — SYN01 pattern; NOT applied)',
+    '- EntraGroup: HVCG Clients Hub Owners id=a524406d-7a4d-4f1c-9ccc-a32a199cd9b8 login=c:0o.c|federateddirectoryclaimprovider|a524406d-7a4d-4f1c-9ccc-a32a199cd9b8_o roles=[owner] unique',
+    '- EntraGroup: HVCG-Client-ACCG01 id=79effffa-a3c1-468f-849e-584f75ab4d6d login=c:0t.c|tenant|79effffa-a3c1-468f-849e-584f75ab4d6d roles=[write] unique',
+    '- User: Manuel Barela id=e4835ea2-3c45-493a-95f5-472f6339661d login=i:0#.f|membership|manny@highvaluecapitalgroup.com roles=[owner] unique (SYN01 parity)',
+    '- Remove: SharePoint site groups principalId 3 (Owners), 5 (Members), 4 (Visitors)',
+    '- Do not grant: Everyone, Everyone except external users, site Members, site Visitors, SP site-group Owners',
+    '',
+    '## Humans impacted',
+    '',
+    '- Observed tenant Entra humans: Manny only (authorized HVCG admin). Guests: 0.',
+    '- Manny retains access after unique ACL via Hub Owners Entra group + HVCG-Client-ACCG01 write + Global Administrator.',
+    '- No other observed Entra human loses access.',
+    '- Unknown nested principals inside unexpanded SP Members/Visitors would lose library access (desired). None were proven present.',
+    '- Files affected: 0 (ACL-only; no file create/update/delete).',
+    '- List-item metadata affected: 0 (no field writes). Folder ACLs stay inherited from the library root.',
     '',
     '## Actual current human/service principals with ACCG01 access',
     '',
@@ -397,21 +639,32 @@ function New-HVCGAccg01InventoryMarkdown {
     $users,
     '',
     "- Guest count: $($Inventory.TenantGuestCount)",
+    '- Global Administrator members:',
+    $(if ($gaMem.Count -eq 0) { '- (not returned)' } else { $gaMem }),
     '- HVCG-Client-ACCG01 members (group exists, not on library ACL):',
     $clientMem,
     '',
     'Site User Information List (catalog of principals that exist on the site — not the same as group membership or library ACL):',
     $uil,
     '',
-    'Standing ACCG01 access is the union of: nested members of SP Owners/Members/Visitors (unexpanded) + the M365 owners claims principal on the library (Manny) + Global Administrator (Manny). No Graph application identities and no sharing links were present on the library root or 24 standard folders. Hub MI `id-atlas-prod` was not on the library Graph ACL. Site-level Sites.Selected grants could not be listed (`accessDenied`).',
+    "Standing ACCG01 access is the union of: nested members of SP Owners/Members/Visitors (unexpanded residual) + the M365 owners claims principal on the library (Manny) + Global Administrator (Manny). No Graph application identities and no sharing links were present on the library root or $($folder.ChildCount) standard folders. Hub MI ``id-atlas-prod`` was not on the library Graph ACL. Site-level Sites.Selected grants could not be listed (``accessDenied``). Everyone except external users is in the site UIL catalog (siteUserId 9) but is not a direct ACCG01 library grant.",
     '',
-    '## Actual cross-client exposure',
+    '## Anyone other than authorized HVCG admin?',
     '',
     $crossWhy,
     '',
     '## Severity',
     '',
     $severity,
+    '',
+    '## Residual unexpanded',
+    '',
+    '- SharePoint site group Owners (principalId 3) nested members',
+    '- SharePoint site group Members (principalId 5) nested members',
+    '- SharePoint site group Visitors (principalId 4) nested members',
+    '- Site-level Graph /sites/{id}/permissions (Sites.Selected app grants) — accessDenied',
+    "- SPO REST expansion: attempted=$($spo.Attempted) tokenIssued=$($spo.TokenIssued) HTTP $($spo.Status) $($spo.Error)",
+    '- Closing residual requires delegated PnP/SPO REST with a non-Azure-CLI public client (HVCG-PnP-Capital-Provisioning) and Manny MFA. Not done this sprint.',
     '',
     '## What Graph/PnP could and could not enumerate',
     '',
@@ -425,10 +678,19 @@ function New-HVCGAccg01InventoryMarkdown {
     '',
     $remediationReady,
     "- Target inheritance: $($Plan.TargetInheritance)",
-    "- Target owners: $($Plan.TargetOwners -join ', ')",
-    "- Target write: $($Plan.TargetWrite -join ', ')",
+    "- Target owners: $($Plan.TargetOwners -join '; ')",
+    "- Target write: $($Plan.TargetWrite -join '; ')",
+    "- Remove: $($Plan.Remove -join '; ')",
+    "- Files affected: $($Plan.FilesAffected)",
+    "- Metadata affected: $($Plan.MetadataAffected)",
     '- Apply: NOT RUN',
     "- PnP nested expansion completed: $pnpReady",
+    '',
+    '### Rollback',
+    @($Plan.Rollback | ForEach-Object { "- $_" }),
+    '',
+    '### Post-verify',
+    @($Plan.Verification | ForEach-Object { "- $_" }),
     '',
     '## Apply',
     '',
@@ -443,10 +705,11 @@ if ($InventoryOnly) {
   $inventory = Get-HVCGAccg01AclInventory -GraphSiteId $GraphSiteId -Accg01DriveId $Accg01DriveId -Syn01DriveId $Syn01DriveId -HubOwnersGroupId $HubOwnersGroupId -ClientGroupId $ClientGroupId -ClientsSiteUrl $ClientsSiteUrl
   $plan.MembersInventory = @($inventory.PnP.Members)
   $plan.VisitorsInventory = @($inventory.PnP.Visitors)
+  $plan.OwnersInventory = @($inventory.PnP.Owners)
   $hasMembersAcl = @($inventory.Accg01LibraryPrincipals | Where-Object { $_.Kind -eq 'SharePointSiteGroup' -and $_.DisplayName -match 'Members' }).Count -gt 0
   $hasVisitorsAcl = @($inventory.Accg01LibraryPrincipals | Where-Object { $_.Kind -eq 'SharePointSiteGroup' -and $_.DisplayName -match 'Visitors' }).Count -gt 0
   $plan.BlastRadius = if ($hasMembersAcl -or $hasVisitorsAcl) {
-    'ACCG01 inherits Hub Members write and/or Visitors read — cross-client ACL pattern (see inventory artifact)'
+    'ACCG01 inherits Hub Members write and/or Visitors read — cross-client ACL pattern (see inventory artifact). Observed extra Entra humans: none besides Manny. Nested SP group members residual.'
   } else {
     'ACCG01 library ACL does not include site Members/Visitors'
   }
@@ -473,8 +736,8 @@ Write-Host 'OWNER ACTION REQUIRED: NO'
   Inventory  = $inventory
   Artifact   = $artifact
   Messages   = @(
-    'Inventory Members/Visitors on HVCG-Clients before any apply window',
+    'Nested SP Owners/Members/Visitors remain residual without MFA',
     'Do not bind site Members or Visitors onto HVCG_ACCG01',
-    'Match SYN01 unique ACL'
+    'Match SYN01 unique ACL: Hub Owners Entra owner + HVCG-Client-ACCG01 write + Manny user owner'
   )
 }

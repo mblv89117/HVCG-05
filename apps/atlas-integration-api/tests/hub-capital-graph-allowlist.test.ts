@@ -6,7 +6,7 @@ import {
   createCapitalGraphTransport,
   type CapitalGraphResourceAllowlist,
 } from '../src/capital/sharepoint/graph.ts';
-import { mapHandoffSource, lenderFromItem } from '../src/capital/sharepoint/map.ts';
+import { mapHandoffSource, lenderFromItem, submissionFromItem } from '../src/capital/sharepoint/map.ts';
 import { GRAPH_ORIGIN } from '../src/pm/sharepoint/graph.ts';
 import { capabilityForPmList } from '../src/pm/sharepoint/graph.ts';
 
@@ -179,5 +179,42 @@ describe('Capital Graph allowlist', () => {
     assert.match(recycle, /az webapp stop/);
     assert.match(recycle, /az webapp start/);
     assert.match(recycle, /INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH/);
+  });
+});
+
+describe('HVCG_LenderOutreach mapping', () => {
+  it('maps Response, MessageClass, and lookup display name without inventing outcomes', () => {
+    const mapped = submissionFromItem({
+      id: '7',
+      etag: '"1"',
+      fields: {
+        CapitalOpportunityIdLookupId: 3,
+        LenderIdLookupId: 5,
+        LenderId: 'Celtic Bank',
+        SubmissionStatus: 'submitted',
+        SubmissionMethod: 'package',
+        Response: 'None',
+        MessageClass: 'REQUEST_FOR_INFORMATION',
+        OutreachDate: '2026-06-01T00:00:00.000Z',
+        Notes: 'SECRET_CLIENT extra docs',
+      },
+    });
+    assert.ok(mapped);
+    assert.equal(mapped.lenderId, '5');
+    assert.equal(mapped.lenderName, 'Celtic Bank');
+    assert.equal(mapped.response, 'None');
+    assert.equal(mapped.messageClass, 'REQUEST_FOR_INFORMATION');
+    assert.equal(mapped.status, 'submitted');
+    const empty = submissionFromItem({
+      id: '8',
+      etag: '"1"',
+      fields: {
+        LenderIdLookupId: 9,
+        SubmissionStatus: 'submitted',
+      },
+    });
+    assert.equal(empty?.lenderName, undefined);
+    assert.equal(empty?.response, undefined);
+    assert.equal(empty?.messageClass, undefined);
   });
 });

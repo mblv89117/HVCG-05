@@ -15,8 +15,25 @@ import { emptyState, type CapitalState } from './store.ts';
 
 export const CAPITAL_OVERLAY_SCHEMA_VERSION = 1;
 
+export class OverlayCorruptError extends Error {
+  readonly code = 'CAPITAL_OVERLAY_CORRUPT';
+  constructor(message: string) {
+    super(message);
+    this.name = 'OverlayCorruptError';
+  }
+}
+
+export class OverlayUnsupportedSchemaError extends Error {
+  readonly code = 'CAPITAL_OVERLAY_SCHEMA';
+  constructor(message: string) {
+    super(message);
+    this.name = 'OverlayUnsupportedSchemaError';
+  }
+}
+
 export type CapitalOverlay = Pick<
   CapitalState,
+  | 'opportunities'
   | 'strategies'
   | 'documents'
   | 'reviews'
@@ -35,6 +52,7 @@ export function emptyOverlay(): CapitalOverlay {
   const s = emptyState();
   return {
     schemaVersion: CAPITAL_OVERLAY_SCHEMA_VERSION,
+    opportunities: s.opportunities,
     strategies: s.strategies,
     documents: s.documents,
     reviews: s.reviews,
@@ -58,17 +76,17 @@ export function emptyOverlay(): CapitalOverlay {
 export function resolveCapitalOverlayDir(dataDir: string, env: NodeJS.ProcessEnv = process.env): string {
   const explicit = (env.INTEGRATION_CAPITAL_OVERLAY_DIR || '').trim();
   if (explicit) return explicit;
+  const fromEnv = (env.INTEGRATION_DATA_DIR || '').trim();
+  if (fromEnv) return join(fromEnv, 'capital-overlay');
   if ((env.HOME || '') === '/home') {
     const preferred = '/home/data/atlas-capital';
     try {
       mkdirSync(preferred, { recursive: true, mode: 0o700 });
       return preferred;
     } catch {
-      /* fall through to INTEGRATION_DATA_DIR */
+      /* fall through to dataDir */
     }
   }
-  const fromEnv = (env.INTEGRATION_DATA_DIR || '').trim();
-  if (fromEnv) return join(fromEnv, 'capital-overlay');
   return join(dataDir, 'capital-overlay');
 }
 
@@ -79,32 +97,94 @@ export function overlayFilePath(dir: string): string {
 export function readCapitalOverlay(dir: string): CapitalOverlay | null {
   const path = overlayFilePath(dir);
   if (!existsSync(path)) return null;
+  let raw: string;
   try {
-    const parsed = JSON.parse(readFileSync(path, 'utf8')) as CapitalOverlay;
-    const base = emptyOverlay();
-    return {
-      ...base,
-      ...parsed,
-      schemaVersion: parsed.schemaVersion || CAPITAL_OVERLAY_SCHEMA_VERSION,
-      checklists: parsed.checklists || {},
-      factReviews: parsed.factReviews || [],
-    };
-  } catch {
-    return null;
+    raw = readFileSync(path, 'utf8');
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === 'EACCES' || code === 'EPERM' || code === 'EROFS') {
+      throw new OverlayCorruptError('Capital overlay is unreadable');
+    }
+    throw err;
   }
+  if (!raw.trim()) {
+    throw new OverlayCorruptError('Capital overlay is empty');
+  }
+  let parsed: CapitalOverlay;
+  try {
+    parsed = JSON.parse(raw) as CapitalOverlay;
+  } catch {
+    throw new OverlayCorruptError('Capital overlay could not be parsed');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new OverlayCorruptError('Capital overlay is not an object');
+  }
+  const ver = parsed.schemaVersion || CAPITAL_OVERLAY_SCHEMA_VERSION;
+  if (ver > CAPITAL_OVERLAY_SCHEMA_VERSION) {
+    throw new OverlayUnsupportedSchemaError(
+      `Capital overlay schemaVersion ${ver} is newer than runtime ${CAPITAL_OVERLAY_SCHEMA_VERSION}`,
+    );
+  }
+  const base = emptyOverlay();
+  return {
+    ...base,
+    ...parsed,
+    schemaVersion: ver,
+    opportunities: parsed.opportunities || [],
+    checklists: parsed.checklists || {},
+    factReviews: parsed.factReviews || [],
+  };
 }
+
+const overlayWriteLocks = new Map<string, Promise<void>>();
 
 export function writeCapitalOverlay(dir: string, overlay: CapitalOverlay): void {
   mkdirSync(dir, { recursive: true, mode: 0o700 });
   const path = overlayFilePath(dir);
-  const tmp = `${path}.${process.pid}.tmp`;
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
   const payload = JSON.stringify({ ...overlay, schemaVersion: CAPITAL_OVERLAY_SCHEMA_VERSION }, null, 2);
   writeFileSync(tmp, payload, { mode: 0o600 });
   renameSync(tmp, path);
 }
 
+/** In-process serialization. Not a distributed lock — single App Service instance only. */
+export async function withOverlayWriteLock<T>(dir: string, fn: () => Promise<T> | T): Promise<T> {
+  const prev = overlayWriteLocks.get(dir) ?? Promise.resolve();
+  let release!: () => void;
+  const gate = new Promise<void>((r) => {
+    release = r;
+  });
+  overlayWriteLocks.set(dir, prev.then(() => gate));
+  await prev;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
 export function applyOverlayToState(state: CapitalState, overlay: CapitalOverlay | null): CapitalState {
   if (!overlay) return state;
+  if (overlay.opportunities?.length) {
+    const byId = new Map(state.opportunities.map((o) => [o.id, o]));
+    for (const row of overlay.opportunities) {
+      const graph = byId.get(row.id);
+      if (!graph) {
+        state.opportunities.push(row);
+        continue;
+      }
+      byId.set(row.id, {
+        ...graph,
+        stage: row.stage || graph.stage,
+        stageEnteredAt: row.stageEnteredAt || graph.stageEnteredAt,
+        mannyStrategyApproval: row.mannyStrategyApproval || graph.mannyStrategyApproval,
+        mannyShortlistApproval: row.mannyShortlistApproval || graph.mannyShortlistApproval,
+        nextAction: row.nextAction || graph.nextAction,
+        updatedAt: row.updatedAt || graph.updatedAt,
+      });
+    }
+    state.opportunities = state.opportunities.map((o) => byId.get(o.id) || o);
+  }
   state.strategies = overlay.strategies?.length ? overlay.strategies : state.strategies;
   state.documents = overlay.documents || [];
   state.reviews = overlay.reviews || [];
@@ -148,6 +228,7 @@ export function applyOverlayToState(state: CapitalState, overlay: CapitalOverlay
 export function overlayFromState(state: CapitalState): CapitalOverlay {
   return {
     schemaVersion: CAPITAL_OVERLAY_SCHEMA_VERSION,
+    opportunities: state.opportunities,
     strategies: state.strategies,
     documents: state.documents,
     reviews: state.reviews,

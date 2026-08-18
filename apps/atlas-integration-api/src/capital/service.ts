@@ -49,6 +49,8 @@ import {
   summarizeHvcgExperience,
   toQueueItem,
   buildMannyStrategyPackage,
+  buildOutreachHistorySnapshot,
+  isStrategyWorkbenchOpen,
   type Attribution,
   type CapitalOpportunity,
   type CapitalStage,
@@ -93,7 +95,10 @@ function nowIso(): string {
 }
 
 function opportunityClientIndex(state: CapitalState) {
-  return state.opportunities.map((o) => ({ id: o.id, clientCode: o.clientCode }));
+  return state.opportunities.map((o) => ({
+    id: o.id,
+    clientCode: o.clientCode,
+  }));
 }
 
 function asRecord(v: unknown): Record<string, unknown> {
@@ -863,6 +868,13 @@ export class CapitalService {
   async strategy(principal: AtlasPrincipal, id: string) {
     const state = await this.store.load();
     const opp = requireOpp(state, principal, id);
+    if (!isStrategyWorkbenchOpen(opp.stage)) {
+      throw new CapitalHttpError(
+        403,
+        'STRATEGY_STAGE_CLOSED',
+        `Strategy workbench is closed at stage ${opp.stage}. Create or use a pre-submission opportunity. Submitted and later stages cannot draft a new strategy package.`,
+      );
+    }
     const uw =
       state.underwriting.find((u) => u.capitalOpportunityId === id) ||
       buildUnderwritingSummary({
@@ -883,6 +895,7 @@ export class CapitalService {
       opportunity: overlayOpportunityFromReviews(opp, state.reviews.filter((r) => r.capitalOpportunityId === id)).opportunity,
       matches: run.matches,
       checklist: state.checklists[id] || [],
+      risks: strat.risks,
     });
     state.strategies = state.strategies.filter((s) => s.capitalOpportunityId !== id);
     state.strategies.push(strat);
@@ -917,6 +930,9 @@ export class CapitalService {
           opp.stageEnteredAt = nowIso();
         } else throw err;
       }
+    } else if (decision === 'REVISE') {
+      opp.stage = 'StrategyDrafted';
+      opp.stageEnteredAt = nowIso();
     }
     await this.store.save(state);
     return { strategy: strat, opportunity: opp };
@@ -944,16 +960,29 @@ export class CapitalService {
         ...lender,
         freshness: organizationFreshness(lender),
         products: state.products.filter((p) => p.lenderId === lender.id).map((p) => productFreshness(p)),
-        historicalExperience: summarizeHvcgExperience(state.submissions, lender.id),
+        historicalExperience: summarizeHvcgExperience(state.submissions, lender.id, lender.name),
         historicalIntelligence: summarizeHistoricalLenderIntelligence({
           outreach: state.submissions,
           lenderId: lender.id,
+          lenderName: lender.name,
         }),
       })),
+      outreachHistory: buildOutreachHistorySnapshot({
+        outreach: state.submissions,
+        lenders: state.lenders,
+      }),
       criteria: catalog.criteria,
       review: { status: 'PENDING_MANNY' as const, disclaimer: FINANCING_DISCLAIMER },
       inventedCriteria: false,
     };
+  }
+
+  async outreachHistory(_principal: AtlasPrincipal) {
+    const state = await this.store.load();
+    return buildOutreachHistorySnapshot({
+      outreach: state.submissions,
+      lenders: state.lenders,
+    });
   }
 
   async addProduct(principal: AtlasPrincipal, lenderId: string, body: Record<string, unknown>) {

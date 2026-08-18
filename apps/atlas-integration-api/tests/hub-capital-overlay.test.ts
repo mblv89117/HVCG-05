@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { buildSyntheticPdf } from '@hvcg/atlas-capital-core';
@@ -12,11 +12,14 @@ import { MemoryCapitalFileSource } from '../src/capital/sharepoint/files.ts';
 import { CapitalHttpError } from '../src/capital/errors.ts';
 import {
   applyOverlayToState,
+  OverlayCorruptError,
+  OverlayUnsupportedSchemaError,
   overlayFromState,
   readCapitalOverlay,
   resolveCapitalOverlayDir,
   writeCapitalOverlay,
 } from '../src/capital/overlay.ts';
+import { inspectCapitalOverlayHealth } from '../src/capital/overlay-health.ts';
 import { emptyState } from '../src/capital/store.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 
@@ -399,6 +402,83 @@ describe('SharePoint overlay recycle + ingest identity', () => {
     assert.ok(stolen instanceof CapitalHttpError);
     assert.equal((stolen as CapitalHttpError).status, 403);
 
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe('overlay fail-closed + durability health truth', () => {
+  it('throws on empty, malformed, and future schema overlay files', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-overlay-fail-'));
+    try {
+      writeFileSync(join(dir, 'capital-intelligence-overlay.json'), '', { mode: 0o600 });
+      assert.throws(() => readCapitalOverlay(dir), OverlayCorruptError);
+      writeFileSync(join(dir, 'capital-intelligence-overlay.json'), '{not json', { mode: 0o600 });
+      assert.throws(() => readCapitalOverlay(dir), OverlayCorruptError);
+      writeFileSync(
+        join(dir, 'capital-intelligence-overlay.json'),
+        JSON.stringify({ schemaVersion: 99, factReviews: [] }),
+        { mode: 0o600 },
+      );
+      assert.throws(() => readCapitalOverlay(dir), OverlayUnsupportedSchemaError);
+      assert.equal(readCapitalOverlay(join(dir, 'missing')), null);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports recycleSurvivable from /home data dir, not HOME===/home', () => {
+    const health = inspectCapitalOverlayHealth('/tmp/wwwroot', {
+      INTEGRATION_DATA_DIR: '/home/webapp_data/integrations',
+      HOME: '/home/web_sierra',
+      WEBSITE_RUN_FROM_PACKAGE: '0',
+      WEBSITE_SKU: 'Basic',
+    } as NodeJS.ProcessEnv);
+    assert.equal(health.dataDirectory, '/home/webapp_data/integrations/capital-overlay');
+    assert.equal(health.persistentStorageConfigured, true);
+    assert.equal(health.recycleSurvivable, true);
+    assert.equal(health.redeploySurvivable, true);
+    assert.equal(health.multiInstanceSafe, false);
+    assert.equal(health.scaleConstraint, 'single-instance-overlay');
+    assert.equal(health.deploymentModelObserved.dataDirUnderHome, true);
+  });
+
+  it('keeps strategy workbench closed on Submitted and open on NeedIdentified', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-strategy-gate-'));
+    const overlayDir = join(dir, 'capital-overlay');
+    const graph = new MemoryGraph();
+    graph.seed(CLIENTS, { Title: 'Alder & Co.', ClientCode: 'ACCG01' }, '1');
+    graph.seed(
+      OPPORTUNITIES,
+      {
+        Title: 'ACCG working capital pre-sub',
+        ClientCode: 'ACCG01',
+        Stage: 'NeedIdentified',
+        TargetAmount: 250000,
+      },
+      '2',
+    );
+    graph.seed(
+      OPPORTUNITIES,
+      {
+        Title: 'SYNTHETIC QA Atlas Capital submitted — do not mutate',
+        ClientCode: 'ACCG01',
+        Stage: 'Submitted',
+        TargetAmount: 250000,
+      },
+      '3',
+    );
+    const store = new AsyncCapitalStore(new GraphCapitalStore(SETTINGS, graph), { overlayDir });
+    const svc = new CapitalService(store, new MemoryCapitalFileSource());
+    const open = await svc.strategy(OWNER, '2');
+    assert.ok(open.mannyPackage);
+    assert.equal(open.mannyPackage.mannyWorkflow.externalSubmit, false);
+    assert.equal(open.strategy.mannyApproval, 'PENDING');
+    await assert.rejects(() => svc.strategy(OWNER, '3'), (err: unknown) => {
+      assert.ok(err instanceof CapitalHttpError);
+      assert.equal(err.status, 403);
+      assert.equal(err.code, 'STRATEGY_STAGE_CLOSED');
+      return true;
+    });
     rmSync(dir, { recursive: true, force: true });
   });
 });

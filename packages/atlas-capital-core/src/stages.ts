@@ -43,6 +43,22 @@ export const MANNY_APPROVAL_STAGES: readonly CapitalStage[] = [
   'AwaitingMannyShortlistApproval',
 ];
 
+/** Pre-submission stages where POST /strategy may draft a package. Submitted+ stays closed. */
+export const STRATEGY_WORKBENCH_STAGES: readonly CapitalStage[] = [
+  'NeedIdentified',
+  'InitialQualification',
+  'DocumentsRequested',
+  'DocumentsInProgress',
+  'DocumentsComplete',
+  'FinancialUnderwritingReview',
+  'StrategyDrafted',
+  'AwaitingMannyStrategyApproval',
+];
+
+export function isStrategyWorkbenchOpen(stage: CapitalStage): boolean {
+  return (STRATEGY_WORKBENCH_STAGES as readonly string[]).includes(stage);
+}
+
 /** Legacy SharePoint FundingStatus → operational stage (lossy, documented). */
 export const LEGACY_FUNDING_STATUS_TO_STAGE: Record<string, CapitalStage> = {
   Identified: 'NeedIdentified',

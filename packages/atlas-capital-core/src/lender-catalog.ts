@@ -15,12 +15,15 @@ import type {
   SourceRef,
 } from './types.ts';
 
-export const CATALOG_VERIFIED_AT = '2026-08-17T00:00:00.000Z';
+export const CATALOG_VERIFIED_AT = '2026-08-18T00:00:00.000Z';
 export const CATALOG_VERIFIED_BY = 'atlas-catalog-official';
 
 const SBA_7A = 'https://www.sba.gov/loans/7a-loans/';
 const SBA_504 = 'https://www.sba.gov/funding-programs/loans/504-loans';
 const SBA_7A_TYPES = 'https://www.sba.gov/partners/lenders/7a-loan-program/types-7a-loans';
+const SBA_MICRO = 'https://www.sba.gov/funding-programs/loans/microloans';
+const FIRST_CITIZENS_SBA =
+  'https://www.firstcitizens.com/small-business/credit-financing/business-financing/sba-term-loans';
 const LIVE_OAK_7A = 'https://www.liveoak.bank/business-loans/sba-loans/';
 const LIVE_OAK_EXPRESS = 'https://www.liveoak.bank/business-loans/live-oak-express/';
 const JPM_ABL = 'https://www.jpmorgan.com/credit-and-financing/asset-based-lending';
@@ -76,6 +79,66 @@ export const CATALOG_RESEARCH_REJECTIONS: Array<{ name: string; url: string; rea
     name: 'Bank of America cash-secured credit line',
     url: BOFA_FINANCING,
     reason: 'Security-deposit product ($1,000) is not an HVCG commercial WC structure.',
+  },
+  {
+    name: 'Bank of America unsecured term loan amount band',
+    url: BOFA_FINANCING,
+    reason: 'Official page states TIB and revenue qualifications but no min/max loan amount. Amount band left UNKNOWN.',
+  },
+  {
+    name: 'Celtic Bank SBA 504',
+    url: 'https://www.celticbank.com/sba-504-loans/',
+    reason: 'Official 504 URL returned 404 during this verification pass.',
+  },
+  {
+    name: 'Huntington Business Line of Credit amount band',
+    url: 'https://www.huntington.com/SmallBusiness/loans/business-line-of-credit',
+    reason: 'Official LOC page has no stated min/max. Not recorded as CURRENT amount support.',
+  },
+  {
+    name: 'First Citizens SBA 504 amount',
+    url: FIRST_CITIZENS_SBA,
+    reason: 'Table states up to $13.5 million vs disclosures of $5M / $5.5M SBA portion. Conflicting official ranges not recorded as CURRENT min/max.',
+  },
+  {
+    name: 'SBA CAPLines as a distinct envelope',
+    url: SBA_7A_TYPES,
+    reason: 'CAPLines subsection does not restate a distinct maximum; SOP 50 10 is cited. Not recorded as a separate CURRENT max.',
+  },
+  {
+    name: 'J.P. Morgan Commercial Term Lending',
+    url: 'https://www.jpmorgan.com/commercial-real-estate/commercial-term-lending',
+    reason: 'Official ranges are stabilized multifamily/investment CRE, not owner-occupied small-business CRE.',
+  },
+  {
+    name: 'J.P. Morgan equipment financing min/max',
+    url: 'https://www.jpmorgan.com/credit-and-financing/equipment-financing',
+    reason: 'Product page has no official facility min/max. Insight-article “around $100,000” is not a product box.',
+  },
+  {
+    name: 'Wells Fargo ABL product page',
+    url: 'https://www.wellsfargo.com/com/financing/asset-based-lending/',
+    reason: 'Official URL returned 404 during this verification pass.',
+  },
+  {
+    name: 'Stearns Bank SBA lending page',
+    url: 'https://www.stearnsbank.com/sba-lending/',
+    reason: 'Official URL returned 404 during this verification pass.',
+  },
+  {
+    name: 'Bank of America SBA loans product page',
+    url: 'https://www.bankofamerica.com/smallbusiness/business-financing/sba-loans/',
+    reason: 'Official SBA product URL returned 404; financing hub links SBA without a stated 7(a) min/max.',
+  },
+  {
+    name: 'U.S. Bank SBA loans product page',
+    url: 'https://www.usbank.com/business-banking/sba-loans.html',
+    reason: 'Official SBA URL returned 404 during this verification pass.',
+  },
+  {
+    name: 'Celtic Bank FICO / DSCR invented from third parties',
+    url: CELTIC_7A,
+    reason: 'Refused to invent FICO, DSCR, or TIB minima. Official 7(a) page is silent. UNKNOWN.',
   },
 ];
 
@@ -185,6 +248,7 @@ const sba504 = officialProduct({
   productName: 'SBA 504 CDC / debenture',
   productCategory: 'sba',
   maxAmount: 5_500_000,
+  minAmount: 25_000,
   sbaParticipation: true,
   realEstateAppetite: true,
   equipmentAppetite: true,
@@ -401,6 +465,148 @@ const newtekRevolving = officialProduct({
     'Official: revolving lines of credit backed by accounts receivable and inventory; up to $5 million available. Minimum amount is not stated. Not labeled as SBA 7(a).',
 });
 
+const sbaMicro = officialProduct({
+  id: 'pr-catalog-sba-micro',
+  lenderId: sba.id,
+  productName: 'SBA Microloan program envelope',
+  productCategory: 'working_capital_loc',
+  maxAmount: 50_000,
+  sbaParticipation: true,
+  equipmentAppetite: true,
+  geography: 'US',
+  source: SBA_MICRO,
+  otherCriteria:
+    'Official: loans up to $50,000 via intermediary lenders; average about $13,000. Cannot be used to pay existing debts or to purchase real estate. TIB/FICO/min revenue not stated.',
+});
+
+const sba7aSmall = officialProduct({
+  id: 'pr-catalog-sba-7a-small',
+  lenderId: sba.id,
+  productName: 'SBA 7(a) Small program envelope',
+  productCategory: 'sba',
+  maxAmount: 350_000,
+  sbaParticipation: true,
+  geography: 'US',
+  source: SBA_7A_TYPES,
+  otherCriteria:
+    'Official: term (non-revolving) 7(a) loans $350,000 or less. Distinct from SBA Express. Lender overlays unknown. TIB/FICO/min revenue not stated on this page.',
+});
+
+const sbaExportExpress = officialProduct({
+  id: 'pr-catalog-sba-export-express',
+  lenderId: sba.id,
+  productName: 'SBA Export Express program envelope',
+  productCategory: 'sba_express',
+  maxAmount: 500_000,
+  sbaParticipation: true,
+  geography: 'US',
+  source: SBA_7A_TYPES,
+  otherCriteria:
+    'Official: maximum loan amount $500,000; revolving lines may not exceed seven years. For export development. Lender overlays unknown.',
+});
+
+const sbaEwcp = officialProduct({
+  id: 'pr-catalog-sba-ewcp',
+  lenderId: sba.id,
+  productName: 'SBA 7(a) Export Working Capital Program',
+  productCategory: 'sba_working_capital',
+  maxAmount: 5_000_000,
+  sbaParticipation: true,
+  arEligible: true,
+  inventoryEligible: true,
+  geography: 'US',
+  source: SBA_7A_TYPES,
+  otherCriteria:
+    'Official: maximum loan amount $5 million; 90% guarantee; revolving terms 36 months or less. For export sales working capital. TIB/FICO/min revenue not stated on this page.',
+});
+
+const sbaMarc = officialProduct({
+  id: 'pr-catalog-sba-marc',
+  lenderId: sba.id,
+  productName: 'SBA Manufacturers Access to Revolving Credit (MARC)',
+  productCategory: 'sba_working_capital',
+  maxAmount: 5_000_000,
+  sbaParticipation: true,
+  arEligible: true,
+  industriesRequired: ['manufacturing'],
+  geography: 'US',
+  source: SBA_7A_TYPES,
+  otherCriteria:
+    'Official: available only to manufacturing NAICS sectors 31-33. Maximum $5 million. Revolving maturity up to 20 years (10 revolving / 10 term). TIB/FICO/min revenue not stated on this page.',
+});
+
+const bylineExpress = officialProduct({
+  id: 'pr-catalog-byline-express',
+  lenderId: byline.id,
+  productName: 'Byline Express (conventional under $500k)',
+  productCategory: 'working_capital_loc',
+  minAmount: 50_000,
+  maxAmount: 500_000,
+  equipmentAppetite: true,
+  inventoryEligible: true,
+  source: BYLINE_LOANS,
+  otherCriteria:
+    'Official loans page: Business Banking financing options from $50,000 to $3 million; Byline Express is traditional or term loans under $500,000 for working capital, equipment, or inventory. FICO/DSCR/TIB not stated.',
+});
+
+const firstCitizens7a = officialProduct({
+  id: 'pr-catalog-firstcitizens-7a',
+  lenderId: firstCitizens.id,
+  productName: 'First Citizens SBA 7(a)',
+  productCategory: 'sba',
+  minAmount: 400_000,
+  maxAmount: 5_000_000,
+  sbaParticipation: true,
+  acquisitionAppetite: true,
+  equipmentAppetite: true,
+  realEstateAppetite: true,
+  constructionAppetite: true,
+  source: FIRST_CITIZENS_SBA,
+  otherCriteria:
+    'Official table: SBA 7(a) $400,000 to $5 million. Uses include acquisition, WC, equipment, construction, and CRE. Offered in all US states except Vermont (exclusion is unstructured sourced text, not a parsed state engine). TIB/FICO/min revenue not stated.',
+});
+
+const firstCitizensExpress = officialProduct({
+  id: 'pr-catalog-firstcitizens-express',
+  lenderId: firstCitizens.id,
+  productName: 'First Citizens SBA Express',
+  productCategory: 'sba_express',
+  minAmount: 50_000,
+  maxAmount: 400_000,
+  sbaParticipation: true,
+  equipmentAppetite: true,
+  source: FIRST_CITIZENS_SBA,
+  otherCriteria:
+    'Official table: SBA Express $50,000 to $400,000 for working capital and nontitled equipment. Lender overlay is below the federal Express $500,000 cap. TIB/FICO/min revenue not stated.',
+});
+
+const newtekTerm = officialProduct({
+  id: 'pr-catalog-newtek-term',
+  lenderId: newtek.id,
+  productName: 'Newtek term loan',
+  productCategory: 'conventional_bank_loan',
+  minAmount: 5_000,
+  maxAmount: 15_000_000,
+  acquisitionAppetite: true,
+  realEstateAppetite: true,
+  source: NEWTEK_LENDING,
+  otherCriteria:
+    'Official: term loans $5,000 to $15 million; uses include expand/acquire, refinance, working capital, and owner-occupied real estate. Not labeled as SBA 7(a). FICO/DSCR/TIB/min revenue not stated.',
+});
+
+const bofaSecuredLoc = officialProduct({
+  id: 'pr-catalog-bofa-secured-loc',
+  lenderId: bofa.id,
+  productName: 'Bank of America secured business line of credit',
+  productCategory: 'working_capital_loc',
+  minAmount: 25_000,
+  minRevenue: 250_000,
+  timeInBusinessMonths: 24,
+  source: BOFA_FINANCING,
+  otherCriteria:
+    'Official: loan amount from $25,000; revolving with annual renewal; minimum 2 years in business under existing ownership; minimum $250,000 in annual revenue. Typically secured by a blanket lien or CD. Maximum amount is not stated.',
+});
+
 export const SOURCED_LENDERS: LenderOrganization[] = [
   sba,
   liveOak,
@@ -433,6 +639,16 @@ export const SOURCED_PRODUCTS: LenderProduct[] = [
   bofaCre,
   firstCitizensAbl,
   newtekRevolving,
+  sbaMicro,
+  sba7aSmall,
+  sbaExportExpress,
+  sbaEwcp,
+  sbaMarc,
+  bylineExpress,
+  firstCitizens7a,
+  firstCitizensExpress,
+  newtekTerm,
+  bofaSecuredLoc,
 ];
 
 export const SOURCED_CRITERIA: LenderCriterionRecord[] = [
@@ -440,6 +656,15 @@ export const SOURCED_CRITERIA: LenderCriterionRecord[] = [
   criterion({ lender: sba, product: sba7a, criterion: 'sbaParticipation', value: true, field: 'SBAParticipation', sourceType: 'sba_government', url: SBA_7A }),
   criterion({ lender: sba, product: sbaWcp, criterion: 'maxAmount', value: 5_000_000, field: 'MaxAmount', sourceType: 'sba_government', url: SBA_7A }),
   criterion({ lender: sba, product: sbaWcp, criterion: 'timeInBusinessMonths', value: 12, field: 'TimeInBusinessMonths', sourceType: 'sba_government', url: SBA_7A }),
+  criterion({
+    lender: sba,
+    product: sba504,
+    criterion: 'minAmount',
+    value: 25_000,
+    field: 'MinAmount',
+    sourceType: 'sba_government',
+    url: SBA_7A_TYPES,
+  }),
   criterion({ lender: sba, product: sba504, criterion: 'maxAmount', value: 5_500_000, field: 'MaxAmount', sourceType: 'sba_government', url: SBA_504 }),
   criterion({
     lender: sba,
@@ -667,6 +892,103 @@ export const SOURCED_CRITERIA: LenderCriterionRecord[] = [
     field: 'AREligible',
     sourceType: 'official_website',
     url: NEWTEK_LENDING,
+  }),
+  criterion({ lender: sba, product: sbaMicro, criterion: 'maxAmount', value: 50_000, field: 'MaxAmount', sourceType: 'sba_government', url: SBA_MICRO }),
+  criterion({ lender: sba, product: sba7aSmall, criterion: 'maxAmount', value: 350_000, field: 'MaxAmount', sourceType: 'sba_government', url: SBA_7A_TYPES }),
+  criterion({
+    lender: sba,
+    product: sbaExportExpress,
+    criterion: 'maxAmount',
+    value: 500_000,
+    field: 'MaxAmount',
+    sourceType: 'sba_government',
+    url: SBA_7A_TYPES,
+  }),
+  criterion({ lender: sba, product: sbaEwcp, criterion: 'maxAmount', value: 5_000_000, field: 'MaxAmount', sourceType: 'sba_government', url: SBA_7A_TYPES }),
+  criterion({ lender: sba, product: sbaMarc, criterion: 'maxAmount', value: 5_000_000, field: 'MaxAmount', sourceType: 'sba_government', url: SBA_7A_TYPES }),
+  criterion({
+    lender: sba,
+    product: sbaMarc,
+    criterion: 'industriesRequired',
+    value: 'manufacturing',
+    field: 'IndustriesRequired',
+    sourceType: 'sba_government',
+    url: SBA_7A_TYPES,
+  }),
+  criterion({ lender: byline, product: bylineExpress, criterion: 'minAmount', value: 50_000, field: 'MinAmount', sourceType: 'official_website', url: BYLINE_LOANS }),
+  criterion({ lender: byline, product: bylineExpress, criterion: 'maxAmount', value: 500_000, field: 'MaxAmount', sourceType: 'official_website', url: BYLINE_LOANS }),
+  criterion({
+    lender: firstCitizens,
+    product: firstCitizens7a,
+    criterion: 'minAmount',
+    value: 400_000,
+    field: 'MinAmount',
+    sourceType: 'official_website',
+    url: FIRST_CITIZENS_SBA,
+  }),
+  criterion({
+    lender: firstCitizens,
+    product: firstCitizens7a,
+    criterion: 'maxAmount',
+    value: 5_000_000,
+    field: 'MaxAmount',
+    sourceType: 'official_website',
+    url: FIRST_CITIZENS_SBA,
+  }),
+  criterion({
+    lender: firstCitizens,
+    product: firstCitizensExpress,
+    criterion: 'minAmount',
+    value: 50_000,
+    field: 'MinAmount',
+    sourceType: 'official_website',
+    url: FIRST_CITIZENS_SBA,
+  }),
+  criterion({
+    lender: firstCitizens,
+    product: firstCitizensExpress,
+    criterion: 'maxAmount',
+    value: 400_000,
+    field: 'MaxAmount',
+    sourceType: 'official_website',
+    url: FIRST_CITIZENS_SBA,
+  }),
+  criterion({ lender: newtek, product: newtekTerm, criterion: 'minAmount', value: 5_000, field: 'MinAmount', sourceType: 'official_website', url: NEWTEK_LENDING }),
+  criterion({
+    lender: newtek,
+    product: newtekTerm,
+    criterion: 'maxAmount',
+    value: 15_000_000,
+    field: 'MaxAmount',
+    sourceType: 'official_website',
+    url: NEWTEK_LENDING,
+  }),
+  criterion({
+    lender: bofa,
+    product: bofaSecuredLoc,
+    criterion: 'minAmount',
+    value: 25_000,
+    field: 'MinAmount',
+    sourceType: 'official_website',
+    url: BOFA_FINANCING,
+  }),
+  criterion({
+    lender: bofa,
+    product: bofaSecuredLoc,
+    criterion: 'minRevenue',
+    value: 250_000,
+    field: 'MinRevenue',
+    sourceType: 'official_website',
+    url: BOFA_FINANCING,
+  }),
+  criterion({
+    lender: bofa,
+    product: bofaSecuredLoc,
+    criterion: 'timeInBusinessMonths',
+    value: 24,
+    field: 'TimeInBusinessMonths',
+    sourceType: 'official_website',
+    url: BOFA_FINANCING,
   }),
 ];
 

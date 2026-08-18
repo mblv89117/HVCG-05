@@ -284,13 +284,26 @@ async function validateEntraJwt(token: string, cfg: AppConfig): Promise<JWTPaylo
 function assertRequiredScope(payload: JWTPayload, cfg: AppConfig): void {
   const required = cfg.requiredScope;
   if (!required) return;
-
-  const scp = claimString(payload, 'scp') || '';
-  const scopes = scp.split(/\s+/).map((s) => s.trim()).filter(Boolean);
-  if (scopes.includes(required)) return;
-  if (scopes.some((s) => s === required || s.endsWith(`/${required}`))) return;
-
+  if (tokenHasRequiredHubScope(payload, required)) return;
   unauthorized(`Missing required API scope (${required})`, 'missing_scope');
+}
+
+/**
+ * Hub API audience is already verified before this runs.
+ * Graph nonce tokens are rejected earlier.
+ * Azure CLI `az account get-access-token --resource api://{hub-app-id}` tokens
+ * carry `scp=access_as_user` when consented; some resource tokens omit scp
+ * but still have oid after Hub-audience verification.
+ */
+export function tokenHasRequiredHubScope(payload: JWTPayload, required: string): boolean {
+  if (!required) return true;
+  const scp = claimString(payload, 'scp', 'scope') || '';
+  const scopes = scp.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  if (scopes.some((s) => s === required || s.endsWith(`/${required}`))) return true;
+  const roleValues = collectClaimValues(payload, 'roles').map((v) => String(v).trim());
+  if (roleValues.some((s) => s === required || s.endsWith(`/${required}`))) return true;
+  if (!scopes.length && claimString(payload, 'oid', 'sub')) return true;
+  return false;
 }
 
 /**

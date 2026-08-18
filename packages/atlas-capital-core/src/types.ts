@@ -87,6 +87,20 @@ export const LENDER_MESSAGE_CLASSES = [
 ] as const;
 export type LenderMessageClass = (typeof LENDER_MESSAGE_CLASSES)[number];
 
+/** HVCG_LenderOutreach.Response. Blank/missing stays unknown — never inferred. */
+export const LENDER_OUTREACH_RESPONSES = [
+  'None',
+  'Interested',
+  'Pass',
+  'Underwriting',
+  'Term Sheet',
+  'Declined',
+] as const;
+export type LenderOutreachResponse = (typeof LENDER_OUTREACH_RESPONSES)[number];
+
+/** Sourced historical outcome. Conflicting signals stay unknown. Never a fit or future certainty. */
+export type HistoricalOutcome = 'approved' | 'declined' | 'unknown';
+
 export const WORK_QUEUES = [
   'NEEDS_ATTENTION',
   'AWAITING_CLIENT',
@@ -428,6 +442,8 @@ export interface LenderCriterionRecord {
   lastVerified: string;
   confidence: number;
   freshness: LenderFreshness;
+  /** Official published or effective date when known. Omitted when unknown — never invented. */
+  publishedOrEffectiveDate?: string;
 }
 
 export interface DocumentReview {
@@ -583,9 +599,12 @@ export interface HvcgLenderExperience {
   declinedCount: number;
   offerCount: number;
   fundedCount: number;
+  extraDocsRequestedCount: number;
   lastOutreachAt?: string;
   lastResponse?: string;
+  lastMessageClass?: string;
   lastSubmissionStatus?: string;
+  lastOutcome: HistoricalOutcome;
   sourceRefs: SourceRef[];
 }
 
@@ -595,14 +614,35 @@ export interface HistoricalLenderAggregate {
   submittedCount: number;
   declinedCount: number;
   offerCount: number;
+  fundedCount: number;
+  extraDocsRequestedCount: number;
   lastStatus?: string;
+  lastResponse?: string;
+  lastMessageClass?: string;
   lastOutreachAt?: string;
+  lastOutcome: HistoricalOutcome;
+  productKnown: boolean;
+  requestSizeKnown: false;
+  declineReasonKnown: boolean;
+  exceptionsKnown: false;
+  responseTimeKnown: false;
+  fundedOutcome: 'funded' | 'not_recorded';
 }
 
 export interface HistoricalSameClientContext {
   outreachCount: number;
   lastStatus?: string;
+  lastResponse?: string;
+  lastMessageClass?: string;
   lastOutreachAt?: string;
+  lastOutcome: HistoricalOutcome;
+  /** Same-client historical opportunity amount only. Never copied into lenderAggregate. */
+  requestedAmount?: number | null;
+  requestSizeKnown: boolean;
+  productKnown: boolean;
+  declineReasonKnown: boolean;
+  extraDocsRequestedCount: number;
+  fundedCount: number;
 }
 
 export interface HistoricalLenderIntelligence {
@@ -614,6 +654,7 @@ export interface HistoricalLenderIntelligence {
   lenderAggregate: HistoricalLenderAggregate;
   notAFit: true;
   notFutureCertainty: true;
+  notAStatisticalClaim: true;
   explanation: string;
   sourceRefs: SourceRef[];
 }
@@ -621,6 +662,34 @@ export interface HistoricalLenderIntelligence {
 export interface OpportunityClientIndexRow {
   id: string;
   clientCode: string;
+  /** Viewing-client amount lookup only. Never used in cross-client aggregates. */
+  requestedAmount?: number | null;
+}
+
+export interface OutreachHistoryLenderRow {
+  lenderId: string;
+  lenderName?: string;
+  unresolved: boolean;
+  signals: HistoricalLenderAggregate;
+}
+
+export interface OutreachHistorySnapshot {
+  sourceSystem: 'HVCG_LenderOutreach';
+  rowCount: number;
+  mappedRowCount: number;
+  unresolvedRowCount: number;
+  lendersWithOutreach: number;
+  isolation: {
+    clientIdentifiersOmitted: true;
+    amountsOmitted: true;
+    notesOmitted: true;
+    titlesOmitted: true;
+  };
+  notAFit: true;
+  notFutureCertainty: true;
+  notAStatisticalClaim: true;
+  disclaimer: string;
+  lenders: OutreachHistoryLenderRow[];
 }
 
 export interface MannyStrategyFactRow {
@@ -639,6 +708,9 @@ export interface MannyStrategyLenderCandidate {
   unknown: string[];
   stale: boolean;
   historicalContext?: string;
+  unknownCriticalCriteria?: string[];
+  supportedCriteria?: string[];
+  disqualifiers?: string[];
 }
 
 export interface MannyStrategyPackage {
@@ -655,8 +727,15 @@ export interface MannyStrategyPackage {
     unverified: MannyStrategyFactRow[];
     missing: string[];
   };
+  risks: string[];
   structures: FinancingStructure[];
   lenderCandidates: MannyStrategyLenderCandidate[];
+  mannyWorkflow: {
+    approve: 'APPROVED';
+    revise: 'REVISE';
+    reject: 'REJECTED';
+    externalSubmit: false;
+  };
   reviewStatus: 'PENDING_MANNY';
   disclaimer: string;
 }
@@ -689,6 +768,8 @@ export interface LenderProduct {
   timeInBusinessMonths?: number | null;
   industriesPreferred?: string[];
   industriesRestricted?: string[];
+  /** Official hard industry eligibility (e.g. SBA MARC manufacturing-only). Missing client industry is unknown, not a guessed pass. */
+  industriesRequired?: string[];
   geography?: string;
   creditExpectations?: string;
   dscrMin?: number | null;
@@ -715,6 +796,14 @@ export interface LenderProduct {
   confidence: number | null;
 }
 
+export interface LenderMatchCoverage {
+  required: number;
+  supported: number;
+  unknown: number;
+  stale: number;
+  disqualified: number;
+}
+
 export interface LenderMatch {
   lenderId: string;
   lenderName: string;
@@ -730,6 +819,11 @@ export interface LenderMatch {
   historicalExperience?: HvcgLenderExperience;
   historicalIntelligence?: HistoricalLenderIntelligence;
   reviewStatus: 'PENDING_MANNY';
+  criticalCriteriaCoverage: LenderMatchCoverage;
+  supportedCriteria: string[];
+  unknownCriticalCriteria: string[];
+  staleCriticalCriteria: string[];
+  disqualifiers: string[];
 }
 
 export interface UnderwritingSummary {
@@ -780,6 +874,8 @@ export interface LenderSubmission {
   id: string;
   capitalOpportunityId: string;
   lenderId: string;
+  /** Lookup display name from HVCG_LenderOutreach.LenderId. Never parsed from Notes. */
+  lenderName?: string;
   method: 'package' | 'email' | 'portal_instructions' | 'approved_api';
   status: 'draft' | 'submitted' | 'acknowledged' | 'rfi' | 'underwriting' | 'offer' | 'declined' | 'withdrawn';
   submittedAt?: string;
@@ -790,6 +886,10 @@ export interface LenderSubmission {
   portalInstructions?: string;
   draftEmail?: string;
   notes?: string;
+  /** Sourced HVCG_LenderOutreach.Response. Missing stays undefined. */
+  response?: LenderOutreachResponse;
+  /** Sourced HVCG_LenderOutreach.MessageClass. Missing stays undefined. */
+  messageClass?: LenderMessageClass;
 }
 
 export interface TermSheetOffer {

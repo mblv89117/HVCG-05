@@ -3,6 +3,7 @@ import { audit } from '../audit/auditLog.ts';
 import type { AppConfig } from '../config.ts';
 import { requirePrincipal } from '../middleware/auth.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
+import { OverlayCorruptError, OverlayUnsupportedSchemaError } from './overlay.ts';
 import { capitalBackendUnavailableBody } from './backend.ts';
 import { CapitalHttpError, toCapitalErrorBody } from './errors.ts';
 import { assertClientScope } from './authz.ts';
@@ -235,6 +236,10 @@ export async function handleCapitalRoutes(opts: {
       sendOk(await service.listLenders(principal));
       return true;
     }
+    if (method === 'GET' && path === '/api/capital/outreach/history') {
+      sendOk(await service.outreachHistory(principal));
+      return true;
+    }
     if (method === 'POST' && path === '/api/capital/lenders') {
       sendOk(await service.addLender(principal, body));
       return true;
@@ -276,6 +281,15 @@ export async function handleCapitalRoutes(opts: {
         });
       }
       send(res, err.status, toCapitalErrorBody(err), origin);
+      return true;
+    }
+    if (err instanceof OverlayCorruptError || err instanceof OverlayUnsupportedSchemaError) {
+      send(
+        res,
+        503,
+        { error: 'capital_overlay_unavailable', code: err instanceof OverlayCorruptError ? 'overlay_corrupt' : 'overlay_unsupported_schema', message: err.message },
+        origin,
+      );
       return true;
     }
     throw err;

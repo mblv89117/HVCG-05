@@ -749,6 +749,7 @@ export function buildMannyStrategyPackage(opts: {
   opportunity: CapitalOpportunity;
   matches: LenderMatch[];
   checklist?: ChecklistItem[];
+  risks?: string[];
 }): MannyStrategyPackage {
   const o = opts.opportunity;
   const structures = proposeFinancingStructures(o);
@@ -787,6 +788,16 @@ export function buildMannyStrategyPackage(opts: {
     for (const item of requiredOpenItems(opts.checklist)) missing.push(item.name);
   }
 
+  const risks = [
+    ...(opts.risks || []),
+    ...unverified.map((f) => `Unverified fact in package: ${f.field}`),
+    ...candidates
+      .filter((m) => (m.unknownCriticalCriteria || []).length > 0 && m.band === 'BEST_FIT')
+      .map((m) => `BEST_FIT with unknown critical criteria is invalid (${m.productName || m.lenderName})`),
+    'Historical HVCG outreach is context, not approval certainty.',
+    'No external lender submission is performed by this package.',
+  ];
+
   return {
     capitalOpportunityId: o.id,
     clientCode: o.clientCode,
@@ -797,6 +808,7 @@ export function buildMannyStrategyPackage(opts: {
     },
     useOfFunds: o.need.useOfFunds || o.need.purpose || 'MISSING',
     facts: { verified, unverified, missing: [...new Set(missing)] },
+    risks: [...new Set(risks.filter(Boolean))],
     structures,
     lenderCandidates: candidates.map((m) => ({
       lenderId: m.lenderId,
@@ -811,7 +823,16 @@ export function buildMannyStrategyPackage(opts: {
       ],
       stale: m.stale,
       historicalContext: m.historicalIntelligence?.explanation,
+      unknownCriticalCriteria: m.unknownCriticalCriteria,
+      supportedCriteria: m.supportedCriteria,
+      disqualifiers: m.disqualifiers,
     })),
+    mannyWorkflow: {
+      approve: 'APPROVED',
+      revise: 'REVISE',
+      reject: 'REJECTED',
+      externalSubmit: false,
+    },
     reviewStatus: 'PENDING_MANNY',
     disclaimer: FINANCING_DISCLAIMER,
   };

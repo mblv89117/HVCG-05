@@ -80,6 +80,11 @@ function assertEveryExplanationSourced(matches: ReturnType<typeof matchLenders>)
       assert.ok(e.sourceRef.field, `explanation ${e.criterion} missing field`);
     }
     assert.equal(m.reviewStatus, 'PENDING_MANNY');
+    assert.ok(Array.isArray(m.supportedCriteria));
+    assert.ok(Array.isArray(m.unknownCriticalCriteria));
+    assert.ok(Array.isArray(m.staleCriticalCriteria));
+    assert.ok(Array.isArray(m.disqualifiers));
+    assert.ok(m.criticalCriteriaCoverage);
     assertNoFakePercentScore(m);
   }
 }
@@ -130,6 +135,10 @@ describe('matching bands and source refs', () => {
     const [m] = matchLenders(opp(), [lender], [current], new Date('2026-07-01'));
     assert.equal(m.band, 'BEST_FIT');
     assert.equal(m.freshness, 'CURRENT');
+    assert.equal(m.unknownCriticalCriteria.length, 0);
+    assert.equal(m.disqualifiers.length, 0);
+    assert.ok(m.supportedCriteria.includes('minAmount'));
+    assert.ok(m.criticalCriteriaCoverage.unknown === 0);
     assertEveryExplanationSourced([m]);
     assert.ok(m.explanations.some((e) => e.sourceRef.sourceSystem === 'lender-sheet-synthetic'));
   });
@@ -186,6 +195,19 @@ describe('matching bands and source refs', () => {
     assert.notEqual(m.band, 'INELIGIBLE');
     assert.equal(m.band, 'UNKNOWN');
     assert.ok(m.explanations.some((e) => e.criterion === 'annualRevenue' && e.outcome === 'unknown'));
+  });
+
+  it('does not BEST_FIT when stated geography is not supported', () => {
+    const geo: LenderProduct = { ...current, geography: 'Texas' };
+    const [m] = matchLenders(
+      opp({ business: { industry: 'manufacturing', locations: 'California', annualRevenue: verifiedValue(4_200_000, 'synthetic-fixture', '2026-08-01T00:00:00.000Z', 'qa') } }),
+      [lender],
+      [geo],
+      new Date('2026-07-01'),
+    );
+    assert.notEqual(m.band, 'BEST_FIT');
+    assert.ok(m.explanations.some((e) => e.criterion === 'geography' && e.outcome === 'not_met'));
+    assertEveryExplanationSourced([m]);
   });
 
   it('does not parse PreferredProducts notes into numeric criteria', () => {
@@ -496,6 +518,9 @@ describe('B1/B5 contract: eligibility, honesty, disclaimer', () => {
     assert.ok(m.explanations.some((e) => e.criterion === 'leverageMax' && e.outcome === 'context'));
     assert.ok(m.explanations.some((e) => e.criterion === 'creditExpectations' && e.outcome === 'context'));
     assert.equal(m.explanations.some((e) => e.criterion === 'dscrMin' && e.outcome === 'met'), false);
+    assert.notEqual(m.band, 'BEST_FIT');
+    assert.ok(m.unknownCriticalCriteria.includes('dscrMin'));
+    assert.ok(m.unknownCriticalCriteria.includes('leverageMax'));
     assert.equal(m.explanations.some((e) => e.statement.includes('FICO 680') && e.outcome === 'met'), false);
     assertEveryExplanationSourced([m]);
   });

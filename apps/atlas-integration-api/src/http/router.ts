@@ -27,6 +27,7 @@ import type { SharePointPmService } from '../pm/sharepoint/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
 import { handleCapitalRoutes } from '../capital/http.ts';
+import { inspectCapitalOverlayHealth } from '../capital/overlay-health.ts';
 import type { CapitalPersistence } from '../capital/store.ts';
 import { handleBaRoutes } from '../ba/routes.ts';
 import { probeBaHealth } from '../ba/client.ts';
@@ -264,10 +265,7 @@ export async function handleRequest(
             credentialMode: cfg.capitalBackend.credentialMode || 'none',
             configComplete: Boolean(cfg.capitalBackend.configComplete),
             listsConfigured: Boolean(cfg.capitalBackend.sharepoint),
-            overlay: {
-              schemaVersion: 1,
-              recycleSurvivable: (process.env.HOME || '') === '/home',
-            },
+            overlay: inspectCapitalOverlayHealth(cfg.dataDir),
           },
           websiteLeads: {
             configured: Boolean(

@@ -21,6 +21,7 @@ import {
   principalFromVerifiedPayload,
   requirePrincipal,
   rolesFromVerifiedPayload,
+  tokenHasRequiredHubScope,
 } from '../src/middleware/auth.ts';
 import type { JWTPayload } from 'jose';
 
@@ -71,6 +72,20 @@ function mockReq(headers: Record<string, string>): IncomingMessage {
 }
 
 describe('Hub role mapping', () => {
+  it('accepts Hub API Azure CLI tokens with access_as_user, full URI, or oid-only empty scp', () => {
+    assert.equal(tokenHasRequiredHubScope({ scp: 'access_as_user', oid: 'x' } as JWTPayload, 'access_as_user'), true);
+    assert.equal(
+      tokenHasRequiredHubScope(
+        { scp: 'api://99dd84b0-33f7-481b-86db-d76287b124f6/access_as_user', oid: 'x' } as JWTPayload,
+        'access_as_user',
+      ),
+      true,
+    );
+    assert.equal(tokenHasRequiredHubScope({ oid: 'x' } as JWTPayload, 'access_as_user'), true);
+    assert.equal(tokenHasRequiredHubScope({ scp: 'User.Read', oid: 'x' } as JWTPayload, 'access_as_user'), false);
+    assert.equal(normalizeHubRole('HVCG_Owner'), 'HVCG Owner');
+  });
+
   it('maps Admin to Administrator and keeps HVCG Owner distinct', () => {
     assert.equal(normalizeHubRole('Admin'), 'Administrator');
     assert.equal(normalizeHubRole('administrator'), 'Administrator');
