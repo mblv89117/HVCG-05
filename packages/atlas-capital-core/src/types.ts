@@ -273,6 +273,8 @@ export interface ChecklistItem {
   verification: VerificationState;
   fileId?: string;
   fileLink?: string;
+  /** Completeness vs the requested row — not acceptance. */
+  requestSupport?: string;
   overrideReason?: string;
   overrideBy?: string;
   overrideAt?: string;
@@ -301,6 +303,8 @@ export interface CapitalDocument {
   webUrl?: string;
   driveId?: string;
   itemId?: string;
+  sourceVersion?: string;
+  duplicateOf?: string;
   extractionMethod?: ExtractionMethod;
 }
 
@@ -585,6 +589,78 @@ export interface HvcgLenderExperience {
   sourceRefs: SourceRef[];
 }
 
+/** Lender-level historical context. Never a fit. Never future certainty. */
+export interface HistoricalLenderAggregate {
+  outreachCount: number;
+  submittedCount: number;
+  declinedCount: number;
+  offerCount: number;
+  lastStatus?: string;
+  lastOutreachAt?: string;
+}
+
+export interface HistoricalSameClientContext {
+  outreachCount: number;
+  lastStatus?: string;
+  lastOutreachAt?: string;
+}
+
+export interface HistoricalLenderIntelligence {
+  lenderId: string;
+  contacted: boolean;
+  /** Same-client rows only. Never includes another client's opportunity/title/amount. */
+  sameClient: HistoricalSameClientContext;
+  /** Cross-client counts by lenderId with client identifiers omitted. */
+  lenderAggregate: HistoricalLenderAggregate;
+  notAFit: true;
+  notFutureCertainty: true;
+  explanation: string;
+  sourceRefs: SourceRef[];
+}
+
+export interface OpportunityClientIndexRow {
+  id: string;
+  clientCode: string;
+}
+
+export interface MannyStrategyFactRow {
+  field: string;
+  value: string;
+  verification: VerificationState;
+}
+
+export interface MannyStrategyLenderCandidate {
+  lenderId: string;
+  lenderName: string;
+  productId?: string;
+  productName?: string;
+  band: MatchBand;
+  why: string[];
+  unknown: string[];
+  stale: boolean;
+  historicalContext?: string;
+}
+
+export interface MannyStrategyPackage {
+  capitalOpportunityId: string;
+  clientCode: string;
+  need: {
+    requestedAmount: number | null;
+    purpose?: string;
+    transactionType: TransactionType;
+  };
+  useOfFunds: string;
+  facts: {
+    verified: MannyStrategyFactRow[];
+    unverified: MannyStrategyFactRow[];
+    missing: string[];
+  };
+  structures: FinancingStructure[];
+  lenderCandidates: MannyStrategyLenderCandidate[];
+  reviewStatus: 'PENDING_MANNY';
+  disclaimer: string;
+}
+
 export interface LenderFilterRecord {
   lenderId: string;
   lenderName: string;
@@ -652,6 +728,7 @@ export interface LenderMatch {
   freshness: LenderFreshness;
   sourceRef: SourceRef;
   historicalExperience?: HvcgLenderExperience;
+  historicalIntelligence?: HistoricalLenderIntelligence;
   reviewStatus: 'PENDING_MANNY';
 }
 

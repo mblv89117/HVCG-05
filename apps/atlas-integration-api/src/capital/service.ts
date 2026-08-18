@@ -17,6 +17,8 @@ import {
   detectDuplicate,
   extractCapitalDocumentContent,
   FactReviewError,
+  findDocumentByContentHash,
+  findDocumentBySharePointItem,
   findFactInReviews,
   founderWorkloadForCards,
   ingestTypeAllowed,
@@ -43,12 +45,15 @@ import {
   runLenderMatch,
   sourcedLenderCatalog,
   STAGE_TO_LEGACY_FUNDING_STATUS,
+  summarizeHistoricalLenderIntelligence,
   summarizeHvcgExperience,
   toQueueItem,
+  buildMannyStrategyPackage,
   type Attribution,
   type CapitalOpportunity,
   type CapitalStage,
   type ChecklistItem,
+  type DocumentIntelligenceOutput,
   type ExtractedFact,
   type FactReviewDecision,
   type LenderFreshness,
@@ -87,6 +92,10 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+function opportunityClientIndex(state: CapitalState) {
+  return state.opportunities.map((o) => ({ id: o.id, clientCode: o.clientCode }));
+}
+
 function asRecord(v: unknown): Record<string, unknown> {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
@@ -109,6 +118,21 @@ function truthySendValue(v: unknown): boolean {
   return true;
 }
 
+const ingestLocks = new Map<string, Promise<unknown>>();
+
+function withIngestLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const prev = ingestLocks.get(key) ?? Promise.resolve();
+  const run = prev.then(fn, fn);
+  ingestLocks.set(
+    key,
+    run.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return run;
+}
+
 function recordHasSendFlag(body: Record<string, unknown>): boolean {
   for (const [key, v] of Object.entries(body)) {
     if (CLIENT_SEND_KEYS.has(key.toLowerCase()) && truthySendValue(v)) return true;
@@ -124,6 +148,18 @@ function requestedClientSend(body: Record<string, unknown>): boolean {
     return recordHasSendFlag(nested as Record<string, unknown>);
   }
   return false;
+}
+
+function persistIntelligence(state: CapitalState, id: string, intelligence: DocumentIntelligenceOutput): void {
+  state.checklists[id] = intelligence.checklist;
+  for (const next of intelligence.reviews) {
+    state.reviews = state.reviews.filter((r) => r.documentId !== next.documentId);
+    state.reviews.push(next);
+  }
+  if (intelligence.report.underwriting) {
+    state.underwriting = state.underwriting.filter((u) => u.capitalOpportunityId !== id);
+    state.underwriting.push(intelligence.report.underwriting);
+  }
 }
 
 export function assertCapitalAccess(principal: AtlasPrincipal, clientCode: string): void {
@@ -464,102 +500,132 @@ export class CapitalService {
     const driveId = asString(body.driveId);
     const itemId = asString(body.itemId);
     assertSafeDriveIds(driveId, itemId);
-    const state = await this.store.load();
-    const opp = requireOpp(state, principal, id);
-    const meta = await this.files.getItem(driveId, itemId);
-    assertFileBelongsToClient(meta, opp.clientCode);
-    if (!ingestTypeAllowed(meta.name, meta.mimeType)) {
-      unprocessable('File type is not allowed for capital ingest');
-    }
-    const bytes = await this.files.getContent(driveId, itemId);
-    const sha256 = createHash('sha256').update(bytes).digest('hex');
-    const dup = detectDuplicate(state.documents.filter((d) => d.capitalOpportunityId === id), {
-      sha256,
-      fileName: meta.name,
-    });
-    const capturedAt = nowIso();
-    const extracted = extractCapitalDocumentContent({
-      fileName: meta.name,
-      bytes,
-      mimeType: meta.mimeType,
-      capturedAt,
-      sourceRecordId: `${driveId}:${itemId}`,
-    });
-    if (dup) {
-      return {
-        document: state.documents.find((d) => d.id === dup),
-        duplicate: true,
-        duplicateOf: dup,
-        extraction: extracted,
+    return withIngestLock(`${id}:${driveId}:${itemId}`, async () => {
+      const state = await this.store.load();
+      const opp = requireOpp(state, principal, id);
+      const meta = await this.files!.getItem(driveId, itemId);
+      assertFileBelongsToClient(meta, opp.clientCode);
+      if (!ingestTypeAllowed(meta.name, meta.mimeType)) {
+        unprocessable('File type is not allowed for capital ingest');
+      }
+      const bytes = await this.files!.getContent(driveId, itemId);
+      const sha256 = createHash('sha256').update(bytes).digest('hex');
+      const capturedAt = nowIso();
+      const sourceVersion = meta.eTag || meta.modifiedAt;
+      const extracted = extractCapitalDocumentContent({
+        fileName: meta.name,
+        bytes,
+        mimeType: meta.mimeType,
+        capturedAt,
+        sourceRecordId: `${driveId}:${itemId}`,
+      });
+      const oppDocs = state.documents.filter((d) => d.capitalOpportunityId === id);
+      const existingItem = findDocumentBySharePointItem(oppDocs, driveId, itemId);
+      const actor = principal.email || principal.userId;
+      const runIntel = (docId: string, incomingFacts: boolean, extraDocs = oppDocs) =>
+        runDocumentIntelligence({
+          opportunity: opp,
+          checklist: state.checklists[id] || [],
+          documents: extraDocs,
+          incomingFactsByDocumentId:
+            incomingFacts && extracted.facts.length ? { [docId]: extracted.facts } : undefined,
+          incomingExtractionByDocumentId: {
+            [docId]: {
+              method: extracted.method,
+              promptInjection: extracted.promptInjection,
+              text: extracted.text,
+            },
+          },
+          existingReviews: state.reviews.filter((r) => r.capitalOpportunityId === id),
+          includeUnderwriting: body.includeUnderwriting !== false,
+          createdBy: actor,
+        });
+      const payload = (
+        doc: (typeof state.documents)[number],
+        intelligence: DocumentIntelligenceOutput,
+        flags: { duplicate: boolean; replayed?: boolean; versionChanged?: boolean; duplicateOf?: string },
+      ) => ({
+        document: doc,
+        duplicate: flags.duplicate,
+        duplicateOf: flags.duplicateOf,
+        replayed: flags.replayed || false,
+        versionChanged: flags.versionChanged || false,
+        file: {
+          driveId,
+          itemId,
+          fileName: meta.name,
+          mimeType: meta.mimeType,
+          size: bytes.length,
+          sha256,
+          webUrl: meta.webUrl,
+          libraryClientCode: meta.libraryClientCode,
+          sourceVersion,
+        },
+        extraction: {
+          method: extracted.method,
+          promptInjection: extracted.promptInjection,
+          factCount: extracted.facts.length,
+          error: extracted.error,
+        },
+        report: intelligence.report,
+        checklist: intelligence.checklist,
+        clientRequest: intelligence.report.clientRequest,
         clientRequestSendAttempted: false as const,
-      };
-    }
-    const doc = {
-      id: `doc-${randomUUID()}`,
-      capitalOpportunityId: id,
-      clientCode: opp.clientCode,
-      documentType: classifyDocument({ fileName: meta.name, text: extracted.text }).documentType,
-      fileName: meta.name,
-      contentType: meta.mimeType || 'application/octet-stream',
-      sizeBytes: bytes.length,
-      sha256,
-      version: 1,
-      source: 'sharepoint-library',
-      associatedAt: capturedAt,
-      associatedBy: principal.email || principal.userId,
-      originalPreserved: true as const,
-      webUrl: meta.webUrl,
-      driveId,
-      itemId,
-      extractionMethod: extracted.method,
-    };
-    state.documents.push(doc);
-    const intelligence = runDocumentIntelligence({
-      opportunity: opp,
-      checklist: state.checklists[id] || [],
-      documents: state.documents.filter((d) => d.capitalOpportunityId === id),
-      incomingFactsByDocumentId: extracted.facts.length ? { [doc.id]: extracted.facts } : undefined,
-      incomingExtractionByDocumentId: {
-        [doc.id]: { method: extracted.method, promptInjection: extracted.promptInjection, text: extracted.text },
-      },
-      existingReviews: state.reviews.filter((r) => r.capitalOpportunityId === id),
-      includeUnderwriting: body.includeUnderwriting !== false,
-      createdBy: principal.email || principal.userId,
-    });
-    state.checklists[id] = intelligence.checklist;
-    for (const next of intelligence.reviews) {
-      state.reviews = state.reviews.filter((r) => r.documentId !== next.documentId);
-      state.reviews.push(next);
-    }
-    if (intelligence.report.underwriting) {
-      state.underwriting = state.underwriting.filter((u) => u.capitalOpportunityId !== id);
-      state.underwriting.push(intelligence.report.underwriting);
-    }
-    await this.store.save(state);
-    return {
-      document: doc,
-      duplicate: false,
-      file: {
+      });
+
+      if (existingItem && existingItem.sha256 === sha256) {
+        const intelligence = runIntel(existingItem.id, false);
+        persistIntelligence(state, id, intelligence);
+        await this.store.save(state);
+        return payload(existingItem, intelligence, { duplicate: true, replayed: true, duplicateOf: existingItem.id });
+      }
+
+      if (existingItem && existingItem.sha256 !== sha256) {
+        existingItem.version = (existingItem.version || 1) + 1;
+        existingItem.sha256 = sha256;
+        existingItem.sizeBytes = bytes.length;
+        existingItem.fileName = meta.name;
+        existingItem.contentType = meta.mimeType || existingItem.contentType;
+        existingItem.sourceVersion = sourceVersion;
+        existingItem.extractionMethod = extracted.method;
+        existingItem.webUrl = meta.webUrl || existingItem.webUrl;
+        const intelligence = runIntel(existingItem.id, true);
+        persistIntelligence(state, id, intelligence);
+        await this.store.save(state);
+        return payload(existingItem, intelligence, { duplicate: false, versionChanged: true });
+      }
+
+      const sameHash = findDocumentByContentHash(oppDocs, sha256);
+      const doc = {
+        id: `doc-${randomUUID()}`,
+        capitalOpportunityId: id,
+        clientCode: opp.clientCode,
+        documentType: classifyDocument({ fileName: meta.name, text: extracted.text }).documentType,
+        fileName: meta.name,
+        contentType: meta.mimeType || 'application/octet-stream',
+        sizeBytes: bytes.length,
+        sha256,
+        version: 1,
+        source: 'sharepoint-library',
+        associatedAt: capturedAt,
+        associatedBy: actor,
+        originalPreserved: true as const,
+        webUrl: meta.webUrl,
         driveId,
         itemId,
-        fileName: meta.name,
-        mimeType: meta.mimeType,
-        size: bytes.length,
-        sha256,
-        webUrl: meta.webUrl,
-        libraryClientCode: meta.libraryClientCode,
-      },
-      extraction: {
-        method: extracted.method,
-        promptInjection: extracted.promptInjection,
-        factCount: extracted.facts.length,
-        error: extracted.error,
-      },
-      report: intelligence.report,
-      checklist: intelligence.checklist,
-      clientRequest: intelligence.report.clientRequest,
-      clientRequestSendAttempted: false as const,
-    };
+        sourceVersion,
+        duplicateOf: sameHash?.id,
+        extractionMethod: extracted.method,
+      };
+      state.documents.push(doc);
+      const intelligence = runIntel(doc.id, !sameHash, [...oppDocs, doc]);
+      persistIntelligence(state, id, intelligence);
+      await this.store.save(state);
+      return payload(doc, intelligence, {
+        duplicate: Boolean(sameHash),
+        duplicateOf: sameHash?.id,
+      });
+    });
   }
 
   async review(principal: AtlasPrincipal, id: string, docId: string, body: Record<string, unknown>) {
@@ -698,6 +764,10 @@ export class CapitalService {
   }
 
   async reviewFact(principal: AtlasPrincipal, id: string, factId: string, body: Record<string, unknown>) {
+    return withIngestLock(`fact:${id}:${factId}`, () => this.reviewFactUnlocked(principal, id, factId, body));
+  }
+
+  private async reviewFactUnlocked(principal: AtlasPrincipal, id: string, factId: string, body: Record<string, unknown>) {
     const state = await this.store.load();
     const located = findFactInReviews(state.reviews, factId);
     if (located) {
@@ -806,16 +876,21 @@ export class CapitalService {
       state.lenders,
       state.products,
       new Date(),
-      { outreach: state.submissions },
+      { outreach: state.submissions, opportunityClientIndex: opportunityClientIndex(state) },
     );
     const strat = draftStrategy({ opportunity: opp, matches: run.matches, underwriting: uw });
+    const mannyPackage = buildMannyStrategyPackage({
+      opportunity: overlayOpportunityFromReviews(opp, state.reviews.filter((r) => r.capitalOpportunityId === id)).opportunity,
+      matches: run.matches,
+      checklist: state.checklists[id] || [],
+    });
     state.strategies = state.strategies.filter((s) => s.capitalOpportunityId !== id);
     state.strategies.push(strat);
     opp.stage = 'AwaitingMannyStrategyApproval';
     opp.stageEnteredAt = nowIso();
     opp.mannyStrategyApproval = 'PENDING';
     await this.store.save(state);
-    return { strategy: strat };
+    return { strategy: strat, mannyPackage };
   }
 
   async strategyDecision(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
@@ -870,6 +945,10 @@ export class CapitalService {
         freshness: organizationFreshness(lender),
         products: state.products.filter((p) => p.lenderId === lender.id).map((p) => productFreshness(p)),
         historicalExperience: summarizeHvcgExperience(state.submissions, lender.id),
+        historicalIntelligence: summarizeHistoricalLenderIntelligence({
+          outreach: state.submissions,
+          lenderId: lender.id,
+        }),
       })),
       criteria: catalog.criteria,
       review: { status: 'PENDING_MANNY' as const, disclaimer: FINANCING_DISCLAIMER },
@@ -911,7 +990,7 @@ export class CapitalService {
       state.lenders,
       state.products,
       new Date(),
-      { outreach: state.submissions },
+      { outreach: state.submissions, opportunityClientIndex: opportunityClientIndex(state) },
     );
     if (
       opts.persistShortlistPending !== false &&

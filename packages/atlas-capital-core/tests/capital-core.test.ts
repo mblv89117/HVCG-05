@@ -304,6 +304,35 @@ describe('AI governance', () => {
     };
     assert.equal(detectDuplicate([a], { sha256: 'abc', fileName: 'b.pdf' }), 'doc-a');
   });
+
+  it('does not treat the same filename as identity when SharePoint item ids differ', () => {
+    const a: CapitalDocument = {
+      id: 'doc-a',
+      capitalOpportunityId: 'cap-syn-001',
+      clientCode: 'SYN01',
+      documentType: 'pnl',
+      fileName: 'P&L YTD July 2026.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 1,
+      sha256: 'hash-a',
+      version: 1,
+      source: 'sharepoint-library',
+      associatedAt: '2026-08-01T00:00:00.000Z',
+      associatedBy: 'qa',
+      originalPreserved: true,
+      driveId: 'drive-1',
+      itemId: 'item-1',
+    };
+    assert.equal(
+      detectDuplicate([a], {
+        sha256: 'hash-b',
+        fileName: 'P&L YTD July 2026.pdf',
+        driveId: 'drive-1',
+        itemId: 'item-2',
+      }),
+      undefined,
+    );
+  });
 });
 
 describe('strategy, application, fees, handoff', () => {

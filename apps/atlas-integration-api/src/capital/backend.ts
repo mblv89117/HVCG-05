@@ -50,5 +50,5 @@ export function createSharePointCapitalService(cfg: AppConfig): CapitalPersisten
   if (!cfg.capitalFileSource) {
     cfg.capitalFileSource = createGraphCapitalFileSource(tokenProvider);
   }
-  return new AsyncCapitalStore(new GraphCapitalStore(settings, graph));
+  return new AsyncCapitalStore(new GraphCapitalStore(settings, graph), { dataDir: cfg.dataDir });
 }

@@ -23,6 +23,8 @@ import {
   type FinancingStrategy,
   type LenderMatch,
   type LenderMessageClass,
+  type MannyStrategyFactRow,
+  type MannyStrategyPackage,
   type ProvenancedValue,
   type QueueItem,
   type SourceRef,
@@ -166,13 +168,41 @@ export function classifyDocumentName(fileName: string): { documentType: string; 
   return { documentType: classified.documentType, confidence: classified.confidence };
 }
 
-export function detectDuplicate(existing: CapitalDocument[], incoming: { sha256?: string; fileName: string }): string | undefined {
+export function detectDuplicate(
+  existing: CapitalDocument[],
+  incoming: { sha256?: string; fileName: string; driveId?: string; itemId?: string },
+): string | undefined {
   if (incoming.sha256) {
     const hit = existing.find((d) => d.sha256 && d.sha256 === incoming.sha256);
     if (hit) return hit.id;
   }
+  // Filename is not identity when SharePoint item ids are present.
+  if (incoming.driveId && incoming.itemId) return undefined;
   const nameHit = existing.find((d) => d.fileName.toLowerCase() === incoming.fileName.toLowerCase());
   return nameHit?.id;
+}
+
+/** Authorization identity for a SharePoint file — not a content hash. */
+export function sharePointItemKey(driveId?: string, itemId?: string): string | null {
+  if (!driveId || !itemId) return null;
+  return `${driveId}:${itemId}`;
+}
+
+export function findDocumentBySharePointItem(
+  existing: CapitalDocument[],
+  driveId: string,
+  itemId: string,
+): CapitalDocument | undefined {
+  return existing.find((d) => d.driveId === driveId && d.itemId === itemId);
+}
+
+export function findDocumentByContentHash(
+  existing: CapitalDocument[],
+  sha256: string,
+  exceptId?: string,
+): CapitalDocument | undefined {
+  if (!sha256) return undefined;
+  return existing.find((d) => d.sha256 === sha256 && d.id !== exceptId);
 }
 
 export function reviewDocument(input: {
@@ -702,6 +732,89 @@ export function evaHandoffAllowed(annualRevenue: number | null | undefined): {
 
 export function preserveAttribution(input: Attribution): Attribution {
   return { ...input };
+}
+
+function factRow(field: string, pv: ProvenancedValue<number | string> | undefined): MannyStrategyFactRow | { missing: string } {
+  if (!pv || pv.value == null || pv.verification === 'MISSING' || pv.verification === 'REJECTED') {
+    return { missing: field };
+  }
+  const value = typeof pv.value === 'number' ? `$${pv.value.toLocaleString()}` : String(pv.value);
+  const sourced = hasSourceRef(pv.sourceRef);
+  const verification =
+    pv.verification === 'VERIFIED' && sourced ? 'VERIFIED' : pv.verification === 'VERIFIED' && !sourced ? 'UNVERIFIED' : pv.verification;
+  return { field, value, verification };
+}
+
+export function buildMannyStrategyPackage(opts: {
+  opportunity: CapitalOpportunity;
+  matches: LenderMatch[];
+  checklist?: ChecklistItem[];
+}): MannyStrategyPackage {
+  const o = opts.opportunity;
+  const structures = proposeFinancingStructures(o);
+  const candidates = opts.matches.filter((m) => m.band !== 'INELIGIBLE');
+  const verified: MannyStrategyFactRow[] = [];
+  const unverified: MannyStrategyFactRow[] = [];
+  const missing: string[] = [];
+
+  const moneyFacts: Array<[string, ProvenancedValue<number> | undefined]> = [
+    ['annualRevenue', o.business.annualRevenue],
+    ['ebitda', o.business.ebitda],
+    ['cash', o.capitalProfile.cash],
+    ['ar', o.capitalProfile.ar],
+    ['inventory', o.capitalProfile.inventory],
+    ['existingDebt', o.capitalProfile.existingDebt],
+    ['monthlyDebtService', o.capitalProfile.monthlyDebtService],
+  ];
+  for (const [field, pv] of moneyFacts) {
+    const row = factRow(field, pv);
+    if ('missing' in row) missing.push(row.missing);
+    else if (row.verification === 'VERIFIED') verified.push(row);
+    else unverified.push(row);
+  }
+  if (o.business.yearsInBusiness?.value == null || o.business.yearsInBusiness.verification === 'MISSING') {
+    missing.push('yearsInBusiness');
+  } else {
+    const row = factRow('yearsInBusiness', o.business.yearsInBusiness);
+    if (!('missing' in row)) {
+      if (row.verification === 'VERIFIED') verified.push({ ...row, value: String(o.business.yearsInBusiness.value) });
+      else unverified.push({ ...row, value: String(o.business.yearsInBusiness.value) });
+    }
+  }
+  if (o.need.requestedAmount == null) missing.push('requestedAmount');
+  if (!o.need.useOfFunds && !o.need.purpose) missing.push('useOfFunds');
+  if (opts.checklist?.length) {
+    for (const item of requiredOpenItems(opts.checklist)) missing.push(item.name);
+  }
+
+  return {
+    capitalOpportunityId: o.id,
+    clientCode: o.clientCode,
+    need: {
+      requestedAmount: o.need.requestedAmount,
+      purpose: o.need.purpose,
+      transactionType: o.transactionType,
+    },
+    useOfFunds: o.need.useOfFunds || o.need.purpose || 'MISSING',
+    facts: { verified, unverified, missing: [...new Set(missing)] },
+    structures,
+    lenderCandidates: candidates.map((m) => ({
+      lenderId: m.lenderId,
+      lenderName: m.lenderName,
+      productId: m.productId,
+      productName: m.productName,
+      band: m.band,
+      why: m.explanations.filter((e) => e.outcome === 'met').map((e) => e.statement),
+      unknown: [
+        ...m.missingCriteria,
+        ...m.explanations.filter((e) => e.outcome === 'unknown' || e.outcome === 'degraded').map((e) => e.statement),
+      ],
+      stale: m.stale,
+      historicalContext: m.historicalIntelligence?.explanation,
+    })),
+    reviewStatus: 'PENDING_MANNY',
+    disclaimer: FINANCING_DISCLAIMER,
+  };
 }
 
 export { completenessPercent, consolidateMissingRequest };

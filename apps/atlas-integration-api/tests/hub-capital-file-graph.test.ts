@@ -13,7 +13,7 @@ const TOKEN = 'test-capital-file-token-do-not-forward';
 const PREAUTH =
   'https://highvaluecapitalgroup.sharepoint.com/_layouts/15/download.aspx?UniqueId=abc&tempauth=super-secret-download-token';
 const GRAPH_CONTENT = `https://graph.microsoft.com/v1.0/drives/${encodeURIComponent(DRIVE)}/items/${encodeURIComponent(ITEM)}/content`;
-const GRAPH_ITEM = `https://graph.microsoft.com/v1.0/drives/${encodeURIComponent(DRIVE)}/items/${encodeURIComponent(ITEM)}?$select=id,name,size,file,webUrl,parentReference,createdDateTime,lastModifiedDateTime`;
+const GRAPH_ITEM = `https://graph.microsoft.com/v1.0/drives/${encodeURIComponent(DRIVE)}/items/${encodeURIComponent(ITEM)}?$select=id,name,size,file,webUrl,eTag,parentReference,createdDateTime,lastModifiedDateTime`;
 
 function assertNoLeak(err: unknown): asserts err is CapitalHttpError {
   assert.ok(err instanceof CapitalHttpError);
@@ -252,6 +252,7 @@ describe('Graph capital file content download', () => {
           id: ITEM,
           name: 'SYN01 P&L YTD July 2026.pdf',
           size: 780,
+          eTag: '"v1"',
           file: { mimeType: 'application/pdf' },
           webUrl: 'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_SYN01/file.pdf',
           parentReference: { path: '/drives/x/root:/HVCG_SYN01/04 - Current Financials' },
@@ -261,5 +262,6 @@ describe('Graph capital file content download', () => {
     }).getItem(DRIVE, ITEM);
     assert.equal(meta.libraryClientCode, 'SYN01');
     assert.equal(meta.name, 'SYN01 P&L YTD July 2026.pdf');
+    assert.equal(meta.eTag, '"v1"');
   });
 });

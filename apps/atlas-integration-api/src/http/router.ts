@@ -264,6 +264,11 @@ export async function handleRequest(
             credentialMode: cfg.capitalBackend.credentialMode || 'none',
             configComplete: Boolean(cfg.capitalBackend.configComplete),
             listsConfigured: Boolean(cfg.capitalBackend.sharepoint),
+            overlay: {
+              schemaVersion: 1,
+              recycleSurvivable:
+                process.env.HOME === '/home' || Boolean(process.env.INTEGRATION_CAPITAL_OVERLAY_DIR),
+            },
           },
           websiteLeads: {
             configured: Boolean(

@@ -15,6 +15,14 @@ import type {
 import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord, mergeSourcedLenderCatalog } from '@hvcg/atlas-capital-core';
 import { CapitalHttpError, capitalInfrastructureError, forbidden } from '../errors.ts';
 import { emptyState, type CapitalPersistence, type CapitalState } from '../store.ts';
+import {
+  applyOverlayToState,
+  overlayFromState,
+  readCapitalOverlay,
+  resolveCapitalOverlayDir,
+  writeCapitalOverlay,
+  type CapitalOverlay,
+} from '../overlay.ts';
 import type { CapitalGraphTransport, GraphListItem } from './graph.ts';
 import {
   checklistItemFromItem,
@@ -275,48 +283,26 @@ export class GraphCapitalStore {
  */
 export class AsyncCapitalStore implements CapitalPersistence {
   private snapshot: CapitalState | null = null;
-  private overlay: Pick<
-    CapitalState,
-    | 'strategies'
-    | 'documents'
-    | 'reviews'
-    | 'applications'
-    | 'offers'
-    | 'closing'
-    | 'fees'
-    | 'attributions'
-    | 'copilotHandoffs'
-    | 'underwriting'
-    | 'products'
-    | 'checklists'
-    | 'factReviews'
-  > | null = null;
+  private overlay: CapitalOverlay | null = null;
+  private readonly overlayDir: string;
 
-  constructor(private readonly graph: GraphCapitalStore) {}
+  constructor(
+    private readonly graph: GraphCapitalStore,
+    opts: { overlayDir?: string; dataDir?: string } = {},
+  ) {
+    this.overlayDir = opts.overlayDir || resolveCapitalOverlayDir(opts.dataDir || process.cwd());
+  }
+
+  overlayDirectory(): string {
+    return this.overlayDir;
+  }
 
   async load(): Promise<CapitalState> {
     const state = await this.graph.load();
-    if (this.overlay) {
-      state.strategies = this.overlay.strategies.length ? this.overlay.strategies : state.strategies;
-      state.documents = this.overlay.documents;
-      state.reviews = this.overlay.reviews;
-      state.applications = this.overlay.applications;
-      state.offers = this.overlay.offers;
-      state.closing = this.overlay.closing;
-      state.fees = this.overlay.fees;
-      state.attributions = this.overlay.attributions;
-      state.copilotHandoffs = this.overlay.copilotHandoffs;
-      state.underwriting = this.overlay.underwriting;
-      for (const product of this.overlay.products) {
-        if (!state.products.some((p) => p.id === product.id)) state.products.push(product);
-      }
-      if (this.overlay.checklists) {
-        for (const [id, items] of Object.entries(this.overlay.checklists)) {
-          if (items?.length) state.checklists[id] = items;
-        }
-      }
-      if (this.overlay.factReviews?.length) state.factReviews = this.overlay.factReviews;
+    if (!this.overlay) {
+      this.overlay = readCapitalOverlay(this.overlayDir);
     }
+    applyOverlayToState(state, this.overlay);
     mergeSourcedLenderCatalog(state);
     this.snapshot = cloneState(state);
     return state;
@@ -380,21 +366,8 @@ export class AsyncCapitalStore implements CapitalPersistence {
       sub.id = created.id;
     }
 
-    this.overlay = {
-      strategies: state.strategies,
-      documents: state.documents,
-      reviews: state.reviews,
-      applications: state.applications,
-      offers: state.offers,
-      closing: state.closing,
-      fees: state.fees,
-      attributions: state.attributions,
-      copilotHandoffs: state.copilotHandoffs,
-      underwriting: state.underwriting,
-      products: state.products,
-      checklists: state.checklists,
-      factReviews: state.factReviews,
-    };
+    this.overlay = overlayFromState(state);
+    writeCapitalOverlay(this.overlayDir, this.overlay);
     this.snapshot = cloneState(state);
   }
 }

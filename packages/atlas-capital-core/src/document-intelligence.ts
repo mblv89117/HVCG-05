@@ -939,5 +939,10 @@ export function runDocumentIntelligence(input: DocumentIntelligenceInput): Docum
     };
   });
 
+  checklist = checklist.map((item) => {
+    const row = completenessVsRequest.find((r) => r.itemKey === item.itemKey);
+    return row ? { ...item, requestSupport: row.status } : item;
+  });
+
   return { report, checklist, reviews, completenessVsRequest };
 }

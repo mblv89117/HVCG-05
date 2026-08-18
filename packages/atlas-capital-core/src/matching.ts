@@ -11,6 +11,7 @@ import { FINANCING_DISCLAIMER } from './types.ts';
 import type {
   CapitalOpportunity,
   CapitalProfile,
+  HistoricalLenderIntelligence,
   HvcgLenderExperience,
   LenderFilterRecord,
   LenderMatch,
@@ -20,6 +21,7 @@ import type {
   LenderSubmission,
   MatchBand,
   MatchExplanation,
+  OpportunityClientIndexRow,
   SourceRef,
   LenderFreshness,
 } from './types.ts';
@@ -29,6 +31,8 @@ export const CRITERIA_STALE_DAYS = 180;
 export interface LenderMatchContext {
   outreach?: LenderSubmission[];
   profile?: CapitalProfile;
+  /** Maps opportunity id → ClientCode only. Never include titles or amounts. */
+  opportunityClientIndex?: OpportunityClientIndexRow[];
 }
 
 function missingCapturedAt(): string {
@@ -207,31 +211,128 @@ export function applyClientCapitalProfile(
   };
 }
 
+function outreachSourceRef(row: LenderSubmission): SourceRef {
+  return {
+    sourceSystem: 'HVCG_LenderOutreach',
+    sourceRecordId: row.id,
+    field: 'SubmissionStatus',
+    capturedAt: row.submittedAt || missingCapturedAt(),
+    capturedBy: row.submittedBy,
+  };
+}
+
+function sortOutreach(rows: LenderSubmission[]): LenderSubmission[] {
+  return rows
+    .slice()
+    .sort((a, b) => Date.parse(b.submittedAt || '') - Date.parse(a.submittedAt || '') || a.id.localeCompare(b.id));
+}
+
+function countOutreach(rows: LenderSubmission[]): {
+  outreachCount: number;
+  submittedCount: number;
+  declinedCount: number;
+  offerCount: number;
+  last?: LenderSubmission;
+} {
+  const sorted = sortOutreach(rows);
+  return {
+    outreachCount: rows.length,
+    submittedCount: rows.filter((s) => s.status !== 'draft' && s.status !== 'withdrawn').length,
+    declinedCount: rows.filter((s) => s.status === 'declined').length,
+    offerCount: rows.filter((s) => s.status === 'offer').length,
+    last: sorted.find((s) => s.submittedAt) || sorted[0],
+  };
+}
+
 export function summarizeHvcgExperience(
   outreach: LenderSubmission[] | undefined,
   lenderId: string,
 ): HvcgLenderExperience | undefined {
   const rows = (outreach || []).filter((s) => s.lenderId === lenderId);
   if (!rows.length) return undefined;
-  const sourceRefs: SourceRef[] = rows.map((s) => ({
-    sourceSystem: 'HVCG_LenderOutreach',
-    sourceRecordId: s.id,
-    field: 'SubmissionStatus',
-    capturedAt: s.submittedAt || missingCapturedAt(),
-    capturedBy: s.submittedBy,
-  }));
-  const sorted = rows
-    .slice()
-    .sort((a, b) => Date.parse(b.submittedAt || '') - Date.parse(a.submittedAt || '') || a.id.localeCompare(b.id));
-  const last = sorted.find((s) => s.submittedAt) || sorted[0];
+  const counted = countOutreach(rows);
   return {
-    outreachCount: rows.length,
-    submittedCount: rows.filter((s) => s.status !== 'draft' && s.status !== 'withdrawn').length,
-    declinedCount: rows.filter((s) => s.status === 'declined').length,
-    offerCount: rows.filter((s) => s.status === 'offer').length,
+    outreachCount: counted.outreachCount,
+    submittedCount: counted.submittedCount,
+    declinedCount: counted.declinedCount,
+    offerCount: counted.offerCount,
     fundedCount: 0,
-    lastOutreachAt: last.submittedAt,
-    lastSubmissionStatus: last.status,
+    lastOutreachAt: counted.last?.submittedAt,
+    lastSubmissionStatus: counted.last?.status,
+    sourceRefs: rows.map(outreachSourceRef),
+  };
+}
+
+function clientCodeForSubmission(
+  row: LenderSubmission,
+  index: OpportunityClientIndexRow[] | undefined,
+): string | undefined {
+  const hit = (index || []).find((o) => o.id === row.capitalOpportunityId);
+  return hit?.clientCode;
+}
+
+/**
+ * Explainable HVCG_LenderOutreach context for a lender.
+ * Historical contact is not a fit and is not future certainty.
+ * Cross-client: another client's opportunity/title/amount is never attached
+ * to output visible under a different ClientCode. LenderId aggregates omit identifiers.
+ */
+export function summarizeHistoricalLenderIntelligence(input: {
+  outreach?: LenderSubmission[];
+  lenderId: string;
+  viewingClientCode?: string;
+  opportunityClientIndex?: OpportunityClientIndexRow[];
+}): HistoricalLenderIntelligence | undefined {
+  const rows = (input.outreach || []).filter((s) => s.lenderId === input.lenderId);
+  if (!rows.length) return undefined;
+
+  const viewing = (input.viewingClientCode || '').trim();
+  const sameClientRows = viewing
+    ? rows.filter((s) => clientCodeForSubmission(s, input.opportunityClientIndex) === viewing)
+    : [];
+  const aggregate = countOutreach(rows);
+  const same = countOutreach(sameClientRows);
+  const sourceRefs = (viewing ? sameClientRows : rows).map(outreachSourceRef);
+  const contacted = viewing ? same.outreachCount > 0 : aggregate.outreachCount > 0;
+
+  const parts: string[] = [];
+  if (viewing) {
+    parts.push(
+      contacted
+        ? `HVCG recorded ${same.outreachCount} outreach row(s) for this client at this lender; last status ${same.last?.status || 'unknown'}.`
+        : 'HVCG has no sourced outreach rows for this client at this lender.',
+    );
+    if (aggregate.outreachCount > same.outreachCount) {
+      parts.push(
+        `HVCG also recorded ${aggregate.outreachCount - same.outreachCount} other outreach row(s) to this lender (counts only; other-client opportunity/title/amount omitted).`,
+      );
+    }
+  } else {
+    parts.push(
+      `HVCG recorded ${aggregate.outreachCount} outreach row(s) to this lender; last status ${aggregate.last?.status || 'unknown'}.`,
+    );
+  }
+  parts.push('Historical contact is context, not a product fit, and is not future approval certainty.');
+
+  return {
+    lenderId: input.lenderId,
+    contacted,
+    sameClient: {
+      outreachCount: same.outreachCount,
+      lastStatus: same.last?.status,
+      lastOutreachAt: same.last?.submittedAt,
+    },
+    lenderAggregate: {
+      outreachCount: aggregate.outreachCount,
+      submittedCount: aggregate.submittedCount,
+      declinedCount: aggregate.declinedCount,
+      offerCount: aggregate.offerCount,
+      lastStatus: aggregate.last?.status,
+      lastOutreachAt: aggregate.last?.submittedAt,
+    },
+    notAFit: true,
+    notFutureCertainty: true,
+    explanation: parts.join(' '),
     sourceRefs,
   };
 }
@@ -267,6 +368,7 @@ function matchProductCore(
   product: LenderProduct,
   now: Date,
   experience?: HvcgLenderExperience,
+  intelligence?: HistoricalLenderIntelligence,
 ): LenderMatch {
   const fresh = productFreshness(product, now);
   const explanations: MatchExplanation[] = [];
@@ -626,7 +728,19 @@ function matchProductCore(
     });
   }
 
-  if (experience) {
+  if (intelligence) {
+    pushExplanation(explanations, {
+      criterion: 'hvcgExperience',
+      statement: intelligence.explanation,
+      outcome: 'context',
+      sourceRef: intelligence.sourceRefs[0] || {
+        sourceSystem: 'HVCG_LenderOutreach',
+        sourceRecordId: lender.id,
+        field: 'LenderId',
+        capturedAt: intelligence.sameClient.lastOutreachAt || intelligence.lenderAggregate.lastOutreachAt || missingCapturedAt(),
+      },
+    });
+  } else if (experience) {
     pushExplanation(explanations, {
       criterion: 'hvcgExperience',
       statement: `HVCG recorded ${experience.outreachCount} outreach row(s); last status ${experience.lastSubmissionStatus || 'unknown'}. Historical experience is context, not a fit.`,
@@ -674,6 +788,7 @@ function matchProductCore(
     freshness: fresh.freshness,
     sourceRef: productSourceRef(fresh, 'Title'),
     historicalExperience: experience,
+    historicalIntelligence: intelligence,
     reviewStatus: 'PENDING_MANNY',
   };
 }
@@ -683,6 +798,7 @@ export function matchLenderWithoutProducts(
   lender: LenderOrganization,
   now = new Date(),
   experience?: HvcgLenderExperience,
+  intelligence?: HistoricalLenderIntelligence,
 ): LenderMatch {
   const freshness = organizationFreshness(lender, now);
   const explanations: MatchExplanation[] = [
@@ -741,7 +857,19 @@ export function matchLenderWithoutProducts(
       sourceRef: lenderSourceRef(lender, 'Notes'),
     });
   }
-  if (experience) {
+  if (intelligence) {
+    explanations.push({
+      criterion: 'hvcgExperience',
+      statement: intelligence.explanation,
+      outcome: 'context',
+      sourceRef: intelligence.sourceRefs[0] || {
+        sourceSystem: 'HVCG_LenderOutreach',
+        sourceRecordId: lender.id,
+        field: 'LenderId',
+        capturedAt: intelligence.lenderAggregate.lastOutreachAt || missingCapturedAt(),
+      },
+    });
+  } else if (experience) {
     explanations.push({
       criterion: 'hvcgExperience',
       statement: `HVCG recorded ${experience.outreachCount} outreach row(s). Historical experience does not create a product fit.`,
@@ -760,6 +888,7 @@ export function matchLenderWithoutProducts(
     freshness,
     sourceRef: lenderSourceRef(lender, 'Title'),
     historicalExperience: experience,
+    historicalIntelligence: intelligence,
     reviewStatus: 'PENDING_MANNY',
   };
 }
@@ -770,8 +899,9 @@ export function matchProduct(
   product: LenderProduct,
   now = new Date(),
   experience?: HvcgLenderExperience,
+  intelligence?: HistoricalLenderIntelligence,
 ): LenderMatch {
-  return matchProductCore(opportunity, lender, product, now, experience);
+  return matchProductCore(opportunity, lender, product, now, experience, intelligence);
 }
 
 export function rankMatches(matches: LenderMatch[]): LenderMatch[] {
@@ -821,15 +951,25 @@ export function runLenderMatch(
     productsByLender.set(product.lenderId, list);
   }
   const results: LenderMatch[] = [];
+  const index = [
+    { id: facts.id, clientCode: facts.clientCode },
+    ...(context.opportunityClientIndex || []).filter((r) => r.id !== facts.id),
+  ];
   for (const lender of eligible) {
     const experience = summarizeHvcgExperience(context.outreach, lender.id);
+    const intelligence = summarizeHistoricalLenderIntelligence({
+      outreach: context.outreach,
+      lenderId: lender.id,
+      viewingClientCode: facts.clientCode,
+      opportunityClientIndex: index,
+    });
     const lenderProducts = productsByLender.get(lender.id) || [];
     if (!lenderProducts.length) {
-      results.push(matchLenderWithoutProducts(facts, lender, now, experience));
+      results.push(matchLenderWithoutProducts(facts, lender, now, experience, intelligence));
       continue;
     }
     for (const product of lenderProducts) {
-      results.push(matchProduct(facts, lender, product, now, experience));
+      results.push(matchProduct(facts, lender, product, now, experience, intelligence));
     }
   }
   return {

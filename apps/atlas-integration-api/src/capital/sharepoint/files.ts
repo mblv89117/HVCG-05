@@ -22,6 +22,7 @@ export interface CapitalFileMetadata {
   webUrl?: string;
   createdAt?: string;
   modifiedAt?: string;
+  eTag?: string;
   parentPath?: string;
   libraryClientCode: string | null;
 }
@@ -233,7 +234,7 @@ export function createGraphCapitalFileSource(
   return {
     async getItem(driveId, itemId) {
       assertSafeDriveIds(driveId, itemId);
-      const url = `${GRAPH_ORIGIN}/${GRAPH_API_VERSION}/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,name,size,file,webUrl,parentReference,createdDateTime,lastModifiedDateTime`;
+      const url = `${GRAPH_ORIGIN}/${GRAPH_API_VERSION}/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,name,size,file,webUrl,eTag,parentReference,createdDateTime,lastModifiedDateTime`;
       const { status, json } = await graphGet(url, false);
       if (status !== 200) rejected('SharePoint file Graph request failed.');
       const row = json && typeof json === 'object' ? (json as Record<string, unknown>) : {};
@@ -253,6 +254,7 @@ export function createGraphCapitalFileSource(
         webUrl,
         createdAt: typeof row.createdDateTime === 'string' ? row.createdDateTime : undefined,
         modifiedAt: typeof row.lastModifiedDateTime === 'string' ? row.lastModifiedDateTime : undefined,
+        eTag: typeof row.eTag === 'string' ? row.eTag : undefined,
         parentPath,
         libraryClientCode: clientCodeFromSharePointPath(parentPath) || clientCodeFromSharePointPath(webUrl),
       };
