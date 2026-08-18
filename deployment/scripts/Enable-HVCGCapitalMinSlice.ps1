@@ -127,6 +127,7 @@ Write-Host "Hub MI appId=$HubAppId principalId=$HubPrincipalId ($HubIdentityName
 Write-Host "Will NOT: create lists, grant Sites.Manage.All, deploy Hub, or set App Settings."
 
 Import-Module (Join-Path $RepoRoot 'deployment/lib/HVCG.Deployment.psm1') -Force
+Import-Module (Join-Path $RepoRoot 'deployment/lib/HVCG.CapitalListGrants.psm1') -Force
 $Report = New-HVCGDeploymentReport -Environment 'capital-min-slice' -RepoRoot $RepoRoot
 $cfgPath = Join-Path $RepoRoot 'config/environments/development.json'
 $Config = if (Test-Path $cfgPath) {
@@ -223,21 +224,20 @@ foreach ($name in @('HVCG_CapitalOpportunities','HVCG_DocumentRequests','HVCG_Le
   $listId = $Lists[$name]
   $permUrl = "https://graph.microsoft.com/v1.0/sites/$SiteId/lists/$listId/permissions"
   $existing = Invoke-RestMethod -Method GET -Uri $permUrl -Headers $headers
-  $already = $false
-  foreach ($p in @($existing.value)) {
-    $appId = $p.grantedToV2.application.id
-    if (-not $appId) { $appId = $p.grantedTo.application.id }
-    $roles = @($p.roles)
-    if ($appId -eq $HubAppId -and ($roles -contains 'write' -or $roles -contains 'owner')) {
-      $already = $true
-    }
+  $permValues = Get-HVCGNoteProperty -Object $existing -Name 'value'
+  $grant = Resolve-HVCGSelectedWriteGrant -Permissions @($permValues) -TargetAppId $HubAppId
+  if ($grant.State -eq 'UNKNOWN') {
+    throw "Cannot interpret Graph list permissions for $name. Fail closed. $($grant.Diagnostic)"
   }
-  if ($already) {
+  if ($grant.State -eq 'EXISTS') {
     $skipped.Add("grant $name write already present for $HubIdentityName") | Out-Null
     Write-Host "GRANT already present: $name write -> $HubIdentityName"
     continue
   }
   $plan = "GRANT list-level write on $name to $HubIdentityName ($HubAppId)"
+  if ($grant.State -eq 'INSUFFICIENT') {
+    $plan = "$plan (existing Selected grant is not write; additive write still required)"
+  }
   if (-not $Apply) {
     $skipped.Add("WHATIF $plan") | Out-Null
     Write-Host $plan
