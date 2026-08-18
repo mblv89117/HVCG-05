@@ -45,19 +45,32 @@ New-Item -ItemType Directory -Force -Path $buildDir, $rollbackDir | Out-Null
 
 $outfile = Join-Path $buildDir 'server.js'
 $entry = Join-Path $RepoRoot 'apps/atlas-integration-api/src/index.ts'
-$esbuild = Get-Command esbuild -ErrorAction SilentlyContinue
+function Resolve-HVCGEsbuild {
+  $candidates = @(
+    (Join-Path $RepoRoot 'node_modules/.bin/esbuild'),
+    (Join-Path $RepoRoot 'node_modules/esbuild/bin/esbuild'),
+    (Join-Path $RepoRoot 'node_modules/tsx/node_modules/esbuild/bin/esbuild'),
+    (Join-Path $RepoRoot 'apps/atlas-integration-api/node_modules/esbuild/bin/esbuild')
+  )
+  foreach ($c in $candidates) {
+    if (Test-Path -LiteralPath $c) { return $c }
+  }
+  $cmd = Get-Command esbuild -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return [string]$cmd.Source }
+  return $null
+}
+$esbuildBin = Resolve-HVCGEsbuild
 Write-Host "Bundling $entry -> $outfile (commit $sha)"
 Push-Location $RepoRoot
 try {
-  if ($esbuild) {
-    & esbuild $entry --bundle --platform=node --format=esm --outfile=$outfile --legal-comments=none
+  if ($esbuildBin) {
+    Write-Host "esbuild: $esbuildBin"
+    & node $esbuildBin $entry --bundle --platform=node --format=esm --outfile=$outfile --legal-comments=none
   } else {
-    npx --no-install esbuild $entry --bundle --platform=node --format=esm --outfile=$outfile --legal-comments=none
-    if ($LASTEXITCODE -ne 0) {
-      npx --yes esbuild $entry --bundle --platform=node --format=esm --outfile=$outfile --legal-comments=none
-    }
+    npx --yes --package esbuild -- esbuild $entry --bundle --platform=node --format=esm --outfile=$outfile --legal-comments=none
   }
   if ($LASTEXITCODE -ne 0) { throw 'esbuild failed' }
+  if (-not (Test-Path -LiteralPath $outfile)) { throw 'esbuild did not write server.js' }
 } finally {
   Pop-Location
 }
