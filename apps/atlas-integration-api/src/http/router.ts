@@ -266,8 +266,7 @@ export async function handleRequest(
             listsConfigured: Boolean(cfg.capitalBackend.sharepoint),
             overlay: {
               schemaVersion: 1,
-              recycleSurvivable:
-                process.env.HOME === '/home' || Boolean(process.env.INTEGRATION_CAPITAL_OVERLAY_DIR),
+              recycleSurvivable: (process.env.HOME || '') === '/home',
             },
           },
           websiteLeads: {

@@ -58,8 +58,14 @@ export function emptyOverlay(): CapitalOverlay {
 export function resolveCapitalOverlayDir(dataDir: string, env: NodeJS.ProcessEnv = process.env): string {
   const explicit = (env.INTEGRATION_CAPITAL_OVERLAY_DIR || '').trim();
   if (explicit) return explicit;
-  if (env.HOME === '/home' && existsSync('/home/data')) {
-    return '/home/data/atlas-capital';
+  if ((env.HOME || '') === '/home') {
+    const preferred = '/home/data/atlas-capital';
+    try {
+      mkdirSync(preferred, { recursive: true, mode: 0o700 });
+      return preferred;
+    } catch {
+      /* fall through to INTEGRATION_DATA_DIR */
+    }
   }
   const fromEnv = (env.INTEGRATION_DATA_DIR || '').trim();
   if (fromEnv) return join(fromEnv, 'capital-overlay');
