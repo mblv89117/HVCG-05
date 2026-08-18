@@ -105,5 +105,7 @@ if (-not $Apply) {
 $pairs = @($settings.GetEnumerator() | ForEach-Object { "$($_.Name)=$($_.Value)" })
 $pairs += "INTEGRATION_CLIENT_ENTITLEMENT_GROUPS=$nextMap"
 az webapp config appsettings set -g $ResourceGroup -n $AppName --settings @pairs --output none
-Write-Host 'App Settings updated. App will recycle.'
+Write-Host 'App Settings updated. Forcing stop/start so the worker loads the new INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH value.'
+az webapp stop -g $ResourceGroup -n $AppName --output none
+az webapp start -g $ResourceGroup -n $AppName --output none
 Write-Host "Verify GET /health capitalBackend.mode=sharepoint and INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH=$synthetic"
