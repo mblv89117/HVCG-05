@@ -172,6 +172,15 @@ Assert-HVCG 'live Graph JSON inherited ACLs MISSING' ($rlive.State -eq 'MISSING'
 Convert-HVCGListPermission -Permission $liveObjs[0] | Out-Null
 Assert-HVCG 'live Graph JSON siteGroup does not throw' $true
 
+# ACL principal inventory parser (read-only)
+$siteGroupParsed = @(Convert-HVCGAclGrantedPrincipal -Permission $d[0])
+Assert-HVCG 'ACL parser siteGroup kind' ($siteGroupParsed[0].Kind -eq 'SharePointSiteGroup' -and $siteGroupParsed[0].DisplayName -eq 'Owners') $siteGroupParsed[0].Kind
+Assert-HVCG 'ACL parser siteGroup owner role' ($siteGroupParsed[0].Roles -contains 'owner')
+$groupParsed = @(Convert-HVCGAclGrantedPrincipal -Permission $d[3])
+Assert-HVCG 'ACL parser entra group kind' ($groupParsed[0].Kind -eq 'EntraGroup') $groupParsed[0].Kind
+$nullParsed = @(Convert-HVCGAclGrantedPrincipal -Permission $null)
+Assert-HVCG 'ACL parser null is Unknown' ($nullParsed[0].Kind -eq 'Unknown')
+
 if ($failed -gt 0) {
   Write-Host "FAILED $failed"
   exit 1

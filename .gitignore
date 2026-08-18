@@ -53,6 +53,10 @@ deployment/artifacts/hub-*.zip
 deployment/artifacts/*.ps1
 deployment/artifacts/syn01-corpus/
 
+# ACCG01 live ACL inventory (principals — do not commit)
+deployment/artifacts/accg01-acl-inventory.md
+deployment/artifacts/accg01-acl-inventory.json
+
 # Dated local deploy report copies (latest.md/json remain tracked)
 deployment/reports/HVCG-Dev-Deploy-20*.json
 deployment/reports/HVCG-Dev-Deploy-20*.md
