@@ -66,7 +66,10 @@ const KPI_TO_QUEUE: Record<string, QueueFilter> = {
   offersReceived: 'OFFERS_RECEIVED',
   transactionsClosing: 'CLOSING',
   recentlyFunded: 'FUNDED',
-  feeReceivableOpen: 'ALL',
+  feeReceivableOpen: 'COMPLIANCE_REVIEW',
+  readyForSubmission: 'READY_FOR_SUBMISSION',
+  rfiOverdue: 'RFI_OVERDUE',
+  complianceReviewRequired: 'COMPLIANCE_REVIEW',
 };
 
 function formatDue(due?: string): string {
@@ -118,9 +121,12 @@ export function CapitalCommandCenter() {
       AWAITING_CLIENT: 0,
       AWAITING_LENDER: 0,
       AWAITING_MANNY: 0,
+      READY_FOR_SUBMISSION: 0,
+      RFI_OVERDUE: 0,
       OFFERS_RECEIVED: 0,
       CLOSING: 0,
       FUNDED: 0,
+      COMPLIANCE_REVIEW: 0,
     };
     for (const item of payload?.items || []) {
       map[item.queue] += 1;
@@ -145,10 +151,13 @@ export function CapitalCommandCenter() {
         { key: 'documentsBlocked', label: 'Documents Blocked', value: String(kpis.documentsBlocked) },
         { key: 'clientActionsOverdue', label: 'Client Actions Overdue', value: String(kpis.clientActionsOverdue) },
         { key: 'lenderResponsesDue', label: 'Lender Responses Due', value: String(kpis.lenderResponsesDue) },
-        { key: 'mannyApprovalsRequired', label: 'Manny Approvals Required', value: String(kpis.mannyApprovalsRequired) },
-        { key: 'offersReceived', label: 'Offers Received', value: String(kpis.offersReceived) },
-        { key: 'transactionsClosing', label: 'Transactions Closing', value: String(kpis.transactionsClosing) },
-        { key: 'recentlyFunded', label: 'Recently Funded', value: String(kpis.recentlyFunded) },
+        { key: 'mannyApprovalsRequired', label: 'Needs Manny', value: String(kpis.mannyApprovalsRequired) },
+        { key: 'readyForSubmission', label: 'Ready for Submission', value: String(kpis.readyForSubmission ?? 0) },
+        { key: 'rfiOverdue', label: 'RFI Overdue', value: String(kpis.rfiOverdue ?? 0) },
+        { key: 'offersReceived', label: 'Term Sheets Received', value: String(kpis.offersReceived) },
+        { key: 'transactionsClosing', label: 'Closing', value: String(kpis.transactionsClosing) },
+        { key: 'recentlyFunded', label: 'Funded', value: String(kpis.recentlyFunded) },
+        { key: 'complianceReviewRequired', label: 'Compliance Review', value: String(kpis.complianceReviewRequired ?? 0) },
         { key: 'feeReceivableOpen', label: 'Fee / Receivable Status', value: String(kpis.feeReceivableOpen) },
       ]
     : [];

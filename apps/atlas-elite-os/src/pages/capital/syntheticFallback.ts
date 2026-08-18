@@ -670,6 +670,9 @@ function rebuildKpis(items: QueueItem[], details: Map<string, CapitalOpportunity
       (s, d) => s + d.fees.filter((f) => f.paymentStatus !== 'paid' && f.invoiceStatus !== 'void').length,
       0,
     ),
+    readyForSubmission: items.filter((i) => i.queue === 'READY_FOR_SUBMISSION').length,
+    rfiOverdue: items.filter((i) => i.queue === 'RFI_OVERDUE').length,
+    complianceReviewRequired: items.filter((i) => i.queue === 'COMPLIANCE_REVIEW').length,
   };
 }
 

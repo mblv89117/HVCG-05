@@ -36,7 +36,19 @@ const USBANK_CFM =
 const BOFA_LOC = 'https://www.bankofamerica.com/smallbusiness/business-financing/unsecured-business-line-of-credit/';
 const BOFA_FINANCING = 'https://www.bankofamerica.com/smallbusiness/business-financing/';
 const FIRST_CITIZENS_ABL = 'https://www.firstcitizens.com/commercial/solutions/asset-based-lending';
+const FIRST_CITIZENS_EQUIPMENT =
+  'https://www.firstcitizens.com/small-business/credit-financing/equipment-financing-leasing';
+const FIRST_CITIZENS_LOANS =
+  'https://www.firstcitizens.com/small-business/credit-financing/business-financing/business-loans';
 const NEWTEK_LENDING = 'https://www.newtekone.com/newtek-lending/';
+const USBANK_SBA =
+  'https://www.usbank.com/business-banking/banking-products/business-lending/business-loans/sba-loan.html';
+const USBANK_EQUIPMENT =
+  'https://www.usbank.com/business-banking/banking-products/business-lending/business-loans/equipment-financing.html';
+const HUNTINGTON_ABL = 'https://www.huntington.com/Commercial/credit-loans-leasing/asset-based-lending';
+const HUNTINGTON_COMMERCIAL = 'https://www.huntington.com/Commercial/credit-loans-leasing';
+const FIRST_CITIZENS_LOC =
+  'https://www.firstcitizens.com/commercial/solutions/credit-financing/commercial-line-of-credit';
 
 /** Products researched and not added — marketing-only or mixed/unstated criteria. */
 export const CATALOG_RESEARCH_REJECTIONS: Array<{ name: string; url: string; reason: string }> = [
@@ -139,6 +151,48 @@ export const CATALOG_RESEARCH_REJECTIONS: Array<{ name: string; url: string; rea
     name: 'Celtic Bank FICO / DSCR invented from third parties',
     url: CELTIC_7A,
     reason: 'Refused to invent FICO, DSCR, or TIB minima. Official 7(a) page is silent. UNKNOWN.',
+  },
+  {
+    name: 'Huntington ABL facility range',
+    url: HUNTINGTON_COMMERCIAL,
+    reason:
+      'Dedicated ABL page states $10 million to over $1 billion; commercial hub states $7.5MM to $1B+. Conflicting official ranges not recorded as CURRENT min/max.',
+  },
+  {
+    name: 'Huntington ABL $50 million revenue',
+    url: HUNTINGTON_ABL,
+    reason:
+      'Official page says a “strong fit” for $50 million or greater revenue. Marketing fit language, not a hard min. Not recorded.',
+  },
+  {
+    name: 'U.S. Bank equipment financing amount band',
+    url: USBANK_EQUIPMENT,
+    reason:
+      'Official page states an application-only process up to $250,000 for existing customers, not a product min/max for all applicants. Hard maximum is unstated.',
+  },
+  {
+    name: 'U.S. Bank SBA 7(a) overlay and TIB',
+    url: USBANK_SBA,
+    reason:
+      'Working official SBA table restates the federal $5 million 7(a) cap. “Minimum of six months in business” is qualified by direct management experience. Not recorded as a CURRENT lender overlay or TIB min.',
+  },
+  {
+    name: 'U.S. Bank SBA 504 $12.375 million',
+    url: USBANK_SBA,
+    reason:
+      'Official table states up to $12.375 million without distinguishing SBA debenture vs total project (bank + CDC). Not recorded as CURRENT min/max.',
+  },
+  {
+    name: 'First Citizens commercial line of credit amount band',
+    url: FIRST_CITIZENS_LOC,
+    reason:
+      'Official page states the most basic line goes up to $10,000 with larger options unstated. Not an HVCG commercial WC structure; no CURRENT min/max recorded.',
+  },
+  {
+    name: 'SBA 504 owner-occupancy 51%/60%',
+    url: SBA_504,
+    reason:
+      'Public 504 loans page does not restate occupancy percentages. Form/CFR occupancy rules were not recorded as CURRENT catalog criteria in this pass.',
   },
 ];
 
@@ -278,6 +332,7 @@ const liveOak7a = officialProduct({
   maxAmount: 5_000_000,
   sbaParticipation: true,
   acquisitionAppetite: true,
+  realEstateAppetite: true,
   creditExpectations: 'Official site: minimum FICO 680 to be considered',
   source: LIVE_OAK_7A,
   otherCriteria: 'Up to $5 million; acquisitions / partner buyouts / real estate / refinance cited on official page.',
@@ -607,6 +662,30 @@ const bofaSecuredLoc = officialProduct({
     'Official: loan amount from $25,000; revolving with annual renewal; minimum 2 years in business under existing ownership; minimum $250,000 in annual revenue. Typically secured by a blanket lien or CD. Maximum amount is not stated.',
 });
 
+const firstCitizensEquipment = officialProduct({
+  id: 'pr-catalog-firstcitizens-equipment',
+  lenderId: firstCitizens.id,
+  productName: 'First Citizens equipment financing',
+  productCategory: 'equipment',
+  maxAmount: 3_000_000,
+  equipmentAppetite: true,
+  source: FIRST_CITIZENS_EQUIPMENT,
+  otherCriteria:
+    'Official: business equipment financing up to $3 million; up to 100% financing for new and used equipment. Typical terms up to 5 years. Minimum amount, TIB, FICO, and min revenue are not stated.',
+});
+
+const firstCitizensCre = officialProduct({
+  id: 'pr-catalog-firstcitizens-cre',
+  lenderId: firstCitizens.id,
+  productName: 'First Citizens commercial adjustable-rate (owner-occupied)',
+  productCategory: 'commercial_real_estate',
+  minAmount: 250_000,
+  realEstateAppetite: true,
+  source: FIRST_CITIZENS_LOANS,
+  otherCriteria:
+    'Official: available for general purpose, owner-occupied real estate; minimum loan amount of $250,000 with no maximum. 15- and 20-year terms. TIB, FICO, DSCR, and min revenue are not stated.',
+});
+
 export const SOURCED_LENDERS: LenderOrganization[] = [
   sba,
   liveOak,
@@ -649,6 +728,8 @@ export const SOURCED_PRODUCTS: LenderProduct[] = [
   firstCitizensExpress,
   newtekTerm,
   bofaSecuredLoc,
+  firstCitizensEquipment,
+  firstCitizensCre,
 ];
 
 export const SOURCED_CRITERIA: LenderCriterionRecord[] = [
@@ -692,6 +773,15 @@ export const SOURCED_CRITERIA: LenderCriterionRecord[] = [
     criterion: 'creditExpectations',
     value: 'FICO 680 minimum',
     field: 'CreditExpectations',
+    sourceType: 'official_website',
+    url: LIVE_OAK_7A,
+  }),
+  criterion({
+    lender: liveOak,
+    product: liveOak7a,
+    criterion: 'realEstateAppetite',
+    value: true,
+    field: 'RealEstateAppetite',
     sourceType: 'official_website',
     url: LIVE_OAK_7A,
   }),
@@ -989,6 +1079,24 @@ export const SOURCED_CRITERIA: LenderCriterionRecord[] = [
     field: 'TimeInBusinessMonths',
     sourceType: 'official_website',
     url: BOFA_FINANCING,
+  }),
+  criterion({
+    lender: firstCitizens,
+    product: firstCitizensEquipment,
+    criterion: 'maxAmount',
+    value: 3_000_000,
+    field: 'MaxAmount',
+    sourceType: 'official_website',
+    url: FIRST_CITIZENS_EQUIPMENT,
+  }),
+  criterion({
+    lender: firstCitizens,
+    product: firstCitizensCre,
+    criterion: 'minAmount',
+    value: 250_000,
+    field: 'MinAmount',
+    sourceType: 'official_website',
+    url: FIRST_CITIZENS_LOANS,
   }),
 ];
 

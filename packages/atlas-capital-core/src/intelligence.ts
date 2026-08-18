@@ -10,7 +10,6 @@ import {
   AI_DISCLAIMER,
   FINANCING_DISCLAIMER,
   LEGAL_COMPLIANCE_REVIEW_REQUIRED,
-  type ApplicationPackage,
   type Attribution,
   type CapitalCommandKpis,
   type CapitalDocument,
@@ -35,6 +34,7 @@ import {
 } from './types.ts';
 import { completenessPercent, consolidateMissingRequest, requiredOpenItems } from './checklist.ts';
 import { proposeFinancingStructures, structureLines } from './financing-structures.ts';
+import { detectInstructionInjection } from './execution-trust.ts';
 
 export function missingValue<T>(): ProvenancedValue<T> {
   return { value: null, verification: 'MISSING', confidence: null };
@@ -518,66 +518,30 @@ export function applyMannyDecision<T extends { mannyApproval: FinancingStrategy[
   };
 }
 
-export function prepareApplication(opts: {
-  opportunity: CapitalOpportunity;
-  lenderId: string;
-  productId?: string;
-  fieldMap: Record<string, { from: 'opportunity' | 'profile'; path: string }>;
-  documents: CapitalDocument[];
-}): ApplicationPackage {
-  const populated: ApplicationPackage['populatedFields'] = {};
-  const missing: ApplicationPackage['missingFields'] = [];
-
-  const amount = opts.opportunity.need.requestedAmount;
-  if (amount != null) {
-    populated.requestedAmount = { value: amount, verification: 'VERIFIED' };
-  } else {
-    missing.push({ field: 'requestedAmount', requiredFrom: 'MANNY_INPUT_REQUIRED' });
-  }
-
-  const revenue = opts.opportunity.business.annualRevenue;
-  if (revenue?.verification === 'VERIFIED' && revenue.value != null) {
-    populated.annualRevenue = { value: revenue.value, verification: 'VERIFIED' };
-  } else {
-    missing.push({ field: 'annualRevenue', requiredFrom: 'CLIENT_INPUT_REQUIRED' });
-  }
-
-  const legal = opts.opportunity.clientCode;
-  populated.clientCode = { value: legal, verification: 'VERIFIED' };
-
-  return {
-    id: `app-${opts.opportunity.id}-${opts.lenderId}`,
-    capitalOpportunityId: opts.opportunity.id,
-    lenderId: opts.lenderId,
-    productId: opts.productId,
-    populatedFields: populated,
-    missingFields: missing,
-    attachedDocumentIds: opts.documents.filter((d) => d.capitalOpportunityId === opts.opportunity.id).map((d) => d.id),
-    status: missing.length ? 'BLOCKED_MISSING_FIELDS' : 'PREPARED',
-    createdAt: new Date().toISOString(),
-  };
-}
-
 export function classifyLenderMessage(text: string): { classification: LenderMessageClass; requestedItems: string[]; dueDate?: string } {
-  const t = text.toLowerCase();
+  const stripped = (text || '')
+    .split(/\n/)
+    .filter((line) => !detectInstructionInjection(line))
+    .join('\n');
+  const t = stripped.toLowerCase();
   let classification: LenderMessageClass = 'OTHER';
-  if (/\bterm sheet\b/.test(t)) classification = 'TERM_SHEET';
-  else if (/\bfunded\b|\bwired\b/.test(t)) classification = 'FUNDED';
+  if (/\badditional information\b|\brfi\b|\bneed the following/.test(t)) classification = 'REQUEST_FOR_INFORMATION';
+  else if (/\bterm sheet\b/.test(t)) classification = 'TERM_SHEET';
   else if (/\bdeclin/.test(t)) classification = 'DECLINE';
   else if (/\bconditional.?approv/.test(t)) classification = 'CONDITIONAL_APPROVAL';
   else if (/\bclosing condition/.test(t)) classification = 'CLOSING_CONDITION';
-  else if (/\badditional information\b|\brfi\b|\bneed the following/.test(t)) classification = 'REQUEST_FOR_INFORMATION';
   else if (/\bmissing (doc|item)/.test(t) || /\bplease (send|provide|upload)/.test(t)) classification = 'MISSING_DOCUMENT';
   else if (/\bunderwriting\b|\bcredit committee\b/.test(t)) classification = 'UNDERWRITING_QUESTION';
   else if (/\breceived\b|\backnowledg/.test(t)) classification = 'ACKNOWLEDGMENT';
   else if (/\boffer\b/.test(t)) classification = 'TERM_SHEET';
+  else if (/\bfunded\b|\bwired\b/.test(t) && !/\bmark as funded\b/.test(t)) classification = 'FUNDED';
 
   const requestedItems: string[] = [];
-  for (const line of text.split(/\n|;/)) {
+  for (const line of stripped.split(/\n|;/)) {
     const m = /^\s*[-*]\s+(.+)/.exec(line);
-    if (m) requestedItems.push(m[1].trim());
+    if (m && !detectInstructionInjection(m[1])) requestedItems.push(m[1].trim());
   }
-  const due = /\bby (\d{4}-\d{2}-\d{2})\b/i.exec(text)?.[1];
+  const due = /\bby (\d{4}-\d{2}-\d{2})\b/i.exec(stripped)?.[1];
   return { classification, requestedItems, dueDate: due };
 }
 
@@ -596,6 +560,8 @@ export function compareOffers(offers: TermSheetOffer[]): {
   for (const o of offers) {
     if (!o.assumptions.length) notes.push(`${o.lenderName}: no assumptions recorded — do not treat figures as complete.`);
   }
+  notes.push('Derived cost figures, when present, are DERIVED and are not lender-quoted terms.');
+  notes.push('Atlas does not select financing for the client. Manny recommendation and client decision stay separate.');
   return { rows: offers, notes, disclaimer: FINANCING_DISCLAIMER };
 }
 
@@ -629,8 +595,9 @@ export function feeRequiresLegalReview(feeType: string): boolean {
   return /securit|equity|investment|m&a|merger|acquisition fee|transaction.?based|success fee|tail/i.test(feeType);
 }
 
-export function createFeeRecord(input: Omit<FeeRecord, 'id' | 'legalComplianceReviewRequired' | 'approvalStatus' | 'invoiceStatus' | 'paymentStatus'> & Partial<FeeRecord>): FeeRecord {
+export function createFeeRecord(input: Omit<FeeRecord, 'id' | 'legalComplianceReviewRequired' | 'approvalStatus' | 'invoiceStatus' | 'paymentStatus' | 'complianceStatus'> & Partial<FeeRecord>): FeeRecord {
   const legal = input.legalComplianceReviewRequired ?? feeRequiresLegalReview(input.feeType);
+  const complianceStatus = input.complianceStatus || (legal ? 'REVIEW_REQUIRED' : 'UNKNOWN');
   return {
     id: input.id || `fee-${Date.now()}`,
     clientCode: input.clientCode,
@@ -639,6 +606,10 @@ export function createFeeRecord(input: Omit<FeeRecord, 'id' | 'legalComplianceRe
     executedAgreementRef: input.executedAgreementRef,
     feeType: input.feeType,
     feeFormula: input.feeFormula,
+    feeBasis: input.feeBasis,
+    feeRate: input.feeRate,
+    expectedFee: input.expectedFee,
+    actualFee: input.actualFee,
     startDate: input.startDate,
     earnedEvent: input.earnedEvent,
     tailStart: input.tailStart,
@@ -648,25 +619,43 @@ export function createFeeRecord(input: Omit<FeeRecord, 'id' | 'legalComplianceRe
     invoiceStatus: input.invoiceStatus || 'not_invoiced',
     paymentStatus: input.paymentStatus || 'unpaid',
     legalComplianceReviewRequired: legal,
+    complianceStatus,
+    complianceNote:
+      input.complianceNote ||
+      (legal ? LEGAL_COMPLIANCE_REVIEW_REQUIRED : 'Not certified as legally permissible.'),
     notes: legal
       ? `${LEGAL_COMPLIANCE_REVIEW_REQUIRED}. ${input.notes || ''}`.trim()
       : input.notes,
   };
 }
 
-export function queueFor(opportunity: CapitalOpportunity, checklist: ChecklistItem[]): WorkQueue {
+export function queueFor(
+  opportunity: CapitalOpportunity,
+  checklist: ChecklistItem[],
+  extras?: { fees?: FeeRecord[]; now?: Date },
+): WorkQueue {
   if (opportunity.stage === 'Funded' || opportunity.stage === 'ClosedArchived') return 'FUNDED';
   if (opportunity.stage === 'Closing') return 'CLOSING';
+  const fees = extras?.fees || [];
+  if (fees.some((f) => f.legalComplianceReviewRequired && f.approvalStatus !== 'APPROVED' && f.complianceStatus === 'REVIEW_REQUIRED')) {
+    return 'COMPLIANCE_REVIEW';
+  }
+  const now = extras?.now || new Date();
+  if (opportunity.stage === 'AdditionalInformationRequested') {
+    if (opportunity.nextActionDue && Date.parse(opportunity.nextActionDue) < now.getTime()) return 'RFI_OVERDUE';
+    const clientDocs = requiredOpenItems(checklist).some((i) => i.responsibleParty === 'client');
+    return clientDocs ? 'AWAITING_CLIENT' : 'AWAITING_LENDER';
+  }
   if (opportunity.stage === 'TermSheetOfferReceived' || opportunity.stage === 'OfferComparison' || opportunity.stage === 'ClientDecision') {
     return 'OFFERS_RECEIVED';
   }
   if (opportunity.stage === 'AwaitingMannyStrategyApproval' || opportunity.stage === 'AwaitingMannyShortlistApproval') {
     return 'AWAITING_MANNY';
   }
+  if (opportunity.stage === 'ReadyForSubmission') return 'READY_FOR_SUBMISSION';
   if (
     opportunity.stage === 'Submitted' ||
     opportunity.stage === 'Underwriting' ||
-    opportunity.stage === 'AdditionalInformationRequested' ||
     opportunity.stage === 'LenderVendorResearch'
   ) {
     return 'AWAITING_LENDER';
@@ -678,14 +667,19 @@ export function queueFor(opportunity: CapitalOpportunity, checklist: ChecklistIt
   return 'NEEDS_ATTENTION';
 }
 
-export function toQueueItem(opportunity: CapitalOpportunity, checklist: ChecklistItem[], now = new Date()): QueueItem {
+export function toQueueItem(
+  opportunity: CapitalOpportunity,
+  checklist: ChecklistItem[],
+  now = new Date(),
+  extras?: { fees?: FeeRecord[] },
+): QueueItem {
   const agingDays = daysInStage(opportunity.stageEnteredAt, now);
   return {
     opportunityId: opportunity.id,
     title: opportunity.title,
     clientCode: opportunity.clientCode,
     stage: opportunity.stage,
-    queue: queueFor(opportunity, checklist),
+    queue: queueFor(opportunity, checklist, { fees: extras?.fees, now }),
     nextAction: opportunity.nextAction,
     due: opportunity.nextActionDue,
     agingDays,
@@ -714,6 +708,14 @@ export function commandKpis(
     transactionsClosing: live.filter((o) => o.stage === 'Closing').length,
     recentlyFunded: opportunities.filter((o) => o.stage === 'Funded').length,
     feeReceivableOpen: fees.filter((f) => f.paymentStatus !== 'paid' && f.invoiceStatus !== 'void').length,
+    readyForSubmission: live.filter((o) => o.stage === 'ReadyForSubmission').length,
+    rfiOverdue: live.filter(
+      (o) =>
+        o.stage === 'AdditionalInformationRequested' &&
+        o.nextActionDue &&
+        Date.parse(o.nextActionDue) < now.getTime(),
+    ).length,
+    complianceReviewRequired: fees.filter((f) => f.legalComplianceReviewRequired && f.approvalStatus !== 'APPROVED').length,
   };
 }
 

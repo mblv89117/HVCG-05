@@ -46,6 +46,12 @@ export type CapitalOverlay = Pick<
   | 'underwriting'
   | 'checklists'
   | 'factReviews'
+  | 'rfis'
+  | 'interactions'
+  | 'fundingEvents'
+  | 'clientDecisions'
+  | 'lenderIdMaps'
+  | 'internalEvents'
 > & { schemaVersion?: number };
 
 export function emptyOverlay(): CapitalOverlay {
@@ -65,6 +71,12 @@ export function emptyOverlay(): CapitalOverlay {
     underwriting: s.underwriting,
     checklists: s.checklists,
     factReviews: s.factReviews,
+    rfis: s.rfis,
+    interactions: s.interactions,
+    fundingEvents: s.fundingEvents,
+    clientDecisions: s.clientDecisions,
+    lenderIdMaps: s.lenderIdMaps,
+    internalEvents: s.internalEvents,
   };
 }
 
@@ -222,6 +234,12 @@ export function applyOverlayToState(state: CapitalState, overlay: CapitalOverlay
     }
   }
   if (Array.isArray(overlay.factReviews)) state.factReviews = overlay.factReviews;
+  if (Array.isArray(overlay.rfis)) state.rfis = overlay.rfis;
+  if (Array.isArray(overlay.interactions)) state.interactions = overlay.interactions;
+  if (Array.isArray(overlay.fundingEvents)) state.fundingEvents = overlay.fundingEvents;
+  if (Array.isArray(overlay.clientDecisions)) state.clientDecisions = overlay.clientDecisions;
+  if (Array.isArray(overlay.lenderIdMaps)) state.lenderIdMaps = overlay.lenderIdMaps;
+  if (Array.isArray(overlay.internalEvents)) state.internalEvents = overlay.internalEvents;
   return state;
 }
 
@@ -241,5 +259,11 @@ export function overlayFromState(state: CapitalState): CapitalOverlay {
     underwriting: state.underwriting,
     checklists: state.checklists,
     factReviews: state.factReviews,
+    rfis: state.rfis || [],
+    interactions: state.interactions || [],
+    fundingEvents: state.fundingEvents || [],
+    clientDecisions: state.clientDecisions || [],
+    lenderIdMaps: state.lenderIdMaps || [],
+    internalEvents: state.internalEvents || [],
   };
 }

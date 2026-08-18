@@ -3,6 +3,16 @@
  * Additive to legacy HVCG_CapitalOpportunities.FundingStatus — do not delete the legacy field.
  */
 
+/**
+ * Phase 4 workflow names map onto this machine. Do not duplicate statuses.
+ * PackagePreparation → ReadyForSubmission
+ * LenderReview → Underwriting
+ * RFI → AdditionalInformationRequested
+ * ConditionalApproval → Underwriting (message class, not a stage)
+ * TermSheetReceived → TermSheetOfferReceived
+ * TermsUnderReview → OfferComparison
+ * Closed → ClosedArchived
+ */
 export const CAPITAL_STAGES = [
   'NeedIdentified',
   'InitialQualification',

@@ -7,14 +7,20 @@ import {
   type CapitalDocument,
   type CapitalOpportunity,
   type ChecklistItem,
+  type ClientDecisionRecord,
   type ClosingCondition,
   type DocumentReview,
   type FactReviewAudit,
   type FeeRecord,
   type FinancingStrategy,
+  type FundingEvent,
+  type InternalCapitalEvent,
+  type LenderIdMapping,
+  type LenderInteraction,
   type LenderOrganization,
   type LenderProduct,
   type LenderSubmission,
+  type RfiItem,
   type TermSheetOffer,
   type UnderwritingSummary,
 } from '@hvcg/atlas-capital-core';
@@ -46,6 +52,12 @@ export interface CapitalState {
   copilotHandoffs: CopilotHandoffRecord[];
   underwriting: UnderwritingSummary[];
   factReviews: FactReviewAudit[];
+  rfis: RfiItem[];
+  interactions: LenderInteraction[];
+  fundingEvents: FundingEvent[];
+  clientDecisions: ClientDecisionRecord[];
+  lenderIdMaps: LenderIdMapping[];
+  internalEvents: InternalCapitalEvent[];
 }
 
 /** JSON store is sync; Graph persistence is async. `await` works on both. */
@@ -77,6 +89,12 @@ export function emptyState(): CapitalState {
     copilotHandoffs: [],
     underwriting: [],
     factReviews: [],
+    rfis: [],
+    interactions: [],
+    fundingEvents: [],
+    clientDecisions: [],
+    lenderIdMaps: [],
+    internalEvents: [],
   };
 }
 

@@ -4,6 +4,8 @@ import {
   applyMannyDecision,
   applyReviewToReviews,
   assertTransition,
+  attestApplication,
+  canTransition,
   buildEvidenceReviewCards,
   buildUnderwritingSummary,
   classifyDocument,
@@ -11,17 +13,22 @@ import {
   classifyLenderMessage,
   commandKpis,
   compareOffers,
+  compareTermSheets,
+  consolidateClientRequests,
   consolidateMissingRequest,
   createFeeRecord,
-  defaultClosingConditions,
+  decomposeLenderRequest,
+  detectInstructionInjection,
   detectDuplicate,
   extractCapitalDocumentContent,
+  extractTermSheetFromText,
   FactReviewError,
   findDocumentByContentHash,
   findDocumentBySharePointItem,
   findFactInReviews,
   founderWorkloadForCards,
   ingestTypeAllowed,
+  interactionFromClassification,
   draftStrategy,
   evaHandoffAllowed,
   FINANCING_DISCLAIMER,
@@ -31,6 +38,7 @@ import {
   isCapitalClientCode,
   isCapitalStage,
   isMannyApprover,
+  markPackageSubmittedRecordedOnly,
   matchLenders,
   missingValue,
   organizationFreshness,
@@ -40,9 +48,13 @@ import {
   preserveAttribution,
   productFreshness,
   proposeFinancingStructures,
+  recordClientDecision,
+  recordFundingEvent,
+  reconcileOutreachRows,
   reviewDocument,
   runDocumentIntelligence,
   runLenderMatch,
+  seedClosingChecklist,
   sourcedLenderCatalog,
   STAGE_TO_LEGACY_FUNDING_STATUS,
   summarizeHistoricalLenderIntelligence,
@@ -52,14 +64,18 @@ import {
   buildOutreachHistorySnapshot,
   isStrategyWorkbenchOpen,
   type Attribution,
+  type ApplicationAttestationState,
   type CapitalOpportunity,
   type CapitalStage,
   type ChecklistItem,
   type DocumentIntelligenceOutput,
   type ExtractedFact,
   type FactReviewDecision,
+  type InternalCapitalEvent,
+  type InternalCapitalEventType,
   type LenderFreshness,
   type LenderProduct,
+  type SourceRef,
   type TransactionType,
 } from '@hvcg/atlas-capital-core';
 import type { AtlasPrincipal } from '../middleware/auth.ts';
@@ -155,6 +171,40 @@ function requestedClientSend(body: Record<string, unknown>): boolean {
   return false;
 }
 
+function emitEvent(
+  state: CapitalState,
+  type: InternalCapitalEventType,
+  opp: CapitalOpportunity,
+  detail: string,
+): void {
+  if (!state.internalEvents) state.internalEvents = [];
+  const ev: InternalCapitalEvent = {
+    id: `evt-${randomUUID()}`,
+    type,
+    at: nowIso(),
+    clientCode: opp.clientCode,
+    capitalOpportunityId: opp.id,
+    detail,
+    delivered: false,
+  };
+  state.internalEvents.push(ev);
+}
+
+function asSourceRef(v: unknown): SourceRef | undefined {
+  const rec = asRecord(v);
+  const sourceSystem = asString(rec.sourceSystem);
+  const capturedAt = asString(rec.capturedAt);
+  if (!sourceSystem || !capturedAt) return undefined;
+  return {
+    sourceSystem,
+    sourceRecordId: asString(rec.sourceRecordId) || undefined,
+    sourceUrl: asString(rec.sourceUrl) || undefined,
+    field: asString(rec.field) || undefined,
+    capturedAt,
+    capturedBy: asString(rec.capturedBy) || undefined,
+  };
+}
+
 function persistIntelligence(state: CapitalState, id: string, intelligence: DocumentIntelligenceOutput): void {
   state.checklists[id] = intelligence.checklist;
   for (const next of intelligence.reviews) {
@@ -195,10 +245,16 @@ export class CapitalService {
     const checklists = new Map(opps.map((o) => [o.id, state.checklists[o.id] || []]));
     const offers = state.offers.filter((x) => opps.some((o) => o.id === x.capitalOpportunityId));
     const fees = state.fees.filter((f) => canAccessClient(principal, f.clientCode));
-    const queues = opps.map((o) => toQueueItem(o, checklists.get(o.id) || []));
+    const queues = opps.map((o) =>
+      toQueueItem(o, checklists.get(o.id) || [], new Date(), {
+        fees: fees.filter((f) => f.capitalOpportunityId === o.id),
+      }),
+    );
     return {
       kpis: commandKpis(opps, checklists, offers, fees),
       queues,
+      items: queues,
+      events: (state.internalEvents || []).filter((e) => opps.some((o) => o.id === e.capitalOpportunityId)).slice(-50),
       disclaimer:
         'HVCG is not a lender. Financing outcomes are determined by third-party capital providers. AI output is unverified until a human confirms source documents.',
     };
@@ -211,16 +267,27 @@ export class CapitalService {
   async get(principal: AtlasPrincipal, id: string) {
     const state = await this.store.load();
     const opportunity = requireOpp(state, principal, id);
+    const comparison = compareTermSheets((state.offers || []).filter((o) => o.capitalOpportunityId === id));
+    const decision = (state.clientDecisions || []).find((d) => d.capitalOpportunityId === id) || null;
     return {
       opportunity,
       checklist: state.checklists[id] || [],
-      documents: state.documents.filter((d) => d.capitalOpportunityId === id),
-      reviews: state.reviews.filter((r) => r.capitalOpportunityId === id),
-      strategy: state.strategies.find((s) => s.capitalOpportunityId === id) || null,
-      underwriting: state.underwriting.find((u) => u.capitalOpportunityId === id) || null,
-      submissions: state.submissions.filter((s) => s.capitalOpportunityId === id),
-      offers: state.offers.filter((o) => o.capitalOpportunityId === id),
+      documents: (state.documents || []).filter((d) => d.capitalOpportunityId === id),
+      reviews: (state.reviews || []).filter((r) => r.capitalOpportunityId === id),
+      strategy: (state.strategies || []).find((s) => s.capitalOpportunityId === id) || null,
+      underwriting: (state.underwriting || []).find((u) => u.capitalOpportunityId === id) || null,
+      submissions: (state.submissions || []).filter((s) => s.capitalOpportunityId === id),
+      offers: (state.offers || []).filter((o) => o.capitalOpportunityId === id),
+      comparison,
       closing: state.closing[id] || [],
+      application: (state.applications || []).filter((a) => a.capitalOpportunityId === id),
+      applications: (state.applications || []).filter((a) => a.capitalOpportunityId === id),
+      fees: (state.fees || []).filter((f) => f.capitalOpportunityId === id),
+      rfis: (state.rfis || []).filter((r) => r.capitalOpportunityId === id),
+      interactions: (state.interactions || []).filter((i) => i.capitalOpportunityId === id),
+      funding: (state.fundingEvents || []).find((f) => f.capitalOpportunityId === id) || null,
+      decision,
+      events: (state.internalEvents || []).filter((e) => e.capitalOpportunityId === id),
     };
   }
 
@@ -1077,17 +1144,43 @@ export class CapitalService {
     const opp = requireOpp(state, principal, id);
     const lenderId = asString(body.lenderId);
     if (!lenderId) unprocessable('lenderId required');
+    const catalog = sourcedLenderCatalog();
     const pkg = prepareApplication({
       opportunity: opp,
       lenderId,
       productId: asString(body.productId) || undefined,
       fieldMap: {},
       documents: state.documents.filter((d) => d.capitalOpportunityId === id),
+      products: [...state.products, ...catalog.products],
+      criteria: catalog.criteria,
     });
     state.applications = state.applications.filter((a) => a.id !== pkg.id);
     state.applications.push(pkg);
     await this.store.save(state);
-    return { application: pkg };
+    return { application: pkg, notBorrowerRepresentation: true };
+  }
+
+  async attestApplication(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    if (requestedClientSend(body)) unprocessable('Client send is not enabled.');
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const applicationId = asString(body.applicationId) || asString(body.lenderId);
+    const pkg = state.applications.find((a) => a.capitalOpportunityId === id && (a.id === applicationId || a.lenderId === applicationId || !applicationId));
+    if (!pkg) unprocessable('application not found');
+    const next = asString(body.attestation) as ApplicationAttestationState;
+    if (next === 'APPROVED_FOR_SUBMISSION' && !isMannyApprover(principal.roles)) {
+      forbidden('APPROVED_FOR_SUBMISSION requires HVCG Owner');
+    }
+    try {
+      const updated = attestApplication(pkg, next, principal.email || principal.userId);
+      state.applications = state.applications.map((a) => (a.id === pkg.id ? updated : a));
+      if (next === 'CLIENT_CONFIRMATION_REQUIRED') emitEvent(state, 'CLIENT_ITEM_MISSING', opp, 'Client attestation required');
+      if (next === 'APPROVED_FOR_SUBMISSION') emitEvent(state, 'MANNY_ACTION_REQUIRED', opp, 'Package approved for recorded-only submission');
+      await this.store.save(state);
+      return { application: updated, sendAttempted: false };
+    } catch (err) {
+      unprocessable(err instanceof Error ? err.message : 'invalid attestation');
+    }
   }
 
   async submission(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
@@ -1113,6 +1206,10 @@ export class CapitalService {
     ) {
       forbidden('Submission requires Manny strategy and shortlist approval at ReadyForSubmission');
     }
+    const pkg = state.applications.find((a) => a.capitalOpportunityId === id && a.lenderId === lenderId);
+    if (pkg && pkg.attestation !== 'APPROVED_FOR_SUBMISSION') {
+      forbidden('Recorded submission requires client-attested package APPROVED_FOR_SUBMISSION');
+    }
     const sub = {
       id: `sub-${randomUUID()}`,
       capitalOpportunityId: id,
@@ -1127,6 +1224,25 @@ export class CapitalService {
       notes: 'Record only — no external portal submit. BL-C1.',
     };
     state.submissions.push(sub);
+    if (pkg) {
+      state.applications = state.applications.map((a) => (a.id === pkg.id ? markPackageSubmittedRecordedOnly(pkg) : a));
+    }
+    state.interactions.push({
+      id: `int-${randomUUID()}`,
+      capitalOpportunityId: id,
+      clientCode: opp.clientCode,
+      lenderId,
+      submissionId: sub.id,
+      interactionType: 'SUBMISSION_RECORDED',
+      at: nowIso(),
+      direction: 'internal',
+      summary: 'Recorded-only submission. No external portal or email send.',
+      status: 'recorded',
+      requestedItems: [],
+      owner: principal.email || principal.userId,
+      candidateOnly: false,
+      injectionDetected: false,
+    });
     if (opp.stage === 'ReadyForSubmission') {
       opp.stage = 'Submitted';
       opp.stageEnteredAt = nowIso();
@@ -1138,44 +1254,248 @@ export class CapitalService {
   async classify(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
     const state = await this.store.load();
     requireOpp(state, principal, id);
-    const classified = classifyLenderMessage(asString(body.text));
-    return { classification: classified, communication: classified };
+    const text = asString(body.text);
+    const classified = classifyLenderMessage(text);
+    return {
+      classification: classified,
+      communication: classified,
+      injectionDetected: detectInstructionInjection(text),
+      persisted: false,
+      stageUnchanged: true,
+    };
+  }
+
+  async ingestRfi(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    if (requestedClientSend(body)) unprocessable('Client send is not enabled.');
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const text = asString(body.text);
+    if (!text) unprocessable('text required');
+    const lenderId = asString(body.lenderId) || 'unknown';
+    const decomposed = decomposeLenderRequest({
+      text,
+      capitalOpportunityId: id,
+      clientCode: opp.clientCode,
+      lenderId,
+      documents: state.documents.filter((d) => d.capitalOpportunityId === id),
+      checklist: state.checklists[id] || [],
+    });
+    state.rfis = state.rfis.filter((r) => r.capitalOpportunityId !== id);
+    state.rfis.push(...decomposed.items);
+    const interaction = interactionFromClassification({
+      capitalOpportunityId: id,
+      clientCode: opp.clientCode,
+      lenderId,
+      text,
+      classification: decomposed.classification.classification,
+      requestedItems: decomposed.classification.requestedItems,
+      responseDue: decomposed.classification.dueDate,
+      injectionDetected: decomposed.injectionDetected,
+      actor: principal.email || principal.userId,
+    });
+    state.interactions.push(interaction);
+    emitEvent(state, 'RFI_RECEIVED', opp, `${decomposed.items.length} candidate RFI items`);
+    if (decomposed.classification.dueDate) {
+      opp.nextAction = 'Respond to lender RFI (candidate — not authoritative until reviewed)';
+      opp.nextActionDue = decomposed.classification.dueDate;
+      opp.nextActionOwner = 'hvcg';
+    }
+    const applyStage = body.applyStage === true && isMannyApprover(principal.roles) && !decomposed.injectionDetected;
+    if (applyStage && (opp.stage === 'Submitted' || opp.stage === 'Underwriting')) {
+      assertTransition(opp.stage, 'AdditionalInformationRequested');
+      opp.stage = 'AdditionalInformationRequested';
+      opp.stageEnteredAt = nowIso();
+    }
+    await this.store.save(state);
+    return {
+      rfi: decomposed.items,
+      classification: decomposed.classification,
+      injectionDetected: decomposed.injectionDetected,
+      candidateOnly: true,
+      stageApplied: applyStage && opp.stage === 'AdditionalInformationRequested',
+      sendAttempted: false,
+    };
+  }
+
+  async clientRequests(principal: AtlasPrincipal, id: string) {
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const items = state.rfis.filter((r) => r.capitalOpportunityId === id);
+    const bundle = consolidateClientRequests({
+      capitalOpportunityId: id,
+      clientCode: opp.clientCode,
+      items,
+    });
+    const missing = consolidateMissingRequest(state.checklists[id] || [], opp.clientCode);
+    return { clientRequest: bundle, missingRequest: missing, sendAttempted: false };
   }
 
   async addOffer(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
     const state = await this.store.load();
-    requireOpp(state, principal, id);
+    const opp = requireOpp(state, principal, id);
     const offer = {
       id: `off-${randomUUID()}`,
       capitalOpportunityId: id,
       lenderId: asString(body.lenderId) || 'ln-unknown',
       lenderName: asString(body.lenderName) || 'Unknown lender',
+      product: asString(body.product) || undefined,
       amount: asNumber(body.amount) ?? undefined,
       interestRate: asNumber(body.interestRate) ?? undefined,
+      termMonths: asNumber(body.termMonths) ?? undefined,
+      amortizationMonths: asNumber(body.amortizationMonths) ?? undefined,
+      origination: asNumber(body.origination) ?? undefined,
+      collateral: asString(body.collateral) || undefined,
+      personalGuarantee: asString(body.personalGuarantee) || undefined,
+      covenants: asString(body.covenants) || undefined,
+      conditions: asString(body.conditions) || undefined,
+      expectedClosingDays: asNumber(body.expectedClosingDays) ?? undefined,
       assumptions: Array.isArray(body.assumptions) ? body.assumptions.map((x) => String(x)) : [],
       createdAt: nowIso(),
+      extractionVerification: 'UNVERIFIED' as const,
     };
     state.offers.push(offer);
+    emitEvent(state, 'TERM_SHEET_RECEIVED', opp, offer.lenderName);
+    if (canTransition(opp.stage, 'TermSheetOfferReceived')) {
+      assertTransition(opp.stage, 'TermSheetOfferReceived');
+      opp.stage = 'TermSheetOfferReceived';
+      opp.stageEnteredAt = nowIso();
+    }
     await this.store.save(state);
     return { offer };
+  }
+
+  async extractOffer(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const text = asString(body.text);
+    if (!text) unprocessable('text required');
+    const extracted = extractTermSheetFromText({
+      text,
+      capitalOpportunityId: id,
+      lenderId: asString(body.lenderId) || undefined,
+      lenderName: asString(body.lenderName) || undefined,
+      id: `off-${randomUUID()}`,
+    });
+    if (extracted.injectionDetected) {
+      return { extraction: extracted, persisted: false, injectionDetected: true };
+    }
+    state.offers.push(extracted.offer);
+    emitEvent(state, 'TERM_SHEET_RECEIVED', opp, extracted.offer.lenderName);
+    await this.store.save(state);
+    return { extraction: extracted, offer: extracted.offer, persisted: true, injectionDetected: false };
   }
 
   async compare(principal: AtlasPrincipal, id: string) {
     const state = await this.store.load();
     requireOpp(state, principal, id);
-    return compareOffers(state.offers.filter((o) => o.capitalOpportunityId === id));
+    const offers = state.offers.filter((o) => o.capitalOpportunityId === id);
+    const decision = state.clientDecisions.find((d) => d.capitalOpportunityId === id);
+    return {
+      ...compareOffers(offers),
+      comparison: compareTermSheets(offers, decision?.reason, decision?.decisionBy),
+    };
+  }
+
+  async recommend(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    if (!isMannyApprover(principal.roles)) forbidden('HVCG Owner recommendation required');
+    const state = await this.store.load();
+    requireOpp(state, principal, id);
+    const offers = state.offers.filter((o) => o.capitalOpportunityId === id);
+    const comparison = compareTermSheets(
+      offers,
+      asString(body.recommendation) || undefined,
+      principal.email || principal.userId,
+    );
+    return { comparison, mannyRecommendation: comparison.mannyRecommendation, notClientDecision: true };
+  }
+
+  async clientDecision(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    const decision = recordClientDecision({
+      capitalOpportunityId: id,
+      clientCode: opp.clientCode,
+      selectedTermSheetId: asString(body.selectedTermSheetId) || undefined,
+      decision: (asString(body.decision) || 'SELECTED') as 'SELECTED' | 'DECLINED_ALL' | 'DEFERRED',
+      decisionBy: asString(body.decisionBy) || principal.email || principal.userId,
+      reason: asString(body.reason) || undefined,
+      alternativesRejected: Array.isArray(body.alternativesRejected)
+        ? body.alternativesRejected.map((x) => String(x))
+        : [],
+      conditionsAccepted: asString(body.conditionsAccepted) || undefined,
+      outstandingQuestions: asString(body.outstandingQuestions) || undefined,
+    });
+    state.clientDecisions = state.clientDecisions.filter((d) => d.capitalOpportunityId !== id);
+    state.clientDecisions.push(decision);
+    if (decision.decision === 'SELECTED' && opp.stage === 'OfferComparison') {
+      assertTransition(opp.stage, 'ClientDecision');
+      opp.stage = 'ClientDecision';
+      opp.stageEnteredAt = nowIso();
+    }
+    await this.store.save(state);
+    return { decision, legallyBinding: false };
   }
 
   async closing(principal: AtlasPrincipal, id: string) {
     const state = await this.store.load();
     const opp = requireOpp(state, principal, id);
-    const items = defaultClosingConditions(opp.transactionType).map((c) => ({
-      ...c,
-      capitalOpportunityId: id,
-    }));
+    const items = seedClosingChecklist(id, opp.transactionType);
     state.closing[id] = items;
     await this.store.save(state);
-    return { closing: items, conditions: items };
+    return { closing: items, conditions: items, notLegalCompleteness: true };
+  }
+
+  async funding(principal: AtlasPrincipal, id: string, body: Record<string, unknown>) {
+    if (!isMannyApprover(principal.roles)) forbidden('Funded verification requires HVCG Owner');
+    const state = await this.store.load();
+    const opp = requireOpp(state, principal, id);
+    try {
+      const event = recordFundingEvent({
+        capitalOpportunityId: id,
+        clientCode: opp.clientCode,
+        fundedDate: asString(body.fundedDate) || nowIso(),
+        grossAmount: asNumber(body.grossAmount) ?? undefined,
+        netProceeds: asNumber(body.netProceeds) ?? undefined,
+        lenderId: asString(body.lenderId) || undefined,
+        productId: asString(body.productId) || undefined,
+        sourceRef: asSourceRef(body.sourceRef),
+        verifiedBy: asString(body.verifiedBy) || principal.email || principal.userId,
+        evidenceKind: asString(body.evidenceKind) === 'source_document' ? 'source_document' : 'authorized_confirmation',
+      });
+      state.fundingEvents = state.fundingEvents.filter((f) => f.capitalOpportunityId !== id);
+      state.fundingEvents.push(event);
+      if (opp.stage === 'Closing') {
+        assertTransition(opp.stage, 'Funded');
+        opp.stage = 'Funded';
+        opp.stageEnteredAt = nowIso();
+      } else {
+        unprocessable('Funded requires Closing stage plus evidence');
+      }
+      emitEvent(state, 'FUNDED_CONFIRMED', opp, event.fundedDate);
+      await this.store.save(state);
+      return { funding: event };
+    } catch (err) {
+      unprocessable(err instanceof Error ? err.message : 'funded evidence required');
+    }
+  }
+
+  async outreachReconcile(principal: AtlasPrincipal) {
+    const state = await this.store.load();
+    const catalog = sourcedLenderCatalog();
+    const result = reconcileOutreachRows({
+      outreach: state.submissions.filter((s) => {
+        const opp = state.opportunities.find((o) => o.id === s.capitalOpportunityId);
+        return !opp || canAccessClient(principal, opp.clientCode);
+      }),
+      catalog: [...state.lenders, ...catalog.lenders],
+    });
+    state.lenderIdMaps = result.mappings;
+    await this.store.save(state);
+    return {
+      ...result,
+      originalIdsPreserved: true,
+      noGuessedMappings: true,
+    };
   }
 
   async fee(principal: AtlasPrincipal, body: Record<string, unknown>) {
@@ -1187,12 +1507,22 @@ export class CapitalService {
       capitalOpportunityId: asString(body.capitalOpportunityId) || undefined,
       feeType: asString(body.feeType) || 'advisory',
       feeFormula: asString(body.feeFormula) || undefined,
+      feeBasis: asString(body.feeBasis) || undefined,
+      feeRate: asNumber(body.feeRate) ?? undefined,
+      expectedFee: asNumber(body.expectedFee) ?? undefined,
+      actualFee: asNumber(body.actualFee) ?? undefined,
+      tailStart: asString(body.tailStart) || undefined,
+      tailEnd: asString(body.tailEnd) || undefined,
       notes: asString(body.notes) || undefined,
     });
     const state = await this.store.load();
     state.fees.push(rec);
+    if (rec.legalComplianceReviewRequired) {
+      const opp = state.opportunities.find((o) => o.id === rec.capitalOpportunityId);
+      if (opp) emitEvent(state, 'FEE_REVIEW_REQUIRED', opp, rec.feeType);
+    }
     await this.store.save(state);
-    return { fee: rec };
+    return { fee: rec, legallyCertified: false };
   }
 
   async evaHandoff(principal: AtlasPrincipal, body: Record<string, unknown>) {

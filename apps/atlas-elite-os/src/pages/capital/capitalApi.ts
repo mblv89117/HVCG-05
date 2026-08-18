@@ -46,21 +46,27 @@ export const WORK_QUEUES = [
   'AWAITING_CLIENT',
   'AWAITING_LENDER',
   'AWAITING_MANNY',
+  'READY_FOR_SUBMISSION',
+  'RFI_OVERDUE',
   'OFFERS_RECEIVED',
   'CLOSING',
   'FUNDED',
+  'COMPLIANCE_REVIEW',
 ] as const;
 
 export type WorkQueue = (typeof WORK_QUEUES)[number];
 
 export const QUEUE_LABELS: Record<WorkQueue, string> = {
   NEEDS_ATTENTION: 'NEEDS ATTENTION',
-  AWAITING_CLIENT: 'AWAITING CLIENT',
-  AWAITING_LENDER: 'AWAITING LENDER',
-  AWAITING_MANNY: 'AWAITING MANNY',
-  OFFERS_RECEIVED: 'OFFERS RECEIVED',
+  AWAITING_CLIENT: 'WAITING CLIENT',
+  AWAITING_LENDER: 'WAITING LENDER',
+  AWAITING_MANNY: 'NEEDS MANNY',
+  READY_FOR_SUBMISSION: 'READY FOR SUBMISSION',
+  RFI_OVERDUE: 'RFI OVERDUE',
+  OFFERS_RECEIVED: 'TERM SHEET RECEIVED',
   CLOSING: 'CLOSING',
   FUNDED: 'FUNDED',
+  COMPLIANCE_REVIEW: 'COMPLIANCE REVIEW',
 };
 
 export const STAGE_LABELS: Record<string, string> = {
@@ -113,6 +119,9 @@ export interface CapitalKpis {
   transactionsClosing: number;
   recentlyFunded: number;
   feeReceivableOpen: number;
+  readyForSubmission: number;
+  rfiOverdue: number;
+  complianceReviewRequired: number;
 }
 
 export interface QueueItem {
@@ -378,9 +387,11 @@ export function agingTone(aging: AgingBand): 'success' | 'info' | 'warning' | 'd
 }
 
 export function queueTone(queue: WorkQueue): 'danger' | 'warning' | 'info' | 'gold' | 'success' | 'neutral' {
-  if (queue === 'NEEDS_ATTENTION' || queue === 'AWAITING_MANNY') return 'danger';
+  if (queue === 'NEEDS_ATTENTION' || queue === 'AWAITING_MANNY' || queue === 'RFI_OVERDUE' || queue === 'COMPLIANCE_REVIEW') {
+    return 'danger';
+  }
   if (queue === 'AWAITING_CLIENT') return 'warning';
-  if (queue === 'AWAITING_LENDER') return 'info';
+  if (queue === 'AWAITING_LENDER' || queue === 'READY_FOR_SUBMISSION') return 'info';
   if (queue === 'OFFERS_RECEIVED') return 'gold';
   if (queue === 'CLOSING') return 'info';
   if (queue === 'FUNDED') return 'success';
@@ -428,6 +439,9 @@ function emptyKpis(): CapitalKpis {
     transactionsClosing: 0,
     recentlyFunded: 0,
     feeReceivableOpen: 0,
+    readyForSubmission: 0,
+    rfiOverdue: 0,
+    complianceReviewRequired: 0,
   };
 }
 

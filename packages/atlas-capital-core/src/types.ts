@@ -106,11 +106,113 @@ export const WORK_QUEUES = [
   'AWAITING_CLIENT',
   'AWAITING_LENDER',
   'AWAITING_MANNY',
+  'READY_FOR_SUBMISSION',
+  'RFI_OVERDUE',
   'OFFERS_RECEIVED',
   'CLOSING',
   'FUNDED',
+  'COMPLIANCE_REVIEW',
 ] as const;
 export type WorkQueue = (typeof WORK_QUEUES)[number];
+
+export const APPLICATION_ATTESTATION_STATES = [
+  'PREPARED',
+  'CLIENT_CONFIRMATION_REQUIRED',
+  'CLIENT_CONFIRMED',
+  'CORRECTION_REQUIRED',
+  'APPROVED_FOR_SUBMISSION',
+] as const;
+export type ApplicationAttestationState = (typeof APPLICATION_ATTESTATION_STATES)[number];
+
+export const PACKAGE_READINESS_STATES = [
+  'INCOMPLETE',
+  'READY_FOR_MANNY_REVIEW',
+  'CLIENT_CONFIRMATION_REQUIRED',
+  'READY_FOR_SUBMISSION',
+  'SUBMITTED_RECORDED_ONLY',
+] as const;
+export type PackageReadinessState = (typeof PACKAGE_READINESS_STATES)[number];
+
+export const LENDER_INTERACTION_TYPES = [
+  'SUBMISSION_RECORDED',
+  'ACKNOWLEDGED',
+  'QUESTION',
+  'RFI',
+  'CONDITION',
+  'FOLLOW_UP',
+  'TERM_SHEET',
+  'DECLINE',
+  'APPROVAL',
+  'CLOSING_REQUEST',
+  'FUNDED_NOTICE',
+  'OTHER',
+] as const;
+export type LenderInteractionType = (typeof LENDER_INTERACTION_TYPES)[number];
+
+export const RFI_ITEM_SUPPORT = [
+  'already_available',
+  'missing',
+  'stale',
+  'partial_support_only',
+  'requires_client_narrative',
+  'requires_manny_narrative',
+] as const;
+export type RfiItemSupport = (typeof RFI_ITEM_SUPPORT)[number];
+
+export const CLIENT_REQUEST_BUCKETS = [
+  'STILL_NEEDED',
+  'UPDATED_VERSION_REQUIRED',
+  'CLARIFICATION_REQUIRED',
+  'SIGNATURE_ATTESTATION_REQUIRED',
+  'MANNY_INPUT_REQUIRED',
+] as const;
+export type ClientRequestBucket = (typeof CLIENT_REQUEST_BUCKETS)[number];
+
+export const SLA_STATES = [
+  'ON_TRACK',
+  'DUE_SOON',
+  'OVERDUE',
+  'BLOCKED_CLIENT',
+  'BLOCKED_LENDER',
+  'BLOCKED_HVCG',
+  'MANNY_DECISION_REQUIRED',
+] as const;
+export type SlaState = (typeof SLA_STATES)[number];
+
+export const FEE_COMPLIANCE_STATES = ['CLEARED', 'REVIEW_REQUIRED', 'NOT_APPLICABLE', 'UNKNOWN'] as const;
+export type FeeComplianceStatus = (typeof FEE_COMPLIANCE_STATES)[number];
+
+export const LENDER_ID_RECONCILE_STATES = [
+  'RESOLVED',
+  'LIKELY_MATCH_NEEDS_REVIEW',
+  'UNRESOLVED',
+  'CONFLICT',
+] as const;
+export type LenderIdReconcileState = (typeof LENDER_ID_RECONCILE_STATES)[number];
+
+export const DECISION_SUPPORT_BANDS = [
+  'LOWEST_COST',
+  'MOST_FLEXIBLE',
+  'FASTEST',
+  'LOWEST_COLLATERAL_BURDEN',
+  'LOWEST_GUARANTEE_BURDEN',
+  'BEST_MATCH_TO_REQUEST',
+  'UNKNOWN_INSUFFICIENT_DATA',
+] as const;
+export type DecisionSupportBand = (typeof DECISION_SUPPORT_BANDS)[number];
+
+export const INTERNAL_CAPITAL_EVENTS = [
+  'MANNY_ACTION_REQUIRED',
+  'CLIENT_ITEM_MISSING',
+  'LENDER_RESPONSE_OVERDUE',
+  'RFI_RECEIVED',
+  'TERM_SHEET_RECEIVED',
+  'TERM_EXPIRING',
+  'CLOSING_ITEM_OVERDUE',
+  'FUNDED_CONFIRMED',
+  'FEE_REVIEW_REQUIRED',
+] as const;
+export type InternalCapitalEventType = (typeof INTERNAL_CAPITAL_EVENTS)[number];
 
 export interface SourceRef {
   sourceSystem: string;
@@ -858,16 +960,188 @@ export interface FinancingStrategy {
   disclaimer: string;
 }
 
+export interface ApplicationPackageSection {
+  key: string;
+  label: string;
+  fields: Record<string, { value: unknown; verification: VerificationState; sourceRef?: SourceRef }>;
+  missing: string[];
+}
+
+export interface LenderSpecificRequirement {
+  item: string;
+  criterion?: string;
+  freshness: LenderFreshness | 'UNKNOWN';
+  sourceRef?: SourceRef;
+  unknownReason?: string;
+}
+
 export interface ApplicationPackage {
   id: string;
   capitalOpportunityId: string;
   lenderId: string;
   productId?: string;
-  populatedFields: Record<string, { value: unknown; verification: VerificationState }>;
+  populatedFields: Record<string, { value: unknown; verification: VerificationState; sourceRef?: SourceRef }>;
   missingFields: Array<{ field: string; requiredFrom: 'CLIENT_INPUT_REQUIRED' | 'MANNY_INPUT_REQUIRED' }>;
   attachedDocumentIds: string[];
   status: 'PREPARED' | 'BLOCKED_MISSING_FIELDS';
+  attestation: ApplicationAttestationState;
+  packageStatus: PackageReadinessState;
+  sections: ApplicationPackageSection[];
+  standardDocumentIds: string[];
+  lenderSpecificRequirements: LenderSpecificRequirement[];
+  expectedQuestions: string[];
+  internalNotes: string[];
+  notBorrowerRepresentation: true;
   createdAt: string;
+  attestedAt?: string;
+  attestedBy?: string;
+}
+
+export interface LenderInteraction {
+  id: string;
+  capitalOpportunityId: string;
+  clientCode: string;
+  lenderId: string;
+  productId?: string;
+  submissionId?: string;
+  packageId?: string;
+  interactionType: LenderInteractionType;
+  at: string;
+  direction: 'inbound' | 'outbound' | 'internal';
+  contact?: string;
+  summary: string;
+  status: string;
+  requestedItems: string[];
+  responseDue?: string;
+  owner?: string;
+  sourceRef?: SourceRef;
+  candidateOnly: boolean;
+  injectionDetected: boolean;
+}
+
+export interface RfiItem {
+  id: string;
+  capitalOpportunityId: string;
+  clientCode: string;
+  lenderId?: string;
+  item: string;
+  support: RfiItemSupport;
+  source?: string;
+  matchedDocumentId?: string;
+  matchedChecklistItemId?: string;
+  action: 'attach_existing' | 'request_client' | 'draft_response' | 'manny_input';
+  sla: SlaState;
+  requestedAt: string;
+  responseDue?: string;
+  lastFollowUp?: string;
+  nextAction?: string;
+  nextActionOwner?: string;
+  agingDays: number;
+  candidateOnly: true;
+}
+
+export interface ClientRequestBundle {
+  capitalOpportunityId: string;
+  clientCode: string;
+  sendAttempted: false;
+  buckets: Record<ClientRequestBucket, string[]>;
+  subject: string;
+  body: string;
+}
+
+export interface TermSheetExtraction {
+  offer: TermSheetOffer;
+  fieldVerification: Record<string, VerificationState>;
+  missingTerms: string[];
+  injectionDetected: boolean;
+  notQuotedAsComplete: true;
+}
+
+export interface DerivedTermMetrics {
+  estimatedAnnualDebtService?: number;
+  estimatedCashCost?: number;
+  estimatedEffectiveFees?: number;
+  totalScheduledPayments?: number;
+  balloon?: number;
+  methodology: string;
+  verification: 'DERIVED';
+}
+
+export interface TermComparisonRow {
+  offerId: string;
+  lenderName: string;
+  product?: string;
+  amount?: number;
+  interestRate?: number;
+  termMonths?: number;
+  estimatedPayment?: number;
+  origination?: number;
+  collateral?: string;
+  personalGuarantee?: string;
+  covenants?: string;
+  conditions?: string;
+  expectedClosingDays?: number;
+  derived: DerivedTermMetrics;
+}
+
+export interface TermComparison {
+  rows: TermComparisonRow[];
+  bands: Record<DecisionSupportBand, string | 'UNKNOWN'>;
+  notes: string[];
+  mannyRecommendation?: string;
+  mannyRecommendationBy?: string;
+  disclaimer: string;
+  derivedNotQuoted: true;
+}
+
+export interface ClientDecisionRecord {
+  id: string;
+  capitalOpportunityId: string;
+  clientCode: string;
+  selectedTermSheetId?: string;
+  decision: 'SELECTED' | 'DECLINED_ALL' | 'DEFERRED';
+  decisionDate: string;
+  decisionBy: string;
+  reason?: string;
+  alternativesRejected: string[];
+  conditionsAccepted?: string;
+  outstandingQuestions?: string;
+  legallyBinding: false;
+}
+
+export interface FundingEvent {
+  id: string;
+  capitalOpportunityId: string;
+  clientCode: string;
+  fundedDate: string;
+  grossAmount?: number;
+  netProceeds?: number;
+  lenderId?: string;
+  productId?: string;
+  sourceRef: SourceRef;
+  verifiedBy: string;
+  evidenceKind: 'authorized_confirmation' | 'source_document';
+}
+
+export interface LenderIdMapping {
+  originalLookupId: string;
+  originalLenderName?: string;
+  catalogLenderId?: string;
+  catalogLenderName?: string;
+  state: LenderIdReconcileState;
+  evidence: string[];
+  autoResolved: boolean;
+  reviewedBy?: string;
+}
+
+export interface InternalCapitalEvent {
+  id: string;
+  type: InternalCapitalEventType;
+  at: string;
+  clientCode: string;
+  capitalOpportunityId: string;
+  detail: string;
+  delivered: false;
 }
 
 export interface LenderSubmission {
@@ -916,11 +1190,14 @@ export interface TermSheetOffer {
   reportingObligations?: string;
   deposits?: string;
   conditions?: string;
+  expiration?: string;
   expectedClosingDays?: number;
   majorRisks?: string;
   effectiveCostNotes?: string;
   assumptions: string[];
   createdAt: string;
+  extractionVerification?: VerificationState;
+  sourceRef?: SourceRef;
 }
 
 export interface ClosingCondition {
@@ -943,6 +1220,10 @@ export interface FeeRecord {
   executedAgreementRef?: string;
   feeType: string;
   feeFormula?: string;
+  feeBasis?: string;
+  feeRate?: number;
+  expectedFee?: number;
+  actualFee?: number;
   startDate?: string;
   earnedEvent?: string;
   tailStart?: string;
@@ -952,6 +1233,8 @@ export interface FeeRecord {
   invoiceStatus: 'not_invoiced' | 'invoiced' | 'paid' | 'void';
   paymentStatus: 'unpaid' | 'partial' | 'paid';
   legalComplianceReviewRequired: boolean;
+  complianceStatus: FeeComplianceStatus;
+  complianceNote?: string;
   notes?: string;
 }
 
@@ -982,6 +1265,9 @@ export interface CapitalCommandKpis {
   transactionsClosing: number;
   recentlyFunded: number;
   feeReceivableOpen: number;
+  readyForSubmission: number;
+  rfiOverdue: number;
+  complianceReviewRequired: number;
 }
 
 export interface QueueItem {

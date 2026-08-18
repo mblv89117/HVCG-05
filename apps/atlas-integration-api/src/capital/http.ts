@@ -208,6 +208,11 @@ export async function handleCapitalRoutes(opts: {
         sendOk(await service.application(principal, id, body));
         return true;
       }
+      if (method === 'POST' && rest === 'application/attest') {
+        sendOk(await service.attestApplication(principal, id, body));
+        persistAudit('capital_application_attest', `id=${id} attestation=${String(body.attestation || '')}`);
+        return true;
+      }
       if (method === 'POST' && rest === 'submissions') {
         const result = await service.submission(principal, id, body);
         persistAudit('capital_submission', `id=${id} recordedOnly=true externalSubmit=false`);
@@ -218,16 +223,55 @@ export async function handleCapitalRoutes(opts: {
         sendOk(await service.classify(principal, id, body));
         return true;
       }
+      if (method === 'POST' && rest === 'rfi') {
+        const result = await service.ingestRfi(principal, id, body);
+        persistAudit('capital_rfi_ingest', `id=${id} injection=${String((result as { injectionDetected?: boolean }).injectionDetected || false)}`);
+        sendOk(result);
+        return true;
+      }
+      if (method === 'GET' && rest === 'rfi') {
+        const detail = await service.get(principal, id);
+        sendOk({ rfis: detail.rfis, sendAttempted: false });
+        return true;
+      }
+      if (method === 'GET' && rest === 'client-requests') {
+        sendOk(await service.clientRequests(principal, id));
+        return true;
+      }
       if (method === 'POST' && rest === 'offers') {
         sendOk(await service.addOffer(principal, id, body));
+        persistAudit('capital_offer_add', `id=${id}`);
+        return true;
+      }
+      if (method === 'POST' && rest === 'offers/extract') {
+        sendOk(await service.extractOffer(principal, id, body));
+        persistAudit('capital_offer_extract', `id=${id}`);
         return true;
       }
       if (method === 'GET' && rest === 'offers/compare') {
         sendOk(await service.compare(principal, id));
         return true;
       }
+      if (method === 'POST' && rest === 'recommendation') {
+        const result = await service.recommend(principal, id, body);
+        persistAudit('capital_manny_recommendation', `id=${id}`);
+        sendOk(result);
+        return true;
+      }
+      if (method === 'POST' && rest === 'decision') {
+        const result = await service.clientDecision(principal, id, body);
+        persistAudit('capital_client_decision', `id=${id} legallyBinding=false`);
+        sendOk(result);
+        return true;
+      }
       if (method === 'POST' && rest === 'closing/generate') {
         sendOk(await service.closing(principal, id));
+        return true;
+      }
+      if (method === 'POST' && rest === 'funding') {
+        const result = await service.funding(principal, id, body);
+        persistAudit('capital_funding', `id=${id}`);
+        sendOk(result);
         return true;
       }
     }
@@ -238,6 +282,10 @@ export async function handleCapitalRoutes(opts: {
     }
     if (method === 'GET' && path === '/api/capital/outreach/history') {
       sendOk(await service.outreachHistory(principal));
+      return true;
+    }
+    if (method === 'GET' && path === '/api/capital/outreach/reconcile') {
+      sendOk(await service.outreachReconcile(principal));
       return true;
     }
     if (method === 'POST' && path === '/api/capital/lenders') {

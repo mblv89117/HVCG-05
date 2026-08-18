@@ -12,7 +12,7 @@ import type {
   FinancingStrategy,
   LenderSubmission,
 } from '@hvcg/atlas-capital-core';
-import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord, mergeSourcedLenderCatalog } from '@hvcg/atlas-capital-core';
+import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord, isSyntheticClientCode, mergeSourcedLenderCatalog } from '@hvcg/atlas-capital-core';
 import { CapitalHttpError, capitalInfrastructureError, forbidden } from '../errors.ts';
 import { emptyState, type CapitalPersistence, type CapitalState } from '../store.ts';
 import {
@@ -323,16 +323,24 @@ export class AsyncCapitalStore implements CapitalPersistence {
     for (const opp of state.opportunities) {
       const prior = snapOpps.get(opp.id);
       if (!prior) {
-        const created = await this.graph.createOpportunity(opp);
-        if (created.id !== opp.id) {
-          const oldId = opp.id;
-          opp.id = created.id;
-          if (state.checklists[oldId] && !state.checklists[created.id]) {
-            state.checklists[created.id] = state.checklists[oldId];
-            delete state.checklists[oldId];
+        try {
+          const created = await this.graph.createOpportunity(opp);
+          if (created.id !== opp.id) {
+            const oldId = opp.id;
+            opp.id = created.id;
+            if (state.checklists[oldId] && !state.checklists[created.id]) {
+              state.checklists[created.id] = state.checklists[oldId];
+              delete state.checklists[oldId];
+            }
+            for (const sub of state.submissions) {
+              if (sub.capitalOpportunityId === oldId) sub.capitalOpportunityId = created.id;
+            }
           }
-          for (const sub of state.submissions) {
-            if (sub.capitalOpportunityId === oldId) sub.capitalOpportunityId = created.id;
+        } catch (err) {
+          if (err instanceof CapitalHttpError && err.status === 403 && isSyntheticClientCode(opp.clientCode)) {
+            /* SYN* Graph creates stay closed; SYN01 opportunity remains Hub overlay-only. */
+          } else {
+            throw err;
           }
         }
         continue;
@@ -378,8 +386,17 @@ export class AsyncCapitalStore implements CapitalPersistence {
     const snapSubIds = new Set(snap.submissions.map((s) => s.id));
     for (const sub of state.submissions) {
       if (snapSubIds.has(sub.id)) continue;
-      const created = await this.graph.createSubmission(sub);
-      sub.id = created.id;
+      const opp = state.opportunities.find((o) => o.id === sub.capitalOpportunityId);
+      try {
+        const created = await this.graph.createSubmission(sub);
+        sub.id = created.id;
+      } catch (err) {
+        if (err instanceof CapitalHttpError && err.status === 403 && isSyntheticCapitalRecord({ clientCode: opp?.clientCode, title: opp?.title })) {
+          /* SYN* Graph outreach writes stay closed; recorded submission remains Hub overlay. */
+        } else {
+          throw err;
+        }
+      }
     }
 
     this.overlay = overlayFromState(state);
