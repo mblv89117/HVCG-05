@@ -10,6 +10,12 @@ import { dirname, join } from 'node:path';
 import type { ProviderId } from '@hvcg/atlas-integration-core';
 import { isCanonicalClientCode } from './entitlements/clientCode.ts';
 import type { UserBasicLookup } from './entitlements/userLookup.ts';
+import type { CapitalGraphTransport } from './capital/sharepoint/graph.ts';
+import type { SharePointCapitalSettings } from './capital/sharepoint/settings.ts';
+import {
+  resolveSharePointCapitalSettings,
+  SharePointCapitalSettingsError,
+} from './capital/sharepoint/settings.ts';
 import type { PmGraphTransport } from './pm/sharepoint/graph.ts';
 import type { SharePointPmSettings } from './pm/sharepoint/settings.ts';
 import { resolveSharePointPmSettings, SharePointPmSettingsError } from './pm/sharepoint/settings.ts';
@@ -278,6 +284,92 @@ export function resolvePmBackend(env: EnvMap = process.env): HubPmBackend {
   );
 }
 
+export type CapitalBackendMode = 'development-json' | 'unavailable' | 'sharepoint';
+export type CapitalBackendClassification = 'development-local' | 'unavailable' | 'sharepoint-graph';
+
+export interface HubCapitalBackend {
+  mode: CapitalBackendMode;
+  classification: CapitalBackendClassification;
+  /** True only when local JSON is an explicit, non-production opt-in. */
+  localJsonAuthorized: boolean;
+  sharepoint?: SharePointCapitalSettings;
+  credentialMode?: 'managed_identity' | 'none' | 'development-json';
+  configComplete?: boolean;
+}
+
+/**
+ * Capital persistence mode.
+ *
+ * `capital-operations.json` is development/local state only. It is not SharePoint,
+ * not production, and not an approved operational system of record.
+ *
+ * Approved values:
+ * - unset / `unavailable` / `none` — capital persistence is not configured
+ * - `development-json` or `local-json` — explicit local JSON (non-production only)
+ * - `sharepoint` — Graph repository when site/list/managed-identity IDs are valid
+ *
+ * Production plus local JSON is rejected at configuration time (fail closed).
+ * SharePoint is never selected silently and never falls back to JSON.
+ * Capital list IDs are never mixed into the PM allowlist.
+ */
+export function resolveCapitalBackend(env: EnvMap = process.env): HubCapitalBackend {
+  const isProduction = (env.NODE_ENV || 'development') === 'production';
+  const raw = (env.INTEGRATION_CAPITAL_BACKEND || '').trim().toLowerCase();
+  const localJsonRequested = raw === 'development-json' || raw === 'local-json';
+  const unavailableRequested =
+    raw === '' || raw === 'unavailable' || raw === 'none' || raw === 'not-configured';
+  const sharepointRequested = raw === 'sharepoint';
+
+  if (isProduction && localJsonRequested) {
+    throw new UnsafeHubConfigurationError(
+      'Unsafe configuration: the development capital JSON store (INTEGRATION_CAPITAL_BACKEND=development-json) is not allowed when NODE_ENV=production. capital-operations.json is development/local state only and is not an approved production operational system of record.',
+    );
+  }
+
+  if (localJsonRequested) {
+    return {
+      mode: 'development-json',
+      classification: 'development-local',
+      localJsonAuthorized: true,
+      credentialMode: 'development-json',
+      configComplete: true,
+    };
+  }
+
+  if (unavailableRequested) {
+    return {
+      mode: 'unavailable',
+      classification: 'unavailable',
+      localJsonAuthorized: false,
+      credentialMode: 'none',
+      configComplete: false,
+    };
+  }
+
+  if (sharepointRequested) {
+    try {
+      const sharepoint = resolveSharePointCapitalSettings(env);
+      return {
+        mode: 'sharepoint',
+        classification: 'sharepoint-graph',
+        localJsonAuthorized: false,
+        sharepoint,
+        credentialMode: 'managed_identity',
+        configComplete: true,
+      };
+    } catch (err) {
+      if (err instanceof SharePointCapitalSettingsError) {
+        throw new UnsafeHubConfigurationError(err.message);
+      }
+      throw err;
+    }
+  }
+
+  throw new UnsafeHubConfigurationError(
+    `Unsafe configuration: INTEGRATION_CAPITAL_BACKEND=${raw} is not an approved capital backend. Approved values: development-json (non-production only), sharepoint (explicit site/list IDs), or unset/unavailable.`,
+  );
+}
+
 const GROUP_ID_RE =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
@@ -337,6 +429,7 @@ export function resolveClientEntitlement(env: EnvMap = process.env): HubClientEn
 export function loadConfig() {
   const security = resolveHubRuntimeSecurity();
   const pmBackend = resolvePmBackend();
+  const capitalBackend = resolveCapitalBackend();
   const clientEntitlement = resolveClientEntitlement();
   const ba = resolveBaClientSettings();
   return {
@@ -348,6 +441,7 @@ export function loadConfig() {
     insecureDevAuth: security.insecureDevAuth,
     isProduction: security.isProduction,
     pmBackend,
+    capitalBackend,
     /**
      * Test-only JWT verifier. Production loadConfig never sets this.
      * Authenticated identity still comes from the verified payload, never from request headers.
@@ -367,6 +461,8 @@ export function loadConfig() {
     lookupUserBasic: undefined as UserBasicLookup | undefined,
     /** Test-only PM Graph transport. Production uses managed-identity Graph. */
     pmGraphTransport: undefined as PmGraphTransport | undefined,
+    /** Test-only capital Graph transport. Production uses managed-identity Graph. */
+    capitalGraphTransport: undefined as CapitalGraphTransport | undefined,
     /** Test-only PM token provider. Production uses the App Service managed-identity local token endpoint. */
     pmTokenProvider: undefined as PmGraphTokenProvider | undefined,
     allowedOrigins: (

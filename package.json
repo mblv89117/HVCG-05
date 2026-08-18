@@ -15,6 +15,7 @@
     "test:plaid-api": "npm run test -w @hvcg/atlas-plaid-api",
     "dev:integration-api": "npm run start -w @hvcg/atlas-integration-api",
     "test:integration-api": "npm run test -w @hvcg/atlas-integration-api",
+    "test:capital-core": "npm run test -w @hvcg/atlas-capital-core",
     "test:recovery": "npm run test:recovery -w @hvcg/atlas-elite-os",
     "test:elite": "npm run test:all -w @hvcg/atlas-elite-os",
     "storybook": "npm run storybook -w @hvcg/atlas-design-system",

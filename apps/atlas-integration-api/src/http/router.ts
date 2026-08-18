@@ -26,6 +26,8 @@ import type { PmRepository } from '../pm/repository.ts';
 import type { SharePointPmService } from '../pm/sharepoint/repository.ts';
 import { runBatchSync, runSyncForConnection } from '../sync/orchestrator.ts';
 import { handlePmRoutes } from '../pm/http.ts';
+import { handleCapitalRoutes } from '../capital/http.ts';
+import type { CapitalPersistence } from '../capital/store.ts';
 import { handleBaRoutes } from '../ba/routes.ts';
 import { probeBaHealth } from '../ba/client.ts';
 import type { LocalAiAdapter } from '../local-ai/adapter.ts';
@@ -39,6 +41,7 @@ export interface RouterDeps {
   pm: PmRepository | null;
   sharepoint?: SharePointPmService | null;
   localAi: LocalAiAdapter;
+  capital?: CapitalPersistence | null;
 }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
@@ -160,6 +163,19 @@ export async function handleRequest(
       if (handled) return;
     }
 
+    if (path.startsWith('/api/capital')) {
+      const handled = await handleCapitalRoutes({
+        cfg,
+        capital: deps.capital,
+        req,
+        res,
+        method,
+        path,
+        origin,
+      });
+      if (handled) return;
+    }
+
     if (path.startsWith('/api/pm')) {
       const handled = await handlePmRoutes({
         cfg,
@@ -233,6 +249,13 @@ export async function handleRequest(
             credentialMode: cfg.pmBackend.credentialMode || 'none',
             configComplete: Boolean(cfg.pmBackend.configComplete),
             listsConfigured: Boolean(cfg.pmBackend.sharepoint),
+          },
+          capitalBackend: {
+            mode: cfg.capitalBackend.mode,
+            classification: cfg.capitalBackend.classification,
+            credentialMode: cfg.capitalBackend.credentialMode || 'none',
+            configComplete: Boolean(cfg.capitalBackend.configComplete),
+            listsConfigured: Boolean(cfg.capitalBackend.sharepoint),
           },
           websiteLeads: {
             configured: Boolean(

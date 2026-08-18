@@ -1,7 +1,9 @@
 # ARCHITECTURE
 
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 04:20 UTC (index note added 2026-08-17)  
 **Role:** Atlas **index only** — not a second architecture SoR.
+
+**Atlas Capital Operations (2026-08-17):** an **internal Project Atlas / HVCG OS module**, not an eighth HVCG platform. SharePoint `HVCG_*` remains V1 SoR. Do not migrate capital to Dataverse. Module docs: [docs/CAPITAL_OPERATIONS_ARCHITECTURE.md](../docs/CAPITAL_OPERATIONS_ARCHITECTURE.md) · [docs/CAPITAL_OPERATIONS_DISCOVERY.md](../docs/CAPITAL_OPERATIONS_DISCOVERY.md). Seven-system index: [docs/architecture/HVCG_SYSTEM_INDEX.md](../docs/architecture/HVCG_SYSTEM_INDEX.md).
 
 ## Canonical architecture sources (outside Atlas)
 

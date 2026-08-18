@@ -25,6 +25,7 @@ Client 360 mapping: **CLIENT 360 MAPPING — POST CORE AUDIT DEFERRED BACKLOG** 
 - **Canonical branch:** `integration/atlas-canonical`
 - **Canonical worktree:** `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-canonical-integration`
 - **Primary system of record:** SharePoint `HVCG_*` lists for Version 1 CRM/clients/projects/tasks/HVCG finance ops; Hub for runtime APIs; BA engines in-tree at `config/business/`
+- **Capital Operations:** Internal Atlas module (Elite `/capital`, Hub, `HVCG_*` capital lists). **Not an eighth system.** Min-slice lists exist; additive columns and Selected grants are owner-gated. Hub capital backend defaults to unavailable. Schema/docs: `docs/CAPITAL_OPERATIONS_DISCOVERY.md`.
 - **Production URL/status:** Azure production Elite/Hub (untouched by Gate 11 final closure). Do not treat `origin/main` as the integration line.
 - **Integrations:** Entra ID, SharePoint, Graph, optional Local AI / Ollama loopback, Plaid API in-tree (`apps/atlas-plaid-api`). QBO application package exists on `cursor/quickbooks-integration` (preserved on origin) and is **not** yet merged into canonical.
 

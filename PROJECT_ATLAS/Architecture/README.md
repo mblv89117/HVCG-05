@@ -9,6 +9,7 @@ This folder is for **future** ADRs/diagrams with evidence links only.
 - [../ARCHITECTURE.md](../ARCHITECTURE.md) (Atlas index)  
 - Repo `ARCHITECTURE.md` / `docs/architecture/`  
 - `docs/data-model/`  
+- Capital Operations (internal Atlas module, not an 8th system): `docs/CAPITAL_OPERATIONS_ARCHITECTURE.md`  
 - RC-1 + Track-1 packages  
 
 If a document here conflicts with those sources, the external SoR wins.

@@ -26,7 +26,7 @@ import {
   workspaceCatalog,
 } from '../data/workspaces';
 import { PortfolioPage } from './PortfolioPage';
-import { CapitalReadinessWorkbench } from './CapitalReadinessWorkbench';
+import { CapitalCommandCenter } from './capital/CapitalCommandCenter';
 import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
 import { ProcurementWorkbench } from './ProcurementWorkbench';
 import { RiskClaimsWorkbench } from './RiskClaimsWorkbench';
@@ -388,7 +388,7 @@ export function ClientDetailPage({ workspaceId }: { workspaceId: string }) {
 }
 
 export function CapitalPage() {
-  return <CapitalReadinessWorkbench />;
+  return <CapitalCommandCenter />;
 }
 
 export function ProcurementPage() {
