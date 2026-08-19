@@ -452,7 +452,7 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
     payload = req.get("payload") or {}
     client = payload.get("client") or payload.get("clientId")
 
-    # Ops that require client (lead intake is pre-client — no clientId)
+    # Ops that require client (lead/free-fit intake is pre-client — no clientId)
     needs_client = op not in (
         "gates.registry",
         "security.ping",
@@ -461,6 +461,12 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
         "lead.list",
         "lead.get",
         "lead.blc1",
+        "freefit.definition",
+        "freefit.complete",
+        "freefit.get",
+        "freefit.by_lead",
+        "freefit.owner_decision",
+        "freefit.blc1",
     )
     if needs_client:
         cc = require_client_context(mapped, client)
@@ -500,6 +506,56 @@ def dispatch_ba_request(req: dict[str, Any]) -> dict[str, Any]:
             out["correlationId"] = correlation
             return out
         out = leads.attempt_external_followup()
+        out["correlationId"] = correlation
+        return out
+
+    if op in (
+        "freefit.definition",
+        "freefit.complete",
+        "freefit.get",
+        "freefit.by_lead",
+        "freefit.owner_decision",
+        "freefit.blc1",
+    ):
+        import free_fit_runtime as ff
+
+        if op == "freefit.definition":
+            out = ff.questionnaire_definition(
+                include_restricted=bool(payload.get("includeRestricted")),
+            )
+            out["correlationId"] = correlation
+            return out
+        if op == "freefit.complete":
+            out = ff.complete_assessment(
+                lead_id=str(payload.get("leadId") or ""),
+                need_type=str(payload.get("needType") or payload.get("need") or ""),
+                revenue_range=payload.get("revenueRange"),
+                capital_goal=payload.get("capitalGoal"),
+                urgency=payload.get("urgency"),
+                primary_issue=payload.get("primaryIssue") or payload.get("businessNeed"),
+                actor=mapped.get("user"),
+            )
+            out["correlationId"] = correlation
+            return out
+        if op == "freefit.get":
+            out = ff.get_assessment(str(payload.get("assessmentId") or ""))
+            out["correlationId"] = correlation
+            return out
+        if op == "freefit.by_lead":
+            out = ff.get_by_lead(str(payload.get("leadId") or ""))
+            out["correlationId"] = correlation
+            return out
+        if op == "freefit.owner_decision":
+            out = ff.record_owner_decision(
+                assessment_id=str(payload.get("assessmentId") or ""),
+                decision=str(payload.get("decision") or ""),
+                alternate_commercial_class=payload.get("alternateCommercialClass"),
+                notes=payload.get("notes"),
+                actor=mapped.get("user"),
+            )
+            out["correlationId"] = correlation
+            return out
+        out = ff.attempt_external_followup()
         out["correlationId"] = correlation
         return out
 

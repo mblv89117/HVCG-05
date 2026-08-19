@@ -217,6 +217,44 @@ def list_leads() -> dict[str, Any]:
     }
 
 
+def patch_lead(lead_id: str, fields: dict[str, Any], *, actor: str | None = None) -> dict[str, Any]:
+    """Development-only field patch — does not convert to Client / Production CRM."""
+    leads = _load_all()
+    for i, lead in enumerate(leads):
+        if lead.get("LeadId") != lead_id:
+            continue
+        forbidden = {"ConvertedClientId", "IsClient360Client", "ContractedEconomicsCreated"}
+        for k, v in fields.items():
+            if k in ("LeadId", "Adapter", "ProductionCrm", "CreatedAt"):
+                continue
+            # Allow explicit False/None for boundary fields
+            if k in forbidden and v not in (False, None):
+                continue
+            lead[k] = v
+        lead["UpdatedAt"] = _now()
+        if actor:
+            lead["UpdatedBy"] = actor
+        # Hard boundaries
+        lead["ProductionCrm"] = False
+        if fields.get("IsClient360Client") is not True:
+            lead["IsClient360Client"] = False
+        if fields.get("ContractedEconomicsCreated") is not True:
+            lead["ContractedEconomicsCreated"] = False
+        leads[i] = lead
+        _save_all(leads)
+        sec.security_audit_event(
+            action="intake.updated",
+            policy_result="ALLOW",
+            allow=True,
+            actor=actor,
+            event_type="intake_updated",
+            environment="DEV",
+            matter=lead_id,
+        )
+        return {"ok": True, "status": "SUCCESS", "lead": lead}
+    return {"ok": False, "status": "FORBIDDEN", "message": "Lead not found", "leakage": False}
+
+
 def attempt_external_followup() -> dict[str, Any]:
     return sec.attempt_external_tool(tool_id="TOOL-EXTERNAL-SEND", via="lead_intake")
 
