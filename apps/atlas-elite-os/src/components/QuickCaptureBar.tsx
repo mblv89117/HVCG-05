@@ -36,14 +36,7 @@ export function QuickCaptureBar({
   };
 
   if (!supported) {
-    return (
-      <AtlasCard>
-        <Caption1 style={{ display: 'block' }}>
-          Quick Capture is not implemented for SharePoint production. Create or complete a task from
-          a project instead.
-        </Caption1>
-      </AtlasCard>
-    );
+    return null;
   }
 
   return (

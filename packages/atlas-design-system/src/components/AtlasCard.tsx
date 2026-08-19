@@ -1,68 +1,82 @@
 import { makeStyles, mergeClasses, tokens, Text, Caption1 } from '@fluentui/react-components';
 import type { ReactNode, CSSProperties } from 'react';
+import { brandStyles } from '../styles/brandStyles';
+import { color } from '../tokens';
+
+export type AtlasDensity = 'default' | 'compact';
 
 const useStyles = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
-    padding: '20px',
-    borderRadius: tokens.borderRadiusLarge,
-    backgroundColor: tokens.colorNeutralBackground2,
+    gap: '8px',
+    padding: '16px',
+    borderRadius: tokens.borderRadiusMedium,
+    backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    boxShadow: '0 4px 14px rgba(11, 31, 51, 0.06)',
-    transitionProperty: 'box-shadow, transform, border-color, background-color',
-    transitionDuration: '200ms',
+    boxShadow: 'none',
+    transitionProperty: 'border-color, background-color',
+    transitionDuration: '160ms',
     transitionTimingFunction: 'cubic-bezier(0.33, 1, 0.68, 1)',
   },
-  glass: {
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
-    backdropFilter: 'blur(14px)',
-    WebkitBackdropFilter: 'blur(14px)',
-    border: `1px solid ${tokens.colorNeutralStroke1}`,
-    boxShadow: '0 0 0 1px rgba(201, 162, 39, 0.12), 0 8px 28px rgba(11, 31, 51, 0.08)',
+  compact: {
+    gap: '6px',
+    padding: '10px 12px',
   },
-  quiet: {
-    boxShadow: 'none',
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    backgroundColor: tokens.colorNeutralBackground1,
-    padding: '16px',
-  },
-  accent: {
-    borderTop: '3px solid #C9A227',
-  },
-  ai: {
-    border: '1px solid rgba(37, 99, 235, 0.28)',
-    boxShadow: '0 0 0 1px rgba(37, 99, 235, 0.10), 0 8px 24px rgba(37, 99, 235, 0.08)',
-  },
-  interactive: {
-    cursor: 'pointer',
-    ':hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 12px 36px rgba(11, 31, 51, 0.10)',
-      border: '1px solid rgba(201, 162, 39, 0.40)',
+  ...brandStyles({
+    glass: {
+      backgroundColor: 'rgba(248, 250, 252, 0.88)',
+      backdropFilter: 'blur(2px)',
+      WebkitBackdropFilter: 'blur(2px)',
+      border: `1px solid ${color.line}`,
+      boxShadow: 'none',
     },
-    ':focus-visible': {
-      outline: `2px solid ${tokens.colorStrokeFocus2}`,
-      outlineOffset: '2px',
+    ai: {
+      borderLeft: `2px solid ${color.azure}`,
+      boxShadow: 'none',
     },
-  },
+    quiet: {
+      boxShadow: 'none',
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      backgroundColor: tokens.colorNeutralBackground1,
+      padding: '12px',
+    },
+    accent: {
+      borderLeftWidth: '2px',
+      borderLeftStyle: 'solid',
+      borderLeftColor: color.gold,
+    },
+    interactive: {
+      cursor: 'pointer',
+      ':hover': {
+        backgroundColor: tokens.colorNeutralBackground2,
+      },
+      ':focus-visible': {
+        outline: `2px solid ${tokens.colorStrokeFocus2}`,
+        outlineOffset: '2px',
+      },
+    },
+  }),
   header: {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: '12px',
+    gap: '8px',
   },
   titleBlock: {
     display: 'flex',
     flexDirection: 'column',
     gap: '2px',
     minWidth: 0,
+    '& .fui-Text': {
+      display: 'block',
+      width: '100%',
+    },
   },
   body: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '6px',
     minWidth: 0,
   },
   footer: {
@@ -70,7 +84,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '8px',
-    marginTop: '4px',
+    marginTop: '2px',
   },
 });
 
@@ -84,6 +98,8 @@ export interface AtlasCardProps {
   footer?: ReactNode;
   variant?: CardVariant;
   interactive?: boolean;
+  /** Tighter padding and gaps. Default preserves current Elite card rhythm. */
+  density?: AtlasDensity;
   className?: string;
   style?: CSSProperties;
   onClick?: () => void;
@@ -98,6 +114,7 @@ export function AtlasCard({
   footer,
   variant = 'default',
   interactive,
+  density = 'default',
   className,
   style,
   onClick,
@@ -113,6 +130,7 @@ export function AtlasCard({
         variant === 'quiet' && s.quiet,
         variant === 'accent' && s.accent,
         variant === 'ai' && s.ai,
+        density === 'compact' && s.compact,
         clickable && s.interactive,
         'atlas-fade-in',
         className,
@@ -137,11 +155,15 @@ export function AtlasCard({
         <div className={s.header}>
           <div className={s.titleBlock}>
             {title ? (
-              <Text weight="semibold" size={400}>
+              <Text block weight="semibold" size={density === 'compact' ? 300 : 400}>
                 {title}
               </Text>
             ) : null}
-            {subtitle ? <Caption1>{subtitle}</Caption1> : null}
+            {subtitle ? (
+              <Caption1 as="p" block>
+                {subtitle}
+              </Caption1>
+            ) : null}
           </div>
           {headerAction}
         </div>

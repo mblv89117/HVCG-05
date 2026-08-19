@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AtlasCard,
@@ -6,16 +6,21 @@ import {
   AtlasProgress,
   EmptyState,
   DataTable,
+  LoadingState,
+  ErrorState,
+  AccessDeniedState,
 } from '@hvcg/atlas-design-system';
 import {
   Button,
   Text,
   Caption1,
-  Spinner,
   Tab,
   TabList,
   Input,
   Field,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
 } from '@fluentui/react-components';
 import { OpenRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
@@ -33,7 +38,9 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { isValidProjectId } from '../routing/projectId';
-import { displayHealth, displayNextAction, isBootstrapNextAction } from '../operating/projectDisplay';
+import { displayHealth, displayLastActivity, displayNextAction, isBootstrapNextAction } from '../operating/projectDisplay';
+import { isCanonicalClientCode } from '../security/clientCode';
+import { ATLAS_STATUS, atlasStatusDisplay, atlasStatusTone } from '../ui/statusLanguage';
 
 const BOARD_STATUS: Record<string, string> = {
   todo: 'ready',
@@ -41,6 +48,78 @@ const BOARD_STATUS: Record<string, string> = {
   review: 'needs_review',
   done: 'completed',
 };
+
+const KNOWN_ATLAS = new Set<string>(Object.values(ATLAS_STATUS));
+
+function titleCaseUnknown(raw: string): string {
+  return raw
+    .trim()
+    .replace(/[_-]+/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function atlasChip(raw: string | undefined | null): { label: string; tone: ReturnType<typeof atlasStatusTone> } {
+  if (!raw || !String(raw).trim()) return { label: '—', tone: 'neutral' };
+  const mapped = atlasStatusDisplay(raw);
+  if (mapped && KNOWN_ATLAS.has(mapped.label)) return mapped;
+  return { label: titleCaseUnknown(mapped?.label || raw), tone: mapped?.tone || 'neutral' };
+}
+
+function healthChip(health: string, nextAction?: string): { label: string; tone: ReturnType<typeof atlasStatusTone> } {
+  const raw = displayHealth(health, {
+    treatHealthyAsUnassessed: isBootstrapNextAction(nextAction),
+  });
+  if (raw === 'Not assessed') return { label: ATLAS_STATUS.unverified, tone: 'neutral' };
+  return atlasChip(raw);
+}
+
+function clientPath(code?: string | null): string | null {
+  const id = String(code || '').trim();
+  if (!isCanonicalClientCode(id)) return null;
+  return `/clients/${encodeURIComponent(id)}`;
+}
+
+function taskNeedsOwner(task: PmTask): boolean {
+  return task.status === 'needs_owner_approval' || task.status === 'needs_review';
+}
+
+function safeErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message.trim()) return err.message;
+  return fallback;
+}
+
+function DeferredClosed({ label }: { label: string }) {
+  return (
+    <AtlasCard title={label}>
+      <Caption1>
+        {label} is not in the SharePoint production MVP. Hub marked this collection deferred —
+        Atlas will not treat missing rows as “none yet.”
+      </Caption1>
+    </AtlasCard>
+  );
+}
+
+function RecordRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '140px 1fr',
+        gap: 12,
+        padding: '10px 0',
+        borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
+      }}
+    >
+      <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+        {label}
+      </Caption1>
+      <div>{children}</div>
+    </div>
+  );
+}
 
 export function ProjectDetailPage({
   projectId,
@@ -50,7 +129,7 @@ export function ProjectDetailPage({
   invalidId?: boolean;
 }) {
   const auth = useHubAuth();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState('record');
   const [project, setProject] = useState<PmProject | null>(null);
   const [tasks, setTasks] = useState<PmTask[]>([]);
   const [board, setBoard] = useState<{
@@ -78,11 +157,15 @@ export function ProjectDetailPage({
     Array<{ id: string; whatIsNeeded: string; owedByName: string }>
   >([]);
   const [notes, setNotes] = useState<Array<{ id: string; body: string; title?: string }>>([]);
+  const [activity, setActivity] = useState<Array<{ id: string; at?: string; action?: string; detail?: string }>>(
+    [],
+  );
   const [documents, setDocuments] = useState<OperatingDocument[]>([]);
   const [loading, setLoading] = useState(!invalidId);
   const [missing, setMissing] = useState(Boolean(invalidId));
   const [authFailure, setAuthFailure] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [message, setMessage] = useState(
     invalidId
       ? 'This project link is invalid (missing, undefined, unknown, or obsolete demo id).'
@@ -93,12 +176,14 @@ export function ProjectDetailPage({
   const [milestoneTitle, setMilestoneTitle] = useState('');
   const [decisionTitle, setDecisionTitle] = useState('');
   const [deferred, setDeferred] = useState<Record<string, string>>({});
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!isValidProjectId(projectId)) {
       setMissing(true);
       setLoading(false);
       setAuthFailure(null);
+      setLoadError(null);
       setMessage(
         'This project link is invalid (missing, undefined, unknown, or obsolete demo id).',
       );
@@ -108,6 +193,7 @@ export function ProjectDetailPage({
     if (!auth.hasBearer) {
       setLoading(false);
       setMissing(false);
+      setLoadError(null);
       setAuthFailure(
         auth.bootstrapStatus === 'interaction_required'
           ? auth.bootstrapMessage || 'Authorize Atlas Integration Hub'
@@ -119,6 +205,7 @@ export function ProjectDetailPage({
     setMissing(false);
     setAuthFailure(null);
     setForbidden(false);
+    setLoadError(null);
     try {
       const res = await fetchPmProject(auth, projectId);
       setProject(res.project);
@@ -138,6 +225,7 @@ export function ProjectDetailPage({
       setDeliverables((res.deliverables as typeof deliverables) || []);
       setWaiting((res.waiting as typeof waiting) || []);
       setNotes((res.notes as typeof notes) || []);
+      setActivity((res.activity as typeof activity) || []);
       setDocuments(res.documents || []);
       setDeferred(res.deferred || {});
       setMessage('');
@@ -150,14 +238,17 @@ export function ProjectDetailPage({
             : 'Microsoft sign-in required (Bearer token missing)',
         );
         setMissing(false);
+        setLoadError(null);
         setProject(null);
       } else if (status === 403) {
         setForbidden(true);
         setMissing(false);
+        setLoadError(null);
         setProject(null);
         setMessage('Authenticated but not authorized to view this project.');
       } else if (status === 404) {
         setMissing(true);
+        setLoadError(null);
         setProject(null);
         setMessage(
           err instanceof Error
@@ -167,7 +258,7 @@ export function ProjectDetailPage({
       } else {
         setMissing(false);
         setProject(null);
-        setMessage(err instanceof Error ? err.message : 'Server error loading project.');
+        setLoadError(safeErrorMessage(err, 'Server error loading project.'));
       }
     } finally {
       setLoading(false);
@@ -179,17 +270,30 @@ export function ProjectDetailPage({
   }, [refresh]);
 
   const moveTask = async (task: PmTask, column: keyof typeof BOARD_STATUS) => {
-    await patchPmTask(auth, task.id, {
-      status: BOARD_STATUS[column],
-      ...(task.etag ? { etag: task.etag } : {}),
-    });
-    await refresh();
+    setActionError(null);
+    try {
+      await patchPmTask(auth, task.id, {
+        status: BOARD_STATUS[column],
+        ...(task.etag ? { etag: task.etag } : {}),
+      });
+      await refresh();
+    } catch (err) {
+      setActionError(safeErrorMessage(err, 'Could not update this task.'));
+    }
   };
 
-  if (!auth.tokenReady || loading) {
+  if (!auth.tokenReady) {
     return (
-      <ModuleScaffold title="Project" subtitle="Loading…" showPendingBanner={false}>
-        <Spinner />
+      <ModuleScaffold title="Project" subtitle="Preparing Microsoft session…" showPendingBanner={false}>
+        <LoadingState rows={6} label="Acquiring Hub access token…" />
+      </ModuleScaffold>
+    );
+  }
+
+  if (loading) {
+    return (
+      <ModuleScaffold title="Project" subtitle="Loading record…" showPendingBanner={false}>
+        <LoadingState rows={8} label="Loading project from Integration Hub…" />
       </ModuleScaffold>
     );
   }
@@ -197,41 +301,38 @@ export function ProjectDetailPage({
   if (authFailure) {
     return (
       <ModuleScaffold
-        title="Authentication required"
+        title="Project"
         subtitle={
           auth.bootstrapStatus === 'interaction_required'
-            ? 'Hub API authorization required'
-            : 'Integration Hub rejected the request (401)'
+            ? 'Hub authorization required'
+            : 'Sign-in required'
         }
         showPendingBanner={false}
       >
-        <AtlasCard
+        <AccessDeniedState
           title={
             auth.bootstrapStatus === 'interaction_required'
               ? 'Authorize Atlas Integration Hub'
               : 'Bearer token missing or rejected'
           }
-        >
-          <Text>{authFailure}</Text>
-          <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            Your Atlas UI session may be signed in, but the Hub API call did not receive a valid
-            access token. This is not a missing project.
-          </Caption1>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            {auth.bootstrapStatus === 'interaction_required' ? (
-              <Button appearance="primary" onClick={() => void auth.authorizeHub()}>
-                Authorize Atlas Integration Hub
-              </Button>
-            ) : (
-              <Button appearance="primary" onClick={() => void refresh()}>
-                Retry with Hub bearer
-              </Button>
-            )}
-            <Link to="/projects">
-              <Button appearance="secondary">Back to projects</Button>
-            </Link>
-          </div>
-        </AtlasCard>
+          description={`${authFailure} Your Atlas UI session may be signed in, but the Hub API call did not receive a valid access token. This is not a missing project.`}
+          actions={
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {auth.bootstrapStatus === 'interaction_required' ? (
+                <Button appearance="primary" onClick={() => void auth.authorizeHub()}>
+                  Authorize Atlas Integration Hub
+                </Button>
+              ) : (
+                <Button appearance="primary" onClick={() => void refresh()}>
+                  Retry with Hub bearer
+                </Button>
+              )}
+              <Link to="/projects">
+                <Button appearance="secondary">Back to projects</Button>
+              </Link>
+            </div>
+          }
+        />
       </ModuleScaffold>
     );
   }
@@ -239,14 +340,31 @@ export function ProjectDetailPage({
   if (forbidden) {
     return (
       <ModuleScaffold title="Access denied" subtitle="403" showPendingBanner={false}>
-        <AtlasCard title="Insufficient authorization">
-          <Text>{message}</Text>
-          <Link to="/projects">
-            <Button appearance="primary" style={{ marginTop: 12 }}>
-              Back to projects
-            </Button>
-          </Link>
-        </AtlasCard>
+        <AccessDeniedState
+          title="Insufficient authorization"
+          description={message || 'Authenticated but not authorized to view this project.'}
+          actions={
+            <Link to="/projects">
+              <Button appearance="primary">Back to projects</Button>
+            </Link>
+          }
+        />
+      </ModuleScaffold>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <ModuleScaffold title="Project unavailable" subtitle="Hub request failed" showPendingBanner={false}>
+        <ErrorState
+          title="Could not load this project"
+          description={`${loadError} This is not a missing project. Retry after Hub access is restored, or return to the project list.`}
+          actions={
+            <Link to="/projects">
+              <Button appearance="primary">Back to projects</Button>
+            </Link>
+          }
+        />
       </ModuleScaffold>
     );
   }
@@ -305,11 +423,17 @@ export function ProjectDetailPage({
               borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
             }}
           >
-            <Text weight="semibold">{t.title}</Text>
+            {taskNeedsOwner(t) ? (
+              <Link to="/tasks">
+                <Text weight="semibold">{t.title}</Text>
+              </Link>
+            ) : (
+              <Text weight="semibold">{t.title}</Text>
+            )}
             <Caption1 style={{ display: 'block' }}>
               {t.assigneeName || 'Unassigned'}
-              {t.dueDate ? ` · due ${t.dueDate}` : ''} · {t.priority}
-              {t.blocker ? ` · blocker: ${t.blocker}` : ''}
+              {t.dueDate ? ` · due ${t.dueDate}` : ''} · {atlasChip(t.priority).label}
+              {t.blocker ? ` · ${ATLAS_STATUS.blocked}: ${t.blocker}` : ''}
             </Caption1>
             <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
               {(
@@ -333,6 +457,13 @@ export function ProjectDetailPage({
     </AtlasCard>
   );
 
+  const status = atlasChip(project.status);
+  const health = healthChip(project.health, project.nextAction);
+  const priority = atlasChip(project.priority);
+  const relatedClientHref = clientPath(project.clientCode || project.clientId);
+  const taskBlockers = tasks.filter((t) => t.blocker || t.status === 'blocked');
+  const ownerDecisions = tasks.filter(taskNeedsOwner);
+
   return (
     <ModuleScaffold
       title={project.name}
@@ -343,19 +474,32 @@ export function ProjectDetailPage({
           <Link to="/projects">
             <Button appearance="primary">Back to projects</Button>
           </Link>
-          <Link to="/portfolio">
-            <Button appearance="secondary">Portfolio</Button>
+          <Link to="/projects">
+            <Button appearance="secondary">Projects</Button>
           </Link>
-          {project.clientId ? (
-            <Link to={`/clients/${project.clientId}`}>
+          {relatedClientHref ? (
+            <Link to={relatedClientHref}>
               <Button appearance="secondary">Client</Button>
+            </Link>
+          ) : null}
+          {ownerDecisions.length ? (
+            <Link to="/tasks">
+              <Button appearance="secondary">Decisions</Button>
             </Link>
           ) : null}
         </div>
       }
     >
+      {actionError ? (
+        <MessageBar intent="error">
+          <MessageBarBody>
+            <MessageBarTitle>Change was not saved</MessageBarTitle>
+            {actionError}
+          </MessageBarBody>
+        </MessageBar>
+      ) : null}
       <TabList selectedValue={tab} onTabSelect={(_, d) => setTab(String(d.value))}>
-        <Tab value="overview">Overview</Tab>
+        <Tab value="record">Record</Tab>
         <Tab value="board">Board</Tab>
         <Tab value="milestones">Milestones</Tab>
         <Tab value="documents">Documents</Tab>
@@ -363,68 +507,153 @@ export function ProjectDetailPage({
         <Tab value="risks">Risks & waiting</Tab>
       </TabList>
 
-      {tab === 'overview' ? (
+      {tab === 'record' ? (
         <div style={{ display: 'grid', gap: 16 }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-              gap: 12,
-            }}
-          >
-            <AtlasCard variant="quiet">
-              <Caption1>Status</Caption1>
-              <StatusChip label={project.status} tone="info" />
-            </AtlasCard>
-            <AtlasCard variant="quiet">
-              <Caption1>Health</Caption1>
-              <StatusChip
-                label={displayHealth(project.health, {
-                  treatHealthyAsUnassessed: isBootstrapNextAction(project.nextAction),
-                })}
-                tone={
-                  displayHealth(project.health, {
-                    treatHealthyAsUnassessed: isBootstrapNextAction(project.nextAction),
-                  }) === 'Not assessed'
-                    ? 'neutral'
-                    : project.health === 'healthy'
-                      ? 'success'
-                      : project.health === 'at_risk' || project.health === 'critical'
-                        ? 'danger'
-                        : 'warning'
-                }
-              />
-            </AtlasCard>
-            <AtlasCard variant="quiet">
-              <Caption1>Owner</Caption1>
-              <Text weight="semibold">{project.ownerName}</Text>
-            </AtlasCard>
-            <AtlasCard variant="quiet">
-              <Caption1>Priority</Caption1>
-              <Text weight="semibold">{project.priority}</Text>
-            </AtlasCard>
-            <AtlasCard variant="quiet">
-              <Caption1>Due</Caption1>
-              <Text weight="semibold">{project.targetCompletionDate || '—'}</Text>
-            </AtlasCard>
-          </div>
-
-          <AtlasCard title="Objective & next action">
-            <Text>{project.objective || '—'}</Text>
-            <Caption1 style={{ display: 'block', marginTop: 8 }}>
-              Next action: {displayNextAction(project.nextAction)}
-            </Caption1>
+          <AtlasCard title="Project record">
+            <RecordRow label="What">
+              <Text weight="semibold">{project.name}</Text>
+              <Caption1 style={{ display: 'block' }}>
+                {project.objective || 'No objective recorded'}
+              </Caption1>
+            </RecordRow>
+            <RecordRow label="State">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <StatusChip
+                  label={status.label}
+                  tone={status.tone === 'neutral' ? 'info' : status.tone}
+                />
+                <StatusChip label={health.label} tone={health.tone} />
+                <Caption1>Priority {priority.label}</Caption1>
+              </div>
+            </RecordRow>
+            <RecordRow label="Next">
+              <Text>{displayNextAction(project.nextAction)}</Text>
+            </RecordRow>
+            <RecordRow label="Owner">
+              <Text weight="semibold">{project.ownerName || '—'}</Text>
+              <Caption1 style={{ display: 'block' }}>
+                {(project.teamMemberIds || []).join(', ') || 'No additional team on this record'}
+              </Caption1>
+            </RecordRow>
+            <RecordRow label="Blocker">
+              {deferred.risks ? (
+                <Caption1>
+                  Risk/blocker register is not in the SharePoint production MVP. Showing task-level
+                  blockers only.
+                </Caption1>
+              ) : null}
+              {taskBlockers.length === 0 && !deferred.risks ? (
+                <Caption1>No blockers on Hub tasks for this project.</Caption1>
+              ) : null}
+              {taskBlockers.map((t) => (
+                <div key={t.id} style={{ padding: '4px 0' }}>
+                  {taskNeedsOwner(t) ? (
+                    <Link to="/tasks">{t.title}</Link>
+                  ) : (
+                    <Text>{t.title}</Text>
+                  )}
+                  <Caption1 style={{ display: 'block' }}>
+                    {ATLAS_STATUS.blocked}
+                    {t.blocker ? ` — ${t.blocker}` : ''}
+                  </Caption1>
+                </div>
+              ))}
+            </RecordRow>
+            <RecordRow label="Related">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                {relatedClientHref ? (
+                  <Link to={relatedClientHref}>{project.clientName || project.clientCode || project.clientId}</Link>
+                ) : (
+                  <Caption1>{project.clientName || 'No client on this record'}</Caption1>
+                )}
+                {ownerDecisions.length ? <Link to="/tasks">Decisions</Link> : null}
+                <Caption1>
+                  {project.businessEntity} · {project.projectType}
+                  {project.targetCompletionDate ? ` · due ${project.targetCompletionDate}` : ''}
+                </Caption1>
+              </div>
+            </RecordRow>
+            <RecordRow label="Changed">
+              <Text>{displayLastActivity(project.lastActivityAt)}</Text>
+              {deferred.activity ? (
+                <Caption1 style={{ display: 'block' }}>
+                  Activity feed is not in the SharePoint production MVP. Hub did not send a change
+                  summary — only lastActivityAt.
+                </Caption1>
+              ) : activity.length === 0 ? (
+                <Caption1 style={{ display: 'block' }}>No activity events on this record.</Caption1>
+              ) : (
+                activity.slice(0, 5).map((a) => (
+                  <Caption1 key={a.id} style={{ display: 'block' }}>
+                    {a.at ? String(a.at).slice(0, 10) : ''} {a.action || a.detail || ''}
+                  </Caption1>
+                ))
+              )}
+            </RecordRow>
+            <RecordRow label="Requires me">
+              {deferred.decisions ? (
+                <Caption1>
+                  Decisions register is not in the SharePoint production MVP. Showing Hub task
+                  approvals on this project only.
+                </Caption1>
+              ) : null}
+              {ownerDecisions.length === 0 ? (
+                <Caption1>Nothing on this project requires you right now.</Caption1>
+              ) : (
+                ownerDecisions.map((t) => (
+                  <div key={t.id} style={{ padding: '4px 0' }}>
+                    <StatusChip
+                      tone={atlasStatusTone(ATLAS_STATUS.needsManny)}
+                      label={ATLAS_STATUS.needsManny}
+                    />{' '}
+                    <Link to="/tasks">{t.title}</Link>
+                  </div>
+                ))
+              )}
+            </RecordRow>
             <div style={{ marginTop: 12 }}>
               <AtlasProgress value={project.progressPercent} label="Completion" />
             </div>
           </AtlasCard>
 
-          <AtlasCard title="Team">
-            <Text>{(project.teamMemberIds || []).join(', ') || project.ownerName}</Text>
-          </AtlasCard>
+          {deferred.deliverables ? (
+            <DeferredClosed label="Deliverables" />
+          ) : (
+            <AtlasCard title="Deliverables">
+              {deliverables.length === 0 ? (
+                <Caption1>None yet</Caption1>
+              ) : (
+                deliverables.map((d) => (
+                  <Caption1 key={d.id} style={{ display: 'block', padding: '4px 0' }}>
+                    {d.name} ({atlasChip(d.status).label})
+                  </Caption1>
+                ))
+              )}
+            </AtlasCard>
+          )}
 
-          <AtlasCard title="Tasks">
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {deferred.commitments ? (
+            <DeferredClosed label="Commitments" />
+          ) : (
+            <AtlasCard title="Commitments">
+              {commitments.length === 0 ? (
+                <Caption1>None</Caption1>
+              ) : (
+                commitments.map((c) => (
+                  <Caption1 key={c.id} style={{ display: 'block', padding: '4px 0' }}>
+                    {c.description} ({atlasChip(c.status).label})
+                  </Caption1>
+                ))
+              )}
+            </AtlasCard>
+          )}
+        </div>
+      ) : null}
+
+      {tab === 'board' ? (
+        <div style={{ display: 'grid', gap: 16 }}>
+          <AtlasCard title="Add work">
+            <div style={{ display: 'flex', gap: 8 }}>
               <Input
                 placeholder="New task title"
                 value={taskTitle}
@@ -439,104 +668,34 @@ export function ProjectDetailPage({
                     clientId: project.clientId,
                     clientName: project.clientName,
                     status: 'ready',
-                  }).then(() => {
-                    setTaskTitle('');
-                    return refresh();
                   })
+                    .then(() => {
+                      setTaskTitle('');
+                      setActionError(null);
+                      return refresh();
+                    })
+                    .catch((err) => {
+                      setActionError(safeErrorMessage(err, 'Could not add this task.'));
+                    })
                 }
                 disabled={!taskTitle.trim()}
               >
                 Add task
               </Button>
             </div>
-            {tasks.length === 0 ? (
-              <EmptyState
-                title="No tasks"
-                description="Add a task or sync work from Command Center."
-              />
-            ) : (
-              tasks.map((t) => (
-                <div
-                  key={t.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 8,
-                    padding: '8px 0',
-                    borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
-                  }}
-                >
-                  <div>
-                    <Text weight="semibold">{t.title}</Text>
-                    <Caption1 style={{ display: 'block' }}>
-                      {t.status} · {t.priority}
-                      {t.dueDate ? ` · due ${t.dueDate}` : ''}
-                      {t.blocker ? ` · blocker: ${t.blocker}` : ''}
-                    </Caption1>
-                  </div>
-                  {t.status !== 'completed' ? (
-                    <Button
-                      size="small"
-                      onClick={() =>
-                        void patchPmTask(auth, t.id, {
-                          status: 'completed',
-                          ...(t.etag ? { etag: t.etag } : {}),
-                        }).then(refresh)
-                      }
-                    >
-                      Complete
-                    </Button>
-                  ) : null}
-                </div>
-              ))
-            )}
           </AtlasCard>
-
           <div
             style={{
               display: 'grid',
-              gap: 16,
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 12,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
             }}
           >
-            <AtlasCard title="Deliverables">
-              {deliverables.length === 0 ? (
-                <Caption1>None yet</Caption1>
-              ) : (
-                deliverables.map((d) => (
-                  <Caption1 key={d.id} style={{ display: 'block', padding: '4px 0' }}>
-                    {d.name} ({d.status})
-                  </Caption1>
-                ))
-              )}
-            </AtlasCard>
-            <AtlasCard title="Commitments">
-              {commitments.length === 0 ? (
-                <Caption1>None</Caption1>
-              ) : (
-                commitments.map((c) => (
-                  <Caption1 key={c.id} style={{ display: 'block', padding: '4px 0' }}>
-                    {c.description} ({c.status})
-                  </Caption1>
-                ))
-              )}
-            </AtlasCard>
+            <BoardColumn title="To Do" column="todo" items={board.todo} />
+            <BoardColumn title="In Progress" column="inProgress" items={board.inProgress} />
+            <BoardColumn title="Review" column="review" items={board.review} />
+            <BoardColumn title="Done" column="done" items={board.done} />
           </div>
-        </div>
-      ) : null}
-
-      {tab === 'board' ? (
-        <div
-          style={{
-            display: 'grid',
-            gap: 12,
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          }}
-        >
-          <BoardColumn title="To Do" column="todo" items={board.todo} />
-          <BoardColumn title="In Progress" column="inProgress" items={board.inProgress} />
-          <BoardColumn title="Review" column="review" items={board.review} />
-          <BoardColumn title="Done" column="done" items={board.done} />
         </div>
       ) : null}
 
@@ -555,10 +714,15 @@ export function ProjectDetailPage({
                 void createPmMilestone(auth, {
                   projectId: project.id,
                   title: milestoneTitle,
-                }).then(() => {
-                  setMilestoneTitle('');
-                  return refresh();
                 })
+                  .then(() => {
+                    setMilestoneTitle('');
+                    setActionError(null);
+                    return refresh();
+                  })
+                  .catch((err) => {
+                    setActionError(safeErrorMessage(err, 'Could not add this milestone.'));
+                  })
               }
             >
               Add milestone
@@ -569,7 +733,7 @@ export function ProjectDetailPage({
           ) : (
             milestones.map((m) => (
               <Caption1 key={m.id} style={{ display: 'block', padding: '4px 0' }}>
-                {m.title} · {m.status}
+                {m.title} · {atlasChip(m.status).label}
                 {m.dueDate ? ` · ${m.dueDate}` : ''}
               </Caption1>
             ))
@@ -579,9 +743,7 @@ export function ProjectDetailPage({
 
       {tab === 'documents' ? (
         deferred.documents ? (
-          <AtlasCard title="Documents">
-            <Caption1>Documents are not in the SharePoint production MVP.</Caption1>
-          </AtlasCard>
+          <DeferredClosed label="Documents" />
         ) : documents.length === 0 ? (
           <EmptyState
             title="No linked documents for this project"
@@ -620,9 +782,10 @@ export function ProjectDetailPage({
 
       {tab === 'notes' ? (
         deferred.notes || deferred.decisions ? (
-          <AtlasCard title="Notes & decisions">
-            <Caption1>Notes and decisions are not in the SharePoint production MVP.</Caption1>
-          </AtlasCard>
+          <div style={{ display: 'grid', gap: 16 }}>
+            {deferred.notes ? <DeferredClosed label="Notes" /> : null}
+            {deferred.decisions ? <DeferredClosed label="Decisions" /> : null}
+          </div>
         ) : (
         <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
           <AtlasCard title="Notes">
@@ -638,20 +801,29 @@ export function ProjectDetailPage({
                   projectId: project.id,
                   clientId: project.clientId,
                   clientName: project.clientName,
-                }).then(() => {
-                  setNoteBody('');
-                  return refresh();
                 })
+                  .then(() => {
+                    setNoteBody('');
+                    setActionError(null);
+                    return refresh();
+                  })
+                  .catch((err) => {
+                    setActionError(safeErrorMessage(err, 'Could not record this note.'));
+                  })
               }
             >
               Record note
             </Button>
-            {notes.map((n) => (
-              <Caption1 key={n.id} style={{ display: 'block', marginTop: 8 }}>
-                {n.title ? `${n.title}: ` : ''}
-                {n.body}
-              </Caption1>
-            ))}
+            {notes.length === 0 ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>No notes on this record.</Caption1>
+            ) : (
+              notes.map((n) => (
+                <Caption1 key={n.id} style={{ display: 'block', marginTop: 8 }}>
+                  {n.title ? `${n.title}: ` : ''}
+                  {n.body}
+                </Caption1>
+              ))
+            )}
           </AtlasCard>
           <AtlasCard title="Decisions">
             <Field label="Decision">
@@ -667,29 +839,40 @@ export function ProjectDetailPage({
                   projectId: project.id,
                   clientId: project.clientId,
                   clientName: project.clientName,
-                }).then(() => {
-                  setDecisionTitle('');
-                  return refresh();
                 })
+                  .then(() => {
+                    setDecisionTitle('');
+                    setActionError(null);
+                    return refresh();
+                  })
+                  .catch((err) => {
+                    setActionError(safeErrorMessage(err, 'Could not record this decision.'));
+                  })
               }
             >
               Record decision
             </Button>
-            {decisions.map((d) => (
-              <Caption1 key={d.id} style={{ display: 'block', marginTop: 8 }}>
-                {d.title} ({d.status})
-              </Caption1>
-            ))}
+            {decisions.length === 0 ? (
+              <Caption1 style={{ display: 'block', marginTop: 8 }}>No decisions on this record.</Caption1>
+            ) : (
+              decisions.map((d) => (
+                <Caption1 key={d.id} style={{ display: 'block', marginTop: 8 }}>
+                  {d.title} ({atlasChip(d.status).label})
+                </Caption1>
+              ))
+            )}
           </AtlasCard>
         </div>
         )
       ) : null}
 
       {tab === 'risks' ? (
-        deferred.risks || deferred.waiting || deferred.commitments ? (
-          <AtlasCard title="Risks & waiting">
-            <Caption1>Risks, waiting items, and commitments are not in the SharePoint production MVP.</Caption1>
-          </AtlasCard>
+        deferred.risks || deferred.waiting ? (
+          <div style={{ display: 'grid', gap: 16 }}>
+            {deferred.risks ? <DeferredClosed label="Risks" /> : null}
+            {deferred.waiting ? <DeferredClosed label="Waiting" /> : null}
+            {deferred.commitments ? <DeferredClosed label="Commitments" /> : null}
+          </div>
         ) : (
         <div
           style={{
@@ -721,16 +904,14 @@ export function ProjectDetailPage({
             )}
           </AtlasCard>
           <AtlasCard title="Approvals">
-            {tasks.filter((t) => t.status === 'needs_owner_approval' || false).length === 0 ? (
+            {ownerDecisions.length === 0 ? (
               <Caption1>No pending project approvals</Caption1>
             ) : (
-              tasks
-                .filter((t) => t.status === 'needs_owner_approval')
-                .map((t) => (
-                  <Caption1 key={t.id} style={{ display: 'block', padding: '4px 0' }}>
-                    {t.title}
-                  </Caption1>
-                ))
+              ownerDecisions.map((t) => (
+                <Caption1 key={t.id} style={{ display: 'block', padding: '4px 0' }}>
+                  <Link to="/tasks">{t.title}</Link> · {atlasChip(t.status).label}
+                </Caption1>
+              ))
             )}
           </AtlasCard>
         </div>

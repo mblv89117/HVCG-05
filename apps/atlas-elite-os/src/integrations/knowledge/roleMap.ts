@@ -24,8 +24,10 @@ const ALIASES: Record<string, RoleId> = {
   'client contact': 'ClientContact',
   clientcontributor: 'ClientContact',
   client: 'ClientContact',
-  unauthenticated: 'ReadOnly',
-  unresolved: 'ReadOnly',
+  'client executive': 'ClientContact',
+  clientexecutive: 'ClientContact',
+  unauthenticated: 'ClientContact',
+  unresolved: 'ClientContact',
 }
 
 export function mapHostRole(raw: string | null | undefined): RoleId {

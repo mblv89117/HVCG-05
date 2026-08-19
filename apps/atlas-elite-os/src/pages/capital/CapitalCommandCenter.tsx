@@ -1,15 +1,15 @@
 /**
- * Manny-first Capital Command Center — 60-second executive scan + work queues.
+ * Manny-first Capital Command Center — work queues + opportunity drill-down.
  * Primary /capital surface. CapitalReadinessWorkbench remains a development fixture only.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  AccessDeniedState,
   AtlasCard,
   DataTable,
-  EmptyState,
+  ErrorState,
   FilterToolbar,
-  KpiTile,
-  ResponsiveGrid,
+  LoadingState,
   SectionRail,
   SourceBadge,
   StatusChip,
@@ -28,26 +28,31 @@ import {
   MessageBar,
   MessageBarBody,
   MessageBarTitle,
-  Spinner,
   Text,
 } from '@fluentui/react-components';
 import { AddRegular, ArrowSyncRegular } from '@fluentui/react-icons';
+import { useSearchParams } from 'react-router-dom';
 import { ModuleScaffold } from '../shared/ModuleScaffold';
 import { useHubAuth } from '../../integrations/hub/useHubAuth';
+import { ATLAS_STATUS } from '../../ui/statusLanguage';
 import { OpportunityWorkspace } from './OpportunityWorkspace';
 import {
   AI_DISCLAIMER,
+  FINANCING_DISCLAIMER,
+  MANNY_GATE_COPY,
+  QUEUE_LABELS,
+  SYNTHETIC_BANNER,
+  WORK_QUEUES,
+  accessFailureKind,
   agingTone,
   createOpportunity,
-  FINANCING_DISCLAIMER,
+  formatAging,
   formatStage,
   formatUsd,
   loadCommandCenter,
-  MANNY_GATE_COPY,
-  QUEUE_LABELS,
+  operatorFacingMessage,
   queueTone,
-  SYNTHETIC_BANNER,
-  WORK_QUEUES,
+  readOpportunityQuery,
   type CapitalCommandCenterPayload,
   type CreateOpportunityInput,
   type QueueItem,
@@ -55,22 +60,7 @@ import {
 } from './capitalApi';
 
 type QueueFilter = WorkQueue | 'ALL';
-
-const KPI_TO_QUEUE: Record<string, QueueFilter> = {
-  activeOpportunities: 'ALL',
-  totalRequested: 'ALL',
-  documentsBlocked: 'AWAITING_CLIENT',
-  clientActionsOverdue: 'AWAITING_CLIENT',
-  lenderResponsesDue: 'AWAITING_LENDER',
-  mannyApprovalsRequired: 'AWAITING_MANNY',
-  offersReceived: 'OFFERS_RECEIVED',
-  transactionsClosing: 'CLOSING',
-  recentlyFunded: 'FUNDED',
-  feeReceivableOpen: 'COMPLIANCE_REVIEW',
-  readyForSubmission: 'READY_FOR_SUBMISSION',
-  rfiOverdue: 'RFI_OVERDUE',
-  complianceReviewRequired: 'COMPLIANCE_REVIEW',
-};
+type Surface = 'loading' | 'unauthorized' | 'forbidden' | 'error' | 'ready';
 
 function formatDue(due?: string): string {
   if (!due) return 'No due date';
@@ -79,15 +69,33 @@ function formatDue(due?: string): string {
   return new Date(ms).toLocaleDateString();
 }
 
+function emptyCounts(): Record<WorkQueue, number> {
+  return {
+    AWAITING_MANNY: 0,
+    AWAITING_CLIENT: 0,
+    AWAITING_LENDER: 0,
+    READY_FOR_SUBMISSION: 0,
+    RFI_OVERDUE: 0,
+    OFFERS_RECEIVED: 0,
+    CLOSING: 0,
+    FUNDED: 0,
+    COMPLIANCE_REVIEW: 0,
+    NEEDS_ATTENTION: 0,
+  };
+}
+
 export function CapitalCommandCenter() {
   const auth = useHubAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [payload, setPayload] = useState<CapitalCommandCenterPayload | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [surface, setSurface] = useState<Surface>('loading');
   const [error, setError] = useState<string | null>(null);
-  const [queue, setQueue] = useState<QueueFilter>('NEEDS_ATTENTION');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [queue, setQueue] = useState<QueueFilter>('AWAITING_MANNY');
+  const selectedId = readOpportunityQuery(searchParams);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [form, setForm] = useState<CreateOpportunityInput>({
     title: '',
     clientCode: '',
@@ -96,43 +104,79 @@ export function CapitalCommandCenter() {
     purpose: '',
   });
 
+  const openOpportunity = useCallback(
+    (id: string) => {
+      const nextId = id.trim();
+      if (!nextId) return;
+      setSearchParams(
+        (prev) => {
+          if (readOpportunityQuery(prev) === nextId) return prev;
+          const next = new URLSearchParams(prev);
+          next.set('opportunity', nextId);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const closeOpportunity = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        if (!readOpportunityQuery(prev)) return prev;
+        const next = new URLSearchParams(prev);
+        next.delete('opportunity');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
   const refresh = useCallback(async () => {
-    setLoading(true);
+    setRefreshing(true);
     setError(null);
+    setActionError(null);
     try {
       const next = await loadCommandCenter(auth);
       setPayload(next);
+      setSurface('ready');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load Capital Command Center');
+      const kind = accessFailureKind(err);
       setPayload(null);
+      setError(operatorFacingMessage(err, 'Capital Command Center could not be loaded.'));
+      setSurface(kind || 'error');
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   }, [auth]);
 
   useEffect(() => {
-    if (!auth.tokenReady) return;
+    if (!auth.tokenReady) {
+      setSurface('loading');
+      return;
+    }
     void refresh();
   }, [auth.tokenReady, refresh]);
 
   const counts = useMemo(() => {
-    const map: Record<WorkQueue, number> = {
-      NEEDS_ATTENTION: 0,
-      AWAITING_CLIENT: 0,
-      AWAITING_LENDER: 0,
-      AWAITING_MANNY: 0,
-      READY_FOR_SUBMISSION: 0,
-      RFI_OVERDUE: 0,
-      OFFERS_RECEIVED: 0,
-      CLOSING: 0,
-      FUNDED: 0,
-      COMPLIANCE_REVIEW: 0,
-    };
+    const map = emptyCounts();
     for (const item of payload?.items || []) {
       map[item.queue] += 1;
     }
     return map;
   }, [payload]);
+
+  useEffect(() => {
+    if (!payload) return;
+    if (queue !== 'AWAITING_MANNY') return;
+    if (counts.AWAITING_MANNY > 0) return;
+    if (counts.NEEDS_ATTENTION > 0) {
+      setQueue('NEEDS_ATTENTION');
+      return;
+    }
+    if ((payload.items || []).length > 0) setQueue('ALL');
+  }, [payload, queue, counts.AWAITING_MANNY, counts.NEEDS_ATTENTION]);
 
   const rows = useMemo(() => {
     const items = payload?.items || [];
@@ -141,26 +185,15 @@ export function CapitalCommandCenter() {
   }, [payload, queue]);
 
   const synthetic = payload?.source === 'synthetic';
-  const accessBlocked = Boolean(error && /Synthetic demonstration data is not shown/.test(error));
-  const kpis = payload?.kpis;
-
-  const kpiTiles: Array<{ key: keyof NonNullable<typeof kpis>; label: string; value: string }> = kpis
-    ? [
-        { key: 'activeOpportunities', label: 'Active Capital Opportunities', value: String(kpis.activeOpportunities) },
-        { key: 'totalRequested', label: 'Total Capital Requested', value: formatUsd(kpis.totalRequested) },
-        { key: 'documentsBlocked', label: 'Documents Blocked', value: String(kpis.documentsBlocked) },
-        { key: 'clientActionsOverdue', label: 'Client Actions Overdue', value: String(kpis.clientActionsOverdue) },
-        { key: 'lenderResponsesDue', label: 'Lender Responses Due', value: String(kpis.lenderResponsesDue) },
-        { key: 'mannyApprovalsRequired', label: 'Needs Manny', value: String(kpis.mannyApprovalsRequired) },
-        { key: 'readyForSubmission', label: 'Ready for Submission', value: String(kpis.readyForSubmission ?? 0) },
-        { key: 'rfiOverdue', label: 'RFI Overdue', value: String(kpis.rfiOverdue ?? 0) },
-        { key: 'offersReceived', label: 'Term Sheets Received', value: String(kpis.offersReceived) },
-        { key: 'transactionsClosing', label: 'Closing', value: String(kpis.transactionsClosing) },
-        { key: 'recentlyFunded', label: 'Funded', value: String(kpis.recentlyFunded) },
-        { key: 'complianceReviewRequired', label: 'Compliance Review', value: String(kpis.complianceReviewRequired ?? 0) },
-        { key: 'feeReceivableOpen', label: 'Fee / Receivable Status', value: String(kpis.feeReceivableOpen) },
-      ]
-    : [];
+  const bookSize = payload?.items.length || 0;
+  const attentionLine = [
+    `${bookSize} ${bookSize === 1 ? 'file' : 'files'}`,
+    counts.AWAITING_MANNY ? `${counts.AWAITING_MANNY} ${ATLAS_STATUS.needsManny}` : null,
+    counts.RFI_OVERDUE ? `${counts.RFI_OVERDUE} ${ATLAS_STATUS.rfiOverdue}` : null,
+    counts.COMPLIANCE_REVIEW ? `${counts.COMPLIANCE_REVIEW} ${ATLAS_STATUS.complianceReview}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   const openCreate = () => {
     setForm({
@@ -170,116 +203,153 @@ export function CapitalCommandCenter() {
       requestedAmount: null,
       purpose: '',
     });
+    setActionError(null);
     setCreateOpen(true);
   };
 
   const submitCreate = async () => {
     setCreating(true);
-    setError(null);
+    setActionError(null);
     try {
       const res = await createOpportunity(auth, form, { source: payload?.source });
       setCreateOpen(false);
       await refresh();
-      setSelectedId(res.opportunity.id);
+      openOpportunity(res.opportunity.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Create failed');
+      const kind = accessFailureKind(err);
+      const message = operatorFacingMessage(err, 'The opportunity could not be created.');
+      if (kind) {
+        setPayload(null);
+        setError(message);
+        setSurface(kind);
+        setCreateOpen(false);
+      } else {
+        setActionError(message);
+      }
     } finally {
       setCreating(false);
     }
   };
 
-  if (selectedId && payload) {
+  if (selectedId) {
     return (
       <ModuleScaffold
         title="Capital opportunity"
-        subtitle="Manny workspace · HVCG is not a lender · no financing guarantees"
+        subtitle="What this file is · state · next action · owner · blocker"
         showPendingBanner={false}
-        actions={
-          <Button appearance="secondary" onClick={() => setSelectedId(null)} aria-label="Return to Capital Command Center">
-            Command Center
-          </Button>
-        }
       >
         <OpportunityWorkspace
           opportunityId={selectedId}
-          source={payload.source}
-          onBack={() => setSelectedId(null)}
+          source={payload?.source || 'hub'}
+          onBack={closeOpportunity}
           onChanged={() => void refresh()}
         />
       </ModuleScaffold>
     );
   }
 
+  const actions = (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Button
+        appearance="primary"
+        icon={<AddRegular />}
+        onClick={openCreate}
+        disabled={surface !== 'ready'}
+        aria-label="Create capital opportunity"
+      >
+        New opportunity
+      </Button>
+      <Button
+        appearance="secondary"
+        icon={<ArrowSyncRegular />}
+        disabled={surface === 'loading' || refreshing}
+        onClick={() => void refresh()}
+        aria-label="Refresh capital command center"
+      >
+        Refresh
+      </Button>
+    </div>
+  );
+
   return (
     <ModuleScaffold
       title="Capital Command Center"
-      subtitle="Manny scan · work queues · opportunity workspace. HVCG is not a lender."
+      subtitle="Work queues for capital files. HVCG is not a lender."
       showPendingBanner={false}
-      actions={
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Button
-            appearance="primary"
-            icon={<AddRegular />}
-            onClick={openCreate}
-            disabled={accessBlocked}
-            aria-label="Create capital opportunity"
-          >
-            New opportunity
-          </Button>
-          <Button
-            appearance="secondary"
-            icon={<ArrowSyncRegular />}
-            disabled={loading}
-            onClick={() => void refresh()}
-            aria-label="Refresh capital command center"
-          >
-            Refresh
-          </Button>
-        </div>
-      }
+      actions={actions}
     >
-      {synthetic ? (
-        <MessageBar intent="warning">
-          <MessageBarBody>
-            <MessageBarTitle>SYNTHETIC</MessageBarTitle>
-            {SYNTHETIC_BANNER}
-            {payload?.fallbackReason ? ` (${payload.fallbackReason}.)` : ''} These figures are demonstration only — not live client financials.
-          </MessageBarBody>
-        </MessageBar>
-      ) : (
-        <MessageBar intent="info">
-          <MessageBarBody>
-            <MessageBarTitle>Capital operations</MessageBarTitle>
-            {FINANCING_DISCLAIMER} {AI_DISCLAIMER} {MANNY_GATE_COPY}
-          </MessageBarBody>
-        </MessageBar>
-      )}
-
-      {error ? (
-        <MessageBar intent="error">
-          <MessageBarBody>
-            <MessageBarTitle>{accessBlocked ? 'Authenticated access required' : 'Capital Command Center'}</MessageBarTitle>
-            {error}
-          </MessageBarBody>
-        </MessageBar>
+      {surface === 'loading' ? (
+        <LoadingState rows={6} label={!auth.tokenReady ? 'Connecting to Hub' : 'Loading capital command center'} />
       ) : null}
 
-      {accessBlocked ? (
-        <EmptyState
-          title="Capital data is not shown"
-          description="Sign in with an entitled account. Synthetic demonstration data is never used to conceal a 401 or 403."
+      {surface === 'unauthorized' ? (
+        <AccessDeniedState
+          title="Authenticated access required"
+          description={error || 'Hub returned 401. Synthetic demonstration data is not shown.'}
+          actions={
+            <Button appearance="primary" onClick={() => void refresh()} aria-label="Retry Capital Command Center">
+              Retry
+            </Button>
+          }
         />
-      ) : !auth.tokenReady || (loading && !payload) ? (
-        <Spinner label="Loading capital command center…" />
-      ) : (
+      ) : null}
+
+      {surface === 'forbidden' ? (
+        <AccessDeniedState
+          title="Access denied"
+          description={error || 'You are signed in but not entitled to this capital data. Synthetic demonstration data is not shown.'}
+          actions={
+            <Button appearance="primary" onClick={() => void refresh()} aria-label="Retry Capital Command Center">
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+
+      {surface === 'error' ? (
+        <ErrorState
+          title="Capital Command Center could not load"
+          description={error || 'Capital data was not loaded. Try again.'}
+          actions={
+            <Button appearance="primary" onClick={() => void refresh()} aria-label="Retry Capital Command Center">
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+
+      {surface === 'ready' && payload ? (
         <>
+          {synthetic ? (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>Synthetic demonstration</MessageBarTitle>
+                {SYNTHETIC_BANNER}
+                {payload.fallbackReason ? ` (${payload.fallbackReason}.)` : ''} These figures are demonstration only — not live client financials.
+              </MessageBarBody>
+            </MessageBar>
+          ) : (
+            <Caption1>
+              {FINANCING_DISCLAIMER} {AI_DISCLAIMER} {MANNY_GATE_COPY}
+            </Caption1>
+          )}
+
+          {actionError ? (
+            <MessageBar intent="error">
+              <MessageBarBody>
+                <MessageBarTitle>Action did not complete</MessageBarTitle>
+                {actionError}
+              </MessageBarBody>
+            </MessageBar>
+          ) : null}
+
           <SectionRail
-            title="Executive scan"
-            subtitle={synthetic ? 'SYNTHETIC KPIs — not live client financials' : '60-second attention scan'}
+            title="Work queues"
+            subtitle={attentionLine || 'No capital files in this book yet'}
             actions={
               <SourceBadge
                 status={synthetic ? 'Sample data' : 'Not live'}
-                label={synthetic ? 'SYNTHETIC' : 'Hub'}
+                label={synthetic ? 'Synthetic' : 'Hub'}
                 detail={
                   synthetic
                     ? SYNTHETIC_BANNER
@@ -288,37 +358,15 @@ export function CapitalCommandCenter() {
               />
             }
           >
-            {kpiTiles.length === 0 ? (
-              <EmptyState title="No capital KPIs" description="Queues populate when Hub capital data is available." />
-            ) : (
-              <ResponsiveGrid className="atlas-stagger">
-                {kpiTiles.map((tile) => (
-                  <KpiTile
-                    key={tile.key}
-                    label={tile.label}
-                    value={tile.value}
-                    onClick={() => setQueue(KPI_TO_QUEUE[tile.key] || 'ALL')}
-                    footer={
-                      <Caption1>
-                        {synthetic ? 'SYNTHETIC — not a live client' : 'Hub count — not a financing guarantee'}
-                      </Caption1>
-                    }
-                  />
-                ))}
-              </ResponsiveGrid>
-            )}
-          </SectionRail>
-
-          <SectionRail title="Work queues" subtitle="Filter the book Manny is running">
             <FilterToolbar>
               <Button
                 size="small"
                 appearance={queue === 'ALL' ? 'primary' : 'secondary'}
                 aria-pressed={queue === 'ALL'}
-                aria-label={`Show all capital opportunities, ${payload?.items.length || 0} items`}
+                aria-label={`Show all capital opportunities, ${bookSize} items`}
                 onClick={() => setQueue('ALL')}
               >
-                All ({payload?.items.length || 0})
+                All ({bookSize})
               </Button>
               {WORK_QUEUES.map((id) => (
                 <Button
@@ -337,76 +385,121 @@ export function CapitalCommandCenter() {
 
           <AtlasCard
             title={queue === 'ALL' ? 'All capital opportunities' : QUEUE_LABELS[queue]}
-            subtitle="Open a row to work the file. Approve strategy and shortlist only from the opportunity workspace."
+            subtitle="Open a row to work the file. Strategy and shortlist approval stay on the opportunity."
             variant="quiet"
           >
-            <DataTable
-              ariaLabel={queue === 'ALL' ? 'All capital opportunities' : `${QUEUE_LABELS[queue]} capital opportunities`}
-              getRowKey={(r: QueueItem) => r.opportunityId}
-              rows={rows}
-              emptyTitle="Nothing in this queue"
-              emptyDescription="Clear for this filter. Choose another queue or create an opportunity."
-              columns={[
-                {
-                  key: 'title',
-                  header: 'Opportunity',
-                  sticky: 'left',
-                  render: (r) => (
-                    <Button
-                      appearance="subtle"
-                      aria-label={`Open capital opportunity ${r.title}`}
-                      onClick={() => setSelectedId(r.opportunityId)}
-                      style={{ fontWeight: 600, justifyContent: 'flex-start', padding: 0, minWidth: 0 }}
-                    >
-                      {r.title}
-                    </Button>
-                  ),
-                },
-                { key: 'client', header: 'Client', render: (r) => r.clientCode },
-                {
-                  key: 'queue',
-                  header: 'Queue',
-                  render: (r) => <StatusChip label={QUEUE_LABELS[r.queue]} tone={queueTone(r.queue)} />,
-                },
-                { key: 'stage', header: 'Stage', render: (r) => formatStage(r.stage) },
-                {
-                  key: 'amount',
-                  header: 'Requested',
-                  render: (r) =>
-                    synthetic ? `${formatUsd(r.requestedAmount)} (synthetic)` : formatUsd(r.requestedAmount),
-                },
-                { key: 'next', header: 'Next action', render: (r) => r.nextAction || 'Not recorded' },
-                { key: 'due', header: 'Due', render: (r) => formatDue(r.due) },
-                {
-                  key: 'aging',
-                  header: 'Aging',
-                  render: (r) => <StatusChip label={`${r.agingDays}d · ${r.aging}`} tone={agingTone(r.aging)} />,
-                },
-                { key: 'block', header: 'Blocker', render: (r) => r.blocker || '—' },
-                {
-                  key: 'open',
-                  header: 'Open',
-                  sticky: 'right',
-                  render: (r) => (
-                    <Button
-                      size="small"
-                      appearance="primary"
-                      aria-label={`Open workspace for ${r.title}`}
-                      onClick={() => setSelectedId(r.opportunityId)}
-                    >
-                      Open
-                    </Button>
-                  ),
-                },
-              ]}
-            />
+            <div style={{ minWidth: 0, width: '100%' }}>
+              <DataTable
+                ariaLabel={queue === 'ALL' ? 'All capital opportunities' : `${QUEUE_LABELS[queue]} capital opportunities`}
+                getRowKey={(r: QueueItem) => r.opportunityId}
+                rows={rows}
+                emptyTitle={bookSize === 0 ? 'No capital files yet' : 'Nothing in this queue'}
+                emptyDescription={
+                  bookSize === 0
+                    ? 'Create an opportunity when a client capital need is identified. HVCG is not a lender.'
+                    : `Clear for ${queue === 'ALL' ? 'all files' : QUEUE_LABELS[queue]}. Choose another queue or create an opportunity.`
+                }
+                columns={[
+                  {
+                    key: 'title',
+                    header: 'Opportunity',
+                    sticky: 'left',
+                    width: 280,
+                    render: (r) => (
+                      <Button
+                        appearance="subtle"
+                        aria-label={`Open capital opportunity ${r.title}`}
+                        title={r.title}
+                        onClick={() => openOpportunity(r.opportunityId)}
+                        style={{
+                          fontWeight: 600,
+                          justifyContent: 'flex-start',
+                          padding: 0,
+                          minWidth: 0,
+                          maxWidth: 360,
+                          whiteSpace: 'normal',
+                          textAlign: 'left',
+                          height: 'auto',
+                        }}
+                      >
+                        {r.title}
+                      </Button>
+                    ),
+                  },
+                  {
+                    key: 'client',
+                    header: 'Client',
+                    width: 140,
+                    render: (r) => r.companyName || r.clientCode,
+                  },
+                  {
+                    key: 'queue',
+                    header: 'Queue',
+                    width: 160,
+                    render: (r) => <StatusChip label={QUEUE_LABELS[r.queue]} tone={queueTone(r.queue)} />,
+                  },
+                  { key: 'stage', header: 'Stage', width: 180, render: (r) => formatStage(r.stage) },
+                  {
+                    key: 'amount',
+                    header: 'Requested',
+                    width: 140,
+                    render: (r) =>
+                      synthetic ? `${formatUsd(r.requestedAmount)} (synthetic)` : formatUsd(r.requestedAmount),
+                  },
+                  {
+                    key: 'nextAction',
+                    header: 'Next action',
+                    width: 240,
+                    render: (r) => (
+                      <span title={r.nextAction || 'Not recorded'} style={{ whiteSpace: 'normal' }}>
+                        {r.nextAction || 'Not recorded'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'owner',
+                    header: 'Owner',
+                    width: 120,
+                    render: (r) => r.nextActionOwner || 'Not recorded',
+                  },
+                  { key: 'due', header: 'Due', width: 110, render: (r) => formatDue(r.due) },
+                  {
+                    key: 'aging',
+                    header: 'Aging',
+                    width: 140,
+                    render: (r) => <StatusChip label={formatAging(r.agingDays, r.aging)} tone={agingTone(r.aging)} />,
+                  },
+                  {
+                    key: 'blocker',
+                    header: 'Blocker',
+                    width: 200,
+                    render: (r) => (
+                      <span title={r.blocker || undefined} style={{ whiteSpace: 'normal' }}>
+                        {r.blocker || '—'}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'open',
+                    header: 'Open',
+                    sticky: 'right',
+                    render: (r) => (
+                      <Button
+                        size="small"
+                        appearance="primary"
+                        aria-label={`Open workspace for ${r.title}`}
+                        onClick={() => openOpportunity(r.opportunityId)}
+                      >
+                        Open
+                      </Button>
+                    ),
+                  },
+                ]}
+              />
+            </div>
           </AtlasCard>
-
-          <Caption1>
-            {FINANCING_DISCLAIMER} {AI_DISCLAIMER} {MANNY_GATE_COPY}
-          </Caption1>
         </>
-      )}
+      ) : null}
 
       <Dialog open={createOpen} onOpenChange={(_, d) => setCreateOpen(d.open)}>
         <DialogSurface>

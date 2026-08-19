@@ -15,10 +15,17 @@ import {
 import { DismissRegular } from '@fluentui/react-icons';
 import type { ReactNode } from 'react';
 import { EmptyState } from './EmptyState';
+import type { AtlasDensity } from './AtlasCard';
+
+export type SystemStateLayout = 'page' | 'inline';
 
 const useDrawer = makeStyles({
   surface: {
     width: 'min(420px, 100vw)',
+  },
+  body: {
+    display: 'grid',
+    gap: '12px',
   },
 });
 
@@ -52,9 +59,10 @@ export function AtlasDrawer({
           action={
             <Button
               appearance="subtle"
-              aria-label="Close"
+              aria-label={`Close ${title}`}
               icon={<DismissRegular />}
               onClick={() => onOpenChange(false)}
+              style={{ minWidth: 44, minHeight: 44 }}
             />
           }
         >
@@ -62,7 +70,9 @@ export function AtlasDrawer({
         </DrawerHeaderTitle>
       </DrawerHeader>
       <DrawerBody>
-        <div style={{ display: 'grid', gap: 16, paddingBottom: footer ? 24 : 0 }}>{children}</div>
+        <div className={s.body} style={{ paddingBottom: footer ? 16 : 0 }}>
+          {children}
+        </div>
         {footer}
       </DrawerBody>
     </Drawer>
@@ -96,14 +106,14 @@ export function AtlasProgress({
 }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
   return (
-    <div style={{ display: 'grid', gap: 6 }} role="group" aria-label={label || 'Progress'}>
+    <div style={{ display: 'grid', gap: 4 }} role="group" aria-label={label || 'Progress'}>
       {label ? (
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
           <Caption1>{label}</Caption1>
           <Caption1>{Math.round(pct)}%</Caption1>
         </div>
       ) : null}
-      <ProgressBar value={pct / 100} thickness="large" />
+      <ProgressBar value={pct / 100} thickness="medium" aria-label={label || 'Progress'} />
     </div>
   );
 }
@@ -112,14 +122,14 @@ const useSection = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px',
+    gap: '2px',
     marginBottom: '4px',
   },
   row: {
     display: 'flex',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    gap: '12px',
+    gap: '8px',
     flexWrap: 'wrap',
   },
 });
@@ -138,7 +148,7 @@ export function SectionHeader({
     <div className={s.root}>
       <div className={s.row}>
         <div>
-          <Text as="h2" size={500} weight="semibold">
+          <Text as="h2" size={400} weight="semibold">
             {title}
           </Text>
           {subtitle ? <Caption1>{subtitle}</Caption1> : null}
@@ -153,11 +163,11 @@ const useFilter = makeStyles({
   root: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px',
+    gap: '6px',
     alignItems: 'center',
-    padding: '10px 12px',
-    borderRadius: tokens.borderRadiusLarge,
-    backgroundColor: tokens.colorNeutralBackground2,
+    padding: '8px 10px',
+    borderRadius: tokens.borderRadiusMedium,
+    backgroundColor: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
   },
 });
@@ -165,7 +175,7 @@ const useFilter = makeStyles({
 export function FilterToolbar({ children, className }: { children: ReactNode; className?: string }) {
   const s = useFilter();
   return (
-    <div className={mergeClasses(s.root, className)} role="toolbar" aria-label="Filters">
+    <div className={mergeClasses(s.root, className)} role="group" aria-label="Filters">
       {children}
     </div>
   );
@@ -173,31 +183,53 @@ export function FilterToolbar({ children, className }: { children: ReactNode; cl
 
 const useSystem = makeStyles({
   wrap: {
-    minHeight: '60vh',
+    minHeight: '220px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '24px',
+    padding: '12px 0',
+  },
+  inline: {
+    minHeight: 0,
+    padding: 0,
+    display: 'block',
   },
   card: {
     width: 'min(480px, 100%)',
   },
+  inlineCard: {
+    width: '100%',
+  },
 });
+
+export interface SystemStateProps {
+  title?: string;
+  description?: string;
+  actions?: ReactNode;
+  layout?: SystemStateLayout;
+  density?: AtlasDensity;
+}
 
 export function AccessDeniedState({
   title = 'Access denied',
   description = 'Your Microsoft account does not have permission for this area. Contact an HVCG administrator.',
   actions,
-}: {
-  title?: string;
-  description?: string;
-  actions?: ReactNode;
-}) {
+  layout = 'page',
+  density = 'default',
+}: SystemStateProps) {
   const s = useSystem();
   return (
-    <div className={s.wrap}>
-      <div className={s.card}>
-        <EmptyState title={title} description={description} actions={actions} />
+    <div className={mergeClasses(s.wrap, layout === 'inline' && s.inline)}>
+      <div className={layout === 'inline' ? s.inlineCard : s.card}>
+        <EmptyState
+          title={title}
+          description={description}
+          actions={actions}
+          role="alert"
+          tone="warning"
+          density={density}
+          align={layout === 'inline' ? 'start' : 'center'}
+        />
       </div>
     </div>
   );
@@ -207,16 +239,22 @@ export function ErrorState({
   title = 'Something went wrong',
   description = 'The page could not be loaded. Try again, or return to Executive Home.',
   actions,
-}: {
-  title?: string;
-  description?: string;
-  actions?: ReactNode;
-}) {
+  layout = 'page',
+  density = 'default',
+}: SystemStateProps) {
   const s = useSystem();
   return (
-    <div className={s.wrap}>
-      <div className={s.card}>
-        <EmptyState title={title} description={description} actions={actions} />
+    <div className={mergeClasses(s.wrap, layout === 'inline' && s.inline)}>
+      <div className={layout === 'inline' ? s.inlineCard : s.card}>
+        <EmptyState
+          title={title}
+          description={description}
+          actions={actions}
+          role="alert"
+          tone="danger"
+          density={density}
+          align={layout === 'inline' ? 'start' : 'center'}
+        />
       </div>
     </div>
   );

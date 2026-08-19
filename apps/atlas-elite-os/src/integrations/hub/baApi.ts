@@ -37,6 +37,7 @@ export type DevLead = {
   LeadId: string;
   Title: string;
   ContactName?: string | null;
+  Email?: string | null;
   Source?: string | null;
   LeadSourceDetail?: string | null;
   LeadStatus?: string;
@@ -44,10 +45,17 @@ export type DevLead = {
   BusinessNeed?: string | null;
   Notes?: string | null;
   NextAction?: string | null;
+  NextFollowUpDate?: string | null;
+  OwnerEmail?: string | null;
   LifecycleLabel?: string | null;
   ConversionBoundary?: string | null;
   IsClient360Client?: boolean;
   ContractedEconomicsCreated?: boolean;
+  Adapter?: string | null;
+  ProductionCrm?: boolean;
+  CreatedAt?: string | null;
+  UpdatedAt?: string | null;
+  CreatedBy?: string | null;
 };
 
 export async function baLeadCreate(auth: AtlasHubAuthHeaders, body: Record<string, unknown>) {

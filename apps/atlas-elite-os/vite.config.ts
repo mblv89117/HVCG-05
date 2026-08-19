@@ -12,5 +12,7 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 5180,
+    // Entra SPA redirect is registered for :5180 only. Do not silently hop ports.
+    strictPort: true,
   },
 });

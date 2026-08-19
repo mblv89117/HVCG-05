@@ -24,16 +24,45 @@ export interface NavSection {
 }
 
 const useStyles = makeStyles({
+  skipLink: {
+    position: 'fixed',
+    left: '12px',
+    top: '8px',
+    zIndex: 100,
+    padding: '8px 14px',
+    minHeight: '44px',
+    minWidth: '44px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    border: `2px solid ${tokens.colorStrokeFocus2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    textDecoration: 'none',
+    fontWeight: tokens.fontWeightSemibold,
+    transform: 'translateY(-250%)',
+    ':focus': {
+      transform: 'none',
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: '2px',
+    },
+    ':focus-visible': {
+      transform: 'none',
+    },
+  },
   shell: {
     display: 'grid',
     gridTemplateColumns: '1fr',
-    gridTemplateRows: 'auto 1fr',
+    gridTemplateRows: 'auto auto 1fr',
+    gridTemplateAreas: `"banner" "bar" "main"`,
     minHeight: '100vh',
     backgroundColor: tokens.colorNeutralBackground1,
+    position: 'relative',
     '@media (min-width: 960px)': {
       gridTemplateColumns: '272px 1fr',
-      gridTemplateRows: 'auto 1fr',
-      gridTemplateAreas: `"bar bar" "nav main"`,
+      gridTemplateRows: 'auto auto 1fr',
+      gridTemplateAreas: `"banner banner" "bar bar" "nav main"`,
     },
   },
   shellCollapsed: {
@@ -41,11 +70,17 @@ const useStyles = makeStyles({
       gridTemplateColumns: '72px 1fr',
     },
   },
-  bar: {
-    gridColumn: '1 / -1',
+  shellNoNav: {
     '@media (min-width: 960px)': {
-      gridArea: 'bar',
+      gridTemplateColumns: '1fr',
+      gridTemplateAreas: `"banner" "bar" "main"`,
     },
+  },
+  bar: {
+    gridArea: 'bar',
+  },
+  navHidden: {
+    display: 'none',
   },
   nav: {
     display: 'none',
@@ -63,11 +98,15 @@ const useStyles = makeStyles({
   navOpenMobile: {
     display: 'flex',
     position: 'fixed',
-    inset: '56px 0 0 0',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    top: '56px',
     zIndex: 30,
     backgroundColor: tokens.colorNeutralBackground2,
   },
   sectionTitle: {
+    margin: 0,
     padding: '14px 10px 6px',
     color: tokens.colorNeutralForeground2,
     textTransform: 'uppercase',
@@ -79,7 +118,9 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
-    padding: '9px 12px',
+    padding: '10px 12px',
+    minHeight: '44px',
+    minWidth: '44px',
     borderRadius: tokens.borderRadiusMedium,
     color: tokens.colorNeutralForeground1,
     textDecoration: 'none',
@@ -92,6 +133,10 @@ const useStyles = makeStyles({
       outline: `2px solid ${tokens.colorStrokeFocus2}`,
       outlineOffset: '1px',
     },
+  },
+  linkIcon: {
+    display: 'inline-flex',
+    flexShrink: 0,
   },
   linkActive: {
     backgroundColor: 'rgba(37, 99, 235, 0.10)',
@@ -107,6 +152,13 @@ const useStyles = makeStyles({
     '@media (min-width: 960px)': {
       gridArea: 'main',
     },
+    ':focus': {
+      outline: 'none',
+    },
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: '-2px',
+    },
   },
   content: {
     flex: 1,
@@ -117,8 +169,9 @@ const useStyles = makeStyles({
     },
   },
   banner: {
+    gridArea: 'banner',
     padding: '8px 16px',
-    background: 'linear-gradient(90deg, #071624, #0B1F33 40%, #122A42)',
+    backgroundColor: '#0B1F33',
     color: '#F1F5F9',
     textAlign: 'center',
     fontSize: tokens.fontSizeBase200,
@@ -158,53 +211,89 @@ export function NavShell({
   onSelectShortcut,
 }: NavShellProps) {
   const s = useStyles();
+  const hasNav = sections.some((section) => section.items.length > 0);
   return (
-    <div className={mergeClasses(s.shell, collapsed && s.shellCollapsed, className)}>
+    <div className={mergeClasses(s.shell, collapsed && hasNav && s.shellCollapsed, !hasNav && s.shellNoNav, className)}>
+      <a
+        className={s.skipLink}
+        href="#atlas-main-content"
+        onClick={(event) => {
+          const main = document.getElementById('atlas-main-content');
+          if (!main) return;
+          event.preventDefault();
+          main.focus();
+        }}
+      >
+        Skip to main content
+      </a>
       <div className={s.banner} role="status">
         {environmentBanner}
       </div>
       <div className={s.bar}>{commandBar}</div>
       <nav
-        className={mergeClasses(s.nav, mobileNavOpen && s.navOpenMobile)}
+        id="atlas-primary-nav"
+        className={mergeClasses(s.nav, hasNav && mobileNavOpen && s.navOpenMobile, !hasNav && s.navHidden)}
         aria-label="Primary"
+        hidden={!hasNav}
         data-collapsed={collapsed ? 'true' : 'false'}
       >
         {sections.map((section) => (
-          <div key={section.id}>
+          <div
+            key={section.id}
+            role="group"
+            aria-labelledby={section.title && !collapsed ? `atlas-nav-${section.id}` : undefined}
+          >
             {section.title && !collapsed ? (
-              <div className={s.sectionTitle}>{section.title}</div>
+              <p className={s.sectionTitle} id={`atlas-nav-${section.id}`}>
+                {section.title}
+              </p>
             ) : null}
-            {section.items.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) => mergeClasses(s.link, isActive && s.linkActive)}
-                title={item.label}
-              >
-                {item.icon}
-                {!collapsed ? <Text size={300}>{item.label}</Text> : null}
-                {!collapsed && item.badge != null ? (
-                  <Caption1 style={{ marginLeft: 'auto' }}>{item.badge}</Caption1>
-                ) : null}
-              </NavLink>
-            ))}
+            {section.items.map((item) => {
+              const accessibleName =
+                item.badge != null ? `${item.label}, ${item.badge}` : item.label;
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={({ isActive }) => mergeClasses(s.link, isActive && s.linkActive)}
+                  title={item.label}
+                  aria-label={collapsed || item.badge != null ? accessibleName : undefined}
+                >
+                  {item.icon ? (
+                    <span className={s.linkIcon} aria-hidden>
+                      {item.icon}
+                    </span>
+                  ) : null}
+                  {!collapsed ? <Text size={300}>{item.label}</Text> : null}
+                  {!collapsed && item.badge != null ? (
+                    <Caption1 style={{ marginLeft: 'auto' }} aria-hidden>
+                      {item.badge}
+                    </Caption1>
+                  ) : null}
+                </NavLink>
+              );
+            })}
           </div>
         ))}
         {!collapsed && favorites && favorites.length > 0 ? (
-          <div className={s.sideBlock}>
-            <div className={s.sectionTitle}>Favorites</div>
+          <div className={s.sideBlock} role="group" aria-labelledby="atlas-nav-favorites">
+            <p className={s.sectionTitle} id="atlas-nav-favorites">
+              Favorites
+            </p>
             <RecentList items={favorites} onSelect={onSelectShortcut} />
           </div>
         ) : null}
         {!collapsed && recentItems && recentItems.length > 0 ? (
-          <div className={s.sideBlock}>
-            <div className={s.sectionTitle}>Recent</div>
+          <div className={s.sideBlock} role="group" aria-labelledby="atlas-nav-recent">
+            <p className={s.sectionTitle} id="atlas-nav-recent">
+              Recent
+            </p>
             <RecentList items={recentItems} onSelect={onSelectShortcut} />
           </div>
         ) : null}
       </nav>
-      <main className={s.main}>
+      <main className={s.main} id="atlas-main-content" tabIndex={-1} inert={mobileNavOpen || undefined}>
         <div className={mergeClasses(s.content, 'atlas-page')}>{children}</div>
       </main>
     </div>
@@ -223,7 +312,33 @@ const useLayout = makeStyles({
   header: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
+    gap: '12px',
+    '@media (min-width: 640px)': {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+  },
+  titleBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    minWidth: 0,
+    flex: '1 1 220px',
+    width: '100%',
+    '& .fui-Text': {
+      display: 'block',
+      width: '100%',
+    },
+  },
+  title: {
+    display: 'block',
+    margin: 0,
+    width: '100%',
+  },
+  subtitle: {
+    display: 'block',
+    width: '100%',
   },
   grid: {
     display: 'grid',
@@ -268,23 +383,19 @@ export function PageLayout({
   const s = useLayout();
   return (
     <div className={s.page}>
-      <div
-        className={s.header}
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: 12,
-        }}
-      >
-        <div>
-          <Text as="h1" size={700} weight="semibold">
+      <header className={s.header}>
+        <div className={s.titleBlock}>
+          <Text as="h1" size={700} weight="semibold" block className={s.title}>
             {title}
           </Text>
-          {subtitle ? <Caption1>{subtitle}</Caption1> : null}
+          {subtitle ? (
+            <Caption1 as="p" block className={s.subtitle}>
+              {subtitle}
+            </Caption1>
+          ) : null}
         </div>
-        {actions}
-      </div>
+        {actions ? <div>{actions}</div> : null}
+      </header>
       {children}
     </div>
   );

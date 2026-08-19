@@ -1,13 +1,18 @@
 import type { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Spinner } from '@fluentui/react-components';
+import { AccessDeniedState } from '@hvcg/atlas-design-system';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from './RoleProvider';
 import type { Capability } from './rbac';
 
 /**
- * Route guard: wait for MSAL, then require a signed-in account (or allowed Dev Owner).
- * Does not render private page content while auth is unresolved or when signed out.
+ * Route guard: wait for MSAL, then require a signed-in account (or allowed Dev Owner)
+ * with a resolved Atlas role. Unresolved / Unauthenticated fail closed — no private UI.
+ *
+ * Capability misses render AccessDenied in place. Navigating signed-in operators to
+ * /access-denied can bounce them back to the typed URL (AccessDeniedPage auto-returns
+ * anyone with viewExecutiveHome), which would flash module chrome instead of denying it.
  */
 export function RequireMicrosoftAuth({
   children,
@@ -24,12 +29,12 @@ export function RequireMicrosoftAuth({
   if (!ready) {
     return (
       <div style={{ display: 'grid', placeItems: 'center', minHeight: 240 }}>
-        <Spinner size="medium" label="Checking Microsoft sign-in…" />
+        <Spinner size="medium" label="Checking sign-in…" />
       </div>
     );
   }
 
-  if (!signedIn || role === 'Unauthenticated') {
+  if (!signedIn || role === 'Unauthenticated' || role === 'Unresolved') {
     return (
       <Navigate
         to="/access-denied"
@@ -41,10 +46,10 @@ export function RequireMicrosoftAuth({
 
   if (capability && !can(capability)) {
     return (
-      <Navigate
-        to="/access-denied"
-        replace
-        state={{ from: `${location.pathname}${location.search}` }}
+      <AccessDeniedState
+        title="Access denied"
+        description="Your Atlas role does not include this module."
+        actions={<Link to="/">Return home</Link>}
       />
     );
   }

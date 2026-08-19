@@ -152,7 +152,7 @@ export function useHubAuth(): HubAuthState {
     return {
       userId: account.localAccountId || account.homeAccountId || '',
       organizationId: 'org-hvcg',
-      clientIds: ['*'],
+      clientIds: [],
       email: account.username,
       roles: [role === 'Unauthenticated' ? 'Guest' : role],
       accessToken,

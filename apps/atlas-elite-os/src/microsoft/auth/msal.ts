@@ -93,23 +93,42 @@ function sanitizeMsalError(e: unknown): string {
   return String(e).slice(0, 240);
 }
 
+function isPopupDeliveryFailure(e: unknown): boolean {
+  if (!(e instanceof BrowserAuthError)) return false;
+  if (e.errorCode === 'user_cancelled') return false;
+  return /popup|monitor_window|empty_window|hash_empty|blocked/i.test(
+    `${e.errorCode} ${e.message}`,
+  );
+}
+
 export async function signInInteractive(): Promise<AccountInfo | null> {
   const instance = await getMsal();
   if (!instance) return null;
   return withInteractiveLock(async () => {
-    const result = await instance.loginPopup({
-      scopes: getDataverseScopes(),
-      prompt: 'select_account',
-    });
-    if (result.account) instance.setActiveAccount(result.account);
-    return result.account;
+    try {
+      // Atlas V1 identity is Hub API access — not Dataverse. Requesting
+      // Dataverse /.default on first login can complete MFA and still leave
+      // Elite unsigned when that resource is not consented.
+      const result = await instance.loginPopup({
+        scopes: getHubApiScopes(),
+        prompt: 'select_account',
+      });
+      if (result.account) instance.setActiveAccount(result.account);
+      return result.account;
+    } catch (e) {
+      if (isPopupDeliveryFailure(e)) {
+        await instance.loginRedirect({ scopes: getHubApiScopes() });
+        return null;
+      }
+      throw e;
+    }
   });
 }
 
 export async function signInRedirect(): Promise<void> {
   const instance = await getMsal();
   if (!instance) return;
-  await instance.loginRedirect({ scopes: getDataverseScopes() });
+  await instance.loginRedirect({ scopes: getHubApiScopes() });
 }
 
 /**

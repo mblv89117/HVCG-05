@@ -18,10 +18,8 @@ function canSeeApproval(role: RoleId, status: ApprovalStatus): boolean {
 function canSeeAudience(role: RoleId, audience: Audience, article: KnowledgeArticle, user: KnowledgeUser): boolean {
   if (audience === 'ClientScoped') {
     if (!article.relatedClientCode) return false
-    return (
-      DRAFT_ROLES.includes(role) ||
-      (user.assignedClients.includes(article.relatedClientCode) && role !== 'ClientContact' && role !== 'ReadOnly')
-    )
+    if (role === 'ClientContact' || role === 'ReadOnly') return false
+    return user.assignedClients.includes(article.relatedClientCode)
   }
   if (audience === 'Executive') return EXEC_ROLES.includes(role)
   if (audience === 'Finance') return FINANCE_ROLES.includes(role)

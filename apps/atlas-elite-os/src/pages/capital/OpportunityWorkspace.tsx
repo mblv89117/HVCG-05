@@ -1,12 +1,15 @@
 /**
- * Opportunity workspace — Manny operates a single capital file here.
+ * Opportunity workspace — record-detail for one capital file.
  * Strategy / shortlist Approve controls are Manny gates.
  */
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
+  AccessDeniedState,
   AtlasCard,
   DataTable,
   EmptyState,
+  ErrorState,
+  LoadingState,
   SectionRail,
   StatusChip,
   InsightCard,
@@ -17,13 +20,14 @@ import {
   MessageBar,
   MessageBarBody,
   MessageBarTitle,
-  Spinner,
   Tab,
   TabList,
   Text,
 } from '@fluentui/react-components';
 import { ArrowLeftRegular } from '@fluentui/react-icons';
 import { useHubAuth } from '../../integrations/hub/useHubAuth';
+import { useAtlasRole } from '../../security/RoleProvider';
+import { ATLAS_STATUS } from '../../ui/statusLanguage';
 import {
   AI_DISCLAIMER,
   decideShortlist,
@@ -31,12 +35,17 @@ import {
   FINANCING_DISCLAIMER,
   formatStage,
   formatUsd,
+  formatVerification,
   generateOpportunityChecklist,
+  hubStatus,
   loadMissingRequest,
   loadOpportunity,
   MANNY_GATE_COPY,
+  accessFailureKind,
+  operatorFacingMessage,
   runLenderMatch,
   SYNTHETIC_BANNER,
+  titleFromToken,
   transitionOpportunity,
   type CapitalDataSource,
   type CapitalOpportunityDetail,
@@ -88,23 +97,25 @@ function matchTone(band: string): 'success' | 'warning' | 'danger' | 'info' | 'n
 function ProvenanceNote({ source }: { source: CapitalDataSource }) {
   if (source !== 'synthetic') {
     return (
-      <Caption1 style={{ display: 'block' }}>
-        Hub record. {FINANCING_DISCLAIMER} {AI_DISCLAIMER}
+      <Caption1 style={{ display: 'block', marginTop: 12 }}>
+        Hub record. {FINANCING_DISCLAIMER}
       </Caption1>
     );
   }
   return (
-    <Caption1 style={{ display: 'block' }}>
-      SYNTHETIC demonstration figures — not live client financials. {FINANCING_DISCLAIMER}
+    <Caption1 style={{ display: 'block', marginTop: 12 }}>
+      Synthetic demonstration figures — not live client financials. {FINANCING_DISCLAIMER}
     </Caption1>
   );
 }
 
-function Fact({ label, value }: { label: string; value: ReactNode }) {
+function RecordField({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160 }}>
-      <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>{label}</Caption1>
-      <Text weight="semibold">{value}</Text>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 160, maxWidth: 320 }}>
+      <Caption1 style={{ fontWeight: 600 }}>{label}</Caption1>
+      <Text weight="semibold" style={{ whiteSpace: 'normal' }}>
+        {value}
+      </Text>
     </div>
   );
 }
@@ -121,32 +132,67 @@ export function OpportunityWorkspace({
   onChanged?: () => void;
 }) {
   const auth = useHubAuth();
+  const { can } = useAtlasRole();
+  const canMutateApprovals = can('mutateApprovals');
   const [tab, setTab] = useState<WorkspaceTab>('overview');
   const [detail, setDetail] = useState<CapitalOpportunityDetail | null>(null);
+  const sourceHintRef = useRef(source);
+  sourceHintRef.current = source;
+  const loadSourceRef = useRef<CapitalDataSource>(source);
   const [activeSource, setActiveSource] = useState<CapitalDataSource>(source);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [access, setAccess] = useState<'unauthorized' | 'forbidden' | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   const refresh = useCallback(async () => {
+    if (!auth.tokenReady) {
+      setLoading(true);
+      return;
+    }
     setLoading(true);
     setError(null);
+    setAccess(null);
+    setNotFound(false);
     try {
-      const res = await loadOpportunity(auth, opportunityId, { source });
+      const res = await loadOpportunity(auth, opportunityId, { source: loadSourceRef.current });
       setDetail(res.detail);
       setActiveSource(res.source);
+      loadSourceRef.current = res.source;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load capital opportunity');
+      const kind = accessFailureKind(err);
+      const status = hubStatus(err);
+      const message = operatorFacingMessage(err, 'This capital opportunity could not be loaded.');
       setDetail(null);
+      setError(message);
+      if (kind) setAccess(kind);
+      else if (status === 404 || /not found/i.test(message)) setNotFound(true);
     } finally {
       setLoading(false);
     }
-  }, [auth, opportunityId, source]);
+  }, [auth, opportunityId]);
 
   useEffect(() => {
+    loadSourceRef.current = sourceHintRef.current;
+    setActiveSource(sourceHintRef.current);
+    setTab('overview');
+    setNotice(null);
+    setDetail(null);
+    setError(null);
+    setAccess(null);
+    setNotFound(false);
+    setLoading(true);
+  }, [opportunityId]);
+
+  useEffect(() => {
+    if (!auth.tokenReady) {
+      setLoading(true);
+      return;
+    }
     void refresh();
-  }, [refresh]);
+  }, [refresh, auth.tokenReady]);
 
   const run = async (action: () => Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }>, ok: string) => {
     setBusy(true);
@@ -155,10 +201,16 @@ export function OpportunityWorkspace({
       const res = await action();
       setDetail(res.detail);
       setActiveSource(res.source);
+      loadSourceRef.current = res.source;
       setNotice(ok);
       onChanged?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action failed');
+      const kind = accessFailureKind(err);
+      setError(operatorFacingMessage(err, 'That action could not be completed.'));
+      if (kind) {
+        setAccess(kind);
+        setDetail(null);
+      }
     } finally {
       setBusy(false);
     }
@@ -167,66 +219,156 @@ export function OpportunityWorkspace({
   const o = detail?.opportunity;
   const strategyPending = o?.mannyStrategyApproval === 'PENDING' || o?.stage === 'AwaitingMannyStrategyApproval';
   const shortlistPending = o?.mannyShortlistApproval === 'PENDING' || o?.stage === 'AwaitingMannyShortlistApproval';
+  const decisionRequired = Boolean(strategyPending || shortlistPending);
+
+  const openChecklist = detail
+    ? detail.checklist.filter((i) => i.requiredness !== 'OPTIONAL' && i.status !== 'ACCEPTED' && i.status !== 'NOT_APPLICABLE')
+        .length
+    : 0;
+
+  const relatedWork: Array<{ tab: WorkspaceTab; label: string; value: string }> = detail && o
+    ? [
+        { tab: 'checklist', label: 'Checklist', value: openChecklist ? `${openChecklist} open` : 'Clear' },
+        { tab: 'documents', label: 'Documents', value: String(detail.documents.length) },
+        { tab: 'underwriting', label: 'Underwriting', value: detail.underwriting ? 'Draft on file' : 'None' },
+        { tab: 'strategy', label: 'Strategy', value: titleFromToken(o.mannyStrategyApproval) },
+        { tab: 'lenders', label: 'Shortlist', value: titleFromToken(o.mannyShortlistApproval) },
+        { tab: 'submissions', label: 'Submissions', value: String(detail.submissions.length) },
+        { tab: 'offers', label: 'Term sheets', value: String(detail.offers.length) },
+        { tab: 'closing', label: 'Closing conditions', value: String(detail.closing.length) },
+        { tab: 'fees', label: 'Fees', value: String(detail.fees.length) },
+      ]
+    : [];
+
+  const back = (
+    <Button appearance="secondary" icon={<ArrowLeftRegular />} onClick={onBack} aria-label="Back to Capital Command Center">
+      Back to queues
+    </Button>
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Button appearance="secondary" icon={<ArrowLeftRegular />} onClick={onBack} aria-label="Back to Capital Command Center">
-          Back to queues
-        </Button>
-        {o ? <StatusChip label={formatStage(o.stage)} tone={strategyPending || shortlistPending ? 'danger' : 'info'} /> : null}
-        {activeSource === 'synthetic' ? <StatusChip label="SYNTHETIC" tone="warning" /> : <StatusChip label="Hub" tone="info" />}
-      </div>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>{back}</div>
 
-      {activeSource === 'synthetic' ? (
-        <MessageBar intent="warning">
-          <MessageBarBody>
-            <MessageBarTitle>SYNTHETIC</MessageBarTitle>
-            {SYNTHETIC_BANNER}
-          </MessageBarBody>
-        </MessageBar>
+      {access === 'unauthorized' ? (
+        <AccessDeniedState
+          title="Authenticated access required"
+          description={error || 'Hub returned 401. Synthetic demonstration data is not shown.'}
+          actions={
+            <Button appearance="primary" onClick={() => void refresh()} aria-label="Retry capital opportunity">
+              Retry
+            </Button>
+          }
+        />
       ) : null}
 
-      {error ? (
+      {access === 'forbidden' ? (
+        <AccessDeniedState
+          title="Access denied"
+          description={error || 'You are signed in but not entitled to this capital file. Synthetic demonstration data is not shown.'}
+          actions={
+            <Button appearance="primary" onClick={() => void refresh()} aria-label="Retry capital opportunity">
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+
+      {loading && !detail && !access ? (
+        <LoadingState rows={6} label={!auth.tokenReady ? 'Connecting to Hub' : 'Loading capital opportunity'} />
+      ) : null}
+
+      {!loading && !o && !access && error && !notFound ? (
+        <ErrorState
+          title="Capital opportunity could not load"
+          description={error}
+          actions={
+            <Button appearance="primary" onClick={() => void refresh()} aria-label="Retry capital opportunity">
+              Retry
+            </Button>
+          }
+        />
+      ) : null}
+
+      {!loading && !o && !access && (notFound || !error) ? (
+        <EmptyState title="Opportunity not found" description="Return to the command center and select another row." />
+      ) : null}
+
+      {o && error && !access ? (
         <MessageBar intent="error">
           <MessageBarBody>
-            <MessageBarTitle>Opportunity</MessageBarTitle>
+            <MessageBarTitle>Action did not complete</MessageBarTitle>
             {error}
           </MessageBarBody>
         </MessageBar>
       ) : null}
 
-      {notice ? (
+      {notice && o ? (
         <MessageBar intent="success">
           <MessageBarBody>{notice}</MessageBarBody>
         </MessageBar>
       ) : null}
 
-      {loading && !detail ? (
-        <Spinner label="Loading capital opportunity…" />
-      ) : !o ? (
-        <EmptyState title="Opportunity not found" description="Return to the command center and select another row." />
-      ) : (
+      {o ? (
         <>
+          {activeSource === 'synthetic' ? (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>Synthetic demonstration</MessageBarTitle>
+                {SYNTHETIC_BANNER}
+              </MessageBarBody>
+            </MessageBar>
+          ) : null}
+
+          {decisionRequired ? (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>{ATLAS_STATUS.decisionRequired}</MessageBarTitle>
+                {strategyPending
+                  ? 'Manny must approve, revise, or reject the financing strategy before this is an HVCG recommendation.'
+                  : 'Manny must approve, revise, or reject the lender shortlist before outreach.'}{' '}
+                Nothing is sent to a lender as an HVCG recommendation until that gate is complete.
+              </MessageBarBody>
+            </MessageBar>
+          ) : null}
+
           <AtlasCard
             title={o.title}
-            subtitle={`${o.companyName || o.clientCode} · ${o.clientCode} · ${o.transactionType.replace(/_/g, ' ')}`}
+            subtitle={`${o.companyName || o.clientCode} · ${o.clientCode} · ${titleFromToken(o.transactionType)}`}
             variant="accent"
           >
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              <StatusChip label={formatStage(o.stage)} tone={decisionRequired ? 'warning' : 'info'} />
+              {o.blockers ? <StatusChip label={ATLAS_STATUS.blocked} tone="danger" /> : null}
+              {activeSource === 'synthetic' ? (
+                <StatusChip label="Synthetic" tone="warning" />
+              ) : (
+                <StatusChip label="Hub" tone="info" />
+              )}
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-              <Fact
-                label="Requested amount"
-                value={
+              <RecordField
+                label="What this is"
+                value={`${titleFromToken(o.transactionType)} · ${
                   activeSource === 'synthetic'
                     ? `${formatUsd(o.need.requestedAmount)} (synthetic)`
                     : formatUsd(o.need.requestedAmount)
+                }`}
+              />
+              <RecordField label="State" value={formatStage(o.stage)} />
+              <RecordField label="Next action" value={o.nextAction || 'Not recorded'} />
+              <RecordField label="Owner" value={o.nextActionOwner || o.ownerEmail || 'Not recorded'} />
+              <RecordField label="Blocker" value={o.blockers || 'None recorded'} />
+              <RecordField
+                label={ATLAS_STATUS.decisionRequired}
+                value={
+                  strategyPending
+                    ? 'Strategy gate — Manny'
+                    : shortlistPending
+                      ? 'Shortlist gate — Manny'
+                      : 'None'
                 }
               />
-              <Fact label="Stage" value={formatStage(o.stage)} />
-              <Fact label="Next action" value={o.nextAction || 'Not recorded'} />
-              <Fact label="Owner" value={o.nextActionOwner || o.ownerEmail} />
-              <Fact label="Strategy gate" value={o.mannyStrategyApproval} />
-              <Fact label="Shortlist gate" value={o.mannyShortlistApproval} />
             </div>
             <ProvenanceNote source={activeSource} />
           </AtlasCard>
@@ -244,25 +386,37 @@ export function OpportunityWorkspace({
           </TabList>
 
           {tab === 'overview' ? (
-            <SectionRail title="Overview" subtitle="Need, blockers, and Manny gates">
+            <SectionRail title="Overview" subtitle="Need, related work, and operating rules">
               <div style={{ display: 'grid', gap: 12 }}>
                 <AtlasCard title="Need" subtitle="HVCG is not a lender">
                   <Text>{o.need.purpose || 'Purpose not recorded'}</Text>
                   <Caption1 style={{ display: 'block', marginTop: 8 }}>
                     Use of funds: {o.need.useOfFunds || 'Not recorded'} · Timing: {o.need.timing || 'Not recorded'}
                   </Caption1>
-                  {o.blockers ? (
-                    <Caption1 style={{ display: 'block', marginTop: 8, color: '#B91C1C' }}>Blocker: {o.blockers}</Caption1>
-                  ) : null}
+                </AtlasCard>
+                <AtlasCard title="Related work" subtitle="Open the matching section from here">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {relatedWork.map((item) => (
+                      <Button
+                        key={item.tab}
+                        size="small"
+                        appearance={tab === item.tab ? 'primary' : 'secondary'}
+                        aria-label={`Open ${item.label}, ${item.value}`}
+                        onClick={() => setTab(item.tab)}
+                      >
+                        {item.label}: {item.value}
+                      </Button>
+                    ))}
+                  </div>
                 </AtlasCard>
                 <AtlasCard title="Business facts" subtitle="Missing stays missing — never guessed">
                   <Caption1>
                     Industry: {o.business?.industry || 'Not recorded'} · Revenue:{' '}
                     {o.business?.annualRevenue?.value == null
                       ? 'Not recorded'
-                      : `${formatUsd(o.business.annualRevenue.value)} (${o.business.annualRevenue.verification}${
-                          activeSource === 'synthetic' ? ', synthetic' : ''
-                        })`}
+                      : `${formatUsd(o.business.annualRevenue.value)} (${formatVerification(
+                          o.business.annualRevenue.verification,
+                        )}${activeSource === 'synthetic' ? ', synthetic' : ''})`}
                   </Caption1>
                 </AtlasCard>
                 <InsightCard title="Operating rules" body={`${MANNY_GATE_COPY} ${AI_DISCLAIMER} ${FINANCING_DISCLAIMER}`} />
@@ -307,7 +461,7 @@ export function OpportunityWorkspace({
                       header: 'Status',
                       render: (r) => (
                         <StatusChip
-                          label={r.status}
+                          label={titleFromToken(r.status)}
                           tone={r.status === 'ACCEPTED' ? 'success' : r.status === 'MISSING' || r.status === 'INCOMPLETE' ? 'danger' : 'warning'}
                         />
                       ),
@@ -315,7 +469,7 @@ export function OpportunityWorkspace({
                     {
                       key: 'ver',
                       header: 'Verification',
-                      render: (r) => <StatusChip label={r.verification} tone={verificationTone(r.verification)} />,
+                      render: (r) => <StatusChip label={formatVerification(r.verification)} tone={verificationTone(r.verification)} />,
                     },
                     { key: 'def', header: 'Deficiency', render: (r) => r.deficiency || '—' },
                   ]}
@@ -337,7 +491,13 @@ export function OpportunityWorkspace({
                           setDetail((cur) => (cur ? { ...cur, missingRequest: res.request } : cur));
                         }
                       } catch (err) {
-                        setError(err instanceof Error ? err.message : 'Failed to load missing request');
+                        const kind = accessFailureKind(err);
+                        const message = operatorFacingMessage(err, 'The missing-document request could not be loaded.');
+                        setError(message);
+                        if (kind) {
+                          setAccess(kind);
+                          setDetail(null);
+                        }
                       } finally {
                         setBusy(false);
                       }
@@ -374,7 +534,7 @@ export function OpportunityWorkspace({
                     {
                       key: 'ver',
                       header: 'Verification',
-                      render: (r) => <StatusChip label={r.verification || 'UNVERIFIED'} tone={verificationTone(r.verification || 'UNVERIFIED')} />,
+                      render: (r) => <StatusChip label={formatVerification(r.verification || 'UNVERIFIED')} tone={verificationTone(r.verification || 'UNVERIFIED')} />,
                     },
                     { key: 'by', header: 'Associated by', render: (r) => r.associatedBy },
                   ]}
@@ -436,7 +596,7 @@ export function OpportunityWorkspace({
                   <AtlasCard title="Need summary" subtitle={detail.strategy.needSummary}>
                     <Text>{detail.strategy.rationale}</Text>
                     <Caption1 style={{ display: 'block', marginTop: 8 }}>
-                      Approval: {detail.strategy.mannyApproval}
+                      Approval: {titleFromToken(detail.strategy.mannyApproval)}
                       {detail.strategy.approvedBy ? ` · ${detail.strategy.approvedBy}` : ''}
                     </Caption1>
                   </AtlasCard>
@@ -450,10 +610,10 @@ export function OpportunityWorkspace({
                       </div>
                     ))}
                   </AtlasCard>
+                  {can('mutateApprovals') ? (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button
                       appearance="primary"
-                      disabled={busy || detail.strategy.mannyApproval === 'APPROVED'}
                       aria-label="Approve financing strategy (Manny gate)"
                       onClick={() =>
                         void run(
@@ -461,6 +621,7 @@ export function OpportunityWorkspace({
                           'Strategy approved by Manny gate. Lender outreach still requires shortlist approval.',
                         )
                       }
+                      disabled={busy || detail.strategy.mannyApproval === 'APPROVED' || !canMutateApprovals}
                     >
                       Approve strategy
                     </Button>
@@ -491,6 +652,9 @@ export function OpportunityWorkspace({
                       Reject
                     </Button>
                   </div>
+                  ) : (
+                    <Caption1>Strategy approve requires mutateApprovals. Hub rejects unauthorized callers.</Caption1>
+                  )}
                 </div>
               )}
             </SectionRail>
@@ -529,12 +693,12 @@ export function OpportunityWorkspace({
                     {
                       key: 'band',
                       header: 'Band',
-                      render: (r) => <StatusChip label={r.band} tone={matchTone(r.band)} />,
+                      render: (r) => <StatusChip label={titleFromToken(r.band)} tone={matchTone(r.band)} />,
                     },
                     {
                       key: 'stale',
                       header: 'Freshness',
-                      render: (r) => <StatusChip label={r.stale ? 'STALE' : 'Current sheet'} tone={r.stale ? 'warning' : 'info'} />,
+                      render: (r) => <StatusChip label={r.stale ? 'Stale' : 'Current sheet'} tone={r.stale ? 'warning' : 'info'} />,
                     },
                     { key: 'why', header: 'Reasons', render: (r) => r.reasons.join('; ') || '—' },
                     { key: 'miss', header: 'Missing criteria', render: (r) => r.missingCriteria.join('; ') || '—' },
@@ -542,10 +706,11 @@ export function OpportunityWorkspace({
                 />
               )}
               <Caption1 style={{ display: 'block', margin: '12px 0' }}>{MANNY_GATE_COPY}</Caption1>
+              {can('mutateApprovals') ? (
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Button
                   appearance="primary"
-                  disabled={busy || o.mannyShortlistApproval === 'APPROVED'}
+                  disabled={busy || o.mannyShortlistApproval === 'APPROVED' || !canMutateApprovals}
                   aria-label="Approve lender shortlist (Manny gate)"
                   onClick={() =>
                     void run(
@@ -580,6 +745,9 @@ export function OpportunityWorkspace({
                   Reject shortlist
                 </Button>
               </div>
+              ) : (
+                <Caption1>Shortlist approve requires mutateApprovals. Hub rejects unauthorized callers.</Caption1>
+              )}
             </SectionRail>
           ) : null}
 
@@ -596,7 +764,7 @@ export function OpportunityWorkspace({
                   subtitle={`Lender ${detail.application.lenderId}`}
                 >
                   <Caption1 style={{ display: 'block', marginBottom: 8 }}>
-                    Status: {detail.application.status}. Populated values remain unverified until a human confirms source documents.
+                    Status: {titleFromToken(detail.application.status)}. Populated values remain unverified until a human confirms source documents.
                   </Caption1>
                   {Object.entries(detail.application.populatedFields).map(([field, cell]) => (
                     <div key={field} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
@@ -638,7 +806,7 @@ export function OpportunityWorkspace({
                     {
                       key: 'status',
                       header: 'Status',
-                      render: (r) => <StatusChip label={r.status} tone="info" />,
+                      render: (r) => <StatusChip label={titleFromToken(r.status)} tone="info" />,
                     },
                     { key: 'at', header: 'Submitted', render: (r) => (r.submittedAt ? new Date(r.submittedAt).toLocaleString() : '—') },
                     { key: 'conf', header: 'Confirmation', render: (r) => r.confirmationNumber || '—' },
@@ -723,7 +891,7 @@ export function OpportunityWorkspace({
                       header: 'Status',
                       render: (r) => (
                         <StatusChip
-                          label={r.status}
+                          label={titleFromToken(r.status)}
                           tone={r.status === 'satisfied' || r.status === 'waived' ? 'success' : r.status === 'blocked' ? 'danger' : 'warning'}
                         />
                       ),
@@ -755,7 +923,7 @@ export function OpportunityWorkspace({
                     {
                       key: 'appr',
                       header: 'Approval',
-                      render: (r) => <StatusChip label={r.approvalStatus} tone={r.approvalStatus === 'APPROVED' ? 'success' : 'warning'} />,
+                      render: (r) => <StatusChip label={titleFromToken(r.approvalStatus)} tone={r.approvalStatus === 'APPROVED' ? 'success' : 'warning'} />,
                     },
                     { key: 'inv', header: 'Invoice', render: (r) => r.invoiceStatus },
                     { key: 'pay', header: 'Payment', render: (r) => r.paymentStatus },
@@ -764,7 +932,7 @@ export function OpportunityWorkspace({
                       header: 'Legal / compliance',
                       render: (r) =>
                         r.legalComplianceReviewRequired ? (
-                          <StatusChip label="REVIEW REQUIRED" tone="danger" />
+                          <StatusChip label={ATLAS_STATUS.complianceReview} tone="gold" />
                         ) : (
                           '—'
                         ),
@@ -776,7 +944,7 @@ export function OpportunityWorkspace({
             </SectionRail>
           ) : null}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

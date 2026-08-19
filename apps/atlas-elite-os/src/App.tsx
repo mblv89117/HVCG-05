@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Routes, Route, useParams, Navigate } from 'react-router-dom';
-import { Button, MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
-import { MicrosoftAuthProvider, useMicrosoftAuth } from './microsoft/auth/AuthProvider';
+import { MicrosoftAuthProvider } from './microsoft/auth/AuthProvider';
 import { WorkspaceProvider } from './state/WorkspaceContext';
 import { RoleProvider, useAtlasRole } from './security/RoleProvider';
 import { RequireMicrosoftAuth } from './security/RequireMicrosoftAuth';
@@ -14,6 +13,7 @@ import { UniversalInboxPage, TeamAgentsPage } from './pages/OperatingSystemPages
 import { AdminPage } from './pages/AdminPage';
 import {
   AiInsightsPage,
+  AutomationsDeferredPage,
   CapitalPage,
   ProcurementPage,
   RiskPage,
@@ -21,23 +21,23 @@ import {
   ClientDetailPage as DemoClientDetailPage,
   EnterpriseValuePage,
   FinancialsPage,
+  NotificationsDeferredPage,
+  ReportsDeferredPage,
   RevenuePage,
   TasksPage,
 } from './pages/Modules';
 import { DocumentsOperatingPage } from './pages/DocumentsOperatingPage';
-import { DocumentLifecycleWorkbench } from './pages/DocumentLifecycleWorkbench';
 import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWorkbench';
 import { ClientsPage } from './pages/LiveClientsPage';
 import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
-import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
-import { AccessDeniedPage } from './pages/SystemPages';
+import { SettingsPage } from './pages/NotificationsSettings';
+import { AccessDeniedPage, NotFoundPage } from './pages/SystemPages';
 import { BankingConnectionsPage } from './pages/BankingConnectionsPage';
 import { AccountingConnectionsPage } from './pages/AccountingConnectionsPage';
 import { ConnectionsCenterPage } from './pages/ConnectionsCenterPage';
-import { AutomationsPage, KnowledgePage, ReportsPage } from './pages/PlatformModules';
-import { ModuleScaffold } from './pages/shared/ModuleScaffold';
+import { KnowledgePage } from './pages/PlatformModules';
 import { isValidProjectId } from './routing/projectId';
 
 function ClientDetailRoute() {
@@ -65,48 +65,8 @@ function FinanceRoute({ children }: { children: ReactNode }) {
   return <RequireMicrosoftAuth capability="viewFinance">{children}</RequireMicrosoftAuth>;
 }
 
-function AdminRoute() {
-  return (
-    <RequireMicrosoftAuth capability="viewAdmin">
-      <AdminPage />
-    </RequireMicrosoftAuth>
-  );
-}
-
-function ConnectionsRoute() {
-  const { can, role } = useAtlasRole();
-  const { activateDevOwner, devOwnerLoginAllowed } = useMicrosoftAuth();
-  if (!can('viewAdmin')) {
-    return (
-      <ModuleScaffold
-        title="Connections Center"
-        subtitle="Owner / Administrator access required"
-        showPendingBanner={false}
-      >
-        <MessageBar intent="warning">
-          <MessageBarBody>
-            <MessageBarTitle>
-              {role === 'Unauthenticated' ? 'Sign-in required' : 'Insufficient permissions'}
-            </MessageBarTitle>
-            {role === 'Unauthenticated'
-              ? 'Connections is blank until you activate Local Owner (Dev) or sign in as HVCG Owner. The top-right company dropdown only switches client workspace — it does not grant access.'
-              : `Role "${role}" cannot manage integrations. Use an HVCG Owner or Administrator account.`}
-          </MessageBarBody>
-        </MessageBar>
-        {role === 'Unauthenticated' && devOwnerLoginAllowed ? (
-          <Button
-            appearance="primary"
-            onClick={() => {
-              activateDevOwner();
-            }}
-          >
-            Continue as Local Owner (Dev)
-          </Button>
-        ) : null}
-      </ModuleScaffold>
-    );
-  }
-  return <ConnectionsCenterPage />;
+function AdminRoute({ children }: { children: ReactNode }) {
+  return <RequireMicrosoftAuth capability="viewAdmin">{children}</RequireMicrosoftAuth>;
 }
 
 function ClientsRoute({ children }: { children: ReactNode }) {
@@ -160,14 +120,7 @@ export function App() {
                   </PrivateRoute>
                 }
               />
-              <Route
-                path="command-center"
-                element={
-                  <PrivateRoute>
-                    <HomeRoute />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="command-center" element={<Navigate to="/" replace />} />
               <Route
                 path="my-work"
                 element={
@@ -176,14 +129,7 @@ export function App() {
                   </PrivateRoute>
                 }
               />
-              <Route
-                path="portfolio"
-                element={
-                  <PrivateRoute>
-                    <PortfolioPage />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="portfolio" element={<Navigate to="/projects" replace />} />
               <Route
                 path="inbox"
                 element={
@@ -304,14 +250,7 @@ export function App() {
                   </FinanceRoute>
                 }
               />
-              <Route
-                path="documents"
-                element={
-                  <PrivateRoute>
-                    <DocumentLifecycleWorkbench />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="documents" element={<Navigate to="/documents/operating" replace />} />
               <Route
                 path="documents/operating"
                 element={
@@ -348,7 +287,7 @@ export function App() {
                 path="automations"
                 element={
                   <PrivateRoute>
-                    <AutomationsPage />
+                    <AutomationsDeferredPage />
                   </PrivateRoute>
                 }
               />
@@ -356,7 +295,7 @@ export function App() {
                 path="reports"
                 element={
                   <PrivateRoute>
-                    <ReportsPage />
+                    <ReportsDeferredPage />
                   </PrivateRoute>
                 }
               />
@@ -372,7 +311,7 @@ export function App() {
                 path="notifications"
                 element={
                   <PrivateRoute>
-                    <NotificationsPage />
+                    <NotificationsDeferredPage />
                   </PrivateRoute>
                 }
               />
@@ -384,9 +323,24 @@ export function App() {
                   </PrivateRoute>
                 }
               />
-              <Route path="connections" element={<ConnectionsRoute />} />
-              <Route path="admin" element={<AdminRoute />} />
+              <Route
+                path="connections"
+                element={
+                  <AdminRoute>
+                    <ConnectionsCenterPage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="admin"
+                element={
+                  <AdminRoute>
+                    <AdminPage />
+                  </AdminRoute>
+                }
+              />
               <Route path="access-denied" element={<AccessDeniedPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </WorkspaceProvider>

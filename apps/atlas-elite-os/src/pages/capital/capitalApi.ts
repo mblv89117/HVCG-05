@@ -23,77 +23,47 @@ import {
 } from './syntheticFallback';
 import {
   CapitalAccessError,
+  accessFailureKind,
   hubStatus,
   isAuthorizationFailure,
+  operatorFacingMessage,
   shouldUseSyntheticFallback as shouldFallback,
   toCapitalAccessError,
   type CapitalFallbackKind,
 } from './capitalAccess';
+import {
+  isWorkQueue,
+  type WorkQueue,
+} from './capitalDisplay';
 
 export {
   CapitalAccessError,
+  accessFailureKind,
   isAuthorizationFailure,
+  operatorFacingMessage,
   toCapitalAccessError,
   type CapitalFallbackKind,
 };
 
+export {
+  QUEUE_LABELS,
+  STAGE_LABELS,
+  WORK_QUEUES,
+  agingTone,
+  formatAging,
+  formatStage,
+  formatUsd,
+  formatVerification,
+  isWorkQueue,
+  queueTone,
+  readOpportunityQuery,
+  titleFromToken,
+  type WorkQueue,
+} from './capitalDisplay';
+
 export { SYNTHETIC_BANNER };
 
 export type CapitalDataSource = 'hub' | 'synthetic';
-
-export const WORK_QUEUES = [
-  'NEEDS_ATTENTION',
-  'AWAITING_CLIENT',
-  'AWAITING_LENDER',
-  'AWAITING_MANNY',
-  'READY_FOR_SUBMISSION',
-  'RFI_OVERDUE',
-  'OFFERS_RECEIVED',
-  'CLOSING',
-  'FUNDED',
-  'COMPLIANCE_REVIEW',
-] as const;
-
-export type WorkQueue = (typeof WORK_QUEUES)[number];
-
-export const QUEUE_LABELS: Record<WorkQueue, string> = {
-  NEEDS_ATTENTION: 'NEEDS ATTENTION',
-  AWAITING_CLIENT: 'WAITING CLIENT',
-  AWAITING_LENDER: 'WAITING LENDER',
-  AWAITING_MANNY: 'NEEDS MANNY',
-  READY_FOR_SUBMISSION: 'READY FOR SUBMISSION',
-  RFI_OVERDUE: 'RFI OVERDUE',
-  OFFERS_RECEIVED: 'TERM SHEET RECEIVED',
-  CLOSING: 'CLOSING',
-  FUNDED: 'FUNDED',
-  COMPLIANCE_REVIEW: 'COMPLIANCE REVIEW',
-};
-
-export const STAGE_LABELS: Record<string, string> = {
-  NeedIdentified: 'Need identified',
-  InitialQualification: 'Initial qualification',
-  DocumentsRequested: 'Documents requested',
-  DocumentsInProgress: 'Documents in progress',
-  DocumentsComplete: 'Documents complete',
-  FinancialUnderwritingReview: 'Financial / underwriting review',
-  StrategyDrafted: 'Strategy drafted',
-  AwaitingMannyStrategyApproval: 'Awaiting Manny strategy approval',
-  StrategyApproved: 'Strategy approved',
-  LenderVendorResearch: 'Lender / vendor research',
-  AwaitingMannyShortlistApproval: 'Awaiting Manny shortlist approval',
-  ReadyForSubmission: 'Ready for submission',
-  Submitted: 'Submitted',
-  AdditionalInformationRequested: 'Additional information requested',
-  Underwriting: 'Underwriting',
-  TermSheetOfferReceived: 'Term sheet / offer received',
-  OfferComparison: 'Offer comparison',
-  ClientDecision: 'Client decision',
-  Closing: 'Closing',
-  Funded: 'Funded',
-  Declined: 'Declined',
-  Withdrawn: 'Withdrawn',
-  ClosedArchived: 'Closed / archived',
-};
 
 export const FINANCING_DISCLAIMER =
   'HVCG is not a lender. Financing outcomes are determined by third-party lenders and capital providers. HVCG does not guarantee approval, terms, or funding.';
@@ -366,42 +336,6 @@ export interface CreateOpportunityInput {
   purpose?: string;
 }
 
-export function formatUsd(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(Number(value))) return 'Not recorded';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-export function formatStage(stage: string): string {
-  return STAGE_LABELS[stage] || stage.replace(/([A-Z])/g, ' $1').trim();
-}
-
-export function agingTone(aging: AgingBand): 'success' | 'info' | 'warning' | 'danger' {
-  if (aging === 'critical') return 'danger';
-  if (aging === 'overdue') return 'warning';
-  if (aging === 'watch') return 'info';
-  return 'success';
-}
-
-export function queueTone(queue: WorkQueue): 'danger' | 'warning' | 'info' | 'gold' | 'success' | 'neutral' {
-  if (queue === 'NEEDS_ATTENTION' || queue === 'AWAITING_MANNY' || queue === 'RFI_OVERDUE' || queue === 'COMPLIANCE_REVIEW') {
-    return 'danger';
-  }
-  if (queue === 'AWAITING_CLIENT') return 'warning';
-  if (queue === 'AWAITING_LENDER' || queue === 'READY_FOR_SUBMISSION') return 'info';
-  if (queue === 'OFFERS_RECEIVED') return 'gold';
-  if (queue === 'CLOSING') return 'info';
-  if (queue === 'FUNDED') return 'success';
-  return 'neutral';
-}
-
-export function isWorkQueue(value: string): value is WorkQueue {
-  return (WORK_QUEUES as readonly string[]).includes(value);
-}
-
 export { hubStatus };
 
 /**
@@ -420,11 +354,9 @@ function fallbackReason(err: unknown): string {
   const status = hubStatus(err);
   if (status === 404) return 'Capital API is not mounted on Hub yet';
   if (status === 501 || status === 503) return 'Capital backend is unavailable';
-  const msg = String((err as Error)?.message || err || '');
-  if (/failed to fetch|networkerror|load failed|mixed content|err_connection|econnrefused|network request failed/i.test(msg)) {
-    return 'Hub is unreachable';
-  }
-  return err instanceof Error ? err.message : 'Hub unavailable';
+  const msg = operatorFacingMessage(err, 'Hub unavailable');
+  if (msg === 'Hub is unreachable. Capital data was not loaded.') return 'Hub is unreachable';
+  return msg;
 }
 
 function emptyKpis(): CapitalKpis {

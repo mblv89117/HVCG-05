@@ -11,7 +11,8 @@ import {
   TableCellLayout,
   Text,
 } from '@fluentui/react-components';
-import type { ReactNode, FormEvent } from 'react';
+import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
+import { useId } from 'react';
 import { EmptyState } from './EmptyState';
 import { LoadingState } from './EmptyState';
 
@@ -37,14 +38,19 @@ export interface DataTableProps<T> {
 
 const useStyles = makeStyles({
   wrap: {
+    position: 'relative',
     width: '100%',
-    overflowX: 'auto',
+    overflow: 'auto',
+    maxHeight: 'min(70vh, 800px)',
     borderRadius: tokens.borderRadiusLarge,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     backgroundColor: tokens.colorNeutralBackground2,
     boxShadow: '0 1px 2px rgba(11, 31, 51, 0.04)',
-    // Make horizontal scroll visually obvious
     scrollbarGutter: 'stable',
+    ':focus-visible': {
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: '-2px',
+    },
   },
   table: {
     minWidth: '1100px',
@@ -57,6 +63,9 @@ const useStyles = makeStyles({
     top: 0,
     zIndex: 2,
   },
+  headerCell: {
+    minHeight: '44px',
+  },
   row: {
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground3,
@@ -65,6 +74,18 @@ const useStyles = makeStyles({
   cell: {
     paddingTop: '12px',
     paddingBottom: '12px',
+    minHeight: '44px',
+  },
+  visuallyHidden: {
+    position: 'absolute',
+    width: '1px',
+    height: '1px',
+    padding: 0,
+    margin: '-1px',
+    overflow: 'hidden',
+    clip: 'rect(0, 0, 0, 0)',
+    whiteSpace: 'nowrap',
+    border: 0,
   },
   stickyLeft: {
     position: 'sticky',
@@ -109,22 +130,85 @@ export function DataTable<T>({
   className,
 }: DataTableProps<T>) {
   const s = useStyles();
+  const captionId = useId();
+  const hintId = useId();
   if (loading) return <LoadingState rows={5} />;
   if (!rows.length) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
+
+  const onScrollerKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    const node = event.currentTarget;
+    const stepX = 64;
+    const stepY = 64;
+    switch (event.key) {
+      case 'ArrowRight':
+        node.scrollLeft += stepX;
+        event.preventDefault();
+        break;
+      case 'ArrowLeft':
+        node.scrollLeft -= stepX;
+        event.preventDefault();
+        break;
+      case 'ArrowDown':
+        node.scrollTop += stepY;
+        event.preventDefault();
+        break;
+      case 'ArrowUp':
+        node.scrollTop -= stepY;
+        event.preventDefault();
+        break;
+      case 'PageDown':
+        node.scrollTop += node.clientHeight * 0.9;
+        event.preventDefault();
+        break;
+      case 'PageUp':
+        node.scrollTop -= node.clientHeight * 0.9;
+        event.preventDefault();
+        break;
+      case 'Home':
+        node.scrollLeft = 0;
+        if (event.ctrlKey) node.scrollTop = 0;
+        event.preventDefault();
+        break;
+      case 'End':
+        node.scrollLeft = node.scrollWidth;
+        if (event.ctrlKey) node.scrollTop = node.scrollHeight;
+        event.preventDefault();
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
-    <div className={mergeClasses(s.wrap, className)} tabIndex={0} aria-label={`${ariaLabel} (scroll horizontally for more columns)`}>
-      <Table className={s.table} aria-label={ariaLabel}>
+    <div
+      className={mergeClasses(s.wrap, className)}
+      tabIndex={0}
+      role="region"
+      aria-labelledby={captionId}
+      aria-describedby={hintId}
+      onKeyDown={onScrollerKeyDown}
+    >
+      <span id={captionId} className={s.visuallyHidden}>
+        {ariaLabel}
+      </span>
+      <span id={hintId} className={s.visuallyHidden}>
+        Scroll for more columns or rows. When this region is focused, use arrow keys, Page Up, Page Down, Home, and End.
+      </span>
+      <Table className={s.table} aria-labelledby={captionId}>
         <TableHeader className={s.header}>
           <TableRow>
             {columns.map((c) => (
               <TableHeaderCell
                 key={c.key}
                 style={c.width ? { width: c.width } : undefined}
-                className={
-                  c.sticky === 'left' ? s.stickyHeaderLeft : c.sticky === 'right' ? s.stickyHeaderRight : undefined
-                }
+                className={mergeClasses(
+                  s.headerCell,
+                  c.sticky === 'left' ? s.stickyHeaderLeft : undefined,
+                  c.sticky === 'right' ? s.stickyHeaderRight : undefined,
+                )}
               >
                 {c.header}
               </TableHeaderCell>
@@ -223,16 +307,18 @@ export function FormField({
   children: ReactNode;
 }) {
   const s = useForm();
+  const hintId = useId();
+  const labelId = useId();
   return (
-    <div className={s.field}>
-      <label htmlFor={htmlFor} className={s.label}>
+    <div className={s.field} role="group" aria-labelledby={labelId} aria-describedby={hint ? hintId : undefined}>
+      <label htmlFor={htmlFor} className={s.label} id={labelId}>
         <Text size={300} weight="semibold">
           {label}
         </Text>
       </label>
       {children}
       {hint ? (
-        <Text size={200} className={s.hint}>
+        <Text size={200} className={s.hint} id={hintId}>
           {hint}
         </Text>
       ) : null}

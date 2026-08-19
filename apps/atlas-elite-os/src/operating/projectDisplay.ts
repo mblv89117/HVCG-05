@@ -39,7 +39,9 @@ export function displayMilestone(title: string | undefined | null): string {
 
 export function displayNextAction(value: string | undefined | null): string {
   if (isBootstrapNextAction(value)) return 'Next action required';
-  return value!;
+  const t = value!.trim();
+  if (/^\d{4}-\d{2}-\d{2}T/.test(t)) return t.slice(0, 10);
+  return t;
 }
 
 export function displayDueDate(value: string | undefined | null): string {

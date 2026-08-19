@@ -1,6 +1,6 @@
-export { StatusChip, SourceBadge, type StatusTone, type SourceKind, type StatusChipProps, type SourceBadgeProps } from './StatusChip';
-export { EmptyState, LoadingState, PersonAvatar, type EmptyStateProps, type LoadingStateProps, type PersonAvatarProps } from './EmptyState';
-export { AtlasCard, type AtlasCardProps, type CardVariant } from './AtlasCard';
+export { StatusChip, SourceBadge, AtlasStatusChip, type StatusTone, type SourceKind, type StatusChipProps, type SourceBadgeProps, type StatusChipSize } from './StatusChip';
+export { EmptyState, LoadingState, LoadingSkeleton, PersonAvatar, type EmptyStateProps, type LoadingStateProps, type LoadingSkeletonProps, type SkeletonVariant, type PersonAvatarProps, type EmptyStateTone, type EmptyStateAlign } from './EmptyState';
+export { AtlasCard, type AtlasCardProps, type CardVariant, type AtlasDensity } from './AtlasCard';
 export {
   DashboardWidget,
   SparkBars,
@@ -55,6 +55,8 @@ export {
   AccessDeniedState,
   ErrorState,
   type AtlasDrawerProps,
+  type SystemStateProps,
+  type SystemStateLayout,
 } from './Overlays';
 export {
   KpiTile,
@@ -66,3 +68,24 @@ export {
   type InsightCardProps,
   type RecentItem,
 } from './ExecutivePrimitives';
+export {
+  AttentionCard,
+  DecisionCard,
+  QueueTabs,
+  QueueSection,
+  type AttentionCardProps,
+  type DecisionCardProps,
+  type QueueTabItem,
+  type QueueTabsProps,
+  type QueueSectionProps,
+} from './OperatingPrimitives';
+export {
+  ATLAS_STATUS,
+  atlasStatusTone,
+  atlasStatusChip,
+  atlasLabelForRawStatus,
+  atlasStatusDisplay,
+  type AtlasStatusKey,
+  type AtlasStatusLabel,
+  type AtlasStatusTone,
+} from '../status/statusLanguage';

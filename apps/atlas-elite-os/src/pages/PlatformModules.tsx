@@ -1,50 +1,192 @@
-import { Link } from 'react-router-dom';
-import { AtlasCard, EmptyState, InsightCard, ResponsiveGrid } from '@hvcg/atlas-design-system';
-import { Text, Caption1, Button } from '@fluentui/react-components';
-import { BotRegular, DocumentDataRegular, BookRegular } from '@fluentui/react-icons';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AccessDeniedState,
+  AtlasCard,
+  EmptyState,
+  GlobalSearch,
+  LoadingState,
+  StatusChip,
+  type SearchResult,
+} from '@hvcg/atlas-design-system';
+import { Button, Caption1, Text } from '@fluentui/react-components';
+import { BotRegular, DocumentDataRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
-import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge';
-import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import { useAtlasRole } from '../security/RoleProvider';
-import { useWorkspaceContext } from '../state/WorkspaceContext';
+import { HubHttpError } from '../integrations/hub/hubFetch';
+import { searchPm, type PmSearchHit } from '../integrations/hub/pmApi';
+import { useHubAuth } from '../integrations/hub/useHubAuth';
+
+const KIND_LABEL: Record<string, string> = {
+  client: 'Client',
+  project: 'Project',
+  task: 'Task',
+  opportunity: 'Opportunity',
+  capital_opportunity: 'Capital opportunity',
+  lead: 'Lead',
+  lender: 'Lender',
+  document: 'Document',
+  communication: 'Communication',
+  meeting: 'Meeting',
+  engagement: 'Engagement',
+  deliverable: 'Deliverable',
+  decision: 'Decision',
+  vendor: 'Vendor',
+};
+
+function kindLabel(kind: string): string {
+  return KIND_LABEL[kind] || kind;
+}
 
 export function KnowledgePage() {
-  const { account } = useMicrosoftAuth();
-  const { role } = useAtlasRole();
-  const { workspaceId } = useWorkspaceContext();
-  const user = knowledgeUserFromHost({
-    id: account?.localAccountId || 'local-dev',
-    name: account?.name,
-    email: account?.username,
-    role,
-    organizationId: 'org-hvcg',
-  });
-  const clientCode = workspaceId === 'ws-ccb' ? 'CCB' : workspaceId === 'ws-hvcg' ? 'HVCG' : undefined;
+  const auth = useHubAuth();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [hits, setHits] = useState<PmSearchHit[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [denied, setDenied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [scope, setScope] = useState<string>('');
+
+  useEffect(() => {
+    if (!auth.tokenReady) return;
+    const q = query.trim();
+    if (q.length < 2) {
+      setHits([]);
+      setError(null);
+      setDenied(false);
+      setScope('');
+      setBusy(false);
+      return;
+    }
+    if (!auth.hasBearer) {
+      setHits([]);
+      setDenied(true);
+      setError('Microsoft sign-in required (Bearer token missing)');
+      setBusy(false);
+      return;
+    }
+    let cancelled = false;
+    setBusy(true);
+    setError(null);
+    setDenied(false);
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const found = await searchPm(auth, q);
+          if (cancelled) return;
+          setHits(found.results || []);
+          setScope(found.scope || '');
+        } catch (err) {
+          if (cancelled) return;
+          setHits([]);
+          const status = err instanceof HubHttpError ? err.status : (err as { status?: number }).status;
+          if (status === 401) {
+            setDenied(true);
+            setError('Authentication failed talking to Integration Hub (401). Bearer was missing or rejected.');
+          } else if (status === 403) {
+            setDenied(true);
+            setError('Authenticated but not authorized for knowledge search (403).');
+          } else {
+            setDenied(false);
+            setError(err instanceof Error ? err.message : String(err));
+          }
+        } finally {
+          if (!cancelled) setBusy(false);
+        }
+      })();
+    }, 280);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, auth]);
+
+  const results: SearchResult[] = useMemo(
+    () =>
+      hits.map((hit) => ({
+        id: `${hit.kind}-${hit.id}`,
+        title: hit.title,
+        category: kindLabel(hit.kind),
+        subtitle: [hit.clientCode, hit.source].filter(Boolean).join(' · '),
+        to: hit.href,
+      })),
+    [hits],
+  );
+
+  const hubClosed = auth.tokenReady && !auth.hasBearer;
+  const closed = denied || hubClosed;
+  const unauthorized = Boolean(error?.includes('403') || error?.includes('not authorized'));
 
   return (
     <ModuleScaffold
-      title="Knowledge"
-      subtitle="Contextual guidance and repository-derived knowledge for the active module."
+      title="Search / Knowledge"
+      subtitle="Authorized Hub search across entitled clients, projects, and documents. ⌘K jumps modules; this page searches records."
       showPendingBanner={false}
     >
-      <ModuleKnowledgeRail module="Knowledge" user={user} clientCode={clientCode} />
-      <ResponsiveGrid dense>
-        <AtlasCard title="Knowledge Platform status" variant="quiet">
-          <Text>
-            Knowledge catalog and rail are integrated into Elite OS. Full SharePoint / Copilot grounding
-            remains gated on Entra configuration and Knowledge Platform track completion.
-          </Text>
-        </AtlasCard>
-        <InsightCard
-          title="AI-assisted retrieval"
-          body="Ask Atlas Copilot (⌘J) for module-aware guidance. Grounded answers require Knowledge Platform connectors."
+      {!auth.tokenReady ? (
+        <LoadingState rows={6} label="Connecting to Integration Hub" />
+      ) : closed ? (
+        <AccessDeniedState
+          title={
+            unauthorized
+              ? 'Not authorized'
+              : auth.bootstrapStatus === 'interaction_required'
+                ? 'Hub authorization required'
+                : 'Sign-in required'
+          }
+          description={
+            error ||
+            auth.bootstrapMessage ||
+            'Knowledge search is closed without a valid Hub Bearer token. Use ⌘K to jump modules without Hub.'
+          }
           actions={
-            <Button size="small" appearance="secondary" icon={<BookRegular />} disabled>
-              Browse catalog
-            </Button>
+            auth.bootstrapStatus === 'interaction_required' ? (
+              <Button appearance="primary" onClick={() => void auth.authorizeHub()}>
+                Authorize Hub
+              </Button>
+            ) : undefined
           }
         />
-      </ResponsiveGrid>
+      ) : (
+        <>
+          {error ? (
+            <AtlasCard title="Knowledge search error">
+              <Text>{error}</Text>
+            </AtlasCard>
+          ) : null}
+          {scope ? (
+            <StatusChip
+              label={scope === 'manny_tenant' ? 'Manny tenant search' : 'Entitled scope'}
+              tone="success"
+            />
+          ) : null}
+          <Caption1>
+            Server-side authorization: only entitled ClientCodes are returned. 401/403 fail closed — Hub hits are not
+            filtered in the browser.
+          </Caption1>
+          <AtlasCard variant="quiet">
+            <GlobalSearch
+              variant="inline"
+              open
+              onOpenChange={() => undefined}
+              query={query}
+              onQueryChange={setQuery}
+              results={results}
+              loading={busy}
+              onSelect={(r) => {
+                if (r.to) navigate(r.to);
+              }}
+              placeholder="Search Atlas…"
+              idleLabel="Type at least two characters. Hub returns only entitled records — empty is a real answer."
+              emptyLabel="No authorized matches in your entitled SharePoint scope."
+              loadingLabel="Searching entitled records…"
+              inputLabel="Authorized knowledge search"
+              listLabel="Authorized search results"
+              autoFocus
+            />
+          </AtlasCard>
+        </>
+      )}
     </ModuleScaffold>
   );
 }

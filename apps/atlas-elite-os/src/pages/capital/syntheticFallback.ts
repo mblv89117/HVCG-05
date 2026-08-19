@@ -635,6 +635,116 @@ function seed(): Store {
     missingRequest: null,
   });
 
+  const ready = opportunity({
+    id: 'cap-syn-ready',
+    title: 'SYNTHETIC Brookfield Metals — ready for submission',
+    clientCode: 'SYN09',
+    companyName: 'SYNTHETIC Brookfield Metals',
+    transactionType: 'working_capital_loc',
+    stage: 'ReadyForSubmission',
+    stageEnteredAt: isoDaysAgo(1),
+    need: { requestedAmount: 650_000, purpose: 'working capital (demo path only)' },
+    nextAction: 'Prepare application package — do not submit until Manny confirms',
+    nextActionOwner: 'HVCG',
+    nextActionDue: isoDaysFromNow(2),
+    mannyStrategyApproval: 'APPROVED',
+    mannyShortlistApproval: 'APPROVED',
+    submissionReadiness: true,
+  });
+  details.set(ready.id, {
+    opportunity: ready,
+    checklist: checklist(ready.id, [
+      { itemKey: 'fin-pl-ytd', name: 'Year-to-date profit & loss', status: 'ACCEPTED', category: 'Current Financials', verification: 'UNVERIFIED' },
+    ]),
+    documents: [],
+    underwriting: underwriting(ready.id),
+    strategy: strategyFor(ready, matchesFor('brook'), 'APPROVED'),
+    matches: matchesFor('brook'),
+    application: null,
+    submissions: [],
+    offers: [],
+    closing: [],
+    fees: [],
+    missingRequest: null,
+  });
+
+  const rfi = opportunity({
+    id: 'cap-syn-rfi',
+    title: 'SYNTHETIC Lakeside Print — lender RFI overdue',
+    clientCode: 'SYN10',
+    companyName: 'SYNTHETIC Lakeside Print',
+    transactionType: 'conventional_bank_loan',
+    stage: 'AdditionalInformationRequested',
+    stageEnteredAt: isoDaysAgo(12),
+    need: { requestedAmount: 800_000, purpose: 'working capital (demo path only)' },
+    nextAction: 'Client to answer lender RFI',
+    nextActionOwner: 'Client',
+    nextActionDue: isoDaysAgo(5),
+    blockers: 'Lender RFI past due — do not treat silence as clearance',
+    mannyStrategyApproval: 'APPROVED',
+    mannyShortlistApproval: 'APPROVED',
+  });
+  const rfiChecklist = checklist(rfi.id, [
+    { itemKey: 'rfi-debt', name: 'Updated debt schedule for lender RFI (demo item)', status: 'REQUESTED', category: 'Debt Schedule', deficiency: 'Not received' },
+  ]);
+  details.set(rfi.id, {
+    opportunity: rfi,
+    checklist: rfiChecklist,
+    documents: [],
+    underwriting: underwriting(rfi.id),
+    strategy: strategyFor(rfi, matchesFor('lake'), 'APPROVED'),
+    matches: matchesFor('lake'),
+    application: null,
+    submissions: [
+      {
+        id: `${rfi.id}-sub-1`,
+        lenderId: 'ln-syn-lake-1',
+        lenderName: 'SYNTHETIC Regional Bank (demo lender record)',
+        method: 'package',
+        status: 'rfi',
+        submittedAt: isoDaysAgo(18),
+        notes: 'Demo RFI tracking. HVCG did not underwrite this request.',
+      },
+    ],
+    offers: [],
+    closing: [],
+    fees: [],
+    missingRequest: missingFrom(rfiChecklist, rfi.clientCode),
+  });
+
+  const compliance = opportunity({
+    id: 'cap-syn-compliance',
+    title: 'SYNTHETIC Summit Advisors — fee compliance review',
+    clientCode: 'SYN11',
+    companyName: 'SYNTHETIC Summit Advisors',
+    transactionType: 'sba',
+    stage: 'StrategyApproved',
+    stageEnteredAt: isoDaysAgo(4),
+    need: { requestedAmount: 500_000, purpose: 'SBA working capital (demo path only)' },
+    nextAction: 'Complete legal / compliance review of HVCG fee before any invoice',
+    nextActionOwner: 'Manny',
+    nextActionDue: isoDaysFromNow(3),
+    mannyStrategyApproval: 'APPROVED',
+    mannyShortlistApproval: 'NOT_REQUIRED',
+    blockers: 'Legal / compliance review required on HVCG fee — not a lending decision',
+  });
+  details.set(compliance.id, {
+    opportunity: compliance,
+    checklist: checklist(compliance.id, [
+      { itemKey: 'fin-pl-ytd', name: 'Year-to-date profit & loss', status: 'ACCEPTED', category: 'Current Financials', verification: 'UNVERIFIED' },
+    ]),
+    documents: [],
+    underwriting: underwriting(compliance.id),
+    strategy: strategyFor(compliance, matchesFor('summit'), 'APPROVED'),
+    matches: matchesFor('summit'),
+    application: null,
+    submissions: [],
+    offers: [],
+    closing: [],
+    fees: [demoFee(compliance.id)],
+    missingRequest: null,
+  });
+
   return { details };
 }
 
@@ -703,12 +813,19 @@ function inferQueue(d: CapitalOpportunityDetail): { queue: WorkQueue; agingDays:
   if (stage === 'AwaitingMannyStrategyApproval' || stage === 'AwaitingMannyShortlistApproval') {
     return { queue: 'AWAITING_MANNY', agingDays: 0, aging: 'watch' };
   }
+  if (stage === 'ReadyForSubmission') return { queue: 'READY_FOR_SUBMISSION', agingDays: 0, aging: 'fresh' };
+  if (stage === 'AdditionalInformationRequested') {
+    const due = d.opportunity.nextActionDue ? Date.parse(d.opportunity.nextActionDue) : NaN;
+    if (Number.isFinite(due) && due < Date.parse(NOW)) return { queue: 'RFI_OVERDUE', agingDays: 0, aging: 'overdue' };
+    return { queue: 'AWAITING_LENDER', agingDays: 0, aging: 'watch' };
+  }
   if (
-    stage === 'Submitted' ||
-    stage === 'Underwriting' ||
-    stage === 'AdditionalInformationRequested' ||
-    stage === 'LenderVendorResearch'
+    d.fees.some((f) => f.legalComplianceReviewRequired && f.approvalStatus !== 'APPROVED') &&
+    (stage === 'StrategyApproved' || stage === 'DocumentsComplete')
   ) {
+    return { queue: 'COMPLIANCE_REVIEW', agingDays: 0, aging: 'watch' };
+  }
+  if (stage === 'Submitted' || stage === 'Underwriting' || stage === 'LenderVendorResearch') {
     return { queue: 'AWAITING_LENDER', agingDays: 0, aging: 'watch' };
   }
   if (stage === 'DocumentsRequested' || stage === 'DocumentsInProgress') {

@@ -14,12 +14,15 @@ export function hubStatus(err: unknown): number | undefined {
   return undefined;
 }
 
+const AUTH_FAILURE_MSG =
+  /microsoft sign-in required|bearer token missing|invalid or expired microsoft token|unauthorized|forbidden|access denied|\b401\b|\b403\b/i;
+
 /** 401 and 403 are authorization failures. Never substitute synthetic data. */
 export function isAuthorizationFailure(err: unknown): boolean {
   const status = hubStatus(err);
   if (status === 401 || status === 403) return true;
   const msg = String((err as Error)?.message || err || '');
-  return /microsoft sign-in required|bearer token missing|invalid or expired microsoft token/i.test(msg);
+  return AUTH_FAILURE_MSG.test(msg);
 }
 
 export class CapitalAccessError extends Error {
@@ -43,6 +46,39 @@ export function toCapitalAccessError(err: unknown): CapitalAccessError {
     401,
     'Authenticated access required. Hub returned 401. Synthetic demonstration data is not shown.',
   );
+}
+
+const STACK_LINE = /\n\s*at\s+/;
+
+/**
+ * Operator-safe error copy. Never returns a stack trace or raw exception dump.
+ */
+export function operatorFacingMessage(err: unknown, fallback: string): string {
+  if (err instanceof CapitalAccessError) return err.message;
+  if (isAuthorizationFailure(err)) return toCapitalAccessError(err).message;
+  const status = hubStatus(err);
+  if (status === 404) return fallback;
+  if (status === 501 || status === 503) return 'Capital operations are unavailable on Hub right now.';
+  const raw = err instanceof Error ? err.message : String(err || '');
+  const firstLine = raw.split('\n')[0].replace(/^Error:\s*/i, '').trim();
+  if (!firstLine || STACK_LINE.test(raw) || /^\s*at\s+/.test(firstLine)) {
+    return fallback;
+  }
+  if (
+    /failed to fetch|networkerror|load failed|mixed content|err_connection|econnrefused|network request failed/i.test(
+      firstLine,
+    )
+  ) {
+    return 'Hub is unreachable. Capital data was not loaded.';
+  }
+  if (firstLine.length > 220) return fallback;
+  return firstLine;
+}
+
+export function accessFailureKind(err: unknown): 'unauthorized' | 'forbidden' | null {
+  if (!isAuthorizationFailure(err)) return null;
+  const status = err instanceof CapitalAccessError ? err.status : hubStatus(err);
+  return status === 403 ? 'forbidden' : 'unauthorized';
 }
 
 /**

@@ -28,22 +28,20 @@ import {
 import { PortfolioPage } from './PortfolioPage';
 import { CapitalCommandCenter } from './capital/CapitalCommandCenter';
 import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
-import { ProcurementWorkbench } from './ProcurementWorkbench';
-import { RiskClaimsWorkbench } from './RiskClaimsWorkbench';
 import { GrowthOsWorkbench } from './GrowthOsWorkbench';
 import { RevenueTruthWorkbench } from './RevenueTruthWorkbench';
+import { DeferredBoundaryPage } from './PlaceholderModule';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
 export { ClientsPage } from './LiveClientsPage';
 
 export function FinancialsPage() {
-  // Sprint 7: Fractional CFO OS extends this surface — no second Finance SPA.
-  // Live QBO/Plaid remain PENDING_LIVE_SOURCE; workbench uses Dev fixtures only.
+  // Deferred — not Atlas SoR. Do not impersonate Growth Command Center or live QBO/Plaid.
   return <FractionalCfoWorkbench />;
 }
 
 export function RevenuePage() {
-  // Sprint 12: Revenue Truth extends Revenue OS — no second billing shell.
+  // Deferred — not Atlas SoR. Do not impersonate 360 billing, GCC books, or EVA conversion.
   return <RevenueTruthWorkbench />;
 }
 
@@ -392,43 +390,73 @@ export function CapitalPage() {
 }
 
 export function ProcurementPage() {
-  return <ProcurementWorkbench />;
+  return (
+    <DeferredBoundaryPage
+      title="Contract Procurement"
+      description="This route is deferred. Atlas does not run SAM submissions, bid pipelines, or government-readiness scorecards. Fixture pursuits were removed."
+      notAtlasSor="Not Atlas V1 SoR. Procurement readiness is not SharePoint HVCG_* and is not rebuilt from another product in this shell."
+      atlasFallback="Live Atlas work is Command Center, Clients, Projects, and Capital on SharePoint HVCG_*."
+    />
+  );
 }
 
 export function RiskPage() {
-  return <RiskClaimsWorkbench />;
+  return (
+    <DeferredBoundaryPage
+      title="Risk & Claims"
+      description="This route is deferred. Atlas does not host insurance claims, tax-resolution, or legal-matter workbenches. This page is not a licensed law, CPA, or insurance product."
+      notAtlasSor="Not Atlas V1 SoR. Ops project risks stay on SharePoint HVCG_Risks when present — distinct from this claims shell, which is not live."
+      atlasFallback="Live Atlas work is Command Center, Clients, Projects, and Capital on SharePoint HVCG_*."
+    />
+  );
 }
 
 export function GrowthPage() {
+  // Deferred — not Atlas SoR. Do not impersonate Growth Command Center or 360 Growth.
   return <GrowthOsWorkbench />;
 }
 
 export function EnterpriseValuePage() {
   return (
-    <ModuleScaffold
+    <DeferredBoundaryPage
       title="Enterprise Value"
-      subtitle="Estimates labeled preliminary until formally validated."
-    >
-      <FieldGrid
-        fields={[
-          {
-            label: 'Current estimated value',
-            value: 'Not yet calculated — preliminary/indicative only when available',
-            availability: 'Not yet calculated',
-          },
-          { label: 'Valuation range', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-          { label: 'Methodology', value: 'Data connection pending', availability: 'Data connection pending' },
-          { label: 'EBITDA multiple', value: 'Awaiting verified data', availability: 'Awaiting verified data' },
-          { label: 'Target future value', value: 'Not yet calculated', availability: 'Not yet calculated' },
-        ]}
-      />
-      <AtlasCard title="Disclosure">
-        <Text>
-          Any future estimate shown in Atlas will be labeled preliminary or indicative unless formally
-          validated by an approved valuation process.
-        </Text>
-      </AtlasCard>
-    </ModuleScaffold>
+      description="This route is deferred. Atlas does not calculate enterprise value, EBITDA multiples, or valuation ranges. No preliminary figures are shown."
+      notAtlasSor="Not Atlas V1 SoR. EVA is a separate diagnostic front door. Formal valuation is outside Atlas."
+      atlasFallback="Live Atlas work is Command Center, Clients, Projects, and Capital on SharePoint HVCG_*."
+    />
+  );
+}
+
+export function ReportsDeferredPage() {
+  return (
+    <DeferredBoundaryPage
+      title="Reports"
+      description="This route is deferred. Atlas does not host scheduled PDF/Excel export or a live report catalog. Analytics, Financials, and Enterprise Value are not report products in this shell."
+      notAtlasSor="Not Atlas V1 SoR. Executive operating visibility is Command Center. Commercial financial reports belong to Growth Command Center."
+      atlasFallback="Live Atlas work is Command Center, Clients, Projects, and Capital on SharePoint HVCG_*."
+    />
+  );
+}
+
+export function AutomationsDeferredPage() {
+  return (
+    <DeferredBoundaryPage
+      title="Automation"
+      description="This route is deferred. Power Automate reminders and Eva intake remain off. Atlas does not show a fake run-success console."
+      notAtlasSor="Not Atlas V1 SoR. Orchestration packages are not a live operator workbench in this shell."
+      atlasFallback="Live Atlas work is Command Center, Clients, Projects, and Capital on SharePoint HVCG_*."
+    />
+  );
+}
+
+export function NotificationsDeferredPage() {
+  return (
+    <DeferredBoundaryPage
+      title="Notifications"
+      description="This route is deferred. Atlas does not present a fixture alert catalog as an operating inbox."
+      notAtlasSor="Not Atlas V1 SoR. Attention work is Command Center and Decisions on SharePoint HVCG_*."
+      atlasFallback="Use Command Center for what needs attention today."
+    />
   );
 }
 

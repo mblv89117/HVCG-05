@@ -1,124 +1,185 @@
 /**
- * SharePoint HVCG_Clients detail — ClientCode canonical. Client 360 is fail-closed / deferred.
+ * Client operations record-detail — SharePoint HVCG_Clients.ClientCode.
+ * Hub client workspace payload only (`/api/pm/clients/:code/workspace`).
+ * Client 360 is fail-closed / deferred. GCC stays financial intelligence (not pulled here).
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  AccessDeniedState,
   AtlasCard,
   DataTable,
-  StatusChip,
   EmptyState,
-  FilterToolbar,
+  ErrorState,
+  LoadingState,
+  StatusChip,
 } from '@hvcg/atlas-design-system';
 import {
   Button,
   Caption1,
+  Input,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
   Spinner,
   Text,
-  Tab,
-  TabList,
-  Input,
-  Field,
 } from '@fluentui/react-components';
 import { ArrowSyncRegular, OpenRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
-import { type Client360Candidate, type Client360Document } from '../integrations/hub/api';
 import {
-  createPmDecision,
-  createPmNote,
   createPmProject,
   createPmTask,
-  createPmMilestone,
-  fetchPmClient,
+  fetchClientPmWorkspace,
+  HubHttpError,
+  type ClientPmWorkspace,
   type PmProject,
   type PmTask,
+  type WorkspaceSection,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
-import { Client360DocumentsSection } from './DocumentLifecycleWorkbench';
-import { Client360ExecutiveFlags } from './ExecutiveOwnerSupportWorkbench';
 import { projectDetailPath } from '../routing/projectId';
 import { isCanonicalClientCode } from '../security/clientCode';
-import {
-  Client360CapitalSection,
-  Client360FinanceSection,
-  Client360GrowthSection,
-  Client360MigrationSection,
-  Client360ProcurementSection,
-  Client360RevenueSection,
-  Client360RiskSection,
-} from './Client360CommercialSections';
-import { Client360AiAssist } from './AiOrchestrationWorkbench';
+import { displayNextAction, isBootstrapNextAction } from '../operating/projectDisplay';
+import { ATLAS_STATUS, atlasStatusDisplay } from '../ui/statusLanguage';
+
+function dayStamp(iso?: string): string | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return iso.slice(0, 10) || null;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+function hubStatus(err: unknown): number | null {
+  if (err instanceof HubHttpError) return err.status;
+  const status = (err as { status?: number })?.status;
+  return typeof status === 'number' ? status : null;
+}
+
+function isOverdueTask(task: PmTask): boolean {
+  if (task.status === 'completed' || task.status === 'cancelled' || !task.dueDate) return false;
+  const due = dayStamp(task.dueDate);
+  const today = new Date().toISOString().slice(0, 10);
+  return Boolean(due && due < today);
+}
+
+function taskStatusLabel(task: PmTask) {
+  if (isOverdueTask(task)) {
+    return { label: ATLAS_STATUS.overdue, tone: 'danger' as const };
+  }
+  return atlasStatusDisplay(task.status) || { label: task.status, tone: 'neutral' as const };
+}
+
+function needsOwnerTask(task: PmTask): boolean {
+  const status = (task.status || '').toLowerCase().replace(/[_-]+/g, ' ');
+  return (
+    status === 'needs owner approval' ||
+    status === 'needs review' ||
+    status === 'needs manny' ||
+    status === 'decision required'
+  );
+}
+
+function taskWorkPath(task: PmTask): string {
+  return projectDetailPath(task.projectId) || '/tasks';
+}
+
+function evidencePath(
+  ev: { kind: string; id: string },
+  tasks: PmTask[],
+): string | null {
+  const kind = (ev.kind || '').toLowerCase();
+  if (kind.includes('project')) return projectDetailPath(ev.id);
+  if (kind.includes('task')) {
+    const task = tasks.find((t) => t.id === ev.id);
+    return task ? taskWorkPath(task) : '/tasks';
+  }
+  return null;
+}
+
+function RecordRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '160px 1fr',
+        gap: 12,
+        padding: '12px 0',
+        borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
+      }}
+    >
+      <Caption1 style={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>
+        {label}
+      </Caption1>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function StatusOrDash({ raw }: { raw?: string | null }) {
+  const chip = atlasStatusDisplay(raw || undefined);
+  if (chip) return <StatusChip label={chip.label} tone={chip.tone} />;
+  if (raw) return <StatusChip label={raw} tone="neutral" />;
+  return <Caption1>—</Caption1>;
+}
+
+function sectionHonesty(section?: WorkspaceSection): string {
+  if (!section) return 'Hub did not include this source on the workspace payload.';
+  if (!section.queried) {
+    return (
+      section.reason ||
+      'Source not queried. The Hub Graph allowlist did not grant this list — not treated as empty.'
+    );
+  }
+  if (!section.items.length) return 'Queried source returned no entitled rows.';
+  return `${section.items.length} entitled row${section.items.length === 1 ? '' : 's'}.`;
+}
 
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
-  const { account, ready } = useMicrosoftAuth();
+  const { account, ready, signIn } = useMicrosoftAuth();
   const auth = useHubAuth();
-  const [tab, setTab] = useState('overview');
-  const [client, setClient] = useState<Client360Candidate | null>(null);
-  const [docs, setDocs] = useState<Client360Document[]>([]);
-  const [projects, setProjects] = useState<PmProject[]>([]);
-  const [tasks, setTasks] = useState<PmTask[]>([]);
-  const [notes, setNotes] = useState<Array<{ id: string; body: string }>>([]);
-  const [decisions, setDecisions] = useState<Array<{ id: string; title: string; status: string }>>(
-    [],
-  );
-  const [deliverables, setDeliverables] = useState<Array<{ id: string; name: string; status: string }>>(
-    [],
-  );
-  const [meetings, setMeetings] = useState<Array<{ id?: string; title: string; at?: string; kind?: string }>>(
-    [],
-  );
-  const [approvals, setApprovals] = useState<PmTask[]>([]);
+  const [workspace, setWorkspace] = useState<ClientPmWorkspace | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
+  const [codeRejected, setCodeRejected] = useState(false);
+  const [unauthorized, setUnauthorized] = useState<string | null>(null);
+  const [forbidden, setForbidden] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
-  const [noteBody, setNoteBody] = useState('');
-  const [decisionTitle, setDecisionTitle] = useState('');
-  const [milestoneTitle, setMilestoneTitle] = useState('');
-
-  const [c360Deferred, setC360Deferred] = useState(false);
 
   const refresh = useCallback(async () => {
     setBusy(true);
     setError(null);
-    setC360Deferred(false);
+    setCodeRejected(false);
+    setUnauthorized(null);
+    setForbidden(null);
     try {
       if (!isCanonicalClientCode(clientId)) {
-        setClient(null);
-        setDocs([]);
-        setProjects([]);
-        setTasks([]);
-        setC360Deferred(true);
+        setWorkspace(null);
+        setCodeRejected(true);
+        return;
+      }
+      if (!auth.hasBearer) {
+        setWorkspace(null);
+        setUnauthorized(
+          auth.bootstrapMessage || 'Microsoft sign-in required (Bearer token missing)',
+        );
         return;
       }
       const scoped = { ...auth, clientIds: [clientId] };
-      const detail = await fetchPmClient(scoped, clientId);
-      setClient({
-        id: detail.client.clientCode,
-        displayName: detail.client.displayName,
-        legalName: detail.client.displayName,
-        lifecycle: 'active',
-        completenessScore: 0,
-        emails: [],
-        domains: [],
-        businessEntities: ['HVCG'],
-        recommendedNextActions: [],
-        timeline: [],
-        sourceRefs: [],
-        associations: { documents: [], emails: [] },
-      } as Client360Candidate);
-      setDocs([]);
-      const listed = detail.projects || [];
-      setProjects(listed);
-      setTasks([]);
-      setNotes([]);
-      setDecisions([]);
-      setDeliverables([]);
-      setMeetings([]);
-      setApprovals([]);
+      const detail = await fetchClientPmWorkspace(scoped, clientId);
+      setWorkspace(detail.workspace || null);
     } catch (err) {
-      setError(String(err));
+      const status = hubStatus(err);
+      const message = err instanceof Error ? err.message : String(err);
+      setWorkspace(null);
+      if (status === 401) {
+        setUnauthorized(message);
+      } else if (status === 403) {
+        setForbidden(message);
+      } else {
+        setError(message);
+      }
     } finally {
       setBusy(false);
     }
@@ -127,34 +188,86 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   useEffect(() => {
     if (!ready) return;
     if (!account) {
-      setClient(null);
-      setDocs([]);
+      setWorkspace(null);
       setError(null);
+      setUnauthorized(null);
+      setForbidden(null);
       setBusy(false);
       return;
     }
-    if (!auth.accessToken) return;
+    if (!auth.tokenReady) return;
     void refresh();
-  }, [refresh, ready, account, auth.accessToken]);
+  }, [refresh, ready, account, auth.tokenReady, auth.hasBearer]);
 
-  const hvsTimeline = useMemo(
+  const overview = workspace?.overview;
+  const projects = workspace?.projects || [];
+  const tasks = workspace?.tasks || [];
+  const nextActions = workspace?.nextActions || [];
+  const capitalLinked = useMemo(
     () =>
-      (client?.timeline || []).filter((t) =>
-        (client?.sourceRefs || []).some(
-          (s) => s.sourceRecordId === t.sourceRecordId && s.businessEntity === 'HVS',
-        ),
-      ),
-    [client],
+      projects.some((p) => /capital/i.test(`${p.projectType || ''} ${p.name || ''}`)) ||
+      /capital/i.test(overview?.engagementType || ''),
+    [projects, overview?.engagementType],
   );
 
-  if (c360Deferred && !busy) {
+  const ownerNames = useMemo(
+    () => [...new Set(projects.map((p) => p.ownerName).filter(Boolean))],
+    [projects],
+  );
+
+  const blockers = useMemo(() => {
+    return tasks.filter((t) => t.blocker || t.status === 'blocked' || isOverdueTask(t));
+  }, [tasks]);
+
+  const requiresMe = useMemo(() => {
+    const fromTasks = tasks.filter((t) => needsOwnerTask(t) || isOverdueTask(t) || t.status === 'blocked');
+    const fromProjects = projects.filter(
+      (p) => isBootstrapNextAction(p.nextAction) || p.health === 'at_risk' || p.health === 'critical',
+    );
+    return { tasks: fromTasks, projects: fromProjects };
+  }, [tasks, projects]);
+
+  const backToClients = (
+    <Link to="/clients">
+      <Button appearance="secondary">Back to clients</Button>
+    </Link>
+  );
+
+  if (!ready || (account && !auth.tokenReady && !unauthorized && !forbidden && !error && !codeRejected)) {
+    return (
+      <ModuleScaffold title="Client" subtitle="Preparing Microsoft session…" showPendingBanner={false}>
+        <LoadingState rows={6} label="Loading session…" />
+      </ModuleScaffold>
+    );
+  }
+
+  if (!account) {
+    return (
+      <ModuleScaffold title="Client" subtitle="Sign in required" showPendingBanner={false}>
+        <EmptyState
+          title="Sign in required"
+          description="Client operations requires a Microsoft session. This is not a missing client and not a Hub error."
+          actions={
+            <Button appearance="primary" onClick={() => void signIn()}>
+              Sign in with Microsoft
+            </Button>
+          }
+        />
+      </ModuleScaffold>
+    );
+  }
+
+  if (codeRejected && !busy) {
     return (
       <ModuleScaffold title="Client" subtitle="Client 360 deferred" showPendingBanner={false}>
         <AtlasCard title="Client 360 mapping is deferred">
           <Text>
-            Client 360 identifiers are not mapped to HVCG_Clients.ClientCode. This route is fail-closed
-            and does not block the Clients directory.
+            This route only opens canonical HVCG_Clients.ClientCode values. Client 360 identifiers are not
+            mapped. Fail-closed — the Clients directory is not blocked.
           </Text>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            GCC financial intelligence stays on GCC. It is not substituted here.
+          </Caption1>
           <Link to="/clients">
             <Button appearance="primary" style={{ marginTop: 12 }}>
               Back to SharePoint clients
@@ -165,475 +278,532 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
     );
   }
 
-  if (!client && !busy && error) {
+  if (unauthorized && !workspace) {
     return (
-      <ModuleScaffold title="Client" subtitle="SharePoint HVCG_Clients" showPendingBanner={false}>
-        <AtlasCard title="Error">
-          <Text>{error}</Text>
-          <Link to="/clients">
-            <Button appearance="primary" style={{ marginTop: 12 }}>
-              Back to clients
-            </Button>
-          </Link>
-        </AtlasCard>
+      <ModuleScaffold
+        title="Authenticated access required"
+        subtitle={
+          auth.bootstrapStatus === 'interaction_required'
+            ? 'Hub API authorization required'
+            : 'Integration Hub rejected the request (401)'
+        }
+        showPendingBanner={false}
+      >
+        <AccessDeniedState
+          title="Authenticated access required"
+          description={
+            unauthorized ||
+            'Hub returned 401. Client workspace is not shown. This is not an empty client record.'
+          }
+          actions={
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {auth.bootstrapStatus === 'interaction_required' ? (
+                <Button appearance="primary" onClick={() => void auth.authorizeHub()}>
+                  Authorize Atlas Integration Hub
+                </Button>
+              ) : (
+                <Button appearance="primary" onClick={() => void refresh()}>
+                  Retry
+                </Button>
+              )}
+              {backToClients}
+            </div>
+          }
+        />
       </ModuleScaffold>
     );
   }
 
-  const title = client?.displayName || client?.legalName || 'Client';
-  const sharePointClients =
-    'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients';
+  if (forbidden && !workspace) {
+    return (
+      <ModuleScaffold title="Access denied" subtitle="403" showPendingBanner={false}>
+        <AccessDeniedState
+          title="Access denied"
+          description={
+            forbidden ||
+            'You are signed in but not entitled to this ClientCode. Client workspace is not shown.'
+          }
+          actions={backToClients}
+        />
+      </ModuleScaffold>
+    );
+  }
+
+  if (error && !workspace && !busy) {
+    return (
+      <ModuleScaffold title="Client" subtitle="Sign in required" showPendingBanner={false}>
+        <ErrorState
+          title="Client workspace unavailable"
+          description={error}
+          actions={
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button appearance="primary" onClick={() => void refresh()}>
+                Retry
+              </Button>
+              {backToClients}
+            </div>
+          }
+        />
+      </ModuleScaffold>
+    );
+  }
+
+  if (!workspace) {
+    if (busy) {
+      return (
+        <ModuleScaffold title="Client" subtitle="Loading Hub workspace…" showPendingBanner={false}>
+          <LoadingState rows={6} label="Loading client workspace…" />
+        </ModuleScaffold>
+      );
+    }
+    return (
+      <ModuleScaffold title="Client" subtitle="Sign in required" showPendingBanner={false}>
+        <EmptyState
+          title="No client workspace returned"
+          description="Hub responded without a workspace for this ClientCode. This is not a 401 and not a Client 360 record."
+          actions={
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button appearance="primary" onClick={() => void refresh()}>
+                Retry
+              </Button>
+              {backToClients}
+            </div>
+          }
+        />
+      </ModuleScaffold>
+    );
+  }
+
+  const title = overview?.displayName || workspace.client.displayName || 'Client';
+  const libraryUrl = overview?.sharePointLibraryUrl;
+  const identityBits = [
+    overview?.clientCode || clientId,
+    overview?.dba ? `DBA ${overview.dba}` : null,
+    overview?.industry || null,
+    overview?.engagementType || null,
+    overview?.sourceOrg || null,
+  ].filter(Boolean);
+  const stageChip = atlasStatusDisplay(overview?.clientStage);
+  const healthChip = atlasStatusDisplay(overview?.overallHealth);
+  const primaryNext =
+    nextActions[0]?.text ||
+    projects.map((p) => displayNextAction(p.nextAction)).find((t) => t && t !== 'Next action required') ||
+    (projects.length ? ATLAS_STATUS.needsAction : 'No evidenced next action on this workspace.');
 
   return (
     <ModuleScaffold
       title={title}
-      subtitle="SharePoint HVCG_Clients · ClientCode canonical · Client 360 deferred (fail-closed)"
+      subtitle={`${overview?.clientCode || clientId} · operator record`}
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button icon={<ArrowSyncRegular />} onClick={() => void refresh()} disabled={busy}>
             Refresh
           </Button>
-          <Button
-            appearance="secondary"
-            icon={<OpenRegular />}
-            onClick={() => window.open(sharePointClients, '_blank', 'noopener,noreferrer')}
-          >
-            Open SharePoint workspace
-          </Button>
-          <Link to="/clients">
-            <Button appearance="secondary">All clients</Button>
-          </Link>
+          {libraryUrl ? (
+            <Button
+              appearance="secondary"
+              icon={<OpenRegular />}
+              onClick={() => window.open(libraryUrl, '_blank', 'noopener,noreferrer')}
+            >
+              Open client library
+            </Button>
+          ) : null}
+          {capitalLinked ? (
+            <Link to="/capital">
+              <Button appearance="secondary">Capital desk</Button>
+            </Link>
+          ) : null}
+          {backToClients}
         </div>
       }
     >
-      <FilterToolbar>
-        <StatusChip label={client?.lifecycle || '…'} tone="info" />
-        <StatusChip
-          label={`${Math.round(client?.completenessScore || 0)}% complete`}
-          tone="success"
-        />
-        <StatusChip label={`${projects.length} projects`} tone="gold" />
-        <StatusChip label={`${docs.length} linked docs`} tone="gold" />
-        {busy ? <Spinner size="tiny" /> : null}
-        <Caption1>SharePoint ClientCode directory · Client 360 sections below are deferred</Caption1>
-      </FilterToolbar>
+      {error ? (
+        <MessageBar intent="error">
+          <MessageBarBody>
+            <MessageBarTitle>Refresh failed</MessageBarTitle>
+            {error}
+          </MessageBarBody>
+        </MessageBar>
+      ) : null}
 
-      <TabList
-        selectedValue={tab}
-        onTabSelect={(_, d) => setTab(String(d.value))}
-        aria-label="Client sections"
+      {busy ? <Spinner size="tiny" label="Refreshing…" /> : null}
+
+      <AtlasCard
+        title="Client record"
+        subtitle="Hub workspace — not Client 360. GCC financial dashboards are not on this page."
       >
-        <Tab value="overview">Overview</Tab>
-        <Tab value="health">Health</Tab>
-        <Tab value="projects">Projects</Tab>
-        <Tab value="tasks">Tasks</Tab>
-        <Tab value="documents">Documents</Tab>
-        <Tab value="meetings">Meetings</Tab>
-        <Tab value="financials">Financials</Tab>
-        <Tab value="revenue">Revenue</Tab>
-        <Tab value="migration">Migration</Tab>
-        <Tab value="capital">Capital</Tab>
-        <Tab value="procurement">Procurement</Tab>
-        <Tab value="risk">Risk</Tab>
-        <Tab value="growth">Growth</Tab>
-        <Tab value="ai">AI</Tab>
-        <Tab value="deliverables">Deliverables</Tab>
-        <Tab value="approvals">Approvals</Tab>
-        <Tab value="notes">Notes</Tab>
-        <Tab value="decisions">Decisions</Tab>
-        <Tab value="activity">Activity</Tab>
-      </TabList>
-
-      {tab === 'overview' ? (
-        <div style={{ display: 'grid', gap: 16 }}>
-          <AtlasCard title="Identity" subtitle="Canonical SharePoint ClientCode">
-            <Text>
-              {client?.legalName || client?.displayName}
-              {client?.domains?.length ? ` · ${client.domains.join(', ')}` : ''}
-            </Text>
-            <Caption1 style={{ display: 'block', marginTop: 8 }}>
-              Emails: {(client?.emails || []).slice(0, 5).join(', ') || '—'}
+        <RecordRow label="What is this">
+          <Text weight="semibold">{title}</Text>
+          <Caption1 style={{ display: 'block' }}>{identityBits.join(' · ')}</Caption1>
+          {overview?.website ? (
+            <Caption1 style={{ display: 'block' }}>
+              <a href={overview.website} target="_blank" rel="noreferrer">
+                {overview.website}
+              </a>
             </Caption1>
-            <Caption1 style={{ display: 'block', marginTop: 4 }}>
-              Entities: {(client?.businessEntities || []).join(', ') || '—'}
-            </Caption1>
-          </AtlasCard>
-          <AtlasCard title="Next actions">
-            {(client?.recommendedNextActions || []).length ? (
-              <ul>
-                {(client?.recommendedNextActions || []).map((a) => (
-                  <li key={a}>
-                    <Text size={300}>{a}</Text>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Text size={300}>No recommended actions yet.</Text>
-            )}
-          </AtlasCard>
-          <Client360ExecutiveFlags clientHint={client?.legalName || client?.displayName || clientId} />
-        </div>
-      ) : null}
-
-      {tab === 'health' ? (
-        <AtlasCard title="Client health">
-          <Text>
-            Completeness {Math.round(client?.completenessScore || 0)}%. Missing information:{' '}
-            {(client?.missingInformation || []).join('; ') || 'None listed'}.
-          </Text>
-          <Caption1 style={{ display: 'block', marginTop: 8 }}>
-            Open projects: {projects.length} · Open tasks: {tasks.length} · Linked documents:{' '}
-            {docs.length}
-          </Caption1>
-        </AtlasCard>
-      ) : null}
-
-      {tab === 'projects' ? (
-        <AtlasCard title="Projects">
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <Input
-              placeholder="New project name"
-              value={projectName}
-              onChange={(_, d) => setProjectName(d.value)}
-              style={{ flex: 1 }}
-            />
-            <Button
-              appearance="primary"
-              disabled={!projectName.trim() || busy}
-              onClick={() =>
-                void createPmProject(auth, {
-                  name: projectName.trim(),
-                  ClientCode: clientId,
-                  clientCode: clientId,
-                  nextAction: 'Define first milestone',
-                }).then(() => {
-                  setProjectName('');
-                  return refresh();
-                })
-              }
-            >
-              Create project
-            </Button>
-          </div>
-          {projects.length === 0 ? (
-            <EmptyState
-              title="No projects have been created for this client."
-              description="Create a project to begin tracking milestones, tasks, and deliverables."
-            />
-          ) : (
-            <DataTable
-              ariaLabel="Client projects"
-              getRowKey={(r) => r.id}
-              rows={projects}
-              columns={[
-                {
-                  key: 'name',
-                  header: 'Project',
-                  render: (r) => {
-                    const path = projectDetailPath(r.id);
-                    return path ? <Link to={path}>{r.name}</Link> : r.name;
-                  },
-                },
-                { key: 'owner', header: 'Owner', render: (r) => r.ownerName },
-                {
-                  key: 'status',
-                  header: 'Status',
-                  render: (r) => <StatusChip label={r.status} tone="info" />,
-                },
-                { key: 'next', header: 'Next action', render: (r) => r.nextAction || '—' },
-              ]}
-            />
-          )}
-          {projects[0] ? (
-            <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-              <Input
-                placeholder="Milestone for first project"
-                value={milestoneTitle}
-                onChange={(_, d) => setMilestoneTitle(d.value)}
-              />
-              <Button
-                disabled={!milestoneTitle.trim()}
-                onClick={() =>
-                  void createPmMilestone(auth, {
-                    projectId: projects[0].id,
-                    title: milestoneTitle,
-                  }).then(() => {
-                    setMilestoneTitle('');
-                    return refresh();
-                  })
-                }
-              >
-                Add milestone
-              </Button>
-            </div>
           ) : null}
-        </AtlasCard>
-      ) : null}
+          {overview?.lastMeaningfulContact ? (
+            <Caption1 style={{ display: 'block' }}>
+              Last contact {dayStamp(overview.lastMeaningfulContact) || overview.lastMeaningfulContact}
+            </Caption1>
+          ) : (
+            <Caption1 style={{ display: 'block' }}>Last contact not recorded on HVCG_Clients.</Caption1>
+          )}
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Contacts: {sectionHonesty(workspace.contacts)} Engagements:{' '}
+            {sectionHonesty(workspace.engagements)}
+          </Caption1>
+        </RecordRow>
 
-      {tab === 'tasks' ? (
-        <AtlasCard title="Tasks">
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <Input
-              placeholder="Task title"
-              value={taskTitle}
-              onChange={(_, d) => setTaskTitle(d.value)}
-              style={{ flex: 1 }}
-            />
-            <Button
-              disabled={!taskTitle.trim()}
-              onClick={() =>
-                void createPmTask(auth, {
-                  title: taskTitle,
-                  clientId,
-                  clientName: title,
-                  projectId: projects[0]?.id,
-                  assigneeName: 'Manny Barela',
-                  assigneeId: 'person-manny',
-                  status: 'ready',
-                }).then(() => {
-                  setTaskTitle('');
-                  return refresh();
-                })
-              }
-            >
-              Create task
-            </Button>
+        <RecordRow label="State">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {stageChip ? (
+              <StatusChip label={stageChip.label} tone={stageChip.tone} />
+            ) : overview?.clientStage ? (
+              <StatusChip label={overview.clientStage} tone="info" />
+            ) : (
+              <Caption1>Stage not recorded</Caption1>
+            )}
+            {healthChip ? (
+              <StatusChip label={healthChip.label} tone={healthChip.tone} />
+            ) : overview?.overallHealth && overview.overallHealth !== 'unknown' ? (
+              <StatusChip
+                label={overview.overallHealth}
+                tone={overview.overallHealth === 'healthy' ? 'success' : 'neutral'}
+              />
+            ) : (
+              <Caption1>Health not assessed</Caption1>
+            )}
+            <StatusChip label={`${projects.length} projects`} tone="gold" />
+            <StatusChip label={`${tasks.length} open tasks`} tone="info" />
           </div>
-          {tasks.length === 0 ? (
-            <EmptyState
-              title="No open tasks for this client."
-              description="Create a task with an owner and due date to drive next actions."
-            />
+        </RecordRow>
+
+        <RecordRow label="Next">
+          {nextActions.length ? (
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {nextActions.map((a, i) => {
+                const ev = a.evidence[0];
+                const path = ev ? evidencePath(ev, tasks) : null;
+                return (
+                  <li key={`${a.text}-${i}`}>
+                    {path ? <Link to={path}>{a.text}</Link> : <Text size={300}>{a.text}</Text>}
+                    {ev ? (
+                      <Caption1 style={{ display: 'block' }}>
+                        {ev.source}
+                        {ev.field ? ` · ${ev.field}` : ''}
+                      </Caption1>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
-            tasks.map((t) => (
-              <Caption1 key={t.id} style={{ display: 'block', padding: '6px 0' }}>
-                {t.title} · {t.status} · {t.assigneeName || 'Unassigned'}
-                {t.dueDate ? ` · due ${t.dueDate}` : ''}
-              </Caption1>
-            ))
+            <Text>{primaryNext}</Text>
           )}
-        </AtlasCard>
-      ) : null}
+        </RecordRow>
 
-      {tab === 'documents' ? (
-        <>
-          <Client360DocumentsSection clientHint={client?.displayName || client?.legalName || clientId} />
-          {docs.length === 0 && !busy ? (
-          <EmptyState
-            title="No linked documents for this client."
-            description="Upload in the approved SharePoint client library, then refresh Client 360 ingest."
-          />
-        ) : (
-          <AtlasCard
-            title="Authorized document links"
-            subtitle="Opens original SharePoint / OneDrive file — Atlas does not move or delete source files"
-            variant="quiet"
-          >
-            <DataTable
-              ariaLabel="Client documents"
-              getRowKey={(r) => r.id}
-              rows={docs}
-              columns={[
-                {
-                  key: 'title',
-                  header: 'File',
-                  render: (r) => (
-                    <span style={{ fontWeight: 600 }}>
-                      {r.webUrl ? (
-                        <a href={String(r.webUrl)} target="_blank" rel="noreferrer">
-                          {r.title} <OpenRegular />
-                        </a>
-                      ) : (
-                        r.title
-                      )}
-                    </span>
-                  ),
-                },
-                {
-                  key: 'class',
-                  header: 'Classification',
-                  render: (r) => String(r.classification || r.kind || '—'),
-                },
-                {
-                  key: 'status',
-                  header: 'Migration',
-                  render: (r) => (
-                    <StatusChip label={String(r.migrationStatus || 'link_only')} tone="info" />
-                  ),
-                },
-              ]}
-            />
-          </AtlasCard>
-        )}
-        </>
-      ) : null}
+        <RecordRow label="Owner">
+          {ownerNames.length ? (
+            <>
+              <Text weight="semibold">{ownerNames.join(', ')}</Text>
+              <Caption1 style={{ display: 'block' }}>
+                Derived from entitled HVCG_Projects on this ClientCode. HVCG_Clients has no owner field
+                on this payload.
+              </Caption1>
+            </>
+          ) : (
+            <Caption1>No project owner on entitled HVCG_Projects for this client.</Caption1>
+          )}
+        </RecordRow>
 
-      {tab === 'meetings' ? (
-        meetings.length === 0 ? (
-          <EmptyState
-            title="No meetings linked for this client."
-            description="Calendar items appear after Microsoft sync associates them to this client."
-          />
-        ) : (
-          meetings.map((m, i) => (
-            <Caption1 key={m.id || `${m.title}-${i}`} style={{ display: 'block', padding: '4px 0' }}>
-              {m.title}
-              {m.at ? ` · ${m.at}` : ''}
+        <RecordRow label="Blocker">
+          {blockers.length === 0 ? (
+            <Caption1>
+              No blocked or overdue Hub tasks on this client.{' '}
+              {workspace.decisionsRisks
+                ? `Decisions / risks: ${sectionHonesty(workspace.decisionsRisks)}`
+                : ''}
             </Caption1>
-          ))
-        )
-      ) : null}
+          ) : (
+            <div>
+              {blockers.map((t) => {
+                const path = taskWorkPath(t);
+                const chip = taskStatusLabel(t);
+                return (
+                  <div key={t.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                    <StatusChip label={chip.label} tone={chip.tone} />
+                    <Link to={path}>{t.title}</Link>
+                    {t.blocker ? <Caption1>{t.blocker}</Caption1> : null}
+                  </div>
+                );
+              })}
+              {workspace.decisionsRisks ? (
+                <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                  Decisions / risks: {sectionHonesty(workspace.decisionsRisks)}
+                </Caption1>
+              ) : null}
+            </div>
+          )}
+        </RecordRow>
 
-      {tab === 'financials' ? (
-        <div style={{ display: 'grid', gap: 16 }}>
-          <Client360FinanceSection clientHint={client?.legalName || client?.displayName || clientId} />
-          <AtlasCard title="Live balances">
-            <EmptyState
-              title="No verified live financial figures for this client"
-              description="PENDING_LIVE_SOURCE for QBO/Plaid. Atlas does not fabricate charts or balances. CFO cadence lives in Finance workbench (/financials)."
-            />
-          </AtlasCard>
+        <RecordRow label="Related work">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {projects.length === 0 && tasks.length === 0 ? (
+              <Caption1>No entitled projects or open tasks on this ClientCode.</Caption1>
+            ) : (
+              <>
+                {projects.slice(0, 6).map((p) => {
+                  const path = projectDetailPath(p.id);
+                  return path ? (
+                    <Link key={p.id} to={path}>
+                      {p.name}
+                    </Link>
+                  ) : (
+                    <Caption1 key={p.id}>{p.name}</Caption1>
+                  );
+                })}
+                {projects.length > 6 ? <Caption1>+{projects.length - 6} more</Caption1> : null}
+              </>
+            )}
+          </div>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Documents: {sectionHonesty(workspace.documents)} · Deliverables:{' '}
+            {sectionHonesty(workspace.deliverables)} · Meetings: {sectionHonesty(workspace.meetings)} ·
+            Communications: {sectionHonesty(workspace.communications)}
+          </Caption1>
+          {capitalLinked ? (
+            <Caption1 style={{ display: 'block' }}>
+              Capital engagement is already on this payload — open the Capital desk, not GCC.
+            </Caption1>
+          ) : null}
+        </RecordRow>
+
+        <RecordRow label="What requires me">
+          {requiresMe.tasks.length === 0 && requiresMe.projects.length === 0 ? (
+            <Caption1>Nothing on this Hub workspace currently requires you.</Caption1>
+          ) : (
+            <div>
+              {requiresMe.tasks.map((t) => {
+                const chip = taskStatusLabel(t);
+                const ownerChip = needsOwnerTask(t)
+                  ? atlasStatusDisplay(t.status) || { label: ATLAS_STATUS.decisionRequired, tone: 'warning' as const }
+                  : chip;
+                return (
+                  <div key={t.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                    <StatusChip label={ownerChip.label} tone={ownerChip.tone} />
+                    <Link to={taskWorkPath(t)}>{t.title}</Link>
+                  </div>
+                );
+              })}
+              {requiresMe.projects
+                .filter((p) => !requiresMe.tasks.some((t) => t.projectId === p.id))
+                .map((p) => {
+                  const path = projectDetailPath(p.id);
+                  const label = isBootstrapNextAction(p.nextAction)
+                    ? ATLAS_STATUS.needsAction
+                    : atlasStatusDisplay(p.health)?.label || p.health;
+                  return (
+                    <div key={p.id} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '4px 0' }}>
+                      <StatusChip
+                        label={label}
+                        tone={atlasStatusDisplay(label)?.tone || 'warning'}
+                      />
+                      {path ? <Link to={path}>{p.name}</Link> : <Text>{p.name}</Text>}
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </RecordRow>
+      </AtlasCard>
+
+      <AtlasCard title="Related projects" subtitle="Deep-link to the project record">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <Input
+            placeholder="New project name"
+            value={projectName}
+            onChange={(_, d) => setProjectName(d.value)}
+            style={{ flex: 1 }}
+          />
+          <Button
+            appearance="primary"
+            disabled={!projectName.trim() || busy}
+            onClick={() =>
+              void createPmProject(auth, {
+                name: projectName.trim(),
+                ClientCode: clientId,
+                clientCode: clientId,
+                nextAction: 'Define first milestone',
+              }).then(() => {
+                setProjectName('');
+                return refresh();
+              })
+            }
+          >
+            Create project
+          </Button>
         </div>
-      ) : null}
-
-      {tab === 'revenue' ? (
-        <Client360RevenueSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'migration' ? (
-        <Client360MigrationSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'capital' ? (
-        <Client360CapitalSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'procurement' ? (
-        <Client360ProcurementSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'risk' ? (
-        <Client360RiskSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'growth' ? (
-        <Client360GrowthSection clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'ai' ? (
-        <Client360AiAssist clientHint={client?.legalName || client?.displayName || clientId} />
-      ) : null}
-
-      {tab === 'deliverables' ? (
-        deliverables.length === 0 ? (
-          <EmptyState title="No deliverables recorded for this client." description="Deliverables appear from project work and classified Microsoft sources." />
-        ) : (
-          deliverables.map((d) => (
-            <Caption1 key={d.id} style={{ display: 'block', padding: '4px 0' }}>
-              {d.name} ({d.status})
-            </Caption1>
-          ))
-        )
-      ) : null}
-
-      {tab === 'approvals' ? (
-        approvals.length === 0 ? (
-          <EmptyState title="No pending approvals for this client." description="Owner approval tasks will appear here when flagged." />
-        ) : (
-          approvals.map((t) => (
-            <Caption1 key={t.id} style={{ display: 'block', padding: '4px 0' }}>
-              {t.title}
-            </Caption1>
-          ))
-        )
-      ) : null}
-
-      {tab === 'notes' ? (
-        <AtlasCard title="Notes">
-          <Field label="Record a note">
-            <Input value={noteBody} onChange={(_, d) => setNoteBody(d.value)} />
-          </Field>
-          <Button
-            style={{ marginTop: 8 }}
-            disabled={!noteBody.trim()}
-            onClick={() =>
-              void createPmNote(auth, {
-                body: noteBody,
-                clientId,
-                clientName: title,
-                projectId: projects[0]?.id,
-              }).then(() => {
-                setNoteBody('');
-                return refresh();
-              })
-            }
-          >
-            Save note
-          </Button>
-          {notes.length === 0 ? (
-            <Caption1 style={{ display: 'block', marginTop: 12 }}>No notes yet.</Caption1>
-          ) : (
-            notes.map((n) => (
-              <Caption1 key={n.id} style={{ display: 'block', marginTop: 8 }}>
-                {n.body}
-              </Caption1>
-            ))
-          )}
-        </AtlasCard>
-      ) : null}
-
-      {tab === 'decisions' ? (
-        <AtlasCard title="Decisions">
-          <Field label="Record a decision">
-            <Input value={decisionTitle} onChange={(_, d) => setDecisionTitle(d.value)} />
-          </Field>
-          <Button
-            style={{ marginTop: 8 }}
-            disabled={!decisionTitle.trim()}
-            onClick={() =>
-              void createPmDecision(auth, {
-                title: decisionTitle,
-                decision: decisionTitle,
-                clientId,
-                clientName: title,
-                projectId: projects[0]?.id,
-              }).then(() => {
-                setDecisionTitle('');
-                return refresh();
-              })
-            }
-          >
-            Save decision
-          </Button>
-          {decisions.length === 0 ? (
-            <Caption1 style={{ display: 'block', marginTop: 12 }}>No decisions recorded.</Caption1>
-          ) : (
-            decisions.map((d) => (
-              <Caption1 key={d.id} style={{ display: 'block', marginTop: 8 }}>
-                {d.title} ({d.status})
-              </Caption1>
-            ))
-          )}
-        </AtlasCard>
-      ) : null}
-
-      {tab === 'activity' ? (
-        hvsTimeline.length === 0 ? (
+        {projects.length === 0 ? (
           <EmptyState
-            title="No activity timeline yet"
-            description="Timeline events appear after Microsoft sources are associated to this client."
+            title="No projects for this client"
+            description="Queried HVCG_Projects returned no entitled rows. Create a project to track next actions."
           />
         ) : (
-          <AtlasCard title="Activity">
-            {hvsTimeline.slice(0, 40).map((t) => (
-              <Caption1 key={`${t.sourceRecordId}-${t.at}`} style={{ display: 'block', padding: '4px 0' }}>
-                {t.at?.slice(0, 10)} · {t.kind} · {t.title}
-              </Caption1>
-            ))}
-          </AtlasCard>
-        )
-      ) : null}
+          <DataTable
+            ariaLabel="Client projects"
+            getRowKey={(r: PmProject) => r.id}
+            rows={projects}
+            columns={[
+              {
+                key: 'name',
+                header: 'Project',
+                sticky: 'left',
+                render: (r) => {
+                  const path = projectDetailPath(r.id);
+                  return path ? <Link to={path}>{r.name}</Link> : r.name;
+                },
+              },
+              { key: 'owner', header: 'Owner', render: (r) => r.ownerName || '—' },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (r) => <StatusOrDash raw={r.status} />,
+              },
+              {
+                key: 'health',
+                header: 'Health',
+                render: (r) => {
+                  if (r.health === 'healthy') return <StatusChip label="healthy" tone="success" />;
+                  return <StatusOrDash raw={r.health === 'healthy' ? undefined : r.health} />;
+                },
+              },
+              {
+                key: 'next',
+                header: 'Next action',
+                render: (r) =>
+                  isBootstrapNextAction(r.nextAction) ? ATLAS_STATUS.needsAction : displayNextAction(r.nextAction),
+              },
+            ]}
+          />
+        )}
+      </AtlasCard>
+
+      <AtlasCard title="Related tasks" subtitle="Open tasks deep-link to the owning project">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <Input
+            placeholder="Task title"
+            value={taskTitle}
+            onChange={(_, d) => setTaskTitle(d.value)}
+            style={{ flex: 1 }}
+          />
+          <Button
+            disabled={!taskTitle.trim() || busy}
+            onClick={() =>
+              void createPmTask(auth, {
+                title: taskTitle,
+                clientId,
+                clientName: title,
+                projectId: projects[0]?.id,
+                status: 'ready',
+              }).then(() => {
+                setTaskTitle('');
+                return refresh();
+              })
+            }
+          >
+            Create task
+          </Button>
+        </div>
+        {tasks.length === 0 ? (
+          <EmptyState
+            title="No open tasks for this client"
+            description="Queried HVCG_Tasks returned no entitled open rows."
+          />
+        ) : (
+          <DataTable
+            ariaLabel="Client tasks"
+            getRowKey={(r: PmTask) => r.id}
+            rows={tasks}
+            columns={[
+              {
+                key: 'title',
+                header: 'Task',
+                sticky: 'left',
+                render: (r) => <Link to={taskWorkPath(r)}>{r.title}</Link>,
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (r) => {
+                  const chip = taskStatusLabel(r);
+                  return <StatusChip label={chip.label} tone={chip.tone} />;
+                },
+              },
+              { key: 'owner', header: 'Owner', render: (r) => r.assigneeName || '—' },
+              { key: 'due', header: 'Due', render: (r) => dayStamp(r.dueDate) || '—' },
+              {
+                key: 'project',
+                header: 'Project',
+                render: (r) => {
+                  const path = projectDetailPath(r.projectId);
+                  const name = projects.find((p) => p.id === r.projectId)?.name;
+                  if (path) return <Link to={path}>{name || 'Project'}</Link>;
+                  return <Caption1>{name || '—'}</Caption1>;
+                },
+              },
+            ]}
+          />
+        )}
+      </AtlasCard>
+
+      {workspace.documents.queried && workspace.documents.items.length > 0 ? (
+        <AtlasCard
+          title="Authorized document links"
+          subtitle="Opens original SharePoint / OneDrive file — Atlas does not move or delete source files"
+          variant="quiet"
+        >
+          <DataTable
+            ariaLabel="Client documents"
+            getRowKey={(r) => r.id}
+            rows={workspace.documents.items}
+            columns={[
+              {
+                key: 'title',
+                header: 'File',
+                sticky: 'left',
+                render: (r) =>
+                  r.webUrl ? (
+                    <a href={r.webUrl} target="_blank" rel="noreferrer">
+                      {r.title} <OpenRegular />
+                    </a>
+                  ) : (
+                    r.title
+                  ),
+              },
+              { key: 'kind', header: 'Kind', render: (r) => r.kind || '—' },
+              { key: 'source', header: 'Source', render: (r) => r.source || '—' },
+            ]}
+          />
+        </AtlasCard>
+      ) : (
+        <Caption1>{sectionHonesty(workspace.documents)}</Caption1>
+      )}
+
+      <AtlasCard title="Client 360" subtitle="Deferred — fail-closed">
+        <Text>
+          Client 360 mapping to HVCG_Clients.ClientCode is not trusted. Revenue, finance, migration,
+          capital package, procurement, risk, and growth Client 360 sections are not rendered from
+          invented snapshots. GCC financial dashboards stay on GCC — they are not pulled into this
+          operator record.
+        </Text>
+        <Caption1 style={{ display: 'block', marginTop: 8 }}>
+          Operating truth for this client is the Hub workspace above (identity, owners from projects,
+          tasks, next actions). Capital opportunities live on the Capital desk when a capital
+          engagement is already on the payload.
+        </Caption1>
+      </AtlasCard>
     </ModuleScaffold>
   );
 }

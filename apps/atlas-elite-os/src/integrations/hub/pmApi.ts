@@ -284,7 +284,10 @@ export async function fetchWeeklyReview(auth: AtlasHubAuthHeaders) {
 }
 
 export async function fetchClientPmWorkspace(auth: AtlasHubAuthHeaders, clientId: string) {
-  return hubFetchJson(auth, `/api/pm/clients/${encodeURIComponent(clientId)}/workspace`);
+  return hubFetchJson<{ workspace: ClientPmWorkspace }>(
+    auth,
+    `/api/pm/clients/${encodeURIComponent(clientId)}/workspace`,
+  );
 }
 
 export interface PmTask {
@@ -312,6 +315,74 @@ export interface PmClient {
   clientCode: string;
   displayName: string;
   itemId?: string;
+  source: string;
+  industry?: string;
+  clientStage?: string;
+  engagementType?: string;
+  overallHealth?: string;
+  dba?: string;
+  website?: string;
+  sourceOrg?: string;
+  lastMeaningfulContact?: string;
+  sharePointLibraryUrl?: string;
+}
+
+export type WorkspaceCompletenessStatus =
+  | 'COMPLETE'
+  | 'PARTIAL_SOURCE_DATA_NOT_FOUND'
+  | 'BLOCKED_AMBIGUOUS_IDENTITY';
+
+export interface WorkspaceCompletenessCell {
+  status: WorkspaceCompletenessStatus;
+  queried: boolean;
+  count: number;
+  reason?: string;
+}
+
+export interface WorkspaceSection<T = Record<string, unknown>> {
+  status: WorkspaceCompletenessStatus;
+  queried: boolean;
+  items: T[];
+  reason?: string;
+}
+
+export interface ClientPmWorkspace {
+  kind: 'client_workspace_v1';
+  client: PmClient;
+  completeness: Record<string, WorkspaceCompletenessCell>;
+  overview: {
+    clientCode: string;
+    displayName: string;
+    industry?: string;
+    clientStage?: string;
+    engagementType?: string;
+    overallHealth?: string;
+    dba?: string;
+    website?: string;
+    sourceOrg?: string;
+    lastMeaningfulContact?: string;
+    sharePointLibraryUrl?: string;
+  };
+  projects: PmProject[];
+  tasks: PmTask[];
+  documents: WorkspaceSection<{
+    id: string;
+    title: string;
+    webUrl?: string;
+    kind: string;
+    source: string;
+  }>;
+  communications: WorkspaceSection;
+  meetings: WorkspaceSection;
+  engagements: WorkspaceSection;
+  deliverables: WorkspaceSection;
+  decisionsRisks: WorkspaceSection;
+  contacts: WorkspaceSection;
+  timeline: Array<{ at: string; kind: string; title: string; source: string; id: string }>;
+  nextActions: Array<{
+    text: string;
+    evidence: Array<{ source: string; kind: string; id: string; field?: string }>;
+  }>;
   source: string;
 }
 
@@ -443,4 +514,22 @@ export interface MyWork {
   delegatedToAgents: PmTask[];
   delegatedToTeam: PmTask[];
   requiringApproval: PmTask[];
+}
+
+export interface PmSearchHit {
+  kind: string;
+  id: string;
+  clientCode?: string;
+  title: string;
+  href: string;
+  source: string;
+}
+
+export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
+  const q = query.trim().slice(0, 120);
+  if (q.length < 2) return { query: q, results: [] as PmSearchHit[], scope: 'entitled' as const };
+  return hubFetchJson<{ query: string; results: PmSearchHit[]; scope: 'entitled' | 'manny_tenant' }>(
+    auth,
+    `/api/pm/search?q=${encodeURIComponent(q)}`,
+  );
 }

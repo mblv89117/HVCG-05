@@ -1,4 +1,4 @@
-import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import {
   AccessDeniedState,
   ErrorState,
@@ -7,27 +7,61 @@ import {
   PageLayout,
   AtlasCard,
 } from '@hvcg/atlas-design-system';
-import { Button } from '@fluentui/react-components';
+import { Button, MessageBar, MessageBarBody } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
+import type { Capability } from '../security/rbac';
+
+/** Same-origin path only. Query `from` must not bounce operators onto a foreign URL. */
+function safeReturnTo(raw: string | null | undefined): string {
+  if (!raw) return '/';
+  const path = raw.split('#')[0];
+  if (!path.startsWith('/') || path.startsWith('//')) return '/';
+  return path;
+}
+
+function capabilityForPath(pathname: string): Capability | null {
+  const path = (pathname.split('?')[0] || '/').replace(/\/+$/, '') || '/';
+  if (path === '/admin' || path === '/connections' || path.startsWith('/connections/')) return 'viewAdmin';
+  if (
+    path === '/capital' ||
+    path.startsWith('/capital/') ||
+    path === '/financials' ||
+    path === '/revenue' ||
+    path === '/enterprise-value' ||
+    path === '/banking' ||
+    path === '/accounting'
+  ) {
+    return 'viewFinance';
+  }
+  if (path.startsWith('/clients/') && path !== '/clients/intake') return 'viewClientDetail';
+  if (path === '/clients' || path === '/clients/intake') return 'viewClients';
+  if (path === '/') return 'viewExecutiveHome';
+  return null;
+}
+
+function canOpenReturnTo(returnTo: string, can: (capability: Capability) => boolean): boolean {
+  const needed = capabilityForPath(returnTo);
+  if (!needed) return true;
+  return can(needed);
+}
 
 export function AccessDeniedPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { role, can } = useAtlasRole();
-  const { activateDevOwner, devOwnerLoginAllowed, configured, signIn } = useMicrosoftAuth();
+  const { configured, signIn, error } = useMicrosoftAuth();
 
-  const returnTo =
+  const returnTo = safeReturnTo(
     (location.state as { from?: string } | null)?.from ||
-    (typeof location.search === 'string' && new URLSearchParams(location.search).get('from')) ||
-    '/';
+      (typeof location.search === 'string' && new URLSearchParams(location.search).get('from')) ||
+      '/',
+  );
 
-  // If authorization was just established (e.g. Local Owner), leave the denial page.
+  // Bounce only when the destination is now allowed (e.g. Local Owner just activated).
+  // Do not send a signed-in role back to /admin or /capital when they still lack the capability —
+  // that loop would either spin or flash operational chrome.
   if (role !== 'Unauthenticated' && role !== 'Unresolved') {
-    if (can('viewAdmin') && (returnTo === '/connections' || returnTo.startsWith('/connections'))) {
-      return <Navigate to="/connections" replace />;
-    }
-    if (can('viewExecutiveHome')) {
+    if (canOpenReturnTo(returnTo, can)) {
       return <Navigate to={returnTo === '/access-denied' ? '/' : returnTo} replace />;
     }
   }
@@ -42,17 +76,23 @@ export function AccessDeniedPage() {
       : 'Insufficient Atlas permissions';
 
   const description = unauthenticated
-    ? devOwnerLoginAllowed
-      ? 'Microsoft Entra is not required for controlled Development UAT. Use Local Owner (Dev) to continue, or sign in with Microsoft if Entra is configured. Local Owner is disabled in Production/Staging.'
-      : 'You must sign in with Microsoft before Atlas will show clients, portfolios, or other private data. Local Owner (Dev) is disabled in this environment (Production/Staging or not enabled). Sign in with your HVCG Entra account to continue.'
+    ? 'Sign in with Microsoft so Atlas can acquire a Hub access token. Local Owner only paints chrome — it does not authorize Hub, and it is not a certification session.'
     : unresolved
       ? 'You are signed in, but your Entra token has no recognizable Atlas app role (HVCG Owner, HVCG Team Member, Client Executive, Client Team Member, Read-Only Advisor, or Administrator). There is no default Owner access.'
       : 'Your current Atlas role does not include this module. Contact an HVCG Owner to adjust Entra app role assignments.';
 
   return (
-    <PageLayout title="Access denied" subtitle="Role matrix enforcement">
+    <PageLayout
+      title={title}
+      subtitle={unauthenticated ? 'Sign in to operate Atlas' : 'This role cannot open this module'}
+    >
+      {error ? (
+        <MessageBar intent="error" style={{ marginBottom: 12 }}>
+          <MessageBarBody>{error}</MessageBarBody>
+        </MessageBar>
+      ) : null}
       <AccessDeniedState
-        title={title}
+        title={unauthenticated ? 'Choose a session' : title}
         description={description}
         actions={
           <>
@@ -61,21 +101,28 @@ export function AccessDeniedPage() {
                 Sign in with Microsoft
               </Button>
             ) : null}
-            {unauthenticated && devOwnerLoginAllowed ? (
-              <Button
-                appearance="secondary"
-                onClick={() => {
-                  activateDevOwner();
-                  navigate(returnTo === '/access-denied' ? '/connections' : returnTo, { replace: true });
-                }}
-              >
-                Continue as Local Owner (Dev)
-              </Button>
-            ) : null}
+            {unauthenticated ? null : (
             <Link to="/">
               <Button appearance="secondary">Return home</Button>
             </Link>
+            )}
           </>
+        }
+      />
+    </PageLayout>
+  );
+}
+
+export function NotFoundPage() {
+  return (
+    <PageLayout title="Page not found" subtitle="This route is not part of Atlas">
+      <ErrorState
+        title="Page not found"
+        description="This address is not a live Atlas module. Return to Command Center, or sign in if you followed a private link."
+        actions={
+          <Link to="/">
+            <Button appearance="primary">Command Center</Button>
+          </Link>
         }
       />
     </PageLayout>

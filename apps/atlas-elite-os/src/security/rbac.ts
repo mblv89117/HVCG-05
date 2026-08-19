@@ -141,9 +141,10 @@ export function resolveAtlasRole(input: {
     return input.devOwnerRole;
   }
 
-  const allowSim = import.meta.env.VITE_ALLOW_ROLE_SIM === 'true' && nonProd;
+  const viteEnv = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env;
+  const allowSim = viteEnv?.VITE_ALLOW_ROLE_SIM === 'true' && nonProd;
   if (allowSim) {
-    const sim = normalizeRole(String(import.meta.env.VITE_ATLAS_ROLE_SIM || ''));
+    const sim = normalizeRole(String(viteEnv?.VITE_ATLAS_ROLE_SIM || ''));
     if (sim && sim !== 'Unauthenticated' && sim !== 'Unresolved') return sim;
   }
 

@@ -21,6 +21,14 @@ export const Default: Story = {
   },
 };
 
+export const Quiet: Story = {
+  args: {
+    ...Default.args,
+    variant: 'quiet',
+    title: 'Quiet card',
+  },
+};
+
 export const Glass: Story = {
   args: {
     ...Default.args,

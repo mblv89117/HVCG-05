@@ -1,7 +1,93 @@
 import type { ReactNode } from 'react';
 import { PageLayout, AtlasCard, EmptyState, SectionRail } from '@hvcg/atlas-design-system';
-import { MessageBar, MessageBarBody, MessageBarTitle, Text, Caption1 } from '@fluentui/react-components';
+import {
+  makeStyles,
+  mergeClasses,
+  MessageBar,
+  MessageBarBody,
+  MessageBarTitle,
+  Text,
+  Caption1,
+} from '@fluentui/react-components';
 import type { DataAvailability } from '../../data/workspaces';
+
+/**
+ * Responsive contract (conceptual — desktop primary; no brand restyle).
+ *
+ * Viewport / content (NavShell 272px rail from 960px):
+ * - ~640 phone: PageLayout already stacks title then actions.
+ * - ~960 tablet: rail on; main ~688px. Header must wrap — never hide controls.
+ * - ~1280 desktop: main ~1008px. Title + required actions stay on one row when they fit.
+ * - ~1440 desktop+: main ~1168px. Same row; FieldGrid can hold four 220px tiles.
+ *
+ * NavShell overlap (not edited — Accessibility owns NavShell.tsx this pass):
+ * Mobile nav overlay uses `inset: '56px 0 0 0'` (CommandBar minHeight 56px). CommandBar
+ * `flexWrap`s; below ~640 the search row wraps and the bar grows past 56px, so the overlay
+ * covers the wrapped command-bar controls. Fix later: bind overlay top to the actual bar
+ * height (grid row / sticky header), not a hardcoded 56px.
+ */
+
+const useScaffold = makeStyles({
+  chrome: {
+    minWidth: 0,
+    width: '100%',
+    // PageLayout header is a <header> without flex-wrap; wrap so actions never clip.
+    '& header': {
+      flexWrap: 'wrap',
+      minWidth: 0,
+      width: '100%',
+    },
+    '& header > div:first-child': {
+      minWidth: 0,
+      flex: '1 1 220px',
+    },
+  },
+  actions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '8px',
+    minWidth: 0,
+    maxWidth: '100%',
+    flex: '1 1 240px',
+    overflow: 'visible',
+  },
+  body: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+    minWidth: 0,
+    width: '100%',
+  },
+  fields: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))',
+    gap: '14px',
+    minWidth: 0,
+    width: '100%',
+  },
+  section: {
+    minWidth: 0,
+    width: '100%',
+    '& > section > div:first-child': {
+      flexWrap: 'wrap',
+      alignItems: 'flex-start',
+      minWidth: 0,
+    },
+  },
+  sectionActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '8px',
+    minWidth: 0,
+    maxWidth: '100%',
+    flex: '1 1 160px',
+    overflow: 'visible',
+  },
+});
 
 export function PendingBanner({
   title = 'Verified financial data not yet connected',
@@ -31,7 +117,7 @@ export function ModuleScaffold({
   children,
   emptyTitle,
   emptyDescription,
-  showPendingBanner = true,
+  showPendingBanner = false,
 }: {
   title: string;
   subtitle: string;
@@ -41,18 +127,23 @@ export function ModuleScaffold({
   emptyDescription?: string;
   showPendingBanner?: boolean;
 }) {
+  const s = useScaffold();
   return (
-    <PageLayout title={title} subtitle={subtitle} actions={actions}>
-      {showPendingBanner ? <PendingBanner /> : null}
-      <div className="atlas-stagger" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {children}
-      </div>
-      {emptyTitle ? (
-        <AtlasCard variant="quiet">
-          <EmptyState title={emptyTitle} description={emptyDescription} />
-        </AtlasCard>
-      ) : null}
-    </PageLayout>
+    <div className={s.chrome}>
+      <PageLayout
+        title={title}
+        subtitle={subtitle}
+        actions={actions ? <div className={s.actions}>{actions}</div> : undefined}
+      >
+        {showPendingBanner ? <PendingBanner /> : null}
+        <div className={mergeClasses('atlas-stagger', s.body)}>{children}</div>
+        {emptyTitle ? (
+          <AtlasCard variant="quiet">
+            <EmptyState title={emptyTitle} description={emptyDescription} />
+          </AtlasCard>
+        ) : null}
+      </PageLayout>
+    </div>
   );
 }
 
@@ -61,16 +152,11 @@ export function FieldGrid({
 }: {
   fields: Array<{ label: string; value: string; availability?: DataAvailability }>;
 }) {
+  const s = useScaffold();
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-        gap: 14,
-      }}
-    >
+    <div className={s.fields}>
       {fields.map((f) => (
-        <AtlasCard key={f.label} variant="glass">
+        <AtlasCard key={f.label} variant="quiet">
           <Caption1
             style={{
               textTransform: 'uppercase',
@@ -102,9 +188,16 @@ export function ModuleSection({
   children: ReactNode;
   actions?: ReactNode;
 }) {
+  const s = useScaffold();
   return (
-    <SectionRail title={title} subtitle={subtitle} actions={actions}>
-      {children}
-    </SectionRail>
+    <div className={s.section}>
+      <SectionRail
+        title={title}
+        subtitle={subtitle}
+        actions={actions ? <div className={s.sectionActions}>{actions}</div> : undefined}
+      >
+        {children}
+      </SectionRail>
+    </div>
   );
 }

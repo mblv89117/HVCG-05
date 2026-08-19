@@ -12,10 +12,11 @@
     "preview": "vite preview --host 127.0.0.1 --port 4180",
     "test:routes": "node ./scripts/project-route-tests.mjs && node ./scripts/capital-route-tests.mjs",
     "test:capital-access": "npx tsx --test src/pages/capital/capitalAccess.test.ts",
+    "test:security": "npx tsx --test src/security/*.test.ts src/pages/capital/capitalAccess.test.ts",
     "test:hub-auth": "node ./scripts/hub-access-token-tests.mjs",
     "test:hard-refresh": "node ./scripts/hard-refresh-shell-test.mjs",
     "test:auth-transitions": "node ./scripts/auth-transition-tests.mjs",
-    "test:all": "npm run test:hub-auth && npm run test:routes && npm run test:capital-access && npm run test:recovery && npm run test:hard-refresh && npm run test:auth-transitions && npm run test:hook-order && npm run test:operating-data && npm run test:evidence",
+    "test:all": "npm run test:hub-auth && npm run test:routes && npm run test:security && npm run test:recovery && npm run test:hard-refresh && npm run test:auth-transitions && npm run test:hook-order && npm run test:operating-data && npm run test:evidence",
     "test:hook-order": "node ./scripts/hook-order-render-tests.mjs",
     "test:operating-data": "node ./scripts/operating-data-quality-tests.mjs",
     "test:evidence": "node ./scripts/evidence-provenance-tests.mjs"

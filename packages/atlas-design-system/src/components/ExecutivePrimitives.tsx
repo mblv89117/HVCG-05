@@ -1,39 +1,40 @@
 import { makeStyles, mergeClasses, tokens, Text, Caption1, Button } from '@fluentui/react-components';
 import { StarRegular, StarFilled, SparkleRegular, ChevronRightRegular } from '@fluentui/react-icons';
 import type { ReactNode } from 'react';
-import { AtlasCard } from './AtlasCard';
+import { AtlasCard, type CardVariant } from './AtlasCard';
 import { StatusChip, type StatusTone } from './StatusChip';
 import { SparkBars } from './DashboardWidget';
+import { color } from '../tokens';
 
 const useKpi = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
-    minHeight: '120px',
+    gap: '6px',
+    minHeight: '96px',
   },
   label: {
     color: tokens.colorNeutralForeground2,
-    letterSpacing: '0.02em',
+    letterSpacing: '0.04em',
     textTransform: 'uppercase',
     fontSize: tokens.fontSizeBase100,
     fontWeight: tokens.fontWeightSemibold,
   },
   value: {
-    fontSize: tokens.fontSizeHero800,
+    fontSize: tokens.fontSizeHero700,
     fontWeight: tokens.fontWeightSemibold,
     letterSpacing: '-0.03em',
-    lineHeight: tokens.lineHeightHero800,
+    lineHeight: tokens.lineHeightHero700,
     color: tokens.colorNeutralForeground1,
   },
   meta: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px',
+    gap: '6px',
     alignItems: 'center',
   },
-  up: { color: '#059669' },
-  down: { color: '#DC2626' },
+  up: { color: color.emerald },
+  down: { color: color.danger },
   flat: { color: tokens.colorNeutralForeground2 },
 });
 
@@ -47,6 +48,7 @@ export interface KpiTileProps {
   sparkValues?: number[];
   footer?: ReactNode;
   onClick?: () => void;
+  variant?: CardVariant;
 }
 
 export function KpiTile({
@@ -59,19 +61,20 @@ export function KpiTile({
   sparkValues,
   footer,
   onClick,
+  variant = 'quiet',
 }: KpiTileProps) {
   const s = useKpi();
   return (
-    <AtlasCard variant="glass" interactive={Boolean(onClick)} onClick={onClick} aria-label={label}>
+    <AtlasCard variant={variant} density="compact" interactive={Boolean(onClick)} onClick={onClick} aria-label={label}>
       <div className={s.root}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
           <Caption1 className={s.label}>{label}</Caption1>
-          {tone ? <StatusChip label={tone} tone={tone} /> : null}
+          {tone ? <StatusChip label={tone} tone={tone} size="sm" /> : null}
         </div>
         <Text className={s.value}>
           {value}
           {unit ? (
-            <Text size={300} weight="regular" style={{ marginLeft: 6 }}>
+            <Text size={200} weight="regular" style={{ marginLeft: 6 }}>
               {unit}
             </Text>
           ) : null}
@@ -94,22 +97,22 @@ const useInsight = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '6px',
   },
   head: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: '6px',
   },
   icon: {
-    color: '#2563EB',
+    color: color.azure,
     display: 'flex',
   },
   actions: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '8px',
-    marginTop: '4px',
+    marginTop: '2px',
   },
 });
 
@@ -123,13 +126,13 @@ export interface InsightCardProps {
 export function InsightCard({ title, body, actions, className }: InsightCardProps) {
   const s = useInsight();
   return (
-    <AtlasCard variant="ai" className={className} title={undefined}>
+    <AtlasCard variant="ai" density="compact" className={className} title={undefined}>
       <div className={s.root}>
         <div className={s.head}>
           <span className={s.icon} aria-hidden>
-            <SparkleRegular fontSize={18} />
+            <SparkleRegular fontSize={14} />
           </span>
-          <Text weight="semibold" size={400}>
+          <Text weight="semibold" size={300}>
             {title}
           </Text>
         </div>
@@ -144,7 +147,7 @@ const useRail = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '8px',
   },
   head: {
     display: 'flex',
@@ -170,7 +173,7 @@ export function SectionRail({
     <section className={mergeClasses(s.root, 'atlas-fade-in')} aria-label={title}>
       <div className={s.head}>
         <div>
-          <Text as="h2" size={500} weight="semibold">
+          <Text as="h2" size={400} weight="semibold">
             {title}
           </Text>
           {subtitle ? <Caption1>{subtitle}</Caption1> : null}
@@ -193,7 +196,7 @@ const useList = makeStyles({
   list: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '2px',
+    gap: '1px',
     listStyle: 'none',
     margin: 0,
     padding: 0,
@@ -201,8 +204,9 @@ const useList = makeStyles({
   item: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    padding: '8px 10px',
+    gap: '8px',
+    padding: '10px 8px',
+    minHeight: '44px',
     borderRadius: tokens.borderRadiusMedium,
     border: 'none',
     background: 'transparent',
@@ -226,7 +230,7 @@ const useList = makeStyles({
     gap: '1px',
   },
   empty: {
-    padding: '8px 10px',
+    padding: '6px 8px',
     color: tokens.colorNeutralForeground2,
   },
 });
@@ -254,10 +258,14 @@ export function RecentList({
         <li key={item.id}>
           <button type="button" className={s.item} onClick={() => onSelect?.(item)}>
             <div className={s.text}>
-              <Text size={300} weight="semibold">
+              <Text block size={300} weight="semibold">
                 {item.label}
               </Text>
-              {item.subtitle ? <Caption1>{item.subtitle}</Caption1> : null}
+              {item.subtitle ? (
+                <Caption1 as="p" block>
+                  {item.subtitle}
+                </Caption1>
+              ) : null}
             </div>
             <ChevronRightRegular fontSize={14} aria-hidden />
           </button>
@@ -284,7 +292,7 @@ export function FavoritePin({
       aria-label={label}
       aria-pressed={active}
       onClick={onToggle}
-      style={active ? { color: '#C9A227' } : undefined}
+      style={active ? { color: color.gold } : undefined}
     />
   );
 }
