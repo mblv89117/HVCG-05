@@ -423,6 +423,38 @@ export async function handleSharePointPmRoutes(opts: {
       return true;
     }
 
+    const leadConvert = path.match(/^\/api\/pm\/leads\/([^/]+)\/convert$/);
+    if (method === 'POST' && leadConvert) {
+      const converted = await service.convertLead(
+        principal,
+        decodeURIComponent(leadConvert[1]),
+        readEtag(req, body),
+      );
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: 'pm_lead_convert',
+        outcome: 'success',
+        detail: `list=HVCG_Leads item=${converted.lead.id} company=${converted.company.clientCode} opportunity=${converted.opportunity.id} replay=${converted.replay}`,
+      });
+      send(res, 200, converted, origin);
+      return true;
+    }
+
+    const opportunityOne = path.match(/^\/api\/pm\/opportunities\/([^/]+)$/);
+    if (method === 'GET' && opportunityOne) {
+      const opportunity = await service.authorizeOpportunity(
+        principal,
+        decodeURIComponent(opportunityOne[1]),
+      );
+      if (opportunity === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      send(res, 200, { opportunity, source: 'sharepoint' }, origin);
+      return true;
+    }
+
     if (method === 'POST' && path === '/api/pm/fabric/sync') {
       const tokenProvider =
         opts.cfg.pmTokenProvider ||

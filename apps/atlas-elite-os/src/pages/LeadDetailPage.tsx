@@ -1,8 +1,9 @@
 /**
- * HVCG_Leads record — Hub is authoritative. Conversion is not performed here.
+ * HVCG_Leads record — Hub is authoritative.
+ * Convert is POST /api/pm/leads/:id/convert (not a LeadStatus PATCH).
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   AccessDeniedState,
   AtlasCard,
@@ -23,7 +24,7 @@ import {
 } from '@fluentui/react-components';
 import { ArrowSyncRegular } from '@fluentui/react-icons';
 import { ModuleScaffold } from './shared/ModuleScaffold';
-import { fetchPmLead, HubHttpError, patchPmLead, type PmLead } from '../integrations/hub/pmApi';
+import { convertPmLead, fetchPmLead, HubHttpError, patchPmLead, type PmLead } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { ATLAS_STATUS, atlasStatusDisplay } from '../ui/statusLanguage';
 
@@ -46,10 +47,13 @@ function dayStamp(iso?: string): string {
 
 export function LeadDetailPage() {
   const { leadId = '' } = useParams();
+  const navigate = useNavigate();
   const auth = useHubAuth();
   const [lead, setLead] = useState<PmLead | null>(null);
   const [busy, setBusy] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const [confirmConvert, setConfirmConvert] = useState(false);
   const [failure, setFailure] = useState<{ kind: 'auth' | 'forbidden' | 'error'; message: string } | null>(
     null,
   );
@@ -103,6 +107,22 @@ export function LeadDetailPage() {
       setActionError(classify(err).message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const convert = async () => {
+    if (!lead) return;
+    setConverting(true);
+    setActionError(null);
+    try {
+      const data = await convertPmLead(auth, lead.id, lead.etag);
+      setLead(data.lead);
+      navigate(data.href);
+    } catch (err) {
+      setActionError(classify(err).message);
+      setConfirmConvert(false);
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -206,7 +226,18 @@ export function LeadDetailPage() {
       {terminal ? (
         <EmptyState
           title={lead.status === 'Converted' ? 'Converted' : 'Disqualified'}
-          description="Terminal leads are read-only here. Conversion to HVCG_Clients is a separate workflow."
+          description={
+            lead.status === 'Converted'
+              ? 'This inbound lead is now a Company, Contact, and Discovery Opportunity.'
+              : 'Disqualified leads are read-only and cannot be converted.'
+          }
+          actions={
+            lead.status === 'Converted' && lead.convertedOpportunityId ? (
+              <Link to={`/opportunities/${encodeURIComponent(lead.convertedOpportunityId)}`}>
+                <Button appearance="primary">Open opportunity</Button>
+              </Link>
+            ) : undefined
+          }
         />
       ) : (
         <AtlasCard title="Update follow-up">
@@ -235,9 +266,33 @@ export function LeadDetailPage() {
                 aria-label="Next follow-up date"
               />
             </label>
-            <Button appearance="primary" onClick={() => void save()} disabled={saving}>
+            <Button appearance="primary" onClick={() => void save()} disabled={saving || converting}>
               {saving ? <Spinner size="tiny" /> : 'Save'}
             </Button>
+            {confirmConvert ? (
+              <div style={{ display: 'grid', gap: 8 }}>
+                <Caption1>
+                  Convert creates or reuses Company (HVCG_Clients), Contact, and a Discovery Opportunity. This
+                  does not send email or Teams messages.
+                </Caption1>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Button appearance="primary" onClick={() => void convert()} disabled={converting}>
+                    {converting ? <Spinner size="tiny" /> : 'Confirm convert'}
+                  </Button>
+                  <Button
+                    appearance="secondary"
+                    onClick={() => setConfirmConvert(false)}
+                    disabled={converting}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button appearance="secondary" onClick={() => setConfirmConvert(true)} disabled={saving || converting}>
+                Convert to opportunity
+              </Button>
+            )}
           </div>
         </AtlasCard>
       )}

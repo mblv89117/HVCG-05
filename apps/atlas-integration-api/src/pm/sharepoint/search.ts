@@ -136,10 +136,9 @@ function canSeeLead(principal: AtlasPrincipal, entitled: Set<string>, clientCode
   return entitled.has(code);
 }
 
-function opportunityHref(clientCode?: string): string {
-  const code = (clientCode || '').trim();
-  if (code && isCanonicalClientCode(code)) return clientHref(code);
-  return '/capital';
+function opportunityHref(id: string): string {
+  const item = (id || '').trim();
+  return item ? `/opportunities/${encodeURIComponent(item)}` : '/leads';
 }
 
 function capitalOpportunityHref(row: CapitalOpportunityRow): string {
@@ -286,7 +285,7 @@ export async function searchSharePointPm(
       id: o.id,
       clientCode: o.clientCode,
       title: o.title,
-      href: opportunityHref(o.clientCode),
+      href: opportunityHref(o.id),
       source: 'HVCG_Opportunities',
     });
   }

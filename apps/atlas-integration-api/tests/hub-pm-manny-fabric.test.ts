@@ -295,6 +295,6 @@ describe('Search extracts drive items and includes Atlas records', () => {
     assert.equal(mannyHits.scope, 'manny_tenant');
     assert.ok(mannyHits.results.some((r) => r.kind === 'opportunity' && r.clientCode === 'PDG01'));
     assert.ok(mannyHits.results.some((r) => r.kind === 'lender' && r.href === '/capital'));
-    assert.ok(mannyHits.results.some((r) => r.id === 'opp-open' && r.href === '/capital'));
+    assert.ok(mannyHits.results.some((r) => r.id === 'opp-open' && r.href === '/opportunities/opp-open'));
   });
 });

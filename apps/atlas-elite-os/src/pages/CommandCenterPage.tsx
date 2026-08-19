@@ -191,6 +191,7 @@ function namedRecordHref(href: string | undefined): string | null {
   if (path.startsWith('/projects/') && path !== '/projects') return href;
   if (path.startsWith('/clients/') && path !== '/clients') return href;
   if (path.startsWith('/leads/') && path !== '/leads') return href;
+  if (path.startsWith('/opportunities/') && path !== '/opportunities') return href;
   return null;
 }
 

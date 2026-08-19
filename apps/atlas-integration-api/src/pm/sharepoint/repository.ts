@@ -34,6 +34,15 @@ import {
   type MilestoneHubStatus,
 } from './mapping.ts';
 import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
+import {
+  CONVERTIBLE_LEAD_STATUSES,
+  clientFromLeadIdempotencyKey,
+  normalizeCompanyTitle,
+  opportunityHref,
+  opportunityIdempotencyKey,
+  opportunityTypeFromServiceInterest,
+  proposeClientCode,
+} from './leadConversion.ts';
 import { fieldsEq, itemMatchesFieldsFilter } from './odata.ts';
 import type { SharePointPmSettings } from './settings.ts';
 
@@ -104,9 +113,52 @@ export type SharePointLead = {
   pipelineValue?: number;
   clientCode?: string;
   convertedClientId?: string;
+  convertedOpportunityId?: string;
+  referralPartnerId?: string;
   isReferral?: boolean;
   lastModified?: string;
   created?: string;
+};
+
+export type SharePointOpportunity = {
+  id: string;
+  etag: string;
+  title: string;
+  stage: string;
+  clientCode?: string;
+  clientId?: string;
+  leadId?: string;
+  ownerEmail?: string;
+  opportunityType?: string;
+  winLossStatus?: string;
+  proposalAmount?: number;
+  notes?: string;
+  idempotencyKey?: string;
+};
+
+export type SharePointContact = {
+  id: string;
+  title: string;
+  email?: string;
+  phone?: string;
+  clientCode?: string;
+  clientId?: string;
+};
+
+export type LeadConversionResult = {
+  lead: SharePointLead;
+  company: {
+    id: string;
+    itemId: string;
+    clientCode: string;
+    displayName: string;
+    reused: boolean;
+  };
+  contact: { id: string; title: string; email?: string; reused: boolean };
+  opportunity: SharePointOpportunity;
+  href: string;
+  replay: boolean;
+  created: { company: boolean; contact: boolean; opportunity: boolean };
 };
 
 function nextActionFromNotes(notes?: string): string | undefined {
@@ -1095,16 +1147,83 @@ export class SharePointPmService {
   async listOpportunities(): Promise<
     Array<{ id: string; title: string; clientCode?: string; notes?: string }>
   > {
+    const rows = await this.listOpportunityRecords();
+    return rows.map((o) => ({
+      id: o.id,
+      title: o.title,
+      clientCode: o.clientCode,
+      notes: o.notes,
+    }));
+  }
+
+  async listOpportunityRecords(): Promise<SharePointOpportunity[]> {
     if (!this.settings.opportunitiesListId) return [];
     const items = await this.listAll(this.settings.opportunitiesListId);
+    const clients = await this.clientIndex();
     return items
-      .map((i) => ({
-        id: i.id,
-        title: asString(i.fields.Title) || i.id,
-        clientCode: asString(i.fields.ClientCode) || undefined,
-        notes: asString(i.fields.Notes) || asString(i.fields.Summary),
-      }))
-      .filter((v) => v.title);
+      .map((item) => this.mapOpportunity(item, clients))
+      .filter((row): row is SharePointOpportunity => Boolean(row));
+  }
+
+  private async clientIndex(): Promise<Map<string, SharePointClient>> {
+    const items = await this.listAll(this.settings.clientsListId);
+    const byId = new Map<string, SharePointClient>();
+    for (const item of items) {
+      const mapped = this.mapClient(item);
+      if (!mapped) continue;
+      byId.set(mapped.itemId, mapped);
+      byId.set(mapped.clientCode, mapped);
+    }
+    return byId;
+  }
+
+  private mapOpportunity(
+    item: GraphListItem,
+    clients: Map<string, SharePointClient>,
+  ): SharePointOpportunity | null {
+    const title = asString(item.fields.Title);
+    if (!item.id || !title) return null;
+    const clientId = lookupId(item.fields, 'ClientId');
+    const fromField = asString(item.fields.ClientCode);
+    const linked = (clientId && clients.get(clientId)) || (fromField && clients.get(fromField)) || undefined;
+    const clientCode =
+      (fromField && isCanonicalClientCode(fromField) && fromField !== '*' ? fromField : undefined) ||
+      linked?.clientCode;
+    const amount = item.fields.ProposalAmount;
+    return {
+      id: item.id,
+      etag: item.etag,
+      title,
+      stage: asString(item.fields.Stage) || 'Discovery',
+      clientCode,
+      clientId: clientId || linked?.itemId,
+      leadId: lookupId(item.fields, 'LeadId'),
+      ownerEmail: asString(item.fields.OwnerEmail) || asString(item.fields.SalesOwnerEmail),
+      opportunityType: asString(item.fields.OpportunityType),
+      winLossStatus: asString(item.fields.WinLossStatus),
+      proposalAmount: typeof amount === 'number' && Number.isFinite(amount) ? amount : undefined,
+      notes: asString(item.fields.Notes) || asString(item.fields.Summary),
+      idempotencyKey: asString(item.fields.HVCG_IdempotencyKey),
+    };
+  }
+
+  private canSeeOpportunity(principal: AtlasPrincipal, opportunity: SharePointOpportunity): boolean {
+    if (isInternalStaff(principal)) return true;
+    const code = (opportunity.clientCode || '').trim();
+    if (!code || !isCanonicalClientCode(code) || code === '*') return false;
+    return entitledClientCodes(principal).includes(code);
+  }
+
+  async authorizeOpportunity(
+    principal: AtlasPrincipal,
+    id: string,
+  ): Promise<SharePointOpportunity | 'not_found'> {
+    if (!this.settings.opportunitiesListId || !isSharePointItemId(id)) return 'not_found';
+    const item = await this.graph.getItem(this.settings.opportunitiesListId, id);
+    if (!item) return 'not_found';
+    const mapped = this.mapOpportunity(item, await this.clientIndex());
+    if (!mapped || !this.canSeeOpportunity(principal, mapped)) return 'not_found';
+    return mapped;
   }
 
   private mapLead(item: GraphListItem): SharePointLead | null {
@@ -1140,6 +1259,8 @@ export class SharePointPmService {
       pipelineValue: typeof pipeline === 'number' && Number.isFinite(pipeline) ? pipeline : undefined,
       clientCode: canonical,
       convertedClientId,
+      convertedOpportunityId: lookupId(item.fields, 'ConvertedOpportunityId'),
+      referralPartnerId: lookupId(item.fields, 'ReferralPartnerId'),
       isReferral: asBool(item.fields.IsReferral),
       lastModified: isoDate(item.fields.Modified),
       created: isoDate(item.fields.Created),
@@ -1241,6 +1362,245 @@ export class SharePointPmService {
     const mapped = this.mapLead(patched);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched lead could not be mapped.');
     return mapped;
+  }
+
+  async convertLead(
+    principal: AtlasPrincipal,
+    id: string,
+    etag: string | undefined,
+  ): Promise<LeadConversionResult> {
+    const existing = await this.authorizeLead(principal, id);
+    if (existing === 'not_found') throw new PmHttpError(404, 'not_found', 'not_found');
+    if (!isInternalStaff(principal)) {
+      throw new PmHttpError(403, 'forbidden', 'Lead conversion is restricted to HVCG internal staff.');
+    }
+    if (existing.status === 'Disqualified') {
+      throw new PmHttpError(400, 'conversion_not_allowed', 'Disqualified leads cannot be converted.');
+    }
+    if (existing.status !== 'Converted' && !CONVERTIBLE_LEAD_STATUSES.has(existing.status)) {
+      throw new PmHttpError(400, 'conversion_not_allowed', 'LeadStatus cannot be converted.');
+    }
+    if (!this.settings.leadsListId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Leads is not configured.');
+    }
+    if (!this.settings.opportunitiesListId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Opportunities is not configured.');
+    }
+    if (!this.settings.contactsListId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Contacts is not configured.');
+    }
+    const replay = existing.status === 'Converted';
+    if (!replay && !etag) {
+      throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
+    }
+
+    const company = await this.ensureCompanyFromLead(existing);
+    const contact = await this.ensureContactFromLead(existing, company.client);
+    const opportunity = await this.ensureOpportunityFromLead(existing, company.client);
+
+    let lead = existing;
+    const needsLeadWrite =
+      lead.status !== 'Converted' ||
+      lead.convertedClientId !== company.client.itemId ||
+      lead.convertedOpportunityId !== opportunity.record.id;
+    if (needsLeadWrite) {
+      const match = etag || lead.etag;
+      if (!match) {
+        throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
+      }
+      const fields: Record<string, unknown> = {
+        LeadStatus: 'Converted',
+        ConvertedClientIdLookupId: Number(company.client.itemId),
+        ConvertedOpportunityIdLookupId: Number(opportunity.record.id),
+      };
+      if (company.stampClientCode) fields.ClientCode = company.client.clientCode;
+      const patched = await this.graph.patchItemFields(this.settings.leadsListId, id, fields, match);
+      const mapped = this.mapLead(patched);
+      if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Converted lead could not be mapped.');
+      lead = mapped;
+    }
+
+    return {
+      lead,
+      company: {
+        id: company.client.clientCode,
+        itemId: company.client.itemId,
+        clientCode: company.client.clientCode,
+        displayName: company.client.displayName,
+        reused: company.reused,
+      },
+      contact: {
+        id: contact.record.id,
+        title: contact.record.title,
+        email: contact.record.email,
+        reused: contact.reused,
+      },
+      opportunity: opportunity.record,
+      href: opportunityHref(opportunity.record.id),
+      replay: replay && company.reused && contact.reused && opportunity.reused,
+      created: {
+        company: !company.reused,
+        contact: !contact.reused,
+        opportunity: !opportunity.reused,
+      },
+    };
+  }
+
+  private async ensureCompanyFromLead(
+    lead: SharePointLead,
+  ): Promise<{ client: SharePointClient; reused: boolean; stampClientCode: boolean }> {
+    const clients = await this.listAll(this.settings.clientsListId);
+    const mapped = clients
+      .map((item) => this.mapClient(item))
+      .filter((row): row is SharePointClient => Boolean(row));
+    const byItem = new Map(mapped.map((c) => [c.itemId, c]));
+    const byCode = new Map(mapped.map((c) => [c.clientCode, c]));
+
+    if (lead.convertedClientId && byItem.has(lead.convertedClientId)) {
+      const client = byItem.get(lead.convertedClientId)!;
+      return { client, reused: true, stampClientCode: Boolean(lead.clientCode) };
+    }
+    if (lead.clientCode && byCode.has(lead.clientCode)) {
+      const client = byCode.get(lead.clientCode)!;
+      return { client, reused: true, stampClientCode: true };
+    }
+
+    const wanted = normalizeCompanyTitle(lead.title);
+    const titleMatch = mapped.find((c) => normalizeCompanyTitle(c.displayName) === wanted);
+    if (titleMatch) {
+      return { client: titleMatch, reused: true, stampClientCode: true };
+    }
+
+    const prior = await this.findByIdempotency(
+      this.settings.clientsListId,
+      clientFromLeadIdempotencyKey(lead.id),
+    );
+    if (prior) {
+      const existing = this.mapClient(prior);
+      if (existing) return { client: existing, reused: true, stampClientCode: false };
+    }
+
+    const clientCode = proposeClientCode(lead.title, mapped.map((c) => c.clientCode));
+    const fields: Record<string, unknown> = {
+      Title: lead.title.slice(0, 255),
+      ClientCode: clientCode,
+      ClientStage: 'Prospect',
+      IsActive: true,
+      HVCG_IdempotencyKey: clientFromLeadIdempotencyKey(lead.id),
+    };
+    if (lead.serviceInterest) fields.EngagementTypePrimary = lead.serviceInterest;
+    if (lead.source) fields.ReferralSource = lead.source.slice(0, 255);
+    if (lead.ownerEmail) fields.RelationshipOwnerEmail = lead.ownerEmail;
+    const created = await this.graph.createItem(this.settings.clientsListId, fields);
+    const client = this.mapClient(created);
+    if (!client) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
+    return { client, reused: false, stampClientCode: false };
+  }
+
+  private async ensureContactFromLead(
+    lead: SharePointLead,
+    client: SharePointClient,
+  ): Promise<{ record: SharePointContact; reused: boolean }> {
+    const listId = this.settings.contactsListId;
+    if (!listId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Contacts is not configured.');
+    }
+    const items = await this.listAll(listId);
+    const email = (lead.email || '').toLowerCase();
+    const match = items.find((item) => {
+      const itemClientId = lookupId(item.fields, 'ClientId');
+      const itemCode = asString(item.fields.ClientCode);
+      const sameCompany = itemClientId === client.itemId || itemCode === client.clientCode;
+      if (!sameCompany) return false;
+      if (email) return asString(item.fields.Email)?.toLowerCase() === email;
+      const name = asString(item.fields.Title);
+      return Boolean(lead.contactName && name && name.toLowerCase() === lead.contactName.toLowerCase());
+    });
+    if (match) {
+      return {
+        record: {
+          id: match.id,
+          title: asString(match.fields.Title) || lead.contactName || lead.title,
+          email: asString(match.fields.Email),
+          phone: asString(match.fields.Phone),
+          clientCode: client.clientCode,
+          clientId: client.itemId,
+        },
+        reused: true,
+      };
+    }
+    const title = (lead.contactName || lead.email || lead.title).slice(0, 255);
+    const fields: Record<string, unknown> = {
+      Title: title,
+      ClientIdLookupId: Number(client.itemId),
+      ClientCode: client.clientCode,
+      IsPrimary: true,
+      IsActive: true,
+    };
+    if (lead.email) fields.Email = lead.email;
+    if (lead.phone) fields.Phone = lead.phone;
+    const created = await this.graph.createItem(listId, fields);
+    return {
+      record: {
+        id: created.id,
+        title,
+        email: lead.email,
+        phone: lead.phone,
+        clientCode: client.clientCode,
+        clientId: client.itemId,
+      },
+      reused: false,
+    };
+  }
+
+  private async ensureOpportunityFromLead(
+    lead: SharePointLead,
+    client: SharePointClient,
+  ): Promise<{ record: SharePointOpportunity; reused: boolean }> {
+    const listId = this.settings.opportunitiesListId;
+    if (!listId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Opportunities is not configured.');
+    }
+    const clients = await this.clientIndex();
+    if (lead.convertedOpportunityId) {
+      const item = await this.graph.getItem(listId, lead.convertedOpportunityId);
+      const mapped = item ? this.mapOpportunity(item, clients) : null;
+      if (mapped) return { record: mapped, reused: true };
+    }
+    const key = opportunityIdempotencyKey(lead.id);
+    const prior = await this.findByIdempotency(listId, key);
+    if (prior) {
+      const mapped = this.mapOpportunity(prior, clients);
+      if (mapped) return { record: mapped, reused: true };
+    }
+    const fields: Record<string, unknown> = {
+      Title: `${lead.title} — Discovery`.slice(0, 255),
+      Stage: 'Discovery',
+      WinLossStatus: 'Open',
+      ForecastCategory: 'Pipeline',
+      LeadIdLookupId: Number(lead.id),
+      ClientIdLookupId: Number(client.itemId),
+      OpportunityType: opportunityTypeFromServiceInterest(lead.serviceInterest),
+      CapitalHandoffStatus: 'NotApplicable',
+      Probability: 20,
+      HVCG_IdempotencyKey: key,
+      CopilotSummary: `Converted from lead ${lead.title}`.slice(0, 2000),
+      CopilotKeywords: ['lead', 'converted', 'discovery', lead.serviceInterest, lead.source]
+        .filter(Boolean)
+        .join(';'),
+    };
+    if (lead.ownerEmail) {
+      fields.OwnerEmail = lead.ownerEmail;
+      fields.SalesOwnerEmail = lead.ownerEmail;
+    }
+    if (lead.estimatedValue != null) fields.ProposalAmount = lead.estimatedValue;
+    if (lead.serviceInterest) fields.ServicePackage = lead.serviceInterest;
+    if (lead.source) fields.Notes = `Source=${lead.source}${lead.leadSourceDetail ? `; Detail=${lead.leadSourceDetail}` : ''}`;
+    if (lead.referralPartnerId) fields.ReferralPartnerIdLookupId = Number(lead.referralPartnerId);
+    const created = await this.graph.createItem(listId, fields);
+    const mapped = this.mapOpportunity(created, await this.clientIndex());
+    if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created opportunity could not be mapped.');
+    return { record: mapped, reused: false };
   }
 
   async listIndexedFiles(): Promise<
