@@ -57,7 +57,7 @@ Do not infer production from:
 - a newer local commit (including `a43803e`)
 - `origin/main` (`b641fdd`)
 - `deployment/reports/HVCG-Dev-Deploy-latest.md` (that file is a local PnP/dev report, not Hub provenance)
-- Elite or other app deploys (Elite LIVE is `e5740379`, not Hub)
+- Elite or other app deploys (Elite LIVE is now `a43803e` / `index-iXOWTfM9.js`, independently rollbackable to `e574037`)
 
 Update **this file** when a new Hub zip is actually live.
 
