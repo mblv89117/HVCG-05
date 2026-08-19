@@ -1,0 +1,170 @@
+{
+  "generatedAt": "2026-07-20T02:46:26.039Z",
+  "branch": "cursor/finance-intelligence-sprint1",
+  "dataMode": "mock-demo + incomplete CCB",
+  "summary": {
+    "passed": 25,
+    "failed": 0,
+    "total": 25
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "overview route",
+      "pass": true,
+      "evidence": "/ → Financial Overview"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "decisions route",
+      "pass": true,
+      "evidence": "/decisions → Executive Recommendations"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "changes route",
+      "pass": true,
+      "evidence": "/changes → What Changed Since Yesterday"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "scores route",
+      "pass": true,
+      "evidence": "/scores → Risk & Readiness Scores"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "trends route",
+      "pass": true,
+      "evidence": "/trends → Trend Analysis"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "cash route",
+      "pass": true,
+      "evidence": "/cash → Cash & Runway"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "working-capital route",
+      "pass": true,
+      "evidence": "/working-capital → Working Capital"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "budget route",
+      "pass": true,
+      "evidence": "/budget → Budget versus Actual"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "forecast route",
+      "pass": true,
+      "evidence": "/forecast → Forecast & Scenario Analysis"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "enterprise-value route",
+      "pass": true,
+      "evidence": "/enterprise-value → Enterprise Value"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "workspaces route",
+      "pass": true,
+      "evidence": "/workspaces → Client Workspaces"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "capital route",
+      "pass": true,
+      "evidence": "/capital → Capital Advisory"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "alerts route",
+      "pass": true,
+      "evidence": "/alerts → Finance Alerts"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "ai route",
+      "pass": true,
+      "evidence": "/ai → AI-supported Financial Observations"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "governance route",
+      "pass": true,
+      "evidence": "/governance → Governance, Permissions & Audit"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 cash dashboard",
+      "pass": true,
+      "evidence": "mobile nav=true; overflowPx=0"
+    },
+    {
+      "suite": "Decision QA",
+      "name": "Recommendations cite supporting data",
+      "pass": true,
+      "evidence": "recCards=7; citations=16"
+    },
+    {
+      "suite": "Decision QA",
+      "name": "What changed since yesterday",
+      "pass": true,
+      "evidence": "3 rows"
+    },
+    {
+      "suite": "Decision QA",
+      "name": "Risk and readiness scores",
+      "pass": true,
+      "evidence": "3 scorecards"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant layout",
+      "pass": true,
+      "evidence": "cash=false; ev=false; overview=true"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected cash route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4176/"
+    },
+    {
+      "suite": "Financial QA",
+      "name": "CCB incomplete labels",
+      "pass": true,
+      "evidence": "incomplete matches=15"
+    },
+    {
+      "suite": "Financial QA",
+      "name": "Overview KPI density",
+      "pass": true,
+      "evidence": "14 KPI cards"
+    },
+    {
+      "suite": "Financial QA",
+      "name": "Mock-only banner present",
+      "pass": true,
+      "evidence": "banner=1"
+    },
+    {
+      "suite": "Financial QA",
+      "name": "EV indicative labeling",
+      "pass": true,
+      "evidence": "indicative matches=6"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-overview-desktop.png",
+    "screenshots/02-decisions-desktop.png",
+    "screenshots/03-enterprise-value-desktop.png",
+    "screenshots/04-ccb-workspace-desktop.png",
+    "screenshots/05-scores-desktop.png",
+    "screenshots/06-cash-mobile.png"
+  ]
+}
