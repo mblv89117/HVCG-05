@@ -354,6 +354,52 @@ describe('Capital red team', () => {
     });
   });
 
+  it('does not skip client attestation by submitting a different lenderId than the prepared package', async () => {
+    await withCapitalHub(async ({ base }) => {
+      const syn = await createSyn(base, 'syn-mismatch-lender');
+      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/strategy`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: '{}',
+      });
+      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/strategy/decision`, {
+        method: 'POST',
+        headers: headers('valid-owner'),
+        body: JSON.stringify({ decision: 'APPROVED' }),
+      });
+      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/match`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: '{}',
+      });
+      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/shortlist/decision`, {
+        method: 'POST',
+        headers: headers('valid-owner'),
+        body: JSON.stringify({ decision: 'APPROVED', lenderIds: ['ln-synthetic-1'] }),
+      });
+      const prepared = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/application`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ lenderId: 'celtic-bank', productId: 'pr-syn-001' }),
+      });
+      assert.equal(prepared.status, 200);
+
+      const mismatch = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ lenderId: 'ln-synthetic-1', externalSubmit: true }),
+      });
+      assert.equal(mismatch.status, 422);
+
+      const unattested = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ lenderId: 'celtic-bank', externalSubmit: true }),
+      });
+      assert.equal(unattested.status, 403);
+    });
+  });
+
   it('persists capital create audit trails to the Hub store', async () => {
     await withCapitalHub(async ({ base, dataDir }) => {
       await createSyn(base, 'syn-audit');

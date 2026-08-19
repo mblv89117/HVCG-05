@@ -1206,9 +1206,15 @@ export class CapitalService {
     ) {
       forbidden('Submission requires Manny strategy and shortlist approval at ReadyForSubmission');
     }
-    const pkg = state.applications.find((a) => a.capitalOpportunityId === id && a.lenderId === lenderId);
-    if (pkg && pkg.attestation !== 'APPROVED_FOR_SUBMISSION') {
-      forbidden('Recorded submission requires client-attested package APPROVED_FOR_SUBMISSION');
+    const packages = state.applications.filter((a) => a.capitalOpportunityId === id);
+    const pkg = packages.find((a) => a.lenderId === lenderId);
+    if (packages.length > 0) {
+      if (!pkg) {
+        unprocessable('Recorded submission lenderId must match a prepared application package');
+      }
+      if (pkg.attestation !== 'APPROVED_FOR_SUBMISSION') {
+        forbidden('Recorded submission requires client-attested package APPROVED_FOR_SUBMISSION');
+      }
     }
     const sub = {
       id: `sub-${randomUUID()}`,
