@@ -8,7 +8,7 @@ Two different things were collapsed in the July 20 note. Keep them separate.
 
 ## LIVE (production Hub — not this git HEAD)
 
-LIVE Hub zip `a43803edb29a3f8dd080033ca579a09532d89fbc` at `https://app-atlas-integration-hub.azurewebsites.net` (Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`). LIVE Elite is `2a4e115` (`index-CiVmQVqq.js`).
+LIVE Hub zip `b333fb4b833668ab5d2689446a10268868c75a4b` at `https://app-atlas-integration-hub.azurewebsites.net` (Azure deploy `5d3826c0-f784-41da-9043-6912e63e122e`). LIVE Elite is `2a4e115` (`index-CiVmQVqq.js`).
 
 | Path | LIVE status | Evidence |
 |------|-------------|----------|
@@ -16,8 +16,8 @@ LIVE Hub zip `a43803edb29a3f8dd080033ca579a09532d89fbc` at `https://app-atlas-in
 | SharePoint PM Graph | **LIVE** | `/health` `pmBackend.mode=sharepoint`, `authRequired=true`, `insecureDevAuth=false` |
 | Capital Graph mode | **LIVE `sharepoint`** | `/health` `capitalBackend.mode=sharepoint`; overlay durable. **ACCG01 ACL Apply was not run.** |
 | Google Workspace / GitHub live consent | **NOT LIVE** | Owner credentials / admin consent for those adapters were not certified as production ingest. Do not infer them from website leads. |
-| Opportunity CRM operator | **LIVE DEPLOYED** `a43803e` — Premium UI **HOLD** | Hub GET/PATCH `/api/pm/leads` live. Signed-in rendered `/leads` not certified. |
-| Phase 5B Capital / Client Elite | **LIVE DEPLOYED** SWA `2a4e115` | `b9806bc` / `0ffb645` Elite-only. Hub stays `a43803e`. stash0 `773e120` **not applied**. |
+| Opportunity CRM operator | **LIVE** Hub `b333fb4` / Elite `2a4e115` — `/leads` Owner-browser **PASS** | Hub GET/PATCH `/api/pm/leads` live. Convert `887edd8` is **not** in this zip. |
+| Phase 5B Capital / Client Elite | **LIVE DEPLOYED** SWA `2a4e115` | `b9806bc` / `0ffb645` Elite-only. Hub is `b333fb4`. stash0 `773e120` **not applied**. |
 | Command-K / Hub search | **P2 OPEN** | SYN* queries **15–24s**. Do not call this fixed. |
 
 `origin/main` remains `b641fdd784b9d9cc50b85f2e5548526da4f28a02` and is **not** this LIVE Hub.

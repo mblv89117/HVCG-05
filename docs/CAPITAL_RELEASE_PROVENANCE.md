@@ -3,7 +3,7 @@
 **Recorded:** 2026-08-19  
 **Honesty worktree:** `.worktrees/atlas-phase5-docs`  
 **Honesty branch:** `feature/atlas-phase5-docs` (docs only; HEAD is **not** Azure)  
-**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Hub zip is `a43803e`. Elite SWA is `2a4e115`. stash0 `773e120` is **not** applied. `origin/main` (`b641fdd`) is **not** production.
+**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Hub zip is `b333fb4`. Elite SWA is `2a4e115`. stash0 `773e120` is **not** applied. `origin/main` (`b641fdd`) is **not** production.
 
 This file is the operator record of **what is live** versus **what is in git**. It does not deploy, mutate App Settings, delete artifacts, merge `main`, or block a CRM Hub deploy.
 
@@ -15,13 +15,13 @@ This file is the operator record of **what is live** versus **what is in git**. 
 |------|--------|
 | App | `app-atlas-integration-hub` / `rg-atlas-prod` |
 | URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| **Running Hub SHA** | `a43803edb29a3f8dd080033ca579a09532d89fbc` |
-| **Azure deployment ID** | `3d406e37-2d91-4fd6-a20b-8c955c7b5733` |
-| Commit message (that SHA) | `feat(atlas): add CRM operator workflow` |
-| Kudu `ATLAS_HUB_COMMIT.txt` | `a43803edb29a3f8dd080033ca579a09532d89fbc` |
+| **Running Hub SHA** | `b333fb4b833668ab5d2689446a10268868c75a4b` |
+| **Azure deployment ID** | `5d3826c0-f784-41da-9043-6912e63e122e` |
+| Commit message (that SHA) | `fix(hub): require matching attested package for recorded submission` |
+| Kudu `ATLAS_HUB_COMMIT.txt` | `b333fb4b833668ab5d2689446a10268868c75a4b` |
 | LIVE `/health` | `ok`; `authRequired=true`; `insecureDevAuth=false`; `pmBackend.mode=sharepoint`; `capitalBackend.mode=sharepoint`; overlay durable; `websiteLeads.configured=true` |
-| LIVE Elite (separate app) | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-CiVmQVqq.js` (Last-Modified 2026-08-19 03:23:27 UTC). Contains Capital `b9806bc` + Client `0ffb645`. |
-| Immediate prior Hub zip | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` (deployment `501fb29b-80f6-427d-8c65-3f1a88da52d9`) — rollback archive `server.js.pre-d22b55f-20260819-030627` |
+| LIVE Elite (separate app) | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-CiVmQVqq.js` (Last-Modified 2026-08-19 03:23:27 UTC). Contains Capital `b9806bc` + Client `0ffb645`. **Not redeployed for this Hub hotfix.** |
+| Immediate prior Hub zip | `a43803edb29a3f8dd080033ca579a09532d89fbc` (deployment `3d406e37-2d91-4fd6-a20b-8c955c7b5733`) — rollback archive `server.js.pre-a43803e-20260819-040903` |
 | Immediate prior Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` asset `index-DvEHjcS6.js` |
 | Older Hub zip | `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` (deployment `dd965bc2-6d56-4f80-b126-67fcecfc33db`) — superseded |
 | Ancestor noted on the prior record | `0b2305cf40bf35871256e923344216b21d6f1baa` (Phase 4 transaction execution OS); earlier zip `e49be659e8d7d0c7f6079cd505b73469398f2d4c` |
@@ -34,11 +34,17 @@ GitHub workflows do **not** deploy Hub.
 
 ---
 
-## CRM operator (LIVE deployed 2026-08-19 — signed-in Premium UI HOLD)
+## CRM operator (LIVE — Owner-browser `/leads` PASS)
 
-Hub zip and Elite dist of `a43803e` are **running**. Anonymous `/api/pm/projects` and `/api/pm/leads` are **401**. Authenticated Microsoft Hub session (Azure CLI Hub audience, not Local Owner) returned 12 `HVCG_Leads`, required If-Match, rejected Converted PATCH, and returned 10 Home `myDay.waitingFollowUps` with `/leads/:id` hrefs.
+Hub zip `b333fb4` (CRM operator `a43803e` plus confirmation-gate) and Elite `2a4e115` are **running**. Anonymous `/api/pm/projects` and `/api/pm/leads` are **401**. Authenticated Microsoft Hub session returned 12 `HVCG_Leads` after the hotfix.
 
-Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner session this pass (unsigned production screenshots show Microsoft sign-in gate; Local Owner is not a certification session). Do not equate Hub API proof with a completed Premium UI gate. HOLD remains accurate.
+Phase 5C Owner-browser `/leads` **PASS**. Convert Lead → Opportunity (`887edd8`) is **not** in the live zip.
+
+## Phase 5D confirmation-gate (LIVE Hub `b333fb4`)
+
+Recorded submission requires a prepared application package for the **same** opportunity + lender, in `APPROVED_FOR_SUBMISSION`. Mismatched `lenderId` is **422**. Live proof: SYN01 `cap-309f30f9-272a-4775-a2ae-31d23fc88967` at ReadyForSubmission, celtic-bank PREPARED, `lenderId=ln-synthetic-1` → 422, zero submission rows. ACCG/Prodigy/Hart not mutated. Elite not redeployed.
+
+Matching attested HTTP 200 is separately blocked by SYN SharePoint Graph **503** (overlay still writes `SUBMISSION_RECORDED`). That is P2, not a reopened P1.
 
 ---
 
@@ -46,9 +52,9 @@ Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner 
 
 | Item | SHA / branch | Status |
 |------|--------------|--------|
-| Capital Elite post-shortlist execution | `b9806bc` inside SWA `2a4e115` | **LIVE DEPLOYED.** Elite-only. Hub stays `a43803e`. Signed-in Premium UI HOLD. |
+| Capital Elite post-shortlist execution | `b9806bc` inside SWA `2a4e115` | **LIVE DEPLOYED.** Elite-only. Hub is `b333fb4`. Owner-browser `/capital` PASS. |
 | Client ops Elite detail | `0ffb645` inside SWA `2a4e115` | **LIVE DEPLOYED.** Elite-only. SYN01 workspace items currently empty. |
-| stash0 Hub hardening | `773e120` `fix/hub-stash0-hardening` | **NOT APPLIED.** Wave 2 conflicts with live CRM `a43803e`. Do not apply. |
+| stash0 Hub hardening | `773e120` `fix/hub-stash0-hardening` | **NOT APPLIED.** Wave 2 conflicts with live CRM. Do not apply. |
 
 **Search P2 (open):** SYN* Command-K / Hub search still **15–24s**. Do not call this fixed.
 
@@ -61,7 +67,7 @@ Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner 
 Treat them as two facts:
 
 1. **Worktree HEAD** — local / branch tip. On this honesty branch that tip is a docs-only commit on top of CRM `a43803e`. Changes here do nothing to production until an explicit Hub/Elite deploy.
-2. **Running Hub SHA** — `a43803edb29a3f8dd080033ca579a09532d89fbc` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
+2. **Running Hub SHA** — `b333fb4b833668ab5d2689446a10268868c75a4b` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
 
 Do not infer production from:
 
@@ -69,7 +75,7 @@ Do not infer production from:
 - a newer local commit (including Phase 5B `b9806bc` / `0ffb645` / `773e120`)
 - `origin/main` (`b641fdd`)
 - `deployment/reports/HVCG-Dev-Deploy-latest.md` (that file is a local PnP/dev report, not Hub provenance)
-- Elite or other app deploys (Elite LIVE is now `2a4e115` / `index-CiVmQVqq.js`; Hub stays `a43803e`)
+- Elite or other app deploys (Elite LIVE is `2a4e115` / `index-CiVmQVqq.js`; Hub is `b333fb4`)
 
 Update **this file** when a new Hub zip is actually live.
 

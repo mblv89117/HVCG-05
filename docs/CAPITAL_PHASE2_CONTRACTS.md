@@ -2,7 +2,7 @@
 
 Orchestrator-owned. Change via notify → update this file → sync impacted agents. Do not fork types.
 
-**LIVE Hub zip:** `a43803edb29a3f8dd080033ca579a09532d89fbc` (Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`). Prior recorded zip `d22b55f870efc0c105ed328a20a4ba4df077e6aa` is the immediate rollback, not current LIVE.  
+**LIVE Hub zip:** `b333fb4b833668ab5d2689446a10268868c75a4b` (Azure deploy `5d3826c0-f784-41da-9043-6912e63e122e`). Immediate rollback zip `a43803edb29a3f8dd080033ca579a09532d89fbc` / deploy `3d406e37`.  
 **Repo HEAD is independent.** Do not report “deployed latest.” Elite SWA `2a4e115` contains Capital `b9806bc` + Client `0ffb645`; those SHAs are **not** this Hub zip. stash0 `773e120` is **not** applied. `origin/main` (`b641fdd`) is **not** production.
 
 ## Identity / scope

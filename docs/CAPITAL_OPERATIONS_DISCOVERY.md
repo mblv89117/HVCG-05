@@ -9,14 +9,14 @@
 
 | Fact | Value |
 |------|--------|
-| LIVE Hub | `a43803edb29a3f8dd080033ca579a09532d89fbc` / Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` |
+| LIVE Hub | `b333fb4b833668ab5d2689446a10268868c75a4b` / Azure deploy `5d3826c0-f784-41da-9043-6912e63e122e` |
 | LIVE `/health` capital | `capitalBackend.mode=sharepoint`; overlay durable |
 | LIVE Elite | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` asset `index-CiVmQVqq.js` |
 | ACCG01 ACL Apply | **Not run.** Do not say it was. |
-| CRM operator `a43803e` | **LIVE DEPLOYED** on Hub; signed-in Premium UI **HOLD** |
+| CRM operator `b333fb4` | **LIVE** on Hub (lineage `a43803e` + confirmation-gate); Owner-browser `/leads` **PASS** |
 | Capital Elite `b9806bc` | **LIVE DEPLOYED** inside SWA `2a4e115`; Hub unchanged |
 | Client ops `0ffb645` | **LIVE DEPLOYED** inside SWA `2a4e115` |
-| stash0 `773e120` | **NOT APPLIED** — Wave 2 conflicts with live CRM `a43803e` |
+| stash0 `773e120` | **NOT APPLIED** — Wave 2 conflicts with live CRM |
 | Search P2 | SYN* Command-K **15–24s**. Do not call this fixed. |
 | Code default when `INTEGRATION_CAPITAL_BACKEND` unset | still fail-closed `unavailable` (503). LIVE App Settings are **not** unset. |
 
@@ -106,7 +106,7 @@ Catalog/schema metadata visibility for ungranted lists is a known moderate resid
 | Environment | Backend | Capital writes |
 |-------------|---------|----------------|
 | Local / CI | `INTEGRATION_CAPITAL_BACKEND=development-json` | Allowed. Not SharePoint. |
-| Production Hub (LIVE) | `sharepoint` (`a43803e` `/health`) | App Settings are sharepoint. Code default if unset is still **503 fail closed**. **ACCG01 ACL Apply was not run** — do not treat mode as grant proof. |
+| Production Hub (LIVE) | `sharepoint` (`b333fb4` `/health`) | App Settings are sharepoint. Code default if unset is still **503 fail closed**. **ACCG01 ACL Apply was not run** — do not treat mode as grant proof. |
 
 `NODE_ENV=production` plus capital `development-json` is rejected at configuration time. Do not use the JSON store as a production SoR.
 
