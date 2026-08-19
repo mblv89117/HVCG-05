@@ -80,6 +80,8 @@ export type SearchPmService = Pick<
 };
 
 const SEARCH_CAP = 40;
+/** Projects/tasks must not block an already-matched authorized client. */
+const CORE_BUDGET_MS = 2500;
 /** Workspace extras must not block or fail the operating-index (clients/projects/tasks). */
 const EXTRAS_BUDGET_MS = 1200;
 
@@ -147,7 +149,7 @@ export async function searchSharePointPm(
   service: SearchPmService,
   principal: AtlasPrincipal,
   rawQuery: string,
-  opts?: { extrasBudgetMs?: number },
+  opts?: { extrasBudgetMs?: number; coreBudgetMs?: number },
 ): Promise<{ query: string; results: PmSearchHit[]; scope: 'entitled' | 'manny_tenant' }> {
   const query = rawQuery.trim().slice(0, 120);
   if (query.length < 2) return { query, results: [], scope: 'entitled' };
@@ -155,11 +157,8 @@ export async function searchSharePointPm(
   const results: PmSearchHit[] = [];
   const manny = isMannyPrincipal(principal);
   const extrasBudgetMs = opts?.extrasBudgetMs ?? EXTRAS_BUDGET_MS;
-  const [clients, projects, tasks] = await Promise.all([
-    service.listAuthorizedClients(principal),
-    service.listAuthorizedProjects(principal),
-    service.listAuthorizedTasks(principal),
-  ]);
+  const coreBudgetMs = opts?.coreBudgetMs ?? CORE_BUDGET_MS;
+  const clients = await service.listAuthorizedClients(principal);
   const entitled = new Set(clients.map((c) => c.clientCode));
   const push = (hit: PmSearchHit) => {
     if (hit.clientCode && !canSeeClientBound(manny, entitled, hit.clientCode)) return;
@@ -179,6 +178,10 @@ export async function searchSharePointPm(
       });
     }
   }
+  const [projects, tasks] = await Promise.all([
+    withBudget(() => service.listAuthorizedProjects(principal), coreBudgetMs).then((rows) => rows || []),
+    withBudget(() => service.listAuthorizedTasks(principal), coreBudgetMs).then((rows) => rows || []),
+  ]);
   for (const p of projects) {
     const hay = [p.name, p.nextAction, p.clientCode, p.objective].filter(Boolean).join(' ').toLowerCase();
     if (hay.includes(q)) {

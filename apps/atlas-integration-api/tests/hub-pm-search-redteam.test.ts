@@ -459,10 +459,19 @@ describe('PM search / Elite Hub routes — SYN isolation', () => {
       async listWorkspaceCollections() {
         return new Promise(() => {});
       },
+      async listAuthorizedProjects() {
+        return new Promise(() => {});
+      },
+      async listAuthorizedTasks() {
+        return new Promise(() => {});
+      },
     });
     const started = Date.now();
-    const hung = await searchSharePointPm(hanging, synMember, 'SYN', { extrasBudgetMs: 40 });
-    assert.ok(Date.now() - started < 400, 'extras hang must not block the operating index');
+    const hung = await searchSharePointPm(hanging, synMember, 'SYN', {
+      extrasBudgetMs: 40,
+      coreBudgetMs: 40,
+    });
+    assert.ok(Date.now() - started < 400, 'projects/tasks/extras hang must not block client hits');
     assert.ok(hung.results.some((r) => r.kind === 'client' && r.clientCode === 'SYN01'));
   });
 
