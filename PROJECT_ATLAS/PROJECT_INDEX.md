@@ -1,6 +1,6 @@
 # PROJECT_INDEX
 
-**As of:** 2026-07-17 01:21 UTC
+**As of:** 2026-07-17 01:54 UTC
 **Repo root:** `/Volumes/MacMiniPro2TB/HVCG Project Management System`
 **Canonical SoR:** this Atlas. Future ChatGPT sessions begin with [CONTINUATION/START_HERE.md](CONTINUATION/START_HERE.md).
 
@@ -55,7 +55,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [4](Tracks/Track4_ClientPortal.md) | Portal / data rooms | Invites gated BL-C1 |
 | [5](Tracks/Track5_ClientOnboarding.md) | Onboarding specs/automation | Gated D-002/BL-C1 |
 | [6](Tracks/Track6_AI.md) | AI governance | Worktree active |
-| [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | Parallel; Prod Draft-heavy |
+| [7](Tracks/Track7_InternalOperations.md) | Ops/exec/finance/Draft flows | CEO Command Center Sprint 2 implementation complete; QA/owner review pending |
 | [8](Tracks/Track8_Enterprise.md) | Scale / v2 | Horizon |
 | [9](Tracks/Track9_EngineeringOS.md) | Engineering Operating System | Sprints 1–2 **COMPLETE AND PUSHED (Dev)**; Sprint 2 @ `e7bb1a3` |
 
@@ -69,6 +69,7 @@ Detail: [ARCHITECTURE.md](ARCHITECTURE.md) · root/`docs/architecture/` · freez
 | [4](Sprints/Sprint4.md) | **COMPLETE (Dev/Staging)** @ `7e4eb10` |
 | [EOS 1](Sprints/Sprint_EOS1.md) | **COMPLETE AND PUSHED (Dev)** @ `6b36782` |
 | [EOS 2](Sprints/Sprint_EOS2.md) | **COMPLETE AND PUSHED (Dev)** @ `e7bb1a3` |
+| [CEO Command Center 2](Sprints/Sprint_CEO_Command_Center_2.md) | **IMPLEMENTATION COMPLETE — AWAITING QA / OWNER REVIEW (Dev/UAT)** |
 
 ## Revenue tip
 
@@ -98,5 +99,6 @@ Versioned folders under `releases/` (and worktree `releases/`) with `version.jso
 
 [ROADMAP.md](ROADMAP.md) · [NEXT_ACTIONS.md](NEXT_ACTIONS.md) · [Sprints/BACKLOG.md](Sprints/BACKLOG.md)
 
-Priority theme: **protect Track 1 freeze** → preserve completed Revenue and
-EOS releases → await owner assignment. EOS Sprint 3 is not started.
+Priority theme: **protect Track 1 freeze** → QA/owner review of the
+uncommitted CEO Command Center Sprint 2 → preserve completed Revenue and
+EOS releases. EOS Sprint 3 is not started.

@@ -1,0 +1,165 @@
+{
+  "generatedAt": "2026-07-17T01:57:08.126Z",
+  "branch": "cursor/track7-ceo-command-center-sprint2",
+  "environment": "Development / UAT",
+  "summary": {
+    "passed": 24,
+    "failed": 0,
+    "total": 24
+  },
+  "checks": [
+    {
+      "suite": "Atlas source",
+      "name": "Track 1 freeze",
+      "pass": true,
+      "evidence": "CURRENT_STATE.md freeze anchor"
+    },
+    {
+      "suite": "Atlas source",
+      "name": "Revenue Sprint 4 complete",
+      "pass": true,
+      "evidence": "CURRENT_STATE.md Revenue anchor"
+    },
+    {
+      "suite": "Atlas source",
+      "name": "EOS Sprint 2 complete",
+      "pass": true,
+      "evidence": "CURRENT_STATE.md EOS anchor"
+    },
+    {
+      "suite": "Atlas source",
+      "name": "Tracks 1–9 indexed",
+      "pass": true,
+      "evidence": "TRACK_INDEX.md contains all tracks"
+    },
+    {
+      "suite": "Protected paths",
+      "name": "No Production / Track 1 / Revenue mutation",
+      "pass": true,
+      "evidence": "No protected paths changed"
+    },
+    {
+      "suite": "Security",
+      "name": "No unsafe dynamic HTML API",
+      "pass": true,
+      "evidence": "React text rendering only"
+    },
+    {
+      "suite": "Navigation",
+      "name": "overview route",
+      "pass": true,
+      "evidence": "/ → Good morning, Manny"
+    },
+    {
+      "suite": "Source labels",
+      "name": "overview source visibility",
+      "pass": true,
+      "evidence": "23 source badges"
+    },
+    {
+      "suite": "Navigation",
+      "name": "approvals route",
+      "pass": true,
+      "evidence": "/approvals → Decisions waiting for Manny"
+    },
+    {
+      "suite": "Source labels",
+      "name": "approvals source visibility",
+      "pass": true,
+      "evidence": "3 source badges"
+    },
+    {
+      "suite": "Navigation",
+      "name": "agents route",
+      "pass": true,
+      "evidence": "/agents → Agent assignments and gates"
+    },
+    {
+      "suite": "Source labels",
+      "name": "agents source visibility",
+      "pass": true,
+      "evidence": "5 source badges"
+    },
+    {
+      "suite": "Navigation",
+      "name": "portfolio route",
+      "pass": true,
+      "evidence": "/portfolio → Every operating-system track"
+    },
+    {
+      "suite": "Source labels",
+      "name": "portfolio source visibility",
+      "pass": true,
+      "evidence": "9 source badges"
+    },
+    {
+      "suite": "Navigation",
+      "name": "revenue route",
+      "pass": true,
+      "evidence": "/revenue → Revenue visibility without invented numbers"
+    },
+    {
+      "suite": "Source labels",
+      "name": "revenue source visibility",
+      "pass": true,
+      "evidence": "16 source badges"
+    },
+    {
+      "suite": "Navigation",
+      "name": "engineering route",
+      "pass": true,
+      "evidence": "/engineering → Track 9 EOS at a glance"
+    },
+    {
+      "suite": "Source labels",
+      "name": "engineering source visibility",
+      "pass": true,
+      "evidence": "13 source badges"
+    },
+    {
+      "suite": "Navigation",
+      "name": "brief route",
+      "pass": true,
+      "evidence": "/brief → What Manny needs to know"
+    },
+    {
+      "suite": "Source labels",
+      "name": "brief source visibility",
+      "pass": true,
+      "evidence": "18 source badges"
+    },
+    {
+      "suite": "Approval safety",
+      "name": "Placeholder action cannot execute live",
+      "pass": true,
+      "evidence": "Development placeholder only: OA-CEO-UAT marked \"Approved locally\". No live action executed."
+    },
+    {
+      "suite": "Responsive desktop",
+      "name": "1280px viewport",
+      "pass": true,
+      "evidence": "horizontal overflow=false"
+    },
+    {
+      "suite": "Responsive desktop",
+      "name": "1440px viewport",
+      "pass": true,
+      "evidence": "horizontal overflow=false"
+    },
+    {
+      "suite": "Network safety",
+      "name": "No external requests",
+      "pass": true,
+      "evidence": "Local static assets only"
+    }
+  ],
+  "screenshots": [
+    "screenshots/overview-1440.png",
+    "screenshots/approvals-1440.png",
+    "screenshots/agents-1440.png",
+    "screenshots/portfolio-1440.png",
+    "screenshots/revenue-1440.png",
+    "screenshots/engineering-1440.png",
+    "screenshots/brief-1440.png"
+  ]
+}

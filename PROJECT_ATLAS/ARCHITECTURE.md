@@ -1,6 +1,6 @@
 # ARCHITECTURE
 
-**As of:** 2026-07-16 04:20 UTC  
+**As of:** 2026-07-16 04:20 UTC
 **Role:** Atlas **index only** — not a second architecture SoR.
 
 ## Canonical architecture sources (outside Atlas)
@@ -12,6 +12,9 @@
 | 3 | Freeze packages: `releases/RC-1-Development-Baseline/`, `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/` |
 
 Do **not** copy full architecture prose into Atlas. Link out. Future dated notes/diagrams may live in [Architecture/](Architecture/) only as pointers or ADRs that cite evidence.
+
+Track 7 Atlas CEO Command Center pointer:
+[Architecture/Track7AtlasCEOCommandCenter.md](Architecture/Track7AtlasCEOCommandCenter.md).
 
 ## Platform shape (summary — repository-backed)
 
@@ -39,8 +42,8 @@ SharePoint Online · Office 365 Outlook · Teams · Approvals — see `releases/
 
 ## Notification policy
 
-- `hvcg_CrmEnableTeamsNotify=false`  
-- `hvcg_EnableClientEmails=false`  
+- `hvcg_CrmEnableTeamsNotify=false`
+- `hvcg_EnableClientEmails=false`
 
 ## Revenue OS front door
 

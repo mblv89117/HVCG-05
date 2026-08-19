@@ -524,7 +524,7 @@ Implemented
 
 Context
 
-Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1ù3 completion and RC-1 lock.
+Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1ÔøΩ3 completion and RC-1 lock.
 
 Decision
 
@@ -558,7 +558,7 @@ HVCG Owner
 
 Category
 
-Track 9 ó Engineering Operating System
+Track 9 ÔøΩ Engineering Operating System
 
 Status
 
@@ -600,7 +600,7 @@ HVCG Owner
 
 Category
 
-Track 9 ù Engineering Operating System
+Track 9 ? Engineering Operating System
 
 Status
 
@@ -642,7 +642,7 @@ HVCG Owner
 
 Category
 
-Track 9 ù Engineering Operating System
+Track 9 ÔøΩ Engineering Operating System
 
 Status
 
@@ -670,6 +670,59 @@ Impact
 EOS Sprint 2 is COMPLETE in Development. Release implementation commit:
 `e7bb1a3896ac5fbebf0eab8335b6d6e9f1c4fe7f`. The branch is pushed and
 synchronized; merge and deployment remain separately gated.
+
+Can This Be Revisited?
+
+Only through a new owner decision or approved Change Request.
+
+---
+
+# Decision ID
+
+DEC-0017
+
+Date
+
+2026-07-17
+
+Decision Owner
+
+HVCG Owner
+
+Category
+
+Track 7 ? Internal Operations / Executive Command
+
+Status
+
+Implemented in Development; release approval pending
+
+Context
+
+The owner authorized a practical Atlas CEO Command Center Development
+sprint after Track 9 EOS Sprint 2. Existing Track 7 documentation assigns
+executive command and internal operations to Track 7, and an existing
+mock-only Executive Command Center Sprint 1 app provides the UI baseline.
+
+Decision
+
+Assign Atlas CEO Command Center to Track 7 as Executive Command Center
+Sprint 2. Reuse the existing app, Project Atlas, Track 9 EOS, Revenue
+Sprint 4 data contract, and approved architecture. Do not create a new
+track. Implementation remains Development/UAT and must stop uncommitted
+for QA/owner review.
+
+Reasoning
+
+Track 7 already owns executive command; Track 9 owns engineering
+management and Track 2 owns Revenue. This preserves ownership and avoids
+duplicated systems of record.
+
+Impact
+
+Seven owner modules, source-aware adapters, tests, user guide, QA
+handoff, and release draft were produced on
+`cursor/track7-ceo-command-center-sprint2`. No live system was changed.
 
 Can This Be Revisited?
 

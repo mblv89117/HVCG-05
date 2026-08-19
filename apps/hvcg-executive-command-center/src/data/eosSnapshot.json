@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-07-17T01:21:00Z",
+  "environment": "Development",
+  "atlasSyncStatus": "healthy",
+  "activeTracks": [
+    { "id": "track1", "name": "Track 1 — Live Internal", "status": "FROZEN", "health": "stable" },
+    { "id": "track2", "name": "Track 2 — Revenue OS", "status": "Sprint 4 COMPLETE", "health": "healthy" },
+    { "id": "track9", "name": "Track 9 — Engineering OS", "status": "Sprint 2 COMPLETE", "health": "healthy" }
+  ],
+  "activeSprints": [],
+  "activeBranches": [
+    { "name": "cursor/track9-eos-sprint2", "owner": "master-pm", "track": "track9" },
+    { "name": "cursor/project-atlas-rc1", "owner": "master-pm", "track": "atlas" },
+    { "name": "cursor/revenue-sprint4-activation", "owner": "revenue", "track": "track2", "frozenTip": true }
+  ],
+  "activeWorktrees": [
+    { "path": ".worktrees/track9-eos-sprint2", "branch": "cursor/track9-eos-sprint2", "owner": "master-pm" },
+    { "path": ".worktrees/project-atlas-authoritative", "branch": "cursor/project-atlas-rc1", "owner": "master-pm" },
+    { "path": ".worktrees/revenue-sprint4", "branch": "cursor/revenue-sprint4-activation", "owner": "revenue" }
+  ],
+  "assignedAgents": [
+    { "id": "master-pm", "role": "Master Project Management", "assignment": "Standby", "status": "idle" },
+    { "id": "architecture", "role": "Architecture", "assignment": "Standby", "status": "idle" },
+    { "id": "qa-agent", "role": "QA", "assignment": "Sprint 2 complete", "status": "idle" },
+    { "id": "deployment-manager", "role": "Deployment", "assignment": "No deployment authorized", "status": "idle" },
+    { "id": "documentation", "role": "Documentation", "assignment": "Atlas synchronized", "status": "idle" },
+    { "id": "revenue", "role": "Revenue", "assignment": "Track 2 preserved", "status": "idle" },
+    { "id": "engineering", "role": "Engineering", "assignment": "Ready for next owner assignment", "status": "ready" }
+  ],
+  "blockedItems": [],
+  "qaStatus": {
+    "queueDepth": 0,
+    "latestVerdict": "APPROVED",
+    "passRatePercent": 100
+  },
+  "deploymentReadiness": {
+    "ready": false,
+    "reason": "Development release complete — deployment not authorized"
+  },
+  "technicalDebt": [],
+  "openChangeRequests": [],
+  "releaseCandidates": [
+    { "id": "EOS-S2-DEV", "name": "Track 9 EOS Sprint 2 Development Release", "status": "released" }
+  ],
+  "ownerApprovals": [
+    { "id": "OA-EOS-S2", "item": "EOS Sprint 2 release", "status": "approved" }
+  ],
+  "revenueHealth": {
+    "status": "Sprint 4 COMPLETE (Dev/Staging)",
+    "score": 92
+  },
+  "engineeringHealth": {
+    "status": "Track 9 Sprint 2 COMPLETE — Engineering ready",
+    "score": 96
+  },
+  "overallProjectHealth": {
+    "status": "GREEN — Atlas synchronized; Revenue preserved; EOS Sprint 2 complete",
+    "score": 96
+  },
+  "openRisks": [],
+  "upcomingReleases": [],
+  "pendingDecisions": [],
+  "metricsSeed": {
+    "completedPoints": 40,
+    "plannedPoints": 40,
+    "cycleTimesDays": [2, 3, 2.5, 4],
+    "leadTimesDays": [5, 6, 4, 7],
+    "qaPassed": 12,
+    "qaFailed": 0,
+    "regressions": 0,
+    "agentCompletedItems": 27,
+    "deploysLast30Days": 0,
+    "docsPresent": 20,
+    "docsExpected": 20,
+    "atlasBrokenLinks": 0,
+    "atlasTotalLinks": 301
+  }
+}

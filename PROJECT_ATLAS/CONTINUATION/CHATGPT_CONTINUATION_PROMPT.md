@@ -31,11 +31,12 @@ Only ask a question when the uploaded continuation documents contain a material 
 
 Preserve module ownership. Protect application code, client data, Production, Track 1, completed releases, and committed work outside the active scope.
 
-Current release instruction: EOS Sprint 2 is COMPLETE in Development
-under DEC-0016. Release implementation commit `e7bb1a3` is pushed on
-`origin/cursor/track9-eos-sprint2`. Do not merge, tag, deploy, modify
-Production, Track 1, or Revenue Track 2, enable live communications, or
-start EOS Sprint 3. Enter standby and await owner instructions.
+Current release instruction: Track 7 Atlas CEO Command Center Sprint 2
+implementation and automated QA are complete under DEC-0017 on
+`cursor/track7-ceo-command-center-sprint2`. The work is uncommitted and
+unpushed pending independent QA and owner review. Do not commit, push,
+merge, tag, deploy, modify Production, Track 1, or Revenue Track 2,
+enable live communications, or start another sprint.
 
 When the user types:
 

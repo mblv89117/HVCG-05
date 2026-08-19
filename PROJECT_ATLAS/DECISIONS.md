@@ -1,6 +1,6 @@
 # DECISIONS
 
-**As of:** 2026-07-16 04:10 UTC
+**As of:** 2026-07-17 01:54 UTC
 **Detail SoR:** `.worktrees/master-pm-orchestrator/docs/business-launch/OWNER_DECISIONS.md`
 **Also:** Track-1 gates in `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/README.md`
 
@@ -19,11 +19,13 @@
 | DEC-0014 | Track 9 EOS Sprint 1 approved with minor changes; DEF-EOS-001 through DEF-EOS-005 accepted for EOS Sprint 2; feature-branch commit/push authorized only | `CONTINUATION/DECISION_HISTORY.md` |
 | DEC-0015 | Track 9 EOS Sprint 2 start approved (Dev only); commit/push gated on QA + owner; no merge/deploy/live comms | `CONTINUATION/DECISION_HISTORY.md` |
 | DEC-0016 | Track 9 EOS Sprint 2 release approved; commit/push completed @ `e7bb1a3`; no merge/deploy/Sprint 3 | `CONTINUATION/DECISION_HISTORY.md` |
+| DEC-0017 | Atlas CEO Command Center assigned to Track 7 as Executive Command Center Sprint 2; Development/UAT only; stop uncommitted for QA/owner review | `CONTINUATION/DECISION_HISTORY.md` |
 
 ## Open gates
 
 | ID | Ask | Blocks |
 |----|-----|--------|
+| CEO-CC-S2 | QA/owner approval and separate feature-branch commit/push authorization | CEO Command Center release |
 | BL-GRAPH-1 | Graph read-only (optional) | Optional enrichment |
 | BL-PNP-1 | PnP for SP Comm Site provision | Some SharePoint automation |
 | BL-C1 | Any outbound client contact / portal invite | Collections send, invites |

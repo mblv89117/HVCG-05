@@ -1,11 +1,11 @@
 # DEPLOYMENT_STATUS
 
-**As of:** 2026-07-17 01:21 UTC
+**As of:** 2026-07-17 01:54 UTC
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 | Environment | Status | Package / tip | Notes |
 |-------------|--------|---------------|-------|
-| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprints 1–4; Track 9 EOS Sprints 1–2 | EOS Sprint 2 @ `e7bb1a3`; not deployed |
+| HVCG Development | Active Dev/UAT | RC-1 baseline; Revenue Sprints 1–4; Track 9 EOS Sprints 1–2; CEO Command Center Sprint 2 | CEO sprint uncommitted; no deployment |
 | HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | **no EOS / Sprint 4 Prod deploy** |
 | Website | Staging/preview only | go-live track3 / staging HTML | No DNS |
 | Pilot data Prod | Not imported | Pre-import reports in master-pm go-live | Owner gate |
@@ -13,7 +13,8 @@
 | Revenue Sprint 4 Phase 1 | Committed | `origin/cursor/revenue-sprint4-activation` @ `7fd8bf2` | Activation framework |
 | Revenue Sprint 4 Phase 2 | Committed | `origin/cursor/revenue-sprint4-activation` @ `7e4eb10` | Sales engine Dev/Staging only |
 | Atlas authoritative tip | Committed | `origin/cursor/project-atlas-rc1` @ `bd07e61` | Sprint 4 Atlas reconciliation |
-| EOS Sprint 1 | Local worktree | `cursor/track9-eos-sprint1` | **NOT committed** — owner review |
+| EOS Sprint 1 | Committed/pushed Development release | `origin/cursor/track9-eos-sprint1` @ `6b36782` | Complete; not deployed |
+| CEO Command Center Sprint 2 | Local Development/UAT | `cursor/track7-ceo-command-center-sprint2` | Automated QA PASS; uncommitted/unpushed; no deploy |
 
 ## Freeze packages
 
