@@ -951,13 +951,26 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       });
       assert.equal(res.status, 200);
       const body = (await res.json()) as {
-        lead: { status: string; convertedClientId?: string; convertedOpportunityId?: string; source?: string };
-        company: { clientCode: string; reused: boolean; displayName: string };
+        lead: {
+          status: string;
+          clientCode?: string;
+          convertedClientId?: string;
+          convertedOpportunityId?: string;
+          source?: string;
+        };
+        company: {
+          clientCode: string;
+          reused: boolean;
+          displayName: string;
+          clientStage?: string;
+          entitlementProvisioned: false;
+        };
         contact: { email?: string; reused: boolean };
         opportunity: { id: string; stage: string; opportunityType?: string };
         href: string;
         replay: boolean;
         created: { company: boolean; contact: boolean; opportunity: boolean };
+        entitlementProvisioned: false;
       };
       assert.equal(body.lead.status, 'Converted');
       assert.equal(body.lead.clientCode, undefined);

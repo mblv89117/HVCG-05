@@ -118,7 +118,7 @@ export async function runFabricSync(opts: {
   const indexed = { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 };
 
   const seenConversations = new Set<string>();
-  let mailUrl =
+  let mailUrl: string | null =
     cp.mailSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/messages?$select=id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview&$top=${PAGE_SIZE}&$orderby=receivedDateTime desc`;
   for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
@@ -181,7 +181,7 @@ export async function runFabricSync(opts: {
     cp.mailSkip = mailUrl;
   }
 
-  let calUrl =
+  let calUrl: string | null =
     cp.calendarSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/calendar/events?$select=id,subject,start,end,organizer,attendees,webLink,onlineMeetingUrl,bodyPreview&$top=${PAGE_SIZE}&$orderby=start/dateTime desc`;
   for (let page = 0; page < MAX_PAGES && calUrl; page += 1) {
@@ -234,7 +234,7 @@ export async function runFabricSync(opts: {
     cp.calendarSkip = calUrl;
   }
 
-  let contactUrl =
+  let contactUrl: string | null =
     cp.contactsSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/contacts?$select=id,displayName,emailAddresses,companyName,jobTitle,businessPhones&$top=${PAGE_SIZE}`;
   for (let page = 0; page < MAX_PAGES && contactUrl; page += 1) {
@@ -276,7 +276,7 @@ export async function runFabricSync(opts: {
     cp.contactsSkip = contactUrl;
   }
 
-  let fileUrl = cp.filesSkip || `/v1.0/users/${MANNY_ENTRA_OID}/drive/recent?$top=${PAGE_SIZE}`;
+  let fileUrl: string | null = cp.filesSkip || `/v1.0/users/${MANNY_ENTRA_OID}/drive/recent?$top=${PAGE_SIZE}`;
   for (let page = 0; page < 4 && fileUrl; page += 1) {
     const { status, json } = await opts.fabric.getJson(fileUrl);
     if (status !== 200) {

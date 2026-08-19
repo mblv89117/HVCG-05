@@ -373,7 +373,6 @@ export async function handlePmRoutes(opts: {
 
   if (path === '/api/pm/initialize' || path === '/api/pm/populate') {
     const dryRun =
-      method === 'GET' ||
       body?.dryRun === true ||
       body?.preview === true ||
       new URL(req.url || '', 'http://local').searchParams.get('dryRun') === '1';

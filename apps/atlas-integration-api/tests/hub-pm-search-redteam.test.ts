@@ -16,7 +16,7 @@ import { createLocalAiAdapter } from '../src/local-ai/adapter.ts';
 import { createAuthorizedPmRepository, createSharePointPmService } from '../src/pm/backend.ts';
 import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
-import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
+import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
 import { fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import { MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
@@ -402,7 +402,7 @@ describe('PM search / Elite Hub routes — SYN isolation', () => {
     assert.equal(found.results.some((r) => r.kind === 'vendor' || r.kind === 'opportunity'), false);
   });
 
-  function operatingIndexService(overrides: Partial<SharePointPmService> = {}): SharePointPmService {
+  function operatingIndexService(overrides: Partial<SearchPmService> = {}): SearchPmService {
     return {
       async listAuthorizedClients() {
         return [{ clientCode: 'SYN01', displayName: 'SYNTHETIC Alpha Co', dba: 'SYN Alpha' }];
@@ -433,7 +433,7 @@ describe('PM search / Elite Hub routes — SYN isolation', () => {
         return [];
       },
       ...overrides,
-    } as unknown as SharePointPmService;
+    };
   }
 
   const synMember: AtlasPrincipal = {
