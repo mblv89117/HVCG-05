@@ -1,12 +1,12 @@
 # DEPLOYMENT_STATUS
 
-**As of:** 2026-07-17 01:21 UTC
+**As of:** 2026-07-19
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 | Environment | Status | Package / tip | Notes |
 |-------------|--------|---------------|-------|
-| HVCG Development | Active Dev | RC-1 baseline; Revenue Sprints 1–4; Track 9 EOS Sprints 1–2 | EOS Sprint 2 @ `e7bb1a3`; not deployed |
-| HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | **no EOS / Sprint 4 Prod deploy** |
+| HVCG Development | Active Dev | Atlas Command Center Dev/UAT **published** | Play appid `dea8a490-4b82-f111-ab0e-6045bd0193e8` |
+| HVCG Production | **LIVE—INTERNAL** (Track 1 **FROZEN**) | `Track 1 Live - Internal` | **no Atlas Command Center Prod deploy** |
 | Website | Staging/preview only | go-live track3 / staging HTML | No DNS |
 | Pilot data Prod | Not imported | Pre-import reports in master-pm go-live | Owner gate |
 | Revenue Sprint 2–3 tip | Committed | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` | COMPLETE |

@@ -1,36 +1,38 @@
 # CURRENT_STATE
 
-**As of:** 2026-07-17 01:21 UTC
-**Sources:** `origin/cursor/track9-eos-sprint2` @ `e7bb1a3`; Track-1 freeze; Revenue tip `bf34c93`
+**As of:** 2026-07-19 (Atlas Power Apps UAT)
+**Sources:** branch `cursor/track7-atlas-powerapps-uat`; Track-1 freeze; EOS tips preserved
 
 ## Snapshot
 
 | Area | Status | Evidence |
 |------|--------|----------|
-| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | Track-1-Live-Internal tag `302615956cea80c238172931f5901792f548f59c` |
-| Sprint 1–4 Revenue OS (Track 2) | **COMPLETE** (Dev/Staging) | `origin/cursor/revenue-sprint4-activation` @ `7e4eb10` (tip `bf34c93`) |
-| Track 9 — Engineering OS Sprint 1 | **COMPLETE AND PUSHED (Dev)** | `origin/cursor/track9-eos-sprint1` @ `6b36782` |
-| Track 9 — Engineering OS Sprint 2 | **COMPLETE AND PUSHED (Dev)** — QA/owner approved | `origin/cursor/track9-eos-sprint2` @ `e7bb1a3` |
-| Production | Track 1 slice live; frozen | No EOS Prod writes |
-| Development | HVCG Development | EOS Sprint 2 Dev only |
+| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | Track-1 freeze intact |
+| Track 7 — Atlas Command Center (Microsoft Dev/UAT) | **PUBLISHED IN DEV — AWAITING OWNER UAT** | App `dea8a490-4b82-f111-ab0e-6045bd0193e8` |
+| Sprint 1–4 Revenue OS (Track 2) | **COMPLETE** (Dev/Staging) | Preserved |
+| Track 9 — Engineering OS Sprint 1 | **COMPLETE AND PUSHED (Dev)** | Preserved |
+| Track 9 — Engineering OS Sprint 2 | **COMPLETE AND PUSHED (Dev)** | Preserved |
+| Production | Track 1 slice live; frozen | No Power Apps Prod writes |
+| Development | HVCG Development | Atlas Command Center Dev/UAT live |
 | Website public / DNS | **NOT STARTED** | Gated |
-| Canvas publish | **NOT DONE** (D-002) | Gated |
-| Authoritative Atlas branch | `cursor/project-atlas-rc1` @ `bd07e61` | `.worktrees/project-atlas-authoritative` |
+| Authoritative Atlas branch | `cursor/project-atlas-rc1` | Separate worktree |
 
-## Engineering OS tips
+## Active Dev app
 
-| Layer | Branch | Commit / state |
-|-------|--------|----------------|
-| EOS Sprint 1 | `origin/cursor/track9-eos-sprint1` | `6b36782` |
-| EOS Sprint 2 | `origin/cursor/track9-eos-sprint2` | `e7bb1a3` — synchronized; no merge/deploy |
+| Item | Value |
+|------|-------|
+| App | Atlas Command Center |
+| Play | https://org1131a2b0.crm.dynamics.com/main.aspx?appid=dea8a490-4b82-f111-ab0e-6045bd0193e8 |
+| Solution | HVCGProjectAtlasCommandCenterDEV |
+| Branch / worktree | `cursor/track7-atlas-powerapps-uat` / `.worktrees/atlas-powerapps-uat` |
+| Owner guide | `HOW_MANNY_USES_PROJECT_ATLAS_UI.md` |
 
 ## Priorities now
 
 1. Keep Track 1 frozen
-2. Preserve EOS Sprint 2 release @ `e7bb1a3`; await owner instructions
-3. Preserve Revenue Track 2 and EOS Sprint 1 as delivered
-4. Do not start EOS Sprint 3
-5. Do not merge/deploy
+2. Owner UAT of Atlas Command Center Dev play link
+3. Preserve EOS / Revenue tips; no merge/deploy
+4. Do not start EOS Sprint 3 or Production Power Apps work
 
 ## Status authority
 

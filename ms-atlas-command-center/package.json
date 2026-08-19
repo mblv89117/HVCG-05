@@ -1,0 +1,10 @@
+{
+  "name": "hvcg-atlas-command-center-provisioning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Development/UAT provisioning scripts for the Project Atlas Command Center in HVCG Development Dataverse.",
+  "dependencies": {
+    "@azure/msal-node": "^2.16.2"
+  }
+}
