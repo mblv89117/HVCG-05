@@ -32,6 +32,21 @@ export async function fetchPmLead(auth: AtlasHubAuthHeaders, id: string) {
   return hubFetchJson<{ lead: PmLead; source: string }>(auth, `/api/pm/leads/${encodeURIComponent(id)}`);
 }
 
+export async function convertPmLead(auth: AtlasHubAuthHeaders, id: string, etag: string) {
+  return hubFetchJson<LeadConversionResult>(auth, `/api/pm/leads/${encodeURIComponent(id)}/convert`, {
+    method: 'POST',
+    headers: { 'If-Match': etag },
+    body: '{}',
+  });
+}
+
+export async function fetchPmOpportunity(auth: AtlasHubAuthHeaders, id: string) {
+  return hubFetchJson<{ opportunity: PmOpportunity; source: string }>(
+    auth,
+    `/api/pm/opportunities/${encodeURIComponent(id)}`,
+  );
+}
+
 export async function patchPmLead(
   auth: AtlasHubAuthHeaders,
   id: string,
@@ -371,9 +386,41 @@ export interface PmLead {
   pipelineValue?: number;
   clientCode?: string;
   convertedClientId?: string;
+  convertedOpportunityId?: string;
   isReferral?: boolean;
   lastModified?: string;
   created?: string;
+}
+
+export interface PmOpportunity {
+  id: string;
+  etag: string;
+  title: string;
+  stage: string;
+  clientCode?: string;
+  clientId?: string;
+  leadId?: string;
+  ownerEmail?: string;
+  opportunityType?: string;
+  winLossStatus?: string;
+  proposalAmount?: number;
+  notes?: string;
+}
+
+export interface LeadConversionResult {
+  lead: PmLead;
+  company: {
+    id: string;
+    itemId: string;
+    clientCode: string;
+    displayName: string;
+    reused: boolean;
+  };
+  contact: { id: string; title: string; email?: string; reused: boolean };
+  opportunity: PmOpportunity;
+  href: string;
+  replay: boolean;
+  created: { company: boolean; contact: boolean; opportunity: boolean };
 }
 
 export type WorkspaceCompletenessStatus =

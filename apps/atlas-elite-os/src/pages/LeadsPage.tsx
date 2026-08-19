@@ -181,8 +181,8 @@ export function LeadsPage() {
       }
     >
       <Caption1 style={{ display: 'block' }}>
-        Authorized HVCG_Leads from Hub. Unconverted leads are internal staff only. Conversion to a client is a
-        separate workflow.
+        Authorized HVCG_Leads from Hub. Unconverted leads are internal staff only. Convert is a
+        governed action on the lead record — it is not silent auto-create.
       </Caption1>
 
       {failure?.kind === 'error' ? (

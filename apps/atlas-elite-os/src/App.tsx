@@ -33,6 +33,7 @@ import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { LeadsPage } from './pages/LeadsPage';
 import { LeadDetailPage } from './pages/LeadDetailPage';
+import { OpportunityDetailPage } from './pages/OpportunityDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { SettingsPage } from './pages/NotificationsSettings';
 import { AccessDeniedPage, NotFoundPage } from './pages/SystemPages';
@@ -189,6 +190,14 @@ export function App() {
                 element={
                   <LeadsRoute>
                     <LeadDetailPage />
+                  </LeadsRoute>
+                }
+              />
+              <Route
+                path="opportunities/:opportunityId"
+                element={
+                  <LeadsRoute>
+                    <OpportunityDetailPage />
                   </LeadsRoute>
                 }
               />
