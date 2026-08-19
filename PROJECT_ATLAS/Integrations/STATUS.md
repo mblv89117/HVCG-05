@@ -1,6 +1,6 @@
 # Universal Integration Layer — Implementation Status
 
-**Honesty date:** 2026-08-18  
+**Honesty date:** 2026-08-19  
 **Prior document date:** 2026-07-20 (adapter-framework snapshot — **stale as a picture of LIVE Atlas**)  
 **Status SoR:** [../CURRENT_STATE.md](../CURRENT_STATE.md)
 
@@ -8,7 +8,7 @@ Two different things were collapsed in the July 20 note. Keep them separate.
 
 ## LIVE (production Hub — not this git HEAD)
 
-LIVE Hub zip `d22b55f870efc0c105ed328a20a4ba4df077e6aa` at `https://app-atlas-integration-hub.azurewebsites.net` (Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`).
+LIVE Hub zip `a43803edb29a3f8dd080033ca579a09532d89fbc` at `https://app-atlas-integration-hub.azurewebsites.net` (Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`). LIVE Elite is the same SHA (`index-iXOWTfM9.js`).
 
 | Path | LIVE status | Evidence |
 |------|-------------|----------|
@@ -16,7 +16,9 @@ LIVE Hub zip `d22b55f870efc0c105ed328a20a4ba4df077e6aa` at `https://app-atlas-in
 | SharePoint PM Graph | **LIVE** | `/health` `pmBackend.mode=sharepoint`, `authRequired=true`, `insecureDevAuth=false` |
 | Capital Graph mode | **LIVE `sharepoint`** | `/health` `capitalBackend.mode=sharepoint`; overlay durable. **ACCG01 ACL Apply was not run.** |
 | Google Workspace / GitHub live consent | **NOT LIVE** | Owner credentials / admin consent for those adapters were not certified as production ingest. Do not infer them from website leads. |
-| Opportunity CRM operator | **NOT LIVE** | Candidate `a43803edb29a3f8dd080033ca579a09532d89fbc` on `feature/atlas-crm-operator`. Not live-certified. |
+| Opportunity CRM operator | **LIVE DEPLOYED** `a43803e` — Premium UI **HOLD** | Hub GET/PATCH `/api/pm/leads` live. Signed-in rendered `/leads` not certified. |
+| Phase 5B Capital / Client Elite | **NOT LIVE** | `b9806bc` / `0ffb645` Elite-only. stash0 `773e120` **not applied** (Wave 2 conflicts with `a43803e`). |
+| Command-K / Hub search | **P2 OPEN** | SYN* queries **15–24s**. Do not call this fixed. |
 
 `origin/main` remains `b641fdd784b9d9cc50b85f2e5548526da4f28a02` and is **not** this LIVE Hub.
 
@@ -58,4 +60,4 @@ Do not rebuild website lead ingest to “finish” this checklist. Website inges
 5. Autonomous Client 360 ingestion (Client 360 mapping remains fail-closed)  
 6. Azure Key Vault injection for staging/production adapter secrets  
 
-None of those items recertifies CRM operator (`a43803e`) or implies `origin/main` is production.
+None of those items recertifies signed-in `/leads` Premium UI, deploys Phase 5B candidates, or implies `origin/main` is production.

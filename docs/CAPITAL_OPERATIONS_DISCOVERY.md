@@ -1,19 +1,23 @@
 # Capital Operations — Discovery
 
-**As of:** 2026-08-18 (LIVE overlay on the 2026-08-17 discovery text)  
+**As of:** 2026-08-19 (LIVE overlay on the 2026-08-17 discovery text)  
 **Scope:** Atlas Capital Operations (internal Project Atlas module)  
 **Worktree (this honesty pass):** `.worktrees/atlas-phase5-docs`  
-**Honesty rule:** This document reports contracts in git **and** LIVE Hub `/health`. It does not claim ACCG01 ACL Apply ran, live lender matching, CRM operator certification, or a new platform.
+**Honesty rule:** This document reports contracts in git **and** LIVE Hub `/health`. It does not claim ACCG01 ACL Apply ran, live lender matching, Capital Elite `b9806bc` as live, or a new platform.
 
 ## LIVE vs this document
 
 | Fact | Value |
 |------|--------|
-| LIVE Hub | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` / Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9` |
+| LIVE Hub | `a43803edb29a3f8dd080033ca579a09532d89fbc` / Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` |
 | LIVE `/health` capital | `capitalBackend.mode=sharepoint`; overlay durable |
-| LIVE Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` asset `index-DvEHjcS6.js` |
+| LIVE Elite | `a43803edb29a3f8dd080033ca579a09532d89fbc` asset `index-iXOWTfM9.js` |
 | ACCG01 ACL Apply | **Not run.** Do not say it was. |
-| CRM operator `a43803e` | **Candidate only** — not live-certified |
+| CRM operator `a43803e` | **LIVE DEPLOYED** — signed-in Premium UI **HOLD** |
+| Capital Elite `b9806bc` | **Candidate only** — Elite-only; Hub unchanged; **not live** |
+| Client ops `0ffb645` | **Candidate only** — Elite-only; **not live** |
+| stash0 `773e120` | **NOT APPLIED** — Wave 2 conflicts with live CRM `a43803e` |
+| Search P2 | SYN* Command-K **15–24s**. Do not call this fixed. |
 | Code default when `INTEGRATION_CAPITAL_BACKEND` unset | still fail-closed `unavailable` (503). LIVE App Settings are **not** unset. |
 
 Capital Operations is an **internal Atlas / HVCG OS module**. It is not an eighth HVCG product. SharePoint `HVCG_*` remains the operational system of record. There is no Dataverse migration and no new CRM or database.
@@ -34,7 +38,7 @@ Capital Operations is an **internal Atlas / HVCG OS module**. It is not an eight
 | AI governance | Existing `HVCG_AI*` lists, `docs/ai/AI_GOVERNANCE.md`, human-gated jobs. Capital AI must reuse these. Extracted numbers stay unverified until a human confirms them. |
 | Audit | `HVCG_AuditEvents` is the business audit list. Stage changes, overrides, and Manny approvals should write here once a runtime exists. |
 
-Elite `/capital` is an operating Command Center against Hub `/api/capital/*`. 401/403 fail closed. **LIVE** Hub App Settings already report `capitalBackend.mode=sharepoint`. That is not ACCG01 ACL Apply and not a certified CRM operator zip. No lender auto-submit.
+Elite `/capital` is an operating Command Center against Hub `/api/capital/*`. 401/403 fail closed. **LIVE** Hub App Settings already report `capitalBackend.mode=sharepoint`. That is not ACCG01 ACL Apply. Capital Elite post-shortlist candidate `b9806bc` is **not** this LIVE zip. No lender auto-submit.
 
 ---
 
@@ -102,7 +106,7 @@ Catalog/schema metadata visibility for ungranted lists is a known moderate resid
 | Environment | Backend | Capital writes |
 |-------------|---------|----------------|
 | Local / CI | `INTEGRATION_CAPITAL_BACKEND=development-json` | Allowed. Not SharePoint. |
-| Production Hub (LIVE) | `sharepoint` (`d22b55f` `/health`) | App Settings are sharepoint. Code default if unset is still **503 fail closed**. **ACCG01 ACL Apply was not run** — do not treat mode as grant proof. |
+| Production Hub (LIVE) | `sharepoint` (`a43803e` `/health`) | App Settings are sharepoint. Code default if unset is still **503 fail closed**. **ACCG01 ACL Apply was not run** — do not treat mode as grant proof. |
 
 `NODE_ENV=production` plus capital `development-json` is rejected at configuration time. Do not use the JSON store as a production SoR.
 

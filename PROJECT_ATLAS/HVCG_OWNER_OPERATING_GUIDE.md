@@ -1,9 +1,9 @@
 # HVCG Owner Operating Guide
 
-**As of:** 2026-08-18  
+**As of:** 2026-08-19  
 **Audience:** Manny (`manny@highvaluecapitalgroup.com`) and the next AI session  
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)  
-**Do not** start Gate 12, promote `main`, launch commercial products, or reopen the architecture audit. Documentation must not block a CRM Hub deploy.
+**Do not** start Gate 12, promote `main`, launch commercial products, or reopen the architecture audit. This docs branch does not deploy.
 
 The seven-system architecture is settled. Atlas owner recovery is complete. Normal client operations run on Atlas + the live HVCG website. Everything else below is either a supporting product or explicitly deferred.
 
@@ -17,12 +17,12 @@ Sign in to Atlas with **Manny’s Microsoft account only**. Owner role is not a 
 |---|---|
 | **SYSTEM** | Atlas (Elite OS + Integration Hub + Business Architecture) |
 | **PURPOSE** | Internal operating system: clients, projects, tasks, Command Center, HVCG finance ops |
-| **CURRENT STATUS** | Production Elite/Hub are **LIVE** (Elite `e5740379` / `index-DvEHjcS6.js`; Hub `d22b55f`). SharePoint `HVCG_*` is V1 system of record. Local AI is off. Opportunity CRM operator (`a43803e`) is a **candidate**, not live-certified. `origin/main` (`b641fdd`) is not production. ACCG01 ACL Apply was not run. |
+| **CURRENT STATUS** | Production Elite/Hub are **LIVE** at CRM `a43803e` (Elite `index-iXOWTfM9.js`; Hub deploy `3d406e37`). SharePoint `HVCG_*` is V1 system of record. Local AI is off. Opportunity CRM operator is **LIVE DEPLOYED**; signed-in `/leads` Premium UI remains **HOLD**. Phase 5B Capital Elite (`b9806bc`) and Client ops (`0ffb645`) are **not live**. stash0 Hub patches (`773e120`) are **not applied**. Command-K SYN search P2 (**15–24s**) is not fixed. `origin/main` (`b641fdd`) is not production. ACCG01 ACL Apply was not run. |
 | **HOW MANNY ACCESSES IT** | Sign in at [Atlas Elite](https://zealous-rock-0090c7e1e.7.azurestaticapps.net) with `manny@highvaluecapitalgroup.com`. Hub: `https://app-atlas-integration-hub.azurewebsites.net` (auth required). |
-| **WHAT TO USE IT FOR TODAY** | Command Center (`/command-center`), My Work (`/my-work`), Portfolio (`/portfolio`), Projects (`/projects`). Day-to-day client/project/task work backed by SharePoint. Website leads land in `HVCG_Leads`. Seven ClientCodes: ACCG01, CCB01, CPL01, HFD01, KAVA01, LIEN01, PDG01 (Manny-only groups). |
+| **WHAT TO USE IT FOR TODAY** | Command Center (`/command-center`), My Work (`/my-work`), Portfolio (`/portfolio`), Projects (`/projects`). Day-to-day client/project/task work backed by SharePoint. Website leads land in `HVCG_Leads`. Elite `/leads` exists behind Microsoft sign-in; signed-in Premium UI is **HOLD**. Seven ClientCodes: ACCG01, CCB01, CPL01, HFD01, KAVA01, LIEN01, PDG01 (Manny-only groups). |
 | **WHAT NOT TO USE IT FOR** | Dynamics/Dataverse CRM. Client 360 as a live client map. Initialize / Quick Capture / Microsoft sync / Archive (honestly disabled). Launching 360, Copilot, GCC commercial, Syndicate, or Best Day from Atlas. Adding anyone else to `HVCG-Client-*` groups. |
 | **MANUAL FALLBACK** | [HVCG Project Command Center](https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter) — lists `HVCG_*` (clients, projects, tasks, leads). |
-| **CURRENTLY DEFERRED FEATURES** | Client 360 mapping (fail-closed). Dynamics/Dataverse. Gate 12 worktree retirement. Local AI. GitHub `main` promotion. Employee-to-client roster. |
+| **CURRENTLY DEFERRED FEATURES** | Client 360 mapping (fail-closed). Dynamics/Dataverse. Gate 12 worktree retirement. Local AI. GitHub `main` promotion. Employee-to-client roster. Phase 5B Capital Elite / Client ops until certified. |
 
 ---
 
@@ -123,4 +123,5 @@ Sign in to Atlas with **Manny’s Microsoft account only**. Owner role is not a 
 - Do not add anyone except Manny to `HVCG-Client-*` groups.
 - Do not invent Client 360 mappings.
 - Do not promote `integration/atlas-canonical` to `main`.
+- Do not treat Phase 5B candidates as live. Do not apply stash0 Hub patches.
 - Worktree retirement is housekeeping, not an owner-operability blocker.

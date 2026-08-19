@@ -1,9 +1,9 @@
 # Capital Operations — Release provenance
 
-**Recorded:** 2026-08-18  
+**Recorded:** 2026-08-19  
 **Honesty worktree:** `.worktrees/atlas-phase5-docs`  
-**Honesty branch:** `feature/atlas-phase5-docs` (docs only; HEAD is CRM candidate `a43803e`, **not** Azure)  
-**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Cite the running Hub SHA and Azure deployment ID below. `origin/main` (`b641fdd`) is **not** production.
+**Honesty branch:** `feature/atlas-phase5-docs` (docs only; HEAD is **not** Azure)  
+**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Cite the running Hub SHA and Azure deployment ID below. `origin/main` (`b641fdd`) is **not** production. Phase 5B candidates (`b9806bc`, `0ffb645`, `773e120`) are **not** live.
 
 This file is the operator record of **what is live** versus **what is in git**. It does not deploy, mutate App Settings, delete artifacts, merge `main`, or block a CRM Hub deploy.
 
@@ -38,7 +38,19 @@ GitHub workflows do **not** deploy Hub.
 
 Hub zip and Elite dist of `a43803e` are **running**. Anonymous `/api/pm/projects` and `/api/pm/leads` are **401**. Authenticated Microsoft Hub session (Azure CLI Hub audience, not Local Owner) returned 12 `HVCG_Leads`, required If-Match, rejected Converted PATCH, and returned 10 Home `myDay.waitingFollowUps` with `/leads/:id` hrefs.
 
-Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner session this pass (unsigned production screenshots show Microsoft sign-in gate; Local Owner is not a certification session). Do not equate Hub API proof with a completed Premium UI gate.
+Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner session this pass (unsigned production screenshots show Microsoft sign-in gate; Local Owner is not a certification session). Do not equate Hub API proof with a completed Premium UI gate. HOLD remains accurate.
+
+---
+
+## Phase 5B candidates (not this LIVE zip)
+
+| Candidate | SHA / branch | Status |
+|-----------|--------------|--------|
+| Capital Elite post-shortlist execution | `b9806bc` `feature/atlas-phase5-capital` | **NOT LIVE.** Elite-only. Hub stays `a43803e`. |
+| Client ops Elite detail | `0ffb645` `feature/atlas-phase5-client` | **NOT LIVE.** Elite-only. |
+| stash0 Hub hardening | `773e120` `fix/hub-stash0-hardening` | **NOT APPLIED.** Wave 2 conflicts with live CRM `a43803e`. Do not apply. |
+
+**Search P2 (open):** SYN* Command-K / Hub search still **15–24s**. Do not call this fixed.
 
 ---
 
@@ -48,13 +60,13 @@ Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner 
 
 Treat them as two facts:
 
-1. **Worktree HEAD** — local / branch tip. On this honesty branch that tip is CRM candidate `a43803e`. Changes here do nothing to production until an explicit Hub/Elite deploy.
+1. **Worktree HEAD** — local / branch tip. On this honesty branch that tip is a docs-only commit on top of CRM `a43803e`. Changes here do nothing to production until an explicit Hub/Elite deploy.
 2. **Running Hub SHA** — `a43803edb29a3f8dd080033ca579a09532d89fbc` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
 
 Do not infer production from:
 
 - uncommitted files
-- a newer local commit (including `a43803e`)
+- a newer local commit (including Phase 5B `b9806bc` / `0ffb645` / `773e120`)
 - `origin/main` (`b641fdd`)
 - `deployment/reports/HVCG-Dev-Deploy-latest.md` (that file is a local PnP/dev report, not Hub provenance)
 - Elite or other app deploys (Elite LIVE is now `a43803e` / `index-iXOWTfM9.js`, independently rollbackable to `e574037`)

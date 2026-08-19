@@ -2,8 +2,8 @@
 
 Orchestrator-owned. Change via notify → update this file → sync impacted agents. Do not fork types.
 
-**LIVE Hub zip:** `d22b55f870efc0c105ed328a20a4ba4df077e6aa` (Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`). Prior recorded zip `65b7438f8697e244d903f88039e6be659e9215fd` is **stale**.  
-**Repo HEAD is independent.** Do not report “deployed latest.” CRM candidate `a43803e` is **not** this LIVE zip. `origin/main` (`b641fdd`) is **not** production.
+**LIVE Hub zip:** `a43803edb29a3f8dd080033ca579a09532d89fbc` (Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`). Prior recorded zip `d22b55f870efc0c105ed328a20a4ba4df077e6aa` is the immediate rollback, not current LIVE.  
+**Repo HEAD is independent.** Do not report “deployed latest.” Capital Elite `b9806bc`, Client ops `0ffb645`, and stash0 `773e120` are **not** this LIVE zip. `origin/main` (`b641fdd`) is **not** production.
 
 ## Identity / scope
 

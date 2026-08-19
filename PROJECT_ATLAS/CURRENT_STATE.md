@@ -1,13 +1,13 @@
 # CURRENT_STATE
 
-**As of:** 2026-08-18  
+**As of:** 2026-08-19  
 **Status SoR:** this file  
 **Honesty worktree:** `.worktrees/atlas-phase5-docs` (`feature/atlas-phase5-docs`)  
 **Canonical Atlas git line (source, not Azure):** `integration/atlas-canonical`  
 **Owner operating guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)  
 **Historical July 16 snapshot (not current SoR):** [Archive/CURRENT_STATE_2026-07-16.md](Archive/CURRENT_STATE_2026-07-16.md)
 
-**LIVE vs CANDIDATE:** Azure Elite and Hub below are **LIVE** at CRM SHA `a43803e`. `origin/main` is **not** production. Signed-in rendered `/leads` Premium UI remains HOLD. Documentation here does not deploy or merge `main`.
+**LIVE vs CANDIDATE:** Azure Elite and Hub below are **LIVE** at CRM SHA `a43803e` (Elite asset `index-iXOWTfM9.js`; Hub deploy `3d406e37`). Signed-in rendered `/leads` Premium UI remains **HOLD**. Phase 5B Capital Elite (`b9806bc`), Client ops (`0ffb645`), and stash0 Hub patches (`773e120`) are **repo-only** until separately certified and deployed. `origin/main` is **not** production. Documentation here does not deploy or merge `main`.
 
 **Owner recovery closeout (still true):** seven-system architecture is settled. Atlas owner recovery is complete. Manny-only entitlements are executed. Client 360 and commercial launches are deferred. Remaining technical governance is separate maintenance. Worktree retirement is not an owner-operability blocker. **Do not restart the architecture audit.**
 
@@ -21,7 +21,8 @@ Recorded 2026-08-19 after Phase 5A CRM Hub+Elite exact-SHA deploy.
 | Hub App Service | `a43803edb29a3f8dd080033ca579a09532d89fbc` | `https://app-atlas-integration-hub.azurewebsites.net`. Azure deployment `3d406e37-2d91-4fd6-a20b-8c955c7b5733`. Kudu `ATLAS_HUB_COMMIT.txt` matches. Prior rollback: `d22b55f` / deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`. |
 | Hub `/health` | `ok` | `authRequired=true`, `insecureDevAuth=false`, `pmBackend.mode=sharepoint`, `capitalBackend.mode=sharepoint`, overlay durable, `websiteLeads.configured=true` |
 | Website → `HVCG_Leads` | **LIVE** | Keyed Hub ingest configured (`websiteLeads.configured=true`). Buffer is Azure Table `HvcgWebsiteLeads`. Not a second CRM. |
-| Atlas Capital backend mode | **LIVE `sharepoint`** | Hub `/health` `capitalBackend.mode=sharepoint`. Code default when unset remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not infer Selected grants or ACCG01 write certification from health mode alone. |
+| Atlas Capital backend mode | **LIVE `sharepoint`** | Hub `/health` `capitalBackend.mode=sharepoint`. Code default when unset remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not infer Selected grants or ACCG01 write certification from health mode alone. Capital Elite post-shortlist UI (`b9806bc`) is **not** this LIVE zip. |
+| Command-K / Hub search | **P2 OPEN** | SYN* queries still **15–24s**. Do not call this fixed. `d22b55f` returns client hits without waiting out slow project lists; that does not close SYN latency. |
 | `origin/main` | `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Protected promotion target. **Not production.** Do not imply `main` is what Azure is running. |
 
 Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` / deploy `dd965bc2-6d56-4f80-b126-67fcecfc33db`. See [docs/CAPITAL_RELEASE_PROVENANCE.md](../docs/CAPITAL_RELEASE_PROVENANCE.md).
@@ -33,6 +34,16 @@ Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d
 | CRM operator Hub+Elite | **DEPLOYED** `a43803e` | Hub GET/PATCH `/api/pm/leads` live. Anonymous 401. Converted PATCH rejected. 10 Home follow-ups with `/leads/:id`. Elite `/leads` SPA 200 with production Microsoft gate. |
 | Signed-in rendered `/leads` | **HOLD** | Unsigned production screenshots show Microsoft sign-in. Local Owner is not a certification session. Do not mark Premium UI PASS until an Owner browser session reviews the queue. |
 | Docs honesty branch | `feature/atlas-phase5-docs` | Doc-only. `origin/main` unchanged. |
+
+## Phase 5B candidates (repo-only — not LIVE)
+
+Not in Azure until a later certified deploy. This docs branch does not deploy them. LIVE Hub stays `a43803e` unless a separately authorized Hub zip is deployed.
+
+| Candidate | SHA / branch | Scope | Status |
+|-----------|--------------|-------|--------|
+| Capital Elite post-shortlist execution | `b9806bc58b240a34764dfa4566492c9ba6234e1a` `feature/atlas-phase5-capital` | **Elite-only.** Hub unchanged. | **NOT LIVE** |
+| Client ops Elite detail (workspace items) | `0ffb6453b022299bb8e963b5e86caf81a1db6add` `feature/atlas-phase5-client` | **Elite-only.** Timeline / engagements / decisions from Hub workspace payload. | **NOT LIVE** |
+| stash0 Hub hardening patches | `773e120420ffc35764cf2d31f84194a6acb2d031` `fix/hub-stash0-hardening` | Hub patches **NOT APPLIED**. Wave 2 **conflicts** with live CRM `a43803e` (`listLeads` / blockerCount / command-center). Do not apply, cherry-pick, or deploy this branch. | **NOT APPLIED** |
 
 ## Snapshot
 
@@ -49,8 +60,10 @@ Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d
 | Client 360 mapping | **DEFERRED POST-AUDIT FEATURE** (fail-closed; not an audit blocker) | Owner Decision 5; `apps/atlas-integration-api/src/client360/access.ts` |
 | Gate 12 worktree/workspace retirement | **NOT STARTED** | Explicitly out of scope |
 | Seven-system architecture | Defined; commercial launches are **post-audit** | [docs/architecture/HVCG_SYSTEM_INDEX.md](../docs/architecture/HVCG_SYSTEM_INDEX.md); Owner Decision 1 |
-| Atlas Capital Operations | **INTERNAL Atlas module — not an eighth platform** | Elite `/capital` is the Capital Command Center. 401/403 fail closed. **LIVE Hub** reports `capitalBackend.mode=sharepoint` and durable overlay. SharePoint min-slice lists **exist**. **ACCG01 ACL Apply was not run.** Do not claim ACCG01 Selected grants were applied. Do not claim CRM/capital operator work is live-certified. See [docs/CAPITAL_RELEASE_PROVENANCE.md](../docs/CAPITAL_RELEASE_PROVENANCE.md). |
-| Opportunity CRM operator (Elite/Hub) | **LIVE DEPLOYED `a43803e` — Premium UI HOLD** | Hub leads API + Elite `/leads` running. Unsigned production is Microsoft-gated. Local Owner is not a certification session. |
+| Atlas Capital Operations | **INTERNAL Atlas module — not an eighth platform** | Elite `/capital` is the Capital Command Center on LIVE `a43803e`. 401/403 fail closed. **LIVE Hub** reports `capitalBackend.mode=sharepoint` and durable overlay. SharePoint min-slice lists **exist**. **ACCG01 ACL Apply was not run.** Do not claim ACCG01 Selected grants were applied. Capital Elite candidate `b9806bc` is **not** live. See [docs/CAPITAL_RELEASE_PROVENANCE.md](../docs/CAPITAL_RELEASE_PROVENANCE.md). |
+| Opportunity CRM operator (Elite/Hub) | **LIVE DEPLOYED `a43803e` — Premium UI HOLD** | Hub leads API + Elite `/leads` running. Unsigned production is Microsoft-gated. Local Owner is not a certification session. Do not mark Premium UI PASS. |
+| Phase 5B Elite candidates | **NOT LIVE** | Capital `b9806bc` and Client ops `0ffb645` are Elite-only repo tips. stash0 `773e120` is **not applied**. |
+| Command-K search P2 | **OPEN** | SYN* queries **15–24s**. Not fixed. |
 | GCC | Commercial CFO / financial-intelligence product; own app/data boundary; HVCG may be a tenant | Owner Decision 2 |
 | G11-F03 client entitlements | **COMPLETE** — `G11-F03 — MANNY-ONLY INITIAL PRODUCTION ENTITLEMENTS COMPLETE` | Entra read-back (Gate 11): Manny sole member of all seven groups; Hub app `checkMemberGroups` returns all seven IDs; Hub `INTEGRATION_CLIENT_ENTITLEMENT_GROUPS` maps those seven IDs. Owner role is not client access. |
 | G11-F07 GitHub main protection | **DEFERRED ENGINEERING GOVERNANCE** (already in place; do not change) | PR + 1 approval + dismiss stale + conversation resolution + 6 Atlas checks + no force-push + no deletion + `enforce_admins`. Not an owner-operability blocker. |
@@ -65,6 +78,9 @@ Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d
 | LIVE Hub | `a43803edb29a3f8dd080033ca579a09532d89fbc` — Azure App Service zip `3d406e37-2d91-4fd6-a20b-8c955c7b5733`, not `origin/main` |
 | Rollback Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` / `index-DvEHjcS6.js` |
 | Rollback Hub | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` / deploy `501fb29b` |
+| Candidate Capital Elite | `b9806bc58b240a34764dfa4566492c9ba6234e1a` `feature/atlas-phase5-capital` — **not Azure** |
+| Candidate Client ops Elite | `0ffb6453b022299bb8e963b5e86caf81a1db6add` `feature/atlas-phase5-client` — **not Azure** |
+| stash0 Hub patches | `773e120420ffc35764cf2d31f84194a6acb2d031` `fix/hub-stash0-hardening` — **NOT APPLIED**; Wave 2 conflicts with `a43803e` |
 | `integration/atlas-canonical` | Canonical Atlas **source** line (not automatically Azure) |
 | `origin/main` | Protected production-promotion target; SHA must stay `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion. **Not what Azure is running.** |
 | Default GitHub branch | `cursor/v1.1.0-intelligence-ai-ops` (residual; not changed by Gate 11) |
@@ -78,6 +94,8 @@ Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d
 | BA | Reachable through Hub when configured; anonymous `/api/ba/health` is 401 |
 | Local AI | Disabled on production Hub (`insecureDevAuth=false`; do not treat Local AI as on) |
 | CRM operator | **LIVE DEPLOYED** `a43803e` — signed-in rendered Premium UI HOLD |
+| Phase 5B candidates | **NOT LIVE** — Capital Elite `b9806bc`; Client ops `0ffb645`; stash0 `773e120` not applied |
+| Command-K search | **P2 OPEN** — SYN* **15–24s**; not fixed |
 
 ## Entitlements (G11-F03)
 
@@ -107,9 +125,11 @@ No other users. Employee-to-client roster requires a later owner approval. Hub c
 - Do not initiate Dynamics/Dataverse.
 - Do not invent Client 360 mappings.
 - Do not add anyone except Manny to client groups.
-- Do not claim CRM operator (`a43803e`) is live-certified.
+- Do not claim signed-in `/leads` Premium UI PASS. CRM operator Hub+Elite is **LIVE DEPLOYED** `a43803e`; Premium UI remains HOLD until an Owner browser session reviews the queue.
+- Do not treat Phase 5B candidates (`b9806bc`, `0ffb645`, `773e120`) as live. Do not apply stash0 / Wave 2 onto live Hub.
+- Do not call Command-K SYN search (15–24s) fixed.
 - Do not claim ACCG01 ACL Apply ran.
-- Do not let documentation block a CRM Hub deploy.
+- Do not let documentation block a later certified Elite/Hub deploy. This branch still does not deploy.
 
 ## Status authority
 
