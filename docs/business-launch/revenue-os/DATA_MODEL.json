@@ -1,0 +1,142 @@
+{
+  "model_version": "revenue-os-1.0.0",
+  "status": "logical_contract_only",
+  "deployment": false,
+  "schema_changes": false,
+  "entities": {
+    "lead": {
+      "existing_contract": "HVCG_Leads",
+      "primary_key": "lead_id",
+      "states": ["New", "Contacted", "Discovery", "Qualified", "Nurture", "Converted", "Disqualified"],
+      "required": ["lead_id", "company_name", "status", "source", "owner", "created_at"],
+      "controls": ["manual_qualification", "legacy_guard", "idempotency_key"]
+    },
+    "sales_activity": {
+      "existing_contract": "HVCG_OpportunityActivities",
+      "primary_key": "activity_id",
+      "required": ["activity_id", "subject_type", "subject_id", "activity_type", "occurred_at", "owner"],
+      "controls": ["no_external_send_without_BL-C1"]
+    },
+    "opportunity": {
+      "existing_contract": "HVCG_Opportunities",
+      "primary_key": "opportunity_id",
+      "states": ["Discovery", "Assessment", "Proposal", "Negotiation", "Verbal Commit", "Won", "Lost"],
+      "required": ["opportunity_id", "lead_id", "stage", "owner", "expected_close_date", "forecast_category"],
+      "derived": ["weighted_value", "pipeline_health", "age_days", "stage_age_days"]
+    },
+    "proposal": {
+      "existing_contract": "HVCG_Proposals",
+      "primary_key": "proposal_id",
+      "states": ["Draft", "Internal Review", "Approved", "Sent", "Negotiation", "Accepted", "Rejected", "Expired", "Withdrawn"],
+      "required": ["proposal_id", "opportunity_id", "version", "status", "commercial_terms", "pricing_version"],
+      "controls": ["immutable_versions", "pricing_approval", "outbound_gate"]
+    },
+    "contract_envelope": {
+      "existing_contract": null,
+      "owner": "Legal/Business owner interface",
+      "primary_key": "contract_id",
+      "states": ["Draft", "Review", "Approved to Send", "Sent", "Negotiation", "Signed", "Activated", "Declined", "Expired", "Terminated"],
+      "required": ["contract_id", "proposal_id", "template_version", "contracting_entity", "commercial_terms", "approval_refs"],
+      "implementation": "interface_spec_only"
+    },
+    "client": {
+      "existing_contract": "HVCG_Clients",
+      "primary_key": "client_id",
+      "required": ["client_id", "client_code", "legal_name", "stage", "relationship_owner"],
+      "controls": ["legacy_pricing_preservation", "unique_client_code"]
+    },
+    "engagement": {
+      "existing_contract": "HVCG_Engagements",
+      "primary_key": "engagement_id",
+      "states": ["Draft", "Proposed", "Active", "On Hold", "Completed", "Cancelled"],
+      "required": ["engagement_id", "client_id", "type", "billing_structure", "status", "owner"]
+    },
+    "onboarding_case": {
+      "existing_contract": null,
+      "owner": "Operations/Client Portal interface",
+      "primary_key": "onboarding_id",
+      "states": ["Pending Contract", "Pending Payment", "Internal Setup", "Client Inputs", "Kickoff Ready", "Active", "Blocked"],
+      "required": ["onboarding_id", "client_id", "engagement_id", "readiness_checks", "requested_at"],
+      "implementation": "interface_spec_only"
+    },
+    "project": {
+      "existing_contract": "HVCG_Projects",
+      "primary_key": "project_id",
+      "states": ["Not Started", "In Progress", "Blocked", "On Hold", "Completed", "Cancelled"],
+      "required": ["project_id", "client_id", "engagement_id", "status", "owner"]
+    },
+    "billing_intent": {
+      "existing_contract": null,
+      "owner": "Finance interface",
+      "primary_key": "billing_intent_id",
+      "states": ["Draft", "Commercial Review", "Finance Accepted", "Invoice Drafted", "Rejected"],
+      "required": ["billing_intent_id", "client_id", "engagement_id", "type", "amount", "service_period", "approval_refs"],
+      "implementation": "interface_spec_only"
+    },
+    "invoice": {
+      "existing_contract": "HVCG_Invoices",
+      "owner": "Finance",
+      "primary_key": "invoice_id",
+      "states": ["Draft", "Sent", "Partial", "Paid", "Past Due", "Void"],
+      "required": ["invoice_id", "client_id", "amount", "status"],
+      "derived": ["open_balance", "days_outstanding", "days_past_due", "aging_bucket"]
+    },
+    "collection_activity": {
+      "existing_contract": "HVCG_CollectionsActivities",
+      "owner": "Finance",
+      "primary_key": "collection_activity_id",
+      "states": ["Reminder", "Call", "Email", "Payment Plan", "Escalation", "WriteOff"],
+      "required": ["collection_activity_id", "invoice_id", "activity_date", "type"],
+      "controls": ["outbound_gate", "writeoff_approval"]
+    },
+    "forecast_line": {
+      "existing_contract": "HVCG_RevenueForecastLines",
+      "primary_key": "forecast_line_id",
+      "required": ["forecast_line_id", "forecast_month", "revenue_type", "amount", "probability", "category"],
+      "derived": ["weighted_amount"]
+    },
+    "approval": {
+      "existing_contract": "HVCG_Approvals",
+      "primary_key": "approval_id",
+      "required": ["approval_id", "subject_type", "subject_id", "decision", "decided_by", "decided_at"]
+    },
+    "revenue_event": {
+      "existing_contract": "HVCG_AuditEvents",
+      "primary_key": "event_id",
+      "required": ["event_id", "event_type", "aggregate_type", "aggregate_id", "occurred_at", "actor", "payload_version"],
+      "controls": ["append_only", "idempotency_key"]
+    },
+    "metric_snapshot": {
+      "existing_contract": null,
+      "owner": "Revenue analytics interface",
+      "primary_key": "snapshot_id",
+      "required": ["snapshot_id", "as_of", "metric_id", "value", "grain", "source_watermark"],
+      "implementation": "mock_only"
+    }
+  },
+  "relationships": [
+    ["lead", "opportunity", "one_to_many"],
+    ["opportunity", "proposal", "one_to_many_versioned"],
+    ["proposal", "contract_envelope", "one_to_many_versioned"],
+    ["contract_envelope", "client", "many_to_one"],
+    ["client", "engagement", "one_to_many"],
+    ["engagement", "onboarding_case", "one_to_one_or_many"],
+    ["engagement", "project", "one_to_many"],
+    ["engagement", "billing_intent", "one_to_many"],
+    ["billing_intent", "invoice", "one_to_many"],
+    ["invoice", "collection_activity", "one_to_many"],
+    ["opportunity", "forecast_line", "one_to_many"],
+    ["client", "forecast_line", "one_to_many"]
+  ],
+  "global_controls": {
+    "environment": "Mock",
+    "production_writes": false,
+    "external_sends": false,
+    "payment_processing": false,
+    "schema_deployment": false,
+    "idempotency_required": true,
+    "audit_event_required": true,
+    "legacy_auto_reprice": false,
+    "lead_auto_qualify": false
+  }
+}
