@@ -223,7 +223,7 @@ function shortcutAllowed(
   ) {
     return can('viewFinance');
   }
-  if (path === '/leads' || path.startsWith('/leads/') || path.startsWith('/opportunities/')) {
+  if (path === '/leads' || path.startsWith('/leads/') || path === '/opportunities' || path.startsWith('/opportunities/')) {
     return can('viewCrmLeads');
   }
   if (to.startsWith('/clients') || isClientShortcut(item)) return can('viewClients');

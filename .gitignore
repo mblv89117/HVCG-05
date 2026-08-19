@@ -50,6 +50,7 @@ deployment/reports/data/
 deployment/artifacts/hub-build/
 deployment/artifacts/hub-rollback/
 deployment/artifacts/hub-*.zip
+deployment/artifacts/elite-*.zip
 deployment/artifacts/*.ps1
 deployment/artifacts/syn01-corpus/
 

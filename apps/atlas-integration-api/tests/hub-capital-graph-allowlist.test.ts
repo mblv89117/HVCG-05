@@ -170,7 +170,7 @@ describe('Capital Graph allowlist', () => {
     const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
     const graphSrc = readFileSync(join(root, 'apps/atlas-integration-api/src/capital/sharepoint/graph.ts'), 'utf8');
     const enable = readFileSync(join(root, 'deployment/scripts/Enable-HVCGCapitalMinSlice.ps1'), 'utf8');
-    const verify = readFileSync(join(root, 'deployment/artifacts/verify-capital-enablement.ps1'), 'utf8');
+    const verify = readFileSync(join(root, 'deployment/scripts/Verify-HVCGCapitalEnablement.ps1'), 'utf8');
     const recycle = readFileSync(join(root, 'deployment/scripts/Set-HVCGCapitalHubAppSettings.ps1'), 'utf8');
     assert.doesNotMatch(graphSrc, /Sites\.Manage\.All/);
     assert.match(enable, /Does not grant Sites\.Manage\.All/);

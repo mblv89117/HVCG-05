@@ -133,8 +133,18 @@ export type SharePointOpportunity = {
   opportunityType?: string;
   winLossStatus?: string;
   proposalAmount?: number;
+  expectedCloseDate?: string;
+  nextAction?: string;
+  nextActionDate?: string;
+  requiresExecutiveAttention?: boolean;
+  lostReason?: string;
+  wonDate?: string;
+  lostDate?: string;
+  capitalHandoffStatus?: string;
+  lastModified?: string;
   notes?: string;
   idempotencyKey?: string;
+  attention: OpportunityAttention;
 };
 
 export type SharePointContact = {
@@ -165,6 +175,73 @@ export type LeadConversionResult = {
   created: { company: boolean; contact: boolean; opportunity: boolean };
   entitlementProvisioned: false;
 };
+
+export const OPPORTUNITY_STAGES = ['Discovery', 'Assessment', 'Proposal', 'Negotiation', 'Won', 'Lost'] as const;
+export const OPPORTUNITY_WIN_LOSS_STATUSES = ['Open', 'Won', 'Lost', 'Abandoned'] as const;
+export const OPPORTUNITY_LOST_REASONS = ['Price', 'Timing', 'Competitor', 'Fit', 'Capacity', 'Other'] as const;
+
+export type OpportunityStage = (typeof OPPORTUNITY_STAGES)[number];
+export type OpportunityWinLossStatus = (typeof OPPORTUNITY_WIN_LOSS_STATUSES)[number];
+export type OpportunityAttention = {
+  state: 'OPEN' | 'NEEDS_ACTION' | 'OVERDUE' | 'NO_NEXT_ACTION' | 'NEEDS_MANNY' | 'WON' | 'LOST';
+  label: string;
+  severity: 'neutral' | 'info' | 'warning' | 'danger' | 'success';
+  reason: string;
+};
+
+const OPPORTUNITY_STAGE_SET = new Set<string>(OPPORTUNITY_STAGES);
+const OPPORTUNITY_WIN_LOSS_SET = new Set<string>(OPPORTUNITY_WIN_LOSS_STATUSES);
+const OPPORTUNITY_LOST_REASON_SET = new Set<string>(OPPORTUNITY_LOST_REASONS);
+
+function isOpportunityStage(value: string | undefined): value is OpportunityStage {
+  return Boolean(value && OPPORTUNITY_STAGE_SET.has(value));
+}
+
+function isOpportunityWinLossStatus(value: string | undefined): value is OpportunityWinLossStatus {
+  return Boolean(value && OPPORTUNITY_WIN_LOSS_SET.has(value));
+}
+
+function nullDateOrIso(v: unknown): string | null {
+  if (v === null || v === '') return null;
+  const s = asString(v);
+  if (!s) return null;
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) {
+    throw new PmHttpError(400, 'invalid_input', 'Date fields must be valid ISO dates.');
+  }
+  return d.toISOString();
+}
+
+export function classifyOpportunityAttention(
+  opportunity: Pick<
+    SharePointOpportunity,
+    'stage' | 'winLossStatus' | 'nextAction' | 'nextActionDate' | 'requiresExecutiveAttention'
+  >,
+  today = new Date().toISOString().slice(0, 10),
+): OpportunityAttention {
+  const status = opportunity.winLossStatus || (opportunity.stage === 'Won' || opportunity.stage === 'Lost' ? opportunity.stage : 'Open');
+  if (status === 'Won' || opportunity.stage === 'Won') {
+    return {
+      state: 'WON',
+      label: 'Won',
+      severity: 'success',
+      reason: 'Closed won. Client activation remains a separate approved workflow.',
+    };
+  }
+  if (status === 'Lost' || status === 'Abandoned' || opportunity.stage === 'Lost') {
+    return { state: 'LOST', label: status === 'Abandoned' ? 'Abandoned' : 'Lost', severity: 'neutral', reason: 'Closed out of active pipeline.' };
+  }
+  if (opportunity.requiresExecutiveAttention) {
+    return { state: 'NEEDS_MANNY', label: 'Needs Manny', severity: 'warning', reason: 'Executive attention flag is set.' };
+  }
+  const due = (opportunity.nextActionDate || '').slice(0, 10);
+  if (due && due < today) return { state: 'OVERDUE', label: 'Overdue', severity: 'danger', reason: `Next action was due ${due}.` };
+  if (!opportunity.nextAction && !due) {
+    return { state: 'NO_NEXT_ACTION', label: 'No Next Action', severity: 'warning', reason: 'Open opportunity has no next action or due date.' };
+  }
+  if (due && due <= today) return { state: 'NEEDS_ACTION', label: 'Needs Action', severity: 'warning', reason: `Next action due ${due}.` };
+  return { state: 'OPEN', label: 'Open', severity: 'info', reason: 'Open pipeline work with a future or recorded next step.' };
+}
 
 function nextActionFromNotes(notes?: string): string | undefined {
   if (!notes) return undefined;
@@ -1195,7 +1272,7 @@ export class SharePointPmService {
       (fromField && isCanonicalClientCode(fromField) && fromField !== '*' ? fromField : undefined) ||
       linked?.clientCode;
     const amount = item.fields.ProposalAmount;
-    return {
+    const opportunity: Omit<SharePointOpportunity, 'attention'> = {
       id: item.id,
       etag: item.etag,
       title,
@@ -1208,9 +1285,19 @@ export class SharePointPmService {
       opportunityType: asString(item.fields.OpportunityType),
       winLossStatus: asString(item.fields.WinLossStatus),
       proposalAmount: typeof amount === 'number' && Number.isFinite(amount) ? amount : undefined,
+      expectedCloseDate: isoDate(item.fields.ExpectedCloseDate),
+      nextAction: asString(item.fields.NextActionNotes),
+      nextActionDate: isoDate(item.fields.NextActionDate),
+      requiresExecutiveAttention: asBool(item.fields.RequiresExecutiveAttention),
+      lostReason: asString(item.fields.LostReason),
+      wonDate: isoDate(item.fields.WonDate),
+      lostDate: isoDate(item.fields.LostDate),
+      capitalHandoffStatus: asString(item.fields.CapitalHandoffStatus),
+      lastModified: isoDate(item.fields.Modified),
       notes: asString(item.fields.Notes) || asString(item.fields.Summary),
       idempotencyKey: asString(item.fields.HVCG_IdempotencyKey),
     };
+    return { ...opportunity, attention: classifyOpportunityAttention(opportunity) };
   }
 
   private canSeeOpportunity(principal: AtlasPrincipal, opportunity: SharePointOpportunity): boolean {
@@ -1229,6 +1316,118 @@ export class SharePointPmService {
     if (!item) return 'not_found';
     const mapped = this.mapOpportunity(item, await this.clientIndex());
     if (!mapped || !this.canSeeOpportunity(principal, mapped)) return 'not_found';
+    return mapped;
+  }
+
+  async patchOpportunity(
+    principal: AtlasPrincipal,
+    id: string,
+    body: Record<string, unknown>,
+    etag: string | undefined,
+  ): Promise<SharePointOpportunity> {
+    const existing = await this.authorizeOpportunity(principal, id);
+    if (existing === 'not_found') throw new PmHttpError(404, 'not_found', 'not_found');
+    if (!isInternalStaff(principal)) {
+      throw new PmHttpError(403, 'forbidden', 'Opportunity updates are restricted to HVCG internal staff.');
+    }
+    if (!etag) throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
+    if (!this.settings.opportunitiesListId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Opportunities is not configured.');
+    }
+    const immutable = [
+      'clientCode',
+      'ClientCode',
+      'clientId',
+      'ClientId',
+      'leadId',
+      'LeadId',
+      'convertedClientId',
+      'ConvertedClientId',
+      'ClientStage',
+      'clientStage',
+      'HVCG_IdempotencyKey',
+      'idempotencyKey',
+      'CapitalOpportunityId',
+      'capitalOpportunityId',
+      'CapitalHandoffStatus',
+      'capitalHandoffStatus',
+    ];
+    if (immutable.some((field) => field in body)) {
+      throw new PmHttpError(
+        400,
+        'immutable_field',
+        'Opportunity linkage, activation, capital handoff, and idempotency fields cannot be changed via PATCH.',
+      );
+    }
+
+    const fields: Record<string, unknown> = {};
+    const requestedStage = asString(body.stage) || asString(body.Stage);
+    const requestedStatus = asString(body.winLossStatus) || asString(body.WinLossStatus);
+    if (requestedStage) {
+      if (!isOpportunityStage(requestedStage)) {
+        throw new PmHttpError(400, 'invalid_input', 'Stage must be Discovery, Assessment, Proposal, Negotiation, Won, or Lost.');
+      }
+      fields.Stage = requestedStage;
+      if (requestedStage === 'Won') {
+        fields.WinLossStatus = 'Won';
+        fields.WonDate = existing.wonDate || new Date().toISOString();
+      }
+      if (requestedStage === 'Lost') {
+        fields.WinLossStatus = 'Lost';
+        fields.LostDate = existing.lostDate || new Date().toISOString();
+      }
+    }
+    if (requestedStatus) {
+      if (!isOpportunityWinLossStatus(requestedStatus)) {
+        throw new PmHttpError(400, 'invalid_input', 'WinLossStatus must be Open, Won, Lost, or Abandoned.');
+      }
+      fields.WinLossStatus = requestedStatus;
+      if (requestedStatus === 'Won') {
+        fields.Stage = 'Won';
+        fields.WonDate = existing.wonDate || new Date().toISOString();
+      }
+      if (requestedStatus === 'Lost' || requestedStatus === 'Abandoned') {
+        fields.Stage = 'Lost';
+        fields.LostDate = existing.lostDate || new Date().toISOString();
+      }
+    }
+    const lostReason = asString(body.lostReason) || asString(body.LostReason);
+    if (lostReason) {
+      if (!OPPORTUNITY_LOST_REASON_SET.has(lostReason)) {
+        throw new PmHttpError(400, 'invalid_input', 'LostReason must be Price, Timing, Competitor, Fit, Capacity, or Other.');
+      }
+      fields.LostReason = lostReason;
+    }
+    if ('ownerEmail' in body || 'OwnerEmail' in body || 'salesOwnerEmail' in body || 'SalesOwnerEmail' in body) {
+      const ownerEmail =
+        asString(body.ownerEmail) ||
+        asString(body.OwnerEmail) ||
+        asString(body.salesOwnerEmail) ||
+        asString(body.SalesOwnerEmail) ||
+        '';
+      fields.OwnerEmail = ownerEmail;
+      fields.SalesOwnerEmail = ownerEmail;
+    }
+    if ('nextAction' in body || 'nextActionNotes' in body || 'NextActionNotes' in body) {
+      fields.NextActionNotes =
+        (asString(body.nextAction) || asString(body.nextActionNotes) || asString(body.NextActionNotes) || '').slice(0, 2000);
+    }
+    if ('nextActionDate' in body || 'NextActionDate' in body) {
+      fields.NextActionDate = nullDateOrIso(body.nextActionDate ?? body.NextActionDate);
+    }
+    if ('expectedCloseDate' in body || 'ExpectedCloseDate' in body) {
+      fields.ExpectedCloseDate = nullDateOrIso(body.expectedCloseDate ?? body.ExpectedCloseDate);
+    }
+    if ('requiresExecutiveAttention' in body || 'RequiresExecutiveAttention' in body) {
+      fields.RequiresExecutiveAttention = body.requiresExecutiveAttention === true || body.RequiresExecutiveAttention === true;
+    }
+    if ('notes' in body || 'Notes' in body) {
+      fields.Notes = (asString(body.notes) || asString(body.Notes) || '').slice(0, 2000);
+    }
+    if (Object.keys(fields).length === 0) return existing;
+    const patched = await this.graph.patchItemFields(this.settings.opportunitiesListId, id, fields, etag);
+    const mapped = this.mapOpportunity(patched, await this.clientIndex());
+    if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched opportunity could not be mapped.');
     return mapped;
   }
 

@@ -182,7 +182,7 @@ export async function indexBusinessFiles(opts: {
         });
       }
       const prior = cp.drives[driveId]?.deltaLink;
-      let url =
+      let url: string | null =
         prior ||
         `/v1.0/drives/${driveId}/root/delta?$select=id,name,file,folder,webUrl,parentReference&$top=${PAGE_SIZE}`;
       for (let page = 0; page < MAX_DELTA_PAGES && url; page += 1) {

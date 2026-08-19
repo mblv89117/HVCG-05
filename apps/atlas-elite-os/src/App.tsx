@@ -34,6 +34,7 @@ import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { LeadsPage } from './pages/LeadsPage';
 import { LeadDetailPage } from './pages/LeadDetailPage';
 import { OpportunityDetailPage } from './pages/OpportunityDetailPage';
+import { OpportunitiesPage } from './pages/OpportunitiesPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { SettingsPage } from './pages/NotificationsSettings';
 import { AccessDeniedPage, NotFoundPage } from './pages/SystemPages';
@@ -190,6 +191,14 @@ export function App() {
                 element={
                   <LeadsRoute>
                     <LeadDetailPage />
+                  </LeadsRoute>
+                }
+              />
+              <Route
+                path="opportunities"
+                element={
+                  <LeadsRoute>
+                    <OpportunitiesPage />
                   </LeadsRoute>
                 }
               />
