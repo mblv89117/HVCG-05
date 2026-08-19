@@ -29,6 +29,14 @@ import { useHubAuth } from '../../integrations/hub/useHubAuth';
 import { useAtlasRole } from '../../security/RoleProvider';
 import { ATLAS_STATUS } from '../../ui/statusLanguage';
 import {
+  ApplicationExecution,
+  ClosingExecution,
+  FeesExecution,
+  OffersExecution,
+  RfiExecution,
+  SubmissionExecution,
+} from './CapitalExecutionSurfaces';
+import {
   AI_DISCLAIMER,
   decideShortlist,
   decideStrategy,
@@ -50,6 +58,7 @@ import {
   type CapitalDataSource,
   type CapitalOpportunityDetail,
   type StrategyDecision,
+  type TermComparison,
 } from './capitalApi';
 
 type WorkspaceTab =
@@ -61,6 +70,7 @@ type WorkspaceTab =
   | 'lenders'
   | 'application'
   | 'submissions'
+  | 'rfi'
   | 'offers'
   | 'closing'
   | 'fees';
@@ -74,6 +84,7 @@ const TABS: Array<[WorkspaceTab, string]> = [
   ['lenders', 'Lenders / Match'],
   ['application', 'Application'],
   ['submissions', 'Submission tracking'],
+  ['rfi', 'RFI'],
   ['offers', 'Offers'],
   ['closing', 'Closing'],
   ['fees', 'Fees'],
@@ -216,6 +227,31 @@ export function OpportunityWorkspace({
     }
   };
 
+  const runComparison = async (
+    action: () => Promise<{ comparison: TermComparison; source: CapitalDataSource }>,
+    ok: string,
+  ) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await action();
+      setDetail((cur) => (cur ? { ...cur, comparison: res.comparison } : cur));
+      setActiveSource(res.source);
+      loadSourceRef.current = res.source;
+      setNotice(ok);
+      onChanged?.();
+    } catch (err) {
+      const kind = accessFailureKind(err);
+      setError(operatorFacingMessage(err, 'That action could not be completed.'));
+      if (kind) {
+        setAccess(kind);
+        setDetail(null);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const o = detail?.opportunity;
   const strategyPending = o?.mannyStrategyApproval === 'PENDING' || o?.stage === 'AwaitingMannyStrategyApproval';
   const shortlistPending = o?.mannyShortlistApproval === 'PENDING' || o?.stage === 'AwaitingMannyShortlistApproval';
@@ -234,6 +270,7 @@ export function OpportunityWorkspace({
         { tab: 'strategy', label: 'Strategy', value: titleFromToken(o.mannyStrategyApproval) },
         { tab: 'lenders', label: 'Shortlist', value: titleFromToken(o.mannyShortlistApproval) },
         { tab: 'submissions', label: 'Submissions', value: String(detail.submissions.length) },
+        { tab: 'rfi', label: 'RFI', value: String((detail.rfis || []).length) },
         { tab: 'offers', label: 'Term sheets', value: String(detail.offers.length) },
         { tab: 'closing', label: 'Closing conditions', value: String(detail.closing.length) },
         { tab: 'fees', label: 'Fees', value: String(detail.fees.length) },
@@ -752,196 +789,73 @@ export function OpportunityWorkspace({
           ) : null}
 
           {tab === 'application' ? (
-            <SectionRail title="Application" subtitle="Populated fields keep their verification state">
-              {!detail.application ? (
-                <EmptyState
-                  title="No application package"
-                  description="Packages are prepared after Manny approves the shortlist. Missing fields block submission."
-                />
-              ) : (
-                <AtlasCard
-                  title={detail.application.status === 'PREPARED' ? 'Prepared (not submitted)' : 'Blocked — missing fields'}
-                  subtitle={`Lender ${detail.application.lenderId}`}
-                >
-                  <Caption1 style={{ display: 'block', marginBottom: 8 }}>
-                    Status: {titleFromToken(detail.application.status)}. Populated values remain unverified until a human confirms source documents.
-                  </Caption1>
-                  {Object.entries(detail.application.populatedFields).map(([field, cell]) => (
-                    <div key={field} style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                      <Text weight="semibold">{field}</Text>
-                      <Caption1>
-                        {String(cell.value)} · {cell.verification}
-                        {activeSource === 'synthetic' ? ' · synthetic' : ''}
-                      </Caption1>
-                    </div>
-                  ))}
-                  {detail.application.missingFields.length ? (
-                    <ul>
-                      {detail.application.missingFields.map((m) => (
-                        <li key={m.field}>
-                          <Text size={300}>
-                            {m.field} — {m.requiredFrom}
-                          </Text>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </AtlasCard>
-              )}
-            </SectionRail>
+            <ApplicationExecution
+              detail={detail}
+              source={activeSource}
+              auth={auth}
+              busy={busy}
+              canMutateApprovals={canMutateApprovals}
+              run={run}
+            />
           ) : null}
 
           {tab === 'submissions' ? (
-            <SectionRail title="Submission tracking" subtitle="HVCG tracks packages — HVCG does not lend">
-              {detail.submissions.length === 0 ? (
-                <EmptyState title="No submissions" description="Tracking rows appear after a package is sent to a third-party lender." />
-              ) : (
-                <DataTable
-                  ariaLabel="Lender submission tracking"
-                  getRowKey={(r) => r.id}
-                  rows={detail.submissions}
-                  columns={[
-                    { key: 'lender', header: 'Lender', render: (r) => r.lenderName || r.lenderId },
-                    { key: 'method', header: 'Method', render: (r) => r.method },
-                    {
-                      key: 'status',
-                      header: 'Status',
-                      render: (r) => <StatusChip label={titleFromToken(r.status)} tone="info" />,
-                    },
-                    { key: 'at', header: 'Submitted', render: (r) => (r.submittedAt ? new Date(r.submittedAt).toLocaleString() : '—') },
-                    { key: 'conf', header: 'Confirmation', render: (r) => r.confirmationNumber || '—' },
-                    { key: 'notes', header: 'Notes', render: (r) => r.notes || '—' },
-                  ]}
-                />
-              )}
-            </SectionRail>
+            <SubmissionExecution detail={detail} source={activeSource} auth={auth} busy={busy} run={run} />
+          ) : null}
+
+          {tab === 'rfi' ? (
+            <RfiExecution
+              detail={detail}
+              source={activeSource}
+              auth={auth}
+              busy={busy}
+              canMutateApprovals={canMutateApprovals}
+              run={run}
+            />
           ) : null}
 
           {tab === 'offers' ? (
-            <SectionRail title="Offers" subtitle="Comparison is informational — not a financing guarantee">
-              {detail.offers.length === 0 ? (
-                <EmptyState title="No offers recorded" description="Term sheets appear when a lender responds. HVCG does not guarantee terms." />
-              ) : (
-                <>
-                  <MessageBar intent="info">
-                    <MessageBarBody>{FINANCING_DISCLAIMER}</MessageBarBody>
-                  </MessageBar>
-                  <DataTable
-                    ariaLabel="Term sheet offers"
-                    getRowKey={(r) => r.id}
-                    rows={detail.offers}
-                    columns={[
-                      { key: 'lender', header: 'Lender', sticky: 'left', render: (r) => r.lenderName },
-                      { key: 'product', header: 'Product', render: (r) => r.product || '—' },
-                      {
-                        key: 'amt',
-                        header: 'Amount',
-                        render: (r) =>
-                          activeSource === 'synthetic' ? `${formatUsd(r.amount)} (synthetic)` : formatUsd(r.amount),
-                      },
-                      {
-                        key: 'rate',
-                        header: 'Stated rate',
-                        render: (r) => (r.interestRate != null ? `${r.interestRate}%` : 'Not recorded'),
-                      },
-                      { key: 'term', header: 'Term (mo)', render: (r) => (r.termMonths != null ? String(r.termMonths) : '—') },
-                      { key: 'orig', header: 'Origination', render: (r) => (r.origination != null ? `${r.origination}%` : '—') },
-                      { key: 'assume', header: 'Assumptions', render: (r) => r.assumptions.join('; ') || 'None recorded' },
-                    ]}
-                  />
-                </>
-              )}
-            </SectionRail>
+            <OffersExecution
+              detail={detail}
+              source={activeSource}
+              auth={auth}
+              busy={busy}
+              canMutateApprovals={canMutateApprovals}
+              run={run}
+              runComparison={runComparison}
+            />
           ) : null}
 
           {tab === 'closing' ? (
-            <SectionRail
-              title="Closing"
-              subtitle="Conditions to funding by a third-party lender"
-              actions={
-                o.stage === 'ClientDecision' ? (
-                  <Button
-                    size="small"
-                    disabled={busy}
-                    aria-label="Move opportunity to closing"
-                    onClick={() =>
-                      void run(
-                        () => transitionOpportunity(auth, o.id, 'Closing', { source: activeSource }),
-                        'Moved to closing. Funding is still determined by the lender.',
-                      )
-                    }
-                  >
-                    Enter closing
-                  </Button>
-                ) : null
-              }
-            >
-              {detail.closing.length === 0 ? (
-                <EmptyState title="No closing conditions" description="Conditions generate when the file enters closing." />
-              ) : (
-                <DataTable
-                  ariaLabel="Closing conditions"
-                  getRowKey={(r) => r.id}
-                  rows={detail.closing}
-                  columns={[
-                    { key: 'name', header: 'Condition', render: (r) => r.name },
-                    { key: 'owner', header: 'Owner', render: (r) => r.owner },
-                    {
-                      key: 'status',
-                      header: 'Status',
-                      render: (r) => (
-                        <StatusChip
-                          label={titleFromToken(r.status)}
-                          tone={r.status === 'satisfied' || r.status === 'waived' ? 'success' : r.status === 'blocked' ? 'danger' : 'warning'}
-                        />
-                      ),
-                    },
-                    { key: 'due', header: 'Due', render: (r) => r.due || '—' },
-                    { key: 'block', header: 'Blocker', render: (r) => r.blocker || '—' },
-                  ]}
-                />
-              )}
-            </SectionRail>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {o.stage === 'ClientDecision' ? (
+                <Button
+                  size="small"
+                  disabled={busy}
+                  aria-label="Move opportunity to closing"
+                  onClick={() =>
+                    void run(
+                      () => transitionOpportunity(auth, o.id, 'Closing', { source: activeSource }),
+                      'Moved to closing. Funding is still determined by the lender.',
+                    )
+                  }
+                >
+                  Enter closing
+                </Button>
+              ) : null}
+              <ClosingExecution
+                detail={detail}
+                source={activeSource}
+                auth={auth}
+                busy={busy}
+                canMutateApprovals={canMutateApprovals}
+                run={run}
+              />
+            </div>
           ) : null}
 
           {tab === 'fees' ? (
-            <SectionRail title="Fees / receivables" subtitle="HVCG economics — not funded capital">
-              {detail.fees.length === 0 ? (
-                <EmptyState
-                  title="No fee records"
-                  description="Fees follow the executed HVCG agreement. Success fee ≠ lender funding."
-                />
-              ) : (
-                <DataTable
-                  ariaLabel="Capital fee and receivable status"
-                  getRowKey={(r) => r.id}
-                  rows={detail.fees}
-                  columns={[
-                    { key: 'type', header: 'Fee type', render: (r) => r.feeType },
-                    { key: 'formula', header: 'Formula', render: (r) => r.feeFormula || '—' },
-                    { key: 'event', header: 'Earned event', render: (r) => r.earnedEvent || '—' },
-                    {
-                      key: 'appr',
-                      header: 'Approval',
-                      render: (r) => <StatusChip label={titleFromToken(r.approvalStatus)} tone={r.approvalStatus === 'APPROVED' ? 'success' : 'warning'} />,
-                    },
-                    { key: 'inv', header: 'Invoice', render: (r) => r.invoiceStatus },
-                    { key: 'pay', header: 'Payment', render: (r) => r.paymentStatus },
-                    {
-                      key: 'legal',
-                      header: 'Legal / compliance',
-                      render: (r) =>
-                        r.legalComplianceReviewRequired ? (
-                          <StatusChip label={ATLAS_STATUS.complianceReview} tone="gold" />
-                        ) : (
-                          '—'
-                        ),
-                    },
-                    { key: 'notes', header: 'Notes', render: (r) => r.notes || '—' },
-                  ]}
-                />
-              )}
-            </SectionRail>
+            <FeesExecution detail={detail} source={activeSource} auth={auth} busy={busy} run={run} />
           ) : null}
         </>
       ) : null}
