@@ -1199,6 +1199,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
         },
         '121',
       );
+      const staleEtag = overdue.etag;
 
       const list = await fetch(`${base}/api/pm/opportunities`, { headers: auth('staff') });
       assert.equal(list.status, 200);
@@ -1258,7 +1259,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
 
       const stale = await fetch(`${base}/api/pm/opportunities/120`, {
         method: 'PATCH',
-        headers: { ...auth('staff'), 'if-match': overdue.etag },
+        headers: { ...auth('staff'), 'if-match': staleEtag },
         body: JSON.stringify({ nextAction: 'Stale mutation' }),
       });
       assert.equal(stale.status, 412);
