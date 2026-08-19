@@ -153,41 +153,86 @@ export function ClientsPage() {
 export function OperationsPage() {
   const { data, visibleNotifications } = useDashboard()
   const approvals = visibleNotifications.filter((item) => item.domain === 'Approvals')
+  const portfolio = [
+    { name: 'Operations Hub Command Center', owner: 'Manny Barela', status: 'In Progress', health: 'Green', next: 'Ship portfolio + approval workflows', due: '2026-07-25' },
+    { name: 'Summit Infrastructure delivery', owner: 'Alex Rivera', status: 'At Risk', health: 'Yellow', next: 'Unblock valuation inputs', due: '2026-07-22' },
+    { name: 'Cobalt scope change', owner: 'Jordan Lee', status: 'Blocked', health: 'Red', next: 'Owner commercial exception', due: '2026-07-18' },
+    { name: 'Weekly ops cadence', owner: 'Casey Nguyen', status: 'On Track', health: 'Green', next: 'Publish Monday digest', due: '2026-09-30' },
+  ]
   return (
     <>
-      <PageHeader eyebrow="Internal operations" title="Operating control plane" description="Projects, agents, sprints, releases, QA, system health, deployments, and approvals." />
+      <PageHeader
+        eyebrow="Internal operations"
+        title="Operating control plane"
+        description="HVCG workspace operations command center — portfolio health, escalations, approvals, and agent posture. Deep workspace: Operations Hub Portfolio."
+        action={<span className="data-chip">Integrated · Ops Hub portfolio</span>}
+      />
       <MetricGrid metrics={[
-        { id: 'projects', label: 'Active projects', value: '12', detail: '9 on track · 3 watch', trend: '92% milestone rate', trendDirection: 'up', tone: 'positive' },
-        { id: 'sprints', label: 'Active sprints', value: '1', detail: 'Executive Command Center', trend: 'Sprint 1', trendDirection: 'flat', tone: 'accent' },
-        { id: 'qa', label: 'QA status', value: '98.4%', detail: 'RC-1 locked · no regression', trend: '147 checks', trendDirection: 'up', tone: 'positive' },
-        { id: 'approvals', label: 'Pending approvals', value: String(Math.max(approvals.length, 3)), detail: '2 owner · 1 finance', trend: 'Oldest 4h', trendDirection: 'flat', tone: 'warning' },
+        { id: 'projects', label: 'Active projects', value: '4', detail: '2 healthy · 1 watch · 1 blocked', trend: 'Portfolio live', trendDirection: 'up', tone: 'positive' },
+        { id: 'overdue', label: 'Overdue work', value: '2', detail: 'Escalate owners', trend: 'Due-date gate', trendDirection: 'down', tone: 'critical' },
+        { id: 'blocked', label: 'Blocked', value: '2', detail: 'Client input + commercial', trend: 'Needs decision', trendDirection: 'flat', tone: 'critical' },
+        { id: 'approvals', label: 'Pending approvals', value: String(Math.max(approvals.length, 2)), detail: 'Ops Hub + executive gates', trend: 'Oldest 4h', trendDirection: 'flat', tone: 'warning' },
       ]} />
+
+      <Section title="Executive portfolio" subtitle="Surfaced from Operations Hub · next action first" className="table-panel">
+        <div className="table-wrap" data-testid="exec-ops-portfolio">
+          <table>
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Health</th>
+                <th>Due</th>
+                <th>Next action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {portfolio.map((row) => (
+                <tr key={row.name}>
+                  <td>{row.name}</td>
+                  <td>{row.owner}</td>
+                  <td><Badge tone={row.status === 'Blocked' ? 'critical' : row.status === 'At Risk' ? 'warning' : row.status === 'On Track' ? 'positive' : 'accent'}>{row.status}</Badge></td>
+                  <td><Badge tone={row.health === 'Green' ? 'positive' : row.health === 'Yellow' ? 'warning' : 'critical'}>{row.health}</Badge></td>
+                  <td>{row.due}</td>
+                  <td>{row.next}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="center-note">Open full workflows in Operations Hub → Portfolio (`/portfolio`): create/update projects, milestones, tasks, approvals, risks, issues, decisions, comments, and documents.</p>
+      </Section>
+
       <div className="dashboard-grid split">
+        <Section title="Escalations" subtitle="Overdue and blocked work">
+          <div className="recommendation-list">
+            <div className="risk-high"><span>Blocked</span><p><strong>Cobalt commercial exception</strong>Awaiting owner approve/reject.</p><small>Ops Hub · Approvals</small></div>
+            <div className="risk-high"><span>Overdue</span><p><strong>Summit valuation inputs</strong>Client document chase past due.</p><small>Ops Hub · Blocked task</small></div>
+            <div className="risk-medium"><span>Watch</span><p><strong>Approval UX gate</strong>Ops Hub approval workflow pending owner review.</p><small>Ops Hub · Awaiting Approval</small></div>
+          </div>
+        </Section>
         <Section title="Agent status" subtitle="Mock multi-agent operating state">
           <div className="agent-list">{data.agentStatuses.map((agent) => (
             <div key={agent.name}><span className={`status-light status-${agent.status.toLowerCase().replace(' ', '-')}`} /><p><strong>{agent.name}</strong><small>{agent.workstream}</small></p><span><Badge tone={agent.status === 'Blocked' ? 'critical' : agent.status === 'In progress' ? 'accent' : 'neutral'}>{agent.status}</Badge><small>{agent.heartbeat}</small></span></div>
           ))}</div>
         </Section>
+      </div>
+      <div className="dashboard-grid thirds">
         <Section title="System health" subtitle="Environment and service posture">
           <div className="health-list">
             <div><span>Development</span><strong>Healthy</strong><Badge tone="positive">Online</Badge></div>
             <div><span>Track 1</span><strong>Live—Internal</strong><Badge tone="neutral">Frozen</Badge></div>
-            <div><span>Client Portal</span><strong>Sprint 1 complete</strong><Badge tone="positive">Ready</Badge></div>
-            <div><span>Revenue OS</span><strong>Phase 1 complete</strong><Badge tone="positive">Ready</Badge></div>
+            <div><span>Operations Hub</span><strong>Portfolio command center</strong><Badge tone="accent">Integrated</Badge></div>
             <div><span>Production changes</span><strong>None</strong><Badge tone="neutral">Protected</Badge></div>
           </div>
         </Section>
-      </div>
-      <div className="dashboard-grid thirds">
         <Section title="Current release" subtitle="Release candidate">
           <div className="release-card"><span>RC</span><div><strong>RC-1</strong><p>Locked development baseline</p></div></div>
-          <dl className="stacked-facts"><div><dt>Track 1</dt><dd>Frozen</dd></div><div><dt>Production</dt><dd>Protected</dd></div><div><dt>Next gate</dt><dd>Owner approval</dd></div></dl>
+          <dl className="stacked-facts"><div><dt>Track 1</dt><dd>Frozen</dd></div><div><dt>Production</dt><dd>Protected</dd></div><div><dt>Next gate</dt><dd>Owner / QA</dd></div></dl>
         </Section>
-        <Section title="Sprint status" subtitle="Authoritative phase state">
-          <div className="sprint-list"><p><span>Revenue 1–4</span><Badge tone="positive">Complete</Badge></p><p><span>Portal Sprint 1</span><Badge tone="positive">Complete</Badge></p><p><span>Executive Sprint 1</span><Badge tone="accent">In progress</Badge></p></div>
-        </Section>
-        <Section title="Deployments" subtitle="No live changes in this sprint">
-          <div className="deployment-status"><Icon name="briefcase" size={28} /><strong>Protected mode</strong><p>Mock dashboard only. No Production, Track 1, DNS, email, SMS, or live integrations.</p></div>
+        <Section title="Integrations (approved posture)" subtitle="Mock · no live send">
+          <div className="deployment-status"><Icon name="briefcase" size={28} /><strong>Notifications · Outlook · Teams · Automation</strong><p>Surfaced as architecture-ready hooks. Live client communications remain blocked until authorized.</p></div>
         </Section>
       </div>
     </>

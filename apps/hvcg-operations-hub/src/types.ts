@@ -1,13 +1,27 @@
 export type Role = 'Owner' | 'Operations' | 'PM' | 'Finance' | 'Advisor' | 'Assistant'
 
 export type ModuleId =
+  | 'portfolio'
+  | 'executive'
   | 'operations'
+  | 'scorecards'
+  | 'weekly'
+  | 'quarterly'
+  | 'kpis'
+  | 'meetings'
+  | 'sop'
+  | 'hr'
+  | 'hiring'
+  | 'training'
+  | 'vendors'
+  | 'assets'
+  | 'notifications'
+  | 'calendar'
+  | 'docs'
   | 'team'
   | 'projects'
-  | 'sop'
   | 'ai'
   | 'human'
-  | 'notifications'
 
 export type Tone = 'neutral' | 'positive' | 'warning' | 'critical' | 'accent'
 export type TrendDirection = 'up' | 'down' | 'flat'
@@ -104,6 +118,8 @@ export interface Meeting {
   title: string
   when: string
   attendees: string
+  type?: string
+  location?: string
 }
 
 export interface ReleaseItem {
@@ -115,7 +131,7 @@ export interface ReleaseItem {
 
 export interface Notification {
   id: string
-  type: 'QA complete' | 'Release' | 'Client docs' | 'Proposal approved' | 'Sprint complete' | 'Deployment pending'
+  type: string
   title: string
   detail: string
   timestamp: string
@@ -124,11 +140,113 @@ export interface Notification {
   allowedRoles: Role[]
 }
 
+export interface ScorecardRow {
+  id: string
+  owner: string
+  metric: string
+  target: string
+  actual: string
+  status: 'Green' | 'Yellow' | 'Red'
+}
+
+export interface WeeklyReviewItem {
+  id: string
+  week: string
+  theme: string
+  wins: string
+  risks: string
+  owner: string
+  status: 'Draft' | 'Ready' | 'Reviewed'
+}
+
+export interface QuarterlyPlanItem {
+  id: string
+  quarter: string
+  objective: string
+  owner: string
+  progress: number
+  status: 'On track' | 'At risk' | 'Deferred'
+}
+
+export interface CompanyKpi {
+  id: string
+  name: string
+  value: string
+  target: string
+  period: string
+  tone: Tone
+}
+
+export interface HrRecord {
+  id: string
+  name: string
+  department: string
+  title: string
+  status: 'Active' | 'On leave' | 'Offboarding'
+  manager: string
+  startDate: string
+}
+
+export interface HiringRole {
+  id: string
+  role: string
+  stage: 'Open' | 'Screening' | 'Interview' | 'Offer' | 'Filled'
+  candidates: number
+  owner: string
+  targetDate: string
+}
+
+export interface TrainingItem {
+  id: string
+  course: string
+  audience: string
+  completion: number
+  due: string
+  status: 'In progress' | 'Complete' | 'Overdue'
+}
+
+export interface Vendor {
+  id: string
+  name: string
+  category: string
+  status: 'Active' | 'Review' | 'Paused'
+  owner: string
+  renewal: string
+  spend: string
+}
+
+export interface Asset {
+  id: string
+  name: string
+  type: string
+  assignee: string
+  status: 'In use' | 'Available' | 'Maintenance' | 'Retired'
+  location: string
+}
+
+export interface DocPackage {
+  id: string
+  title: string
+  kind: string
+  owner: string
+  updatedAt: string
+  status: ApprovalState
+}
+
+export interface CalendarArchNote {
+  id: string
+  layer: string
+  decision: string
+  status: 'Planned' | 'Designed' | 'Deferred'
+  note: string
+}
+
 export interface OperationsData {
   generatedAt: string
   tenantId: string
   tenantName: string
   overviewMetrics: Metric[]
+  executiveMetrics: Metric[]
   team: TeamMember[]
   projects: Project[]
   sops: SopDocument[]
@@ -140,4 +258,15 @@ export interface OperationsData {
   releases: ReleaseItem[]
   docHealth: Metric[]
   notifications: Notification[]
+  scorecards: ScorecardRow[]
+  weeklyReviews: WeeklyReviewItem[]
+  quarterlyPlans: QuarterlyPlanItem[]
+  companyKpis: CompanyKpi[]
+  hrRoster: HrRecord[]
+  hiringRoles: HiringRole[]
+  training: TrainingItem[]
+  vendors: Vendor[]
+  assets: Asset[]
+  documentation: DocPackage[]
+  calendarArchitecture: CalendarArchNote[]
 }

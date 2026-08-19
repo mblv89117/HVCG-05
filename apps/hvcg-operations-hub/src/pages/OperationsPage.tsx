@@ -1,12 +1,14 @@
 import { MetricCard, PageHeader, Section, StatusPill } from '../components/Ui'
+import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge'
 import { useOps } from '../state/OpsContext'
 
 export function OperationsPage() {
-  const { data } = useOps()
+  const { data, role } = useOps()
   const due = data.tasks.filter((task) => task.state === 'Due today')
   const waiting = data.tasks.filter((task) => task.state === 'Waiting')
   const blocked = data.tasks.filter((task) => task.state === 'Blocked')
   const approvals = data.tasks.filter((task) => task.state === 'Approval')
+  const knowledgeUser = knowledgeUserFromHost({ role, organizationId: 'HVCG', assignedClients: ['CCB'] })
 
   return (
     <div className="page-stack">
@@ -87,6 +89,8 @@ export function OperationsPage() {
       <Section title="Documentation health" subtitle="SOP currency across the library">
         <div className="metric-grid compact">{data.docHealth.map((metric) => <MetricCard key={metric.id} metric={metric} />)}</div>
       </Section>
+
+      <ModuleKnowledgeRail module="Operations" user={knowledgeUser} title="Operations knowledge context" />
     </div>
   )
 }

@@ -3,21 +3,61 @@ import { Icon, type IconName } from '../components/Ui'
 import { useOps } from '../state/OpsContext'
 import type { ModuleId, Role } from '../types'
 
-const links: { id: ModuleId; to: string; label: string; icon: IconName }[] = [
-  { id: 'operations', to: '/', label: 'Operations', icon: 'operations' },
-  { id: 'team', to: '/team', label: 'Team', icon: 'team' },
-  { id: 'projects', to: '/projects', label: 'Projects', icon: 'projects' },
-  { id: 'sop', to: '/sop', label: 'SOP Library', icon: 'sop' },
-  { id: 'ai', to: '/ai', label: 'AI Workforce', icon: 'ai' },
-  { id: 'human', to: '/human', label: 'Human Workforce', icon: 'human' },
-  { id: 'notifications', to: '/notifications', label: 'Notifications', icon: 'notifications' },
+type NavLinkItem = { id: ModuleId; to: string; label: string; icon: IconName }
+type NavGroup = { label: string; items: NavLinkItem[] }
+
+const navGroups: NavGroup[] = [
+  {
+    label: 'Command',
+    items: [
+      { id: 'portfolio', to: '/portfolio', label: 'Portfolio', icon: 'projects' },
+      { id: 'executive', to: '/executive', label: 'Executive', icon: 'executive' },
+      { id: 'operations', to: '/', label: 'Operations', icon: 'operations' },
+      { id: 'scorecards', to: '/scorecards', label: 'Daily Scorecards', icon: 'scorecards' },
+      { id: 'weekly', to: '/weekly', label: 'Weekly Reviews', icon: 'weekly' },
+      { id: 'quarterly', to: '/quarterly', label: 'Quarterly Planning', icon: 'quarterly' },
+      { id: 'kpis', to: '/kpis', label: 'Company KPIs', icon: 'kpis' },
+    ],
+  },
+  {
+    label: 'People & process',
+    items: [
+      { id: 'meetings', to: '/meetings', label: 'Meeting Center', icon: 'meetings' },
+      { id: 'sop', to: '/sop', label: 'SOP Library', icon: 'sop' },
+      { id: 'hr', to: '/hr', label: 'HR', icon: 'hr' },
+      { id: 'hiring', to: '/hiring', label: 'Hiring', icon: 'hiring' },
+      { id: 'training', to: '/training', label: 'Training', icon: 'training' },
+      { id: 'team', to: '/team', label: 'Team', icon: 'team' },
+      { id: 'human', to: '/human', label: 'Human Workforce', icon: 'human' },
+    ],
+  },
+  {
+    label: 'Delivery & assets',
+    items: [
+      { id: 'projects', to: '/projects', label: 'Projects', icon: 'projects' },
+      { id: 'vendors', to: '/vendors', label: 'Vendors', icon: 'vendors' },
+      { id: 'assets', to: '/assets', label: 'Assets', icon: 'assets' },
+      { id: 'ai', to: '/ai', label: 'AI Workforce', icon: 'ai' },
+    ],
+  },
+  {
+    label: 'Systems',
+    items: [
+      { id: 'notifications', to: '/notifications', label: 'Notifications', icon: 'notifications' },
+      { id: 'calendar', to: '/calendar', label: 'Calendar Arch', icon: 'calendar' },
+      { id: 'docs', to: '/docs', label: 'Documentation', icon: 'docs' },
+    ],
+  },
 ]
 
 const roles: Role[] = ['Owner', 'Operations', 'PM', 'Finance', 'Advisor', 'Assistant']
 
 export function AppShell() {
   const { role, setRole, allowedModules, unreadCount, data } = useOps()
-  const visibleLinks = links.filter((link) => allowedModules.includes(link.id))
+  const visibleGroups = navGroups
+    .map((group) => ({ ...group, items: group.items.filter((item) => allowedModules.includes(item.id)) }))
+    .filter((group) => group.items.length > 0)
+  const mobileLinks = visibleGroups.flatMap((group) => group.items).slice(0, 5)
 
   return (
     <div className="app-shell">
@@ -30,22 +70,27 @@ export function AppShell() {
           </div>
         </div>
         <div className="workspace-label">
-          <span>Delivery workspace</span>
-          <b>Internal · Mock</b>
+          <span>Internal operations</span>
+          <b>Dev · Mock only</b>
         </div>
         <nav aria-label="Primary navigation">
-          {visibleLinks.map((link) => (
-            <NavLink
-              key={link.id}
-              to={link.to}
-              end={link.to === '/'}
-              data-testid={`nav-${link.id}`}
-              className={({ isActive }) => (isActive ? 'active' : undefined)}
-            >
-              <Icon name={link.icon} />
-              <span>{link.label}</span>
-              {link.id === 'notifications' && unreadCount > 0 && <b className="nav-count">{unreadCount}</b>}
-            </NavLink>
+          {visibleGroups.map((group) => (
+            <div className="nav-group" key={group.label}>
+              <p className="nav-group-label">{group.label}</p>
+              {group.items.map((link) => (
+                <NavLink
+                  key={link.id}
+                  to={link.to}
+                  end={link.to === '/'}
+                  data-testid={`nav-${link.id}`}
+                  className={({ isActive }) => (isActive ? 'active' : undefined)}
+                >
+                  <Icon name={link.icon} />
+                  <span>{link.label}</span>
+                  {link.id === 'notifications' && unreadCount > 0 && <b className="nav-count">{unreadCount}</b>}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
         <div className="sidebar-context">
@@ -71,7 +116,7 @@ export function AppShell() {
           </button>
           <label className="search">
             <Icon name="search" size={17} />
-            <input aria-label="Search operations hub" placeholder="Search teams, projects, SOPs…" />
+            <input aria-label="Search operations hub" placeholder="Search ops, people, SOPs, vendors…" />
             <kbd>⌘ K</kbd>
           </label>
           <div className="topbar-actions">
@@ -96,7 +141,7 @@ export function AppShell() {
           <Outlet />
         </main>
         <nav className="mobile-nav" aria-label="Mobile navigation">
-          {visibleLinks.slice(0, 5).map((link) => (
+          {mobileLinks.map((link) => (
             <NavLink key={link.id} to={link.to} end={link.to === '/'}>
               <Icon name={link.icon} size={19} />
               <span>{link.label.split(' ')[0]}</span>

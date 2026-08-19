@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { PageHeader, ProgressBar, Section, StatusPill } from '../components/Ui'
 import { useOps } from '../state/OpsContext'
 
@@ -18,7 +19,8 @@ export function ProjectsPage() {
       <PageHeader
         eyebrow="Project dashboard"
         title="Active project board"
-        description="Client and internal projects with status, priority, progress, and owner."
+        description="Legacy snapshot board. Canonical workflows live in Portfolio (create, assign, approve, escalate)."
+        action={<Link to="/portfolio">Open Portfolio →</Link>}
       />
       <Section title="Client projects" subtitle={`${client.length} active or recent`}>
         <div className="table-wrap">

@@ -1,49 +1,45 @@
 # CURRENT_STATE
 
-**As of:** 2026-07-16 21:15 UTC
-**Sources:** Revenue Systems Engineer (`cursor/revenue-sprint4-activation` @ `7fd8bf270dc080eea9a3326184707169a3b120ca`), Client Portal Sprint 1 (`cursor/client-portal-sprint1` @ `8c8806b1c9c01522c574c6d8ec28c5d6ea81aed7`), `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`, and owner directive dated 2026-07-16.
+**As of:** 2026-07-16 21:15 UTC  
+**Sources:** RC-1 lock; Revenue Systems Engineer (`cursor/revenue-sprint4-activation` @ `7fd8bf2`); Client Portal Sprint 1 (`8c8806b`); Executive Command Center Sprint 1 (`5bb42c2`); Finance Operations Sprint 1 (`c287508`); Operations Hub Sprint 1 Phase 1 QA package (local, uncommitted).
 
 ## Snapshot
 
 | Area | Status | Evidence |
 |------|--------|----------|
-| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | `.worktrees/deployment-engineer/releases/Track-1-Live-Internal/`; GO_LIVE_STATUS 2026-07-16T03:08Z |
-| Sprint 1 Revenue OS | **COMPLETE** | Revenue handoff; EVA → Dev CRM smoke |
-| Sprint 2 Revenue OS | **COMPLETE** (Dev/Staging) | `origin/cursor/revenue-sprint3-conversion` @ `0073bf4` |
-| Sprint 3 Revenue OS | **COMPLETE** (Dev/Staging) | Same commit; conversion engine + tests in git |
-| Sprint 4 Revenue OS | **PHASE 1 COMPLETE** (Dev/Staging) | Activation Framework @ `7fd8bf2`; no Production activation |
-| Revenue Systems Engineer | **COMPLETE** | Authoritative for Revenue Sprints 1–4 Phase 1 |
-| Client Portal Sprint 1 | **COMPLETE** | Isolated branch @ `8c8806b`; not merged or deployed |
-| Executive Command Center Sprint 1 | **COMPLETE** | Mock-only app, QA, screenshots, architecture, and handoff approved for commit/push |
-| Operations Hub Sprint 1 Phase 1 | **COMPLETE** | Mock-only app; build PASS; unit 6/6; Playwright 13/13; commit/push approved |
-| Production | HVCG Production Track 1 slice live | `https://orgee2f7545.crm.dynamics.com/` |
+| Track 1 (internal Prod CRM) | **FROZEN — LIVE—INTERNAL** | Tag `Track-1-Live-Internal` @ `302615956cea80c238172931f5901792f548f59c` |
+| Revenue Sprint 1–3 | **COMPLETE** | `0073bf4` |
+| Revenue Sprint 4 Phase 1 | **PHASE 1 COMPLETE** (Dev/Staging) | Activation Framework @ `7fd8bf2`; no Production activation |
+| Client Portal Sprint 1 | **COMPLETE** | Isolated @ `8c8806b`; not merged/deployed |
+| Executive Command Center Sprint 1 | **COMPLETE** | Mock-only @ `5bb42c2`; merge/deploy gated |
+| Finance Operations Sprint 1 Phase 1 | **COMPLETE** | Mock Finance SPA @ `c287508`; QA passed; ready for Sprint 2 |
+| Operations Hub Sprint 1 Phase 1 | **COMPLETE** (pushed) | `0f8f6da` · `apps/hvcg-operations-hub/` |
+| Operations Hub Atlas modules | **READY FOR QA** (uncommitted) | Full mission module set · unit 7/7 · Playwright 22/22 · no prod integrations |
+| Production | Track 1 slice live | `https://orgee2f7545.crm.dynamics.com/` |
 | Development | HVCG Development | `https://org1131a2b0.crm.dynamics.com/` |
-| Website public / DNS | **NOT STARTED** | Track-1 freeze gates |
-| Pilot client import | **NOT STARTED** / BLOCKED | GO_LIVE Track 2 Pilot |
-| Canvas publish | **NOT DONE** (D-002) | RC-1 + Deployment Engineer handoff |
-| Main checkout | `cursor/agent-communications` | Local orientation/Atlas branch |
-| Revenue Phase 1 tip | `7fd8bf2` on `cursor/revenue-sprint4-activation` | Revenue Systems Engineer authority |
-| Client Portal Sprint 1 tip | `8c8806b` on `cursor/client-portal-sprint1` | Complete; isolated |
-| Atlas committed tip | `692d276` on `origin/cursor/agent-communications` | Local HEAD = remote branch tip |
+| Canvas publish | **NOT DONE** (D-002) | Owner gate |
+| Public DNS / website publish | **NOT STARTED** | Track-1 freeze gates |
+| Pilot client import | **NOT STARTED** / BLOCKED | Owner gate |
 
-## Release checkpoint
+## Release checkpoint (RC-1)
 
-[Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) records the verified pre-Sprint 4 state. Immutable anchors:
+[Release Candidate RC-1](Releases/Release_Candidate_RC-1.md) remains the locked pre-Sprint 4 documentation checkpoint.
 
-- Revenue: `0073bf49411408cced88873805b432bce4eefb31`
-- Atlas baseline: `692d27668e2144ec0e62360941c249dfd3d92db4`
-- Track 1 freeze tag: `302615956cea80c238172931f5901792f548f59c`
+Immutable anchors:
 
-The repository working directories are **not clean**; RC-1 excludes all uncommitted files. See the checkpoint for counts and worktree status.
+- Revenue Sprints 2–3: `0073bf49411408cced88873805b432bce4eefb31`
+- Atlas baseline (RC-1 committed): `692d27668e2144ec0e62360941c249dfd3d92db4`
+- Track 1 freeze: `302615956cea80c238172931f5901792f548f59c`
 
-## Revenue tip (canonical for Sprint 1–4 Phase 1)
+Post-RC-1 module tips (isolated; not merged to Production):
 
-| Field | Value |
-|-------|-------|
-| Branch | `cursor/revenue-sprint4-activation` |
-| Commit | `7fd8bf270dc080eea9a3326184707169a3b120ca` |
-| Worktree | `.worktrees/revenue-sprint4` |
-| State | Sprints 1–3 complete; Sprint 4 Phase 1 Activation Framework complete in Dev/Staging |
+| Module | Branch | Tip |
+|--------|--------|-----|
+| Revenue Sprint 4 Phase 1 | `cursor/revenue-sprint4-activation` | `7fd8bf2` |
+| Client Portal Sprint 1 | `cursor/client-portal-sprint1` | `8c8806b` |
+| Executive Command Center Sprint 1 | `cursor/executive-command-center-sprint1` | `5bb42c2` |
+| Finance Operations Sprint 1 | `cursor/finance-operations-sprint1` | `c287508` |
+| Operations Hub Sprint 1 (this workstream) | `cursor/operations-hub-sprint1` | local Phase 1 package (uncommitted) |
 
 ## Environments
 
@@ -55,37 +51,27 @@ The repository working directories are **not clean**; RC-1 excludes all uncommit
 ## Production Track 1 slice (frozen)
 
 - Managed solution imported; LeadQualified functional smoke **PASS**
-- Flows: **1 Activated** (`HVCG_LeadQualifiedCreateOpportunity`) · **14 Draft**
+- Flows: **1 Activated** · **14 Draft**
 - Gates: Teams notify **Off** · client emails **Off** · no canvas · no pilot import · no DNS
 
 ## Active worktrees (notable)
 
-| Worktree | Branch | HEAD (short) |
-|----------|--------|--------------|
-| `.` (main) | `cursor/agent-communications` | see `git rev-parse` |
-| `.worktrees/deployment-engineer` | `cursor/deployment-engineer` | `c726f1e` |
-| `.worktrees/revenue-sprint3` | `cursor/revenue-sprint3-conversion` | `0073bf4` |
-| `.worktrees/master-pm-orchestrator` | `cursor/master-pm-orchestrator` | `b75b19b` |
-| `.worktrees/revenue-sprint4` | `cursor/revenue-sprint4-activation` | `7fd8bf2` |
-| `.worktrees/client-portal-sprint1` | `cursor/client-portal-sprint1` | `8c8806b` |
-| `.worktrees/executive-command-center-sprint1` | `cursor/executive-command-center-sprint1` | Sprint 1 COMPLETE; commit/push authorized |
-| `.worktrees/operations-hub-sprint1` | `cursor/operations-hub-sprint1` | Sprint 1 Phase 1 COMPLETE; commit/push authorized |
-
-Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
+| Worktree | Branch | HEAD |
+|----------|--------|------|
+| `.worktrees/operations-hub-sprint1` | `cursor/operations-hub-sprint1` | Sprint 1 Phase 1 **COMPLETE** (local) |
+| `.worktrees/executive-command-center-sprint1` | `cursor/executive-command-center-sprint1` | `5bb42c2` **COMPLETE** |
+| `.worktrees/finance-operations-sprint1` | `cursor/finance-operations-sprint1` | `c287508` **COMPLETE** |
+| `.worktrees/client-portal-sprint1` | `cursor/client-portal-sprint1` | `8c8806b` **COMPLETE** |
+| `.worktrees/revenue-sprint4` | `cursor/revenue-sprint4-activation` | `7fd8bf2` Phase 1 **COMPLETE** |
+| `.worktrees/operations-hub` | `cursor/operations-hub` | **LEGACY** — do not use for Sprint 1 |
 
 ## Priorities now
 
-1. Do **not** modify Track 1 frozen Production slice without new owner approval  
-2. Preserve Executive Command Center Sprint 1 as COMPLETE after approved commit/push
-3. Preserve Revenue Sprint 4 Phase 1 and Client Portal Sprint 1 completed branches without modifying them
-4. Soft UAT / optional Dev HTTP URL / website preview / pilot remain separately gated
-5. Keep Atlas as SoR; Revenue code authority is the Revenue Systems Engineer
-6. Preserve Operations Hub Sprint 1 Phase 1 as COMPLETE; do not merge or deploy without a new instruction
+1. Do **not** modify Track 1 frozen Production slice  
+2. Do **not** modify Revenue, Client Portal, Executive, Finance, CRM, Activation Framework  
+3. Owner review of Operations Hub Sprint 1 Phase 1 package; approve commit/push when ready  
+4. Preserve RC-1 immutable anchors  
 
 ## Status authority
 
-Within Atlas, **this file** is the status SoR. Track/Sprint pages and agent handbooks must match it.
-
-## Known stale note
-
-`.worktrees/master-pm-orchestrator/docs/business-launch/go-live/GO_LIVE_STATUS.md` may still describe earlier Prod-blocked state. Prefer Deployment Engineer Track-1 package + GO_LIVE_STATUS for Track 1. Track-1 freeze is **not** at repo-root `releases/Track-1-Live-Internal/`.
+Within Atlas, **this file** is the status SoR for this workstream.

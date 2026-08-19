@@ -1,0 +1,153 @@
+{
+  "generatedAt": "2026-07-17T01:31:01.313Z",
+  "branch": "cursor/operations-hub-sprint1",
+  "dataMode": "mock-only",
+  "productionIntegrations": false,
+  "summary": {
+    "passed": 22,
+    "failed": 0,
+    "total": 22
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "operations route",
+      "pass": true,
+      "evidence": "/ → Today’s operations pulse"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "executive route",
+      "pass": true,
+      "evidence": "/executive → Leadership operations view"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "scorecards route",
+      "pass": true,
+      "evidence": "/scorecards → Daily performance scorecards"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "weekly route",
+      "pass": true,
+      "evidence": "/weekly → Weekly operations reviews"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "quarterly route",
+      "pass": true,
+      "evidence": "/quarterly → Quarterly objectives board"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "kpis route",
+      "pass": true,
+      "evidence": "/kpis → Company performance indicators"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "meetings route",
+      "pass": true,
+      "evidence": "/meetings → Meeting center"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "sop route",
+      "pass": true,
+      "evidence": "/sop → Standard operating procedures"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "hr route",
+      "pass": true,
+      "evidence": "/hr → Human resources roster"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "hiring route",
+      "pass": true,
+      "evidence": "/hiring → Hiring pipeline"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "training route",
+      "pass": true,
+      "evidence": "/training → Training & compliance"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "vendors route",
+      "pass": true,
+      "evidence": "/vendors → Vendor register"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "assets route",
+      "pass": true,
+      "evidence": "/assets → Asset inventory"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "notifications route",
+      "pass": true,
+      "evidence": "/notifications → Ops signal feed"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "calendar route",
+      "pass": true,
+      "evidence": "/calendar → Calendar integration architecture"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "docs route",
+      "pass": true,
+      "evidence": "/docs → Internal documentation center"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 meeting center",
+      "pass": true,
+      "evidence": "mobile nav=true; horizontal overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant layout",
+      "pass": true,
+      "evidence": "executive=false; hiring=false; operations=true"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected executive route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4176/"
+    },
+    {
+      "suite": "Boundary QA",
+      "name": "Calendar architecture is design-only",
+      "pass": true,
+      "evidence": "calendar page contains no-live-integration copy"
+    },
+    {
+      "suite": "Dashboard QA",
+      "name": "Operations feature density",
+      "pass": true,
+      "evidence": "11 visible KPI cards"
+    },
+    {
+      "suite": "Performance QA",
+      "name": "Local load duration",
+      "pass": true,
+      "evidence": "5 ms"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-executive-desktop.png",
+    "screenshots/02-operations-desktop.png",
+    "screenshots/03-hr-desktop.png",
+    "screenshots/04-vendors-desktop.png",
+    "screenshots/05-calendar-arch-desktop.png",
+    "screenshots/06-meetings-mobile.png"
+  ]
+}

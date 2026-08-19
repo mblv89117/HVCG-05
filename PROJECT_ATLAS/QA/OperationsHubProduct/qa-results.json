@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-07-20T02:15:32.395Z",
+  "branch": "cursor/operations-hub-sprint1",
+  "product": "Operations Hub Command Center",
+  "dataMode": "mock-product-store",
+  "summary": {
+    "passed": 9,
+    "failed": 0,
+    "total": 9
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "portfolio route",
+      "pass": true,
+      "evidence": "/portfolio → Project portfolio"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "project-detail route",
+      "pass": true,
+      "evidence": "/portfolio/p-1 → Operations Hub Command Center"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "executive route",
+      "pass": true,
+      "evidence": "/executive → Leadership operations view"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "operations route",
+      "pass": true,
+      "evidence": "/ → Today’s operations pulse"
+    },
+    {
+      "suite": "Product QA",
+      "name": "Portfolio views present",
+      "pass": true,
+      "evidence": "10 views"
+    },
+    {
+      "suite": "Product QA",
+      "name": "Project detail workflows",
+      "pass": true,
+      "evidence": "detail page rendered"
+    },
+    {
+      "suite": "Integration QA",
+      "name": "Executive escalations from Ops Hub",
+      "pass": true,
+      "evidence": "executive page linked"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 portfolio",
+      "pass": true,
+      "evidence": "nav=true; overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant portfolio access",
+      "pass": true,
+      "evidence": "portfolio=true; hiring=false"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-portfolio-desktop.png",
+    "screenshots/02-project-detail-desktop.png",
+    "screenshots/03-executive-integrated.png",
+    "screenshots/04-portfolio-mobile.png"
+  ]
+}

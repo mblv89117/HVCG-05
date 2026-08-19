@@ -13,6 +13,7 @@
 | Client Portal Sprint 1 | [Sprints/Sprint_ClientPortal1.md](Sprints/Sprint_ClientPortal1.md) | **COMPLETE** |
 | Executive Command Center Sprint 1 | [Sprints/Sprint_ExecutiveCommandCenter1.md](Sprints/Sprint_ExecutiveCommandCenter1.md) | **COMPLETE** |
 | Operations Hub Sprint 1 | [Sprints/Sprint_OperationsHub1.md](Sprints/Sprint_OperationsHub1.md) | **PHASE 1 COMPLETE** |
+| Operations Hub Atlas | [Sprints/Sprint_OperationsHubAtlas.md](Sprints/Sprint_OperationsHubAtlas.md) | **READY FOR QA** (mock; no commit) |
 | Backlog | [Sprints/BACKLOG.md](Sprints/BACKLOG.md) | Gated candidates |
 
 Revenue Systems Engineer: **COMPLETE** for Sprints 1–4 Phase 1.  
