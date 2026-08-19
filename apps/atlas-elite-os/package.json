@@ -19,7 +19,7 @@
     "test:all": "npm run test:hub-auth && npm run test:routes && npm run test:security && npm run test:recovery && npm run test:hard-refresh && npm run test:auth-transitions && npm run test:hook-order && npm run test:operating-data && npm run test:evidence",
     "test:hook-order": "node ./scripts/hook-order-render-tests.mjs",
     "test:operating-data": "node ./scripts/operating-data-quality-tests.mjs",
-    "test:evidence": "node ./scripts/evidence-provenance-tests.mjs"
+    "test:evidence": "npx tsx ./scripts/evidence-provenance-tests.mjs"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.12.0",
