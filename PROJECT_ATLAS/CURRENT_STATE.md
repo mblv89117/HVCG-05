@@ -7,7 +7,7 @@
 **Owner operating guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)  
 **Historical July 16 snapshot (not current SoR):** [Archive/CURRENT_STATE_2026-07-16.md](Archive/CURRENT_STATE_2026-07-16.md)
 
-**LIVE vs CANDIDATE:** Azure Elite and Hub below are **LIVE** at CRM SHA `a43803e` (Elite asset `index-iXOWTfM9.js`; Hub deploy `3d406e37`). Signed-in rendered `/leads` Premium UI remains **HOLD**. Phase 5B Capital Elite (`b9806bc`), Client ops (`0ffb645`), and stash0 Hub patches (`773e120`) are **repo-only** until separately certified and deployed. `origin/main` is **not** production. Documentation here does not deploy or merge `main`.
+**LIVE vs CANDIDATE:** Azure Elite is **LIVE** at merge SHA `2a4e115` (asset `index-CiVmQVqq.js`) = Capital `b9806bc` + Client ops `0ffb645`. Hub remains **`a43803e`** deploy `3d406e37`. Signed-in rendered Premium UI remains **HOLD**. stash0 Hub patches `773e120` are **not applied**. `origin/main` is **not** production.
 
 **Owner recovery closeout (still true):** seven-system architecture is settled. Atlas owner recovery is complete. Manny-only entitlements are executed. Client 360 and commercial launches are deferred. Remaining technical governance is separate maintenance. Worktree retirement is not an owner-operability blocker. **Do not restart the architecture audit.**
 
@@ -17,7 +17,7 @@ Recorded 2026-08-19 after Phase 5A CRM Hub+Elite exact-SHA deploy.
 
 | Surface | LIVE fact | Evidence |
 |---------|-----------|----------|
-| Elite SWA | `a43803edb29a3f8dd080033ca579a09532d89fbc` | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-iXOWTfM9.js`. Last-Modified 2026-08-19 03:11:17 UTC. Prior rollback: `e574037` / `index-DvEHjcS6.js`. |
+| Elite SWA | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-CiVmQVqq.js`. Last-Modified 2026-08-19 03:23:27 UTC. Contains Capital `b9806bc` + Client `0ffb645`. Prior: `b9806bc` / `index-DmyugMFV.js`, then `a43803e` / `index-iXOWTfM9.js`. |
 | Hub App Service | `a43803edb29a3f8dd080033ca579a09532d89fbc` | `https://app-atlas-integration-hub.azurewebsites.net`. Azure deployment `3d406e37-2d91-4fd6-a20b-8c955c7b5733`. Kudu `ATLAS_HUB_COMMIT.txt` matches. Prior rollback: `d22b55f` / deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`. |
 | Hub `/health` | `ok` | `authRequired=true`, `insecureDevAuth=false`, `pmBackend.mode=sharepoint`, `capitalBackend.mode=sharepoint`, overlay durable, `websiteLeads.configured=true` |
 | Website → `HVCG_Leads` | **LIVE** | Keyed Hub ingest configured (`websiteLeads.configured=true`). Buffer is Azure Table `HvcgWebsiteLeads`. Not a second CRM. |
@@ -41,8 +41,8 @@ Not in Azure until a later certified deploy. This docs branch does not deploy th
 
 | Candidate | SHA / branch | Scope | Status |
 |-----------|--------------|-------|--------|
-| Capital Elite post-shortlist execution | `b9806bc58b240a34764dfa4566492c9ba6234e1a` `feature/atlas-phase5-capital` | **Elite-only.** Hub unchanged. | **NOT LIVE** |
-| Client ops Elite detail (workspace items) | `0ffb6453b022299bb8e963b5e86caf81a1db6add` `feature/atlas-phase5-client` | **Elite-only.** Timeline / engagements / decisions from Hub workspace payload. | **NOT LIVE** |
+| Capital Elite post-shortlist execution | `b9806bc` in live Elite `2a4e115` | **Elite-only.** Hub unchanged `a43803e`. | **LIVE DEPLOYED** — signed-in Premium UI HOLD |
+| Client ops Elite detail (workspace items) | `0ffb645` in live Elite `2a4e115` | Timeline / engagements / decisions from Hub workspace. | **LIVE DEPLOYED** — SYN01 workspace items currently empty |
 | stash0 Hub hardening patches | `773e120420ffc35764cf2d31f84194a6acb2d031` `fix/hub-stash0-hardening` | Hub patches **NOT APPLIED**. Wave 2 **conflicts** with live CRM `a43803e` (`listLeads` / blockerCount / command-center). Do not apply, cherry-pick, or deploy this branch. | **NOT APPLIED** |
 
 ## Snapshot
@@ -74,7 +74,7 @@ Not in Azure until a later certified deploy. This docs branch does not deploy th
 
 | Ref | Role |
 |-----|------|
-| LIVE Elite | `a43803edb29a3f8dd080033ca579a09532d89fbc` — Azure SWA asset `index-iXOWTfM9.js`, not `origin/main` |
+| LIVE Elite | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` — Azure SWA asset `index-CiVmQVqq.js` (Capital `b9806bc` + Client `0ffb645`) |
 | LIVE Hub | `a43803edb29a3f8dd080033ca579a09532d89fbc` — Azure App Service zip `3d406e37-2d91-4fd6-a20b-8c955c7b5733`, not `origin/main` |
 | Rollback Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` / `index-DvEHjcS6.js` |
 | Rollback Hub | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` / deploy `501fb29b` |
@@ -89,12 +89,12 @@ Not in Azure until a later certified deploy. This docs branch does not deploy th
 
 | Component | Status |
 |-----------|--------|
-| Elite SWA | **LIVE** `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` — SHA `a43803e`, asset `index-iXOWTfM9.js` |
+| Elite SWA | **LIVE** `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` — SHA `2a4e115`, asset `index-CiVmQVqq.js` |
 | Hub | **LIVE** `https://app-atlas-integration-hub.azurewebsites.net` — SHA `a43803e`, Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`. Auth required; `insecureDevAuth=false`; SharePoint PM; capital backend `sharepoint`; overlay durable; keyed `POST /api/website/leads` configured; operator `GET/PATCH /api/pm/leads` |
 | BA | Reachable through Hub when configured; anonymous `/api/ba/health` is 401 |
 | Local AI | Disabled on production Hub (`insecureDevAuth=false`; do not treat Local AI as on) |
 | CRM operator | **LIVE DEPLOYED** `a43803e` — signed-in rendered Premium UI HOLD |
-| Phase 5B candidates | **NOT LIVE** — Capital Elite `b9806bc`; Client ops `0ffb645`; stash0 `773e120` not applied |
+| Phase 5B Elite | **LIVE DEPLOYED** `2a4e115` — Capital `b9806bc` + Client `0ffb645`. Hub still `a43803e`. stash0 `773e120` not applied. Signed-in Premium UI HOLD. |
 | Command-K search | **P2 OPEN** — SYN* **15–24s**; not fixed |
 
 ## Entitlements (G11-F03)
