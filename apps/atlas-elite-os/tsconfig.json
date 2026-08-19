@@ -16,5 +16,6 @@
       "@hvcg/atlas-design-system/*": ["../../packages/atlas-design-system/src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
 }

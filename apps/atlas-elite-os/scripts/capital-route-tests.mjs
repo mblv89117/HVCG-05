@@ -38,7 +38,9 @@ assert.match(fixture, /export function CapitalReadinessWorkbench/);
 
 assert.match(command, /showPendingBanner=\{false\}/);
 assert.match(command, /SYNTHETIC_BANNER/);
-assert.match(command, /KpiTile/);
+assert.match(command, /StatusChip/);
+assert.match(command, /NEEDS_ATTENTION/);
+assert.match(command, /readOpportunityQuery/);
 assert.match(command, /OpportunityWorkspace/);
 assert.match(workspace, /Approve strategy/);
 assert.match(workspace, /Approve shortlist/);
@@ -53,7 +55,7 @@ assert.doesNotMatch(api, /if \(status === 401 \|\| status === 404 \|\| status ==
 assert.match(synthetic, /Synthetic demonstration data — not a live client\. Not production facts\./);
 assert.match(synthetic, /not a live client/);
 assert.match(command, /Authenticated access required/);
-assert.match(command, /Synthetic demonstration data is never used to conceal a 401 or 403/);
+assert.match(command, /Synthetic demonstration data is not shown/);
 assert.doesNotMatch(api, /client_secret|CLIENT_SECRET/);
 assert.doesNotMatch(command, /client_secret|CLIENT_SECRET/);
 

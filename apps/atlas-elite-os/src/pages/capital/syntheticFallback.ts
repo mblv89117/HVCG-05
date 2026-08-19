@@ -62,7 +62,6 @@ function opportunity(partial: Partial<CapitalOpportunity> & Pick<CapitalOpportun
     clientCode: 'SYN01',
     companyName: 'SYNTHETIC demonstration company',
     transactionType: 'working_capital_loc',
-    need: { requestedAmount: null, purpose: 'working capital' },
     business: {
       industry: 'manufacturing',
       annualRevenue: { value: null, verification: 'MISSING', notes: 'Not a live client financial' },

@@ -152,16 +152,17 @@ assert.match(provenance, /'dataverse'/);
 assert.match(provenance, /'hub-snapshot'/);
 
 const cc = readFileSync(join(root, 'src/pages/CommandCenterPage.tsx'), 'utf8');
-assert.match(cc, /origin:\s*'hub-snapshot'/);
-assert.match(cc, /status=\{evidence\.status\}/);
+assert.match(cc, /fetchCommandCenter/);
+assert.match(cc, /CapitalAttentionStrip/);
+assert.match(cc, /opportunity=/);
+assert.doesNotMatch(cc, /origin:\s*'hub-snapshot'/);
 assert.doesNotMatch(cc, /briefBuilder/);
 assert.doesNotMatch(cc, /commandCenterData/);
 assert.doesNotMatch(cc, /prioritize/);
 
 const dash = readFileSync(join(root, 'src/pages/ExecutiveDashboard.tsx'), 'utf8');
-assert.match(dash, /metrics\.length === 0/);
-assert.match(dash, /approvals\.length === 0/);
-assert.match(dash, /EmptyState/);
+assert.match(dash, /DeferredBoundaryPage/);
+assert.match(dash, /Command Center/);
 assert.doesNotMatch(dash, /m\.source === 'Live' \? 'Live' : 'Pending'/);
 assert.doesNotMatch(dash, /briefBuilder/);
 assert.doesNotMatch(dash, /prioritize/);

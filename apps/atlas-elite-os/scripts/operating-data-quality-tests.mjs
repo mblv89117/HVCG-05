@@ -50,7 +50,7 @@ assert.match(portfolio, /not implemented for SharePoint production/);
 assert.match(portfolio, /ClientCode/);
 assert.match(
   readFileSync(join(root, 'src/components/QuickCaptureBar.tsx'), 'utf8'),
-  /not implemented for SharePoint production/,
+  /Production SharePoint MVP does not implement \/api\/pm\/quick-capture/,
 );
 assert.doesNotMatch(
   readFileSync(join(root, 'src/pages/CommandCenterPage.tsx'), 'utf8'),
