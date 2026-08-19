@@ -1167,6 +1167,152 @@ describe('SharePoint HVCG_Leads operator queue', () => {
     assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
   });
 
+  it('operates Opportunities with attention states, ETag safety, audit, and no client activation', async () => {
+    const entitlementBefore = process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS;
+    await withCrmLeads(async ({ base, graph, dataDir }) => {
+      graph.seed(CLIENTS, { Title: 'SYNTHETIC QA Phase 5G', ClientCode: 'SYNTH01', ClientStage: 'Prospect' }, '90');
+      const overdue = graph.seed(
+        OPPORTUNITIES,
+        {
+          Title: 'SYNTHETIC QA Phase 5G — Discovery',
+          Stage: 'Discovery',
+          WinLossStatus: 'Open',
+          ClientIdLookupId: 90,
+          OwnerEmail: 'manny@highvaluecapitalgroup.com',
+          SalesOwnerEmail: 'manny@highvaluecapitalgroup.com',
+          OpportunityType: 'Assessment',
+          NextActionNotes: 'Schedule discovery call',
+          NextActionDate: '2020-01-01T00:00:00.000Z',
+          ExpectedCloseDate: '2030-01-15T00:00:00.000Z',
+          Notes: 'Source=Website-EVA; Detail=synthetic-phase-5g',
+        },
+        '120',
+      );
+      graph.seed(
+        OPPORTUNITIES,
+        {
+          Title: 'SYNTHETIC QA No Next Action',
+          Stage: 'Assessment',
+          WinLossStatus: 'Open',
+          ClientIdLookupId: 90,
+          OpportunityType: 'Advisory Engagement',
+        },
+        '121',
+      );
+      const staleEtag = overdue.etag;
+
+      const list = await fetch(`${base}/api/pm/opportunities`, { headers: auth('staff') });
+      assert.equal(list.status, 200);
+      const listBody = (await list.json()) as {
+        opportunities: Array<{ id: string; clientStage?: string; attention: { state: string }; nextAction?: string }>;
+      };
+      assert.deepEqual(listBody.opportunities.map((o) => o.id), ['120', '121']);
+      assert.equal(listBody.opportunities[0].clientStage, 'Prospect');
+      assert.equal(listBody.opportunities[0].nextAction, 'Schedule discovery call');
+      assert.equal(listBody.opportunities[0].attention.state, 'OVERDUE');
+      assert.equal(listBody.opportunities[1].attention.state, 'NO_NEXT_ACTION');
+
+      const home = await fetch(`${base}/api/pm/command-center`, { headers: auth('staff') });
+      const homeBody = (await home.json()) as {
+        commandCenter: {
+          criticalAlerts: Array<{ href?: string; title: string }>;
+          clientAttention: { opportunities: Array<{ href: string; detail: string }> };
+        };
+      };
+      assert.equal(
+        homeBody.commandCenter.criticalAlerts.some((row) => row.href === '/opportunities/120' && row.title.includes('Overdue')),
+        true,
+      );
+      assert.equal(
+        homeBody.commandCenter.clientAttention.opportunities.some((row) => row.href === '/opportunities/121' && row.detail.includes('No Next Action')),
+        true,
+      );
+
+      const patched = await fetch(`${base}/api/pm/opportunities/120`, {
+        method: 'PATCH',
+        headers: { ...auth('staff'), 'if-match': overdue.etag },
+        body: JSON.stringify({
+          stage: 'Proposal',
+          ownerEmail: 'operator@highvaluecapitalgroup.com',
+          nextAction: 'Send assessment scope',
+          nextActionDate: '2030-02-01',
+          expectedCloseDate: '2030-03-01',
+          requiresExecutiveAttention: true,
+          notes: 'Source=Website-EVA; Detail=synthetic-phase-5g; Updated through Atlas',
+        }),
+      });
+      assert.equal(patched.status, 200);
+      const patchedBody = (await patched.json()) as {
+        opportunity: { stage: string; ownerEmail?: string; nextAction?: string; attention: { state: string }; clientStage?: string };
+      };
+      assert.equal(patchedBody.opportunity.stage, 'Proposal');
+      assert.equal(patchedBody.opportunity.ownerEmail, 'operator@highvaluecapitalgroup.com');
+      assert.equal(patchedBody.opportunity.nextAction, 'Send assessment scope');
+      assert.equal(patchedBody.opportunity.attention.state, 'NEEDS_MANNY');
+      assert.equal(patchedBody.opportunity.clientStage, 'Prospect');
+      const item = await graph.getItem(OPPORTUNITIES, '120');
+      assert.equal(item?.fields.OwnerEmail, 'operator@highvaluecapitalgroup.com');
+      assert.equal(item?.fields.SalesOwnerEmail, 'operator@highvaluecapitalgroup.com');
+      assert.equal(item?.fields.NextActionNotes, 'Send assessment scope');
+      assert.equal(item?.fields.Stage, 'Proposal');
+      assert.equal(item?.fields.ClientStage, undefined);
+
+      const stale = await fetch(`${base}/api/pm/opportunities/120`, {
+        method: 'PATCH',
+        headers: { ...auth('staff'), 'if-match': staleEtag },
+        body: JSON.stringify({ nextAction: 'Stale mutation' }),
+      });
+      assert.equal(stale.status, 412);
+      assert.equal(item?.fields.NextActionNotes, 'Send assessment scope');
+
+      graph.failPatchFor.set(OPPORTUNITIES, 503);
+      const graphFail = await fetch(`${base}/api/pm/opportunities/120`, {
+        method: 'PATCH',
+        headers: { ...auth('staff'), 'if-match': item!.etag },
+        body: JSON.stringify({ nextAction: 'Hidden partial write' }),
+      });
+      assert.equal(graphFail.status, 503);
+      assert.equal(item?.fields.NextActionNotes, 'Send assessment scope');
+      graph.failPatchFor.delete(OPPORTUNITIES);
+
+      const spoof = await fetch(`${base}/api/pm/opportunities/120`, {
+        method: 'PATCH',
+        headers: { ...auth('staff'), 'if-match': item!.etag },
+        body: JSON.stringify({ ClientStage: 'Active Client', ClientCode: 'ACCG01', CapitalHandoffStatus: 'Ready' }),
+      });
+      assert.equal(spoof.status, 400);
+
+      const clientDenied = await fetch(`${base}/api/pm/opportunities/120`, {
+        method: 'PATCH',
+        headers: { ...auth('client'), 'if-match': item!.etag },
+        body: JSON.stringify({ nextAction: 'Client mutation' }),
+      });
+      assert.equal(clientDenied.status, 403);
+
+      const won = await fetch(`${base}/api/pm/opportunities/120`, {
+        method: 'PATCH',
+        headers: { ...auth('staff'), 'if-match': item!.etag },
+        body: JSON.stringify({ winLossStatus: 'Won', requiresExecutiveAttention: false }),
+      });
+      assert.equal(won.status, 200);
+      const wonBody = (await won.json()) as { opportunity: { stage: string; winLossStatus?: string; attention: { state: string }; clientStage?: string } };
+      assert.equal(wonBody.opportunity.stage, 'Won');
+      assert.equal(wonBody.opportunity.winLossStatus, 'Won');
+      assert.equal(wonBody.opportunity.attention.state, 'WON');
+      assert.equal(wonBody.opportunity.clientStage, 'Prospect');
+      const client = await graph.getItem(CLIENTS, '90');
+      assert.equal(client?.fields.ClientStage, 'Prospect');
+      assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
+
+      const store = JSON.parse(readFileSync(join(dataDir, 'integration-store.json'), 'utf8')) as {
+        auditEvents: Array<{ action: string; detail: string }>;
+      };
+      assert.equal(store.auditEvents.filter((e) => e.action === 'pm_opportunity_patch').length, 2);
+      assert.equal(store.auditEvents.some((e) => e.detail.includes('clientStage=Prospect')), true);
+    }, () => ['SYNTH01']);
+    assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
+  });
+
   it('does not convert Disqualified leads and returns 503 when Opportunities are unconfigured', async () => {
     await withCrmLeads(async ({ base, graph }) => {
       graph.seed(LEADS, { Title: 'Lost inbound', LeadStatus: 'Disqualified', Email: 'x@example.com' }, '86');

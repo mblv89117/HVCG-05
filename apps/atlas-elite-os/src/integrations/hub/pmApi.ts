@@ -47,6 +47,28 @@ export async function fetchPmOpportunity(auth: AtlasHubAuthHeaders, id: string) 
   );
 }
 
+export async function fetchPmOpportunities(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{ opportunities: PmOpportunity[]; source: string; configured?: boolean }>(
+    auth,
+    '/api/pm/opportunities',
+  );
+}
+
+export async function patchPmOpportunity(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  patch: Record<string, unknown>,
+) {
+  const etag = typeof patch.etag === 'string' ? patch.etag : undefined;
+  const headers: Record<string, string> = {};
+  if (etag) headers['If-Match'] = etag;
+  return hubFetchJson<{ opportunity: PmOpportunity }>(auth, `/api/pm/opportunities/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(patch),
+  });
+}
+
 export async function patchPmLead(
   auth: AtlasHubAuthHeaders,
   id: string,
@@ -405,7 +427,22 @@ export interface PmOpportunity {
   opportunityType?: string;
   winLossStatus?: string;
   proposalAmount?: number;
+  expectedCloseDate?: string;
+  nextAction?: string;
+  nextActionDate?: string;
+  requiresExecutiveAttention?: boolean;
+  lostReason?: string;
+  wonDate?: string;
+  lostDate?: string;
+  capitalHandoffStatus?: string;
+  lastModified?: string;
   notes?: string;
+  attention?: {
+    state: string;
+    label: string;
+    severity: 'neutral' | 'info' | 'warning' | 'danger' | 'success';
+    reason: string;
+  };
 }
 
 export interface LeadConversionResult {

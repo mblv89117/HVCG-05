@@ -135,6 +135,120 @@ function sectionHonesty(section?: WorkspaceSection): string {
   return `${section.items.length} entitled row${section.items.length === 1 ? '' : 's'}.`;
 }
 
+function asItemText(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function workspaceItemId(item: Record<string, unknown>, index: number): string {
+  return asItemText(item.id) || `workspace-item-${index}`;
+}
+
+function workspaceItemTitle(item: Record<string, unknown>): string {
+  return asItemText(item.title) || asItemText(item.id) || 'Untitled item';
+}
+
+function timelineKindChip(kind: string) {
+  const token = kind.trim() || 'event';
+  const mapped = atlasStatusDisplay(token);
+  if (mapped) return mapped;
+  const lower = token.toLowerCase();
+  if (lower.includes('risk') || lower.includes('decision')) return { label: token, tone: 'warning' as const };
+  if (lower.includes('task') || lower.includes('meeting')) return { label: token, tone: 'info' as const };
+  if (lower.includes('project')) return { label: token, tone: 'gold' as const };
+  return { label: token, tone: 'neutral' as const };
+}
+
+function timelineEventPath(
+  ev: { kind: string; id: string },
+  tasks: PmTask[],
+): string | null {
+  const kind = (ev.kind || '').toLowerCase();
+  if (kind.includes('project')) return projectDetailPath(ev.id);
+  if (kind.includes('task')) {
+    const task = tasks.find((t) => t.id === ev.id);
+    return task ? taskWorkPath(task) : '/tasks';
+  }
+  return null;
+}
+
+function WorkspaceItemRow({ item, index }: { item: Record<string, unknown>; index: number }) {
+  const title = workspaceItemTitle(item);
+  const statusRaw = asItemText(item.status);
+  const chip = atlasStatusDisplay(statusRaw);
+  const date = dayStamp(asItemText(item.date));
+  const summary = asItemText(item.summary);
+  const webUrl = asItemText(item.webUrl);
+  const channel = asItemText(item.channel);
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr) auto',
+        gap: 8,
+        padding: '8px 0',
+        borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
+      }}
+    >
+      <div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          {chip ? (
+            <StatusChip label={chip.label} tone={chip.tone} size="sm" />
+          ) : statusRaw ? (
+            <StatusChip label={statusRaw} tone="neutral" size="sm" />
+          ) : null}
+          {webUrl ? (
+            <a href={webUrl} target="_blank" rel="noreferrer">
+              {title} <OpenRegular />
+            </a>
+          ) : (
+            <Text weight="semibold">{title}</Text>
+          )}
+        </div>
+        {summary ? <Caption1 style={{ display: 'block' }}>{summary}</Caption1> : null}
+        {channel ? <Caption1 style={{ display: 'block' }}>{channel}</Caption1> : null}
+      </div>
+      <Caption1>{date || '—'}</Caption1>
+    </div>
+  );
+}
+
+function WorkspaceSectionCard({
+  title,
+  subtitle,
+  section,
+  emptyTitle,
+}: {
+  title: string;
+  subtitle: string;
+  section?: WorkspaceSection;
+  emptyTitle: string;
+}) {
+  const items = section?.items || [];
+  const showItems = Boolean(section?.queried && items.length);
+  return (
+    <AtlasCard
+      title={title}
+      subtitle={subtitle}
+      density="compact"
+      headerAction={
+        <StatusChip
+          label={section?.queried ? `${items.length} entitled` : 'Not queried'}
+          tone={showItems ? 'info' : 'neutral'}
+          size="sm"
+        />
+      }
+    >
+      {showItems ? (
+        items.map((item, index) => <WorkspaceItemRow key={workspaceItemId(item, index)} item={item} index={index} />)
+      ) : (
+        <EmptyState title={emptyTitle} description={sectionHonesty(section)} density="compact" align="start" />
+      )}
+    </AtlasCard>
+  );
+}
+
 export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const { account, ready, signIn } = useMicrosoftAuth();
   const auth = useHubAuth();
@@ -451,8 +565,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             <Caption1 style={{ display: 'block' }}>Last contact not recorded on HVCG_Clients.</Caption1>
           )}
           <Caption1 style={{ display: 'block', marginTop: 4 }}>
-            Contacts: {sectionHonesty(workspace.contacts)} Engagements:{' '}
-            {sectionHonesty(workspace.engagements)}
+            Contacts: {sectionHonesty(workspace.contacts)}
           </Caption1>
         </RecordRow>
 
@@ -477,6 +590,15 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             )}
             <StatusChip label={`${projects.length} projects`} tone="gold" />
             <StatusChip label={`${tasks.length} open tasks`} tone="info" />
+            <StatusChip
+              label={`${workspace.engagements.items.length} engagements`}
+              tone={workspace.engagements.queried ? 'info' : 'neutral'}
+            />
+            <StatusChip
+              label={`${workspace.decisionsRisks.items.length} decisions / risks`}
+              tone={workspace.decisionsRisks.queried ? 'warning' : 'neutral'}
+            />
+            <StatusChip label={`${workspace.timeline.length} timeline`} tone="gold" />
           </div>
         </RecordRow>
 
@@ -520,12 +642,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
         <RecordRow label="Blocker">
           {blockers.length === 0 ? (
-            <Caption1>
-              No blocked or overdue Hub tasks on this client.{' '}
-              {workspace.decisionsRisks
-                ? `Decisions / risks: ${sectionHonesty(workspace.decisionsRisks)}`
-                : ''}
-            </Caption1>
+            <Caption1>No blocked or overdue Hub tasks on this client.</Caption1>
           ) : (
             <div>
               {blockers.map((t) => {
@@ -539,11 +656,6 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
                   </div>
                 );
               })}
-              {workspace.decisionsRisks ? (
-                <Caption1 style={{ display: 'block', marginTop: 4 }}>
-                  Decisions / risks: {sectionHonesty(workspace.decisionsRisks)}
-                </Caption1>
-              ) : null}
             </div>
           )}
         </RecordRow>
@@ -755,6 +867,72 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
               },
             ]}
           />
+        )}
+      </AtlasCard>
+
+      <WorkspaceSectionCard
+        title="Engagements"
+        subtitle="HVCG_Engagements on this ClientCode — read-only Hub payload. Not GCC."
+        section={workspace.engagements}
+        emptyTitle="No entitled engagements"
+      />
+
+      <WorkspaceSectionCard
+        title="Decisions / risks"
+        subtitle="HVCG_Decisions and HVCG_Risks on this ClientCode — read-only Hub payload"
+        section={workspace.decisionsRisks}
+        emptyTitle="No entitled decisions or risks"
+      />
+
+      <AtlasCard
+        title="Timeline"
+        subtitle="Hub workspace timeline — projects, tasks, meetings, communications. Read-only."
+        density="compact"
+        headerAction={
+          <StatusChip
+            label={`${workspace.timeline.length} events`}
+            tone={workspace.timeline.length ? 'gold' : 'neutral'}
+            size="sm"
+          />
+        }
+      >
+        {workspace.timeline.length === 0 ? (
+          <EmptyState
+            title="No timeline events"
+            description="Hub workspace timeline is empty for this ClientCode. This is not Client 360 history."
+            density="compact"
+            align="start"
+          />
+        ) : (
+          workspace.timeline.map((ev) => {
+            const chip = timelineKindChip(ev.kind);
+            const path = timelineEventPath(ev, tasks);
+            return (
+              <div
+                key={`${ev.kind}-${ev.id}-${ev.at}`}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  gap: 8,
+                  padding: '8px 0',
+                  borderBottom: '1px solid color-mix(in srgb, currentColor 10%, transparent)',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <StatusChip label={chip.label} tone={chip.tone} size="sm" />
+                    {path ? (
+                      <Link to={path}>{ev.title}</Link>
+                    ) : (
+                      <Text weight="semibold">{ev.title}</Text>
+                    )}
+                  </div>
+                  <Caption1 style={{ display: 'block' }}>{ev.source}</Caption1>
+                </div>
+                <Caption1>{dayStamp(ev.at) || ev.at || '—'}</Caption1>
+              </div>
+            );
+          })
         )}
       </AtlasCard>
 

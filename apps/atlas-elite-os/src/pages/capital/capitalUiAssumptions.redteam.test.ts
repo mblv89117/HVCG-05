@@ -60,6 +60,31 @@ describe('Elite capital UI assumptions', () => {
     }
   });
 
+  it('post-shortlist writes reuse Hub routes and keep Manny / no-send gates', () => {
+    const api = src('capitalApi.ts');
+    assert.match(api, /\/application\/attest/);
+    assert.match(api, /\/submissions/);
+    assert.match(api, /\/offers\/compare/);
+    assert.match(api, /\/closing\/generate/);
+    assert.match(api, /\/api\/capital\/fees/);
+    assert.match(api, /recordedOnly: true/);
+    assert.match(api, /externalSubmit: false/);
+    assert.doesNotMatch(api, /externalSubmit:\s*true/);
+    assert.match(api, /isSyntheticMutationTarget/);
+    assert.match(api, /Synthetic capital mutations are limited to SYN\*/);
+
+    const exec = src('CapitalExecutionSurfaces.tsx');
+    assert.match(exec, /Record submission \(no send\)/);
+    assert.match(exec, /APPROVED_FOR_SUBMISSION/);
+    assert.match(exec, /canMutateApprovals/);
+    assert.match(exec, /NOT_BORROWER_REPRESENTATION|Not a borrower representation/);
+    const attestBlock = exec.slice(exec.indexOf('nextAttestationOptions'), exec.indexOf('SubmissionExecution'));
+    assert.match(attestBlock, /APPROVED_FOR_SUBMISSION/);
+    assert.match(attestBlock, /canMutateApprovals/);
+    const labels = src('capitalDetail.ts');
+    assert.match(labels, /Approve for recorded submission/);
+  });
+
   it('CapitalCommandCenter opens workspace from ?opportunity= without waiting on the queue payload', () => {
     const cc = src('CapitalCommandCenter.tsx');
     assert.match(cc, /readOpportunityQuery/);

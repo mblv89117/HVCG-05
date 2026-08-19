@@ -16,11 +16,13 @@ import type {
   LenderSubmission,
   MissingDocumentRequest,
   QueueItem,
+  RfiItem,
   StrategyDecision,
   TermSheetOffer,
   UnderwritingSummary,
   WorkQueue,
 } from './capitalApi';
+import { isSyntheticMutationTarget } from './capitalDetail';
 
 const FINANCING_DISCLAIMER =
   'HVCG is not a lender. Financing outcomes are determined by third-party lenders and capital providers. HVCG does not guarantee approval, terms, or funding.';
@@ -833,6 +835,23 @@ function inferQueue(d: CapitalOpportunityDetail): { queue: WorkQueue; agingDays:
   return { queue: 'NEEDS_ATTENTION', agingDays: 0, aging: 'fresh' };
 }
 
+function withExecutionDefaults(detail: CapitalOpportunityDetail): CapitalOpportunityDetail {
+  const applications = detail.applications?.length
+    ? detail.applications
+    : detail.application
+      ? [detail.application]
+      : [];
+  return {
+    ...detail,
+    applications,
+    application: applications[0] || null,
+    rfis: detail.rfis || [],
+    comparison: detail.comparison ?? null,
+    funding: detail.funding ?? null,
+    decision: detail.decision ?? null,
+  };
+}
+
 export function getSyntheticCommandCenter(): SyntheticCommandCenter {
   const s = getStore();
   const items = itemsFromStore(s);
@@ -848,7 +867,7 @@ export function getSyntheticOpportunity(id: string): CapitalOpportunityDetail {
   if (!found) {
     throw new Error(`Synthetic capital opportunity not found: ${id}`);
   }
-  return found;
+  return withExecutionDefaults(found);
 }
 
 export function getSyntheticMissingRequest(id: string): MissingDocumentRequest | null {
@@ -885,10 +904,15 @@ export function addSyntheticOpportunity(input: CreateOpportunityInput): CapitalO
     strategy: null,
     matches: [],
     application: null,
+    applications: [],
     submissions: [],
     offers: [],
     closing: [],
     fees: [],
+    rfis: [],
+    comparison: null,
+    funding: null,
+    decision: null,
     missingRequest: missingFrom(ck, opp.clientCode),
   });
   return opp;
@@ -948,6 +972,317 @@ export function applySyntheticStrategyDecision(id: string, decision: StrategyDec
           approvedAt: new Date().toISOString(),
         }
       : d.strategy,
+  }));
+}
+
+function requireSyntheticId(id: string): void {
+  if (!isSyntheticMutationTarget(id)) {
+    throw new Error('Synthetic capital mutations are limited to SYN* demonstration files.');
+  }
+}
+
+const ATTEST_FORWARD_SYN: Record<string, string[]> = {
+  PREPARED: ['CLIENT_CONFIRMATION_REQUIRED', 'CORRECTION_REQUIRED'],
+  CLIENT_CONFIRMATION_REQUIRED: ['CLIENT_CONFIRMED', 'CORRECTION_REQUIRED'],
+  CLIENT_CONFIRMED: ['APPROVED_FOR_SUBMISSION', 'CORRECTION_REQUIRED'],
+  CORRECTION_REQUIRED: ['PREPARED', 'CLIENT_CONFIRMATION_REQUIRED'],
+  APPROVED_FOR_SUBMISSION: ['CORRECTION_REQUIRED'],
+};
+
+export function applySyntheticPrepareApplication(
+  id: string,
+  input: { lenderId: string; productId?: string },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  const lenderId = String(input.lenderId || '').trim();
+  if (!lenderId) throw new Error('lenderId required');
+  return patch(id, (d) => {
+    const pkg = {
+      id: `app-${id}-${lenderId}`,
+      capitalOpportunityId: id,
+      lenderId,
+      productId: input.productId,
+      populatedFields: {
+        clientCode: { value: d.opportunity.clientCode, verification: 'VERIFIED' },
+      },
+      missingFields: [],
+      attachedDocumentIds: d.documents.map((doc) => doc.id),
+      status: 'PREPARED' as const,
+      attestation: 'PREPARED' as const,
+      packageStatus: 'READY_FOR_MANNY_REVIEW',
+      notBorrowerRepresentation: true,
+      expectedQuestions: [],
+      createdAt: new Date().toISOString(),
+    };
+    const applications = [...(d.applications || []).filter((a) => a.lenderId !== lenderId), pkg];
+    return {
+      ...d,
+      applications,
+      application: applications[0] || pkg,
+    };
+  });
+}
+
+export function applySyntheticAttestApplication(
+  id: string,
+  input: { attestation: string; applicationId?: string; lenderId?: string },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  return patch(id, (d) => {
+    const applications = [...(d.applications || [])];
+    const idx = applications.findIndex(
+      (a) =>
+        a.id === input.applicationId ||
+        a.lenderId === input.lenderId ||
+        a.lenderId === input.applicationId ||
+        (!input.applicationId && !input.lenderId),
+    );
+    if (idx < 0) throw new Error('application not found');
+    const current = applications[idx];
+    const from = String(current.attestation || current.status || 'PREPARED');
+    const allowed = ATTEST_FORWARD_SYN[from] || [];
+    if (!allowed.includes(input.attestation)) {
+      throw new Error(`Invalid application attestation transition: ${from} → ${input.attestation}`);
+    }
+    applications[idx] = {
+      ...current,
+      attestation: input.attestation,
+      packageStatus:
+        input.attestation === 'APPROVED_FOR_SUBMISSION'
+          ? 'READY_FOR_SUBMISSION'
+          : input.attestation === 'CLIENT_CONFIRMATION_REQUIRED' || input.attestation === 'CLIENT_CONFIRMED'
+            ? 'CLIENT_CONFIRMATION_REQUIRED'
+            : current.packageStatus,
+      attestedAt: new Date().toISOString(),
+      attestedBy: 'manny@hvcg.example',
+      notBorrowerRepresentation: true,
+    };
+    return { ...d, applications, application: applications[0] };
+  });
+}
+
+export function applySyntheticRecordedSubmission(
+  id: string,
+  input: { lenderId: string; confirmationNumber?: string; packageVersion?: string },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  return patch(id, (d) => {
+    const o = d.opportunity;
+    if (o.mannyStrategyApproval !== 'APPROVED' || o.mannyShortlistApproval !== 'APPROVED') {
+      throw new Error('Submission requires Manny strategy and shortlist approval at ReadyForSubmission');
+    }
+    const pkg = (d.applications || []).find((a) => a.lenderId === input.lenderId);
+    if (pkg && pkg.attestation !== 'APPROVED_FOR_SUBMISSION') {
+      throw new Error('Recorded submission requires client-attested package APPROVED_FOR_SUBMISSION');
+    }
+    const sub: LenderSubmission = {
+      id: `sub-${id}-${Date.now()}`,
+      lenderId: input.lenderId,
+      method: 'package',
+      status: 'submitted',
+      submittedAt: new Date().toISOString(),
+      submittedBy: 'demo-operator',
+      confirmationNumber: input.confirmationNumber,
+      notes: 'Record only — no external portal submit. SYNTHETIC demonstration.',
+    };
+    const applications = (d.applications || []).map((a) =>
+      a.lenderId === input.lenderId ? { ...a, packageStatus: 'SUBMITTED_RECORDED_ONLY' } : a,
+    );
+    return {
+      ...d,
+      applications,
+      application: applications[0] || d.application,
+      submissions: [...d.submissions, sub],
+      opportunity: {
+        ...o,
+        stage: o.stage === 'ReadyForSubmission' ? 'Submitted' : o.stage,
+        stageEnteredAt: o.stage === 'ReadyForSubmission' ? new Date().toISOString() : o.stageEnteredAt,
+        lastMeaningfulActivityAt: new Date().toISOString(),
+      },
+    };
+  });
+}
+
+export function applySyntheticIngestRfi(
+  id: string,
+  input: { text: string; lenderId?: string; applyStage?: boolean },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  const text = String(input.text || '').trim();
+  if (!text) throw new Error('text required');
+  return patch(id, (d) => {
+    const lines = text
+      .split('\n')
+      .map((line) => line.replace(/^[-*]\s*/, '').trim())
+      .filter((line) => line && !/ignore previous instructions/i.test(line));
+    const rfis: RfiItem[] = lines.slice(0, 8).map((item, idx) => ({
+      id: `${id}-rfi-${idx + 1}`,
+      capitalOpportunityId: id,
+      clientCode: d.opportunity.clientCode,
+      lenderId: input.lenderId,
+      item,
+      action: 'request_client',
+      candidateOnly: true,
+      agingDays: 0,
+    }));
+    return {
+      ...d,
+      rfis,
+      opportunity: {
+        ...d.opportunity,
+        nextAction: 'Respond to lender RFI (candidate — not authoritative until reviewed)',
+        nextActionOwner: 'hvcg',
+        lastMeaningfulActivityAt: new Date().toISOString(),
+      },
+    };
+  });
+}
+
+export function applySyntheticAddOffer(
+  id: string,
+  input: {
+    lenderId: string;
+    lenderName: string;
+    product?: string;
+    amount?: number | null;
+    interestRate?: number | null;
+    termMonths?: number | null;
+    origination?: number | null;
+    assumptions?: string[];
+  },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  return patch(id, (d) => {
+    const offer: TermSheetOffer = {
+      id: `off-${id}-${Date.now()}`,
+      lenderId: input.lenderId,
+      lenderName: input.lenderName.startsWith('SYNTHETIC') ? input.lenderName : `SYNTHETIC ${input.lenderName}`,
+      product: input.product,
+      amount: input.amount ?? undefined,
+      interestRate: input.interestRate ?? undefined,
+      termMonths: input.termMonths ?? undefined,
+      origination: input.origination ?? undefined,
+      assumptions: input.assumptions || ['manual entry UNVERIFIED'],
+      createdAt: new Date().toISOString(),
+    };
+    return {
+      ...d,
+      offers: [...d.offers, offer],
+      opportunity: {
+        ...d.opportunity,
+        stage: d.opportunity.stage === 'Submitted' || d.opportunity.stage === 'Underwriting'
+          ? 'TermSheetOfferReceived'
+          : d.opportunity.stage,
+        lastMeaningfulActivityAt: new Date().toISOString(),
+      },
+    };
+  });
+}
+
+export function applySyntheticExtractOffer(
+  id: string,
+  input: { text: string; lenderId?: string; lenderName?: string },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  const text = String(input.text || '').trim();
+  if (!text) throw new Error('text required');
+  if (/ignore previous instructions/i.test(text)) {
+    return getSyntheticOpportunity(id);
+  }
+  const amountMatch = text.match(/\$?\s*([\d,]+)/);
+  const rateMatch = text.match(/(\d+(?:\.\d+)?)\s*%/);
+  const termMatch = text.match(/(\d+)\s*months?/i);
+  return applySyntheticAddOffer(id, {
+    lenderId: input.lenderId || 'ln-syn-extract',
+    lenderName: input.lenderName || 'SYNTHETIC extracted lender',
+    amount: amountMatch ? Number(amountMatch[1].replace(/,/g, '')) : null,
+    interestRate: rateMatch ? Number(rateMatch[1]) : null,
+    termMonths: termMatch ? Number(termMatch[1]) : null,
+    assumptions: ['extracted UNVERIFIED — not quoted as complete'],
+  });
+}
+
+export function applySyntheticGenerateClosing(id: string): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  return patch(id, (d) => ({
+    ...d,
+    closing: closingDefaults(id),
+  }));
+}
+
+export function applySyntheticRecordFunding(
+  id: string,
+  input: {
+    fundedDate: string;
+    verifiedBy: string;
+    sourceSystem: string;
+    capturedAt: string;
+    lenderId?: string;
+    grossAmount?: number | null;
+  },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  if (!input.verifiedBy || !input.sourceSystem || !input.capturedAt) {
+    throw new Error('Funded requires authorized confirmation and a SourceRef.');
+  }
+  return patch(id, (d) => ({
+    ...d,
+    funding: {
+      id: `fund-${id}`,
+      capitalOpportunityId: id,
+      clientCode: d.opportunity.clientCode,
+      fundedDate: input.fundedDate,
+      verifiedBy: input.verifiedBy,
+      lenderId: input.lenderId,
+      grossAmount: input.grossAmount ?? undefined,
+      evidenceKind: 'authorized_confirmation',
+    },
+    opportunity: {
+      ...d.opportunity,
+      stage: d.opportunity.stage === 'Closing' ? 'Funded' : d.opportunity.stage,
+      lastMeaningfulActivityAt: new Date().toISOString(),
+    },
+  }));
+}
+
+export function applySyntheticRecordFee(
+  id: string,
+  input: { clientCode: string; feeType: string; notes?: string; feeFormula?: string },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  return patch(id, (d) => ({
+    ...d,
+    fees: [
+      ...d.fees,
+      {
+        id: `${id}-fee-${Date.now()}`,
+        feeType: input.feeType,
+        feeFormula: input.feeFormula,
+        earnedEvent: 'Funding by a third-party lender (not an HVCG lending event)',
+        approvalStatus: 'PENDING',
+        invoiceStatus: 'not_invoiced',
+        paymentStatus: 'unpaid',
+        legalComplianceReviewRequired: true,
+        notes: input.notes || 'LEGAL / COMPLIANCE REVIEW REQUIRED. Success fee ≠ funded capital.',
+      },
+    ],
+  }));
+}
+
+export function applySyntheticClientDecision(
+  id: string,
+  input: { decision: string; selectedTermSheetId?: string; reason?: string },
+): CapitalOpportunityDetail {
+  requireSyntheticId(id);
+  return patch(id, (d) => ({
+    ...d,
+    decision: {
+      id: `dec-${id}`,
+      decision: input.decision,
+      selectedTermSheetId: input.selectedTermSheetId,
+      reason: input.reason,
+      legallyBinding: false,
+    },
   }));
 }
 

@@ -133,6 +133,9 @@ function commandCenterPayload(
     const status = o.winLossStatus || 'Open';
     return status === 'Open';
   });
+  const opportunityExceptions = openOpps.filter((o) =>
+    ['OVERDUE', 'NO_NEXT_ACTION', 'NEEDS_ACTION', 'NEEDS_MANNY'].includes(o.attention.state),
+  );
   const overdueFollowUps = followLeads.filter((lead) => {
     const due = (lead.nextFollowUpDate || '').slice(0, 10);
     return Boolean(due && due < today);
@@ -162,6 +165,12 @@ function commandCenterPayload(
         severity: 'high',
         title: `Overdue follow-up: ${lead.title}`,
         href: `/leads/${lead.id}`,
+      })),
+      ...opportunityExceptions.slice(0, 5).map((o) => ({
+        id: `opportunity-${o.id}`,
+        severity: o.attention.severity === 'danger' ? 'high' : 'medium',
+        title: `${o.attention.label}: ${o.title}`,
+        href: `/opportunities/${o.id}`,
       })),
       ...atRisk.slice(0, 5).map((p) => ({
         id: p.id,
@@ -210,7 +219,17 @@ function commandCenterPayload(
         ...openOpps.map((o) => ({
           id: o.id,
           name: o.title,
-          detail: [o.stage, o.opportunityType, o.clientCode].filter(Boolean).join(' · '),
+          detail: [
+            o.attention.label,
+            o.stage,
+            o.ownerEmail,
+            o.nextAction,
+            o.nextActionDate ? `Due ${o.nextActionDate.slice(0, 10)}` : null,
+            o.clientStage,
+            o.clientCode,
+          ]
+            .filter(Boolean)
+            .join(' · '),
           href: `/opportunities/${o.id}`,
         })),
       ].slice(0, 20),
@@ -457,6 +476,21 @@ export async function handleSharePointPmRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/pm/opportunities') {
+      const opportunities = await service.listAuthorizedOpportunities(principal);
+      send(
+        res,
+        200,
+        {
+          opportunities,
+          source: 'sharepoint',
+          configured: Boolean(opts.cfg.pmBackend.sharepoint?.opportunitiesListId),
+        },
+        origin,
+      );
+      return true;
+    }
+
     const opportunityOne = path.match(/^\/api\/pm\/opportunities\/([^/]+)$/);
     if (method === 'GET' && opportunityOne) {
       const opportunity = await service.authorizeOpportunity(
@@ -468,6 +502,24 @@ export async function handleSharePointPmRoutes(opts: {
         return true;
       }
       send(res, 200, { opportunity, source: 'sharepoint' }, origin);
+      return true;
+    }
+
+    if (method === 'PATCH' && opportunityOne) {
+      const opportunity = await service.patchOpportunity(
+        principal,
+        decodeURIComponent(opportunityOne[1]),
+        body,
+        readEtag(req, body),
+      );
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: 'pm_opportunity_patch',
+        outcome: 'success',
+        detail: `list=HVCG_Opportunities item=${opportunity.id} stage=${opportunity.stage} winLoss=${opportunity.winLossStatus || ''} attention=${opportunity.attention.state} clientStage=${opportunity.clientStage || ''}`,
+      });
+      send(res, 200, { opportunity }, origin);
       return true;
     }
 
