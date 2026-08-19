@@ -1,0 +1,22 @@
+{
+  "schema": "atlas-release-candidate-v1",
+  "releaseVersion": "RC-HOLD-S13",
+  "commitSha": "5f3351027c8448ecedeb34700cd5ab5d303c535a",
+  "deploymentEnvironment": "none-hold",
+  "azureSubscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+  "producedAt": "2026-07-20T02:21:16Z",
+  "producedBy": "deployment-manager",
+  "qaStatus": "PENDING",
+  "coordinatorStatus": "BLOCKED",
+  "deployAuthorized": false,
+  "refuseGateResults": {
+    "REFUSE-QA-NOGO": "FAIL",
+    "REFUSE-S0": "PASS",
+    "REFUSE-S1": "PASS",
+    "REFUSE-TS-BUILD": "NOT_RUN",
+    "REFUSE-RBAC": "NOT_RUN",
+    "REFUSE-PLACEHOLDER": "NOT_RUN",
+    "REFUSE-FAKE-FINANCE": "NOT_RUN"
+  },
+  "notes": "Monitoring hold package \u2014 not a deployable RC"
+}

@@ -1,0 +1,115 @@
+{
+  "generatedAt": "2026-07-16T21:13:56.571Z",
+  "branch": "cursor/deployment-manager-sprint1",
+  "dataMode": "mock-only",
+  "summary": {
+    "passed": 16,
+    "failed": 0,
+    "total": 16
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "dashboard route",
+      "pass": true,
+      "evidence": "/ → Release Dashboard"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "queue route",
+      "pass": true,
+      "evidence": "/queue → Deployment Queue"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "promotion route",
+      "pass": true,
+      "evidence": "/promotion → Environment Promotion"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "approvals route",
+      "pass": true,
+      "evidence": "/approvals → Approval Workflow"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "evidence route",
+      "pass": true,
+      "evidence": "/evidence → Release Evidence"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "rollback route",
+      "pass": true,
+      "evidence": "/rollback → Rollback Dashboard"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "environments route",
+      "pass": true,
+      "evidence": "/environments → Environment Status"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "calendar route",
+      "pass": true,
+      "evidence": "/calendar → Deployment Calendar"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "incidents route",
+      "pass": true,
+      "evidence": "/incidents → Incident Dashboard"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "audit route",
+      "pass": true,
+      "evidence": "/audit → Audit Trail"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "release-detail route",
+      "pass": true,
+      "evidence": "/releases/RC-DM-001 → Deployment Manager Sprint 1 Phase 1"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 dashboard",
+      "pass": true,
+      "evidence": "mobile nav=true; overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Viewer layout",
+      "pass": true,
+      "evidence": "queue=0; environments=1"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected queue route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4181/"
+    },
+    {
+      "suite": "Protected Path QA",
+      "name": "No production credentials in UI",
+      "pass": true,
+      "evidence": "scanned visible body text"
+    },
+    {
+      "suite": "Protected Path QA",
+      "name": "Mock-only banner present",
+      "pass": true,
+      "evidence": "Mock keyword visible"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-dashboard-desktop.png",
+    "screenshots/02-queue-desktop.png",
+    "screenshots/03-environments-desktop.png",
+    "screenshots/04-dashboard-mobile.png",
+    "screenshots/05-approvals-desktop.png"
+  ]
+}

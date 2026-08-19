@@ -1,0 +1,755 @@
+{
+  "generatedAt": "2026-07-20T02:29:21Z",
+  "coordinator": "deployment-manager",
+  "role": "Release Deployment Coordinator",
+  "deployAuthorized": false,
+  "qaFormalGo": false,
+  "refuseStanding": [
+    "REFUSE-QA-NOGO: no formal QA GO recorded for current RC"
+  ],
+  "orchestration": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/sprint12-engineering-orchestration/PROJECT_ATLAS/ORCHESTRATION",
+  "releaseBoard": {
+    "updatedAt": "2026-07-20T00:23:46Z",
+    "active": [
+      {
+        "version": "s13-elite-telemetry-uat",
+        "stage": "Implementation",
+        "feature": "FEAT-S13-ELITE-TELEMETRY-UAT",
+        "taskIds": [
+          "ATLAS-T-1301",
+          "ATLAS-T-1302",
+          "ATLAS-T-1303",
+          "ATLAS-T-1304",
+          "ATLAS-T-1310",
+          "ATLAS-T-1311",
+          "ATLAS-T-1312",
+          "ATLAS-T-1313"
+        ],
+        "ownerApprovalRequired": true,
+        "notes": "Owner UAT (1304) required before production promotion claims"
+      }
+    ],
+    "upcoming": [
+      {
+        "version": "elite-os-dev-uat",
+        "stage": "Implementation",
+        "taskIds": [
+          "ATLAS-T-1301",
+          "ATLAS-T-1303",
+          "ATLAS-T-1304"
+        ]
+      }
+    ]
+  },
+  "reviewsWaiting": [
+    "ATLAS-T-1201",
+    "ATLAS-T-1202",
+    "ATLAS-T-1203",
+    "ATLAS-T-1204",
+    "ATLAS-T-1205",
+    "ATLAS-T-1302",
+    "ATLAS-T-1306",
+    "ATLAS-T-1301"
+  ],
+  "readyTaskCount": 11,
+  "mergeCandidateCount": 9,
+  "readyTasks": [
+    {
+      "id": "ATLAS-T-1303",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "elite-ui",
+      "priority": "P1",
+      "title": "Wire Application Insights into Elite OS"
+    },
+    {
+      "id": "ATLAS-T-1304",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "Owner UAT: Design System + Executive Dashboard on SWA"
+    },
+    {
+      "id": "ATLAS-T-1307",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "data-engineering",
+      "priority": "P1",
+      "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map"
+    },
+    {
+      "id": "ATLAS-T-1313",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "QA gate: ATLAS-T-1301 CORS + ATLAS-T-1302 KV purge protection"
+    },
+    {
+      "id": "ATLAS-T-1314",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "executive-intelligence",
+      "priority": "P0",
+      "title": "Executive Intelligence: Owner Daily Brief (Sprint 13 Day 1)"
+    },
+    {
+      "id": "ATLAS-T-1315",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "finance-intelligence",
+      "priority": "P1",
+      "title": "Finance Intelligence: Sprint 13 engineering investment & Azure spend brief"
+    },
+    {
+      "id": "ATLAS-T-1316",
+      "sprint": 13,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P1",
+      "title": "QA clearance: Sprint 12 orchestration tasks still Waiting Review"
+    },
+    {
+      "id": "ATLAS-T-1402",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "Owner UAT: Executive Home + HVCG + CCB workspaces"
+    },
+    {
+      "id": "ATLAS-T-1403",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "elite-ui",
+      "priority": "P1",
+      "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)"
+    },
+    {
+      "id": "ATLAS-T-1404",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P1",
+      "title": "QA gate: CORS + signed-in Dataverse on SWA + App Insights plan"
+    },
+    {
+      "id": "ATLAS-T-1405",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "system-architect",
+      "priority": "P1",
+      "title": "Freeze duplicate executive shells \u2014 Elite OS only for daily UX"
+    }
+  ],
+  "mergeCandidates": [
+    {
+      "id": "ATLAS-T-1201",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "master-pm",
+      "priority": "P0",
+      "title": "Stand up ORCHESTRATION directory and schemas"
+    },
+    {
+      "id": "ATLAS-T-1202",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "master-pm",
+      "priority": "P0",
+      "title": "Register all engineering agents"
+    },
+    {
+      "id": "ATLAS-T-1203",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "automation",
+      "priority": "P0",
+      "title": "Implement task engine CLI (claim/list/complete)"
+    },
+    {
+      "id": "ATLAS-T-1204",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "knowledge-platform",
+      "priority": "P0",
+      "title": "Seed engineering memory, ADRs, knowledge graph"
+    },
+    {
+      "id": "ATLAS-T-1205",
+      "sprint": 12,
+      "status": "Waiting Review",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "title": "Define review + release workflows and Sprint 13 backlog"
+    },
+    {
+      "id": "ATLAS-T-1301",
+      "sprint": 13,
+      "status": "QA Review",
+      "assignedAgent": "power-platform",
+      "priority": "P0",
+      "title": "Apply Dataverse CORS for Elite OS SWA origin"
+    },
+    {
+      "id": "ATLAS-T-1302",
+      "sprint": 13,
+      "status": "QA Review",
+      "assignedAgent": "azure-platform",
+      "priority": "P1",
+      "title": "Enable Key Vault purge protection"
+    },
+    {
+      "id": "ATLAS-T-1306",
+      "sprint": 13,
+      "status": "Waiting Review",
+      "assignedAgent": "communications",
+      "priority": "P2",
+      "title": "Bridge agent-comms status requests to orchestration heartbeats"
+    },
+    {
+      "id": "ATLAS-T-1401",
+      "sprint": 14,
+      "status": "Waiting Review",
+      "assignedAgent": "elite-ui",
+      "priority": "P0",
+      "title": "Commit Elite OS Executive Dashboard product SoR and redeploy Dev SWA"
+    }
+  ],
+  "tracks": {
+    "Elite UI": {
+      "agents": [
+        "elite-ui"
+      ],
+      "heartbeats": [
+        {
+          "agentId": "elite-ui",
+          "status": "Idle",
+          "action": "Ready work available: ATLAS-T-1303",
+          "task": null
+        }
+      ],
+      "readyTasks": [
+        {
+          "id": "ATLAS-T-1303",
+          "sprint": 13,
+          "status": "Ready",
+          "assignedAgent": "elite-ui",
+          "priority": "P1",
+          "title": "Wire Application Insights into Elite OS"
+        },
+        {
+          "id": "ATLAS-T-1403",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "elite-ui",
+          "priority": "P1",
+          "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)"
+        },
+        {
+          "id": "ATLAS-T-1405",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "system-architect",
+          "priority": "P1",
+          "title": "Freeze duplicate executive shells \u2014 Elite OS only for daily UX"
+        }
+      ],
+      "mergeCandidates": [
+        {
+          "id": "ATLAS-T-1301",
+          "sprint": 13,
+          "status": "QA Review",
+          "assignedAgent": "power-platform",
+          "priority": "P0",
+          "title": "Apply Dataverse CORS for Elite OS SWA origin"
+        },
+        {
+          "id": "ATLAS-T-1401",
+          "sprint": 14,
+          "status": "Waiting Review",
+          "assignedAgent": "elite-ui",
+          "priority": "P0",
+          "title": "Commit Elite OS Executive Dashboard product SoR and redeploy Dev SWA"
+        }
+      ],
+      "allTasks": [
+        {
+          "id": "ATLAS-T-1301",
+          "sprint": 13,
+          "status": "QA Review",
+          "assignedAgent": "power-platform",
+          "priority": "P0",
+          "title": "Apply Dataverse CORS for Elite OS SWA origin"
+        },
+        {
+          "id": "ATLAS-T-1303",
+          "sprint": 13,
+          "status": "Ready",
+          "assignedAgent": "elite-ui",
+          "priority": "P1",
+          "title": "Wire Application Insights into Elite OS"
+        },
+        {
+          "id": "ATLAS-T-1310",
+          "sprint": 13,
+          "status": "Planned",
+          "assignedAgent": "security-engineering",
+          "priority": "P1",
+          "title": "Security review: Elite OS App Insights telemetry (PII / secrets)"
+        },
+        {
+          "id": "ATLAS-T-1311",
+          "sprint": 13,
+          "status": "Planned",
+          "assignedAgent": "documentation-manager",
+          "priority": "P1",
+          "title": "Document Elite OS App Insights + Owner UAT runbook"
+        },
+        {
+          "id": "ATLAS-T-1401",
+          "sprint": 14,
+          "status": "Waiting Review",
+          "assignedAgent": "elite-ui",
+          "priority": "P0",
+          "title": "Commit Elite OS Executive Dashboard product SoR and redeploy Dev SWA"
+        },
+        {
+          "id": "ATLAS-T-1403",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "elite-ui",
+          "priority": "P1",
+          "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)"
+        },
+        {
+          "id": "ATLAS-T-1405",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "system-architect",
+          "priority": "P1",
+          "title": "Freeze duplicate executive shells \u2014 Elite OS only for daily UX"
+        }
+      ],
+      "signal": "MERGE_CANDIDATE"
+    },
+    "Operations Hub": {
+      "agents": [
+        "operations-hub",
+        "operations"
+      ],
+      "heartbeats": [],
+      "readyTasks": [],
+      "mergeCandidates": [],
+      "allTasks": [],
+      "signal": "QUIET"
+    },
+    "Revenue Systems": {
+      "agents": [
+        "revenue-systems"
+      ],
+      "heartbeats": [
+        {
+          "agentId": "revenue-systems",
+          "status": "Idle",
+          "action": "verified data-engineering already registered in Sprint 12 orchestration; no DE claim (out of ownership)",
+          "task": null
+        }
+      ],
+      "readyTasks": [],
+      "mergeCandidates": [],
+      "allTasks": [],
+      "signal": "ACTIVE_HB"
+    },
+    "Client Portal": {
+      "agents": [
+        "client-workspace",
+        "client-portal"
+      ],
+      "heartbeats": [
+        {
+          "agentId": "client-workspace",
+          "status": "Idle",
+          "action": "verified Sprint 12 data-engineering registration already complete; no DE claim (out of ownership)",
+          "task": null
+        }
+      ],
+      "readyTasks": [],
+      "mergeCandidates": [],
+      "allTasks": [],
+      "signal": "ACTIVE_HB"
+    },
+    "Finance Intelligence": {
+      "agents": [
+        "finance-intelligence",
+        "finance"
+      ],
+      "heartbeats": [
+        {
+          "agentId": "finance-intelligence",
+          "status": "Idle",
+          "action": "Ready: ATLAS-T-1315 cost brief",
+          "task": null
+        }
+      ],
+      "readyTasks": [
+        {
+          "id": "ATLAS-T-1315",
+          "sprint": 13,
+          "status": "Ready",
+          "assignedAgent": "finance-intelligence",
+          "priority": "P1",
+          "title": "Finance Intelligence: Sprint 13 engineering investment & Azure spend brief"
+        }
+      ],
+      "mergeCandidates": [],
+      "allTasks": [
+        {
+          "id": "ATLAS-T-1315",
+          "sprint": 13,
+          "status": "Ready",
+          "assignedAgent": "finance-intelligence",
+          "priority": "P1",
+          "title": "Finance Intelligence: Sprint 13 engineering investment & Azure spend brief"
+        }
+      ],
+      "signal": "READY_WORK"
+    },
+    "Security": {
+      "agents": [
+        "security-engineering",
+        "security"
+      ],
+      "heartbeats": [
+        {
+          "agentId": "security-engineering",
+          "status": "Idle",
+          "action": "registered (migrated from security id)",
+          "task": null
+        },
+        {
+          "agentId": "security",
+          "status": "Idle",
+          "action": "Verified data-engineering Sprint 12 registration: active, ownedPaths least-privilege, escalatesTo master-pm",
+          "task": null
+        }
+      ],
+      "readyTasks": [],
+      "mergeCandidates": [],
+      "allTasks": [
+        {
+          "id": "ATLAS-T-1310",
+          "sprint": 13,
+          "status": "Planned",
+          "assignedAgent": "security-engineering",
+          "priority": "P1",
+          "title": "Security review: Elite OS App Insights telemetry (PII / secrets)"
+        }
+      ],
+      "signal": "ACTIVE_HB"
+    },
+    "Data Engineering": {
+      "agents": [
+        "data-engineering"
+      ],
+      "heartbeats": [
+        {
+          "agentId": "data-engineering",
+          "status": "Idle",
+          "action": "Registered on Atlas Engineering Orchestration Platform (REG-DATA-ENGINEERING-S12); Ready work ATLAS-T-1307 available",
+          "task": null
+        }
+      ],
+      "readyTasks": [
+        {
+          "id": "ATLAS-T-1307",
+          "sprint": 13,
+          "status": "Ready",
+          "assignedAgent": "data-engineering",
+          "priority": "P1",
+          "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map"
+        },
+        {
+          "id": "ATLAS-T-1403",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "elite-ui",
+          "priority": "P1",
+          "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)"
+        },
+        {
+          "id": "ATLAS-T-1404",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "qa-release",
+          "priority": "P1",
+          "title": "QA gate: CORS + signed-in Dataverse on SWA + App Insights plan"
+        }
+      ],
+      "mergeCandidates": [
+        {
+          "id": "ATLAS-T-1301",
+          "sprint": 13,
+          "status": "QA Review",
+          "assignedAgent": "power-platform",
+          "priority": "P0",
+          "title": "Apply Dataverse CORS for Elite OS SWA origin"
+        }
+      ],
+      "allTasks": [
+        {
+          "id": "ATLAS-T-1206",
+          "sprint": 12,
+          "status": "Closed",
+          "assignedAgent": "data-engineering",
+          "priority": "P0",
+          "title": "Register Data Engineering with Orchestration Platform"
+        },
+        {
+          "id": "ATLAS-T-1301",
+          "sprint": 13,
+          "status": "QA Review",
+          "assignedAgent": "power-platform",
+          "priority": "P0",
+          "title": "Apply Dataverse CORS for Elite OS SWA origin"
+        },
+        {
+          "id": "ATLAS-T-1307",
+          "sprint": 13,
+          "status": "Ready",
+          "assignedAgent": "data-engineering",
+          "priority": "P1",
+          "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map"
+        },
+        {
+          "id": "ATLAS-T-1312",
+          "sprint": 13,
+          "status": "Planned",
+          "assignedAgent": "system-architect",
+          "priority": "P1",
+          "title": "Architecture review: App Insights + Dataverse CORS pattern"
+        },
+        {
+          "id": "ATLAS-T-1403",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "elite-ui",
+          "priority": "P1",
+          "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)"
+        },
+        {
+          "id": "ATLAS-T-1404",
+          "sprint": 14,
+          "status": "Ready",
+          "assignedAgent": "qa-release",
+          "priority": "P1",
+          "title": "QA gate: CORS + signed-in Dataverse on SWA + App Insights plan"
+        }
+      ],
+      "signal": "MERGE_CANDIDATE"
+    }
+  },
+  "worktrees": [
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System",
+      "head": "912d3ca52fea",
+      "branch": "cursor/agent-communications"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/ai-governance-sprint1",
+      "head": "0dc0c6fafe6c",
+      "branch": "cursor/ai-governance-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/ai-governance-work-queues",
+      "head": "fc1fa79eac23",
+      "branch": "cursor/ai-governance-work-queues"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-powerapps-uat",
+      "head": "d778f23ad53e",
+      "branch": "cursor/track7-atlas-powerapps-uat"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/ceo-command-center-sprint2",
+      "head": "d778f23ad53e",
+      "branch": "cursor/track7-ceo-command-center-sprint2"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/client-portal-data-rooms",
+      "head": "b8b2005b5467",
+      "branch": "cursor/client-portal-data-rooms"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/client-portal-sprint1",
+      "head": "8c8806b1c9c0",
+      "branch": "cursor/client-portal-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/crm-dev-validation-commit",
+      "head": "7c226e6737dd",
+      "branch": "agent/crm-dev-validation"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/crm-docs-owner",
+      "head": "d39efa22bd58",
+      "branch": "agent/crm-docs-owner"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/crm-integration",
+      "head": "bbfeec9df72a",
+      "branch": "agent/crm-integration"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/crm-migration-audit",
+      "head": "e6c5d723fc12",
+      "branch": "agent/crm-migration-audit"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/crm-power-automate",
+      "head": "4c3d709252a8",
+      "branch": "agent/crm-power-automate"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/crm-testing-qa",
+      "head": "fdd5f1157132",
+      "branch": "agent/crm-testing-qa"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/deployment-engineer",
+      "head": "c726f1ecf945",
+      "branch": "cursor/deployment-engineer"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/deployment-manager-sprint1",
+      "head": "2290456e488c",
+      "branch": "cursor/deployment-manager-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/documentation-knowledge-manager",
+      "head": "2c064b3235f3",
+      "branch": "cursor/documentation-knowledge-manager"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/documentation-manager-sprint12-validation",
+      "head": "bd428ff9b040",
+      "branch": "cursor/documentation-manager/sprint12-validation-ATLAS-T-1208"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/elite-ui-release-recovery",
+      "head": "35ca684c5756",
+      "branch": "cursor/elite-ui-release-recovery"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/executive-command-center",
+      "head": "e074cfcc382b",
+      "branch": "cursor/executive-command-center-active"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/executive-command-center-sprint1",
+      "head": "5bb42c252f5a",
+      "branch": "cursor/executive-command-center-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/executive-intelligence-sprint1",
+      "head": "5bb42c252f5a",
+      "branch": "cursor/executive-intelligence-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/finance-intelligence-sprint1",
+      "head": "c287508ab775",
+      "branch": "cursor/finance-intelligence-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/finance-operations",
+      "head": "c79d35b3ad30",
+      "branch": "cursor/finance-operations"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/finance-operations-sprint1",
+      "head": "c287508ab775",
+      "branch": "cursor/finance-operations-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/master-pm-orchestrator",
+      "head": "b75b19bef11d",
+      "branch": "cursor/master-pm-orchestrator"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/operations-hub",
+      "head": "a584f612cb43",
+      "branch": "cursor/operations-hub"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/operations-hub-sprint1",
+      "head": "0f8f6da42dc9",
+      "branch": "cursor/operations-hub-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/project-atlas-authoritative",
+      "head": "bd07e6104847",
+      "branch": "cursor/project-atlas-rc1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/qa-release-manager",
+      "head": "2c064b3235f3",
+      "branch": "cursor/qa-release-manager"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/revenue-os-atlas-design",
+      "head": "7fd8bf270dc0",
+      "branch": "cursor/revenue-os-atlas-design"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/revenue-pipeline-product",
+      "head": "923d475a844b",
+      "branch": "cursor/revenue-pipeline-product"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/revenue-sprint3",
+      "head": "0073bf494114",
+      "branch": "cursor/revenue-sprint3-conversion"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/revenue-sprint4",
+      "head": "bf34c931e645",
+      "branch": "cursor/revenue-sprint4-activation"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/sprint11-azure-production-migration",
+      "head": "a386d816e77a",
+      "branch": "cursor/sprint11-azure-production-migration"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/sprint12-engineering-orchestration",
+      "head": "5f3351027c84",
+      "branch": "cursor/orchestration-sprint12"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/system-architect",
+      "head": "b75b19bef11d",
+      "branch": "cursor/system-architect"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/track10-elite-ui",
+      "head": "f2199a4ed5d1",
+      "branch": "cursor/comms-product-timeline"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/track9-eos-sprint1",
+      "head": "6b36782265e9",
+      "branch": "cursor/track9-eos-sprint1"
+    },
+    {
+      "worktree": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/track9-eos-sprint2",
+      "head": "d778f23ad53e",
+      "branch": "cursor/track9-eos-sprint2"
+    }
+  ],
+  "nextActions": [
+    "Continue monitoring; do not deploy",
+    "When merge candidates clear QA with formal GO, produce RC package",
+    "Notify Master PM on READY_FOR_QA only after refuse gates PASS"
+  ]
+}

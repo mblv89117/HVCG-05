@@ -1,0 +1,29 @@
+{
+  "schema": "atlas-release-candidate-v1",
+  "releaseVersion": "REPLACE",
+  "commitSha": "REPLACE",
+  "additionalCommits": [],
+  "deploymentEnvironment": "REPLACE",
+  "azureSubscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
+  "azureSubscriptionName": "HVCG Production",
+  "producedAt": "REPLACE",
+  "producedBy": "deployment-manager",
+  "qaStatus": "PENDING",
+  "coordinatorStatus": "DRAFT",
+  "tracksIncluded": [],
+  "migrationRequirements": [],
+  "rollbackPlan": [],
+  "knownIssues": [],
+  "refuseGateResults": {
+    "REFUSE-QA-NOGO": "FAIL",
+    "REFUSE-S0": "NOT_RUN",
+    "REFUSE-S1": "NOT_RUN",
+    "REFUSE-TS-BUILD": "NOT_RUN",
+    "REFUSE-RBAC": "NOT_RUN",
+    "REFUSE-PLACEHOLDER": "NOT_RUN",
+    "REFUSE-FAKE-FINANCE": "NOT_RUN"
+  },
+  "deploymentChecklistPath": "deployment/release-coordination/checklists/DEPLOYMENT_READINESS_CHECKLIST.md",
+  "deployAuthorized": false,
+  "notes": "deployAuthorized remains false until QA formal GO and all refuse gates PASS"
+}

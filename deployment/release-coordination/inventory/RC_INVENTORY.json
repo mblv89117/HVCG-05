@@ -1,0 +1,185 @@
+{
+  "updatedAt": "2026-07-20T02:33:28Z",
+  "candidates": [
+    {
+      "taskId": "ATLAS-T-1201",
+      "title": "Stand up ORCHESTRATION directory and schemas",
+      "assignedAgent": "master-pm",
+      "priority": "P0",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1202",
+      "title": "Register all engineering agents",
+      "assignedAgent": "master-pm",
+      "priority": "P0",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1203",
+      "title": "Implement task engine CLI (claim/list/complete)",
+      "assignedAgent": "automation",
+      "priority": "P0",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1204",
+      "title": "Seed engineering memory, ADRs, knowledge graph",
+      "assignedAgent": "knowledge-platform",
+      "priority": "P0",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1205",
+      "title": "Define review + release workflows and Sprint 13 backlog",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1301",
+      "title": "Apply Dataverse CORS for Elite OS SWA origin",
+      "assignedAgent": "power-platform",
+      "priority": "P0",
+      "status": "QA Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1302",
+      "title": "Enable Key Vault purge protection",
+      "assignedAgent": "azure-platform",
+      "priority": "P1",
+      "status": "QA Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1303",
+      "title": "Wire Application Insights into Elite OS",
+      "assignedAgent": "elite-ui",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1304",
+      "title": "Owner UAT: Design System + Executive Dashboard on SWA",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1306",
+      "title": "Bridge agent-comms status requests to orchestration heartbeats",
+      "assignedAgent": "communications",
+      "priority": "P2",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1307",
+      "title": "Publish Atlas Dataverse hvcg_atlas* inventory + sample-data map",
+      "assignedAgent": "data-engineering",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1313",
+      "title": "QA gate: ATLAS-T-1301 CORS + ATLAS-T-1302 KV purge protection",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1314",
+      "title": "Executive Intelligence: Owner Daily Brief (Sprint 13 Day 1)",
+      "assignedAgent": "executive-intelligence",
+      "priority": "P0",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1315",
+      "title": "Finance Intelligence: Sprint 13 engineering investment & Azure spend brief",
+      "assignedAgent": "finance-intelligence",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1316",
+      "title": "QA clearance: Sprint 12 orchestration tasks still Waiting Review",
+      "assignedAgent": "qa-release",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1401",
+      "title": "Commit Elite OS Executive Dashboard product SoR and redeploy Dev SWA",
+      "assignedAgent": "elite-ui",
+      "priority": "P0",
+      "status": "Waiting Review",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1402",
+      "title": "Owner UAT: Executive Home + HVCG + CCB workspaces",
+      "assignedAgent": "qa-release",
+      "priority": "P0",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1403",
+      "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)",
+      "assignedAgent": "elite-ui",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1404",
+      "title": "QA gate: CORS + signed-in Dataverse on SWA + App Insights plan",
+      "assignedAgent": "qa-release",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    },
+    {
+      "taskId": "ATLAS-T-1405",
+      "title": "Freeze duplicate executive shells \u2014 Elite OS only for daily UX",
+      "assignedAgent": "system-architect",
+      "priority": "P1",
+      "status": "Ready",
+      "source": "orchestration",
+      "updatedAt": "2026-07-20T02:33:28Z"
+    }
+  ]
+}

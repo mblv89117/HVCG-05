@@ -1,0 +1,16 @@
+{
+  "mode": "event-driven",
+  "updatedAt": "2026-07-20T02:33:28Z",
+  "deployAuthorized": false,
+  "autoDeploy": false,
+  "approvals": {
+    "qaGo": false,
+    "masterPmApproval": false,
+    "ownerApproval": false
+  },
+  "qaStatus": "PENDING",
+  "activeReleaseVersion": null,
+  "incidentFreeze": false,
+  "lastEventId": "91cc1d36-2bd3-49b2-84a3-a3ea148b0faa",
+  "lastEventType": "SYNC_REQUESTED"
+}

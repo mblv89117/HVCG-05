@@ -1,0 +1,16 @@
+{
+  "eventId": "91cc1d36-2bd3-49b2-84a3-a3ea148b0faa",
+  "eventType": "SYNC_REQUESTED",
+  "emittedAt": "2026-07-20T02:33:28Z",
+  "source": "master-pm",
+  "releaseVersion": null,
+  "taskId": null,
+  "commitSha": null,
+  "qaStatus": null,
+  "masterPmApproval": null,
+  "ownerApproval": null,
+  "blockingIssueId": null,
+  "incidentSeverity": null,
+  "payload": {},
+  "notes": "Bootstrap event-driven orchestrator; refresh inventory from orchestration"
+}
