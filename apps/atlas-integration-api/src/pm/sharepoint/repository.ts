@@ -79,6 +79,57 @@ export type SharePointClient = {
   sharePointLibraryUrl?: string;
 };
 
+const LEAD_STATUSES = new Set(['New', 'Contacted', 'Qualified', 'Disqualified', 'Converted']);
+const LEAD_PATCHABLE_STATUSES = new Set(['New', 'Contacted', 'Qualified', 'Disqualified']);
+const LEAD_FOLLOW_STATUSES = new Set(['New', 'Contacted', 'Qualified']);
+
+export type SharePointLead = {
+  id: string;
+  etag: string;
+  title: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  source?: string;
+  leadSourceDetail?: string;
+  status: string;
+  serviceInterest?: string;
+  ownerEmail?: string;
+  notes?: string;
+  nextAction?: string;
+  nextFollowUpDate?: string;
+  discoveryCallDate?: string;
+  leadScore?: number;
+  estimatedValue?: number;
+  pipelineValue?: number;
+  clientCode?: string;
+  convertedClientId?: string;
+  isReferral?: boolean;
+  lastModified?: string;
+  created?: string;
+};
+
+function nextActionFromNotes(notes?: string): string | undefined {
+  if (!notes) return undefined;
+  try {
+    const parsed = JSON.parse(notes) as { nextAction?: unknown };
+    if (parsed && typeof parsed === 'object' && typeof parsed.nextAction === 'string') {
+      const next = parsed.nextAction.trim();
+      return next ? next.slice(0, 255) : undefined;
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
+export function leadNeedsFollowUp(lead: SharePointLead, today = new Date().toISOString().slice(0, 10)): boolean {
+  if (!LEAD_FOLLOW_STATUSES.has(lead.status)) return false;
+  const due = (lead.nextFollowUpDate || '').slice(0, 10);
+  if (!due) return true;
+  return due <= today;
+}
+
 export type WorkspaceCollectionResult = {
   status: 'COMPLETE' | 'PARTIAL_SOURCE_DATA_NOT_FOUND';
   queried: boolean;
@@ -1054,6 +1105,142 @@ export class SharePointPmService {
         notes: asString(i.fields.Notes) || asString(i.fields.Summary),
       }))
       .filter((v) => v.title);
+  }
+
+  private mapLead(item: GraphListItem): SharePointLead | null {
+    const title = asString(item.fields.Title);
+    if (!item.id || !title) return null;
+    const status = asString(item.fields.LeadStatus) || 'New';
+    if (!LEAD_STATUSES.has(status)) return null;
+    const notes = asString(item.fields.Notes);
+    const convertedClientId = lookupId(item.fields, 'ConvertedClientId');
+    const clientCode = asString(item.fields.ClientCode);
+    const canonical = clientCode && isCanonicalClientCode(clientCode) ? clientCode : undefined;
+    const score = item.fields.LeadScore;
+    const estimated = item.fields.EstimatedValue;
+    const pipeline = item.fields.PipelineValue;
+    return {
+      id: item.id,
+      etag: item.etag,
+      title,
+      contactName: asString(item.fields.ContactName),
+      email: asString(item.fields.Email),
+      phone: asString(item.fields.Phone),
+      source: asString(item.fields.Source),
+      leadSourceDetail: asString(item.fields.LeadSourceDetail),
+      status,
+      serviceInterest: asString(item.fields.ServiceInterest),
+      ownerEmail: asString(item.fields.OwnerEmail),
+      notes,
+      nextAction: nextActionFromNotes(notes),
+      nextFollowUpDate: isoDate(item.fields.NextFollowUpDate),
+      discoveryCallDate: isoDate(item.fields.DiscoveryCallDate),
+      leadScore: typeof score === 'number' && Number.isFinite(score) ? score : undefined,
+      estimatedValue: typeof estimated === 'number' && Number.isFinite(estimated) ? estimated : undefined,
+      pipelineValue: typeof pipeline === 'number' && Number.isFinite(pipeline) ? pipeline : undefined,
+      clientCode: canonical,
+      convertedClientId,
+      isReferral: asBool(item.fields.IsReferral),
+      lastModified: isoDate(item.fields.Modified),
+      created: isoDate(item.fields.Created),
+    };
+  }
+
+  private canSeeLead(principal: AtlasPrincipal, lead: SharePointLead): boolean {
+    const code = (lead.clientCode || '').trim();
+    if (!code) return isInternalStaff(principal);
+    if (!isCanonicalClientCode(code) || code === '*') return false;
+    return entitledClientCodes(principal).includes(code);
+  }
+
+  async listLeads(): Promise<
+    Array<{
+      id: string;
+      title: string;
+      clientCode?: string;
+      notes?: string;
+      email?: string;
+      company?: string;
+      status?: string;
+    }>
+  > {
+    const rows = await this.listLeadRecords();
+    return rows.map((lead) => ({
+      id: lead.id,
+      title: lead.title,
+      clientCode: lead.clientCode,
+      notes: lead.notes,
+      email: lead.email,
+      company: lead.title,
+      status: lead.status,
+    }));
+  }
+
+  async listLeadRecords(): Promise<SharePointLead[]> {
+    if (!this.settings.leadsListId) return [];
+    const items = await this.listAll(this.settings.leadsListId);
+    return items.map((item) => this.mapLead(item)).filter((row): row is SharePointLead => Boolean(row));
+  }
+
+  async listAuthorizedLeads(principal: AtlasPrincipal): Promise<SharePointLead[]> {
+    const rows = await this.listLeadRecords();
+    return rows.filter((lead) => this.canSeeLead(principal, lead));
+  }
+
+  async authorizeLead(principal: AtlasPrincipal, id: string): Promise<SharePointLead | 'not_found'> {
+    if (!this.settings.leadsListId || !isSharePointItemId(id)) return 'not_found';
+    const item = await this.graph.getItem(this.settings.leadsListId, id);
+    const lead = item ? this.mapLead(item) : null;
+    if (!lead || !this.canSeeLead(principal, lead)) return 'not_found';
+    return lead;
+  }
+
+  async patchLead(
+    principal: AtlasPrincipal,
+    id: string,
+    body: Record<string, unknown>,
+    etag: string | undefined,
+  ): Promise<SharePointLead> {
+    const existing = await this.authorizeLead(principal, id);
+    if (existing === 'not_found') throw new PmHttpError(404, 'not_found', 'not_found');
+    if (!isInternalStaff(principal)) {
+      throw new PmHttpError(403, 'forbidden', 'Lead updates are restricted to HVCG internal staff.');
+    }
+    if (!etag) throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
+    if (
+      'clientCode' in body ||
+      'ClientCode' in body ||
+      'convertedClientId' in body ||
+      'ConvertedClientId' in body ||
+      'HVCG_IdempotencyKey' in body ||
+      'idempotencyKey' in body
+    ) {
+      throw new PmHttpError(400, 'immutable_field', 'Client conversion and idempotency keys cannot be changed via PATCH.');
+    }
+    if (!this.settings.leadsListId) {
+      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Leads is not configured.');
+    }
+    const fields: Record<string, unknown> = {};
+    if ('status' in body || 'leadStatus' in body) {
+      const status = asString(body.status) || asString(body.leadStatus);
+      if (!status || !LEAD_PATCHABLE_STATUSES.has(status)) {
+        throw new PmHttpError(
+          400,
+          'invalid_input',
+          'LeadStatus must be New, Contacted, Qualified, or Disqualified. Conversion is a separate workflow.',
+        );
+      }
+      fields.LeadStatus = status;
+    }
+    if ('ownerEmail' in body) fields.OwnerEmail = asString(body.ownerEmail) || '';
+    if ('nextFollowUpDate' in body) fields.NextFollowUpDate = asString(body.nextFollowUpDate) || null;
+    if ('discoveryCallDate' in body) fields.DiscoveryCallDate = asString(body.discoveryCallDate) || null;
+    if ('notes' in body) fields.Notes = asString(body.notes) || '';
+    if (Object.keys(fields).length === 0) return existing;
+    const patched = await this.graph.patchItemFields(this.settings.leadsListId, id, fields, etag);
+    const mapped = this.mapLead(patched);
+    if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched lead could not be mapped.');
+    return mapped;
   }
 
   async listIndexedFiles(): Promise<

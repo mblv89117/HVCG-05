@@ -794,6 +794,145 @@ describe('SharePoint PM HTTP', () => {
   });
 });
 
+const LEADS = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2';
+
+describe('SharePoint HVCG_Leads operator queue', () => {
+  async function withLeads(
+    fn: (ctx: { base: string; graph: MemoryGraph }) => Promise<void>,
+    entitlements: (oid: string | undefined) => string[] = () => ['ACCG01'],
+  ) {
+    const prevLeads = process.env.INTEGRATION_PM_LEADS_LIST_ID;
+    process.env.INTEGRATION_PM_LEADS_LIST_ID = LEADS;
+    const graph = new MemoryGraph();
+    try {
+      await withSpHub({ entitlements, graph }, fn);
+    } finally {
+      if (prevLeads === undefined) delete process.env.INTEGRATION_PM_LEADS_LIST_ID;
+      else process.env.INTEGRATION_PM_LEADS_LIST_ID = prevLeads;
+    }
+  }
+
+  it('lists unclassified leads for internal staff and surfaces them on Command Center', async () => {
+    await withLeads(async ({ base, graph }) => {
+      graph.seed(
+        LEADS,
+        {
+          Title: 'Website-EVA inbound',
+          ContactName: 'Pat Lead',
+          Email: 'pat@example.com',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+          OwnerEmail: 'manny@highvaluecapitalgroup.com',
+          Notes: JSON.stringify({ nextAction: 'Call Pat about assessment' }),
+        },
+        '80',
+      );
+      const listed = await fetch(`${base}/api/pm/leads`, { headers: auth('a') });
+      assert.equal(listed.status, 200);
+      const body = (await listed.json()) as { leads: Array<{ id: string; status: string; nextAction?: string }> };
+      assert.equal(body.leads.length, 1);
+      assert.equal(body.leads[0].id, '80');
+      assert.equal(body.leads[0].nextAction, 'Call Pat about assessment');
+      const cc = await fetch(`${base}/api/pm/command-center`, { headers: auth('a') });
+      const ccBody = (await cc.json()) as {
+        commandCenter: { myDay: { waitingFollowUps: Array<{ href?: string; id: string }> } };
+      };
+      assert.equal(ccBody.commandCenter.myDay.waitingFollowUps.some((row) => row.href === '/leads/80'), true);
+    });
+  });
+
+  it('Administrator and Advisor cannot read unclassified HVCG_Leads', async () => {
+    await withLeads(async ({ base, graph }) => {
+      graph.seed(LEADS, { Title: 'Internal inbound', LeadStatus: 'New', Email: 'x@example.com' }, '81');
+      const admin = await fetch(`${base}/api/pm/leads`, { headers: auth('admin') });
+      const adminBody = (await admin.json()) as { leads: unknown[] };
+      assert.equal(admin.status, 200);
+      assert.equal(adminBody.leads.length, 0);
+      const advisor = await fetch(`${base}/api/pm/leads`, { headers: auth('advisor') });
+      const advisorBody = (await advisor.json()) as { leads: unknown[] };
+      assert.equal(advisorBody.leads.length, 0);
+      const one = await fetch(`${base}/api/pm/leads/81`, { headers: auth('admin') });
+      assert.equal(one.status, 404);
+    });
+  });
+
+  it('does not leak a foreign converted lead and rejects Converted PATCH', async () => {
+    await withLeads(async ({ base, graph }) => {
+      graph.seed(
+        LEADS,
+        { Title: 'ACCG inbound', LeadStatus: 'New', ClientCode: 'ACCG01', Email: 'a@example.com' },
+        '82',
+      );
+      graph.seed(
+        LEADS,
+        { Title: 'PDG inbound', LeadStatus: 'Contacted', ClientCode: 'PDG01', Email: 'p@example.com' },
+        '83',
+      );
+      const listed = await fetch(`${base}/api/pm/leads`, { headers: auth('a') });
+      const body = (await listed.json()) as { leads: Array<{ id: string; clientCode?: string }> };
+      assert.deepEqual(body.leads.map((l) => l.id), ['82']);
+      const foreign = await fetch(`${base}/api/pm/leads/83`, { headers: auth('a') });
+      assert.equal(foreign.status, 404);
+      const mine = await fetch(`${base}/api/pm/leads/82`, { headers: auth('a') });
+      const mineBody = (await mine.json()) as { lead: { etag: string } };
+      const converted = await fetch(`${base}/api/pm/leads/82`, {
+        method: 'PATCH',
+        headers: { ...auth('a'), 'if-match': mineBody.lead.etag },
+        body: JSON.stringify({ status: 'Converted' }),
+      });
+      assert.equal(converted.status, 400);
+    });
+  });
+
+  it('portfolio blockerCount uses blocked tasks and dataQuality.needsOwnerReview', async () => {
+    await withSpHub({ entitlements: () => ['ACCG01'] }, async ({ base, graph }) => {
+      graph.seed(
+        PROJECTS,
+        {
+          Title: 'Blocked file',
+          ClientCode: 'ACCG01',
+          IsInternalProject: false,
+          ProjectStatus: 'In Progress',
+          ProjectHealth: 'Green',
+          Priority: 'High',
+        },
+        '90',
+      );
+      graph.seed(
+        TASKS,
+        {
+          Title: 'Waiting on bank',
+          ProjectIdLookupId: 90,
+          ClientCode: 'ACCG01',
+          TaskStatus: 'Blocked',
+          Priority: 'High',
+          Blockers: 'Bank package',
+        },
+        '91',
+      );
+      graph.seed(
+        TASKS,
+        {
+          Title: 'Owner gate',
+          ProjectIdLookupId: 90,
+          ClientCode: 'ACCG01',
+          TaskStatus: 'In Review',
+          Priority: 'High',
+        },
+        '92',
+      );
+      const res = await fetch(`${base}/api/pm/portfolio`, { headers: auth('a') });
+      const body = (await res.json()) as {
+        portfolio: Array<{ id: string; blockerCount: number; dataQuality?: { needsOwnerReview?: boolean } }>;
+      };
+      const row = body.portfolio.find((p) => p.id === '90');
+      assert.ok(row);
+      assert.equal(row.blockerCount, 1);
+      assert.equal(row.dataQuality?.needsOwnerReview, true);
+    });
+  });
+});
+
 describe('SharePoint config does not fall back to JSON', () => {
   it('createAuthorizedPmRepository is null when sharepoint is selected', () => {
     const prev = { ...process.env };

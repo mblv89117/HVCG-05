@@ -52,6 +52,7 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
   it('Command-K catalog also filters Clients by viewClients', () => {
     const results = slice(appShell, 'const results = useMemo', 'const notificationCount');
     assert.match(results, /can\(['"]viewClients['"]\)/, 'P2: Command-K catalog does not filter Clients by viewClients.');
+    assert.match(results, /can\(['"]viewCrmLeads['"]\)/, 'Command-K catalog must filter Leads by viewCrmLeads.');
   });
 
   it('Command-K favorites and recents gate Capital by viewFinance', () => {

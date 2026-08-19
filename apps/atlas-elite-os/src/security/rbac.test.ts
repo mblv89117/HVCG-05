@@ -14,6 +14,7 @@ import {
 const CAPABILITIES: Capability[] = [
   'viewExecutiveHome',
   'viewClients',
+  'viewCrmLeads',
   'viewClientDetail',
   'viewFinance',
   'mutateTasks',
@@ -47,6 +48,10 @@ describe('Elite RBAC fail closed', () => {
     assert.equal(canViewFinance('Client Executive'), false);
     assert.equal(canAccessAdmin('Administrator'), true);
     assert.equal(canAccessAdmin('HVCG Team Member'), false);
+    assert.equal(can('HVCG Owner', 'viewCrmLeads'), true);
+    assert.equal(can('HVCG Team Member', 'viewCrmLeads'), true);
+    assert.equal(can('Client Executive', 'viewCrmLeads'), false);
+    assert.equal(can('Administrator', 'viewCrmLeads'), false);
   });
 
   it('does not treat Client Executive as Owner/Admin', () => {

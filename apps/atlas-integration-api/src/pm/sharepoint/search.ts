@@ -7,6 +7,7 @@
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isMannyPrincipal } from './manny.ts';
+import { isInternalStaff } from './authz.ts';
 import type { SharePointPmService } from './repository.ts';
 
 import { isFileIndexRow } from './fabric/fileIndex.ts';
@@ -127,6 +128,14 @@ function canSeeClientBound(manny: boolean, entitled: Set<string>, clientCode?: s
   return manny;
 }
 
+/** Unconverted HVCG_Leads are internal CRM, not a client-scope wildcard. */
+function canSeeLead(principal: AtlasPrincipal, entitled: Set<string>, clientCode?: string): boolean {
+  const code = (clientCode || '').trim();
+  if (!code) return isInternalStaff(principal);
+  if (!isCanonicalClientCode(code) || code === '*') return false;
+  return entitled.has(code);
+}
+
 function opportunityHref(clientCode?: string): string {
   const code = (clientCode || '').trim();
   if (code && isCanonicalClientCode(code)) return clientHref(code);
@@ -139,10 +148,9 @@ function capitalOpportunityHref(row: CapitalOpportunityRow): string {
   return '/capital';
 }
 
-function leadHref(clientCode?: string): string {
-  const code = (clientCode || '').trim();
-  if (code && isCanonicalClientCode(code)) return clientHref(code);
-  return '/clients';
+function leadHref(id: string): string {
+  const item = (id || '').trim();
+  return item ? `/leads/${encodeURIComponent(item)}` : '/leads';
 }
 
 export async function searchSharePointPm(
@@ -229,13 +237,26 @@ export async function searchSharePointPm(
     }
   };
   const extrasStarted = Date.now();
-  for (const c of clients) {
-    const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
-    const extras = await withBudget(
-      () => service.listWorkspaceCollections(principal, c.clientCode),
-      remaining,
-    );
-    if (!extras) continue;
+  const extrasPromise = Promise.all(
+    clients.map(async (c) => {
+      const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
+      const extras = await withBudget(
+        () => service.listWorkspaceCollections(principal, c.clientCode),
+        Math.max(0, remaining),
+      );
+      return { client: c, extras };
+    }),
+  );
+  const [extrasRows, opportunities, leads, capitalOpps] = await Promise.all([
+    extrasPromise,
+    bestEffort(() => service.listOpportunities(), []),
+    bestEffort(async () => (await service.listLeads?.()) || [], []),
+    bestEffort(async () => (await service.listCapitalOpportunities?.()) || [], []),
+  ]);
+  for (const row of extrasRows) {
+    if (!row.extras) continue;
+    const c = row.client;
+    const extras = row.extras;
     for (const item of extras.communications.items) {
       const title = String(item.title || '');
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
@@ -256,7 +277,6 @@ export async function searchSharePointPm(
     pushCollection(extras.decisionsRisks.items, 'decision', 'HVCG_Decisions', c.clientCode);
   }
 
-  const opportunities = await bestEffort(() => service.listOpportunities(), []);
   for (const o of opportunities) {
     if (!canSeeClientBound(manny, entitled, o.clientCode)) continue;
     const hay = [o.title, o.notes, o.clientCode].filter(Boolean).join(' ').toLowerCase();
@@ -271,9 +291,8 @@ export async function searchSharePointPm(
     });
   }
 
-  const leads = await bestEffort(async () => (await service.listLeads?.()) || [], []);
   for (const lead of leads) {
-    if (!canSeeClientBound(manny, entitled, lead.clientCode)) continue;
+    if (!canSeeLead(principal, entitled, lead.clientCode)) continue;
     const hay = [lead.title, lead.notes, lead.email, lead.company, lead.status, lead.clientCode]
       .filter(Boolean)
       .join(' ')
@@ -284,12 +303,11 @@ export async function searchSharePointPm(
       id: lead.id,
       clientCode: lead.clientCode,
       title: lead.title,
-      href: leadHref(lead.clientCode),
+      href: leadHref(lead.id),
       source: 'HVCG_Leads',
     });
   }
 
-  const capitalOpps = await bestEffort(async () => (await service.listCapitalOpportunities?.()) || [], []);
   for (const o of capitalOpps) {
     if (!canSeeClientBound(manny, entitled, o.clientCode)) continue;
     const hay = [o.title, o.notes, o.clientCode, o.projectId].filter(Boolean).join(' ').toLowerCase();

@@ -16,6 +16,7 @@ export type AtlasRole =
 export type Capability =
   | 'viewExecutiveHome'
   | 'viewClients'
+  | 'viewCrmLeads'
   | 'viewClientDetail'
   | 'viewFinance'
   | 'mutateTasks'
@@ -30,6 +31,7 @@ const MATRIX: Record<
   'HVCG Owner': {
     viewExecutiveHome: true,
     viewClients: true,
+    viewCrmLeads: true,
     viewClientDetail: true,
     viewFinance: true,
     mutateTasks: true,
@@ -40,6 +42,7 @@ const MATRIX: Record<
   'HVCG Team Member': {
     viewExecutiveHome: true,
     viewClients: true,
+    viewCrmLeads: true,
     viewClientDetail: true,
     viewFinance: true,
     mutateTasks: true,
@@ -50,6 +53,7 @@ const MATRIX: Record<
   'Client Executive': {
     viewExecutiveHome: false,
     viewClients: true,
+    viewCrmLeads: false,
     viewClientDetail: true,
     viewFinance: false,
     mutateTasks: true,
@@ -60,6 +64,7 @@ const MATRIX: Record<
   'Client Team Member': {
     viewExecutiveHome: false,
     viewClients: true,
+    viewCrmLeads: false,
     viewClientDetail: true,
     viewFinance: false,
     mutateTasks: true,
@@ -70,6 +75,7 @@ const MATRIX: Record<
   'Read-Only Advisor': {
     viewExecutiveHome: true,
     viewClients: true,
+    viewCrmLeads: false,
     viewClientDetail: true,
     viewFinance: false,
     mutateTasks: false,
@@ -80,6 +86,7 @@ const MATRIX: Record<
   Administrator: {
     viewExecutiveHome: true,
     viewClients: true,
+    viewCrmLeads: false,
     viewClientDetail: true,
     viewFinance: true,
     mutateTasks: true,

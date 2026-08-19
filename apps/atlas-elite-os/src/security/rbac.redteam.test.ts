@@ -40,4 +40,12 @@ describe('Elite rbac source contract', () => {
     assert.match(capitalRoute, /FinanceRoute/);
     assert.match(app, /capability="viewFinance"/);
   });
+
+  it('/leads requires viewCrmLeads and is not granted to Client Executive or Administrator', () => {
+    const app = readFileSync(join(root, '../App.tsx'), 'utf8');
+    assert.match(app, /capability="viewCrmLeads"/);
+    assert.equal(can('Client Executive', 'viewCrmLeads'), false);
+    assert.equal(can('Administrator', 'viewCrmLeads'), false);
+    assert.equal(can('HVCG Owner', 'viewCrmLeads'), true);
+  });
 });

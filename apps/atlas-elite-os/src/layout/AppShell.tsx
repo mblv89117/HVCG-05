@@ -15,6 +15,7 @@ import {
 } from '@hvcg/atlas-design-system';
 import {
   HomeRegular,
+  MailRegular,
   PeopleRegular,
   MoneyRegular,
   ClipboardTaskRegular,
@@ -65,7 +66,10 @@ const allSections: NavSection[] = [
   {
     id: 'crm',
     title: 'CRM',
-    items: [{ id: 'clients', label: 'Clients', to: '/clients', icon: <PeopleRegular /> }],
+    items: [
+      { id: 'clients', label: 'Clients', to: '/clients', icon: <PeopleRegular /> },
+      { id: 'leads', label: 'Leads', to: '/leads', icon: <MailRegular /> },
+    ],
   },
   {
     id: 'work',
@@ -101,6 +105,7 @@ const catalog: SearchResult[] = [
   { id: 's1b', title: 'My Work', category: 'Navigation', to: '/my-work' },
   { id: 's-decisions', title: 'Decisions', category: 'Navigation', subtitle: 'Approvals that need you', to: '/tasks' },
   { id: 's16', title: 'Clients', category: 'CRM', to: '/clients' },
+  { id: 's16b', title: 'Leads', category: 'CRM', subtitle: 'Who needs follow-up', to: '/leads' },
   { id: 's12', title: 'Projects', category: 'Work', to: '/projects' },
   { id: 's8', title: 'Capital', category: 'Capital', subtitle: 'Transactions requiring attention', to: '/capital' },
   { id: 's7', title: 'Search / Knowledge', category: 'Search', to: '/knowledge' },
@@ -137,6 +142,7 @@ const routeLabels: Record<string, string> = {
   '/executive': 'Analytics',
   '/clients': 'Clients',
   '/clients/intake': 'Lead intake',
+  '/leads': 'Leads',
   '/projects': 'Projects',
   '/tasks': 'Decisions',
   '/capital': 'Capital',
@@ -202,7 +208,7 @@ function isClientShortcut(item: RecentItem): boolean {
 
 function shortcutAllowed(
   item: RecentItem,
-  can: (capability: 'viewAdmin' | 'viewFinance' | 'viewClients') => boolean,
+  can: (capability: 'viewAdmin' | 'viewFinance' | 'viewClients' | 'viewCrmLeads') => boolean,
 ): boolean {
   const to = item.to || '';
   const path = to.split(/[?#]/)[0];
@@ -217,6 +223,7 @@ function shortcutAllowed(
   ) {
     return can('viewFinance');
   }
+  if (path === '/leads' || path.startsWith('/leads/')) return can('viewCrmLeads');
   if (to.startsWith('/clients') || isClientShortcut(item)) return can('viewClients');
   return true;
 }
@@ -399,6 +406,7 @@ export function AppShell() {
           if (item.id === 'admin') return can('viewAdmin');
           if (financeIds.has(item.id)) return can('viewFinance');
           if (item.id === 'clients') return can('viewClients');
+          if (item.id === 'leads') return can('viewCrmLeads');
           return role !== 'Unauthenticated';
         }),
       }))
@@ -423,6 +431,7 @@ export function AppShell() {
       if (r.to === '/admin') return can('viewAdmin');
       if (r.to === '/capital') return can('viewFinance');
       if (r.to === '/clients') return can('viewClients');
+      if (r.to === '/leads') return can('viewCrmLeads');
       return true;
     });
     const nav = !q

@@ -33,6 +33,7 @@ const CLIENTS = 'dddddddd-dddd-4ddd-8ddd-ddddddddddd1';
 const COMMS = 'ffffffff-ffff-4fff-8fff-fffffffffff1';
 const VENDORS = 'ffffffff-ffff-4fff-8fff-fffffffffff2';
 const OPPORTUNITIES = 'ffffffff-ffff-4fff-8fff-fffffffffff3';
+const LEADS = 'ffffffff-ffff-4fff-8fff-fffffffffff4';
 const MI = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1';
 
 const SYN_A = '11111111-1111-4111-8111-aaaaaaaaaa01';
@@ -47,7 +48,7 @@ class MemoryGraph implements PmGraphTransport {
   etagN = 1;
 
   constructor() {
-    for (const id of [PROJECTS, TASKS, MILESTONES, CLIENTS, COMMS, VENDORS, OPPORTUNITIES]) {
+    for (const id of [PROJECTS, TASKS, MILESTONES, CLIENTS, COMMS, VENDORS, OPPORTUNITIES, LEADS]) {
       this.lists.set(id, []);
     }
   }
@@ -211,6 +212,19 @@ async function withSynSpHub(
     ClientCode: 'SYN02',
     Notes: 'must not leak to SYN01 search',
   }, '60');
+  graph.seed(LEADS, {
+    Title: 'Hidden SYN02 inbound lead',
+    ClientCode: 'SYN02',
+    Email: 'bravo@example.com',
+    LeadStatus: 'New',
+    Notes: 'must not leak to SYN01 search',
+  }, '70');
+  graph.seed(LEADS, {
+    Title: 'Unconverted website lead',
+    Email: 'inbound@example.com',
+    LeadStatus: 'New',
+    Source: 'Website-EVA',
+  }, '71');
 
   const prev = { ...process.env };
   process.env.NODE_ENV = 'production';
@@ -227,6 +241,7 @@ async function withSynSpHub(
   process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID = COMMS;
   process.env.INTEGRATION_PM_VENDORS_LIST_ID = VENDORS;
   process.env.INTEGRATION_PM_OPPORTUNITIES_LIST_ID = OPPORTUNITIES;
+  process.env.INTEGRATION_PM_LEADS_LIST_ID = LEADS;
   process.env.AZURE_CLIENT_ID = MI;
   delete process.env.INTEGRATION_REQUIRE_AUTH;
   delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
@@ -566,6 +581,22 @@ describe('PM search / Elite Hub routes — SYN isolation', () => {
       assert.equal(res.status, 401);
       const body = (await res.json()) as { results?: unknown };
       assert.equal(body.results, undefined);
+    });
+  });
+
+  it('SYN01 search cannot see a SYN02 lead; unclassified leads do not use clientIds *', async () => {
+    await withSynSpHub(async ({ base }) => {
+      const foreign = await fetch(`${base}/api/pm/search?q=Hidden`, { headers: auth('syn-a') });
+      const foreignBody = (await foreign.json()) as { results: Array<{ kind: string; clientCode?: string; href?: string }> };
+      assert.equal(foreignBody.results.some((r) => r.kind === 'lead' && r.clientCode === 'SYN02'), false);
+      const inbound = await fetch(`${base}/api/pm/search?q=website`, { headers: auth('syn-a') });
+      const inboundBody = (await inbound.json()) as { results: Array<{ kind: string; href?: string; clientCode?: string }> };
+      const hits = inboundBody.results.filter((r) => r.kind === 'lead');
+      assert.ok(hits.some((r) => r.href === '/leads/71'));
+      assert.equal(hits.some((r) => r.clientCode === 'SYN02'), false);
+      const admin = await fetch(`${base}/api/pm/search?q=website`, { headers: auth('syn-admin') });
+      const adminBody = (await admin.json()) as { results: Array<{ kind: string }> };
+      assert.equal(adminBody.results.some((r) => r.kind === 'lead'), false);
     });
   });
 

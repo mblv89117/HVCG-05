@@ -351,9 +351,9 @@ export function ClientsPage() {
       }
     >
       <Caption1 style={{ display: 'block' }}>
-        Production clients come from Hub <code>/api/pm/clients</code>. Prospect intake on this app is the
-        Development BA adapter — not production HVCG_Leads. Website ingest writes HVCG_Leads; there is no
-        operator GET on that list here.
+        Production clients come from Hub <code>/api/pm/clients</code>. Inbound website leads are on{' '}
+        <Link to="/leads">Leads</Link> (<code>HVCG_Leads</code>). Prospect intake on this app is the
+        Development BA adapter — not production HVCG_Leads.
       </Caption1>
 
       {failure?.kind === 'error' ? (

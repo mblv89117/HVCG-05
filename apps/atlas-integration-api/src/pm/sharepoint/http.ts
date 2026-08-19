@@ -11,7 +11,14 @@ import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isValidProjectId } from '../projectId.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
 import { isSharePointItemId } from './ids.ts';
-import { DEFERRED_COLLECTIONS, type SharePointPmService, type SharePointProject, type SharePointTask } from './repository.ts';
+import {
+  DEFERRED_COLLECTIONS,
+  leadNeedsFollowUp,
+  type SharePointLead,
+  type SharePointPmService,
+  type SharePointProject,
+  type SharePointTask,
+} from './repository.ts';
 import { searchSharePointPm } from './search.ts';
 import { buildSharePointClientWorkspace } from './workspace.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './token.ts';
@@ -110,6 +117,7 @@ function commandCenterPayload(
   projects: SharePointProject[],
   tasks: SharePointTask[],
   milestones: Awaited<ReturnType<SharePointPmService['listAuthorizedMilestones']>>,
+  leads: SharePointLead[] = [],
 ) {
   const today = new Date().toISOString().slice(0, 10);
   const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
@@ -117,6 +125,12 @@ function commandCenterPayload(
   const dueToday = openTasks.filter((t) => t.dueDate && t.dueDate.slice(0, 10) === today);
   const atRisk = projects.filter((p) => p.health === 'at_risk' || p.health === 'critical');
   const ownerApprovals = openTasks.filter((t) => t.status === 'needs_owner_approval' || t.requiresApproval);
+  const followLeads = leads.filter((lead) => leadNeedsFollowUp(lead, today));
+  const qualifiedLeads = leads.filter((lead) => lead.status === 'Qualified');
+  const overdueFollowUps = followLeads.filter((lead) => {
+    const due = (lead.nextFollowUpDate || '').slice(0, 10);
+    return Boolean(due && due < today);
+  });
   return {
     generatedAt: new Date().toISOString(),
     date: today,
@@ -125,9 +139,9 @@ function commandCenterPayload(
       atRiskProjects: atRisk.length,
       openTasks: openTasks.length,
       overdueTasks: overdue.length,
-      waitingItems: openTasks.filter((t) => t.status === 'waiting').length,
+      waitingItems: openTasks.filter((t) => t.status === 'waiting').length + followLeads.length,
       openCommitments: 0,
-      decisionsNeeded: 0,
+      decisionsNeeded: ownerApprovals.length,
       clientsNeedingAttention: atRisk.length,
     },
     criticalAlerts: [
@@ -135,7 +149,13 @@ function commandCenterPayload(
         id: t.id,
         severity: 'critical',
         title: `Overdue: ${t.title}`,
-        href: '/my-work',
+        href: t.projectId ? `/projects/${t.projectId}` : '/my-work',
+      })),
+      ...overdueFollowUps.slice(0, 5).map((lead) => ({
+        id: `lead-${lead.id}`,
+        severity: 'high',
+        title: `Overdue follow-up: ${lead.title}`,
+        href: `/leads/${lead.id}`,
       })),
       ...atRisk.slice(0, 5).map((p) => ({
         id: p.id,
@@ -153,17 +173,33 @@ function commandCenterPayload(
       criticalTasks: openTasks.filter((t) => t.priority === 'critical'),
       dueToday,
       overdue,
-      waitingFollowUps: [] as Array<{ id: string; whatIsNeeded: string; owedByName: string }>,
-      decisionsNeeded: [] as Array<{ id: string; title: string }>,
+      waitingFollowUps: followLeads.slice(0, 40).map((lead) => ({
+        id: lead.id,
+        whatIsNeeded: lead.nextAction || `Follow up · ${lead.status}`,
+        owedByName: lead.ownerEmail || lead.contactName || lead.title,
+        nextFollowUpDate: lead.nextFollowUpDate,
+        href: `/leads/${lead.id}`,
+        clientCode: lead.clientCode,
+      })),
+      decisionsNeeded: ownerApprovals.slice(0, 20).map((t) => ({
+        id: t.id,
+        title: t.title,
+        projectId: t.projectId,
+      })),
     },
     clientAttention: {
-      atRisk: atRisk.map((p) => ({ id: p.id, name: p.name, reason: p.health })),
+      atRisk: atRisk.map((p) => ({ id: p.id, name: p.name, reason: p.health, clientCode: p.clientCode })),
       waitingOnUs: [] as Array<{ id: string; whatIsNeeded: string }>,
       waitingOnClient: [] as Array<{ id: string; whatIsNeeded: string }>,
       upcomingDeadlines: openTasks
         .filter((t) => t.dueDate && t.dueDate.slice(0, 10) > today)
         .slice(0, 10),
-      opportunities: [] as Array<{ id: string; name: string; detail: string }>,
+      opportunities: qualifiedLeads.slice(0, 20).map((lead) => ({
+        id: lead.id,
+        name: lead.title,
+        detail: [lead.serviceInterest, lead.source, lead.nextAction].filter(Boolean).join(' · '),
+        href: `/leads/${lead.id}`,
+      })),
     },
     teamAndAgents: {
       teamWorkload: [] as Array<{ id: string; name: string; openTasks: number; overdue: number; blocked: number }>,
@@ -204,9 +240,12 @@ function myWorkPayload(tasks: SharePointTask[]) {
     needsOwnerDecision: open.filter((t) => t.status === 'needs_owner_approval'),
     highValueOpportunities: [],
     clientEmergencies: overdue.filter((t) => t.priority === 'critical' || t.priority === 'high'),
-    followUps: [],
+    followUps: [] as Array<{ id: string; whatIsNeeded: string; owedByName: string; nextFollowUpDate?: string }>,
     recentlyCompleted: completed.slice(0, 20),
-    suggestedNextActions: [],
+    suggestedNextActions: open
+      .filter((t) => t.nextAction)
+      .slice(0, 10)
+      .map((t) => t.nextAction as string),
     autoGenerated: [],
     delegatedToAgents: [],
     delegatedToTeam: [],
@@ -337,6 +376,50 @@ export async function handleSharePointPmRoutes(opts: {
       const url = new URL(req.url || '', 'http://local');
       const found = await searchSharePointPm(service, principal, url.searchParams.get('q') || '');
       send(res, 200, found, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/pm/leads') {
+      const leads = await service.listAuthorizedLeads(principal);
+      send(
+        res,
+        200,
+        {
+          leads,
+          source: 'sharepoint',
+          configured: Boolean(opts.cfg.pmBackend.sharepoint?.leadsListId),
+        },
+        origin,
+      );
+      return true;
+    }
+
+    const leadOne = path.match(/^\/api\/pm\/leads\/([^/]+)$/);
+    if (method === 'GET' && leadOne) {
+      const lead = await service.authorizeLead(principal, decodeURIComponent(leadOne[1]));
+      if (lead === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      send(res, 200, { lead, source: 'sharepoint' }, origin);
+      return true;
+    }
+
+    if (method === 'PATCH' && leadOne) {
+      const lead = await service.patchLead(
+        principal,
+        decodeURIComponent(leadOne[1]),
+        body,
+        readEtag(req, body),
+      );
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: 'pm_lead_patch',
+        outcome: 'success',
+        detail: `list=HVCG_Leads item=${lead.id} status=${lead.status}`,
+      });
+      send(res, 200, { lead }, origin);
       return true;
     }
 
@@ -517,11 +600,12 @@ export async function handleSharePointPmRoutes(opts: {
     if (method === 'GET' && path === '/api/pm/command-center') {
       const projects = await service.listAuthorizedProjects(principal);
       const tasks = await service.listAuthorizedTasks(principal);
+      const leads = await service.listAuthorizedLeads(principal);
       const milestones = [];
       for (const p of projects) {
         milestones.push(...(await service.listAuthorizedMilestones(principal, p.id)));
       }
-      send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones) }, origin);
+      send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones, leads) }, origin);
       return true;
     }
 
@@ -536,13 +620,22 @@ export async function handleSharePointPmRoutes(opts: {
         const next = milestones
           .filter((m) => m.status !== 'completed')
           .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))[0];
+        const blocked = open.filter((t) => t.status === 'blocked' || Boolean(t.blocker));
+        const needsOwner = open.filter(
+          (t) => t.status === 'needs_owner_approval' || t.status === 'needs_review' || t.requiresApproval,
+        );
         portfolio.push({
           ...p,
           overdueTaskCount: open.filter((t) => t.dueDate && t.dueDate.slice(0, 10) < today).length,
-          blockerCount: 0,
+          blockerCount: blocked.length,
           openTaskCount: open.length,
           nextMilestone: next?.title,
           nextMilestoneDue: next?.dueDate,
+          dataQuality: {
+            nextActionSet: Boolean(p.nextAction),
+            needsOwnerReview: needsOwner.length > 0,
+            missingClientId: !p.clientCode && !p.isInternalProject,
+          },
         });
       }
       send(res, 200, { portfolio }, origin);

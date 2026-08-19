@@ -84,6 +84,8 @@ type HubWaitingRow = RecordRefs & {
   id: string;
   whatIsNeeded: string;
   owedByName?: string;
+  href?: string;
+  nextFollowUpDate?: string;
 };
 
 type HubDecisionRow = RecordRefs & {
@@ -160,7 +162,8 @@ function taskRecordPath(task: PmTask, asDecision = false): string | null {
   return null;
 }
 
-function waitingRecordPath(row: RecordRefs): string | null {
+function waitingRecordPath(row: RecordRefs & { href?: string }): string | null {
+  if (row.href) return namedRecordHref(row.href);
   const project = projectDetailPath(row.projectId);
   if (project) return project;
   return clientRecordPath(row.clientCode) || clientRecordPath(row.clientId);
@@ -187,6 +190,7 @@ function namedRecordHref(href: string | undefined): string | null {
   if (path === '/capital' && /(?:^|&)opportunity=/.test(query)) return href;
   if (path.startsWith('/projects/') && path !== '/projects') return href;
   if (path.startsWith('/clients/') && path !== '/clients') return href;
+  if (path.startsWith('/leads/') && path !== '/leads') return href;
   return null;
 }
 
@@ -519,6 +523,9 @@ export function CommandCenterPage() {
           <Button appearance="subtle" onClick={() => navigate('/my-work')}>
             My Work
           </Button>
+          <Button appearance="subtle" onClick={() => navigate('/leads')}>
+            Leads
+          </Button>
           <Button appearance="subtle" onClick={() => navigate('/capital')}>
             Capital
           </Button>
@@ -674,17 +681,18 @@ export function CommandCenterPage() {
                   ? `Hub reports ${h?.waitingItems} waiting items, but follow-up records are not in this payload.`
                   : 'Hub returned no waiting work.'
               }
-              href="/my-work"
-              hrefLabel="My Work"
+              href="/leads"
+              hrefLabel="Leads"
             >
               {waitingTasks.slice(0, 6).map((t) => (
                 <TaskRow key={t.id} task={t} label={ATLAS_STATUS.waiting} />
               ))}
-              {waitingFollowUps.slice(0, 4).map((w) => (
+              {waitingFollowUps.slice(0, 8).map((w) => (
                 <div key={w.id} style={{ padding: '8px 0' }}>
                   <RecordTitle to={waitingRecordPath(w)}>{w.whatIsNeeded}</RecordTitle>
                   <Caption1 style={{ display: 'block' }}>
-                    {ATLAS_STATUS.waiting} · {w.owedByName}
+                    {ATLAS_STATUS.needsAction} · {w.owedByName}
+                    {w.nextFollowUpDate ? ` · Due ${w.nextFollowUpDate.slice(0, 10)}` : ''}
                   </Caption1>
                 </div>
               ))}

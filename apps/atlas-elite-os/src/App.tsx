@@ -31,6 +31,8 @@ import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWor
 import { ClientsPage } from './pages/LiveClientsPage';
 import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
+import { LeadsPage } from './pages/LeadsPage';
+import { LeadDetailPage } from './pages/LeadDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { SettingsPage } from './pages/NotificationsSettings';
 import { AccessDeniedPage, NotFoundPage } from './pages/SystemPages';
@@ -71,6 +73,10 @@ function AdminRoute({ children }: { children: ReactNode }) {
 
 function ClientsRoute({ children }: { children: ReactNode }) {
   return <RequireMicrosoftAuth capability="viewClients">{children}</RequireMicrosoftAuth>;
+}
+
+function LeadsRoute({ children }: { children: ReactNode }) {
+  return <RequireMicrosoftAuth capability="viewCrmLeads">{children}</RequireMicrosoftAuth>;
 }
 
 function ClientDetailAuthRoute({ children }: { children: ReactNode }) {
@@ -168,6 +174,22 @@ export function App() {
                   <ClientsRoute>
                     <ClientsPage />
                   </ClientsRoute>
+                }
+              />
+              <Route
+                path="leads"
+                element={
+                  <LeadsRoute>
+                    <LeadsPage />
+                  </LeadsRoute>
+                }
+              />
+              <Route
+                path="leads/:leadId"
+                element={
+                  <LeadsRoute>
+                    <LeadDetailPage />
+                  </LeadsRoute>
                 }
               />
               <Route

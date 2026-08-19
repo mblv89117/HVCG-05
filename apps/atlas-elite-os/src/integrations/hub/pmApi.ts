@@ -24,6 +24,29 @@ export async function fetchPmClients(auth: AtlasHubAuthHeaders) {
   return hubFetchJson<{ clients: PmClient[]; source: string }>(auth, '/api/pm/clients');
 }
 
+export async function fetchPmLeads(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{ leads: PmLead[]; source: string; configured?: boolean }>(auth, '/api/pm/leads');
+}
+
+export async function fetchPmLead(auth: AtlasHubAuthHeaders, id: string) {
+  return hubFetchJson<{ lead: PmLead; source: string }>(auth, `/api/pm/leads/${encodeURIComponent(id)}`);
+}
+
+export async function patchPmLead(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  body: Record<string, unknown>,
+) {
+  const etag = typeof body.etag === 'string' ? body.etag : undefined;
+  const headers: Record<string, string> = {};
+  if (etag) headers['If-Match'] = etag;
+  return hubFetchJson<{ lead: PmLead }>(auth, `/api/pm/leads/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 export async function fetchPmClient(auth: AtlasHubAuthHeaders, clientCode: string) {
   return hubFetchJson<{
     client: PmClient;
@@ -327,6 +350,32 @@ export interface PmClient {
   sharePointLibraryUrl?: string;
 }
 
+export interface PmLead {
+  id: string;
+  etag: string;
+  title: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  source?: string;
+  leadSourceDetail?: string;
+  status: string;
+  serviceInterest?: string;
+  ownerEmail?: string;
+  notes?: string;
+  nextAction?: string;
+  nextFollowUpDate?: string;
+  discoveryCallDate?: string;
+  leadScore?: number;
+  estimatedValue?: number;
+  pipelineValue?: number;
+  clientCode?: string;
+  convertedClientId?: string;
+  isReferral?: boolean;
+  lastModified?: string;
+  created?: string;
+}
+
 export type WorkspaceCompletenessStatus =
   | 'COMPLETE'
   | 'PARTIAL_SOURCE_DATA_NOT_FOUND'
@@ -474,7 +523,14 @@ export interface CommandCenter {
     criticalTasks: PmTask[];
     dueToday: PmTask[];
     overdue: PmTask[];
-    waitingFollowUps: Array<{ id: string; whatIsNeeded: string; owedByName: string }>;
+    waitingFollowUps: Array<{
+      id: string;
+      whatIsNeeded: string;
+      owedByName: string;
+      nextFollowUpDate?: string;
+      href?: string;
+      clientCode?: string;
+    }>;
     decisionsNeeded: Array<{ id: string; title: string }>;
   };
   clientAttention: {
@@ -482,7 +538,7 @@ export interface CommandCenter {
     waitingOnUs: Array<{ id: string; whatIsNeeded: string }>;
     waitingOnClient: Array<{ id: string; whatIsNeeded: string }>;
     upcomingDeadlines: PmTask[];
-    opportunities: Array<{ id: string; name: string; detail: string }>;
+    opportunities: Array<{ id: string; name: string; detail: string; href?: string }>;
   };
   teamAndAgents: {
     teamWorkload: Array<{ id: string; name: string; openTasks: number; overdue: number; blocked: number }>;
