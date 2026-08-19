@@ -17,12 +17,12 @@ Sign in to Atlas with **Manny’s Microsoft account only**. Owner role is not a 
 |---|---|
 | **SYSTEM** | Atlas (Elite OS + Integration Hub + Business Architecture) |
 | **PURPOSE** | Internal operating system: clients, projects, tasks, Command Center, HVCG finance ops |
-| **CURRENT STATUS** | Production Elite/Hub are **LIVE** at CRM `a43803e` (Elite `index-iXOWTfM9.js`; Hub deploy `3d406e37`). SharePoint `HVCG_*` is V1 system of record. Local AI is off. Opportunity CRM operator is **LIVE DEPLOYED**; signed-in `/leads` Premium UI remains **HOLD**. Phase 5B Capital Elite (`b9806bc`) and Client ops (`0ffb645`) are **not live**. stash0 Hub patches (`773e120`) are **not applied**. Command-K SYN search P2 (**15–24s**) is not fixed. `origin/main` (`b641fdd`) is not production. ACCG01 ACL Apply was not run. |
+| **CURRENT STATUS** | Production Hub is **LIVE** at `a43803e` (deploy `3d406e37`). Production Elite is **LIVE** at `2a4e115` (`index-CiVmQVqq.js` = Capital `b9806bc` + Client `0ffb645`). SharePoint `HVCG_*` is V1 system of record. Local AI is off. CRM `/leads` is **LIVE DEPLOYED**; signed-in Premium UI remains **HOLD**. stash0 Hub patches (`773e120`) are **not applied**. Command-K SYN search P2 (**15–24s**) is not fixed. `origin/main` (`b641fdd`) is not production. ACCG01 ACL Apply was not run. |
 | **HOW MANNY ACCESSES IT** | Sign in at [Atlas Elite](https://zealous-rock-0090c7e1e.7.azurestaticapps.net) with `manny@highvaluecapitalgroup.com`. Hub: `https://app-atlas-integration-hub.azurewebsites.net` (auth required). |
 | **WHAT TO USE IT FOR TODAY** | Command Center (`/command-center`), My Work (`/my-work`), Portfolio (`/portfolio`), Projects (`/projects`). Day-to-day client/project/task work backed by SharePoint. Website leads land in `HVCG_Leads`. Elite `/leads` exists behind Microsoft sign-in; signed-in Premium UI is **HOLD**. Seven ClientCodes: ACCG01, CCB01, CPL01, HFD01, KAVA01, LIEN01, PDG01 (Manny-only groups). |
 | **WHAT NOT TO USE IT FOR** | Dynamics/Dataverse CRM. Client 360 as a live client map. Initialize / Quick Capture / Microsoft sync / Archive (honestly disabled). Launching 360, Copilot, GCC commercial, Syndicate, or Best Day from Atlas. Adding anyone else to `HVCG-Client-*` groups. |
 | **MANUAL FALLBACK** | [HVCG Project Command Center](https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter) — lists `HVCG_*` (clients, projects, tasks, leads). |
-| **CURRENTLY DEFERRED FEATURES** | Client 360 mapping (fail-closed). Dynamics/Dataverse. Gate 12 worktree retirement. Local AI. GitHub `main` promotion. Employee-to-client roster. Phase 5B Capital Elite / Client ops until certified. |
+| **CURRENTLY DEFERRED FEATURES** | Client 360 mapping (fail-closed). Dynamics/Dataverse. Gate 12 worktree retirement. Local AI. GitHub `main` promotion. Employee-to-client roster. Signed-in Premium UI cert for `/leads` and `/capital`. |
 
 ---
 
@@ -123,5 +123,5 @@ Sign in to Atlas with **Manny’s Microsoft account only**. Owner role is not a 
 - Do not add anyone except Manny to `HVCG-Client-*` groups.
 - Do not invent Client 360 mappings.
 - Do not promote `integration/atlas-canonical` to `main`.
-- Do not treat Phase 5B candidates as live. Do not apply stash0 Hub patches.
+- Do not apply stash0 Hub patches (`773e120`). Phase 5B Capital and Client ops are already in live Elite `2a4e115`.
 - Worktree retirement is housekeeping, not an owner-operability blocker.

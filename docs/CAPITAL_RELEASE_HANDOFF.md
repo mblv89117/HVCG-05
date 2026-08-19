@@ -2,7 +2,7 @@
 
 **As of:** 2026-08-19 (LIVE overlay on the 2026-08-17 handoff)  
 **Honesty worktree:** `.worktrees/atlas-phase5-docs`  
-**Honesty:** This file is an owner-action package, not a deploy log. **LIVE** Hub `/health` already reports `capitalBackend.mode=sharepoint` on zip `a43803e` (Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`). **ACCG01 ACL Apply was not run.** CRM operator is **LIVE DEPLOYED**; signed-in Premium UI **HOLD**. Capital Elite `b9806bc` is **not** live. No new SharePoint lists were created by this docs pass.
+**Honesty:** This file is an owner-action package, not a deploy log. **LIVE** Hub `/health` already reports `capitalBackend.mode=sharepoint` on zip `a43803e` (Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733`). **ACCG01 ACL Apply was not run.** CRM operator is **LIVE DEPLOYED**; signed-in Premium UI **HOLD**. Capital Elite `b9806bc` is in SWA `2a4e115`, not this Hub zip. No new SharePoint lists were created by this docs pass.
 
 Capital Operations is an **internal Atlas module**, not an eighth platform.
 
@@ -56,7 +56,7 @@ If those settings are absent, Hub capital routes return **503 `CAPITAL_BACKEND_U
 
 **What automation already attempted (2026-08-17 checkpoint):** Tenant list inventory. Column inventory (thin V1 schema). Graph `POST .../columns` for `Stage` as the signed-in owner → **403 accessDenied**. Hub Graph adapter + separate allowlist implemented. Mocked create/read/update/checklist/submission tests. Elite 401/403 fail-closed. No duplicate lists created.
 
-**LIVE overlay (2026-08-19):** Hub zip `a43803e` is deployed; `/health` `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.** This docs agent does not re-run Enable/Apply scripts. Capital Elite candidate `b9806bc` is not this LIVE zip.
+**LIVE overlay (2026-08-19):** Hub zip `a43803e` is deployed; `/health` `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.** This docs agent does not re-run Enable/Apply scripts. Capital Elite `b9806bc` is in SWA `2a4e115`, not this Hub zip.
 
 **Exact permission/consent needed:** SharePoint list manage (columns) + list permissions (Selected write) + Entra group create (`HVCG-Client-SYN01`) + App Service configuration for Hub (Cursor after this script).
 

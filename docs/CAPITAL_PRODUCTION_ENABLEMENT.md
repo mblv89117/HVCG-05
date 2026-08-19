@@ -5,7 +5,7 @@
 
 This is **not** a new platform. No new SharePoint lists. No `Sites.Manage.All` on Hub runtime identity.
 
-**LIVE overlay (2026-08-19):** Hub zip `a43803e` / Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` reports `/health` `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.** This docs branch does not deploy Hub and does not run Enable `-Apply`. CRM operator is this LIVE zip; signed-in Premium UI remains HOLD. Capital Elite candidate `b9806bc` is **not** this LIVE zip.
+**LIVE overlay (2026-08-19):** Hub zip `a43803e` / Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` reports `/health` `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.** This docs branch does not deploy Hub and does not run Enable `-Apply`. CRM operator is this LIVE Hub zip; signed-in Premium UI remains HOLD. Capital Elite `b9806bc` is in SWA `2a4e115`, not this Hub zip.
 
 ---
 
@@ -198,7 +198,7 @@ GitHub workflows do **not** deploy Hub.
 | INTEGRATION_CAPITAL_* App Settings | absent | sharepoint + IDs | **yes, after Hub deploy** | Hub recycle |
 | INTEGRATION_PM_BACKEND | sharepoint | keep | no | none |
 | INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH | unset | false (true only during QA) | after deploy | QA window |
-| LIVE Hub `/health` (2026-08-19) | `capitalBackend.mode=sharepoint` on `a43803e` / deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` | keep observing `/health` after any later zip | **no Hub zip from this docs branch** | Capital Elite candidate `b9806bc` is not this LIVE zip |
+| LIVE Hub `/health` (2026-08-19) | `capitalBackend.mode=sharepoint` on `a43803e` / deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` | keep observing `/health` after any later zip | **no Hub zip from this docs branch** | Capital Elite `b9806bc` is in SWA `2a4e115`, not this Hub zip |
 
 ---
 

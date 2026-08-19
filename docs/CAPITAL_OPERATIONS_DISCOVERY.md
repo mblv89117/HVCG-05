@@ -3,7 +3,7 @@
 **As of:** 2026-08-19 (LIVE overlay on the 2026-08-17 discovery text)  
 **Scope:** Atlas Capital Operations (internal Project Atlas module)  
 **Worktree (this honesty pass):** `.worktrees/atlas-phase5-docs`  
-**Honesty rule:** This document reports contracts in git **and** LIVE Hub `/health`. It does not claim ACCG01 ACL Apply ran, live lender matching, Capital Elite `b9806bc` as live, or a new platform.
+**Honesty rule:** This document reports contracts in git **and** LIVE Hub `/health`. It does not claim ACCG01 ACL Apply ran, live lender matching, or a new platform. Capital Elite UI is live in SWA `2a4e115`; it is not the Hub zip.
 
 ## LIVE vs this document
 
@@ -11,11 +11,11 @@
 |------|--------|
 | LIVE Hub | `a43803edb29a3f8dd080033ca579a09532d89fbc` / Azure deploy `3d406e37-2d91-4fd6-a20b-8c955c7b5733` |
 | LIVE `/health` capital | `capitalBackend.mode=sharepoint`; overlay durable |
-| LIVE Elite | `a43803edb29a3f8dd080033ca579a09532d89fbc` asset `index-iXOWTfM9.js` |
+| LIVE Elite | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` asset `index-CiVmQVqq.js` |
 | ACCG01 ACL Apply | **Not run.** Do not say it was. |
-| CRM operator `a43803e` | **LIVE DEPLOYED** — signed-in Premium UI **HOLD** |
-| Capital Elite `b9806bc` | **Candidate only** — Elite-only; Hub unchanged; **not live** |
-| Client ops `0ffb645` | **Candidate only** — Elite-only; **not live** |
+| CRM operator `a43803e` | **LIVE DEPLOYED** on Hub; signed-in Premium UI **HOLD** |
+| Capital Elite `b9806bc` | **LIVE DEPLOYED** inside SWA `2a4e115`; Hub unchanged |
+| Client ops `0ffb645` | **LIVE DEPLOYED** inside SWA `2a4e115` |
 | stash0 `773e120` | **NOT APPLIED** — Wave 2 conflicts with live CRM `a43803e` |
 | Search P2 | SYN* Command-K **15–24s**. Do not call this fixed. |
 | Code default when `INTEGRATION_CAPITAL_BACKEND` unset | still fail-closed `unavailable` (503). LIVE App Settings are **not** unset. |
@@ -38,7 +38,7 @@ Capital Operations is an **internal Atlas / HVCG OS module**. It is not an eight
 | AI governance | Existing `HVCG_AI*` lists, `docs/ai/AI_GOVERNANCE.md`, human-gated jobs. Capital AI must reuse these. Extracted numbers stay unverified until a human confirms them. |
 | Audit | `HVCG_AuditEvents` is the business audit list. Stage changes, overrides, and Manny approvals should write here once a runtime exists. |
 
-Elite `/capital` is an operating Command Center against Hub `/api/capital/*`. 401/403 fail closed. **LIVE** Hub App Settings already report `capitalBackend.mode=sharepoint`. That is not ACCG01 ACL Apply. Capital Elite post-shortlist candidate `b9806bc` is **not** this LIVE zip. No lender auto-submit.
+Elite `/capital` is an operating Command Center against Hub `/api/capital/*`. 401/403 fail closed. **LIVE** Hub App Settings already report `capitalBackend.mode=sharepoint`. That is not ACCG01 ACL Apply. Capital Elite post-shortlist UI (`b9806bc`) is in SWA `2a4e115`, not the Hub zip. No lender auto-submit.
 
 ---
 

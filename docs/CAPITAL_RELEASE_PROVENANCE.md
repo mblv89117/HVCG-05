@@ -3,7 +3,7 @@
 **Recorded:** 2026-08-19  
 **Honesty worktree:** `.worktrees/atlas-phase5-docs`  
 **Honesty branch:** `feature/atlas-phase5-docs` (docs only; HEAD is **not** Azure)  
-**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Cite the running Hub SHA and Azure deployment ID below. `origin/main` (`b641fdd`) is **not** production. Phase 5B candidates (`b9806bc`, `0ffb645`, `773e120`) are **not** live.
+**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Hub zip is `a43803e`. Elite SWA is `2a4e115`. stash0 `773e120` is **not** applied. `origin/main` (`b641fdd`) is **not** production.
 
 This file is the operator record of **what is live** versus **what is in git**. It does not deploy, mutate App Settings, delete artifacts, merge `main`, or block a CRM Hub deploy.
 
@@ -20,7 +20,7 @@ This file is the operator record of **what is live** versus **what is in git**. 
 | Commit message (that SHA) | `feat(atlas): add CRM operator workflow` |
 | Kudu `ATLAS_HUB_COMMIT.txt` | `a43803edb29a3f8dd080033ca579a09532d89fbc` |
 | LIVE `/health` | `ok`; `authRequired=true`; `insecureDevAuth=false`; `pmBackend.mode=sharepoint`; `capitalBackend.mode=sharepoint`; overlay durable; `websiteLeads.configured=true` |
-| LIVE Elite (separate app) | `a43803edb29a3f8dd080033ca579a09532d89fbc` at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-iXOWTfM9.js` (Last-Modified 2026-08-19 03:11:17 UTC) |
+| LIVE Elite (separate app) | `2a4e115acdd881ef074f4c795fbe1e575f8fb7af` at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-CiVmQVqq.js` (Last-Modified 2026-08-19 03:23:27 UTC). Contains Capital `b9806bc` + Client `0ffb645`. |
 | Immediate prior Hub zip | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` (deployment `501fb29b-80f6-427d-8c65-3f1a88da52d9`) — rollback archive `server.js.pre-d22b55f-20260819-030627` |
 | Immediate prior Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` asset `index-DvEHjcS6.js` |
 | Older Hub zip | `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` (deployment `dd965bc2-6d56-4f80-b126-67fcecfc33db`) — superseded |
@@ -42,12 +42,12 @@ Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner 
 
 ---
 
-## Phase 5B candidates (not this LIVE zip)
+## Phase 5B Elite (LIVE SWA `2a4e115` — Hub zip unchanged)
 
-| Candidate | SHA / branch | Status |
-|-----------|--------------|--------|
-| Capital Elite post-shortlist execution | `b9806bc` `feature/atlas-phase5-capital` | **NOT LIVE.** Elite-only. Hub stays `a43803e`. |
-| Client ops Elite detail | `0ffb645` `feature/atlas-phase5-client` | **NOT LIVE.** Elite-only. |
+| Item | SHA / branch | Status |
+|------|--------------|--------|
+| Capital Elite post-shortlist execution | `b9806bc` inside SWA `2a4e115` | **LIVE DEPLOYED.** Elite-only. Hub stays `a43803e`. Signed-in Premium UI HOLD. |
+| Client ops Elite detail | `0ffb645` inside SWA `2a4e115` | **LIVE DEPLOYED.** Elite-only. SYN01 workspace items currently empty. |
 | stash0 Hub hardening | `773e120` `fix/hub-stash0-hardening` | **NOT APPLIED.** Wave 2 conflicts with live CRM `a43803e`. Do not apply. |
 
 **Search P2 (open):** SYN* Command-K / Hub search still **15–24s**. Do not call this fixed.
@@ -69,7 +69,7 @@ Do not infer production from:
 - a newer local commit (including Phase 5B `b9806bc` / `0ffb645` / `773e120`)
 - `origin/main` (`b641fdd`)
 - `deployment/reports/HVCG-Dev-Deploy-latest.md` (that file is a local PnP/dev report, not Hub provenance)
-- Elite or other app deploys (Elite LIVE is now `a43803e` / `index-iXOWTfM9.js`, independently rollbackable to `e574037`)
+- Elite or other app deploys (Elite LIVE is now `2a4e115` / `index-CiVmQVqq.js`; Hub stays `a43803e`)
 
 Update **this file** when a new Hub zip is actually live.
 

@@ -87,7 +87,7 @@ Application code cannot honestly enable production capital writes by default. Ow
 3. Set Hub App Settings: `INTEGRATION_CAPITAL_BACKEND=sharepoint` plus `INTEGRATION_CAPITAL_*_LIST_ID` (see `docs/CAPITAL_RELEASE_HANDOFF.md`).
 4. Deploy the Hub zip that includes capital Graph. Keep `INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH=false` except during a labeled QA pilot.
 
-**LIVE (2026-08-19):** Hub `/health` already reports `capitalBackend.mode=sharepoint` on `a43803e`. Unset/code default remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not treat health mode as grant proof. Capital Elite candidate `b9806bc` is **not** live. CRM operator is LIVE DEPLOYED; signed-in Premium UI remains HOLD.
+**LIVE (2026-08-19):** Hub `/health` already reports `capitalBackend.mode=sharepoint` on `a43803e`. Unset/code default remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not treat health mode as grant proof. Capital Elite `b9806bc` is in SWA `2a4e115`. CRM operator is LIVE DEPLOYED; signed-in Premium UI remains HOLD.
 
 ---
 

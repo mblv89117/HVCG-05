@@ -21,7 +21,7 @@ Recorded 2026-08-19 after Phase 5A CRM Hub+Elite exact-SHA deploy.
 | Hub App Service | `a43803edb29a3f8dd080033ca579a09532d89fbc` | `https://app-atlas-integration-hub.azurewebsites.net`. Azure deployment `3d406e37-2d91-4fd6-a20b-8c955c7b5733`. Kudu `ATLAS_HUB_COMMIT.txt` matches. Prior rollback: `d22b55f` / deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`. |
 | Hub `/health` | `ok` | `authRequired=true`, `insecureDevAuth=false`, `pmBackend.mode=sharepoint`, `capitalBackend.mode=sharepoint`, overlay durable, `websiteLeads.configured=true` |
 | Website → `HVCG_Leads` | **LIVE** | Keyed Hub ingest configured (`websiteLeads.configured=true`). Buffer is Azure Table `HvcgWebsiteLeads`. Not a second CRM. |
-| Atlas Capital backend mode | **LIVE `sharepoint`** | Hub `/health` `capitalBackend.mode=sharepoint`. Code default when unset remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not infer Selected grants or ACCG01 write certification from health mode alone. Capital Elite post-shortlist UI (`b9806bc`) is **not** this LIVE zip. |
+| Atlas Capital backend mode | **LIVE `sharepoint`** | Hub `/health` `capitalBackend.mode=sharepoint` on zip `a43803e`. Elite post-shortlist UI is in SWA `2a4e115` (includes `b9806bc`). **ACCG01 ACL Apply was not run.** |
 | Command-K / Hub search | **P2 OPEN** | SYN* queries still **15–24s**. Do not call this fixed. `d22b55f` returns client hits without waiting out slow project lists; that does not close SYN latency. |
 | `origin/main` | `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Protected promotion target. **Not production.** Do not imply `main` is what Azure is running. |
 
@@ -35,9 +35,9 @@ Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d
 | Signed-in rendered `/leads` | **HOLD** | Unsigned production screenshots show Microsoft sign-in. Local Owner is not a certification session. Do not mark Premium UI PASS until an Owner browser session reviews the queue. |
 | Docs honesty branch | `feature/atlas-phase5-docs` | Doc-only. `origin/main` unchanged. |
 
-## Phase 5B candidates (repo-only — not LIVE)
+## Phase 5B (Elite live in `2a4e115`; Hub hardening not applied)
 
-Not in Azure until a later certified deploy. This docs branch does not deploy them. LIVE Hub stays `a43803e` unless a separately authorized Hub zip is deployed.
+Capital `b9806bc` and Client `0ffb645` are in Azure Elite. LIVE Hub stays `a43803e`. stash0 `773e120` stays unapplied.
 
 | Candidate | SHA / branch | Scope | Status |
 |-----------|--------------|-------|--------|
@@ -60,7 +60,7 @@ Not in Azure until a later certified deploy. This docs branch does not deploy th
 | Client 360 mapping | **DEFERRED POST-AUDIT FEATURE** (fail-closed; not an audit blocker) | Owner Decision 5; `apps/atlas-integration-api/src/client360/access.ts` |
 | Gate 12 worktree/workspace retirement | **NOT STARTED** | Explicitly out of scope |
 | Seven-system architecture | Defined; commercial launches are **post-audit** | [docs/architecture/HVCG_SYSTEM_INDEX.md](../docs/architecture/HVCG_SYSTEM_INDEX.md); Owner Decision 1 |
-| Atlas Capital Operations | **INTERNAL Atlas module — not an eighth platform** | Elite `/capital` is the Capital Command Center on LIVE `a43803e`. 401/403 fail closed. **LIVE Hub** reports `capitalBackend.mode=sharepoint` and durable overlay. SharePoint min-slice lists **exist**. **ACCG01 ACL Apply was not run.** Do not claim ACCG01 Selected grants were applied. Capital Elite candidate `b9806bc` is **not** live. See [docs/CAPITAL_RELEASE_PROVENANCE.md](../docs/CAPITAL_RELEASE_PROVENANCE.md). |
+| Atlas Capital Operations | **INTERNAL Atlas module — not an eighth platform** | Elite `/capital` on LIVE SWA `2a4e115` (Capital `b9806bc`). Hub zip remains `a43803e`. 401/403 fail closed. **ACCG01 ACL Apply was not run.** |
 | Opportunity CRM operator (Elite/Hub) | **LIVE DEPLOYED `a43803e` — Premium UI HOLD** | Hub leads API + Elite `/leads` running. Unsigned production is Microsoft-gated. Local Owner is not a certification session. Do not mark Premium UI PASS. |
 | Phase 5B Elite | **LIVE DEPLOYED** `2a4e115` | Capital `b9806bc` + Client `0ffb645` in the SWA bundle. stash0 `773e120` is **not applied**. |
 | Command-K search P2 | **OPEN** | SYN* queries **15–24s**. Not fixed. |
@@ -78,8 +78,8 @@ Not in Azure until a later certified deploy. This docs branch does not deploy th
 | LIVE Hub | `a43803edb29a3f8dd080033ca579a09532d89fbc` — Azure App Service zip `3d406e37-2d91-4fd6-a20b-8c955c7b5733`, not `origin/main` |
 | Rollback Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` / `index-DvEHjcS6.js` |
 | Rollback Hub | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` / deploy `501fb29b` |
-| Candidate Capital Elite | `b9806bc58b240a34764dfa4566492c9ba6234e1a` `feature/atlas-phase5-capital` — **not Azure** |
-| Candidate Client ops Elite | `0ffb6453b022299bb8e963b5e86caf81a1db6add` `feature/atlas-phase5-client` — **not Azure** |
+| LIVE Capital Elite | `b9806bc` shipped inside SWA `2a4e115` |
+| LIVE Client ops Elite | `0ffb645` shipped inside SWA `2a4e115` |
 | stash0 Hub patches | `773e120420ffc35764cf2d31f84194a6acb2d031` `fix/hub-stash0-hardening` — **NOT APPLIED**; Wave 2 conflicts with `a43803e` |
 | `integration/atlas-canonical` | Canonical Atlas **source** line (not automatically Azure) |
 | `origin/main` | Protected production-promotion target; SHA must stay `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion. **Not what Azure is running.** |
@@ -126,7 +126,7 @@ No other users. Employee-to-client roster requires a later owner approval. Hub c
 - Do not invent Client 360 mappings.
 - Do not add anyone except Manny to client groups.
 - Do not claim signed-in `/leads` Premium UI PASS. CRM operator Hub+Elite is **LIVE DEPLOYED** `a43803e`; Premium UI remains HOLD until an Owner browser session reviews the queue.
-- Do not treat Phase 5B candidates (`b9806bc`, `0ffb645`, `773e120`) as live. Do not apply stash0 / Wave 2 onto live Hub.
+- Do not treat stash0 `773e120` / Wave 2 as live. Do not apply them onto Hub `a43803e`. Capital `b9806bc` and Client `0ffb645` are in live Elite `2a4e115`.
 - Do not call Command-K SYN search (15–24s) fixed.
 - Do not claim ACCG01 ACL Apply ran.
 - Do not let documentation block a later certified Elite/Hub deploy. This branch still does not deploy.
