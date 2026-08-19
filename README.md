@@ -80,9 +80,28 @@ Prefix: `HVCG_`
 
 Examples: `HVCG_Clients`, `HVCG_Engagements`, `HVCG_CreateClientWorkspace`
 
+## Documentation
+
+Start at [`docs/INDEX.md`](docs/INDEX.md) (canonical documentation index).
+
+| Need | Document |
+|------|----------|
+| Docs map / owners | [`docs/DOCUMENTATION_MAP.md`](docs/DOCUMENTATION_MAP.md) |
+| Standards | [`docs/DOCUMENTATION_STANDARDS.md`](docs/DOCUMENTATION_STANDARDS.md) |
+| Glossary | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) |
+| Onboarding | [`docs/ONBOARDING.md`](docs/ONBOARDING.md) |
+| Doc status / debt | [`DOCUMENTATION_STATUS.md`](DOCUMENTATION_STATUS.md), [`DOCUMENTATION_DEBT.md`](DOCUMENTATION_DEBT.md) |
+| Program status (SoR) | `.worktrees/master-pm-orchestrator/MASTER_PROJECT_STATUS.md` (master-pm) |
+| Architecture (SoR) | `.worktrees/system-architect/docs/architecture/SYSTEM_ARCHITECTURE.md` (architect) |
+| Release / QA | `.worktrees/qa-release-manager/docs/release/` and `docs/qa/` (integration) |
+
+Agent communications: [`docs/agents/AGENT_COMMUNICATIONS.md`](docs/agents/AGENT_COMMUNICATIONS.md).
+
 ## Status
 
-See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for current phase, blockers, and next executable task.
+**Program status (authoritative):** `.worktrees/master-pm-orchestrator/MASTER_PROJECT_STATUS.md`
+
+Root [`PROJECT_STATUS.md`](PROJECT_STATUS.md) is module/session-local and may diverge across worktrees — do not treat it as the program source of record (see DEF-QA-004 / master-pm).
 
 ## Owner Actions
 
