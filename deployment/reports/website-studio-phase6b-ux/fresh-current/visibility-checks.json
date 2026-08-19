@@ -1,0 +1,25 @@
+{
+  "clickedLocalOwner": true,
+  "beforeAuthHasLocalOwner": true,
+  "hasWebsiteStudio": true,
+  "hasManageSubtitle": true,
+  "hasHVCG": true,
+  "hasEditWebsite": true,
+  "hasAskAi": true,
+  "hasOwnerSidebarPages": true,
+  "hasDraftChangesNav": true,
+  "hasAiAssistantNav": true,
+  "hasOwnerModeLabel": true,
+  "hasOldBootstrap": false,
+  "hasOldPillRow": false,
+  "pagesHasHome": true,
+  "editorHasAdvisor": true,
+  "editorHasAnalyze": true,
+  "draftsHasWcr": true,
+  "draftsHasPreview": true,
+  "roleLine": "role HVCG Owner · client High Value Capital Group",
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "failed": []
+}

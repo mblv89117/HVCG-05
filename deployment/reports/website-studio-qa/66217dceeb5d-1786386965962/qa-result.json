@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "runId": "eced1462-9d5b-460b-81bd-55044bb238e3",
+  "runType": "RELEASE GATE",
+  "gate": "TESTING",
+  "verdict": "WEBSITE STUDIO QA GATE — FAILED",
+  "testedCommit": "66217dceeb5dc8bdb13333528fe266b9caea27c0",
+  "startedAt": "2026-08-10T18:36:05.949Z",
+  "finishedAt": "2026-08-10T18:37:32.500Z",
+  "durationMs": 86550,
+  "changeRequestId": "wcr_96016971141f",
+  "websiteId": "ws_hvcg_real",
+  "checks": [
+    {
+      "id": "svc-elite",
+      "name": "Elite OS :5180",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "svc-hub",
+      "name": "Integration Hub :8790",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "svc-ollama",
+      "name": "Ollama (optional for deterministic advisor)",
+      "status": "PASS",
+      "detail": "{\"ok\":true,\"status\":200}"
+    },
+    {
+      "id": "preview-running",
+      "name": "Preview running on loopback",
+      "status": "FAIL",
+      "detail": "preview did not become healthy",
+      "durationMs": 10601
+    },
+    {
+      "id": "full-visual-render",
+      "name": "FULL VISUAL RENDER (styled localhost Before/After)",
+      "status": "FAIL",
+      "detail": "{\"beforeUrl\":\"http://127.0.0.1:8766/\",\"afterUrl\":\"http://127.0.0.1:8765/\",\"beforePort\":8766,\"afterPort\":8765,\"beforeH1\":\"Find out what is preventing your business from growing, qualifying for capital, \",\"afterH1\":\"\",\"mismatches\":[\"after preview HTML not healthy (0)\",\"after H1 missing from rendered HTML\",\"after styles.css missing or not real CSS (unstyled HTML risk)\",\"after HTML missing styles.css stylesheet link\",\"after render is UNSTYLED — owner must see real HVCG page with CSS\",\"after critical asset 404s: styles.css, assets/brand/hvcg-logo-nav.png, js/site.js\"],\"criticalAsset404s\":[\"styles.css\",\"assets/brand/hvcg-logo-nav.png\",\"js/site.js\"],\"unstyledDetected\":true}"
+    },
+    {
+      "id": "asset-before-styles",
+      "name": "Asset before-styles",
+      "status": "PASS",
+      "detail": "http://127.0.0.1:8766/styles.css → 200"
+    },
+    {
+      "id": "full-visual-render",
+      "name": "FULL VISUAL RENDER (styled localhost Before/After)",
+      "status": "FAIL",
+      "detail": "TypeError: fetch failed"
+    },
+    {
+      "id": "api-before-after",
+      "name": "API Before/After H1 identity",
+      "status": "PASS",
+      "detail": "before=Find out what is preventing your business from growing, qualifying for capital,  | after=Strategic capital advisory to help your business grow, qualify for capital, and "
+    },
+    {
+      "id": "safety-flags",
+      "name": "Safety feature flags",
+      "status": "PASS",
+      "detail": "{\"elite\":{\"port\":5180,\"bind\":\"127.0.0.1\",\"healthUrl\":\"http://127.0.0.1:5180/\"},\"hub\":{\"port\":8790,\"bind\":\"127.0.0.1\",\"healthUrl\":\"http://127.0.0.1:8790/health\"},\"preview\":{\"port\":8765,\"role\":\"AFTER / pilot draft\",\"onDemand\":true,\"note\":\"Start from Website Studio — not LaunchAgent-managed\"},\"baselinePreview\":{\"port\":8766,\"role\":\"BEFORE / production baseline\",\"onDemand\":true,\"note\":\"Materialized from baseline commit via git archive — local only\"},\"ollama\":{\"baseUrl\":\"http://127.0.0.1:11434\"},\"sqlitePathPresent\":true,\"clamscan\":true,\"safety\":{\"LocalAIWritesEnabled\":false,\"LocalAIExternalMessagesEnabled\":false,\"EvaIntakeEnabled\":false,\"ClientEmailsEnabled\":false},\"logsDir\":\"~/Library/Logs/HVCG-Atlas\"}"
+    },
+    {
+      "id": "ai-three-options",
+      "name": "Advisor 3 options (deterministic)",
+      "status": "PASS"
+    },
+    {
+      "id": "multi-page-preview-routing",
+      "name": "Multi-page preview routing + page blocks",
+      "status": "PASS",
+      "detail": "/→http://127.0.0.1:8765/ blocks=1 | /about→http://127.0.0.1:8765/about.html blocks=1 | /funding→http://127.0.0.1:8765/funding.html blocks=1 | /faq→http://127.0.0.1:8765/faq.html blocks=1 | /contact→http://127.0.0.1:8765/contact.html blocks=1 | /book-appointment→http://127.0.0.1:8765/book-appointment.html blocks=1 | /accessibility→http://127.0.0.1:8765/accessibility.html blocks=1"
+    },
+    {
+      "id": "reject-persistence",
+      "name": "Reject persistence (synthetic CR)",
+      "status": "PASS",
+      "detail": "{\"syntheticId\":\"wcr_fc8a822293ff\",\"status\":\"Rejected\",\"ownerStatus\":\"Rejected\"}"
+    },
+    {
+      "id": "browser-owner-flow",
+      "name": "Browser owner journey",
+      "status": "FAIL",
+      "detail": "png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/video.webm\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/error-context.md\n\n    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n    Usage:\n\n        npx playwright show-trace artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n  2 failed\n    tests/multi-page-decisions.spec.ts:81:1 › multi-page editor identity + randomized smoke ────────\n    tests/owner-journey.spec.ts:125:1 › HVCG Website Studio owner journey RELEASE GATE ─────────────\n  2 did not run\n",
+      "durationMs": 63197
+    },
+    {
+      "id": "approval-invalidation",
+      "name": "Approval invalidation",
+      "status": "WARN",
+      "detail": "Error: Hub /api/website-studio/change-requests/wcr_96016971141f/owner-approve → 409: {\"error\":\"preview_version_mismatch\",\"message\":\"PREVIEW VERSION MISMATCH: AFTER (pilot) preview server is not running; after preview HTML not healthy (0); after H1 missing from rendered HTML; after styles.css missing or not real CSS (unstyled HTML risk); after HTML missing styles.css stylesheet link; after render is UNSTYLED — owner must see real HVCG page with CSS; after critical asset 404s: styles.css, assets/brand/hvcg-logo-nav.png, js/site.js\"}"
+    },
+    {
+      "id": "approval-persistence",
+      "name": "Approval persistence",
+      "status": "PASS"
+    },
+    {
+      "id": "restore-for-manny",
+      "name": "Restore CR for owner UAT",
+      "status": "PASS",
+      "detail": "Waiting for Your Review"
+    }
+  ],
+  "defects": [
+    {
+      "id": "DEF-1",
+      "title": "Preview running on loopback",
+      "severity": "HIGH",
+      "ownerWorkflowStep": "Preview running on loopback",
+      "expected": "PASS",
+      "actual": "preview did not become healthy",
+      "affectedComponent": "Website Studio",
+      "suggestedFix": "See QA evidence and fix Phase 6B blocker",
+      "retestRequired": true
+    },
+    {
+      "id": "DEF-2",
+      "title": "FULL VISUAL RENDER (styled localhost Before/After)",
+      "severity": "CRITICAL",
+      "ownerWorkflowStep": "FULL VISUAL RENDER (styled localhost Before/After)",
+      "expected": "PASS",
+      "actual": "{\"beforeUrl\":\"http://127.0.0.1:8766/\",\"afterUrl\":\"http://127.0.0.1:8765/\",\"beforePort\":8766,\"afterPort\":8765,\"beforeH1\":\"Find out what is preventing your business from growing, qualifying for capital, \",\"afterH1\":\"\",\"mismatches\":[\"after preview HTML not healthy (0)\",\"after H1 missing from rendered HTML\",\"after styles.css missing or not real CSS (unstyled HTML risk)\",\"after HTML missing styles.css stylesheet link\",\"after render is UNSTYLED — owner must see real HVCG page with CSS\",\"after critical asset 404s: styles.css, assets/brand/hvcg-logo-nav.png, js/site.js\"],\"criticalAsset404s\":[\"styles.css\",\"assets/brand/hvcg-logo-nav.png\",\"js/site.js\"],\"unstyledDetected\":true}",
+      "affectedComponent": "Website Studio",
+      "suggestedFix": "See QA evidence and fix Phase 6B blocker",
+      "retestRequired": true
+    },
+    {
+      "id": "DEF-UNSTYLED-COMPARE",
+      "title": "Before/After shows unstyled HTML instead of real HVCG pages",
+      "severity": "CRITICAL",
+      "ownerWorkflowStep": "Before/After/Compare",
+      "expected": "Styled real HVCG pages on :8766 (BEFORE) and :8765 (AFTER)",
+      "actual": "[\"after preview HTML not healthy (0)\",\"after H1 missing from rendered HTML\",\"after styles.css missing or not real CSS (unstyled HTML risk)\",\"after HTML missing styles.css stylesheet link\",\"after render is UNSTYLED — owner must see real HVCG page with CSS\",\"after critical asset 404s: styles.css, assets/brand/hvcg-logo-nav.png, js/site.js\"]",
+      "affectedComponent": "ChangeReviewScreen",
+      "suggestedFix": "Serve baseline git-archive on 8766 and pilot staging on 8765; use iframe src not srcDoc",
+      "retestRequired": true
+    },
+    {
+      "id": "DEF-4",
+      "title": "FULL VISUAL RENDER (styled localhost Before/After)",
+      "severity": "CRITICAL",
+      "ownerWorkflowStep": "FULL VISUAL RENDER (styled localhost Before/After)",
+      "expected": "PASS",
+      "actual": "TypeError: fetch failed",
+      "affectedComponent": "Website Studio",
+      "suggestedFix": "See QA evidence and fix Phase 6B blocker",
+      "retestRequired": true
+    },
+    {
+      "id": "DEF-UNSTYLED-COMPARE",
+      "title": "Before/After shows unstyled HTML instead of real HVCG pages",
+      "severity": "CRITICAL",
+      "ownerWorkflowStep": "Before/After/Compare",
+      "expected": "Styled real HVCG pages on distinct localhost ports",
+      "actual": "TypeError: fetch failed",
+      "affectedComponent": "ChangeReviewScreen",
+      "suggestedFix": "Repair compare preview servers",
+      "retestRequired": true
+    },
+    {
+      "id": "DEF-6",
+      "title": "Browser owner journey",
+      "severity": "HIGH",
+      "ownerWorkflowStep": "Browser owner journey",
+      "expected": "PASS",
+      "actual": "png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/video.webm\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/error-context.md\n\n    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────\n    artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n    Usage:\n\n        npx playwright show-trace artifacts/test-results/owner-journey-HVCG-Website-Studio-owner-journey-RELEASE-GATE/trace.zip\n\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n  2 failed\n    tests/multi-page-decisions.spec.ts:81:1 › multi-page editor identity + randomized smoke ────────\n    tests/owner-journey.spec.ts:125:1 › HVCG Website Studio owner journey RELEASE GATE ─────────────\n  2 did not run\n",
+      "affectedComponent": "Website Studio",
+      "suggestedFix": "See QA evidence and fix Phase 6B blocker",
+      "retestRequired": true
+    }
+  ],
+  "buttonInventory": {
+    "total": 0,
+    "functional": 0,
+    "disabledWithExplanation": 0,
+    "comingLater": 0,
+    "failures": []
+  },
+  "beforeAfter": {
+    "baselineCommit": "97e3a913bc2ec7f8884d8bc7035864069122d06e",
+    "pilotCommit": "fd4e05d1a634d53a5442d9865487ec76b7a21258",
+    "beforeH1": "Find out what is preventing your business from growing, qualifying for capital, or becoming more valuable.",
+    "afterH1": "Strategic capital advisory to help your business grow, qualify for capital, and build enterprise value.",
+    "visualDifferenceVerified": false,
+    "fullVisualRenderOk": false,
+    "beforeUrl": "http://127.0.0.1:8766/",
+    "afterUrl": "http://127.0.0.1:8765/",
+    "beforePort": 8766,
+    "afterPort": 8765,
+    "criticalAsset404s": [
+      "styles.css",
+      "assets/brand/hvcg-logo-nav.png",
+      "js/site.js"
+    ],
+    "unstyledDetected": true
+  },
+  "aiAdvisor": {
+    "mode": "deterministic",
+    "threeOptionsOk": true,
+    "failures": []
+  },
+  "approval": {
+    "confirmationOk": false,
+    "persistenceOk": true,
+    "invalidationOk": false,
+    "productionUnchanged": true
+  },
+  "safety": {
+    "localAiWritesEnabled": false,
+    "localAiExternalMessagesEnabled": false,
+    "evaIntakeEnabled": false,
+    "clientEmailsEnabled": false,
+    "productionChanged": false,
+    "unexpectedExternalHosts": []
+  },
+  "performance": {
+    "ownerFlowMs": 63197,
+    "previewStartupMs": 10601,
+    "aiOperationMs": 2,
+    "pageLoadMs": 0,
+    "retries": 0,
+    "retestCount": 0
+  },
+  "evidenceDir": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-local-ai-operations/deployment/reports/website-studio-qa/66217dceeb5d-1786386965962",
+  "screenshots": [],
+  "traces": [],
+  "summary": {
+    "Build": "FAIL",
+    "Browser Flow": "FAIL",
+    "Preview Identity": "FAIL",
+    "FULL VISUAL RENDER": "FAIL",
+    "Before / After": "PASS",
+    "AI Advisor": "PASS",
+    "Buttons": "0/?",
+    "Approval Persistence": "PASS",
+    "Approval Invalidation": "WARN",
+    "Console Errors": "see evidence",
+    "Safety": "PASS",
+    "Production Changed": "NO"
+  }
+}
