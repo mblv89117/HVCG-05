@@ -337,6 +337,21 @@ describe('Capital Graph live slice (in-memory)', () => {
       assert.equal(shortlist.status, 200);
       assert.ok((graph.lists.get(LENDER_OUTREACH) || []).length >= 1);
 
+      const appRes = await fetch(`${base}/api/capital/opportunities/${id}/application`, {
+        method: 'POST',
+        headers: auth('member'),
+        body: JSON.stringify({ lenderId: '10' }),
+      });
+      assert.equal(appRes.status, 200);
+      for (const attestation of ['CLIENT_CONFIRMATION_REQUIRED', 'CLIENT_CONFIRMED', 'APPROVED_FOR_SUBMISSION']) {
+        const att = await fetch(`${base}/api/capital/opportunities/${id}/application/attest`, {
+          method: 'POST',
+          headers: auth('owner'),
+          body: JSON.stringify({ lenderId: '10', attestation }),
+        });
+        assert.equal(att.status, 200, attestation);
+      }
+
       const sub = await fetch(`${base}/api/capital/opportunities/${id}/submissions`, {
         method: 'POST',
         headers: auth('member'),

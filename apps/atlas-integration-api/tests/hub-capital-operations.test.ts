@@ -454,6 +454,21 @@ describe('Hub capital operations API', () => {
       });
       assert.equal(shortlist.status, 200);
 
+      const readyApp = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/application`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({ lenderId: 'ln-synthetic-1' }),
+      });
+      assert.equal(readyApp.status, 200);
+      for (const attestation of ['CLIENT_CONFIRMATION_REQUIRED', 'CLIENT_CONFIRMED', 'APPROVED_FOR_SUBMISSION']) {
+        const att = await fetch(`${base}/api/capital/opportunities/${opportunity.id}/application/attest`, {
+          method: 'POST',
+          headers: headers('valid-owner'),
+          body: JSON.stringify({ lenderId: 'ln-synthetic-1', attestation }),
+        });
+        assert.equal(att.status, 200, attestation);
+      }
+
       const incomplete = await fetch(`${base}/api/capital/opportunities`, {
         method: 'POST',
         headers: headers('valid-member'),

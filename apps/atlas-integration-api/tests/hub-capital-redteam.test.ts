@@ -133,6 +133,49 @@ async function createSyn(base: string, key = SYN_OPP.idempotencyKey) {
   return payload as { opportunity: { id: string; clientCode: string; business?: { annualRevenue?: { verification?: string } } } };
 }
 
+async function approveReady(base: string, id: string, lenderIds = ['ln-synthetic-1']) {
+  await fetch(`${base}/api/capital/opportunities/${id}/strategy`, {
+    method: 'POST',
+    headers: headers('valid-member'),
+    body: '{}',
+  });
+  await fetch(`${base}/api/capital/opportunities/${id}/strategy/decision`, {
+    method: 'POST',
+    headers: headers('valid-owner'),
+    body: JSON.stringify({ decision: 'APPROVED' }),
+  });
+  await fetch(`${base}/api/capital/opportunities/${id}/match`, {
+    method: 'POST',
+    headers: headers('valid-member'),
+    body: '{}',
+  });
+  const short = await fetch(`${base}/api/capital/opportunities/${id}/shortlist/decision`, {
+    method: 'POST',
+    headers: headers('valid-owner'),
+    body: JSON.stringify({ decision: 'APPROVED', lenderIds }),
+  });
+  assert.equal(short.status, 200);
+}
+
+async function attestPackage(base: string, id: string, lenderId = 'ln-synthetic-1') {
+  const prep = await fetch(`${base}/api/capital/opportunities/${id}/application`, {
+    method: 'POST',
+    headers: headers('valid-member'),
+    body: JSON.stringify({ lenderId, productId: 'pr-syn-001' }),
+  });
+  assert.equal(prep.status, 200);
+  const app = (await prep.json()) as { application: { id: string; attestation: string } };
+  for (const attestation of ['CLIENT_CONFIRMATION_REQUIRED', 'CLIENT_CONFIRMED', 'APPROVED_FOR_SUBMISSION']) {
+    const att = await fetch(`${base}/api/capital/opportunities/${id}/application/attest`, {
+      method: 'POST',
+      headers: headers('valid-owner'),
+      body: JSON.stringify({ lenderId, attestation }),
+    });
+    assert.equal(att.status, 200, attestation);
+  }
+  return app.application;
+}
+
 describe('Capital red team', () => {
   it('malformed JSON POST is 400 not 500', async () => {
     await withCapitalHub(async ({ base }) => {
@@ -285,26 +328,8 @@ describe('Capital red team', () => {
   it('externalSubmit stays recorded-only and duplicate submissions are idempotent', async () => {
     await withCapitalHub(async ({ base }) => {
       const syn = await createSyn(base, 'syn-submit');
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/strategy`, {
-        method: 'POST',
-        headers: headers('valid-member'),
-        body: '{}',
-      });
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/strategy/decision`, {
-        method: 'POST',
-        headers: headers('valid-owner'),
-        body: JSON.stringify({ decision: 'APPROVED' }),
-      });
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/match`, {
-        method: 'POST',
-        headers: headers('valid-member'),
-        body: '{}',
-      });
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/shortlist/decision`, {
-        method: 'POST',
-        headers: headers('valid-owner'),
-        body: JSON.stringify({ decision: 'APPROVED', lenderIds: ['ln-synthetic-1'] }),
-      });
+      await approveReady(base, syn.opportunity.id);
+      await attestPackage(base, syn.opportunity.id);
 
       const first = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
         method: 'POST',
@@ -357,32 +382,22 @@ describe('Capital red team', () => {
   it('does not skip client attestation by submitting a different lenderId than the prepared package', async () => {
     await withCapitalHub(async ({ base }) => {
       const syn = await createSyn(base, 'syn-mismatch-lender');
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/strategy`, {
+      await approveReady(base, syn.opportunity.id);
+
+      const none = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
         method: 'POST',
         headers: headers('valid-member'),
-        body: '{}',
+        body: JSON.stringify({ lenderId: 'ln-synthetic-1', externalSubmit: true }),
       });
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/strategy/decision`, {
-        method: 'POST',
-        headers: headers('valid-owner'),
-        body: JSON.stringify({ decision: 'APPROVED' }),
-      });
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/match`, {
-        method: 'POST',
-        headers: headers('valid-member'),
-        body: '{}',
-      });
-      await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/shortlist/decision`, {
-        method: 'POST',
-        headers: headers('valid-owner'),
-        body: JSON.stringify({ decision: 'APPROVED', lenderIds: ['ln-synthetic-1'] }),
-      });
+      assert.equal(none.status, 422);
+
       const prepared = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/application`, {
         method: 'POST',
         headers: headers('valid-member'),
         body: JSON.stringify({ lenderId: 'celtic-bank', productId: 'pr-syn-001' }),
       });
       assert.equal(prepared.status, 200);
+      const preparedBody = (await prepared.json()) as { application: { id: string } };
 
       const mismatch = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
         method: 'POST',
@@ -391,12 +406,52 @@ describe('Capital red team', () => {
       });
       assert.equal(mismatch.status, 422);
 
+      const skipConfirm = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/application/attest`, {
+        method: 'POST',
+        headers: headers('valid-owner'),
+        body: JSON.stringify({ lenderId: 'celtic-bank', attestation: 'APPROVED_FOR_SUBMISSION' }),
+      });
+      assert.equal(skipConfirm.status, 422);
+
       const unattested = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
         method: 'POST',
         headers: headers('valid-member'),
         body: JSON.stringify({ lenderId: 'celtic-bank', externalSubmit: true }),
       });
-      assert.equal(unattested.status, 403);
+      assert.equal(unattested.status, 422);
+
+      const fakePkg = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({
+          lenderId: 'celtic-bank',
+          packageId: 'pkg-fabricated',
+          externalSubmit: true,
+        }),
+      });
+      assert.equal(fakePkg.status, 422);
+
+      for (const attestation of ['CLIENT_CONFIRMATION_REQUIRED', 'CLIENT_CONFIRMED', 'APPROVED_FOR_SUBMISSION']) {
+        const att = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/application/attest`, {
+          method: 'POST',
+          headers: headers('valid-owner'),
+          body: JSON.stringify({ lenderId: 'celtic-bank', attestation }),
+        });
+        assert.equal(att.status, 200, attestation);
+      }
+      const ok = await fetch(`${base}/api/capital/opportunities/${syn.opportunity.id}/submissions`, {
+        method: 'POST',
+        headers: headers('valid-member'),
+        body: JSON.stringify({
+          lenderId: 'celtic-bank',
+          packageId: preparedBody.application.id,
+          externalSubmit: true,
+        }),
+      });
+      assert.equal(ok.status, 200);
+      const okBody = (await ok.json()) as { recordedOnly: boolean; externalSubmit: boolean };
+      assert.equal(okBody.recordedOnly, true);
+      assert.equal(okBody.externalSubmit, false);
     });
   });
 
