@@ -414,7 +414,16 @@ describe('PM search / Elite Hub routes — SYN isolation', () => {
   function operatingIndexService(overrides: Partial<SearchPmService> = {}): SearchPmService {
     return {
       async listAuthorizedClients() {
-        return [{ clientCode: 'SYN01', displayName: 'SYNTHETIC Alpha Co', dba: 'SYN Alpha' }];
+        return [
+          {
+            id: 'SYN01',
+            itemId: '1',
+            clientCode: 'SYN01',
+            displayName: 'SYNTHETIC Alpha Co',
+            dba: 'SYN Alpha',
+            source: 'sharepoint',
+          },
+        ];
       },
       async listAuthorizedProjects() {
         return [];
