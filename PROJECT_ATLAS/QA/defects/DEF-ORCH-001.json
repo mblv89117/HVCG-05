@@ -1,0 +1,11 @@
+{
+  "id": "DEF-ORCH-001",
+  "severity": "HIGH",
+  "status": "open",
+  "title": "ORCHESTRATION directory lock expires 2099 blocks QA gate writes",
+  "taskIds": ["ATLAS-T-1201", "ATLAS-T-1205"],
+  "holder": "master-pm",
+  "lockId": "LOCK-ORCH-DIR-S12",
+  "reportedBy": "qa-release",
+  "reportedAt": "2026-07-20T00:08:00Z"
+}

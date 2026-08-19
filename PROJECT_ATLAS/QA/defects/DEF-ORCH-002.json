@@ -1,0 +1,9 @@
+{
+  "id": "DEF-ORCH-002",
+  "severity": "MEDIUM",
+  "status": "open",
+  "title": "atlas-orch find_repo_root resolves to empty main ORCHESTRATION without HVCG_REPO_ROOT",
+  "taskIds": ["ATLAS-T-1203"],
+  "reportedBy": "qa-release",
+  "reportedAt": "2026-07-20T00:08:00Z"
+}
