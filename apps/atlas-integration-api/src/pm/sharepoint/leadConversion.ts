@@ -2,15 +2,16 @@
  * Atlas Lead → Opportunity conversion helpers.
  *
  * Existing contracts (do not invent a second CRM):
- * - Company = HVCG_Clients (there is no HVCG_Companies list)
+ * - Company = HVCG_Clients (there is no HVCG_Companies list). ClientStage=Prospect
+ *   is the sales/account master, not Active Client entitlement.
  * - Contact = HVCG_Contacts (requires ClientId)
- * - Opportunity = HVCG_Opportunities Stage=Discovery (Power Automate field map)
+ * - Opportunity = HVCG_Opportunities Stage=Discovery
  * - Idempotency = HVCG_Opportunities.HVCG_IdempotencyKey `opp-from-lead|{LeadId}`
  * - LeadStatus Converted is not a PATCH; it is this workflow
+ * - Conversion MUST NOT create HVCG-Client-{code} or grant portal/SharePoint access.
  *
- * Owner decision (implemented pending owner confirm):
  * Convert is allowed from New, Contacted, or Qualified. Inbound website leads
- * start as New; requiring Qualified first would block Manny's Convert action.
+ * start as New; requiring Qualified first would block the operator Convert action.
  * Qualified PATCH still does not silently create an Opportunity.
  */
 
@@ -30,9 +31,9 @@ export const SERVICE_INTEREST_TO_OPPORTUNITY_TYPE: Record<string, string> = {
   Other: 'Other',
 };
 
-export function opportunityTypeFromServiceInterest(interest?: string): string {
-  if (!interest) return 'Other';
-  return SERVICE_INTEREST_TO_OPPORTUNITY_TYPE[interest] || 'Other';
+export function opportunityTypeFromServiceInterest(interest?: string): string | undefined {
+  if (!interest) return undefined;
+  return SERVICE_INTEREST_TO_OPPORTUNITY_TYPE[interest];
 }
 
 export function opportunityIdempotencyKey(leadId: string): string {

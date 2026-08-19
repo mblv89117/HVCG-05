@@ -120,7 +120,7 @@ export function OpportunityDetailPage() {
               <Button appearance="secondary">Source lead</Button>
             </Link>
           ) : null}
-          {opportunity.clientCode ? (
+          {opportunity.clientStage === 'Active Client' && opportunity.clientCode ? (
             <Link to={`/clients/${encodeURIComponent(opportunity.clientCode)}`}>
               <Button appearance="secondary">Company</Button>
             </Link>
@@ -139,7 +139,13 @@ export function OpportunityDetailPage() {
           ) : null}
         </div>
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
-          {[opportunity.ownerEmail ? `Owner ${opportunity.ownerEmail}` : null, opportunity.clientCode]
+          {[
+            opportunity.ownerEmail ? `Owner ${opportunity.ownerEmail}` : null,
+            opportunity.clientCode,
+            opportunity.clientStage && opportunity.clientStage !== 'Active Client'
+              ? opportunity.clientStage
+              : null,
+          ]
             .filter(Boolean)
             .join(' · ')}
         </Caption1>

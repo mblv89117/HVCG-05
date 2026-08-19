@@ -203,7 +203,11 @@ export function LeadDetailPage() {
               <Caption1>{lead.clientCode}</Caption1>
             </Link>
           ) : (
-            <Caption1>Unconverted · internal CRM</Caption1>
+            <Caption1>
+              {lead.status === 'Converted'
+                ? 'Converted · internal prospect (not an entitled client)'
+                : 'Unconverted · internal CRM'}
+            </Caption1>
           )}
         </div>
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
@@ -272,8 +276,10 @@ export function LeadDetailPage() {
             {confirmConvert ? (
               <div style={{ display: 'grid', gap: 8 }}>
                 <Caption1>
-                  Convert creates or reuses Company (HVCG_Clients), Contact, and a Discovery Opportunity. This
-                  does not send email or Teams messages.
+                  Converts this lead into one Discovery Opportunity. Atlas will create or reuse the internal
+                  company record ({lead.title}) and contact ({lead.contactName || lead.email || 'name on the lead'}).
+                  Stage starts at Discovery. This does not grant client portal access, SharePoint client access, or
+                  an HVCG-Client Entra group.
                 </Caption1>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <Button appearance="primary" onClick={() => void convert()} disabled={converting}>

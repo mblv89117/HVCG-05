@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadConfig, type AppConfig } from '../src/config.ts';
@@ -39,6 +39,8 @@ class MemoryGraph implements PmGraphTransport {
   nextId = 1;
   pageSize = 100;
   etagN = 1;
+  failCreateFor = new Map<string, number>();
+  failPatchFor = new Map<string, number>();
 
   constructor() {
     this.lists.set(PROJECTS, []);
@@ -101,6 +103,10 @@ class MemoryGraph implements PmGraphTransport {
   }
 
   async createItem(listId: string, fields: Record<string, unknown>): Promise<GraphListItem> {
+    const fail = this.failCreateFor.get(listId);
+    if (fail) {
+      throw new PmHttpError(fail, fail === 403 ? 'forbidden' : 'PM_BACKEND_UNAVAILABLE', `Graph ${fail}`);
+    }
     return this.seed(listId, fields);
   }
 
@@ -110,6 +116,10 @@ class MemoryGraph implements PmGraphTransport {
     fields: Record<string, unknown>,
     etag: string,
   ): Promise<GraphListItem> {
+    const fail = this.failPatchFor.get(listId);
+    if (fail) {
+      throw new PmHttpError(fail, fail === 403 ? 'forbidden' : 'PM_BACKEND_UNAVAILABLE', `Graph ${fail}`);
+    }
     const arr = this.lists.get(listId) || [];
     const item = arr.find((i) => i.id === itemId);
     if (!item) {
@@ -817,7 +827,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
   }
 
   async function withCrmLeads(
-    fn: (ctx: { base: string; graph: MemoryGraph }) => Promise<void>,
+    fn: (ctx: { base: string; graph: MemoryGraph; dataDir: string }) => Promise<void>,
     entitlements: (oid: string | undefined) => string[] = () => ['ACCG01'],
   ) {
     const prev = {
@@ -914,7 +924,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
   });
 
   it('converts a New website lead into Company, Contact, and Discovery Opportunity', async () => {
-    await withCrmLeads(async ({ base, graph }) => {
+    await withCrmLeads(async ({ base, graph, dataDir }) => {
       graph.seed(
         LEADS,
         {
@@ -950,17 +960,63 @@ describe('SharePoint HVCG_Leads operator queue', () => {
         created: { company: boolean; contact: boolean; opportunity: boolean };
       };
       assert.equal(body.lead.status, 'Converted');
+      assert.equal(body.lead.clientCode, undefined);
       assert.equal(body.company.reused, false);
       assert.equal(body.company.displayName, 'Northwind Capital');
+      assert.equal(body.company.clientStage, 'Prospect');
+      assert.equal(body.company.entitlementProvisioned, false);
+      assert.equal(body.entitlementProvisioned, false);
       assert.match(body.company.clientCode, /^[A-Z][A-Z0-9]{2,15}$/);
+      assert.notEqual(body.company.clientCode, 'ACCG01');
       assert.equal(body.contact.email, 'pat@northwind.example');
       assert.equal(body.opportunity.stage, 'Discovery');
       assert.equal(body.opportunity.opportunityType, 'Assessment');
       assert.equal(body.href, `/opportunities/${body.opportunity.id}`);
       assert.equal(body.created.opportunity, true);
       assert.ok(body.lead.convertedOpportunityId);
+      const createdClient = (graph.lists.get(CLIENTS) || []).find(
+        (c) => c.fields.ClientCode === body.company.clientCode,
+      );
+      assert.equal(createdClient?.fields.ClientStage, 'Prospect');
+      const createdOpp = (graph.lists.get(OPPORTUNITIES) || [])[0];
+      assert.equal(createdOpp?.fields.Probability, undefined);
+      assert.equal(createdOpp?.fields.ForecastCategory, undefined);
+      assert.equal(createdOpp?.fields.CapitalHandoffStatus, undefined);
+      assert.equal(createdOpp?.fields.Stage, 'Discovery');
+      assert.equal(createdOpp?.fields.HVCG_IdempotencyKey, 'opp-from-lead|84');
       const opp = await fetch(`${base}/api/pm/opportunities/${body.opportunity.id}`, { headers: auth('a') });
       assert.equal(opp.status, 200);
+      const home = await fetch(`${base}/api/pm/command-center`, { headers: auth('a') });
+      const homeBody = (await home.json()) as {
+        commandCenter: {
+          myDay: { waitingFollowUps: Array<{ id: string }> };
+          clientAttention: { opportunities: Array<{ href: string; id: string }> };
+        };
+      };
+      assert.equal(
+        homeBody.commandCenter.myDay.waitingFollowUps.some((row) => row.id === '84'),
+        false,
+      );
+      assert.ok(
+        homeBody.commandCenter.clientAttention.opportunities.some(
+          (row) => row.href === `/opportunities/${body.opportunity.id}`,
+        ),
+      );
+      const clientSearch = await fetch(`${base}/api/pm/search?q=Northwind`, { headers: auth('client') });
+      const clientSearchBody = (await clientSearch.json()) as { results: Array<{ kind: string; id: string }> };
+      assert.equal(
+        clientSearchBody.results.some((r) => r.kind === 'opportunity' && r.id === body.opportunity.id),
+        false,
+      );
+      const spoof = await fetch(`${base}/api/pm/leads/84/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': gotBody.lead.etag },
+        body: JSON.stringify({ clientCode: 'ACCG01', company: 'ACCG01' }),
+      });
+      assert.equal(spoof.status, 200);
+      const spoofBody = (await spoof.json()) as { company: { clientCode: string }; opportunity: { id: string }; replay: boolean };
+      assert.equal(spoofBody.opportunity.id, body.opportunity.id);
+      assert.notEqual(spoofBody.company.clientCode, 'ACCG01');
       const replay = await fetch(`${base}/api/pm/leads/84/convert`, {
         method: 'POST',
         headers: auth('a'),
@@ -969,8 +1025,13 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(replay.status, 200);
       const replayBody = (await replay.json()) as { opportunity: { id: string }; replay: boolean };
       assert.equal(replayBody.opportunity.id, body.opportunity.id);
+      assert.equal(replayBody.replay, true);
       const opps = graph.lists.get(OPPORTUNITIES) || [];
       assert.equal(opps.length, 1);
+      const store = JSON.parse(readFileSync(join(dataDir, 'integration-store.json'), 'utf8')) as {
+        auditEvents: Array<{ action: string }>;
+      };
+      assert.equal(store.auditEvents.filter((e) => e.action === 'pm_lead_convert').length, 1);
       const admin = await fetch(`${base}/api/pm/leads/84/convert`, {
         method: 'POST',
         headers: auth('admin'),
@@ -1017,6 +1078,93 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       const clients = graph.lists.get(CLIENTS) || [];
       assert.equal(clients.filter((c) => c.fields.ClientCode === 'ACCG01').length, 1);
     });
+  });
+
+  it('does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity', async () => {
+    const entitlementBefore = process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS;
+    await withCrmLeads(async ({ base, graph }) => {
+      graph.seed(
+        LEADS,
+        {
+          Title: 'SYN Conversion Co',
+          ContactName: 'Syn Tester',
+          Email: 'syn@conversion.example',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+        },
+        '88',
+      );
+      const got = await fetch(`${base}/api/pm/leads/88`, { headers: auth('a') });
+      const gotBody = (await got.json()) as { lead: { etag: string } };
+      graph.failCreateFor.set(OPPORTUNITIES, 503);
+      const failed = await fetch(`${base}/api/pm/leads/88/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': gotBody.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(failed.status, 503);
+      const leadAfterFail = await fetch(`${base}/api/pm/leads/88`, { headers: auth('a') });
+      const leadFailBody = (await leadAfterFail.json()) as { lead: { status: string; etag: string } };
+      assert.equal(leadFailBody.lead.status, 'New');
+      assert.equal((graph.lists.get(OPPORTUNITIES) || []).length, 0);
+      assert.equal((graph.lists.get(CLIENTS) || []).some((c) => c.fields.Title === 'SYN Conversion Co'), true);
+      graph.failCreateFor.delete(OPPORTUNITIES);
+      const retry = await fetch(`${base}/api/pm/leads/88/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': leadFailBody.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(retry.status, 200);
+      const retryBody = (await retry.json()) as {
+        opportunity: { id: string };
+        created: { company: boolean; opportunity: boolean };
+        entitlementProvisioned: boolean;
+        company: { clientStage?: string };
+      };
+      assert.equal(retryBody.created.company, false);
+      assert.equal(retryBody.created.opportunity, true);
+      assert.equal(retryBody.entitlementProvisioned, false);
+      assert.equal(retryBody.company.clientStage, 'Prospect');
+      assert.equal((graph.lists.get(OPPORTUNITIES) || []).length, 1);
+      graph.failPatchFor.set(LEADS, 503);
+      graph.seed(
+        LEADS,
+        {
+          Title: 'SYN Patch Fail Co',
+          Email: 'patch@conversion.example',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+        },
+        '89',
+      );
+      const lead89 = await fetch(`${base}/api/pm/leads/89`, { headers: auth('a') });
+      const lead89Body = (await lead89.json()) as { lead: { etag: string } };
+      const patchFail = await fetch(`${base}/api/pm/leads/89/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead89Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(patchFail.status, 503);
+      assert.equal((graph.lists.get(OPPORTUNITIES) || []).length, 2);
+      const stillNew = await fetch(`${base}/api/pm/leads/89`, { headers: auth('a') });
+      const stillNewBody = (await stillNew.json()) as { lead: { status: string; etag: string } };
+      assert.equal(stillNewBody.lead.status, 'New');
+      graph.failPatchFor.delete(LEADS);
+      const patchRetry = await fetch(`${base}/api/pm/leads/89/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': stillNewBody.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(patchRetry.status, 200);
+      assert.equal((graph.lists.get(OPPORTUNITIES) || []).length, 2);
+      const foreign = await fetch(`${base}/api/pm/leads/999/convert`, {
+        method: 'POST',
+        headers: auth('a'),
+        body: JSON.stringify({}),
+      });
+      assert.equal(foreign.status, 404);
+    });
+    assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
   });
 
   it('does not convert Disqualified leads and returns 503 when Opportunities are unconfigured', async () => {

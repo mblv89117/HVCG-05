@@ -15,6 +15,7 @@ import {
   DEFERRED_COLLECTIONS,
   leadNeedsFollowUp,
   type SharePointLead,
+  type SharePointOpportunity,
   type SharePointPmService,
   type SharePointProject,
   type SharePointTask,
@@ -118,6 +119,7 @@ function commandCenterPayload(
   tasks: SharePointTask[],
   milestones: Awaited<ReturnType<SharePointPmService['listAuthorizedMilestones']>>,
   leads: SharePointLead[] = [],
+  opportunities: SharePointOpportunity[] = [],
 ) {
   const today = new Date().toISOString().slice(0, 10);
   const openTasks = tasks.filter((t) => t.status !== 'completed' && t.status !== 'cancelled');
@@ -127,6 +129,10 @@ function commandCenterPayload(
   const ownerApprovals = openTasks.filter((t) => t.status === 'needs_owner_approval' || t.requiresApproval);
   const followLeads = leads.filter((lead) => leadNeedsFollowUp(lead, today));
   const qualifiedLeads = leads.filter((lead) => lead.status === 'Qualified');
+  const openOpps = opportunities.filter((o) => {
+    const status = o.winLossStatus || 'Open';
+    return status === 'Open';
+  });
   const overdueFollowUps = followLeads.filter((lead) => {
     const due = (lead.nextFollowUpDate || '').slice(0, 10);
     return Boolean(due && due < today);
@@ -194,12 +200,20 @@ function commandCenterPayload(
       upcomingDeadlines: openTasks
         .filter((t) => t.dueDate && t.dueDate.slice(0, 10) > today)
         .slice(0, 10),
-      opportunities: qualifiedLeads.slice(0, 20).map((lead) => ({
-        id: lead.id,
-        name: lead.title,
-        detail: [lead.serviceInterest, lead.source, lead.nextAction].filter(Boolean).join(' · '),
-        href: `/leads/${lead.id}`,
-      })),
+      opportunities: [
+        ...qualifiedLeads.map((lead) => ({
+          id: lead.id,
+          name: lead.title,
+          detail: [lead.serviceInterest, lead.source, lead.nextAction].filter(Boolean).join(' · '),
+          href: `/leads/${lead.id}`,
+        })),
+        ...openOpps.map((o) => ({
+          id: o.id,
+          name: o.title,
+          detail: [o.stage, o.opportunityType, o.clientCode].filter(Boolean).join(' · '),
+          href: `/opportunities/${o.id}`,
+        })),
+      ].slice(0, 20),
     },
     teamAndAgents: {
       teamWorkload: [] as Array<{ id: string; name: string; openTasks: number; overdue: number; blocked: number }>,
@@ -430,13 +444,15 @@ export async function handleSharePointPmRoutes(opts: {
         decodeURIComponent(leadConvert[1]),
         readEtag(req, body),
       );
-      audit({
-        repo,
-        actorUserId: principal.userId,
-        action: 'pm_lead_convert',
-        outcome: 'success',
-        detail: `list=HVCG_Leads item=${converted.lead.id} company=${converted.company.clientCode} opportunity=${converted.opportunity.id} replay=${converted.replay}`,
-      });
+      if (!converted.replay) {
+        audit({
+          repo,
+          actorUserId: principal.userId,
+          action: 'pm_lead_convert',
+          outcome: 'success',
+          detail: `list=HVCG_Leads item=${converted.lead.id} prev=${converted.previousLeadStatus} next=${converted.lead.status} company=${converted.company.clientCode} stage=${converted.company.clientStage || ''} opportunity=${converted.opportunity.id} entitlement=false`,
+        });
+      }
       send(res, 200, converted, origin);
       return true;
     }
@@ -633,11 +649,12 @@ export async function handleSharePointPmRoutes(opts: {
       const projects = await service.listAuthorizedProjects(principal);
       const tasks = await service.listAuthorizedTasks(principal);
       const leads = await service.listAuthorizedLeads(principal);
+      const opportunities = await service.listAuthorizedOpportunities(principal);
       const milestones = [];
       for (const p of projects) {
         milestones.push(...(await service.listAuthorizedMilestones(principal, p.id)));
       }
-      send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones, leads) }, origin);
+      send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones, leads, opportunities) }, origin);
       return true;
     }
 

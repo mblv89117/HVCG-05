@@ -10,7 +10,8 @@ describe('Lead conversion helpers', () => {
   it('maps ServiceInterest onto existing OpportunityType choices', () => {
     assert.equal(opportunityTypeFromServiceInterest('Assessment'), 'Assessment');
     assert.equal(opportunityTypeFromServiceInterest('Capital Advisory'), 'Capital Raise');
-    assert.equal(opportunityTypeFromServiceInterest('Unknown SKU'), 'Other');
+    assert.equal(opportunityTypeFromServiceInterest('Unknown SKU'), undefined);
+    assert.equal(opportunityTypeFromServiceInterest(undefined), undefined);
   });
 
   it('reuses the Power Automate opportunity idempotency pattern', () => {

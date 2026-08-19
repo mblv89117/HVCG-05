@@ -399,6 +399,7 @@ export interface PmOpportunity {
   stage: string;
   clientCode?: string;
   clientId?: string;
+  clientStage?: string;
   leadId?: string;
   ownerEmail?: string;
   opportunityType?: string;
@@ -414,13 +415,17 @@ export interface LeadConversionResult {
     itemId: string;
     clientCode: string;
     displayName: string;
+    clientStage?: string;
     reused: boolean;
+    entitlementProvisioned?: boolean;
   };
   contact: { id: string; title: string; email?: string; reused: boolean };
   opportunity: PmOpportunity;
   href: string;
   replay: boolean;
+  previousLeadStatus?: string;
   created: { company: boolean; contact: boolean; opportunity: boolean };
+  entitlementProvisioned?: boolean;
 }
 
 export type WorkspaceCompletenessStatus =

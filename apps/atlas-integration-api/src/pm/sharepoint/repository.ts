@@ -127,6 +127,7 @@ export type SharePointOpportunity = {
   stage: string;
   clientCode?: string;
   clientId?: string;
+  clientStage?: string;
   leadId?: string;
   ownerEmail?: string;
   opportunityType?: string;
@@ -152,13 +153,17 @@ export type LeadConversionResult = {
     itemId: string;
     clientCode: string;
     displayName: string;
+    clientStage?: string;
     reused: boolean;
+    entitlementProvisioned: false;
   };
   contact: { id: string; title: string; email?: string; reused: boolean };
   opportunity: SharePointOpportunity;
   href: string;
   replay: boolean;
+  previousLeadStatus: string;
   created: { company: boolean; contact: boolean; opportunity: boolean };
+  entitlementProvisioned: false;
 };
 
 function nextActionFromNotes(notes?: string): string | undefined {
@@ -1197,6 +1202,7 @@ export class SharePointPmService {
       stage: asString(item.fields.Stage) || 'Discovery',
       clientCode,
       clientId: clientId || linked?.itemId,
+      clientStage: linked?.clientStage,
       leadId: lookupId(item.fields, 'LeadId'),
       ownerEmail: asString(item.fields.OwnerEmail) || asString(item.fields.SalesOwnerEmail),
       opportunityType: asString(item.fields.OpportunityType),
@@ -1308,6 +1314,11 @@ export class SharePointPmService {
     return rows.filter((lead) => this.canSeeLead(principal, lead));
   }
 
+  async listAuthorizedOpportunities(principal: AtlasPrincipal): Promise<SharePointOpportunity[]> {
+    const rows = await this.listOpportunityRecords();
+    return rows.filter((opportunity) => this.canSeeOpportunity(principal, opportunity));
+  }
+
   async authorizeLead(principal: AtlasPrincipal, id: string): Promise<SharePointLead | 'not_found'> {
     if (!this.settings.leadsListId || !isSharePointItemId(id)) return 'not_found';
     const item = await this.graph.getItem(this.settings.leadsListId, id);
@@ -1389,12 +1400,14 @@ export class SharePointPmService {
     if (!this.settings.contactsListId) {
       throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'HVCG_Contacts is not configured.');
     }
+    const previousLeadStatus = existing.status;
     const replay = existing.status === 'Converted';
     if (!replay && !etag) {
       throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
     }
 
-    const company = await this.ensureCompanyFromLead(existing);
+    const entitled = new Set(entitledClientCodes(principal));
+    const company = await this.ensureCompanyFromLead(existing, entitled);
     const contact = await this.ensureContactFromLead(existing, company.client);
     const opportunity = await this.ensureOpportunityFromLead(existing, company.client);
 
@@ -1427,7 +1440,9 @@ export class SharePointPmService {
         itemId: company.client.itemId,
         clientCode: company.client.clientCode,
         displayName: company.client.displayName,
+        clientStage: company.client.clientStage,
         reused: company.reused,
+        entitlementProvisioned: false,
       },
       contact: {
         id: contact.record.id,
@@ -1438,16 +1453,19 @@ export class SharePointPmService {
       opportunity: opportunity.record,
       href: opportunityHref(opportunity.record.id),
       replay: replay && company.reused && contact.reused && opportunity.reused,
+      previousLeadStatus,
       created: {
         company: !company.reused,
         contact: !contact.reused,
         opportunity: !opportunity.reused,
       },
+      entitlementProvisioned: false,
     };
   }
 
   private async ensureCompanyFromLead(
     lead: SharePointLead,
+    entitled: Set<string>,
   ): Promise<{ client: SharePointClient; reused: boolean; stampClientCode: boolean }> {
     const clients = await this.listAll(this.settings.clientsListId);
     const mapped = clients
@@ -1456,19 +1474,22 @@ export class SharePointPmService {
     const byItem = new Map(mapped.map((c) => [c.itemId, c]));
     const byCode = new Map(mapped.map((c) => [c.clientCode, c]));
 
+    const stampFor = (client: SharePointClient, reused: boolean): boolean =>
+      Boolean(lead.clientCode) || (reused && entitled.has(client.clientCode));
+
     if (lead.convertedClientId && byItem.has(lead.convertedClientId)) {
       const client = byItem.get(lead.convertedClientId)!;
-      return { client, reused: true, stampClientCode: Boolean(lead.clientCode) };
+      return { client, reused: true, stampClientCode: stampFor(client, true) };
     }
     if (lead.clientCode && byCode.has(lead.clientCode)) {
       const client = byCode.get(lead.clientCode)!;
-      return { client, reused: true, stampClientCode: true };
+      return { client, reused: true, stampClientCode: stampFor(client, true) };
     }
 
     const wanted = normalizeCompanyTitle(lead.title);
     const titleMatch = mapped.find((c) => normalizeCompanyTitle(c.displayName) === wanted);
     if (titleMatch) {
-      return { client: titleMatch, reused: true, stampClientCode: true };
+      return { client: titleMatch, reused: true, stampClientCode: stampFor(titleMatch, true) };
     }
 
     const prior = await this.findByIdempotency(
@@ -1477,7 +1498,7 @@ export class SharePointPmService {
     );
     if (prior) {
       const existing = this.mapClient(prior);
-      if (existing) return { client: existing, reused: true, stampClientCode: false };
+      if (existing) return { client: existing, reused: true, stampClientCode: stampFor(existing, true) };
     }
 
     const clientCode = proposeClientCode(lead.title, mapped.map((c) => c.clientCode));
@@ -1577,18 +1598,13 @@ export class SharePointPmService {
       Title: `${lead.title} — Discovery`.slice(0, 255),
       Stage: 'Discovery',
       WinLossStatus: 'Open',
-      ForecastCategory: 'Pipeline',
       LeadIdLookupId: Number(lead.id),
       ClientIdLookupId: Number(client.itemId),
-      OpportunityType: opportunityTypeFromServiceInterest(lead.serviceInterest),
-      CapitalHandoffStatus: 'NotApplicable',
-      Probability: 20,
       HVCG_IdempotencyKey: key,
       CopilotSummary: `Converted from lead ${lead.title}`.slice(0, 2000),
-      CopilotKeywords: ['lead', 'converted', 'discovery', lead.serviceInterest, lead.source]
-        .filter(Boolean)
-        .join(';'),
     };
+    const opportunityType = opportunityTypeFromServiceInterest(lead.serviceInterest);
+    if (opportunityType) fields.OpportunityType = opportunityType;
     if (lead.ownerEmail) {
       fields.OwnerEmail = lead.ownerEmail;
       fields.SalesOwnerEmail = lead.ownerEmail;
