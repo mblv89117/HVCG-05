@@ -15,12 +15,15 @@ This file is the operator record of **what is live** versus **what is in git**. 
 |------|--------|
 | App | `app-atlas-integration-hub` / `rg-atlas-prod` |
 | URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| **Running Hub SHA** | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` |
-| **Azure deployment ID** | `501fb29b-80f6-427d-8c65-3f1a88da52d9` |
-| Commit message (that SHA) | `Return client Command-K hits without waiting out slow project lists.` |
+| **Running Hub SHA** | `a43803edb29a3f8dd080033ca579a09532d89fbc` |
+| **Azure deployment ID** | `3d406e37-2d91-4fd6-a20b-8c955c7b5733` |
+| Commit message (that SHA) | `feat(atlas): add CRM operator workflow` |
+| Kudu `ATLAS_HUB_COMMIT.txt` | `a43803edb29a3f8dd080033ca579a09532d89fbc` |
 | LIVE `/health` | `ok`; `authRequired=true`; `insecureDevAuth=false`; `pmBackend.mode=sharepoint`; `capitalBackend.mode=sharepoint`; overlay durable; `websiteLeads.configured=true` |
-| LIVE Elite (separate app) | `e5740379ff16b68f329b7e2388867d7a43233a5b` at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-DvEHjcS6.js` |
-| Prior recorded Hub zip | `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` (deployment `dd965bc2-6d56-4f80-b126-67fcecfc33db`) — **stale; superseded by `d22b55f`** |
+| LIVE Elite (separate app) | `a43803edb29a3f8dd080033ca579a09532d89fbc` at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-iXOWTfM9.js` (Last-Modified 2026-08-19 03:11:17 UTC) |
+| Immediate prior Hub zip | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` (deployment `501fb29b-80f6-427d-8c65-3f1a88da52d9`) — rollback archive `server.js.pre-d22b55f-20260819-030627` |
+| Immediate prior Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` asset `index-DvEHjcS6.js` |
+| Older Hub zip | `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` (deployment `dd965bc2-6d56-4f80-b126-67fcecfc33db`) — superseded |
 | Ancestor noted on the prior record | `0b2305cf40bf35871256e923344216b21d6f1baa` (Phase 4 transaction execution OS); earlier zip `e49be659e8d7d0c7f6079cd505b73469398f2d4c` |
 
 That SHA is the zip that was deployed. Overlay facts persist under `INTEGRATION_DATA_DIR=/home/webapp_data/integrations/capital-overlay` (App Service `/home`, survives recycle and zip `--clean` of wwwroot). Health observes that overlay as **durable**. Built-in Linux `NODE|22-lts`, plan B1 capacity 1, autoscale none, `WEBSITE_RUN_FROM_PACKAGE=0` were true on the prior recorded host; this honesty pass did not re-inventory SKU.
@@ -31,15 +34,11 @@ GitHub workflows do **not** deploy Hub.
 
 ---
 
-## CANDIDATE (not LIVE)
+## CRM operator (LIVE deployed 2026-08-19 — signed-in Premium UI HOLD)
 
-| Item | Value |
-|------|--------|
-| CRM operator | `a43803edb29a3f8dd080033ca579a09532d89fbc` on `feature/atlas-crm-operator` |
-| This docs branch HEAD | same SHA (branched for documentation only) |
-| Live-certified? | **No.** Do not call CRM live until a Hub/Elite zip of that SHA (or successor) is certified here. |
+Hub zip and Elite dist of `a43803e` are **running**. Anonymous `/api/pm/projects` and `/api/pm/leads` are **401**. Authenticated Microsoft Hub session (Azure CLI Hub audience, not Local Owner) returned 12 `HVCG_Leads`, required If-Match, rejected Converted PATCH, and returned 10 Home `myDay.waitingFollowUps` with `/leads/:id` hrefs.
 
-If a CRM Hub deploy lands after this record, add a new LIVE row. Keep this CANDIDATE row until that certification exists.
+Signed-in **rendered** `/leads` Premium UI was not certified in a browser Owner session this pass (unsigned production screenshots show Microsoft sign-in gate; Local Owner is not a certification session). Do not equate Hub API proof with a completed Premium UI gate.
 
 ---
 
@@ -50,7 +49,7 @@ If a CRM Hub deploy lands after this record, add a new LIVE row. Keep this CANDI
 Treat them as two facts:
 
 1. **Worktree HEAD** — local / branch tip. On this honesty branch that tip is CRM candidate `a43803e`. Changes here do nothing to production until an explicit Hub/Elite deploy.
-2. **Running Hub SHA** — `d22b55f870efc0c105ed328a20a4ba4df077e6aa` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
+2. **Running Hub SHA** — `a43803edb29a3f8dd080033ca579a09532d89fbc` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
 
 Do not infer production from:
 
