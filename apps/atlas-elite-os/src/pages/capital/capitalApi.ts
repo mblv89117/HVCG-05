@@ -12,6 +12,16 @@ import type { AtlasHubAuthHeaders } from '../../integrations/hub/api';
 import { hubFetchJson } from '../../integrations/hub/hubFetch';
 import {
   addSyntheticOpportunity,
+  applySyntheticAddOffer,
+  applySyntheticAttestApplication,
+  applySyntheticClientDecision,
+  applySyntheticExtractOffer,
+  applySyntheticGenerateClosing,
+  applySyntheticIngestRfi,
+  applySyntheticPrepareApplication,
+  applySyntheticRecordedSubmission,
+  applySyntheticRecordFee,
+  applySyntheticRecordFunding,
   applySyntheticShortlistDecision,
   applySyntheticStrategyDecision,
   applySyntheticTransition,
@@ -21,6 +31,10 @@ import {
   SYNTHETIC_BANNER,
   type SyntheticCommandCenter,
 } from './syntheticFallback';
+import {
+  isSyntheticMutationTarget,
+  normalizeOpportunityDetail,
+} from './capitalDetail';
 import {
   CapitalAccessError,
   accessFailureKind,
@@ -73,6 +87,12 @@ export const AI_DISCLAIMER =
 
 export const MANNY_GATE_COPY =
   'Approve buttons for strategy and shortlist are Manny gates. Nothing is an HVCG recommendation until Manny approves.';
+
+export const RECORDED_ONLY_COPY =
+  'Recorded only. Atlas writes a Hub tracking row — it does not send this package to a lender portal, mailbox, or client.';
+
+export const NOT_BORROWER_REPRESENTATION =
+  'An application package is not a borrower representation and is not a loan application submitted by HVCG as lender.';
 
 export type AgingBand = 'fresh' | 'watch' | 'overdue' | 'critical';
 export type ApprovalState = 'NOT_REQUIRED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVISE';
@@ -235,15 +255,29 @@ export interface FinancingStrategy {
   disclaimer: string;
 }
 
+export type ApplicationAttestation =
+  | 'PREPARED'
+  | 'CLIENT_CONFIRMATION_REQUIRED'
+  | 'CLIENT_CONFIRMED'
+  | 'CORRECTION_REQUIRED'
+  | 'APPROVED_FOR_SUBMISSION';
+
 export interface ApplicationPackage {
   id: string;
+  capitalOpportunityId?: string;
   lenderId: string;
   productId?: string;
   populatedFields: Record<string, { value: unknown; verification: string }>;
   missingFields: Array<{ field: string; requiredFrom: string }>;
   attachedDocumentIds: string[];
   status: string;
+  attestation?: ApplicationAttestation | string;
+  packageStatus?: string;
+  notBorrowerRepresentation?: boolean;
+  expectedQuestions?: string[];
   createdAt: string;
+  attestedAt?: string;
+  attestedBy?: string;
 }
 
 export interface LenderSubmission {
@@ -298,6 +332,60 @@ export interface FeeRecord {
   notes?: string;
 }
 
+export interface RfiItem {
+  id: string;
+  capitalOpportunityId?: string;
+  clientCode?: string;
+  lenderId?: string;
+  item: string;
+  action?: string;
+  sla?: string;
+  responseDue?: string;
+  nextAction?: string;
+  nextActionOwner?: string;
+  agingDays?: number;
+  candidateOnly?: boolean;
+}
+
+export interface TermComparison {
+  rows: Array<{
+    offerId: string;
+    lenderName: string;
+    product?: string;
+    amount?: number;
+    interestRate?: number;
+    termMonths?: number;
+    origination?: number;
+  }>;
+  bands: Record<string, string>;
+  notes: string[];
+  mannyRecommendation?: string;
+  mannyRecommendationBy?: string;
+  disclaimer?: string;
+  derivedNotQuoted?: boolean;
+}
+
+export interface FundingEvent {
+  id: string;
+  capitalOpportunityId?: string;
+  clientCode?: string;
+  fundedDate: string;
+  grossAmount?: number;
+  netProceeds?: number;
+  lenderId?: string;
+  verifiedBy?: string;
+  evidenceKind?: string;
+}
+
+export interface ClientDecisionRecord {
+  id: string;
+  selectedTermSheetId?: string;
+  decision: string;
+  decisionBy?: string;
+  reason?: string;
+  legallyBinding?: boolean;
+}
+
 export interface MissingDocumentRequest {
   subject: string;
   items: Array<{ name: string; category: string; status: string; deficiency?: string }>;
@@ -312,10 +400,15 @@ export interface CapitalOpportunityDetail {
   strategy: FinancingStrategy | null;
   matches: LenderMatch[];
   application: ApplicationPackage | null;
+  applications?: ApplicationPackage[];
   submissions: LenderSubmission[];
   offers: TermSheetOffer[];
   closing: ClosingCondition[];
   fees: FeeRecord[];
+  rfis?: RfiItem[];
+  comparison?: TermComparison | null;
+  funding?: FundingEvent | null;
+  decision?: ClientDecisionRecord | null;
   missingRequest: MissingDocumentRequest | null;
 }
 
@@ -435,22 +528,32 @@ function fromSynthetic(pack: SyntheticCommandCenter, reason?: string): CapitalCo
 }
 
 function asDetail(raw: unknown): CapitalOpportunityDetail {
-  const body = (raw || {}) as Record<string, unknown>;
-  const opportunity = (body.opportunity || body) as CapitalOpportunity;
-  return {
-    opportunity,
-    checklist: Array.isArray(body.checklist) ? (body.checklist as ChecklistItem[]) : [],
-    documents: Array.isArray(body.documents) ? (body.documents as CapitalDocument[]) : [],
-    underwriting: (body.underwriting as UnderwritingSummary) || null,
-    strategy: (body.strategy as FinancingStrategy) || null,
-    matches: Array.isArray(body.matches) ? (body.matches as LenderMatch[]) : [],
-    application: (body.application as ApplicationPackage) || null,
-    submissions: Array.isArray(body.submissions) ? (body.submissions as LenderSubmission[]) : [],
-    offers: Array.isArray(body.offers) ? (body.offers as TermSheetOffer[]) : [],
-    closing: Array.isArray(body.closing) ? (body.closing as ClosingCondition[]) : [],
-    fees: Array.isArray(body.fees) ? (body.fees as FeeRecord[]) : [],
-    missingRequest: (body.missingRequest as MissingDocumentRequest) || null,
-  };
+  return normalizeOpportunityDetail(raw) as unknown as CapitalOpportunityDetail;
+}
+
+export { normalizeOpportunityDetail, isSyntheticMutationTarget };
+
+async function hubMutateThenReload(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  opts: { source?: CapitalDataSource } | undefined,
+  synthetic: () => CapitalOpportunityDetail,
+  request: () => Promise<unknown>,
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  if (opts?.source === 'synthetic') {
+    if (!isSyntheticMutationTarget(id)) {
+      throw new Error('Synthetic capital mutations are limited to SYN* demonstration files.');
+    }
+    return { detail: synthetic(), source: 'synthetic' };
+  }
+  try {
+    await request();
+    const raw = await hubFetchJson<unknown>(auth, `/api/capital/opportunities/${encodeURIComponent(id)}`);
+    return { detail: asDetail(raw), source: 'hub' };
+  } catch (err) {
+    if (isAuthorizationFailure(err)) throw toCapitalAccessError(err);
+    throw err;
+  }
 }
 
 export async function loadCommandCenter(auth: AtlasHubAuthHeaders): Promise<CapitalCommandCenterPayload> {
@@ -636,4 +739,367 @@ export async function loadMissingRequest(
     if (isAuthorizationFailure(err)) throw toCapitalAccessError(err);
     throw err;
   }
+}
+
+export async function prepareApplication(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { lenderId: string; productId?: string },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticPrepareApplication(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/application`, {
+        method: 'POST',
+        body: JSON.stringify({
+          lenderId: input.lenderId,
+          productId: input.productId || undefined,
+        }),
+      }),
+  );
+}
+
+export async function attestApplicationPackage(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { attestation: ApplicationAttestation; applicationId?: string; lenderId?: string },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticAttestApplication(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/application/attest`, {
+        method: 'POST',
+        body: JSON.stringify({
+          attestation: input.attestation,
+          applicationId: input.applicationId || undefined,
+          lenderId: input.lenderId || undefined,
+        }),
+      }),
+  );
+}
+
+export async function recordLenderSubmission(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { lenderId: string; confirmationNumber?: string; packageVersion?: string },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticRecordedSubmission(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/submissions`, {
+        method: 'POST',
+        body: JSON.stringify({
+          lenderId: input.lenderId,
+          confirmationNumber: input.confirmationNumber || undefined,
+          packageVersion: input.packageVersion || 'v1',
+          recordedOnly: true,
+          externalSubmit: false,
+        }),
+      }),
+  );
+}
+
+export async function ingestLenderRfi(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { text: string; lenderId?: string; applyStage?: boolean },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticIngestRfi(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/rfi`, {
+        method: 'POST',
+        body: JSON.stringify({
+          text: input.text,
+          lenderId: input.lenderId || undefined,
+          applyStage: input.applyStage === true,
+        }),
+      }),
+  );
+}
+
+export async function loadRfis(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  opts?: { source?: CapitalDataSource },
+): Promise<{ rfis: RfiItem[]; source: CapitalDataSource }> {
+  if (opts?.source === 'synthetic') {
+    return { rfis: getSyntheticOpportunity(id).rfis || [], source: 'synthetic' };
+  }
+  try {
+    const raw = await hubFetchJson<{ rfis?: RfiItem[] }>(
+      auth,
+      `/api/capital/opportunities/${encodeURIComponent(id)}/rfi`,
+    );
+    return { rfis: Array.isArray(raw.rfis) ? raw.rfis : [], source: 'hub' };
+  } catch (err) {
+    if (isAuthorizationFailure(err)) throw toCapitalAccessError(err);
+    throw err;
+  }
+}
+
+export async function addTermSheet(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: {
+    lenderId: string;
+    lenderName: string;
+    product?: string;
+    amount?: number | null;
+    interestRate?: number | null;
+    termMonths?: number | null;
+    origination?: number | null;
+    assumptions?: string[];
+  },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticAddOffer(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/offers`, {
+        method: 'POST',
+        body: JSON.stringify({
+          lenderId: input.lenderId,
+          lenderName: input.lenderName,
+          product: input.product || undefined,
+          amount: input.amount ?? undefined,
+          interestRate: input.interestRate ?? undefined,
+          termMonths: input.termMonths ?? undefined,
+          origination: input.origination ?? undefined,
+          assumptions: input.assumptions || ['manual entry UNVERIFIED'],
+        }),
+      }),
+  );
+}
+
+export async function extractTermSheet(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { text: string; lenderId?: string; lenderName?: string },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticExtractOffer(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/offers/extract`, {
+        method: 'POST',
+        body: JSON.stringify({
+          text: input.text,
+          lenderId: input.lenderId || undefined,
+          lenderName: input.lenderName || undefined,
+        }),
+      }),
+  );
+}
+
+async function comparisonFromHub(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  path: string,
+  init?: RequestInit,
+): Promise<TermComparison> {
+  const raw = await hubFetchJson<Record<string, unknown>>(
+    auth,
+    `/api/capital/opportunities/${encodeURIComponent(id)}${path}`,
+    init,
+  );
+  const comparison = (raw.comparison || raw) as TermComparison;
+  if (!comparison || typeof comparison !== 'object') {
+    throw new Error('Term comparison was not returned.');
+  }
+  return comparison;
+}
+
+export async function compareTermSheets(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  opts?: { source?: CapitalDataSource },
+): Promise<{ comparison: TermComparison; source: CapitalDataSource }> {
+  if (opts?.source === 'synthetic') {
+    const detail = getSyntheticOpportunity(id);
+    return {
+      comparison: detail.comparison || {
+        rows: (detail.offers || []).map((o) => ({
+          offerId: o.id,
+          lenderName: o.lenderName,
+          product: o.product,
+          amount: o.amount,
+          interestRate: o.interestRate,
+          termMonths: o.termMonths,
+          origination: o.origination,
+        })),
+        bands: {},
+        notes: ['Synthetic demonstration comparison — not live terms.'],
+        derivedNotQuoted: true,
+        disclaimer: FINANCING_DISCLAIMER,
+      },
+      source: 'synthetic',
+    };
+  }
+  try {
+    return { comparison: await comparisonFromHub(auth, id, '/offers/compare'), source: 'hub' };
+  } catch (err) {
+    if (isAuthorizationFailure(err)) throw toCapitalAccessError(err);
+    throw err;
+  }
+}
+
+export async function recommendTermSheet(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  recommendation: string,
+  opts?: { source?: CapitalDataSource },
+): Promise<{ comparison: TermComparison; source: CapitalDataSource }> {
+  if (opts?.source === 'synthetic') {
+    if (!isSyntheticMutationTarget(id)) {
+      throw new Error('Synthetic capital mutations are limited to SYN* demonstration files.');
+    }
+    const compared = await compareTermSheets(auth, id, opts);
+    return {
+      comparison: {
+        ...compared.comparison,
+        mannyRecommendation: recommendation,
+        mannyRecommendationBy: 'manny@hvcg.example',
+      },
+      source: 'synthetic',
+    };
+  }
+  try {
+    return {
+      comparison: await comparisonFromHub(auth, id, '/recommendation', {
+        method: 'POST',
+        body: JSON.stringify({ recommendation }),
+      }),
+      source: 'hub',
+    };
+  } catch (err) {
+    if (isAuthorizationFailure(err)) throw toCapitalAccessError(err);
+    throw err;
+  }
+}
+
+export async function recordClientDecision(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { decision: string; selectedTermSheetId?: string; reason?: string },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticClientDecision(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/decision`, {
+        method: 'POST',
+        body: JSON.stringify({
+          decision: input.decision,
+          selectedTermSheetId: input.selectedTermSheetId || undefined,
+          reason: input.reason || undefined,
+        }),
+      }),
+  );
+}
+
+export async function generateClosingConditions(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticGenerateClosing(id),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/closing/generate`, {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }),
+  );
+}
+
+export async function recordFundingEvent(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: {
+    fundedDate: string;
+    verifiedBy: string;
+    evidenceKind?: string;
+    sourceSystem: string;
+    capturedAt: string;
+    lenderId?: string;
+    grossAmount?: number | null;
+  },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticRecordFunding(id, input),
+    () =>
+      hubFetchJson(auth, `/api/capital/opportunities/${encodeURIComponent(id)}/funding`, {
+        method: 'POST',
+        body: JSON.stringify({
+          fundedDate: input.fundedDate,
+          verifiedBy: input.verifiedBy,
+          evidenceKind: input.evidenceKind || 'authorized_confirmation',
+          lenderId: input.lenderId || undefined,
+          grossAmount: input.grossAmount ?? undefined,
+          sourceRef: {
+            sourceSystem: input.sourceSystem,
+            capturedAt: input.capturedAt,
+            capturedBy: input.verifiedBy,
+          },
+        }),
+      }),
+  );
+}
+
+export async function recordFee(
+  auth: AtlasHubAuthHeaders,
+  id: string,
+  input: { clientCode: string; feeType: string; notes?: string; feeFormula?: string },
+  opts?: { source?: CapitalDataSource },
+): Promise<{ detail: CapitalOpportunityDetail; source: CapitalDataSource }> {
+  return hubMutateThenReload(
+    auth,
+    id,
+    opts,
+    () => applySyntheticRecordFee(id, input),
+    () =>
+      hubFetchJson(auth, '/api/capital/fees', {
+        method: 'POST',
+        body: JSON.stringify({
+          clientCode: input.clientCode,
+          capitalOpportunityId: id,
+          feeType: input.feeType,
+          feeFormula: input.feeFormula || undefined,
+          notes: input.notes || undefined,
+        }),
+      }),
+  );
 }
