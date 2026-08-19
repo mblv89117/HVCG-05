@@ -6,11 +6,11 @@ This document records current runtime/repository truth observed in the cloud age
 
 | Area | Status | Evidence / blocker |
 | --- | --- | --- |
-| Atlas / HVCG OS | Repo-ready candidate for Phase 5G pre-auth gates | `cursor/platform-completion-7241` at `2d0912c3857e73f3833ffd3f52817fe837aff460`; Hub typecheck/tests PASS; Elite build/tests PASS. No live deployment or Microsoft-auth live certification performed in this run. |
+| Atlas / HVCG OS | Repo-ready candidate for Phase 5G pre-auth gates | `cursor/platform-completion-7241` at `2d0912c3857e73f3833ffd3f52817fe837aff460` before this document update; Hub typecheck/tests PASS; Elite build/tests PASS; signed-out rendered QA PASS. No live deployment or Microsoft-auth live certification performed in this run. |
 | 360 Growth Solution | BLOCKED | Exact repo `mblv89117/360-growth-solution` is not accessible to this cloud principal; GitHub repo list/search returned no accessible match. No code changes made. |
 | Agent Copilot | BLOCKED | Exact repo `mblv89117/hvcg-agent-copilot` is not accessible to this cloud principal; GitHub repo list/search returned no accessible match. No code changes made. |
 | EVA | PARTIAL / Atlas-side contract present | Atlas tests cover `Website-EVA` lead listing, lead conversion, idempotency, and no client entitlement. Actual EVA runtime/repository was not accessible/discovered in this environment. |
-| Growth Command Center | Local repo-ready fixes; remote push BLOCKED | `growth-command-center` cloned from `mblv89117/growth-command-center`; local branch `cursor/gcc-client-handoff-7241` at `a400da598b7e25098b2f5b65d319c77a13fcb3b7`; install/build/lint/typecheck PASS locally. Push denied: `Permission to mblv89117/growth-command-center.git denied to cursor[bot]`. |
+| Growth Command Center | Local repo-ready fixes; remote push BLOCKED | `growth-command-center` cloned from `mblv89117/growth-command-center`; local branch `cursor/gcc-client-handoff-7241` at `a400da598b7e25098b2f5b65d319c77a13fcb3b7`; install/build/lint/typecheck PASS locally; signed-out rendered QA PASS with minor non-blocking console observations. Push denied: `Permission to mblv89117/growth-command-center.git denied to cursor[bot]`. |
 | Elevated / Autonomous Marketing / Best Day / client repos | Boundary only | Not platform-completion workstreams in this run. Gmail archive excluded. ACCG01 not touched. |
 
 ## Production / candidate baselines verified
@@ -49,6 +49,7 @@ This document records current runtime/repository truth observed in the cloud age
 - `npm run test -w @hvcg/atlas-integration-api` — PASS (`313` tests, `89` suites)
 - `npm run build -w @hvcg/atlas-elite-os` — PASS
 - `npm run test:all -w @hvcg/atlas-elite-os` — PASS
+- Rendered UI smoke at `http://127.0.0.1:4180/` — PASS for signed-out shell, protected route auth gates, 375px narrow viewport, no horizontal overflow.
 
 Covered Atlas gates include:
 
@@ -84,6 +85,7 @@ Covered Atlas gates include:
 - `npm run build` — PASS
 - `npm run lint` — PASS
 - `npm run typecheck` — PASS after local reproducibility fix
+- Rendered UI smoke at `http://127.0.0.1:3080/` — PASS for signed-out auth gates and narrow responsive layouts. Non-blocking browser-console observations: `auto?ae=1` 404 and one duplicate-label warning on `/cash-forecast`; no source match found and build/lint/typecheck remain green.
 
 Local GCC fixes:
 
@@ -181,10 +183,10 @@ Do not request these individually; batch into one owner window after all repo-on
 
 | System | Repo-complete | Deployed | Live-certified | Business-useful | Premium UI certified | Security certified | Documented |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Atlas | PARTIAL/PASS for Phase 5G pre-auth candidate | NOT in this run | NOT in this run | PARTIAL | Source/test only; rendered QA still needed | Repo red-team PASS for tested gates | PARTIAL/PASS |
+| Atlas | PARTIAL/PASS for Phase 5G pre-auth candidate | NOT in this run | NOT in this run | PARTIAL | PASS for signed-out/protected-route smoke; authenticated rendered QA still owner-auth blocked | Repo red-team PASS for tested gates | PARTIAL/PASS |
 | 360 | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED | PARTIAL boundary only |
 | EVA | Atlas-side PARTIAL | Unknown | NOT in this run | PARTIAL | Not certified | Atlas-side tests PASS | PARTIAL |
 | Agent Copilot | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED | BLOCKED | PARTIAL boundary only |
-| GCC | LOCAL PASS | NOT in this run | NOT in this run | PARTIAL | Not rendered-certified | Build/lint/typecheck only | PARTIAL |
+| GCC | LOCAL PASS | NOT in this run | NOT in this run | PARTIAL | PASS for signed-out/protected-route smoke; authenticated dashboard QA still auth/secret blocked | Build/lint/typecheck PASS locally | PARTIAL |
 
 High Value current approved platform scope is **not complete** until blocked repos are accessible and live certification is performed for production systems.
