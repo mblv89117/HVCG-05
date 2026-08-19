@@ -108,6 +108,16 @@ assert.match(liveClients, /HVCG_Clients/);
 assert.doesNotMatch(liveClients, /fetchClient360/);
 assert.doesNotMatch(liveClients, /ingestMicrosoftClient360/);
 
+const liveDetail = readFileSync(join(root, 'src/pages/LiveClientDetailPage.tsx'), 'utf8');
+assert.match(liveDetail, /fetchClientPmWorkspace/);
+assert.match(liveDetail, /status === 401/);
+assert.match(liveDetail, /status === 403/);
+assert.match(liveDetail, /workspace\.timeline/);
+assert.match(liveDetail, /workspace\.engagements\.items/);
+assert.match(liveDetail, /workspace\.decisionsRisks\.items/);
+assert.doesNotMatch(liveDetail, /fetchClient360/);
+assert.doesNotMatch(liveDetail, /ingestMicrosoftClient360/);
+
 const pmApiSrc = readFileSync(join(root, 'src/integrations/hub/pmApi.ts'), 'utf8');
 assert.match(pmApiSrc, /\/api\/pm\/clients/);
 assert.match(pmApiSrc, /If-Match/);

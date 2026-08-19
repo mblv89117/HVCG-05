@@ -55,6 +55,22 @@ const live = readFileSync(join(root, 'src/pages/LiveClientDetailPage.tsx'), 'utf
 assert.match(live, /Create project/);
 assert.match(live, /No entitled projects or open tasks on this ClientCode/);
 assert.match(live, /projectDetailPath/);
+assert.match(live, /workspace\.timeline/);
+assert.match(live, /workspace\.engagements\.items/);
+assert.match(live, /workspace\.decisionsRisks\.items/);
+assert.match(live, /title="Engagements"/);
+assert.match(live, /title="Decisions \/ risks"/);
+assert.match(live, /title="Timeline"/);
+assert.match(live, /EmptyState/);
+assert.match(live, /StatusChip/);
+assert.match(live, /status === 401/);
+assert.match(live, /status === 403/);
+assert.match(live, /AccessDeniedState/);
+assert.doesNotMatch(live, /fetchClient360/);
+assert.doesNotMatch(live, /Growth Command Center/);
+assert.doesNotMatch(live, /fetchGcc/);
+assert.doesNotMatch(live, /ACCG01/);
+assert.doesNotMatch(live, /Jane Doe|John Smith|sample@client/i);
 
 const docs = readFileSync(join(root, 'src/pages/DocumentsOperatingPage.tsx'), 'utf8');
 assert.match(docs, /fetchPmDocuments/);
