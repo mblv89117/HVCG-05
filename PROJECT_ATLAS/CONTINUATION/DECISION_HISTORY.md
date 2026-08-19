@@ -524,7 +524,7 @@ Implemented
 
 Context
 
-Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1ù3 completion and RC-1 lock.
+Owner assigned Revenue Sprint 4 Automated Sales Engine after Sprints 1ÔøΩ3 completion and RC-1 lock.
 
 Decision
 
@@ -558,7 +558,7 @@ HVCG Owner
 
 Category
 
-Track 9 ó Engineering Operating System
+Track 9 ÔøΩ Engineering Operating System
 
 Status
 
@@ -600,7 +600,7 @@ HVCG Owner
 
 Category
 
-Track 9 ù Engineering Operating System
+Track 9 ÔøΩ Engineering Operating System
 
 Status
 
@@ -642,7 +642,7 @@ HVCG Owner
 
 Category
 
-Track 9 ù Engineering Operating System
+Track 9 ÔøΩ Engineering Operating System
 
 Status
 
