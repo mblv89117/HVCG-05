@@ -73,4 +73,87 @@ export async function baLeadGet(auth: AtlasHubAuthHeaders, leadId: string) {
   });
 }
 
+export type FreeFitAssessment = {
+  assessmentId: string;
+  leadId: string;
+  completedAt?: string;
+  qualificationResult?: string;
+  recommendedDiagnostic?: string | null;
+  recommendedServiceDomain?: string | null;
+  recommendedServiceLineCode?: string | null;
+  recommendedOffer?: string | null;
+  recommendedCommercialClass?: string | null;
+  atlasRecommendation?: Record<string, unknown>;
+  ownerDecision?: string | null;
+  ownerDecisionStatus?: string;
+  nextAction?: string;
+  engineNextAction?: string;
+  contractedEconomicsCreated?: boolean;
+  proposalSent?: boolean;
+  convertedToClient?: boolean;
+  answers?: Record<string, unknown>;
+};
+
+export type FreeFitDefinition = {
+  needOptions?: Array<{ need: string; diagnostic?: string; offerCode?: string; restricted?: boolean }>;
+  urgencyOptions?: string[];
+  revenueRangeOptions?: string[];
+  ownerDecisions?: string[];
+  commercialClasses?: string[];
+  purpose?: string;
+  is?: string[];
+  isNot?: string[];
+  name?: string;
+};
+
+export async function baFreeFitDefinition(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson(auth, '/api/ba/freefit/definition', {
+    method: 'POST',
+    body: '{}',
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
+export async function baFreeFitByLead(auth: AtlasHubAuthHeaders, leadId: string) {
+  return hubFetchJson(auth, '/api/ba/freefit/by-lead', {
+    method: 'POST',
+    body: JSON.stringify({ leadId }),
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
+export async function baFreeFitComplete(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    leadId: string;
+    needType: string;
+    revenueRange?: string;
+    capitalGoal?: string;
+    urgency?: string;
+    primaryIssue?: string;
+  },
+) {
+  return hubFetchJson(auth, '/api/ba/freefit/complete', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
+export async function baFreeFitOwnerDecision(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    assessmentId: string;
+    decision: string;
+    alternateCommercialClass?: string;
+    notes?: string;
+  },
+) {
+  return hubFetchJson(auth, '/api/ba/freefit/owner-decision', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    skipAuth: import.meta.env.DEV,
+  });
+}
+
 export type { HubHttpError };

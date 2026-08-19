@@ -310,8 +310,14 @@ export function ClientIntakeWorkbench() {
             Conversion boundary: {selected.ConversionBoundary} (Track 1 Production conversion not
             performed here)
           </Caption1>
-          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <StatusChip label="Begin Free Fit (manual next)" tone="gold" />
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link to={`/clients/intake/free-fit?lead=${encodeURIComponent(selected.LeadId)}`}>
+              <Button appearance="primary">
+                {(selected.NextAction || '').toLowerCase().includes('free fit')
+                  ? 'Complete Free Fit & Readiness Assessment'
+                  : 'Start Free Fit'}
+              </Button>
+            </Link>
             <StatusChip label="BL-C1: no auto-send" tone="warning" />
           </div>
         </AtlasCard>

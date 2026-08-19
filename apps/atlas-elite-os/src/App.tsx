@@ -29,6 +29,7 @@ import { DocumentLifecycleWorkbench } from './pages/DocumentLifecycleWorkbench';
 import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWorkbench';
 import { ClientsPage } from './pages/LiveClientsPage';
 import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
+import { FreeFitWorkbench } from './pages/FreeFitWorkbench';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { NotificationsPage, SettingsPage } from './pages/NotificationsSettings';
@@ -229,6 +230,14 @@ export function App() {
                 element={
                   <ClientsRoute>
                     <ClientIntakeWorkbench />
+                  </ClientsRoute>
+                }
+              />
+              <Route
+                path="clients/intake/free-fit"
+                element={
+                  <ClientsRoute>
+                    <FreeFitWorkbench />
                   </ClientsRoute>
                 }
               />
