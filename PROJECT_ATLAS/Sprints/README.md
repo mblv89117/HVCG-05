@@ -11,4 +11,5 @@
 | 4 | [Sprint4.md](Sprint4.md) | Phase 1 **COMPLETE** (Dev/Staging) |
 | Client Portal 1 | [Sprint_ClientPortal1.md](Sprint_ClientPortal1.md) | **COMPLETE** |
 | Executive Command Center 1 | [Sprint_ExecutiveCommandCenter1.md](Sprint_ExecutiveCommandCenter1.md) | **COMPLETE** |
+| Executive Intelligence 1 | [Sprint_ExecutiveIntelligence1.md](Sprint_ExecutiveIntelligence1.md) | **IMPLEMENTED — OWNER REVIEW** |
 | Backlog | [BACKLOG.md](BACKLOG.md) | Gated candidates |

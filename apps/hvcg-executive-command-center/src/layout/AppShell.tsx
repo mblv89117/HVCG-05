@@ -5,11 +5,12 @@ import type { DashboardId, Role } from '../types'
 
 const links: { id: DashboardId; to: string; label: string; icon: IconName }[] = [
   { id: 'overview', to: '/', label: "Today's Overview", icon: 'overview' },
+  { id: 'intelligence', to: '/intelligence', label: 'Executive Brief', icon: 'ai' },
   { id: 'revenue', to: '/revenue', label: 'Revenue', icon: 'revenue' },
   { id: 'clients', to: '/clients', label: 'Clients', icon: 'clients' },
   { id: 'operations', to: '/operations', label: 'Operations', icon: 'operations' },
   { id: 'financial', to: '/financial', label: 'Financial', icon: 'financial' },
-  { id: 'ai', to: '/ai', label: 'AI Intelligence', icon: 'ai' },
+  { id: 'ai', to: '/ai', label: 'AI Queue', icon: 'briefcase' },
   { id: 'notifications', to: '/notifications', label: 'Notifications', icon: 'notifications' },
 ]
 
@@ -26,7 +27,7 @@ export function AppShell() {
           <span className="brand-mark">HV</span>
           <div><strong>HVCG</strong><small>Command Center</small></div>
         </div>
-        <div className="workspace-label"><span>Leadership workspace</span><b>Internal · Mock</b></div>
+        <div className="workspace-label"><span>Leadership workspace</span><b>Executive intelligence</b></div>
         <nav aria-label="Primary navigation">
           {visibleLinks.map((link) => (
             <NavLink key={link.id} to={link.to} end={link.to === '/'} data-testid={`nav-${link.id}`} className={({ isActive }) => isActive ? 'active' : undefined}>

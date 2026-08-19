@@ -7,6 +7,7 @@ export type DashboardId =
   | 'operations'
   | 'financial'
   | 'ai'
+  | 'intelligence'
   | 'notifications'
 
 export type Tone = 'neutral' | 'positive' | 'warning' | 'critical' | 'accent'

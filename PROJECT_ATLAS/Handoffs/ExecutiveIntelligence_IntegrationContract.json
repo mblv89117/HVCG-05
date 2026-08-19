@@ -1,0 +1,57 @@
+{
+  "contractVersion": "1.0.0",
+  "module": "executive-intelligence",
+  "branch": "cursor/executive-intelligence-sprint1",
+  "generatedAt": "2026-07-19T19:30:00-07:00",
+  "mergeTarget": {
+    "app": "apps/atlas-elite-os",
+    "page": "ExecutiveDashboard / Executive Home",
+    "owner": "elite-ui"
+  },
+  "exports": {
+    "briefBuilder": "apps/hvcg-executive-command-center/src/intelligence/briefBuilder.ts",
+    "prioritize": "apps/hvcg-executive-command-center/src/intelligence/prioritize.ts",
+    "types": "apps/hvcg-executive-command-center/src/types/intelligence.ts",
+    "verifiedSources": "apps/hvcg-executive-command-center/src/data/verifiedSources.ts",
+    "ccbBriefRoute": "/intelligence/ccb",
+    "dailyBriefRoute": "/intelligence"
+  },
+  "briefChromeRequirements": [
+    "sourceRecords",
+    "generatedAt",
+    "verificationStatus",
+    "aiGeneratedIndicator",
+    "accept",
+    "dismiss",
+    "convertToTask"
+  ],
+  "evidenceKinds": ["Verified", "AI interpretation", "Repository-derived", "Pending verification"],
+  "unboundLabel": "Awaiting verified source",
+  "rbac": {
+    "intelligenceRoles": ["Owner", "Executive", "Advisor", "Operations", "Finance"],
+    "blockedRoles": ["Assistant"],
+    "clientIsolation": {
+      "ccb": {
+        "clientScope": "CCB",
+        "allowOnlyClientScopedInsights": true,
+        "forbidInventedFinancials": true
+      }
+    }
+  },
+  "dataBindOwners": {
+    "financeKpis": "finance-intelligence",
+    "pipelineDollars": "analytics / revenue-os",
+    "opsExceptions": "operations-hub",
+    "ccbRelationshipFacts": "client-portal"
+  },
+  "doNotModify": [
+    "Production",
+    "Track 1",
+    "Live DNS",
+    "Email",
+    "SMS",
+    "Revenue OS code",
+    "Client Portal code (except coordination)",
+    "Elite UI paths (import by Elite UI only)"
+  ]
+}

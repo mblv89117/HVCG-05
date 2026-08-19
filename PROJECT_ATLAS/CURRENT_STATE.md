@@ -15,6 +15,7 @@
 | Revenue Systems Engineer | **COMPLETE** | Authoritative for Revenue Sprints 1–4 Phase 1 |
 | Client Portal Sprint 1 | **COMPLETE** | Isolated branch @ `8c8806b`; not merged or deployed |
 | Executive Command Center Sprint 1 | **COMPLETE** | Mock-only app, QA, screenshots, architecture, and handoff approved for commit/push |
+| Executive Intelligence Sprint 1 | **INTEGRATION READY** | Pending-safe KPIs; Elite UI merge package; Master PM notified |
 | Production | HVCG Production Track 1 slice live | `https://orgee2f7545.crm.dynamics.com/` |
 | Development | HVCG Development | `https://org1131a2b0.crm.dynamics.com/` |
 | Website public / DNS | **NOT STARTED** | Track-1 freeze gates |
@@ -68,6 +69,7 @@ The repository working directories are **not clean**; RC-1 excludes all uncommit
 | `.worktrees/revenue-sprint4` | `cursor/revenue-sprint4-activation` | `7fd8bf2` |
 | `.worktrees/client-portal-sprint1` | `cursor/client-portal-sprint1` | `8c8806b` |
 | `.worktrees/executive-command-center-sprint1` | `cursor/executive-command-center-sprint1` | Sprint 1 COMPLETE; commit/push authorized |
+| `.worktrees/executive-intelligence-sprint1` | `cursor/executive-intelligence-sprint1` | Intelligence Sprint 1 owner review |
 
 Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 
@@ -75,9 +77,11 @@ Full table: [AGENT_ASSIGNMENTS.md](AGENT_ASSIGNMENTS.md)
 
 1. Do **not** modify Track 1 frozen Production slice without new owner approval  
 2. Preserve Executive Command Center Sprint 1 as COMPLETE after approved commit/push
-3. Preserve Revenue Sprint 4 Phase 1 and Client Portal Sprint 1 completed branches without modifying them
-4. Soft UAT / optional Dev HTTP URL / website preview / pilot remain separately gated
-5. Keep Atlas as SoR; Revenue code authority is the Revenue Systems Engineer
+3. Owner/Master PM sequence Executive Intelligence → Elite UI Executive Home merge (integration readiness published; agent-comms notified)
+4. Preserve Revenue Sprint 4 Phase 1 and Client Portal Sprint 1 completed branches without modifying them
+5. Soft UAT / optional Dev HTTP URL / website preview / pilot remain separately gated
+6. Keep Atlas as SoR; Revenue code authority is the Revenue Systems Engineer
+7. Executive remains on Executive Dashboard release support — no new EI features unless Master PM assigns
 
 ## Status authority
 

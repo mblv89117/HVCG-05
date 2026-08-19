@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useDashboard } from '../state/DashboardContext'
 import { Badge, BarChart, Icon, LineChart, MetricCard, NotificationList, PageHeader, Progress, Section } from '../components/Dashboard'
+import { ModuleKnowledgeRail, knowledgeUserFromHost } from '../integrations/knowledge'
 import type { Metric, Tone } from '../types'
 
 const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
@@ -13,42 +14,42 @@ function MetricGrid({ metrics }: { metrics: Metric[] }) {
 
 export function OverviewPage() {
   const { data, visibleNotifications, markNotificationRead, role } = useDashboard()
-  const now = new Date('2026-07-16T12:30:00-07:00')
-  const greeting = now.getHours() < 12 ? 'Good morning' : 'Good afternoon'
+  const now = new Date('2026-07-19T19:00:00-07:00')
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening'
+  const knowledgeUser = knowledgeUserFromHost({ role, organizationId: 'HVCG', assignedClients: ['CCB'] })
 
   return (
     <>
       <PageHeader
-        eyebrow="Thursday · July 16, 2026"
+        eyebrow="Sunday · July 19, 2026"
         title={`${greeting}, leadership`}
-        description={`A single operating view across revenue, clients, finance, operations, and AI. Mock tenant: ${data.tenantName}.`}
-        action={<button className="button button-secondary"><Icon name="calendar" /> Today</button>}
+        description={`Executive intelligence across Atlas-verified status and pending-safe KPIs. Unbound dollars show Awaiting verified source. Tenant: ${data.tenantName}.`}
+        action={<Link className="button button-secondary" to="/intelligence"><Icon name="ai" /> Open Executive Brief</Link>}
       />
       <MetricGrid metrics={data.overviewMetrics} />
 
       <div className="dashboard-grid overview-main">
-        <Section title="AI daily brief" subtitle="Prepared from mock operating signals · 12:30 PM" className="ai-brief">
+        <Section title="AI Executive Brief" subtitle="Grounded overview · generated 7:00 PM" className="ai-brief">
           <div className="brief-lead">
             <span className="brief-mark"><Icon name="ai" size={22} /></span>
             <div>
-              <h3>Momentum is positive, with two owner-level exceptions.</h3>
-              <p>Pipeline increased 12.4% and cash collections are tracking at 91% of plan. Summit Infrastructure is positioned to close, while Northstar’s valuation inputs and Cobalt’s overdue invoice require leadership attention today.</p>
+              <h3>Protect Track 1 freeze. Brief Colorado Craft Beef on verified facts only.</h3>
+              <p>Atlas: Track 1 FROZEN · Revenue Phase 1 / Portal Sprint 1 / ECC Sprint 1 COMPLETE. Portfolio dollar KPIs remain Awaiting verified source. CCB Blueprint is meeting-ready without invented financial findings.</p>
             </div>
           </div>
           <div className="brief-actions">
-            <div><span>01</span><p><strong>Approve pricing exception</strong> for Northstar before the 2:00 PM proposal review.</p></div>
-            <div><span>02</span><p><strong>Assign Cobalt collections owner</strong> and confirm scope-change path.</p></div>
-            <div><span>03</span><p><strong>Protect Summit close</strong> by finalizing term structure today.</p></div>
+            <div><span>01</span><p><strong>Run CCB meeting brief</strong> without inventing financial findings.</p></div>
+            <div><span>02</span><p><strong>Reaffirm Track 1 freeze</strong> before any Production request.</p></div>
+            <div><span>03</span><p><strong>Hand off to Elite UI</strong> for Executive Home merge sequencing.</p></div>
           </div>
-          <Link className="text-link" to="/ai">Open AI command view <Icon name="arrow" size={15} /></Link>
+          <Link className="text-link" to="/intelligence">Open full Executive Brief <Icon name="arrow" size={15} /></Link>
         </Section>
 
         <Section title="Today" subtitle="Leadership schedule and commitments">
           <div className="timeline">
-            <div><time>1:30</time><span><strong>Pipeline review</strong><small>Executive + Revenue</small></span></div>
-            <div className="is-next"><time>2:00</time><span><strong>Summit term structure</strong><small>Client · Capital Advisory</small></span></div>
-            <div><time>4:00</time><span><strong>Northstar valuation inputs</strong><small>Client · Exit Readiness</small></span></div>
-            <div><time>5:15</time><span><strong>Operating closeout</strong><small>Internal · 20 minutes</small></span></div>
+            <div className="is-next"><time>2:00</time><span><strong>Colorado Craft Beef Blueprint</strong><small>Client · Capital Advisory · verified agenda</small></span></div>
+            <div><time>5:00</time><span><strong>Elite UI merge coordination</strong><small>Master PM · Executive · Elite UI</small></span></div>
+            <div><time>—</time><span><strong>Other meetings</strong><small>Awaiting verified source</small></span></div>
           </div>
         </Section>
       </div>
@@ -68,6 +69,8 @@ export function OverviewPage() {
           </div>
         </Section>
       </div>
+
+      <ModuleKnowledgeRail module="Executive" user={knowledgeUser} title="Executive intelligence knowledge" />
     </>
   )
 }
@@ -76,19 +79,19 @@ export function RevenuePage() {
   const { data } = useDashboard()
   return (
     <>
-      <PageHeader eyebrow="Revenue operating system" title="Revenue performance" description="Pipeline velocity, probability-weighted forecast, conversion health, and opportunity focus." action={<span className="data-chip">Mock data · refreshed 12:30 PM</span>} />
+      <PageHeader eyebrow="Revenue operating system" title="Revenue performance" description="Verified opportunity facts where available; unbound pipeline dollars show Awaiting verified source." action={<span className="data-chip">Pending-safe · refreshed 7:00 PM</span>} />
       <MetricGrid metrics={data.revenueMetrics} />
       <div className="dashboard-grid split-wide">
-        <Section title="Revenue forecast" subtitle="Weighted forecast vs plan · next six months">
+        <Section title="Revenue forecast" subtitle="Awaiting verified source until Revenue OS bind">
           <div className="legend"><span className="legend-primary">Weighted forecast</span><span className="legend-secondary">Plan</span></div>
-          <LineChart data={data.revenueForecast} ariaLabel="Weighted revenue forecast and plan from July through December" />
+          <LineChart data={data.revenueForecast} ariaLabel="Revenue forecast pending verified source" />
         </Section>
         <Section title="Deals by stage" subtitle="Open pipeline value">
           <BarChart data={data.pipelineByStage} format="currency" ariaLabel="Open pipeline value by deal stage" />
         </Section>
       </div>
       <div className="dashboard-grid split">
-        <Section title="Top opportunities" subtitle="Ranked by weighted value" className="table-panel">
+        <Section title="Top opportunities" subtitle="Verified opportunities only" className="table-panel">
           <div className="table-wrap">
             <table>
               <thead><tr><th>Opportunity</th><th>Stage</th><th>Value</th><th>Weighted</th><th>Risk</th></tr></thead>
@@ -96,16 +99,17 @@ export function RevenuePage() {
                 <tr key={item.id}>
                   <td><strong>{item.company}</strong><small>{item.service} · {item.owner}</small></td>
                   <td><Badge tone="accent">{item.stage}</Badge></td>
-                  <td>{money(item.value)}</td><td>{money(item.weighted)}</td>
+                  <td>{item.value === 0 ? 'Awaiting verified source' : money(item.value)}</td>
+                  <td>{item.weighted === 0 ? 'Awaiting verified source' : money(item.weighted)}</td>
                   <td><Badge tone={item.risk === 'High' ? 'critical' : item.risk === 'Medium' ? 'warning' : 'positive'}>{item.risk}</Badge></td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
         </Section>
-        <Section title="Lead sources" subtitle="Qualified prospect share">
-          <BarChart data={data.leadSources} format="percent" ariaLabel="Qualified prospects by lead source percentage" />
-          <div className="insight-note"><strong>Primary growth lever</strong><p>Referral partners and the executive network account for 62% of qualified demand.</p></div>
+        <Section title="Lead sources" subtitle="Verified attribution where known">
+          <BarChart data={data.leadSources} format="percent" ariaLabel="Lead sources with verified CCB referral" />
+          <div className="insight-note"><strong>Verified referral</strong><p>Colorado Craft Beef attribution: Randy Kamin — Generational Group. Other sources: Awaiting verified source.</p></div>
         </Section>
       </div>
     </>
@@ -114,18 +118,16 @@ export function RevenuePage() {
 
 export function ClientsPage() {
   const { data } = useDashboard()
-  const openDocuments = data.clients.reduce((sum, client) => sum + client.documentsOutstanding, 0)
-  const openTasks = data.clients.reduce((sum, client) => sum + client.openTasks, 0)
   return (
     <>
-      <PageHeader eyebrow="Client operating view" title="Client portfolio" description="Engagement health, funding progress, document readiness, advisor assignments, and next actions." />
+      <PageHeader eyebrow="Client operating view" title="Client portfolio" description="Verified client workspaces only. Unbound portfolio rollups show Awaiting verified source." />
       <MetricGrid metrics={[
-        { id: 'active-clients', label: 'Active clients', value: '24', detail: '5 shown in priority view', trend: '+2 QTD', trendDirection: 'up', tone: 'positive' },
-        { id: 'engagement-health', label: 'Healthy engagements', value: '87.5%', detail: '21 green · 2 yellow · 1 red', trend: '+4.2 pts', trendDirection: 'up', tone: 'positive' },
-        { id: 'docs-open', label: 'Documents outstanding', value: String(openDocuments), detail: 'Across priority clients', trend: '7 critical', trendDirection: 'down', tone: 'warning' },
-        { id: 'tasks-open', label: 'Open tasks', value: String(openTasks), detail: '24 due this week', trend: '4 overdue', trendDirection: 'down', tone: 'warning' },
+        { id: 'active-clients', label: 'Active clients', value: String(data.clients.length), detail: 'Verified workspace count in this module', tone: 'positive' },
+        { id: 'engagement-health', label: 'Healthy engagements', value: 'Awaiting verified source', detail: 'Portfolio health rollup unbound', tone: 'warning' },
+        { id: 'docs-open', label: 'Documents outstanding', value: 'Awaiting verified source', detail: 'Document room bind pending', tone: 'warning' },
+        { id: 'tasks-open', label: 'Open tasks', value: 'Awaiting verified source', detail: 'Task system bind pending', tone: 'warning' },
       ]} />
-      <Section title="Priority client portfolio" subtitle="Sorted by health and next required action" className="table-panel">
+      <Section title="Priority client portfolio" subtitle="Verified relationships only" className="table-panel">
         <div className="client-grid">
           {data.clients.map((client) => (
             <article className="client-card" key={client.id}>
@@ -134,12 +136,12 @@ export function ClientsPage() {
                 <div><h3>{client.name}</h3><p>{client.code} · {client.engagement}</p></div>
                 <Badge tone={healthTone(client.health)}>{client.health}</Badge>
               </div>
-              <Progress value={client.fundingProgress} label="Funding progress" />
+              <Progress value={client.fundingProgress} label="Funding progress (0 = awaiting verified package)" />
               <dl className="client-facts">
                 <div><dt>Status</dt><dd>{client.engagementStatus}</dd></div>
                 <div><dt>Advisor</dt><dd>{client.advisor}</dd></div>
-                <div><dt>Documents</dt><dd>{client.documentsOutstanding} outstanding</dd></div>
-                <div><dt>Open tasks</dt><dd>{client.openTasks}</dd></div>
+                <div><dt>Documents</dt><dd>Awaiting verified source</dd></div>
+                <div><dt>Open tasks</dt><dd>Awaiting verified source</dd></div>
               </dl>
               <div className="client-next"><span><Icon name="calendar" size={15} /> {client.nextMeeting}</span><p>{client.recentActivity}</p></div>
             </article>
@@ -157,13 +159,13 @@ export function OperationsPage() {
     <>
       <PageHeader eyebrow="Internal operations" title="Operating control plane" description="Projects, agents, sprints, releases, QA, system health, deployments, and approvals." />
       <MetricGrid metrics={[
-        { id: 'projects', label: 'Active projects', value: '12', detail: '9 on track · 3 watch', trend: '92% milestone rate', trendDirection: 'up', tone: 'positive' },
-        { id: 'sprints', label: 'Active sprints', value: '1', detail: 'Executive Command Center', trend: 'Sprint 1', trendDirection: 'flat', tone: 'accent' },
-        { id: 'qa', label: 'QA status', value: '98.4%', detail: 'RC-1 locked · no regression', trend: '147 checks', trendDirection: 'up', tone: 'positive' },
-        { id: 'approvals', label: 'Pending approvals', value: String(Math.max(approvals.length, 3)), detail: '2 owner · 1 finance', trend: 'Oldest 4h', trendDirection: 'flat', tone: 'warning' },
+        { id: 'projects', label: 'Active projects', value: 'Awaiting verified source', detail: 'Ops Hub project rollup unbound', tone: 'warning' },
+        { id: 'sprints', label: 'Active sprints', value: '1+', detail: 'Executive Intelligence integration readiness', tone: 'accent' },
+        { id: 'qa', label: 'QA status', value: 'Pending merge QA', detail: 'Module QA passed · Elite UI merge QA gated', tone: 'accent' },
+        { id: 'approvals', label: 'Pending approvals', value: String(approvals.length), detail: 'Role-filtered approval notifications', tone: approvals.length ? 'warning' : 'positive' },
       ]} />
       <div className="dashboard-grid split">
-        <Section title="Agent status" subtitle="Mock multi-agent operating state">
+        <Section title="Agent status" subtitle="Integration coordination posture">
           <div className="agent-list">{data.agentStatuses.map((agent) => (
             <div key={agent.name}><span className={`status-light status-${agent.status.toLowerCase().replace(' ', '-')}`} /><p><strong>{agent.name}</strong><small>{agent.workstream}</small></p><span><Badge tone={agent.status === 'Blocked' ? 'critical' : agent.status === 'In progress' ? 'accent' : 'neutral'}>{agent.status}</Badge><small>{agent.heartbeat}</small></span></div>
           ))}</div>
@@ -181,13 +183,13 @@ export function OperationsPage() {
       <div className="dashboard-grid thirds">
         <Section title="Current release" subtitle="Release candidate">
           <div className="release-card"><span>RC</span><div><strong>RC-1</strong><p>Locked development baseline</p></div></div>
-          <dl className="stacked-facts"><div><dt>Track 1</dt><dd>Frozen</dd></div><div><dt>Production</dt><dd>Protected</dd></div><div><dt>Next gate</dt><dd>Owner approval</dd></div></dl>
+          <dl className="stacked-facts"><div><dt>Track 1</dt><dd>Frozen</dd></div><div><dt>Production</dt><dd>Protected</dd></div><div><dt>Next gate</dt><dd>Elite UI merge</dd></div></dl>
         </Section>
         <Section title="Sprint status" subtitle="Authoritative phase state">
-          <div className="sprint-list"><p><span>Revenue 1–4</span><Badge tone="positive">Complete</Badge></p><p><span>Portal Sprint 1</span><Badge tone="positive">Complete</Badge></p><p><span>Executive Sprint 1</span><Badge tone="accent">In progress</Badge></p></div>
+          <div className="sprint-list"><p><span>Revenue 1–4</span><Badge tone="positive">Complete</Badge></p><p><span>Portal Sprint 1</span><Badge tone="positive">Complete</Badge></p><p><span>Exec Intelligence 1</span><Badge tone="accent">Integration</Badge></p></div>
         </Section>
         <Section title="Deployments" subtitle="No live changes in this sprint">
-          <div className="deployment-status"><Icon name="briefcase" size={28} /><strong>Protected mode</strong><p>Mock dashboard only. No Production, Track 1, DNS, email, SMS, or live integrations.</p></div>
+          <div className="deployment-status"><Icon name="briefcase" size={28} /><strong>Protected mode</strong><p>No Production, Track 1, DNS, email, SMS, or live integrations from this module.</p></div>
         </Section>
       </div>
     </>
@@ -198,28 +200,28 @@ export function FinancialPage() {
   const { data } = useDashboard()
   return (
     <>
-      <PageHeader eyebrow="Financial command" title="Financial performance" description="Monthly revenue, recurring revenue, retainers, success fees, AR, expenses, cash, and forward outlook." action={<span className="data-chip">Mock data · finance roles only</span>} />
+      <PageHeader eyebrow="Financial command" title="Financial performance" description="Finance tiles remain unbound until Finance Intelligence promotes verified sources. No invented dollars." action={<span className="data-chip">Awaiting verified source · finance roles only</span>} />
       <MetricGrid metrics={data.financialMetrics} />
       <div className="dashboard-grid split-wide">
-        <Section title="Monthly revenue" subtitle="Recognized revenue · six-month trend">
-          <LineChart data={data.monthlyRevenue} ariaLabel="Monthly recognized revenue from February through July" />
+        <Section title="Monthly revenue" subtitle="Awaiting verified source">
+          <LineChart data={data.monthlyRevenue} ariaLabel="Monthly revenue pending verified source" />
         </Section>
-        <Section title="Expense mix" subtitle="Month-to-date operating expenses">
-          <BarChart data={data.expenses} format="currency" ariaLabel="Operating expenses by category for the current month" />
+        <Section title="Expense mix" subtitle="Awaiting verified source">
+          <BarChart data={data.expenses} format="currency" ariaLabel="Operating expenses pending verified source" />
         </Section>
       </div>
       <div className="dashboard-grid thirds">
-        <Section title="Cash position" subtitle="Mock treasury view">
-          <div className="cash-ring"><div><strong>$412K</strong><span>Operating cash</span></div></div>
-          <dl className="stacked-facts"><div><dt>30-day inflow</dt><dd>$184K</dd></div><div><dt>30-day outflow</dt><dd>$147K</dd></div><div><dt>Net movement</dt><dd className="positive-text">+$37K</dd></div></dl>
+        <Section title="Cash position" subtitle="Treasury unbound">
+          <div className="cash-ring"><div><strong>Awaiting verified source</strong><span>Operating cash</span></div></div>
+          <dl className="stacked-facts"><div><dt>30-day inflow</dt><dd>Awaiting verified source</dd></div><div><dt>30-day outflow</dt><dd>Awaiting verified source</dd></div><div><dt>Net movement</dt><dd>Awaiting verified source</dd></div></dl>
         </Section>
-        <Section title="AR aging" subtitle="$72.4K outstanding">
-          <div className="aging-bars"><div><span>Current</span><i style={{ width: '58%' }} /><strong>$42.0K</strong></div><div><span>1–30 days</span><i style={{ width: '25%' }} /><strong>$18.2K</strong></div><div><span>31–60 days</span><i style={{ width: '12%' }} /><strong>$8.7K</strong></div><div><span>60+ days</span><i style={{ width: '5%' }} /><strong>$3.5K</strong></div></div>
+        <Section title="AR aging" subtitle="Awaiting verified source">
+          <div className="aging-bars"><div><span>Current</span><i style={{ width: '8%' }} /><strong>—</strong></div><div><span>1–30 days</span><i style={{ width: '8%' }} /><strong>—</strong></div><div><span>31–60 days</span><i style={{ width: '8%' }} /><strong>—</strong></div><div><span>60+ days</span><i style={{ width: '8%' }} /><strong>—</strong></div></div>
         </Section>
         <Section title="Forecast confidence" subtitle="Next 90 days">
-          <div className="confidence-score"><strong>82</strong><span>/ 100</span></div>
-          <p className="center-note">Forecast confidence improved six points as Summit entered negotiation.</p>
-          <Progress value={82} label="Confidence" />
+          <div className="confidence-score"><strong>—</strong><span>/ 100</span></div>
+          <p className="center-note">Forecast confidence Awaiting verified source until Revenue/Finance binds complete.</p>
+          <Progress value={0} label="Confidence unbound" />
         </Section>
       </div>
     </>
@@ -229,32 +231,36 @@ export function FinancialPage() {
 export function AiPage() {
   return (
     <>
-      <PageHeader eyebrow="AI intelligence" title="Executive intelligence" description="Daily summary, risk alerts, recommended actions, priority clients, at-risk deals, and owner work." action={<Badge tone="accent">Mock recommendations</Badge>} />
+      <PageHeader
+        eyebrow="AI queue"
+        title="Labeled recommendations"
+        description="Compact AI queue. Full Executive Brief with source transparency and decision/task workflows lives under Executive Brief."
+        action={<Link className="button button-primary" to="/intelligence">Open Executive Brief</Link>}
+      />
       <div className="ai-hero">
         <div className="ai-orb"><Icon name="ai" size={30} /></div>
-        <div><p className="eyebrow">Daily executive summary</p><h2>Three actions can materially improve this week’s outcome.</h2><p>Protect the Summit close, unblock Northstar inputs, and resolve Cobalt’s commercial exception. Revenue momentum and client delivery remain healthy.</p></div>
-        <span className="confidence-chip">89% confidence</span>
+        <div>
+          <p className="eyebrow">Daily executive summary</p>
+          <h2>Verified Atlas posture plus labeled portfolio recommendations.</h2>
+          <p>Track 1 stays frozen. Brief Colorado Craft Beef without inventing financial findings. Keep portfolio KPIs labeled Awaiting verified source until Finance Intelligence bind.</p>
+        </div>
+        <span className="confidence-chip">Human review required</span>
       </div>
       <div className="dashboard-grid split">
-        <Section title="Risk alerts" subtitle="Ranked by materiality and urgency">
+        <Section title="Risk alerts" subtitle="Evidence kinds labeled">
           <div className="recommendation-list">
-            <div className="risk-high"><span>High</span><p><strong>Northstar deal at risk</strong>Missing valuation inputs may move expected close by 14 days.</p><small>Revenue · $510K</small></div>
-            <div className="risk-medium"><span>Medium</span><p><strong>Cobalt collection risk</strong>Invoice is 14 days past due while scope change is pending.</p><small>Finance · $12.8K</small></div>
-            <div className="risk-medium"><span>Medium</span><p><strong>Owner bandwidth</strong>Five leadership tasks are due today across three client accounts.</p><small>Operations</small></div>
+            <div className="risk-high"><span>Critical</span><p><strong>Track 1 freeze</strong>Verified Atlas: Production slice remains frozen.</p><small>Project Atlas · CURRENT_STATE</small></div>
+            <div className="risk-high"><span>Critical</span><p><strong>CCB financial package pending</strong>Verified: no dollar KPIs until package received.</p><small>Client Portal · Capital readiness</small></div>
+            <div className="risk-medium"><span>High</span><p><strong>Portfolio KPIs unbound</strong>Awaiting verified source until Finance/Revenue bind.</p><small>Pending verification</small></div>
           </div>
         </Section>
-        <Section title="Recommended actions" subtitle="Human approval required">
+        <Section title="Recommended actions" subtitle="Escalate via Executive Brief">
           <ol className="action-list">
-            <li><span>01</span><div><strong>Approve or revise Northstar exception</strong><p>Deadline today · estimated impact $18K</p><button className="button button-tertiary">Review decision</button></div></li>
-            <li><span>02</span><div><strong>Confirm Summit term structure</strong><p>80% probability · $496K weighted</p><button className="button button-tertiary">Open opportunity</button></div></li>
-            <li><span>03</span><div><strong>Assign Cobalt collections owner</strong><p>Past due 14 days · client health yellow</p><button className="button button-tertiary">Assign owner</button></div></li>
+            <li><span>01</span><div><strong>Open CCB meeting brief</strong><p>Verified facts only</p><Link className="button button-tertiary" to="/intelligence/ccb">Open briefing</Link></div></li>
+            <li><span>02</span><div><strong>Work priority decisions</strong><p>Accept / dismiss / convert with review history</p><Link className="button button-tertiary" to="/intelligence/decisions">Open decisions</Link></div></li>
+            <li><span>03</span><div><strong>Scan exception board</strong><p>Overdue · client · revenue · capital · finance</p><Link className="button button-tertiary" to="/intelligence/exceptions">Open exceptions</Link></div></li>
           </ol>
         </Section>
-      </div>
-      <div className="dashboard-grid thirds">
-        <Section title="Priority clients" subtitle="AI focus list"><div className="rank-list"><p><b>1</b><span>Northstar Logistics<small>Revenue + delivery risk</small></span></p><p><b>2</b><span>Summit Infrastructure<small>Close protection</small></span></p><p><b>3</b><span>Cobalt Consumer<small>AR + scope risk</small></span></p></div></Section>
-        <Section title="Deals at risk" subtitle="Weighted exposure"><strong className="large-value">$400.5K</strong><p className="muted">Two opportunities need action within 24 hours.</p><Progress value={29} label="Share of weighted forecast" /></Section>
-        <Section title="Tasks requiring owner" subtitle="Current queue"><strong className="large-value">5</strong><p className="muted">2 approvals · 2 client decisions · 1 relationship follow-up</p><Link className="text-link" to="/notifications">Open owner queue <Icon name="arrow" size={15} /></Link></Section>
       </div>
     </>
   )

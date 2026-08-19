@@ -1,0 +1,133 @@
+{
+  "generatedAt": "2026-07-20T02:26:49.849Z",
+  "branch": "cursor/executive-intelligence-sprint1",
+  "dataMode": "atlas-verified + labeled mock + CCB verified-only",
+  "summary": {
+    "passed": 19,
+    "failed": 0,
+    "total": 19
+  },
+  "checks": [
+    {
+      "suite": "Navigation QA",
+      "name": "overview route",
+      "pass": true,
+      "evidence": "/ → Good evening, leadership"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "intelligence-daily route",
+      "pass": true,
+      "evidence": "/intelligence → What changed · what matters · what next"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "intelligence-weekly route",
+      "pass": true,
+      "evidence": "/intelligence/weekly → What changed · what matters · what next"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "intelligence-decisions route",
+      "pass": true,
+      "evidence": "/intelligence/decisions → What changed · what matters · what next"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "intelligence-exceptions route",
+      "pass": true,
+      "evidence": "/intelligence/exceptions → What changed · what matters · what next"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "intelligence-meetings route",
+      "pass": true,
+      "evidence": "/intelligence/meetings → What changed · what matters · what next"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "intelligence-ccb route",
+      "pass": true,
+      "evidence": "/intelligence/ccb → What changed · what matters · what next"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "revenue route",
+      "pass": true,
+      "evidence": "/revenue → Revenue performance"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "clients route",
+      "pass": true,
+      "evidence": "/clients → Client portfolio"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "ai route",
+      "pass": true,
+      "evidence": "/ai → Labeled recommendations"
+    },
+    {
+      "suite": "Navigation QA",
+      "name": "notifications route",
+      "pass": true,
+      "evidence": "/notifications → Notifications"
+    },
+    {
+      "suite": "Dashboard QA",
+      "name": "Daily brief 10 sections + timestamp",
+      "pass": true,
+      "evidence": "sections=10; Generated 7/19/2026, 7:00:00 PM"
+    },
+    {
+      "suite": "Decision workflow QA",
+      "name": "Accept insight preserves history",
+      "pass": true,
+      "evidence": "Accepted · INS-001Manny Barela (Owner) · 7/19/2026, 7:26:45 PM"
+    },
+    {
+      "suite": "Client briefing QA",
+      "name": "CCB verified-only briefing",
+      "pass": true,
+      "evidence": "noInvented=true; pending=true"
+    },
+    {
+      "suite": "Exception QA",
+      "name": "Exception board visible",
+      "pass": true,
+      "evidence": "exception columns rendered"
+    },
+    {
+      "suite": "Responsive QA",
+      "name": "390×844 intelligence",
+      "pass": true,
+      "evidence": "mobile nav=true; overflow=false"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Assistant blocked from intelligence",
+      "pass": true,
+      "evidence": "intelligence nav count=0"
+    },
+    {
+      "suite": "Permission QA",
+      "name": "Protected intelligence route",
+      "pass": true,
+      "evidence": "redirected to http://127.0.0.1:4174/"
+    },
+    {
+      "suite": "Performance QA",
+      "name": "Intelligence load duration",
+      "pass": true,
+      "evidence": "507 ms"
+    }
+  ],
+  "screenshots": [
+    "screenshots/01-hvcg-daily-brief.png",
+    "screenshots/02-ccb-meeting-brief.png",
+    "screenshots/03-exception-board.png",
+    "screenshots/04-weekly-brief.png",
+    "screenshots/05-intelligence-mobile.png"
+  ]
+}
