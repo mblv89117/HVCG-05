@@ -1,0 +1,274 @@
+diff --git a/apps/atlas-integration-api/src/pm/sharepoint/http.ts b/apps/atlas-integration-api/src/pm/sharepoint/http.ts
+index 46c72fa..03a017c 100644
+--- a/apps/atlas-integration-api/src/pm/sharepoint/http.ts
++++ b/apps/atlas-integration-api/src/pm/sharepoint/http.ts
+@@ -517,10 +517,7 @@ export async function handleSharePointPmRoutes(opts: {
+     if (method === 'GET' && path === '/api/pm/command-center') {
+       const projects = await service.listAuthorizedProjects(principal);
+       const tasks = await service.listAuthorizedTasks(principal);
+-      const milestones = [];
+-      for (const p of projects) {
+-        milestones.push(...(await service.listAuthorizedMilestones(principal, p.id)));
+-      }
++      const milestones = await service.listAuthorizedMilestones(principal);
+       send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones) }, origin);
+       return true;
+     }
+@@ -536,13 +533,27 @@ export async function handleSharePointPmRoutes(opts: {
+         const next = milestones
+           .filter((m) => m.status !== 'completed')
+           .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))[0];
++        const blockedOpen = open.filter((t) => t.status === 'blocked' || Boolean(t.blocker?.trim()));
++        const needsOwner = open.filter((t) => t.status === 'needs_owner_approval' || t.requiresApproval);
++        const bootstrapNext =
++          !p.nextAction ||
++          /^define next action\b/i.test(p.nextAction) ||
++          /^next action required\b/i.test(p.nextAction);
+         portfolio.push({
+           ...p,
+           overdueTaskCount: open.filter((t) => t.dueDate && t.dueDate.slice(0, 10) < today).length,
+-          blockerCount: 0,
++          blockerCount: blockedOpen.length,
+           openTaskCount: open.length,
+           nextMilestone: next?.title,
+           nextMilestoneDue: next?.dueDate,
++          dataQuality: {
++            healthAssessed: Boolean(p.health && p.health !== 'unknown'),
++            milestoneEstablished: Boolean(next?.title),
++            nextActionSet: !bootstrapNext,
++            dueDateSet: Boolean(p.targetCompletionDate),
++            needsOwnerReview: needsOwner.length > 0,
++            missingClientId: !p.clientId,
++          },
+         });
+       }
+       send(res, 200, { portfolio }, origin);
+diff --git a/apps/atlas-integration-api/src/pm/sharepoint/repository.ts b/apps/atlas-integration-api/src/pm/sharepoint/repository.ts
+index eac1a1f..87ae066 100644
+--- a/apps/atlas-integration-api/src/pm/sharepoint/repository.ts
++++ b/apps/atlas-integration-api/src/pm/sharepoint/repository.ts
+@@ -18,7 +18,7 @@ import {
+   type ProjectClassification,
+ } from './authz.ts';
+ import { PmHttpError, pmInfrastructureError, pmNotImplemented } from './errors.ts';
+-import type { GraphListItem, PmGraphTransport } from './graph.ts';
++import { MAX_GRAPH_LIST_PAGES, type GraphListItem, type PmGraphTransport } from './graph.ts';
+ import { isSharePointItemId, normalizeEmail } from './ids.ts';
+ import {
+   healthFromSharePoint,
+@@ -119,7 +119,15 @@ export class SharePointPmService {
+   private async listAll(listId: string, filter?: string): Promise<GraphListItem[]> {
+     const items: GraphListItem[] = [];
+     let nextLink: string | undefined;
++    let pages = 0;
+     do {
++      pages += 1;
++      if (pages > MAX_GRAPH_LIST_PAGES) {
++        throw pmInfrastructureError(
++          'PM_BACKEND_UNAVAILABLE',
++          'SharePoint list exceeded the Hub page safety cap.',
++        );
++      }
+       const page = await this.graph.listItems(listId, { nextLink, top: 100 });
+       items.push(...page.items);
+       nextLink = page.nextLink;
+@@ -777,16 +785,24 @@ export class SharePointPmService {
+     return mapped;
+   }
+ 
+-  async listAuthorizedMilestones(principal: AtlasPrincipal, projectId: string): Promise<SharePointMilestone[]> {
+-    const project = await this.authorizeProject(principal, projectId);
+-    if (project === 'not_found') return [];
+-    const items = await this.listAll(
+-      this.settings.milestonesListId,
+-      `fields/ProjectIdLookupId eq ${Number(projectId)}`,
+-    );
++  async listAuthorizedMilestones(principal: AtlasPrincipal, projectId?: string): Promise<SharePointMilestone[]> {
++    if (projectId) {
++      const project = await this.authorizeProject(principal, projectId);
++      if (project === 'not_found') return [];
++      const items = await this.listAll(
++        this.settings.milestonesListId,
++        `fields/ProjectIdLookupId eq ${Number(projectId)}`,
++      );
++      return items
++        .map((i) => this.mapMilestone(i))
++        .filter((m): m is SharePointMilestone => Boolean(m && m.projectId === projectId));
++    }
++    const projects = await this.listAuthorizedProjects(principal);
++    const allowed = new Set(projects.map((p) => p.id));
++    const items = await this.listAll(this.settings.milestonesListId);
+     return items
+       .map((i) => this.mapMilestone(i))
+-      .filter((m): m is SharePointMilestone => Boolean(m && m.projectId === projectId));
++      .filter((m): m is SharePointMilestone => Boolean(m && allowed.has(m.projectId)));
+   }
+ 
+   async createMilestone(principal: AtlasPrincipal, body: Record<string, unknown>): Promise<SharePointMilestone> {
+@@ -1056,6 +1072,32 @@ export class SharePointPmService {
+       .filter((v) => v.title);
+   }
+ 
++  async listLeads(): Promise<
++    Array<{
++      id: string;
++      title: string;
++      clientCode?: string;
++      notes?: string;
++      email?: string;
++      company?: string;
++      status?: string;
++    }>
++  > {
++    if (!this.settings.leadsListId) return [];
++    const items = await this.listAll(this.settings.leadsListId);
++    return items
++      .map((i) => ({
++        id: i.id,
++        title: asString(i.fields.Title) || asString(i.fields.ContactName) || i.id,
++        clientCode: asString(i.fields.ClientCode) || undefined,
++        notes: asString(i.fields.Notes),
++        email: asString(i.fields.Email),
++        company: asString(i.fields.Company) || asString(i.fields.ContactName),
++        status: asString(i.fields.LeadStatus),
++      }))
++      .filter((v) => v.title);
++  }
++
+   async listIndexedFiles(): Promise<
+     Array<{ id: string; title: string; clientCode?: string; webUrl?: string; summary?: string }>
+   > {
+diff --git a/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts b/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts
+index 03e2843..0df6c40 100644
+--- a/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts
++++ b/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts
+@@ -755,6 +755,7 @@ describe('SharePoint PM HTTP', () => {
+       const searchOther = await fetch(`${base}/api/pm/search?q=PDG`, { headers: auth('a') });
+       const otherBody = (await searchOther.json()) as { results: Array<{ clientCode?: string }> };
+       assert.equal(otherBody.results.some((r) => r.clientCode === 'PDG01'), false);
++      assert.ok(searchBody.results.every((r) => r.kind && r.source));
+       const c360 = await fetch(`${base}/api/client360`, { headers: auth('a') });
+       assert.equal(c360.status, 403);
+     });
+@@ -773,6 +774,49 @@ describe('SharePoint PM HTTP', () => {
+     });
+   });
+ 
++  it('search does not return another principal\'s ClientCode on opportunities or leads', async () => {
++    const OPP = 'ffffffff-ffff-4fff-8fff-fffffffffff1';
++    const LEADS = 'ffffffff-ffff-4fff-8fff-fffffffffff2';
++    const prevOpp = process.env.INTEGRATION_PM_OPPORTUNITIES_LIST_ID;
++    const prevLeads = process.env.INTEGRATION_PM_LEADS_LIST_ID;
++    process.env.INTEGRATION_PM_OPPORTUNITIES_LIST_ID = OPP;
++    process.env.INTEGRATION_PM_LEADS_LIST_ID = LEADS;
++    const graph = new MemoryGraph();
++    graph.lists.set(OPP, []);
++    graph.lists.set(LEADS, []);
++    try {
++      await withSpHub(
++        { entitlements: (oid) => (oid === USER_A ? ['ACCG01'] : ['PDG01']), graph },
++        async ({ base }) => {
++          graph.seed(OPP, { Title: 'Bridge facility', ClientCode: 'ACCG01', Notes: 'entitled' }, '80');
++          graph.seed(OPP, { Title: 'Bridge facility', ClientCode: 'PDG01', Notes: 'other tenant' }, '81');
++          graph.seed(LEADS, { Title: 'Bridge inquiry', ClientCode: 'PDG01', Email: 'x@pdg.example' }, '82');
++          graph.seed(LEADS, { Title: 'Bridge inquiry', ClientCode: 'ACCG01', Email: 'a@alder.example' }, '83');
++          const res = await fetch(`${base}/api/pm/search?q=Bridge`, { headers: auth('a') });
++          assert.equal(res.status, 200);
++          const body = (await res.json()) as {
++            results: Array<{ kind: string; clientCode?: string; href: string; source: string; title: string }>;
++          };
++          assert.ok(body.results.length > 0);
++          assert.ok(body.results.every((r) => r.kind && r.source && r.href));
++          assert.ok(body.results.every((r) => !r.clientCode || r.clientCode === 'ACCG01'));
++          assert.equal(body.results.some((r) => r.clientCode === 'PDG01'), false);
++          assert.ok(body.results.every((r) => !r.href.includes('/pipeline')));
++          assert.ok(body.results.some((r) => r.kind === 'opportunity' && r.clientCode === 'ACCG01'));
++          assert.ok(body.results.some((r) => r.kind === 'lead' && r.clientCode === 'ACCG01'));
++          const other = await fetch(`${base}/api/pm/search?q=PDG`, { headers: auth('a') });
++          const otherBody = (await other.json()) as { results: Array<{ clientCode?: string }> };
++          assert.equal(otherBody.results.some((r) => r.clientCode === 'PDG01'), false);
++        },
++      );
++    } finally {
++      if (prevOpp === undefined) delete process.env.INTEGRATION_PM_OPPORTUNITIES_LIST_ID;
++      else process.env.INTEGRATION_PM_OPPORTUNITIES_LIST_ID = prevOpp;
++      if (prevLeads === undefined) delete process.env.INTEGRATION_PM_LEADS_LIST_ID;
++      else process.env.INTEGRATION_PM_LEADS_LIST_ID = prevLeads;
++    }
++  });
++
+   it('pagination follows in-origin nextLink', async () => {
+     const graph = new MemoryGraph();
+     graph.pageSize = 2;
+@@ -792,6 +836,71 @@ describe('SharePoint PM HTTP', () => {
+       assert.equal(body.projects.length, 5);
+     });
+   });
++
++  it('command-center lists milestones once rather than per project', async () => {
++    const graph = new MemoryGraph();
++    const calls: Record<string, number> = {};
++    const orig = graph.listItems.bind(graph);
++    graph.listItems = async (listId, opts) => {
++      calls[listId] = (calls[listId] || 0) + 1;
++      return orig(listId, opts);
++    };
++    await withSpHub({ entitlements: () => ['ACCG01'], graph }, async ({ base }) => {
++      for (let i = 0; i < 4; i++) {
++        graph.seed(
++          PROJECTS,
++          {
++            Title: `P${i}`,
++            ClientCode: 'ACCG01',
++            IsInternalProject: false,
++            ProjectStatus: 'In Progress',
++            ProjectHealth: 'Green',
++            Priority: 'Medium',
++          },
++          String(80 + i),
++        );
++        graph.seed(MILESTONES, {
++          Title: `M${i}`,
++          ProjectIdLookupId: 80 + i,
++          Status: 'Pending',
++        });
++      }
++      const res = await fetch(`${base}/api/pm/command-center`, { headers: auth('a') });
++      assert.equal(res.status, 200);
++      assert.equal(calls[MILESTONES] || 0, 1);
++    });
++  });
++
++  it('unbounded Graph pagination fails closed at the Hub page cap', async () => {
++    class InfiniteGraph extends MemoryGraph {
++      async listItems(listId: string): Promise<GraphListPage> {
++        return {
++          items: [
++            {
++              id: '1',
++              etag: 'e',
++              fields: {
++                Title: 'P',
++                ClientCode: 'ACCG01',
++                IsInternalProject: false,
++                ProjectStatus: 'In Progress',
++                ProjectHealth: 'Green',
++                Priority: 'Medium',
++              },
++            },
++          ],
++          nextLink: `https://graph.microsoft.com/v1.0/sites/${encodeURIComponent(SITE)}/lists/${listId}/items?$skiptoken=1`,
++        };
++      }
++    }
++    await withSpHub({ entitlements: () => ['ACCG01'], graph: new InfiniteGraph() }, async ({ base }) => {
++      const res = await fetch(`${base}/api/pm/projects`, { headers: auth('a') });
++      assert.equal(res.status, 503);
++      const body = (await res.json()) as { code?: string; message?: string };
++      assert.equal(body.code, 'PM_BACKEND_UNAVAILABLE');
++      assert.match(String(body.message), /page safety cap/);
++    });
++  });
+ });
+ 
+ describe('SharePoint config does not fall back to JSON', () => {
