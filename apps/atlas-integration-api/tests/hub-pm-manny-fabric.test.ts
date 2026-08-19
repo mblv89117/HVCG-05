@@ -220,4 +220,81 @@ describe('Search extracts drive items and includes Atlas records', () => {
     );
     assert.equal(entitledOnly.results.some((r) => r.kind === 'vendor'), false);
   });
+
+  it('keeps non-entitled ClientCodes out of opportunity/lead/capital hits and does not use /pipeline', async () => {
+    const service = {
+      async listAuthorizedClients() {
+        return [{ clientCode: 'CCB01', displayName: 'Colorado Craft Beef', dba: 'Colorado Craft Beef' }];
+      },
+      async listAuthorizedProjects() {
+        return [];
+      },
+      async listAuthorizedTasks() {
+        return [];
+      },
+      async listWorkspaceCollections() {
+        return {
+          communications: { queried: true, status: 'COMPLETE', items: [] },
+          meetings: { queried: true, status: 'COMPLETE', items: [] },
+          engagements: { queried: true, status: 'COMPLETE', items: [] },
+          deliverables: { queried: true, status: 'COMPLETE', items: [] },
+          decisionsRisks: { queried: true, status: 'COMPLETE', items: [] },
+          contacts: { queried: true, status: 'COMPLETE', items: [] },
+        };
+      },
+      async listVendors() {
+        return [];
+      },
+      async listOpportunities() {
+        return [
+          { id: 'opp-ccb', title: 'Bridge facility', clientCode: 'CCB01' },
+          { id: 'opp-pdg', title: 'Bridge facility', clientCode: 'PDG01' },
+          { id: 'opp-open', title: 'Unclassified bridge' },
+        ];
+      },
+      async listIndexedFiles() {
+        return [];
+      },
+      async listLeads() {
+        return [
+          { id: 'lead-ccb', title: 'Bridge inquiry', clientCode: 'CCB01' },
+          { id: 'lead-pdg', title: 'Bridge inquiry', clientCode: 'PDG01' },
+        ];
+      },
+      async listCapitalOpportunities() {
+        return [
+          { id: 'cap-ccb', title: 'Bridge capital', clientCode: 'CCB01', projectId: '70' },
+          { id: 'cap-pdg', title: 'Bridge capital', clientCode: 'PDG01' },
+        ];
+      },
+      async listLenders() {
+        return [{ id: 'ln-1', title: 'Bridge lender', notes: 'catalog' }];
+      },
+    } as unknown as SharePointPmService;
+
+    const entitled = await searchSharePointPm(
+      service,
+      principal('11111111-1111-4111-8111-111111111001'),
+      'Bridge',
+    );
+    assert.ok(entitled.results.every((r) => r.kind && r.source));
+    assert.ok(entitled.results.every((r) => !r.clientCode || r.clientCode === 'CCB01'));
+    assert.equal(entitled.results.some((r) => r.clientCode === 'PDG01'), false);
+    assert.equal(entitled.results.some((r) => r.kind === 'lender'), false);
+    assert.equal(entitled.results.some((r) => r.id === 'opp-open'), false);
+    assert.ok(entitled.results.some((r) => r.kind === 'opportunity' && r.clientCode === 'CCB01'));
+    assert.ok(entitled.results.some((r) => r.kind === 'lead' && r.clientCode === 'CCB01'));
+    assert.ok(
+      entitled.results.some(
+        (r) => r.kind === 'capital_opportunity' && r.href === '/capital?opportunity=cap-ccb',
+      ),
+    );
+    assert.ok(entitled.results.every((r) => !r.href.includes('/pipeline')));
+
+    const mannyHits = await searchSharePointPm(service, principal(MANNY_ENTRA_OID), 'Bridge');
+    assert.equal(mannyHits.scope, 'manny_tenant');
+    assert.ok(mannyHits.results.some((r) => r.kind === 'opportunity' && r.clientCode === 'PDG01'));
+    assert.ok(mannyHits.results.some((r) => r.kind === 'lender' && r.href === '/capital'));
+    assert.ok(mannyHits.results.some((r) => r.id === 'opp-open' && r.href === '/capital'));
+  });
 });
