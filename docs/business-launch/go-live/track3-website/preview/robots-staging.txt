@@ -1,0 +1,11 @@
+# HVCG Staging — robots policy
+# Environment: SharePoint Dev / local HTML preview
+# As of: 2026-07-15
+# NOT for production DNS — apply equivalent rule on Dev site when live
+
+User-agent: *
+Disallow: /
+
+# Staging must not be indexed by search engines.
+# SharePoint: also set noindex meta on all pages and restrict anonymous access if policy requires.
+# Local HTML: <meta name="robots" content="noindex, nofollow"/> on every page.

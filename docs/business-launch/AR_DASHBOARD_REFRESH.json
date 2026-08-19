@@ -1,0 +1,8 @@
+{
+  "refreshed_at": "2026-07-16T01:30:54.524756+00:00",
+  "invoice_rows": 50,
+  "approval_queue": "APPROVAL_QUEUE.md",
+  "dashboard": "AR_DASHBOARD.md",
+  "auto_contact": false,
+  "next_task": "Age each past-due flag into 1-30/31-60/61+ when dates parseable"
+}

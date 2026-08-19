@@ -1,0 +1,29 @@
+{
+  "code": "CHRI01",
+  "name": "Christie's Place",
+  "classification": "HVS_LEGACY_CLIENT",
+  "entity": "High Value Solution LLC",
+  "engagement": "Business Consulting / annuity support",
+  "pricing": 4750,
+  "pricing_display": "$4,750/mo",
+  "pricing_confidence": "HIGH",
+  "funding": "MISSING",
+  "docs_files": 104,
+  "agreements": 11,
+  "invoices": 2,
+  "contacts": [],
+  "health_score": 70,
+  "health_band": "Green",
+  "renewal": "Review renewal at next billing cycle",
+  "cross_sell": "Capital Advisory / Funding Readiness (HVCG new SKUs \u2014 opportunity only; do not reprice legacy without owner)",
+  "top_next_action": "Maintain ops rhythm; complete CRM Dev shell",
+  "sources": [
+    "HVS_LLC_OPS_CLIENTS",
+    "HVS_Hub_Client_Files"
+  ],
+  "paths": [
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Christie",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Christie's Place",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Faulk"
+  ]
+}

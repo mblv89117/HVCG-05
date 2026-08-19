@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "clientCode": "ARBO01",
+    "generatedAt": "2026-07-15T18:30:00-07:00",
+    "production": "FORBIDDEN",
+    "doNotImportUntilCleared": true,
+    "pricingNote": "Preserve $7,500 deposit + 1% quarterly GR + 5% equity — see ARBORETUM_ONBOARDING_PACKET.md"
+  },
+  "client": {
+    "LegalName": "Arboretum LLC",
+    "ClientCode": "ARBO01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "Confirm active vs former"
+  },
+  "engagement": {
+    "Title": "Arboretum \u2014 Consulting Agreement 1.4.23",
+    "SetupFee": 7500,
+    "RevenueSharePercent": 1.0,
+    "EquityPercent": 5.0,
+    "PricingStatus": "EXTRACTED_VERIFY_ACTIVE"
+  },
+  "documentAnchors": [
+    {
+      "path": "High Value Solution/Arboretum LLC/HVS Internal/Consulting Agreement 1.4.23 - signed.pdf",
+      "importance": "CRITICAL"
+    }
+  ]
+}

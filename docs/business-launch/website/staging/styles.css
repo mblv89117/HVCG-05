@@ -1,0 +1,25 @@
+
+:root{--ink:#0f1c14;--paper:#f3efe6;--accent:#1f6b4a;--muted:#5c6b62;--line:#d4cfc3;}
+*{box-sizing:border-box}body{margin:0;font-family:Georgia,"Times New Roman",serif;background:linear-gradient(165deg,#e8efe9 0%,#f3efe6 45%,#ebe4d8 100%);color:var(--ink);line-height:1.55}
+a{color:var(--accent)}header{padding:2.5rem 1.5rem 1rem;max-width:52rem;margin:0 auto}
+.brand{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;letter-spacing:.02em;margin:0}
+.tag{color:var(--muted);margin:.4rem 0 0;font-size:1.05rem}
+nav.primary,nav.utility{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;padding:0 1.5rem;max-width:52rem;margin:0 auto;font-family:system-ui,sans-serif;font-size:.9rem}
+nav.primary{padding-bottom:.75rem}
+nav.utility{padding-bottom:1.25rem;border-bottom:1px solid var(--line);font-size:.85rem}
+nav.utility a{color:var(--muted)}
+main{max-width:52rem;margin:0 auto;padding:2rem 1.5rem 4rem}
+h1{font-size:clamp(1.6rem,3vw,2.1rem);margin:0 0 .75rem}
+h2{font-size:1.25rem;margin:2rem 0 .5rem;font-family:system-ui,sans-serif}
+.lead{font-size:1.15rem;color:var(--muted);max-width:36rem}
+.cta{display:inline-block;margin-top:1.5rem;padding:.85rem 1.25rem;background:var(--accent);color:#fff;text-decoration:none;font-family:system-ui,sans-serif;font-size:.95rem}
+.cta.secondary{background:transparent;color:var(--accent);border:1px solid var(--accent);margin-left:.5rem}
+.note{margin-top:2.5rem;padding:1rem;border:1px dashed var(--line);font-family:system-ui,sans-serif;font-size:.85rem;color:var(--muted)}
+ul.services,ol.steps{padding-left:1.2rem}
+table.pricing{width:100%;border-collapse:collapse;margin:1.5rem 0;font-family:system-ui,sans-serif;font-size:.9rem}
+table.pricing th,table.pricing td{text-align:left;padding:.6rem .75rem;border-bottom:1px solid var(--line)}
+table.pricing th{font-weight:600;color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.disclaimer-link{font-family:system-ui,sans-serif;font-size:.9rem;margin-top:1rem}
+footer{max-width:52rem;margin:0 auto;padding:0 1.5rem 3rem;font-family:system-ui,sans-serif;font-size:.8rem;color:var(--muted)}
+footer nav.footer{display:flex;flex-wrap:wrap;gap:.5rem 1rem;margin-bottom:1rem;padding-top:1.5rem;border-top:1px solid var(--line)}
+footer nav.footer a{color:var(--muted)}

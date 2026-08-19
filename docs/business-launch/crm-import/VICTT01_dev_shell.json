@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "VICTT01",
+    "generatedAt": "2026-07-15T18:45:00-07:00",
+    "pricingNote": "Multiple HVS instruments — $5K business plan, $10K deposit credits, post-sale 1% fee; preserve legacy HVS pricing"
+  },
+  "client": {
+    "LegalName": "Victorum Tattoo",
+    "ClientCode": "VICTT01",
+    "Classification": "HVS_LEGACY",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Discovery",
+    "EngagementTypePrimary": "Capitalization / SBA lending advisory",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "King Ink LLC dba Victorum Tattoo. 334 OD files. See DISC_56/PROFILE.md"
+  },
+  "contacts": [
+    {
+      "FullName": "Justin VanBibber",
+      "JobTitle": null,
+      "Email": null,
+      "IsPrimary": true,
+      "IsDecisionMaker": true,
+      "DoNotContact": true
+    }
+  ],
+  "engagement": {
+    "Title": "Victorum Tattoo — capitalization / business plan advisory",
+    "ContractingEntity": "High Value Solution LLC",
+    "BusinessPlanFee": 5000,
+    "DepositCredits": {
+      "cash": 10000,
+      "tattooServicesTrade": 7700,
+      "accgReferralCredits": 2500
+    },
+    "HourlyRate": 1500,
+    "CapitalizationTarget": 500000,
+    "PostSaleFeePercent": 1.0,
+    "PostSaleFeeBase": 16000,
+    "PricingStatus": "EXTRACTED_VERIFY_SIGNED",
+    "PricingNote": "Multiple overlapping DOCX — confirm signed vs template; reconcile King Ink vs Victorum Tattoo LLC"
+  },
+  "documentAnchors": [
+    {
+      "path": "High Value Solution/Victorum Tattoo/Victorum Tattoo Business Plan Agreement.docx",
+      "type": "Business Plan Agreement",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "High Value Solution/Victorum Tattoo/SUBMIT 2/Internal/Consulting Agreement 10.19.2023.docx",
+      "type": "Pay for Access Consulting Agreement",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "High Value Solution/Victorum Tattoo/SUBMIT/BUSINESS CONSULTING FEE AGREEMENT FOR THE POST SALE OF A BUSINESS.docx",
+      "type": "Post-Sale Consulting Fee Agreement",
+      "importance": "HIGH"
+    }
+  ]
+}

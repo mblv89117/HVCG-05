@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "LIEN01",
+    "generatedAt": "2026-07-15T18:45:00-07:00",
+    "pricingNote": "Close-Readiness Sprint $4,562/mo + MSA 1% acquisition success fee; EAM 2% separate — preserve legacy HVS rate"
+  },
+  "client": {
+    "LegalName": "Lien Partners LLC",
+    "ClientCode": "LIEN01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Discovery",
+    "EngagementTypePrimary": "Close-Readiness Sprint / capital advisory",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "EAM referral stack in 99_Internal. See HUB_DISCOVERY_ONBOARDING_PACKETS.md"
+  },
+  "contacts": [],
+  "engagement": {
+    "Title": "Lien Partners — Close-Readiness Sprint SOW",
+    "ContractingEntity": "High Value Solution LLC",
+    "MonthlyRetainer": 4562,
+    "SprintTermDays": 60,
+    "PricingStatus": "EXTRACTED_VERIFY",
+    "FeeAlignmentCredit": "One month ($4,562) if forward-flow docs in 60-day sprint — billing credit only",
+    "SuccessFeePercent": 1.0,
+    "SuccessFeeNote": "Controlling equity or all-assets acquisition only — not forward-flow alone",
+    "EamReferralFeePercent": 2.0,
+    "EamAcquisitionSuccessFeePercent": 2.0,
+    "EamFeeNote": "Separate EAM referral/advisory fee stream — not LP client retainer"
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Lien Partners LLC/99_Internal (HVS only)/LP-HVS_Exhibit_A1_Close-Readiness_Sprint_SOW_2025-11-14.docx",
+      "type": "SOW",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Lien Partners LLC/99_Internal (HVS only)/FRACTIONAL CFO & ADVISORY MASTER SERVICES AGREEMENT.docx",
+      "type": "MSA",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Lien Partners LLC/99_Internal (HVS only)/ReferringPartnerAdvisoryFeeAgreementHVS_EAM.docx",
+      "type": "EAM Referral Agreement",
+      "importance": "HIGH"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Lien Partners LLC/99_Internal (HVS only)/CONSULTING AGREEMENT 7.8.25 - signed.pdf",
+      "type": "Consulting Agreement",
+      "importance": "CRITICAL"
+    }
+  ]
+}

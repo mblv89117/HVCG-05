@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "PIER01",
+    "generatedAt": "2026-07-15T18:45:00-07:00",
+    "pricingNote": "Discovery — no HVS agreement; lender soft quote only (third-party rates)"
+  },
+  "client": {
+    "LegalName": "Pierlo Inc (DBA Baker's Travertine Power Clean)",
+    "ClientCode": "PIER01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Discovery",
+    "EngagementTypePrimary": "Capital / lender packaging (TBD)",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "No HVS consulting agreement found. See DISC_01/PROFILE.md"
+  },
+  "contacts": [],
+  "engagement": {
+    "Title": "Pierlo Inc — discovery",
+    "MonthlyRetainer": null,
+    "PricingStatus": "MISSING",
+    "LenderSoftQuoteNote": "Third-party bridge/term rates 9-11%, LTC 80%, ARLTV 65%, advance fees 1.5-2% — not HVS pricing"
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Pierlo Inc (DBA Baker's Travertine Power Clean)/New Client Template/Soft Quote.docx",
+      "type": "Lender Soft Quote",
+      "importance": "LOW"
+    }
+  ]
+}

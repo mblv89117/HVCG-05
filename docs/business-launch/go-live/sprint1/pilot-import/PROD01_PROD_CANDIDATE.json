@@ -1,0 +1,54 @@
+{
+  "_meta": {
+    "clientCode": "PROD01",
+    "generatedAt": "2026-07-16T01:12:45.645129+00:00",
+    "production": "FORBIDDEN",
+    "doNotImportUntilCleared": true
+  },
+  "client": {
+    "LegalName": "Prodigy Games LLC",
+    "ClientCode": "PROD01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "PortalEnabled": false,
+    "IsActive": true
+  },
+  "engagement": {
+    "Title": "Prodigy Games \u2014 Fractional CFO",
+    "MonthlyRetainer": 7500,
+    "PricingStatus": "EXTRACTED_VERIFY_SIGNED",
+    "Source": "HVS_Prodigy_Games_Fractional_CFO_Agreement",
+    "InvoiceEvidence": [
+      {
+        "file": "HVS_Invoice_Prodigy_2026_6.pdf",
+        "amount": 7000
+      },
+      {
+        "file": "Prodigy Games LLC May 2026 Past Due Invoice.pdf",
+        "amount": 7150,
+        "flag": "PAST_DUE"
+      },
+      {
+        "file": "Prodigy Games LLC April 2026 Past Due Invoice.pdf",
+        "amount": 8500,
+        "flag": "PAST_DUE"
+      }
+    ],
+    "PricingNote": "Agreement $7,500/mo; recent invoices show $7,000\u2013$8,500 including past-due \u2014 PRESERVE contracted; collections visibility needed"
+  },
+  "relatedAccounts": [
+    {
+      "LegalName": "That\u2019s Kava LLC",
+      "Relationship": "Co-located bookkeeping agreement"
+    }
+  ],
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Prodigy Games/05_Contracts & Invoice Docs/HVS_Prodigy_Games_Fractional_CFO_Agreement - signed.pdf",
+      "importance": "CRITICAL"
+    }
+  ],
+  "risks": [
+    "Past-due invoices Apr/May 2026"
+  ]
+}

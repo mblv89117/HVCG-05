@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "FROC01",
+    "generatedAt": "2026-07-15T18:45:00-07:00",
+    "pricingNote": "Graduated revenue tiers + 1%/2% success fees — preserve legacy HVS pricing"
+  },
+  "client": {
+    "LegalName": "Frocovery LLC",
+    "ClientCode": "FROC01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Active Client",
+    "EngagementTypePrimary": "Business Development / Capital Access / Implementation",
+    "PortalEnabled": false,
+    "IsActive": true,
+    "InternalNotes": "Effective 2026-03-10. 3-month non-cancelable initial term. See DISC_06/PROFILE.md"
+  },
+  "contacts": [
+    {
+      "FullName": "Fernando Chaidez",
+      "JobTitle": "Sole Member & Manager",
+      "Email": null,
+      "IsPrimary": true,
+      "IsDecisionMaker": true,
+      "DoNotContact": true
+    }
+  ],
+  "engagement": {
+    "Title": "Frocovery LLC — Business Development Agreement",
+    "ContractingEntity": "High Value Solution LLC",
+    "SetupFee": 2500,
+    "SetupFeeInstallments": [1250, 1250],
+    "InitialTermMonths": 3,
+    "InitialTermNote": "Non-cancelable except mutual/Cause; auto-renews month-to-month with 14-day notice",
+    "PricingStatus": "EXTRACTED_VERIFY",
+    "GraduatedMonthlyTiers": [
+      {"tier": 1, "revenueMax": 10000, "monthlyFee": 500},
+      {"tier": 2, "revenueMax": 25000, "monthlyFee": 1000},
+      {"tier": 3, "revenueMax": 50000, "monthlyFee": 1500},
+      {"tier": 4, "revenueMax": 100000, "monthlyFee": 2500},
+      {"tier": 5, "revenueMin": 100000, "monthlyFee": null, "note": "Negotiate in good faith"}
+    ],
+    "SuccessFeeDebtPercent": 1.0,
+    "SuccessFeeEquityPercent": 2.0,
+    "TailPeriodMonths": 12,
+    "OptionalThirdParty": {
+      "rocketSearchMonthly": 300,
+      "bookkeepingMonthly": 300
+    }
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Frocovery/Frocovery_LLC_Business_Development_Agreement.docx",
+      "type": "BDA",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Frocovery/Frocovery Business Development Agreement 3.10.26.docx",
+      "type": "BDA (dated copy)",
+      "importance": "HIGH"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Frocovery/Formal/Frocovery_LLC_Business_Development_Agreement.pdf",
+      "type": "BDA Signed",
+      "importance": "CRITICAL"
+    }
+  ]
+}

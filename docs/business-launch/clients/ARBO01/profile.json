@@ -1,0 +1,28 @@
+{
+  "code": "ARBO01",
+  "name": "Arboretum LLC",
+  "classification": "HVS_LEGACY_CLIENT",
+  "entity": "High Value Solution LLC",
+  "engagement": "Business purchase advisory",
+  "pricing": null,
+  "pricing_display": "MISSING",
+  "pricing_confidence": "LOW",
+  "funding": "Purchase/capitalization historical",
+  "docs_files": 254,
+  "agreements": 37,
+  "invoices": 4,
+  "contacts": [],
+  "health_score": 41,
+  "health_band": "Yellow",
+  "renewal": "Establish contracted terms before renewal planning",
+  "cross_sell": "Capital Advisory / Funding Readiness (HVCG new SKUs \u2014 opportunity only; do not reprice legacy without owner)",
+  "top_next_action": "Extract pricing from agreements/invoices; fill contacts",
+  "sources": [
+    "OD_High_Value_Solution",
+    "HVS_LLC_OPS_CLIENTS"
+  ],
+  "paths": [
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Arboretum LLC",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Investor Funded/Ormond Arboretum"
+  ]
+}

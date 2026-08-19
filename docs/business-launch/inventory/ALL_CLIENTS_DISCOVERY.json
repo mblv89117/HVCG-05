@@ -1,0 +1,1472 @@
+{
+  "generated_at": "2026-07-16T01:16:02.027274+00:00",
+  "mode": "READ_ONLY",
+  "client_count": 81,
+  "clients": {
+    "105 Cimmaron": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Access Plus Member/105 Cimmaron"
+      ],
+      "census": {
+        "agreements": 9,
+        "invoices": 0,
+        "proposals": 8,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 69,
+        "files": 86
+      }
+    },
+    "1408 Dolomiti Dr": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/1408 Dolomiti Dr"
+      ],
+      "census": {
+        "agreements": 10,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 39,
+        "files": 49
+      }
+    },
+    "2nd Location": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/2nd Location"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 1,
+        "files": 1
+      }
+    },
+    "333": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/333"
+      ],
+      "census": {
+        "agreements": 6,
+        "invoices": 0,
+        "proposals": 1,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 26,
+        "files": 33
+      }
+    },
+    "3D Printing LLC": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/3D Printing LLC"
+      ],
+      "census": {
+        "agreements": 5,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 8,
+        "files": 13
+      }
+    },
+    "7781 Osage Cny St": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Access Plus Member/7781 Osage Cny St"
+      ],
+      "census": {
+        "agreements": 6,
+        "invoices": 0,
+        "proposals": 8,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 62,
+        "files": 76
+      }
+    },
+    "AA Gutters": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/AA Gutters"
+      ],
+      "census": {
+        "agreements": 8,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 18,
+        "files": 26
+      }
+    },
+    "ACCG": {
+      "sources": [
+        "OD_High_Value_Solution",
+        "HVCG_Clients"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/ACCG",
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Capital Group/HVCG/Clients/ACCG"
+      ],
+      "census": {
+        "agreements": 40,
+        "invoices": 15,
+        "proposals": 0,
+        "meetings": 5,
+        "emails": 2,
+        "attachments": 0,
+        "other": 558,
+        "files": 620
+      }
+    },
+    "ACCG Inc": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/ACCG Inc"
+      ],
+      "census": {
+        "agreements": 50,
+        "invoices": 45,
+        "proposals": 5,
+        "meetings": 3,
+        "emails": 1,
+        "attachments": 0,
+        "other": 555,
+        "files": 659
+      }
+    },
+    "AMB Enterprises LLC": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/AMB Enterprises LLC"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 12,
+        "files": 13
+      }
+    },
+    "Access Plus Member": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Access Plus Member"
+      ],
+      "census": {
+        "agreements": 19,
+        "invoices": 0,
+        "proposals": 16,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 155,
+        "files": 190
+      }
+    },
+    "Arboretum LLC": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Arboretum LLC"
+      ],
+      "census": {
+        "agreements": 13,
+        "invoices": 1,
+        "proposals": 7,
+        "meetings": 4,
+        "emails": 0,
+        "attachments": 0,
+        "other": 76,
+        "files": 101
+      }
+    },
+    "BFam": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/BFam"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 3,
+        "emails": 0,
+        "attachments": 0,
+        "other": 38,
+        "files": 41
+      }
+    },
+    "Baca Grand System Built LLC": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/REFERRAL PARTNERS/Baca Grand System Built LLC"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 8,
+        "files": 8
+      }
+    },
+    "Bflys": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Bflys"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 5,
+        "files": 5
+      }
+    },
+    "Cakes by Tani": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Access Plus Member/Cakes by Tani"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 5,
+        "files": 5
+      }
+    },
+    "Casa De Lago": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Casa De Lago"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 38,
+        "files": 38
+      }
+    },
+    "Chaidez Submission 2": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Chaidez Submission 2"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 15,
+        "files": 15
+      }
+    },
+    "Christie": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Christie"
+      ],
+      "census": {
+        "agreements": 9,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 57,
+        "files": 66
+      }
+    },
+    "Christie's Place": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Christie's Place"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 2,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 1,
+        "attachments": 0,
+        "other": 8,
+        "files": 11
+      }
+    },
+    "Clients1": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Clients1"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 0,
+        "files": 0
+      }
+    },
+    "Colorado Beef": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Colorado Beef"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 1,
+        "files": 1
+      }
+    },
+    "Comic Books": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Comic Books"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 3,
+        "files": 3
+      }
+    },
+    "Country Living Modular Homes": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Country Living Modular Homes"
+      ],
+      "census": {
+        "agreements": 3,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 9,
+        "files": 13
+      }
+    },
+    "Cultivate Landscape Management": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Cultivate Landscape Management"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 1,
+        "files": 1
+      }
+    },
+    "Danny Byrne": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Danny Byrne"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 3,
+        "files": 3
+      }
+    },
+    "Dependable Maintenance": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Dependable Maintenance"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 2,
+        "files": 4
+      }
+    },
+    "Expert Nursing and Companion Inc": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Expert Nursing and Companion Inc"
+      ],
+      "census": {
+        "agreements": 1,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 10,
+        "files": 12
+      }
+    },
+    "Faulk": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Faulk"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 2,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 23,
+        "files": 27
+      }
+    },
+    "Final Install": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Final Install"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 9,
+        "files": 10
+      }
+    },
+    "Final Installment": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Final Installment"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 2,
+        "emails": 0,
+        "attachments": 0,
+        "other": 71,
+        "files": 73
+      }
+    },
+    "Fireside Inc": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups/Fireside Inc"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 2,
+        "files": 3
+      }
+    },
+    "Focus9": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/REFERRAL PARTNERS/Focus9"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 41,
+        "files": 41
+      }
+    },
+    "Frocovery": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Frocovery"
+      ],
+      "census": {
+        "agreements": 5,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 24,
+        "files": 29
+      }
+    },
+    "GoldRose Construction LLC(Gary Briggs)": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/GoldRose Construction LLC(Gary Briggs)"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 10,
+        "files": 10
+      }
+    },
+    "Hart Family Dental": {
+      "sources": [
+        "HVCG_Clients"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Capital Group/HVCG/Clients/Hart Family Dental"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 1,
+        "files": 1
+      }
+    },
+    "Healing Grace Summerlin": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups/Healing Grace Summerlin",
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Access Plus Member/Healing Grace Summerlin"
+      ],
+      "census": {
+        "agreements": 8,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 31,
+        "files": 39
+      }
+    },
+    "Integrity Lift Solutions LLC": {
+      "sources": [
+        "HVS_Hub_Client_Files",
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Integrity Lift Solutions LLC",
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Integrity Lift Solutions LLC"
+      ],
+      "census": {
+        "agreements": 18,
+        "invoices": 6,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 94,
+        "files": 118
+      }
+    },
+    "Integrity Lifts": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups/Integrity Lifts"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 0,
+        "files": 1
+      }
+    },
+    "J&J Foundation": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups/J&J Foundation"
+      ],
+      "census": {
+        "agreements": 6,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 11,
+        "files": 17
+      }
+    },
+    "Jays Landscaping": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Jays Landscaping"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 2,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 7,
+        "files": 12
+      }
+    },
+    "Jordyn Kline": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Jordyn Kline"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 60,
+        "files": 62
+      }
+    },
+    "LV Appraisals": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/LV Appraisals"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 23,
+        "files": 24
+      }
+    },
+    "Lien Partners LLC": {
+      "sources": [
+        "HVS_Hub_Client_Files",
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Lien Partners LLC",
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Lien Partners LLC"
+      ],
+      "census": {
+        "agreements": 32,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 2,
+        "emails": 0,
+        "attachments": 0,
+        "other": 164,
+        "files": 198
+      }
+    },
+    "Mason Barela": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Mason Barela"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 6,
+        "files": 6
+      }
+    },
+    "Mason Test": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Mason Test"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 6,
+        "files": 6
+      }
+    },
+    "N & J Flooring Services LLC": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/N & J Flooring Services LLC"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 6,
+        "files": 8
+      }
+    },
+    "Nabro Holdings": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Nabro Holdings"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 18,
+        "files": 18
+      }
+    },
+    "North Texas Chimney": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/North Texas Chimney"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 8,
+        "files": 9
+      }
+    },
+    "Ormond Arboretum": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Investor Funded/Ormond Arboretum"
+      ],
+      "census": {
+        "agreements": 24,
+        "invoices": 3,
+        "proposals": 5,
+        "meetings": 4,
+        "emails": 0,
+        "attachments": 0,
+        "other": 117,
+        "files": 153
+      }
+    },
+    "Pedraza": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Pedraza"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 4,
+        "files": 4
+      }
+    },
+    "Pierlo Inc": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Pierlo Inc"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 5,
+        "files": 7
+      }
+    },
+    "Pierlo Inc (DBA Baker's Travertine Power Clean)": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Pierlo Inc (DBA Baker's Travertine Power Clean)"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 49,
+        "files": 51
+      }
+    },
+    "Pro CPR Classes": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Pro CPR Classes"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 37,
+        "files": 39
+      }
+    },
+    "Prodigy Games": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Prodigy Games"
+      ],
+      "census": {
+        "agreements": 13,
+        "invoices": 9,
+        "proposals": 0,
+        "meetings": 2,
+        "emails": 5,
+        "attachments": 0,
+        "other": 661,
+        "files": 690
+      }
+    },
+    "Prospects": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects"
+      ],
+      "census": {
+        "agreements": 28,
+        "invoices": 3,
+        "proposals": 2,
+        "meetings": 8,
+        "emails": 0,
+        "attachments": 0,
+        "other": 301,
+        "files": 342
+      }
+    },
+    "Psychic Ivy": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Psychic Ivy"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 1,
+        "files": 4
+      }
+    },
+    "Quiroga": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Quiroga"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 10,
+        "files": 11
+      }
+    },
+    "REFERRAL PARTNERS": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/REFERRAL PARTNERS"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 51,
+        "files": 51
+      }
+    },
+    "RV Park": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/RV Park"
+      ],
+      "census": {
+        "agreements": 6,
+        "invoices": 2,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 50,
+        "files": 59
+      }
+    },
+    "Rejuvination Station": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Rejuvination Station"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 0,
+        "files": 1
+      }
+    },
+    "Smith River RV Park": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups/Smith River RV Park"
+      ],
+      "census": {
+        "agreements": 6,
+        "invoices": 2,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 81,
+        "files": 90
+      }
+    },
+    "Sober Living Summerlin": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Sober Living Summerlin"
+      ],
+      "census": {
+        "agreements": 3,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 15,
+        "files": 18
+      }
+    },
+    "Startups": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups"
+      ],
+      "census": {
+        "agreements": 16,
+        "invoices": 2,
+        "proposals": 0,
+        "meetings": 3,
+        "emails": 0,
+        "attachments": 0,
+        "other": 124,
+        "files": 145
+      }
+    },
+    "The Meeting Space": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/The Meeting Space"
+      ],
+      "census": {
+        "agreements": 5,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 6,
+        "emails": 0,
+        "attachments": 0,
+        "other": 4,
+        "files": 15
+      }
+    },
+    "Training": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Mortgage/Training"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 2,
+        "files": 2
+      }
+    },
+    "Triarc Construction LL": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/Triarc Construction LL"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 2,
+        "files": 2
+      }
+    },
+    "Triumphant Records": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Startups/Triumphant Records"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 17,
+        "files": 17
+      }
+    },
+    "True Mechanical": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/True Mechanical"
+      ],
+      "census": {
+        "agreements": 8,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 12,
+        "files": 20
+      }
+    },
+    "Victorum Tattoo": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Victorum Tattoo"
+      ],
+      "census": {
+        "agreements": 29,
+        "invoices": 5,
+        "proposals": 0,
+        "meetings": 5,
+        "emails": 0,
+        "attachments": 0,
+        "other": 295,
+        "files": 334
+      }
+    },
+    "Victory Contracting": {
+      "sources": [
+        "HVS_Hub_Client_Files"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Victory Contracting"
+      ],
+      "census": {
+        "agreements": 14,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 9,
+        "files": 23
+      }
+    },
+    "Workingman Tow": {
+      "sources": [
+        "OD_High_Value_Solution"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/Workingman Tow"
+      ],
+      "census": {
+        "agreements": 8,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 21,
+        "files": 29
+      }
+    },
+    "YellowHammer": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Prospects/YellowHammer"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 1,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 30,
+        "files": 33
+      }
+    },
+    "comp-ACCG Inc": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-ACCG Inc"
+      ],
+      "census": {
+        "agreements": 1,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 82,
+        "files": 83
+      }
+    },
+    "comp-Final Installment": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Final Installment"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 1,
+        "emails": 0,
+        "attachments": 0,
+        "other": 12,
+        "files": 13
+      }
+    },
+    "comp-Integrity Lift Solutions LLC": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Integrity Lift Solutions LLC"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 6,
+        "files": 6
+      }
+    },
+    "comp-LV Appraisals": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-LV Appraisals"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 0,
+        "files": 0
+      }
+    },
+    "comp-Lien Partners LLC": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Lien Partners LLC"
+      ],
+      "census": {
+        "agreements": 0,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 5,
+        "files": 5
+      }
+    },
+    "comp-Pierlo Inc (DBA Baker's Travertine Power Clean)": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Pierlo Inc (DBA Baker's Travertine Power Clean)"
+      ],
+      "census": {
+        "agreements": 2,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 44,
+        "files": 46
+      }
+    },
+    "comp-Prodigy Games": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Prodigy Games"
+      ],
+      "census": {
+        "agreements": 3,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 223,
+        "files": 226
+      }
+    },
+    "comp-Victory Contracting": {
+      "sources": [
+        "HVS_LLC_OPS_CLIENTS"
+      ],
+      "paths": [
+        "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Victory Contracting"
+      ],
+      "census": {
+        "agreements": 1,
+        "invoices": 0,
+        "proposals": 0,
+        "meetings": 0,
+        "emails": 0,
+        "attachments": 0,
+        "other": 6,
+        "files": 7
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "pilot": [
+    "ACCG01",
+    "PROD01",
+    "CHRI01"
+  ],
+  "import_forbidden_until": "CEO_EXPLICIT_APPROVAL_AFTER_TRACK1_LIVE",
+  "preserve_pricing": true,
+  "enable_client_emails": false,
+  "portal_enabled": false,
+  "do_not_contact": true,
+  "batch_size": 3
+}

@@ -1,0 +1,198 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-16T01:29:00+00:00",
+  "mode": "READ_ONLY",
+  "environment": "Dev",
+  "source": "AR_DASHBOARD.md + finance-operations invoice register",
+  "hard_rules": {
+    "never_auto_contact_clients": true,
+    "collections_requires_owner_approval": true,
+    "production_deployments": false
+  },
+  "portfolio_summary": {
+    "client_count": 3,
+    "invoice_register_row_count": 50,
+    "past_due_signal_count": 5,
+    "amount_extractable_count": 9,
+    "approval_queue_pending": 2
+  },
+  "invoice_register_ref": {
+    "path": ".worktrees/finance-operations/docs/finance/inventory/INVOICE_REGISTER.json",
+    "markdown_mirror": ".worktrees/finance-operations/docs/finance/inventory/INVOICE_REGISTER.md",
+    "row_count": 50,
+    "clients_scanned": [
+      "ACCG Inc.",
+      "Christie's Place LLC",
+      "Prodigy Games LLC"
+    ],
+    "note": "Full 50-row detail lives in INVOICE_REGISTER.json; this feed exposes portfolio priorities and keyed invoice refs only."
+  },
+  "age_model": {
+    "buckets": [
+      {
+        "id": "current",
+        "label": "Current",
+        "definition": "Not past due",
+        "action": "Monitor"
+      },
+      {
+        "id": "1-30",
+        "label": "1–30",
+        "definition": "Past due ≤30 days",
+        "action": "Draft REM_FRIENDLY → approval queue"
+      },
+      {
+        "id": "31-60",
+        "label": "31–60",
+        "definition": "Past due 31–60 days",
+        "action": "Draft REM_FIRM → approval queue"
+      },
+      {
+        "id": "61+",
+        "label": "61+",
+        "definition": "Past due >60 days",
+        "action": "Internal escalate to Manny"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "rank": 1,
+      "client": "Prodigy Games LLC",
+      "client_code": "PROD01",
+      "billing_status": "~$7,500/mo agreement",
+      "monthly_rate_usd": 7500,
+      "rate_verified": false,
+      "past_due_count": 2,
+      "priority": "HIGH",
+      "priority_sort": 1,
+      "next_action": "Apr/May 2026 past-due — approval queue Q-20260715-001",
+      "pricing_lock": "LEGACY_BLOCK",
+      "collections_eligible": true,
+      "approval_queue_ids": ["Q-20260715-001"],
+      "key_invoices": [
+        {
+          "register_index": 48,
+          "file": "Prodigy Games LLC April 2026 Past Due Invoice.pdf",
+          "invoice_date": "2026-04",
+          "past_due_signal": true,
+          "amount_usd": null
+        },
+        {
+          "register_index": 49,
+          "file": "Prodigy Games LLC May 2026 Past Due Invoice.pdf",
+          "invoice_date": "2026-05",
+          "past_due_signal": true,
+          "amount_usd": null
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "client": "ACCG Inc.",
+      "client_code": "ACCG01",
+      "billing_status": "Legacy LOCKED $4,539/mo",
+      "monthly_rate_usd": 4539,
+      "rate_verified": true,
+      "past_due_count": 3,
+      "priority": "MEDIUM",
+      "priority_sort": 2,
+      "next_action": "Owner: keep legacy pricing; review past-due if still open",
+      "pricing_lock": "OWNER_LOCKED",
+      "collections_eligible": true,
+      "approval_queue_ids": ["Q-20260715-002"],
+      "key_invoices": [
+        {
+          "register_index": 38,
+          "invoice_id": "INV-2025-10-ACCG-AP",
+          "file": "HVS ACCG Past Due Invoice 10.31.25.pdf",
+          "invoice_date": "2025-10-31",
+          "past_due_signal": true,
+          "amount_usd": null
+        },
+        {
+          "register_index": 40,
+          "invoice_id": "APM-ACCGINC-10-31-25",
+          "file": "HVS ACCG Past Due Invoice Oct 2025.pdf",
+          "invoice_date": "2025-11-03",
+          "past_due_signal": true,
+          "amount_usd": 4539.0
+        },
+        {
+          "register_index": 25,
+          "file": "HVS Invoice 6.27.24 ACCGa.pdf",
+          "invoice_date": "2024-06-27",
+          "past_due_signal": true,
+          "amount_usd": 2499.0
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "client": "Christie's Place LLC",
+      "client_code": "CHRP01",
+      "billing_status": "$4,750 invoices Jun 2026",
+      "monthly_rate_usd": null,
+      "invoice_amount_usd": 4750,
+      "rate_verified": true,
+      "past_due_count": 0,
+      "priority": "LOW",
+      "priority_sort": 3,
+      "next_action": "Clear",
+      "pricing_lock": "LEGACY_BLOCK",
+      "collections_eligible": false,
+      "approval_queue_ids": [],
+      "key_invoices": [
+        {
+          "register_index": 47,
+          "invoice_id": "0000128",
+          "file": "Invoice for Christie's Place 6.19.26.pdf",
+          "invoice_date": "2026-06-19",
+          "past_due_signal": false,
+          "amount_usd": 4750.0
+        },
+        {
+          "register_index": 46,
+          "invoice_id": "0000129",
+          "file": "Invoice for Christie's Place 6.19.26 part 2.pdf",
+          "invoice_date": "2026-06-19",
+          "past_due_signal": false,
+          "amount_usd": 4750.0
+        }
+      ]
+    }
+  ],
+  "approval_queue_ref": {
+    "path": "APPROVAL_QUEUE.md",
+    "pending": [
+      {
+        "queue_id": "Q-20260715-001",
+        "client_code": "PROD01",
+        "template": "REM_FRIENDLY",
+        "amount": "TBD (past-due Apr/May)",
+        "channel": "Email",
+        "status": "PENDING_OWNER"
+      },
+      {
+        "queue_id": "Q-20260715-002",
+        "client_code": "ACCG01",
+        "template": "REM_FRIENDLY",
+        "amount": "Review past-due Oct 2025 ($4,539 if still open)",
+        "channel": "Email",
+        "status": "PENDING_OWNER"
+      }
+    ]
+  },
+  "portfolio_floor_usd_per_month": {
+    "verified_acccg_christie": 9289,
+    "note": "ACCG $4,539 + Christie $4,750×2 one-time; Prodigy additive if collected"
+  },
+  "related_docs": [
+    "AR_DASHBOARD.md",
+    "AR_DASHBOARD.html",
+    "APPROVAL_QUEUE.md",
+    "COLLECTIONS_AUTOMATION.md",
+    "LEGACY_PRICING_GUARD.md",
+    "power-automate/COLLECTIONS_FLOW_DEFINITION.md"
+  ]
+}

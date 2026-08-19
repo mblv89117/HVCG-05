@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "HART01",
+    "generatedAt": "2026-07-15T18:30:00-07:00",
+    "pricingNote": "No HVS/HVCG fee instrument located — marketing access doc only"
+  },
+  "client": {
+    "LegalName": "Hart Family Dental",
+    "ClientCode": "HART01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "OWNER_VERIFY",
+    "ClientStage": "Unknown",
+    "EngagementTypePrimary": "Marketing / TBD",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "HVCG Clients folder present; no executed contract. See HART_FAMILY_DENTAL_ONBOARDING_PACKET.md"
+  },
+  "contacts": [
+    {
+      "FullName": "Lindsay",
+      "JobTitle": "Marketing contact (doc addressee)",
+      "Email": null,
+      "IsPrimary": true,
+      "DoNotContact": true
+    }
+  ],
+  "engagement": {
+    "Title": "Hart Family Dental — engagement instrument TBD",
+    "ContractingEntity": "OWNER_VERIFY",
+    "MonthlyRetainer": null,
+    "SetupFee": null,
+    "PricingStatus": "MISSING",
+    "CandidateInstruments": [
+      {
+        "name": "Marketing Campaign Access request",
+        "monthly": null,
+        "note": "No fee in doc; ad budget TBD"
+      }
+    ]
+  },
+  "documentAnchors": [
+    {
+      "path": "High Value Capital Group/HVCG/Clients/Hart Family Dental/Hart Family Dental Marketing Campaign Access.docx",
+      "type": "Marketing Access Checklist",
+      "importance": "MEDIUM"
+    }
+  ]
+}

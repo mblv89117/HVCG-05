@@ -1,0 +1,36 @@
+{
+  "code": "ACCG01",
+  "name": "ACCG Inc",
+  "classification": "HVS_LEGACY_CLIENT",
+  "entity": "High Value Solution LLC",
+  "engagement": "Access Plus / Fractional CFO & Capital Advisory",
+  "pricing": 4539,
+  "pricing_display": "$4,539/mo",
+  "pricing_confidence": "HIGH",
+  "funding": "SBA/debt/project financing evidence in OD",
+  "docs_files": 1362,
+  "agreements": 91,
+  "invoices": 60,
+  "contacts": [
+    "Earl Jackson",
+    "Sandra Vasquez",
+    "Leon Reed"
+  ],
+  "health_score": 100,
+  "health_band": "Green",
+  "renewal": "Review renewal at next billing cycle",
+  "cross_sell": "Capital Advisory / Funding Readiness (HVCG new SKUs \u2014 opportunity only; do not reprice legacy without owner)",
+  "top_next_action": "Maintain ops rhythm; complete CRM Dev shell",
+  "sources": [
+    "OD_High_Value_Solution",
+    "HVCG_Clients",
+    "HVS_Hub_Client_Files",
+    "HVS_LLC_OPS_CLIENTS"
+  ],
+  "paths": [
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution/ACCG",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Capital Group/HVCG/Clients/ACCG",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/ACCG Inc",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-ACCG Inc"
+  ]
+}

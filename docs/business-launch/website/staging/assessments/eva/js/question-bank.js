@@ -1,0 +1,757 @@
+/**
+ * HVCG EVA-FREE question bank — dynamic engine source of truth.
+ * Visibility: showIf(answers) → boolean. Industry branches via Q8.1.
+ */
+window.HVCG_EVA_BANK = (function () {
+  const yn = [
+    { value: "Y", label: "Yes" },
+    { value: "N", label: "No" },
+    { value: "partial", label: "Partial" },
+  ];
+  const scale = (n) =>
+    Array.from({ length: n }, (_, i) => ({
+      value: String(i + 1),
+      label: String(i + 1),
+    }));
+
+  const STEPS = [
+    {
+      id: "identity",
+      title: "Identity & consent",
+      subtitle: "Who we are assessing and how data may be used.",
+    },
+    {
+      id: "business",
+      title: "Business & industry",
+      subtitle: "Stage, industry, and operating context.",
+    },
+    {
+      id: "financials",
+      title: "Financial profile",
+      subtitle: "Revenue, profitability, cash, and reporting quality.",
+    },
+    {
+      id: "capital",
+      title: "Capital & risk",
+      subtitle: "Funding need, debt, collateral, and operating risk.",
+    },
+    {
+      id: "readiness",
+      title: "Management & exit",
+      subtitle: "Team depth, diligence readiness, and exit horizon.",
+    },
+    {
+      id: "review",
+      title: "Review & submit",
+      subtitle: "Confirm answers and generate your preliminary report.",
+    },
+  ];
+
+  const QUESTIONS = [
+    // —— Step: identity ——
+    {
+      id: "Q0.1",
+      step: "identity",
+      type: "text",
+      required: true,
+      label: "Legal business name",
+      map: "company.legalName",
+    },
+    {
+      id: "Q0.2",
+      step: "identity",
+      type: "text",
+      required: false,
+      label: "DBA (if any)",
+    },
+    {
+      id: "Q0.3",
+      step: "identity",
+      type: "enum",
+      required: true,
+      label: "Entity type",
+      options: [
+        "LLC",
+        "Corp",
+        "Sole Prop",
+        "Partnership",
+        "Nonprofit",
+        "Other",
+      ].map((x) => ({ value: x, label: x })),
+    },
+    {
+      id: "Q0.4",
+      step: "identity",
+      type: "text",
+      required: true,
+      label: "State of formation",
+    },
+    {
+      id: "Q0.5",
+      step: "identity",
+      type: "number",
+      required: true,
+      label: "Years in operation",
+      scored: "maturity",
+    },
+    {
+      id: "contact.firstName",
+      step: "identity",
+      type: "text",
+      required: true,
+      label: "First name",
+      map: "contact.firstName",
+    },
+    {
+      id: "contact.lastName",
+      step: "identity",
+      type: "text",
+      required: true,
+      label: "Last name",
+      map: "contact.lastName",
+    },
+    {
+      id: "contact.email",
+      step: "identity",
+      type: "email",
+      required: true,
+      label: "Email",
+      map: "contact.email",
+    },
+    {
+      id: "contact.phone",
+      step: "identity",
+      type: "tel",
+      required: false,
+      label: "Phone",
+      map: "contact.phone",
+    },
+    {
+      id: "contact.role",
+      step: "identity",
+      type: "enum",
+      required: true,
+      label: "Your role",
+      map: "contact.role",
+      options: [
+        { value: "Owner / CEO", label: "Owner / CEO" },
+        { value: "CFO / Finance", label: "CFO / Finance" },
+        { value: "Other decision-maker", label: "Other decision-maker" },
+        { value: "Advisor / Referral", label: "Advisor / Referral" },
+      ],
+    },
+    {
+      id: "contact.isDecisionMaker",
+      step: "identity",
+      type: "enum",
+      required: true,
+      label: "Are you a decision-maker for capital / advisory engagement?",
+      map: "contact.isDecisionMaker",
+      options: [
+        { value: "true", label: "Yes" },
+        { value: "false", label: "No" },
+      ],
+    },
+    {
+      id: "Q0.8",
+      step: "identity",
+      type: "confirm",
+      required: true,
+      label:
+        "I am inquiring as a new HVCG prospect (not changing an existing HVS engagement).",
+      map: "consent.hvcgProspect",
+    },
+    {
+      id: "Q0.9",
+      step: "identity",
+      type: "confirm",
+      required: true,
+      label:
+        "I consent to use of these answers for assessment and internal CRM only (not a financing application).",
+      map: "consent.disclaimerAccepted",
+    },
+    {
+      id: "Q0.10",
+      step: "identity",
+      type: "confirm",
+      required: true,
+      label: "I attest answers are accurate to the best of my knowledge.",
+    },
+
+    // —— Step: business ——
+    {
+      id: "Q1.1",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Business stage",
+      scored: "maturity",
+      options: [
+        { value: "idea", label: "Idea", score: 0 },
+        { value: "pre-revenue", label: "Pre-revenue", score: 1 },
+        { value: "early", label: "Early", score: 2 },
+        { value: "growth", label: "Growth", score: 4 },
+        { value: "mature", label: "Mature", score: 5 },
+        { value: "turnaround", label: "Turnaround", score: 2 },
+      ],
+    },
+    {
+      id: "Q1.3",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Formal operating plan / budget exists?",
+      scored: "maturity",
+      options: yn.map((o) => ({
+        ...o,
+        score: o.value === "Y" ? 5 : o.value === "partial" ? 2 : 0,
+      })),
+    },
+    {
+      id: "Q1.5",
+      step: "business",
+      type: "scale",
+      required: true,
+      label: "Key-person dependency (1=low, 5=owner does most critical work)",
+      scored: "maturity",
+      invert: true,
+      options: scale(5),
+    },
+    {
+      id: "Q8.1",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Primary industry",
+      scored: "industry",
+      options: [
+        { value: "manufacturing", label: "Manufacturing / industrial" },
+        { value: "professional_services", label: "Professional services" },
+        { value: "healthcare", label: "Healthcare / life sciences" },
+        { value: "construction", label: "Construction / trades" },
+        { value: "retail", label: "Retail / e-commerce" },
+        { value: "saas_tech", label: "SaaS / technology" },
+        { value: "hospitality", label: "Hospitality / food" },
+        { value: "real_estate", label: "Real estate" },
+        { value: "fintech", label: "Fintech / financial services" },
+        { value: "cannabis", label: "Cannabis" },
+        { value: "other", label: "Other" },
+      ],
+    },
+    {
+      id: "Q8.2",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Is this a heavily regulated industry?",
+      scored: "industry",
+      options: yn.slice(0, 2),
+    },
+    {
+      id: "Q8.healthcare_payor",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Primary payor mix (healthcare)",
+      showIf: (a) => a["Q8.1"] === "healthcare",
+      options: [
+        { value: "private", label: "Mostly private pay" },
+        { value: "insurance", label: "Insurance / third-party" },
+        { value: "medicare", label: "Medicare / Medicaid heavy" },
+        { value: "mixed", label: "Mixed" },
+      ],
+    },
+    {
+      id: "Q8.saas_arr",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "ARR / subscription maturity (SaaS)",
+      showIf: (a) => a["Q8.1"] === "saas_tech",
+      options: [
+        { value: "pre", label: "Pre-ARR / project" },
+        { value: "early", label: "Early ARR (<$1M)" },
+        { value: "scaled", label: "Scaled ARR ($1M+)" },
+      ],
+    },
+    {
+      id: "Q8.mfg_capacity",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Capacity utilization (manufacturing)",
+      showIf: (a) => a["Q8.1"] === "manufacturing",
+      options: [
+        { value: "low", label: "Under 60%" },
+        { value: "mid", label: "60–85%" },
+        { value: "high", label: "85%+" },
+      ],
+    },
+    {
+      id: "Q8.3",
+      step: "business",
+      type: "scale",
+      required: true,
+      label: "Industry growth outlook (1=weak, 5=strong)",
+      scored: "industry",
+      options: scale(5),
+    },
+    {
+      id: "Q9.2",
+      step: "business",
+      type: "enum",
+      required: true,
+      label: "Primary growth lever",
+      scored: "growth",
+      options: [
+        { value: "sales", label: "Sales / marketing" },
+        { value: "product", label: "Product / service expansion" },
+        { value: "geo", label: "Geographic expansion" },
+        { value: "ma", label: "M&A / roll-up" },
+        { value: "other", label: "Other" },
+      ],
+    },
+    {
+      id: "Q9.3",
+      step: "business",
+      type: "scale",
+      required: true,
+      label: "Pipeline / backlog visibility (1–5)",
+      scored: "growth",
+      options: scale(5),
+    },
+    {
+      id: "company.challenge",
+      step: "business",
+      type: "textarea",
+      required: true,
+      label: "Primary challenge (short)",
+      map: "company.challenge",
+      maxLength: 500,
+    },
+    {
+      id: "company.valueDriverThemes",
+      step: "business",
+      type: "multi",
+      required: true,
+      label: "Value-driver themes (select all that apply)",
+      map: "company.valueDriverThemes",
+      options: [
+        "Revenue quality and concentration",
+        "Margin and unit economics",
+        "Working capital / cash conversion",
+        "Debt structure and covenants",
+        "Management depth and key-person risk",
+        "Market position and differentiation",
+        "Documentation and reporting maturity",
+        "Legal / entity structure clarity",
+      ].map((x) => ({ value: x, label: x })),
+    },
+
+    // —— Step: financials ——
+    {
+      id: "Q2.1",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Trailing-12-month revenue",
+      scored: "revenue",
+      map: "company.revenueBand",
+      options: [
+        { value: "1", label: "Under $100k", score: 1, labelCrm: "Under $1M" },
+        { value: "2", label: "$100k–$500k", score: 2, labelCrm: "$1–3M" },
+        { value: "3", label: "$500k–$1.5M", score: 3, labelCrm: "$3–10M" },
+        { value: "4", label: "$1.5M–$5M", score: 4, labelCrm: "$10M+" },
+        { value: "5", label: "$5M+", score: 5, labelCrm: "$10M+" },
+      ],
+    },
+    {
+      id: "Q2.3",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Revenue trend",
+      scored: "revenue",
+      options: [
+        { value: "declining", label: "Declining", score: 1 },
+        { value: "flat", label: "Flat", score: 2 },
+        { value: "modest", label: "Modest growth", score: 4 },
+        { value: "strong", label: "Strong growth", score: 5 },
+      ],
+    },
+    {
+      id: "Q2.4",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Recurring / contracted % of revenue",
+      scored: "revenue",
+      options: [
+        { value: "1", label: "0–20%", score: 1 },
+        { value: "2", label: "20–40%", score: 2 },
+        { value: "3", label: "40–60%", score: 3 },
+        { value: "4", label: "60–80%", score: 4 },
+        { value: "5", label: "80%+", score: 5 },
+      ],
+    },
+    {
+      id: "Q3.1",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "TTM gross margin",
+      scored: "profitability",
+      options: [
+        { value: "1", label: "<20%", score: 1 },
+        { value: "2", label: "20–35%", score: 2 },
+        { value: "3", label: "35–50%", score: 3 },
+        { value: "4", label: "50–65%", score: 4 },
+        { value: "5", label: "65%+", score: 5 },
+      ],
+    },
+    {
+      id: "Q3.2",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Operating profit / EBITDA (approx)",
+      scored: "profitability",
+      options: [
+        { value: "loss", label: "Loss", score: 1 },
+        { value: "breakeven", label: "Breakeven", score: 2 },
+        { value: "modest", label: "Modest profit", score: 3 },
+        { value: "strong", label: "Strong profit", score: 5 },
+      ],
+    },
+    {
+      id: "Q3.4",
+      step: "financials",
+      type: "textarea",
+      required: true,
+      label: "Path to profitability (required if currently loss-making)",
+      showIf: (a) => a["Q3.2"] === "loss",
+    },
+    {
+      id: "Q4.1",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Typical cash runway",
+      scored: "cash",
+      options: [
+        { value: "0", label: "<1 month", score: 0 },
+        { value: "1", label: "1–2 months", score: 1 },
+        { value: "2", label: "3–5 months", score: 2 },
+        { value: "3", label: "6–11 months", score: 3 },
+        { value: "4", label: "12–18 months", score: 4 },
+        { value: "5", label: "18+ months", score: 5 },
+      ],
+    },
+    {
+      id: "Q4.2",
+      step: "financials",
+      type: "scale",
+      required: true,
+      label: "Cash conversion stress (1=low, 5=severe)",
+      scored: "cash",
+      invert: true,
+      options: scale(5),
+    },
+    {
+      id: "Q11.1",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Books system",
+      scored: "reporting",
+      map: "company.books",
+      options: [
+        { value: "1", label: "None / spreadsheet", score: 1, labelCrm: "Weak / delayed" },
+        { value: "2", label: "Basic QB/Xero — inconsistent", score: 2, labelCrm: "Basic / inconsistent" },
+        { value: "3", label: "Monthly close", score: 4, labelCrm: "Monthly close" },
+        { value: "4", label: "CPA review / audit-ready", score: 5, labelCrm: "Audit-ready" },
+      ],
+    },
+    {
+      id: "Q11.7",
+      step: "financials",
+      type: "enum",
+      required: true,
+      label: "Tax filings current?",
+      scored: "reporting",
+      options: [
+        { value: "Y", label: "Yes", score: 5 },
+        { value: "N", label: "No", score: 0 },
+        { value: "unk", label: "Unsure", score: 2 },
+      ],
+    },
+
+    // —— Step: capital ——
+    {
+      id: "Q12.1",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Capital sought (amount band)",
+      scored: "capital_clarity",
+      options: [
+        { value: "under_250k", label: "Under $250k" },
+        { value: "250_1m", label: "$250k–$1M" },
+        { value: "1_5m", label: "$1M–$5M" },
+        { value: "5m_plus", label: "$5M+" },
+        { value: "unsure", label: "Unsure" },
+      ],
+    },
+    {
+      id: "Q12.2",
+      step: "capital",
+      type: "multi",
+      required: true,
+      label: "Purpose of capital",
+      scored: "capital_clarity",
+      options: [
+        "Growth",
+        "Working capital",
+        "Refinance",
+        "Acquisition",
+        "Equipment",
+        "Turnaround",
+        "Other",
+      ].map((x) => ({ value: x, label: x })),
+    },
+    {
+      id: "Q12.3",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Preferred instrument",
+      map: "company.capital",
+      options: [
+        { value: "debt", label: "Debt", labelCrm: "Debt" },
+        { value: "equity", label: "Equity", labelCrm: "Equity" },
+        { value: "both", label: "Hybrid / both", labelCrm: "Both / unsure" },
+        { value: "none", label: "Not raising now", labelCrm: "Not raising now" },
+      ],
+    },
+    {
+      id: "Q12.4",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Timeline need",
+      map: "company.timeline",
+      scored: "capital_clarity",
+      options: [
+        { value: "1", label: "Exploratory", labelCrm: "Exploring" },
+        { value: "2", label: "90–180 days", labelCrm: "3–6 months" },
+        { value: "3", label: "30–90 days", labelCrm: "0–90 days" },
+        { value: "4", label: "Urgent (<30 days)", labelCrm: "Urgent" },
+      ],
+    },
+    {
+      id: "Q12.6",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Use-of-funds plan documented?",
+      scored: "capital_clarity",
+      options: yn.map((o) => ({
+        ...o,
+        score: o.value === "Y" ? 5 : o.value === "partial" ? 3 : 1,
+      })),
+    },
+    {
+      id: "Q5.2",
+      step: "capital",
+      type: "multi",
+      required: false,
+      label: "Debt types outstanding (if any)",
+      scored: "debt",
+      options: [
+        "Bank",
+        "SBA",
+        "MCA",
+        "Credit cards",
+        "Related-party",
+        "None",
+        "Other",
+      ].map((x) => ({ value: x, label: x })),
+    },
+    {
+      id: "Q5.4",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Current on all debt obligations?",
+      scored: "debt",
+      options: yn.map((o) => ({
+        ...o,
+        score: o.value === "Y" ? 5 : o.value === "partial" ? 2 : 0,
+      })),
+    },
+    {
+      id: "Q5.6",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Defaults / collections / UCC issues (24 mo)?",
+      scored: "debt",
+      options: [
+        { value: "N", label: "No", score: 5 },
+        { value: "Y", label: "Yes", score: 0 },
+      ],
+    },
+    {
+      id: "Q13.1",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Willing to pledge business assets?",
+      scored: "collateral",
+      showIf: (a) => a["Q12.3"] !== "none",
+      options: [
+        { value: "Y", label: "Yes", score: 5 },
+        { value: "N", label: "No", score: 1 },
+        { value: "unk", label: "Unsure", score: 3 },
+      ],
+    },
+    {
+      id: "Q10.1",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Top customer concentration",
+      scored: "risk",
+      options: [
+        { value: "1", label: "<15%", score: 5 },
+        { value: "2", label: "15–25%", score: 4 },
+        { value: "3", label: "25–40%", score: 3 },
+        { value: "4", label: "40–60%", score: 2 },
+        { value: "5", label: ">60%", score: 1 },
+      ],
+    },
+    {
+      id: "Q10.3",
+      step: "capital",
+      type: "enum",
+      required: true,
+      label: "Litigation / regulatory actions pending?",
+      scored: "risk",
+      options: [
+        { value: "N", label: "No", score: 5 },
+        { value: "Y", label: "Yes", score: 1 },
+      ],
+    },
+
+    // —— Step: readiness ——
+    {
+      id: "Q14.3",
+      step: "readiness",
+      type: "enum",
+      required: true,
+      label: "Finance lead on team",
+      scored: "management",
+      options: [
+        { value: "owner", label: "Owner only", score: 2 },
+        { value: "bookkeeper", label: "Bookkeeper", score: 3 },
+        { value: "controller", label: "Controller", score: 4 },
+        { value: "cfo", label: "CFO / Fractional CFO", score: 5 },
+      ],
+    },
+    {
+      id: "Q14.4",
+      step: "readiness",
+      type: "scale",
+      required: true,
+      label: "Willingness to engage advisors & share data (1–5)",
+      scored: "management",
+      options: scale(5),
+    },
+    {
+      id: "Q16.1",
+      step: "readiness",
+      type: "enum",
+      required: true,
+      label: "Exit horizon",
+      scored: "exit",
+      options: [
+        { value: "none", label: "None / lifestyle", score: 2 },
+        { value: "lt2", label: "Under 2 years", score: 4 },
+        { value: "2_5", label: "2–5 years", score: 5 },
+        { value: "5_10", label: "5–10 years", score: 3 },
+        { value: "evergreen", label: "Evergreen", score: 2 },
+      ],
+    },
+    {
+      id: "Q16.4",
+      step: "readiness",
+      type: "scale",
+      required: true,
+      label: "Diligence cleanliness (contracts, IP, books) 1–5",
+      scored: "exit",
+      options: scale(5),
+    },
+    {
+      id: "Q17.1",
+      step: "readiness",
+      type: "enum",
+      required: true,
+      label: "Can provide last 2 years tax returns?",
+      scored: "ops",
+      options: [
+        { value: "Y", label: "Yes", score: 5 },
+        { value: "N", label: "No", score: 1 },
+      ],
+    },
+    {
+      id: "Q17.2",
+      step: "readiness",
+      type: "enum",
+      required: true,
+      label: "Can provide YTD + prior P&L / BS / cash flow?",
+      scored: "ops",
+      options: [
+        { value: "Y", label: "Yes", score: 5 },
+        { value: "N", label: "No", score: 1 },
+      ],
+    },
+    {
+      id: "Q17.3",
+      step: "readiness",
+      type: "enum",
+      required: true,
+      label: "Bank statements (6–12 mo) available?",
+      scored: "ops",
+      options: [
+        { value: "Y", label: "Yes", score: 5 },
+        { value: "N", label: "No", score: 1 },
+      ],
+    },
+  ];
+
+  function visibleQuestions(answers, stepId) {
+    return QUESTIONS.filter((q) => {
+      if (stepId && q.step !== stepId) return false;
+      if (typeof q.showIf === "function") return !!q.showIf(answers);
+      return true;
+    });
+  }
+
+  function validateStep(answers, stepId) {
+    const missing = [];
+    for (const q of visibleQuestions(answers, stepId)) {
+      if (!q.required) continue;
+      const v = answers[q.id];
+      if (q.type === "multi") {
+        if (!Array.isArray(v) || !v.length) missing.push(q.id);
+      } else if (q.type === "confirm") {
+        if (v !== true && v !== "true" && v !== "on") missing.push(q.id);
+      } else if (v === undefined || v === null || String(v).trim() === "") {
+        missing.push(q.id);
+      }
+    }
+    return missing;
+  }
+
+  return { STEPS, QUESTIONS, visibleQuestions, validateStep };
+})();

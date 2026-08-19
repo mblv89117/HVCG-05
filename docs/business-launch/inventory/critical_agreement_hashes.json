@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-07-16T01:10:00.243408+00:00",
+  "mode": "READ_ONLY",
+  "files": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/ACCG Inc/99_Internal (HVS only)/HVS_ACCG_Master_Services_Agreement.docx",
+      "exists": true,
+      "sha256": "6fe101b3fc0419b8d4ee8b3068636353f2060f0732749874f3c986a0ed7da0e4",
+      "size": 187602,
+      "mtime": "2026-01-29T18:35:42+00:00"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/ACCG Inc/99_Internal (HVS only)/HVS_ACCG_Master_Services_Agreement.pdf",
+      "exists": true,
+      "sha256": "fba090d2d90b3cf34176506d257970669e17e875cfbaf66e4ce793b90807708b",
+      "size": 256906,
+      "mtime": "2026-01-29T18:30:53+00:00"
+    },
+    {
+      "path": "High Value Capital Group/HVCG/Clients/ACCG/STATEMENT OF WORK AND ENGAGEMENT AGREEMENT.docx",
+      "exists": true,
+      "sha256": "8ce02d9a771c14182c1f50e085b3820dbe84ae9d8dc6b189e88d798f47149272",
+      "size": 46948,
+      "mtime": "2026-06-09T20:11:26.865771+00:00"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Prodigy Games/05_Contracts & Invoice Docs/HVS_Prodigy_Games_Fractional_CFO_Agreement - signed.pdf",
+      "exists": true,
+      "sha256": "e338c9b5c4efab3bb83c58db260534e950b1a6785bdbdfcafd7dd940b6e48a3f",
+      "size": 250113,
+      "mtime": "2026-01-13T18:56:52+00:00"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "LVAP01",
+    "generatedAt": "2026-07-15T18:45:00-07:00",
+    "pricingNote": "Discovery — website/marketing docs only; no HVS agreement DOCX"
+  },
+  "client": {
+    "LegalName": "LV Appraisals",
+    "ClientCode": "LVAP01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Discovery",
+    "EngagementTypePrimary": "Marketing / website (TBD)",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "No HVS agreement found — website content only. See DISC_04/PROFILE.md"
+  },
+  "contacts": [],
+  "engagement": {
+    "Title": "LV Appraisals — discovery",
+    "MonthlyRetainer": null,
+    "PricingStatus": "MISSING"
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/LV Appraisals/03_Corporate Docs/Las Vegas Appraisal Co Revised.docx",
+      "type": "Website Content",
+      "importance": "LOW"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "INTL01",
+    "generatedAt": "2026-07-15T18:45:00-07:00",
+    "pricingNote": "$10,000 non-refundable retainer per DOCX §2.1 — draft names Expert Nursing; verify signed PDF"
+  },
+  "client": {
+    "LegalName": "Integrity Lift Solutions LLC",
+    "ClientCode": "INTL01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Discovery",
+    "EngagementTypePrimary": "Consulting / capital facilitation",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "Draft DOCX client name mismatch (Expert Nursing). Signed agreement PDF 11.26.24. See DISC_02/PROFILE.md"
+  },
+  "contacts": [],
+  "engagement": {
+    "Title": "Integrity Lift Solutions — Consulting Agreement",
+    "ContractingEntity": "High Value Solution LLC",
+    "SetupFee": 10000,
+    "MonthlyRetainer": null,
+    "FinancingTarget": 1000000,
+    "PricingStatus": "EXTRACTED_VERIFY_SIGNED",
+    "PricingNote": "Non-refundable $10,000 retainer due in full upon execution — confirm against signed PDF and correct client entity"
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Integrity Lift Solutions LLC/05_Contracts & Invoice Docs/CONSULTING AGREEMENT.docx",
+      "type": "Consulting Agreement (draft)",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Integrity Lift Solutions LLC/05_Contracts & Invoice Docs/Integrity Lift Solutions LLC Consulting Agreement 11.26.24 - signed.pdf",
+      "type": "Consulting Agreement",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Integrity Lift Solutions LLC/05_Contracts & Invoice Docs/HVS Invoice 11.27.24 Integrity Lift Solutions.pdf",
+      "type": "Invoice",
+      "importance": "HIGH"
+    }
+  ]
+}

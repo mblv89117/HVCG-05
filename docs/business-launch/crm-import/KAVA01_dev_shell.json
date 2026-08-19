@@ -1,0 +1,65 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "KAVA01",
+    "generatedAt": "2026-07-15T18:30:00-07:00",
+    "pricingNote": "Bookkeeping $1,000/mo co-file with Prodigy — verify live; HVS CFO via PROD01"
+  },
+  "client": {
+    "LegalName": "That's Kava LLC",
+    "ClientCode": "KAVA01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Active Client",
+    "EngagementTypePrimary": "Bookkeeping (co-located with Prodigy)",
+    "PortalEnabled": false,
+    "IsActive": true,
+    "InternalNotes": "No dedicated Hub folder. Documents under Prodigy Games. See THATS_KAVA_ONBOARDING_PACKET.md"
+  },
+  "contacts": [
+    {
+      "FullName": "Ryan Gnieski",
+      "JobTitle": "President, Prodigy Games (authorized rep)",
+      "Email": "ryan@gnieski.biz",
+      "IsPrimary": true,
+      "IsDecisionMaker": true,
+      "DoNotContact": true
+    },
+    {
+      "FullName": "Doug Mafett",
+      "JobTitle": "Bookkeeper",
+      "Email": "sailfishaccounting@yahoo.com",
+      "IsBilling": true,
+      "DoNotContact": true
+    }
+  ],
+  "engagement": {
+    "Title": "That's Kava — Bookkeeping (Prodigy co-file)",
+    "ContractingEntity": "High Value Solution LLC",
+    "MonthlyRetainer": 1000,
+    "PricingStatus": "EXTRACTED_VERIFY",
+    "PricingNote": "Flat $1,000/mo covers Prodigy + Kava bookkeeping per agreement; separate from HVS $7,500/mo CFO on PROD01",
+    "OverageHourlyRate": null
+  },
+  "relatedAccounts": [
+    {
+      "ClientCode": "PROD01",
+      "LegalName": "Prodigy Games LLC",
+      "Relationship": "Parent / common ownership"
+    }
+  ],
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Prodigy Games/05_Contracts & Invoice Docs/Prodigy_ThatsKava_Bookkeeping_Services_Agreement_FL.docx",
+      "type": "Bookkeeping Agreement",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Prodigy Games/05_Contracts & Invoice Docs/Prodigy_ThatsKava_BSA_Enhanced.docx",
+      "type": "Bookkeeping Agreement Enhanced",
+      "importance": "HIGH"
+    }
+  ]
+}

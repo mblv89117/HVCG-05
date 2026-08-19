@@ -1,0 +1,57 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft — DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "OAD01",
+    "generatedAt": "2026-07-15T18:30:00-07:00",
+    "pricingNote": "No HVS advisory agreement — operating agreement only; confirm HVS relationship"
+  },
+  "client": {
+    "LegalName": "Outstanding Auto Detailing LLC",
+    "ClientCode": "OAD01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Unknown",
+    "EngagementTypePrimary": "TBD — investor/member structure located",
+    "PortalEnabled": false,
+    "IsActive": null,
+    "InternalNotes": "Tim Bell archive only. No HVS contract in inventory. See OUTSTANDING_AUTO_DETAILING_ONBOARDING_PACKET.md"
+  },
+  "contacts": [
+    {
+      "FullName": "Philip Garcia",
+      "JobTitle": "Manager / 50% member",
+      "Email": "philipgarcia2020@gmail.com",
+      "IsPrimary": true,
+      "DoNotContact": true
+    },
+    {
+      "FullName": "Tim Bell",
+      "JobTitle": "Investor member 25%",
+      "Email": "dcbell.tt@gmail.com",
+      "DoNotContact": true
+    }
+  ],
+  "engagement": {
+    "Title": "Outstanding Auto Detailing — HVS engagement unconfirmed",
+    "ContractingEntity": "High Value Solution LLC",
+    "MonthlyRetainer": null,
+    "PricingStatus": "MISSING_HVS_INSTRUMENT",
+    "NonHvsInstruments": [
+      {
+        "name": "Schedule E Loan (Operating Agreement)",
+        "principal": 50000,
+        "revenueSharePercent": 8,
+        "note": "Member loan structure — not HVS retainer"
+      }
+    ]
+  },
+  "documentAnchors": [
+    {
+      "path": "Personal Drive/4.10.23/Tim Bell/Outstanding Auto Detailing LLC Operating Agreement Revised.docx",
+      "type": "Operating Agreement",
+      "importance": "MEDIUM"
+    }
+  ]
+}

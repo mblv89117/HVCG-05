@@ -1,0 +1,26 @@
+{
+  "code": "HART01",
+  "name": "Hart Family Dental",
+  "classification": "HVS_LEGACY_CLIENT",
+  "entity": "High Value Solution LLC",
+  "engagement": "MISSING",
+  "pricing": null,
+  "pricing_display": "MISSING",
+  "pricing_confidence": "NONE",
+  "funding": "MISSING",
+  "docs_files": 1,
+  "agreements": 0,
+  "invoices": 0,
+  "contacts": [],
+  "health_score": 5,
+  "health_band": "Red",
+  "renewal": "Establish contracted terms before renewal planning",
+  "cross_sell": "Capital Advisory / Funding Readiness (HVCG new SKUs \u2014 opportunity only; do not reprice legacy without owner)",
+  "top_next_action": "Confirm active status; locate MSA/invoice; prioritize inventory",
+  "sources": [
+    "HVCG_Clients"
+  ],
+  "paths": [
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Capital Group/HVCG/Clients/Hart Family Dental"
+  ]
+}

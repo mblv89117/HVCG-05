@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Enterprise Value Assessment | High Value Capital Group</title>
+<meta name="description" content="HVCG Enterprise Value Assessment — multi-step Dev staging experience."/>
+<link rel="stylesheet" href="css/eva-app.css"/>
+</head>
+<body>
+<div class="app-shell">
+  <header class="brand-bar">
+    <p class="brand">High Value Capital Group</p>
+    <p class="tag">Enterprise Value Assessment</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="progress-label" id="progressLabel">Step 1</p>
+  </div>
+
+  <div class="banner" id="resumeBanner" hidden>
+    <strong>Resume your previous assessment?</strong>
+    <div class="cta-row" style="margin:.6rem 0 0">
+      <button type="button" class="btn" id="btnResume">Resume</button>
+      <button type="button" class="btn ghost" id="btnFresh">Start fresh</button>
+    </div>
+  </div>
+
+  <main class="panel">
+    <h1 id="stepTitle">Identity &amp; consent</h1>
+    <p class="lead" id="stepSub">Who we are assessing and how data may be used.</p>
+    <div class="error" id="stepError" hidden></div>
+    <form class="eva-form" id="stepForm" onsubmit="return false;"></form>
+
+    <div id="resultsPanel" class="results" hidden>
+      <h2>Executive diagnostic</h2>
+      <p id="execSummary"></p>
+      <div class="meta-grid" id="diagMeta"></div>
+
+      <h2>Readiness scores</h2>
+      <div class="score-grid" id="scoreGrid"></div>
+
+      <h2>Preliminary enterprise value range</h2>
+      <div id="valuationBlock"></div>
+
+      <h2>Capital &amp; funding recommendation</h2>
+      <div id="capitalBlock"></div>
+
+      <h2>Recommended HVCG engagement</h2>
+      <div id="engagementBlock"></div>
+
+      <h2>Top five priorities</h2>
+      <ul id="prioritiesList"></ul>
+
+      <h2>Major risks</h2>
+      <ul id="risksList"></ul>
+
+      <h2>Documents typically required</h2>
+      <ul id="docsList"></ul>
+
+      <h2>Timeline &amp; investment</h2>
+      <div id="timelineInvest"></div>
+
+      <div class="cta-panel">
+        <h2>Recommended next step</h2>
+        <button type="button" class="btn" id="primaryCta">Continue</button>
+        <p class="fine" id="ctaStagingNote" hidden>This action is staged for Development only. Live scheduling and email are not enabled until separately approved.</p>
+        <div class="cta-row">
+          <a class="btn secondary" id="openReport" href="report.html">Download branded report</a>
+        </div>
+        <p class="contact-line" id="contactLine"></p>
+      </div>
+
+      <h2>Important disclaimers</h2>
+      <ul class="fine-list" id="disclaimerBlock"></ul>
+    </div>
+
+    <div class="nav-row" id="navRow">
+      <button type="button" class="btn secondary" id="btnBack">Back</button>
+      <button type="button" class="btn" id="btnNext">Continue</button>
+      <span class="save-hint" id="saveHint">Autosave on</span>
+    </div>
+  </main>
+
+  <footer class="eva-foot">
+    <p>Preliminary informational tool only. Not a valuation, financing offer, or guarantee.
+    Final engagement pricing requires owner approval.</p>
+    <p>© High Value Capital Group LLC</p>
+  </footer>
+</div>
+<script src="js/question-bank.js"></script>
+<script src="js/scoring-engine.js"></script>
+<script src="js/recommendations.js"></script>
+<script src="js/conversion-engine.js"></script>
+<script src="js/crm-payload.js"></script>
+<script src="js/autosave.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

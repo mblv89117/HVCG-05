@@ -1,0 +1,120 @@
+{
+  "_meta": {
+    "purpose": "Dev-only CRM shell draft \u2014 DO NOT import until Master PM / owner clears Dev write",
+    "environment": "HVCG Development",
+    "production": "FORBIDDEN",
+    "clientCode": "ACCG01",
+    "generatedAt": "2026-07-15T18:25:00-07:00",
+    "pricingNote": "OWNER CLOSED BL-ACCG-PRICE: legacy Access Plus $4539/mo PRESERVE \u2014 never apply drafts or HVCG rate card",
+    "ownerDecision": "BL-ACCG-PRICE closed 2026-07-15"
+  },
+  "client": {
+    "LegalName": "ACCG Inc.",
+    "ClientCode": "ACCG01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "ClientStage": "Active Client",
+    "EngagementTypePrimary": "Fractional CFO / Capital Advisory",
+    "PortalEnabled": false,
+    "IsActive": true,
+    "InternalNotes": "Legacy HVS. Pricing FROZEN at Access Plus $4,539/mo per owner. Do not reprice."
+  },
+  "contacts": [
+    {
+      "FullName": "Earl Jackson",
+      "JobTitle": "President",
+      "Email": "Ej@accg-inc.com",
+      "Phone": "321-363-6005",
+      "IsPrimary": true,
+      "IsDecisionMaker": true,
+      "DoNotContact": true
+    },
+    {
+      "FullName": "Sandra Vasquez",
+      "JobTitle": "Finance",
+      "Email": null,
+      "IsBilling": true,
+      "DoNotContact": true
+    },
+    {
+      "FullName": "Leon Reed",
+      "JobTitle": "Principal / related party",
+      "Email": null,
+      "DoNotContact": true
+    }
+  ],
+  "engagement": {
+    "Title": "ACCG Inc. \u2014 HVS advisory (instrument TBD)",
+    "ContractingEntity": "High Value Solution LLC",
+    "MonthlyRetainer": 4539,
+    "SetupFee": null,
+    "SuccessFeeDebtPercent": 1.5,
+    "PricingStatus": "OWNER_LOCKED_LEGACY",
+    "CandidateInstruments": [
+      {
+        "name": "Access Plus (ops pattern)",
+        "monthly": 4562,
+        "note": "Cited in HVCG SOW as prior; Second Brain ~4539",
+        "status": "REJECTED_OWNER_KEEP_LEGACY"
+      },
+      {
+        "name": "HVS MSA Scale draft",
+        "monthly": 12500,
+        "note": "OPEN ITEMS before execution \u2014 likely draft",
+        "status": "REJECTED_OWNER_KEEP_LEGACY"
+      },
+      {
+        "name": "HVCG SOW draft",
+        "monthly": 6000,
+        "setup": 3000,
+        "note": "Under HVCG/Clients/ACCG \u2014 confirm if executed",
+        "status": "REJECTED_OWNER_KEEP_LEGACY"
+      }
+    ],
+    "BillingProduct": "ACCESS PLUS MEMBERSHIP",
+    "InvoiceEvidence": [
+      {
+        "file": "HVS_Invoice_ACCG_2026-5.pdf",
+        "invoice": "INV-2026-05-ACCG-AP",
+        "amount": 4539,
+        "label": "Access Plus"
+      },
+      {
+        "file": "HVS ACCG Past Due Invoice Oct 2025.pdf",
+        "amount": 4539,
+        "label": "Access Plus Membership"
+      },
+      {
+        "file": "Invoice-23323F37-0001.pdf",
+        "amount": 4563,
+        "note": "Stripe Sep 2024 \u2014 near Access Plus"
+      }
+    ],
+    "DraftInstrumentsNotApplied": [
+      {
+        "name": "HVS MSA Scale",
+        "monthly": 12500,
+        "status": "DRAFT_NOT_USED_FOR_BILLING"
+      },
+      {
+        "name": "HVCG SOW",
+        "monthly": 6000,
+        "setup": 3000,
+        "status": "DRAFT_NOT_USED_FOR_BILLING"
+      }
+    ],
+    "PricingNote": "Keep on legacy agreement. Drafts ($12,500 MSA / $6,000 HVCG) NOT applied."
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/ACCG Inc/99_Internal (HVS only)/HVS_ACCG_Master_Services_Agreement.docx",
+      "type": "MSA",
+      "importance": "CRITICAL"
+    },
+    {
+      "path": "High Value Capital Group/HVCG/Clients/ACCG/STATEMENT OF WORK AND ENGAGEMENT AGREEMENT.docx",
+      "type": "HVCG_SOW",
+      "importance": "CRITICAL"
+    }
+  ]
+}

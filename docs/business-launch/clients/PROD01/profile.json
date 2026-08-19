@@ -1,0 +1,28 @@
+{
+  "code": "PROD01",
+  "name": "Prodigy Games",
+  "classification": "HVS_LEGACY_CLIENT",
+  "entity": "High Value Solution LLC",
+  "engagement": "Fractional CFO Growth Tier",
+  "pricing": 7500,
+  "pricing_display": "$7,500/mo",
+  "pricing_confidence": "MED",
+  "funding": "Strategic capital agreement on file",
+  "docs_files": 916,
+  "agreements": 16,
+  "invoices": 9,
+  "contacts": [],
+  "health_score": 77,
+  "health_band": "Green",
+  "renewal": "Review renewal at next billing cycle",
+  "cross_sell": "Capital Advisory / Funding Readiness (HVCG new SKUs \u2014 opportunity only; do not reprice legacy without owner)",
+  "top_next_action": "Maintain ops rhythm; complete CRM Dev shell",
+  "sources": [
+    "HVS_Hub_Client_Files",
+    "HVS_LLC_OPS_CLIENTS"
+  ],
+  "paths": [
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/Prodigy Games",
+    "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/High Value Solution LLC/OPERATIONS/CLIENTS/Archive/comp-Prodigy Games"
+  ]
+}

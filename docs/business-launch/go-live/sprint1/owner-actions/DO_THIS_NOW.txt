@@ -1,0 +1,9 @@
+BLOCKING OWNER ACTION — GL-0 (do this now; ~10 minutes)
+
+1. Open https://admin.powerplatform.microsoft.com/environments
+2. Sign in as manny@highvaluecapitalgroup.com
+3. If "HVCG Production" exists: copy Display name, Environment URL (*.crm.dynamics.com), Environment ID → paste reply to COO
+4. If missing: New environment → Name "HVCG Production" → Type Production → Dataverse Yes → Create → reply with name/URL/ID
+5. Also reply with Production SharePoint URLs for: CommandCenter, Clients, Knowledge (NOT *-Dev)
+
+When you reply, COO immediately: fills deploymentSettings-production.json → returns Prod deploy approval with managed package hash → on your GO imports managed zip.

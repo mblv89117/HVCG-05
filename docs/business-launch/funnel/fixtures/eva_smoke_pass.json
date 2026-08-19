@@ -1,0 +1,49 @@
+{
+  "sessionId": "smoke-eva-20260716-001",
+  "submittedAt": "2026-07-16T03:00:00Z",
+  "source": "Website-EVA",
+  "leadSourceDetail": "smoke-fixture|dev-only",
+  "contact": {
+    "firstName": "Jordan",
+    "lastName": "Lee",
+    "name": "Jordan Lee",
+    "email": "jordan.lee.smoke@example.com",
+    "phone": "+1-555-0199",
+    "role": "Owner / CEO",
+    "isDecisionMaker": true
+  },
+  "company": {
+    "legalName": "Northridge Manufacturing LLC",
+    "revenueBand": "3",
+    "revenueBandLabel": "$3–10M",
+    "books": "3",
+    "booksLabel": "Monthly close",
+    "capital": "debt",
+    "capitalLabel": "Debt",
+    "timeline": "3",
+    "timelineLabel": "0–90 days",
+    "challenge": "Need working-capital facility before peak season.",
+    "valueDriverThemes": [
+      "Working capital / cash conversion",
+      "Debt structure and covenants"
+    ]
+  },
+  "consent": {
+    "hvcgProspect": true,
+    "notLegacyEngagementChange": true,
+    "disclaimerAccepted": true
+  },
+  "eva": {
+    "variant": "EVA-FREE",
+    "composite_score_proxy": 72,
+    "band": "B",
+    "confidence_index": 0.7,
+    "flags": [],
+    "recommended_sku": "SKU-CAP-CORE",
+    "package_label": "Capital Advisory — Core (estimate)",
+    "proposed_price": { "setup": 5000, "monthly": 3500 },
+    "rate_card_version": "HVCG-PRICE-2026-07-15-v1",
+    "owner_approval_required": true,
+    "legacy_guard": "PASS"
+  }
+}

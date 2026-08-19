@@ -1,0 +1,6 @@
+If Prod import fails critical smoke:
+1. pac solution delete OR restore pre-import backup per ROLLBACK_GUIDE.md
+2. Set all flows Off
+3. Keep hvcg_EnableClientEmails=false
+4. Do not import pilot clients
+Managed package: packages/HVCGCommandCenterDev-managed-sprint1.zip

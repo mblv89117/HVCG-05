@@ -1,0 +1,51 @@
+{
+  "sessionId": "sprint2-schema-check",
+  "submittedAt": "2026-07-16T20:00:00Z",
+  "source": "Website-EVA",
+  "leadSourceDetail": "eva-experience-v2|dev-staging",
+  "contact": {
+    "firstName": "Alex",
+    "lastName": "Rivera",
+    "name": "Alex Rivera",
+    "email": "alex@example.com",
+    "phone": "+1-555-0100",
+    "role": "Owner / CEO",
+    "isDecisionMaker": true
+  },
+  "company": {
+    "legalName": "Northridge Manufacturing LLC",
+    "revenueBand": "3",
+    "revenueBandLabel": "$500k\u2013$1.5M",
+    "books": "3",
+    "booksLabel": "Monthly close",
+    "capital": "debt",
+    "capitalLabel": "Debt",
+    "timeline": "3",
+    "timelineLabel": "30\u201390 days",
+    "challenge": "Need working-capital facility before peak season.",
+    "valueDriverThemes": [
+      "Working capital / cash conversion"
+    ]
+  },
+  "consent": {
+    "hvcgProspect": true,
+    "notLegacyEngagementChange": true,
+    "disclaimerAccepted": true
+  },
+  "eva": {
+    "variant": "EVA-FREE",
+    "composite_score_proxy": 72,
+    "band": "B",
+    "confidence_index": 0.85,
+    "flags": [],
+    "recommended_sku": "SKU-CAP-CORE",
+    "package_label": "Capital Advisory \u2014 Core (estimate)",
+    "proposed_price": {
+      "setup": 5000,
+      "monthly": 3500
+    },
+    "rate_card_version": "HVCG-PRICE-2026-07-15-v1",
+    "owner_approval_required": true,
+    "legacy_guard": "PASS"
+  }
+}

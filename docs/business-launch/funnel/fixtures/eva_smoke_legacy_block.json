@@ -1,0 +1,36 @@
+{
+  "sessionId": "smoke-eva-legacy-block-001",
+  "submittedAt": "2026-07-16T03:00:00Z",
+  "source": "Website-EVA",
+  "leadSourceDetail": "smoke-fixture|legacy-guard",
+  "contact": {
+    "name": "Test Contact",
+    "email": "legacy.smoke@example.com",
+    "phone": "",
+    "role": "Owner / CEO",
+    "isDecisionMaker": true
+  },
+  "company": {
+    "legalName": "ACCG Inc.",
+    "revenueBand": "4",
+    "books": "4",
+    "capital": "equity",
+    "timeline": "4",
+    "challenge": "Should be blocked — legacy HVS client.",
+    "valueDriverThemes": []
+  },
+  "consent": {
+    "hvcgProspect": true,
+    "notLegacyEngagementChange": true,
+    "disclaimerAccepted": true
+  },
+  "eva": {
+    "variant": "EVA-FREE",
+    "composite_score_proxy": 90,
+    "band": "A",
+    "recommended_sku": "SKU-CAP-GROWTH",
+    "proposed_price": { "setup": 10000, "monthly": 7500 },
+    "rate_card_version": "HVCG-PRICE-2026-07-15-v1",
+    "owner_approval_required": true
+  }
+}

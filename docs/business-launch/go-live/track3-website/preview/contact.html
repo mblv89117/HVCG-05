@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Contact | High Value Capital Group</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+form.contact{max-width:36rem;margin-top:1.25rem;font-family:system-ui,sans-serif}
+label{display:block;margin:.75rem 0 .3rem;font-size:.9rem}
+input,select,textarea{width:100%;padding:.55rem .65rem;border:1px solid #d4cfc3}
+textarea{min-height:6rem}
+.banner{background:#e8f0ea;border:1px solid #b7cfc0;padding:.75rem;font-size:.85rem;margin:1rem 0}
+#ok{display:none;margin-top:1rem;padding:1rem;border:1px solid #1f6b4a}
+</style>
+</head>
+<body>
+<header>
+<p class="brand">High Value Capital Group</p>
+<p class="tag">Staging contact — test only</p>
+</header>
+<nav class="primary">
+<a href="index.html">Home</a>
+<a href="services.html">Services</a>
+<a href="assessments/eva.html">Assessments</a>
+<a href="pricing.html">Pricing</a>
+<a href="contact.html">Contact</a>
+</nav>
+<main>
+<h1>Contact</h1>
+<p class="lead">Staging form for CTA testing. Does not email anyone or write to CRM yet.</p>
+<p class="banner">Approved for <strong>staging testing</strong>. Public DNS/publish still requires separate owner approval. Existing-client pricing is never changed here.</p>
+<form class="contact" id="contactForm">
+  <label for="name">Name *</label><input id="name" required/>
+  <label for="email">Email *</label><input id="email" type="email" required/>
+  <label for="topic">Topic *</label>
+  <select id="topic" required>
+    <option value="">Select</option>
+    <option>General inquiry</option>
+    <option>EVA / assessment</option>
+    <option>Strategy call</option>
+    <option>Proposal follow-up</option>
+    <option>Secure upload help</option>
+  </select>
+  <label for="msg">Message *</label><textarea id="msg" required></textarea>
+  <label><input type="checkbox" required/> I understand this is a staging test and not a public submission endpoint.</label>
+  <p style="margin-top:1rem"><button class="cta" type="submit" style="border:0;cursor:pointer">Submit (staging)</button>
+  <a class="cta secondary" href="assessments/eva.html">Start EVA</a>
+  <a class="cta secondary" href="book-appointment.html">Book appointment</a></p>
+</form>
+<div id="ok"><strong>Captured locally for test.</strong> Download JSON from the console artifact or proceed to EVA. No outbound message was sent.</div>
+<p class="note">STAGING — not published publicly.</p>
+</main>
+<script>
+document.getElementById('contactForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const payload={mode:'STAGING_LOCAL_ONLY',emailSend:false,crmWrite:false,at:new Date().toISOString(),
+    name:name.value,email:email.value,topic:topic.value,message:msg.value};
+  try{localStorage.setItem('hvcg_contact_last',JSON.stringify(payload));}catch(_){}
+  console.log('HVCG staging contact', payload);
+  document.getElementById('ok').style.display='block';
+});
+</script>
+</body>
+</html>

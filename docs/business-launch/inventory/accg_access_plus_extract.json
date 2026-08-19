@@ -1,0 +1,6 @@
+{
+  "file": "/Users/macminipro/Library/CloudStorage/OneDrive-highvaluesolution.com/HVS Hub - Documents/4_Engagements/00_Client Files/ACCG Inc/05_Contracts & Invoice Docs/High value Solution LLC Access Plus Consulting Agreement.pdf",
+  "engine": "fail:No module named 'pypdf'|No module named 'pdfminer'|No module named 'PyPDF2'",
+  "amounts": [],
+  "money_lines": []
+}

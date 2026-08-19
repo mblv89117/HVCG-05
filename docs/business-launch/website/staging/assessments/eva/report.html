@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>EVA Report | High Value Capital Group</title>
+<link rel="stylesheet" href="css/eva-app.css"/>
+<style>
+.report { max-width: 48rem; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+.report-hero {
+  background: linear-gradient(135deg, #0f3d2c 0%, #1a5c42 55%, #2a6b4a 100%);
+  color: #f3efe6; padding: 2rem 1.5rem; border-radius: .35rem; margin-bottom: 1.5rem;
+}
+.report-hero h1 { color: #fff; margin: .35rem 0; font-family: var(--font-display); }
+.report-hero .brand { opacity: .9; font-size: .9rem; letter-spacing: .06em; text-transform: uppercase; }
+.bar {
+  display: grid; grid-template-columns: 9rem 1fr 2.5rem; gap: .5rem; align-items: center;
+  font-size: .85rem; margin: .4rem 0;
+}
+.bar .track { height: .55rem; background: #e4ebe6; border-radius: 999px; overflow: hidden; }
+.bar .fill { height: 100%; background: linear-gradient(90deg, #1a5c42, #b08a3c); }
+.cta-print { margin: 1.5rem 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+@media print {
+  body { background: #fff; }
+  .cta-print, .no-print { display: none !important; }
+  .report-hero, .bar .fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<article class="report" id="report">
+  <header class="report-hero">
+    <p class="brand">High Value Capital Group</p>
+    <h1>Enterprise Value Assessment Report</h1>
+    <p id="reportSub">Preliminary · confidential</p>
+  </header>
+
+  <section>
+    <h2>Executive diagnostic</h2>
+    <p id="execSummary"></p>
+    <div id="diagMeta"></div>
+  </section>
+
+  <section>
+    <h2>Readiness scores</h2>
+    <div id="charts"></div>
+  </section>
+
+  <section>
+    <h2>Preliminary enterprise value range</h2>
+    <div id="valBlock"></div>
+  </section>
+
+  <section>
+    <h2>Capital-readiness analysis</h2>
+    <div id="capitalBlock"></div>
+  </section>
+
+  <section>
+    <h2>Recommended engagement</h2>
+    <div id="engageBlock"></div>
+  </section>
+
+  <section>
+    <h2>Top priorities</h2>
+    <ol id="repPriorities"></ol>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul id="repRisks"></ul>
+  </section>
+
+  <section>
+    <h2>Document checklist</h2>
+    <ul id="repDocs"></ul>
+  </section>
+
+  <section>
+    <h2>Timeline &amp; investment</h2>
+    <p id="repTimeline"></p>
+  </section>
+
+  <section>
+    <h2>Assumptions &amp; disclaimers</h2>
+    <ul id="repDisc" class="fine-list"></ul>
+  </section>
+
+  <section>
+    <h2>Next step</h2>
+    <p id="repCta"></p>
+    <p>Contact: <span id="repContact"></span></p>
+    <div class="cta-print">
+      <button type="button" class="btn" onclick="window.print()">Print / Save PDF</button>
+      <a class="btn ghost no-print" href="index.html">Back to assessment</a>
+    </div>
+  </section>
+
+  <footer class="eva-foot">
+    <p>© High Value Capital Group LLC · manny@highvaluecapitalgroup.com · 702.906.6444</p>
+  </footer>
+</article>
+<script>
+(function(){
+  var full, conv;
+  try { full = JSON.parse(localStorage.getItem('hvcg_eva_last_full') || 'null'); } catch(_){ full = null; }
+  try { conv = JSON.parse(localStorage.getItem('hvcg_eva_conversion') || 'null'); } catch(_){ conv = null; }
+  if (!conv && full && full._experience) conv = full._experience.recommendation;
+  if (!conv) {
+    document.getElementById('execSummary').textContent = 'No completed assessment found. Complete the assessment first.';
+    return;
+  }
+  var company = (full && full.company) || {};
+  var contact = (full && full.contact) || {};
+  document.getElementById('reportSub').textContent =
+    (company.legalName || 'Prospect') + ' · ' + (contact.name || '') + ' · ' + (conv.generated_at || '');
+
+  var d = conv.executive_diagnostic || {};
+  document.getElementById('execSummary').textContent = d.executive_summary || '';
+  document.getElementById('diagMeta').innerHTML =
+    '<p><strong>Stage:</strong> '+(d.current_business_stage||'')+'</p>'+
+    '<p><strong>Primary constraint:</strong> '+(d.primary_constraint||'')+'</p>'+
+    '<p><strong>Value driver:</strong> '+(d.strongest_value_driver||'')+'</p>'+
+    '<p><strong>Largest risk:</strong> '+(d.largest_risk||'')+'</p>'+
+    '<p><strong>Immediate focus:</strong> '+(d.recommended_immediate_focus||'')+'</p>';
+
+  var charts = document.getElementById('charts');
+  var sc = conv.scorecards || {};
+  Object.keys(sc).forEach(function(k){
+    var row = sc[k];
+    var v = row.score == null ? 0 : row.score;
+    var div = document.createElement('div');
+    div.className = 'bar';
+    div.innerHTML = '<span>'+row.name+'</span><div class="track"><div class="fill" style="width:'+v+'%"></div></div><strong>'+v+'</strong>';
+    charts.appendChild(div);
+    var p = document.createElement('p');
+    p.className = 'fine';
+    p.style.margin = '0 0 .75rem';
+    p.textContent = row.plain;
+    charts.appendChild(p);
+  });
+
+  var val = conv.preliminary_enterprise_value || {};
+  var vb = document.getElementById('valBlock');
+  if (val.status === 'preliminary_range') {
+    vb.innerHTML = '<p class="val-range">'+val.range.low+' – '+val.range.high+'</p><ul class="fine-list">'+(val.disclaimers||[]).map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>';
+  } else {
+    vb.innerHTML = '<p class="val-range">Additional information required</p><p>'+(val.message||'')+'</p>';
+  }
+
+  var cap = conv.capital_and_funding || {};
+  document.getElementById('capitalBlock').innerHTML =
+    '<p><strong>'+(cap.recommended_capital_path||'')+'</strong></p><p>'+(cap.why_it_may_fit||'')+'</p>'+
+    '<p>Obstacles: '+((cap.primary_obstacles||[]).join('; '))+'</p>'+
+    '<p>Timeline: '+(cap.estimated_readiness_timeline||'')+' · Confidence: '+(cap.confidence_level||'')+'</p>'+
+    '<p class="fine">'+(cap.disclaimer||'')+'</p>';
+
+  var svc = (conv.hvcg_service_recommendation||{}).primary || {};
+  document.getElementById('engageBlock').innerHTML =
+    '<p><strong>'+(svc.engagement_name||'')+'</strong></p><p>'+(svc.business_problem_addressed||'')+'</p>'+
+    '<p>Deliverables: '+((svc.expected_deliverables||[]).join('; '))+'</p>'+
+    '<p>Timeline: '+(svc.estimated_timeline||'')+'</p>'+
+    '<p>Investment: '+((svc.estimated_investment_range&&svc.estimated_investment_range.label)||'')+'</p>';
+
+  document.getElementById('repPriorities').innerHTML = (conv.top_5_priorities||[]).map(function(p){
+    return '<li><strong>'+p.title+'</strong> — '+p.why+'</li>';
+  }).join('');
+  document.getElementById('repRisks').innerHTML = (conv.major_risks||[]).map(function(r){
+    return '<li>'+r.summary+'</li>';
+  }).join('');
+  document.getElementById('repDocs').innerHTML = (conv.required_documents||[]).map(function(x){
+    return '<li>'+x+'</li>';
+  }).join('');
+  document.getElementById('repTimeline').textContent =
+    'Suggested timeline: '+(conv.expected_timeline||'')+'. Estimated investment: '+((conv.estimated_investment_range&&conv.estimated_investment_range.label)||'')+'.';
+  document.getElementById('repDisc').innerHTML = (conv.disclaimers||[]).map(function(x){return '<li>'+x+'</li>';}).join('');
+  document.getElementById('repCta').textContent = (conv.conversion_cta&&conv.conversion_cta.label)||'Download the Report';
+  var ct = conv.contact || {};
+  document.getElementById('repContact').textContent = (ct.email||'')+' · '+(ct.phone_primary||'');
+})();
+</script>
+</body>
+</html>

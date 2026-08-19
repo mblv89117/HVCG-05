@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "clientCode": "CHRI01",
+    "generatedAt": "2026-07-16T01:12:45.645917+00:00",
+    "production": "FORBIDDEN",
+    "doNotImportUntilCleared": true
+  },
+  "client": {
+    "LegalName": "Christie\u2019s Place LLC",
+    "ClientCode": "CHRI01",
+    "Classification": "HVS_LEGACY_CLIENT",
+    "ContractingEntity": "High Value Solution LLC",
+    "PortalEnabled": false
+  },
+  "engagement": {
+    "Title": "Christie\u2019s Place \u2014 advisory/annuity support",
+    "MonthlyRetainer": 4750,
+    "PricingStatus": "INVOICE_EXTRACTED",
+    "InvoiceFiles": [
+      "Invoice for Christie's Place 6.19.26.pdf",
+      "Invoice for Christie's Place 6.19.26 part 2.pdf"
+    ],
+    "InvoiceEvidence": [
+      {
+        "invoice": "0000128",
+        "amount": 4750,
+        "due": "2026-06-19",
+        "desc": "Business Consulting"
+      },
+      {
+        "invoice": "0000129",
+        "amount": 4750,
+        "due": "2026-06-19",
+        "desc": "Business Consulting"
+      }
+    ],
+    "PricingNote": "Two Jun 2026 invoices at $4,750 each \u2014 confirm if monthly retainer or dual billing. PRESERVE. Do not apply HVCG rates."
+  },
+  "documentAnchors": [
+    {
+      "path": "HVS Hub - Documents/4_Engagements/00_Client Files/Christie's Place/",
+      "importance": "HIGH"
+    }
+  ]
+}
