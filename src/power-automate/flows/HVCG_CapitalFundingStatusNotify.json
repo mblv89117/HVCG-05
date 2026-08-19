@@ -137,7 +137,8 @@
     "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
     "HVCG_EXECUTIVE_EMAIL",
     "HVCG_CRM_TEST_RECIPIENT",
-    "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
+    "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+    "HVCG_OPS_EMAIL"
   ],
   "listsTouched": {
     "reads": [
@@ -192,5 +193,31 @@
     "Linked Opportunity CapitalHandoffStatus updates per bridge map",
     "Teams notify only for Term Sheet|Due Diligence|Committed|Closed|Declined when flag enabled",
     "Idempotent activity key prevents duplicates for same status+Modified"
-  ]
+  ],
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_capitalfundingstatusnotify",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Revenue Systems",
+    "Finance Intelligence"
+  ],
+  "releaseStatus": "Blocked",
+  "blockedReason": "CRM module Off until separate Owner/QA CRM go-live; not in Exec Dashboard activation set",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

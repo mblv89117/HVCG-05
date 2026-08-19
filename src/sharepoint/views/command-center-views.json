@@ -296,6 +296,75 @@
         "DetectedDate",
         "RecommendedAction"
       ]
+    },
+    {
+      "list": "HVCG_AutomationLogs",
+      "title": "Failed Last 24h",
+      "filter": "Status eq 'Failed'",
+      "fields": [
+        "Title",
+        "FlowName",
+        "RunId",
+        "Status",
+        "ClientCode",
+        "Message",
+        "Modified"
+      ]
+    },
+    {
+      "list": "HVCG_AutomationLogs",
+      "title": "Skipped Duplicates",
+      "filter": "Status eq 'SkippedDuplicate'",
+      "fields": [
+        "Title",
+        "FlowName",
+        "IdempotencyKey",
+        "RelatedList",
+        "RelatedItemId",
+        "Modified"
+      ]
+    },
+    {
+      "list": "HVCG_AutomationRegistry",
+      "title": "Enabled Automations",
+      "filter": "AutomationStatus eq 'On'",
+      "fields": [
+        "Title",
+        "FlowName",
+        "RelatedModule",
+        "LastRunAt",
+        "NextRunAt",
+        "FailureState",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_AutomationRegistry",
+      "title": "Failed or Degraded",
+      "filter": "FailureState eq 'Failed' or FailureState eq 'Degraded' or AutomationStatus eq 'Error'",
+      "fields": [
+        "Title",
+        "FlowName",
+        "AutomationStatus",
+        "FailureState",
+        "LastError",
+        "LastRunAt",
+        "OwnerEmail"
+      ]
+    },
+    {
+      "list": "HVCG_Notifications",
+      "title": "Client Sends Awaiting Approval",
+      "filter": "Audience eq 'Client' and Status eq 'PendingApproval'",
+      "fields": [
+        "Title",
+        "RecipientEmail",
+        "NotificationType",
+        "Status",
+        "ApproverEmail",
+        "RelatedClientCode",
+        "RelatedFlowName"
+      ]
     }
   ]
 }

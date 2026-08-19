@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:10:29Z",
   "nodes": [
     {
       "id": "n-elite-os",
@@ -63,6 +63,13 @@
       "type": "platform",
       "name": "Agent Comms Bus",
       "path": ".agent-comms"
+    },
+    {
+      "id": "n-data-engineering",
+      "type": "agent",
+      "name": "Data Engineering",
+      "agentId": "data-engineering",
+      "handbook": "PROJECT_ATLAS/Agents/DataEngineer.md"
     }
   ],
   "edges": [
@@ -115,6 +122,21 @@
       "from": "n-orch",
       "to": "n-elite-os",
       "rel": "coordinates-work-for"
+    },
+    {
+      "from": "n-data-engineering",
+      "to": "n-dataverse-dev",
+      "rel": "models"
+    },
+    {
+      "from": "n-data-engineering",
+      "to": "n-orch",
+      "rel": "registered-with"
+    },
+    {
+      "from": "n-command-center",
+      "to": "n-data-engineering",
+      "rel": "schema-coordinated-by"
     }
   ]
 }

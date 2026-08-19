@@ -1,0 +1,14 @@
+{
+  "archivedAt": "2026-07-20T02:23:00Z",
+  "reason": "Executive Dashboard release hygiene \u2014 unused/speculative/client-facing deferred",
+  "items": [
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_StaleOpportunityAlert.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_StaleOpportunityAlert.definition.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_MeetingPrepAndFollowUp.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_MeetingPrepAndFollowUp.definition.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_CapitalReadinessAlert.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_CapitalReadinessAlert.definition.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_ClientNotificationApproved.json",
+    "src/power-automate/archive/exec-dashboard-deferred/HVCG_ClientNotificationApproved.definition.json"
+  ]
+}

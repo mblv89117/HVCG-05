@@ -1,6 +1,6 @@
 {
   "solutionUniqueName": "HVCGCommandCenterDev",
-  "version": "1.1.0.0",
+  "version": "1.1.1.0",
   "managed": false,
   "components": {
     "environmentVariables": [
@@ -19,7 +19,8 @@
       "hvcg_sharedapprovals"
     ],
     "flows": "see Workflows/*.json and ../../power-automate/flows",
-    "canvasApp": "Canvas app must be authored against SharePoint lists after list provision; build sheet included"
+    "canvasApp": "Canvas app must be authored against SharePoint lists after list provision; build sheet included",
+    "inventory": "../../PRODUCT_INVENTORY.md"
   },
   "importOrder": [
     "1. Provision SharePoint lists (Deploy-HVCGDevelopment.ps1)",
@@ -28,5 +29,6 @@
     "4. Create connections as deploying user",
     "5. Import/create flows from Workflows definitions",
     "6. Build canvas app per build sheet OR import when .msapp produced"
-  ]
+  ],
+  "productNotes": "Sprint 14: hardened DeliverableApproval + CreateDocumentRequests; Elite OS remains UX SoR; canvas deferred"
 }

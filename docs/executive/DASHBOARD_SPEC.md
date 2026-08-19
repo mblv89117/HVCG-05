@@ -8,7 +8,8 @@
 1. Decision density over activity density.  
 2. Dollar-first north-star tiles.  
 3. Queues that clear or escalate — never decorative lists.  
-4. Same KPI definitions across Apps and BI (`KPI_DEFINITIONS.md`).
+4. Same KPI definitions across Apps and BI — canonical [`docs/analytics/METRIC_CATALOG.md`](../analytics/METRIC_CATALOG.md); aliases in `KPI_DEFINITIONS.md`.
+5. Domain analytics pages per [`docs/analytics/DASHBOARDS.md`](../analytics/DASHBOARDS.md).
 
 ## Information architecture
 

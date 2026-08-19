@@ -4,7 +4,7 @@
   "module": "ExecutiveCommandCenter",
   "packageVersion": "1.0.0",
   "defaultState": "Off",
-  "description": "Monday executive KPI digest email to Owner only. Scaffold only — not registered in shared flow indexes from this branch.",
+  "description": "Monday executive KPI digest email to Owner only. Scaffold only \u2014 not registered in shared flow indexes from this branch.",
   "trigger": {
     "type": "Recurrence",
     "schedule": "Weekly Monday 07:45 America/Los_Angeles"
@@ -45,11 +45,26 @@
     "PastDueFinancial"
   ],
   "steps": [
-    { "id": 1, "action": "LogStart" },
-    { "id": 2, "action": "AggregateKpisFromSharePoint" },
-    { "id": 3, "action": "ComposeHtmlBrief" },
-    { "id": 4, "action": "EmailExecutiveIfEnabled" },
-    { "id": 5, "action": "LogSuccess" }
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "AggregateKpisFromSharePoint"
+    },
+    {
+      "id": 3,
+      "action": "ComposeHtmlBrief"
+    },
+    {
+      "id": 4,
+      "action": "EmailExecutiveIfEnabled"
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
   ],
   "humanApproval": [
     "Keep Off until Owner approves digest content",
@@ -57,6 +72,44 @@
   ],
   "environmentVariables": [
     "HVCG_SITE_URL",
-    "HVCG_EXECUTIVE_EMAIL"
-  ]
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_OPS_EMAIL"
+  ],
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/executive/FLOW_INTEGRATION.md",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Executive Dashboard",
+    "Executive Intelligence"
+  ],
+  "execDashboardReleaseRole": "Executive Brief generation",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

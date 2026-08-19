@@ -1,0 +1,50 @@
+{
+  "id": "ATLAS-T-1206",
+  "sprint": 12,
+  "epic": "ORCH-PLATFORM",
+  "feature": "agent-registration",
+  "title": "Register Data Engineering with Orchestration Platform",
+  "description": "Formalize data-engineering agent registration: handbook, registry enrichment, knowledge node, heartbeat, ownership paths.",
+  "assignedAgent": "data-engineering",
+  "priority": "P0",
+  "complexity": "S",
+  "estimatedEffortHours": 1,
+  "dependencies": [
+    "ATLAS-T-1202"
+  ],
+  "blockedBy": [],
+  "status": "Closed",
+  "acceptanceCriteria": [
+    "REG-DATA-ENGINEERING-S12 written",
+    "agents.json enriched with handbook + registrationId",
+    "Heartbeat Idle published",
+    "Knowledge node n-data-engineering linked"
+  ],
+  "requiredReviews": [
+    "documentation"
+  ],
+  "branch": "cursor/orchestration-sprint12",
+  "worktree": ".worktrees/sprint12-engineering-orchestration",
+  "affectedPaths": [
+    "PROJECT_ATLAS/Agents/DataEngineer.md",
+    "PROJECT_ATLAS/ORCHESTRATION/registry/",
+    "PROJECT_ATLAS/ORCHESTRATION/knowledge/"
+  ],
+  "requiredTests": [],
+  "validationResults": {
+    "registered": true,
+    "registrationId": "REG-DATA-ENGINEERING-S12"
+  },
+  "artifacts": [
+    "PROJECT_ATLAS/ORCHESTRATION/registry/registrations/REG-DATA-ENGINEERING-S12.json",
+    "PROJECT_ATLAS/Agents/DataEngineer.md"
+  ],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": "Data Engineering fully registered on Atlas Engineering Orchestration Platform v1.0.",
+  "releaseVersion": "orch-1.0",
+  "createdAt": "2026-07-20T00:10:29Z",
+  "updatedAt": "2026-07-20T00:10:29Z",
+  "claimedBy": "master-pm",
+  "claimedAt": "2026-07-20T00:10:29Z"
+}

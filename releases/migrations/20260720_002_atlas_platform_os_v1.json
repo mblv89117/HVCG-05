@@ -1,0 +1,100 @@
+{
+  "id": "20260720_002_atlas_platform_os_v1",
+  "fromVersion": "1.2.0-draft",
+  "toVersion": "platform-os-1.0.0-draft",
+  "title": "Atlas Platform OS — canonical platform entities (tenant-ready)",
+  "status": "Draft",
+  "layer": "platform-os",
+  "dependsOn": ["20260720_001_atlas_data_foundation_v1"],
+  "additiveOnly": true,
+  "destructive": false,
+  "preservesCustomerData": true,
+  "ownerAgent": "data-engineering",
+  "selfApprovalForbidden": true,
+  "requiresApprovalFrom": [
+    "master-pm",
+    "system-architect",
+    "power-platform",
+    "knowledge-platform",
+    "ai-governance",
+    "security",
+    "qa-release",
+    "owner"
+  ],
+  "notes": "Prioritizes canonical OS entities before product-specific schemas. Does not delete legacy lists. Dual-read aliases for User/Agent/Metric/Approval/Audit. Do not apply to Production without coordination gate.",
+  "documentation": [
+    "docs/data-model/ATLAS_PLATFORM_OS/README.md",
+    "docs/data-model/ATLAS_PLATFORM_OS/06_MIGRATION_AND_ROLLBACK.md",
+    "docs/data-model/ATLAS_PLATFORM_OS/07_COORDINATION_GATE.md"
+  ],
+  "schemaImpact": {
+    "newLists": [
+      "HVCG_Identities",
+      "HVCG_Teams",
+      "HVCG_Permissions",
+      "HVCG_Workflows",
+      "HVCG_Queues",
+      "HVCG_Automations",
+      "HVCG_Conversations",
+      "HVCG_Events",
+      "HVCG_Timeline",
+      "HVCG_Documents",
+      "HVCG_Artifacts",
+      "HVCG_Dashboards",
+      "HVCG_Widgets",
+      "HVCG_Integrations"
+    ],
+    "canonicalAliases": {
+      "User": "HVCG_TeamMembers",
+      "Agent": "HVCG_AIWorkers",
+      "Metric": "HVCG_KpiRecords",
+      "Approval": "HVCG_Approvals",
+      "Audit": "HVCG_AuditEvents"
+    },
+    "additiveColumns": ["TenantId", "SchemaVersion", "ApprovalKind", "AuditChannel", "ProjectKind", "TaskFamily", "AgentCode", "MetricCode"]
+  },
+  "rollbackSteps": [
+    "Feature-flag off Platform OS consumers (Elite UI, flows, agents)",
+    "Resume writes to legacy specialty lists where dual-write was enabled",
+    "Leave additive columns unused",
+    "In Dev only: remove empty new platform lists after schema snapshot restore",
+    "Do not delete Production lists without owner + Architecture approval"
+  ],
+  "validation": [
+    "docs/data-model/ATLAS_PLATFORM_OS/01_CANONICAL_ENTITIES.md",
+    "docs/data-model/ATLAS_PLATFORM_OS/02_DEPRECATION_MAP.md",
+    "tests/unit/Test-HVCGSchemaValidation.ps1"
+  ],
+  "downstreamDependencies": [
+    "Architecture ADR (platform vs product)",
+    "Power Platform provisioning + Dataverse publish plan",
+    "Knowledge Platform graph rename to canonical entities",
+    "AI Governance Agent/Queue/Approval human-gate matrix",
+    "Security Permission→ACL binding",
+    "Master PM sprint scheduling"
+  ],
+  "steps": [
+    {
+      "action": "RequireApprovals",
+      "notes": "Complete 07_COORDINATION_GATE.md before Dev apply"
+    },
+    {
+      "action": "SchemaSnapshot",
+      "notes": "Capture pre-change snapshot in Dev"
+    },
+    {
+      "action": "EnsureDependency",
+      "migrationId": "20260720_001_atlas_data_foundation_v1"
+    },
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/atlas_platform_os_v1.json"
+    },
+    {
+      "action": "LoadSeed",
+      "seedManifest": "sample-data/atlas-platform-os/seed-manifest.json",
+      "environments": ["dev", "local"],
+      "forbiddenEnvironments": ["production"]
+    }
+  ]
+}

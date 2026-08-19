@@ -1,0 +1,44 @@
+{
+  "sprint": 14,
+  "epic": "EXEC-DASHBOARD",
+  "priority": "P0",
+  "complexity": "M",
+  "estimatedEffortHours": 3,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Waiting Review",
+  "requiredReviews": [
+    "qa",
+    "documentation"
+  ],
+  "branch": "cursor/master-pm/executive-dashboard-s14",
+  "worktree": ".worktrees/track10-elite-ui",
+  "affectedPaths": [
+    "apps/atlas-elite-os/"
+  ],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [
+    "https://zealous-rock-0090c7e1e.7.azurestaticapps.net"
+  ],
+  "commitReferences": [
+    "a571a8a"
+  ],
+  "ownerDecisions": [],
+  "completionSummary": "Elite OS committed (a571a8a) and redeployed to Dev SWA.",
+  "releaseVersion": "elite-os-exec-dev",
+  "createdAt": "2026-07-20T02:12:50Z",
+  "updatedAt": "2026-07-20T02:15:24Z",
+  "claimedBy": "elite-ui",
+  "claimedAt": "2026-07-20T02:15:24Z",
+  "feature": "executive-dashboard",
+  "id": "ATLAS-T-1401",
+  "title": "Commit Elite OS Executive Dashboard product SoR and redeploy Dev SWA",
+  "description": "Commit track10 Elite OS (pending-safe dashboard + workspaces) and redeploy to swa-atlas-elite-os-dev so Manny's play URL matches product SoR.",
+  "assignedAgent": "elite-ui",
+  "acceptanceCriteria": [
+    "Elite OS committed on executive-dashboard-s14 branch",
+    "SWA https://zealous-rock-0090c7e1e.7.azurestaticapps.net serves new build",
+    "No fabricated dollar KPIs on Home"
+  ]
+}

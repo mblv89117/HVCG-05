@@ -1,0 +1,113 @@
+{
+  "flowName": "HVCG_AutomationFailureDigest",
+  "displayName": "HVCG_AutomationFailureDigest",
+  "module": "Monitoring",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Hourly scan of HVCG_AutomationLogs for Failed rows in the last window; digest to Ops; create OperationalAlert for repeated failures.",
+  "purpose": "failed workflow notifications",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Hourly at :15 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Monitoring",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_automationfailuredigest",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "fail-digest|{FlowName}|{FailedLogId}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Ops/Admin only"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "opsEmailOnly",
+    "forbidden": [
+      "Client email",
+      "Include secrets/tokens in Message"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetFailedLogsSinceLastWindow"
+    },
+    {
+      "id": 3,
+      "action": "GroupByFlowName"
+    },
+    {
+      "id": 4,
+      "action": "EmailOpsDigest"
+    },
+    {
+      "id": 5,
+      "action": "CreateOperationalAlertIfRepeated",
+      "params": {
+        "threshold": 3,
+        "list": "HVCG_OperationalAlerts"
+      }
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 2,
+    "retryDelaySeconds": 120
+  },
+  "loopPrevention": [
+    "Ignore own FlowName=HVCG_AutomationFailureDigest Started/Succeeded rows for alert aggregation",
+    "Dedup per FailedLogId"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off; close open OperationalAlerts manually",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "usedByModules": [
+    "Operations Hub",
+    "Executive Dashboard"
+  ],
+  "releaseStatus": "Supporting",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
+}

@@ -70,6 +70,18 @@
       "displayName": "Teams Capital Test Channel Group ID",
       "defaultValue": "",
       "description": "Team id for capital test channel."
+    },
+    {
+      "schemaName": "hvcg_ExecEnableEmailDigest",
+      "displayName": "Enable Executive Email Digest",
+      "defaultValue": "false",
+      "description": "Gate for HVCG_ExecutiveWeeklyBrief outbound email. Keep false until Owner UAT."
+    },
+    {
+      "schemaName": "hvcg_EliteOsUrl",
+      "displayName": "Elite OS SWA URL",
+      "defaultValue": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+      "description": "Dev Elite OS URL for secure deep links in notifications (no secrets)."
     }
   ]
 }

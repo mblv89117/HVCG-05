@@ -1,0 +1,57 @@
+{
+  "id": "ws-ccb",
+  "clientCode": "CCB01",
+  "sharePointList": "HVCG_Clients",
+  "kind": "client",
+  "Title": "Colorado Craft Beef",
+  "DBA": "Colorado Craft Beef",
+  "Industry": "Agriculture / Food",
+  "EntityType": "LLC",
+  "StateOfFormation": "CO",
+  "ClientStage": "Active Client",
+  "EngagementTypePrimary": "Capital Advisory",
+  "RelationshipOwnerEmail": "manny@highvaluecapitalgroup.com",
+  "OverallHealth": "Green",
+  "CapitalNeed": true,
+  "CapitalType": "Growth + Real Estate",
+  "IsActive": true,
+  "RequiresExecutiveAttention": false,
+  "ReferralSource": "Randy Kamin — Generational Group",
+  "BusinessDescription": "Client workspace for growth capital advisory and real estate financing exploration. Transitioning to HVCG from HVS referral.",
+  "relationshipHistory": [
+    "Original HVS referral",
+    "Transitioning to HVCG",
+    "Original need involved growth capital and additional real estate",
+    "Prior financing discussion included non-dilutive and agricultural financing options"
+  ],
+  "services": ["Growth capital advisory", "Real estate financing exploration"],
+  "financePolicy": "STRICT — no TargetAmount, CurrentRevenue, retainer, or fee values until Owner verifies source. Elite OS must show pending labels only.",
+  "TargetAmount": null,
+  "CurrentRevenue": null,
+  "MonthlyRetainer": null,
+  "SetupFee": null,
+  "SuccessFeePercent": null,
+  "documentReadiness": {
+    "priorityCategories": [
+      "Corporate",
+      "Financial",
+      "Tax",
+      "Real Estate",
+      "Debt",
+      "Capital",
+      "Ownership"
+    ],
+    "status": "Awaiting checklist generation via HVCG_CreateDocumentRequests"
+  },
+  "capitalAdvisory": {
+    "fundingTypesUnderConsideration": [
+      "USDA B&I",
+      "Commercial Real Estate",
+      "Working Capital",
+      "Private Credit"
+    ],
+    "status": "Relationship + checklist demo only — no verified ask amount"
+  },
+  "eliteOsWorkspaceId": "ws-ccb",
+  "availability": "Repository-derived"
+}

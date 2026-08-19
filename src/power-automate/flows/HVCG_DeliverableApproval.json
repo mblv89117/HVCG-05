@@ -50,13 +50,51 @@
   "errorHandling": {
     "notifyGroup": "HVCG-Role-Administrator",
     "maxRetries": 3,
-    "retryDelaySeconds": 60
+    "retryDelaySeconds": 60,
+    "notifyEmailEnv": "HVCG_OPS_EMAIL"
   },
   "environmentVariables": [
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
+    "hvcg_EnableClientEmails",
     "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
-  ]
+    "HVCG_OPS_EMAIL"
+  ],
+  "definitionPath": "src/power-automate/definitions/HVCG_DeliverableApproval.definition.json",
+  "definitionMaturity": "near-ready",
+  "defaultState": "Off",
+  "notes": "Definition now matches SharePoint modified trigger + Approvals + failure notify. Import Off until Ops/Exec emails set.",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_deliverableapproval",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365",
+    "hvcg_sharedapprovals"
+  ],
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Executive Dashboard",
+    "Operations Hub"
+  ],
+  "execDashboardReleaseRole": "approval routing",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

@@ -1,19 +1,19 @@
 {
   "name": "HVCG_CreateDocumentRequests",
   "displayName": "HVCG_CreateDocumentRequests",
-  "description": "Seed document requests from template",
+  "description": "Manual/child flow: create HVCG_DocumentRequests rows from template requiredDocuments for a client/project. Idempotent; client checklist email gated Off.",
+  "owner": "power-platform",
+  "defaultState": "Off",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
     "parameters": {
-      "$authentication": {
-        "defaultValue": {},
-        "type": "SecureObject"
-      },
-      "$connections": {
-        "defaultValue": {},
-        "type": "Object"
-      }
+      "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+      "$connections": { "defaultValue": {}, "type": "Object" },
+      "hvcg_CommandCenterSiteUrl": { "type": "String" },
+      "hvcg_ClientsSiteUrl": { "type": "String" },
+      "hvcg_OpsEmail": { "type": "String" },
+      "hvcg_EnableClientEmails": { "type": "Bool", "defaultValue": false }
     },
     "triggers": {
       "manual": {
@@ -23,25 +23,24 @@
           "schema": {
             "type": "object",
             "properties": {
-              "ClientCode": {
-                "type": "string"
-              },
-              "ClientListItemId": {
-                "type": "integer"
-              },
-              "TemplateKey": {
-                "type": "string"
-              },
-              "EngagementId": {
-                "type": "integer"
-              },
-              "StartDate": {
-                "type": "string"
+              "ClientListItemId": { "type": "integer" },
+              "ClientCode": { "type": "string" },
+              "TemplateKey": { "type": "string" },
+              "ProjectId": { "type": "integer" },
+              "RequiredDocuments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "Title": { "type": "string" },
+                    "Category": { "type": "string" },
+                    "Criticality": { "type": "string" }
+                  },
+                  "required": ["Title", "Category"]
+                }
               }
             },
-            "required": [
-              "ClientCode"
-            ]
+            "required": ["ClientCode", "RequiredDocuments"]
           }
         }
       }
@@ -59,32 +58,138 @@
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_AutomationLogs",
             "item/Title": "Started",
-            "item/FlowName": "@workflow()?['name']",
-            "item/Status": "Started"
+            "item/FlowName": "HVCG_CreateDocumentRequests",
+            "item/Status": "Started",
+            "item/HVCG_IdempotencyKey": "docreq-start|@{triggerBody()?['ClientCode']}|@{triggerBody()?['TemplateKey']}|@{utcNow()}"
           }
         },
-        "runAfter": {}
-      },
-      "Compose_Inputs": {
-        "type": "Compose",
-        "inputs": {
-          "note": "Manual or child flow: Seed document requests from template",
-          "buildSheet": "src/power-automate/flows/HVCG_CreateDocumentRequests.json"
-        },
-        "runAfter": {
-          "Log_Start": [
-            "Succeeded"
-          ]
+        "runAfter": {},
+        "runtimeConfiguration": {
+          "retryPolicy": { "type": "fixed", "count": 3, "interval": "PT1M" }
         }
+      },
+      "Foreach_Required_Document": {
+        "type": "Foreach",
+        "foreach": "@triggerBody()?['RequiredDocuments']",
+        "actions": {
+          "Create_Document_Request": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PostItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_DocumentRequests",
+                "item/Title": "@items('Foreach_Required_Document')?['Title']",
+                "item/Category": "@items('Foreach_Required_Document')?['Category']",
+                "item/Criticality": "@coalesce(items('Foreach_Required_Document')?['Criticality'], 'Standard')",
+                "item/Status": "Requested",
+                "item/ClientCode": "@triggerBody()?['ClientCode']",
+                "item/ProjectId": "@triggerBody()?['ProjectId']",
+                "item/HVCG_IdempotencyKey": "docreq|@{triggerBody()?['ClientCode']}|@{triggerBody()?['TemplateKey']}|@{items('Foreach_Required_Document')?['Category']}|@{items('Foreach_Required_Document')?['Title']}"
+              }
+            },
+            "runAfter": {},
+            "runtimeConfiguration": {
+              "retryPolicy": { "type": "fixed", "count": 3, "interval": "PT1M" }
+            }
+          }
+        },
+        "runAfter": { "Log_Start": ["Succeeded"] }
+      },
+      "Condition_Client_Email": {
+        "type": "If",
+        "expression": {
+          "equals": ["@parameters('hvcg_EnableClientEmails')", true]
+        },
+        "actions": {
+          "Compose_Client_Email_Blocked_Default": {
+            "type": "Compose",
+            "inputs": "Client checklist email would send here — blocked unless hvcg_EnableClientEmails=true after Security/Owner UAT."
+          }
+        },
+        "else": {
+          "actions": {
+            "Compose_Skip_Client_Email": {
+              "type": "Compose",
+              "inputs": "Client emails disabled (default)."
+            }
+          }
+        },
+        "runAfter": { "Foreach_Required_Document": ["Succeeded"] }
+      },
+      "Notify_Ops_Checklist_Ready": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_office365",
+            "operationId": "SendEmailV2",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+          },
+          "parameters": {
+            "emailMessage/To": "@parameters('hvcg_OpsEmail')",
+            "emailMessage/Subject": "Document checklist created for @{triggerBody()?['ClientCode']}",
+            "emailMessage/Body": "<p>Template: @{triggerBody()?['TemplateKey']}</p><p>Count: @{length(triggerBody()?['RequiredDocuments'])}</p><p>Secure links: use Clients hub library — do not attach files in email.</p>",
+            "emailMessage/Importance": "Normal"
+          }
+        },
+        "runAfter": { "Condition_Client_Email": ["Succeeded", "Skipped"] }
       },
       "Log_Success": {
-        "type": "Compose",
-        "inputs": "Succeeded scaffold",
-        "runAfter": {
-          "Compose_Inputs": [
-            "Succeeded"
-          ]
-        }
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Succeeded",
+            "item/FlowName": "HVCG_CreateDocumentRequests",
+            "item/Status": "Succeeded"
+          }
+        },
+        "runAfter": { "Notify_Ops_Checklist_Ready": ["Succeeded", "Failed", "Skipped"] }
+      },
+      "Log_Failure": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Failed",
+            "item/FlowName": "HVCG_CreateDocumentRequests",
+            "item/Status": "Failed"
+          }
+        },
+        "runAfter": { "Foreach_Required_Document": ["Failed", "TimedOut"] }
+      },
+      "Failure_Notify_Admin": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_office365",
+            "operationId": "SendEmailV2",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+          },
+          "parameters": {
+            "emailMessage/To": "@parameters('hvcg_OpsEmail')",
+            "emailMessage/Subject": "FLOW FAILED: HVCG_CreateDocumentRequests",
+            "emailMessage/Body": "<p>CreateDocumentRequests failed for @{triggerBody()?['ClientCode']}. Check AutomationLogs.</p>",
+            "emailMessage/Importance": "High"
+          }
+        },
+        "runAfter": { "Log_Failure": ["Succeeded", "Failed", "Skipped"] }
       }
     },
     "outputs": {}
@@ -92,34 +197,37 @@
   "connectionReferences": {
     "shared_sharepointonline": {
       "runtimeSource": "embedded",
-      "connection": {
-        "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
-      },
-      "api": {
-        "name": "shared_sharepointonline"
-      }
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedsharepointonline" },
+      "api": { "name": "shared_sharepointonline" }
     },
     "shared_office365": {
       "runtimeSource": "embedded",
-      "connection": {
-        "connectionReferenceLogicalName": "hvcg_sharedoffice365"
-      },
-      "api": {
-        "name": "shared_office365"
-      }
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedoffice365" },
+      "api": { "name": "shared_office365" }
     }
   },
   "environmentVariables": [
     "hvcg_CommandCenterSiteUrl",
     "hvcg_ClientsSiteUrl",
-    "hvcg_ExecutiveEmail",
     "hvcg_OpsEmail",
     "hvcg_EnableClientEmails"
   ],
+  "errorHandling": {
+    "notify": "hvcg_OpsEmail",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60,
+    "auditList": "HVCG_AutomationLogs"
+  },
+  "secureDataHandling": [
+    "Do not attach documents to emails",
+    "Use Clients hub secure library links only",
+    "Client outbound email remains feature-gated"
+  ],
   "acceptanceCriteria": [
-    "Flow appears in solution or My flows",
-    "Connection references resolved",
-    "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
-    "Idempotent re-run does not duplicate business records"
-  ]
+    "Accepts RequiredDocuments array + ClientCode",
+    "Creates one HVCG_DocumentRequests row per item with idempotency key",
+    "Ops notified; client email only if EnableClientEmails=true",
+    "Failure logs + Ops notify"
+  ],
+  "ccbSeedHint": "For CCB01 use categories Corporate, Financial, Tax, Real Estate, Debt, Capital, Ownership — amounts remain pending"
 }

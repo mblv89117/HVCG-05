@@ -1,0 +1,51 @@
+{
+  "dataProvenance": "sample",
+  "sourceSystem": "ImportPack",
+  "lastRefreshedAt": "2026-07-20T02:00:00Z",
+  "disclaimer": "Example KPI rows for wiring Executive Dashboard. Values are sample/calculated placeholders — not verified financials. Do not promote to Production.",
+  "items": [
+    {
+      "Title": "Active Clients — HVCG Exec",
+      "KpiCode": "ACTIVE_CLIENTS",
+      "PeriodCode": "2026-07",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-EXEC",
+      "ValueNumber": 3,
+      "Unit": "count",
+      "CalculationMethod": "Count of Clients where IsActive=true and ClientStage=Active Client (sample fixture)",
+      "DataProvenance": "sample",
+      "SourceSystem": "ImportPack",
+      "LastRefreshedAt": "2026-07-20T02:00:00Z",
+      "HVCG_IdempotencyKey": "sample-kpi-active-clients-2026-07"
+    },
+    {
+      "Title": "Open Tasks — CCB Workspace",
+      "KpiCode": "OPEN_TASKS",
+      "PeriodCode": "2026-07",
+      "OrganizationCode": "ORG-CCB",
+      "WorkspaceCode": "WS-CCB",
+      "ClientCode": "CCB01",
+      "ValueNumber": 0,
+      "Unit": "count",
+      "CalculationMethod": "Count of Tasks in WS-CCB not Completed (seed baseline)",
+      "DataProvenance": "sample",
+      "SourceSystem": "ImportPack",
+      "LastRefreshedAt": "2026-07-20T02:00:00Z",
+      "HVCG_IdempotencyKey": "sample-kpi-ccb-open-tasks-2026-07"
+    },
+    {
+      "Title": "Pipeline Weighted — placeholder",
+      "KpiCode": "PIPELINE_WEIGHTED",
+      "PeriodCode": "2026-07",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-EXEC",
+      "ValueText": "Not calculated in seed — use Power BI measure until refresh job exists",
+      "Unit": "USD",
+      "CalculationMethod": "Sum(Opportunity.Amount * Probability) — calculated in BI; no invented USD amount stored here",
+      "DataProvenance": "calculated",
+      "SourceSystem": "Manual",
+      "LastRefreshedAt": "2026-07-20T02:00:00Z",
+      "HVCG_IdempotencyKey": "sample-kpi-pipeline-weighted-2026-07-stub"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "manifestVersion": "1.0.0",
+  "packId": "atlas-foundation-seed",
+  "generated": "2026-07-20",
+  "dataProvenance": "sample",
+  "disclaimer": "Synthetic sample data only. Do not load to Production. Do not treat currency or KPI values as verified financials. No real TINs or bank data.",
+  "forbiddenEnvironments": ["production"],
+  "allowedEnvironments": ["local", "dev"],
+  "sourceSystem": "ImportPack",
+  "lastRefreshedAt": "2026-07-20T02:00:00Z",
+  "loadOrder": [
+    "organizations.json",
+    "workspaces.json",
+    "roles.json",
+    "financial-periods.json",
+    "clients-ccb.json",
+    "kpi-records.sample.json"
+  ],
+  "workspacesSupported": [
+    "WS-HVCG-INTERNAL",
+    "WS-HVCG-EXEC",
+    "WS-CCB"
+  ],
+  "relatedMigration": "releases/migrations/20260720_001_atlas_data_foundation_v1.json"
+}

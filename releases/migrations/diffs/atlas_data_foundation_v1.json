@@ -1,0 +1,309 @@
+{
+  "description": "Atlas data foundation v1 — additive lists + key hardening for multi-organization / workspace isolation",
+  "addLists": [
+    {
+      "title": "HVCG_Organizations",
+      "description": "Legal/operating organizations (HVCG internal and client orgs)",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "OrganizationCode", "displayName": "OrganizationCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "LegalName", "displayName": "LegalName", "type": "Text", "required": true },
+        { "internalName": "DBA", "displayName": "DBA", "type": "Text" },
+        { "internalName": "OrganizationType", "displayName": "OrganizationType", "type": "Choice", "required": true, "indexed": true, "choices": ["Internal", "Client", "Partner"] },
+        { "internalName": "TaxIdLast4", "displayName": "TaxIdLast4", "type": "Text" },
+        { "internalName": "PrimaryDomain", "displayName": "PrimaryDomain", "type": "Text" },
+        { "internalName": "IsActive", "displayName": "IsActive", "type": "Boolean", "required": true, "default": true },
+        { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "required": true, "choices": ["sample", "test", "imported", "calculated", "verified"], "default": "imported" },
+        { "internalName": "SourceSystem", "displayName": "SourceSystem", "type": "Text" },
+        { "internalName": "LastRefreshedAt", "displayName": "LastRefreshedAt", "type": "DateTime" },
+        { "internalName": "IsArchived", "displayName": "IsArchived", "type": "Boolean", "default": false },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_Workspaces",
+      "description": "Logical workspaces sharing one schema (HVCG internal, executive, client workspaces)",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "WorkspaceCode", "displayName": "WorkspaceCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "DisplayName", "displayName": "DisplayName", "type": "Text", "required": true },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "required": true, "indexed": true, "lookupList": "HVCG_Organizations" },
+        { "internalName": "WorkspaceType", "displayName": "WorkspaceType", "type": "Choice", "required": true, "indexed": true, "choices": ["Internal", "Client", "Executive"] },
+        { "internalName": "DefaultClientCode", "displayName": "DefaultClientCode", "type": "Text", "indexed": true },
+        { "internalName": "IsActive", "displayName": "IsActive", "type": "Boolean", "required": true, "default": true },
+        { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "required": true, "choices": ["sample", "test", "imported", "calculated", "verified"], "default": "imported" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_Roles",
+      "description": "Application role catalog (Entra groups remain authoritative for access)",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "RoleCode", "displayName": "RoleCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "DisplayName", "displayName": "DisplayName", "type": "Text", "required": true },
+        { "internalName": "EntraGroupHint", "displayName": "EntraGroupHint", "type": "Text" },
+        { "internalName": "Scope", "displayName": "Scope", "type": "Choice", "required": true, "choices": ["Tenant", "Organization", "Workspace", "Client"] },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_Notes",
+      "description": "First-class notes linked to regarding entity",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "NoteKey", "displayName": "NoteKey", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "RegardingType", "displayName": "RegardingType", "type": "Choice", "required": true, "indexed": true, "choices": ["Client", "Opportunity", "Project", "Task", "CapitalOpportunity", "Engagement", "Other"] },
+        { "internalName": "RegardingKey", "displayName": "RegardingKey", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "Body", "displayName": "Body", "type": "Note", "required": true },
+        { "internalName": "AuthorEmail", "displayName": "AuthorEmail", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "Visibility", "displayName": "Visibility", "type": "Choice", "required": true, "choices": ["Internal", "ClientVisible"], "default": "Internal" },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true },
+        { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true },
+        { "internalName": "IsArchived", "displayName": "IsArchived", "type": "Boolean", "default": false },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_FinancialPeriods",
+      "description": "Calendar/fiscal period master for budgets, forecasts, KPIs",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "PeriodCode", "displayName": "PeriodCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "StartDate", "displayName": "StartDate", "type": "DateTime", "required": true },
+        { "internalName": "EndDate", "displayName": "EndDate", "type": "DateTime", "required": true },
+        { "internalName": "PeriodType", "displayName": "PeriodType", "type": "Choice", "required": true, "choices": ["Month"], "default": "Month" },
+        { "internalName": "IsClosed", "displayName": "IsClosed", "type": "Boolean", "required": true, "default": false },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_KpiRecords",
+      "description": "KPI snapshots for executive dashboard and analytics — provenance required",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "KpiCode", "displayName": "KpiCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "FinancialPeriodId", "displayName": "FinancialPeriodId", "type": "Lookup", "required": true, "indexed": true, "lookupList": "HVCG_FinancialPeriods" },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "required": true, "indexed": true, "lookupList": "HVCG_Organizations" },
+        { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true },
+        { "internalName": "ValueNumber", "displayName": "ValueNumber", "type": "Number" },
+        { "internalName": "ValueText", "displayName": "ValueText", "type": "Text" },
+        { "internalName": "Unit", "displayName": "Unit", "type": "Text" },
+        { "internalName": "CalculationMethod", "displayName": "CalculationMethod", "type": "Note" },
+        { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "required": true, "indexed": true, "choices": ["sample", "test", "imported", "calculated", "verified"] },
+        { "internalName": "SourceSystem", "displayName": "SourceSystem", "type": "Text", "required": true },
+        { "internalName": "LastRefreshedAt", "displayName": "LastRefreshedAt", "type": "DateTime", "required": true, "indexed": true },
+        { "internalName": "RefreshJobId", "displayName": "RefreshJobId", "type": "Text" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_Forecasts",
+      "description": "Forecast headers; lines remain in HVCG_RevenueForecastLines",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "ForecastCode", "displayName": "ForecastCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "FinancialPeriodId", "displayName": "FinancialPeriodId", "type": "Lookup", "required": true, "lookupList": "HVCG_FinancialPeriods", "indexed": true },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true },
+        { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true },
+        { "internalName": "ForecastCategory", "displayName": "ForecastCategory", "type": "Choice", "required": true, "choices": ["Pipeline", "Best Case", "Commit", "Closed"], "indexed": true },
+        { "internalName": "OwnerEmail", "displayName": "OwnerEmail", "type": "Text", "indexed": true },
+        { "internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "choices": ["Draft", "Published", "Superseded"], "default": "Draft" },
+        { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "required": true, "choices": ["sample", "test", "imported", "calculated", "verified"], "default": "calculated" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_FinancingConditions",
+      "description": "Conditions precedent / covenants on capital opportunities",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "CapitalOpportunityId", "displayName": "CapitalOpportunityId", "type": "Lookup", "required": true, "indexed": true, "lookupList": "HVCG_CapitalOpportunities" },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true },
+        { "internalName": "ConditionType", "displayName": "ConditionType", "type": "Choice", "required": true, "choices": ["Collateral", "Covenant", "Guarantor", "Insurance", "Reporting", "Other"] },
+        { "internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "indexed": true, "choices": ["Open", "Satisfied", "Waived", "Failed"], "default": "Open" },
+        { "internalName": "DueDate", "displayName": "DueDate", "type": "DateTime", "indexed": true },
+        { "internalName": "Description", "displayName": "Description", "type": "Note" },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations" },
+        { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_EnterpriseValueAssessments",
+      "description": "Enterprise value assessments — replaces free-text-only EV on Clients",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "AssessmentCode", "displayName": "AssessmentCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "lookupList": "HVCG_Clients", "indexed": true },
+        { "internalName": "AsOfDate", "displayName": "AsOfDate", "type": "DateTime", "required": true, "indexed": true },
+        { "internalName": "Method", "displayName": "Method", "type": "Choice", "required": true, "choices": ["Income", "Market", "Asset", "Hybrid", "Qualitative"] },
+        { "internalName": "EnterpriseValueLow", "displayName": "EnterpriseValueLow", "type": "Currency" },
+        { "internalName": "EnterpriseValueHigh", "displayName": "EnterpriseValueHigh", "type": "Currency" },
+        { "internalName": "Currency", "displayName": "Currency", "type": "Text", "required": true, "default": "USD" },
+        { "internalName": "Status", "displayName": "Status", "type": "Choice", "required": true, "choices": ["Draft", "In Review", "Accepted", "Superseded"], "default": "Draft" },
+        { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "required": true, "indexed": true, "choices": ["sample", "test", "imported", "calculated", "verified"] },
+        { "internalName": "SourceSystem", "displayName": "SourceSystem", "type": "Text" },
+        { "internalName": "LastRefreshedAt", "displayName": "LastRefreshedAt", "type": "DateTime" },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations" },
+        { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_ValueDrivers",
+      "description": "Value drivers belonging to an enterprise value assessment",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "AssessmentId", "displayName": "AssessmentId", "type": "Lookup", "required": true, "indexed": true, "lookupList": "HVCG_EnterpriseValueAssessments" },
+        { "internalName": "DriverCode", "displayName": "DriverCode", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "DriverName", "displayName": "DriverName", "type": "Text", "required": true },
+        { "internalName": "ImpactDirection", "displayName": "ImpactDirection", "type": "Choice", "required": true, "choices": ["Positive", "Negative", "Neutral"] },
+        { "internalName": "WeightPct", "displayName": "WeightPct", "type": "Number" },
+        { "internalName": "Notes", "displayName": "Notes", "type": "Note" },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    },
+    {
+      "title": "HVCG_AIInsights",
+      "description": "Curated AI insights for dashboard/analytics after human approval",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "InsightKey", "displayName": "InsightKey", "type": "Text", "required": true, "indexed": true },
+        { "internalName": "InsightType", "displayName": "InsightType", "type": "Choice", "required": true, "indexed": true, "choices": ["Risk", "Opportunity", "Action", "Summary", "Anomaly"] },
+        { "internalName": "Summary", "displayName": "Summary", "type": "Note", "required": true },
+        { "internalName": "Confidence", "displayName": "Confidence", "type": "Number" },
+        { "internalName": "SourceJobId", "displayName": "SourceJobId", "type": "Text", "indexed": true },
+        { "internalName": "HumanApprovalStatus", "displayName": "HumanApprovalStatus", "type": "Choice", "required": true, "indexed": true, "choices": ["Pending", "Approved", "Rejected"], "default": "Pending" },
+        { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true },
+        { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true },
+        { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true },
+        { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "required": true, "choices": ["sample", "test", "imported", "calculated", "verified"], "default": "calculated" },
+        { "internalName": "SourceSystem", "displayName": "SourceSystem", "type": "Text", "default": "AIJob" },
+        { "internalName": "LastRefreshedAt", "displayName": "LastRefreshedAt", "type": "DateTime" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_Clients",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": { "internalName": "PrimaryAssessmentId", "displayName": "PrimaryAssessmentId", "type": "Lookup", "lookupList": "HVCG_EnterpriseValueAssessments" }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "choices": ["sample", "test", "imported", "calculated", "verified"], "default": "imported" }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true, "description": "Denormalized join key for Power BI and workspace filters" }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true }
+    },
+    {
+      "list": "HVCG_Budgets",
+      "column": { "internalName": "ClientCode", "displayName": "ClientCode", "type": "Text", "indexed": true }
+    },
+    {
+      "list": "HVCG_Budgets",
+      "column": { "internalName": "FinancialPeriodId", "displayName": "FinancialPeriodId", "type": "Lookup", "lookupList": "HVCG_FinancialPeriods", "indexed": true }
+    },
+    {
+      "list": "HVCG_Budgets",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations" }
+    },
+    {
+      "list": "HVCG_Budgets",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces" }
+    },
+    {
+      "list": "HVCG_RevenueForecastLines",
+      "column": { "internalName": "ForecastId", "displayName": "ForecastId", "type": "Lookup", "lookupList": "HVCG_Forecasts", "indexed": true }
+    },
+    {
+      "list": "HVCG_RevenueForecastLines",
+      "column": { "internalName": "FinancialPeriodId", "displayName": "FinancialPeriodId", "type": "Lookup", "lookupList": "HVCG_FinancialPeriods", "indexed": true }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "lookupList": "HVCG_Clients", "indexed": true }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": { "internalName": "DataProvenance", "displayName": "DataProvenance", "type": "Choice", "choices": ["sample", "test", "imported", "calculated", "verified"] }
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations" }
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "column": { "internalName": "PrimaryWorkspaceId", "displayName": "PrimaryWorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces" }
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "column": { "internalName": "EntraObjectId", "displayName": "EntraObjectId", "type": "Text", "indexed": true }
+    },
+    {
+      "list": "HVCG_Projects",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations", "indexed": true }
+    },
+    {
+      "list": "HVCG_Projects",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true }
+    },
+    {
+      "list": "HVCG_Tasks",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations" }
+    },
+    {
+      "list": "HVCG_Tasks",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true }
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "column": { "internalName": "OrganizationId", "displayName": "OrganizationId", "type": "Lookup", "lookupList": "HVCG_Organizations" }
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "column": { "internalName": "WorkspaceId", "displayName": "WorkspaceId", "type": "Lookup", "lookupList": "HVCG_Workspaces", "indexed": true }
+    }
+  ]
+}

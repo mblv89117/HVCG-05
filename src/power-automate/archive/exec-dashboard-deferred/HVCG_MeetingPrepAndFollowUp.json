@@ -1,0 +1,91 @@
+{
+  "flowName": "HVCG_MeetingPrepAndFollowUp",
+  "displayName": "HVCG_MeetingPrepAndFollowUp",
+  "module": "Communications",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "T-1 business day: prep checklist notify for upcoming meetings. After MeetingDate: create follow-up tasks from open action items when FollowUpRequired.",
+  "purpose": "meeting preparation + follow-up task creation",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 06:45 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Meetings",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_meetingprepandfollowup",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "mtg-{phase}|{MeetingId}|{BusinessDate}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Internal meeting owner only",
+    "No client calendar invites from this flow"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "meetingOwnerInternal",
+    "forbidden": [
+      "Client email",
+      "External auto-invite"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetMeetingsTomorrow",
+      "params": {
+        "list": "HVCG_Meetings"
+      }
+    },
+    {
+      "id": 3,
+      "action": "SendPrepBriefToOwner"
+    },
+    {
+      "id": 4,
+      "action": "GetMeetingsEndedYesterdayNeedingFollowUp"
+    },
+    {
+      "id": 5,
+      "action": "CreateFollowUpTasks",
+      "params": {
+        "list": "HVCG_Tasks",
+        "source": "MeetingActionItems"
+      }
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "loopPrevention": [
+    "Tasks tagged MeetingId; skip if follow-up tasks already exist for MeetingId",
+    "Do not modify MeetingDate"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off; cancel auto-created follow-up tasks by MeetingId filter if needed"
+}

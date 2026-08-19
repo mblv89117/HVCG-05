@@ -60,8 +60,27 @@ Tap → opens matching gallery filter or Power BI page.
 ### Row B — Operating pulse
 - Utilization: avg `CurrentUtilizationPct` from capacity snapshot  
 - Available hours: sum `AvailableHoursThisWeek`  
-- Health distribution: counts Green/Yellow/Red active clients  
-- Optional BI embed stub for win rate / sales cycle (KPI-12/13)
+- Health distribution: `cmpExecHealthStrip` ← `nfExecClientHealthGreen/Yellow/Red` (ATLAS-M-006)  
+- Conversion 90d: `nfExecConversionRate90d` (ATLAS-M-003) — BI preferred for trend  
+- Optional BI embed stub for sales cycle (KPI-13)
+
+### Row B2 — Analytics signals (`cmpExecOpsSignalRow`)
+| Chip | Binding | Catalog |
+|------|---------|---------|
+| Overdue task rate | `nfExecOverdueTaskRate` | ATLAS-M-008 |
+| Doc completion (crit) | `nfExecDocCompletionCritical` | ATLAS-M-012 |
+| Capital readiness | `nfExecCapitalReadiness` | ATLAS-M-011 |
+| EV progress | `nfExecEVProgress` | ATLAS-M-014 |
+| Active users 7d | `nfExecActiveUsers7d` | ATLAS-M-015 |
+| Workflow failures 7d | `nfExecWorkflowFailures7d` | ATLAS-M-016 |
+
+Footer on strip: `cmpExecMetricMeta` with `nfExecSourceMeta`.
+
+### Row B3 — Concentration (Owner/Finance)
+- `cmpExecConcentrationBar` ← Top 5 Active MRR clients + `nfExecConcentrationTop3` (ATLAS-M-005)
+
+### Row B4 — Revenue trend (optional BI / spark)
+- `cmpExecTrendSpark` or Power BI embed for ATLAS-M-001 — **no fabricated history**
 
 ### Row C — My work (`cmpExecQueueCard` galleries)
 1. Critical decisions  

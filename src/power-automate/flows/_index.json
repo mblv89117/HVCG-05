@@ -1,43 +1,182 @@
 {
+  "count": 22,
+  "updatedAt": "2026-07-20T02:23:17Z",
   "flows": [
-    { "flowName": "HVCG_ClientOnboarding", "path": "src/power-automate/flows/HVCG_ClientOnboarding.json" },
-    { "flowName": "HVCG_CreateProjectFromTemplate", "path": "src/power-automate/flows/HVCG_CreateProjectFromTemplate.json" },
-    { "flowName": "HVCG_CreateClientWorkspace", "path": "src/power-automate/flows/HVCG_CreateClientWorkspace.json" },
-    { "flowName": "HVCG_CreateDocumentRequests", "path": "src/power-automate/flows/HVCG_CreateDocumentRequests.json" },
-    { "flowName": "HVCG_MissingDocumentReminders", "path": "src/power-automate/flows/HVCG_MissingDocumentReminders.json" },
-    { "flowName": "HVCG_OverdueTaskEscalation", "path": "src/power-automate/flows/HVCG_OverdueTaskEscalation.json" },
-    { "flowName": "HVCG_DeliverableApproval", "path": "src/power-automate/flows/HVCG_DeliverableApproval.json" },
-    { "flowName": "HVCG_RenewalReminders", "path": "src/power-automate/flows/HVCG_RenewalReminders.json" },
-    { "flowName": "HVCG_ExecutiveDecisionEscalation", "path": "src/power-automate/flows/HVCG_ExecutiveDecisionEscalation.json" },
-    { "flowName": "HVCG_WeeklyStatusSummary", "path": "src/power-automate/flows/HVCG_WeeklyStatusSummary.json" },
-    { "flowName": "HVCG_UpdateProjectHealth", "path": "src/power-automate/flows/HVCG_UpdateProjectHealth.json" },
     {
-      "flowName": "HVCG_LeadQualifiedCreateOpportunity",
-      "path": "src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json",
-      "module": "OpportunityCRM",
-      "packageVersion": "1.1.0",
-      "defaultState": "Off"
+      "flowName": "HVCG_ApprovalOutcomeNotify",
+      "path": "src/power-automate/flows/HVCG_ApprovalOutcomeNotify.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "approval routing"
     },
     {
-      "flowName": "HVCG_OpportunityWonCloseout",
-      "path": "src/power-automate/flows/HVCG_OpportunityWonCloseout.json",
-      "module": "OpportunityCRM",
-      "packageVersion": "1.1.0",
-      "defaultState": "Off"
-    },
-    {
-      "flowName": "HVCG_OpportunityStageChangedNotify",
-      "path": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json",
-      "module": "OpportunityCRM",
-      "packageVersion": "1.1.0",
-      "defaultState": "Off"
+      "flowName": "HVCG_AutomationFailureDigest",
+      "path": "src/power-automate/flows/HVCG_AutomationFailureDigest.json",
+      "defaultState": "Off",
+      "releaseStatus": "Supporting",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
     },
     {
       "flowName": "HVCG_CapitalFundingStatusNotify",
       "path": "src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json",
-      "module": "OpportunityCRM",
-      "packageVersion": "1.1.0",
-      "defaultState": "Off"
+      "defaultState": "Off",
+      "releaseStatus": "Blocked",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_ChangeRequestIntake",
+      "path": "src/power-automate/flows/HVCG_ChangeRequestIntake.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "approval routing"
+    },
+    {
+      "flowName": "HVCG_ClientOnboarding",
+      "path": "src/power-automate/flows/HVCG_ClientOnboarding.json",
+      "defaultState": "Off",
+      "releaseStatus": "Supporting",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_CreateClientWorkspace",
+      "path": "src/power-automate/flows/HVCG_CreateClientWorkspace.json",
+      "defaultState": "Off",
+      "releaseStatus": "Supporting",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_CreateDocumentRequests",
+      "path": "src/power-automate/flows/HVCG_CreateDocumentRequests.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "document requests"
+    },
+    {
+      "flowName": "HVCG_CreateProjectFromTemplate",
+      "path": "src/power-automate/flows/HVCG_CreateProjectFromTemplate.json",
+      "defaultState": "Off",
+      "releaseStatus": "Supporting",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_DeliverableApproval",
+      "path": "src/power-automate/flows/HVCG_DeliverableApproval.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "approval routing"
+    },
+    {
+      "flowName": "HVCG_ExecutiveDecisionEscalation",
+      "path": "src/power-automate/flows/HVCG_ExecutiveDecisionEscalation.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "Executive Brief / escalation"
+    },
+    {
+      "flowName": "HVCG_LeadQualifiedCreateOpportunity",
+      "path": "src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json",
+      "defaultState": "Off",
+      "releaseStatus": "Blocked",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_MissingDocumentReminders",
+      "path": "src/power-automate/flows/HVCG_MissingDocumentReminders.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "document requests"
+    },
+    {
+      "flowName": "HVCG_OpportunityStageChangedNotify",
+      "path": "src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json",
+      "defaultState": "Off",
+      "releaseStatus": "Blocked",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_OpportunityWonCloseout",
+      "path": "src/power-automate/flows/HVCG_OpportunityWonCloseout.json",
+      "defaultState": "Off",
+      "releaseStatus": "Blocked",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_OverdueTaskEscalation",
+      "path": "src/power-automate/flows/HVCG_OverdueTaskEscalation.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "overdue escalations"
+    },
+    {
+      "flowName": "HVCG_PaymentPastDueAlert",
+      "path": "src/power-automate/flows/HVCG_PaymentPastDueAlert.json",
+      "defaultState": "Off",
+      "releaseStatus": "Supporting",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_ProjectStatusReminder",
+      "path": "src/power-automate/flows/HVCG_ProjectStatusReminder.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "project status notifications"
+    },
+    {
+      "flowName": "HVCG_RenewalReminders",
+      "path": "src/power-automate/flows/HVCG_RenewalReminders.json",
+      "defaultState": "Off",
+      "releaseStatus": "Supporting",
+      "releaseSet": null,
+      "execDashboardReleaseRole": null
+    },
+    {
+      "flowName": "HVCG_TaskDueSoonReminders",
+      "path": "src/power-automate/flows/HVCG_TaskDueSoonReminders.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "task reminders"
+    },
+    {
+      "flowName": "HVCG_UpdateProjectHealth",
+      "path": "src/power-automate/flows/HVCG_UpdateProjectHealth.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "project status notifications"
+    },
+    {
+      "flowName": "HVCG_WeeklyStatusSummary",
+      "path": "src/power-automate/flows/HVCG_WeeklyStatusSummary.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "project status notifications (ops)"
+    },
+    {
+      "flowName": "HVCG_ExecutiveWeeklyBrief",
+      "path": "src/power-automate/executive/HVCG_ExecutiveWeeklyBrief.json",
+      "defaultState": "Off",
+      "releaseStatus": "ReleaseCandidate",
+      "releaseSet": "executive-dashboard",
+      "execDashboardReleaseRole": "Executive Brief generation"
     }
   ]
 }

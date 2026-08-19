@@ -1,0 +1,41 @@
+{
+  "sprint": 14,
+  "epic": "EXEC-DASHBOARD",
+  "priority": "P1",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [
+    "ATLAS-T-1401"
+  ],
+  "blockedBy": [],
+  "status": "Ready",
+  "requiredReviews": [
+    "qa"
+  ],
+  "branch": "cursor/master-pm/executive-dashboard-s14",
+  "worktree": ".worktrees/track10-elite-ui",
+  "affectedPaths": [
+    "apps/atlas-elite-os/"
+  ],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "elite-os-exec-dev",
+  "createdAt": "2026-07-20T02:12:50Z",
+  "updatedAt": "2026-07-20T02:12:50Z",
+  "claimedBy": null,
+  "claimedAt": null,
+  "feature": "executive-dashboard",
+  "id": "ATLAS-T-1404",
+  "title": "QA gate: CORS + signed-in Dataverse on SWA + App Insights plan",
+  "description": "Validate signed-in Elite OS on SWA against Dataverse; confirm CORS; coordinate App Insights wiring task.",
+  "assignedAgent": "qa-release",
+  "acceptanceCriteria": [
+    "Signed-in mode evidence",
+    "CORS pass/fail",
+    "Release notes updated"
+  ]
+}

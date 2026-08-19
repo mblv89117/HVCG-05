@@ -1,0 +1,23 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "HVCG Delivery Team",
+      "TeamCode": "TEAM-HVCG-DELIVERY",
+      "DisplayName": "HVCG Delivery",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-INTERNAL",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-team-hvcg-delivery"
+    },
+    {
+      "Title": "CCB Engagement Team",
+      "TeamCode": "TEAM-CCB-CORE",
+      "DisplayName": "Colorado Craft Beef Core",
+      "OrganizationCode": "ORG-CCB",
+      "WorkspaceCode": "WS-CCB",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-team-ccb-core"
+    }
+  ]
+}

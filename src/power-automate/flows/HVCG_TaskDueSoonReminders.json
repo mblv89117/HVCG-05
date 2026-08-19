@@ -1,0 +1,120 @@
+{
+  "flowName": "HVCG_TaskDueSoonReminders",
+  "displayName": "HVCG_TaskDueSoonReminders",
+  "module": "Operations",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Daily reminder to task owners for tasks due within 2 business days (not yet overdue).",
+  "purpose": "task reminders",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 07:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Tasks",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_taskduesoonreminders",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "task-due-soon|{TaskId}|{BusinessDate}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Internal owner email only \u2014 no client send"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "taskOwnerInternal",
+    "forbidden": [
+      "Client email",
+      "External guests"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetTasksDueWithin2BusinessDays",
+      "params": {
+        "list": "HVCG_Tasks",
+        "filter": "Status ne Done and IsOverdue ne true"
+      }
+    },
+    {
+      "id": 3,
+      "action": "ForEachTask",
+      "params": {
+        "notify": "OwnerEmail",
+        "channel": "Outlook",
+        "subject": "Task due soon: {Title}"
+      }
+    },
+    {
+      "id": 4,
+      "action": "CreateNotificationRow",
+      "params": {
+        "list": "HVCG_Notifications",
+        "type": "Reminder"
+      }
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "loopPrevention": [
+    "Skip if Status=Done",
+    "Idempotency per task+business date",
+    "Do not update DueDate from this flow"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off in Maker; no data rollback required (notifications only)",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "usedByModules": [
+    "Operations Hub"
+  ],
+  "execDashboardReleaseRole": "task reminders",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "description": "SAMPLE FIXTURE ONLY — offline arithmetic for Atlas analytics packaging tests. Never present as production data.",
+  "dataProvenance": "sample",
+  "clients": [
+    { "ClientCode": "AAA01", "ClientStage": "Active Client", "IsActive": true, "MonthlyRetainer": 5000, "OverallHealth": "Green", "ClientLifetimeValue": 120000 },
+    { "ClientCode": "BBB02", "ClientStage": "Active Client", "IsActive": true, "MonthlyRetainer": 3000, "OverallHealth": "Yellow", "ClientLifetimeValue": 80000 },
+    { "ClientCode": "CCC03", "ClientStage": "Active Client", "IsActive": true, "MonthlyRetainer": 2000, "OverallHealth": "Red", "ClientLifetimeValue": 40000 },
+    { "ClientCode": "DDD04", "ClientStage": "Prospect", "IsActive": true, "MonthlyRetainer": 0, "OverallHealth": "Green", "ClientLifetimeValue": 0 }
+  ],
+  "engagements": [
+    { "EngagementStatus": "Active", "MonthlyRetainer": 5000, "EngagementValue": 0 },
+    { "EngagementStatus": "In Progress", "MonthlyRetainer": 0, "EngagementValue": 25000 },
+    { "EngagementStatus": "Closed", "MonthlyRetainer": 1000, "EngagementValue": 99999 }
+  ],
+  "opportunities": [
+    { "WinLossStatus": "Open", "WeightedValue": 40000, "ForecastCategory": "Commit" },
+    { "WinLossStatus": "Open", "WeightedValue": 10000, "ForecastCategory": "Pipeline" },
+    { "WinLossStatus": "Won", "WeightedValue": 50000, "ExpectedCloseDate": "2026-06-01" },
+    { "WinLossStatus": "Lost", "WeightedValue": 20000, "ExpectedCloseDate": "2026-06-15" }
+  ],
+  "tasks": [
+    { "Priority": "High", "TaskStatus": "Open", "IsOverdue": true },
+    { "Priority": "Critical", "TaskStatus": "Open", "IsOverdue": false },
+    { "Priority": "High", "TaskStatus": "Done", "IsOverdue": true },
+    { "Priority": "Low", "TaskStatus": "Open", "IsOverdue": true }
+  ],
+  "documentRequests": [
+    { "IsCritical": true, "RequestStatus": "Accepted" },
+    { "IsCritical": true, "RequestStatus": "Requested" },
+    { "IsCritical": true, "RequestStatus": "Waived" },
+    { "IsCritical": false, "RequestStatus": "Accepted" },
+    { "IsCritical": true, "RequestStatus": "Cancelled" }
+  ],
+  "fundingMilestones": [
+    { "IsCritical": true, "Status": "Completed" },
+    { "IsCritical": true, "Status": "Open" },
+    { "IsCritical": false, "Status": "Completed" }
+  ],
+  "capital": [
+    { "FundingStatus": "TermSheet", "WeightedValue": 250000 },
+    { "FundingStatus": "Closed", "WeightedValue": 1000000 }
+  ],
+  "automationLogs": [
+    { "Status": "Failed", "daysAgo": 2 },
+    { "Status": "Succeeded", "daysAgo": 1 },
+    { "Status": "Failed", "daysAgo": 20 }
+  ],
+  "enterpriseValue": [
+    { "Status": "Accepted", "DataProvenance": "verified", "EnterpriseValueLow": 1000000, "EnterpriseValueHigh": 1200000 },
+    { "Status": "Draft", "DataProvenance": "imported", "EnterpriseValueLow": 500000, "EnterpriseValueHigh": 600000 },
+    { "Status": "Accepted", "DataProvenance": "sample", "EnterpriseValueLow": 9999999, "EnterpriseValueHigh": 9999999 }
+  ],
+  "expected": {
+    "weightedPipeline": 50000,
+    "conversionRate90d": 0.5,
+    "engagementRevenue": 30000,
+    "mrrActive": 10000,
+    "concentrationTop3": 1.0,
+    "clientHealthRed": 1,
+    "overdueTaskRateHighCrit": 0.5,
+    "docCompletionCritical": 0.6666666667,
+    "capitalReadiness": 0.5,
+    "activeFinancingPipeline": 250000,
+    "evProgressExcludingSample": 0.5,
+    "workflowFailures7d": 1
+  }
+}

@@ -1,0 +1,1981 @@
+{
+  "description": "Atlas Platform OS v1 \u2014 canonical platform entities + tenant hardening; no legacy list deletes",
+  "addLists": [
+    {
+      "title": "HVCG_Identities",
+      "description": "Canonical Identity \u2014 Entra principals linked into Atlas",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "EntraObjectId",
+          "displayName": "EntraObjectId",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "IdentityType",
+          "displayName": "IdentityType",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "User",
+            "App",
+            "ServicePrincipal"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "UPN",
+          "displayName": "UPN",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text"
+        },
+        {
+          "internalName": "AccountEnabled",
+          "displayName": "AccountEnabled",
+          "type": "Boolean",
+          "default": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Teams",
+      "description": "Canonical Team within a workspace",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "TeamCode",
+          "displayName": "TeamCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text",
+          "required": true
+        },
+        {
+          "internalName": "GraphGroupId",
+          "displayName": "GraphGroupId",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "IsActive",
+          "displayName": "IsActive",
+          "type": "Boolean",
+          "default": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Permissions",
+      "description": "Canonical Permission \u2014 role x resource x action map (Entra/SACL enforce)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "PermissionCode",
+          "displayName": "PermissionCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "RoleCode",
+          "displayName": "RoleCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "ResourceType",
+          "displayName": "ResourceType",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Logical entity name or *"
+        },
+        {
+          "internalName": "Action",
+          "displayName": "Action",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Read",
+            "Write",
+            "Approve",
+            "Admin",
+            "Export"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "Scope",
+          "displayName": "Scope",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Tenant",
+            "Organization",
+            "Workspace",
+            "Client"
+          ]
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Workflows",
+      "description": "Canonical Workflow definitions (runtime may be Power Automate)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "WorkflowCode",
+          "displayName": "WorkflowCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text",
+          "required": true
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Draft",
+            "Active",
+            "Retired"
+          ],
+          "default": "Draft"
+        },
+        {
+          "internalName": "TriggerType",
+          "displayName": "TriggerType",
+          "type": "Choice",
+          "choices": [
+            "Manual",
+            "Schedule",
+            "Event",
+            "Queue"
+          ]
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Queues",
+      "description": "Canonical Queue \u2014 routes work items/tasks without per-module queue schemas",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "QueueCode",
+          "displayName": "QueueCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text",
+          "required": true
+        },
+        {
+          "internalName": "QueueKind",
+          "displayName": "QueueKind",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Human",
+            "AI",
+            "Approval",
+            "Integration",
+            "System"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "DefaultTaskFamily",
+          "displayName": "DefaultTaskFamily",
+          "type": "Text"
+        },
+        {
+          "internalName": "IsActive",
+          "displayName": "IsActive",
+          "type": "Boolean",
+          "default": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Automations",
+      "description": "Canonical Automation catalog \u2014 metadata for flows/jobs; not a second task store",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "AutomationCode",
+          "displayName": "AutomationCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text",
+          "required": true
+        },
+        {
+          "internalName": "WorkflowCode",
+          "displayName": "WorkflowCode",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "RuntimeType",
+          "displayName": "RuntimeType",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "PowerAutomate",
+            "DataversePlugin",
+            "AzureFunction",
+            "Other"
+          ]
+        },
+        {
+          "internalName": "FlowIdOrName",
+          "displayName": "FlowIdOrName",
+          "type": "Text"
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "choices": [
+            "Active",
+            "Paused",
+            "Retired"
+          ],
+          "default": "Active"
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Conversations",
+      "description": "Canonical Conversation \u2014 threads (absorbs portal message threads)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "ConversationKey",
+          "displayName": "ConversationKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "Subject",
+          "displayName": "Subject",
+          "type": "Text"
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "choices": [
+            "Open",
+            "Waiting",
+            "Closed"
+          ],
+          "default": "Open",
+          "indexed": true
+        },
+        {
+          "internalName": "ParticipantEmails",
+          "displayName": "ParticipantEmails",
+          "type": "Note"
+        },
+        {
+          "internalName": "GraphChatId",
+          "displayName": "GraphChatId",
+          "type": "Text"
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Events",
+      "description": "Canonical Event \u2014 domain/system/alert signals (absorbs OperationalAlerts)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "EventKey",
+          "displayName": "EventKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "EventKind",
+          "displayName": "EventKind",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Domain",
+            "Alert",
+            "Signal",
+            "AutomationRun"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "Severity",
+          "displayName": "Severity",
+          "type": "Choice",
+          "choices": [
+            "Info",
+            "Warning",
+            "Error",
+            "Critical"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "PayloadSummary",
+          "displayName": "PayloadSummary",
+          "type": "Note"
+        },
+        {
+          "internalName": "RelatedEntityType",
+          "displayName": "RelatedEntityType",
+          "type": "Text"
+        },
+        {
+          "internalName": "RelatedEntityKey",
+          "displayName": "RelatedEntityKey",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "OccurredAt",
+          "displayName": "OccurredAt",
+          "type": "DateTime",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Timeline",
+      "description": "Canonical TimelineEntry \u2014 activity stream (notes/activities/comms views filter EntryType)",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "TimelineKey",
+          "displayName": "TimelineKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "EntryType",
+          "displayName": "EntryType",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Note",
+            "Call",
+            "Email",
+            "Meeting",
+            "StageChange",
+            "System",
+            "Other"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "RegardingType",
+          "displayName": "RegardingType",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "RegardingKey",
+          "displayName": "RegardingKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "Body",
+          "displayName": "Body",
+          "type": "Note"
+        },
+        {
+          "internalName": "ActorEmail",
+          "displayName": "ActorEmail",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "OccurredAt",
+          "displayName": "OccurredAt",
+          "type": "DateTime",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Documents",
+      "description": "Canonical Document metadata \u2014 file bytes remain in SharePoint/Graph libraries",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "DocumentKey",
+          "displayName": "DocumentKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "DriveItemId",
+          "displayName": "DriveItemId",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "WebUrl",
+          "displayName": "WebUrl",
+          "type": "Text"
+        },
+        {
+          "internalName": "ContentType",
+          "displayName": "ContentType",
+          "type": "Text"
+        },
+        {
+          "internalName": "Classification",
+          "displayName": "Classification",
+          "type": "Choice",
+          "choices": [
+            "Restricted Client Financial",
+            "Internal Confidential",
+            "Internal General"
+          ]
+        },
+        {
+          "internalName": "LibraryPath",
+          "displayName": "LibraryPath",
+          "type": "Text"
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Artifacts",
+      "description": "Canonical Artifact \u2014 deliverables/AI outputs/generated work products",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "ArtifactKey",
+          "displayName": "ArtifactKey",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "ArtifactKind",
+          "displayName": "ArtifactKind",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Deliverable",
+            "AIOutput",
+            "GeneratedDocument",
+            "Export",
+            "Other"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "ClientCode",
+          "displayName": "ClientCode",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "ProjectKey",
+          "displayName": "ProjectKey",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "DocumentKey",
+          "displayName": "DocumentKey",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "choices": [
+            "Draft",
+            "InReview",
+            "Approved",
+            "Published",
+            "Superseded"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Dashboards",
+      "description": "Canonical Dashboard definitions for exec/workspace surfaces",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "DashboardCode",
+          "displayName": "DashboardCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text",
+          "required": true
+        },
+        {
+          "internalName": "Audience",
+          "displayName": "Audience",
+          "type": "Choice",
+          "choices": [
+            "Executive",
+            "Internal",
+            "Client"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "IsActive",
+          "displayName": "IsActive",
+          "type": "Boolean",
+          "default": true
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Widgets",
+      "description": "Canonical Widget \u2014 binds metrics onto dashboards",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "WidgetCode",
+          "displayName": "WidgetCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DashboardCode",
+          "displayName": "DashboardCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "WidgetType",
+          "displayName": "WidgetType",
+          "type": "Choice",
+          "choices": [
+            "KPI",
+            "Chart",
+            "Table",
+            "Queue",
+            "Custom"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "MetricCode",
+          "displayName": "MetricCode",
+          "type": "Text",
+          "indexed": true
+        },
+        {
+          "internalName": "LayoutJson",
+          "displayName": "LayoutJson",
+          "type": "Note"
+        },
+        {
+          "internalName": "SortOrder",
+          "displayName": "SortOrder",
+          "type": "Number"
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "title": "HVCG_Integrations",
+      "description": "Canonical Integration registry \u2014 connectors and external systems",
+      "template": "genericList",
+      "columns": [
+        {
+          "internalName": "IntegrationCode",
+          "displayName": "IntegrationCode",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "DisplayName",
+          "displayName": "DisplayName",
+          "type": "Text",
+          "required": true
+        },
+        {
+          "internalName": "SystemKind",
+          "displayName": "SystemKind",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "Graph",
+            "Dataverse",
+            "SharePoint",
+            "Accounting",
+            "PowerAutomate",
+            "Other"
+          ],
+          "indexed": true
+        },
+        {
+          "internalName": "Direction",
+          "displayName": "Direction",
+          "type": "Choice",
+          "choices": [
+            "Inbound",
+            "Outbound",
+            "Bidirectional"
+          ]
+        },
+        {
+          "internalName": "Status",
+          "displayName": "Status",
+          "type": "Choice",
+          "choices": [
+            "Planned",
+            "Active",
+            "Paused",
+            "Retired"
+          ],
+          "default": "Planned"
+        },
+        {
+          "internalName": "ConfigRef",
+          "displayName": "ConfigRef",
+          "type": "Text",
+          "description": "Key Vault secret name or env var \u2014 never store secrets in list"
+        },
+        {
+          "internalName": "Title",
+          "displayName": "Title",
+          "type": "Text",
+          "required": true,
+          "indexed": true
+        },
+        {
+          "internalName": "TenantId",
+          "displayName": "TenantId",
+          "type": "Text",
+          "required": true,
+          "indexed": true,
+          "description": "Entra tenant GUID"
+        },
+        {
+          "internalName": "OrganizationId",
+          "displayName": "OrganizationId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Organizations",
+          "indexed": true
+        },
+        {
+          "internalName": "WorkspaceId",
+          "displayName": "WorkspaceId",
+          "type": "Lookup",
+          "lookupList": "HVCG_Workspaces",
+          "indexed": true
+        },
+        {
+          "internalName": "SchemaVersion",
+          "displayName": "SchemaVersion",
+          "type": "Text",
+          "default": "platform-os-1.0.0-draft"
+        },
+        {
+          "internalName": "DataProvenance",
+          "displayName": "DataProvenance",
+          "type": "Choice",
+          "required": true,
+          "choices": [
+            "sample",
+            "test",
+            "imported",
+            "calculated",
+            "verified"
+          ],
+          "default": "imported"
+        },
+        {
+          "internalName": "SourceSystem",
+          "displayName": "SourceSystem",
+          "type": "Text"
+        },
+        {
+          "internalName": "LastRefreshedAt",
+          "displayName": "LastRefreshedAt",
+          "type": "DateTime"
+        },
+        {
+          "internalName": "IsArchived",
+          "displayName": "IsArchived",
+          "type": "Boolean",
+          "default": false
+        },
+        {
+          "internalName": "HVCG_IdempotencyKey",
+          "displayName": "HVCG IdempotencyKey",
+          "type": "Text",
+          "indexed": true
+        }
+      ]
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_Organizations",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Organizations",
+      "column": {
+        "internalName": "SchemaVersion",
+        "displayName": "SchemaVersion",
+        "type": "Text"
+      }
+    },
+    {
+      "list": "HVCG_Workspaces",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Workspaces",
+      "column": {
+        "internalName": "SchemaVersion",
+        "displayName": "SchemaVersion",
+        "type": "Text"
+      }
+    },
+    {
+      "list": "HVCG_Roles",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "column": {
+        "internalName": "IdentityId",
+        "displayName": "IdentityId",
+        "type": "Lookup",
+        "lookupList": "HVCG_Identities",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_TeamMembers",
+      "column": {
+        "internalName": "SchemaVersion",
+        "displayName": "SchemaVersion",
+        "type": "Text"
+      }
+    },
+    {
+      "list": "HVCG_AIWorkers",
+      "column": {
+        "internalName": "AgentCode",
+        "displayName": "AgentCode",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_AIWorkers",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "ApprovalKind",
+        "displayName": "ApprovalKind",
+        "type": "Choice",
+        "choices": [
+          "General",
+          "Expense",
+          "AI",
+          "Deliverable",
+          "Other"
+        ],
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "ApprovalKey",
+        "displayName": "ApprovalKey",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Approvals",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": {
+        "internalName": "AuditChannel",
+        "displayName": "AuditChannel",
+        "type": "Choice",
+        "choices": [
+          "Business",
+          "AI",
+          "Automation",
+          "Security"
+        ],
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": {
+        "internalName": "AuditKey",
+        "displayName": "AuditKey",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_AuditEvents",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_KpiRecords",
+      "column": {
+        "internalName": "MetricCode",
+        "displayName": "MetricCode",
+        "type": "Text",
+        "indexed": true,
+        "description": "Canonical Metric alias of KpiCode"
+      }
+    },
+    {
+      "list": "HVCG_KpiRecords",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Projects",
+      "column": {
+        "internalName": "ProjectKind",
+        "displayName": "ProjectKind",
+        "type": "Choice",
+        "choices": [
+          "Client",
+          "Internal"
+        ],
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Projects",
+      "column": {
+        "internalName": "ProjectKey",
+        "displayName": "ProjectKey",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Projects",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Tasks",
+      "column": {
+        "internalName": "TaskFamily",
+        "displayName": "TaskFamily",
+        "type": "Choice",
+        "choices": [
+          "Delivery",
+          "AI",
+          "Ops",
+          "Integration"
+        ],
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Tasks",
+      "column": {
+        "internalName": "TaskKey",
+        "displayName": "TaskKey",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Tasks",
+      "column": {
+        "internalName": "QueueCode",
+        "displayName": "QueueCode",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Tasks",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": {
+        "internalName": "TenantId",
+        "displayName": "TenantId",
+        "type": "Text",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Clients",
+      "column": {
+        "internalName": "SchemaVersion",
+        "displayName": "SchemaVersion",
+        "type": "Text"
+      }
+    }
+  ],
+  "canonicalAliases": {
+    "User": "HVCG_TeamMembers",
+    "Agent": "HVCG_AIWorkers",
+    "Metric": "HVCG_KpiRecords",
+    "Approval": "HVCG_Approvals",
+    "Audit": "HVCG_AuditEvents"
+  }
+}

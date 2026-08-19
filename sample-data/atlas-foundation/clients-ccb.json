@@ -1,0 +1,51 @@
+{
+  "dataProvenance": "sample",
+  "sourceSystem": "ImportPack",
+  "lastRefreshedAt": "2026-07-20T02:00:00Z",
+  "disclaimer": "Colorado Craft Beef sample client stub for workspace isolation tests. No verified financials. Currency fields omitted intentionally.",
+  "items": [
+    {
+      "Title": "Colorado Craft Beef LLC",
+      "ClientCode": "CCB01",
+      "DBA": "Colorado Craft Beef",
+      "Industry": "Food & Beverage — Specialty Beef",
+      "EntityType": "LLC",
+      "StateOfFormation": "CO",
+      "ClientStage": "Active Client",
+      "EngagementTypePrimary": "Capital Advisory",
+      "RelationshipOwnerEmail": "manny@hvcg.example",
+      "ProjectManagerEmail": "pm@hvcg.example",
+      "ServicePackage": "Growth Capital Advisory",
+      "OrganizationCode": "ORG-CCB",
+      "WorkspaceCode": "WS-CCB",
+      "OverallHealth": "Green",
+      "RiskLevel": "Low",
+      "CapitalNeed": true,
+      "CapitalType": "Debt",
+      "IsActive": true,
+      "RequiresExecutiveAttention": false,
+      "PortalEnabled": true,
+      "DataProvenance": "sample",
+      "BusinessDescription": "Colorado-based craft beef producer working with HVCG on capital advisory and operating cadence.",
+      "HVCG_IdempotencyKey": "sample-client-ccb01",
+      "contacts": [
+        {
+          "Title": "Jordan Hale",
+          "Email": "jordan.hale@ccb.example",
+          "ClientCode": "CCB01",
+          "IsPrimary": true,
+          "IsDecisionMaker": true,
+          "HVCG_IdempotencyKey": "sample-contact-ccb-jordan"
+        },
+        {
+          "Title": "Sam Ortega",
+          "Email": "sam.ortega@ccb.example",
+          "ClientCode": "CCB01",
+          "IsPrimary": false,
+          "IsBilling": true,
+          "HVCG_IdempotencyKey": "sample-contact-ccb-sam"
+        }
+      ]
+    }
+  ]
+}

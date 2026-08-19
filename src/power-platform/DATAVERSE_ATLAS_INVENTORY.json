@@ -1,0 +1,163 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-07-20T02:00:00Z",
+  "environment": {
+    "id": "development",
+    "dataverseUrl": "https://org1131a2b0.crm.dynamics.com",
+    "orgId": "704dbfc1-8380-f111-b27b-6045bd01bf39",
+    "environmentId": "c03b1329-4394-ece7-acc9-c50794b3db1e",
+    "modelDrivenAppId": "dea8a490-4b82-f111-ab0e-6045bd0193e8",
+    "modelDrivenAppName": "Atlas Command Center"
+  },
+  "architecture": {
+    "executiveUx": "Elite OS SPA (MSAL) — not canvas",
+    "adminSor": "Model-driven Atlas Command Center",
+    "deliveryDataPlane": "SharePoint HVCG_* lists",
+    "atlasOpsDataPlane": "Dataverse hvcg_atlas*",
+    "doNotDuplicate": "Do not create SharePoint lists for entities already modeled as hvcg_atlas* Atlas ops tables"
+  },
+  "tables": [
+    {
+      "logicalName": "hvcg_atlasapproval",
+      "setName": "hvcg_atlasapprovals",
+      "displayName": "Atlas Approval",
+      "devRowCount": 5,
+      "eliteOsConsumer": "listApprovals / updateApprovalDecision",
+      "productModules": ["Executive Dashboard", "tasks and approvals", "administration"],
+      "keyColumns": [
+        "hvcg_atlasapprovalid",
+        "hvcg_name",
+        "hvcg_risk",
+        "hvcg_track",
+        "hvcg_decision",
+        "hvcg_datasource",
+        "hvcg_ownernotes"
+      ]
+    },
+    {
+      "logicalName": "hvcg_atlasrevenuekpi",
+      "setName": "hvcg_atlasrevenuekpis",
+      "displayName": "Atlas Revenue KPI",
+      "devRowCount": 6,
+      "eliteOsConsumer": "listRevenueKpis",
+      "productModules": ["Executive Dashboard", "HVCG workspace"],
+      "keyColumns": [
+        "hvcg_atlasrevenuekpiid",
+        "hvcg_name",
+        "hvcg_value",
+        "hvcg_unit",
+        "hvcg_trend",
+        "hvcg_period",
+        "hvcg_datasource"
+      ],
+      "financeRule": "Never invent dollar amounts in Elite OS fallbacks; prefer pending labels when datasource unverified"
+    },
+    {
+      "logicalName": "hvcg_atlasbrief",
+      "setName": "hvcg_atlasbriefs",
+      "displayName": "Atlas Executive Brief",
+      "devRowCount": 1,
+      "eliteOsConsumer": "listBriefs",
+      "productModules": ["Executive Dashboard", "notifications"],
+      "keyColumns": [
+        "hvcg_atlasbriefid",
+        "hvcg_name",
+        "hvcg_whatchanged",
+        "hvcg_needsdecision",
+        "hvcg_topactions",
+        "hvcg_datasource"
+      ]
+    },
+    {
+      "logicalName": "hvcg_atlastrack",
+      "setName": "hvcg_atlastracks",
+      "displayName": "Atlas Track",
+      "devRowCount": null,
+      "eliteOsConsumer": "planned / Admin",
+      "productModules": ["administration", "projects"]
+    },
+    {
+      "logicalName": "hvcg_atlasrisk",
+      "setName": "hvcg_atlasrisks",
+      "displayName": "Atlas Risk",
+      "devRowCount": 4,
+      "eliteOsConsumer": "planned",
+      "productModules": ["Executive Dashboard", "administration"]
+    },
+    {
+      "logicalName": "hvcg_atlasagent",
+      "setName": "hvcg_atlasagents",
+      "displayName": "Atlas Agent",
+      "devRowCount": 6,
+      "eliteOsConsumer": "Admin",
+      "productModules": ["administration"]
+    },
+    {
+      "logicalName": "hvcg_atlasblocker",
+      "setName": "hvcg_atlasblockers",
+      "displayName": "Atlas Blocker",
+      "devRowCount": 3,
+      "eliteOsConsumer": "planned",
+      "productModules": ["Executive Dashboard", "tasks and approvals"]
+    },
+    {
+      "logicalName": "hvcg_atlassprint",
+      "setName": "hvcg_atlassprints",
+      "displayName": "Atlas Sprint",
+      "devRowCount": 6,
+      "eliteOsConsumer": "Admin",
+      "productModules": ["administration", "projects"]
+    },
+    {
+      "logicalName": "hvcg_atlasrelease",
+      "setName": "hvcg_atlasreleases",
+      "displayName": "Atlas Release",
+      "devRowCount": 4,
+      "eliteOsConsumer": "Admin",
+      "productModules": ["administration"]
+    },
+    {
+      "logicalName": "hvcg_atlaschangerequest",
+      "setName": "hvcg_atlaschangerequests",
+      "displayName": "Atlas Change Request",
+      "eliteOsConsumer": "planned",
+      "productModules": ["administration", "projects"]
+    },
+    {
+      "logicalName": "hvcg_atlasdatasource",
+      "setName": "hvcg_atlasdatasources",
+      "displayName": "Atlas Data Source",
+      "eliteOsConsumer": "planned",
+      "productModules": ["administration"]
+    },
+    {
+      "logicalName": "hvcg_atlastechnicaldebt",
+      "setName": "hvcg_atlastechnicaldebts",
+      "displayName": "Atlas Technical Debt",
+      "eliteOsConsumer": "planned",
+      "productModules": ["administration"]
+    },
+    {
+      "logicalName": "hvcg_atlasuatfeedback",
+      "setName": "hvcg_atlasuatfeedbacks",
+      "displayName": "Atlas UAT Feedback",
+      "eliteOsConsumer": "planned",
+      "productModules": ["administration"]
+    }
+  ],
+  "sharePointFallbackDomains": [
+    {
+      "domain": "clients-projects-tasks-capital-crm-documents",
+      "listsPrefix": "HVCG_",
+      "listCount": 82,
+      "note": "Command Center delivery plane — do not recreate as Dataverse tables without Architecture ADR"
+    }
+  ],
+  "sampleDataMap": {
+    "executive": "sample-data/executive/",
+    "clients": "sample-data/clients.csv",
+    "workspaces": "sample-data/workspaces/",
+    "tasks": "sample-data/tasks.csv",
+    "documentRequests": "sample-data/documentRequests.csv"
+  }
+}

@@ -1,5 +1,8 @@
 # Executive KPI Catalog
 
+**Canonical IDs:** use `ATLAS-M-###` in [`docs/analytics/METRIC_CATALOG.md`](../analytics/METRIC_CATALOG.md).  
+`E-##` rows below are aliases for Executive Command Center packaging.
+
 All KPIs read existing SharePoint lists. Missing amounts stay blank — never invent.
 
 | KPI ID | Label | Formula concept | Primary list(s) | Visibility |

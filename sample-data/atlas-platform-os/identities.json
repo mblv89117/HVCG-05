@@ -1,0 +1,26 @@
+{
+  "dataProvenance": "sample",
+  "tenantIdHint": "REPLACE-WITH-DEV-TENANT-GUID",
+  "items": [
+    {
+      "Title": "Manny Barela",
+      "EntraObjectId": "00000000-0000-4000-8000-000000000001",
+      "IdentityType": "User",
+      "UPN": "manny@hvcg.example",
+      "DisplayName": "Manny Barela",
+      "AccountEnabled": true,
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-identity-manny"
+    },
+    {
+      "Title": "Atlas Automation App",
+      "EntraObjectId": "00000000-0000-4000-8000-000000000099",
+      "IdentityType": "App",
+      "UPN": "atlas-automation@hvcg.example",
+      "DisplayName": "Atlas Automation",
+      "AccountEnabled": true,
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-identity-atlas-app"
+    }
+  ]
+}

@@ -184,3 +184,207 @@ nfShowExecFullHome =
     LookUp(HVCG_TeamMembers, Email = User().Email).PrimaryRole,
     "OperationsAssistant"
   ) in ["Owner", "Administrator"];
+
+// =============================================================================
+// Atlas Analytics Product — ATLAS-M-* (docs/analytics/METRIC_CATALOG.md)
+// Apps: point-in-time / simple rates. Trends & medians prefer Power BI.
+// =============================================================================
+
+// ATLAS-M-003 Conversion rate 90d (Won / Won+Lost)
+nfExecConversionRate90d =
+    With(
+        {
+            won: CountRows(
+                Filter(
+                    HVCG_Opportunities,
+                    WinLossStatus = "Won" && ExpectedCloseDate >= DateAdd(Today(), -90)
+                )
+            ),
+            lost: CountRows(
+                Filter(
+                    HVCG_Opportunities,
+                    WinLossStatus = "Lost" && ExpectedCloseDate >= DateAdd(Today(), -90)
+                )
+            )
+        },
+        If(won + lost = 0, Blank(), won / (won + lost))
+    );
+
+// ATLAS-M-004 Engagement revenue (active book)
+nfExecEngagementRevenue =
+    Sum(
+        Filter(
+            HVCG_Engagements,
+            EngagementStatus = "Active"
+                || EngagementStatus = "In Progress"
+                || EngagementStatus = "On Track"
+        ),
+        Coalesce(MonthlyRetainer, 0) + Coalesce(EngagementValue, 0)
+    );
+
+// ATLAS-M-005 Client concentration Top-3 share of active MRR
+nfExecMRRActiveTotal =
+    Sum(
+        Filter(HVCG_Clients, IsActive = true && ClientStage = "Active Client"),
+        MonthlyRetainer
+    );
+
+nfExecConcentrationTop3 =
+    With(
+        {
+            ranked: FirstN(
+                Sort(
+                    Filter(HVCG_Clients, IsActive = true && ClientStage = "Active Client"),
+                    MonthlyRetainer,
+                    SortOrder.Descending
+                ),
+                3
+            ),
+            total: nfExecMRRActiveTotal
+        },
+        If(total = 0, Blank(), Sum(ranked, MonthlyRetainer) / total)
+    );
+
+// ATLAS-M-006 Client health counts
+nfExecClientHealthGreen =
+    CountRows(
+        Filter(
+            HVCG_Clients,
+            IsActive = true && ClientStage = "Active Client" && OverallHealth = "Green"
+        )
+    );
+nfExecClientHealthYellow =
+    CountRows(
+        Filter(
+            HVCG_Clients,
+            IsActive = true && ClientStage = "Active Client" && OverallHealth = "Yellow"
+        )
+    );
+nfExecClientHealthRed =
+    CountRows(
+        Filter(
+            HVCG_Clients,
+            IsActive = true && ClientStage = "Active Client" && OverallHealth = "Red"
+        )
+    );
+
+// ATLAS-M-008 Overdue task rate (exec: High/Critical only)
+nfExecOverdueTaskRate =
+    With(
+        {
+            openTasks: Filter(
+                HVCG_Tasks,
+                (Priority = "High" || Priority = "Critical")
+                    && TaskStatus <> "Done"
+                    && TaskStatus <> "Cancelled"
+                    && TaskStatus <> "Completed"
+            )
+        },
+        With(
+            {
+                n: CountRows(openTasks),
+                o: CountRows(Filter(openTasks, IsOverdue = true))
+            },
+            If(n = 0, Blank(), o / n)
+        )
+    );
+
+// ATLAS-M-010 Revenue at risk already: nfExecRevenueAtRisk
+
+// ATLAS-M-011 Capital-readiness (critical funding milestones; BLANK if none)
+// Prefer scoping to open capital in Maker when lookup filters are available.
+nfExecCapitalReadiness =
+    With(
+        {
+            n: CountRows(Filter(HVCG_FundingMilestones, IsCritical = true)),
+            d: CountRows(
+                Filter(
+                    HVCG_FundingMilestones,
+                    IsCritical = true
+                        && (
+                            Status = "Completed"
+                                || Status = "Complete"
+                                || Status = "Satisfied"
+                                || Status = "Waived"
+                        )
+                )
+            )
+        },
+        If(n = 0, Blank(), d / n)
+    );
+
+// ATLAS-M-012 Document completion (critical)
+nfExecDocCompletionCritical =
+    With(
+        {
+            allCrit: Filter(
+                HVCG_DocumentRequests,
+                IsCritical = true && RequestStatus <> "Cancelled"
+            )
+        },
+        With(
+            {
+                n: CountRows(allCrit),
+                d: CountRows(
+                    Filter(
+                        allCrit,
+                        RequestStatus = "Accepted" || RequestStatus = "Waived"
+                    )
+                )
+            },
+            If(n = 0, Blank(), d / n)
+        )
+    );
+
+// ATLAS-M-013 alias of nfExecCapitalPipeline (Active financing pipeline)
+
+// ATLAS-M-014 EV progress (exclude sample/test when DataProvenance present)
+nfExecEVProgress =
+    With(
+        {
+            rows: Filter(
+                HVCG_EnterpriseValueAssessments,
+                Status <> "Superseded"
+                    && Coalesce(DataProvenance, "imported") <> "sample"
+                    && Coalesce(DataProvenance, "imported") <> "test"
+                    && (
+                        Status = "Draft"
+                            || Status = "In Review"
+                            || Status = "Accepted"
+                    )
+            )
+        },
+        With(
+            {
+                n: CountRows(rows),
+                a: CountRows(Filter(rows, Status = "Accepted"))
+            },
+            If(n = 0, Blank(), a / n)
+        )
+    );
+
+// ATLAS-M-015 User adoption 7d (AuditEvents ∩ TeamMembers)
+nfExecActiveUsers7d =
+    CountRows(
+        Distinct(
+            Filter(
+                HVCG_AuditEvents,
+                EventDate >= DateAdd(Today(), -7)
+                    && !IsBlank(ActorEmail)
+                    && !IsBlank(LookUp(HVCG_TeamMembers, Email = ActorEmail && IsActive = true))
+            ),
+            ActorEmail
+        )
+    );
+
+// ATLAS-M-016 Workflow failures 7d
+nfExecWorkflowFailures7d =
+    CountRows(
+        Filter(
+            HVCG_AutomationLogs,
+            Status = "Failed" && Created >= DateAdd(Today(), -7)
+        )
+    );
+
+// Meta helper text for tiles (bind SubLabel)
+nfExecSourceMeta = "Source: SharePoint · Refresh: OnVisible / Refresh";

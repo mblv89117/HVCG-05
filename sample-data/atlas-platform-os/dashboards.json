@@ -1,0 +1,25 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "Executive Command Center",
+      "DashboardCode": "DASH-EXEC-CMD",
+      "DisplayName": "Executive Command Center",
+      "Audience": "Executive",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-EXEC",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-dash-exec"
+    },
+    {
+      "Title": "Colorado Craft Beef Home",
+      "DashboardCode": "DASH-CCB-HOME",
+      "DisplayName": "Colorado Craft Beef Workspace",
+      "Audience": "Client",
+      "OrganizationCode": "ORG-CCB",
+      "WorkspaceCode": "WS-CCB",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-dash-ccb"
+    }
+  ]
+}

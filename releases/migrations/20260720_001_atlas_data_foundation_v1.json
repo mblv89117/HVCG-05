@@ -1,0 +1,57 @@
+{
+  "id": "20260720_001_atlas_data_foundation_v1",
+  "fromVersion": "1.1.0",
+  "toVersion": "1.2.0-draft",
+  "title": "Atlas normalized data foundation — organizations, workspaces, KPIs, EV, notes, periods",
+  "status": "Draft",
+  "additiveOnly": true,
+  "destructive": false,
+  "preservesCustomerData": true,
+  "ownerAgent": "data-engineering",
+  "requiresApprovalFrom": [
+    "system-architect",
+    "power-platform",
+    "security",
+    "qa-release",
+    "owner"
+  ],
+  "selfApprovalForbidden": true,
+  "notes": "Design + Dev-ready diff. Do not apply to Production. Do not bump product VERSION until approvals complete.",
+  "documentation": [
+    "docs/data-model/ATLAS_DATA_FOUNDATION/README.md",
+    "docs/data-model/ATLAS_DATA_FOUNDATION/06_MIGRATION_PLAN.md"
+  ],
+  "rollbackSteps": [
+    "Feature-flag off consumers of new lists",
+    "Leave additive columns unused (SharePoint non-destructive)",
+    "Optionally remove empty new lists in Dev only after backup snapshot",
+    "Restore schema snapshot taken before ApplyListDiff"
+  ],
+  "validation": [
+    "tests/unit/Test-HVCGSchemaValidation.ps1",
+    "docs/data-model/ATLAS_DATA_FOUNDATION/08_VALIDATION_RULES.md"
+  ],
+  "downstreamDependencies": [
+    "Power Platform forms/views",
+    "Security ACL matrix",
+    "Power BI ceo-semantic-model extension",
+    "Elite OS / frontend contracts",
+    "Finance Intelligence EV/KPI verified gate"
+  ],
+  "steps": [
+    {
+      "action": "SchemaSnapshot",
+      "notes": "Capture pre-change snapshot in Dev"
+    },
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/atlas_data_foundation_v1.json"
+    },
+    {
+      "action": "LoadSeed",
+      "seedManifest": "sample-data/atlas-foundation/seed-manifest.json",
+      "environments": ["dev", "local"],
+      "forbiddenEnvironments": ["production"]
+    }
+  ]
+}

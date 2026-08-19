@@ -1,0 +1,157 @@
+{
+  "name": "HVCG_ClientNotificationApproved",
+  "displayName": "HVCG_ClientNotificationApproved",
+  "description": "Sends client-facing notification ONLY when HVCG_Notifications.Status=ApprovedSend and feature flag HVCG_ENABLE_CLIENT_EMAILS=true. Never silent send.",
+  "owner": "automation",
+  "module": "Communications",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_clientnotificationapproved",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      },
+      "hvcg_CommandCenterSiteUrl": {
+        "type": "String"
+      },
+      "hvcg_OpsEmail": {
+        "type": "String"
+      }
+    },
+    "triggers": {
+      "When_item_modified": {
+        "type": "OpenApiConnectionWebhook",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Notifications"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
+        }
+      }
+    },
+    "actions": {
+      "Log_Start": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Started",
+            "item/FlowName": "HVCG_ClientNotificationApproved",
+            "item/Status": "Started"
+          }
+        },
+        "runAfter": {},
+        "runtimeConfiguration": {
+          "retryPolicy": {
+            "type": "fixed",
+            "count": 3,
+            "interval": "PT1M"
+          }
+        }
+      },
+      "Compose_Implement_Build_Sheet": {
+        "type": "Compose",
+        "inputs": "Implement steps from src/power-automate/flows/HVCG_ClientNotificationApproved.json. Honor idempotency, loopPrevention, outboundPolicy, and humanApproval.",
+        "runAfter": {
+          "Log_Start": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Log_Success": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Succeeded",
+            "item/FlowName": "HVCG_ClientNotificationApproved",
+            "item/Status": "Succeeded"
+          }
+        },
+        "runAfter": {
+          "Compose_Implement_Build_Sheet": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Log_Failure": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Failed",
+            "item/FlowName": "HVCG_ClientNotificationApproved",
+            "item/Status": "Failed",
+            "item/Message": "@{coalesce(actions('Compose_Implement_Build_Sheet')?['error']?['message'], 'Flow stage failed')}"
+          }
+        },
+        "runAfter": {
+          "Compose_Implement_Build_Sheet": [
+            "Failed",
+            "TimedOut"
+          ],
+          "Log_Start": [
+            "Failed",
+            "TimedOut"
+          ]
+        }
+      },
+      "Failure_Notify_Admin": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_office365",
+            "operationId": "SendEmailV2",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+          },
+          "parameters": {
+            "emailMessage/To": "@parameters('hvcg_OpsEmail')",
+            "emailMessage/Subject": "FLOW FAILED: HVCG_ClientNotificationApproved",
+            "emailMessage/Body": "<p>Flow <b>HVCG_ClientNotificationApproved</b> failed. Check HVCG_AutomationLogs and Maker run history.</p>",
+            "emailMessage/Importance": "High"
+          }
+        },
+        "runAfter": {
+          "Log_Failure": [
+            "Succeeded",
+            "Failed",
+            "Skipped"
+          ]
+        }
+      }
+    },
+    "outputs": {}
+  }
+}

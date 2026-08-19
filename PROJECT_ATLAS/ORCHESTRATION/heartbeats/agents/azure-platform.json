@@ -1,13 +1,13 @@
 {
   "agentId": "azure-platform",
-  "currentTask": "ATLAS-T-1302",
-  "currentBranch": "cursor/azure-kv-purge-protection",
-  "status": "Waiting Review",
-  "currentAction": "awaiting security + architecture review",
+  "currentTask": null,
+  "currentBranch": null,
+  "status": "Idle",
+  "currentAction": "published Azure product infrastructure audit",
   "progressPercent": 100.0,
-  "lastActivity": "2026-07-20T00:06:55Z",
+  "lastActivity": "2026-07-20T02:10:24Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "idle until next Ready azure-platform task",
-  "heartbeatTime": "2026-07-20T00:06:55Z"
+  "nextAction": "support ATLAS-T-1303 KV secret for App Insights; await prod SWA gate",
+  "heartbeatTime": "2026-07-20T02:10:24Z"
 }

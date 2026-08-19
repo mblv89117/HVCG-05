@@ -16,12 +16,14 @@
 | Kickoffs this week | Meetings next 7 days |
 | Past due payments | FinancialMilestones IsPastDue (if nfIsFinanceViewer) |
 | Yellow/Red projects | ProjectHealth in Yellow, Red |
+| Automations failed/degraded | CountRows(Filter(HVCG_AutomationRegistry, FailureState in ["Failed","Degraded"])) → scrAutomationCenter |
 
 ## Controls
 
 - btnQuickClient → scrQuickCreate mode Client  
 - btnQuickTask → scrQuickCreate mode Task  
 - btnExecSwitch visible if nfIsExecutive  
+- btnAutomationCenter → scrAutomationCenter (Admin/Ops; PM read-only)  
 
 ## Mobile
 

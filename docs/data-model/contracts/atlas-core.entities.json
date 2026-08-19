@@ -1,0 +1,234 @@
+{
+  "contractVersion": "1.0.0",
+  "product": "Project Atlas / HVCG OS",
+  "updatedAt": "2026-07-20T02:00:00Z",
+  "ownerAgent": "data-engineering",
+  "systemOfRecord": {
+    "operationalV1": "SharePoint Lists (HVCG_*)",
+    "documents": "SharePoint Libraries (not duplicated as structured rows)",
+    "identity": "Entra ID",
+    "generalLedger": "External accounting (link IDs only)",
+    "atlasOpsTarget": "Dataverse tables prefixed hvcg_atlas* (additive; Architecture + Power Platform must approve promotion)",
+    "rule": "Do not duplicate structured operational records into SharePoint document libraries or module-specific clones"
+  },
+  "isolation": {
+    "model": "multi-organization + workspace + client",
+    "keys": ["OrganizationId", "WorkspaceId", "ClientCode"],
+    "notes": "HVCG internal workspace and client workspaces (e.g. Colorado Craft Beef) share one normalized schema; row filters enforce isolation"
+  },
+  "stableIdentifiers": {
+    "businessKeys": ["OrganizationCode", "WorkspaceCode", "ClientCode", "ContactKey", "OpportunityKey", "ProjectKey"],
+    "technicalKeys": ["SharePoint ItemId", "future Dataverse GUID"],
+    "idempotency": "HVCG_IdempotencyKey on mutable importable entities"
+  },
+  "dataClassificationLabels": [
+    "Restricted Client Financial",
+    "Internal Confidential",
+    "Internal General"
+  ],
+  "provenanceLabels": ["sample", "test", "imported", "calculated", "verified"],
+  "entities": [
+    {
+      "logicalName": "Organization",
+      "status": "new",
+      "sharePointList": "HVCG_Organizations",
+      "dataverseTable": "hvcg_atlasorganization",
+      "businessKey": "OrganizationCode",
+      "supports": ["HVCG workspace", "Colorado Craft Beef workspace", "future client workspaces"]
+    },
+    {
+      "logicalName": "Workspace",
+      "status": "new",
+      "sharePointList": "HVCG_Workspaces",
+      "dataverseTable": "hvcg_atlasworkspace",
+      "businessKey": "WorkspaceCode",
+      "supports": ["Executive Dashboard", "client isolation"]
+    },
+    {
+      "logicalName": "Client",
+      "status": "existing",
+      "sharePointList": "HVCG_Clients",
+      "dataverseTable": "hvcg_atlasclient",
+      "businessKey": "ClientCode",
+      "gaps": ["add OrganizationId", "add WorkspaceId", "replace free-text EnterpriseValueRange with EV assessment link"]
+    },
+    {
+      "logicalName": "Contact",
+      "status": "existing",
+      "sharePointList": "HVCG_Contacts",
+      "businessKey": "Email+ClientCode"
+    },
+    {
+      "logicalName": "UserProfile",
+      "status": "partial",
+      "sharePointList": "HVCG_TeamMembers",
+      "identitySource": "Entra ID",
+      "businessKey": "Email",
+      "notes": "Directory only; auth/roles live in Entra security groups"
+    },
+    {
+      "logicalName": "Role",
+      "status": "new",
+      "sharePointList": "HVCG_Roles",
+      "dataverseTable": "hvcg_atlasrole",
+      "businessKey": "RoleCode",
+      "notes": "Catalog of app roles; Entra group mapping is authoritative for access"
+    },
+    {
+      "logicalName": "ReferralSource",
+      "status": "existing-split",
+      "sharePointList": ["HVCG_ReferralPartners", "HVCG_Referrals"],
+      "normalizeTo": "ReferralPartner + Referral"
+    },
+    {
+      "logicalName": "Opportunity",
+      "status": "existing",
+      "sharePointList": "HVCG_Opportunities",
+      "gaps": ["add ClientCode denorm", "add OrganizationId", "add WorkspaceId"]
+    },
+    {
+      "logicalName": "Engagement",
+      "status": "existing",
+      "sharePointList": "HVCG_Engagements"
+    },
+    {
+      "logicalName": "Project",
+      "status": "existing",
+      "sharePointList": "HVCG_Projects"
+    },
+    {
+      "logicalName": "Milestone",
+      "status": "existing",
+      "sharePointList": "HVCG_Milestones",
+      "related": ["HVCG_FundingMilestones", "HVCG_FinancialMilestones"]
+    },
+    {
+      "logicalName": "Task",
+      "status": "existing",
+      "sharePointList": "HVCG_Tasks"
+    },
+    {
+      "logicalName": "Approval",
+      "status": "existing",
+      "sharePointList": "HVCG_Approvals",
+      "related": ["HVCG_ExpenseApprovals", "HVCG_AIApprovals"]
+    },
+    {
+      "logicalName": "Risk",
+      "status": "existing",
+      "sharePointList": "HVCG_Risks"
+    },
+    {
+      "logicalName": "Issue",
+      "status": "existing",
+      "sharePointList": "HVCG_Issues"
+    },
+    {
+      "logicalName": "Decision",
+      "status": "existing",
+      "sharePointList": "HVCG_Decisions"
+    },
+    {
+      "logicalName": "Meeting",
+      "status": "existing",
+      "sharePointList": "HVCG_Meetings"
+    },
+    {
+      "logicalName": "Note",
+      "status": "new",
+      "sharePointList": "HVCG_Notes",
+      "dataverseTable": "hvcg_atlasnote",
+      "notes": "First-class notes; OpportunityActivities.ActivityType=Note remains for CRM timeline convenience"
+    },
+    {
+      "logicalName": "FinancialPeriod",
+      "status": "new",
+      "sharePointList": "HVCG_FinancialPeriods",
+      "businessKey": "PeriodCode",
+      "grain": "Month"
+    },
+    {
+      "logicalName": "KpiRecord",
+      "status": "new",
+      "sharePointList": "HVCG_KpiRecords",
+      "supports": ["Executive Dashboard", "analytics"],
+      "notes": "Stores calculated/imported KPI snapshots with provenance; never invent verified financials"
+    },
+    {
+      "logicalName": "Budget",
+      "status": "existing",
+      "sharePointList": "HVCG_Budgets",
+      "gaps": ["add ClientCode", "link FinancialPeriodId"]
+    },
+    {
+      "logicalName": "Forecast",
+      "status": "partial",
+      "sharePointList": "HVCG_RevenueForecastLines",
+      "normalizeTo": "ForecastHeader (new) + ForecastLine (existing renamed logically)"
+    },
+    {
+      "logicalName": "CapitalOpportunity",
+      "status": "existing",
+      "sharePointList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "logicalName": "Lender",
+      "status": "existing",
+      "sharePointList": "HVCG_Lenders",
+      "parent": "HVCG_CapitalSources"
+    },
+    {
+      "logicalName": "Investor",
+      "status": "existing",
+      "sharePointList": "HVCG_Investors",
+      "parent": "HVCG_CapitalSources"
+    },
+    {
+      "logicalName": "FinancingCondition",
+      "status": "new",
+      "sharePointList": "HVCG_FinancingConditions",
+      "parent": "CapitalOpportunity"
+    },
+    {
+      "logicalName": "Document",
+      "status": "library-only",
+      "sharePointLibrary": "Client libraries (HVCG_ClientLibrary template)",
+      "rule": "Metadata index optional via DocumentRequest / Deliverable links; do not clone file bytes into lists"
+    },
+    {
+      "logicalName": "DocumentRequest",
+      "status": "existing",
+      "sharePointList": "HVCG_DocumentRequests"
+    },
+    {
+      "logicalName": "EnterpriseValueAssessment",
+      "status": "new",
+      "sharePointList": "HVCG_EnterpriseValueAssessments",
+      "supports": ["enterprise value", "financial intelligence"]
+    },
+    {
+      "logicalName": "ValueDriver",
+      "status": "new",
+      "sharePointList": "HVCG_ValueDrivers",
+      "parent": "EnterpriseValueAssessment"
+    },
+    {
+      "logicalName": "AiInsight",
+      "status": "new",
+      "sharePointList": "HVCG_AIInsights",
+      "related": ["HVCG_AIOutputs", "HVCG_AI_SuggestedActions"],
+      "notes": "Curated insight records for dashboard/analytics; AI queues remain execution SoR"
+    },
+    {
+      "logicalName": "Notification",
+      "status": "existing",
+      "sharePointList": "HVCG_Notifications"
+    },
+    {
+      "logicalName": "AuditEvent",
+      "status": "existing",
+      "sharePointList": "HVCG_AuditEvents",
+      "gaps": ["add ClientId", "add OrganizationId", "add WorkspaceId", "immutable append-only policy"]
+    }
+  ]
+}

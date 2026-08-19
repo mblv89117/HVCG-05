@@ -1,0 +1,24 @@
+{
+  "taskId": "ATLAS-R-002",
+  "agentRole": "documentation-manager",
+  "dispatchMethod": "cursor-cloud-agents-api",
+  "cloudAgentId": null,
+  "cloudRunId": null,
+  "branch": "cursor/documentation-manager/runtime-validation-ATLAS-R-002",
+  "commitHash": null,
+  "filesChanged": [],
+  "startedAt": "2026-07-20T01:08:22Z",
+  "endedAt": "2026-07-20T01:08:22Z",
+  "status": "error",
+  "errorDetails": "Cursor API POST /agents failed: HTTP 401",
+  "agentUrl": null,
+  "resultText": null,
+  "durationMs": null,
+  "raw": {
+    "errorStatus": 401,
+    "errorBody": {
+      "code": "error",
+      "message": "Invalid User API Key"
+    }
+  }
+}

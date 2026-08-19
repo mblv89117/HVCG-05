@@ -1,0 +1,38 @@
+{
+  "dataProvenance": "sample",
+  "sourceSystem": "ImportPack",
+  "lastRefreshedAt": "2026-07-20T02:00:00Z",
+  "items": [
+    {
+      "Title": "HVCG Internal Workspace",
+      "WorkspaceCode": "WS-HVCG-INTERNAL",
+      "DisplayName": "HVCG Workspace",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceType": "Internal",
+      "IsActive": true,
+      "DataProvenance": "sample",
+      "HVCG_IdempotencyKey": "sample-ws-hvcg-internal"
+    },
+    {
+      "Title": "HVCG Executive Workspace",
+      "WorkspaceCode": "WS-HVCG-EXEC",
+      "DisplayName": "Executive Dashboard",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceType": "Executive",
+      "IsActive": true,
+      "DataProvenance": "sample",
+      "HVCG_IdempotencyKey": "sample-ws-hvcg-exec"
+    },
+    {
+      "Title": "Colorado Craft Beef Workspace",
+      "WorkspaceCode": "WS-CCB",
+      "DisplayName": "Colorado Craft Beef",
+      "OrganizationCode": "ORG-CCB",
+      "WorkspaceType": "Client",
+      "DefaultClientCode": "CCB01",
+      "IsActive": true,
+      "DataProvenance": "sample",
+      "HVCG_IdempotencyKey": "sample-ws-ccb"
+    }
+  ]
+}

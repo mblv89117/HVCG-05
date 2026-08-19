@@ -1,5 +1,9 @@
 # Power Platform Packaging & Import — HVCG Command Center DEV
 
+> Product inventory & Sprint 14 release packet: `PRODUCT_INVENTORY.md`, `RELEASE_PACKET.md`, `DATAVERSE_ATLAS_INVENTORY.json`.  
+> **Production readiness:** `PRODUCTION_READINESS_REPORT.md` — **NO-GO** for Production import (coordinate Deployment Manager + Owner).  
+> UX SoR for Executive Dashboard = **Elite OS SPA** (not canvas). Model-driven = admin SoR.
+
 ## What is deployable from this repo
 
 | Artifact | Path | Import method |

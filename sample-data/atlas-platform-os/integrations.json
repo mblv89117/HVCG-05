@@ -1,0 +1,39 @@
+{
+  "dataProvenance": "sample",
+  "disclaimer": "ConfigRef holds secret *names* only — never raw keys.",
+  "items": [
+    {
+      "Title": "Microsoft Graph",
+      "IntegrationCode": "INT-GRAPH",
+      "DisplayName": "Microsoft Graph",
+      "SystemKind": "Graph",
+      "Direction": "Bidirectional",
+      "Status": "Active",
+      "ConfigRef": "kv:graph-app-cert",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-int-graph"
+    },
+    {
+      "Title": "SharePoint Command Center",
+      "IntegrationCode": "INT-SPO-CC",
+      "DisplayName": "SharePoint Command Center Lists",
+      "SystemKind": "SharePoint",
+      "Direction": "Bidirectional",
+      "Status": "Active",
+      "ConfigRef": "env:HVCG_SITE_URL",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-int-spo"
+    },
+    {
+      "Title": "Dataverse (target)",
+      "IntegrationCode": "INT-DATAVERSE",
+      "DisplayName": "Dataverse Atlas Tables",
+      "SystemKind": "Dataverse",
+      "Direction": "Bidirectional",
+      "Status": "Planned",
+      "ConfigRef": "env:DATAVERSE_URL",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-int-dv"
+    }
+  ]
+}

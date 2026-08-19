@@ -47,6 +47,16 @@ Shows utilization gauge (simple progress) + available hours label.
 
 Grouped counts by FundingStatus from `nfExecCapitalBook`. Simple horizontal gallery of status chips with counts — not a decorative card grid.
 
+## Analytics product components
+
+| Spec | Metric focus |
+|------|----------------|
+| [cmpExecMetricMeta.md](./components/cmpExecMetricMeta.md) | Source + refresh honesty |
+| [cmpExecTrendSpark.md](./components/cmpExecTrendSpark.md) | ATLAS-M-001 |
+| [cmpExecConcentrationBar.md](./components/cmpExecConcentrationBar.md) | ATLAS-M-005 |
+| [cmpExecOpsSignalRow.md](./components/cmpExecOpsSignalRow.md) | M-008, M-011, M-012, M-015, M-016 |
+| [cmpExecHealthStrip](#cmpexechealthstrip) | ATLAS-M-006 |
+
 ## Screen wiring checklist
 
 | Component instance | Formula binding |
@@ -63,7 +73,12 @@ Grouped counts by FundingStatus from `nfExecCapitalBook`. Simple horizontal gall
 | galApprovals | Items = `nfExecApprovalsWaiting` |
 | galRisks | Items = `nfExecMajorRisks` |
 | galMeetings | Items = `nfExecMeetings14d` |
-| healthStrip | Green/Yellow/Red counts |
+| healthStrip | `nfExecClientHealthGreen/Yellow/Red` |
 | capacityPulse | Utilization + Available hours |
+| opsSignals | `cmpExecOpsSignalRow` bindings |
+| concentration | `nfExecConcentrationTop3` + top clients |
+| metricMeta | `nfExecSourceMeta` |
 
 Visible finance tiles: `nfExecIsFinanceViewer`.
+
+Canonical metric IDs: `docs/analytics/METRIC_CATALOG.md`.

@@ -4,6 +4,9 @@
 **Currency:** USD stored in SharePoint Currency columns  
 **Rule:** Never invent amounts; blank → show `—` / measure returns BLANK.
 
+**Canonical product catalog:** [`docs/analytics/METRIC_CATALOG.md`](../analytics/METRIC_CATALOG.md) (`ATLAS-M-###`).  
+IDs below (`KPI-##`) are **aliases** — keep formulas aligned; do not fork definitions.
+
 ## North-star tiles (Row A)
 
 | ID | KPI | Definition | Source | Filter | Formula sketch |

@@ -1,13 +1,13 @@
 {
   "agentId": "deployment-manager",
   "currentTask": null,
-  "currentBranch": null,
-  "status": "Idle",
-  "currentAction": "awaiting Ready queue",
-  "progressPercent": 0.0,
-  "lastActivity": "2026-07-20T00:04:40Z",
+  "currentBranch": "cursor/deployment-manager-sprint1",
+  "status": "In Progress",
+  "currentAction": "Event-driven release orchestrator online; awaiting events; never auto-deploy",
+  "progressPercent": 40.0,
+  "lastActivity": "2026-07-20T02:33:28Z",
   "estimatedCompletion": null,
   "blockers": [],
-  "nextAction": "claim highest-priority Ready task when Master PM assigns deployment-manager work",
-  "heartbeatTime": "2026-07-20T00:04:40Z"
+  "nextAction": "Process RC_ASSIGNED / QA_STATUS / approvals / rollback / incident events",
+  "heartbeatTime": "2026-07-20T02:33:28Z"
 }

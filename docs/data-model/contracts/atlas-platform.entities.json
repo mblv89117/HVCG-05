@@ -1,0 +1,277 @@
+{
+  "contractVersion": "1.0.0",
+  "layer": "platform-os",
+  "layerVersion": "platform-os-1.0.0-draft",
+  "updatedAt": "2026-07-20T03:30:00Z",
+  "ownerAgent": "data-engineering",
+  "priority": "canonical-platform-before-product",
+  "promotion": {
+    "status": "draft",
+    "selfApprovalForbidden": true,
+    "requiresApprovalFrom": [
+      "master-pm",
+      "system-architect",
+      "power-platform",
+      "knowledge-platform",
+      "ai-governance",
+      "security",
+      "qa-release",
+      "owner"
+    ]
+  },
+  "compatibility": ["Dataverse", "SharePoint", "PowerPlatform", "MicrosoftGraph"],
+  "isolationKeys": ["TenantId", "OrganizationCode", "WorkspaceCode", "ClientCode"],
+  "entities": [
+    {
+      "canonical": "Organization",
+      "logicalName": "Organization",
+      "businessKey": "OrganizationCode",
+      "sharePointList": "HVCG_Organizations",
+      "dataverseTable": "hvcg_atlasorganization",
+      "graph": null,
+      "status": "defined-in-foundation-001"
+    },
+    {
+      "canonical": "Workspace",
+      "logicalName": "Workspace",
+      "businessKey": "WorkspaceCode",
+      "sharePointList": "HVCG_Workspaces",
+      "dataverseTable": "hvcg_atlasworkspace",
+      "graph": "optional-group",
+      "status": "defined-in-foundation-001"
+    },
+    {
+      "canonical": "Identity",
+      "logicalName": "Identity",
+      "businessKey": "EntraObjectId",
+      "sharePointList": "HVCG_Identities",
+      "dataverseTable": "hvcg_atlasidentity",
+      "graph": "user|servicePrincipal",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "User",
+      "logicalName": "User",
+      "businessKey": "Email",
+      "sharePointList": "HVCG_TeamMembers",
+      "dataverseTable": "hvcg_atlasuser",
+      "graph": "user",
+      "status": "canonicalize-existing",
+      "aliasOf": "TeamMembers",
+      "noDuplicateList": true
+    },
+    {
+      "canonical": "Team",
+      "logicalName": "Team",
+      "businessKey": "TeamCode",
+      "sharePointList": "HVCG_Teams",
+      "dataverseTable": "hvcg_atlasteam",
+      "graph": "group",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Role",
+      "logicalName": "Role",
+      "businessKey": "RoleCode",
+      "sharePointList": "HVCG_Roles",
+      "dataverseTable": "hvcg_atlasrole",
+      "status": "defined-in-foundation-001"
+    },
+    {
+      "canonical": "Permission",
+      "logicalName": "Permission",
+      "businessKey": "PermissionCode",
+      "sharePointList": "HVCG_Permissions",
+      "dataverseTable": "hvcg_atlaspermission",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Client",
+      "logicalName": "Client",
+      "businessKey": "ClientCode",
+      "sharePointList": "HVCG_Clients",
+      "dataverseTable": "hvcg_atlasclient",
+      "status": "existing-product-as-platform"
+    },
+    {
+      "canonical": "Project",
+      "logicalName": "Project",
+      "businessKey": "ProjectKey",
+      "sharePointList": "HVCG_Projects",
+      "dataverseTable": "hvcg_atlasproject",
+      "status": "existing",
+      "absorbs": ["HVCG_InternalProjects"]
+    },
+    {
+      "canonical": "Task",
+      "logicalName": "Task",
+      "businessKey": "TaskKey",
+      "sharePointList": "HVCG_Tasks",
+      "dataverseTable": "hvcg_atlastask",
+      "status": "existing",
+      "absorbs": ["HVCG_AI_Tasks as TaskFamily=AI"]
+    },
+    {
+      "canonical": "Workflow",
+      "logicalName": "Workflow",
+      "businessKey": "WorkflowCode",
+      "sharePointList": "HVCG_Workflows",
+      "dataverseTable": "hvcg_atlasworkflow",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Queue",
+      "logicalName": "Queue",
+      "businessKey": "QueueCode",
+      "sharePointList": "HVCG_Queues",
+      "dataverseTable": "hvcg_atlasqueue",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Automation",
+      "logicalName": "Automation",
+      "businessKey": "AutomationCode",
+      "sharePointList": "HVCG_Automations",
+      "dataverseTable": "hvcg_atlasautomation",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Agent",
+      "logicalName": "Agent",
+      "businessKey": "AgentCode",
+      "sharePointList": "HVCG_AIWorkers",
+      "dataverseTable": "hvcg_atlasagent",
+      "status": "canonicalize-existing",
+      "aliasOf": "AIWorkers",
+      "noDuplicateList": true
+    },
+    {
+      "canonical": "Conversation",
+      "logicalName": "Conversation",
+      "businessKey": "ConversationKey",
+      "sharePointList": "HVCG_Conversations",
+      "dataverseTable": "hvcg_atlasconversation",
+      "status": "new-in-002",
+      "absorbs": ["HVCG_PortalMessages"]
+    },
+    {
+      "canonical": "Decision",
+      "logicalName": "Decision",
+      "businessKey": "DecisionKey",
+      "sharePointList": "HVCG_Decisions",
+      "dataverseTable": "hvcg_atlasdecision",
+      "status": "existing"
+    },
+    {
+      "canonical": "Approval",
+      "logicalName": "Approval",
+      "businessKey": "ApprovalKey",
+      "sharePointList": "HVCG_Approvals",
+      "dataverseTable": "hvcg_atlasapproval",
+      "status": "canonicalize-existing",
+      "absorbs": ["HVCG_ExpenseApprovals", "HVCG_AIApprovals"]
+    },
+    {
+      "canonical": "Notification",
+      "logicalName": "Notification",
+      "businessKey": "NotificationKey",
+      "sharePointList": "HVCG_Notifications",
+      "dataverseTable": "hvcg_atlasnotification",
+      "status": "existing"
+    },
+    {
+      "canonical": "Event",
+      "logicalName": "Event",
+      "businessKey": "EventKey",
+      "sharePointList": "HVCG_Events",
+      "dataverseTable": "hvcg_atlasevent",
+      "status": "new-in-002",
+      "absorbs": ["HVCG_OperationalAlerts"]
+    },
+    {
+      "canonical": "Timeline",
+      "logicalName": "TimelineEntry",
+      "businessKey": "TimelineKey",
+      "sharePointList": "HVCG_Timeline",
+      "dataverseTable": "hvcg_atlastimeline",
+      "status": "new-in-002",
+      "absorbs": ["HVCG_Notes", "HVCG_OpportunityActivities", "HVCG_Communications"]
+    },
+    {
+      "canonical": "Document",
+      "logicalName": "Document",
+      "businessKey": "DocumentKey",
+      "sharePointList": "HVCG_Documents",
+      "dataverseTable": "hvcg_atlasdocument",
+      "graph": "driveItem",
+      "status": "new-in-002",
+      "fileBytesSoR": "SharePointLibraryOrOneDrive"
+    },
+    {
+      "canonical": "Artifact",
+      "logicalName": "Artifact",
+      "businessKey": "ArtifactKey",
+      "sharePointList": "HVCG_Artifacts",
+      "dataverseTable": "hvcg_atlasartifact",
+      "status": "new-in-002",
+      "absorbs": ["HVCG_Deliverables", "HVCG_AIOutputs", "HVCG_AI_GeneratedDocuments"]
+    },
+    {
+      "canonical": "Metric",
+      "logicalName": "Metric",
+      "businessKey": "MetricCode+PeriodCode",
+      "sharePointList": "HVCG_KpiRecords",
+      "dataverseTable": "hvcg_atlasmetric",
+      "status": "canonicalize-existing",
+      "aliasOf": "KpiRecords",
+      "noDuplicateList": true
+    },
+    {
+      "canonical": "Dashboard",
+      "logicalName": "Dashboard",
+      "businessKey": "DashboardCode",
+      "sharePointList": "HVCG_Dashboards",
+      "dataverseTable": "hvcg_atlasdashboard",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Widget",
+      "logicalName": "Widget",
+      "businessKey": "WidgetCode",
+      "sharePointList": "HVCG_Widgets",
+      "dataverseTable": "hvcg_atlaswidget",
+      "status": "new-in-002"
+    },
+    {
+      "canonical": "Audit",
+      "logicalName": "Audit",
+      "businessKey": "AuditKey",
+      "sharePointList": "HVCG_AuditEvents",
+      "dataverseTable": "hvcg_atlasaudit",
+      "status": "canonicalize-existing",
+      "absorbs": ["HVCG_AIAuditLog"]
+    },
+    {
+      "canonical": "Integration",
+      "logicalName": "Integration",
+      "businessKey": "IntegrationCode",
+      "sharePointList": "HVCG_Integrations",
+      "dataverseTable": "hvcg_atlasintegration",
+      "status": "new-in-002"
+    }
+  ],
+  "productExtensionsDoNotDuplicate": [
+    "Opportunity",
+    "Engagement",
+    "Contact",
+    "CapitalOpportunity",
+    "Budget",
+    "Forecast",
+    "EnterpriseValueAssessment",
+    "Invoice",
+    "Risk",
+    "Issue",
+    "Milestone",
+    "DocumentRequest"
+  ]
+}

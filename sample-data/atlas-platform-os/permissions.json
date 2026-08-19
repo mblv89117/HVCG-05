@@ -1,0 +1,41 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "Owner read all",
+      "PermissionCode": "PERM-OWNER-READ-ALL",
+      "RoleCode": "Owner",
+      "ResourceType": "*",
+      "Action": "Read",
+      "Scope": "Tenant",
+      "HVCG_IdempotencyKey": "sample-perm-owner-read"
+    },
+    {
+      "Title": "Owner admin all",
+      "PermissionCode": "PERM-OWNER-ADMIN-ALL",
+      "RoleCode": "Owner",
+      "ResourceType": "*",
+      "Action": "Admin",
+      "Scope": "Tenant",
+      "HVCG_IdempotencyKey": "sample-perm-owner-admin"
+    },
+    {
+      "Title": "PM write client tasks",
+      "PermissionCode": "PERM-PM-WRITE-TASK",
+      "RoleCode": "ProjectManager",
+      "ResourceType": "Task",
+      "Action": "Write",
+      "Scope": "Client",
+      "HVCG_IdempotencyKey": "sample-perm-pm-task"
+    },
+    {
+      "Title": "Client workspace read",
+      "PermissionCode": "PERM-CLIENT-WS-READ",
+      "RoleCode": "ClientWorkspaceMember",
+      "ResourceType": "*",
+      "Action": "Read",
+      "Scope": "Workspace",
+      "HVCG_IdempotencyKey": "sample-perm-client-ws-read"
+    }
+  ]
+}

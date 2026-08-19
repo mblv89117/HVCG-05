@@ -1,0 +1,723 @@
+{
+  "packageId": "ATLAS-AUTO-EXEC-DASH-1.0",
+  "version": "1.0.0",
+  "publishedAt": "2026-07-20T02:30:53Z",
+  "title": "Executive Dashboard Automation Release Package",
+  "audience": [
+    "deployment-manager",
+    "qa-release"
+  ],
+  "preparedBy": "automation",
+  "branch": "cursor/orchestration-sprint12",
+  "document": "docs/automation/EXEC_DASHBOARD_AUTOMATION_RELEASE_PACKAGE.md",
+  "postureAfterPublish": "monitoring-standby",
+  "respondsOnlyTo": [
+    "master-pm",
+    "qa-release",
+    "deployment-manager"
+  ],
+  "productionApproval": {
+    "qaGoRequired": true,
+    "ownerBriefApprovalRequired": true,
+    "automationAgentMaySelfApprove": false,
+    "clientFacingDeployUntilQaGo": false
+  },
+  "sections": {
+    "1_activeProductionReadyReleaseCandidates": [
+      {
+        "flowName": "HVCG_ExecutiveWeeklyBrief",
+        "role": "Executive Brief generation",
+        "usedByModules": [
+          "Executive Dashboard",
+          "Executive Intelligence"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/executive/FLOW_INTEGRATION.md",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_ApprovalOutcomeNotify",
+        "role": "approval routing",
+        "usedByModules": [
+          "Executive Dashboard",
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_approvaloutcomenotify",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_ChangeRequestIntake",
+        "role": "approval routing",
+        "usedByModules": [
+          "Executive Dashboard",
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_changerequestintake",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365",
+          "hvcg_sharedapprovals"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_CreateDocumentRequests",
+        "role": "document requests",
+        "usedByModules": [
+          "Operations Hub",
+          "Client Portal"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createdocumentrequests",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "hvcg_CommandCenterSiteUrl",
+          "hvcg_ClientsSiteUrl",
+          "hvcg_OpsEmail",
+          "hvcg_EnableClientEmails",
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_DeliverableApproval",
+        "role": "approval routing",
+        "usedByModules": [
+          "Executive Dashboard",
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_deliverableapproval",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365",
+          "hvcg_sharedapprovals"
+        ],
+        "environmentVariables": [
+          "hvcg_CommandCenterSiteUrl",
+          "hvcg_OpsEmail",
+          "hvcg_ExecutiveEmail",
+          "hvcg_EnableClientEmails",
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_ExecutiveDecisionEscalation",
+        "role": "Executive Brief / escalation",
+        "usedByModules": [
+          "Executive Dashboard",
+          "Executive Intelligence"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/executive/FLOW_INTEGRATION.md",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365",
+          "hvcg_sharedteams"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_MissingDocumentReminders",
+        "role": "document requests",
+        "usedByModules": [
+          "Operations Hub",
+          "Client Portal"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_missingdocumentreminders",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_OverdueTaskEscalation",
+        "role": "overdue escalations",
+        "usedByModules": [
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_overduetaskescalation",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365",
+          "hvcg_sharedteams"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_ProjectStatusReminder",
+        "role": "project status notifications",
+        "usedByModules": [
+          "Operations Hub",
+          "Executive Dashboard"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_projectstatusreminder",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_TaskDueSoonReminders",
+        "role": "task reminders",
+        "usedByModules": [
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_taskduesoonreminders",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_UpdateProjectHealth",
+        "role": "project status notifications",
+        "usedByModules": [
+          "Operations Hub",
+          "Executive Dashboard",
+          "Executive Intelligence"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_updateprojecthealth",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_WeeklyStatusSummary",
+        "role": "project status notifications (ops)",
+        "usedByModules": [
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_weeklystatussummary",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      }
+    ],
+    "2_deferredSupporting": [
+      {
+        "flowName": "HVCG_AutomationFailureDigest",
+        "role": null,
+        "usedByModules": [
+          "Operations Hub",
+          "Executive Dashboard"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_automationfailuredigest",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_ClientOnboarding",
+        "role": null,
+        "usedByModules": [
+          "Operations Hub",
+          "Client Portal"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_clientonboarding",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365",
+          "hvcg_sharedteams"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_CreateClientWorkspace",
+        "role": null,
+        "usedByModules": [
+          "Client Portal",
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createclientworkspace",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_CreateProjectFromTemplate",
+        "role": null,
+        "usedByModules": [
+          "Operations Hub"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createprojectfromtemplate",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_PaymentPastDueAlert",
+        "role": null,
+        "usedByModules": [
+          "Finance Intelligence",
+          "Executive Dashboard",
+          "Executive Intelligence"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_paymentpastduealert",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_RenewalReminders",
+        "role": null,
+        "usedByModules": [
+          "Revenue Systems",
+          "Executive Intelligence"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_renewalreminders",
+        "connectionReferences": [
+          "hvcg_sharedsharepointonline",
+          "hvcg_sharedoffice365"
+        ],
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_CLIENTS_HUB_URL",
+          "HVCG_OPS_EMAIL",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_ENABLE_CLIENT_EMAILS"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      }
+    ],
+    "3_archived": [
+      {
+        "flowName": "HVCG_StaleOpportunityAlert",
+        "path": "src/power-automate/archive/exec-dashboard-deferred/HVCG_StaleOpportunityAlert.json",
+        "reason": "Exec Dashboard release hygiene"
+      },
+      {
+        "flowName": "HVCG_MeetingPrepAndFollowUp",
+        "path": "src/power-automate/archive/exec-dashboard-deferred/HVCG_MeetingPrepAndFollowUp.json",
+        "reason": "Exec Dashboard release hygiene"
+      },
+      {
+        "flowName": "HVCG_CapitalReadinessAlert",
+        "path": "src/power-automate/archive/exec-dashboard-deferred/HVCG_CapitalReadinessAlert.json",
+        "reason": "Exec Dashboard release hygiene"
+      },
+      {
+        "flowName": "HVCG_ClientNotificationApproved",
+        "path": "src/power-automate/archive/exec-dashboard-deferred/HVCG_ClientNotificationApproved.json",
+        "reason": "Exec Dashboard release hygiene"
+      }
+    ],
+    "4_blocked": [
+      {
+        "flowName": "HVCG_CapitalFundingStatusNotify",
+        "role": null,
+        "usedByModules": [
+          "Revenue Systems",
+          "Finance Intelligence"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_capitalfundingstatusnotify",
+        "connectionReferences": {
+          "SharePoint": "hvcg_sharedsharepointonline",
+          "Teams": "hvcg_sharedteams"
+        },
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+          "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_CRM_TEST_RECIPIENT",
+          "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_LeadQualifiedCreateOpportunity",
+        "role": null,
+        "usedByModules": [
+          "Revenue Systems"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_leadqualifiedcreateopportunity",
+        "connectionReferences": {
+          "SharePoint": "hvcg_sharedsharepointonline",
+          "Teams": "hvcg_sharedteams",
+          "Outlook": "hvcg_sharedoffice365"
+        },
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_TEAMS_CRM_CHANNEL_ID",
+          "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+          "HVCG_OPS_EMAIL",
+          "HVCG_CRM_TEST_RECIPIENT",
+          "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_OpportunityStageChangedNotify",
+        "role": null,
+        "usedByModules": [
+          "Revenue Systems"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_opportunitystagechangednotify",
+        "connectionReferences": {
+          "SharePoint": "hvcg_sharedsharepointonline",
+          "Teams": "hvcg_sharedteams"
+        },
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_TEAMS_CRM_CHANNEL_ID",
+          "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+          "HVCG_CRM_TEST_RECIPIENT",
+          "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      {
+        "flowName": "HVCG_OpportunityWonCloseout",
+        "role": null,
+        "usedByModules": [
+          "Revenue Systems"
+        ],
+        "defaultState": "Off",
+        "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_opportunitywoncloseout",
+        "connectionReferences": {
+          "SharePoint": "hvcg_sharedsharepointonline",
+          "Teams": "hvcg_sharedteams",
+          "Outlook": "hvcg_sharedoffice365"
+        },
+        "environmentVariables": [
+          "HVCG_SITE_URL",
+          "HVCG_TEAMS_CRM_CHANNEL_ID",
+          "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+          "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+          "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
+          "HVCG_EXECUTIVE_EMAIL",
+          "HVCG_CRM_TEST_RECIPIENT",
+          "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+          "HVCG_OPS_EMAIL"
+        ],
+        "repoProductionCriteriaMet": true,
+        "qaGo": false,
+        "productionEnabled": false
+      }
+    ],
+    "5_dependencies": [
+      "HVCG Development Power Platform environment",
+      "Command Center SharePoint Dev site",
+      "HVCG Ops Automation service account",
+      "List schema for tasks/deliverables/approvals/docs/projects/automation logs/registry",
+      "QA GO before Production",
+      "Owner brief content approval"
+    ],
+    "6_environmentVariables": [
+      {
+        "name": "HVCG_SITE_URL",
+        "defaultDev": "Command Center Dev URL",
+        "required": true
+      },
+      {
+        "name": "HVCG_OPS_EMAIL",
+        "defaultDev": "Ops/test UPN",
+        "required": true
+      },
+      {
+        "name": "HVCG_EXECUTIVE_EMAIL",
+        "defaultDev": "Owner test UPN",
+        "required": true
+      },
+      {
+        "name": "HVCG_EXEC_ENABLE_EMAIL_DIGEST",
+        "defaultDev": false,
+        "required": true
+      },
+      {
+        "name": "HVCG_ENABLE_CLIENT_EMAILS",
+        "defaultDev": false,
+        "required": true
+      },
+      {
+        "name": "HVCG_CLIENTS_HUB_URL",
+        "defaultDev": "Clients Dev URL",
+        "required": false
+      },
+      {
+        "name": "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+        "defaultDev": false,
+        "required": false,
+        "note": "Keep false \u2014 CRM blocked"
+      },
+      {
+        "name": "HVCG_POWER_AUTOMATE_MAKER_URL",
+        "defaultDev": "Maker URL",
+        "required": false
+      }
+    ],
+    "7_connectionReferences": [
+      {
+        "logicalName": "hvcg_sharedsharepointonline",
+        "connector": "SharePoint",
+        "required": true
+      },
+      {
+        "logicalName": "hvcg_sharedoffice365",
+        "connector": "Office 365 Outlook",
+        "required": true
+      },
+      {
+        "logicalName": "hvcg_sharedapprovals",
+        "connector": "Approvals",
+        "required": true
+      },
+      {
+        "logicalName": "hvcg_sharedteams",
+        "connector": "Microsoft Teams",
+        "required": false,
+        "note": "Optional for escalation; not CRM notify"
+      }
+    ],
+    "8_sharePointLists": [
+      "HVCG_AutomationLogs",
+      "HVCG_AutomationRegistry",
+      "HVCG_Notifications",
+      "HVCG_OperationalAlerts",
+      "HVCG_AuditEvents",
+      "HVCG_Tasks",
+      "HVCG_Deliverables",
+      "HVCG_Approvals",
+      "HVCG_ChangeRequests",
+      "HVCG_DocumentRequests",
+      "HVCG_Projects",
+      "HVCG_Clients"
+    ],
+    "9_dataverseTables": {
+      "requiredForThisPackage": [],
+      "note": "Exec automation scaffolds use SharePoint Command Center lists; hvcg_atlas* optional for Elite OS only"
+    },
+    "10_requiredApprovals": [
+      {
+        "id": "QA-GO-AUTO-EXEC-1",
+        "approver": "qa-release"
+      },
+      {
+        "id": "OWNER-BRIEF-1",
+        "approver": "owner"
+      },
+      {
+        "id": "OWNER-EXT-1",
+        "approver": "owner",
+        "when": "client/Teams external"
+      },
+      {
+        "id": "DM-IMPORT-1",
+        "approver": "deployment-manager"
+      }
+    ],
+    "11_rollbackProcedure": "docs/automation/EXEC_DASHBOARD_AUTOMATION_RELEASE_PACKAGE.md#11-rollback-procedure",
+    "12_smokeTestChecklist": "docs/automation/EXEC_DASHBOARD_AUTOMATION_RELEASE_PACKAGE.md#12-smoke-test-checklist",
+    "13_monitoringDashboard": [
+      "HVCG_AutomationLogs Failed Last 24h view",
+      "HVCG_AutomationRegistry Failed or Degraded view",
+      "scrAutomationCenter",
+      "Power BI System Health Automation page"
+    ],
+    "14_alertRouting": [
+      {
+        "condition": "flow failure",
+        "to": "HVCG_OPS_EMAIL"
+      },
+      {
+        "condition": "repeated failures",
+        "to": "HVCG_OperationalAlerts + Ops digest"
+      },
+      {
+        "condition": "executive escalation",
+        "to": "HVCG_EXECUTIVE_EMAIL"
+      },
+      {
+        "condition": "client/external",
+        "to": "NONE \u2014 blocked"
+      }
+    ],
+    "15_knownRisks": [
+      "scaffolds vs Maker drift",
+      "dual Monday email if misconfigured",
+      "CRM/Teams accidental enable",
+      "client email leak",
+      "personal account as flow owner"
+    ],
+    "16_recoveryProcedures": "docs/automation/EXEC_DASHBOARD_AUTOMATION_RELEASE_PACKAGE.md#16-recovery-procedures"
+  },
+  "counts": {
+    "releaseCandidates": 12,
+    "supportingDeferred": 6,
+    "archived": 4,
+    "blocked": 4,
+    "activeTotal": 22
+  }
+}

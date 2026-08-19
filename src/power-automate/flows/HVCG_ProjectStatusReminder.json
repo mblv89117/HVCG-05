@@ -1,0 +1,109 @@
+{
+  "flowName": "HVCG_ProjectStatusReminder",
+  "displayName": "HVCG_ProjectStatusReminder",
+  "module": "Operations",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Weekly reminder to PMs for Active projects missing a status update in the last 7 days or health Yellow/Red without recent note.",
+  "purpose": "project-status reminders",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Weekly Thursday 09:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Projects",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_projectstatusreminder",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "proj-status|{ProjectId}|{WeekStart}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Internal PM only"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "projectManagerInternal",
+    "forbidden": [
+      "Client email"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetActiveProjectsNeedingUpdate"
+    },
+    {
+      "id": 3,
+      "action": "NotifyProjectManager"
+    },
+    {
+      "id": 4,
+      "action": "CreateNotificationRow",
+      "params": {
+        "type": "Reminder"
+      }
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "loopPrevention": [
+    "One reminder per project per week",
+    "Does not Patch ProjectHealth"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "usedByModules": [
+    "Operations Hub",
+    "Executive Dashboard"
+  ],
+  "execDashboardReleaseRole": "project status notifications",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
+}

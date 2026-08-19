@@ -1,0 +1,40 @@
+{
+  "sprint": 14,
+  "epic": "EXEC-DASHBOARD",
+  "priority": "P1",
+  "complexity": "M",
+  "estimatedEffortHours": 6,
+  "dependencies": [
+    "ATLAS-T-1401"
+  ],
+  "blockedBy": [],
+  "status": "Ready",
+  "requiredReviews": [
+    "qa"
+  ],
+  "branch": "cursor/master-pm/executive-dashboard-s14",
+  "worktree": ".worktrees/track10-elite-ui",
+  "affectedPaths": [
+    "apps/atlas-elite-os/"
+  ],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "elite-os-exec-dev",
+  "createdAt": "2026-07-20T02:12:50Z",
+  "updatedAt": "2026-07-20T02:12:50Z",
+  "claimedBy": null,
+  "claimedAt": null,
+  "feature": "executive-dashboard",
+  "id": "ATLAS-T-1403",
+  "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)",
+  "description": "Where Dataverse tables exist, load alerts/initiatives; otherwise keep repository-derived labels. No invented finance.",
+  "assignedAgent": "elite-ui",
+  "acceptanceCriteria": [
+    "Document which panels are Live vs Repository-derived",
+    "No fabricated dollars"
+  ]
+}

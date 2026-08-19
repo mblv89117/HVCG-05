@@ -1,0 +1,26 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "Create client workspace",
+      "AutomationCode": "AUTO-CREATE-CLIENT-WS",
+      "DisplayName": "Create Client Workspace",
+      "WorkflowCode": "WF-CLIENT-ONBOARD",
+      "RuntimeType": "PowerAutomate",
+      "FlowIdOrName": "HVCG_CreateClientWorkspace",
+      "Status": "Active",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-auto-create-ws"
+    },
+    {
+      "Title": "Overdue task escalation",
+      "AutomationCode": "AUTO-OVERDUE-TASK",
+      "DisplayName": "Overdue Task Escalation",
+      "RuntimeType": "PowerAutomate",
+      "FlowIdOrName": "HVCG_OverdueTaskEscalation",
+      "Status": "Active",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-auto-overdue"
+    }
+  ]
+}

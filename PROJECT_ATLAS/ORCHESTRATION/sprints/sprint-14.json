@@ -1,0 +1,28 @@
+{
+  "number": 14,
+  "name": "Executive Dashboard Release",
+  "status": "Active",
+  "goals": [
+    "Manny daily-usable Executive Dashboard on Dev SWA",
+    "HVCG + Colorado Craft Beef workspaces demo-ready (no invented finance)",
+    "Commit Elite OS product SoR; redeploy SWA",
+    "QA approve Home / Clients / Projects / Tasks / Admin"
+  ],
+  "capacityHours": 40,
+  "velocityTarget": 32,
+  "taskIds": [
+    "ATLAS-T-1401",
+    "ATLAS-T-1402",
+    "ATLAS-T-1403",
+    "ATLAS-T-1404",
+    "ATLAS-T-1405"
+  ],
+  "riskSummary": "SWA lag behind product SoR; CORS for signed-in Dataverse; owner UAT scheduling.",
+  "executiveSummary": "Product sprint focused on Elite OS Executive Dashboard release. Runtime/ATLAS-R paused.",
+  "releaseReadiness": "elite-os-exec-dashboard-dev",
+  "pausedWorkstreams": [
+    "Atlas Runtime",
+    "Cursor Cloud Agents",
+    "ATLAS-R"
+  ]
+}

@@ -3,38 +3,41 @@
 All production flows owned by the **HVCG Ops Automation** service account.  
 Each flow writes to `HVCG_AutomationLogs`. Idempotency via `HVCG_IdempotencyKey`.
 
-| Flow | Trigger | Purpose | Premium? | Human approval |
-|------|---------|---------|----------|----------------|
-| HVCG_ClientOnboarding | ClientStage → Active Client | Orchestrate master checks, engagement, project, workspace, docs, tasks, billing, logging | No | Welcome email if customized |
-| HVCG_CreateProjectFromTemplate | Manual / child of onboarding | Expand template JSON into tasks/docs/deliverables/milestones | No* | No |
-| HVCG_CreateClientWorkspace | Called by onboarding | Library + folders + permissions + update Client.SharePointLibraryUrl | No* | No |
-| HVCG_CreateDocumentRequests | Child | Seed document requests from template | No | No |
-| HVCG_MissingDocumentReminders | Daily scheduled | Cadence 0/3/7/14 business days; escalate to PM | No | Client email enabled only if flag true |
-| HVCG_OverdueTaskEscalation | Daily | Mark overdue; notify owner→PM→Ops; executive only if critical+rule | No | No |
-| HVCG_DeliverableApproval | Status → Internal Review / Client Review | Create approval task / Adaptive card | No | Approver must act |
-| HVCG_RenewalReminders | Daily | 60/30/14 day renewal tasks | No | No |
-| HVCG_ExecutiveDecisionEscalation | RequiresExecutiveAttention = true | Notify Manny + log | No | Content is alert only |
-| HVCG_WeeklyStatusSummary | Monday morning | Ops digest; separate Monday executive digest | No | No |
-| HVCG_UpdateProjectHealth | Daily / on task change | Green/Yellow/Red rules from config | No | No |
-| HVCG_PaymentPastDueAlert | Daily | Flag past due; notify Ops; executive if material | No | No |
-| HVCG_ChangeRequestIntake | ChangeStatus = Submitted | Route approval; flag out-of-scope | No | Owner if fee impact |
+**Mission:** Executive Dashboard release support  
+**Health report (Master PM):** [`docs/automation/AUTOMATION_HEALTH_REPORT.md`](docs/automation/AUTOMATION_HEALTH_REPORT.md)  
+**Inventory:** [`src/power-automate/inventory/automation-inventory.json`](src/power-automate/inventory/automation-inventory.json)  
+**Center:** [`docs/automation/AUTOMATION_CENTER.md`](docs/automation/AUTOMATION_CENTER.md)  
+**Duplicates:** [`docs/automation/DUPLICATE_FLOW_FINDINGS.md`](docs/automation/DUPLICATE_FLOW_FINDINGS.md)
 
-## AI queues (ready, not autonomous)
+Active count: **22** (4 deferred under `src/power-automate/archive/exec-dashboard-deferred/`).
 
-Ten `HVCG_AI_*` lists accept future agent writes. **Policy:** `HumanApprovalRequired=true` by default; never auto-send `HVCG_AI_DraftEmails`. No V1 flows publish AI content externally.
+| Flow | Trigger | Purpose | Release | Human approval |
+|------|---------|---------|---------|----------------|
+| HVCG_TaskDueSoonReminders | Daily 07:00 PT | Task due-soon reminders | ReleaseCandidate | Internal only |
+| HVCG_OverdueTaskEscalation | Daily 07:30 PT | Overdue escalate owner→PM→Ops | ReleaseCandidate | Exec only if rule |
+| HVCG_DeliverableApproval | Deliverables review states | Approval routing | ReleaseCandidate | Approver acts |
+| HVCG_ApprovalOutcomeNotify | Approvals Approved/Rejected | Outcome notify + audit | ReleaseCandidate | Already human |
+| HVCG_ChangeRequestIntake | ChangeStatus=Submitted | Change approval routing | ReleaseCandidate | Owner if fee impact |
+| HVCG_CreateDocumentRequests | Manual/child | Seed document requests | ReleaseCandidate | No |
+| HVCG_MissingDocumentReminders | Daily | Missing doc cadence | ReleaseCandidate | Client email flag |
+| HVCG_ExecutiveWeeklyBrief | Mon 07:45 PT | Executive KPI brief | ReleaseCandidate | Owner content |
+| HVCG_ExecutiveDecisionEscalation | RequiresExecutiveAttention | Exec escalation | ReleaseCandidate | Alert only |
+| HVCG_ProjectStatusReminder | Weekly Thu | PM status reminder | ReleaseCandidate | Internal PM |
+| HVCG_UpdateProjectHealth | Daily | Green/Yellow/Red | ReleaseCandidate | No |
+| HVCG_WeeklyStatusSummary | Monday | **Ops** digest only | ReleaseCandidate | No exec KPI |
+| HVCG_AutomationFailureDigest | Hourly | Failed-flow digest | Supporting | Ops only |
+| HVCG_PaymentPastDueAlert | Daily | Past-due milestones | Supporting | Exec if material |
+| HVCG_RenewalReminders | Daily | Renewal tasks | Supporting | No |
+| HVCG_ClientOnboarding | Client Active | Onboarding orchestration | Supporting | Welcome if flag |
+| HVCG_CreateClientWorkspace | Child | Client library | Supporting | No |
+| HVCG_CreateProjectFromTemplate | Child | Template expand | Supporting | No |
+| HVCG_LeadQualifiedCreateOpportunity | Lead Qualified | CRM | **Blocked** | OA-CRM |
+| HVCG_OpportunityStageChangedNotify | Stage changed | CRM | **Blocked** | OA-CRM |
+| HVCG_OpportunityWonCloseout | Won | CRM | **Blocked** | OA-CRM |
+| HVCG_CapitalFundingStatusNotify | FundingStatus | CRM/Capital | **Blocked** | OA-CAP |
 
-## Idempotency Patterns
+## Policy
 
-- Key format: `{artifact}|{clientCode}|{templateKey}|{businessDate}|{itemKey}`
-- Before create: Filter list by HVCG_IdempotencyKey; skip if found; log `SkippedDuplicate`
-
-## Error Handling
-
-- Scope try/catch on each major stage
-- Log Failed with message
-- Notify HVCG-Role-Administrator on failure
-- Do not retry unlimited; max 3 with delay
-
-## Definition Packages
-
-Logical flow definitions: `src/power-automate/flows/*.json` (portable design specs for rebuild in Power Automate designer / PAC).
+- Do not invent new automations without Master PM assignment.  
+- Do not deploy client-facing automations until QA issues GO.  
+- Do not self-approve Production On.

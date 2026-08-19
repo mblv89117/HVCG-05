@@ -1,8 +1,35 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "subscriptionId": "ebc84d85-b5ff-4c4b-add1-b0a8de31b319",
   "subscriptionName": "HVCG Production",
   "regionPrimary": "westus3",
+  "productAssessment": {
+    "auditedAt": "2026-07-20T02:10:00Z",
+    "document": "docs/deployment/AZURE_PRODUCT_INFRASTRUCTURE.md",
+    "productionReadinessReport": "docs/deployment/AZURE_PRODUCTION_INFRASTRUCTURE_READINESS.md",
+    "productionReadiness": "conditional-foundations-ready-cutover-pending-master-pm",
+    "scope": "product-build-only",
+    "executiveDashboardReleaseSupport": true,
+    "provisioningPolicy": "no-new-resources-without-master-pm-approval",
+    "secretsHygiene": "pass-2026-07-20",
+    "duplicateBudgetCandidate": "HVCG",
+    "emptyReservedResourceGroups": ["rg-atlas-prod", "rg-atlas-network"],
+    "pendingMasterPmApprovals": [
+      "swa-atlas-elite-os-prod",
+      "kv-appinsights-connection-string",
+      "affirm-deployment-manager-prod-gate"
+    ],
+    "doNotProvisionWithoutProductNeed": [
+      "App Service",
+      "Functions",
+      "Storage",
+      "VNet",
+      "Private Endpoint",
+      "Azure OpenAI",
+      "Service Bus",
+      "Durable Functions"
+    ]
+  },
   "resources": [
     {
       "name": "rg-atlas-dev",

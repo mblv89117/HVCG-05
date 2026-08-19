@@ -1,0 +1,112 @@
+{
+  "flowName": "HVCG_PaymentPastDueAlert",
+  "displayName": "HVCG_PaymentPastDueAlert",
+  "module": "Finance",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Daily: set IsPastDue on financial milestones; notify Ops; executive only if amount exceeds materiality rule.",
+  "purpose": "payment past-due alerts (catalog completion)",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 07:15 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Finance",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_paymentpastduealert",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "pay-past-due|{MilestoneId}|{BusinessDate}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Executive notify only when materiality rule matches",
+    "No client collections email in v1"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "opsInternal",
+    "forbidden": [
+      "Client dunning email",
+      "Bank details in body"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "GetOpenMilestonesPastDueDate"
+    },
+    {
+      "id": 3,
+      "action": "SetIsPastDueTrue"
+    },
+    {
+      "id": 4,
+      "action": "NotifyOps"
+    },
+    {
+      "id": 5,
+      "action": "ExecutiveIfMaterial"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "loopPrevention": [
+    "Only set IsPastDue true once per day key",
+    "Does not create payment records"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off; clear IsPastDue only with Finance approval",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "usedByModules": [
+    "Finance Intelligence",
+    "Executive Dashboard",
+    "Executive Intelligence"
+  ],
+  "releaseStatus": "Supporting",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
+}

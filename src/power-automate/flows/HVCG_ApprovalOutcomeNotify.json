@@ -1,0 +1,115 @@
+{
+  "flowName": "HVCG_ApprovalOutcomeNotify",
+  "displayName": "HVCG_ApprovalOutcomeNotify",
+  "module": "Approvals",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "When an HVCG_Approvals item moves to Approved or Rejected, notify requester and update related deliverable/change request.",
+  "purpose": "approval outcomes",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Approvals",
+    "condition": "Status changes to Approved or Rejected"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Approvals",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_approvaloutcomenotify",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "appr-outcome|{ApprovalId}|{Status}|{Modified}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Outcome already decided by human approver"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "requesterInternal",
+    "forbidden": [
+      "Client email unless separate approved rule"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "ConditionStatusApprovedOrRejected"
+    },
+    {
+      "id": 3,
+      "action": "NotifyRequester"
+    },
+    {
+      "id": 4,
+      "action": "PatchRelatedDeliverableOrChangeRequest"
+    },
+    {
+      "id": 5,
+      "action": "WriteAuditEvent",
+      "params": {
+        "list": "HVCG_AuditEvents"
+      }
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "loopPrevention": [
+    "Only fire on Status Approved/Rejected",
+    "Do not re-write Status from this flow",
+    "Idempotency key includes Status+Modified"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off; reverse related Status only via Admin if needed",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "usedByModules": [
+    "Executive Dashboard",
+    "Operations Hub"
+  ],
+  "execDashboardReleaseRole": "approval routing",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
+}

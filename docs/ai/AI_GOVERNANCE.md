@@ -1,5 +1,7 @@
 # AI Governance — HVCG OS
 
+Product AI controls package (inventory, metadata, risks, matrix, patterns, review, audit, disclosure, release sign-off): [PRODUCT_AI_GOVERNANCE_INDEX.md](PRODUCT_AI_GOVERNANCE_INDEX.md).
+
 ## Principles
 
 1. AI drafts; humans decide.

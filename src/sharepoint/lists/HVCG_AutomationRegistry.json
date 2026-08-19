@@ -1,0 +1,168 @@
+{
+  "title": "HVCG_AutomationRegistry",
+  "description": "Automation Center catalog — one row per product flow for ops visibility and authorized enable/disable tracking",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Automation display name (matches FlowName)"
+    },
+    {
+      "internalName": "FlowName",
+      "displayName": "FlowName",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Exact Power Automate flow name"
+    },
+    {
+      "internalName": "Purpose",
+      "displayName": "Purpose",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TriggerSummary",
+      "displayName": "TriggerSummary",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Human-readable trigger"
+    },
+    {
+      "internalName": "AutomationStatus",
+      "displayName": "AutomationStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Desired / observed enablement",
+      "choices": [
+        "Off",
+        "On",
+        "Paused",
+        "Error",
+        "ScaffoldOnly"
+      ],
+      "default": "Off"
+    },
+    {
+      "internalName": "LastRunAt",
+      "displayName": "LastRunAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Last successful or failed run timestamp"
+    },
+    {
+      "internalName": "NextRunAt",
+      "displayName": "NextRunAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": "Next scheduled run when recurrence"
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Operational owner (usually service account UPN note)"
+    },
+    {
+      "internalName": "FailureState",
+      "displayName": "FailureState",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Healthy",
+        "Degraded",
+        "Failed",
+        "Unknown"
+      ],
+      "default": "Unknown"
+    },
+    {
+      "internalName": "RelatedModule",
+      "displayName": "RelatedModule",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Operations",
+        "Approvals",
+        "OpportunityCRM",
+        "Capital",
+        "Finance",
+        "Communications",
+        "ExecutiveCommandCenter",
+        "Monitoring",
+        "Platform"
+      ]
+    },
+    {
+      "internalName": "LastError",
+      "displayName": "LastError",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Last failure message (no secrets)"
+    },
+    {
+      "internalName": "DocumentationLink",
+      "displayName": "DocumentationLink",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Repo-relative or SharePoint doc URL"
+    },
+    {
+      "internalName": "MakerEnvironment",
+      "displayName": "MakerEnvironment",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Development",
+        "Test",
+        "Production"
+      ],
+      "default": "Development"
+    },
+    {
+      "internalName": "EnableAuthorized",
+      "displayName": "EnableAuthorized",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "True only when Admin/Ops may toggle On in this environment",
+      "default": false
+    },
+    {
+      "internalName": "PriorityTheme",
+      "displayName": "PriorityTheme",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Product priority bucket"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG_IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Stable key = FlowName for registry upsert"
+    }
+  ]
+}

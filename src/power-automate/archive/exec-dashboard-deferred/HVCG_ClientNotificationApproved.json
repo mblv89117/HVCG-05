@@ -1,0 +1,93 @@
+{
+  "flowName": "HVCG_ClientNotificationApproved",
+  "displayName": "HVCG_ClientNotificationApproved",
+  "module": "Communications",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "Sends client-facing notification ONLY when HVCG_Notifications.Status=ApprovedSend and feature flag HVCG_ENABLE_CLIENT_EMAILS=true. Never silent send.",
+  "purpose": "client notifications (approval-gated)",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Notifications",
+    "condition": "Status = ApprovedSend and Audience = Client"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "relatedModule": "Notifications",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_clientnotificationapproved",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "client-notify|{NotificationId}|{Modified}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Requires Status=ApprovedSend set by human",
+    "Feature flag must be true",
+    "OA-EXT style gate for first production enablement"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_ENABLE_CLIENT_EMAILS",
+    "recipientMode": "clientContactFromRecord",
+    "forbidden": [
+      "Send when flag false",
+      "Send when Status not ApprovedSend",
+      "Restricted financial attachments"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "AssertFeatureFlag"
+    },
+    {
+      "id": 3,
+      "action": "AssertApprovedSend"
+    },
+    {
+      "id": 4,
+      "action": "SendEmailToClientContact"
+    },
+    {
+      "id": 5,
+      "action": "MarkNotificationSent"
+    },
+    {
+      "id": 6,
+      "action": "WriteAuditEvent"
+    },
+    {
+      "id": 7,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 2,
+    "retryDelaySeconds": 120
+  },
+  "loopPrevention": [
+    "Sets Status=Sent after send; will not re-enter ApprovedSend",
+    "Idempotency key includes Modified"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ],
+  "rollbackOrDisable": "Turn Off flag and flow; do not auto-resend"
+}

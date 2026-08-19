@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T02:30:37Z",
   "owner": "Manuel Barela",
   "escalateOnlyWhen": [
     "Financial approval",
@@ -8,12 +8,24 @@
     "Destructive action",
     "Multiple valid architectural paths needing business direction"
   ],
-  "openOwnerDecisions": [],
+  "openOwnerDecisions": [
+    {
+      "id": "OA-PP-PROD-001",
+      "title": "Power Platform Production import authorization",
+      "status": "blocked-no-go",
+      "detail": "Power Platform Specialist reports NO-GO for managed Prod import. See src/power-platform/PRODUCTION_READINESS_REPORT.md. Requires Deployment Manager pack + Owner OA-009."
+    }
+  ],
   "playUrls": {
     "eliteOsDev": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
     "commandCenterDev": "https://org1131a2b0.crm.dynamics.com/main.aspx?appid=dea8a490-4b82-f111-ab0e-6045bd0193e8"
   },
   "recommendedAttention": [
-    "Optional: approve Dataverse CORS for SWA (ATLAS-T-1301) if Master PM lacks admin"
+    "Owner UAT: Design System + Executive Dashboard on SWA (ATLAS-T-1304)",
+    "Do not authorize Power Platform Production import until PRODUCTION_READINESS_REPORT = GO"
+  ],
+  "notes": [
+    "ATLAS-T-1301 Dataverse CORS Dev preflight verified by power-platform — no owner gate required for Development",
+    "2026-07-20: Power Platform Production import NO-GO; Exec Dashboard Dev support READY — COORDINATION_PRODUCTION_INTEGRATION.md"
   ]
 }

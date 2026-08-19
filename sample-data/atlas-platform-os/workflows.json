@@ -1,0 +1,23 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "Client onboarding workflow",
+      "WorkflowCode": "WF-CLIENT-ONBOARD",
+      "DisplayName": "Client Onboarding",
+      "Status": "Active",
+      "TriggerType": "Event",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-wf-onboard"
+    },
+    {
+      "Title": "Document request chase",
+      "WorkflowCode": "WF-DOC-REQUEST",
+      "DisplayName": "Document Request Follow-up",
+      "Status": "Active",
+      "TriggerType": "Schedule",
+      "OrganizationCode": "ORG-HVCG",
+      "HVCG_IdempotencyKey": "sample-wf-doc"
+    }
+  ]
+}

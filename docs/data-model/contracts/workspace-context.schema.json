@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas.hvcg/data-model/workspace-context.schema.json",
+  "title": "AtlasWorkspaceContext",
+  "type": "object",
+  "required": [
+    "organizationCode",
+    "workspaceCode",
+    "workspaceType",
+    "dataProvenance"
+  ],
+  "properties": {
+    "organizationCode": {
+      "type": "string",
+      "minLength": 3,
+      "examples": ["ORG-HVCG", "ORG-CCB"]
+    },
+    "workspaceCode": {
+      "type": "string",
+      "minLength": 3,
+      "examples": ["WS-HVCG-INTERNAL", "WS-HVCG-EXEC", "WS-CCB"]
+    },
+    "workspaceType": {
+      "type": "string",
+      "enum": ["Internal", "Client", "Executive"]
+    },
+    "defaultClientCode": {
+      "type": ["string", "null"]
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "dataProvenance": {
+      "type": "string",
+      "enum": ["sample", "test", "imported", "calculated", "verified"]
+    },
+    "sourceSystem": {
+      "type": "string"
+    },
+    "lastRefreshedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

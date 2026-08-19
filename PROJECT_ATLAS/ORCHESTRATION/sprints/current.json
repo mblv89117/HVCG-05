@@ -1,7 +1,8 @@
 {
-  "sprint": 13,
-  "status": "Active",
-  "updatedAt": "2026-07-20T00:23:46Z",
-  "name": "Stabilization & Production Readiness",
-  "validationFeature": "Elite OS Production Telemetry & Owner UAT Readiness"
+  "sprint": 14,
+  "ref": "sprints/sprint-14.json",
+  "updatedAt": "2026-07-20T02:12:50Z",
+  "previousSprint": 13,
+  "previousSprintRef": "sprints/sprint-13.json",
+  "productFocus": "Executive Dashboard Release"
 }

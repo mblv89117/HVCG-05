@@ -110,7 +110,8 @@
     "HVCG_TEAMS_CRM_CHANNEL_ID",
     "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
     "HVCG_CRM_TEST_RECIPIENT",
-    "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
+    "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+    "HVCG_OPS_EMAIL"
   ],
   "listsTouched": {
     "reads": [
@@ -146,5 +147,30 @@
     "Idempotent key prevents duplicate activity for same Stage+Modified tick",
     "Teams post only for Proposal|Negotiation|Won|Lost when flag enabled",
     "CopilotSummary patched on Opportunity"
-  ]
+  ],
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_opportunitystagechangednotify",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Revenue Systems"
+  ],
+  "releaseStatus": "Blocked",
+  "blockedReason": "CRM module Off until separate Owner/QA CRM go-live; not in Exec Dashboard activation set",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

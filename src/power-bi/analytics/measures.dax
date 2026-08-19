@@ -1,0 +1,259 @@
+-- HVCG_Atlas_Analytics measures (DAX)
+-- Catalog: docs/analytics/metric-catalog.json
+-- Rule: BLANK when unknown; never invent history; exclude sample/test provenance when column exists.
+
+-- ATLAS-M-001 Revenue trend (use on line chart with DimDate)
+Cash Collected =
+SUM ( FactInvoice[AmountCollected] )
+
+Cash Collected T12M =
+CALCULATE (
+    [Cash Collected],
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+)
+
+-- ATLAS-M-002 Weighted pipeline
+Weighted Pipeline =
+CALCULATE (
+    SUM ( FactOpportunity[WeightedValue] ),
+    FactOpportunity[WinLossStatus] = "Open"
+)
+
+-- ATLAS-M-003 Conversion rate (90d)
+Conversion Rate 90d =
+VAR Won =
+    CALCULATE (
+        COUNTROWS ( FactOpportunity ),
+        FactOpportunity[WinLossStatus] = "Won",
+        FactOpportunity[ClosedDate] >= TODAY () - 90
+    )
+VAR Lost =
+    CALCULATE (
+        COUNTROWS ( FactOpportunity ),
+        FactOpportunity[WinLossStatus] = "Lost",
+        FactOpportunity[ClosedDate] >= TODAY () - 90
+    )
+RETURN
+    DIVIDE ( Won, Won + Lost )
+
+-- ATLAS-M-004 Engagement revenue
+Engagement Revenue =
+CALCULATE (
+    SUM ( FactEngagement[MonthlyRetainer] ) + SUM ( FactEngagement[EngagementValue] ),
+    FactEngagement[EngagementStatus] IN { "Active", "In Progress", "On Track" }
+)
+
+-- ATLAS-M-005 Client concentration (Top 3 share of MRR)
+MRR Active =
+CALCULATE (
+    SUM ( DimClient[MonthlyRetainer] ),
+    DimClient[ClientStage] = "Active Client",
+    DimClient[IsActive] = TRUE ()
+)
+
+Client Concentration Top3 =
+VAR Total = [MRR Active]
+VAR Top3 =
+    SUMX (
+        TOPN (
+            3,
+            FILTER (
+                DimClient,
+                DimClient[ClientStage] = "Active Client"
+                    && DimClient[IsActive] = TRUE ()
+            ),
+            DimClient[MonthlyRetainer], DESC
+        ),
+        DimClient[MonthlyRetainer]
+    )
+RETURN
+    DIVIDE ( Top3, Total )
+
+-- ATLAS-M-006 Client health counts
+Client Health Red =
+CALCULATE (
+    DISTINCTCOUNT ( DimClient[ClientCode] ),
+    DimClient[OverallHealth] = "Red",
+    DimClient[IsActive] = TRUE (),
+    DimClient[ClientStage] = "Active Client"
+)
+
+Client Health Yellow =
+CALCULATE (
+    DISTINCTCOUNT ( DimClient[ClientCode] ),
+    DimClient[OverallHealth] = "Yellow",
+    DimClient[IsActive] = TRUE (),
+    DimClient[ClientStage] = "Active Client"
+)
+
+Client Health Green =
+CALCULATE (
+    DISTINCTCOUNT ( DimClient[ClientCode] ),
+    DimClient[OverallHealth] = "Green",
+    DimClient[IsActive] = TRUE (),
+    DimClient[ClientStage] = "Active Client"
+)
+
+-- ATLAS-M-007 Project health
+Projects At Risk =
+CALCULATE (
+    COUNTROWS ( DimProject ),
+    DimProject[ProjectHealth] IN { "Red", "Yellow" }
+)
+
+-- ATLAS-M-008 Overdue task rate
+Overdue Task Rate =
+VAR OpenTasks =
+    CALCULATE ( COUNTROWS ( FactTask ), FactTask[IsOpen] = TRUE () )
+VAR Overdue =
+    CALCULATE (
+        COUNTROWS ( FactTask ),
+        FactTask[IsOpen] = TRUE (),
+        FactTask[IsOverdue] = TRUE ()
+    )
+RETURN
+    DIVIDE ( Overdue, OpenTasks )
+
+-- ATLAS-M-009 Approval turnaround (median days) — approximate via PERCENTILE if median unsupported on table
+Approval Turnaround Days =
+CALCULATE (
+    PERCENTILE.INC ( FactApproval[TurnaroundDays], 0.5 ),
+    FactApproval[ApprovalStatus] IN { "Approved", "Rejected" },
+    FactApproval[CompletedDate] >= TODAY () - 90
+)
+-- TurnaroundDays = CompletedDate - RequestedDate (PQ calculated column; blank excluded)
+
+-- ATLAS-M-010 Milestone performance
+Revenue At Risk =
+CALCULATE (
+    SUM ( FactFinancialMilestone[Amount] ),
+    FactFinancialMilestone[RevenueAtRisk] = TRUE ()
+        || FactFinancialMilestone[IsPastDue] = TRUE ()
+)
+
+-- ATLAS-M-011 Capital-readiness progress
+Capital Readiness Progress =
+VAR TotalCrit =
+    CALCULATE (
+        COUNTROWS ( FactFundingMilestone ),
+        FactFundingMilestone[IsCritical] = TRUE (),
+        RELATED ( FactCapitalOpportunity[FundingStatus] )
+            <> "Closed"
+            && RELATED ( FactCapitalOpportunity[FundingStatus] ) <> "Declined"
+            && RELATED ( FactCapitalOpportunity[FundingStatus] ) <> "Withdrawn"
+    )
+VAR DoneCrit =
+    CALCULATE (
+        COUNTROWS ( FactFundingMilestone ),
+        FactFundingMilestone[IsCritical] = TRUE (),
+        FactFundingMilestone[Status] IN { "Completed", "Complete", "Satisfied", "Waived" },
+        RELATED ( FactCapitalOpportunity[FundingStatus] )
+            <> "Closed"
+            && RELATED ( FactCapitalOpportunity[FundingStatus] ) <> "Declined"
+            && RELATED ( FactCapitalOpportunity[FundingStatus] ) <> "Withdrawn"
+    )
+RETURN
+    IF ( TotalCrit = 0, BLANK (), DIVIDE ( DoneCrit, TotalCrit ) )
+
+-- ATLAS-M-012 Document-completion rate
+Document Completion Rate =
+VAR Denom =
+    CALCULATE (
+        COUNTROWS ( FactDocumentRequest ),
+        NOT FactDocumentRequest[RequestStatus] IN { "Cancelled" }
+    )
+VAR Numer =
+    CALCULATE (
+        COUNTROWS ( FactDocumentRequest ),
+        FactDocumentRequest[RequestStatus] IN { "Accepted", "Waived" }
+    )
+RETURN
+    DIVIDE ( Numer, Denom )
+
+Document Completion Rate Critical =
+CALCULATE (
+    [Document Completion Rate],
+    FactDocumentRequest[IsCritical] = TRUE ()
+)
+
+-- ATLAS-M-013 Active financing pipeline
+Active Financing Pipeline =
+CALCULATE (
+    SUMX (
+        FactCapitalOpportunity,
+        COALESCE (
+            FactCapitalOpportunity[WeightedValue],
+            FactCapitalOpportunity[TargetAmount]
+                * DIVIDE ( FactCapitalOpportunity[FundingProbability], 100 )
+        )
+    ),
+    NOT FactCapitalOpportunity[FundingStatus] IN { "Closed", "Declined", "Withdrawn" }
+)
+
+-- ATLAS-M-014 Enterprise-value progress
+EV Assessment Progress =
+VAR Openish =
+    CALCULATE (
+        COUNTROWS ( FactEnterpriseValue ),
+        FactEnterpriseValue[Status] IN { "Draft", "In Review", "Accepted" },
+        FactEnterpriseValue[DataProvenance] <> "sample",
+        FactEnterpriseValue[DataProvenance] <> "test"
+    )
+VAR Accepted =
+    CALCULATE (
+        COUNTROWS ( FactEnterpriseValue ),
+        FactEnterpriseValue[Status] = "Accepted",
+        FactEnterpriseValue[DataProvenance] <> "sample",
+        FactEnterpriseValue[DataProvenance] <> "test"
+    )
+RETURN
+    DIVIDE ( Accepted, Openish )
+
+EV Verified Midpoint =
+CALCULATE (
+    AVERAGEX (
+        FactEnterpriseValue,
+        DIVIDE (
+            FactEnterpriseValue[EnterpriseValueLow]
+                + FactEnterpriseValue[EnterpriseValueHigh],
+            2
+        )
+    ),
+    FactEnterpriseValue[Status] = "Accepted",
+    FactEnterpriseValue[DataProvenance] = "verified"
+)
+
+-- ATLAS-M-015 User adoption
+Active Users 7d =
+CALCULATE (
+    DISTINCTCOUNT ( FactAuditEvent[ActorEmail] ),
+    FactAuditEvent[EventDate] >= TODAY () - 7,
+    TREATAS ( VALUES ( DimTeamMember[Email] ), FactAuditEvent[ActorEmail] )
+)
+
+Active Users 30d =
+CALCULATE (
+    DISTINCTCOUNT ( FactAuditEvent[ActorEmail] ),
+    FactAuditEvent[EventDate] >= TODAY () - 30,
+    TREATAS ( VALUES ( DimTeamMember[Email] ), FactAuditEvent[ActorEmail] )
+)
+
+-- ATLAS-M-016 Workflow failures
+Workflow Failures 7d =
+CALCULATE (
+    COUNTROWS ( FactAutomationLog ),
+    FactAutomationLog[Status] = "Failed",
+    FactAutomationLog[Created] >= TODAY () - 7
+)
+
+Workflow Failure Rate 7d =
+VAR Fail =
+    [Workflow Failures 7d]
+VAR Ok =
+    CALCULATE (
+        COUNTROWS ( FactAutomationLog ),
+        FactAutomationLog[Status] = "Succeeded",
+        FactAutomationLog[Created] >= TODAY () - 7
+    )
+RETURN
+    DIVIDE ( Fail, Fail + Ok )

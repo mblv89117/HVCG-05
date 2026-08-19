@@ -1,0 +1,115 @@
+{
+  "flowName": "HVCG_ChangeRequestIntake",
+  "displayName": "HVCG_ChangeRequestIntake",
+  "module": "Approvals",
+  "packageVersion": "1.0.0",
+  "defaultState": "Off",
+  "description": "When ChangeStatus becomes Submitted, create approval routing; flag fee-impact for Owner approval.",
+  "purpose": "approval requests (change requests)",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_ChangeRequests",
+    "condition": "ChangeStatus = Submitted"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook",
+    "Approvals"
+  ],
+  "relatedModule": "ChangeRequests",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_changerequestintake",
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "pattern": "cr-intake|{ChangeRequestId}|{Modified}",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Approver must act",
+    "Owner required if fee impact / out-of-scope"
+  ],
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "approverInternal",
+    "forbidden": [
+      "Client email without approved rule"
+    ]
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "ConditionSubmitted"
+    },
+    {
+      "id": 3,
+      "action": "CreateApprovalsListItem"
+    },
+    {
+      "id": 4,
+      "action": "StartApproval"
+    },
+    {
+      "id": 5,
+      "action": "RouteOwnerIfFeeImpact"
+    },
+    {
+      "id": 6,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "loopPrevention": [
+    "Only on ChangeStatus=Submitted",
+    "Does not set ChangeStatus from approval wait path without Outcome flow"
+  ],
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL"
+  ],
+  "rollbackOrDisable": "Turn Off; cancel pending Approvals in Maker",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365",
+    "hvcg_sharedapprovals"
+  ],
+  "usedByModules": [
+    "Executive Dashboard",
+    "Operations Hub"
+  ],
+  "execDashboardReleaseRole": "approval routing",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
+}

@@ -25,7 +25,7 @@ bash scripts/orchestration/list-ready.sh --agent <agentId>
 | Elite UI | `elite-ui` |
 | Power Platform | `power-platform` |
 | Azure Platform | `azure-platform` |
-| Data Engineering | `data-engineering` |
+| Data Engineering | `data-engineering` | [Agents/DataEngineer.md](Agents/DataEngineer.md) · [REG-DATA-ENGINEERING-S12](ORCHESTRATION/registry/registrations/REG-DATA-ENGINEERING-S12.json) |
 | Security Engineering | `security` |
 | Revenue Systems | `revenue-systems` |
 | Client Workspace | `client-workspace` |

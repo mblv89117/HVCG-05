@@ -1,0 +1,37 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "Human work queue",
+      "QueueCode": "Q-HUMAN-WORK",
+      "DisplayName": "Human Work",
+      "QueueKind": "Human",
+      "DefaultTaskFamily": "Delivery",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-INTERNAL",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-queue-human"
+    },
+    {
+      "Title": "AI review queue",
+      "QueueCode": "Q-AI-REVIEW",
+      "DisplayName": "AI Review",
+      "QueueKind": "AI",
+      "DefaultTaskFamily": "AI",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-INTERNAL",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-queue-ai"
+    },
+    {
+      "Title": "Approval queue",
+      "QueueCode": "Q-APPROVALS",
+      "DisplayName": "Approvals",
+      "QueueKind": "Approval",
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-EXEC",
+      "IsActive": true,
+      "HVCG_IdempotencyKey": "sample-queue-approval"
+    }
+  ]
+}

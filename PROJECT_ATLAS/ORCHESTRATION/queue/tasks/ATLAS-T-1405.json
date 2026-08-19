@@ -1,0 +1,38 @@
+{
+  "sprint": 14,
+  "epic": "EXEC-DASHBOARD",
+  "priority": "P1",
+  "complexity": "S",
+  "estimatedEffortHours": 1,
+  "dependencies": [],
+  "blockedBy": [],
+  "status": "Ready",
+  "requiredReviews": [
+    "architecture"
+  ],
+  "branch": "cursor/master-pm/executive-dashboard-s14",
+  "worktree": ".worktrees/track10-elite-ui",
+  "affectedPaths": [
+    "apps/atlas-elite-os/"
+  ],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "elite-os-exec-dev",
+  "createdAt": "2026-07-20T02:12:50Z",
+  "updatedAt": "2026-07-20T02:12:50Z",
+  "claimedBy": null,
+  "claimedAt": null,
+  "feature": "executive-dashboard",
+  "id": "ATLAS-T-1405",
+  "title": "Freeze duplicate executive shells \u2014 Elite OS only for daily UX",
+  "description": "Architect note: ECC/CEO mock SPAs are design references only; no parallel executive product shells this release.",
+  "assignedAgent": "system-architect",
+  "acceptanceCriteria": [
+    "ADR or decision log entry",
+    "PRODUCT_MODULE_REGISTRY marks Elite as canonical UX"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "manifestVersion": "1.0.0",
+  "packId": "atlas-platform-os-seed",
+  "generated": "2026-07-20",
+  "dataProvenance": "sample",
+  "layerVersion": "platform-os-1.0.0-draft",
+  "disclaimer": "Synthetic platform seed only. No secrets. Do not load to Production.",
+  "forbiddenEnvironments": ["production"],
+  "allowedEnvironments": ["local", "dev"],
+  "dependsOnSeed": "sample-data/atlas-foundation/seed-manifest.json",
+  "relatedMigration": "releases/migrations/20260720_002_atlas_platform_os_v1.json",
+  "loadOrder": [
+    "identities.json",
+    "teams.json",
+    "permissions.json",
+    "queues.json",
+    "workflows.json",
+    "automations.json",
+    "dashboards.json",
+    "widgets.json",
+    "integrations.json"
+  ]
+}

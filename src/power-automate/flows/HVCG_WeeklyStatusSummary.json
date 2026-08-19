@@ -1,7 +1,7 @@
 {
   "flowName": "HVCG_WeeklyStatusSummary",
   "displayName": "HVCG_WeeklyStatusSummary",
-  "description": "Weekly ops digest and executive attention-only digest.",
+  "description": "Weekly ops digest only. Executive KPI digest is owned by HVCG_ExecutiveWeeklyBrief (no duplicate exec email).",
   "trigger": {
     "type": "Recurrence",
     "schedule": "Monday 06:30 America/Los_Angeles"
@@ -20,39 +20,75 @@
     "onSuccess": true,
     "onFailure": true
   },
-  "humanApproval": [],
+  "humanApproval": [
+    "Ops digest only \u2014 do not email HVCG_EXECUTIVE_EMAIL from this flow"
+  ],
   "steps": [
     {
       "id": 1,
-      "action": "QueryOpsMetrics"
+      "action": "LogStart"
     },
     {
       "id": 2,
-      "action": "EmailOpsDigest"
+      "action": "QueryOpsMetrics"
     },
     {
       "id": 3,
-      "action": "QueryExecutiveItems"
+      "action": "EmailOpsDigest"
     },
     {
       "id": 4,
-      "action": "EmailExecutiveDigestIfAny"
-    },
-    {
-      "id": 5,
       "action": "LogSuccess"
     }
   ],
   "errorHandling": {
     "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_OPS_EMAIL",
     "maxRetries": 3,
     "retryDelaySeconds": 60
   },
   "environmentVariables": [
     "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
-  ]
+    "HVCG_OPS_EMAIL"
+  ],
+  "defaultState": "Off",
+  "owner": "HVCG Ops Automation",
+  "relatedModule": "Operations",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_weeklystatussummary",
+  "outboundPolicy": {
+    "emailEnabledByDefault": true,
+    "recipientMode": "opsEmailOnly",
+    "forbidden": [
+      "Executive KPI digest (use HVCG_ExecutiveWeeklyBrief)",
+      "Client email"
+    ]
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "rollbackOrDisable": "Turn Off in Maker",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "usedByModules": [
+    "Operations Hub"
+  ],
+  "execDashboardReleaseRole": "project status notifications (ops)",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

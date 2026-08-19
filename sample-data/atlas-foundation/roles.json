@@ -1,0 +1,63 @@
+{
+  "dataProvenance": "sample",
+  "sourceSystem": "ImportPack",
+  "lastRefreshedAt": "2026-07-20T02:00:00Z",
+  "items": [
+    {
+      "Title": "Owner",
+      "RoleCode": "Owner",
+      "DisplayName": "Owner",
+      "EntraGroupHint": "HVCG-Role-Owner",
+      "Scope": "Tenant",
+      "HVCG_IdempotencyKey": "sample-role-owner"
+    },
+    {
+      "Title": "Administrator",
+      "RoleCode": "Administrator",
+      "DisplayName": "Administrator",
+      "EntraGroupHint": "HVCG-Role-Administrator",
+      "Scope": "Tenant",
+      "HVCG_IdempotencyKey": "sample-role-admin"
+    },
+    {
+      "Title": "Operations Manager",
+      "RoleCode": "OperationsManager",
+      "DisplayName": "Operations Manager",
+      "EntraGroupHint": "HVCG-Role-OperationsManager",
+      "Scope": "Organization",
+      "HVCG_IdempotencyKey": "sample-role-ops-mgr"
+    },
+    {
+      "Title": "Project Manager",
+      "RoleCode": "ProjectManager",
+      "DisplayName": "Project Manager",
+      "EntraGroupHint": "HVCG-Role-ProjectManager",
+      "Scope": "Client",
+      "HVCG_IdempotencyKey": "sample-role-pm"
+    },
+    {
+      "Title": "Capital Advisor",
+      "RoleCode": "CapitalAdvisor",
+      "DisplayName": "Capital Advisor",
+      "EntraGroupHint": "HVCG-Role-CapitalAdvisor",
+      "Scope": "Client",
+      "HVCG_IdempotencyKey": "sample-role-capital"
+    },
+    {
+      "Title": "Financial Analyst",
+      "RoleCode": "FinancialAnalyst",
+      "DisplayName": "Financial Analyst",
+      "EntraGroupHint": "HVCG-Role-FinancialAnalyst",
+      "Scope": "Client",
+      "HVCG_IdempotencyKey": "sample-role-fin"
+    },
+    {
+      "Title": "Client Workspace Member",
+      "RoleCode": "ClientWorkspaceMember",
+      "DisplayName": "Client Workspace Member",
+      "EntraGroupHint": "HVCG-Client-{ClientCode}",
+      "Scope": "Workspace",
+      "HVCG_IdempotencyKey": "sample-role-client-ws"
+    }
+  ]
+}

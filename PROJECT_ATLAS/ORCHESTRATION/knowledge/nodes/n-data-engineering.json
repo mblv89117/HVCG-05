@@ -1,0 +1,14 @@
+{
+  "id": "n-data-engineering",
+  "summary": "Owns sample data, migration packs, data dictionary, and Dataverse/SharePoint schema hygiene for Atlas.",
+  "owners": [
+    "data-engineering"
+  ],
+  "features": [
+    "sample-packs",
+    "migrations",
+    "data-dictionary",
+    "import-shells"
+  ],
+  "registrationId": "REG-DATA-ENGINEERING-S12"
+}

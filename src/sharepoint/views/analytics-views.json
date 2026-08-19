@@ -1,0 +1,43 @@
+{
+  "module": "atlas-analytics",
+  "version": "1.0.0",
+  "description": "Optional SharePoint views for Atlas analytics measures. SAMPLE-safe; production install is Ops-owned.",
+  "views": [
+    {
+      "list": "HVCG_Engagements",
+      "title": "Analytics Active Engagements",
+      "fields": ["Title", "ClientCode", "EngagementStatus", "MonthlyRetainer", "EngagementValue", "EngagementType"],
+      "filter": "EngagementStatus eq 'Active' or EngagementStatus eq 'In Progress' or EngagementStatus eq 'On Track'"
+    },
+    {
+      "list": "HVCG_Tasks",
+      "title": "Analytics Open High Tasks",
+      "fields": ["Title", "ClientCode", "Priority", "TaskStatus", "IsOverdue", "OwnerEmail", "DueDate"],
+      "filter": "(Priority eq 'High' or Priority eq 'Critical') and TaskStatus ne 'Done' and TaskStatus ne 'Cancelled'"
+    },
+    {
+      "list": "HVCG_Approvals",
+      "title": "Analytics Approvals Completed 90d",
+      "fields": ["Title", "ClientCode", "ApprovalType", "ApprovalStatus", "RequestedDate", "CompletedDate", "ApproverEmail"],
+      "filter": "ApprovalStatus eq 'Approved' or ApprovalStatus eq 'Rejected'"
+    },
+    {
+      "list": "HVCG_FundingMilestones",
+      "title": "Analytics Critical Funding Milestones",
+      "fields": ["Title", "ClientCode", "CapitalOpportunityId", "Status", "IsCritical", "DueDate", "CompletedDate"],
+      "filter": "IsCritical eq 1"
+    },
+    {
+      "list": "HVCG_DocumentRequests",
+      "title": "Analytics Critical Document Requests",
+      "fields": ["Title", "ClientCode", "RequestStatus", "IsCritical", "CapitalOpportunityId", "DueDate"],
+      "filter": "IsCritical eq 1 and RequestStatus ne 'Cancelled'"
+    },
+    {
+      "list": "HVCG_AutomationLogs",
+      "title": "Analytics Automation Failures",
+      "fields": ["Title", "FlowName", "Status", "ClientCode", "Message", "Created"],
+      "filter": "Status eq 'Failed'"
+    }
+  ]
+}

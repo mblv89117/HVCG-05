@@ -1,0 +1,91 @@
+{
+  "modelName": "HVCG_Atlas_Analytics",
+  "version": "1.0.0",
+  "module": "AnalyticsProduct",
+  "description": "Canonical semantic model for Atlas executive and domain analytics. Import SharePoint lists; exclude DataProvenance sample/test from production measures. Never fabricate historical rows.",
+  "extends": ["HVCG_CEO_Command", "HVCG_OS_Enterprise"],
+  "catalogRef": "docs/analytics/metric-catalog.json",
+  "connections": {
+    "sharePointSite": {
+      "type": "SharePointList",
+      "envVar": "HVCG_SITE_URL",
+      "devDefaultHint": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+    }
+  },
+  "refreshSchedule": {
+    "dev": "Manual or 4x/day",
+    "production": "Owner-approved only"
+  },
+  "dimensions": [
+    {
+      "name": "DimClient",
+      "sourceList": "HVCG_Clients",
+      "key": "ClientCode",
+      "columns": [
+        "ClientCode", "Title", "ClientStage", "IsActive", "MonthlyRetainer",
+        "OverallHealth", "PaymentStatus", "RiskLevel", "ClientLifetimeValue",
+        "RequiresExecutiveAttention", "DataProvenance"
+      ]
+    },
+    {
+      "name": "DimProject",
+      "sourceList": "HVCG_Projects",
+      "key": "Id",
+      "columns": ["Id", "Title", "ClientCode", "ProjectHealth", "RequiresExecutiveAttention"]
+    },
+    {
+      "name": "DimTeamMember",
+      "sourceList": "HVCG_TeamMembers",
+      "key": "Email",
+      "columns": [
+        "Email", "Title", "PrimaryRole", "IsActive", "CapacityHoursPerWeek",
+        "CurrentUtilizationPct", "AvailableHoursThisWeek"
+      ]
+    },
+    {
+      "name": "DimDate",
+      "type": "generated",
+      "grain": "Day"
+    },
+    {
+      "name": "DimPipelineStage",
+      "type": "static",
+      "values": ["Discovery", "Assessment", "Proposal", "Negotiation", "Won", "Lost"]
+    }
+  ],
+  "facts": [
+    {"name": "FactOpportunity", "sourceList": "HVCG_Opportunities", "metrics": ["ATLAS-M-002", "ATLAS-M-003"]},
+    {"name": "FactEngagement", "sourceList": "HVCG_Engagements", "metrics": ["ATLAS-M-004"]},
+    {"name": "FactInvoice", "sourceList": "HVCG_Invoices", "metrics": ["ATLAS-M-001", "ATLAS-M-018", "ATLAS-M-019"]},
+    {"name": "FactFinancialMilestone", "sourceList": "HVCG_FinancialMilestones", "metrics": ["ATLAS-M-010"]},
+    {"name": "FactCapitalOpportunity", "sourceList": "HVCG_CapitalOpportunities", "metrics": ["ATLAS-M-013"]},
+    {"name": "FactFundingMilestone", "sourceList": "HVCG_FundingMilestones", "metrics": ["ATLAS-M-011"]},
+    {"name": "FactDocumentRequest", "sourceList": "HVCG_DocumentRequests", "metrics": ["ATLAS-M-012"]},
+    {"name": "FactEnterpriseValue", "sourceList": "HVCG_EnterpriseValueAssessments", "metrics": ["ATLAS-M-014"], "optionalUntilProvisioned": true},
+    {"name": "FactTask", "sourceList": "HVCG_Tasks", "metrics": ["ATLAS-M-008"]},
+    {"name": "FactApproval", "sourceList": "HVCG_Approvals", "metrics": ["ATLAS-M-009"]},
+    {"name": "FactAutomationLog", "sourceList": "HVCG_AutomationLogs", "metrics": ["ATLAS-M-016"]},
+    {"name": "FactAuditEvent", "sourceList": "HVCG_AuditEvents", "metrics": ["ATLAS-M-015"]},
+    {"name": "FactTimeEntry", "sourceList": "HVCG_TimeEntries", "metrics": ["ATLAS-M-021"]}
+  ],
+  "powerQueryRules": [
+    "Filter DataProvenance NOT IN (sample, test) for production report pages",
+    "Do not generate synthetic historical invoice months",
+    "Prefer ClientCode relationships"
+  ],
+  "pages": [
+    {"name": "Executive Overview", "metrics": ["ATLAS-M-002", "ATLAS-M-017", "ATLAS-M-019", "ATLAS-M-018", "ATLAS-M-013", "ATLAS-M-007", "ATLAS-M-006", "ATLAS-M-016"]},
+    {"name": "Revenue", "metrics": ["ATLAS-M-001", "ATLAS-M-002", "ATLAS-M-003", "ATLAS-M-004"]},
+    {"name": "Clients", "metrics": ["ATLAS-M-005", "ATLAS-M-006"]},
+    {"name": "Projects & Tasks", "metrics": ["ATLAS-M-007", "ATLAS-M-008"]},
+    {"name": "Operations", "metrics": ["ATLAS-M-009", "ATLAS-M-012", "ATLAS-M-015", "ATLAS-M-016"]},
+    {"name": "Capital & Documents", "metrics": ["ATLAS-M-013", "ATLAS-M-011", "ATLAS-M-012"]},
+    {"name": "Enterprise Value", "metrics": ["ATLAS-M-014"]},
+    {"name": "Finance", "metrics": ["ATLAS-M-010", "ATLAS-M-018", "ATLAS-M-019"]},
+    {"name": "Team Workload", "metrics": ["ATLAS-M-008", "ATLAS-M-021"]}
+  ],
+  "security": {
+    "rowLevel": "None in V1 — SharePoint ACL + workspace audience",
+    "workspaceAudience": ["HVCG-Role-Owner", "HVCG-DEV-Role-Owner", "HVCG-Role-FinancialAnalyst"]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T00:01:57Z",
+  "updatedAt": "2026-07-20T00:10:29Z",
   "entries": [
     {
       "id": "ADR-0001",
@@ -35,6 +35,19 @@
       "summary": "Subscription ebc84d85-b5ff-4c4b-add1-b0a8de31b319; deprecate 866189c6 forever.",
       "links": [
         "PROJECT_ATLAS/Sprints/Sprint11_Executive_Status_Report.md"
+      ]
+    },
+    {
+      "id": "REG-DATA-ENGINEERING-S12",
+      "type": "Lesson",
+      "title": "Data Engineering registered on Orchestration Platform",
+      "status": "Accepted",
+      "createdAt": "2026-07-20T00:10:29Z",
+      "decidedBy": "master-pm",
+      "summary": "agentId data-engineering is an active orchestration participant with handbook and knowledge node.",
+      "links": [
+        "registry/registrations/REG-DATA-ENGINEERING-S12.json",
+        "PROJECT_ATLAS/Agents/DataEngineer.md"
       ]
     }
   ]

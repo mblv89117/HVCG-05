@@ -41,7 +41,8 @@
   "errorHandling": {
     "notifyGroup": "HVCG-Role-Administrator",
     "maxRetries": 3,
-    "retryDelaySeconds": 60
+    "retryDelaySeconds": 60,
+    "notifyEmailEnv": "HVCG_OPS_EMAIL"
   },
   "environmentVariables": [
     "HVCG_SITE_URL",
@@ -49,5 +50,37 @@
     "HVCG_OPS_EMAIL",
     "HVCG_EXECUTIVE_EMAIL",
     "HVCG_ENABLE_CLIENT_EMAILS"
-  ]
+  ],
+  "owner": "HVCG Ops Automation",
+  "defaultState": "Off",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_updateprojecthealth",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline"
+  ],
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Operations Hub",
+    "Executive Dashboard",
+    "Executive Intelligence"
+  ],
+  "execDashboardReleaseRole": "project status notifications",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

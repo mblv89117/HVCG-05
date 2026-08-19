@@ -6,7 +6,7 @@
   "taskId": "ATLAS-T-1201",
   "acquiredAt": "2026-07-20T00:01:57Z",
   "expiresAt": "2099-01-01T00:00:00Z",
-  "heartbeatAt": "2026-07-20T00:02:08Z",
+  "heartbeatAt": "2026-07-20T02:12:50Z",
   "ttlMinutes": 999999,
   "note": "Sprint 12 foundation lock; release when Sprint 12 tasks Closed"
 }

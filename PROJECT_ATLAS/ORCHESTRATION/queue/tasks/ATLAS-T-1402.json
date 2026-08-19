@@ -1,0 +1,42 @@
+{
+  "sprint": 14,
+  "epic": "EXEC-DASHBOARD",
+  "priority": "P0",
+  "complexity": "M",
+  "estimatedEffortHours": 4,
+  "dependencies": [
+    "ATLAS-T-1401"
+  ],
+  "blockedBy": [],
+  "status": "Ready",
+  "requiredReviews": [
+    "qa",
+    "owner"
+  ],
+  "branch": "cursor/master-pm/executive-dashboard-s14",
+  "worktree": ".worktrees/track10-elite-ui",
+  "affectedPaths": [
+    "apps/atlas-elite-os/"
+  ],
+  "requiredTests": [],
+  "validationResults": {},
+  "artifacts": [],
+  "commitReferences": [],
+  "ownerDecisions": [],
+  "completionSummary": null,
+  "releaseVersion": "elite-os-exec-dev",
+  "createdAt": "2026-07-20T02:12:50Z",
+  "updatedAt": "2026-07-20T02:12:50Z",
+  "claimedBy": null,
+  "claimedAt": null,
+  "feature": "executive-dashboard",
+  "id": "ATLAS-T-1402",
+  "title": "Owner UAT: Executive Home + HVCG + CCB workspaces",
+  "description": "Facilitate Manny Barela UAT of Home, Clients, HVCG internal workspace, Colorado Craft Beef workspace on Dev SWA.",
+  "assignedAgent": "qa-release",
+  "acceptanceCriteria": [
+    "UAT checklist completed",
+    "Pass/fail recorded",
+    "Defects filed as ATLAS-T tasks"
+  ]
+}

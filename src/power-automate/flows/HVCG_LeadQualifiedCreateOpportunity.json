@@ -203,5 +203,30 @@
     "Lead.ConvertedOpportunityId set",
     "ActivityType StageChange row created",
     "No Teams post unless HVCG_CRM_ENABLE_TEAMS_NOTIFY=true and test channel bound"
-  ]
+  ],
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_leadqualifiedcreateopportunity",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Revenue Systems"
+  ],
+  "releaseStatus": "Blocked",
+  "blockedReason": "CRM module Off until separate Owner/QA CRM go-live; not in Exec Dashboard activation set",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

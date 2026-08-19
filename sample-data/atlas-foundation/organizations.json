@@ -1,0 +1,29 @@
+{
+  "dataProvenance": "sample",
+  "sourceSystem": "ImportPack",
+  "lastRefreshedAt": "2026-07-20T02:00:00Z",
+  "items": [
+    {
+      "Title": "High Value Capital Group LLC",
+      "OrganizationCode": "ORG-HVCG",
+      "LegalName": "High Value Capital Group LLC",
+      "DBA": "HVCG",
+      "OrganizationType": "Internal",
+      "PrimaryDomain": "hvcg.example",
+      "IsActive": true,
+      "DataProvenance": "sample",
+      "HVCG_IdempotencyKey": "sample-org-hvcg"
+    },
+    {
+      "Title": "Colorado Craft Beef LLC",
+      "OrganizationCode": "ORG-CCB",
+      "LegalName": "Colorado Craft Beef LLC",
+      "DBA": "Colorado Craft Beef",
+      "OrganizationType": "Client",
+      "PrimaryDomain": "ccb.example",
+      "IsActive": true,
+      "DataProvenance": "sample",
+      "HVCG_IdempotencyKey": "sample-org-ccb"
+    }
+  ]
+}

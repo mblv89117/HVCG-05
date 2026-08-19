@@ -1,0 +1,34 @@
+{
+  "id": "ws-hvcg",
+  "clientCode": "HVCG01",
+  "sharePointList": "HVCG_Clients",
+  "kind": "internal",
+  "Title": "High Value Capital Group",
+  "DBA": "HVCG",
+  "Industry": "Professional Services",
+  "EntityType": "LLC",
+  "ClientStage": "Active Client",
+  "EngagementTypePrimary": "Internal Operations",
+  "RelationshipOwnerEmail": "manny@highvaluecapitalgroup.com",
+  "OverallHealth": "Green",
+  "CapitalNeed": false,
+  "IsActive": true,
+  "RequiresExecutiveAttention": false,
+  "BusinessDescription": "Internal HVCG operating workspace for leadership KPIs, client portfolio oversight, and capital advisory.",
+  "InternalNotes": "Firm workspace — not a billable client. Aligns with Elite OS workspace id ws-hvcg.",
+  "financePolicy": "No fabricated finance. KPI dollars only from verified Dataverse hvcg_atlasrevenuekpi or Owner-approved sources.",
+  "documentCategories": [
+    "Corporate",
+    "Financial",
+    "Legal",
+    "Operations",
+    "Compliance",
+    "Engagement"
+  ],
+  "teamsAccess": {
+    "recommended": "Project Atlas / Command Center team",
+    "status": "configure channel IDs in env vars before enabling notifies"
+  },
+  "eliteOsWorkspaceId": "ws-hvcg",
+  "availability": "Repository-derived"
+}

@@ -1,6 +1,11 @@
 # DATA DICTIONARY — HVCG OS
 
-Machine-readable schemas: `src/sharepoint/lists/*.json` (**67 lists**).
+Machine-readable schemas: `src/sharepoint/lists/*.json` (**82 lists** in `_index.json` v2.3 / product 1.1.0).
+
+**Atlas Platform OS (canonical entities — prioritize first):** [`ATLAS_PLATFORM_OS/README.md`](ATLAS_PLATFORM_OS/README.md)  
+**Platform entity catalog:** [`contracts/atlas-platform.entities.json`](contracts/atlas-platform.entities.json)  
+**Product foundation (CRM/capital/EV extensions):** [`ATLAS_DATA_FOUNDATION/README.md`](ATLAS_DATA_FOUNDATION/README.md)  
+**Product entity catalog:** [`contracts/atlas-core.entities.json`](contracts/atlas-core.entities.json)
 
 ## Domain index
 

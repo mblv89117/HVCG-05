@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-20T01:10:00Z",
+  "updatedAt": "2026-07-20T02:15:24Z",
   "tasks": [
     {
       "id": "ATLAS-T-1201",
@@ -170,20 +170,44 @@
       "title": "QA clearance: Sprint 12 orchestration tasks still Waiting Review"
     },
     {
-      "id": "ATLAS-R-001",
-      "sprint": null,
-      "status": "Closed",
-      "assignedAgent": "documentation-manager",
+      "id": "ATLAS-T-1401",
+      "sprint": 14,
+      "status": "Waiting Review",
+      "assignedAgent": "elite-ui",
       "priority": "P0",
-      "title": "Validate Cursor Cloud Agent Dispatch"
+      "title": "Commit Elite OS Executive Dashboard product SoR and redeploy Dev SWA"
     },
     {
-      "id": "ATLAS-R-002",
-      "sprint": null,
-      "status": "Blocked",
-      "assignedAgent": "documentation-manager",
+      "id": "ATLAS-T-1402",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
       "priority": "P0",
-      "title": "Validate Cursor Cloud Agents API Dispatch"
+      "title": "Owner UAT: Executive Home + HVCG + CCB workspaces"
+    },
+    {
+      "id": "ATLAS-T-1403",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "elite-ui",
+      "priority": "P1",
+      "title": "Deepen Executive Home Dataverse panels (alerts/initiatives when tables allow)"
+    },
+    {
+      "id": "ATLAS-T-1404",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "qa-release",
+      "priority": "P1",
+      "title": "QA gate: CORS + signed-in Dataverse on SWA + App Insights plan"
+    },
+    {
+      "id": "ATLAS-T-1405",
+      "sprint": 14,
+      "status": "Ready",
+      "assignedAgent": "system-architect",
+      "priority": "P1",
+      "title": "Freeze duplicate executive shells \u2014 Elite OS only for daily UX"
     }
   ]
 }

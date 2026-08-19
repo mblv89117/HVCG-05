@@ -50,13 +50,50 @@
   "errorHandling": {
     "notifyGroup": "HVCG-Role-Administrator",
     "maxRetries": 3,
-    "retryDelaySeconds": 60
+    "retryDelaySeconds": 60,
+    "notifyEmailEnv": "HVCG_OPS_EMAIL"
   },
   "environmentVariables": [
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_EnableClientEmails",
     "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
-  ]
+    "HVCG_OPS_EMAIL"
+  ],
+  "definitionPath": "src/power-automate/definitions/HVCG_CreateDocumentRequests.definition.json",
+  "definitionMaturity": "near-ready",
+  "defaultState": "Off",
+  "notes": "Definition creates DocumentRequests from RequiredDocuments array with retries, audit log, Ops notify, client email gated Off.",
+  "owner": "HVCG Ops Automation",
+  "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createdocumentrequests",
+  "auditHistory": {
+    "list": "HVCG_AutomationLogs",
+    "required": true
+  },
+  "connectionReferences": [
+    "hvcg_sharedsharepointonline",
+    "hvcg_sharedoffice365"
+  ],
+  "rollbackOrDisable": "Turn Off in Maker; leave AutomationLogs intact",
+  "usedByModules": [
+    "Operations Hub",
+    "Client Portal"
+  ],
+  "execDashboardReleaseRole": "document requests",
+  "releaseSet": "executive-dashboard",
+  "releaseStatus": "ReleaseCandidate",
+  "productionChecklist": {
+    "owner": true,
+    "documentation": true,
+    "retryHandling": true,
+    "errorHandling": true,
+    "notifications": true,
+    "auditHistory": true,
+    "connectionReferences": true,
+    "environmentVariables": true,
+    "makerUat": false,
+    "qaGo": false,
+    "productionEnabled": false
+  }
 }

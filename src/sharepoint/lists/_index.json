@@ -486,8 +486,14 @@
     {
       "name": "HVCG_Notifications",
       "path": "src/sharepoint/lists/HVCG_Notifications.json",
-      "columnCount": 8,
-      "description": "Notification queue / history"
+      "columnCount": 13,
+      "description": "Notification queue / history (approval-gated client sends)"
+    },
+    {
+      "name": "HVCG_AutomationRegistry",
+      "path": "src/sharepoint/lists/HVCG_AutomationRegistry.json",
+      "columnCount": 16,
+      "description": "Automation Center catalog and enablement tracking"
     },
     {
       "name": "HVCG_AuditEvents",

@@ -1,0 +1,1011 @@
+{
+  "version": "1.1.0",
+  "updatedAt": "2026-07-20T02:23:17Z",
+  "mission": "Executive Dashboard release support",
+  "count": 22,
+  "automations": [
+    {
+      "automationName": "HVCG_ExecutiveWeeklyBrief",
+      "purpose": "Monday executive KPI digest email to Owner only. Scaffold only \u2014 not registered in shared flow indexes from this branch.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Weekly Monday 07:45 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "ExecutiveCommandCenter",
+      "usedByModules": [
+        "Executive Dashboard",
+        "Executive Intelligence"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "Executive Brief generation",
+      "documentationLink": "docs/executive/FLOW_INTEGRATION.md",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_ApprovalOutcomeNotify",
+      "purpose": "When an HVCG_Approvals item moves to Approved or Rejected, notify requester and update related deliverable/change request.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_Approvals",
+        "condition": "Status changes to Approved or Rejected"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Approvals",
+      "usedByModules": [
+        "Executive Dashboard",
+        "Operations Hub"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "approval routing",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_approvaloutcomenotify",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_AutomationFailureDigest",
+      "purpose": "Hourly scan of HVCG_AutomationLogs for Failed rows in the last window; digest to Ops; create OperationalAlert for repeated failures.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Hourly at :15 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Monitoring",
+      "usedByModules": [
+        "Operations Hub",
+        "Executive Dashboard"
+      ],
+      "releaseStatus": "Supporting",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_automationfailuredigest",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_CapitalFundingStatusNotify",
+      "purpose": "When capital FundingStatus reaches Term Sheet, Due Diligence, Committed, Closed, or Declined \u2014 activity log, bridge update on sales opp, optional Teams capital test channel post.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_CapitalOpportunities",
+        "condition": "FundingStatus changed",
+        "triggerWindow": "If FundingStatus unchanged vs previous, LogSkipped"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "OpportunityCRM",
+      "usedByModules": [
+        "Revenue Systems",
+        "Finance Intelligence"
+      ],
+      "releaseStatus": "Blocked",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_capitalfundingstatusnotify",
+      "connectionReferences": {
+        "SharePoint": "hvcg_sharedsharepointonline",
+        "Teams": "hvcg_sharedteams"
+      },
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+        "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_CRM_TEST_RECIPIENT",
+        "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_ChangeRequestIntake",
+      "purpose": "When ChangeStatus becomes Submitted, create approval routing; flag fee-impact for Owner approval.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_ChangeRequests",
+        "condition": "ChangeStatus = Submitted"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "ChangeRequests",
+      "usedByModules": [
+        "Executive Dashboard",
+        "Operations Hub"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "approval routing",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_changerequestintake",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365",
+        "hvcg_sharedapprovals"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_ClientOnboarding",
+      "purpose": "Full onboarding orchestration when a client becomes active.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_Clients",
+        "condition": "ClientStage changes to 'Active Client'"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Operations Hub",
+        "Client Portal"
+      ],
+      "releaseStatus": "Supporting",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_clientonboarding",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365",
+        "hvcg_sharedteams"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_CreateClientWorkspace",
+      "purpose": "Creates client library, folders 00-23, permissions, updates client URL.",
+      "trigger": {
+        "type": "ManualOrChild",
+        "inputs": [
+          "ClientCode",
+          "ClientDisplayName",
+          "ClientListItemId"
+        ]
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Client Portal",
+        "Operations Hub"
+      ],
+      "releaseStatus": "Supporting",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createclientworkspace",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_CreateDocumentRequests",
+      "purpose": "Creates document request items from template requiredDocuments.",
+      "trigger": {
+        "type": "ManualOrChild",
+        "inputs": [
+          "ClientListItemId",
+          "ClientCode",
+          "TemplateKey",
+          "ProjectId"
+        ]
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Operations Hub",
+        "Client Portal"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "document requests",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createdocumentrequests",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "hvcg_CommandCenterSiteUrl",
+        "hvcg_ClientsSiteUrl",
+        "hvcg_OpsEmail",
+        "hvcg_EnableClientEmails",
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_CreateProjectFromTemplate",
+      "purpose": "Expands project template into project, milestones, tasks, docs, deliverables.",
+      "trigger": {
+        "type": "ManualOrChild",
+        "inputs": [
+          "ClientListItemId",
+          "ClientCode",
+          "TemplateKey",
+          "EngagementId",
+          "StartDate"
+        ]
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Operations Hub"
+      ],
+      "releaseStatus": "Supporting",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_createprojectfromtemplate",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_DeliverableApproval",
+      "purpose": "Creates approval records and notifies approvers.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_Deliverables",
+        "condition": "Status Internal/Client Review or RequiresExecutiveApproval"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Executive Dashboard",
+        "Operations Hub"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "approval routing",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_deliverableapproval",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365",
+        "hvcg_sharedapprovals"
+      ],
+      "environmentVariables": [
+        "hvcg_CommandCenterSiteUrl",
+        "hvcg_OpsEmail",
+        "hvcg_ExecutiveEmail",
+        "hvcg_EnableClientEmails",
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_ExecutiveDecisionEscalation",
+      "purpose": "Notifies executive only for qualifying items.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "condition": "RequiresExecutiveAttention eq true"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Executive Dashboard",
+        "Executive Intelligence"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "Executive Brief / escalation",
+      "documentationLink": "docs/executive/FLOW_INTEGRATION.md",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365",
+        "hvcg_sharedteams"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_LeadQualifiedCreateOpportunity",
+      "purpose": "When a lead becomes Qualified, create (or link) a Discovery-stage opportunity idempotently. Optional Teams/Outlook notify is gated and test-recipient only.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_Leads",
+        "condition": "LeadStatus changes to 'Qualified'"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "OpportunityCRM",
+      "usedByModules": [
+        "Revenue Systems"
+      ],
+      "releaseStatus": "Blocked",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_leadqualifiedcreateopportunity",
+      "connectionReferences": {
+        "SharePoint": "hvcg_sharedsharepointonline",
+        "Teams": "hvcg_sharedteams",
+        "Outlook": "hvcg_sharedoffice365"
+      },
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_TEAMS_CRM_CHANNEL_ID",
+        "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+        "HVCG_OPS_EMAIL",
+        "HVCG_CRM_TEST_RECIPIENT",
+        "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_MissingDocumentReminders",
+      "purpose": "Reminder cadence for open document requests; escalate after final reminder.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Daily 08:00 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Operations Hub",
+        "Client Portal"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "document requests",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_missingdocumentreminders",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_OpportunityStageChangedNotify",
+      "purpose": "Log stage changes to OpportunityActivities and optionally notify the CRM Teams test channel for meaningful stage moves.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_Opportunities",
+        "condition": "Stage column changed",
+        "triggerWindow": "Use triggerOutputs previous Stage when available; if Stage unchanged vs previous, LogSkipped"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "OpportunityCRM",
+      "usedByModules": [
+        "Revenue Systems"
+      ],
+      "releaseStatus": "Blocked",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_opportunitystagechangednotify",
+      "connectionReferences": {
+        "SharePoint": "hvcg_sharedsharepointonline",
+        "Teams": "hvcg_sharedteams"
+      },
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_TEAMS_CRM_CHANNEL_ID",
+        "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+        "HVCG_CRM_TEST_RECIPIENT",
+        "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_OpportunityWonCloseout",
+      "purpose": "On opportunity Won: stamp dates, create win/loss stub, optional Teams notify, and hand off Capital Raise/Hybrid deals to HVCG_CapitalOpportunities.",
+      "trigger": {
+        "type": "SharePointItemModified",
+        "list": "HVCG_Opportunities",
+        "condition": "Stage eq 'Won' OR WinLossStatus eq 'Won'"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "OpportunityCRM",
+      "usedByModules": [
+        "Revenue Systems"
+      ],
+      "releaseStatus": "Blocked",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_opportunitywoncloseout",
+      "connectionReferences": {
+        "SharePoint": "hvcg_sharedsharepointonline",
+        "Teams": "hvcg_sharedteams",
+        "Outlook": "hvcg_sharedoffice365"
+      },
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_TEAMS_CRM_CHANNEL_ID",
+        "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+        "HVCG_TEAMS_CAPITAL_CHANNEL_ID",
+        "HVCG_TEAMS_CAPITAL_CHANNEL_GROUP_ID",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_CRM_TEST_RECIPIENT",
+        "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_OverdueTaskEscalation",
+      "purpose": "Marks overdue tasks and escalates per ladder; executive only when warranted.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Daily 07:30 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Operations Hub"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "overdue escalations",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_overduetaskescalation",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365",
+        "hvcg_sharedteams"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_PaymentPastDueAlert",
+      "purpose": "Daily: set IsPastDue on financial milestones; notify Ops; executive only if amount exceeds materiality rule.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Daily 07:15 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Finance",
+      "usedByModules": [
+        "Finance Intelligence",
+        "Executive Dashboard",
+        "Executive Intelligence"
+      ],
+      "releaseStatus": "Supporting",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_paymentpastduealert",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_ProjectStatusReminder",
+      "purpose": "Weekly reminder to PMs for Active projects missing a status update in the last 7 days or health Yellow/Red without recent note.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Weekly Thursday 09:00 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Projects",
+      "usedByModules": [
+        "Operations Hub",
+        "Executive Dashboard"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "project status notifications",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_projectstatusreminder",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_RenewalReminders",
+      "purpose": "Creates renewal tasks 60/30/14 days before RenewalDate.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Daily 07:00 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Revenue Systems",
+        "Executive Intelligence"
+      ],
+      "releaseStatus": "Supporting",
+      "execDashboardReleaseRole": null,
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_renewalreminders",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_TaskDueSoonReminders",
+      "purpose": "Daily reminder to task owners for tasks due within 2 business days (not yet overdue).",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Daily 07:00 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Tasks",
+      "usedByModules": [
+        "Operations Hub"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "task reminders",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_taskduesoonreminders",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_UpdateProjectHealth",
+      "purpose": "Applies green/yellow/red health rules.",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Daily 06:00 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Platform",
+      "usedByModules": [
+        "Operations Hub",
+        "Executive Dashboard",
+        "Executive Intelligence"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "project status notifications",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_updateprojecthealth",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_CLIENTS_HUB_URL",
+        "HVCG_OPS_EMAIL",
+        "HVCG_EXECUTIVE_EMAIL",
+        "HVCG_ENABLE_CLIENT_EMAILS"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    },
+    {
+      "automationName": "HVCG_WeeklyStatusSummary",
+      "purpose": "Weekly ops digest only. Executive KPI digest is owned by HVCG_ExecutiveWeeklyBrief (no duplicate exec email).",
+      "trigger": {
+        "type": "Recurrence",
+        "schedule": "Monday 06:30 America/Los_Angeles"
+      },
+      "status": "Off",
+      "owner": "HVCG Ops Automation",
+      "relatedModule": "Operations",
+      "usedByModules": [
+        "Operations Hub"
+      ],
+      "releaseStatus": "ReleaseCandidate",
+      "execDashboardReleaseRole": "project status notifications (ops)",
+      "documentationLink": "docs/automation/AUTOMATION_INVENTORY.md#hvcg_weeklystatussummary",
+      "connectionReferences": [
+        "hvcg_sharedsharepointonline",
+        "hvcg_sharedoffice365"
+      ],
+      "environmentVariables": [
+        "HVCG_SITE_URL",
+        "HVCG_OPS_EMAIL"
+      ],
+      "productionChecklist": {
+        "owner": true,
+        "documentation": true,
+        "retryHandling": true,
+        "errorHandling": true,
+        "notifications": true,
+        "auditHistory": true,
+        "connectionReferences": true,
+        "environmentVariables": true,
+        "makerUat": false,
+        "qaGo": false,
+        "productionEnabled": false
+      },
+      "repoProductionCriteriaMet": true,
+      "qaGo": false,
+      "clientFacing": false
+    }
+  ]
+}

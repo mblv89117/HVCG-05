@@ -141,5 +141,10 @@
   "security": {
     "rowLevel": "None in V1 — rely on SharePoint ACL + workspace audience Owner group",
     "workspaceAudience": ["HVCG-Role-Owner", "HVCG-DEV-Role-Owner"]
+  },
+  "analyticsExtension": {
+    "model": "HVCG_Atlas_Analytics",
+    "path": "src/power-bi/analytics/atlas-analytics-semantic-model.json",
+    "catalog": "docs/analytics/metric-catalog.json"
   }
 }

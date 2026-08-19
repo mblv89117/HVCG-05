@@ -1,48 +1,34 @@
 {
   "name": "HVCG_DeliverableApproval",
   "displayName": "HVCG_DeliverableApproval",
-  "description": "Approval routing for deliverables",
+  "description": "SharePoint-triggered approval routing for deliverables in Internal/Client Review or RequiresExecutiveApproval. Logs to HVCG_AutomationLogs; Approvals + Outlook; client email gated Off.",
+  "owner": "power-platform",
+  "defaultState": "Off",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
     "parameters": {
-      "$authentication": {
-        "defaultValue": {},
-        "type": "SecureObject"
-      },
-      "$connections": {
-        "defaultValue": {},
-        "type": "Object"
-      }
+      "$authentication": { "defaultValue": {}, "type": "SecureObject" },
+      "$connections": { "defaultValue": {}, "type": "Object" },
+      "hvcg_CommandCenterSiteUrl": { "type": "String" },
+      "hvcg_OpsEmail": { "type": "String" },
+      "hvcg_ExecutiveEmail": { "type": "String" },
+      "hvcg_EnableClientEmails": { "type": "Bool", "defaultValue": false }
     },
     "triggers": {
-      "manual": {
-        "type": "Request",
-        "kind": "Button",
+      "When_deliverable_modified": {
+        "type": "OpenApiConnectionWebhook",
         "inputs": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "ClientCode": {
-                "type": "string"
-              },
-              "ClientListItemId": {
-                "type": "integer"
-              },
-              "TemplateKey": {
-                "type": "string"
-              },
-              "EngagementId": {
-                "type": "integer"
-              },
-              "StartDate": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "ClientCode"
-            ]
-          }
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetOnUpdatedItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Deliverables"
+          },
+          "splitOn": "@triggerOutputs()?['body/value']"
         }
       }
     },
@@ -59,32 +45,205 @@
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_AutomationLogs",
             "item/Title": "Started",
-            "item/FlowName": "@workflow()?['name']",
-            "item/Status": "Started"
+            "item/FlowName": "HVCG_DeliverableApproval",
+            "item/Status": "Started",
+            "item/HVCG_IdempotencyKey": "deliv-appr-start|@{triggerOutputs()?['body/ID']}|@{triggerOutputs()?['body/Modified']}"
           }
         },
-        "runAfter": {}
-      },
-      "Compose_Inputs": {
-        "type": "Compose",
-        "inputs": {
-          "note": "Manual or child flow: Approval routing for deliverables",
-          "buildSheet": "src/power-automate/flows/HVCG_DeliverableApproval.json"
-        },
-        "runAfter": {
-          "Log_Start": [
-            "Succeeded"
-          ]
+        "runAfter": {},
+        "runtimeConfiguration": {
+          "retryPolicy": { "type": "fixed", "count": 3, "interval": "PT1M" }
         }
+      },
+      "Condition_Needs_Approval": {
+        "type": "If",
+        "expression": {
+          "or": [
+            {
+              "equals": [
+                "@triggerOutputs()?['body/Status']",
+                "Internal Review"
+              ]
+            },
+            {
+              "equals": [
+                "@triggerOutputs()?['body/Status']",
+                "Client Review"
+              ]
+            },
+            {
+              "equals": [
+                "@triggerOutputs()?['body/RequiresExecutiveApproval']",
+                true
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Create_Approvals_List_Item": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PostItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_Approvals",
+                "item/Title": "Deliverable: @{triggerOutputs()?['body/Title']}",
+                "item/Status": "Pending",
+                "item/ApproverEmail": "@coalesce(triggerOutputs()?['body/ApproverEmail'], parameters('hvcg_OpsEmail'))",
+                "item/RelatedDeliverableId": "@triggerOutputs()?['body/ID']",
+                "item/HVCG_IdempotencyKey": "deliv-appr|@{triggerOutputs()?['body/ID']}|@{triggerOutputs()?['body/Status']}|@{triggerOutputs()?['body/Modified']}"
+              }
+            },
+            "runAfter": {},
+            "runtimeConfiguration": {
+              "retryPolicy": { "type": "fixed", "count": 3, "interval": "PT1M" }
+            }
+          },
+          "Start_Approval": {
+            "type": "OpenApiConnectionWebhook",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_approvals",
+                "operationId": "StartAndWaitForAnApproval",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+              },
+              "parameters": {
+                "approvalType": "Basic",
+                "WebhookApprovalCreationInput/title": "Approve deliverable: @{triggerOutputs()?['body/Title']}",
+                "WebhookApprovalCreationInput/assignedTo": "@coalesce(triggerOutputs()?['body/ApproverEmail'], parameters('hvcg_OpsEmail'))",
+                "WebhookApprovalCreationInput/details": "Client/Project deliverable requires review. Source list item @{triggerOutputs()?['body/ID']}."
+              }
+            },
+            "runAfter": { "Create_Approvals_List_Item": ["Succeeded"] }
+          },
+          "Update_Deliverable_Status": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PatchItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_Deliverables",
+                "id": "@triggerOutputs()?['body/ID']",
+                "item/Status": "@if(equals(body('Start_Approval')?['outcome'], 'Approve'), 'Approved', 'Changes Requested')"
+              }
+            },
+            "runAfter": { "Start_Approval": ["Succeeded"] }
+          },
+          "Notify_Ops": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_office365",
+                "operationId": "SendEmailV2",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+              },
+              "parameters": {
+                "emailMessage/To": "@parameters('hvcg_OpsEmail')",
+                "emailMessage/Subject": "Deliverable approval @{body('Start_Approval')?['outcome']}: @{triggerOutputs()?['body/Title']}",
+                "emailMessage/Body": "<p>Outcome: @{body('Start_Approval')?['outcome']}</p><p>Item ID: @{triggerOutputs()?['body/ID']}</p>",
+                "emailMessage/Importance": "Normal"
+              }
+            },
+            "runAfter": { "Update_Deliverable_Status": ["Succeeded", "Failed"] }
+          },
+          "Condition_Exec_Attention": {
+            "type": "If",
+            "expression": {
+              "equals": ["@triggerOutputs()?['body/RequiresExecutiveApproval']", true]
+            },
+            "actions": {
+              "Notify_Executive": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_office365",
+                    "operationId": "SendEmailV2",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                  },
+                  "parameters": {
+                    "emailMessage/To": "@parameters('hvcg_ExecutiveEmail')",
+                    "emailMessage/Subject": "Executive deliverable approval required: @{triggerOutputs()?['body/Title']}",
+                    "emailMessage/Body": "<p>Requires executive approval. Outcome: @{body('Start_Approval')?['outcome']}</p>",
+                    "emailMessage/Importance": "High"
+                  }
+                },
+                "runAfter": {}
+              }
+            },
+            "runAfter": { "Notify_Ops": ["Succeeded", "Failed", "Skipped"] }
+          }
+        },
+        "else": {
+          "actions": {
+            "Compose_Skip": {
+              "type": "Compose",
+              "inputs": "Deliverable status does not require approval routing — skipped.",
+              "runAfter": {}
+            }
+          }
+        },
+        "runAfter": { "Log_Start": ["Succeeded"] }
       },
       "Log_Success": {
-        "type": "Compose",
-        "inputs": "Succeeded scaffold",
-        "runAfter": {
-          "Compose_Inputs": [
-            "Succeeded"
-          ]
-        }
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Succeeded",
+            "item/FlowName": "HVCG_DeliverableApproval",
+            "item/Status": "Succeeded"
+          }
+        },
+        "runAfter": { "Condition_Needs_Approval": ["Succeeded", "Skipped"] }
+      },
+      "Log_Failure": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "PostItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_AutomationLogs",
+            "item/Title": "Failed",
+            "item/FlowName": "HVCG_DeliverableApproval",
+            "item/Status": "Failed"
+          }
+        },
+        "runAfter": { "Condition_Needs_Approval": ["Failed", "TimedOut"] }
+      },
+      "Failure_Notify_Admin": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_office365",
+            "operationId": "SendEmailV2",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+          },
+          "parameters": {
+            "emailMessage/To": "@parameters('hvcg_OpsEmail')",
+            "emailMessage/Subject": "FLOW FAILED: HVCG_DeliverableApproval",
+            "emailMessage/Body": "<p>HVCG_DeliverableApproval failed. Check HVCG_AutomationLogs and run history.</p>",
+            "emailMessage/Importance": "High"
+          }
+        },
+        "runAfter": { "Log_Failure": ["Succeeded", "Failed", "Skipped"] }
       }
     },
     "outputs": {}
@@ -92,34 +251,37 @@
   "connectionReferences": {
     "shared_sharepointonline": {
       "runtimeSource": "embedded",
-      "connection": {
-        "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
-      },
-      "api": {
-        "name": "shared_sharepointonline"
-      }
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedsharepointonline" },
+      "api": { "name": "shared_sharepointonline" }
     },
     "shared_office365": {
       "runtimeSource": "embedded",
-      "connection": {
-        "connectionReferenceLogicalName": "hvcg_sharedoffice365"
-      },
-      "api": {
-        "name": "shared_office365"
-      }
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedoffice365" },
+      "api": { "name": "shared_office365" }
+    },
+    "shared_approvals": {
+      "runtimeSource": "embedded",
+      "connection": { "connectionReferenceLogicalName": "hvcg_sharedapprovals" },
+      "api": { "name": "shared_approvals" }
     }
   },
   "environmentVariables": [
     "hvcg_CommandCenterSiteUrl",
-    "hvcg_ClientsSiteUrl",
-    "hvcg_ExecutiveEmail",
     "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
     "hvcg_EnableClientEmails"
   ],
+  "errorHandling": {
+    "notify": "hvcg_OpsEmail",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60,
+    "auditList": "HVCG_AutomationLogs"
+  },
   "acceptanceCriteria": [
-    "Flow appears in solution or My flows",
-    "Connection references resolved",
-    "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
-    "Idempotent re-run does not duplicate business records"
+    "Trigger is SharePoint item modified on HVCG_Deliverables",
+    "Creates HVCG_Approvals row with idempotency key",
+    "Starts Approvals action and patches deliverable Status",
+    "Failure path logs + emails Ops",
+    "Client email path remains gated by hvcg_EnableClientEmails=false"
   ]
 }

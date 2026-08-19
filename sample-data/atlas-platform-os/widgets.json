@@ -1,0 +1,27 @@
+{
+  "dataProvenance": "sample",
+  "items": [
+    {
+      "Title": "Active clients KPI",
+      "WidgetCode": "WGT-EXEC-ACTIVE-CLIENTS",
+      "DashboardCode": "DASH-EXEC-CMD",
+      "WidgetType": "KPI",
+      "MetricCode": "ACTIVE_CLIENTS",
+      "SortOrder": 1,
+      "OrganizationCode": "ORG-HVCG",
+      "WorkspaceCode": "WS-HVCG-EXEC",
+      "HVCG_IdempotencyKey": "sample-wgt-active-clients"
+    },
+    {
+      "Title": "CCB open tasks",
+      "WidgetCode": "WGT-CCB-OPEN-TASKS",
+      "DashboardCode": "DASH-CCB-HOME",
+      "WidgetType": "KPI",
+      "MetricCode": "OPEN_TASKS",
+      "SortOrder": 1,
+      "OrganizationCode": "ORG-CCB",
+      "WorkspaceCode": "WS-CCB",
+      "HVCG_IdempotencyKey": "sample-wgt-ccb-tasks"
+    }
+  ]
+}

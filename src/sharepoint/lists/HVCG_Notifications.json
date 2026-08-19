@@ -79,6 +79,60 @@
       "indexed": false,
       "description": "",
       "default": false
+    },
+    {
+      "internalName": "Audience",
+      "displayName": "Audience",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Internal vs Client — client sends require ApprovedSend + feature flag",
+      "choices": [
+        "Internal",
+        "Client"
+      ],
+      "default": "Internal"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Draft → PendingApproval → ApprovedSend → Sent / Cancelled / Failed",
+      "choices": [
+        "Draft",
+        "PendingApproval",
+        "ApprovedSend",
+        "Sent",
+        "Cancelled",
+        "Failed"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG_IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Idempotent send key"
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Who approved client send"
+    },
+    {
+      "internalName": "RelatedFlowName",
+      "displayName": "RelatedFlowName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Originating automation name"
     }
   ]
 }
