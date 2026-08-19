@@ -13,7 +13,7 @@ import type {
   LenderSubmission,
 } from '@hvcg/atlas-capital-core';
 import { FINANCING_DISCLAIMER, isSyntheticCapitalRecord, isSyntheticClientCode, mergeSourcedLenderCatalog } from '@hvcg/atlas-capital-core';
-import { CapitalHttpError, capitalInfrastructureError, forbidden } from '../errors.ts';
+import { CAPITAL_BACKEND_UNAVAILABLE, CapitalHttpError, capitalInfrastructureError, forbidden } from '../errors.ts';
 import { emptyState, type CapitalPersistence, type CapitalState } from '../store.ts';
 import {
   applyOverlayToState,
@@ -47,6 +47,21 @@ function cloneState(state: CapitalState): CapitalState {
 
 function sameJson(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** SYN* Graph is overlay-authoritative. 403 and Graph 503/404 must not abort the overlay commit. */
+function isSyntheticGraphClosed(
+  err: unknown,
+  record: { clientCode?: string; title?: string },
+): boolean {
+  if (!(err instanceof CapitalHttpError)) return false;
+  if (!isSyntheticCapitalRecord(record) && !isSyntheticClientCode(record.clientCode)) return false;
+  return (
+    err.status === 403 ||
+    err.status === 404 ||
+    err.status === 503 ||
+    err.code === CAPITAL_BACKEND_UNAVAILABLE
+  );
 }
 
 export class GraphCapitalStore {
@@ -307,10 +322,9 @@ export class AsyncCapitalStore implements CapitalPersistence {
 
   async load(): Promise<CapitalState> {
     const state = await this.graph.load();
-    if (!this.overlay) {
-      this.overlay = readCapitalOverlay(this.overlayDir);
-    }
-    applyOverlayToState(state, this.overlay);
+    this.overlay = readCapitalOverlay(this.overlayDir);
+    const isolated = this.overlay ? (JSON.parse(JSON.stringify(this.overlay)) as CapitalOverlay) : null;
+    applyOverlayToState(state, isolated);
     mergeSourcedLenderCatalog(state);
     this.snapshot = cloneState(state);
     return state;
@@ -337,7 +351,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
             }
           }
         } catch (err) {
-          if (err instanceof CapitalHttpError && err.status === 403 && isSyntheticClientCode(opp.clientCode)) {
+          if (isSyntheticGraphClosed(err, opp)) {
             /* SYN* Graph creates stay closed; SYN01 opportunity remains Hub overlay-only. */
           } else {
             throw err;
@@ -350,7 +364,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
           const patched = await this.graph.patchOpportunity(opp);
           opp.updatedAt = patched.updatedAt;
         } catch (err) {
-          if (err instanceof CapitalHttpError && err.status === 403 && isSyntheticCapitalRecord(opp)) {
+          if (isSyntheticGraphClosed(err, opp)) {
             /* SYN* Graph writes stay closed; stage/strategy remain Hub overlay. */
           } else {
             throw err;
@@ -370,7 +384,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
             const persisted = await this.graph.replaceChecklist(id, opp?.clientCode || '', next);
             state.checklists[id] = persisted;
           } catch (err) {
-            if (err instanceof CapitalHttpError && err.status === 403) {
+            if (isSyntheticGraphClosed(err, { clientCode: opp?.clientCode, title: opp?.title })) {
               /* SYN* Graph writes stay closed; checklist remains Hub overlay. */
             } else {
               throw err;
@@ -391,7 +405,7 @@ export class AsyncCapitalStore implements CapitalPersistence {
         const created = await this.graph.createSubmission(sub);
         sub.id = created.id;
       } catch (err) {
-        if (err instanceof CapitalHttpError && err.status === 403 && isSyntheticCapitalRecord({ clientCode: opp?.clientCode, title: opp?.title })) {
+        if (isSyntheticGraphClosed(err, { clientCode: opp?.clientCode, title: opp?.title })) {
           /* SYN* Graph outreach writes stay closed; recorded submission remains Hub overlay. */
         } else {
           throw err;

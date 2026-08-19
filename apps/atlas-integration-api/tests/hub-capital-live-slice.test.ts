@@ -390,8 +390,8 @@ describe('Capital Graph live slice (in-memory)', () => {
     assert.equal(isSyntheticCapitalRecord({ clientCode: 'ACCG01', title: 'SYNTHETIC Co' }), true);
     assert.equal(isSyntheticCapitalRecord({ clientCode: 'ACCG01', title: 'Working capital' }), false);
 
-    await withGraphHub({ allowSynthetic: false }, async ({ base }) => {
-      const denied = await fetch(`${base}/api/capital/opportunities`, {
+    await withGraphHub({ allowSynthetic: false }, async ({ base, graph }) => {
+      const overlayOnly = await fetch(`${base}/api/capital/opportunities`, {
         method: 'POST',
         headers: auth('member'),
         body: JSON.stringify({
@@ -400,7 +400,13 @@ describe('Capital Graph live slice (in-memory)', () => {
           idempotencyKey: 'syn-blocked',
         }),
       });
-      assert.equal(denied.status, 403);
+      assert.equal(overlayOnly.status, 200);
+      const body = (await overlayOnly.json()) as { opportunity: { id: string; title: string } };
+      assert.match(body.opportunity.title, /SYNTHETIC/);
+      assert.equal(
+        (graph.lists.get(OPPORTUNITIES) || []).some((row) => String(row.fields.Title || '').includes('SYNTHETIC')),
+        false,
+      );
     });
 
     const graph = new MemoryGraph();

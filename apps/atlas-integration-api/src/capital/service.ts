@@ -1199,14 +1199,22 @@ export class CapitalService {
     if (existing) {
       return { submission: existing, recordedOnly: true, externalSubmitAttempted: false, externalSubmit: false, created: false };
     }
+    const pkg = state.applications.find((a) => a.capitalOpportunityId === id && a.lenderId === lenderId);
+    const hasSubmittedRow = state.submissions.some(
+      (s) => s.capitalOpportunityId === id && s.status === 'submitted',
+    );
+    const persistRetry =
+      opp.stage === 'Submitted' &&
+      !hasSubmittedRow &&
+      opp.mannyStrategyApproval === 'APPROVED' &&
+      opp.mannyShortlistApproval === 'APPROVED';
     if (
       opp.mannyStrategyApproval !== 'APPROVED' ||
       opp.mannyShortlistApproval !== 'APPROVED' ||
-      opp.stage !== 'ReadyForSubmission'
+      (opp.stage !== 'ReadyForSubmission' && !persistRetry)
     ) {
       forbidden('Submission requires Manny strategy and shortlist approval at ReadyForSubmission');
     }
-    const pkg = state.applications.find((a) => a.capitalOpportunityId === id && a.lenderId === lenderId);
     if (!pkg) {
       unprocessable('Recorded submission requires a prepared application package for this lender');
     }
@@ -1234,22 +1242,30 @@ export class CapitalService {
     if (pkg) {
       state.applications = state.applications.map((a) => (a.id === pkg.id ? markPackageSubmittedRecordedOnly(pkg) : a));
     }
-    state.interactions.push({
-      id: `int-${randomUUID()}`,
-      capitalOpportunityId: id,
-      clientCode: opp.clientCode,
-      lenderId,
-      submissionId: sub.id,
-      interactionType: 'SUBMISSION_RECORDED',
-      at: nowIso(),
-      direction: 'internal',
-      summary: 'Recorded-only submission. No external portal or email send.',
-      status: 'recorded',
-      requestedItems: [],
-      owner: principal.email || principal.userId,
-      candidateOnly: false,
-      injectionDetected: false,
-    });
+    const alreadyRecorded = state.interactions.some(
+      (i) =>
+        i.capitalOpportunityId === id &&
+        i.lenderId === lenderId &&
+        i.interactionType === 'SUBMISSION_RECORDED',
+    );
+    if (!alreadyRecorded) {
+      state.interactions.push({
+        id: `int-${randomUUID()}`,
+        capitalOpportunityId: id,
+        clientCode: opp.clientCode,
+        lenderId,
+        submissionId: sub.id,
+        interactionType: 'SUBMISSION_RECORDED',
+        at: nowIso(),
+        direction: 'internal',
+        summary: 'Recorded-only submission. No external portal or email send.',
+        status: 'recorded',
+        requestedItems: [],
+        owner: principal.email || principal.userId,
+        candidateOnly: false,
+        injectionDetected: false,
+      });
+    }
     if (opp.stage === 'ReadyForSubmission') {
       opp.stage = 'Submitted';
       opp.stageEnteredAt = nowIso();

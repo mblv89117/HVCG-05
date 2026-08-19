@@ -36,6 +36,8 @@ class MemoryGraph implements CapitalGraphTransport {
   readonly lists = new Map<string, GraphListItem[]>();
   nextId = 1;
   etagN = 1;
+  throwOnGetItem = false;
+  throwOnPatch = false;
 
   constructor() {
     this.lists.set(OPPORTUNITIES, []);
@@ -62,6 +64,9 @@ class MemoryGraph implements CapitalGraphTransport {
   }
 
   async getItem(listId: string, itemId: string): Promise<GraphListItem | null> {
+    if (this.throwOnGetItem) {
+      throw new CapitalHttpError(503, 'CAPITAL_BACKEND_UNAVAILABLE', 'SharePoint capital Graph request failed.');
+    }
     return (this.lists.get(listId) || []).find((i) => i.id === itemId) || null;
   }
 
@@ -75,6 +80,9 @@ class MemoryGraph implements CapitalGraphTransport {
     fields: Record<string, unknown>,
     etag: string,
   ): Promise<GraphListItem> {
+    if (this.throwOnPatch) {
+      throw new CapitalHttpError(503, 'CAPITAL_BACKEND_UNAVAILABLE', 'SharePoint capital Graph request failed.');
+    }
     const item = (this.lists.get(listId) || []).find((i) => i.id === itemId);
     if (!item) throw new CapitalHttpError(404, 'not_found', 'not_found');
     if (etag !== item.etag) {
@@ -479,6 +487,67 @@ describe('overlay fail-closed + durability health truth', () => {
       assert.equal(err.code, 'STRATEGY_STAGE_CLOSED');
       return true;
     });
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('commits SYN recorded submission to overlay when Graph returns 503', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-overlay-503-'));
+    const overlayDir = join(dir, 'capital-overlay');
+    const graph = new MemoryGraph();
+    graph.throwOnGetItem = true;
+    const synOwner: AtlasPrincipal = { ...OWNER, allowedClientIds: ['SYN01'] };
+    const store = new AsyncCapitalStore(new GraphCapitalStore(SETTINGS, graph), { overlayDir });
+    const svc = new CapitalService(store, new MemoryCapitalFileSource());
+    const created = await svc.create(synOwner, {
+      title: 'SYNTHETIC QA persist-consistency — DO NOT CONTACT',
+      clientCode: 'SYN01',
+      clientId: 'SYN01',
+      transactionType: 'working_capital_loc',
+      need: { requestedAmount: 1000, purpose: 'qa' },
+      idempotencyKey: 'syn-persist-503',
+    });
+    const id = created.opportunity.id;
+    await svc.strategy(synOwner, id);
+    await svc.strategyDecision(synOwner, id, { decision: 'APPROVED' });
+    await svc.match(synOwner, id, { persistShortlistPending: true });
+    const short = await svc.shortlistDecision(synOwner, id, {
+      decision: 'APPROVED',
+      lenderIds: ['celtic-bank'],
+    });
+    assert.equal(short.opportunity.stage, 'ReadyForSubmission');
+    await svc.application(synOwner, id, { lenderId: 'celtic-bank' });
+    for (const attestation of ['CLIENT_CONFIRMATION_REQUIRED', 'CLIENT_CONFIRMED', 'APPROVED_FOR_SUBMISSION']) {
+      const att = await svc.attestApplication(synOwner, id, { lenderId: 'celtic-bank', attestation });
+      assert.equal(att.application.attestation, attestation);
+    }
+    const first = await svc.submission(synOwner, id, { lenderId: 'celtic-bank', externalSubmit: true });
+    assert.equal(first.recordedOnly, true);
+    assert.equal(first.externalSubmit, false);
+    assert.equal(first.submission.status, 'submitted');
+    assert.ok(first.submission.id);
+
+    const store2 = new AsyncCapitalStore(new GraphCapitalStore(SETTINGS, graph), { overlayDir });
+    const svc2 = new CapitalService(store2, new MemoryCapitalFileSource());
+    const loaded = await svc2.get(synOwner, id);
+    assert.equal(loaded.opportunity.stage, 'Submitted');
+    assert.equal(loaded.submissions.filter((row) => row.status === 'submitted').length, 1);
+    assert.equal(loaded.submissions.some((row) => row.lenderId === 'celtic-bank' && row.status === 'submitted'), true);
+    assert.equal(
+      loaded.interactions.filter((row) => row.interactionType === 'SUBMISSION_RECORDED').length,
+      1,
+    );
+
+    const replay = await svc2.submission(synOwner, id, { lenderId: 'celtic-bank', externalSubmit: true });
+    assert.equal(replay.created, false);
+    assert.equal(replay.submission.id, first.submission.id);
+    await assert.rejects(
+      () => svc2.submission(synOwner, id, { lenderId: 'ln-synthetic-1', externalSubmit: true }),
+      (err: unknown) => {
+        assert.ok(err instanceof CapitalHttpError);
+        assert.equal(err.status, 403);
+        return true;
+      },
+    );
     rmSync(dir, { recursive: true, force: true });
   });
 });
