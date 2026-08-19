@@ -183,7 +183,7 @@ Capital lists are **not** in the PM four-list allowlist. Separate env vars:
 - `INTEGRATION_CAPITAL_LENDER_OUTREACH_LIST_ID`
 - Optional: `INTEGRATION_CAPITAL_LENDERS_LIST_ID`, `INTEGRATION_CAPITAL_CLIENTS_LIST_ID`
 
-Hub MI must have `Lists.SelectedOperations.Selected` on these lists before production Graph writes. Default production backend: **unavailable** (503).
+Hub MI must have `Lists.SelectedOperations.Selected` on these lists before production Graph writes. Code default when unset: **unavailable** (503). **LIVE** Hub `/health` reports `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.**
 
 ### 2.4 Fabric / restricted content
 

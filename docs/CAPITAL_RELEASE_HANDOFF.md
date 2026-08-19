@@ -1,9 +1,8 @@
 # Capital Operations — Release handoff
 
-**As of:** 2026-08-17  
-**Branch:** `feature/atlas-capital-operations`  
-**Worktree:** `.worktrees/atlas-capital-operations`  
-**Honesty:** This branch implements Hub Graph capital I/O. Production Hub App Settings are **not** switched to `sharepoint` in this checkpoint. No new SharePoint lists were created.
+**As of:** 2026-08-18 (LIVE overlay on the 2026-08-17 handoff)  
+**Honesty worktree:** `.worktrees/atlas-phase5-docs`  
+**Honesty:** This file is an owner-action package, not a deploy log. **LIVE** Hub `/health` already reports `capitalBackend.mode=sharepoint` on zip `d22b55f` (Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`). **ACCG01 ACL Apply was not run.** CRM operator `a43803e` is **not** live-certified. No new SharePoint lists were created by this docs pass.
 
 Capital Operations is an **internal Atlas module**, not an eighth platform.
 
@@ -43,7 +42,9 @@ INTEGRATION_CAPITAL_OPTIONAL_COLUMNS=Stage,StageEnteredAt,NextAction,NextActionO
 
 Site ID and clients list ID reuse `INTEGRATION_PM_SHAREPOINT_SITE_ID` and `INTEGRATION_PM_CLIENTS_LIST_ID`. Identity remains `AZURE_CLIENT_ID` (`id-atlas-prod`).
 
-Until those settings exist, Hub capital routes return **503 `CAPITAL_BACKEND_UNAVAILABLE`**. There is no JSON fallback in production.
+If those settings are absent, Hub capital routes return **503 `CAPITAL_BACKEND_UNAVAILABLE`**. There is no JSON fallback in production.
+
+**LIVE (2026-08-18):** `/health` already reports `capitalBackend.mode=sharepoint`. That is the Azure App Setting observation. It is **not** ACCG01 ACL Apply and not a claim that every Selected grant in this package was executed.
 
 ---
 
@@ -53,7 +54,9 @@ Until those settings exist, Hub capital routes return **503 `CAPITAL_BACKEND_UNA
 
 **Why required:** Hub identity has `Lists.SelectedOperations.Selected` and `Sites.Read.All` — it **cannot** create lists or columns (`Sites.Manage.All` is absent and must stay absent). SYN01 SharePoint row without the Entra group would 403 on Hub QA and push operators onto live ACCG/PDG clients.
 
-**What automation already attempted:** Tenant list inventory. Column inventory (thin V1 schema). Graph `POST .../columns` for `Stage` as the signed-in owner → **403 accessDenied**. Hub Graph adapter + separate allowlist implemented. Mocked create/read/update/checklist/submission tests. Elite 401/403 fail-closed. No duplicate lists created. Production App Settings **not** switched. Hub **not** deployed in this checkpoint.
+**What automation already attempted (2026-08-17 checkpoint):** Tenant list inventory. Column inventory (thin V1 schema). Graph `POST .../columns` for `Stage` as the signed-in owner → **403 accessDenied**. Hub Graph adapter + separate allowlist implemented. Mocked create/read/update/checklist/submission tests. Elite 401/403 fail-closed. No duplicate lists created.
+
+**LIVE overlay (2026-08-18):** Hub zip `d22b55f` is deployed; `/health` `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.** This docs agent does not re-run Enable/Apply scripts.
 
 **Exact permission/consent needed:** SharePoint list manage (columns) + list permissions (Selected write) + Entra group create (`HVCG-Client-SYN01`) + App Service configuration for Hub (Cursor after this script).
 

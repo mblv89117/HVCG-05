@@ -4,6 +4,7 @@
 
 | Date | Change |
 |------|--------|
+| 2026-08-18 | **Documentation honesty (LIVE vs CANDIDATE).** LIVE Elite `e5740379` / `index-DvEHjcS6.js`. LIVE Hub `d22b55f` / Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9` with `/health` `capitalBackend.mode=sharepoint`, overlay durable, `websiteLeads.configured=true`. CRM operator `a43803e` remains a candidate (not live-certified). `origin/main` stays `b641fdd` (not production). ACCG01 ACL Apply was not run. Docs-only; no deploy. |
 | 2026-08-14 21:25 UTC | **Owner recovery closeout.** Website lead path verified (www → buffer → `HVCG_Leads`). G11-F03 re-read: Manny sole member of seven groups; Hub approved-group map set. Owner guide added. G11-F07/F08 recorded as deferred engineering governance. `origin/main` untouched. |
 | 2026-08-14 21:15 UTC | **P1 website lead ingest.** Keyed `POST /api/website/leads` upserts SharePoint `HVCG_Leads` via existing Graph/MI path. No second CRM. Bearer auth not broadened. `origin/main` untouched. |
 | 2026-08-14 21:00 UTC | **P0 Command Center SharePoint 403 repair.** Hub Graph transport no longer sends `$filter` (Selected-permission 403 was masquerading as a token rejection). In-memory ClientCode/project authorization preserved. Elite hides unimplemented Initialize / Quick Capture / Microsoft sync / Archive. Graph vs BA audiences unchanged. `origin/main` untouched. Live: Hub zip `3572500` RuntimeSuccessful; Elite `index-CRgf6DAQ.js`. |

@@ -1,52 +1,81 @@
 # CURRENT_STATE
 
-**As of:** 2026-08-14 21:25 UTC  
+**As of:** 2026-08-18  
 **Status SoR:** this file  
-**Canonical worktree:** `.worktrees/atlas-canonical-integration`  
-**Canonical branch:** `integration/atlas-canonical`  
+**Honesty worktree:** `.worktrees/atlas-phase5-docs` (`feature/atlas-phase5-docs`)  
+**Canonical Atlas git line (source, not Azure):** `integration/atlas-canonical`  
 **Owner operating guide:** [HVCG_OWNER_OPERATING_GUIDE.md](HVCG_OWNER_OPERATING_GUIDE.md)  
 **Historical July 16 snapshot (not current SoR):** [Archive/CURRENT_STATE_2026-07-16.md](Archive/CURRENT_STATE_2026-07-16.md)
 
-**Owner recovery closeout:** seven-system architecture is settled. Atlas owner recovery is complete. Manny-only entitlements are executed. Client 360 and commercial launches are deferred. Remaining technical governance is separate maintenance. Worktree retirement is not an owner-operability blocker. **Do not restart the architecture audit.**
+**LIVE vs CANDIDATE:** Azure Elite and Hub below are **LIVE**. Repo HEAD in this worktree is the CRM **candidate** and is **not** live-certified. `origin/main` is **not** production. Documentation here does not deploy, merge `main`, or block a CRM Hub deploy.
+
+**Owner recovery closeout (still true):** seven-system architecture is settled. Atlas owner recovery is complete. Manny-only entitlements are executed. Client 360 and commercial launches are deferred. Remaining technical governance is separate maintenance. Worktree retirement is not an owner-operability blocker. **Do not restart the architecture audit.**
+
+## LIVE runtime (certified in Azure — not this git HEAD)
+
+Recorded before any CRM Hub deploy. If a CRM Hub zip lands later, treat it as a new LIVE fact; this file’s CANDIDATE row stays a candidate until that zip is certified.
+
+| Surface | LIVE fact | Evidence |
+|---------|-----------|----------|
+| Elite SWA | `e5740379ff16b68f329b7e2388867d7a43233a5b` | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` asset `index-DvEHjcS6.js`. Message: `Unblock the Elite release build without changing certified UI.` |
+| Hub App Service | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` | `https://app-atlas-integration-hub.azurewebsites.net`. Azure deployment `501fb29b-80f6-427d-8c65-3f1a88da52d9`. Message: `Return client Command-K hits without waiting out slow project lists.` |
+| Hub `/health` | `ok` | `authRequired=true`, `insecureDevAuth=false`, `pmBackend.mode=sharepoint`, `capitalBackend.mode=sharepoint`, overlay durable, `websiteLeads.configured=true` |
+| Website → `HVCG_Leads` | **LIVE** | Keyed Hub ingest configured (`websiteLeads.configured=true`). Buffer is Azure Table `HvcgWebsiteLeads`. Not a second CRM. |
+| Atlas Capital backend mode | **LIVE `sharepoint`** | Hub `/health` `capitalBackend.mode=sharepoint`. Code default when unset remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not infer Selected grants or ACCG01 write certification from health mode alone. |
+| `origin/main` | `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Protected promotion target. **Not production.** Do not imply `main` is what Azure is running. |
+
+Prior Hub zip recorded in provenance (superseded): `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` / deploy `dd965bc2-6d56-4f80-b126-67fcecfc33db`. See [docs/CAPITAL_RELEASE_PROVENANCE.md](../docs/CAPITAL_RELEASE_PROVENANCE.md).
+
+## CANDIDATE (repo only — not live-certified)
+
+| Surface | Candidate fact | Evidence |
+|---------|----------------|----------|
+| CRM operator workflow | `a43803edb29a3f8dd080033ca579a09532d89fbc` on `feature/atlas-crm-operator` | Message: `feat(atlas): add CRM operator workflow`. This worktree is branched from that SHA for docs only. **Not live. Not certified.** A later Hub deploy of this SHA would still need a separate LIVE certification. |
+| Docs honesty branch | `feature/atlas-phase5-docs` | Doc-only. Does not deploy Hub or Elite. Must not block CRM deployment. |
 
 ## Snapshot
 
 | Area | Status | Evidence |
 |------|--------|----------|
-| Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite live; signed-in Elite session not proven this closeout** | Anonymous `/api/pm/*` and `/api/ba/health` 401 (expected). Hub `/health` `pmBackend.mode=sharepoint`, `ba.configured=true`, `ba.reachable=true`. No user JWT / device-code this session. Owner signs in at Elite to load Command Center / My Work / Portfolio / Projects. |
-| Website → `HVCG_Leads` ingest | **GREEN — COMPLETE AND VERIFIED** | Live www contact POST 201 `durable=true` `atlasSyncStatus=synced` → Hub keyed ingest → SharePoint `HVCG_Leads` (idempotent update). Buffer is Azure Table `HvcgWebsiteLeads` only. No second CRM. Synthetic closeout item removed. |
+| Owner production workflow (Command Center SharePoint reads) | **YELLOW — Hub/Elite live; signed-in Elite session is owner-browser** | Anonymous `/api/pm/*` and `/api/ba/health` 401 (expected). Hub `/health` `pmBackend.mode=sharepoint`, `authRequired=true`, `insecureDevAuth=false`. Owner signs in at Elite to load Command Center / My Work / Portfolio / Projects. |
+| Website → `HVCG_Leads` ingest | **GREEN — LIVE** | Hub `/health` `websiteLeads.configured=true`. Live path: www contact → Azure Table `HvcgWebsiteLeads` → keyed `POST /api/website/leads` → SharePoint `HVCG_Leads`. Adapter-framework consent (Google/GitHub) is a separate backlog — see [Integrations/STATUS.md](Integrations/STATUS.md). |
 | HVCG Master Architecture Audit — core production architecture | **GATE 11 — COMPLETE** | [Reports/GATE11_FINAL_CLOSURE.md](Reports/GATE11_FINAL_CLOSURE.md) |
-| Canonical Atlas line | `integration/atlas-canonical` | Git; do not treat `origin/main` as the integration line |
-| `origin/main` | **UNCHANGED** `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Must not be modified without separate promotion authorization |
+| Canonical Atlas git line | `integration/atlas-canonical` | Git source line. Do not treat `origin/main` or this docs HEAD as the integration line **or** as Azure production. |
+| `origin/main` | **UNCHANGED** `b641fdd784b9d9cc50b85f2e5548526da4f28a02` | Must not be modified without separate promotion authorization. **Not LIVE Azure.** |
 | Atlas V1 system of record | SharePoint `HVCG_*` (CRM / clients / projects / tasks / HVCG finance ops) | Owner Decision 3; Hub `pmBackend.mode=sharepoint` |
 | Dynamics / Dataverse | **DEFERRED** — no migration | Owner Decision 3 |
 | Token paths | Elite → Hub → `id-atlas-prod` → Graph → SharePoint `HVCG_*`; Elite → Hub → MI → BA | Audiences not mixed (`https://graph.microsoft.com` vs `api://` BA URI) |
 | Client 360 mapping | **DEFERRED POST-AUDIT FEATURE** (fail-closed; not an audit blocker) | Owner Decision 5; `apps/atlas-integration-api/src/client360/access.ts` |
 | Gate 12 worktree/workspace retirement | **NOT STARTED** | Explicitly out of scope |
 | Seven-system architecture | Defined; commercial launches are **post-audit** | [docs/architecture/HVCG_SYSTEM_INDEX.md](../docs/architecture/HVCG_SYSTEM_INDEX.md); Owner Decision 1 |
-| Atlas Capital Operations | **INTERNAL Atlas module — not an eighth platform** | Elite `/capital` is the Capital Command Center. 401/403 fail closed. Hub capital backend defaults to **unavailable**. SharePoint min-slice lists **exist**; additive pipeline columns and Selected grants do **not**. Live Graph capital writes **BLOCKED** until owner columns + grants + App Settings. See [docs/CAPITAL_OPERATIONS_DISCOVERY.md](../docs/CAPITAL_OPERATIONS_DISCOVERY.md). |
+| Atlas Capital Operations | **INTERNAL Atlas module — not an eighth platform** | Elite `/capital` is the Capital Command Center. 401/403 fail closed. **LIVE Hub** reports `capitalBackend.mode=sharepoint` and durable overlay. SharePoint min-slice lists **exist**. **ACCG01 ACL Apply was not run.** Do not claim ACCG01 Selected grants were applied. Do not claim CRM/capital operator work is live-certified. See [docs/CAPITAL_RELEASE_PROVENANCE.md](../docs/CAPITAL_RELEASE_PROVENANCE.md). |
+| Opportunity CRM operator (Elite/Hub) | **CANDIDATE — not live-certified** | SHA `a43803e` on `feature/atlas-crm-operator`. Docs in this worktree must not block its deploy, and must not call it LIVE until a certified Hub/Elite zip exists. |
 | GCC | Commercial CFO / financial-intelligence product; own app/data boundary; HVCG may be a tenant | Owner Decision 2 |
-| G11-F03 client entitlements | **COMPLETE** — `G11-F03 — MANNY-ONLY INITIAL PRODUCTION ENTITLEMENTS COMPLETE` | Entra read-back: Manny sole member of all seven groups; Hub app `checkMemberGroups` returns all seven IDs; Hub `INTEGRATION_CLIENT_ENTITLEMENT_GROUPS` maps those seven IDs. Signed-in Elite session was **not** proven (no user JWT). Owner role is not client access. |
+| G11-F03 client entitlements | **COMPLETE** — `G11-F03 — MANNY-ONLY INITIAL PRODUCTION ENTITLEMENTS COMPLETE` | Entra read-back (Gate 11): Manny sole member of all seven groups; Hub app `checkMemberGroups` returns all seven IDs; Hub `INTEGRATION_CLIENT_ENTITLEMENT_GROUPS` maps those seven IDs. Owner role is not client access. |
 | G11-F07 GitHub main protection | **DEFERRED ENGINEERING GOVERNANCE** (already in place; do not change) | PR + 1 approval + dismiss stale + conversation resolution + 6 Atlas checks + no force-push + no deletion + `enforce_admins`. Not an owner-operability blocker. |
 | G11-F08 Atlas CI / release control | **DEFERRED ENGINEERING GOVERNANCE** (already in place; do not change) | `atlas-ci.yml` + `atlas-release-control.yml`. Residual: GitHub `production` reviewers not invented; default branch still `cursor/v1.1.0-intelligence-ai-ops`. |
-| Worktree count | **27** | `git worktree list` (C1 already removed 19 Atlas checkouts; branches kept) |
+| Worktree count | **Not an operability metric** | Parallel checkouts exist (including this docs worktree). Do not treat a count as Gate 11 completeness. |
 
 ## Canonical git (verify with `git rev-parse`; do not reuse chat SHAs)
 
 | Ref | Role |
 |-----|------|
-| `integration/atlas-canonical` | Canonical Atlas source |
-| `origin/main` | Protected production-promotion target; SHA must stay `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion |
+| LIVE Elite | `e5740379ff16b68f329b7e2388867d7a43233a5b` — Azure SWA, not `origin/main` |
+| LIVE Hub | `d22b55f870efc0c105ed328a20a4ba4df077e6aa` — Azure App Service zip, not `origin/main` |
+| CRM candidate | `a43803edb29a3f8dd080033ca579a09532d89fbc` (`feature/atlas-crm-operator`) — **not live** |
+| `integration/atlas-canonical` | Canonical Atlas **source** line (not automatically Azure) |
+| `origin/main` | Protected production-promotion target; SHA must stay `b641fdd784b9d9cc50b85f2e5548526da4f28a02` until a separately authorized promotion. **Not what Azure is running.** |
 | Default GitHub branch | `cursor/v1.1.0-intelligence-ai-ops` (residual; not changed by Gate 11) |
 
 ## Production Atlas
 
 | Component | Status |
 |-----------|--------|
-| Elite SWA | Live (`https://zealous-rock-0090c7e1e.7.azurestaticapps.net`) — honesty UI for unimplemented ops |
-| Hub | Live `https://app-atlas-integration-hub.azurewebsites.net` — auth required; SharePoint PM via `id-atlas-prod` Graph (no `$filter`); keyed `POST /api/website/leads` → `HVCG_Leads` |
-| BA | Configured and reachable through Hub; anonymous `/api/ba/health` is 401 |
-| Local AI | Disabled on production Hub |
+| Elite SWA | **LIVE** `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` — SHA `e5740379`, asset `index-DvEHjcS6.js` |
+| Hub | **LIVE** `https://app-atlas-integration-hub.azurewebsites.net` — SHA `d22b55f`, Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`. Auth required; `insecureDevAuth=false`; SharePoint PM; capital backend `sharepoint`; overlay durable; keyed `POST /api/website/leads` configured |
+| BA | Reachable through Hub when configured; anonymous `/api/ba/health` is 401 |
+| Local AI | Disabled on production Hub (`insecureDevAuth=false`; do not treat Local AI as on) |
+| CRM operator zip | **NOT LIVE** until a certified deploy of `a43803e` (or successor) is recorded here |
 
 ## Entitlements (G11-F03)
 
@@ -64,16 +93,22 @@ Immediate production client access is **Manny only** (`manny@highvaluecapitalgro
 
 No other users. Employee-to-client roster requires a later owner approval. Hub confidential-client Graph resolves the seven groups; Elite signed-in UI still needs Manny’s browser.
 
+**ACCG01 ACL Apply was not run.** Membership in `HVCG-Client-ACCG01` is not proof that capital Selected-permission Apply ran on ACCG01 lists.
+
 ## What the next session must not redo
 
 - Do not re-audit product overlap, BA architecture, Elite auth, or completed Gate 11 findings unless **current** repository evidence contradicts them.
 - Do not start Gate 12, prune/retire more worktrees, archive systems, delete branches, or remove preservation.
 - Do not launch commercial products.
 - Do not promote `integration/atlas-canonical` to `main`.
+- Do not treat `origin/main` as production.
 - Do not initiate Dynamics/Dataverse.
 - Do not invent Client 360 mappings.
 - Do not add anyone except Manny to client groups.
+- Do not claim CRM operator (`a43803e`) is live-certified.
+- Do not claim ACCG01 ACL Apply ran.
+- Do not let documentation block a CRM Hub deploy.
 
 ## Status authority
 
-Within Atlas, **this file** is the status SoR. July 2026 Dynamics Track-1 freeze notes are historical evidence only; they do not override Owner Decision 3 (SharePoint `HVCG_*` is Atlas V1 SoR).
+Within Atlas, **this file** is the status SoR. July 2026 Dynamics Track-1 freeze notes are historical evidence only; they do not override Owner Decision 3 (SharePoint `HVCG_*` is Atlas V1 SoR). Git HEAD is not Azure. Azure is not `origin/main`.

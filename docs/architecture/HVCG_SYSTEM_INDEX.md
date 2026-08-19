@@ -25,8 +25,8 @@ Client 360 mapping: **CLIENT 360 MAPPING — POST CORE AUDIT DEFERRED BACKLOG** 
 - **Canonical branch:** `integration/atlas-canonical`
 - **Canonical worktree:** `/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-canonical-integration`
 - **Primary system of record:** SharePoint `HVCG_*` lists for Version 1 CRM/clients/projects/tasks/HVCG finance ops; Hub for runtime APIs; BA engines in-tree at `config/business/`
-- **Capital Operations:** Internal Atlas module (Elite `/capital`, Hub, `HVCG_*` capital lists). **Not an eighth system.** Min-slice lists exist; additive columns and Selected grants are owner-gated. Hub capital backend defaults to unavailable. Schema/docs: `docs/CAPITAL_OPERATIONS_DISCOVERY.md`.
-- **Production URL/status:** Azure production Elite/Hub (untouched by Gate 11 final closure). Do not treat `origin/main` as the integration line.
+- **Capital Operations:** Internal Atlas module (Elite `/capital`, Hub, `HVCG_*` capital lists). **Not an eighth system.** Min-slice lists exist. **LIVE Hub** `/health` reports `capitalBackend.mode=sharepoint` with durable overlay (`d22b55f`, deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`). Code default when unset remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not infer ACCG01 Selected grants from health mode. Schema/docs: `docs/CAPITAL_OPERATIONS_DISCOVERY.md`; live SHAs: `docs/CAPITAL_RELEASE_PROVENANCE.md`.
+- **Production URL/status:** LIVE Elite `e5740379` (`index-DvEHjcS6.js`) at `https://zealous-rock-0090c7e1e.7.azurestaticapps.net`; LIVE Hub `d22b55f` at `https://app-atlas-integration-hub.azurewebsites.net`. Do not treat `origin/main` (`b641fdd`) as Azure production. CRM operator `a43803e` is a **candidate**, not live-certified.
 - **Integrations:** Entra ID, SharePoint, Graph, optional Local AI / Ollama loopback, Plaid API in-tree (`apps/atlas-plaid-api`). QBO application package exists on `cursor/quickbooks-integration` (preserved on origin) and is **not** yet merged into canonical.
 
 ## 2. Autonomous Marketing

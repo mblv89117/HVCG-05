@@ -2,8 +2,8 @@
 
 Orchestrator-owned. Change via notify → update this file → sync impacted agents. Do not fork types.
 
-**Runtime Hub zip:** `65b7438f8697e244d903f88039e6be659e9215fd`  
-**Repo HEAD is independent.** Do not report “deployed latest.”
+**LIVE Hub zip:** `d22b55f870efc0c105ed328a20a4ba4df077e6aa` (Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9`). Prior recorded zip `65b7438f8697e244d903f88039e6be659e9215fd` is **stale**.  
+**Repo HEAD is independent.** Do not report “deployed latest.” CRM candidate `a43803e` is **not** this LIVE zip. `origin/main` (`b641fdd`) is **not** production.
 
 ## Identity / scope
 

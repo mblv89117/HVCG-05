@@ -5,6 +5,8 @@
 
 This is **not** a new platform. No new SharePoint lists. No `Sites.Manage.All` on Hub runtime identity.
 
+**LIVE overlay (2026-08-18):** Hub zip `d22b55f` / Azure deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9` already reports `/health` `capitalBackend.mode=sharepoint`. **ACCG01 ACL Apply was not run.** This docs branch does not deploy Hub and does not run Enable `-Apply`. CRM operator `a43803e` is not this LIVE zip.
+
 ---
 
 ## What Manny runs (PnP app first — not Enable -Apply)
@@ -196,7 +198,7 @@ GitHub workflows do **not** deploy Hub.
 | INTEGRATION_CAPITAL_* App Settings | absent | sharepoint + IDs | **yes, after Hub deploy** | Hub recycle |
 | INTEGRATION_PM_BACKEND | sharepoint | keep | no | none |
 | INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH | unset | false (true only during QA) | after deploy | QA window |
-| Current Hub `/health` | no `capitalBackend` | field present after deploy | **yes, deploy** | PM regression if bundle wrong |
+| LIVE Hub `/health` (2026-08-18) | `capitalBackend.mode=sharepoint` on `d22b55f` / deploy `501fb29b-80f6-427d-8c65-3f1a88da52d9` | keep observing `/health` after any later zip | **no Hub zip from this docs branch** | CRM candidate `a43803e` is not this LIVE zip |
 
 ---
 

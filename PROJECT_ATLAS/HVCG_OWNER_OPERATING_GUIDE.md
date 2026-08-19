@@ -1,9 +1,9 @@
 # HVCG Owner Operating Guide
 
-**As of:** 2026-08-14  
+**As of:** 2026-08-18  
 **Audience:** Manny (`manny@highvaluecapitalgroup.com`) and the next AI session  
 **Status SoR:** [CURRENT_STATE.md](CURRENT_STATE.md)  
-**Do not** start Gate 12, promote `main`, launch commercial products, or reopen the architecture audit.
+**Do not** start Gate 12, promote `main`, launch commercial products, or reopen the architecture audit. Documentation must not block a CRM Hub deploy.
 
 The seven-system architecture is settled. Atlas owner recovery is complete. Normal client operations run on Atlas + the live HVCG website. Everything else below is either a supporting product or explicitly deferred.
 
@@ -17,7 +17,7 @@ Sign in to Atlas with **Manny’s Microsoft account only**. Owner role is not a 
 |---|---|
 | **SYSTEM** | Atlas (Elite OS + Integration Hub + Business Architecture) |
 | **PURPOSE** | Internal operating system: clients, projects, tasks, Command Center, HVCG finance ops |
-| **CURRENT STATUS** | Production live. SharePoint `HVCG_*` is V1 system of record. Hub and Elite are up. Local AI is off. |
+| **CURRENT STATUS** | Production Elite/Hub are **LIVE** (Elite `e5740379` / `index-DvEHjcS6.js`; Hub `d22b55f`). SharePoint `HVCG_*` is V1 system of record. Local AI is off. Opportunity CRM operator (`a43803e`) is a **candidate**, not live-certified. `origin/main` (`b641fdd`) is not production. ACCG01 ACL Apply was not run. |
 | **HOW MANNY ACCESSES IT** | Sign in at [Atlas Elite](https://zealous-rock-0090c7e1e.7.azurestaticapps.net) with `manny@highvaluecapitalgroup.com`. Hub: `https://app-atlas-integration-hub.azurewebsites.net` (auth required). |
 | **WHAT TO USE IT FOR TODAY** | Command Center (`/command-center`), My Work (`/my-work`), Portfolio (`/portfolio`), Projects (`/projects`). Day-to-day client/project/task work backed by SharePoint. Website leads land in `HVCG_Leads`. Seven ClientCodes: ACCG01, CCB01, CPL01, HFD01, KAVA01, LIEN01, PDG01 (Manny-only groups). |
 | **WHAT NOT TO USE IT FOR** | Dynamics/Dataverse CRM. Client 360 as a live client map. Initialize / Quick Capture / Microsoft sync / Archive (honestly disabled). Launching 360, Copilot, GCC commercial, Syndicate, or Best Day from Atlas. Adding anyone else to `HVCG-Client-*` groups. |

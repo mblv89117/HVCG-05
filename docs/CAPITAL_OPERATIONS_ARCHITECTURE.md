@@ -85,9 +85,9 @@ Application code cannot honestly enable production capital writes by default. Ow
 1. Add **additive columns** to existing lists (`HVCG_CapitalOpportunities`, `HVCG_DocumentRequests`, `HVCG_LenderOutreach`). Do **not** create duplicate lists. Do **not** create `HVCG_CapitalStrategies` / Profiles / Offers for the min slice.
 2. Grant list-level `write` (Lists.Selected) on those three lists to Hub identity `id-atlas-prod` (`2b9ca61d-2396-4caa-95cd-30200d2ff36a`).
 3. Set Hub App Settings: `INTEGRATION_CAPITAL_BACKEND=sharepoint` plus `INTEGRATION_CAPITAL_*_LIST_ID` (see `docs/CAPITAL_RELEASE_HANDOFF.md`).
-4. Deploy this branch’s Hub. Keep `INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH=false` except during a labeled QA pilot.
+4. Deploy the Hub zip that includes capital Graph. Keep `INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH=false` except during a labeled QA pilot.
 
-Until then, production Hub must fail closed for capital Graph I/O (`unavailable`).
+**LIVE (2026-08-18):** Hub `/health` already reports `capitalBackend.mode=sharepoint` on `d22b55f`. Unset/code default remains fail-closed `unavailable`. **ACCG01 ACL Apply was not run** — do not treat health mode as grant proof. CRM operator `a43803e` is not live-certified.
 
 ---
 
