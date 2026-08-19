@@ -1,0 +1,72 @@
+# Atlas Release Pipeline (framework)
+
+# Development-oriented. Production stage is blocked.
+# DO NOT enable Prod jobs without a new owner-approved Atlas revision.
+
+trigger: none  # manual / QA only for this delivery
+
+parameters:
+  - name: targetEnvironment
+    displayName: Target environment
+    type: string
+    default: development
+    values:
+      - development
+      - testing
+      - staging
+      # production intentionally omitted from selectable values
+
+stages:
+  - stage: Validate
+    displayName: Validate package
+    jobs:
+      - job: SchemaAndUnit
+        steps:
+          - script: |
+              echo "Atlas Validate — run tests/validate_predeployment.py when QA approves execution"
+              echo "This delivery stops for QA; do not auto-run."
+            displayName: Placeholder validate
+
+  - stage: Development
+    displayName: Development
+    dependsOn: Validate
+    condition: and(succeeded(), eq('${{ parameters.targetEnvironment }}', 'development'))
+    jobs:
+      - job: DevGate
+        steps:
+          - script: |
+              echo "Preflight → Deploy(Dev) → Health → Smoke → PostDeploy → ReleaseNotes → Log"
+              echo "Wrappers: deployment/atlas/scripts/*.ps1"
+            displayName: Dev orchestration (documented)
+
+  - stage: Testing
+    displayName: Testing
+    dependsOn: Development
+    condition: and(succeeded(), eq('${{ parameters.targetEnvironment }}', 'testing'))
+    jobs:
+      - job: TestGate
+        steps:
+          - script: echo "Testing stage scaffold — not executed in Atlas 0.1.0-dev"
+            displayName: Testing scaffold
+
+  - stage: Staging
+    displayName: Staging
+    dependsOn: Testing
+    condition: and(succeeded(), eq('${{ parameters.targetEnvironment }}', 'staging'))
+    jobs:
+      - job: StagingGate
+        steps:
+          - script: echo "Staging / blue-green scaffold — not executed"
+            displayName: Staging scaffold
+
+  - stage: ProductionBlocked
+    displayName: Production (BLOCKED)
+    dependsOn: Staging
+    condition: always()
+    jobs:
+      - job: RefuseProduction
+        steps:
+          - script: |
+              echo "##vso[task.logissue type=error]Atlas refuses Production. Exit."
+              exit 1
+            displayName: Hard block Production

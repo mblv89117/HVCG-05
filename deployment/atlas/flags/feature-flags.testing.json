@@ -1,0 +1,14 @@
+{
+  "environment": "testing",
+  "updated": "2026-07-17T01:27:00Z",
+  "flags": {
+    "CrmEnableTeamsNotify": false,
+    "EnableClientEmails": false,
+    "CanvasPublishEnabled": false,
+    "PilotImportEnabled": false,
+    "BlueGreenSwapEnabled": false,
+    "AtlasAllowProduction": false,
+    "LeadQualifiedScannerEnabled": false,
+    "AtlasFrameworkEnabled": true
+  }
+}

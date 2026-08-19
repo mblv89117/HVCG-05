@@ -1,0 +1,38 @@
+{
+  "id": "development",
+  "label": "HVCG Development",
+  "atlasRole": "primary",
+  "connectAllowed": true,
+  "deployAllowed": true,
+  "promotionFrom": null,
+  "promotionTo": "testing",
+  "configBinding": "config/environments/development.json",
+  "configExample": "config/environments/development.example.json",
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Development",
+    "environmentId": "RESOLVE_AT_RUNTIME_DO_NOT_HARDCODE_IN_ATLAS",
+    "orgUrlPattern": "https://*.crm.dynamics.com/",
+    "solutionUniqueName": "HVCGCommandCenterDev"
+  },
+  "sharePoint": {
+    "commandCenterAliasSuffix": "-Dev",
+    "forbidProdSiteUrls": true
+  },
+  "gates": {
+    "hvcg_CrmEnableTeamsNotify": false,
+    "hvcg_EnableClientEmails": false,
+    "canvasPublish": false
+  },
+  "blueGreen": {
+    "enabled": false,
+    "slot": "single"
+  },
+  "featureFlagsFile": "flags/feature-flags.development.json",
+  "validation": {
+    "preflightRequired": true,
+    "healthRequired": true,
+    "smokeRequired": true,
+    "postDeployRequired": true
+  },
+  "notes": "Only environment Atlas scripts may target in this framework build."
+}

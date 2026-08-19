@@ -1,0 +1,44 @@
+{
+  "generated": "2026-07-16T18:29:17.0081120-07:00",
+  "environment": "development",
+  "overall": "PASS",
+  "checks": [
+    {
+      "id": "PF-01",
+      "name": "environment_guard",
+      "ok": true,
+      "detail": "exit=0"
+    },
+    {
+      "id": "PF-02",
+      "name": "manifest",
+      "ok": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/deployment-engineer/deployment/atlas/ATLAS_MANIFEST.json"
+    },
+    {
+      "id": "PF-03",
+      "name": "environment_definition",
+      "ok": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/deployment-engineer/deployment/atlas/environments/development.json"
+    },
+    {
+      "id": "PF-04",
+      "name": "feature_flags_safe",
+      "ok": true,
+      "detail": "Teams=False; Email=False; AllowProd=False"
+    },
+    {
+      "id": "PF-05",
+      "name": "predeploy_tests_present",
+      "ok": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/deployment-engineer/tests/Invoke-HVCGPreDeploymentTests.ps1"
+    },
+    {
+      "id": "PF-06",
+      "name": "track1_freeze_untouched_notice",
+      "ok": true,
+      "detail": "Reference only: /Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/deployment-engineer/releases/Track-1-Live-Internal (Atlas must not modify)"
+    }
+  ],
+  "productionBlocked": true
+}

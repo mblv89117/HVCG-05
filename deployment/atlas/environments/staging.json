@@ -1,0 +1,40 @@
+{
+  "id": "staging",
+  "label": "HVCG Staging",
+  "atlasRole": "pre-prod-rehearsal",
+  "connectAllowed": true,
+  "deployAllowed": false,
+  "promotionFrom": "testing",
+  "promotionTo": "production",
+  "configBinding": "config/environments/staging.json",
+  "configExample": null,
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Staging",
+    "environmentId": "NOT_PROVISIONED_IN_THIS_DELIVERY",
+    "orgUrlPattern": "https://*.crm.dynamics.com/",
+    "solutionUniqueName": "HVCGCommandCenterDev"
+  },
+  "sharePoint": {
+    "commandCenterAliasSuffix": "-Staging",
+    "forbidProdSiteUrls": true
+  },
+  "gates": {
+    "hvcg_CrmEnableTeamsNotify": false,
+    "hvcg_EnableClientEmails": false,
+    "canvasPublish": false
+  },
+  "blueGreen": {
+    "enabled": true,
+    "slot": "blue",
+    "alternateSlot": "green",
+    "notes": "Blue/Green rehearsal target — see docs/BLUE_GREEN_ARCHITECTURE.md"
+  },
+  "featureFlagsFile": "flags/feature-flags.staging.json",
+  "validation": {
+    "preflightRequired": true,
+    "healthRequired": true,
+    "smokeRequired": true,
+    "postDeployRequired": true
+  },
+  "notes": "Scaffold only. Blue/Green documented; not executed in this delivery."
+}

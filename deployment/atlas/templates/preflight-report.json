@@ -1,0 +1,9 @@
+{
+  "generated": "REPLACE_ISO8601",
+  "environment": "development",
+  "overall": "PASS|FAIL|NOT_RUN",
+  "checks": [
+    { "id": "PF-01", "name": "environment_guard", "ok": false, "detail": "" }
+  ],
+  "productionBlocked": true
+}

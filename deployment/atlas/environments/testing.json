@@ -1,0 +1,38 @@
+{
+  "id": "testing",
+  "label": "HVCG Testing",
+  "atlasRole": "integration-test",
+  "connectAllowed": true,
+  "deployAllowed": false,
+  "promotionFrom": "development",
+  "promotionTo": "staging",
+  "configBinding": "config/environments/test.json",
+  "configExample": "config/environments/test.example.json",
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Testing",
+    "environmentId": "NOT_PROVISIONED_IN_THIS_DELIVERY",
+    "orgUrlPattern": "https://*.crm.dynamics.com/",
+    "solutionUniqueName": "HVCGCommandCenterDev"
+  },
+  "sharePoint": {
+    "commandCenterAliasSuffix": "-Test",
+    "forbidProdSiteUrls": true
+  },
+  "gates": {
+    "hvcg_CrmEnableTeamsNotify": false,
+    "hvcg_EnableClientEmails": false,
+    "canvasPublish": false
+  },
+  "blueGreen": {
+    "enabled": false,
+    "slot": "single"
+  },
+  "featureFlagsFile": "flags/feature-flags.testing.json",
+  "validation": {
+    "preflightRequired": true,
+    "healthRequired": true,
+    "smokeRequired": true,
+    "postDeployRequired": true
+  },
+  "notes": "Scaffold only. Do not provision or deploy in this Atlas delivery."
+}

@@ -1,0 +1,40 @@
+{
+  "indexVersion": "1",
+  "framework": "Project Atlas",
+  "environments": [
+    {
+      "id": "development",
+      "definition": "environments/development.json",
+      "rank": 1,
+      "connectAllowed": true,
+      "deployAllowed": true,
+      "notes": "Primary Atlas target"
+    },
+    {
+      "id": "testing",
+      "definition": "environments/testing.json",
+      "rank": 2,
+      "connectAllowed": true,
+      "deployAllowed": false,
+      "notes": "Scaffolded; no execution in this delivery"
+    },
+    {
+      "id": "staging",
+      "definition": "environments/staging.json",
+      "rank": 3,
+      "connectAllowed": true,
+      "deployAllowed": false,
+      "notes": "Scaffolded blue/green rehearsal target"
+    },
+    {
+      "id": "production",
+      "definition": "environments/production.json",
+      "rank": 4,
+      "connectAllowed": false,
+      "deployAllowed": false,
+      "notes": "Definition only — Atlas scripts MUST refuse"
+    }
+  ],
+  "defaultEnvironment": "development",
+  "guardScript": "scripts/Test-AtlasEnvironmentGuard.ps1"
+}

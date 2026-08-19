@@ -1,0 +1,10 @@
+{
+  "suite": "LeadQualified",
+  "notes": "Pass -Execute after QA approval to run Dev CRM smoke.",
+  "environment": "development",
+  "passed": false,
+  "failureCount": 0,
+  "mode": "dry-run",
+  "evidencePath": "",
+  "generated": "2026-07-16T18:29:17.3460110-07:00"
+}

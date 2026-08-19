@@ -1,0 +1,50 @@
+{
+  "id": "production",
+  "label": "HVCG Production",
+  "atlasRole": "production-definition-only",
+  "connectAllowed": false,
+  "deployAllowed": false,
+  "promotionFrom": "staging",
+  "promotionTo": null,
+  "configBinding": "config/environments/production.json",
+  "configExample": "config/environments/production.example.json",
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Production",
+    "environmentId": "BLOCKED_DO_NOT_RESOLVE_VIA_ATLAS",
+    "orgUrlPattern": "BLOCKED",
+    "solutionUniqueName": "HVCGCommandCenterDev"
+  },
+  "sharePoint": {
+    "commandCenterAliasSuffix": "",
+    "forbidProdSiteUrls": false,
+    "atlasMustNotConnect": true
+  },
+  "gates": {
+    "hvcg_CrmEnableTeamsNotify": false,
+    "hvcg_EnableClientEmails": false,
+    "canvasPublish": false,
+    "ownerApprovalRequiredForAnyChange": true
+  },
+  "blueGreen": {
+    "enabled": true,
+    "slot": "future",
+    "notes": "Production blue/green is architectural intent only under Atlas. Existing Track-1 Live-Internal freeze is outside Atlas execution."
+  },
+  "featureFlagsFile": "flags/feature-flags.production.json",
+  "validation": {
+    "preflightRequired": true,
+    "healthRequired": true,
+    "smokeRequired": true,
+    "postDeployRequired": true
+  },
+  "atlasHardBlock": {
+    "reason": "Project Atlas delivery is Development-only. Do not connect. Do not deploy.",
+    "refuseKeywords": [
+      "production",
+      "orgee2f7545",
+      "HVCG Production",
+      "f141a2cf-ae13-eb59-84c4-25817d899105"
+    ]
+  },
+  "notes": "DEFINITION ONLY. Atlas scripts must exit non-zero if this environment is selected."
+}

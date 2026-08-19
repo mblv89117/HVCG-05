@@ -1,0 +1,13 @@
+{
+  "generated": "2026-07-16T18:29:17.6327400-07:00",
+  "environment": "development",
+  "action": "preflight",
+  "status": "succeeded",
+  "frameworkVersion": "0.1.0-dev",
+  "operator": "macminipro",
+  "details": {
+    "message": "offline QA self-check"
+  },
+  "relatedFiles": [],
+  "productionTouch": false
+}

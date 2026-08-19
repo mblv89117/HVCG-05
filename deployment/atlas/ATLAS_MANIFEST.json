@@ -1,0 +1,55 @@
+{
+  "framework": "Project Atlas",
+  "packagePath": "deployment/atlas",
+  "version": "0.1.0-dev",
+  "status": "READY_FOR_QA",
+  "scope": "development-framework-only",
+  "created": "2026-07-17T01:27:00Z",
+  "branch": "cursor/deployment-engineer",
+  "constraints": {
+    "allowProductionConnect": false,
+    "allowProductionDeploy": false,
+    "allowCommitInThisDelivery": false,
+    "stopForQa": true
+  },
+  "environments": [
+    "development",
+    "testing",
+    "staging",
+    "production"
+  ],
+  "activeTargets": [
+    "development"
+  ],
+  "blockedTargets": [
+    "production"
+  ],
+  "components": [
+    "deployment-dashboard",
+    "environment-manager",
+    "environment-definitions",
+    "rollback-engine",
+    "release-pipeline",
+    "deployment-checklist",
+    "health-checks",
+    "smoke-tests",
+    "preflight-validation",
+    "post-deployment-validation",
+    "feature-flags",
+    "blue-green-architecture",
+    "release-notes-generator",
+    "deployment-logs"
+  ],
+  "reuseExisting": {
+    "devDeploy": "deployment/Deploy-HVCGDevelopment.ps1",
+    "health": "deployment/health/",
+    "crmSmoke": "deployment/scripts/crm/",
+    "predeployTests": "tests/Invoke-HVCGPreDeploymentTests.ps1",
+    "rollbackScript": "deployment/rollback/Rollback-HVCGOS.ps1",
+    "configExamples": "config/environments/"
+  },
+  "doNotTouch": [
+    "releases/Track-1-Live-Internal/",
+    "deployment/release-ops/production.runtime.json"
+  ]
+}

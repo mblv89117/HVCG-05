@@ -1,0 +1,9 @@
+{
+  "generated": "REPLACE_ISO8601",
+  "environment": "development",
+  "suite": "LeadQualified|All|Health",
+  "passed": false,
+  "failureCount": 0,
+  "evidencePath": "",
+  "notes": "Atlas smoke wrapper summary"
+}

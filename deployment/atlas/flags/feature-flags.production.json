@@ -1,0 +1,15 @@
+{
+  "environment": "production",
+  "updated": "2026-07-17T01:27:00Z",
+  "notes": "DEFINITION ONLY — Atlas must not load this for execution",
+  "flags": {
+    "CrmEnableTeamsNotify": false,
+    "EnableClientEmails": false,
+    "CanvasPublishEnabled": false,
+    "PilotImportEnabled": false,
+    "BlueGreenSwapEnabled": false,
+    "AtlasAllowProduction": false,
+    "LeadQualifiedScannerEnabled": false,
+    "AtlasFrameworkEnabled": false
+  }
+}

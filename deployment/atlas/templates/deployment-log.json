@@ -1,0 +1,11 @@
+{
+  "generated": "REPLACE_ISO8601",
+  "environment": "development",
+  "action": "preflight|health|smoke|deploy|postdeploy|rollback|release-notes",
+  "status": "started|succeeded|failed|blocked",
+  "frameworkVersion": "0.1.0-dev",
+  "operator": "REPLACE",
+  "details": {},
+  "relatedFiles": [],
+  "productionTouch": false
+}

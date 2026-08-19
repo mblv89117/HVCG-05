@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "atlas-dashboard-data",
+  "title": "Atlas Deployment Dashboard Data",
+  "type": "object",
+  "required": ["generated", "frameworkVersion", "environments", "gates"],
+  "properties": {
+    "generated": { "type": "string", "format": "date-time" },
+    "frameworkVersion": { "type": "string" },
+    "activeEnvironment": { "type": "string", "enum": ["development", "testing", "staging", "production"] },
+    "environments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "deployAllowed"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "deployAllowed": { "type": "boolean" },
+          "connectAllowed": { "type": "boolean" },
+          "lastPreflight": { "type": ["string", "null"] },
+          "lastHealth": { "type": ["string", "null"] },
+          "lastSmoke": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "properties": {
+        "productionBlocked": { "type": "boolean" },
+        "teamsNotifyDefault": { "type": "boolean" },
+        "clientEmailsDefault": { "type": "boolean" }
+      }
+    },
+    "pipeline": {
+      "type": "object",
+      "properties": {
+        "currentStage": { "type": "string" },
+        "blockedStages": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
