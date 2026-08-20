@@ -60,6 +60,7 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
     assert.match(shortcut, /viewFinance/, 'P2: Command-K shortcuts are not filtered by viewFinance.');
     assert.match(shortcut, /path === '\/capital'/);
     assert.match(shortcut, /to\.startsWith\('\/capital\?'\)/);
+    assert.match(shortcut, /path === '\/revenue'/);
     const fav = slice(appShell, 'const visibleFavorites', 'const visibleRecents');
     const recents = slice(appShell, 'const visibleRecents', 'const results = useMemo');
     assert.match(fav, /shortcutAllowed\(f, can\)/);

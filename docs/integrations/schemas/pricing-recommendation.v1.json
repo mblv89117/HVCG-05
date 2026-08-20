@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/pricing-recommendation.v1.json",
+  "title": "Pricing Recommendation v1",
+  "description": "Suggested pricing band. Not a quote, invoice, or legal commitment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "recommendationId",
+    "opportunityId",
+    "currency",
+    "observationOnly"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "pricing-recommendation.v1"
+    },
+    "recommendationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "opportunityId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "listPrice": {
+      "type": "number",
+      "minimum": 0
+    },
+    "recommendedPrice": {
+      "type": "number",
+      "minimum": 0
+    },
+    "floorPrice": {
+      "type": "number",
+      "minimum": 0
+    },
+    "discountPct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "createsCommitment": {
+      "const": false
+    }
+  }
+}

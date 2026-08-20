@@ -238,6 +238,9 @@ export function OpportunityDetailPage() {
           <Link to="/opportunities">
             <Button appearance="secondary">Pipeline</Button>
           </Link>
+          <Link to={`/revenue?opportunity=${encodeURIComponent(opportunity.id)}`}>
+            <Button appearance="secondary">Commercial workspace</Button>
+          </Link>
           {opportunity.leadId ? (
             <Link to={`/leads/${encodeURIComponent(opportunity.leadId)}`}>
               <Button appearance="secondary">Source lead</Button>

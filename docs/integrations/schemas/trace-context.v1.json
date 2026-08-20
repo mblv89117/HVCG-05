@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/trace-context.v1.json",
+  "title": "Cross-System Trace Context v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "correlationId",
+    "sourceSystem",
+    "eventId",
+    "timestamp",
+    "version",
+    "outcome"
+  ],
+  "properties": {
+    "correlationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "sourceSystem": {
+      "type": "string",
+      "enum": [
+        "atlas",
+        "360",
+        "gcc",
+        "copilot",
+        "eva",
+        "website",
+        "hvcg-internal"
+      ]
+    },
+    "destinationSystem": {
+      "type": "string",
+      "enum": [
+        "atlas",
+        "360",
+        "gcc",
+        "copilot",
+        "eva",
+        "website",
+        "hvcg-internal"
+      ]
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "entityId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[a-z0-9._-]+\\.v[0-9]+$"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "rejected",
+        "duplicate",
+        "pending",
+        "failed",
+        "timeout",
+        "partial"
+      ]
+    }
+  }
+}

@@ -70,6 +70,7 @@ const allSections: NavSection[] = [
       { id: 'clients', label: 'Clients', to: '/clients', icon: <PeopleRegular /> },
       { id: 'leads', label: 'Leads', to: '/leads', icon: <MailRegular /> },
       { id: 'opportunities', label: 'Opportunities', to: '/opportunities', icon: <ApprovalsAppRegular /> },
+      { id: 'commercial', label: 'Commercial', to: '/revenue', icon: <MoneyRegular /> },
     ],
   },
   {
@@ -108,6 +109,7 @@ const catalog: SearchResult[] = [
   { id: 's16', title: 'Clients', category: 'CRM', to: '/clients' },
   { id: 's16b', title: 'Leads', category: 'CRM', subtitle: 'Who needs follow-up', to: '/leads' },
   { id: 's16c', title: 'Opportunities', category: 'CRM', subtitle: 'Pipeline and activation exceptions', to: '/opportunities' },
+  { id: 's16d', title: 'Commercial workspace', category: 'CRM', subtitle: 'Offer, pricing, proposal, engagement', to: '/revenue' },
   { id: 's12', title: 'Projects', category: 'Work', to: '/projects' },
   { id: 's8', title: 'Capital', category: 'Capital', subtitle: 'Transactions requiring attention', to: '/capital' },
   { id: 's7', title: 'Search / Knowledge', category: 'Search', to: '/knowledge' },
@@ -146,6 +148,7 @@ const routeLabels: Record<string, string> = {
   '/clients/intake': 'Lead intake',
   '/leads': 'Leads',
   '/opportunities': 'Opportunities',
+  '/revenue': 'Commercial',
   '/projects': 'Projects',
   '/tasks': 'Decisions',
   '/capital': 'Capital',
@@ -222,7 +225,9 @@ function shortcutAllowed(
     to.startsWith('/capital?') ||
     path === '/financials' ||
     path === '/banking' ||
-    path === '/accounting'
+    path === '/accounting' ||
+    path === '/revenue' ||
+    path.startsWith('/revenue/')
   ) {
     return can('viewFinance');
   }
@@ -403,7 +408,7 @@ export function AppShell() {
   }, []);
 
   const sections = useMemo(() => {
-    const financeIds = new Set(['financials', 'banking', 'accounting', 'capital']);
+    const financeIds = new Set(['financials', 'banking', 'accounting', 'capital', 'commercial']);
     return allSections
       .map((section) => ({
         ...section,
@@ -434,7 +439,7 @@ export function AppShell() {
     const pool = catalog.filter((r) => {
       if (!signedIn) return r.category === 'Navigation';
       if (r.to === '/admin') return can('viewAdmin');
-      if (r.to === '/capital') return can('viewFinance');
+      if (r.to === '/capital' || r.to === '/revenue') return can('viewFinance');
       if (r.to === '/clients') return can('viewClients');
       if (r.to === '/leads' || r.to === '/opportunities') return can('viewCrmLeads');
       return true;

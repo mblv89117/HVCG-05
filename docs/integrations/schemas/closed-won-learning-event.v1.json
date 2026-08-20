@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/closed-won-learning-event.v1.json",
+  "title": "Closed Won Learning Event v1",
+  "description": "Learning signal from Atlas revenue outcomes back to 360 GTM. Does not mutate production ads spend.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "eventId",
+    "outcomeId",
+    "ownerSystem",
+    "envelope"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "closed-won-learning-event.v1"
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "outcomeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "source": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "lessons": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "maxLength": 1000
+      }
+    },
+    "ownerSystem": {
+      "const": "atlas"
+    },
+    "destinationSystem": {
+      "const": "360"
+    },
+    "mutatesPaidAds": {
+      "const": false
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

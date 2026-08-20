@@ -29,7 +29,7 @@ import { PortfolioPage } from './PortfolioPage';
 import { CapitalCommandCenter } from './capital/CapitalCommandCenter';
 import { FractionalCfoWorkbench } from './FractionalCfoWorkbench';
 import { GrowthOsWorkbench } from './GrowthOsWorkbench';
-import { RevenueTruthWorkbench } from './RevenueTruthWorkbench';
+import { CommercialWorkspacePage } from './revenue/CommercialWorkspacePage';
 import { DeferredBoundaryPage } from './PlaceholderModule';
 export { TasksPage } from './TasksApprovalsPage';
 export { PortfolioPage as ProjectsPage };
@@ -41,8 +41,8 @@ export function FinancialsPage() {
 }
 
 export function RevenuePage() {
-  // Deferred — not Atlas SoR. Do not impersonate 360 billing, GCC books, or EVA conversion.
-  return <RevenueTruthWorkbench />;
+  // Commercial workspace renders tip read-models. Billing/collections remain not Atlas SoR.
+  return <CommercialWorkspacePage />;
 }
 
 export function ClientsPageDemoCatalog() {

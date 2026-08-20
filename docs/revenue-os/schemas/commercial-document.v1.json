@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/commercial-document.v1.json",
+  "title": "Revenue OS Commercial Document v1",
+  "description": "MSA/SOW/change-order envelope owned by Revenue OS. Does not auto-send or e-sign. Complements Integration proposal-context.v1 without forking it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "documentId",
+    "documentType",
+    "opportunityId",
+    "clientCode",
+    "title",
+    "status",
+    "autoSend",
+    "liveDispatch",
+    "esignEnabled"
+  ],
+  "properties": {
+    "contractVersion": { "const": "commercial-document.v1" },
+    "documentId": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "documentType": {
+      "type": "string",
+      "enum": ["MSA", "SOW", "CHANGE_ORDER", "RENEWAL_ADDENDUM", "SUCCESS_FEE_RIDER"]
+    },
+    "opportunityId": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "clientCode": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{2,15}$" },
+    "proposalId": { "type": "string", "maxLength": 255 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "INTERNAL_REVIEW",
+        "APPROVED_TO_SEND",
+        "SENT",
+        "NEGOTIATION",
+        "SIGNED",
+        "ACTIVATED",
+        "DECLINED",
+        "EXPIRED",
+        "SUPERSEDED"
+      ]
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "autoSend": { "const": false },
+    "liveDispatch": { "const": false },
+    "esignEnabled": { "const": false }
+  }
+}

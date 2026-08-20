@@ -30,6 +30,8 @@ Authority: CR-HVCG-BA-V2-001.
 | `client-migration-seed.json` | Initial migration records |
 | `hvcg-agents-v2.json` | Eighteen agent configuration stubs |
 
+Revenue Engagement OS (`src/revenue_os/`) consumes these catalogs as commercial authority. It does not replace this directory or invent a second offer/price SoT.
+
 UI and proposals must read these sources. Do not hard-code prices in React components.
 
 Human docs: [HVCG_V2_REQUIREMENTS_TRACEABILITY.md](../../PROJECT_ATLAS/BUSINESS/HVCG_V2_REQUIREMENTS_TRACEABILITY.md) · [HVCG_COMMERCIAL_PLAYBOOK.md](../../PROJECT_ATLAS/BUSINESS/HVCG_COMMERCIAL_PLAYBOOK.md)

@@ -1,0 +1,269 @@
+{
+  "desktop-shell-nav": {
+    "url": "http://127.0.0.1:5180/revenue",
+    "heading": "Commercial workspace",
+    "alerts": [
+      "Commercial context not loaded\n\nopportunityId is required. Commercial workspace fails closed when no opportunity is specified."
+    ],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": false,
+    "hasFailClosed": true,
+    "hasSkipLink": true
+  },
+  "desktop-empty-error": {
+    "url": "http://127.0.0.1:5180/revenue",
+    "heading": "Commercial workspace",
+    "alerts": [
+      "Commercial context not loaded\n\nopportunityId is required. Commercial workspace fails closed when no opportunity is specified."
+    ],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": false,
+    "hasFailClosed": true,
+    "hasSkipLink": true
+  },
+  "desktop-00-fail-closed": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-accg-expansion-001",
+    "heading": "Commercial workspace",
+    "alerts": [
+      "Commercial context not loaded\n\nNo loaded commercial context for opportunity 'opp-accg-expansion-001'. Fail closed — ACME01 prices are not remapped onto unmatched opportunities."
+    ],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": false,
+    "hasFailClosed": true,
+    "hasSkipLink": true
+  },
+  "desktop-01-needs-action": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)",
+      "Open engagement"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "desktop-02-ready": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)",
+      "Open engagement"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "desktop-03-blocked": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)",
+      "Open engagement"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "desktop-04-engagement": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End Local Owner",
+      "Capital",
+      "Clients",
+      "Commercial\n\nNavigation",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "mobile-shell-nav": {
+    "url": "http://127.0.0.1:5180/revenue",
+    "heading": "Commercial workspace",
+    "alerts": [
+      "Commercial context not loaded\n\nopportunityId is required. Commercial workspace fails closed when no opportunity is specified."
+    ],
+    "buttons": [
+      "End",
+      "Pipeline"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": false,
+    "hasFailClosed": true,
+    "hasSkipLink": true
+  },
+  "mobile-empty-error": {
+    "url": "http://127.0.0.1:5180/revenue",
+    "heading": "Commercial workspace",
+    "alerts": [
+      "Commercial context not loaded\n\nopportunityId is required. Commercial workspace fails closed when no opportunity is specified."
+    ],
+    "buttons": [
+      "End",
+      "Pipeline"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": false,
+    "hasFailClosed": true,
+    "hasSkipLink": true
+  },
+  "mobile-00-fail-closed": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-accg-expansion-001",
+    "heading": "Commercial workspace",
+    "alerts": [
+      "Commercial context not loaded\n\nNo loaded commercial context for opportunity 'opp-accg-expansion-001'. Fail closed — ACME01 prices are not remapped onto unmatched opportunities."
+    ],
+    "buttons": [
+      "End",
+      "Pipeline"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": false,
+    "hasFailClosed": true,
+    "hasSkipLink": true
+  },
+  "mobile-01-needs-action": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)",
+      "Open engagement"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "mobile-02-ready": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)",
+      "Open engagement"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "mobile-03-blocked": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)",
+      "Open engagement"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  },
+  "mobile-04-engagement": {
+    "url": "http://127.0.0.1:5180/revenue?opportunity=opp-revos-001",
+    "heading": "Commercial workspace",
+    "alerts": [],
+    "buttons": [
+      "End",
+      "Pipeline",
+      "Operator accept offer",
+      "Operator accept pricing",
+      "Send proposal",
+      "Record acceptance (no live send)"
+    ],
+    "hasLiveDispatchFalse": true,
+    "hasAutoSendFalse": true,
+    "hasAcmeFloor": true,
+    "hasFailClosed": false,
+    "hasSkipLink": true
+  }
+}

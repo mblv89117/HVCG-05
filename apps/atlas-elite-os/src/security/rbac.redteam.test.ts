@@ -34,6 +34,17 @@ describe('Elite rbac source contract', () => {
     assert.equal(can('Client Executive', 'viewAdmin'), false);
   });
 
+  it('/revenue commercial workspace still requires viewFinance (FinanceRoute)', () => {
+    const app = readFileSync(join(root, '../App.tsx'), 'utf8');
+    const modules = readFileSync(join(root, '../pages/Modules.tsx'), 'utf8');
+    const revenueRoute = app.slice(app.indexOf('path="revenue"'), app.indexOf('path="clients"'));
+    assert.match(revenueRoute, /FinanceRoute/);
+    assert.match(revenueRoute, /RevenuePage/);
+    assert.match(modules, /CommercialWorkspacePage/);
+    assert.equal(can('Client Executive', 'viewFinance'), false);
+    assert.equal(can('HVCG Owner', 'viewFinance'), true);
+  });
+
   it('/capital?opportunity= still requires viewFinance (FinanceRoute)', () => {
     const app = readFileSync(join(root, '../App.tsx'), 'utf8');
     const capitalRoute = app.slice(app.indexOf('path="capital"'), app.indexOf('path="procurement"'));

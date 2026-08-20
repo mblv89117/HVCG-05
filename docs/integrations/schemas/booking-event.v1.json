@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/booking-event.v1.json",
+  "title": "Booking Event v1",
+  "description": "Meeting/booking event. Must use write-envelope idempotency; retries must not duplicate bookings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "bookingId",
+    "envelope",
+    "startsAt",
+    "status"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "booking-event.v1"
+    },
+    "bookingId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    },
+    "leadRef": {
+      "$ref": "./typed-ref.v1.json"
+    },
+    "contactEmail": {
+      "type": "string",
+      "format": "email",
+      "maxLength": 255
+    },
+    "startsAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endsAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "requested",
+        "confirmed",
+        "cancelled",
+        "completed",
+        "no_show"
+      ]
+    },
+    "meetingProvider": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

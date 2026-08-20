@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/pre-call-brief.v1.json",
+  "title": "Pre-Call Brief v1",
+  "description": "Brief for discovery/sales call. Observation context for Atlas operators; not a CRM record create.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "briefId",
+    "bookingId",
+    "generatedAt",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "pre-call-brief.v1"
+    },
+    "briefId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "bookingId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "companyName": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "atlasClientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "painHypotheses": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string"
+      }
+    },
+    "suggestedQuestions": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string"
+      }
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ownerSystem": {
+      "type": "string",
+      "enum": [
+        "360",
+        "copilot",
+        "atlas"
+      ]
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}
