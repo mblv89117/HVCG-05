@@ -1,0 +1,78 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-security-config.test.ts
+UTC=2026-08-20T15:05:56Z
+TAP version 13
+# Subtest: Hub bind host classification
+    # Subtest: treats 127.0.0.1, ::1, and localhost as loopback
+    ok 1 - treats 127.0.0.1, ::1, and localhost as loopback
+      ---
+      duration_ms: 0.429099
+      ...
+    1..1
+ok 1 - Hub bind host classification
+  ---
+  duration_ms: 0.984294
+  type: 'suite'
+  ...
+# Subtest: Hub runtime security configuration
+    # Subtest: A. development default requires auth and loopback bind
+    ok 1 - A. development default requires auth and loopback bind
+      ---
+      duration_ms: 0.252023
+      ...
+    # Subtest: B. production default requires auth
+    ok 2 - B. production default requires auth
+      ---
+      duration_ms: 0.07089
+      ...
+    # Subtest: C. production INTEGRATION_REQUIRE_AUTH=false fails startup
+    ok 3 - C. production INTEGRATION_REQUIRE_AUTH=false fails startup
+      ---
+      duration_ms: 0.283135
+      ...
+    # Subtest: D. auth disable without explicit insecure-dev opt-in is rejected
+    ok 4 - D. auth disable without explicit insecure-dev opt-in is rejected
+      ---
+      duration_ms: 0.128095
+      ...
+    # Subtest: E. explicit insecure dev + loopback is permitted
+    ok 5 - E. explicit insecure dev + loopback is permitted
+      ---
+      duration_ms: 0.071901
+      ...
+    # Subtest: F. explicit insecure dev + 0.0.0.0 is rejected
+    ok 6 - F. explicit insecure dev + 0.0.0.0 is rejected
+      ---
+      duration_ms: 0.11562
+      ...
+    # Subtest: G. any auth-off + non-loopback is rejected
+    ok 7 - G. any auth-off + non-loopback is rejected
+      ---
+      duration_ms: 0.163828
+      ...
+    # Subtest: H. auth-on + explicit 0.0.0.0 is allowed
+    ok 8 - H. auth-on + explicit 0.0.0.0 is allowed
+      ---
+      duration_ms: 0.094996
+      ...
+    # Subtest: production cannot enable insecure-dev opt-in
+    ok 9 - production cannot enable insecure-dev opt-in
+      ---
+      duration_ms: 0.153795
+      ...
+    1..9
+ok 2 - Hub runtime security configuration
+  ---
+  duration_ms: 1.628566
+  type: 'suite'
+  ...
+1..2
+# tests 10
+# suites 2
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 147.513274
+EXIT:0

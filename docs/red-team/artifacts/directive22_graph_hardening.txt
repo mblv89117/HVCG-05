@@ -1,0 +1,111 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-pm-graph-transport-hardening.test.ts
+UTC=2026-08-20T15:05:56Z
+TAP version 13
+# Subtest: PM Graph transport resource allowlist
+    # Subtest: accepts the four configured lists and rejects any other list before Graph
+    ok 1 - accepts the four configured lists and rejects any other list before Graph
+      ---
+      duration_ms: 16.096591
+      ...
+    # Subtest: allows HVCG_Leads write only when leadsListId is configured
+    ok 2 - allows HVCG_Leads write only when leadsListId is configured
+      ---
+      duration_ms: 0.643615
+      ...
+    1..2
+ok 1 - PM Graph transport resource allowlist
+  ---
+  duration_ms: 17.28904
+  type: 'suite'
+  ...
+# Subtest: PM Graph transport capability matrix
+    # Subtest: permits Projects/Tasks/Milestones/Clients selected-list writes and rejects unknown lists
+    ok 1 - permits Projects/Tasks/Milestones/Clients selected-list writes and rejects unknown lists
+      ---
+      duration_ms: 4.437185
+      ...
+    1..1
+ok 2 - PM Graph transport capability matrix
+  ---
+  duration_ms: 4.523236
+  type: 'suite'
+  ...
+# Subtest: PM Graph origin, site, and redirect controls
+    # Subtest: accepts the Graph origin and rejects alternate HTTPS, HTTP, and malformed continuation URLs before token use
+    ok 1 - accepts the Graph origin and rejects alternate HTTPS, HTTP, and malformed continuation URLs before token use
+      ---
+      duration_ms: 0.540882
+      ...
+    # Subtest: rejects a continuation path for a different site before an authenticated Graph request
+    ok 2 - rejects a continuation path for a different site before an authenticated Graph request
+      ---
+      duration_ms: 0.196643
+      ...
+    # Subtest: does not follow Graph 301/302/307/308 or forward the bearer token to a Location URL
+    ok 3 - does not follow Graph 301/302/307/308 or forward the bearer token to a Location URL
+      ---
+      duration_ms: 0.942506
+      ...
+    1..3
+ok 3 - PM Graph origin, site, and redirect controls
+  ---
+  duration_ms: 1.956869
+  type: 'suite'
+  ...
+# Subtest: PM Graph pagination nextLink confinement
+    # Subtest: accepts a same-list nextLink and rejects cross-list, catalog, columns, and permissions links before Graph
+    ok 1 - accepts a same-list nextLink and rejects cross-list, catalog, columns, and permissions links before Graph
+      ---
+      duration_ms: 0.522174
+      ...
+    # Subtest: rejects a Graph-returned nextLink that switches lists without issuing another request
+    ok 2 - rejects a Graph-returned nextLink that switches lists without issuing another request
+      ---
+      duration_ms: 0.345283
+      ...
+    1..2
+ok 4 - PM Graph pagination nextLink confinement
+  ---
+  duration_ms: 1.025258
+  type: 'suite'
+  ...
+# Subtest: PM Graph metadata surface absence
+    # Subtest: exposes only item list/get/create/patch operations
+    ok 1 - exposes only item list/get/create/patch operations
+      ---
+      duration_ms: 0.529041
+      ...
+    1..1
+ok 5 - PM Graph metadata surface absence
+  ---
+  duration_ms: 0.649512
+  type: 'suite'
+  ...
+# Subtest: PM Graph Selected-permission collection reads
+    # Subtest: does not send $filter to Graph even when a Hub field predicate is supplied
+    ok 1 - does not send $filter to Graph even when a Hub field predicate is supplied
+      ---
+      duration_ms: 0.428054
+      ...
+    # Subtest: maps Graph 401 and 403 to a permission/token rejection without leaking the body
+    ok 2 - maps Graph 401 and 403 to a permission/token rejection without leaking the body
+      ---
+      duration_ms: 0.706916
+      ...
+    1..2
+ok 6 - PM Graph Selected-permission collection reads
+  ---
+  duration_ms: 1.211093
+  type: 'suite'
+  ...
+1..6
+# tests 11
+# suites 6
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 174.961047
+EXIT:0

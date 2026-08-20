@@ -1,0 +1,286 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-pm-sharepoint.test.ts
+UTC=2026-08-20T15:05:55Z
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: SharePoint PM unit: authz / odata / mapping safety
+    # Subtest: missing ClientCode is not internal
+    ok 1 - missing ClientCode is not internal
+      ---
+      duration_ms: 0.557425
+      ...
+    # Subtest: Administrator and client roles are not internal staff
+    ok 2 - Administrator and client roles are not internal staff
+      ---
+      duration_ms: 0.183244
+      ...
+    # Subtest: wildcard is not a client scope
+    ok 3 - wildcard is not a client scope
+      ---
+      duration_ms: 0.071317
+      ...
+    # Subtest: OData escaping doubles quotes
+    ok 4 - OData escaping doubles quotes
+      ---
+      duration_ms: 0.076024
+      ...
+    # Subtest: Hub matches field filters in memory without sending them to Graph
+    ok 5 - Hub matches field filters in memory without sending them to Graph
+      ---
+      duration_ms: 0.19306
+      ...
+    # Subtest: pagination nextLink off graph.microsoft.com is rejected
+    ok 6 - pagination nextLink off graph.microsoft.com is rejected
+      ---
+      duration_ms: 0.5806
+      ...
+    1..6
+ok 1 - SharePoint PM unit: authz / odata / mapping safety
+  ---
+  duration_ms: 2.356348
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: SharePoint PM HTTP
+    # Subtest: health reports sharepoint without raw IDs or tokens and does not write JSON
+    ok 1 - health reports sharepoint without raw IDs or tokens and does not write JSON
+      ---
+      duration_ms: 22.09016
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: lists only entitled client projects and excludes others
+    ok 2 - lists only entitled client projects and excludes others
+      ---
+      duration_ms: 11.821585
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: internal projects require staff; missing ClientCode is not internal; admin denied
+    ok 3 - internal projects require staff; missing ClientCode is not internal; admin denied
+      ---
+      duration_ms: 7.410323
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: creates client project with lookup; rejects UUID/display/unauthorized/duplicate/missing ClientCode
+    ok 4 - creates client project with lookup; rejects UUID/display/unauthorized/duplicate/missing ClientCode
+      ---
+      duration_ms: 14.44104
+      ...
+# {"level":"audit","id":"4b158676-4212-4b39-a31e-60bacf99d85a","at":"2026-08-20T15:05:55.877Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=1 client=ACCG01","sensitive":false}
+# {"level":"audit","id":"00111279-d034-4e84-8b6b-c2e63e5d6225","at":"2026-08-20T15:05:55.881Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=2 client=internal","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: creates client and internal projects; patch keeps classification immutable
+    ok 5 - creates client and internal projects; patch keeps classification immutable
+      ---
+      duration_ms: 8.349904
+      ...
+# {"level":"audit","id":"8f3fc169-e7a3-4349-8b63-d9e7fd2eb777","at":"2026-08-20T15:05:55.886Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=1 client=ACCG01","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: ETag conflict is 412; archive is not implemented
+    ok 6 - ETag conflict is 412; archive is not implemented
+      ---
+      duration_ms: 6.304932
+      ...
+# {"level":"audit","id":"1e9b5e8e-e426-4681-a89f-7bc84b7015fa","at":"2026-08-20T15:05:55.894Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_task_create","outcome":"success","detail":"list=HVCG_Tasks item=1 project=30","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: tasks require authorized parent and inherit ClientCode; ProjectId immutable
+    ok 7 - tasks require authorized parent and inherit ClientCode; ProjectId immutable
+      ---
+      duration_ms: 6.703276
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: inconsistent task/project ClientCode fails closed
+    ok 8 - inconsistent task/project ClientCode fails closed
+      ---
+      duration_ms: 2.811577
+      ...
+# {"level":"audit","id":"e223bf86-a7bb-4ebd-84f8-f5cb2675e4ff","at":"2026-08-20T15:05:55.903Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_milestone_create","outcome":"success","detail":"list=HVCG_Milestones item=1 project=50","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: milestones require project authorization
+    ok 9 - milestones require project authorization
+      ---
+      duration_ms: 4.736624
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: My Work uses oid directory mail, ignores owner query, fails closed on directory errors
+    ok 10 - My Work uses oid directory mail, ignores owner query, fails closed on directory errors
+      ---
+      duration_ms: 7.619221
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: My Work UPN fallback and command center / portfolio stay in scope
+    ok 11 - My Work UPN fallback and command center / portfolio stay in scope
+      ---
+      duration_ms: 5.11692
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: Command Center Graph 403 is a permission rejection, not an empty success
+    ok 12 - Command Center Graph 403 is a permission rejection, not an empty success
+      ---
+      duration_ms: 2.753801
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: clients directory is SharePoint HVCG_Clients by ClientCode, not Client 360
+    ok 13 - clients directory is SharePoint HVCG_Clients by ClientCode, not Client 360
+      ---
+      duration_ms: 11.451476
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: deferred routes are not implemented and do not fall back to JSON
+    ok 14 - deferred routes are not implemented and do not fall back to JSON
+      ---
+      duration_ms: 4.719075
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: pagination follows in-origin nextLink
+    ok 15 - pagination follows in-origin nextLink
+      ---
+      duration_ms: 2.325167
+      ...
+    1..15
+ok 2 - SharePoint PM HTTP
+  ---
+  duration_ms: 119.345915
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: SharePoint HVCG_Leads operator queue
+    # Subtest: lists unclassified leads for internal staff and surfaces them on Command Center
+    ok 1 - lists unclassified leads for internal staff and surfaces them on Command Center
+      ---
+      duration_ms: 4.048777
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: Administrator and Advisor cannot read unclassified HVCG_Leads
+    ok 2 - Administrator and Advisor cannot read unclassified HVCG_Leads
+      ---
+      duration_ms: 3.768285
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not leak a foreign converted lead and rejects Converted PATCH
+    ok 3 - does not leak a foreign converted lead and rejects Converted PATCH
+      ---
+      duration_ms: 4.707997
+      ...
+# {"level":"audit","id":"1df021df-af2c-48a8-969d-eb398cb12de0","at":"2026-08-20T15:05:55.954Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=84 prev=New next=Converted company=NORTH01 stage=Prospect opportunity=3 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: converts a New website lead into Company, Contact, and Discovery Opportunity
+    not ok 4 - converts a New website lead into Company, Contact, and Discovery Opportunity
+      ---
+      duration_ms: 9.626791
+      location: '/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:1:28969'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        
+        404 !== 200
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 200
+      actual: 404
+      operator: 'strictEqual'
+      stack: |-
+        <anonymous> (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:1003:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        async withSpHub (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:224:5)
+        async withCrmLeads (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:845:7)
+        async TestContext.<anonymous> (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:929:5)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:677:7)
+      ...
+# {"level":"audit","id":"6c0b3c16-7457-4b02-af45-04a4784d2b59","at":"2026-08-20T15:05:55.964Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=85 prev=Contacted next=Converted company=ACCG01 stage= opportunity=2 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: reuses an existing HVCG_Clients company by title and denies Converted PATCH
+    ok 5 - reuses an existing HVCG_Clients company by title and denies Converted PATCH
+      ---
+      duration_ms: 4.678416
+      ...
+# {"level":"audit","id":"ad3c6038-5d7f-49c6-9b9e-f09ba754c5f7","at":"2026-08-20T15:05:55.968Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=201 prev=New next=Converted company=SYNQA stage=Prospect opportunity=2 entitlement=false","sensitive":false}
+# {"level":"audit","id":"63ca940e-e28d-4f1c-9306-60530d96c05f","at":"2026-08-20T15:05:55.971Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=202 prev=New next=Converted company=SYNACT stage=Active Client opportunity=4 entitlement=false","sensitive":false}
+# {"level":"audit","id":"5ab148bb-b823-470c-a3f6-2c6e6d3a3a61","at":"2026-08-20T15:05:55.975Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=203 prev=Contacted next=Converted company=ACCG01 stage=Lead opportunity=6 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: promotes a reused Lead-stage company to Prospect and never downgrades Active Client or ACCG01
+    ok 6 - promotes a reused Lead-stage company to Prospect and never downgrades Active Client or ACCG01
+      ---
+      duration_ms: 11.426717
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: recovers opportunity clientCode from converted title when Graph drops ClientId
+    ok 7 - recovers opportunity clientCode from converted title when Graph drops ClientId
+      ---
+      duration_ms: 2.617778
+      ...
+# {"level":"audit","id":"61310111-7a42-4b3d-be70-974242e13703","at":"2026-08-20T15:05:55.983Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=88 prev=New next=Converted company=SYNCO01 stage=Prospect opportunity=3 entitlement=false","sensitive":false}
+# {"level":"audit","id":"00c100e0-3779-4c5a-a35a-77657bceab17","at":"2026-08-20T15:05:55.987Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=89 prev=New next=Converted company=SYNPA01 stage=Prospect opportunity=6 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity
+    ok 8 - does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity
+      ---
+      duration_ms: 9.598761
+      ...
+# {"level":"audit","id":"f97028ce-ee31-4dd2-885e-212037f8726c","at":"2026-08-20T15:05:55.993Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_opportunity_patch","outcome":"success","detail":"list=HVCG_Opportunities item=120 stage=Proposal winLoss=Open attention=NEEDS_MANNY clientStage=Prospect","sensitive":false}
+# {"level":"audit","id":"841de780-e36c-4722-bb39-767f9c50d61f","at":"2026-08-20T15:05:55.997Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_opportunity_patch","outcome":"success","detail":"list=HVCG_Opportunities item=120 stage=Won winLoss=Won attention=ACTIVATION_REQUIRED clientStage=Prospect","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: operates Opportunities with attention states, ETag safety, audit, and no client activation
+    ok 9 - operates Opportunities with attention states, ETag safety, audit, and no client activation
+      ---
+      duration_ms: 9.661356
+      ...
+# {"level":"audit","id":"9326144f-77f1-4eef-99fb-f844b6456d0f","at":"2026-08-20T15:05:56.004Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_client_activation_request","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=activation_required stage=Prospect entitlement=false replay=false","sensitive":false}
+# {"level":"audit","id":"62f1ba55-032e-4284-833c-a9626dc05259","at":"2026-08-20T15:05:56.006Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_client_activation_review","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=review stage=Prospect entitlement=false replay=false","sensitive":false}
+# {"level":"audit","id":"2511f39f-c507-4b28-99d3-9a0a57096dd4","at":"2026-08-20T15:05:56.009Z","actorUserId":"e4835ea2-3c45-493a-95f5-472f6339661d","action":"pm_client_activation_authorize","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=authorized stage=Active Client entitlement=false replay=false","sensitive":false}
+# {"level":"audit","id":"822198ad-168d-442e-b2d7-f05ad987b409","at":"2026-08-20T15:05:56.010Z","actorUserId":"e4835ea2-3c45-493a-95f5-472f6339661d","action":"pm_client_activation_authorize","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=authorized stage=Active Client entitlement=false replay=true","sensitive":false}
+# {"level":"audit","id":"596a0eb0-dbf5-4172-9633-b5c6651ea9b3","at":"2026-08-20T15:05:56.011Z","actorUserId":"e4835ea2-3c45-493a-95f5-472f6339661d","action":"pm_client_activation_verify","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=verified stage=Active Client entitlement=false replay=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: governs client activation separately from Won and never provisions entitlements
+    ok 10 - governs client activation separately from Won and never provisions entitlements
+      ---
+      duration_ms: 13.563314
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not convert Disqualified leads and returns 503 when Opportunities are unconfigured
+    ok 11 - does not convert Disqualified leads and returns 503 when Opportunities are unconfigured
+      ---
+      duration_ms: 6.201341
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: portfolio blockerCount uses blocked tasks and dataQuality.needsOwnerReview
+    ok 12 - portfolio blockerCount uses blocked tasks and dataQuality.needsOwnerReview
+      ---
+      duration_ms: 2.550728
+      ...
+    1..12
+not ok 3 - SharePoint HVCG_Leads operator queue
+  ---
+  duration_ms: 83.106136
+  type: 'suite'
+  location: '/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:1:25206'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: SharePoint config does not fall back to JSON
+    # Subtest: createAuthorizedPmRepository is null when sharepoint is selected
+    ok 1 - createAuthorizedPmRepository is null when sharepoint is selected
+      ---
+      duration_ms: 0.946394
+      ...
+    1..1
+ok 4 - SharePoint config does not fall back to JSON
+  ---
+  duration_ms: 1.001261
+  type: 'suite'
+  ...
+1..4
+# tests 34
+# suites 4
+# pass 33
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 465.047377
+EXIT:1

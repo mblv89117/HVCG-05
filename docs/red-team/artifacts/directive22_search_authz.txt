@@ -1,0 +1,96 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-pm-search-redteam.test.ts
+UTC=2026-08-20T15:05:54Z
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: PM search / Elite Hub routes — SYN isolation
+    # Subtest: SYN01 search cannot see SYN02 clients, projects, tasks, docs, or opportunities
+    ok 1 - SYN01 search cannot see SYN02 clients, projects, tasks, docs, or opportunities
+      ---
+      duration_ms: 27.744019
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: prompt-injection and oversized search queries do not broaden scope
+    ok 2 - prompt-injection and oversized search queries do not broaden scope
+      ---
+      duration_ms: 8.987465
+      ...
+    # Subtest: x-atlas spoofing cannot become Manny or broaden SYN01 to SYN02
+    ok 3 - x-atlas spoofing cannot become Manny or broaden SYN01 to SYN02
+      ---
+      duration_ms: 6.894177
+      ...
+    # Subtest: non-Manny cannot read unclassified files or tenant vendors via search
+    ok 4 - non-Manny cannot read unclassified files or tenant vendors via search
+      ---
+      duration_ms: 0.439075
+      ...
+    # Subtest: SYN / SYN01 / exact and partial client name hit the authorized client
+    ok 5 - SYN / SYN01 / exact and partial client name hit the authorized client
+      ---
+      duration_ms: 0.972198
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: workspace extras throw or hang cannot drop an authorized SYN01 client hit
+    ok 6 - workspace extras throw or hang cannot drop an authorized SYN01 client hit
+      ---
+      duration_ms: 80.795785
+      ...
+    # Subtest: capital opportunity search stays client-scoped and uses the file route
+    ok 7 - capital opportunity search stays client-scoped and uses the file route
+      ---
+      duration_ms: 0.406723
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: foreign project/task ID substitution is 404/403 and create cannot plant SYN02
+    ok 8 - foreign project/task ID substitution is 404/403 and create cannot plant SYN02
+      ---
+      duration_ms: 12.155094
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: SharePoint my-work ignores ownerId impersonation; fabric sync is Manny-only
+    ok 9 - SharePoint my-work ignores ownerId impersonation; fabric sync is Manny-only
+      ---
+      duration_ms: 7.792808
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: search query-param manipulation cannot broaden SYN01 onto SYN02
+    ok 10 - search query-param manipulation cannot broaden SYN01 onto SYN02
+      ---
+      duration_ms: 4.593726
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: unauthenticated search is 401; missing bearer is not a 200 empty leak
+    ok 11 - unauthenticated search is 401; missing bearer is not a 200 empty leak
+      ---
+      duration_ms: 2.671808
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: SYN01 search cannot see a SYN02 lead; unclassified leads do not use clientIds *
+    ok 12 - SYN01 search cannot see a SYN02 lead; unclassified leads do not use clientIds *
+      ---
+      duration_ms: 5.485066
+      ...
+# {"level":"audit","id":"c7b1aa35-3e44-43bc-b0cf-66278d0d43f0","at":"2026-08-20T15:05:55.321Z","actorUserId":"11111111-1111-4111-8111-aaaaaaaaaa02","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=100 client=SYN02","sensitive":false}
+    # Subtest: duplicate project idempotency does not leak SYN02 rows to SYN01
+    ok 13 - duplicate project idempotency does not leak SYN02 rows to SYN01
+      ---
+      duration_ms: 6.196881
+      ...
+    1..13
+ok 1 - PM search / Elite Hub routes — SYN isolation
+  ---
+  duration_ms: 166.308009
+  type: 'suite'
+  ...
+1..1
+# tests 13
+# suites 1
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 412.954615
+EXIT:0

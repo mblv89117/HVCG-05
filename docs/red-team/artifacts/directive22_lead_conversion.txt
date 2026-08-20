@@ -1,0 +1,46 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-pm-lead-conversion.test.ts
+UTC=2026-08-20T15:05:52Z
+TAP version 13
+# Subtest: Lead conversion helpers
+    # Subtest: maps ServiceInterest onto existing OpportunityType choices
+    ok 1 - maps ServiceInterest onto existing OpportunityType choices
+      ---
+      duration_ms: 0.554581
+      ...
+    # Subtest: reuses the Power Automate opportunity idempotency pattern
+    ok 2 - reuses the Power Automate opportunity idempotency pattern
+      ---
+      duration_ms: 0.09314
+      ...
+    # Subtest: proposes a canonical ClientCode without colliding
+    ok 3 - proposes a canonical ClientCode without colliding
+      ---
+      duration_ms: 0.272086
+      ...
+    # Subtest: strips the converted Discovery suffix from opportunity titles
+    ok 4 - strips the converted Discovery suffix from opportunity titles
+      ---
+      duration_ms: 0.134728
+      ...
+    # Subtest: promotes only Lead-stage reused companies and never ACCG01
+    ok 5 - promotes only Lead-stage reused companies and never ACCG01
+      ---
+      duration_ms: 0.141841
+      ...
+    1..5
+ok 1 - Lead conversion helpers
+  ---
+  duration_ms: 1.955215
+  type: 'suite'
+  ...
+1..1
+# tests 5
+# suites 1
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 144.870277
+EXIT:0

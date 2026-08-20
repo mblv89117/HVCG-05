@@ -1,0 +1,160 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-entitlements.test.ts
+UTC=2026-08-20T15:05:51Z
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: canonical ClientCode validation
+    # Subtest: accepts live-shaped codes and rejects aliases/UUIDs/wildcard
+    ok 1 - accepts live-shaped codes and rejects aliases/UUIDs/wildcard
+      ---
+      duration_ms: 0.511898
+      ...
+    # Subtest: parses only exact HVCG-Client-{ClientCode} names
+    ok 2 - parses only exact HVCG-Client-{ClientCode} names
+      ---
+      duration_ms: 0.134853
+      ...
+    1..2
+ok 1 - canonical ClientCode validation
+  ---
+  duration_ms: 1.335528
+  type: 'suite'
+  ...
+# Subtest: approved group map parsing
+    # Subtest: keeps a valid 1:1 map
+    ok 1 - keeps a valid 1:1 map
+      ---
+      duration_ms: 0.276497
+      ...
+    # Subtest: malformed GUID, malformed ClientCode, or wildcard fail the entire map
+    ok 2 - malformed GUID, malformed ClientCode, or wildcard fail the entire map
+      ---
+      duration_ms: 0.109452
+      ...
+    # Subtest: duplicate group IDs or duplicate ClientCodes fail closed
+    ok 3 - duplicate group IDs or duplicate ClientCodes fail closed
+      ---
+      duration_ms: 0.101685
+      ...
+    # Subtest: empty input is a valid empty map
+    ok 4 - empty input is a valid empty map
+      ---
+      duration_ms: 0.068188
+      ...
+    1..4
+ok 2 - approved group map parsing
+  ---
+  duration_ms: 0.811849
+  type: 'suite'
+  ...
+# Subtest: ClientEntitlementResolver
+    # Subtest: missing oid fails closed
+    ok 1 - missing oid fails closed
+      ---
+      duration_ms: 0.689914
+      ...
+    # Subtest: no membership → empty scope
+    ok 2 - no membership → empty scope
+      ---
+      duration_ms: 0.170872
+      ...
+    # Subtest: one approved client group → exactly one ClientCode
+    ok 3 - one approved client group → exactly one ClientCode
+      ---
+      duration_ms: 0.213604
+      ...
+    # Subtest: multiple approved groups → exact list only
+    ok 4 - multiple approved groups → exact list only
+      ---
+      duration_ms: 0.265821
+      ...
+    # Subtest: unrelated Entra groups and malformed codes are ignored
+    ok 5 - unrelated Entra groups and malformed codes are ignored
+      ---
+      duration_ms: 0.130474
+      ...
+    # Subtest: Graph failure and timeout fail closed
+    ok 6 - Graph failure and timeout fail closed
+      ---
+      duration_ms: 0.146671
+      ...
+    # Subtest: never returns wildcard
+    ok 7 - never returns wildcard
+      ---
+      duration_ms: 0.103409
+      ...
+    # Subtest: cache hit returns previously resolved exact scope
+    ok 8 - cache hit returns previously resolved exact scope
+      ---
+      duration_ms: 0.190833
+      ...
+    # Subtest: expired cache requires fresh resolution
+    ok 9 - expired cache requires fresh resolution
+      ---
+      duration_ms: 0.238051
+      ...
+    # Subtest: failed refresh does not keep stale authorization
+    ok 10 - failed refresh does not keep stale authorization
+      ---
+      duration_ms: 0.113088
+      ...
+    1..10
+ok 3 - ClientEntitlementResolver
+  ---
+  duration_ms: 2.642789
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub principal client scope from resolver
+    # Subtest: Administrator and HVCG Owner do not gain wildcard client scope
+    ok 1 - Administrator and HVCG Owner do not gain wildcard client scope
+      ---
+      duration_ms: 7.575543
+      ...
+    # Subtest: missing oid fails closed for client entitlement
+    ok 2 - missing oid fails closed for client entitlement
+      ---
+      duration_ms: 0.383305
+      ...
+    1..2
+ok 4 - Hub principal client scope from resolver
+  ---
+  duration_ms: 8.056888
+  type: 'suite'
+  ...
+# Subtest: Client 360 identifiers are not ClientCodes
+    # Subtest: random UUID client-360 path is forbidden without a trusted mapping
+    ok 1 - random UUID client-360 path is forbidden without a trusted mapping
+      ---
+      duration_ms: 18.493756
+      ...
+    1..1
+ok 5 - Client 360 identifiers are not ClientCodes
+  ---
+  duration_ms: 18.603244
+  type: 'suite'
+  ...
+# Subtest: entitlement config defaults
+    # Subtest: is enabled by default with 120s cache and empty approved groups
+    ok 1 - is enabled by default with 120s cache and empty approved groups
+      ---
+      duration_ms: 0.084404
+      ...
+    1..1
+ok 6 - entitlement config defaults
+  ---
+  duration_ms: 0.133572
+  type: 'suite'
+  ...
+1..6
+# tests 20
+# suites 6
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 290.339819
+EXIT:0

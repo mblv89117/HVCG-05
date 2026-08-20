@@ -497,3 +497,17 @@ Severity: P0 / P1 / P2 (not inflated)
 | Incomplete tip `bb7edae` | — | STALE_SUPERSEDED (XSYS incomplete) |
 | Candidate P0/P1 | — | **0 / 0** |
 | Live production P0 | **5** | — |
+
+
+## Directive 22 status appendix (certified workflow regression + rollback)
+
+| Gate / ID | Status @ Directive 22 |
+|-----------|------------------------|
+| ATLAS-RT-01/02/03 · XSYS-01/02 | Dual-surface **unchanged** (D21): LIVE OPEN×5 / CANDIDATE FIXED_REVALIDATED — findings probes not re-run as sole D22 evidence |
+| Certified workflow regression @ `0bbfd87` | **PARTIAL** — Hub API 322 pass / 1 fail (`hub-pm-sharepoint` convert→GET opportunity 404 vs staff short-circuit on Hub `940a484`) |
+| Workflows a–c, e–k | **PASS** (executable suites; artifacts `directive22_*.txt`) |
+| Workflow d Lead→Prospect→Opportunity | **PARTIAL** (convert 200; post-convert GET 404) |
+| ROLLBACK_READY | **YES** (script EXISTS; prior Hub SHA `b6a3c9c` RECORDED; zip MISSING/gitignored; **not executed**) |
+| OWNER_GATE_PREREQS | `CANDIDATE_P0=0 CANDIDATE_P1=0 RED_TEAM=PASS REGRESSION=PARTIAL ROLLBACK_READY=YES` |
+| Live production P0 | **5** (unchanged) |
+| Report | `docs/red-team/CERTIFIED_WORKFLOW_REGRESSION_0bbfd87.md` |

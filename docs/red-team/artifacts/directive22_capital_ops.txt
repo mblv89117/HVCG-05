@@ -1,0 +1,95 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-capital-operations.test.ts
+UTC=2026-08-20T15:05:53Z
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub capital operations API
+    # Subtest: requires auth on capital routes
+    ok 1 - requires auth on capital routes
+      ---
+      duration_ms: 20.244834
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: returns 400 for malformed JSON without leaking a stack
+    ok 2 - returns 400 for malformed JSON without leaking a stack
+      ---
+      duration_ms: 9.085608
+      ...
+# {"level":"audit","id":"d0750039-2e78-48d6-9a59-2b2004a6150c","at":"2026-08-20T15:05:53.821Z","actorUserId":"user-empty","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"audit","id":"cf311b3c-196d-4712-b0c1-0c3ed373cf68","at":"2026-08-20T15:05:53.824Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-7b303466-1601-40af-ab36-2c8bbedac0cd created=true","sensitive":false}
+# {"level":"audit","id":"7e074007-f697-4593-8583-4bb2a746c5c6","at":"2026-08-20T15:05:53.827Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: enforces client isolation and empty staff scope
+    ok 3 - enforces client isolation and empty staff scope
+      ---
+      duration_ms: 12.796043
+      ...
+# {"level":"audit","id":"2e0be885-b5ea-46c3-9ce0-35fbcd9c5c3d","at":"2026-08-20T15:05:53.835Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 created=true","sensitive":false}
+# {"level":"audit","id":"2676cec9-676d-4db9-9b67-ddc2c62278ba","at":"2026-08-20T15:05:53.838Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 created=false","sensitive":false}
+# {"level":"audit","id":"b8b9d738-2693-4a12-889d-8da2f6631d97","at":"2026-08-20T15:05:53.843Z","actorUserId":"user-1","action":"capital_opportunity_transition","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 to=InitialQualification","sensitive":false}
+# {"level":"audit","id":"2bac3cd4-58d0-425d-a3e3-73b653a56b89","at":"2026-08-20T15:05:53.850Z","actorUserId":"user-1","action":"capital_checklist_override","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 item=chk-org-formation","sensitive":false}
+# {"level":"audit","id":"34ac9cd3-4777-4ab0-a18c-5ac14e2753b0","at":"2026-08-20T15:05:53.854Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0","sensitive":false}
+# {"level":"audit","id":"453fb78b-0781-4c1b-b6d5-6bf57ec235d1","at":"2026-08-20T15:05:53.855Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0","sensitive":false}
+# {"level":"audit","id":"025aa363-e045-45b1-8249-217e88808616","at":"2026-08-20T15:05:53.860Z","actorUserId":"user-1","action":"capital_document_review","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 doc=doc-9a216968-c44b-44ee-90af-7bfe846d5509","sensitive":false}
+# {"level":"audit","id":"30c32cd4-d251-4d56-a64e-4491b6cbc355","at":"2026-08-20T15:05:53.874Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 sendAttempted=false","sensitive":false}
+# {"level":"audit","id":"f22373cf-6250-402e-bcf5-742b39fafe55","at":"2026-08-20T15:05:53.885Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"0dbe0e98-1346-45d4-ab2a-53e84a7e48dd","at":"2026-08-20T15:05:53.887Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"85e7595c-46cc-4a05-b377-87dc20e3a5b1","at":"2026-08-20T15:05:53.906Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0/shortlist/decision forbidden","sensitive":false}
+# {"level":"audit","id":"ef8434d4-2c43-44f9-9ca7-f0453e6bec3a","at":"2026-08-20T15:05:53.907Z","actorUserId":"user-admin","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0/shortlist/decision forbidden","sensitive":false}
+# {"level":"audit","id":"d4416bc0-5025-4814-8c0e-e4137a2b986c","at":"2026-08-20T15:05:53.910Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"9b2d87e1-31a7-4fb8-91ad-e0e4b0565971","at":"2026-08-20T15:05:53.916Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"28b237a9-829a-4d23-80e5-c829bcfc38bf","at":"2026-08-20T15:05:53.918Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"56fe13f9-d203-4de5-8d42-3ffd2737a030","at":"2026-08-20T15:05:53.921Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"a946170a-0d31-477d-8158-e269226aab20","at":"2026-08-20T15:05:53.924Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-acdc243b-c6aa-4c56-9364-ff43fabcdbe4 created=true","sensitive":false}
+# {"level":"audit","id":"d0fdb281-4373-4f7f-8589-96702cc09d52","at":"2026-08-20T15:05:53.929Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0 recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"audit","id":"9a8571b5-709f-4614-8243-abc63faf3d1b","at":"2026-08-20T15:05:53.935Z","actorUserId":"user-1","action":"capital_offer_add","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0","sensitive":false}
+# {"level":"audit","id":"574fbc18-3c7a-48db-ace4-1686b3b27f18","at":"2026-08-20T15:05:53.937Z","actorUserId":"user-1","action":"capital_offer_add","outcome":"success","detail":"id=cap-97f3e116-02dc-41bc-be39-f3be1dcf16a0","sensitive":false}
+# {"level":"audit","id":"b1a87fd8-83ac-4708-8bc2-a233342488b5","at":"2026-08-20T15:05:53.945Z","actorUserId":"user-1","action":"capital_fee_record","outcome":"success","detail":"client=SYN01","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: creates, transitions, checklists, documents, strategy, matching, application, submission, fees, and handoffs
+    ok 4 - creates, transitions, checklists, documents, strategy, matching, application, submission, fees, and handoffs
+      ---
+      duration_ms: 131.783136
+      ...
+# {"level":"audit","id":"1c5c3bfd-2079-4700-a58a-dceb099f1dab","at":"2026-08-20T15:05:53.965Z","actorUserId":"user-star","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"audit","id":"c4b298c3-2fc2-4fc6-97e5-ecbe8b34e904","at":"2026-08-20T15:05:53.967Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-4510605f-406e-46c8-b30c-271a83c0d617 created=true","sensitive":false}
+# {"level":"audit","id":"95693ccc-aa11-4019-b40d-c55f5539d2d7","at":"2026-08-20T15:05:53.968Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-4510605f-406e-46c8-b30c-271a83c0d617/submissions forbidden","sensitive":false}
+# {"level":"audit","id":"90161336-c4f5-41aa-abc0-b9eb5f11f344","at":"2026-08-20T15:05:53.969Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/lenders forbidden","sensitive":false}
+# {"level":"audit","id":"253f97e6-5e95-4559-9bc9-f285d467cd3a","at":"2026-08-20T15:05:53.970Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/handoffs/attribution forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects wildcard principal, unapproved submission, and member catalog writes
+    ok 5 - rejects wildcard principal, unapproved submission, and member catalog writes
+      ---
+      duration_ms: 7.688811
+      ...
+# {"level":"audit","id":"0cd57098-ab95-4455-bea3-7995642663e7","at":"2026-08-20T15:05:53.973Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-7ae4cadb-1e4d-45ff-abae-8608270aae07 created=true","sensitive":false}
+# {"level":"audit","id":"f7c86c85-1085-422c-a377-d792426f5807","at":"2026-08-20T15:05:53.976Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-7ae4cadb-1e4d-45ff-abae-8608270aae07","sensitive":false}
+# {"level":"audit","id":"84e85dbd-64ee-4572-a5bc-bd91f4a97c2b","at":"2026-08-20T15:05:53.979Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-7ae4cadb-1e4d-45ff-abae-8608270aae07 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: runs document intelligence as a draft-only, fail-closed package review
+    ok 6 - runs document intelligence as a draft-only, fail-closed package review
+      ---
+      duration_ms: 9.835414
+      ...
+    # Subtest: unauthenticated capital requests remain 401 when the backend is unavailable
+    ok 7 - unauthenticated capital requests remain 401 when the backend is unavailable
+      ---
+      duration_ms: 3.646186
+      ...
+    1..7
+ok 1 - Hub capital operations API
+  ---
+  duration_ms: 196.039214
+  type: 'suite'
+  ...
+1..1
+# tests 7
+# suites 1
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 478.826088
+EXIT:0
