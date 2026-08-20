@@ -926,6 +926,10 @@ describe('SharePoint HVCG_Leads operator queue', () => {
   });
 
   it('converts a New website lead into Company, Contact, and Discovery Opportunity', async () => {
+    // ATLAS-01: convert must not grant visibility. USER_A is fixture-entitled for
+    // the proposed ClientCode (NORTH01) so post-convert GET/command-center can
+    // assert 200 under an entitled principal. Convert still reports
+    // entitlementProvisioned=false. Staff without NORTH01 remains 404.
     await withCrmLeads(async ({ base, graph, dataDir }) => {
       graph.seed(
         LEADS,
@@ -981,7 +985,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(body.company.clientStage, 'Prospect');
       assert.equal(body.company.entitlementProvisioned, false);
       assert.equal(body.entitlementProvisioned, false);
-      assert.match(body.company.clientCode, /^[A-Z][A-Z0-9]{2,15}$/);
+      assert.equal(body.company.clientCode, 'NORTH01');
       assert.notEqual(body.company.clientCode, 'ACCG01');
       assert.equal(body.contact.email, 'pat@northwind.example');
       assert.equal(body.opportunity.stage, 'Discovery');
@@ -1001,6 +1005,10 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(createdOpp?.fields.HVCG_IdempotencyKey, 'opp-from-lead|84');
       const opp = await fetch(`${base}/api/pm/opportunities/${body.opportunity.id}`, { headers: auth('a') });
       assert.equal(opp.status, 200);
+      const staffHidden = await fetch(`${base}/api/pm/opportunities/${body.opportunity.id}`, {
+        headers: auth('staff'),
+      });
+      assert.equal(staffHidden.status, 404);
       const home = await fetch(`${base}/api/pm/command-center`, { headers: auth('a') });
       const homeBody = (await home.json()) as {
         commandCenter: {
@@ -1059,7 +1067,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
         body: JSON.stringify({}),
       });
       assert.equal(clientDenied.status, 404);
-    });
+    }, (oid) => (oid === USER_A ? ['ACCG01', 'NORTH01'] : ['ACCG01']));
   });
 
   it('reuses an existing HVCG_Clients company by title and denies Converted PATCH', async () => {

@@ -1413,7 +1413,8 @@ export class SharePointPmService {
   }
 
   private canSeeOpportunity(principal: AtlasPrincipal, opportunity: SharePointOpportunity): boolean {
-    if (isInternalStaff(principal)) return true;
+    // OD-005 / ATLAS-RT-01+02: never short-circuit staff to all opportunities.
+    // Entitlement intersection applies to every principal (including internal staff).
     const code = (opportunity.clientCode || '').trim();
     if (!code || !isCanonicalClientCode(code) || code === '*') return false;
     return entitledClientCodes(principal).includes(code);

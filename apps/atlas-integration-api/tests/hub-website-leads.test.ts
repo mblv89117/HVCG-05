@@ -14,7 +14,23 @@ import type { GraphListItem, PmGraphTransport } from '../src/pm/sharepoint/graph
 import { GRAPH_TOKEN_RESOURCE } from '../src/pm/sharepoint/token.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
 import { resolveWebsiteLeadIdempotencyKey } from '../src/website/leads.ts';
-import { verifyWebsiteIntakeKey, websiteIntakeKeyConfigured } from '../src/website/intakeAuth.ts';
+import {
+  computeWebsiteIntakeSignature,
+  verifyWebsiteIntakeKey,
+  websiteIntakeKeyConfigured,
+  WEBSITE_INTAKE_DEFAULT_KEY_ID,
+} from '../src/website/intakeAuth.ts';
+
+function signedIntakeHeaders(body: string, key = INTAKE_KEY): Record<string, string> {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  return {
+    'content-type': 'application/json',
+    'x-website-intake-key': key,
+    'x-website-intake-key-id': WEBSITE_INTAKE_DEFAULT_KEY_ID,
+    'x-website-intake-timestamp': timestamp,
+    'x-website-intake-signature': computeWebsiteIntakeSignature(key, timestamp, body),
+  };
+}
 
 const SITE =
   'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022';
@@ -167,6 +183,27 @@ describe('website lead idempotency', () => {
     );
     assert.equal(resolveWebsiteLeadIdempotencyKey({ leadId: 'abc' }), 'website|abc');
   });
+
+  it('rejects foreign-prefix overwrite (XSYS-02)', () => {
+    assert.throws(
+      () =>
+        resolveWebsiteLeadIdempotencyKey({
+          submissionType: 'Website-Contact',
+          leadId: 'x',
+          fullPayload: { idempotencyKey: 'eva|foreign' },
+        }),
+      (err: { status?: number; code?: string }) => err?.status === 409 || err?.code === 'IDEMPOTENCY_PREFIX_MISMATCH',
+    );
+    assert.throws(
+      () =>
+        resolveWebsiteLeadIdempotencyKey({
+          submissionType: 'Agent-Copilot',
+          assessmentId: 'a1',
+          fullPayload: { idempotencyKey: 'website|wrong' },
+        }),
+      (err: { status?: number }) => err?.status === 409,
+    );
+  });
 });
 
 describe('POST /api/website/leads', () => {
@@ -181,26 +218,36 @@ describe('POST /api/website/leads', () => {
     });
   });
 
-  it('is 401 without the intake key and Bearer does not grant ingest', async () => {
+  it('is 401 without signed intake auth and Bearer does not grant ingest (XSYS-01)', async () => {
     await withHub({}, async ({ base, graph }) => {
+      const body = JSON.stringify(sample);
       const missing = await fetch(`${base}/api/website/leads`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(sample),
+        body,
       });
       assert.equal(missing.status, 401);
+      const keyOnly = await fetch(`${base}/api/website/leads`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-website-intake-key': INTAKE_KEY },
+        body,
+      });
+      assert.equal(keyOnly.status, 401);
+      const badSig = await fetch(`${base}/api/website/leads`, {
+        method: 'POST',
+        headers: {
+          ...signedIntakeHeaders(body),
+          'x-website-intake-signature': '0'.repeat(64),
+        },
+        body,
+      });
+      assert.equal(badSig.status, 401);
       const bearer = await fetch(`${base}/api/website/leads`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: 'Bearer valid-member' },
-        body: JSON.stringify(sample),
+        body,
       });
       assert.equal(bearer.status, 401);
-      const wrong = await fetch(`${base}/api/website/leads`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-website-intake-key': 'not-the-intake-key-value' },
-        body: JSON.stringify(sample),
-      });
-      assert.equal(wrong.status, 401);
       assert.equal(graph.lists.get(LEADS)?.length || 0, 0);
       const pm = await fetch(`${base}/api/pm/projects`);
       assert.equal(pm.status, 401);
@@ -209,14 +256,11 @@ describe('POST /api/website/leads', () => {
 
   it('upserts HVCG_Leads by idempotency key and does not duplicate', async () => {
     await withHub({}, async ({ base, graph }) => {
-      const headers = {
-        'content-type': 'application/json',
-        'x-website-intake-key': INTAKE_KEY,
-      };
+      const body1 = JSON.stringify(sample);
       const created = await fetch(`${base}/api/website/leads`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify(sample),
+        headers: signedIntakeHeaders(body1),
+        body: body1,
       });
       assert.equal(created.status, 201);
       const createdBody = (await created.json()) as { created: boolean; itemId: string; list: string };
@@ -231,13 +275,14 @@ describe('POST /api/website/leads', () => {
       assert.equal(rows[0].fields.HVCG_IdempotencyKey, 'website|lead-1');
       assert.equal(rows[0].fields.ServiceInterest, 'Other');
 
+      const body2 = JSON.stringify({
+        ...sample,
+        contact: { ...sample.contact, phone: '7025550199' },
+      });
       const again = await fetch(`${base}/api/website/leads`, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({
-          ...sample,
-          contact: { ...sample.contact, phone: '7025550199' },
-        }),
+        headers: signedIntakeHeaders(body2),
+        body: body2,
       });
       assert.equal(again.status, 200);
       const againBody = (await again.json()) as { created: boolean; itemId: string };
@@ -254,24 +299,23 @@ describe('POST /api/website/leads', () => {
 
   it('maps EVA session idempotency and does not mix Graph with BA audience', async () => {
     await withHub({}, async ({ base, graph }) => {
+      const payload = {
+        type: 'hvcg_website_lead',
+        leadId: 'eva-1',
+        correlationId: 'sess-9',
+        submissionType: 'Website-EVA',
+        source: 'Website-EVA',
+        contact: { name: 'Eva User', email: 'eva@example.com', company: 'Eva Co' },
+        fullPayload: {
+          sessionId: 'sess-9',
+          eva: { band: 'B', composite_score_proxy: 70, recommended_sku: 'SKU-FRA' },
+        },
+      };
+      const body = JSON.stringify(payload);
       const res = await fetch(`${base}/api/website/leads`, {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-website-intake-key': INTAKE_KEY,
-        },
-        body: JSON.stringify({
-          type: 'hvcg_website_lead',
-          leadId: 'eva-1',
-          correlationId: 'sess-9',
-          submissionType: 'Website-EVA',
-          source: 'Website-EVA',
-          contact: { name: 'Eva User', email: 'eva@example.com', company: 'Eva Co' },
-          fullPayload: {
-            sessionId: 'sess-9',
-            eva: { band: 'B', composite_score_proxy: 70, recommended_sku: 'SKU-FRA' },
-          },
-        }),
+        headers: signedIntakeHeaders(body),
+        body,
       });
       assert.equal(res.status, 201);
       const row = (graph.lists.get(LEADS) || [])[0];
@@ -281,6 +325,23 @@ describe('POST /api/website/leads', () => {
       assert.equal(row.fields.LeadScore, 70);
       assert.equal(GRAPH_TOKEN_RESOURCE, 'https://graph.microsoft.com');
       assert.equal(GRAPH_TOKEN_RESOURCE.startsWith('api://'), false);
+    });
+  });
+
+  it('rejects Website type with eva| idempotency key (XSYS-02)', async () => {
+    await withHub({}, async ({ base, graph }) => {
+      const payload = {
+        ...sample,
+        fullPayload: { idempotencyKey: 'eva|stolen' },
+      };
+      const body = JSON.stringify(payload);
+      const res = await fetch(`${base}/api/website/leads`, {
+        method: 'POST',
+        headers: signedIntakeHeaders(body),
+        body,
+      });
+      assert.equal(res.status, 409);
+      assert.equal(graph.lists.get(LEADS)?.length || 0, 0);
     });
   });
 
@@ -299,13 +360,11 @@ describe('POST /api/website/leads', () => {
       },
     ]);
     await withHub({ graph }, async ({ base }) => {
+      const body = JSON.stringify(sample);
       const res = await fetch(`${base}/api/website/leads`, {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-website-intake-key': INTAKE_KEY,
-        },
-        body: JSON.stringify(sample),
+        headers: signedIntakeHeaders(body),
+        body,
       });
       assert.equal(res.status, 200);
       assert.equal(graph.lists.get(LEADS)?.[0].fields.LeadStatus, 'Qualified');

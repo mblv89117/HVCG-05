@@ -6,7 +6,7 @@ import { PlaidRepository } from '../src/store/repository.ts';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { assertClientAccess, parsePrincipal } from '../src/middleware/auth.ts';
+import { assertClientAccess, parsePrincipal, requireVerifiedPrincipal } from '../src/middleware/auth.ts';
 import { APPROVED_PLAID_PRODUCTS } from '../../../packages/atlas-plaid-contracts/src/index.ts';
 
 describe('token vault', () => {
@@ -33,6 +33,23 @@ describe('tenant isolation', () => {
     assert.ok(p);
     assert.doesNotThrow(() => assertClientAccess(p!, 'client-a'));
     assert.throws(() => assertClientAccess(p!, 'client-z'));
+  });
+
+  it('ATLAS-03: requireAuth rejects header-only principal without Bearer', async () => {
+    const h = new Headers({
+      'x-atlas-user-id': 'spoof',
+      'x-atlas-client-ids': 'client-a',
+    });
+    await assert.rejects(
+      () =>
+        requireVerifiedPrincipal(h, {
+          requireAuth: true,
+          entraTenantId: 'tenant',
+          entraAudience: 'api://hub',
+        } as never),
+      (err: Error & { status?: number; code?: string }) =>
+        err.status === 401 && err.code === 'missing_bearer',
+    );
   });
 });
 

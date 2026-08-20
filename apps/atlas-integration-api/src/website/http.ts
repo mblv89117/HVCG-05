@@ -1,6 +1,7 @@
 /**
- * Keyed POST /api/website/leads → SharePoint HVCG_Leads.
- * Auth is x-website-intake-key only. Bearer does not grant this route.
+ * Keyed + signed POST /api/website/leads → SharePoint HVCG_Leads.
+ * Auth: x-website-intake-key + key-id + timestamp + HMAC body signature (XSYS-01).
+ * Bearer does not grant this route.
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -9,7 +10,10 @@ import type { AppConfig } from '../config.ts';
 import { createGraphTransport } from '../pm/sharepoint/graph.ts';
 import { PmHttpError, toErrorBody } from '../pm/sharepoint/errors.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../pm/sharepoint/token.ts';
-import { verifyWebsiteIntakeKey, websiteIntakeKeyConfigured } from './intakeAuth.ts';
+import {
+  verifyWebsiteIntakeSignedRequest,
+  websiteIntakeKeyConfigured,
+} from './intakeAuth.ts';
 import { upsertWebsiteLead } from './leads.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
@@ -52,19 +56,6 @@ export async function handleWebsiteLeadRoutes(opts: {
     return true;
   }
 
-  if (!verifyWebsiteIntakeKey(req.headers['x-website-intake-key'], cfg.websiteIntakeKey)) {
-    send(
-      res,
-      401,
-      {
-        error: 'unauthorized',
-        message: 'Website intake key required.',
-      },
-      origin,
-    );
-    return true;
-  }
-
   if (method !== 'POST') {
     send(res, 405, { error: 'method_not_allowed' }, origin);
     return true;
@@ -85,11 +76,12 @@ export async function handleWebsiteLeadRoutes(opts: {
     return true;
   }
 
+  let raw = '';
   let body: unknown = {};
   try {
     const chunks: Buffer[] = [];
     for await (const c of req) chunks.push(c as Buffer);
-    const raw = Buffer.concat(chunks).toString('utf8');
+    raw = Buffer.concat(chunks).toString('utf8');
     body = raw ? JSON.parse(raw) : {};
   } catch {
     send(res, 400, { error: 'invalid_json' }, origin);
@@ -97,6 +89,28 @@ export async function handleWebsiteLeadRoutes(opts: {
   }
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     send(res, 400, { error: 'invalid_json' }, origin);
+    return true;
+  }
+
+  const auth = verifyWebsiteIntakeSignedRequest({
+    keyHeader: req.headers['x-website-intake-key'],
+    keyIdHeader: req.headers['x-website-intake-key-id'],
+    timestampHeader: req.headers['x-website-intake-timestamp'],
+    signatureHeader: req.headers['x-website-intake-signature'],
+    rawBody: raw,
+    expectedKey: cfg.websiteIntakeKey,
+  });
+  if (!auth.ok) {
+    send(
+      res,
+      auth.status,
+      {
+        error: auth.code,
+        code: auth.code,
+        message: auth.message,
+      },
+      origin,
+    );
     return true;
   }
 
@@ -117,7 +131,7 @@ export async function handleWebsiteLeadRoutes(opts: {
     audit({
       action: 'website_lead_upsert',
       outcome: 'success',
-      detail: `${result.created ? 'created' : 'updated'} list=HVCG_Leads item=${result.itemId}`,
+      detail: `${result.created ? 'created' : 'updated'} list=HVCG_Leads item=${result.itemId} keyId=${auth.keyId}`,
     });
     send(res, result.created ? 201 : 200, result, origin);
     return true;

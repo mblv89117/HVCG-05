@@ -27,6 +27,9 @@ export function loadConfig() {
     dataDir: process.env.PLAID_DATA_DIR || new URL('../.data', import.meta.url).pathname,
     requireAuth: process.env.PLAID_REQUIRE_AUTH !== 'false',
     allowedOrigins: (process.env.PLAID_ALLOWED_ORIGINS || 'http://127.0.0.1:5173,http://localhost:5173').split(','),
+    /** Entra tenant + Hub API audience for ATLAS-RT-03 JWT verification */
+    entraTenantId: process.env.PLAID_ENTRA_TENANT_ID || process.env.AZURE_TENANT_ID || '',
+    entraAudience: process.env.PLAID_ENTRA_AUDIENCE || process.env.ATLAS_HUB_API_AUDIENCE || '',
   };
 }
 
