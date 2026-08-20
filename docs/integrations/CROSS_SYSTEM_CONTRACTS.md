@@ -59,7 +59,7 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 6. `Won` opportunities do not activate clients. Client activation is a separate governed event.
 7. GCC financial intelligence stays in GCC; Atlas links only after an explicit bridge contract.
 8. Every cross-system write carries a `write-envelope.v1` (idempotency key, source, destination, entity, operation, version, replay semantics, trace).
-9. Breaking schema changes require a new `.vN` and consumer compatibility tests — no silent drift.
+9. Breaking schema changes require a new `.vN` and consumer compatibility tests — no silent drift. Current consumer matrix: `CONSUMER_COMPATIBILITY.md`.
 
 ## Machine-readable schemas
 

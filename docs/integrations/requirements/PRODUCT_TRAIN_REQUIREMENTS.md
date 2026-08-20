@@ -7,8 +7,8 @@ Frozen Atlas baseline: Hub `940a484`, Elite `75d0c59` — do not regress.
 
 ## Atlas (Revenue OS / CRM train)
 
-Branch inspected: `cursor/atlas-hv-completion-52d1` (base for this coordination branch).
-Requested parallel branch `cursor/atlas-revenue-engagement-os` was **not present** on remote at inspection time.
+Branch inspected (directive 2): `cursor/atlas-revenue-engagement-os` @ `e9b3be8` (consumes SoT `773b510`).
+Frozen Atlas baseline remains Hub `940a484` / Elite `75d0c59` — do not regress.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -18,11 +18,11 @@ Requested parallel branch `cursor/atlas-revenue-engagement-os` was **not present
 | ATLAS-INT-004 | Consume `gcc-value-signal.v1` as review signals — do not copy GCC ledgers into `HVCG_*` | P1 |
 | ATLAS-INT-005 | Emit `closed-won-learning-event.v1` to 360 without enabling paid ads | P2 |
 | ATLAS-INT-006 | Treat offer/pricing recommendation contracts as observation-only until operator accept | P0 |
-| ATLAS-INT-007 | XSYS-RT-01: before any **new** live intake hardening release, require body HMAC (or equivalent request authenticity) in addition to intake key — **owned by Atlas security patch train**; Integration documents only (no Hub churn on this branch) | P0 |
+| ATLAS-INT-007 | XSYS-01/02: Hub intake HMAC + idempotency prefix↔source bind — **owned by Atlas security patch train** (`cursor/atlas-security-patch-od005` @ `0bbfd87`); Integration documents only (no Hub churn on this branch) | P0 |
 
 ## 360 Growth (GTM train)
 
-Branch inspected: `cursor/360-gtm-agent-system` @ `43f9305` (and predecessor `360-hv-completion-52d1`).
+Branch declared (directive 2): `cursor/360-gtm-agent-system` @ `e0dd445` — sibling remote **404** on this worker. Last independent GTM source probe: Red Team D19 `7b704111`. Predecessor `360-hv-completion-52d1`.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ Branch inspected: `cursor/360-gtm-agent-system` @ `43f9305` (and predecessor `36
 
 ## Agent Copilot
 
-Branch inspected: `cursor/copilot-production-completion` @ `7e63a6d` (and predecessor `copilot-hv-completion-52d1`).
+Branch declared (directive 2): `cursor/copilot-production-completion` @ `19a200e8` — sibling remote **404** on this worker. Last contract-visible conflict: `7e63a6d`. Predecessor `copilot-hv-completion-52d1`.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ Branch inspected: `cursor/copilot-production-completion` @ `7e63a6d` (and predec
 
 ## Growth Command Center
 
-Branch inspected: `cursor/gcc-client-value-os` @ `78cb5d2` (and predecessor `gcc-hv-completion-52d1`).
+Branch inspected (directive 2): `cursor/gcc-client-value-os` @ `41a59b8` on `growth-command-center` (equals remote tip; consumes SoT `773b510`). Predecessor `gcc-hv-completion-52d1`.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |

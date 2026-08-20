@@ -17,13 +17,20 @@ Harness coverage (no production side effects): `tests/integrations/test_security
 
 No universal cross-platform admin token is defined in these contracts.
 
-## XSYS-RT-01 (intake authenticity) — fail-safe
+## XSYS-01 / XSYS-02 (intake authenticity + prefix bind) — Hub-side
 
-Independent Red Team finding: website/EVA intake key without body HMAC.
+Independent Red Team findings (D21 catalog). Classification: **Hub LIVE_PRODUCTION_P0** on frozen Hub `940a484`. **Not this contracts branch.**
+
+| ID | Live Hub `940a484` | Remediation owner |
+| --- | --- | --- |
+| **XSYS-01** (XSYS-RT-20260820-01) | Website/EVA intake key without body HMAC | `cursor/atlas-security-patch-od005` @ `0bbfd87` — candidate adds key-id + timestamp + HMAC-SHA256(`${timestamp}.${rawBody}`) fail-closed |
+| **XSYS-02** (XSYS-RT-20260820-02) | `fullPayload.idempotencyKey` accepted unbound to source | Same candidate — prefix must match `submissionType` (`website\|` / `eva\|` / `copilot\|` / `360\|`); mismatch → 409 |
 
 | Rule | Value |
 | --- | --- |
-| Contract posture | Live intake MUST plan for request authenticity beyond a static header key (HMAC or signed body) before new production intake hardening |
+| Contract posture | Live intake MUST plan for request authenticity beyond a static header key, plus prefix↔source bind, before new production intake hardening |
 | This train | Documents requirement only (`ATLAS-INT-007`) |
 | Forbidden here | Patching frozen Hub `940a484` runtime on the contracts branch |
-| Owner | Atlas security-patch train (OD-005 adjacent) |
+| Owner | Atlas security-patch train (OD-005). Independent RT PASS + owner authorize required before any Hub deploy |
+
+SECURITY_CERTIFIED remains Atlas/OD-005, not this train.

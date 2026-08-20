@@ -1,12 +1,12 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** `6e6c7ac` (contracts base `9b46313`)  
+**SHA:** `773b510` (contracts base `9b46313`; directive 2 refresh)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
-**Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59`, P0 `0`, P1 `0`  
+**Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59` — **not thawed**  
 **Harness:** `python3 tests/integrations/run_integration_contracts.py` → **27/27 OK**  
-**Orchestrator directive consumed:** `ORCH-DIR-E-2026-08-20T0418Z` @ orch SHA `795d515`
+**Orchestrator directive consumed:** **2** (replacement worker `bc-0e3c9a74`; did not reuse `bc-af57d6b6`)
 
 ## Integration %
 
@@ -19,7 +19,7 @@
 | Failure atomicity tests | Synthetic matrix covered | 95 |
 | Identity / auth model | Documented; least privilege | 100 |
 | Synthetic journeys A/B/C | Machine-verifiable harness | 100 |
-| CC-001 / CC-006 reconciliation | Fail-safe + adapter published | 90 |
+| CC-001 / CC-002 / CC-003 / CC-006 | Confirmed on SoT; consumer matrix refreshed | 95 |
 | Security contract tests | Spoof/replay/injection/schema confusion | 95 |
 | Live product adapters | Owner-gated / staging (unchanged) | 40 |
 | **Weighted platform contract readiness** | Contracts + harness + orch checkpoint | **~86** |
@@ -30,15 +30,15 @@ Live Hub POST for 360/Copilot and GCC auto-provision remain intentionally gated.
 
 | Field | Value |
 | --- | --- |
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `ORCH-DIR-E-2026-08-20T0418Z` |
-| CURRENT SHA | `6e6c7ac` |
-| COMPLETED ACTIONS | Fetch orch; CC-001 fail-safe; CC-006 adapter; ratify gtm-sync + gcc-gtm-feedback; XSYS docs-only; agent-status |
-| REMAINING ACTIONS | OD-003; Copilot/GCC adapter code on product trains; Atlas HMAC patch train |
-| P0/P1/P2 | P0: XSYS-RT-01 (Atlas patch), COP-INT-005; P1: GCC emit adapter; P2: learning automation |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **2** |
+| CURRENT SHA | `773b510` |
+| COMPLETED ACTIONS | Directive 2 consume; consumer matrix vs five tips; harness 27/27; CC-001/002/003/006 confirm; XSYS-01/02 Hub-side docs |
+| REMAINING ACTIONS | GTM/Copilot source fetch when remotes authorized; OD-005 RT + owner; DEPLOYMENT_READY owner-gated |
+| P0/P1/P2 | P0/P1/P2 **none on this train**. Hub XSYS-01/02 owned by OD-005 @ `0bbfd87` |
 | TEST STATUS | 27/27 OK |
 | PREMIUM STATUS | N/A |
-| INTEGRATION STATUS | SoT + compatibility adapters published |
-| OWNER DECISIONS | OD-003 pending |
+| INTEGRATION STATUS | SoT + compatibility matrix @ declared tips; live adapters gated |
+| OWNER DECISIONS | OD-003 pending; OD-005 / deploy owner-gated |
 
 ## Canonical IDs / Attribution / Schemas / Idempotency / Failure / Identity
 
@@ -46,27 +46,30 @@ Unchanged from first-run publish; see `docs/integrations/*`. Additive this check
 
 ## Compatibility
 
-| Train | Tip inspected | Status |
+Full matrix: `CONSUMER_COMPATIBILITY.md`.
+
+| Train | Declared tip (directive 2) | Status |
 | --- | --- | --- |
-| GTM | `43f9305` | `360-atlas-gtm-sync.v1` ratified |
-| GCC | `78cb5d2` | CC-006 map published |
-| Copilot | `7e63a6d` | PascalCase required dual rejected as SoT |
-| Revenue OS | missing | Wait tip |
+| GTM | `e0dd445` | SHA recorded; sibling remote 404 on this worker. SoT CC-001 unchanged. Last RT source probe `7b704111` held camelCase + `liveDispatch:false`. |
+| Revenue | `e9b3be8` | Fetched. Consumes SoT `773b510`. CC-001/002/003 adapters present. Commercial authority = Revenue. |
+| GCC | `41a59b8` | Fetched (equals remote branch tip). CC-003/CC-006 hold. `gcc-value-signal.v1.json` byte-identical. |
+| Copilot | `19a200e8` | SHA recorded; sibling remote 404. SoT CC-001/002 unchanged. RT D12 inspected this SHA for RT-02 only. |
+| Contracts self | `773b510` | Sole publisher of canonical meaning |
 
 ## P0 / P1 / P2
 
 | Sev | Items |
 | --- | --- |
-| P0 | Keep liveDispatch/paidAds/autoProvision false; COP-INT-005; XSYS-RT-01 Hub authenticity (Atlas train) |
-| P1 | GCC emit via value-signal; UTM persist ATLAS-INT-002 |
-| P2 | Closed-won learning automation |
+| P0 | **None on this train.** Keep liveDispatch/paidAds/autoProvision false. XSYS-01/02 = Hub LIVE_PRODUCTION_P0 on OD-005 @ `0bbfd87` (not patched here). |
+| P1 | **None on this train.** Product-side COP-INT-005 remains a Copilot obligation until source-confirmed. |
+| P2 | **None on this train.** |
 
 ## Owner Decisions
 
-1. **OD-003** — Confirm Integration tip as SoT (pending).
+1. **OD-003** — Confirm Integration tip as SoT (pending owner; consumers already pin `773b510`).
 2. Live Hub POST / paid ads / GCC access remain owner-gated.
-3. Hub HMAC patch is **not** executed on this contracts branch (freeze fail-safe).
+3. Hub HMAC / prefix-bind (XSYS-01/02) is **not** executed on this contracts branch. Candidate: `cursor/atlas-security-patch-od005` @ `0bbfd87`.
 
 ## Next Milestone
 
-Product trains consume ratified adapters; re-fetch orchestrator for next directive version under `directives/` when published.
+Keep SoT stable. Re-inspect GTM/Copilot source when remotes are authorized. Do not deploy.
