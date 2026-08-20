@@ -23,11 +23,11 @@ Honesty rule: this file records **what Azure is running**, not what a worktree c
 |------|--------|
 | SWA | `swa-atlas-elite-os-dev` / `rg-atlas-dev` (Free SKU; production URL) |
 | URL | `https://zealous-rock-0090c7e1e.7.azurestaticapps.net` |
-| Asset | `/assets/index-DpGJPHPN.js` |
-| Stamped SHA | `940a4849577ad5356da86850e2eccdbf3fe4e86b` |
+| Asset | `/assets/index-fZIMESb5.js` |
+| Stamped SHA | `75d0c59d564ae249787b9b1f93755a80d7a73ef5` |
 | Flags | `VITE_ATLAS_ENV=production`, `VITE_ALLOW_SAMPLE_FALLBACK=false`, `VITE_ALLOW_DEV_OWNER_LOGIN=false` |
 | Snapshot | empty `client360-snapshot.json` (`source=disabled-in-production`) |
-| Prior asset | `/assets/index-Ba9JfZv2.js` / SHA `b6a3c9c50747f3bc06b0de870d9906c4b9424152` |
+| Prior asset | `/assets/index-DpGJPHPN.js` / SHA `940a4849577ad5356da86850e2eccdbf3fe4e86b` |
 
 ## Rollback
 

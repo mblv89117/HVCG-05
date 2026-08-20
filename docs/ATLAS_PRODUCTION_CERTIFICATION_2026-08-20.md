@@ -96,6 +96,14 @@ Signed-out production gate and Microsoft login page only. Authenticated Home / L
 ## Known P2 debt
 
 - Search latency ~14–16s (Graph fan-out)
-- Elite Premium authenticated visual QA pending browser Microsoft login
-- Hub vs Elite SHA rematch if Elite is not redeployed after this Hub patch
+- Elite Premium authenticated visual QA pending successful MSAL browser login
+- Hub vs Elite SHA rematch after Elite auth fix deploys
 - 360 / Copilot / GCC remain undeployed by policy
+
+## Auth incident (2026-08-20)
+
+Operator saw **401 Unauthorized** at `identity.7.azurestaticapps.net/.auth/login/done` after Microsoft password/MFA.
+
+Classification: **Azure Static Web Apps Easy Auth callback failure**, not Hub API and not AADSTS. This Free SWA has **zero** invited users (`az staticwebapp users list` = `[]`). Hosted "Sign in with Microsoft" was incorrectly routing to `/.auth/login/aad`.
+
+Fix: Elite Sign-in uses **MSAL SPA** `49d20328-…` for Hub `access_as_user`. SWA `/.auth/me` remains hint-only. Do not use `/.auth/login/aad` for Premium certification.
