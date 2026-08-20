@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `ba9dfe5` |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d19-revenue-elite.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **19** |
 | BASED ON WORKER SHA | `41b77f7a92f20052a5541994ff12810c8833b7d4` |
 | BASED ON RUN ID | `run-3df335cf-fe59-4f76-832f-8c4f1d0a66fc` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `ba9dfe5050f92ac8d0efcd44857c460df7b62a3e` |
 | COMPLETED ACTIONS | Revalidated terminal GTM `7b70411` (RT-03/04 + SYN-GTM); first-pass/revalidated Revenue Elite `fc92f74`; **closed** REVOS-ELITE-RT-20260820-01 with tip evidence |
 | REMAINING ACTIONS | Retest Hub/XSYS when OD-005 authorized or XSYS remediations land |
 | P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
