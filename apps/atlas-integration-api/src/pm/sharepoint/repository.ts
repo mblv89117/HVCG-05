@@ -53,6 +53,7 @@ import {
   opportunityIdempotencyKey,
   opportunityTypeFromServiceInterest,
   proposeClientCode,
+  shouldPromoteReusedCompanyToProspect,
 } from './leadConversion.ts';
 import { fieldsEq, itemMatchesFieldsFilter } from './odata.ts';
 import type { SharePointPmSettings } from './settings.ts';
@@ -1782,16 +1783,22 @@ export class SharePointPmService {
     const byCode = new Map(mapped.map((c) => [c.clientCode, c]));
 
     if (lead.convertedClientId && byItem.has(lead.convertedClientId)) {
-      return { client: byItem.get(lead.convertedClientId)!, reused: true };
+      return {
+        client: await this.promoteReusedCompanyToProspectIfLead(byItem.get(lead.convertedClientId)!),
+        reused: true,
+      };
     }
     if (lead.clientCode && byCode.has(lead.clientCode)) {
-      return { client: byCode.get(lead.clientCode)!, reused: true };
+      return {
+        client: await this.promoteReusedCompanyToProspectIfLead(byCode.get(lead.clientCode)!),
+        reused: true,
+      };
     }
 
     const wanted = normalizeCompanyTitle(lead.title);
     const titleMatch = mapped.find((c) => normalizeCompanyTitle(c.displayName) === wanted);
     if (titleMatch) {
-      return { client: titleMatch, reused: true };
+      return { client: await this.promoteReusedCompanyToProspectIfLead(titleMatch), reused: true };
     }
 
     const prior = await this.findByIdempotency(
@@ -1800,7 +1807,9 @@ export class SharePointPmService {
     );
     if (prior) {
       const existing = this.mapClient(prior);
-      if (existing) return { client: existing, reused: true };
+      if (existing) {
+        return { client: await this.promoteReusedCompanyToProspectIfLead(existing), reused: true };
+      }
     }
 
     const clientCode = proposeClientCode(lead.title, mapped.map((c) => c.clientCode));
@@ -1818,6 +1827,20 @@ export class SharePointPmService {
     const client = this.mapClient(created);
     if (!client) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
     return { client, reused: false };
+  }
+
+  private async promoteReusedCompanyToProspectIfLead(client: SharePointClient): Promise<SharePointClient> {
+    if (!shouldPromoteReusedCompanyToProspect(client)) return client;
+    if (!client.etag) {
+      throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required to promote a reused Lead company to Prospect.');
+    }
+    const patched = await this.graph.patchItemFields(
+      this.settings.clientsListId,
+      client.itemId,
+      { ClientStage: 'Prospect' },
+      client.etag,
+    );
+    return this.mapClient(patched) ?? client;
   }
 
   private async ensureContactFromLead(

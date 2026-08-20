@@ -1095,6 +1095,122 @@ describe('SharePoint HVCG_Leads operator queue', () => {
     });
   });
 
+  it('promotes a reused Lead-stage company to Prospect and never downgrades Active Client or ACCG01', async () => {
+    await withCrmLeads(async ({ base, graph }) => {
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA — Convert Stage Fixture', ClientCode: 'SYNQA', ClientStage: 'Lead' },
+        '31',
+      );
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA — Active Fixture', ClientCode: 'SYNACT', ClientStage: 'Active Client' },
+        '32',
+      );
+      const accg = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'ACCG01');
+      assert.ok(accg);
+      accg.fields.ClientStage = 'Lead';
+      graph.seed(
+        LEADS,
+        {
+          Title: 'SYNTHETIC QA — Convert Stage Fixture',
+          ContactName: 'Stage Tester',
+          Email: 'stage.tester@synthetic.invalid',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+        },
+        '201',
+      );
+      graph.seed(
+        LEADS,
+        {
+          Title: 'SYNTHETIC QA — Active Fixture',
+          ContactName: 'Active Tester',
+          Email: 'active.tester@synthetic.invalid',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+        },
+        '202',
+      );
+      graph.seed(
+        LEADS,
+        {
+          Title: 'Alder & Co.',
+          ContactName: 'Alex Alder',
+          Email: 'alex-stage@alder.example',
+          Source: 'Website-Funding',
+          LeadStatus: 'Contacted',
+        },
+        '203',
+      );
+
+      const lead201 = await fetch(`${base}/api/pm/leads/201`, { headers: auth('a') });
+      const lead201Body = (await lead201.json()) as { lead: { etag: string } };
+      const convertLead = await fetch(`${base}/api/pm/leads/201/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead201Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(convertLead.status, 200);
+      const convertedLead = (await convertLead.json()) as {
+        company: { clientCode: string; reused: boolean; clientStage?: string };
+      };
+      assert.equal(convertedLead.company.clientCode, 'SYNQA');
+      assert.equal(convertedLead.company.reused, true);
+      assert.equal(convertedLead.company.clientStage, 'Prospect');
+      const synqa = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'SYNQA');
+      assert.equal(synqa?.fields.ClientStage, 'Prospect');
+
+      const replay = await fetch(`${base}/api/pm/leads/201/convert`, {
+        method: 'POST',
+        headers: auth('a'),
+        body: JSON.stringify({}),
+      });
+      assert.equal(replay.status, 200);
+      const replayBody = (await replay.json()) as {
+        company: { clientStage?: string; reused: boolean };
+        replay: boolean;
+      };
+      assert.equal(replayBody.company.clientStage, 'Prospect');
+      assert.equal(replayBody.company.reused, true);
+      assert.equal(replayBody.replay, true);
+
+      const lead202 = await fetch(`${base}/api/pm/leads/202`, { headers: auth('a') });
+      const lead202Body = (await lead202.json()) as { lead: { etag: string } };
+      const convertActive = await fetch(`${base}/api/pm/leads/202/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead202Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(convertActive.status, 200);
+      const convertedActive = (await convertActive.json()) as {
+        company: { clientCode: string; clientStage?: string; reused: boolean };
+      };
+      assert.equal(convertedActive.company.clientCode, 'SYNACT');
+      assert.equal(convertedActive.company.reused, true);
+      assert.equal(convertedActive.company.clientStage, 'Active Client');
+      const synact = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'SYNACT');
+      assert.equal(synact?.fields.ClientStage, 'Active Client');
+
+      const lead203 = await fetch(`${base}/api/pm/leads/203`, { headers: auth('a') });
+      const lead203Body = (await lead203.json()) as { lead: { etag: string } };
+      const convertAccg = await fetch(`${base}/api/pm/leads/203/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead203Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(convertAccg.status, 200);
+      const convertedAccg = (await convertAccg.json()) as {
+        company: { clientCode: string; clientStage?: string; reused: boolean };
+      };
+      assert.equal(convertedAccg.company.clientCode, 'ACCG01');
+      assert.equal(convertedAccg.company.reused, true);
+      assert.equal(convertedAccg.company.clientStage, 'Lead');
+      const accgAfter = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'ACCG01');
+      assert.equal(accgAfter?.fields.ClientStage, 'Lead');
+    }, () => ['SYNQA', 'SYNACT', 'ACCG01']);
+  });
+
   it('recovers opportunity clientCode from converted title when Graph drops ClientId', async () => {
     await withCrmLeads(async ({ base, graph }) => {
       graph.seed(
