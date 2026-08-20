@@ -157,10 +157,17 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     writeDevOwnerSessionActive(false);
     setDevOwnerActive(false);
-    // Hosted SWA: full-page Easy Auth navigation preserves the current route and
-    // does not wait for MSAL/Hub readiness. Local Vite keeps MSAL popup.
-    if (shouldUseSwaSignInNavigation()) {
-      beginSwaMicrosoftSignIn();
+    // Hub authorization requires the Elite SPA MSAL client (49d20328…) and
+    // api://…/access_as_user. Do not send operators through SWA Easy Auth
+    // (/.auth/login/aad): this Free SWA has no invited users, so Microsoft
+    // can succeed and identity.7…/.auth/login/done still returns 401.
+    // SWA /.auth/me remains an optional silent SSO hint only.
+    if (!configured) {
+      if (shouldUseSwaSignInNavigation()) {
+        beginSwaMicrosoftSignIn();
+        return;
+      }
+      setError('Microsoft Entra is not configured for this Elite build.');
       return;
     }
     try {
@@ -169,7 +176,7 @@ export function MicrosoftAuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, []);
+  }, [configured]);
 
   const signOutUser = useCallback(async () => {
     setError(null);

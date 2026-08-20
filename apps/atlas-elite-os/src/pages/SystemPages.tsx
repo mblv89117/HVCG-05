@@ -76,7 +76,7 @@ export function AccessDeniedPage() {
       : 'Insufficient Atlas permissions';
 
   const description = unauthenticated
-    ? 'Sign in with Microsoft so Atlas can acquire a Hub access token. Local Owner only paints chrome — it does not authorize Hub, and it is not a certification session.'
+    ? 'Sign in with Microsoft so Atlas can acquire a Hub access token (Elite SPA / MSAL). Local Owner only paints chrome — it does not authorize Hub, and it is not a certification session.'
     : unresolved
       ? 'You are signed in, but your Entra token has no recognizable Atlas app role (HVCG Owner, HVCG Team Member, Client Executive, Client Team Member, Read-Only Advisor, or Administrator). There is no default Owner access.'
       : 'Your current Atlas role does not include this module. Contact an HVCG Owner to adjust Entra app role assignments.';
