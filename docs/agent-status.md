@@ -6,104 +6,79 @@
 | durable role | sole Revenue OS worker |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-revenue-engagement-os` |
-| workOnCurrentBranch | true — no second Revenue branch; not bound to GTM "Atlas Revenue OS" |
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `2` |
-| starting ref | `cursor/atlas-revenue-engagement-os` @ `f24345e` |
-| Integration SoT | `hvcg-05` / `cursor/platform-integration-contracts` @ `773b5101032ccd5218d5563d2177c31722ecf575` |
-| frozen Atlas | Hub `940a484` / Elite `75d0c59` — **not modified, not deployed** |
-| owned domains | Service Catalog, Offer Catalog, Pricing Rules, Opportunity Commercial Workspace, Proposal Engine, MSA/SOW workflow, Engagement / renewals / success-fee / referral economics |
-| files/domains touched | `src/revenue_os/**`, `docs/revenue-os/**`, `docs/integrations/**` (consumed SoT), `tests/revenue_os/**`, `tests/integrations/**` (consumed harness), `docs/agent-status.md` |
-| UI this checkpoint | none |
+| CURRENT SHA | `7f96fd7` plus this status checkpoint |
+| workOnCurrentBranch | true |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `3` |
+| based on SHA | `9c9c331d707e59c8e020f28bcaf75528bfe42927` |
+| based on run | `run-c107a3e2-7893-455e-8ade-1c2ef3d4e529` |
+| Integration SoT | `cursor/platform-integration-contracts` @ `773b5101032ccd5218d5563d2177c31722ecf575` |
+| frozen Atlas | Hub `940a484` / Elite `75d0c59` — **not deployed; production runtime not thawed** |
+| UI this checkpoint | Elite `/revenue` commercial workspace |
 | production deploy | **none** |
 
 ## Orchestrator protocol
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `2` |
-| DIRECTIVE SOURCE | HVCG Orchestrator Priority A — Revenue & Engagement OS (directive version 2) |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `3` |
+| DIRECTIVE SOURCE | HVCG Orchestrator follow-up — Revenue & Engagement OS (directive version 3) |
 | COMPLETED ACTIONS | See below |
 | REMAINING ACTIONS | See below |
 | P0 | none |
 | P1 | none |
-| P2 | REVOS-RT-20260820-01-design (design residue; implementation started this checkpoint) |
-| TEST STATUS | Train suite **OK** — BA sprint 2/3/4 + Integration SoT 27/27 + Revenue OS 17/17 |
-| PREMIUM STATUS | **N/A** — no Elite/Hub UI change this checkpoint; commercial surfaces remain engine/API-only |
-| INTEGRATION STATUS | Canonical contracts/adapters consumed @ `773b510`; no semantic forks |
-| SECURITY STATUS | Security-clean start preserved. No Atlas auth/RBAC/ACCG01/Hub/Elite runtime edits. No new P0/P1. |
-| DEPLOYMENT STATE | Synthetic commercial journey passed / **not** `DEPLOYMENT_READY` / **no production deploy** |
+| P2 | REVOS-RT-20260820-01-design (design residue; engines + Elite render exist) |
+| TEST STATUS | **PASS** — train suite + Elite commercial/RBAC + Atlas security 52/52 |
+| PREMIUM STATUS | **PASS** (this-train commercial workspace, desktop + mobile). Not a production Elite recert of `75d0c59`. |
+| INTEGRATION STATUS | SoT still `773b510`; no contract-meaning forks |
+| SECURITY STATUS | Independent P0/P1 = 0. FinanceRoute/`viewFinance` preserved. ACCG01 untouched. |
+| OWNER DECISIONS | None opened. Live dispatch / GCC provision / production deploy remain off. |
 
 ## Release gates
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| BUILD_COMPLETE | **claimed** | `src/revenue_os` engines + train suite green |
-| SYNTHETIC_CERTIFIED | **claimed** | `tests/revenue_os/test_synthetic_journey.py` — offer → pricing → proposal → closed-won → engagement; `liveDispatch=false` |
-| SECURITY_CERTIFIED | **this-train clean** | No Hub/Elite/auth weakening; BA security sprint 16 + integration sprint 15 still OK (73 tests). Not an Atlas production recert. |
-| PREMIUM_CERTIFIED | **N/A** | No UI this checkpoint |
-| INTEGRATION_CERTIFIED | **contracts consumed** | SoT harness 27/27; CC-001/002/003 adapters tested |
-| DEPLOYMENT_READY | **open** | No production deploy; live outbound remains off |
+| BUILD_COMPLETE | **claimed** | Engines @ `9c9c331` + Elite render this checkpoint |
+| SYNTHETIC_CERTIFIED | **claimed** | Existing journey still green; not rebuilt |
+| SECURITY_CERTIFIED | **this-train clean** | P0/P1 = 0; BA security 16 + integration 15 = 52/52 OK |
+| PREMIUM_CERTIFIED | **claimed (this-train)** | `docs/revenue-os/premium/WALKTHROUGH.md` desktop+mobile |
+| INTEGRATION_CERTIFIED | **contracts consumed** | SoT @ `773b510`; harness 27/27 |
+| DEPLOYMENT_READY | **open** | No production deploy |
 
-## Completed actions (directive version 2)
+## Completed actions (directive version 3)
 
-1. Stayed on `cursor/atlas-revenue-engagement-os`. Did not fork, did not start from `revenue-os-atlas-design`, did not bind to the GTM worker.
-2. Consumed Integration contracts/adapters @ `773b510` — schemas, adapters, harness. No independent semantic forks.
-3. Implemented Service Catalog over `config/business/service-lines.json`.
-4. Implemented Offer Catalog over `config/business/offer-catalog.json` + decision engine.
-5. Implemented Pricing Rules with observation-only `pricing-recommendation.v1` and ACCG/legacy lock preserved.
-6. Implemented Opportunity Commercial Workspace (operator accept required).
-7. Implemented Proposal Engine (`autoSend=false`, BL-C1 send blocked).
-8. Implemented MSA/SOW/document workflow with wet-ink path and no e-sign/live send.
-9. Implemented Engagement model: scope, renewals, success-fee/tail (`EARNED ≠ COLLECTED`), referral economics (`ELIGIBLE ≠ PAYABLE ≠ PAID`, payout off).
-10. CC-001: GTM camelCase lead-intake accepted; PascalCase-only rejected.
-11. CC-002: Copilot recommendations advisory; Revenue remains commercial authority.
-12. CC-003: GCC handoff persist-only; `autoProvisionAccess=false`.
-13. Schema validation + idempotent replay tests for commercial documents and `engagement|{opportunityId}`.
-14. Synthetic commercial journey passed; live dispatch confirmed false.
-15. Premium N/A with rationale (no UI).
-16. Published this `docs/agent-status.md`.
+1. Re-consumed Integration SoT @ `773b510` — no semantic redefinition.
+2. Did not rebuild catalogs/pricing/proposal/engagement engines (D15 first-pass @ `9c9c331` kept).
+3. Added Elite commercial workspace rendering on `/revenue` for offer/pricing/proposal/engagement read-models. Operator accept required. `autoSend=false`.
+4. Kept `liveDispatch=false`, `autoProvisionAccess=false`, ACCG01 untouched. No SharePoint schema thaw. No production deploy.
+5. Rendered Premium desktop (1440×900) and mobile (390×844) walkthrough evidence.
+6. Pushed checkpoint on `cursor/atlas-revenue-engagement-os` and updated this file.
 
 ## Remaining actions
 
-1. Elite commercial surfaces (only if a later directive requires UI) + Premium walkthrough.
-2. Dev SharePoint adapters for `HVCG_Proposals` / `HVCG_Engagements` without schema thaw.
-3. Owner-gated live dispatch / GCC mapping — remain off.
-4. `DEPLOYMENT_READY` stays closed until owner + orchestrator authorize.
-
-## Compatibility acknowledgements
-
-| Control | Honored |
-| --- | --- |
-| CC-001 GTM lead-intake semantics | Yes — camelCase SoT; no remap of `360|*` keys |
-| CC-002 Copilot vs Revenue authority | Yes — `observationOnly`; operator accept required |
-| CC-003 GCC `autoProvisionAccess=false` | Yes |
-| Frozen Atlas Hub/Elite | Untouched |
-| ACCG01 writes | Untouched |
-| Lead → Prospect → Opportunity / Opportunity Ops / Client Activation / Capital / SharePoint / Microsoft permissions | Untouched |
-| Production / live outbound / paid ads / secrets | Untouched |
+1. Dev SharePoint adapters for `HVCG_Proposals` / `HVCG_Engagements` without schema thaw.
+2. Owner-gated live dispatch / GCC mapping — remain off.
+3. `DEPLOYMENT_READY` stays closed.
+4. Production Elite recert of frozen `75d0c59` is out of scope for this train.
 
 ## Tests
 
 ```bash
 python3 tests/revenue_os/run_train_suite.py
+node apps/atlas-elite-os/scripts/commercial-route-tests.mjs
+npx tsx --test apps/atlas-elite-os/src/pages/revenue/commercialWorkspace.test.ts apps/atlas-elite-os/src/security/rbac.redteam.test.ts apps/atlas-elite-os/src/layout/appShellSearch.redteam.test.ts
+python3 -m unittest tests.unit.business.test_atlas_security_sprint16 tests.unit.business.test_atlas_integration_sprint15
 ```
 
 Results this checkpoint:
 
-- BA commercial sprint 2: OK (1 skipped historical)
-- BA revenue sprint 3: OK (1 skipped historical)
-- BA revenue sprint 4: OK
-- Integration SoT harness: **27/27 OK**
-- Revenue OS suite: **17/17 OK** (catalogs, pricing, proposals, documents, idempotency, CC-001/002/003, synthetic journey)
-- Atlas security sprint 16 + integration sprint 15 + revenue truth sprint 12: **73/73 OK**
+- Train suite: **PASS** (BA 2/3/4, Integration SoT 27/27, Revenue OS 17/17)
+- Elite commercial route + workspace + RBAC/search: **PASS** (22/22)
+- Atlas security sprint 16 + integration sprint 15: **52/52 OK**
+- No new P0/P1; no RT IDs closed this cycle (none were open)
 
-## Owner decisions
+## Premium
 
-None opened. Live Hub POST, paid ads, entitlement provision, and production deploy remain owner-gated and off.
+See `docs/revenue-os/premium/WALKTHROUGH.md`. Send remains blocked; engagement shows `autoProvisionAccess=false`.
 
-## Next milestone
-
-Optional Elite commercial workspace rendering (Premium then required). Keep this branch as the sole Revenue OS worker tip.
-
-**Updated:** 2026-08-20T06:45:00Z  
-**Directive version acknowledged:** `2`
+**Updated:** 2026-08-20T07:05:00Z  
+**Directive version acknowledged:** `3`

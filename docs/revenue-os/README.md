@@ -2,7 +2,7 @@
 
 **Train:** `revenue-os`  
 **Branch:** `cursor/atlas-revenue-engagement-os`  
-**Directive consumed:** `2`  
+**Directive consumed:** `3`  
 **Integration SoT:** `773b510` (`cursor/platform-integration-contracts`)
 
 In-memory commercial control plane from offer recommendation through engagement economics. Hub `940a484` and Elite `75d0c59` stay frozen. No production writes, live dispatch, paid ads, or GCC auto-provision.
@@ -19,12 +19,15 @@ In-memory commercial control plane from offer recommendation through engagement 
 | `src/revenue_os/engagements.py` | Scope, renewals, success-fee/tail, referral economics |
 | `src/revenue_os/compatibility.py` | CC-001 / CC-002 / CC-003 adapters |
 | `src/revenue_os/journey.py` | Synthetic offer → pricing → proposal → closed-won → engagement |
+| `apps/atlas-elite-os/src/pages/revenue/` | Elite `/revenue` commercial workspace (render-only) |
 
 ## Tests
 
 ```bash
 python3 tests/revenue_os/run_train_suite.py
 ```
+
+Premium evidence: [premium/WALKTHROUGH.md](premium/WALKTHROUGH.md).
 
 ## Gates this checkpoint
 
