@@ -89,15 +89,32 @@ Certified on Hub `b6a3c9c` before the convert-stage patch. Attestation code was 
 
 **P2 performance debt.** Typical ~14–16s vs ~3s target. Not materially unusable. Do not weaken RBAC.
 
-## Premium screenshots
+## Premium screenshots / video
 
-Signed-out production gate and Microsoft login page only. Authenticated Home / Leads / Opportunities / Activation / Capital / Search **were not rendered** because Azure CLI session does not transfer to the browser.
+Authenticated MSAL session as Manny on production Elite (`75d0c59` / `/assets/index-fZIMESb5.js`).
+
+Surfaces inspected live: Home, Leads (+ detail), Opportunities (+ detail / exception clear), Clients / SYN01, `/clients/SYN01/activation` (Active Client · verified · entitlements not provisioned), Projects, My Work, Capital (+ detail), Command-K Search SYN01 (3 hits), responsive narrow viewport.
+
+Home business cert: cleared "No Next Action" on SYN Atlas Conversion Co opportunity; exception left the Command Center feed.
+
+Artifacts:
+- `elite_authenticated_premium_qa_walkthrough.mp4` / `elite_authenticated_premium_qa_demo.mp4`
+- `elite_auth_home_command_center.webp`
+- `elite_auth_leads.webp`
+- `elite_auth_opportunities.webp`
+- `elite_auth_clients_syn01.webp`
+- `elite_auth_syn01_activation_verified.webp`
+- `elite_auth_capital_command_center.webp`
+- `elite_auth_search_syn01.webp`
+- `elite_auth_responsive_narrow.webp`
+
+**PREMIUM STATUS: PASS** (authenticated rendered inspection completed 2026-08-20).
 
 ## Known P2 debt
 
-- Search latency ~14–16s (Graph fan-out)
-- Elite Premium authenticated visual QA pending successful MSAL browser login
-- Hub vs Elite SHA rematch after Elite auth fix deploys
+- Search Hub API latency ~14–16s (Command-K UI felt ~3–5s)
+- Opportunity date input display glitch (`mm/dd/…` formatting) — save still worked
+- Projects list currently Draft/Unverified ACCG01 rows (view-only; no ACCG01 writes)
 - 360 / Copilot / GCC remain undeployed by policy
 
 ## Auth incident (2026-08-20)
@@ -106,4 +123,8 @@ Operator saw **401 Unauthorized** at `identity.7.azurestaticapps.net/.auth/login
 
 Classification: **Azure Static Web Apps Easy Auth callback failure**, not Hub API and not AADSTS. This Free SWA has **zero** invited users (`az staticwebapp users list` = `[]`). Hosted "Sign in with Microsoft" was incorrectly routing to `/.auth/login/aad`.
 
-Fix: Elite Sign-in uses **MSAL SPA** `49d20328-…` for Hub `access_as_user`. SWA `/.auth/me` remains hint-only. Do not use `/.auth/login/aad` for Premium certification.
+Fix: Elite Sign-in uses **MSAL SPA** `49d20328-…` for Hub `access_as_user` (`75d0c59`). SWA `/.auth/me` remains hint-only. Do not use `/.auth/login/aad` for Premium certification.
+
+## Atlas freeze
+
+Current-scope Atlas P0 = 0 and P1 = 0 after Premium PASS. **FREEZE ATLAS** for unrelated feature work. Remaining parallel work stays on 360 / Copilot / GCC repo-only until separately authorized.
