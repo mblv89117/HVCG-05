@@ -1,0 +1,40 @@
+{
+  "SHA": "fe3db7569a0c52e6d25c171c57bba1d85d0fa592",
+  "assessmentsGET": {
+    "status": 401,
+    "body": {
+      "error": "Authentication required",
+      "code": "UNAUTHENTICATED"
+    }
+  },
+  "assessmentsPOST": {
+    "status": 401,
+    "body": {
+      "error": "Authentication required",
+      "code": "UNAUTHENTICATED"
+    }
+  },
+  "enrichmentGET": {
+    "status": 401,
+    "body": {
+      "error": "Authentication required",
+      "code": "UNAUTHENTICATED"
+    }
+  },
+  "enrichmentPOST": {
+    "status": 401,
+    "body": {
+      "error": "Authentication required",
+      "code": "UNAUTHENTICATED"
+    }
+  },
+  "assessmentsPublic": false,
+  "enrichmentPublic": false,
+  "publicPrefixesHasAssessments": false,
+  "publicPrefixesHasEnrichment": false,
+  "missingToken": true,
+  "forgedToken": true
+}
+UNAUTH_401_AND_FAILCLOSED_PASS
+
+EXIT:0

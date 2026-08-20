@@ -1,0 +1,237 @@
+BASE=2f0270228cdaf1dceed51a52a62200ffde07a9e0
+FEAT=0c62792ee379e9eaa0359245cfd3a057cd1041d7
+TIP=fe3db7569a0c52e6d25c171c57bba1d85d0fa592
+==== DIFF 2f02702..0c62792 -- enrichment ====
+diff --git a/src/app/api/gtm/enrichment/route.ts b/src/app/api/gtm/enrichment/route.ts
+index 670a616..ab723c0 100644
+--- a/src/app/api/gtm/enrichment/route.ts
++++ b/src/app/api/gtm/enrichment/route.ts
+@@ -1,10 +1,15 @@
+ import { NextRequest, NextResponse } from "next/server";
+ import { AuthError, authErrorResponse, requireTenantContext } from "@/lib/auth/guards";
+ import { readSessionFromRequest } from "@/lib/auth/session";
+-import { buildPreCallBrief, buildQualificationHints, normalizeAttribution } from "@/lib/gtm/enrichment";
++import {
++  buildPreCallBrief,
++  buildQualificationHints,
++  normalizeAttribution,
++  toIntegrationPreCallBrief,
++} from "@/lib/gtm/enrichment";
+ import { readStore } from "@/lib/store";
+ 
+-/** GTM enrichment — producer only; does not orchestrate campaigns. */
++/** GTM enrichment — producer only; does not orchestrate campaigns or write CRM. */
+ export async function GET(req: NextRequest) {
+   try {
+     const session = await readSessionFromRequest(req);
+@@ -27,9 +32,14 @@ export async function GET(req: NextRequest) {
+       contractVersion: "gtm.assessment-enrichment.v1",
+       liveOrchestration: false,
+       commercialBinding: false,
++      observationOnly: true,
++      commercialAuthority: "revenue-os",
++      liveDispatch: false,
+       attribution,
+       qualificationHints: qualification,
+       preCallBrief: brief,
++      integrationPreCallBrief: null,
++      note: "Producer enrichment only. Map via toIntegrationPreCallBrief when a bookingId exists. Not CRM/GTM orchestration.",
+     });
+   } catch (err) {
+     return authErrorResponse(err);
+@@ -49,12 +59,24 @@ export async function POST(req: NextRequest) {
+       source: body.source,
+       utm: body.utm,
+     });
++    const brief = buildPreCallBrief({ organization, assessment, attribution });
++    const bookingId = typeof body.bookingId === "string" ? body.bookingId : undefined;
+     return NextResponse.json({
+       ok: true,
+       liveOrchestration: false,
++      commercialBinding: false,
++      observationOnly: true,
++      commercialAuthority: "revenue-os",
++      liveDispatch: false,
+       attribution,
+       qualificationHints: buildQualificationHints(assessment),
+-      preCallBrief: buildPreCallBrief({ organization, assessment, attribution }),
++      preCallBrief: brief,
++      integrationPreCallBrief: bookingId
++        ? toIntegrationPreCallBrief(brief, {
++            bookingId,
++            atlasClientCode: typeof body.atlasClientCode === "string" ? body.atlasClientCode : undefined,
++          })
++        : null,
+     });
+   } catch (err) {
+     return authErrorResponse(err);
+diff --git a/src/lib/gtm/enrichment.ts b/src/lib/gtm/enrichment.ts
+index e84357e..9353027 100644
+--- a/src/lib/gtm/enrichment.ts
++++ b/src/lib/gtm/enrichment.ts
+@@ -27,6 +27,21 @@ export interface QualificationHints {
+   factClass: FactClass;
+ }
+ 
++/** Provenanced finding row for GTM pre-call enrichment (not a CRM field). */
++export interface PreCallStructuredFinding {
++  id: string;
++  title: string;
++  statement: string;
++  factClass: FactClass;
++  confidence: number;
++  kind: "business_context" | "observed_problem" | "opportunity" | "recommendation";
++}
++
++/**
++ * Copilot producer enrichment for GTM Pre-Call Brief consumers.
++ * Distinct from Integration SoT `pre-call-brief.v1` booking envelope —
++ * use `toIntegrationPreCallBrief` to map without redefining SoT meaning.
++ */
+ export interface PreCallBrief {
+   contractVersion: "gtm.pre-call-brief.v1";
+   assessmentId: string;
+@@ -41,10 +56,36 @@ export interface PreCallBrief {
+   priorityOpportunities: string[];
+   recommendedNextStep: string;
+   servicePath: string;
++  /** Structured MRI findings with fact vs inference provenance. */
++  structuredFindings: PreCallStructuredFinding[];
+   factClasses: Array<{ label: string; factClass: FactClass; confidence: number }>;
+   attribution: GtmAttribution;
++  observationOnly: true;
+   commercialBinding: false;
+   liveOrchestration: false;
++  /** Copilot has no commercial authority (CC-002). */
++  commercialAuthority: "revenue-os";
++}
++
++/** Integration SoT `pre-call-brief.v1` observation envelope (not CRM create). */
++export interface IntegrationPreCallBriefV1 {
++  contractVersion: "pre-call-brief.v1";
++  briefId: string;
++  bookingId: string;
++  companyName: string;
++  atlasClientCode?: string;
++  summary: string;
++  painHypotheses: string[];
++  suggestedQuestions: string[];
++  generatedAt: string;
++  ownerSystem: "copilot";
++  observationOnly: true;
++  attribution?: {
++    source?: string;
++    campaignId?: string;
++    diagnosticId?: string;
++    utm?: GtmAttribution["utm"];
++  };
+ }
+ 
+ export function normalizeAttribution(input?: Partial<GtmAttribution> & {
+@@ -116,6 +157,41 @@ export function buildPreCallBrief(input: {
+     ])
+   ).slice(0, 10);
+ 
++  const structuredFindings: PreCallStructuredFinding[] = [
++    ...report.businessContext.slice(0, 4).map((i) => ({
++      id: i.id,
++      title: i.title,
++      statement: i.statement,
++      factClass: i.factClass,
++      confidence: i.confidence,
++      kind: "business_context" as const,
++    })),
++    ...report.observedProblems.slice(0, 6).map((i) => ({
++      id: i.id,
++      title: i.title,
++      statement: i.statement,
++      factClass: i.factClass,
++      confidence: i.confidence,
++      kind: "observed_problem" as const,
++    })),
++    ...report.recommendedPriority.slice(0, 4).map((i) => ({
++      id: i.id,
++      title: i.title,
++      statement: i.statement,
++      factClass: i.factClass,
++      confidence: i.confidence,
++      kind: "opportunity" as const,
++    })),
++    {
++      id: "recommended-hvcg-next-step",
++      title: "Recommended HVCG next step",
++      statement: report.recommendedHvcgNextStep.statement,
++      factClass: report.recommendedHvcgNextStep.factClass,
++      confidence: report.recommendedHvcgNextStep.confidence,
++      kind: "recommendation",
++    },
++  ];
++
+   return {
+     contractVersion: "gtm.pre-call-brief.v1",
+     assessmentId: input.assessment.id,
+@@ -140,20 +216,52 @@ export function buildPreCallBrief(input: {
+     priorityOpportunities: report.recommendedPriority.map((p) => p.title),
+     recommendedNextStep: report.recommendedHvcgNextStep.statement,
+     servicePath: service.displayName,
+-    factClasses: [
+-      ...report.businessContext.slice(0, 3).map((i) => ({
+-        label: i.title,
+-        factClass: i.factClass,
+-        confidence: i.confidence,
+-      })),
+-      ...report.observedProblems.slice(0, 3).map((i) => ({
+-        label: i.title,
+-        factClass: i.factClass,
+-        confidence: i.confidence,
+-      })),
+-    ],
++    structuredFindings,
++    factClasses: structuredFindings.map((i) => ({
++      label: i.title,
++      factClass: i.factClass,
++      confidence: i.confidence,
++    })),
+     attribution,
++    observationOnly: true,
+     commercialBinding: false,
+     liveOrchestration: false,
++    commercialAuthority: "revenue-os",
++  };
++}
++
++/**
++ * Map Copilot producer enrichment → Integration SoT `pre-call-brief.v1`.
++ * Does not create CRM/lead/opportunity records. Requires a synthetic bookingId for fixture.
++ */
++export function toIntegrationPreCallBrief(
++  brief: PreCallBrief,
++  input: { bookingId: string; briefId?: string; atlasClientCode?: string; generatedAt?: string }
++): IntegrationPreCallBriefV1 {
++  const verified = brief.structuredFindings.filter((f) => f.factClass === "VERIFIED CLIENT INPUT");
++  const inferred = brief.structuredFindings.filter(
++    (f) => f.factClass === "AI INFERENCE" || f.factClass === "AI RECOMMENDATION"
++  );
++  const provenanceNote = `Provenance: ${verified.length} verified client input · ${inferred.length} AI inference/recommendation (not client facts).`;
++  const summary = `${brief.executiveSummary}\n\n${provenanceNote}`.slice(0, 5000);
++
++  return {
++    contractVersion: "pre-call-brief.v1",
++    briefId: (input.briefId || `pcb-${brief.assessmentId}`).slice(0, 255),
++    bookingId: input.bookingId.slice(0, 255),
++    companyName: brief.company.slice(0, 255),
++    atlasClientCode: input.atlasClientCode,
++    summary,
++    painHypotheses: brief.painPoints.slice(0, 20),
++    suggestedQuestions: brief.recommendedTalkTracks.slice(0, 20),
++    generatedAt: input.generatedAt || new Date().toISOString(),
++    ownerSystem: "copilot",
++    observationOnly: true,
++    attribution: {
++      source: brief.attribution.source,
++      campaignId: brief.attribution.campaignId,
++      diagnosticId: brief.assessmentId,
++      utm: brief.attribution.utm,
++    },
+   };
+ }

@@ -291,7 +291,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Blanket unauth API compromise mitigated; bootstrap path remains intentional UAT hole.
 - **recommended remediation:** Narrow public prefix to explicit start-only route; rate-limit; never wipe global store.
 - **regression test:** Unauthenticated mutating routes except controlled start → 401.
-- **status:** FIXED_REVALIDATED @ `2f02702` (D26; assessments not public; invalid/missing tokens fail closed; prior D12 @ `19a200e`)
+- **status:** FIXED_REVALIDATED @ `fe3db75` (D27; prior D26 @ `2f02702`)
 
 ### COPILOT-RT-20260820-02
 - **system:** Copilot · **severity:** P0 · **branch/SHA:** `7e63a6d` (revalidated; still open)
@@ -300,7 +300,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-session disclosure/destruction.
 - **recommended remediation:** Per-user durable store; enforce assertTenant at persistence layer.
 - **regression test:** Two sessions isolated.
-- **status:** FIXED_REVALIDATED @ `2f02702` (D26 concurrent workspace isolation; prior D12 @ `19a200e`)
+- **status:** FIXED_REVALIDATED @ `fe3db75` (D27; prior D26 @ `2f02702`)
 
 ### COPILOT-RT-20260820-03
 - **system:** Copilot · **severity:** P0 → **closed on tip** · **branch/SHA:** `7e63a6d`
@@ -309,7 +309,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Original unauth admin bypass remediated on production-completion tip.
 - **recommended remediation:** Keep; add Entra before production client data.
 - **regression test:** Unauthenticated admin → 401 (passing on tip).
-- **status:** FIXED_REVALIDATED @ `2f02702` (D26)
+- **status:** FIXED_REVALIDATED @ `fe3db75` (D27)
 
 ### COPILOT-RT-20260820-11
 - **system:** Copilot · **severity:** P1 · **branch/SHA:** `7e63a6d`
@@ -318,7 +318,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Amplifies RT-02; forged campaign attribution on start body.
 - **recommended remediation:** Dedicated `/api/assessments/start` with abuse controls; no global wipe.
 - **regression test:** Concurrent starts do not destroy other session data.
-- **status:** FIXED_REVALIDATED @ `2f02702` (D26; `/api/assessments` not in PUBLIC_API_PREFIXES; prior FIXED @ `aacc09c` / D12)
+- **status:** FIXED_REVALIDATED @ `fe3db75` (D27; assessments + enrichment not public; prior D26 @ `2f02702`)
 
 ### COPILOT-RT-20260820-04..10
 - **04** P1 Assessment ID spoofing / active-resolution confusion.
@@ -583,3 +583,23 @@ Severity: P0 / P1 / P2 (not inflated)
 | OD-005 REGRESSION | **PASS** @ `9e5d10a` (D23 cite; not retested) |
 | Live production P0 | **5** OPEN @ Hub `940a484` |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_26_2026-08-20.md` |
+
+
+## Directive 27 status appendix (Copilot tip `fe3db75` — enrichment / pre-call)
+
+| Gate / ID | Status @ Directive 27 |
+|-----------|------------------------|
+| Exact Copilot SHA | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` (feat `0c62792`) |
+| `npm test` | **PASS** — **44/44** exit 0 |
+| `security-rt-revalidation` | **PASS** — **7/7** exit 0 |
+| Unauth assessments GET+POST | **401** UNAUTHENTICATED (suite + independent probe) |
+| Unauth enrichment GET+POST | **401** UNAUTHENTICATED (independent probe) |
+| jose / session fail-closed | **PASS** |
+| Enrichment tenant spoof | **403** TENANT_CONTEXT_REQUIRED (foreign assessment/org) |
+| Governance flags | observationOnly=true; liveDispatch=false; commercialAuthority=revenue-os; productionClientDataAllowed=false |
+| COPILOT-RT-01/02/03/11 | **FIXED_REVALIDATED** @ `fe3db75` |
+| New enrichment P0/P1 | **0** |
+| Copilot SECURITY_CERTIFIED | **PASS** @ `fe3db75` |
+| Prior tip `2f02702` | STALE_SUPERSEDED for SECURITY_CERTIFIED gate |
+| Live production P0 | **5** OPEN @ Hub `940a484` |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_27_2026-08-20.md` |
