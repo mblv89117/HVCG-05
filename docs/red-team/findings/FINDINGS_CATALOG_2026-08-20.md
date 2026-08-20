@@ -511,3 +511,20 @@ Severity: P0 / P1 / P2 (not inflated)
 | OWNER_GATE_PREREQS | `CANDIDATE_P0=0 CANDIDATE_P1=0 RED_TEAM=PASS REGRESSION=PARTIAL ROLLBACK_READY=YES` |
 | Live production P0 | **5** (unchanged) |
 | Report | `docs/red-team/CERTIFIED_WORKFLOW_REGRESSION_0bbfd87.md` |
+
+
+## Directive 23 status appendix (OD-005 tip move `9e5d10a` — convert residual)
+
+| Gate / ID | Status @ Directive 23 |
+|-----------|------------------------|
+| Exact candidate SHA | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` |
+| hub-pm-sharepoint convert+GET residual | **PASS** — 34/34 exit 0; entitled GET 200; staff GET 404; `entitlementProvisioned=false`; NORTH01 |
+| Hub API aggregate | **PASS** — **323 pass / 0 fail** exit 0 (D22 was 322/1 on `0bbfd87`) |
+| Staff-bypass static check | **PASS** — exit 0; `staffShortCircuitPresent=false` |
+| Certified workflow REGRESSION | **PASS** |
+| ROLLBACK_READY | **YES** (script EXISTS; prior Hub `b6a3c9c` RECORDED; zip MISSING/gitignored; not executed) |
+| ATLAS-RT-01/02/03 · XSYS-01/02 | Dual-surface **unchanged**: LIVE OPEN×5 / CANDIDATE FIXED_REVALIDATED (D21 cite; findings probes not sole D23 evidence; D23 commands did not reopen) |
+| OWNER_GATE_PREREQS | `CANDIDATE_P0=0 CANDIDATE_P1=0 RED_TEAM=PASS REGRESSION=PASS ROLLBACK_READY=YES` |
+| AUTHORIZE PRODUCTION SECURITY PATCH | **NO** (this worker) |
+| Live production P0 | **5** (unchanged) |
+| Report | `docs/red-team/CERTIFIED_WORKFLOW_REGRESSION_9e5d10a.md` |

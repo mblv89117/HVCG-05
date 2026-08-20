@@ -1,0 +1,11 @@
+SHA=9e5d10a20639bbeb659fbacd6362cd9f13adb08b
+CMD: node scripts/red-team/check-opportunity-staff-bypass.mjs .
+UTC=2026-08-20T15:35:45Z
+CWD=/tmp/rt-d23/od005
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": false,
+  "status": "PATTERN_ABSENT_RETEST_REQUIRED"
+}
+EXIT:0
