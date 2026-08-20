@@ -5,7 +5,7 @@
 | project | Platform Integration / Contracts (Train E) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-integration-contracts` |
-| current SHA | `a109246` |
+| current SHA | `6e6c7ac` |
 | baseline | Hub `940a484` + Elite `75d0c59` via `atlas-hv-completion-52d1` tip `2a5a605` |
 | owned domains | Cross-system schemas, identity/attribution, idempotency, journey harness, compatibility |
 | files/domains touched | `docs/integrations/**`, `tests/integrations/**`, `docs/platform-orchestration/**`, `docs/agent-status.md` |
@@ -30,7 +30,7 @@
 | ORCHESTRATOR REMOTE | `360-growth-solution` / `cursor/platform-orchestrator-b1fa` |
 | ORCHESTRATOR REMOTE SHA | `795d5159d1ba9257e7607701fd7aacb9c4fa2bff` |
 | DIRECTIVE SOURCE | `docs/platform-orchestration/trains/E-platform-integration.md` + `reports/ORCHESTRATOR_REPORT_2026-08-20T0418Z.md` (no `directives/` folder on orch tip yet) |
-| CURRENT SHA | `a109246` |
+| CURRENT SHA | `6e6c7ac` |
 | COMPLETED ACTIONS | See below |
 | REMAINING ACTIONS | See below |
 | P0/P1/P2 | above |

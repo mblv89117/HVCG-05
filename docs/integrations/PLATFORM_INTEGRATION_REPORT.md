@@ -1,7 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** `a109246` (contracts base `9b46313`)  
+**SHA:** `6e6c7ac` (contracts base `9b46313`)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59`, P0 `0`, P1 `0`  
@@ -31,7 +31,7 @@ Live Hub POST for 360/Copilot and GCC auto-provision remain intentionally gated.
 | Field | Value |
 | --- | --- |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `ORCH-DIR-E-2026-08-20T0418Z` |
-| CURRENT SHA | `a109246` |
+| CURRENT SHA | `6e6c7ac` |
 | COMPLETED ACTIONS | Fetch orch; CC-001 fail-safe; CC-006 adapter; ratify gtm-sync + gcc-gtm-feedback; XSYS docs-only; agent-status |
 | REMAINING ACTIONS | OD-003; Copilot/GCC adapter code on product trains; Atlas HMAC patch train |
 | P0/P1/P2 | P0: XSYS-RT-01 (Atlas patch), COP-INT-005; P1: GCC emit adapter; P2: learning automation |
