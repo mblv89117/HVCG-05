@@ -46,6 +46,9 @@ REQUIRED_SCHEMAS = [
     "atlas-gcc-client-activation.v1.json",
     "atlas-to-gcc-handoff.v1.json",
     "gcc-value-signal.v1.json",
+    "360-atlas-gtm-sync.v1.json",
+    "gcc-gtm-feedback.v1.json",
+    "peers/gcc-atlas-signal.v1.json",
 ]
 
 

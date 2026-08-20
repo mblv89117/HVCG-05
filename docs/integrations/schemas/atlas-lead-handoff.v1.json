@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://highvaluecapitalgroup.com/contracts/atlas-lead-handoff.v1.json",
   "title": "Agent Copilot Atlas Lead Handoff v1",
-  "description": "Observation-only lead intake from Agent Copilot Business MRI into Atlas HVCG_Leads. This is not a CRM, ClientStage, entitlement, or opportunity create.",
+  "description": "CANONICAL observation-only Copilot \u2192 Atlas lead handoff. camelCase fields are authoritative. Optional PascalCase aliases may be present only if equal to their camelCase counterparts. Copilot tips must NOT require PascalCase-only dual fields (CC-001 fail-safe).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,13 +18,33 @@
     "governance"
   ],
   "properties": {
-    "contractVersion": { "const": "atlas-lead-handoff.v1" },
-    "assessmentId": { "type": "string", "minLength": 1, "maxLength": 255 },
-    "organizationName": { "type": "string", "minLength": 1, "maxLength": 255 },
-    "clientCode": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{2,15}$" },
-    "recommendedPackage": { "type": "string", "maxLength": 255 },
-    "source": { "const": "agent-copilot" },
-    "observationOnly": { "const": true },
+    "contractVersion": {
+      "const": "atlas-lead-handoff.v1"
+    },
+    "assessmentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "organizationName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "recommendedPackage": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "source": {
+      "const": "agent-copilot"
+    },
+    "observationOnly": {
+      "const": true
+    },
     "provenance": {
       "type": "object",
       "additionalProperties": false,
@@ -38,33 +58,94 @@
         "idempotencyKey"
       ],
       "properties": {
-        "source": { "const": "agent-copilot" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "assessmentVersion": { "type": "string", "minLength": 1, "maxLength": 255 },
-        "submittedAt": { "type": "string", "format": "date-time" },
-        "campaign": { "type": "string", "minLength": 1, "maxLength": 255 },
-        "sourceAttribution": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "source": {
+          "const": "agent-copilot"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "assessmentVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "campaign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "sourceAttribution": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
         "idempotencyKey": {
           "type": "string",
           "pattern": "^copilot\\|.+",
           "description": "Must be copilot|{assessmentId}"
+        },
+        "campaignId": {
+          "type": "string",
+          "maxLength": 255
         }
       }
     },
     "assessment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["assessmentId", "assessmentVersion", "status", "completeness", "topOpportunityNames"],
+      "required": [
+        "assessmentId",
+        "assessmentVersion",
+        "status",
+        "completeness",
+        "topOpportunityNames"
+      ],
       "properties": {
-        "assessmentId": { "type": "string", "minLength": 1, "maxLength": 255 },
-        "assessmentVersion": { "type": "string", "minLength": 1, "maxLength": 255 },
-        "status": { "type": "string" },
-        "completeness": { "type": "number", "minimum": 0, "maximum": 100 },
-        "readinessOverall": { "type": "number" },
-        "readinessConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
-        "recommendedPackage": { "type": "string" },
-        "topOpportunityNames": { "type": "array", "maxItems": 8, "items": { "type": "string" } },
-        "expectedAnnualBenefits": { "type": "number" }
+        "assessmentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "assessmentVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "status": {
+          "type": "string"
+        },
+        "completeness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "readinessOverall": {
+          "type": "number"
+        },
+        "readinessConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "recommendedPackage": {
+          "type": "string"
+        },
+        "topOpportunityNames": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string"
+          }
+        },
+        "expectedAnnualBenefits": {
+          "type": "number"
+        }
       }
     },
     "observations": {
@@ -73,16 +154,45 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["label", "factClass"],
+        "required": [
+          "label",
+          "factClass"
+        ],
         "properties": {
-          "label": { "type": "string", "minLength": 1, "maxLength": 255 },
-          "value": { "type": ["string", "number", "boolean", "null"] },
-          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
           "factClass": {
             "type": "string",
-            "enum": ["VERIFIED", "INFERRED", "AI OBSERVATION", "UNKNOWN"]
+            "enum": [
+              "VERIFIED",
+              "INFERRED",
+              "AI OBSERVATION",
+              "UNKNOWN",
+              "VERIFIED CLIENT INPUT",
+              "AI INFERENCE",
+              "AI RECOMMENDATION"
+            ]
           },
-          "provenance": { "type": "string", "maxLength": 500 }
+          "provenance": {
+            "type": "string",
+            "maxLength": 500
+          }
         }
       }
     },
@@ -90,10 +200,22 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "name": { "type": "string", "maxLength": 255 },
-        "email": { "type": "string", "maxLength": 255 },
-        "company": { "type": "string", "maxLength": 255 },
-        "phone": { "type": "string", "maxLength": 255 }
+        "name": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "company": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 255
+        }
       }
     },
     "governance": {
@@ -109,14 +231,95 @@
         "liveDispatch"
       ],
       "properties": {
-        "observationOnly": { "const": true },
-        "productionClientDataAllowed": { "const": false },
-        "createsClientStage": { "const": false },
-        "createsEntitlement": { "const": false },
-        "createsOpportunity": { "const": false },
-        "isCrm": { "const": false },
-        "liveDispatch": { "const": false }
+        "observationOnly": {
+          "const": true
+        },
+        "productionClientDataAllowed": {
+          "const": false
+        },
+        "createsClientStage": {
+          "const": false
+        },
+        "createsEntitlement": {
+          "const": false
+        },
+        "createsOpportunity": {
+          "const": false
+        },
+        "isCrm": {
+          "const": false
+        },
+        "liveDispatch": {
+          "const": false
+        }
       }
+    },
+    "AssessmentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Optional alias of assessmentId; must match if present"
+    },
+    "AssessmentVersion": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "Company": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Optional alias of organizationName"
+    },
+    "Source": {
+      "const": "agent-copilot"
+    },
+    "CampaignId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "PainHypotheses": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string"
+      }
+    },
+    "PriorityOpportunities": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "string"
+      }
+    },
+    "Summary": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "Confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "RecommendedNextStep": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "IdempotencyKey": {
+      "type": "string",
+      "pattern": "^copilot\\|.+"
+    },
+    "Contact": {
+      "$ref": "#/properties/contact"
+    },
+    "AIReadiness": {
+      "type": "number"
+    },
+    "preCallBrief": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "qualificationHints": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

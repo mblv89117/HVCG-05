@@ -16,3 +16,14 @@ Harness coverage (no production side effects): `tests/integrations/test_security
 | Unsafe defaults | `observationOnly`, `liveDispatch:false`, `paidAdsEnabled:false`, `autoProvisionAccess:false` required where applicable |
 
 No universal cross-platform admin token is defined in these contracts.
+
+## XSYS-RT-01 (intake authenticity) — fail-safe
+
+Independent Red Team finding: website/EVA intake key without body HMAC.
+
+| Rule | Value |
+| --- | --- |
+| Contract posture | Live intake MUST plan for request authenticity beyond a static header key (HMAC or signed body) before new production intake hardening |
+| This train | Documents requirement only (`ATLAS-INT-007`) |
+| Forbidden here | Patching frozen Hub `940a484` runtime on the contracts branch |
+| Owner | Atlas security-patch train (OD-005 adjacent) |

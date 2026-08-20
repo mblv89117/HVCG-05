@@ -15,14 +15,17 @@ SCHEMA_DIR = ROOT / "docs" / "integrations" / "schemas"
 @lru_cache(maxsize=1)
 def registry() -> Registry:
     reg = Registry()
-    for path in SCHEMA_DIR.glob("*.json"):
+    for path in SCHEMA_DIR.rglob("*.json"):
         data = json.loads(path.read_text())
         if "$id" not in data:
             continue
         reg = reg.with_resource(data["$id"], Resource.from_contents(data))
         # Also allow relative resolution by filename for $ref like ./x.json
+        rel = path.relative_to(SCHEMA_DIR).as_posix()
         reg = reg.with_resource(path.name, Resource.from_contents(data))
         reg = reg.with_resource(f"./{path.name}", Resource.from_contents(data))
+        reg = reg.with_resource(rel, Resource.from_contents(data))
+        reg = reg.with_resource(f"./{rel}", Resource.from_contents(data))
     return reg
 
 

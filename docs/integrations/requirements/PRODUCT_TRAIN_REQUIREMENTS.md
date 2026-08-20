@@ -18,11 +18,11 @@ Requested parallel branch `cursor/atlas-revenue-engagement-os` was **not present
 | ATLAS-INT-004 | Consume `gcc-value-signal.v1` as review signals — do not copy GCC ledgers into `HVCG_*` | P1 |
 | ATLAS-INT-005 | Emit `closed-won-learning-event.v1` to 360 without enabling paid ads | P2 |
 | ATLAS-INT-006 | Treat offer/pricing recommendation contracts as observation-only until operator accept | P0 |
+| ATLAS-INT-007 | XSYS-RT-01: before any **new** live intake hardening release, require body HMAC (or equivalent request authenticity) in addition to intake key — **owned by Atlas security patch train**; Integration documents only (no Hub churn on this branch) | P0 |
 
 ## 360 Growth (GTM train)
 
-Branch inspected: `cursor/360-hv-completion-52d1`.
-Requested `cursor/360-gtm-agent-system` was **not present**.
+Branch inspected: `cursor/360-gtm-agent-system` @ `43f9305` (and predecessor `360-hv-completion-52d1`).
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -31,11 +31,11 @@ Requested `cursor/360-gtm-agent-system` was **not present**.
 | GTM-INT-003 | Never send live Hub POST until owner gate; `liveDispatch:false` | P0 |
 | GTM-INT-004 | Consume `closed-won-learning-event.v1` as learning only; `mutatesPaidAds:false` | P1 |
 | GTM-INT-005 | Do not present 360 org UUID as Atlas `ClientCode` | P0 |
+| GTM-INT-006 | Keep additive sync aligned to ratified `360-atlas-gtm-sync.v1.json` | P0 |
 
 ## Agent Copilot
 
-Branch inspected: `cursor/copilot-hv-completion-52d1`.
-Requested `cursor/copilot-production-completion` was **not present**.
+Branch inspected: `cursor/copilot-production-completion` @ `7e63a6d` (and predecessor `copilot-hv-completion-52d1`).
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -43,17 +43,18 @@ Requested `cursor/copilot-production-completion` was **not present**.
 | COP-INT-002 | Label MRI opportunities as non-Atlas (`mriOpportunities`); never write `HVCG_Opportunities` directly | P0 |
 | COP-INT-003 | Keep `observationOnly:true`, `liveDispatch:false` | P0 |
 | COP-INT-004 | Align assessment handoff with `agent-copilot-assessment-handoff.v1` mission name | P1 |
+| COP-INT-005 | **Remove mandatory PascalCase dual fields** from Copilot schema/required[]; camelCase is SoT; PascalCase aliases optional only if equal (CC-001) | P0 |
 
 ## Growth Command Center
 
-Branch inspected: `cursor/gcc-hv-completion-52d1`.
-Requested `cursor/gcc-client-value-os` was **not present**.
+Branch inspected: `cursor/gcc-client-value-os` @ `78cb5d2` (and predecessor `gcc-hv-completion-52d1`).
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
 | GCC-INT-001 | Keep persist-only activation receiver; `autoProvisionAccess:false` | P0 |
-| GCC-INT-002 | Emit `gcc-value-signal.v1` with both `clientCode` and `gccOrganizationId` — never conflate | P0 |
+| GCC-INT-002 | Emit canonical `gcc-value-signal.v1` (adapt from local `gcc-atlas-signal.v1` via published map) with both `clientCode` and `gccOrganizationId` — never conflate | P0 |
 | GCC-INT-003 | Do not create Atlas CRM duplicates from handoffs | P0 |
+| GCC-INT-004 | Align `gcc-gtm-feedback.v1` to Integration-ratified schema | P1 |
 
 ## EVA
 

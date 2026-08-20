@@ -75,6 +75,7 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 - `schemas/eva-crm-payload.v1.json`
 - `schemas/atlas-lead-intake.v1.json`
 - `schemas/360-atlas-lead.v1.json`
+- `schemas/360-atlas-gtm-sync.v1.json`
 - `schemas/gtm-company-profile.v1.json`
 - `schemas/gtm-lead-score.v1.json`
 - `schemas/pain-hypothesis.v1.json`
@@ -105,7 +106,10 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 ### GCC
 - `schemas/atlas-gcc-client-activation.v1.json`
 - `schemas/atlas-to-gcc-handoff.v1.json`
-- `schemas/gcc-value-signal.v1.json`
+- `schemas/gcc-value-signal.v1.json` (canonical; peer `peers/gcc-atlas-signal.v1.json` + adapter)
+- `schemas/gcc-gtm-feedback.v1.json`
+- `schemas/adapters/gcc-atlas-signal-to-value-signal.md`
+- `schemas/adapters/copilot-lead-handoff-aliases.md`
 
 Runtime source remains authoritative where Atlas Hub behavior is already implemented.
 Synthetic journey harness: `tests/integrations/`.
