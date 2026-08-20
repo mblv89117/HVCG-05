@@ -4,29 +4,27 @@
 |-------|-------|
 | Train | integration (E — Platform Integration / Contracts) |
 | Product branch | `cursor/platform-integration-contracts` (`workOnCurrentBranch=true`) |
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **6** |
-| BASED ON CURRENT SHA | `516553f18ac43085f704632f1b54ad94da5eed41` |
-| BASED ON CURRENT RUN ID | D5 FINISHED (`followup-accepted-2026-08-20T2030Z` → `516553f`) |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **7** |
+| BASED ON CURRENT SHA | `d6aff599569a23b6d3501c361925a15c83e0826d` |
+| BASED ON CURRENT RUN ID | D6 FINISHED (`followup-accepted-2026-08-20T2045Z` → `d6aff59`) |
 | This worker | `bc-0e3c9a74` |
 | Must not reuse | `bc-af57d6b6` / `run-8c5dc9cf` on `cursor/platform-orchestrator-b1fa` |
 | Orchestrator repo | `360-growth-solution` |
 | Orchestrator branch | `cursor/platform-orchestrator-b1fa` (**not pushed**) |
-| Prior consumed | **5** (current-tip TESTED_TOGETHER + pre-call-brief harness @ `516553f`) |
+| Prior consumed | **6** (booking + opt-v2 harness vs then-current GTM `14d8e4d` @ `d6aff59`) |
 
 ## Comparison vs branch state at consume time
 
-| Orch expectation (v6) | Branch state @ `516553f` | Action |
+| Orch expectation (v7) | Branch state @ `d6aff59` | Action |
 | --- | --- | --- |
-| Add booking-event.v1 harness | Schema published; step PARTIAL (not in A/B/C) | Journey A + dedicated dry-run/idempotency test + GTM adapter |
-| Add experiment-spec / optimization-decision (Variant 2) | Schemas published; step PARTIAL | Journey C + mutatesPaidAds=false test + adapters |
-| Keep A/B/C + nurture + pre-call-brief green | Present (30/30) | Kept; harness grew to 34/34 |
-| BOOKING / OPT-V2 PARTIAL→PASS only if green + producer cite | PARTIAL | PASS; GTM `synthetic.ts` + `engine.ts` @ `14d8e4d` cited |
-| Early-funnel stays PARTIAL unless new depth | PARTIAL | Left PARTIAL (no invented depth) |
-| Confirm CC-001/002/003/006 | Hold on D5 tips | Reconfirmed vs current tips |
-| Republish TESTED_TOGETHER vs current tips | D5 pins still current; GTM tip still `14d8e4d` | Republished YES |
+| Pin GTM `f53e628` (D14 landed) | Matrix still pinned `14d8e4d` | Republished TESTED_TOGETHER=**YES** vs `f53e628` |
+| Consume landed `journey-sot.ts` adapters | D6 used SYN-GTM marks only | Mirrored `toBookingEventV1` / `toExperimentSpecV1` / `toOptimizationDecisionV1` (file SHA `6d8d541`) |
+| Keep A/B/C + nurture + pre-call + booking + opt green | 34/34 | Kept; harness grew to 36/36 |
+| Early-funnel only from existing SYN-GTM marks | Grouped PARTIAL | Added schema/adapter tests for 7 marks with SoT; `icp_studio` + dry-run outbound left PARTIAL |
+| Confirm CC-001/002/003/006 | Hold on D6 tips | Reconfirmed vs current tips |
 | Keep SoT meaning 773b510 | Unchanged | No semantic fork |
 | No Hub/OD-005/orchestrator | Satisfied | No runtime edits; no second worker |
 
 ## Stale-directive rule
 
-D5 TESTED_TOGETHER / pre-call-brief publish is consumed and remains historical coverage. D4 nurture publish against `e0dd445`/`2f02702` is superseded for tip pins. D3 journey pack and D2 matrix refresh remain historical. Directive 1 schema publish remains satisfied since `9b46313`. Those items were not re-implemented.
+D6 TESTED_TOGETHER / booking+opt publish against `14d8e4d` is consumed and superseded for the GTM tip pin. D5 pre-call-brief and D4 nurture remain historical coverage. D3 journey pack and D2 matrix refresh remain historical. Directive 1 schema publish remains satisfied since `9b46313`. Those items were not re-implemented.

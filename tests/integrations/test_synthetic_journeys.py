@@ -24,9 +24,9 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertEqual(result["counts"]["gcc_handoff"], 1)
         self.assertEqual(result["results"]["lead"], "accepted")
         self.assertEqual(result["clientCode"], "ACME01")
-        booking = result["bus"].store["booking|book-syn-1"]["payload"]
-        self.assertEqual(booking["bookingId"], "book-syn-1")
-        self.assertEqual(booking["status"], "requested")
+        booking = result["bus"].store["booking|mtg-book-syn-1"]["payload"]
+        self.assertEqual(booking["bookingId"], "mtg-book-syn-1")
+        self.assertEqual(booking["status"], "confirmed")
         self.assertNotIn("liveDispatch", booking)
 
     def test_journey_a_replay_does_not_duplicate(self):
@@ -42,7 +42,7 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertFalse(again.created)
         gcc_again = replay_write(bus, "gcc-activate|ACME01|activate", "gcc_handoff", {"id": "should-not-create"})
         self.assertEqual(gcc_again.outcome, "duplicate")
-        booking_again = replay_write(bus, "booking|book-syn-1", "booking", {"id": "should-not-create"})
+        booking_again = replay_write(bus, "booking|mtg-book-syn-1", "booking", {"id": "should-not-create"})
         self.assertEqual(booking_again.outcome, "duplicate")
         self.assertEqual(bus.count("lead"), 1)
         self.assertEqual(bus.count("gcc_handoff"), 1)
@@ -69,12 +69,12 @@ class SyntheticJourneyTests(unittest.TestCase):
         sig = result["bus"].store["gcc-signal|sig-900"]["payload"]
         self.assertEqual(sig["clientCode"], "ACME01")
         self.assertNotEqual(sig["gccOrganizationId"], sig["clientCode"])
-        opt = result["bus"].store["optimize|opt-exp-cmp-gtm-001-v2"]["payload"]
-        self.assertEqual(opt["decision"], "kill")
+        opt = result["bus"].store["optimize|dec-exp-cmp-gtm-001-v2"]["payload"]
+        self.assertEqual(opt["decision"], "hold_for_owner")
         self.assertFalse(opt["mutatesPaidAds"])
         replay = replay_write(
             result["bus"],
-            "optimize|opt-exp-cmp-gtm-001-v2",
+            "optimize|dec-exp-cmp-gtm-001-v2",
             "optimization",
             {"id": "should-not-create"},
         )

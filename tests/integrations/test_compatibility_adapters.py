@@ -63,6 +63,7 @@ def map_gcc_atlas_signal(local: dict) -> dict:
     }
 
 
+# Mirror GTM packages/gtm-agent/src/atlas/journey-sot.ts @ f53e628 (file SHA 6d8d541).
 GTM_EXPERIMENT_STATUS_TO_SOT = {
     "observed": "draft",
     "analyzed": "draft",
@@ -71,51 +72,91 @@ GTM_EXPERIMENT_STATUS_TO_SOT = {
     "qa_passed": "draft",
     "compliance_checked": "draft",
     "experimenting": "running",
-    "measured": "running",
-    "attributed": "running",
+    "measured": "completed",
+    "attributed": "completed",
     "learned": "completed",
     "promoted": "completed",
     "rolled_back": "abandoned",
 }
 
+PAIN_KIND_TO_SEVERITY = {
+    "capital_readiness": "capital",
+    "cash_flow_visibility": "cash",
+    "financial_reporting": "cash",
+    "contract_readiness": "operations",
+    "procurement": "operations",
+    "operational_systems": "operations",
+    "owner_bottleneck": "operations",
+    "crm_weakness": "growth",
+    "ai_opportunity": "growth",
+    "risk_documentation": "capital",
+    "growth_system_weakness": "growth",
+}
 
-def to_integration_booking_event(producer: dict, *, envelope: dict) -> dict:
-    """Map GTM SYN-GTM dry-run calendar booking @ 14d8e4d → SoT booking-event.v1."""
+
+def to_integration_booking_event(producer: dict, *, envelope: dict | None = None) -> dict:
+    """Mirror GTM `toBookingEventV1` @ f53e628 — throws unless dryRun===true."""
+    if producer.get("ok") is False or producer.get("dryRun") is not True:
+        raise ValueError("booking_event_requires_dryRun_true — liveDispatch impossible")
+    booking_id = producer.get("meetingId") or producer.get("bookingId") or producer.get("requestId")
     slot = producer.get("slot") or {}
+    campaign_id = producer.get("campaignId")
+    env = envelope or {
+        "idempotencyKey": f"booking|{booking_id}",
+        "sourceSystem": "360",
+        "destinationSystem": "atlas",
+        "entity": "booking",
+        "operation": "stage",
+        "version": "booking-event.v1",
+        "replaySemantics": "return-existing",
+        "trace": {
+            "correlationId": producer.get("correlationId") or booking_id,
+            "sourceSystem": "360",
+            "destinationSystem": "atlas",
+            "eventId": f"evt-book-{booking_id}",
+            "entityId": booking_id,
+            "campaignId": campaign_id,
+            "timestamp": "2026-08-20T21:00:00Z",
+            "version": "booking-event.v1",
+            "outcome": "accepted",
+        },
+        "actor": {"identityClass": "system_service", "principalId": "360-gtm-synthetic", "scopes": ["booking:stage"]},
+    }
     return {
         "contractVersion": "booking-event.v1",
-        "bookingId": producer.get("requestId") or producer.get("bookingId"),
-        "envelope": envelope,
+        "bookingId": booking_id,
+        "envelope": env,
         "leadRef": {
             "system": "360",
             "entity": "lead",
             "id": producer.get("leadId") or f"lead-{producer.get('companyId', 'unknown')}",
         },
-        "contactEmail": producer["attendeeEmail"],
+        "contactEmail": producer.get("attendeeEmail") or producer.get("contactEmail"),
         "startsAt": slot.get("start") or producer["startsAt"],
         "endsAt": slot.get("end") or producer.get("endsAt"),
-        "status": "requested",
-        "meetingProvider": "microsoft-mock-dry-run",
+        "status": "confirmed" if producer.get("status") == "confirmed" else "requested",
+        "meetingProvider": "microsoft_calendar_mock",
         "attribution": {
-            "source": "360-growth",
-            "campaignId": producer.get("campaignId"),
+            "source": "SYN-GTM",
+            "campaignId": campaign_id,
         },
     }
 
 
 def to_integration_experiment_spec(producer: dict) -> dict:
-    """Map GTM gtm-experiment.v1 / runOptimizationCycle @ 14d8e4d → SoT experiment-spec.v1."""
+    """Mirror GTM `toExperimentSpecV1` @ f53e628."""
     status = GTM_EXPERIMENT_STATUS_TO_SOT[producer["status"]]
+    variant_id = producer.get("variantCampaignId") or producer["experimentId"]
     return {
         "contractVersion": "experiment-spec.v1",
         "experimentId": producer["experimentId"],
-        "campaignId": producer["parentCampaignId"],
+        "campaignId": producer.get("parentCampaignId") or producer.get("campaignId"),
         "hypothesis": producer["hypothesis"],
         "status": status,
         "variants": [
             {
-                "variantId": producer["variantCampaignId"],
-                "name": "Variant 2",
+                "variantId": variant_id,
+                "name": f"Variant 2 · {variant_id}",
                 "allocationPct": 0,
             }
         ],
@@ -125,20 +166,141 @@ def to_integration_experiment_spec(producer: dict) -> dict:
 
 
 def to_integration_optimization_decision(producer: dict, *, decided_at: str) -> dict:
-    """Map GTM Variant 2 rollback (live Level 4 refused) → SoT optimization-decision.v1."""
-    decision = "kill" if producer["status"] == "rolled_back" else "hold_for_owner"
-    if producer["status"] == "promoted":
-        decision = "scale"
+    """Mirror GTM `toOptimizationDecisionV1` @ f53e628 — decision is const hold_for_owner."""
+    status = producer.get("status")
+    rationale = (
+        "Variant 2 rolled back — insufficient wins / kill switch; hold for owner. No paid-ads mutation."
+        if status == "rolled_back"
+        else "Optimization remains observation-only; hold for owner before any spend or live promotion."
+    )
     return {
         "contractVersion": "optimization-decision.v1",
-        "decisionId": f"opt-{producer['experimentId']}",
+        "decisionId": f"dec-{producer['experimentId']}",
         "experimentId": producer["experimentId"],
-        "decision": decision,
-        "rationale": "Live Level 4 refused. Variant 2 remains dry-run; mutatesPaidAds stays false.",
+        "decision": "hold_for_owner",
+        "rationale": rationale,
         "decidedAt": decided_at,
         "ownerSystem": "360",
         "requiresOwnerApproval": True,
         "mutatesPaidAds": False,
+    }
+
+
+def to_gtm_company_profile_v1(producer: dict, *, pain_hypotheses: list[str] | None = None) -> dict:
+    """Mirror GTM `toGtmCompanyProfileV1` @ f53e628 integration-sot.ts — never invent ClientCode."""
+    legal = producer.get("legalName") or producer.get("company")
+    domain = producer.get("domain")
+    website = producer.get("website") or producer.get("url")
+    if not website and domain:
+        website = f"https://{domain}"
+    mapped = {
+        "contractVersion": "gtm-company-profile.v1",
+        "companyId": producer["companyId"],
+        "legalName": legal,
+        "ownerSystem": "360",
+        "industry": producer.get("industry"),
+        "geography": producer.get("geography") or producer.get("location") or (producer.get("locations") or [None])[0],
+        "website": website,
+        "painHypotheses": pain_hypotheses,
+    }
+    return {k: v for k, v in mapped.items() if v is not None}
+
+
+def to_pain_hypothesis_v1(producer: dict, *, company_id: str) -> dict:
+    """Map SYN-GTM pain mark (status=HYPOTHESIS) → SoT pain-hypothesis.v1."""
+    if producer.get("status") != "HYPOTHESIS":
+        raise ValueError("pain_hypothesis_requires_HYPOTHESIS_status")
+    return {
+        "contractVersion": "pain-hypothesis.v1",
+        "hypothesisId": producer["id"],
+        "companyId": company_id,
+        "statement": producer["statement"],
+        "severity": PAIN_KIND_TO_SEVERITY.get(producer.get("kind", ""), "other"),
+        "confidence": producer.get("confidence"),
+        "ownerSystem": "360",
+        "observationOnly": True,
+    }
+
+
+def to_gtm_lead_score_v1(producer: dict, *, lead_id: str, company_id: str | None = None) -> dict:
+    """Mirror GTM `toGtmLeadScoreV1` @ f53e628."""
+    total = producer["total"] if "total" in producer else producer["score"]
+    if total >= 80:
+        band = "qualified"
+    elif total >= 65:
+        band = "hot"
+    elif total >= 45:
+        band = "warm"
+    else:
+        band = "cold"
+    return {
+        "contractVersion": "gtm-lead-score.v1",
+        "leadId": lead_id,
+        "companyId": company_id or producer.get("companyId"),
+        "score": total,
+        "band": band,
+        "signals": producer.get("signals") or [],
+        "ownerSystem": "360",
+        "scoredAt": producer.get("scoredAt") or "2026-08-20T21:00:00Z",
+        "observationOnly": True,
+    }
+
+
+def to_campaign_spec_v1(producer: dict) -> dict:
+    """Map GTM campaign-spec.v1 producer (running_dry) → SoT campaign-spec.v1. Never live. paidAdsEnabled false."""
+    status = producer.get("status") or "draft"
+    if status in {"running_dry", "ready"}:
+        sot_status = "ready"
+    elif status == "paused":
+        sot_status = "paused"
+    elif status == "archived":
+        sot_status = "completed"
+    else:
+        sot_status = "draft"
+    channels = producer.get("channels") or []
+    return {
+        "contractVersion": "campaign-spec.v1",
+        "campaignId": producer["campaignId"],
+        "name": producer.get("name") or producer.get("segment") or producer["campaignId"],
+        "status": sot_status,
+        "channel": producer.get("channel") or (channels[0] if channels else "web"),
+        "paidAdsEnabled": False,
+        "ownerSystem": "360",
+        "attribution": {"source": "SYN-GTM", "campaignId": producer["campaignId"]},
+    }
+
+
+def to_funnel_spec_v1(producer: dict) -> dict:
+    """Map SYN-GTM compiled funnel mark → SoT funnel-spec.v1 (existing schema only)."""
+    pages = producer.get("pages") or []
+    steps = producer.get("steps")
+    if not steps:
+        steps = [{"stepId": p.get("pageId") or f"p{i}", "kind": "content"} for i, p in enumerate(pages, start=1)]
+        if not steps:
+            steps = [{"stepId": "s1", "kind": "form", "formId": producer.get("formId")}]
+    return {
+        "contractVersion": "funnel-spec.v1",
+        "funnelId": producer.get("funnelId") or producer.get("siteId"),
+        "campaignId": producer["campaignId"],
+        "name": producer.get("name") or "SYN-GTM funnel",
+        "ownerSystem": "360",
+        "steps": steps,
+    }
+
+
+def to_form_spec_v1(producer: dict) -> dict:
+    """Map SYN-GTM generateDynamicForm mark → SoT form-spec.v1."""
+    fields = producer.get("fields") or [
+        {"name": "email", "type": "email", "required": True},
+        {"name": "company", "type": "string", "required": True, "maxLength": 255},
+    ]
+    return {
+        "contractVersion": "form-spec.v1",
+        "formId": producer["formId"],
+        "funnelId": producer.get("funnelId"),
+        "campaignId": producer.get("campaignId"),
+        "ownerSystem": "360",
+        "fields": fields,
     }
 
 
@@ -371,35 +533,26 @@ class CompatibilityTests(unittest.TestCase):
         self.assertNotIn("opportunityId", sot)
 
     def test_gtm_dry_run_booking_maps_to_sot(self):
-        from harness.journeys import envelope
-
         producer = {
             "ok": True,
             "dryRun": True,
             "requestId": "book-syn-1",
+            "meetingId": "mtg-book-syn-1",
+            "status": "confirmed",
             "attendeeEmail": "owner@summitridge.example",
             "companyId": "SYN-GTM-001",
             "campaignId": "cmp-SYN-GTM-001",
             "leadId": "lead-SYN-GTM-001",
             "slot": {"start": "2026-08-21T14:00:00.000Z", "end": "2026-08-21T14:45:00.000Z"},
         }
-        self.assertTrue(producer["dryRun"])
-        env = envelope(
-            key="booking|book-syn-1",
-            source="360",
-            dest="atlas",
-            entity="booking",
-            operation="create",
-            version="booking-event.v1",
-            correlation="syn-gtm-d6",
-            event_id="evt-book-syn-1",
-            entity_id="book-syn-1",
-            campaign_id=producer["campaignId"],
-        )
-        sot = to_integration_booking_event(producer, envelope=env)
+        sot = to_integration_booking_event(producer)
         assert_valid("booking-event.v1.json", sot)
-        self.assertEqual(sot["envelope"]["idempotencyKey"], "booking|book-syn-1")
+        self.assertEqual(sot["bookingId"], "mtg-book-syn-1")
+        self.assertEqual(sot["envelope"]["idempotencyKey"], "booking|mtg-book-syn-1")
+        self.assertEqual(sot["status"], "confirmed")
         self.assertNotIn("liveDispatch", sot)
+        with self.assertRaises(ValueError):
+            to_integration_booking_event({**producer, "dryRun": False})
 
     def test_gtm_optimization_variant2_maps_to_sot(self):
         producer = {
@@ -418,8 +571,90 @@ class CompatibilityTests(unittest.TestCase):
         self.assertTrue(spec["variants"][0]["variantId"].endswith("-v2"))
         self.assertEqual(spec["status"], "abandoned")
         self.assertFalse(spec["paidAdsEnabled"])
-        self.assertEqual(decision["decision"], "kill")
+        self.assertEqual(decision["decision"], "hold_for_owner")
+        self.assertEqual(decision["decisionId"], "dec-exp-cmp-gtm-001-v2")
         self.assertFalse(decision["mutatesPaidAds"])
+
+    def test_syn_gtm_early_funnel_marks_map_to_sot(self):
+        discovered = {
+            "companyId": "SYN-GTM-001",
+            "legalName": "Summit Ridge Construction Group",
+            "domain": "summitridge.example",
+            "industry": "construction",
+            "location": "Austin, TX",
+            "url": "https://summitridge.example",
+        }
+        researched = {
+            "companyId": "SYN-GTM-001",
+            "company": "Summit Ridge Construction Group",
+            "industry": "construction",
+            "locations": ["Austin, TX"],
+            "domain": "summitridge.example",
+        }
+        company = to_gtm_company_profile_v1(discovered)
+        researched_profile = to_gtm_company_profile_v1(
+            researched,
+            pain_hypotheses=["capital_readiness"],
+        )
+        assert_valid("gtm-company-profile.v1.json", company)
+        assert_valid("gtm-company-profile.v1.json", researched_profile)
+        self.assertNotIn("atlasClientCode", researched_profile)
+
+        pain = to_pain_hypothesis_v1(
+            {
+                "id": "SYN-GTM-001-capital_readiness",
+                "kind": "capital_readiness",
+                "statement": "Summit Ridge Construction Group may lack capital-readiness packaging for growth or transaction.",
+                "confidence": 0.7,
+                "status": "HYPOTHESIS",
+            },
+            company_id="SYN-GTM-001",
+        )
+        assert_valid("pain-hypothesis.v1.json", pain)
+        self.assertTrue(pain["observationOnly"])
+
+        score = to_gtm_lead_score_v1(
+            {"total": 72, "version": "gtm-score.v1", "scoredAt": "2026-08-20T21:00:00Z", "explanations": {}},
+            lead_id="lead-SYN-GTM-001",
+            company_id="SYN-GTM-001",
+        )
+        assert_valid("gtm-lead-score.v1.json", score)
+        self.assertTrue(score["observationOnly"])
+        self.assertEqual(score["band"], "hot")
+
+        campaign = to_campaign_spec_v1(
+            {
+                "version": "campaign-spec.v1",
+                "campaignId": "cmp-SYN-GTM-001",
+                "segment": "construction capital-ready",
+                "status": "running_dry",
+                "channels": ["email", "web"],
+                "funnelId": "fun-SYN-GTM-001",
+                "formId": "form-SYN-GTM-001",
+            }
+        )
+        assert_valid("campaign-spec.v1.json", campaign)
+        self.assertFalse(campaign["paidAdsEnabled"])
+        self.assertEqual(campaign["status"], "ready")
+
+        funnel = to_funnel_spec_v1(
+            {
+                "funnelId": "fun-SYN-GTM-001",
+                "siteId": "fun-SYN-GTM-001",
+                "campaignId": "cmp-SYN-GTM-001",
+                "formId": "form-SYN-GTM-001",
+                "pages": [{"pageId": "p1"}, {"pageId": "p2"}],
+            }
+        )
+        form = to_form_spec_v1(
+            {
+                "formId": "form-SYN-GTM-001",
+                "funnelId": "fun-SYN-GTM-001",
+                "campaignId": "cmp-SYN-GTM-001",
+            }
+        )
+        assert_valid("funnel-spec.v1.json", funnel)
+        assert_valid("form-spec.v1.json", form)
 
     def test_gcc_gtm_feedback_ratified(self):
         assert_valid(

@@ -50,8 +50,8 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 | Atlas → GCC | GCC `/api/handoff/atlas-activation` | `platform_admin` | `gcc-activate\|{ClientCode}\|{event}` | Mapping later | Persist-only | No auto-access |
 | GCC → Atlas value signal | Contract `gcc-value-signal.v1` | Service identity | `gcc-signal\|{signalId}` | `ClientCode` + GCC org | Schema + harness | No ledger copy |
 | Atlas → 360 learning | Contract `closed-won-learning-event.v1` | Service identity | `learn-won\|{outcomeId}` | Campaign attribution | Schema + harness | No ad spend |
-| 360 dry-run booking | Contract `booking-event.v1` | Local / staging | `booking\|{bookingId}` | 360 lead / meeting | Schema + harness | Dry-run only |
-| 360 optimization Variant 2 | Contract `experiment-spec.v1` / `optimization-decision.v1` | Local / staging | `experiment\|{experimentId}`, `optimize\|{decisionId}` | Campaign | Schema + harness | `mutatesPaidAds=false` |
+| 360 dry-run booking | Contract `booking-event.v1` | Local / staging | `booking\|{bookingId}` | 360 lead / meeting | Schema + harness (`toBookingEventV1` @ `f53e628`) | Dry-run only |
+| 360 optimization Variant 2 | Contract `experiment-spec.v1` / `optimization-decision.v1` | Local / staging | `experiment\|{experimentId}`, `optimize\|{decisionId}` | Campaign | Schema + harness (`toOptimizationDecisionV1` hold_for_owner @ `f53e628`) | `mutatesPaidAds=false` |
 
 ## Contract rules
 

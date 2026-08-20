@@ -69,6 +69,31 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
     }
     assert_valid("gtm-company-profile.v1.json", company)
 
+    pain = {
+        "contractVersion": "pain-hypothesis.v1",
+        "hypothesisId": "360-co-001-capital_readiness",
+        "companyId": company["companyId"],
+        "statement": "Working capital gap may constrain bid capacity (HYPOTHESIS — not a verified fact).",
+        "severity": "capital",
+        "confidence": 0.7,
+        "ownerSystem": "360",
+        "observationOnly": True,
+    }
+    assert_valid("pain-hypothesis.v1.json", pain)
+
+    score = {
+        "contractVersion": "gtm-lead-score.v1",
+        "leadId": "360-lead-001",
+        "companyId": company["companyId"],
+        "score": 72,
+        "band": "hot",
+        "signals": ["gtm-score.v1"],
+        "ownerSystem": "360",
+        "scoredAt": NOW,
+        "observationOnly": True,
+    }
+    assert_valid("gtm-lead-score.v1.json", score)
+
     campaign = {
         "contractVersion": "campaign-spec.v1",
         "campaignId": campaign_id,
@@ -130,31 +155,31 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
     assert_valid("nurture-plan.v1.json", nurture)
 
     book_env = envelope(
-        key="booking|book-syn-1",
+        key="booking|mtg-book-syn-1",
         source="360",
         dest="atlas",
         entity="booking",
-        operation="create",
+        operation="stage",
         version="booking-event.v1",
         correlation=CORRELATION_A,
-        event_id="evt-book-001",
-        entity_id="book-syn-1",
+        event_id="evt-book-mtg-book-syn-1",
+        entity_id="mtg-book-syn-1",
         campaign_id=campaign_id,
     )
     booking = {
         "contractVersion": "booking-event.v1",
-        "bookingId": "book-syn-1",
+        "bookingId": "mtg-book-syn-1",
         "envelope": book_env,
         "leadRef": {"system": "360", "entity": "lead", "id": "360-lead-001"},
         "contactEmail": "jordan@acme.example",
         "startsAt": "2026-08-21T14:00:00Z",
         "endsAt": "2026-08-21T14:45:00Z",
-        "status": "requested",
-        "meetingProvider": "microsoft-mock-dry-run",
-        "attribution": {"source": "360-growth", "campaignId": campaign_id},
+        "status": "confirmed",
+        "meetingProvider": "microsoft_calendar_mock",
+        "attribution": {"source": "SYN-GTM", "campaignId": campaign_id},
     }
     assert_valid("booking-event.v1.json", booking)
-    bus.write("booking|book-syn-1", "booking", {"id": "book-syn-1", **booking})
+    bus.write("booking|mtg-book-syn-1", "booking", {"id": "mtg-book-syn-1", **booking})
 
     lead_handoff = {
         "contractVersion": "360-atlas-lead.v1",
@@ -534,17 +559,17 @@ def run_journey_c(bus: SyntheticBus | None = None) -> dict[str, Any]:
 
     decision = {
         "contractVersion": "optimization-decision.v1",
-        "decisionId": "opt-exp-cmp-gtm-001-v2",
+        "decisionId": "dec-exp-cmp-gtm-001-v2",
         "experimentId": "exp-cmp-gtm-001-v2",
-        "decision": "kill",
-        "rationale": "Live Level 4 refused. Variant 2 dry-run rolled back; mutatesPaidAds false.",
+        "decision": "hold_for_owner",
+        "rationale": "Variant 2 rolled back — insufficient wins / kill switch; hold for owner. No paid-ads mutation.",
         "decidedAt": NOW,
         "ownerSystem": "360",
         "requiresOwnerApproval": True,
         "mutatesPaidAds": False,
     }
     assert_valid("optimization-decision.v1.json", decision)
-    bus.write("optimize|opt-exp-cmp-gtm-001-v2", "optimization", {"id": "opt-exp-cmp-gtm-001-v2", **decision})
+    bus.write("optimize|dec-exp-cmp-gtm-001-v2", "optimization", {"id": "dec-exp-cmp-gtm-001-v2", **decision})
 
     return {
         "journey": "C",

@@ -199,7 +199,7 @@
           "owner": "GTM / Atlas meetings",
           "collisionBehavior": "return-existing",
           "replaySemantics": "Retries must not create duplicate meetings. SYN-GTM dryRun=true only.",
-          "notes": "Live dispatch impossible. booking.ok && booking.dryRun === true @ 14d8e4d."
+          "notes": "Live dispatch impossible. toBookingEventV1 throws unless dryRun===true @ f53e628 journey-sot.ts."
         },
         {
           "edge": "360 GTM experiment spec",
@@ -225,7 +225,7 @@
           "owner": "360 runOptimizationCycle",
           "collisionBehavior": "return-existing",
           "replaySemantics": "Retries must not flip mutatesPaidAds or invent spend.",
-          "notes": "mutatesPaidAds const false. Live Level 4 refused; rolled_back → kill."
+          "notes": "mutatesPaidAds const false. toOptimizationDecisionV1 decision=hold_for_owner @ f53e628."
         },
         {
           "edge": "Engagement create",

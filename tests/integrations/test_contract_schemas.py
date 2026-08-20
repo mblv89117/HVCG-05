@@ -143,6 +143,57 @@ class ContractSchemaTests(unittest.TestCase):
         )
         self.assertTrue(errors)
 
+    def test_early_funnel_marks_stay_observation_only(self):
+        assert_valid(
+            "pain-hypothesis.v1.json",
+            {
+                "contractVersion": "pain-hypothesis.v1",
+                "hypothesisId": "SYN-GTM-001-capital_readiness",
+                "companyId": "SYN-GTM-001",
+                "statement": "Capital-readiness packaging may be incomplete (HYPOTHESIS).",
+                "severity": "capital",
+                "ownerSystem": "360",
+                "observationOnly": True,
+            },
+        )
+        self.assertTrue(
+            validate(
+                "pain-hypothesis.v1.json",
+                {
+                    "contractVersion": "pain-hypothesis.v1",
+                    "hypothesisId": "bad-pain",
+                    "companyId": "SYN-GTM-001",
+                    "statement": "Must not become a fact.",
+                    "ownerSystem": "360",
+                    "observationOnly": False,
+                },
+            )
+        )
+        assert_valid(
+            "gtm-lead-score.v1.json",
+            {
+                "contractVersion": "gtm-lead-score.v1",
+                "leadId": "lead-SYN-GTM-001",
+                "score": 72,
+                "band": "hot",
+                "ownerSystem": "360",
+                "scoredAt": "2026-08-20T21:00:00Z",
+                "observationOnly": True,
+            },
+        )
+        campaign_live = validate(
+            "campaign-spec.v1.json",
+            {
+                "contractVersion": "campaign-spec.v1",
+                "campaignId": "cmp-bad",
+                "name": "Live spend",
+                "status": "ready",
+                "ownerSystem": "360",
+                "paidAdsEnabled": True,
+            },
+        )
+        self.assertTrue(campaign_live)
+
     def test_pre_call_brief_observation_only(self):
         # Copilot toIntegrationPreCallBrief output @ fe3db75 (docs/copilot/pre-call-brief-fixture-d26.json)
         assert_valid(
@@ -253,10 +304,10 @@ class ContractSchemaTests(unittest.TestCase):
             "optimization-decision.v1.json",
             {
                 "contractVersion": "optimization-decision.v1",
-                "decisionId": "opt-exp-cmp-gtm-001-v2",
+                "decisionId": "dec-exp-cmp-gtm-001-v2",
                 "experimentId": "exp-cmp-gtm-001-v2",
-                "decision": "kill",
-                "rationale": "Live Level 4 refused. Dry-run Variant 2 rolled back.",
+                "decision": "hold_for_owner",
+                "rationale": "Variant 2 rolled back — hold for owner. No paid-ads mutation.",
                 "decidedAt": "2026-08-20T20:00:00Z",
                 "ownerSystem": "360",
                 "requiresOwnerApproval": True,
