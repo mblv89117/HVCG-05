@@ -44,6 +44,7 @@ for (let i = 0; i < 3; i += 1) {
       status: res.status,
       ms: res.ms,
       count: Array.isArray(res.json.results) ? res.json.results.length : null,
+      timing: res.json.timing || null,
     });
   }
 }
@@ -77,9 +78,11 @@ const report = {
   min: times[0] || null,
   max: times[times.length - 1] || null,
   sampleCount: times.length,
+  timings: okSamples.map((s) => s.json?.timing).filter(Boolean),
   results,
   samples,
   at: new Date().toISOString(),
+  note: 'Candidate Hub search latency cert. Does not deploy production.',
 };
 mkdirSync('/opt/cursor/artifacts', { recursive: true });
 writeFileSync('/opt/cursor/artifacts/atlas_search_authz_cert.json', JSON.stringify(report, null, 2));
