@@ -15,9 +15,9 @@ This file is the operator record of **what is live** versus **what is in git**. 
 |------|--------|
 | App | `app-atlas-integration-hub` / `rg-atlas-prod` |
 | URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| **Running Hub SHA** | `b6a3c9c50747f3bc06b0de870d9906c4b9424152` |
-| **Azure deployment ID** | `3f62750c-2909-49d5-b25e-d1e119843e2e` |
-| Commit message (that SHA) | `fix(atlas): convert reuse without HVCG_Leads.ClientCode` |
+| **Running Hub SHA** | `940a4849577ad5356da86850e2eccdbf3fe4e86b` |
+| **Azure deployment ID** | `9b406df7-984c-43c0-a4e1-52a291eb79b3` |
+| Commit message (that SHA) | `chore(atlas): add live Capital attestation and search cert scripts` (runtime ancestor `ec71350` Lead→Prospect) |
 | Runtime-critical ancestor | `3f794f7a8b51c094dba7e4cd5febd0c6bc81c6a6` (governed activation; deployed earlier this window as `828e426b`) |
 | Prior running zip before this window | `5b50ca2c338b34afffa5796d6fa79298a7b27d4c` (deployment `7795bc89-daaa-43a8-8213-581e01c0f460`) |
 | Stale cited ID | `dd965bc2` is an older **inactive** 2026-08-18 deploy, not current |
@@ -35,7 +35,7 @@ GitHub workflows do **not** deploy Hub.
 Treat them as two facts:
 
 1. **Worktree HEAD** — local / branch tip. Changes here do nothing to production until an explicit Hub deploy.
-2. **Running Hub SHA** — `b6a3c9c50747f3bc06b0de870d9906c4b9424152` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
+2. **Running Hub SHA** — `940a4849577ad5356da86850e2eccdbf3fe4e86b` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
 
 Do not infer production from:
 
