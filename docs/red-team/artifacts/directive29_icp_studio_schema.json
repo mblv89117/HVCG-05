@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/icp-studio.v1.json",
+  "title": "ICP Studio v1",
+  "description": "CANONICAL 360 GTM active ICP from packages/gtm-agent/src/icp/model.ts + studio.ts @ f53e628. Maps existing IcpModel / ICP_MODEL_VERSION fields only. Does not encode sensitive personal traits. Observation-only; not an Atlas ClientCode and not a CRM fact.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "version",
+    "name",
+    "description",
+    "criteria",
+    "verticalHypotheses",
+    "exclusions",
+    "createdAt",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "icp-studio.v1"
+    },
+    "version": {
+      "const": "icp.hvcg.v1",
+      "description": "ICP_MODEL_VERSION from GTM icp/model.ts @ f53e628"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "criteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "founderLed",
+        "minRevenueUsdApprox",
+        "provenDemandRequired",
+        "constraintSignals",
+        "ownerBottleneck",
+        "limitedCfoCooInfrastructure",
+        "opportunityAreas"
+      ],
+      "properties": {
+        "founderLed": {
+          "type": "boolean"
+        },
+        "minRevenueUsdApprox": {
+          "type": "number",
+          "minimum": 0
+        },
+        "provenDemandRequired": {
+          "type": "boolean"
+        },
+        "constraintSignals": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "ownerBottleneck": {
+          "type": "boolean"
+        },
+        "limitedCfoCooInfrastructure": {
+          "type": "boolean"
+        },
+        "opportunityAreas": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      }
+    },
+    "verticalHypotheses": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "type": "string",
+        "enum": [
+          "construction",
+          "professional_services",
+          "healthcare_dental",
+          "home_services",
+          "select_franchises"
+        ]
+      }
+    },
+    "exclusions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sensitivePersonalTraits"
+      ],
+      "properties": {
+        "sensitivePersonalTraits": {
+          "const": true,
+          "description": "Required true — ICP must exclude sensitive personal profiling."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "activeVersion": {
+      "const": "icp.hvcg.v1",
+      "description": "IcpStudioState.activeVersion from studio.ts — same const as ICP_MODEL_VERSION"
+    }
+  }
+}

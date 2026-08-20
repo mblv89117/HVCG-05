@@ -620,3 +620,18 @@ Severity: P0 / P1 / P2 (not inflated)
 | Prior tip `14d8e4d` | STALE_SUPERSEDED for this SECURITY_CERTIFIED gate |
 | Live production P0 | **5** OPEN @ Hub `940a484` |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_28_2026-08-20.md` |
+
+
+## Directive 29 status appendix (Integration tip `30964bb` — outbound-dispatch + icp-studio)
+
+| Gate / ID | Status @ Directive 29 |
+|-----------|------------------------|
+| Exact Integration SHA | `30964bbf437ef0f43708a0e308d554b84ce4c1d7` (pack `778defd`) |
+| `outbound-dispatch.v1` | **PASS** — mode=`dry_run_record_only`; recorded=true; dispatched=false; liveDispatch=false |
+| `icp-studio.v1` | **PASS** — `exclusions.sensitivePersonalTraits` const true |
+| Harness | **40/40** exit 0 |
+| Fail-closed probes | **PASS** (reject live/dispatched/sensitive=false) |
+| GTM `createOutboundAdapter` @ `f53e628` | cite-only: cannot return `dispatched=true` in engineering |
+| New findings | **none** (candidate P0=0 P1=0) |
+| Live production P0 | **5** OPEN @ Hub `940a484` |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_29_2026-08-20.md` |

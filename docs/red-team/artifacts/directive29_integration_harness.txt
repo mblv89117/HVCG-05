@@ -1,0 +1,50 @@
+SHA=30964bbf437ef0f43708a0e308d554b84ce4c1d7
+CMD: python3 tests/integrations/run_integration_contracts.py
+UTC=2026-08-20T21:37:36Z
+CWD=/tmp/rt-d29/integration
+test_cc006_adapter_maps_to_canonical (test_compatibility_adapters.CompatibilityTests.test_cc006_adapter_maps_to_canonical) ... ok
+test_copilot_canonical_without_pascalcase_still_valid (test_compatibility_adapters.CompatibilityTests.test_copilot_canonical_without_pascalcase_still_valid) ... ok
+test_copilot_matching_alias_allowed (test_compatibility_adapters.CompatibilityTests.test_copilot_matching_alias_allowed) ... ok
+test_copilot_pre_call_brief_adapter_maps_to_sot (test_compatibility_adapters.CompatibilityTests.test_copilot_pre_call_brief_adapter_maps_to_sot) ... ok
+test_gcc_gtm_feedback_ratified (test_compatibility_adapters.CompatibilityTests.test_gcc_gtm_feedback_ratified) ... ok
+test_gtm_dry_run_booking_maps_to_sot (test_compatibility_adapters.CompatibilityTests.test_gtm_dry_run_booking_maps_to_sot) ... ok
+test_gtm_icp_studio_maps_to_sot (test_compatibility_adapters.CompatibilityTests.test_gtm_icp_studio_maps_to_sot) ... ok
+test_gtm_optimization_variant2_maps_to_sot (test_compatibility_adapters.CompatibilityTests.test_gtm_optimization_variant2_maps_to_sot) ... ok
+test_gtm_outbound_dispatch_maps_to_sot (test_compatibility_adapters.CompatibilityTests.test_gtm_outbound_dispatch_maps_to_sot) ... ok
+test_gtm_sync_ratified (test_compatibility_adapters.CompatibilityTests.test_gtm_sync_ratified) ... ok
+test_pascalcase_only_payload_rejected (test_compatibility_adapters.CompatibilityTests.test_pascalcase_only_payload_rejected) ... ok
+test_syn_gtm_early_funnel_marks_map_to_sot (test_compatibility_adapters.CompatibilityTests.test_syn_gtm_early_funnel_marks_map_to_sot) ... ok
+test_all_required_schemas_exist (test_contract_schemas.ContractSchemaTests.test_all_required_schemas_exist) ... ok
+test_booking_event_dry_run_idempotent (test_contract_schemas.ContractSchemaTests.test_booking_event_dry_run_idempotent) ... ok
+test_client_code_pattern_rejects_uuid (test_contract_schemas.ContractSchemaTests.test_client_code_pattern_rejects_uuid) ... ok
+test_early_funnel_marks_stay_observation_only (test_contract_schemas.ContractSchemaTests.test_early_funnel_marks_stay_observation_only) ... ok
+test_icp_studio_excludes_sensitive_personal_traits (test_contract_schemas.ContractSchemaTests.test_icp_studio_excludes_sensitive_personal_traits) ... ok
+test_idempotency_registry_covers_critical_edges (test_contract_schemas.ContractSchemaTests.test_idempotency_registry_covers_critical_edges) ... ok
+test_nurture_plan_observation_only (test_contract_schemas.ContractSchemaTests.test_nurture_plan_observation_only) ... ok
+test_offer_cannot_drop_observation_only (test_contract_schemas.ContractSchemaTests.test_offer_cannot_drop_observation_only) ... ok
+test_optimization_decision_cannot_mutate_paid_ads (test_contract_schemas.ContractSchemaTests.test_optimization_decision_cannot_mutate_paid_ads) ... ok
+test_outbound_dispatch_fail_closed (test_contract_schemas.ContractSchemaTests.test_outbound_dispatch_fail_closed) ... ok
+test_pre_call_brief_observation_only (test_contract_schemas.ContractSchemaTests.test_pre_call_brief_observation_only) ... ok
+test_schemas_have_ids_and_parse (test_contract_schemas.ContractSchemaTests.test_schemas_have_ids_and_parse) ... ok
+test_website_lead_minimal_valid (test_contract_schemas.ContractSchemaTests.test_website_lead_minimal_valid) ... ok
+test_journey_a_no_false_success_on_injected_failure (test_security_contracts.FailureAtomicityTests.test_journey_a_no_false_success_on_injected_failure) ... ok
+test_partial_convert_keys_remain_idempotent (test_security_contracts.FailureAtomicityTests.test_partial_convert_keys_remain_idempotent) ... ok
+test_response_lost_after_persist (test_security_contracts.FailureAtomicityTests.test_response_lost_after_persist) ... ok
+test_sender_success_receiver_fail_then_retry (test_security_contracts.FailureAtomicityTests.test_sender_success_receiver_fail_then_retry) ... ok
+test_stale_auth_simulated_as_failed_no_write (test_security_contracts.FailureAtomicityTests.test_stale_auth_simulated_as_failed_no_write) ... ok
+test_forged_handoff_missing_governance_rejected (test_security_contracts.SecurityContractTests.test_forged_handoff_missing_governance_rejected) ... ok
+test_live_dispatch_cannot_be_true (test_security_contracts.SecurityContractTests.test_live_dispatch_cannot_be_true) ... ok
+test_prompt_injection_oversized_observation_rejected (test_security_contracts.SecurityContractTests.test_prompt_injection_oversized_observation_rejected) ... ok
+test_rejects_uuid_as_client_code_on_gcc_handoff (test_security_contracts.SecurityContractTests.test_rejects_uuid_as_client_code_on_gcc_handoff) ... ok
+test_schema_confusion_wrong_version_const (test_security_contracts.SecurityContractTests.test_schema_confusion_wrong_version_const) ... ok
+test_typed_ref_requires_system_entity (test_security_contracts.SecurityContractTests.test_typed_ref_requires_system_entity) ... ok
+test_journey_a_end_to_end (test_synthetic_journeys.SyntheticJourneyTests.test_journey_a_end_to_end) ... ok
+test_journey_a_replay_does_not_duplicate (test_synthetic_journeys.SyntheticJourneyTests.test_journey_a_replay_does_not_duplicate) ... ok
+test_journey_b_copilot_to_engagement (test_synthetic_journeys.SyntheticJourneyTests.test_journey_b_copilot_to_engagement) ... ok
+test_journey_c_gcc_signal_to_learning (test_synthetic_journeys.SyntheticJourneyTests.test_journey_c_gcc_signal_to_learning) ... ok
+
+----------------------------------------------------------------------
+Ran 40 tests in 0.050s
+
+OK
+EXIT:0

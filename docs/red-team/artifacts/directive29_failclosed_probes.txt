@@ -1,0 +1,48 @@
+icp criteria schema {
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "founderLed",
+    "minRevenueUsdApprox",
+    "provenDemandRequired",
+    "constraintSignals",
+    "ownerBottleneck",
+    "limitedCfoCooInfrastructure",
+    "opportunityAreas"
+  ],
+  "properties": {
+    "founderLed": {
+      "type": "boolean"
+    },
+    "minRevenueUsdApprox": {
+      "type": "number",
+      "minimum": 0
+    },
+    "provenDemandRequired": {
+      "type": "boolean"
+    },
+    "constraintSignals": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+
+criteria props ['founderLed', 'minRevenueUsdApprox', 'provenDemandRequired', 'constraintSignals', 'ownerBottleneck', 'limitedCfoCooInfrastructure', 'opportunityAreas']
+criteria required ['founderLed', 'minRevenueUsdApprox', 'provenDemandRequired', 'constraintSignals', 'ownerBottleneck', 'limitedCfoCooInfrastructure', 'opportunityAreas']
+icp extract found True
+valid_icp exclusions {'sensitivePersonalTraits': True, 'notes': 'Do not target or store sensitive personal traits.'}
+od extract found True
+outbound_valid: ACCEPT errs=[]
+outbound_dispatched_true: REJECT n=1 msg=False was expected
+outbound_mode_live: REJECT n=1 msg='dry_run_record_only' was expected
+outbound_liveDispatch_true: REJECT n=1 msg=False was expected
+outbound_recorded_false: REJECT n=1 msg=True was expected
+icp_valid: ACCEPT errs=[]
+icp_sensitivePersonalTraits_false: REJECT n=1 msg=True was expected
+adapter_live: REJECT outbound_dispatch_requires_dry_run_record_only_and_not_dispatched
+adapter_dispatched_true: REJECT outbound_dispatch_requires_dry_run_record_only_and_not_dispatched
+adapter_icp_sensitive_false: REJECT icp_studio_requires_icp.hvcg.v1
+unittest_targeted PASS ran 2
+FAILCLOSED_PROBES_PASS
+EXIT:0

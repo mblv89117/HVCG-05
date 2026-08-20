@@ -1,0 +1,43 @@
+=== outbound-dispatch.v1 ===
+required ['contractVersion', 'messageId', 'channel', 'mode', 'recorded', 'dispatched', 'ownerSystem']
+additionalProperties False
+mode {'const': 'dry_run_record_only'}
+recorded {'const': True}
+dispatched {'const': False}
+liveDispatch {'const': False}
+contractVersion {'const': 'outbound-dispatch.v1'}
+contains liveDispatch True
+contains mode live False
+
+=== icp-studio.v1 ===
+required ['contractVersion', 'version', 'name', 'description', 'criteria', 'verticalHypotheses', 'exclusions', 'createdAt', 'ownerSystem']
+exclusions {
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sensitivePersonalTraits"
+  ],
+  "properties": {
+    "sensitivePersonalTraits": {
+      "const": true,
+      "description": "Required true \u2014 ICP must exclude sensitive personal profiling."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  }
+}
+term_hit health
+term_hit sensitive
+
+CHECKS {
+  "mode_const_dry_run_record_only": true,
+  "recorded_const_true": true,
+  "dispatched_const_false": true,
+  "no_live_mode_enum_success": true,
+  "liveDispatch_absent_or_false": true,
+  "sensitivePersonalTraits_const_true": true
+}
+sensitivePersonalTraits_const True
+SCHEMA_FAILCLOSED_INSPECT_PASS
