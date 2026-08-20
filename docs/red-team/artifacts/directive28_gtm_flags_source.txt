@@ -1,0 +1,95 @@
+SHA=f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb
+==== FLAG / GOVERNANCE SEARCH ====
+packages/gtm-agent/src/command-center/views.ts:31:      GTM_KILL_SWITCH: flags.gtmKillSwitch,
+packages/gtm-agent/src/command-center/views.ts:32:      GTM_LIVE_DISPATCH_ENABLED: flags.gtmLiveDispatchEnabled,
+packages/gtm-agent/src/command-center/views.ts:37:      PAID_ADS_ENABLED: flags.paidAdsEnabled,
+packages/gtm-agent/tests/gtm-agent.test.ts:79:    expect(snap.safety.GTM_LIVE_DISPATCH_ENABLED).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:80:    expect(snap.safety.PAID_ADS_ENABLED).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:143:    expect(intake.envelope?.liveDispatch).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:163:      mutatesPaidAds: false,
+packages/gtm-agent/tests/gtm-agent.test.ts:168:    expect(learning.mutatesPaidAds).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:171:    expect(GTM_SYNC_RATIFICATION.liveDispatch).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:176:  const ENV_KEYS = ['PAID_ADS_ENABLED', 'EMERGENCY_PAUSE_GLOBAL'] as const;
+packages/gtm-agent/tests/gtm-agent.test.ts:181:    process.env.PAID_ADS_ENABLED = 'false';
+packages/gtm-agent/tests/gtm-agent.test.ts:239:    expect(first.liveDispatch).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:246:    expect(first.intake.envelope?.liveDispatch).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:297:    expect(received.liveDispatch).toBe(false);
+packages/gtm-agent/tests/gtm-agent.test.ts:302:  it('keeps liveDispatch false and Revenue OS non-authoritative for GTM', async () => {
+packages/gtm-agent/tests/gtm-agent.test.ts:307:    expect(report.store.atlasSync.every((s) => s.governance.liveDispatch === false)).toBe(true);
+packages/gtm-agent/tests/gtm-agent.test.ts:328:    expect(report.store.revenueOsEngagements.every((e) => e.envelope.liveDispatch === false)).toBe(
+packages/gtm-agent/tests/gtm-agent.test.ts:342:    expect(commercial.liveDispatch).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:58:    expect(booking.dryRun).toBe(true);
+packages/gtm-agent/tests/journey-sot.test.ts:73:    // Schema forbids dryRun field; adapter enforces dry-run by refusing live bookings
+packages/gtm-agent/tests/journey-sot.test.ts:74:    expect(Object.prototype.hasOwnProperty.call(event, 'dryRun')).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:75:    expect(Object.prototype.hasOwnProperty.call(event, 'liveDispatch')).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:78:  it('toBookingEventV1 refuses non-dryRun bookings (liveDispatch impossible)', async () => {
+packages/gtm-agent/tests/journey-sot.test.ts:99:    const liveBooking = { ...booking, dryRun: false as const };
+packages/gtm-agent/tests/journey-sot.test.ts:107:    ).toThrow(/dryRun/);
+packages/gtm-agent/tests/journey-sot.test.ts:110:  it('Variant 2 emits experiment-spec.v1 + optimization-decision.v1 with mutatesPaidAds false', async () => {
+packages/gtm-agent/tests/journey-sot.test.ts:164:    expect(spec.paidAdsEnabled).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:167:    expect(decision.decision).toBe('hold_for_owner');
+packages/gtm-agent/tests/journey-sot.test.ts:168:    expect(decision.mutatesPaidAds).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:190:    expect(spec.paidAdsEnabled).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:191:    expect(decision.mutatesPaidAds).toBe(false);
+packages/gtm-agent/tests/journey-sot.test.ts:192:    expect(decision.decision).toBe('hold_for_owner');
+packages/gtm-agent/tests/journey-sot.test.ts:197:    expect(flags.paidAdsEnabled).toBe(false);
+packages/gtm-agent/tests/nurture.test.ts:68:    expect(raw.liveDispatch).toBeUndefined();
+packages/gtm-agent/tests/nurture.test.ts:69:    expect(raw.paidAdsEnabled).toBeUndefined();
+packages/gtm-agent/tests/nurture.test.ts:70:    expect(raw.mutatesPaidAds).toBeUndefined();
+packages/gtm-agent/tests/nurture.test.ts:71:    expect(JSON.stringify(plan)).not.toMatch(/liveDispatch["']?\s*:\s*true/i);
+packages/gtm-agent/tests/nurture.test.ts:78:    expect(flags.paidAdsEnabled).toBe(false);
+packages/gtm-agent/tests/nurture.test.ts:85:  it('SYN-GTM journey stores nurture and keeps liveDispatch/paid-ads blocked', async () => {
+packages/gtm-agent/tests/nurture.test.ts:98:    expect(report.store.atlasSync.every((s) => s.governance.liveDispatch === false)).toBe(true);
+packages/gtm-agent/tests/nurture.test.ts:102:    expect(flags.paidAdsEnabled).toBe(false);
+packages/gtm-agent/src/journey/synthetic.ts:213:        !('liveDispatch' in nurture) &&
+packages/gtm-agent/src/journey/synthetic.ts:215:        getSafetyFlags().paidAdsEnabled === false,
+packages/gtm-agent/src/journey/synthetic.ts:247:    if (booking.ok === true && booking.dryRun === true) {
+packages/gtm-agent/src/journey/synthetic.ts:264:      booking.ok === true && booking.ok && booking.dryRun === true && bookingEventOk,
+packages/gtm-agent/src/journey/synthetic.ts:288:    mark('atlas_contract_simulation', staged.created === true && staged.destination === 'HVCG_Leads' && staged.liveDispatch === false);
+packages/gtm-agent/src/journey/synthetic.ts:321:        commercial.liveDispatch === false,
+packages/gtm-agent/src/journey/synthetic.ts:385:        engagement.engagement?.envelope.liveDispatch === false &&
+packages/gtm-agent/src/journey/synthetic.ts:486:      experimentSpec.paidAdsEnabled === false &&
+packages/gtm-agent/src/journey/synthetic.ts:489:      optimizationDecision.decision === 'hold_for_owner' &&
+packages/gtm-agent/src/journey/synthetic.ts:490:      optimizationDecision.mutatesPaidAds === false &&
+packages/gtm-agent/src/outbound/orchestrator.ts:34:function dryRunResult(message: OutboundMessage, reason?: string): OutboundDispatchResult {
+packages/gtm-agent/src/outbound/orchestrator.ts:51:        return dryRunResult(message, 'GTM_KILL_SWITCH');
+packages/gtm-agent/src/outbound/orchestrator.ts:54:        return dryRunResult(message, 'EMERGENCY_PAUSE_GLOBAL');
+packages/gtm-agent/src/outbound/orchestrator.ts:57:        return dryRunResult(message, 'GTM_LIVE_DISPATCH_ENABLED=false');
+packages/gtm-agent/src/outbound/orchestrator.ts:62:        return dryRunResult(message, err instanceof Error ? err.message : 'channel_blocked');
+packages/gtm-agent/src/outbound/orchestrator.ts:65:      return dryRunResult(message, 'live_path_not_wired_in_engineering');
+packages/gtm-agent/src/outbound/orchestrator.ts:82:        const blocked = dryRunResult(parsed, `no_adapter_${parsed.channel}`);
+packages/gtm-agent/src/security/redteam.ts:226:          liveDispatch: false,
+packages/gtm-agent/src/pricing/revenue-os.ts:12: * Operator accept required. autoSend=false. liveDispatch=false.
+packages/gtm-agent/src/pricing/revenue-os.ts:96:      liveDispatch: z.literal(false).optional(),
+packages/gtm-agent/src/pricing/revenue-os.ts:144:  liveDispatch: false;
+packages/gtm-agent/src/pricing/revenue-os.ts:241:    liveDispatch: false,
+packages/gtm-agent/src/pricing/revenue-os.ts:352:          liveDispatch: false,
+packages/gtm-agent/src/atlas/integration-sot.ts:112:        liveDispatch: z.literal(false),
+packages/gtm-agent/src/atlas/integration-sot.ts:211:      liveDispatch: false,
+packages/gtm-agent/src/atlas/integration-sot.ts:316:    mutatesPaidAds: z.literal(false),
+packages/gtm-agent/src/atlas/integration-sot.ts:329:  mutatesPaidAds: false;
+packages/gtm-agent/src/atlas/integration-sot.ts:339:  if (event.mutatesPaidAds !== false) {
+packages/gtm-agent/src/atlas/integration-sot.ts:344:    mutatesPaidAds: false,
+packages/gtm-agent/src/atlas/integration-sot.ts:364: * Local staging remains observation-only / liveDispatch=false.
+packages/gtm-agent/src/atlas/integration-sot.ts:371:  liveDispatch: false,
+packages/gtm-agent/src/atlas/sync.ts:45:      liveDispatch: z.literal(false),
+packages/gtm-agent/src/atlas/sync.ts:62:      liveDispatch: false,
+packages/gtm-agent/src/atlas/sync.ts:99:      liveDispatch: false,
+packages/gtm-agent/src/atlas/sync.ts:100:      paidAdsEnabled: false,
+packages/gtm-agent/src/calendar/microsoft.ts:32:      dryRun: boolean;
+packages/gtm-agent/src/calendar/microsoft.ts:138:        dryRun: true,
+packages/gtm-agent/src/atlas/receive-inquiry.ts:36:  liveDispatch: false;
+packages/gtm-agent/src/atlas/receive-inquiry.ts:76:      if (intake.envelope?.liveDispatch !== false) {
+packages/gtm-agent/src/atlas/receive-inquiry.ts:77:        throw new Error('liveDispatch_must_remain_false');
+packages/gtm-agent/src/atlas/receive-inquiry.ts:91:        liveDispatch: false,
+packages/gtm-agent/src/atlas/journey-sot.ts:111:    paidAdsEnabled: z.literal(false),
+packages/gtm-agent/src/atlas/journey-sot.ts:122:    decision: z.enum(['keep', 'kill', 'scale', 'iterate', 'hold_for_owner']),
+packages/gtm-agent/src/atlas/journey-sot.ts:127:    mutatesPaidAds: z.literal(false),
+packages/gtm-agent/src/atlas/journey-sot.ts:157: * Refuses non-dry-run bookings (liveDispatch impossible on this path).
+packages/gtm-agent/src/atlas/journey-sot.ts:166:  if (input.booking.dryRun !== true) {
+packages/gtm-agent/src/atlas/journey-sot.ts:167:    throw new Error('booking_event_requires_dryRun_true — liveDispatch impossible');
+packages/gtm-agent/src/atlas/journey-sot.ts:216:/** Emit experiment-spec.v1 from runOptimizationCycle Variant 2 (ownerSystem=360, paidAdsEnabled=false). */
+packages/gtm-agent/src/atlas/journey-sot.ts:235:    paidAdsEnabled: false,
+packages/gtm-agent/src/atlas/journey-sot.ts:241: * mutatesPaidAds const false; decision hold_for_owner (non-spend); no live promotion.
+packages/gtm-agent/src/atlas/journey-sot.ts:252:    decision: 'hold_for_owner',
+packages/gtm-agent/src/atlas/journey-sot.ts:260:    mutatesPaidAds: false,

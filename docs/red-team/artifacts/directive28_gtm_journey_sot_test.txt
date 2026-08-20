@@ -1,0 +1,15 @@
+SHA=f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb
+CMD: pnpm --filter @360gs/gtm-agent exec vitest run tests/journey-sot.test.ts
+UTC=2026-08-20T21:05:21Z
+CWD=/tmp/rt-d28/gtm
+
+ RUN  v2.1.9 /tmp/rt-d28/gtm/packages/gtm-agent
+
+ ✓ tests/journey-sot.test.ts (5 tests) 14ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  21:05:21
+   Duration  378ms (transform 170ms, setup 0ms, collect 237ms, tests 14ms, environment 0ms, prepare 44ms)
+
+EXIT:0

@@ -603,3 +603,20 @@ Severity: P0 / P1 / P2 (not inflated)
 | Prior tip `2f02702` | STALE_SUPERSEDED for SECURITY_CERTIFIED gate |
 | Live production P0 | **5** OPEN @ Hub `940a484` |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_27_2026-08-20.md` |
+
+
+## Directive 28 status appendix (GTM tip `f53e628` — journey-sot adapters)
+
+| Gate / ID | Status @ Directive 28 |
+|-----------|------------------------|
+| Exact GTM SHA | `f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb` (feat `f61d29c`) |
+| Flag defaults | LIVE_DISPATCH=false; PAID_ADS=false; KILL_SWITCH=true |
+| `toBookingEventV1` | refuses non-dry-run (**PASS**) |
+| `toExperimentSpecV1` | `paidAdsEnabled` const false (**PASS**) |
+| `toOptimizationDecisionV1` | `mutatesPaidAds` const false; `hold_for_owner` (**PASS**) |
+| journey-sot / gtm-agent / flags tests | 5/5 · 16/16 · 9/9 all exit 0 |
+| New GTM P0/P1 | **0 / 0** |
+| GTM SECURITY_CERTIFIED | **PASS** @ `f53e628` |
+| Prior tip `14d8e4d` | STALE_SUPERSEDED for this SECURITY_CERTIFIED gate |
+| Live production P0 | **5** OPEN @ Hub `940a484` |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_28_2026-08-20.md` |

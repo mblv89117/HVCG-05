@@ -1,0 +1,21 @@
+SHA=f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb
+CMD: pnpm --filter @360gs/gtm-agent test
+UTC=2026-08-20T21:05:21Z
+CWD=/tmp/rt-d28/gtm
+
+> @360gs/gtm-agent@0.1.0 test /tmp/rt-d28/gtm/packages/gtm-agent
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d28/gtm/packages/gtm-agent
+
+ ✓ tests/nurture.test.ts (2 tests) 11ms
+ ✓ tests/journey-sot.test.ts (5 tests) 13ms
+ ✓ tests/gtm-agent.test.ts (9 tests) 29ms
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  21:05:22
+   Duration  402ms (transform 231ms, setup 0ms, collect 708ms, tests 53ms, environment 0ms, prepare 149ms)
+
+EXIT:0
