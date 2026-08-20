@@ -1,0 +1,11 @@
+{"id":"ROUTE_FINANCE","status":"PASS","detail":"/revenue behind FinanceRoute"}
+{"id":"GATES_CLOSED","status":"PASS","detail":"commercial gates closed + observationOnly"}
+{"id":"OPERATOR_ACCEPT_AND_SEND_BLOCK","status":"PASS","detail":"operator accept + BL-C1 send block"}
+{"id":"NO_ACCG01_REWRITE_SURFACE","status":"PASS","detail":"ACCG01 absent from commercial read-model/workspace (no rewrite path)"}
+{"id":"REVOS-ELITE-RT-20260820-01","status":"OPEN_P1","detail":"opportunityId deep-link cosmetic; clientCode/pricing remain ACME synthetic"}
+{
+  "summary": {
+    "fail": 0,
+    "p1DeepLink": true
+  }
+}

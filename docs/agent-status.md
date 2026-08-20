@@ -5,52 +5,49 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `34f42da` |
+| current SHA | *(git tip after push)* |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d16-gtm.mjs` |
+| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d18-revenue-elite.mjs` |
 | contracts required | Integration SoT `773b510` (dependency; not retested) |
-| tests | D16: GTM flags 9/9 · handoff 5/5 · gtm-agent 9/9 · SYN-GTM 28/28 · D16 harness exit 0 |
+| tests | D18: commercial-route PASS · commercialWorkspace 4/4 · test:security 47/47 · harness exit 0 |
 | build | N/A |
-| synthetic certification | N/A (product SYN-GTM verified dry-run only) |
-| security status | Gate **FAIL** until XSYS P0=0 and OD-005 authorized for Hub |
+| synthetic certification | N/A |
+| security status | Gate **FAIL** — Hub P0s open + new Elite P1 |
 | Premium status | **N/A** — no RT UI |
 | integration dependencies | `integration@773b510` |
-| P0 | Hub: ATLAS-01/02/03 + XSYS-01/02 **OPEN**. OD-005 candidate: ATLAS FIXED (D15); XSYS OPEN |
-| P1 | **0** (GTM-03/04 **FIXED**, reconfirmed @ `f63b8eb`) |
-| P2 | none filed (dry-run engagement binding note only) |
-| owner decisions | OD-005 deploy authorization required; XSYS follow-on patch needed |
+| P0 | Hub: ATLAS-01/02/03 + XSYS-01/02 **OPEN** |
+| P1 | **REVOS-ELITE-RT-20260820-01** OPEN @ `8cffe34` |
+| P2 | none filed |
+| owner decisions | OD-005 deploy authorization required; XSYS follow-on; Elite commercial deep-link bind |
 | deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **16** |
-| BASED ON WORKER SHA | `456fee71e3698839c5eee6e63a196441435c6990` |
-| BASED ON RUN ID | `run-d8447acf-4835-4a40-bbfd-7f8367984608` |
-| CURRENT SHA | `34f42dad0d99561ea743b7d5bc21bc055a1d1b36` |
-| COMPLETED ACTIONS | Revalidated GTM tip `f63b8eb` for GTM-RT-03/04 + Revenue OS consumer/SYN-GTM; confirmed pause fail-closed, InquiryForm camelCase, liveDispatch=false, operator-accept required; no new P0/P1 |
-| REMAINING ACTIONS | Retest when XSYS remediations land; re-confirm Hub after OD-005 authorized deploy |
-| P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
-| TEST STATUS | D16 harness exit 0; flags/handoff/gtm-agent PASS; SYN-GTM 28/28 PASS |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **18** |
+| BASED ON WORKER SHA | `95f57204f6f06661c99173759f4e20ab6f7f652a` |
+| BASED ON RUN ID | `run-42feb9ac-ca22-4906-91a1-05657e3b6cd9` |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | First-pass Revenue Elite UI @ `8cffe34` (/revenue read-models, gates, FinanceRoute/viewFinance, ACCG01 isolation, no SP thaw); published P1 deep-link commercial-context finding |
+| REMAINING ACTIONS | Retest Elite after deep-link fix; XSYS/OD-005 Hub paths when authorized |
+| P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=REVOS-ELITE-01 · P2=none |
+| TEST STATUS | commercial-route PASS; workspace 4/4; security 47/47; D18 harness exit 0 |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Dependency `773b510`; XSYS Hub authenticity still open |
-| OWNER DECISIONS | Await OD-005 production security-patch authorization |
+| OWNER DECISIONS | Await OD-005 auth; Elite P1 remediation by Revenue OS train |
 
 ## SHAs this cycle
 
 | System | SHA |
 |--------|-----|
-| GTM (moved) | `f63b8eb166eb5161bdb9956a9e0cdf939e9c3fcb` |
-| Prior OD-005 (not retested) | `bb7edae503d91e85fe8f5a6a69943aeed5579c3a` |
-| Prior Revenue engine (not retested) | `9c9c331d707e59c8e020f28bcaf75528bfe42927` |
+| Revenue Elite UI (new) | `8cffe34e266b4ff3869d840ecf394930041b4c3d` |
 
 ## Notes
 
-- Did not implement Hub runtime fixes on frozen production.
-- Did not deploy OD-005.
-- Did not retest identical D15/D12/D10 SHA/scope surfaces.
-- Revenue OS engine tip unchanged — consumer path on GTM tip only.
+- Did not retest GTM `f63b8eb` or engine `9c9c331`.
+- Did not deploy OD-005 or mutate frozen Hub/Elite production runtime.
+- No SharePoint schema files in tip delta.
 
-**Updated:** 2026-08-20T06:56:30Z
+**Updated:** 2026-08-20T07:10:30Z

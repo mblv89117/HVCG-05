@@ -332,6 +332,17 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ---
 
+
+### REVOS-ELITE-RT-20260820-01
+- **system:** Revenue OS Elite UI
+- **severity:** P1
+- **branch/SHA:** `cursor/atlas-revenue-engagement-os` / `8cffe34`
+- **evidence:** `loadCommercialReadModel(opportunityId)` returns `{...ACME_COMMERCIAL_READ_MODEL, opportunityId}` — clientCode/pricing stay ACME01 while opportunity id can be any deep-link value (e.g. from OpportunityDetailPage `/revenue?opportunity=`).
+- **impact:** Operators can view ACME synthetic economics under a foreign opportunity id; commercial context not opportunity-bound.
+- **recommended remediation:** Fail closed unless opportunity maps to matching ClientCode commercial context; never render ACME prices for non-ACME ids.
+- **regression test:** `loadCommercialReadModel('opp-accg-expansion-001').clientCode` must not be `ACME01` (or must error).
+- **status:** open
+
 ## CROSS-SYSTEM
 
 ### XSYS-RT-20260820-01
@@ -441,3 +452,14 @@ Severity: P0 / P1 / P2 (not inflated)
 | ATLAS-RT-20260820-01/02/03 | OPEN on Hub (not retested; OD-005 candidate still FIXED per D15) |
 | XSYS-RT-20260820-01/02 | OPEN (not retested) |
 | Revenue OS engine `9c9c331` | Not retested (identical SHA) |
+
+
+## Directive 18 status appendix (Revenue Elite UI)
+
+| ID | Status @ Directive 18 |
+|----|------------------------|
+| REVOS-ELITE-RT-20260820-01 | OPEN P1 @ `8cffe34` (opportunity deep-link commercial context) |
+| Elite /revenue gates (autoSend/liveDispatch/operator accept/FinanceRoute) | PASS patterns @ `8cffe34` |
+| ACCG01 rewrite / SharePoint thaw | Not observed in tip delta |
+| ATLAS-RT-01/02/03 · XSYS-01/02 | OPEN on Hub (not retested) |
+| GTM `f63b8eb` / engine `9c9c331` | Not retested |

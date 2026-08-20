@@ -1,0 +1,21 @@
+{
+  "emptyOperatorBlocked": true,
+  "liveDispatch": false,
+  "autoSend": false,
+  "sendBlocked": true,
+  "foreignClientCode": "ACME01",
+  "foreignOppId": "opp-accg-expansion-001",
+  "foreignFloor": 10000,
+  "findings": [
+    {
+      "id": "REVOS-ELITE-RT-20260820-01",
+      "severity": "P1",
+      "detail": "Deep-link opportunityId swapped but clientCode/pricing remain ACME01 synthetic — commercial context not opportunity-bound"
+    },
+    {
+      "id": "ACCG01_in_commercial_read_model",
+      "present": false,
+      "status": "ABSENT_OK"
+    }
+  ]
+}
