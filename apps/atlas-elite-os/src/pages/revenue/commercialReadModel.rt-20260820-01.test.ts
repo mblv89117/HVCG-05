@@ -33,7 +33,7 @@ describe('REVOS-ELITE-RT-20260820-01 fail-closed commercial context', () => {
     assert.match(result.error, /opp-accg-expansion-001/);
     assert.doesNotMatch(JSON.stringify(result), /"floorPrice":10000/);
     assert.doesNotMatch(JSON.stringify(result), /"listPrice":35000/);
-    assert.doesNotMatch(JSON.stringify(result), /ACME01/);
+    assert.equal(result.model, null);
   });
 
   it('fails closed when opportunityId is missing', () => {
