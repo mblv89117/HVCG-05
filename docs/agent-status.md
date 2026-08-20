@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(tip)* |
+| current SHA | 8f197ad |
 | baseline | Hub `940a484` / Elite `75d0c59` (not retested this cycle) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d12-closures.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **12** |
 | BASED ON WORKER SHA | `072e56f3b355535d2f2cf421fb6ffa54cd16ea42` |
 | BASED ON RUN ID | `run-c9759931-513d-4435-bd50-f119f7f72676` |
-| CURRENT SHA | *(git tip)* |
+| CURRENT SHA | 8f197adb444508c589fff160f0f5cb871a16e978 |
 | COMPLETED ACTIONS | Verified GCC `41a59b8` + Copilot `19a200e`; confirmed GCC-05/06/07 + COPILOT-02 FIXED with tests; published D12 report |
 | REMAINING ACTIONS | Retest when Atlas OD-005 tip or GTM tip moves; keep gate FAIL until P0=0 and P1=0 |
 | P0/P1/P2 | P0=5 · P1=2 · P2=none |
