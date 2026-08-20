@@ -13,14 +13,25 @@ mkdirSync(outDir, { recursive: true });
 
 const BASE = process.env.ELITE_BASE_URL || 'http://127.0.0.1:5180';
 
-async function walk(page, prefix, size) {
-  await page.setViewportSize(size);
-  await page.goto(`${BASE}/revenue`, { waitUntil: 'networkidle' });
+async function dismissLocalOwner(page) {
   const localOwner = page.getByRole('button', { name: 'Continue as Local Owner (Dev)' });
   if (await localOwner.isVisible({ timeout: 1500 }).catch(() => false)) {
     await localOwner.click();
     await page.waitForTimeout(400);
   }
+}
+
+async function walk(page, prefix, size) {
+  await page.setViewportSize(size);
+  await page.goto(`${BASE}/revenue`, { waitUntil: 'networkidle' });
+  await dismissLocalOwner(page);
+
+  // REVOS-ELITE-RT-20260820-01 — unmatched ACCG opportunity must fail closed (no ACME prices)
+  await page.goto(`${BASE}/revenue?opportunity=opp-accg-expansion-001`, { waitUntil: 'networkidle' });
+  await page.getByTestId('commercial-fail-closed').waitFor({ timeout: 15000 });
+  await page.getByText('Commercial context not loaded').first().waitFor();
+  await page.screenshot({ path: join(outDir, `${prefix}-00-fail-closed-accg.png`), fullPage: true });
+
   await page.goto(`${BASE}/revenue?opportunity=opp-revos-001`, { waitUntil: 'networkidle' });
   await page.getByText('Commercial workspace').first().waitFor({ timeout: 15000 });
   await page.screenshot({ path: join(outDir, `${prefix}-01-workspace.png`), fullPage: true });

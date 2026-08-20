@@ -2,10 +2,11 @@
  * Elite commercial workspace — offer / pricing / proposal / engagement read-models.
  * Operator accept required. autoSend=false. Does not rebuild Revenue OS engines.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AtlasCard,
+  ErrorState,
   ResponsiveGrid,
   StatusChip,
 } from '@hvcg/atlas-design-system';
@@ -32,9 +33,49 @@ export function CommercialWorkspacePage() {
   const { displayName } = useMicrosoftAuth();
   const [params] = useSearchParams();
   const opportunityId = params.get('opportunity');
-  const initial = useMemo(() => createWorkspaceState(loadCommercialReadModel(opportunityId)), [opportunityId]);
-  const [state, setState] = useState(initial);
+  const clientCode = params.get('client') ?? params.get('clientCode');
+  const loaded = useMemo(
+    () => loadCommercialReadModel(opportunityId, clientCode),
+    [opportunityId, clientCode],
+  );
+  const [state, setState] = useState(() => (loaded.ok ? createWorkspaceState(loaded.model) : null));
+
+  useEffect(() => {
+    setState(loaded.ok ? createWorkspaceState(loaded.model) : null);
+  }, [loaded]);
+
   const operator = displayName || role || '';
+
+  const gateChips = (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <StatusChip label="liveDispatch false" tone="neutral" />
+      <StatusChip label="autoSend false" tone="neutral" />
+      <Link to="/opportunities">
+        <Button appearance="secondary" size="small">
+          Pipeline
+        </Button>
+      </Link>
+    </div>
+  );
+
+  if (!loaded.ok || !state) {
+    return (
+      <ModuleScaffold
+        title="Commercial workspace"
+        subtitle="No loaded commercial context — fail closed"
+        showPendingBanner={false}
+        actions={gateChips}
+      >
+        <div data-testid="commercial-fail-closed">
+          <ErrorState
+            title="Commercial context not loaded"
+            description={loaded.error}
+          />
+        </div>
+      </ModuleScaffold>
+    );
+  }
+
   const { model, gates } = state;
 
   return (
@@ -42,17 +83,7 @@ export function CommercialWorkspacePage() {
       title="Commercial workspace"
       subtitle={`${model.clientName} · ${model.clientCode} · ${model.opportunityId} — Revenue OS read-models. Billing remains outside Atlas.`}
       showPendingBanner={false}
-      actions={
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <StatusChip label="liveDispatch false" tone="neutral" />
-          <StatusChip label="autoSend false" tone="neutral" />
-          <Link to="/opportunities">
-            <Button appearance="secondary" size="small">
-              Pipeline
-            </Button>
-          </Link>
-        </div>
-      }
+      actions={gateChips}
     >
       <MessageBar intent="info" data-testid="commercial-gates">
         <MessageBarBody>

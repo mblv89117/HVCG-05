@@ -2,6 +2,9 @@
  * Elite read-models for Revenue OS commercial workspace.
  * Source of truth remains src/revenue_os — this file only renders tip contracts.
  * Observation until operator accept. autoSend and liveDispatch stay false.
+ *
+ * REVOS-ELITE-RT-20260820-01: fail closed unless opportunityId matches a loaded
+ * commercial context for that ClientCode. Never remap ACME01 prices onto another id.
  */
 
 export const COMMERCIAL_GATES = {
@@ -89,6 +92,11 @@ export interface OpportunityCommercialReadModel {
   engagement: EngagementReadModel | null;
 }
 
+/** Fail-closed result: unmatched opportunity/ClientCode never inherit another tenant's prices. */
+export type CommercialReadModelResult =
+  | { ok: true; model: OpportunityCommercialReadModel; error: null }
+  | { ok: false; model: null; error: string };
+
 /** Synthetic ACME journey already certified on tip 9c9c331 — render only. */
 export const ACME_COMMERCIAL_READ_MODEL: OpportunityCommercialReadModel = {
   contractVersion: 'opportunity-commercial-context.v1',
@@ -140,9 +148,55 @@ export const ACME_COMMERCIAL_READ_MODEL: OpportunityCommercialReadModel = {
   engagement: null,
 };
 
-export function loadCommercialReadModel(opportunityId?: string | null): OpportunityCommercialReadModel {
-  if (opportunityId && opportunityId !== ACME_COMMERCIAL_READ_MODEL.opportunityId) {
-    return { ...ACME_COMMERCIAL_READ_MODEL, opportunityId };
+/**
+ * Loaded commercial contexts keyed by opportunityId.
+ * Only ACME01 / opp-revos-001 is loaded this cycle — no ACME remapping, no ACCG01 writes.
+ */
+const LOADED_COMMERCIAL_CONTEXTS: Readonly<Record<string, OpportunityCommercialReadModel>> = {
+  [ACME_COMMERCIAL_READ_MODEL.opportunityId]: ACME_COMMERCIAL_READ_MODEL,
+};
+
+export function hasLoadedCommercialContext(opportunityId?: string | null): boolean {
+  const id = opportunityId?.trim() ?? '';
+  return Boolean(id && LOADED_COMMERCIAL_CONTEXTS[id]);
+}
+
+/**
+ * REVOS-ELITE-RT-20260820-01: fail closed unless opportunityId matches a loaded
+ * commercial context for that ClientCode. Never render ACME01 floor/list under a
+ * non-ACME opportunity (e.g. opp-accg-expansion-001).
+ */
+export function loadCommercialReadModel(
+  opportunityId?: string | null,
+  clientCode?: string | null,
+): CommercialReadModelResult {
+  const id = opportunityId?.trim() ?? '';
+  if (!id) {
+    return {
+      ok: false,
+      model: null,
+      error:
+        'opportunityId is required. Commercial workspace fails closed when no opportunity is specified.',
+    };
   }
-  return structuredClone(ACME_COMMERCIAL_READ_MODEL);
+
+  const record = LOADED_COMMERCIAL_CONTEXTS[id];
+  if (!record) {
+    return {
+      ok: false,
+      model: null,
+      error: `No loaded commercial context for opportunity '${id}'. Fail closed — ACME01 prices are not remapped onto unmatched opportunities.`,
+    };
+  }
+
+  const requestedClient = clientCode?.trim() ?? '';
+  if (requestedClient && requestedClient !== record.clientCode) {
+    return {
+      ok: false,
+      model: null,
+      error: `ClientCode '${requestedClient}' does not match loaded commercial context '${record.clientCode}' for opportunity '${id}'. Fail closed.`,
+    };
+  }
+
+  return { ok: true, model: structuredClone(record), error: null };
 }
