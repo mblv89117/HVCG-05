@@ -8,7 +8,7 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import type { UserBasicLookup } from '../../entitlements/userLookup.ts';
 import { ownerEmailFromProfile } from '../../entitlements/userLookup.ts';
-import { assertMannyOnly } from './manny.ts';
+import { assertMannyOnly, isMannyPrincipal } from './manny.ts';
 import type { MilestoneRecord, ProjectHealth, ProjectRecord, ProjectStatus, TaskPriority, TaskRecord, TaskStatus } from '../types.ts';
 import {
   canAccessClassification,
@@ -20,6 +20,16 @@ import {
 import { PmHttpError, pmInfrastructureError, pmNotImplemented } from './errors.ts';
 import type { GraphListItem, PmGraphTransport } from './graph.ts';
 import { isSharePointItemId, normalizeEmail } from './ids.ts';
+import {
+  activationIdempotencyKey,
+  classifyClientActivation,
+  emptyProvisioning,
+  parseActivationNotes,
+  writeActivationNotes,
+  type ClientActivationAction,
+  type ClientActivationRecord,
+  type ClientActivationStatus,
+} from './clientActivation.ts';
 import {
   healthFromSharePoint,
   healthToSharePoint,
@@ -37,11 +47,13 @@ import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
 import {
   CONVERTIBLE_LEAD_STATUSES,
   clientFromLeadIdempotencyKey,
+  companyTitleFromOpportunityTitle,
   normalizeCompanyTitle,
   opportunityHref,
   opportunityIdempotencyKey,
   opportunityTypeFromServiceInterest,
   proposeClientCode,
+  shouldPromoteReusedCompanyToProspect,
 } from './leadConversion.ts';
 import { fieldsEq, itemMatchesFieldsFilter } from './odata.ts';
 import type { SharePointPmSettings } from './settings.ts';
@@ -86,6 +98,9 @@ export type SharePointClient = {
   sourceOrg?: string;
   lastMeaningfulContact?: string;
   sharePointLibraryUrl?: string;
+  etag?: string;
+  activationStatus?: ClientActivationStatus;
+  activation?: ClientActivationRecord;
 };
 
 const LEAD_STATUSES = new Set(['New', 'Contacted', 'Qualified', 'Disqualified', 'Converted']);
@@ -183,7 +198,15 @@ export const OPPORTUNITY_LOST_REASONS = ['Price', 'Timing', 'Competitor', 'Fit',
 export type OpportunityStage = (typeof OPPORTUNITY_STAGES)[number];
 export type OpportunityWinLossStatus = (typeof OPPORTUNITY_WIN_LOSS_STATUSES)[number];
 export type OpportunityAttention = {
-  state: 'OPEN' | 'NEEDS_ACTION' | 'OVERDUE' | 'NO_NEXT_ACTION' | 'NEEDS_MANNY' | 'WON' | 'LOST';
+  state:
+    | 'OPEN'
+    | 'NEEDS_ACTION'
+    | 'OVERDUE'
+    | 'NO_NEXT_ACTION'
+    | 'NEEDS_MANNY'
+    | 'WON'
+    | 'LOST'
+    | 'ACTIVATION_REQUIRED';
   label: string;
   severity: 'neutral' | 'info' | 'warning' | 'danger' | 'success';
   reason: string;
@@ -215,12 +238,20 @@ function nullDateOrIso(v: unknown): string | null {
 export function classifyOpportunityAttention(
   opportunity: Pick<
     SharePointOpportunity,
-    'stage' | 'winLossStatus' | 'nextAction' | 'nextActionDate' | 'requiresExecutiveAttention'
+    'stage' | 'winLossStatus' | 'nextAction' | 'nextActionDate' | 'requiresExecutiveAttention' | 'clientStage'
   >,
   today = new Date().toISOString().slice(0, 10),
 ): OpportunityAttention {
   const status = opportunity.winLossStatus || (opportunity.stage === 'Won' || opportunity.stage === 'Lost' ? opportunity.stage : 'Open');
   if (status === 'Won' || opportunity.stage === 'Won') {
+    if (opportunity.clientStage && opportunity.clientStage !== 'Active Client') {
+      return {
+        state: 'ACTIVATION_REQUIRED',
+        label: 'Activation Required',
+        severity: 'warning',
+        reason: 'Closed won. Client activation is required before Active Client access.',
+      };
+    }
     return {
       state: 'WON',
       label: 'Won',
@@ -422,6 +453,8 @@ export class SharePointPmService {
   private mapClient(item: GraphListItem): SharePointClient | null {
     const clientCode = asString(item.fields.ClientCode);
     if (!clientCode || !isCanonicalClientCode(clientCode) || clientCode === '*') return null;
+    const activation = parseActivationNotes(asString(item.fields.InternalNotes));
+    const clientStage = asString(item.fields.ClientStage);
     return {
       id: clientCode,
       clientCode,
@@ -429,7 +462,7 @@ export class SharePointPmService {
       itemId: item.id,
       source: 'sharepoint',
       industry: asString(item.fields.Industry),
-      clientStage: asString(item.fields.ClientStage),
+      clientStage,
       engagementType: asString(item.fields.EngagementTypePrimary),
       overallHealth: asString(item.fields.OverallHealth),
       dba: asString(item.fields.DBA),
@@ -437,6 +470,12 @@ export class SharePointPmService {
       sourceOrg: asString(item.fields.SourceOrg),
       lastMeaningfulContact: isoDate(item.fields.LastMeaningfulContact),
       sharePointLibraryUrl: this.urlField(item.fields.SharePointLibraryUrl),
+      etag: item.etag,
+      activation,
+      activationStatus: classifyClientActivation({
+        clientStage,
+        record: activation,
+      }),
     };
   }
 
@@ -538,6 +577,54 @@ export class SharePointPmService {
           }
         : this.ungranted('HVCG_Decisions / HVCG_Risks');
     return { communications, meetings, engagements, deliverables, decisionsRisks, contacts };
+  }
+
+  async listWorkspaceCollectionsForSearch(
+    principal: AtlasPrincipal,
+    clientCodes: string[],
+  ): Promise<
+    Map<
+      string,
+      Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>
+    >
+  > {
+    const entitled = new Set(
+      clientCodes.filter((code) => isCanonicalClientCode(code) && principal.allowedClientIds.includes(code)),
+    );
+    const load = async (listId: string | undefined, listName: string) => {
+      if (!listId) return { listName, items: [] as GraphListItem[], queried: false as const };
+      return { listName, items: await this.listAll(listId), queried: true as const };
+    };
+    const [communications, meetings, engagements, deliverables, decisions, risks, contacts] = await Promise.all([
+      load(this.settings.communicationsListId, 'HVCG_Communications'),
+      load(this.settings.meetingsListId, 'HVCG_Meetings'),
+      load(this.settings.engagementsListId, 'HVCG_Engagements'),
+      load(this.settings.deliverablesListId, 'HVCG_Deliverables'),
+      load(this.settings.decisionsListId, 'HVCG_Decisions'),
+      load(this.settings.risksListId, 'HVCG_Risks'),
+      load(this.settings.contactsListId, 'HVCG_Contacts'),
+    ]);
+    const out = new Map<string, Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>>();
+    for (const code of entitled) {
+      const pack = (row: { items: GraphListItem[]; queried: boolean; listName: string }): WorkspaceCollectionResult => {
+        if (!row.queried) return this.ungranted(row.listName);
+        return { status: 'COMPLETE', queried: true, items: this.mapWorkspaceItems(row.items, code) };
+      };
+      const decisionItems = [...pack(decisions).items, ...pack(risks).items];
+      const decisionsRisks: WorkspaceCollectionResult =
+        decisions.queried || risks.queried
+          ? { status: 'COMPLETE', queried: true, items: decisionItems }
+          : this.ungranted('HVCG_Decisions / HVCG_Risks');
+      out.set(code, {
+        communications: pack(communications),
+        meetings: pack(meetings),
+        engagements: pack(engagements),
+        deliverables: pack(deliverables),
+        decisionsRisks,
+        contacts: pack(contacts),
+      });
+    }
+    return out;
   }
 
   private mapMilestone(item: GraphListItem): SharePointMilestone | null {
@@ -1033,7 +1120,15 @@ export class SharePointPmService {
     };
     if (asString(body.industry)) fields.Industry = asString(body.industry);
     if (asString(body.dba)) fields.DBA = asString(body.dba);
-    if (asString(body.clientStage)) fields.ClientStage = asString(body.clientStage);
+    const requestedStage = asString(body.clientStage) || asString(body.ClientStage);
+    if (requestedStage === 'Active Client' && !asString(body.provenanceSource)) {
+      throw new PmHttpError(
+        400,
+        'activation_required',
+        'Active Client requires the governed activation workflow unless importing a verified historical client with provenanceSource.',
+      );
+    }
+    if (requestedStage) fields.ClientStage = requestedStage;
     if (idempotencyKey) fields.HVCG_IdempotencyKey = idempotencyKey;
     const created = await this.graph.createItem(this.settings.clientsListId, fields);
     const mapped = this.mapClient(created);
@@ -1062,7 +1157,13 @@ export class SharePointPmService {
     }
     if ('industry' in body) fields.Industry = asString(body.industry) || '';
     if ('dba' in body) fields.DBA = asString(body.dba) || '';
-    if ('clientStage' in body) fields.ClientStage = asString(body.clientStage) || '';
+    if ('clientStage' in body || 'ClientStage' in body) {
+      throw new PmHttpError(
+        400,
+        'immutable_field',
+        'ClientStage changes require the governed client activation workflow.',
+      );
+    }
     if ('website' in body) fields.Website = asString(body.website) || '';
     if (Object.keys(fields).length === 0) return current;
     const patched = await this.graph.patchItemFields(this.settings.clientsListId, current.itemId, fields, etag);
@@ -1255,6 +1356,13 @@ export class SharePointPmService {
       if (!mapped) continue;
       byId.set(mapped.itemId, mapped);
       byId.set(mapped.clientCode, mapped);
+      const titleKey = `title:${normalizeCompanyTitle(mapped.displayName)}`;
+      const existingTitle = byId.get(titleKey);
+      if (existingTitle && existingTitle.clientCode !== mapped.clientCode) {
+        byId.delete(titleKey);
+      } else if (!existingTitle) {
+        byId.set(titleKey, mapped);
+      }
     }
     return byId;
   }
@@ -1267,7 +1375,11 @@ export class SharePointPmService {
     if (!item.id || !title) return null;
     const clientId = lookupId(item.fields, 'ClientId');
     const fromField = asString(item.fields.ClientCode);
-    const linked = (clientId && clients.get(clientId)) || (fromField && clients.get(fromField)) || undefined;
+    const linked =
+      (clientId && clients.get(clientId)) ||
+      (fromField && clients.get(fromField)) ||
+      clients.get(`title:${normalizeCompanyTitle(companyTitleFromOpportunityTitle(title))}`) ||
+      undefined;
     const clientCode =
       (fromField && isCanonicalClientCode(fromField) && fromField !== '*' ? fromField : undefined) ||
       linked?.clientCode;
@@ -1605,8 +1717,7 @@ export class SharePointPmService {
       throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
     }
 
-    const entitled = new Set(entitledClientCodes(principal));
-    const company = await this.ensureCompanyFromLead(existing, entitled);
+    const company = await this.ensureCompanyFromLead(existing);
     const contact = await this.ensureContactFromLead(existing, company.client);
     const opportunity = await this.ensureOpportunityFromLead(existing, company.client);
 
@@ -1625,7 +1736,6 @@ export class SharePointPmService {
         ConvertedClientIdLookupId: Number(company.client.itemId),
         ConvertedOpportunityIdLookupId: Number(opportunity.record.id),
       };
-      if (company.stampClientCode) fields.ClientCode = company.client.clientCode;
       const patched = await this.graph.patchItemFields(this.settings.leadsListId, id, fields, match);
       const mapped = this.mapLead(patched);
       if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Converted lead could not be mapped.');
@@ -1664,8 +1774,7 @@ export class SharePointPmService {
 
   private async ensureCompanyFromLead(
     lead: SharePointLead,
-    entitled: Set<string>,
-  ): Promise<{ client: SharePointClient; reused: boolean; stampClientCode: boolean }> {
+  ): Promise<{ client: SharePointClient; reused: boolean }> {
     const clients = await this.listAll(this.settings.clientsListId);
     const mapped = clients
       .map((item) => this.mapClient(item))
@@ -1673,22 +1782,23 @@ export class SharePointPmService {
     const byItem = new Map(mapped.map((c) => [c.itemId, c]));
     const byCode = new Map(mapped.map((c) => [c.clientCode, c]));
 
-    const stampFor = (client: SharePointClient, reused: boolean): boolean =>
-      Boolean(lead.clientCode) || (reused && entitled.has(client.clientCode));
-
     if (lead.convertedClientId && byItem.has(lead.convertedClientId)) {
-      const client = byItem.get(lead.convertedClientId)!;
-      return { client, reused: true, stampClientCode: stampFor(client, true) };
+      return {
+        client: await this.promoteReusedCompanyToProspectIfLead(byItem.get(lead.convertedClientId)!),
+        reused: true,
+      };
     }
     if (lead.clientCode && byCode.has(lead.clientCode)) {
-      const client = byCode.get(lead.clientCode)!;
-      return { client, reused: true, stampClientCode: stampFor(client, true) };
+      return {
+        client: await this.promoteReusedCompanyToProspectIfLead(byCode.get(lead.clientCode)!),
+        reused: true,
+      };
     }
 
     const wanted = normalizeCompanyTitle(lead.title);
     const titleMatch = mapped.find((c) => normalizeCompanyTitle(c.displayName) === wanted);
     if (titleMatch) {
-      return { client: titleMatch, reused: true, stampClientCode: stampFor(titleMatch, true) };
+      return { client: await this.promoteReusedCompanyToProspectIfLead(titleMatch), reused: true };
     }
 
     const prior = await this.findByIdempotency(
@@ -1697,7 +1807,9 @@ export class SharePointPmService {
     );
     if (prior) {
       const existing = this.mapClient(prior);
-      if (existing) return { client: existing, reused: true, stampClientCode: stampFor(existing, true) };
+      if (existing) {
+        return { client: await this.promoteReusedCompanyToProspectIfLead(existing), reused: true };
+      }
     }
 
     const clientCode = proposeClientCode(lead.title, mapped.map((c) => c.clientCode));
@@ -1714,7 +1826,21 @@ export class SharePointPmService {
     const created = await this.graph.createItem(this.settings.clientsListId, fields);
     const client = this.mapClient(created);
     if (!client) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
-    return { client, reused: false, stampClientCode: false };
+    return { client, reused: false };
+  }
+
+  private async promoteReusedCompanyToProspectIfLead(client: SharePointClient): Promise<SharePointClient> {
+    if (!shouldPromoteReusedCompanyToProspect(client)) return client;
+    if (!client.etag) {
+      throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required to promote a reused Lead company to Prospect.');
+    }
+    const patched = await this.graph.patchItemFields(
+      this.settings.clientsListId,
+      client.itemId,
+      { ClientStage: 'Prospect' },
+      client.etag,
+    );
+    return this.mapClient(patched) ?? client;
   }
 
   private async ensureContactFromLead(
@@ -1845,6 +1971,269 @@ export class SharePointPmService {
       out.push(mapped);
     }
     return out;
+  }
+
+  async listActivationQueue(principal: AtlasPrincipal): Promise<
+    Array<{
+      clientCode: string;
+      clientStage?: string;
+      opportunityId: string;
+      opportunityTitle: string;
+      status: ClientActivationStatus;
+      href: string;
+    }>
+  > {
+    if (!isInternalStaff(principal)) {
+      throw new PmHttpError(403, 'forbidden', 'Client activation queue is restricted to HVCG internal staff.');
+    }
+    const opportunities = await this.listAuthorizedOpportunities(principal);
+    const out: Array<{
+      clientCode: string;
+      clientStage?: string;
+      opportunityId: string;
+      opportunityTitle: string;
+      status: ClientActivationStatus;
+      href: string;
+    }> = [];
+    const seen = new Set<string>();
+    for (const opportunity of opportunities) {
+      if (opportunity.winLossStatus !== 'Won' && opportunity.stage !== 'Won') continue;
+      const code = opportunity.clientCode;
+      if (!code || !isCanonicalClientCode(code)) continue;
+      const key = `${code}|${opportunity.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const status = classifyClientActivation({
+        clientStage: opportunity.clientStage,
+        winLossStatus: opportunity.winLossStatus,
+        opportunityStage: opportunity.stage,
+      });
+      if (status === 'active' || status === 'verified') continue;
+      out.push({
+        clientCode: code,
+        clientStage: opportunity.clientStage,
+        opportunityId: opportunity.id,
+        opportunityTitle: opportunity.title,
+        status,
+        href: `/clients/${encodeURIComponent(code)}/activation`,
+      });
+    }
+    return out;
+  }
+
+  private async authorizeClientForActivation(
+    principal: AtlasPrincipal,
+    clientCode: string,
+  ): Promise<SharePointClient | 'not_found'> {
+    const entitled = await this.authorizeClient(principal, clientCode);
+    if (entitled !== 'not_found') return entitled;
+    if (!isMannyPrincipal(principal) || !isCanonicalClientCode(clientCode) || clientCode === '*') {
+      return 'not_found';
+    }
+    const items = await this.listAll(this.settings.clientsListId, fieldsEq('ClientCode', clientCode));
+    const matches = items
+      .map((item) => this.mapClient(item))
+      .filter((row): row is SharePointClient => Boolean(row && row.clientCode === clientCode));
+    return matches[0] || 'not_found';
+  }
+
+  async getClientActivation(
+    principal: AtlasPrincipal,
+    clientCode: string,
+    opportunityId?: string,
+  ): Promise<{
+    client: SharePointClient;
+    opportunity?: SharePointOpportunity;
+    activation?: ClientActivationRecord;
+    status: ClientActivationStatus;
+    entitlementProvisioned: false;
+  }> {
+    const client = await this.authorizeClientForActivation(principal, clientCode);
+    if (client === 'not_found') throw new PmHttpError(404, 'not_found', 'not_found');
+    if (!isInternalStaff(principal)) {
+      throw new PmHttpError(403, 'forbidden', 'Client activation is restricted to HVCG internal staff.');
+    }
+    const opportunities = await this.listAuthorizedOpportunities(principal);
+    const opportunity = opportunities.find((row) => {
+      if (row.clientCode !== client.clientCode) return false;
+      if (opportunityId) return row.id === opportunityId;
+      return row.winLossStatus === 'Won' || row.stage === 'Won';
+    });
+    const activation = client.activation;
+    const status = classifyClientActivation({
+      clientStage: client.clientStage,
+      winLossStatus: opportunity?.winLossStatus,
+      opportunityStage: opportunity?.stage,
+      record: activation,
+    });
+    return {
+      client,
+      opportunity,
+      activation,
+      status,
+      entitlementProvisioned: false,
+    };
+  }
+
+  async applyClientActivation(
+    principal: AtlasPrincipal,
+    clientCode: string,
+    body: Record<string, unknown>,
+    etag: string | undefined,
+  ): Promise<{
+    client: SharePointClient;
+    opportunity: SharePointOpportunity;
+    activation: ClientActivationRecord;
+    created: boolean;
+    entitlementProvisioned: false;
+    replay: boolean;
+  }> {
+    const action = (asString(body.action) || '') as ClientActivationAction;
+    if (!['request', 'review', 'authorize', 'verify'].includes(action)) {
+      throw new PmHttpError(400, 'invalid_input', 'action must be request, review, authorize, or verify.');
+    }
+    if (!isInternalStaff(principal)) {
+      throw new PmHttpError(403, 'forbidden', 'Client activation is restricted to HVCG internal staff.');
+    }
+    if (action === 'authorize') {
+      assertMannyOnly(principal, 'Client activation authorize');
+    }
+    if (!etag) throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
+    const opportunityId = asString(body.opportunityId);
+    if (!opportunityId || !isSharePointItemId(opportunityId)) {
+      throw new PmHttpError(400, 'invalid_input', 'opportunityId is required.');
+    }
+    const current = await this.getClientActivation(principal, clientCode, opportunityId);
+    const opportunity = current.opportunity;
+    if (!opportunity || opportunity.id !== opportunityId) {
+      throw new PmHttpError(404, 'not_found', 'Won opportunity was not found for this client.');
+    }
+    if (opportunity.winLossStatus !== 'Won' && opportunity.stage !== 'Won') {
+      throw new PmHttpError(400, 'activation_not_eligible', 'Client activation requires a Won opportunity.');
+    }
+    const now = new Date().toISOString();
+    const actor = principal.userId;
+    const key = activationIdempotencyKey(clientCode, opportunityId);
+    let record = current.activation;
+    const replayActive =
+      current.client.clientStage === 'Active Client' &&
+      (action === 'authorize' || action === 'verify') &&
+      record?.opportunityId === opportunityId;
+    if (replayActive && record) {
+      if (action === 'verify' && record.status !== 'verified') {
+        record = {
+          ...record,
+          ...emptyProvisioning(),
+          status: 'verified',
+          verifiedAt: now,
+          verifiedBy: actor,
+        };
+      } else {
+        return {
+          client: current.client,
+          opportunity,
+          activation: record,
+          created: false,
+          entitlementProvisioned: false,
+          replay: true,
+        };
+      }
+    }
+
+    if (action === 'request') {
+      if (current.client.clientStage === 'Active Client') {
+        throw new PmHttpError(400, 'already_active', 'Client is already Active Client.');
+      }
+      record = {
+        version: 1,
+        clientCode,
+        opportunityId,
+        status: 'activation_required',
+        idempotencyKey: key,
+        requestedAt: record?.requestedAt || now,
+        requestedBy: record?.requestedBy || actor,
+        notes: asString(body.notes) || record?.notes,
+        ...emptyProvisioning(),
+        workspaceProvisioning: 'not_started',
+      };
+    } else if (action === 'review') {
+      if (!record || (record.status !== 'activation_required' && record.status !== 'review')) {
+        throw new PmHttpError(400, 'activation_not_ready', 'Activation review requires a prior request.');
+      }
+      record = {
+        ...record,
+        ...emptyProvisioning(),
+        status: 'review',
+        reviewedAt: now,
+        reviewedBy: actor,
+        notes: asString(body.notes) || record.notes,
+      };
+    } else if (action === 'authorize') {
+      if (current.client.clientStage !== 'Active Client' && record && record.status !== 'review' && record.status !== 'activation_required') {
+        throw new PmHttpError(400, 'activation_not_ready', 'Authorization requires an activation request or completed review.');
+      }
+      if (!record) {
+        record = {
+          version: 1,
+          clientCode,
+          opportunityId,
+          status: 'activation_required',
+          idempotencyKey: key,
+          requestedAt: now,
+          requestedBy: actor,
+          ...emptyProvisioning(),
+        };
+      }
+      record = {
+        ...record,
+        ...emptyProvisioning(),
+        status: 'authorized',
+        authorizedAt: now,
+        authorizedBy: actor,
+        notes: asString(body.notes) || record.notes,
+        workspaceProvisioning: 'staged',
+      };
+    } else {
+      if (current.client.clientStage !== 'Active Client') {
+        throw new PmHttpError(400, 'activation_not_ready', 'Verification requires an authorized Active Client.');
+      }
+      record = {
+        ...(record || {
+          version: 1 as const,
+          clientCode,
+          opportunityId,
+          idempotencyKey: key,
+          ...emptyProvisioning(),
+        }),
+        ...emptyProvisioning(),
+        status: 'verified',
+        verifiedAt: now,
+        verifiedBy: actor,
+        notes: asString(body.notes) || record?.notes,
+        workspaceProvisioning: 'staged',
+      };
+    }
+
+    const item = await this.graph.getItem(this.settings.clientsListId, current.client.itemId);
+    if (!item) throw new PmHttpError(404, 'not_found', 'not_found');
+    const fields: Record<string, unknown> = {
+      InternalNotes: writeActivationNotes(asString(item.fields.InternalNotes), record),
+    };
+    if (action === 'authorize') {
+      fields.ClientStage = 'Active Client';
+      fields.IsActive = true;
+    }
+    const patched = await this.graph.patchItemFields(this.settings.clientsListId, current.client.itemId, fields, etag);
+    const mapped = this.mapClient(patched);
+    if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Activated client could not be mapped.');
+    return {
+      client: mapped,
+      opportunity,
+      activation: record,
+      created: action === 'authorize' && current.client.clientStage !== 'Active Client',
+      entitlementProvisioned: false,
+      replay: false,
+    };
   }
 
   async myWorkTasks(principal: AtlasPrincipal): Promise<SharePointTask[]> {

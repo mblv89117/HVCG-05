@@ -100,6 +100,12 @@ type HubAtRiskClient = {
   clientCode?: string;
 };
 
+type HubActivationRow = RecordRefs & {
+  id: string;
+  name: string;
+  href?: string;
+};
+
 function operatorMessage(err: unknown, fallback: string): string {
   const raw = err instanceof Error ? err.message : String(err || '');
   const first = raw.split('\n')[0].replace(/^Error:\s*/i, '').trim();
@@ -501,6 +507,23 @@ export function CommandCenterPage() {
   const atRiskClients = (cc?.clientAttention?.atRisk || []) as HubAtRiskClient[];
   const atRiskProjects = cc?.projects?.atRisk || [];
   const alerts = cc?.criticalAlerts || [];
+  const activationRequired = (() => {
+    const seen = new Set<string>();
+    const rows: HubActivationRow[] = [];
+    const push = (row: HubActivationRow) => {
+      const key = row.href || row.id;
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      rows.push(row);
+    };
+    for (const row of (cc?.clientAttention?.activationRequired || []) as HubActivationRow[]) push(row);
+    for (const row of cc?.clientAttention?.opportunities || []) {
+      if (row.id.startsWith('activation-') || /activation required/i.test(row.detail || '')) {
+        push({ id: row.id, name: row.name, href: row.href });
+      }
+    }
+    return rows;
+  })();
 
   const showLoading = (!auth.tokenReady || loading) && !cc;
   const showUnauthorized = Boolean(unauthorized) && !cc;
@@ -526,6 +549,9 @@ export function CommandCenterPage() {
           </Button>
           <Button appearance="subtle" onClick={() => navigate('/leads')}>
             Leads
+          </Button>
+          <Button appearance="subtle" onClick={() => navigate('/opportunities')}>
+            Opportunities
           </Button>
           <Button appearance="subtle" onClick={() => navigate('/capital')}>
             Capital
@@ -590,6 +616,7 @@ export function CommandCenterPage() {
                     `${h?.atRiskProjects ?? atRiskProjects.length} ${ATLAS_STATUS.atRisk}`,
                     `${h?.waitingItems ?? waitingCount} ${ATLAS_STATUS.waiting}`,
                     `${h?.decisionsNeeded ?? decisions.length + decisionsNeeded.length} ${ATLAS_STATUS.decisionRequired}`,
+                    `${h?.clientsNeedingActivation ?? activationRequired.length} ${ATLAS_STATUS.activationRequired}`,
                   ].join(' · ')}
                 </Caption1>
               </div>
@@ -713,6 +740,24 @@ export function CommandCenterPage() {
           </ResponsiveGrid>
 
           <ResponsiveGrid>
+            <ExceptionCard
+              title={ATLAS_STATUS.activationRequired}
+              count={activationRequired.length}
+              empty="Hub returned no won opportunities waiting on client activation."
+              href="/opportunities"
+              hrefLabel="Opportunities"
+            >
+              {activationRequired.slice(0, 8).map((row) => (
+                <div key={row.id} style={{ padding: '8px 0' }}>
+                  <RecordTitle to={namedRecordHref(row.href) || clientRecordPath(row.clientCode)}>
+                    {row.name}
+                  </RecordTitle>
+                  <Caption1 style={{ display: 'block' }}>
+                    {ATLAS_STATUS.activationRequired} · Won is not Active Client
+                  </Caption1>
+                </div>
+              ))}
+            </ExceptionCard>
             <ExceptionCard
               title={ATLAS_STATUS.decisionRequired}
               count={decisions.length + decisionsNeeded.length}

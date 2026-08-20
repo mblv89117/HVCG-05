@@ -54,6 +54,63 @@ export async function fetchPmOpportunities(auth: AtlasHubAuthHeaders) {
   );
 }
 
+export async function fetchActivationQueue(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    activations: Array<{
+      clientCode: string;
+      clientStage?: string;
+      opportunityId: string;
+      opportunityTitle: string;
+      status: string;
+      href: string;
+    }>;
+    source: string;
+  }>(auth, '/api/pm/activation-queue');
+}
+
+export async function fetchClientActivation(
+  auth: AtlasHubAuthHeaders,
+  clientCode: string,
+  opportunityId?: string,
+) {
+  const qs = opportunityId ? `?opportunityId=${encodeURIComponent(opportunityId)}` : '';
+  return hubFetchJson<{
+    client: PmClient;
+    opportunity?: PmOpportunity;
+    status: string;
+    entitlementProvisioned: false;
+    activation?: {
+      status: string;
+      opportunityId: string;
+      entitlementProvisioned: false;
+      entraGroupProvisioned: false;
+      sharePointLibraryProvisioned: false;
+      portalAccessProvisioned: false;
+    };
+  }>(auth, `/api/pm/clients/${encodeURIComponent(clientCode)}/activation${qs}`);
+}
+
+export async function applyClientActivation(
+  auth: AtlasHubAuthHeaders,
+  clientCode: string,
+  body: { action: 'request' | 'review' | 'authorize' | 'verify'; opportunityId: string; notes?: string; etag?: string },
+) {
+  const headers: Record<string, string> = {};
+  if (body.etag) headers['If-Match'] = body.etag;
+  return hubFetchJson<{
+    client: PmClient;
+    opportunity: PmOpportunity;
+    activation: { status: string; entitlementProvisioned: false };
+    created: boolean;
+    replay: boolean;
+    entitlementProvisioned: false;
+  }>(auth, `/api/pm/clients/${encodeURIComponent(clientCode)}/activation`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+}
+
 export async function patchPmOpportunity(
   auth: AtlasHubAuthHeaders,
   id: string,
@@ -376,6 +433,7 @@ export interface PmClient {
   displayName: string;
   itemId?: string;
   source: string;
+  etag?: string;
   industry?: string;
   clientStage?: string;
   engagementType?: string;
@@ -602,6 +660,7 @@ export interface CommandCenter {
     openCommitments: number;
     decisionsNeeded: number;
     clientsNeedingAttention: number;
+    clientsNeedingActivation?: number;
     avgClientCompleteness?: number;
   };
   criticalAlerts: Array<{ id: string; severity: string; title: string; href?: string }>;
@@ -628,6 +687,7 @@ export interface CommandCenter {
     waitingOnClient: Array<{ id: string; whatIsNeeded: string }>;
     upcomingDeadlines: PmTask[];
     opportunities: Array<{ id: string; name: string; detail: string; href?: string }>;
+    activationRequired?: Array<{ id: string; name: string; clientCode?: string; href?: string }>;
   };
   teamAndAgents: {
     teamWorkload: Array<{ id: string; name: string; openTasks: number; overdue: number; blocked: number }>;

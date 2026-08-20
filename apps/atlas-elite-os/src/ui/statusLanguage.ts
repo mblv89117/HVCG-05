@@ -27,6 +27,7 @@ export const ATLAS_STATUS = {
   termSheetReceived: 'Term Sheet Received',
   closing: 'Closing',
   decisionRequired: 'Decision Required',
+  activationRequired: 'Client Activation Required',
 } as const;
 
 export type AtlasStatusLabel = (typeof ATLAS_STATUS)[keyof typeof ATLAS_STATUS];
@@ -37,6 +38,7 @@ const TONE_BY_LABEL: Record<string, AtlasStatusTone> = {
   [ATLAS_STATUS.needsAction]: 'warning',
   [ATLAS_STATUS.needsManny]: 'warning',
   [ATLAS_STATUS.decisionRequired]: 'warning',
+  [ATLAS_STATUS.activationRequired]: 'gold',
   [ATLAS_STATUS.waiting]: 'info',
   [ATLAS_STATUS.waitingClient]: 'info',
   [ATLAS_STATUS.waitingLender]: 'info',
@@ -93,6 +95,8 @@ const RAW_TO_ATLAS: Record<string, AtlasStatusLabel> = {
   'needs owner approval': ATLAS_STATUS.needsManny,
   'needs manny': ATLAS_STATUS.needsManny,
   'decision required': ATLAS_STATUS.decisionRequired,
+  'activation required': ATLAS_STATUS.activationRequired,
+  'client activation required': ATLAS_STATUS.activationRequired,
   completed: ATLAS_STATUS.complete,
   complete: ATLAS_STATUS.complete,
   ready: ATLAS_STATUS.ready,

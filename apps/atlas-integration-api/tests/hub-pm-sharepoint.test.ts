@@ -18,6 +18,7 @@ import { classifyProjectFields, canAccessClassification, isInternalStaff } from 
 import { IntegrationRepository } from '../src/store/repository.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { UserBasicLookup } from '../src/entitlements/userLookup.ts';
+import { MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
 
 const SITE =
   'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022';
@@ -152,6 +153,7 @@ async function verify(token: string): Promise<Record<string, unknown>> {
     a: { oid: USER_A, roles: ['HVCG Team Member'], scp: 'access_as_user' },
     b: { oid: USER_B, roles: ['HVCG Team Member'], scp: 'access_as_user' },
     staff: { oid: USER_STAFF, roles: ['HVCG Owner'], scp: 'access_as_user' },
+    manny: { oid: MANNY_ENTRA_OID, roles: ['HVCG Owner'], scp: 'access_as_user' },
     admin: { oid: USER_ADMIN, roles: ['Administrator'], scp: 'access_as_user' },
     advisor: { oid: USER_ADVISOR, roles: ['Read-Only Advisor'], scp: 'access_as_user' },
     client: { oid: USER_CLIENT, roles: ['Client Executive'], scp: 'access_as_user' },
@@ -1087,10 +1089,152 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       };
       assert.equal(body.company.clientCode, 'ACCG01');
       assert.equal(body.company.reused, true);
-      assert.equal(body.lead.clientCode, 'ACCG01');
+      assert.equal(body.lead.clientCode, undefined);
       const clients = graph.lists.get(CLIENTS) || [];
       assert.equal(clients.filter((c) => c.fields.ClientCode === 'ACCG01').length, 1);
     });
+  });
+
+  it('promotes a reused Lead-stage company to Prospect and never downgrades Active Client or ACCG01', async () => {
+    await withCrmLeads(async ({ base, graph }) => {
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA — Convert Stage Fixture', ClientCode: 'SYNQA', ClientStage: 'Lead' },
+        '31',
+      );
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA — Active Fixture', ClientCode: 'SYNACT', ClientStage: 'Active Client' },
+        '32',
+      );
+      const accg = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'ACCG01');
+      assert.ok(accg);
+      accg.fields.ClientStage = 'Lead';
+      graph.seed(
+        LEADS,
+        {
+          Title: 'SYNTHETIC QA — Convert Stage Fixture',
+          ContactName: 'Stage Tester',
+          Email: 'stage.tester@synthetic.invalid',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+        },
+        '201',
+      );
+      graph.seed(
+        LEADS,
+        {
+          Title: 'SYNTHETIC QA — Active Fixture',
+          ContactName: 'Active Tester',
+          Email: 'active.tester@synthetic.invalid',
+          Source: 'Website-EVA',
+          LeadStatus: 'New',
+        },
+        '202',
+      );
+      graph.seed(
+        LEADS,
+        {
+          Title: 'Alder & Co.',
+          ContactName: 'Alex Alder',
+          Email: 'alex-stage@alder.example',
+          Source: 'Website-Funding',
+          LeadStatus: 'Contacted',
+        },
+        '203',
+      );
+
+      const lead201 = await fetch(`${base}/api/pm/leads/201`, { headers: auth('a') });
+      const lead201Body = (await lead201.json()) as { lead: { etag: string } };
+      const convertLead = await fetch(`${base}/api/pm/leads/201/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead201Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(convertLead.status, 200);
+      const convertedLead = (await convertLead.json()) as {
+        company: { clientCode: string; reused: boolean; clientStage?: string };
+      };
+      assert.equal(convertedLead.company.clientCode, 'SYNQA');
+      assert.equal(convertedLead.company.reused, true);
+      assert.equal(convertedLead.company.clientStage, 'Prospect');
+      const synqa = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'SYNQA');
+      assert.equal(synqa?.fields.ClientStage, 'Prospect');
+
+      const replay = await fetch(`${base}/api/pm/leads/201/convert`, {
+        method: 'POST',
+        headers: auth('a'),
+        body: JSON.stringify({}),
+      });
+      assert.equal(replay.status, 200);
+      const replayBody = (await replay.json()) as {
+        company: { clientStage?: string; reused: boolean };
+        replay: boolean;
+      };
+      assert.equal(replayBody.company.clientStage, 'Prospect');
+      assert.equal(replayBody.company.reused, true);
+      assert.equal(replayBody.replay, true);
+
+      const lead202 = await fetch(`${base}/api/pm/leads/202`, { headers: auth('a') });
+      const lead202Body = (await lead202.json()) as { lead: { etag: string } };
+      const convertActive = await fetch(`${base}/api/pm/leads/202/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead202Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(convertActive.status, 200);
+      const convertedActive = (await convertActive.json()) as {
+        company: { clientCode: string; clientStage?: string; reused: boolean };
+      };
+      assert.equal(convertedActive.company.clientCode, 'SYNACT');
+      assert.equal(convertedActive.company.reused, true);
+      assert.equal(convertedActive.company.clientStage, 'Active Client');
+      const synact = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'SYNACT');
+      assert.equal(synact?.fields.ClientStage, 'Active Client');
+
+      const lead203 = await fetch(`${base}/api/pm/leads/203`, { headers: auth('a') });
+      const lead203Body = (await lead203.json()) as { lead: { etag: string } };
+      const convertAccg = await fetch(`${base}/api/pm/leads/203/convert`, {
+        method: 'POST',
+        headers: { ...auth('a'), 'if-match': lead203Body.lead.etag },
+        body: JSON.stringify({}),
+      });
+      assert.equal(convertAccg.status, 200);
+      const convertedAccg = (await convertAccg.json()) as {
+        company: { clientCode: string; clientStage?: string; reused: boolean };
+      };
+      assert.equal(convertedAccg.company.clientCode, 'ACCG01');
+      assert.equal(convertedAccg.company.reused, true);
+      assert.equal(convertedAccg.company.clientStage, 'Lead');
+      const accgAfter = (graph.lists.get(CLIENTS) || []).find((c) => c.fields.ClientCode === 'ACCG01');
+      assert.equal(accgAfter?.fields.ClientStage, 'Lead');
+    }, () => ['SYNQA', 'SYNACT', 'ACCG01']);
+  });
+
+  it('recovers opportunity clientCode from converted title when Graph drops ClientId', async () => {
+    await withCrmLeads(async ({ base, graph }) => {
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA — Atlas Capital Operations', ClientCode: 'SYN01', ClientStage: 'Lead' },
+        '8',
+      );
+      graph.seed(
+        OPPORTUNITIES,
+        {
+          Title: 'SYNTHETIC QA — Atlas Capital Operations — Discovery',
+          Stage: 'Discovery',
+          WinLossStatus: 'Open',
+          LeadIdLookupId: 21,
+          HVCG_IdempotencyKey: 'opp-from-lead|21',
+        },
+        '4',
+      );
+      const res = await fetch(`${base}/api/pm/opportunities/4`, { headers: auth('staff') });
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as { opportunity: { clientCode?: string; clientStage?: string; title: string } };
+      assert.equal(body.opportunity.clientCode, 'SYN01');
+      assert.equal(body.opportunity.clientStage, 'Lead');
+    }, () => ['SYN01']);
   });
 
   it('does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity', async () => {
@@ -1311,7 +1455,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       const wonBody = (await won.json()) as { opportunity: { stage: string; winLossStatus?: string; attention: { state: string }; clientStage?: string } };
       assert.equal(wonBody.opportunity.stage, 'Won');
       assert.equal(wonBody.opportunity.winLossStatus, 'Won');
-      assert.equal(wonBody.opportunity.attention.state, 'WON');
+      assert.equal(wonBody.opportunity.attention.state, 'ACTIVATION_REQUIRED');
       assert.equal(wonBody.opportunity.clientStage, 'Prospect');
       const client = await graph.getItem(CLIENTS, '90');
       assert.equal(client?.fields.ClientStage, 'Prospect');
@@ -1322,6 +1466,156 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       };
       assert.equal(store.auditEvents.filter((e) => e.action === 'pm_opportunity_patch').length, 2);
       assert.equal(store.auditEvents.some((e) => e.detail.includes('clientStage=Prospect')), true);
+    }, () => ['SYNTH01']);
+    assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
+  });
+
+  it('governs client activation separately from Won and never provisions entitlements', async () => {
+    const entitlementBefore = process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS;
+    await withCrmLeads(async ({ base, graph, dataDir }) => {
+      const client = graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA Activation', ClientCode: 'SYNTH01', ClientStage: 'Prospect' },
+        '91',
+      );
+      graph.seed(
+        OPPORTUNITIES,
+        {
+          Title: 'SYNTHETIC QA Won Activation',
+          Stage: 'Won',
+          WinLossStatus: 'Won',
+          ClientIdLookupId: 91,
+          OwnerEmail: 'manny@highvaluecapitalgroup.com',
+        },
+        '130',
+      );
+
+      const home = await fetch(`${base}/api/pm/command-center`, { headers: auth('staff') });
+      const homeBody = (await home.json()) as {
+        commandCenter: {
+          criticalAlerts: Array<{ href?: string; title: string }>;
+          businessHealth: { clientsNeedingActivation?: number };
+        };
+      };
+      assert.equal(homeBody.commandCenter.businessHealth.clientsNeedingActivation, 1);
+      assert.equal(
+        homeBody.commandCenter.criticalAlerts.some(
+          (row) => row.title.includes('Client activation required') && String(row.href).includes('SYNTH01'),
+        ),
+        true,
+      );
+
+      const queue = await fetch(`${base}/api/pm/activation-queue`, { headers: auth('staff') });
+      assert.equal(queue.status, 200);
+      const queueBody = (await queue.json()) as { activations: Array<{ clientCode: string; status: string }> };
+      assert.equal(queueBody.activations.some((row) => row.clientCode === 'SYNTH01'), true);
+
+      const clientDenied = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('client'), 'if-match': client.etag },
+        body: JSON.stringify({ action: 'request', opportunityId: '130' }),
+      });
+      assert.equal(clientDenied.status, 403);
+
+      const patchBypass = await fetch(`${base}/api/pm/clients/SYNTH01`, {
+        method: 'PATCH',
+        headers: { ...auth('manny'), 'if-match': client.etag },
+        body: JSON.stringify({ clientStage: 'Active Client' }),
+      });
+      assert.equal(patchBypass.status, 400);
+      assert.equal((await graph.getItem(CLIENTS, '91'))?.fields.ClientStage, 'Prospect');
+
+      const requested = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('staff'), 'if-match': client.etag },
+        body: JSON.stringify({ action: 'request', opportunityId: '130', notes: 'SYN01 activation review' }),
+      });
+      assert.equal(requested.status, 200);
+      const requestedBody = (await requested.json()) as {
+        client: { clientStage?: string; etag?: string };
+        activation: { status: string; entitlementProvisioned: boolean };
+        created: boolean;
+      };
+      assert.equal(requestedBody.client.clientStage, 'Prospect');
+      assert.equal(requestedBody.activation.status, 'activation_required');
+      assert.equal(requestedBody.activation.entitlementProvisioned, false);
+
+      const reviewed = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('staff'), 'if-match': requestedBody.client.etag || (await graph.getItem(CLIENTS, '91'))!.etag },
+        body: JSON.stringify({ action: 'review', opportunityId: '130' }),
+      });
+      assert.equal(reviewed.status, 200);
+      const reviewedBody = (await reviewed.json()) as {
+        client: { clientStage?: string; etag?: string };
+        activation: { status: string };
+      };
+      assert.equal(reviewedBody.activation.status, 'review');
+      assert.equal(reviewedBody.client.clientStage, 'Prospect');
+
+      const staffAuthorize = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('staff'), 'if-match': reviewedBody.client.etag || (await graph.getItem(CLIENTS, '91'))!.etag },
+        body: JSON.stringify({ action: 'authorize', opportunityId: '130' }),
+      });
+      assert.equal(staffAuthorize.status, 403);
+      assert.equal((await graph.getItem(CLIENTS, '91'))?.fields.ClientStage, 'Prospect');
+
+      graph.failPatchFor.set(CLIENTS, 503);
+      const graphFail = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('manny'), 'if-match': reviewedBody.client.etag || (await graph.getItem(CLIENTS, '91'))!.etag },
+        body: JSON.stringify({ action: 'authorize', opportunityId: '130' }),
+      });
+      assert.equal(graphFail.status, 503);
+      assert.equal((await graph.getItem(CLIENTS, '91'))?.fields.ClientStage, 'Prospect');
+      graph.failPatchFor.delete(CLIENTS);
+
+      const authorized = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('manny'), 'if-match': (await graph.getItem(CLIENTS, '91'))!.etag },
+        body: JSON.stringify({ action: 'authorize', opportunityId: '130' }),
+      });
+      assert.equal(authorized.status, 200);
+      const authorizedBody = (await authorized.json()) as {
+        client: { clientStage?: string; etag?: string };
+        activation: { status: string; entitlementProvisioned: boolean; entraGroupProvisioned: boolean };
+        created: boolean;
+        replay: boolean;
+      };
+      assert.equal(authorizedBody.client.clientStage, 'Active Client');
+      assert.equal(authorizedBody.activation.status, 'authorized');
+      assert.equal(authorizedBody.activation.entitlementProvisioned, false);
+      assert.equal(authorizedBody.activation.entraGroupProvisioned, false);
+      assert.equal(authorizedBody.created, true);
+      assert.equal(authorizedBody.replay, false);
+
+      const replay = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('manny'), 'if-match': authorizedBody.client.etag || (await graph.getItem(CLIENTS, '91'))!.etag },
+        body: JSON.stringify({ action: 'authorize', opportunityId: '130' }),
+      });
+      assert.equal(replay.status, 200);
+      const replayBody = (await replay.json()) as { created: boolean; replay: boolean; client: { clientStage?: string } };
+      assert.equal(replayBody.replay, true);
+      assert.equal(replayBody.created, false);
+      assert.equal(replayBody.client.clientStage, 'Active Client');
+
+      const verified = await fetch(`${base}/api/pm/clients/SYNTH01/activation`, {
+        method: 'POST',
+        headers: { ...auth('manny'), 'if-match': (await graph.getItem(CLIENTS, '91'))!.etag },
+        body: JSON.stringify({ action: 'verify', opportunityId: '130' }),
+      });
+      assert.equal(verified.status, 200);
+      const verifiedBody = (await verified.json()) as { activation: { status: string; entitlementProvisioned: boolean } };
+      assert.equal(verifiedBody.activation.status, 'verified');
+      assert.equal(verifiedBody.activation.entitlementProvisioned, false);
+      assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
+
+      const store = JSON.parse(readFileSync(join(dataDir, 'integration-store.json'), 'utf8')) as {
+        auditEvents: Array<{ action: string; detail: string }>;
+      };
+      assert.equal(store.auditEvents.some((e) => e.action === 'pm_client_activation_authorize' && e.detail.includes('entitlement=false')), true);
     }, () => ['SYNTH01']);
     assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
   });

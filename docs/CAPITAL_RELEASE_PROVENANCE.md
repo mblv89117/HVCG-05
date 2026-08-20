@@ -1,9 +1,9 @@
 # Capital Operations — Release provenance
 
-**Recorded:** 2026-08-18  
-**Worktree:** `.worktrees/atlas-capital-operations`  
-**Branch:** `feature/atlas-capital-operations`  
-**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Cite the running Hub SHA and Azure deployment ID below.
+**Recorded:** 2026-08-20 (Hub+Elite cutover). Prior 2026-08-18 rows are historical.  
+**Branch:** `cursor/atlas-hv-completion-52d1`  
+**Honesty rule:** Repo HEAD is **not** automatically production. Do not report “deployed latest.” Cite the running Hub SHA and Azure deployment ID below.  
+**Current-reality companion:** [ATLAS_LIVE_RELEASE_2026-08-20.md](ATLAS_LIVE_RELEASE_2026-08-20.md)
 
 This file is the operator record of **what is live** versus **what is in git**. It does not deploy, mutate App Settings, or delete artifacts.
 
@@ -15,11 +15,12 @@ This file is the operator record of **what is live** versus **what is in git**. 
 |------|--------|
 | App | `app-atlas-integration-hub` / `rg-atlas-prod` |
 | URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| **Running Hub SHA** | `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` |
-| **Azure deployment ID** | `dd965bc2-6d56-4f80-b126-67fcecfc33db` |
-| Commit message (that SHA) | `Persist overlay-only SYN submissions so recorded-only outreach survives Hub reload.` |
-| Runtime-critical ancestor | `0b2305cf40bf35871256e923344216b21d6f1baa` (Phase 4 transaction execution OS) |
-| Prior running zip | `e49be659e8d7d0c7f6079cd505b73469398f2d4c` (deployment `6fc7a842-1ab5-4750-9d43-1b498b099d5c`) |
+| **Running Hub SHA** | `940a4849577ad5356da86850e2eccdbf3fe4e86b` |
+| **Azure deployment ID** | `9b406df7-984c-43c0-a4e1-52a291eb79b3` |
+| Commit message (that SHA) | `chore(atlas): add live Capital attestation and search cert scripts` (runtime ancestor `ec71350` Lead→Prospect) |
+| Runtime-critical ancestor | `3f794f7a8b51c094dba7e4cd5febd0c6bc81c6a6` (governed activation; deployed earlier this window as `828e426b`) |
+| Prior running zip before this window | `5b50ca2c338b34afffa5796d6fa79298a7b27d4c` (deployment `7795bc89-daaa-43a8-8213-581e01c0f460`) |
+| Stale cited ID | `dd965bc2` is an older **inactive** 2026-08-18 deploy, not current |
 
 That SHA is the zip that was deployed. Overlay facts persist under `INTEGRATION_DATA_DIR=/home/webapp_data/integrations/capital-overlay` (App Service `/home`, survives recycle and zip `--clean` of wwwroot). Health now observes that path: `recycleSurvivable=true`, `redeploySurvivable=true`, `multiInstanceSafe=false`. Built-in Linux `NODE\|22-lts`, plan B1 capacity 1, autoscale none, `WEBSITE_RUN_FROM_PACKAGE=0`. `WEBSITES_ENABLE_APP_SERVICE_STORAGE` is unset (default persistent `/home`).
 
@@ -34,7 +35,7 @@ GitHub workflows do **not** deploy Hub.
 Treat them as two facts:
 
 1. **Worktree HEAD** — local / branch tip. Changes here do nothing to production until an explicit Hub deploy.
-2. **Running Hub SHA** — `8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
+2. **Running Hub SHA** — `940a4849577ad5356da86850e2eccdbf3fe4e86b` until the next successful `az webapp deploy`. A later docs-only commit on this branch is not production.
 
 Do not infer production from:
 
@@ -57,7 +58,7 @@ deployment/artifacts/hub-rollback/
 
 That directory is **gitignored** (with `deployment/artifacts/hub-build/` and `deployment/artifacts/hub-*.zip`). Do not commit rollback binaries, Kudu copies, or publish credentials.
 
-Restore with `deployment/scripts/Rollback-HVCGCapitalHub.ps1` (defaults to the newest `pre-*.zip` in that folder). Current rollback zip from this deploy: `deployment/artifacts/hub-rollback/pre-8ff4220cec3d6cfd3ce41bb5232d0f325ef5fe6f-20260818-115231.zip`. That archive is the previous production zip (`0b2305c`, which itself replaced `e49be65`). Rollback restores the archived zip and does not delete SharePoint lists/columns. Overlay JSON under `/home/webapp_data` is not in the zip; rolling back code does not wipe that overlay.
+Restore with `deployment/scripts/Rollback-HVCGCapitalHub.ps1` (defaults to the newest `pre-*.zip` in that folder). Current rollback zip from this window: `deployment/artifacts/hub-rollback/pre-3f794f7a8b51c094dba7e4cd5febd0c6bc81c6a6-20260820-014626.zip`. That archive is the pre-window production zip (`5b50ca2`). Rollback restores the archived zip and does not delete SharePoint lists/columns. Overlay JSON under `/home/webapp_data` is not in the zip; rolling back code does not wipe that overlay.
 
 ---
 

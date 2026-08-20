@@ -1,6 +1,11 @@
 /**
  * Static Web Apps Microsoft sign-in navigation.
- * Does not wait for MSAL, Hub tokens, React effects, or role resolution.
+ *
+ * Fallback only when the Elite SPA Entra client is not configured.
+ * Primary hosted sign-in is MSAL (Hub access_as_user). Forcing
+ * /.auth/login/aad on this Free SWA returns 401 at
+ * identity.7.azurestaticapps.net/.auth/login/done because no SWA
+ * invitations/users are configured.
  */
 
 export function getSafePostLoginRedirect(href = window.location.href): string {

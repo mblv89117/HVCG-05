@@ -57,6 +57,8 @@ export function resolveWebsiteLeadIdempotencyKey(body: Record<string, unknown>):
   const submissionType = asString(body.submissionType);
   const sessionId = asString(full.sessionId) || asString(body.correlationId);
   if (submissionType === 'Website-EVA' && sessionId) return clip(`eva|${sessionId}`, TEXT_MAX);
+  const assessmentId = asString(full.assessmentId) || asString(body.assessmentId);
+  if (submissionType === 'Agent-Copilot' && assessmentId) return clip(`copilot|${assessmentId}`, TEXT_MAX);
   const leadId = asString(body.leadId);
   if (leadId) return clip(`website|${leadId}`, TEXT_MAX);
   return '';
@@ -75,7 +77,9 @@ function serviceInterestOf(body: Record<string, unknown>): string {
   const sku = asString(asRecord(asRecord(body.fullPayload).eva).recommended_sku).toUpperCase();
   if (submissionType === 'Website-Funding' || sku.includes('CAP')) return 'Capital Advisory';
   if (sku.includes('FRA')) return 'Fractional CFO';
-  if (submissionType === 'Website-EVA' || submissionType === 'Website-Book') return 'Assessment';
+  if (submissionType === 'Website-EVA' || submissionType === 'Website-Book' || submissionType === 'Agent-Copilot') {
+    return 'Assessment';
+  }
   return 'Other';
 }
 

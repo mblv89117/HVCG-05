@@ -69,6 +69,7 @@ const allSections: NavSection[] = [
     items: [
       { id: 'clients', label: 'Clients', to: '/clients', icon: <PeopleRegular /> },
       { id: 'leads', label: 'Leads', to: '/leads', icon: <MailRegular /> },
+      { id: 'opportunities', label: 'Opportunities', to: '/opportunities', icon: <ApprovalsAppRegular /> },
     ],
   },
   {
@@ -106,6 +107,7 @@ const catalog: SearchResult[] = [
   { id: 's-decisions', title: 'Decisions', category: 'Navigation', subtitle: 'Approvals that need you', to: '/tasks' },
   { id: 's16', title: 'Clients', category: 'CRM', to: '/clients' },
   { id: 's16b', title: 'Leads', category: 'CRM', subtitle: 'Who needs follow-up', to: '/leads' },
+  { id: 's16c', title: 'Opportunities', category: 'CRM', subtitle: 'Pipeline and activation exceptions', to: '/opportunities' },
   { id: 's12', title: 'Projects', category: 'Work', to: '/projects' },
   { id: 's8', title: 'Capital', category: 'Capital', subtitle: 'Transactions requiring attention', to: '/capital' },
   { id: 's7', title: 'Search / Knowledge', category: 'Search', to: '/knowledge' },
@@ -143,6 +145,7 @@ const routeLabels: Record<string, string> = {
   '/clients': 'Clients',
   '/clients/intake': 'Lead intake',
   '/leads': 'Leads',
+  '/opportunities': 'Opportunities',
   '/projects': 'Projects',
   '/tasks': 'Decisions',
   '/capital': 'Capital',
@@ -408,7 +411,7 @@ export function AppShell() {
           if (item.id === 'admin') return can('viewAdmin');
           if (financeIds.has(item.id)) return can('viewFinance');
           if (item.id === 'clients') return can('viewClients');
-          if (item.id === 'leads') return can('viewCrmLeads');
+          if (item.id === 'leads' || item.id === 'opportunities') return can('viewCrmLeads');
           return role !== 'Unauthenticated';
         }),
       }))
@@ -433,7 +436,7 @@ export function AppShell() {
       if (r.to === '/admin') return can('viewAdmin');
       if (r.to === '/capital') return can('viewFinance');
       if (r.to === '/clients') return can('viewClients');
-      if (r.to === '/leads') return can('viewCrmLeads');
+      if (r.to === '/leads' || r.to === '/opportunities') return can('viewCrmLeads');
       return true;
     });
     const nav = !q

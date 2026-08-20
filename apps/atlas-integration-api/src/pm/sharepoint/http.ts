@@ -90,7 +90,7 @@ function isDeferredPath(path: string): boolean {
     const rest = decodeURIComponent(path.slice('/api/pm/clients/'.length));
     if (!rest.includes('/') && isCanonicalClientCode(rest)) return false;
     const [code, tail] = rest.split('/');
-    if (isCanonicalClientCode(code) && (tail === 'workspace' || tail === 'brief')) return false;
+    if (isCanonicalClientCode(code) && (tail === 'workspace' || tail === 'brief' || tail === 'activation')) return false;
     return true;
   }
   if (path === '/api/pm/search') return false;
@@ -134,8 +134,11 @@ function commandCenterPayload(
     return status === 'Open';
   });
   const opportunityExceptions = openOpps.filter((o) =>
-    ['OVERDUE', 'NO_NEXT_ACTION', 'NEEDS_ACTION', 'NEEDS_MANNY'].includes(o.attention.state),
+    ['OVERDUE', 'NO_NEXT_ACTION', 'NEEDS_ACTION', 'NEEDS_MANNY', 'ACTIVATION_REQUIRED'].includes(
+      o.attention.state,
+    ),
   );
+  const activationRequired = opportunities.filter((o) => o.attention.state === 'ACTIVATION_REQUIRED');
   const overdueFollowUps = followLeads.filter((lead) => {
     const due = (lead.nextFollowUpDate || '').slice(0, 10);
     return Boolean(due && due < today);
@@ -152,6 +155,7 @@ function commandCenterPayload(
       openCommitments: 0,
       decisionsNeeded: ownerApprovals.length,
       clientsNeedingAttention: atRisk.length,
+      clientsNeedingActivation: activationRequired.length,
     },
     criticalAlerts: [
       ...overdue.slice(0, 5).map((t) => ({
@@ -165,6 +169,12 @@ function commandCenterPayload(
         severity: 'high',
         title: `Overdue follow-up: ${lead.title}`,
         href: `/leads/${lead.id}`,
+      })),
+      ...activationRequired.slice(0, 5).map((o) => ({
+        id: `activation-${o.id}`,
+        severity: 'high',
+        title: `Client activation required: ${o.title}`,
+        href: o.clientCode ? `/clients/${encodeURIComponent(o.clientCode)}/activation` : `/opportunities/${o.id}`,
       })),
       ...opportunityExceptions.slice(0, 5).map((o) => ({
         id: `opportunity-${o.id}`,
@@ -232,7 +242,19 @@ function commandCenterPayload(
             .join(' · '),
           href: `/opportunities/${o.id}`,
         })),
+        ...activationRequired.map((o) => ({
+          id: `activation-${o.id}`,
+          name: o.title,
+          detail: ['Client activation required', o.clientStage, o.clientCode].filter(Boolean).join(' · '),
+          href: o.clientCode ? `/clients/${encodeURIComponent(o.clientCode)}/activation` : `/opportunities/${o.id}`,
+        })),
       ].slice(0, 20),
+      activationRequired: activationRequired.slice(0, 20).map((o) => ({
+        id: o.id,
+        name: o.title,
+        clientCode: o.clientCode,
+        href: o.clientCode ? `/clients/${encodeURIComponent(o.clientCode)}/activation` : `/opportunities/${o.id}`,
+      })),
     },
     teamAndAgents: {
       teamWorkload: [] as Array<{ id: string; name: string; openTasks: number; overdue: number; blocked: number }>,
@@ -402,6 +424,47 @@ export async function handleSharePointPmRoutes(opts: {
       const rawCode = decodeURIComponent(clientWorkspace[1]);
       const workspace = await buildSharePointClientWorkspace(service, principal, rawCode);
       send(res, 200, { workspace }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/pm/activation-queue') {
+      const queue = await service.listActivationQueue(principal);
+      send(res, 200, { activations: queue, source: 'sharepoint' }, origin);
+      return true;
+    }
+
+    const clientActivation = path.match(/^\/api\/pm\/clients\/([^/]+)\/activation$/);
+    if (method === 'GET' && clientActivation) {
+      const rawCode = decodeURIComponent(clientActivation[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const url = new URL(req.url || '', 'http://local');
+      const activation = await service.getClientActivation(
+        principal,
+        rawCode,
+        url.searchParams.get('opportunityId') || undefined,
+      );
+      send(res, 200, activation, origin);
+      return true;
+    }
+
+    if (method === 'POST' && clientActivation) {
+      const rawCode = decodeURIComponent(clientActivation[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const result = await service.applyClientActivation(principal, rawCode, body, readEtag(req, body));
+      audit({
+        repo,
+        actorUserId: principal.userId,
+        action: `pm_client_activation_${typeof body.action === 'string' ? body.action : 'unknown'}`,
+        outcome: 'success',
+        detail: `list=HVCG_Clients client=${result.client.clientCode} opp=${result.opportunity.id} status=${result.activation.status} stage=${result.client.clientStage || ''} entitlement=false replay=${result.replay}`,
+      });
+      send(res, 200, result, origin);
       return true;
     }
 

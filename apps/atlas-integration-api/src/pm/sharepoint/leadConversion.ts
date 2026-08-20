@@ -52,6 +52,27 @@ export function normalizeCompanyTitle(title: string): string {
   return title.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+/** Convert writes `${company} — Discovery`. Graph often drops ClientIdLookupId on HVCG_Opportunities. */
+export function companyTitleFromOpportunityTitle(title: string): string {
+  return title.replace(/\s*[—–-]\s*Discovery\s*$/i, '').trim();
+}
+
+/** ACCG01 is GET-only in live certification. Convert reuse must never PATCH it. */
+export const NO_TOUCH_CLIENT_CODES = new Set(['ACCG01']);
+
+/**
+ * Convert reuse may promote only ClientStage=Lead → Prospect.
+ * Never downgrade Active Client, Alumni, Do Not Engage, On Hold, or Prospect.
+ */
+export function shouldPromoteReusedCompanyToProspect(input: {
+  clientCode?: string;
+  clientStage?: string;
+}): boolean {
+  const code = (input.clientCode || '').trim();
+  if (!code || NO_TOUCH_CLIENT_CODES.has(code)) return false;
+  return (input.clientStage || '').trim() === 'Lead';
+}
+
 /** Canonical ClientCode from a company title; never returns '*'. */
 export function proposeClientCode(title: string, taken: Iterable<string>): string {
   const used = new Set(taken);

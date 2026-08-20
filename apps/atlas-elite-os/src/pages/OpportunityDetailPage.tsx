@@ -26,7 +26,14 @@ import {
 } from '@fluentui/react-components';
 import { ArrowSyncRegular } from '@fluentui/react-icons';
 import { FieldGrid, ModuleScaffold } from './shared/ModuleScaffold';
-import { fetchPmOpportunity, HubHttpError, patchPmOpportunity, type PmOpportunity } from '../integrations/hub/pmApi';
+import {
+  applyClientActivation,
+  fetchClientActivation,
+  fetchPmOpportunity,
+  HubHttpError,
+  patchPmOpportunity,
+  type PmOpportunity,
+} from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { atlasStatusDisplay, atlasStatusTone, type AtlasStatusTone } from '../ui/statusLanguage';
 
@@ -76,6 +83,7 @@ export function OpportunityDetailPage() {
   const [requiresExecutiveAttention, setRequiresExecutiveAttention] = useState(false);
   const [lostReason, setLostReason] = useState('');
   const [notes, setNotes] = useState('');
+  const [activating, setActivating] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!auth.tokenReady) return;
@@ -144,6 +152,29 @@ export function OpportunityDetailPage() {
       setActionError(classify(err).message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const requestActivation = async () => {
+    if (!opportunity?.clientCode) {
+      setActionError('A Prospect company is required before client activation.');
+      return;
+    }
+    setActivating(true);
+    setActionError(null);
+    try {
+      const current = await fetchClientActivation(auth, opportunity.clientCode, opportunity.id);
+      await applyClientActivation(auth, opportunity.clientCode, {
+        action: 'request',
+        opportunityId: opportunity.id,
+        notes: 'Requested from Opportunity detail',
+        etag: current.client.etag,
+      });
+      await refresh();
+    } catch (err) {
+      setActionError(classify(err).message);
+    } finally {
+      setActivating(false);
     }
   };
 
@@ -239,7 +270,9 @@ export function OpportunityDetailPage() {
           {opportunity.opportunityType ? (
             <StatusChip label={opportunity.opportunityType} tone="neutral" />
           ) : null}
-          {closedWon ? <StatusChip label="Client activation required" tone="gold" /> : null}
+          {closedWon && opportunity.clientStage !== 'Active Client' ? (
+            <StatusChip label="Client activation required" tone="gold" />
+          ) : null}
           {closedLost ? <StatusChip label="Removed from active pipeline" tone="neutral" /> : null}
         </div>
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
@@ -347,13 +380,28 @@ export function OpportunityDetailPage() {
             It does not change ClientStage to Active Client, provision HVCG-Client groups, grant SharePoint or portal access,
             or send external communications.
           </Caption1>
-          {closedWon ? (
+          {closedWon && opportunity.clientStage !== 'Active Client' ? (
             <MessageBar intent="warning" style={{ marginTop: 12 }}>
               <MessageBarBody>
                 <MessageBarTitle>Client activation required</MessageBarTitle>
-                This won Opportunity is ready for a separate approved onboarding/activation workflow when that policy exists.
+                Won is not Active Client. Request activation review, then Manny authorizes ClientStage.
+                This does not create Entra groups, SharePoint libraries, portal access, or entitlements.
               </MessageBarBody>
             </MessageBar>
+          ) : null}
+          {closedWon && opportunity.clientStage !== 'Active Client' && opportunity.clientCode ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+              <Button
+                appearance="primary"
+                disabled={activating || busy}
+                onClick={() => void requestActivation()}
+              >
+                {activating ? <Spinner size="tiny" /> : 'Request client activation'}
+              </Button>
+              <Link to={`/clients/${encodeURIComponent(opportunity.clientCode)}/activation`}>
+                <Button appearance="secondary">Open activation</Button>
+              </Link>
+            </div>
           ) : null}
         </AtlasCard>
       </ResponsiveGrid>
