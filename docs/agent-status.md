@@ -5,54 +5,51 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | 8f197ad |
-| baseline | Hub `940a484` / Elite `75d0c59` (not retested this cycle) |
+| current SHA | *(tip)* |
+| baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d12-closures.mjs` |
-| contracts required | Integration SoT dependency `773b510` (unchanged; not retested) |
-| tests | GCC `npm run test:security` PASS 6/6; Copilot vitest security-rt PASS 7/7; RT static probe script added |
-| build | N/A (docs + harness) |
+| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d15-od005.mjs` |
+| contracts required | Integration SoT `773b510` (dependency; not retested) |
+| tests | OD-005 Plaid PASS 6/6; opportunity harness exit 0; GTM flags/handoff/agent PASS; Revenue OS suite PASS 17/17 |
+| build | N/A |
 | synthetic certification | N/A |
-| security status | Gate **FAIL** (Atlas/XSYS P0s + GTM P1s remain) |
-| Premium status | **N/A** — RT docs/harness only; no RT UI |
+| security status | Gate **FAIL** until XSYS P0=0 and OD-005 authorized for Hub |
+| Premium status | **N/A** — no RT UI |
 | integration dependencies | `integration@773b510` |
-| P0 | **5 open** (ATLAS-01/02/03, XSYS-01/02); COPILOT-02 **FIXED** @ `19a200e` |
-| P1 | **2 open** (GTM-03/04); GCC-05/06/07 **FIXED** @ `41a59b8` |
-| P2 | none this cycle |
-| owner decisions | OD-005 Atlas patch still required for remaining P0s |
-| deployment state | REMOTE_REACHABLE findings train — **not** DEPLOYMENT_READY |
+| P0 | OD-005 tip: ATLAS-01/02/03 **FIXED**; XSYS-01/02 **OPEN**. Frozen Hub: ATLAS+XSYS still open until deploy |
+| P1 | **0** tracked open (GTM-03/04 **FIXED** @ `bd72003`) |
+| P2 | none |
+| owner decisions | OD-005 deploy authorization required; XSYS follow-on patch needed |
+| deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **12** |
-| BASED ON WORKER SHA | `072e56f3b355535d2f2cf421fb6ffa54cd16ea42` |
-| BASED ON RUN ID | `run-c9759931-513d-4435-bd50-f119f7f72676` |
-| CURRENT SHA | 8f197adb444508c589fff160f0f5cb871a16e978 |
-| COMPLETED ACTIONS | Verified GCC `41a59b8` + Copilot `19a200e`; confirmed GCC-05/06/07 + COPILOT-02 FIXED with tests; published D12 report |
-| REMAINING ACTIONS | Retest when Atlas OD-005 tip or GTM tip moves; keep gate FAIL until P0=0 and P1=0 |
-| P0/P1/P2 | P0=5 · P1=2 · P2=none |
-| TEST STATUS | GCC security PASS; Copilot security-rt PASS; `check-d12-closures.mjs` added |
-| PREMIUM STATUS | N/A (no RT UI) |
-| INTEGRATION STATUS | Dependency noted `773b510`; Hub HMAC/prefix still open (unchanged) |
-| OWNER DECISIONS | Awaiting OD-005 for Atlas/XSYS P0s; GTM owns 03/04 |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **15** |
+| BASED ON WORKER SHA | `97576c2bc23e3834ae1488e48422656cce894fa1` |
+| BASED ON RUN ID | `run-75ccd61c-6d51-406b-a509-7f245e4f86c1` |
+| CURRENT SHA | *(git tip)* |
+| COMPLETED ACTIONS | Verified OD-005 `bb7edae` for ATLAS-01/02/03; confirmed XSYS still open; verified GTM-03/04 @ `bd72003`; Revenue OS first-pass @ `9c9c331` (no new P0/P1) |
+| REMAINING ACTIONS | Retest when XSYS remediations land; re-confirm Hub after OD-005 authorized deploy |
+| P0/P1/P2 | P0=XSYS×2 (+ Hub ATLAS until deploy) · P1=0 · P2=none |
+| TEST STATUS | See Directive 15 report commands — all executed suites PASS |
+| PREMIUM STATUS | N/A |
+| INTEGRATION STATUS | Dependency `773b510`; XSYS Hub authenticity still open |
+| OWNER DECISIONS | Await OD-005 production security-patch authorization |
 
 ## SHAs this cycle
 
 | System | SHA |
 |--------|-----|
-| GCC | `41a59b84335d644effbd7bd84faa31f73a139531` |
-| Copilot | `19a200e8af288ea0c81471b7c6235c002de45c7e` |
+| OD-005 | `bb7edae503d91e85fe8f5a6a69943aeed5579c3a` |
+| GTM | `bd720033a646a9b8775d6c5f17f001d182ad2632` |
+| Revenue | `9c9c331d707e59c8e020f28bcaf75528bfe42927` |
 
 ## Notes
 
-- Did not retest unchanged GTM/Integration/Atlas frozen SHAs (Directive 12 scope).
-- Did not implement product features; findings + harness only.
-- Frozen Atlas baseline remains PASS — not mutated.
+- Did not implement Hub runtime fixes on frozen production.
+- Did not deploy OD-005.
+- Design notes from Revenue OS not inherited as P0.
 
-## Next milestone
-
-Atlas security-patch tip revalidation for ATLAS-RT-01/02/03 + XSYS-01/02.
-
-**Updated:** 2026-08-20T06:05:00Z
+**Updated:** 2026-08-20T06:42:00Z
