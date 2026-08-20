@@ -6,7 +6,7 @@
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-integration-contracts` |
 | workOnCurrentBranch | **true** |
-| current SHA | `8fb9af7` (based-on; this commit updates) |
+| current SHA | `8f46a89` |
 | baseline | Hub `940a484` + Elite `75d0c59` — **not thawed** |
 | owned domains | Cross-system schemas, identity/attribution, idempotency, journey harness, compatibility |
 | files/domains touched | `docs/integrations/**`, `docs/platform-orchestration/**`, `docs/agent-status.md`, `tests/integrations/**` |
@@ -32,7 +32,7 @@
 | BASED ON CURRENT RUN ID | `run-b871ffb0-643b-4bee-ac4e-25d48d5584c1` |
 | This worker | `bc-0e3c9a74` (canonical Integration durable worker; did not reuse `bc-af57d6b6`) |
 | ORCHESTRATOR REMOTE | `360-growth-solution` / `cursor/platform-orchestrator-b1fa` (**not pushed**) |
-| CURRENT SHA | `8fb9af7` (based-on) |
+| CURRENT SHA | `8f46a89` |
 | COMPLETED ACTIONS | See below |
 | REMAINING ACTIONS | See below |
 | P0/P1/P2 | above |

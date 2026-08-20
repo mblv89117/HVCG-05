@@ -1,7 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** `8fb9af7` (directive 5 based-on; SoT meaning `773b510`)  
+**SHA:** `8f46a89` (directive 5 pack; based-on `8fb9af7`; SoT meaning `773b510`)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59` — **not thawed**  
@@ -32,7 +32,7 @@ Live Hub POST, paid ads, and GCC auto-provision remain gated.
 | Field | Value |
 | --- | --- |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **5** |
-| CURRENT SHA | `8fb9af7` (based-on) |
+| CURRENT SHA | `8f46a89` |
 | COMPLETED ACTIONS | D5 retarget current tips; pre-call-brief harness; PRE-CALL BRIEF PASS; CC confirm |
 | REMAINING ACTIONS | Early-funnel / booking / opt-v2 PARTIAL; SECURITY_CERTIFIED / deploy owner-gated; XSYS Hub-side |
 | P0/P1/P2 | **None P0/P1 on this train.** P2: early-funnel / booking / opt-v2 PARTIAL. Hub XSYS owned by OD-005 @ `9e5d10a`. |
@@ -52,7 +52,7 @@ Full matrix: `CONSUMER_COMPATIBILITY.md`. Journey table: `CROSS_SYSTEM_JOURNEY_P
 | GCC | `8d757cf` | Unchanged. CC-003/CC-006 hold. |
 | Copilot | `fe3db75` | Git remote 404. GitHub MCP + Supervisor 2030Z: 401 / observationOnly / revenue-os / pre-call adapter. |
 | OD-005 | `9e5d10a` | Fetched read-only. XSYS candidate FIXED_REVALIDATED (RT D23). |
-| Contracts self | `8fb9af7` | Sole publisher of canonical meaning |
+| Contracts self | `8f46a89` | Sole publisher of canonical meaning |
 
 ## P0 / P1 / P2
 

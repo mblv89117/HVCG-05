@@ -4,7 +4,7 @@
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
 **SoT meaning SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged; `nurture-plan.v1` additive)  
-**Contracts self tip (directive 5 based-on):** `8fb9af7cafe905c29f8277bfe5959d3c29d8e505`  
+**Contracts self tip:** `8f46a89ff06149eb7becf6ced02777b60c7a7f2b` (based-on `8fb9af7`)  
 **Directive consumed:** **5**  
 **Replacement worker:** `bc-0e3c9a74` · based-on D4 run `run-b871ffb0-643b-4bee-ac4e-25d48d5584c1`  
 **CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **YES**  
@@ -25,7 +25,7 @@ This train does not implement product runtime. Product adapters are allowed; con
 | GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** (prior) | Unchanged vs D4 |
 | Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | git remote **404** | GitHub MCP + Supervisor V2 2030Z |
 | OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only | Unchanged |
-| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `8fb9af7cafe905c29f8277bfe5959d3c29d8e505` | **This branch** (based-on) | Supervisor independently 28/28 @ `8fb9af7` |
+| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `8f46a89ff06149eb7becf6ced02777b60c7a7f2b` | **This branch** | D5 pack; Supervisor independently 28/28 @ `8fb9af7` |
 
 No second Integration worker. Orchestrator control-plane was not pushed.
 

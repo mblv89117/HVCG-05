@@ -9,7 +9,7 @@ Inspection sources (fetched read-only, not merged) — directive 5 tips:
 | `cursor/gcc-client-value-os` | `8d757cf` | Unchanged vs D4 |
 | `cursor/copilot-production-completion` | `fe3db75` | Git remote 404; GitHub MCP + Supervisor V2 2030Z |
 | `cursor/atlas-security-patch-od005` | `9e5d10a` | Fetched read-only (XSYS owner; not merged) |
-| `cursor/platform-integration-contracts` | `8fb9af7` | This branch based-on (SoT meaning `773b510`) |
+| `cursor/platform-integration-contracts` | `8f46a89` | This branch (SoT meaning `773b510`; based-on `8fb9af7`) |
 
 Prior substitutes (`360-hv-completion-52d1`, `gcc-hv-completion-52d1`, `copilot-hv-completion-52d1`) remain historical ancestry only.
 
