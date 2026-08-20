@@ -23,7 +23,7 @@ Live adapters stay gated. No production writes. No Hub thaw. No paid ads.
 | GCC | `8d757cf68157a6054432de7ca57f8431731b2d64` | Unchanged vs D6 |
 | Copilot | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | Unchanged vs D6 |
 | OD-005 | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | This worker fetched read-only — unchanged |
-| Contracts | this D7 pack (pin follows) | Based-on `d6aff59`; Supervisor independently 34/34 @ `d6aff59` |
+| Contracts | `795bbe7d9d03673bd39eba1bb2d423a14c4e30af` | This branch D7 pack; Supervisor independently 34/34 @ `d6aff59` |
 
 `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER=YES` is against these six SHAs — GTM **must** be `f53e628`, not `14d8e4d`.
 

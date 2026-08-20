@@ -4,7 +4,7 @@
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
 **SoT meaning SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged; no semantic fork)  
-**Contracts self tip:** this D7 pack (pin follows; based-on `d6aff59`)  
+**Contracts self tip:** `795bbe7d9d03673bd39eba1bb2d423a14c4e30af` (based-on `d6aff59`)  
 **Directive consumed:** **7**  
 **Replacement worker:** `bc-0e3c9a74` · based-on D6 FINISHED `d6aff59`  
 **CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **YES**  
@@ -25,7 +25,7 @@ This train does not implement product runtime. Product adapters are allowed; con
 | GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** (prior) | Unchanged vs D6 |
 | Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | git remote **404** | Unchanged vs D6 |
 | OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only | Unchanged |
-| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | this D7 pack | **This branch** | Based-on `d6aff59`; Supervisor independently 34/34 @ `d6aff59` |
+| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `795bbe7d9d03673bd39eba1bb2d423a14c4e30af` | **This branch** | D7 pack; Supervisor independently 34/34 @ `d6aff59` |
 
 No second Integration worker. Orchestrator control-plane was not pushed. Do not revert to `14d8e4d` / `516553f` / `2f02702`.
 

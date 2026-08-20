@@ -6,7 +6,7 @@
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-integration-contracts` |
 | workOnCurrentBranch | **true** |
-| current SHA | this D7 pack (pin follows) |
+| current SHA | `795bbe7` |
 | baseline | Hub `940a484` + Elite `75d0c59` — **not thawed** |
 | owned domains | Cross-system schemas, identity/attribution, idempotency, journey harness, compatibility |
 | files/domains touched | `docs/integrations/**`, `docs/platform-orchestration/**`, `docs/agent-status.md`, `tests/integrations/**` |
@@ -32,7 +32,7 @@
 | BASED ON CURRENT RUN ID | D6 FINISHED (`followup-accepted-2026-08-20T2045Z` → `d6aff59`) |
 | This worker | `bc-0e3c9a74` (canonical Integration durable worker; did not reuse `bc-af57d6b6`) |
 | ORCHESTRATOR REMOTE | `360-growth-solution` / `cursor/platform-orchestrator-b1fa` (**not pushed**) |
-| CURRENT SHA | this D7 pack (pin follows) |
+| CURRENT SHA | `795bbe7` |
 | COMPLETED ACTIONS | See below |
 | REMAINING ACTIONS | See below |
 | P0/P1/P2 | above |
