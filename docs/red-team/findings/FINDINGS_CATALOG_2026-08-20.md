@@ -14,14 +14,14 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** `cursor/atlas-hv-completion-52d1` / `2a5a605` (also Hub `940a484`)
+- **branch/SHA:** LIVE Hub `940a484` OPEN; CANDIDATE `0bbfd87` FIXED_REVALIDATED
 - **severity:** P0
 - **evidence:** `apps/atlas-integration-api/src/pm/sharepoint/repository.ts` `canSeeOpportunity` returns true for all `isInternalStaff` principals, ignoring Entra client entitlements. Projects/Capital/search enforce entitlements; opportunity list/get do not.
 - **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** fixed on OD-005 candidate `bb7edae`; open on frozen Hub `940a484` until authorized deploy
+- **status:** LIVE OPEN @ Hub `940a484`; CANDIDATE FIXED_REVALIDATED @ `0bbfd87` (complete OD-005)
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
@@ -32,7 +32,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** fixed on OD-005 candidate `bb7edae`; open on frozen Hub `940a484` until authorized deploy
+- **status:** LIVE OPEN @ Hub `940a484`; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
@@ -43,7 +43,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Bank connection/balance/identity isolation collapse.
 - **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
 - **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** fixed on OD-005 candidate `bb7edae` (Plaid `jwtVerify` / `requireVerifiedPrincipal`); open on frozen Hub until authorized deploy
+- **status:** LIVE OPEN @ Hub `940a484`; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -346,20 +346,20 @@ Severity: P0 / P1 / P2 (not inflated)
 ## CROSS-SYSTEM
 
 ### XSYS-RT-20260820-01
-- **system:** Integration · **severity:** P0 · **branch/SHA:** Atlas `2a5a605`
-- **evidence:** `website/http.ts` auth = `x-website-intake-key` equality only; no body HMAC/timestamp/sender id.
-- **impact:** Key holder forges leads/attribution into SharePoint CRM.
-- **recommended remediation:** Per-sender HMAC + key id + timestamp.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `940a484` / CANDIDATE `0bbfd87`
+- **evidence:** LIVE: key-only auth. CANDIDATE: HMAC+key-id+timestamp in `intakeAuth.ts` / `http.ts`.
+- **impact:** Key holder forges leads/attribution into SharePoint CRM (live).
+- **recommended remediation:** Deploy OD-005 Hub intake auth.
 - **regression test:** Valid key + invalid signature → 401.
-- **status:** open
+- **status:** LIVE OPEN; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
 
 ### XSYS-RT-20260820-02
-- **system:** Integration · **severity:** P0 · **branch/SHA:** `2a5a605`
-- **evidence:** Idempotency key accepted without prefix↔source binding (`360|`, `copilot|`, `eva|`).
-- **impact:** Cross-system lead overwrite via colliding keys.
-- **recommended remediation:** Enforce prefix binding; foreign-prefix → 409.
-- **regression test:** 360 type + `eva|` key → reject.
-- **status:** open
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `940a484` / CANDIDATE `0bbfd87`
+- **evidence:** LIVE: unbound `fullPayload.idempotencyKey`. CANDIDATE: `assertIdempotencyKeyBoundToSource` → 409.
+- **impact:** Cross-system lead overwrite via colliding keys (live).
+- **recommended remediation:** Deploy OD-005 prefix binding.
+- **regression test:** Website type + `eva|` key → 409.
+- **status:** LIVE OPEN; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
 
 ### XSYS-RT-20260820-03..12
 - **03** P1 GCC handoff without Atlas attestation.
@@ -483,3 +483,17 @@ Severity: P0 / P1 / P2 (not inflated)
 | REVOS-ELITE-RT-20260820-01 | FIXED reconfirmed @ `e9b3be8` |
 | New P0/P1 | 0 / 0 |
 | ATLAS-RT-01/02/03 · XSYS-01/02 | OPEN on Hub (not retested) |
+
+
+## Directive 21 status appendix (complete OD-005 @ 0bbfd87)
+
+| ID | LIVE Hub `940a484` | CANDIDATE `0bbfd87` |
+|----|--------------------|---------------------|
+| ATLAS-RT-20260820-01 | OPEN | FIXED_REVALIDATED |
+| ATLAS-RT-20260820-02 | OPEN | FIXED_REVALIDATED |
+| ATLAS-RT-20260820-03 | OPEN | FIXED_REVALIDATED |
+| XSYS-RT-20260820-01 | OPEN | FIXED_REVALIDATED |
+| XSYS-RT-20260820-02 | OPEN | FIXED_REVALIDATED |
+| Incomplete tip `bb7edae` | — | STALE_SUPERSEDED (XSYS incomplete) |
+| Candidate P0/P1 | — | **0 / 0** |
+| Live production P0 | **5** | — |

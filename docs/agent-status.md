@@ -5,49 +5,50 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `e6bd584` |
-| baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
+| current SHA | *(git tip after push)* |
+| baseline | Hub `940a484` / Elite `75d0c59` PASS freeze (live not mutated) |
 | owned domains | Independent adversarial testing and findings |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d20-revenue-adapters.mjs` |
-| contracts required | Integration SoT `773b510` (dependency; not retested) |
-| tests | D20: adapter 5/5 · revenue suite 22/22 · Elite P1 6/6 · harness exit 0 |
+| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d21-od005-complete.mjs` |
+| contracts required | Integration SoT `773b510` (not retested) |
+| tests | D21: website-leads 9/9 · Plaid 6/6 · staff bypass cand 0 / hub 2 · D21 harness exit 0 |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | Gate **FAIL** until Hub P0=0 |
-| Premium status | **N/A** — no RT UI |
+| security status | **Live Hub gate FAIL** (P0=5). **Candidate `0bbfd87` P0=0 P1=0** (FIXED_REVALIDATED; not deployed) |
+| Premium status | **N/A** |
 | integration dependencies | `integration@773b510` |
-| P0 | Hub: ATLAS-01/02/03 + XSYS-01/02 **OPEN** |
-| P1 | **0** (REVOS-ELITE-01 **FIXED**, reconfirmed @ `e9b3be8`) |
-| P2 | none filed |
-| owner decisions | OD-005 deploy authorization required; XSYS follow-on |
-| deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY |
+| P0 | **LIVE:** ATLAS-01/02/03 + XSYS-01/02 OPEN @ Hub `940a484`. **CANDIDATE:** all five FIXED_REVALIDATED @ `0bbfd87` |
+| P1 | none |
+| P2 | none |
+| owner decisions | OD-005 deploy authorization required to clear live P0s; do not treat candidate closes as live |
+| deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY (live P0≠0) |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **20** |
-| BASED ON WORKER SHA | `22ab0ef89e6c68168e19af868f672db5040db801` |
-| BASED ON RUN ID | `run-214442cf-2399-468d-aaaa-f77d74cd2057` |
-| CURRENT SHA | `e6bd584fafba5d3174b89530934b6267f1054849` |
-| COMPLETED ACTIONS | First-pass Revenue Dev SharePoint adapters @ `e9b3be8` (Proposals/Engagements); reconfirmed REVOS-ELITE-RT-20260820-01 FIXED; no new P0/P1 |
-| REMAINING ACTIONS | Retest Hub/XSYS when OD-005 authorized or XSYS remediations land |
-| P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
-| TEST STATUS | adapter 5/5; revenue suite 22/22; Elite P1 6/6; D20 harness exit 0 |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **21** |
+| BASED ON WORKER SHA | `8d336b2c4d02cb61044702aa9b91098fc409eab5` |
+| BASED ON RUN ID | `run-38c049ca-7a16-44ee-a200-7faa55e9a2d6` |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | Independently revalidated complete OD-005 @ `0bbfd87` (supersedes `bb7edae`); dual-surface statuses for ATLAS-01/02/03 + XSYS-01/02; website-leads 9/9 + Plaid 6/6 re-run |
+| REMAINING ACTIONS | Live retest after authorized Hub/Elite OD-005 deploy only |
+| P0/P1/P2 | Live P0=5 · Candidate P0=0 · P1=0 · P2=none |
+| TEST STATUS | website-leads 9/9 PASS; Plaid 6/6 PASS; D21 harness exit 0 |
 | PREMIUM STATUS | N/A |
-| INTEGRATION STATUS | Dependency `773b510`; XSYS Hub authenticity still open |
-| OWNER DECISIONS | Await OD-005 production security-patch authorization |
+| INTEGRATION STATUS | SoT `773b510`; live XSYS authenticity open until Hub deploy |
+| OWNER DECISIONS | Await OD-005 production security-patch authorization — **no deploy requested this run** |
 
 ## SHAs this cycle
 
 | System | SHA |
 |--------|-----|
-| Revenue adapters (new) | `e9b3be8c58a3ea20f8d73806c9dbd6258cec8c56` |
+| OD-005 complete candidate | `0bbfd877aac88b654a7c9abdf6c63a312d7cfb05` |
+| Live Hub (still OPEN for P0s) | `940a4849577ad5356da86850e2eccdbf3fe4e86b` |
 
 ## Notes
 
-- Did not retest GTM docs-only pins or identical prior tips.
-- No SharePoint schema thaw in tip delta.
-- No production deploy; adapters are fixture-only.
+- Candidate P0=0 and P1=0 on `0bbfd87` — stated for orchestrator; **no deploy request**.
+- Live production P0 count remains **5** until Hub is actually patched.
+- Incomplete tip `bb7edae` is STALE_SUPERSEDED for XSYS completeness.
 
-**Updated:** 2026-08-20T08:08:30Z
+**Updated:** 2026-08-20T14:55:30Z

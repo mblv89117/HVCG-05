@@ -1,0 +1,16 @@
+{"findingId":"ATLAS-RT-20260820-01","surface":"CANDIDATE","sha":"0bbfd877aac88b654a7c9abdf6c63a312d7cfb05","status":"FIXED_REVALIDATED","detail":"staff short-circuit absent"}
+{"findingId":"ATLAS-RT-20260820-01","surface":"LIVE_PRODUCTION","sha":"940a4849577ad5356da86850e2eccdbf3fe4e86b","status":"OPEN","detail":"staff short-circuit present on Hub"}
+{"findingId":"ATLAS-RT-20260820-02","surface":"CANDIDATE","sha":"0bbfd877aac88b654a7c9abdf6c63a312d7cfb05","status":"FIXED_REVALIDATED","detail":"same canSeeOpportunity entitlement path"}
+{"findingId":"ATLAS-RT-20260820-02","surface":"LIVE_PRODUCTION","sha":"940a4849577ad5356da86850e2eccdbf3fe4e86b","status":"OPEN","detail":"staff short-circuit enables foreign patch"}
+{"findingId":"ATLAS-RT-20260820-03","surface":"CANDIDATE","sha":"0bbfd877aac88b654a7c9abdf6c63a312d7cfb05","status":"FIXED_REVALIDATED","detail":"Plaid JWT / requireVerifiedPrincipal"}
+{"findingId":"ATLAS-RT-20260820-03","surface":"LIVE_PRODUCTION","sha":"940a4849577ad5356da86850e2eccdbf3fe4e86b","status":"OPEN","detail":"header-only principal auth on live Hub"}
+{"findingId":"XSYS-RT-20260820-01","surface":"CANDIDATE","sha":"0bbfd877aac88b654a7c9abdf6c63a312d7cfb05","status":"FIXED_REVALIDATED","detail":"intake HMAC+key-id+timestamp"}
+{"findingId":"XSYS-RT-20260820-01","surface":"LIVE_PRODUCTION","sha":"940a4849577ad5356da86850e2eccdbf3fe4e86b","status":"OPEN","detail":"key-only intake on Hub"}
+{"findingId":"XSYS-RT-20260820-02","surface":"CANDIDATE","sha":"0bbfd877aac88b654a7c9abdf6c63a312d7cfb05","status":"FIXED_REVALIDATED","detail":"idempotency prefix binding"}
+{"findingId":"XSYS-RT-20260820-02","surface":"LIVE_PRODUCTION","sha":"940a4849577ad5356da86850e2eccdbf3fe4e86b","status":"OPEN","detail":"unbound fullPayload.idempotencyKey"}
+{
+  "summary": {
+    "candidateOpen": 0,
+    "liveOpen": 5
+  }
+}
