@@ -55,7 +55,8 @@ Incomplete prior tip `bb7edae` (ATLAS-only) is superseded by this complete candi
 | Item | Value |
 |------|--------|
 | Prior candidate SHA | `0bbfd877aac88b654a7c9abdf6c63a312d7cfb05` (`0bbfd87`) |
-| This checkpoint SHA | `533a13007753e81f2178393907d63bc8ab16310a` (`533a130`) |
+| Fixture alignment SHA | `533a13007753e81f2178393907d63bc8ab16310a` (`533a130`) |
+| Status note SHA | `226c11047533a508cb1e33b9d0543c92585638c7` (`226c110`) |
 | Live Hub | `940a484` — **P0 remains 5 OPEN** (ATLAS-01/02/03, XSYS-01/02). Do not claim live close. |
 | Candidate P0/P1 | 0 OPEN on this SHA (fixture alignment only; no product authz rollback) |
 | DEPLOYMENT_READY | Owner-gated — not pursued |
@@ -66,11 +67,17 @@ Red Team D22 (`bc-1d522892`) reported REGRESSION=PARTIAL on `0bbfd87`: convert P
 
 **Certified contract kept:** convert does **not** provision entitlements (`entitlementProvisioned=false`). Staff short-circuit stays **removed**. Post-convert GET is 200 only under a principal already entitled for the proposed ClientCode (`NORTH01`). Unentitled staff remains 404.
 
-### Evidence commands
+### Evidence commands (executed)
 
 ```bash
 cd apps/atlas-integration-api && npx tsx --test tests/hub-pm-sharepoint.test.ts
+# tests 34  pass 34  fail 0
+
 cd apps/atlas-integration-api && npm test
+# tests 323  pass 323  fail 0   (was 322/323 on 0bbfd87)
+
+node scripts/red-team/check-opportunity-staff-bypass.mjs .
+# staffShortCircuitPresent=false  exit 0
 ```
 
 Do **not** authorize a production security patch from this note. Live Hub P0 count stays 5 until an authorized Hub deploy.

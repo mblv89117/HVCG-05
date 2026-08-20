@@ -26,6 +26,6 @@ Do **not** deploy Hub or Elite from this train. Frozen live-cert remains Hub `94
 **LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED = 1**
 
 - Prior SHA: `0bbfd87` — D22 REGRESSION=PARTIAL (convert GET 404 under ACCG01-only principal)
-- This SHA: `533a130` — convert fixture entitles USER_A for `NORTH01`; staff short-circuit still absent; `entitlementProvisioned=false`
-- Evidence: `cd apps/atlas-integration-api && npx tsx --test tests/hub-pm-sharepoint.test.ts` and `cd apps/atlas-integration-api && npm test`
+- Fixture SHA: `533a130` — convert fixture entitles USER_A for `NORTH01`; staff short-circuit still absent; `entitlementProvisioned=false`
+- Evidence (executed): `npx tsx --test tests/hub-pm-sharepoint.test.ts` → 34/34; `npm test` → 323/323 fail 0; staff-bypass check exit 0
 - Live Hub `940a484` P0 remains **5 OPEN**. DEPLOYMENT_READY not pursued.
