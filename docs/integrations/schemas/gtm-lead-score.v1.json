@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/gtm-lead-score.v1.json",
+  "title": "GTM Lead Score v1",
+  "description": "360-owned lead scoring observation. Does not create Atlas CRM facts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "leadId",
+    "score",
+    "band",
+    "ownerSystem",
+    "scoredAt"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "gtm-lead-score.v1"
+    },
+    "leadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "companyId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "band": {
+      "type": "string",
+      "enum": [
+        "cold",
+        "warm",
+        "hot",
+        "qualified"
+      ]
+    },
+    "signals": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "maxLength": 255
+      }
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "scoredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "observationOnly": {
+      "const": true
+    }
+  }
+}

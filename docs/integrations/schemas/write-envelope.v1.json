@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/write-envelope.v1.json",
+  "title": "Cross-System Write Envelope v1",
+  "description": "Required metadata for every cross-system write. Retries must not duplicate durable entities.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "idempotencyKey",
+    "sourceSystem",
+    "destinationSystem",
+    "entity",
+    "operation",
+    "version",
+    "replaySemantics",
+    "trace"
+  ],
+  "properties": {
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 255
+    },
+    "sourceSystem": {
+      "type": "string",
+      "enum": [
+        "atlas",
+        "360",
+        "gcc",
+        "copilot",
+        "eva",
+        "website",
+        "hvcg-internal"
+      ]
+    },
+    "destinationSystem": {
+      "type": "string",
+      "enum": [
+        "atlas",
+        "360",
+        "gcc",
+        "copilot",
+        "eva",
+        "website",
+        "hvcg-internal"
+      ]
+    },
+    "entity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "create",
+        "upsert",
+        "update",
+        "convert",
+        "activate",
+        "handoff",
+        "signal",
+        "stage"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[a-z0-9._-]+\\.v[0-9]+$"
+    },
+    "replaySemantics": {
+      "type": "string",
+      "enum": [
+        "return-existing",
+        "update-existing",
+        "reject-conflict"
+      ]
+    },
+    "trace": {
+      "$ref": "./trace-context.v1.json"
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identityClass"
+      ],
+      "properties": {
+        "identityClass": {
+          "type": "string",
+          "enum": [
+            "hvcg_human",
+            "client_user",
+            "system_service",
+            "marketing_tenant",
+            "assessment_session",
+            "gcc_client_user"
+          ]
+        },
+        "principalId": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 32
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/campaign-spec.v1.json",
+  "title": "Campaign Spec v1",
+  "description": "360-owned campaign definition. Paid ads remain owner-gated.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "campaignId",
+    "name",
+    "status",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "campaign-spec.v1"
+    },
+    "campaignId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "ready",
+        "live",
+        "paused",
+        "completed",
+        "cancelled"
+      ]
+    },
+    "channel": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "offerSku": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "paidAdsEnabled": {
+      "const": false
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

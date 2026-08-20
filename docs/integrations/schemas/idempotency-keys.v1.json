@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://highvaluecapitalgroup.com/contracts/idempotency-keys.v1.json",
   "title": "High Value Idempotency Keys v1",
-  "description": "Source-controlled registry of current cross-system idempotency key patterns. These patterns prevent duplicate leads, clients, opportunities, and capital records on replay.",
+  "description": "Source-controlled registry of cross-system idempotency key patterns. Retries must not duplicate leads, opportunities, engagements, bookings, messages, client records, or GCC handoffs.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -14,52 +14,201 @@
         "properties": {
           "edge": { "type": "string" },
           "pattern": { "type": "string" },
+          "sourceSystem": { "type": "string" },
+          "destinationSystem": { "type": "string" },
+          "entity": { "type": "string" },
+          "operation": { "type": "string" },
+          "version": { "type": "string" },
           "owner": { "type": "string" },
           "collisionBehavior": {
             "type": "string",
             "enum": ["return-existing", "update-existing", "reject-conflict"]
           },
+          "replaySemantics": { "type": "string" },
           "notes": { "type": "string" }
         },
-        "required": ["edge", "pattern", "owner", "collisionBehavior"]
+        "required": [
+          "edge",
+          "pattern",
+          "sourceSystem",
+          "destinationSystem",
+          "entity",
+          "operation",
+          "version",
+          "owner",
+          "collisionBehavior",
+          "replaySemantics"
+        ]
       },
       "default": [
         {
           "edge": "EVA -> Atlas lead",
           "pattern": "eva|{sessionId}",
+          "sourceSystem": "eva",
+          "destinationSystem": "atlas",
+          "entity": "lead",
+          "operation": "upsert",
+          "version": "eva-crm-payload.v1",
           "owner": "Atlas Hub website lead intake",
           "collisionBehavior": "update-existing",
+          "replaySemantics": "Same key updates non-terminal lead fields; terminal statuses are not reset to New.",
           "notes": "Terminal lead statuses are not reset to New on replay."
         },
         {
           "edge": "Website -> Atlas lead",
           "pattern": "website|{leadId}",
+          "sourceSystem": "website",
+          "destinationSystem": "atlas",
+          "entity": "lead",
+          "operation": "upsert",
+          "version": "website-lead-upsert.v1",
           "owner": "Atlas Hub website lead intake",
-          "collisionBehavior": "update-existing"
+          "collisionBehavior": "update-existing",
+          "replaySemantics": "Return/update existing HVCG_Leads row."
+        },
+        {
+          "edge": "360 Growth -> Atlas lead",
+          "pattern": "360|{leadId}",
+          "sourceSystem": "360",
+          "destinationSystem": "atlas",
+          "entity": "lead",
+          "operation": "stage",
+          "version": "360-atlas-lead.v1",
+          "owner": "360 @360gs/atlas-handoff",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Local stage returns created:false; live Hub POST owner-gated."
+        },
+        {
+          "edge": "Agent Copilot -> Atlas lead",
+          "pattern": "copilot|{assessmentId}",
+          "sourceSystem": "copilot",
+          "destinationSystem": "atlas",
+          "entity": "lead",
+          "operation": "stage",
+          "version": "atlas-lead-handoff.v1",
+          "owner": "Agent Copilot lead handoff",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Local stage returns created:false; live Hub POST off."
         },
         {
           "edge": "Lead -> Atlas client",
           "pattern": "client-from-lead|{LeadId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "atlas",
+          "entity": "client",
+          "operation": "convert",
+          "version": "opportunity-commercial-context.v1",
           "owner": "Atlas PM lead conversion",
-          "collisionBehavior": "return-existing"
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Do not create a second ClientCode."
         },
         {
           "edge": "Lead -> Atlas contact",
           "pattern": "contact-from-lead|{LeadId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "atlas",
+          "entity": "contact",
+          "operation": "convert",
+          "version": "opportunity-commercial-context.v1",
           "owner": "Atlas PM lead conversion",
-          "collisionBehavior": "return-existing"
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Do not duplicate contact rows for the same lead conversion."
         },
         {
           "edge": "Lead -> Atlas opportunity",
           "pattern": "opp-from-lead|{LeadId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "atlas",
+          "entity": "opportunity",
+          "operation": "convert",
+          "version": "opportunity-commercial-context.v1",
           "owner": "Atlas PM lead conversion",
-          "collisionBehavior": "return-existing"
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Do not create a second opportunity from the same lead."
         },
         {
           "edge": "Opportunity -> Atlas capital opportunity",
           "pattern": "cap-from-opp|{OpportunityId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "atlas",
+          "entity": "capital_need",
+          "operation": "create",
+          "version": "agent-copilot-handoff.v1",
           "owner": "Atlas Capital",
-          "collisionBehavior": "return-existing"
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Return existing capital opportunity bridge."
+        },
+        {
+          "edge": "Atlas client activation",
+          "pattern": "client-activate|{ClientCode}|{OpportunityId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "atlas",
+          "entity": "client",
+          "operation": "activate",
+          "version": "client-activation-event.v1",
+          "owner": "Atlas PM client activation",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Won ≠ Active Client; replay returns existing activation state."
+        },
+        {
+          "edge": "Atlas -> GCC handoff",
+          "pattern": "gcc-activate|{ClientCode}|{event}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "gcc",
+          "entity": "client",
+          "operation": "handoff",
+          "version": "atlas-to-gcc-handoff.v1",
+          "owner": "GCC persist-only receiver",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Persist-only; no second mapping prep record; no auto-provision."
+        },
+        {
+          "edge": "Booking create",
+          "pattern": "booking|{bookingId}",
+          "sourceSystem": "360",
+          "destinationSystem": "atlas",
+          "entity": "booking",
+          "operation": "create",
+          "version": "booking-event.v1",
+          "owner": "GTM / Atlas meetings",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not create duplicate meetings."
+        },
+        {
+          "edge": "Engagement create",
+          "pattern": "engagement|{opportunityId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "atlas",
+          "entity": "engagement",
+          "operation": "create",
+          "version": "engagement-created.v1",
+          "owner": "Atlas engagement ops",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "One engagement per opportunity conversion key unless explicitly versioned."
+        },
+        {
+          "edge": "GCC value signal",
+          "pattern": "gcc-signal|{signalId}",
+          "sourceSystem": "gcc",
+          "destinationSystem": "atlas",
+          "entity": "revenue_outcome",
+          "operation": "signal",
+          "version": "gcc-value-signal.v1",
+          "owner": "GCC → Atlas value intelligence",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Duplicate signal IDs return existing; do not invent CRM opportunities."
+        },
+        {
+          "edge": "Closed-won learning",
+          "pattern": "learn-won|{outcomeId}",
+          "sourceSystem": "atlas",
+          "destinationSystem": "360",
+          "entity": "gtm_experiment",
+          "operation": "signal",
+          "version": "closed-won-learning-event.v1",
+          "owner": "Atlas → 360 learning",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Learning events are idempotent; never mutate paid ads."
         }
       ]
     }

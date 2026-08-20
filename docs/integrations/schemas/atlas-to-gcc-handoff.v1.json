@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/atlas-to-gcc-handoff.v1.json",
+  "title": "Atlas to GCC Handoff v1",
+  "description": "Canonical alias of atlas-gcc-client-activation.v1 with write envelope. Persist-only; no auto-provision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "idempotencyKey",
+    "client",
+    "activation",
+    "gcc",
+    "governance",
+    "envelope"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "atlas-to-gcc-handoff.v1"
+    },
+    "emittedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^gcc-activate\\|"
+    },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clientCode",
+        "displayName",
+        "clientStage"
+      ],
+      "properties": {
+        "clientCode": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "clientStage": {
+          "const": "Active Client"
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "opportunityId": {
+          "type": "string"
+        },
+        "authorizedBy": {
+          "type": "string"
+        },
+        "authorizedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "gcc": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "const": "prepare_tenant_mapping"
+        },
+        "organizationId": {
+          "type": "string",
+          "description": "GCC organizations.id only after explicit mapping; never equal to ClientCode by convention."
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "autoProvisionAccess",
+        "duplicateAtlasCrm"
+      ],
+      "properties": {
+        "autoProvisionAccess": {
+          "const": false
+        },
+        "duplicateAtlasCrm": {
+          "const": false
+        }
+      }
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    }
+  }
+}

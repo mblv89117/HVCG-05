@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/typed-ref.v1.json",
+  "title": "Typed System Reference v1",
+  "description": "Unambiguous cross-system identity reference. A tenant ID from one system must never masquerade as a client ID from another.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "system",
+    "entity",
+    "id"
+  ],
+  "properties": {
+    "system": {
+      "type": "string",
+      "enum": [
+        "atlas",
+        "360",
+        "gcc",
+        "copilot",
+        "eva",
+        "website",
+        "hvcg-internal"
+      ]
+    },
+    "entity": {
+      "type": "string",
+      "enum": [
+        "company",
+        "contact",
+        "lead",
+        "opportunity",
+        "diagnostic",
+        "assessment",
+        "campaign",
+        "engagement",
+        "client",
+        "capital_need",
+        "project",
+        "booking",
+        "proposal",
+        "revenue_outcome",
+        "gtm_experiment",
+        "funnel",
+        "form",
+        "content",
+        "message",
+        "meeting",
+        "tenant",
+        "session",
+        "organization"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$",
+      "description": "Atlas ClientCode only. Never a GCC org UUID or 360 tenant id."
+    }
+  }
+}

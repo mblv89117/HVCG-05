@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/atlas-lead-intake.v1.json",
+  "title": "Atlas Lead Intake v1",
+  "description": "Umbrella contract for any system writing HVCG_Leads via Hub website intake shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "intakeChannel",
+    "websiteLead"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "atlas-lead-intake.v1"
+    },
+    "intakeChannel": {
+      "type": "string",
+      "enum": [
+        "website",
+        "eva",
+        "360-growth",
+        "agent-copilot"
+      ]
+    },
+    "websiteLead": {
+      "$ref": "./website-lead-upsert.v1.json"
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}
