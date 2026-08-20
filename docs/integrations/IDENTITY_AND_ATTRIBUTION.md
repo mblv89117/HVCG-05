@@ -51,7 +51,7 @@ Preserve supplied values; do not invent missing values.
 
 | Contract | Current state |
 | --- | --- |
-| 360 Growth -> EVA / Atlas | Repository unavailable in this cloud run; no source contract verified. |
-| Agent Copilot -> Atlas lead handoff | Product repository unavailable; Atlas currently has capital observation-only handoff source and schema doc. |
-| EVA runtime -> Atlas | Atlas-side website intake exists; actual EVA implementation/deployment still needs access/live certification. |
-| Atlas -> GCC | No current bridge. Future bridge must be owner-approved and must not grant broad automatic access. |
+| 360 Growth -> EVA / Atlas | 360 `@360gs/atlas-handoff` stages attributed leads locally. Live Hub POST is not enabled. |
+| Agent Copilot -> Atlas lead handoff | Copilot stages `copilot|{assessmentId}` locally as observation-only. Live Hub POST is not enabled. |
+| EVA runtime -> Atlas | Atlas-side website intake exists; EVA UI remains an external HVCG-site / Autonomous Marketing deployment. |
+| Atlas -> GCC | Persist-only `atlas-gcc-client-activation.v1` receiver exists. Access is not auto-provisioned. |

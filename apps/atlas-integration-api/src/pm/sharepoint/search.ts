@@ -75,6 +75,7 @@ export type SearchPmService = Pick<
   | 'listOpportunities'
   | 'listIndexedFiles'
 > & {
+  listWorkspaceCollectionsForSearch?: SharePointPmService['listWorkspaceCollectionsForSearch'];
   listLeads?: () => Promise<LeadRow[]>;
   listCapitalOpportunities?: () => Promise<CapitalOpportunityRow[]>;
   listLenders?: () => Promise<LenderRow[]>;
@@ -236,16 +237,26 @@ export async function searchSharePointPm(
     }
   };
   const extrasStarted = Date.now();
-  const extrasPromise = Promise.all(
-    clients.map(async (c) => {
+  const extrasPromise = (async () => {
+    if (service.listWorkspaceCollectionsForSearch) {
       const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
-      const extras = await withBudget(
-        () => service.listWorkspaceCollections(principal, c.clientCode),
+      const batched = await withBudget(
+        () => service.listWorkspaceCollectionsForSearch!(principal, clients.map((c) => c.clientCode)),
         Math.max(0, remaining),
       );
-      return { client: c, extras };
-    }),
-  );
+      return clients.map((client) => ({ client, extras: batched?.get(client.clientCode) }));
+    }
+    return Promise.all(
+      clients.map(async (c) => {
+        const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
+        const extras = await withBudget(
+          () => service.listWorkspaceCollections(principal, c.clientCode),
+          Math.max(0, remaining),
+        );
+        return { client: c, extras };
+      }),
+    );
+  })();
   const [extrasRows, opportunities, leads, capitalOpps] = await Promise.all([
     extrasPromise,
     bestEffort(() => service.listOpportunities(), []),
