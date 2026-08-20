@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "steps": 28,
+  "failed": [],
+  "liveDispatchAllFalse": true,
+  "operatorAcceptRequired": true,
+  "autoSendFalse": true
+}

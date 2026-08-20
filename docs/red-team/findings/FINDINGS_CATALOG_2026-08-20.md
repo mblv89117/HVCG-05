@@ -341,7 +341,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Operators can view ACME synthetic economics under a foreign opportunity id; commercial context not opportunity-bound.
 - **recommended remediation:** Fail closed unless opportunity maps to matching ClientCode commercial context; never render ACME prices for non-ACME ids.
 - **regression test:** `loadCommercialReadModel('opp-accg-expansion-001').clientCode` must not be `ACME01` (or must error).
-- **status:** open
+- **status:** fixed @ `fc92f74` (fail-closed LOADED_COMMERCIAL_CONTEXTS + ClientCode bind)
 
 ## CROSS-SYSTEM
 
@@ -463,3 +463,13 @@ Severity: P0 / P1 / P2 (not inflated)
 | ACCG01 rewrite / SharePoint thaw | Not observed in tip delta |
 | ATLAS-RT-01/02/03 · XSYS-01/02 | OPEN on Hub (not retested) |
 | GTM `f63b8eb` / engine `9c9c331` | Not retested |
+
+
+## Directive 19 status appendix
+
+| ID | Status @ Directive 19 |
+|----|------------------------|
+| GTM-RT-20260820-03/04 | FIXED reconfirmed @ `7b70411` |
+| REVOS-ELITE-RT-20260820-01 | **FIXED** @ `fc92f74` |
+| ATLAS-RT-01/02/03 · XSYS-01/02 | OPEN on Hub (not retested) |
+| New P0/P1 this cycle | 0 / 0 |

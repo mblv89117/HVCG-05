@@ -5,49 +5,50 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `c27b14b` |
+| current SHA | *(git tip after push)* |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d18-revenue-elite.mjs` |
+| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d19-revenue-elite.mjs` |
 | contracts required | Integration SoT `773b510` (dependency; not retested) |
-| tests | D18: commercial-route PASS · commercialWorkspace 4/4 · test:security 47/47 · harness exit 0 |
+| tests | D19: GTM flags/handoff/agent + SYN 28/28; Elite security 53/53; P1 unit PASS; harnesses exit 0 |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | Gate **FAIL** — Hub P0s open + new Elite P1 |
+| security status | Gate **FAIL** until Hub P0=0 (XSYS + ATLAS pending OD-005) |
 | Premium status | **N/A** — no RT UI |
 | integration dependencies | `integration@773b510` |
 | P0 | Hub: ATLAS-01/02/03 + XSYS-01/02 **OPEN** |
-| P1 | **REVOS-ELITE-RT-20260820-01** OPEN @ `8cffe34` |
-| P2 | none filed |
-| owner decisions | OD-005 deploy authorization required; XSYS follow-on; Elite commercial deep-link bind |
+| P1 | **0** (REVOS-ELITE-RT-20260820-01 **FIXED** @ `fc92f74`) |
+| P2 | none |
+| owner decisions | OD-005 deploy authorization required; XSYS follow-on patch needed |
 | deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **18** |
-| BASED ON WORKER SHA | `95f57204f6f06661c99173759f4e20ab6f7f652a` |
-| BASED ON RUN ID | `run-42feb9ac-ca22-4906-91a1-05657e3b6cd9` |
-| CURRENT SHA | `c27b14bf71697bc63b692aeabb7b64a7041d2c1b` |
-| COMPLETED ACTIONS | First-pass Revenue Elite UI @ `8cffe34` (/revenue read-models, gates, FinanceRoute/viewFinance, ACCG01 isolation, no SP thaw); published P1 deep-link commercial-context finding |
-| REMAINING ACTIONS | Retest Elite after deep-link fix; XSYS/OD-005 Hub paths when authorized |
-| P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=REVOS-ELITE-01 · P2=none |
-| TEST STATUS | commercial-route PASS; workspace 4/4; security 47/47; D18 harness exit 0 |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **19** |
+| BASED ON WORKER SHA | `41b77f7a92f20052a5541994ff12810c8833b7d4` |
+| BASED ON RUN ID | `run-3df335cf-fe59-4f76-832f-8c4f1d0a66fc` |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | Revalidated terminal GTM `7b70411` (RT-03/04 + SYN-GTM); first-pass/revalidated Revenue Elite `fc92f74`; **closed** REVOS-ELITE-RT-20260820-01 with tip evidence |
+| REMAINING ACTIONS | Retest Hub/XSYS when OD-005 authorized or XSYS remediations land |
+| P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
+| TEST STATUS | GTM suites PASS; SYN 28/28; Elite security 53/53; D19 harness exit 0 |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Dependency `773b510`; XSYS Hub authenticity still open |
-| OWNER DECISIONS | Await OD-005 auth; Elite P1 remediation by Revenue OS train |
+| OWNER DECISIONS | Await OD-005 production security-patch authorization |
 
 ## SHAs this cycle
 
 | System | SHA |
 |--------|-----|
-| Revenue Elite UI (new) | `8cffe34e266b4ff3869d840ecf394930041b4c3d` |
+| GTM (moved) | `7b7041110b86d15f371bbcc34a3ee748e57fc992` |
+| Revenue Elite (new) | `fc92f74d5e1f7e04c6779dd6f784ce04601c7147` |
 
 ## Notes
 
-- Did not retest GTM `f63b8eb` or engine `9c9c331`.
-- Did not deploy OD-005 or mutate frozen Hub/Elite production runtime.
-- No SharePoint schema files in tip delta.
+- Did not retest identical D18 engine / frozen Hub/Elite / OD-005 tips.
+- No SharePoint schema thaw in Revenue tip delta.
+- No production deploy.
 
-**Updated:** 2026-08-20T07:10:30Z
+**Updated:** 2026-08-20T07:36:30Z

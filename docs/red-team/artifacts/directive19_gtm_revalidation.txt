@@ -1,0 +1,92 @@
+=== D19 GTM @ 7b70411 terminal 2026-08-20T07:35:02Z ===
+TIP=7b7041110b86d15f371bbcc34a3ee748e57fc992
+DELTA_SECURITY_FILES: unchanged vs f63b8eb (UI-only Command Center + docs)
+
+{"id":"GTM-RT-20260820-03","status":"FIXED","detail":"unified pause SoT fail-closed"}
+{"id":"GTM-RT-20260820-04","status":"FIXED","detail":"InquiryForm camelCase governance + receive liveDispatch=false"}
+{"id":"GTM-REVOS-CONSUMER","status":"FIXED","detail":"Revenue OS consumer operator-accept + autoSend=false + tip pin"}
+{
+  "summary": {
+    "fail": 0
+  }
+}
+d16_harness_exit:0
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d19/gtm/packages/flags
+
+ ✓ tests/flags.test.ts (9 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  07:35:03
+   Duration  290ms (transform 48ms, setup 0ms, collect 58ms, tests 6ms, environment 0ms, prepare 53ms)
+
+flags_exit:0
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d19/gtm/packages/atlas-handoff
+
+ ✓ tests/atlas-handoff.test.ts (5 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  07:35:03
+   Duration  262ms (transform 73ms, setup 0ms, collect 94ms, tests 6ms, environment 0ms, prepare 42ms)
+
+handoff_exit:0
+
+> @360gs/gtm-agent@0.1.0 test /tmp/rt-d19/gtm/packages/gtm-agent
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d19/gtm/packages/gtm-agent
+
+ ✓ tests/gtm-agent.test.ts (9 tests) 42ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  07:35:04
+   Duration  554ms (transform 249ms, setup 0ms, collect 356ms, tests 42ms, environment 0ms, prepare 46ms)
+
+gtm_agent_exit:0
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+Error: Transform failed with 1 error:
+/eval.ts:3:10: ERROR: Top-level await is currently not supported with the "cjs" output format
+    at failureErrorWithLog (/tmp/rt-d19/gtm/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1748:15)
+    at /tmp/rt-d19/gtm/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:1017:50
+    at responseCallbacks.<computed> (/tmp/rt-d19/gtm/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:884:9)
+    at handleIncomingPacket (/tmp/rt-d19/gtm/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:939:12)
+    at Socket.readFromStdout (/tmp/rt-d19/gtm/node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js:862:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  errors: [
+    {
+      detail: undefined,
+      id: '',
+      location: {
+        column: 10,
+        file: '/eval.ts',
+        length: 5,
+        line: 3,
+        lineText: 'const r = await runSyntheticGtmJourney();',
+        namespace: '',
+        suggestion: ''
+      },
+      notes: [],
+      pluginName: '',
+      text: 'Top-level await is currently not supported with the "cjs" output format'
+    }
+  ],
+  warnings: []
+}
+
+Node.js v22.14.0
