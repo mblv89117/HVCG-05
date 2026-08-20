@@ -63,6 +63,36 @@ def map_gcc_atlas_signal(local: dict) -> dict:
     }
 
 
+def to_integration_pre_call_brief(producer: dict, *, booking_id: str, atlas_client_code: str | None = None, generated_at: str) -> dict:
+    """Mirror Copilot `toIntegrationPreCallBrief` @ fe3db75 — adapter only; SoT meaning unchanged."""
+    findings = producer.get("structuredFindings") or []
+    verified = [f for f in findings if f.get("factClass") == "VERIFIED CLIENT INPUT"]
+    inferred = [f for f in findings if f.get("factClass") in {"AI INFERENCE", "AI RECOMMENDATION"}]
+    provenance = f"Provenance: {len(verified)} verified client input · {len(inferred)} AI inference/recommendation (not client facts)."
+    summary = f"{producer['executiveSummary']}\n\n{provenance}"[:5000]
+    attribution = producer.get("attribution") or {}
+    mapped = {
+        "contractVersion": "pre-call-brief.v1",
+        "briefId": f"pcb-{producer['assessmentId']}",
+        "bookingId": booking_id,
+        "companyName": producer["company"],
+        "summary": summary,
+        "painHypotheses": (producer.get("painPoints") or [])[:20],
+        "suggestedQuestions": (producer.get("recommendedTalkTracks") or [])[:20],
+        "generatedAt": generated_at,
+        "ownerSystem": "copilot",
+        "observationOnly": True,
+        "attribution": {
+            "source": attribution.get("source", "agent-copilot"),
+            "campaignId": attribution.get("campaignId"),
+            "diagnosticId": producer["assessmentId"],
+        },
+    }
+    if atlas_client_code:
+        mapped["atlasClientCode"] = atlas_client_code
+    return mapped
+
+
 class CompatibilityTests(unittest.TestCase):
     def test_cc006_adapter_maps_to_canonical(self):
         local = {
@@ -228,6 +258,38 @@ class CompatibilityTests(unittest.TestCase):
             },
         )
         self.assertTrue(any("assessmentId" in e for e in errors))
+
+    def test_copilot_pre_call_brief_adapter_maps_to_sot(self):
+        producer = {
+            "contractVersion": "gtm.pre-call-brief.v1",
+            "assessmentId": "assess-meridian-mri",
+            "company": "Meridian Field Services",
+            "executiveSummary": "Operational estimates — not guarantees.",
+            "painPoints": ["Collections workflow friction"],
+            "recommendedTalkTracks": ["Pricing owned by Revenue OS."],
+            "structuredFindings": [
+                {"id": "ctx", "title": "Company", "statement": "Meridian", "factClass": "VERIFIED CLIENT INPUT", "confidence": 1, "kind": "business_context"},
+                {"id": "inf", "title": "AR", "statement": "Aging", "factClass": "AI INFERENCE", "confidence": 0.7, "kind": "observed_problem"},
+            ],
+            "attribution": {"campaignId": "gtm-syn-d26", "source": "agent-copilot", "sourceAttribution": "gtm/fixture-d26"},
+            "observationOnly": True,
+            "commercialBinding": False,
+            "liveOrchestration": False,
+            "commercialAuthority": "revenue-os",
+        }
+        self.assertEqual(producer["commercialAuthority"], "revenue-os")
+        sot = to_integration_pre_call_brief(
+            producer,
+            booking_id="booking-syn-d26-001",
+            atlas_client_code="MERIDIAN01",
+            generated_at="2026-08-20T20:00:00Z",
+        )
+        assert_valid("pre-call-brief.v1.json", sot)
+        self.assertEqual(sot["ownerSystem"], "copilot")
+        self.assertTrue(sot["observationOnly"])
+        self.assertNotIn("liveDispatch", sot)
+        self.assertNotIn("leadId", sot)
+        self.assertNotIn("opportunityId", sot)
 
     def test_gcc_gtm_feedback_ratified(self):
         assert_valid(

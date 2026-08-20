@@ -22,7 +22,7 @@ Frozen Atlas baseline remains Hub `940a484` / Elite `75d0c59` — do not regress
 
 ## 360 Growth (GTM train)
 
-Branch declared (directive 4): `cursor/360-gtm-agent-system` @ `e0dd445` — sibling remote **404** here. Supervisor V2 2013Z opened the tip (`GTM_LIVE_DISPATCH_ENABLED` default false, `PAID_ADS_ENABLED` default false, `GTM_KILL_SWITCH` default true; `nurture/engine.ts` `createNurturePlan`).
+Branch declared (directive 5): `cursor/360-gtm-agent-system` @ `14d8e4d` — sibling git remote **404** here. GitHub MCP opened `.env.example` + `nurture/engine.ts` (`GTM_LIVE_DISPATCH_ENABLED=false`, `PAID_ADS_ENABLED=false`, `GTM_KILL_SWITCH=true`; `nurturePlanSchema` unchanged vs D4).
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ Branch declared (directive 4): `cursor/360-gtm-agent-system` @ `e0dd445` — sib
 
 ## Agent Copilot
 
-Branch declared (directive 4): `cursor/copilot-production-completion` @ `2f02702` — sibling remote **404** here. Supervisor V2 2013Z + RT D26: `jose.jwtVerify` in middleware + session; `/api/assessments` GET/POST 401.
+Branch declared (directive 5): `cursor/copilot-production-completion` @ `fe3db75` — sibling git remote **404** here. Supervisor V2 2030Z + GitHub MCP: enrichment GET/POST 401 without session; `observationOnly=true`; `liveDispatch=false`; `commercialAuthority=revenue-os`; `toIntegrationPreCallBrief` + `docs/copilot/pre-call-brief-fixture-d26.json`.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -45,6 +45,7 @@ Branch declared (directive 4): `cursor/copilot-production-completion` @ `2f02702
 | COP-INT-003 | Keep `observationOnly:true`, `liveDispatch:false` | P0 |
 | COP-INT-004 | Align assessment handoff with `agent-copilot-assessment-handoff.v1` mission name | P1 |
 | COP-INT-005 | **Remove mandatory PascalCase dual fields** from Copilot schema/required[]; camelCase is SoT; PascalCase aliases optional only if equal (CC-001) | P0 |
+| COP-INT-006 | Emit Integration SoT `pre-call-brief.v1` via `toIntegrationPreCallBrief` (`ownerSystem=copilot`, `observationOnly=true`). No commercial authority. No CRM create. | P2 |
 
 ## Growth Command Center
 

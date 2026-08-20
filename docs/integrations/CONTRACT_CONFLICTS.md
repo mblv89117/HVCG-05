@@ -1,15 +1,15 @@
 # Contract Conflicts and Canonical Resolutions
 
-Inspection sources (fetched read-only, not merged) — directive 4 tips:
+Inspection sources (fetched read-only, not merged) — directive 5 tips:
 
 | Requested branch | Tip | This-worker fetch |
 | --- | --- | --- |
 | `cursor/atlas-revenue-engagement-os` | `85def0e` | Fetched on `hvcg-05` |
-| `cursor/360-gtm-agent-system` | `e0dd445` | Git remote 404; Supervisor V2 2013Z + GitHub MCP `nurturePlanSchema` cited |
-| `cursor/gcc-client-value-os` | `8d757cf` | Fetched on `growth-command-center` (equals branch tip) |
-| `cursor/copilot-production-completion` | `2f02702` | Git remote 404; Supervisor V2 2013Z + RT D26 cited |
+| `cursor/360-gtm-agent-system` | `14d8e4d` | Git remote 404; GitHub MCP `.env.example` + `nurturePlanSchema` |
+| `cursor/gcc-client-value-os` | `8d757cf` | Unchanged vs D4 |
+| `cursor/copilot-production-completion` | `fe3db75` | Git remote 404; GitHub MCP + Supervisor V2 2030Z |
 | `cursor/atlas-security-patch-od005` | `9e5d10a` | Fetched read-only (XSYS owner; not merged) |
-| `cursor/platform-integration-contracts` | `189281a` | This branch (SoT meaning `773b510`; based-on `d57a780`) |
+| `cursor/platform-integration-contracts` | `8fb9af7` | This branch based-on (SoT meaning `773b510`) |
 
 Prior substitutes (`360-hv-completion-52d1`, `gcc-hv-completion-52d1`, `copilot-hv-completion-52d1`) remain historical ancestry only.
 

@@ -68,7 +68,7 @@ class ContractSchemaTests(unittest.TestCase):
         data = load_schema("idempotency-keys.v1.json")
         patterns = data["properties"]["patterns"]["default"]
         keys = {p["pattern"].split("|")[0] for p in patterns}
-        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "booking", "engagement", "gcc-signal", "learn-won"]:
+        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "precall", "booking", "engagement", "gcc-signal", "learn-won"]:
             self.assertIn(prefix, keys, f"Missing idempotency prefix {prefix}")
 
     def test_website_lead_minimal_valid(self):
@@ -142,6 +142,55 @@ class ContractSchemaTests(unittest.TestCase):
             },
         )
         self.assertTrue(errors)
+
+    def test_pre_call_brief_observation_only(self):
+        # Copilot toIntegrationPreCallBrief output @ fe3db75 (docs/copilot/pre-call-brief-fixture-d26.json)
+        assert_valid(
+            "pre-call-brief.v1.json",
+            {
+                "contractVersion": "pre-call-brief.v1",
+                "briefId": "pcb-assess-meridian-mri",
+                "bookingId": "booking-syn-d26-001",
+                "companyName": "Meridian Field Services",
+                "atlasClientCode": "MERIDIAN01",
+                "summary": "Operational estimates — not guarantees. Provenance: verified vs inference.",
+                "painHypotheses": ["Collections workflow friction"],
+                "suggestedQuestions": ["Discuss path — pricing owned by Revenue OS."],
+                "generatedAt": "2026-08-20T20:00:00.000Z",
+                "ownerSystem": "copilot",
+                "observationOnly": True,
+                "attribution": {
+                    "source": "agent-copilot",
+                    "campaignId": "gtm-syn-d26",
+                    "diagnosticId": "assess-meridian-mri",
+                },
+            },
+        )
+        errors = validate(
+            "pre-call-brief.v1.json",
+            {
+                "contractVersion": "pre-call-brief.v1",
+                "briefId": "pcb-bad",
+                "bookingId": "booking-bad",
+                "generatedAt": "2026-08-20T20:00:00.000Z",
+                "ownerSystem": "copilot",
+                "observationOnly": False,
+            },
+        )
+        self.assertTrue(errors)
+        live_dispatch_errors = validate(
+            "pre-call-brief.v1.json",
+            {
+                "contractVersion": "pre-call-brief.v1",
+                "briefId": "pcb-bad-dispatch",
+                "bookingId": "booking-bad",
+                "generatedAt": "2026-08-20T20:00:00.000Z",
+                "ownerSystem": "copilot",
+                "observationOnly": True,
+                "liveDispatch": True,
+            },
+        )
+        self.assertTrue(live_dispatch_errors)
 
 
 if __name__ == "__main__":

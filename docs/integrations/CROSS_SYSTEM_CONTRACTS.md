@@ -45,6 +45,7 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 | 360 nurture plan | Contract `nurture-plan.v1` | Local / staging | `nurture\|{planId}` | 360 lead | Schema + harness | No live send |
 | 360 → Atlas lead | `@360gs/atlas-handoff` stage | Intake key when live | `360\|{leadId}` | `HVCG_Leads` | Staging only | Owner before live |
 | Copilot → Atlas lead | Copilot `/api/atlas/leads` | Local / future Entra | `copilot\|{assessmentId}` | `HVCG_Leads` | Staging only | Non-fact |
+| Copilot → pre-call brief | Contract `pre-call-brief.v1` | Local / staging | `precall\|{briefId}` | Booking + MRI | Schema + harness | Observation-only |
 | Atlas client activation | `POST /api/pm/clients/{ClientCode}/activation` | Staff + Manny authorize | `client-activate\|{ClientCode}\|{OpportunityId}` | `ClientCode` | Implemented | Won ≠ Active |
 | Atlas → GCC | GCC `/api/handoff/atlas-activation` | `platform_admin` | `gcc-activate\|{ClientCode}\|{event}` | Mapping later | Persist-only | No auto-access |
 | GCC → Atlas value signal | Contract `gcc-value-signal.v1` | Service identity | `gcc-signal\|{signalId}` | `ClientCode` + GCC org | Schema + harness | No ledger copy |

@@ -325,6 +325,26 @@ def run_journey_b(bus: SyntheticBus | None = None) -> dict[str, Any]:
     assert_valid("agent-copilot-assessment-handoff.v1.json", handoff)
     bus.write("copilot|mri-501", "lead", {"id": "atlas-lead-501", **handoff})
 
+    brief = {
+        "contractVersion": "pre-call-brief.v1",
+        "briefId": "pcb-mri-501",
+        "bookingId": "booking-syn-b-501",
+        "companyName": "Northwind Logistics",
+        "atlasClientCode": "NORTH01",
+        "summary": "Observation-only MRI brief. Pricing owned by Revenue OS. Provenance: verified vs inference.",
+        "painHypotheses": ["AP automation backlog"],
+        "suggestedQuestions": ["Separate verified client input from AI inference before scoping."],
+        "generatedAt": NOW,
+        "ownerSystem": "copilot",
+        "observationOnly": True,
+        "attribution": {
+            "source": "agent-copilot",
+            "campaignId": "copilot-organic",
+            "diagnosticId": "mri-501",
+        },
+    }
+    assert_valid("pre-call-brief.v1.json", brief)
+
     bus.write("client-from-lead|atlas-lead-501", "client", {"id": "NORTH01", "ClientCode": "NORTH01"})
     bus.write("opp-from-lead|atlas-lead-501", "opportunity", {"id": "opp-501", "ClientCode": "NORTH01"})
 

@@ -176,6 +176,19 @@
           "notes": "Observation-only. goal=prepare_lead_before_manny_call. No live send."
         },
         {
+          "edge": "Copilot pre-call brief",
+          "pattern": "precall|{briefId}",
+          "sourceSystem": "copilot",
+          "destinationSystem": "atlas",
+          "entity": "pre_call_brief",
+          "operation": "observe",
+          "version": "pre-call-brief.v1",
+          "owner": "Copilot toIntegrationPreCallBrief",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not create CRM records; observationOnly stays true.",
+          "notes": "ownerSystem=copilot. commercialAuthority remains revenue-os. No liveDispatch."
+        },
+        {
           "edge": "Booking create",
           "pattern": "booking|{bookingId}",
           "sourceSystem": "360",
