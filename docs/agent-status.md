@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | b56c4a29ba2f9af8a7ee1ac6e59a1e60116c9155 |
 | baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **26** |
 | BASED ON WORKER SHA | `b0dfd71d9f972203bda51f556ab61f631c5d8481` |
 | BASED ON RUN ID | `run-b434439c-dff0-43d5-91c9-8f47083d4737` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | b56c4a29ba2f9af8a7ee1ac6e59a1e60116c9155 |
 | COMPLETED ACTIONS | Independent Copilot revalidation @ `2f02702` (npm test/security/build/jose inspect); SECURITY_CERTIFIED=PASS |
 | REMAINING ACTIONS | Owner-gated Hub deploy for live P0=0; RT does not authorize production patch |
 | P0/P1/P2 | Live P0=5 · Candidate OD-005/GCC/Copilot tip FIXED_REVALIDATED · P2=none |
