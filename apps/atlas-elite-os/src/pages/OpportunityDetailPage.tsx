@@ -51,9 +51,17 @@ function classify(err: unknown): { kind: 'auth' | 'forbidden' | 'error'; message
 
 function dayStamp(iso?: string): string {
   if (!iso) return '';
-  const t = Date.parse(iso);
-  if (!Number.isFinite(t)) return iso.slice(0, 10);
-  return new Date(t).toISOString().slice(0, 10);
+  const s = String(iso).trim();
+  // Prefer calendar YYYY-MM-DD when present — valid for <input type="date">.
+  const ymd = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (ymd) return `${ymd[1]}-${ymd[2]}-${ymd[3]}`;
+  const t = Date.parse(s);
+  if (!Number.isFinite(t)) return '';
+  const d = new Date(t);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function attentionTone(opportunity: PmOpportunity): AtlasStatusTone {

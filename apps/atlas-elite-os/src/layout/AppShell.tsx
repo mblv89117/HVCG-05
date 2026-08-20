@@ -355,10 +355,11 @@ export function AppShell() {
       return;
     }
     let cancelled = false;
+    const abort = new AbortController();
     setHubSearchBusy(true);
     setHubSearchError(null);
     const timer = window.setTimeout(() => {
-      void searchPm(hubAuth, q)
+      void searchPm(hubAuth, q, { signal: abort.signal })
         .then((found) => {
           if (cancelled) return;
           setHubHits(
@@ -373,7 +374,7 @@ export function AppShell() {
           setHubSearchBusy(false);
         })
         .catch((err) => {
-          if (cancelled) return;
+          if (cancelled || abort.signal.aborted) return;
           setHubHits([]);
           setHubSearchBusy(false);
           setHubSearchError(err instanceof Error ? err.message : 'Hub search failed');
@@ -381,6 +382,7 @@ export function AppShell() {
     }, 280);
     return () => {
       cancelled = true;
+      abort.abort();
       window.clearTimeout(timer);
     };
   }, [query, searchOpen, hubAuth.hasBearer, hubAuth.accessToken]);

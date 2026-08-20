@@ -730,11 +730,12 @@ export interface PmSearchHit {
   source: string;
 }
 
-export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
+export async function searchPm(auth: AtlasHubAuthHeaders, query: string, init?: { signal?: AbortSignal }) {
   const q = query.trim().slice(0, 120);
   if (q.length < 2) return { query: q, results: [] as PmSearchHit[], scope: 'entitled' as const };
   return hubFetchJson<{ query: string; results: PmSearchHit[]; scope: 'entitled' | 'manny_tenant' }>(
     auth,
     `/api/pm/search?q=${encodeURIComponent(q)}`,
+    init?.signal ? { signal: init.signal } : undefined,
   );
 }

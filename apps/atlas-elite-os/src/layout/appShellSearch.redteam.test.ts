@@ -44,7 +44,7 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
 
   it('Elite renders Hub search hits as returned (entitlement is Hub-enforced)', () => {
     assert.match(appShell, /searchPm\(hubAuth/);
-    const effect = slice(appShell, 'void searchPm(hubAuth, q)', '.catch((');
+    const effect = slice(appShell, 'void searchPm(hubAuth, q, { signal: abort.signal })', '.catch((');
     assert.match(effect, /found\.results/);
     assert.doesNotMatch(effect, /viewClients|allowedClientIds|can\(/);
   });
@@ -76,7 +76,8 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
   it('unsigned Command-K never mixes Hub hits and Hub search only sends q', () => {
     const results = slice(appShell, 'const results = useMemo', 'const notificationCount');
     assert.match(results, /if \(!signedIn \|\| hubHits\.length === 0\) return nav/);
-    assert.match(appShell, /searchPm\(hubAuth, q\)/);
+    assert.match(appShell, /searchPm\(hubAuth, q, \{ signal: abort\.signal \}\)/);
+    assert.match(appShell, /AbortController/);
     assert.doesNotMatch(appShell, /searchPm\([^;]*clientCode|searchPm\([^;]*scope=/);
   });
 

@@ -498,6 +498,7 @@ export function PortfolioPage() {
             onOptionSelect={(_, d) => setStatusFilter(String(d.optionValue || 'all'))}
           >
             <Option value="all">All statuses</Option>
+            <Option value="draft">{ATLAS_STATUS.draft}</Option>
             <Option value="active">Active</Option>
             <Option value="on_hold">On Hold</Option>
             <Option value="blocked">{ATLAS_STATUS.blocked}</Option>
@@ -588,6 +589,9 @@ export function PortfolioPage() {
                   honest === 'Not assessed'
                     ? { label: ATLAS_STATUS.unverified, tone: 'neutral' as const }
                     : atlasChip(honest);
+                const draftUnverified =
+                  (r.status === 'draft' || chip.label === ATLAS_STATUS.draft) &&
+                  health.label === ATLAS_STATUS.unverified;
                 return (
                   <div style={{ display: 'grid', gap: 4 }}>
                     <StatusChip
@@ -601,6 +605,9 @@ export function PortfolioPage() {
                         : ''}
                       {r.priority ? ` · ${atlasChip(r.priority).label}` : ''}
                     </Caption1>
+                    {draftUnverified ? (
+                      <Caption1>Not assessed yet · view only until next action is real</Caption1>
+                    ) : null}
                   </div>
                 );
               },
