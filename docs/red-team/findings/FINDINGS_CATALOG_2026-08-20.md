@@ -1,11 +1,12 @@
 # Findings Catalog — 2026-08-20
 
-Status legend: `open` | `closed` | `accepted-risk` | `partial`  
+Status legend: `open` | `closed` | `fixed` | `partial` | `requires-integration-test` | `accepted-risk`
 Severity: P0 / P1 / P2 (not inflated)
 
-**Tip revalidation:** 2026-08-20T0428Z against GTM `43f9305`, GCC `78cb5d2`, Copilot `7e63a6d`, Atlas P2 `66b77d2`, Integration `8fc711f`. See `../REVALIDATION_2026-08-20T0428Z.md`.
+**Tip revalidation 0428Z:** older SHAs (superseded for product tips).
+**Directive 10 revalidation:** `docs/red-team/REVALIDATION_DIRECTIVE_10_2026-08-20.md` against GTM `5bd8204`, GCC `b02c132`, Copilot `aacc09c`, Integration `773b510`, Atlas Hub `940a484`.
 
-**Post-revalidation counts:** P0=9 · P1=19 · P2=14 · Gate FAIL
+**Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
 ---
 
@@ -373,3 +374,29 @@ Severity: P0 / P1 / P2 (not inflated)
 | P2 | remaining |
 
 **Release gate:** No candidate is production-ready while P0>0 or P1>0.
+
+---
+
+## Directive 10 status appendix (authoritative for tip classification)
+
+| ID | Status @ Directive 10 |
+|----|------------------------|
+| ATLAS-RT-20260820-01 | OPEN @ Hub `940a484` |
+| ATLAS-RT-20260820-02 | OPEN @ Hub `940a484` |
+| ATLAS-RT-20260820-03 | OPEN @ Hub/`2a5a605` |
+| GTM-RT-20260820-01 | FIXED @ `5bd8204` |
+| GTM-RT-20260820-02 | FIXED @ `5bd8204` |
+| GTM-RT-20260820-03 | PARTIALLY FIXED @ `5bd8204` |
+| GTM-RT-20260820-04 | REQUIRES INTEGRATION TEST @ `5bd8204` |
+| GCC-RT-20260820-01 | FIXED @ `b02c132` |
+| GCC-RT-20260820-02 | FIXED @ `b02c132` |
+| GCC-RT-20260820-03 | FIXED @ `b02c132` |
+| GCC-RT-20260820-05 | PARTIALLY FIXED @ `b02c132` |
+| GCC-RT-20260820-06 | OPEN @ `b02c132` |
+| GCC-RT-20260820-07 | OPEN @ `b02c132` |
+| COPILOT-RT-20260820-01 | FIXED @ `aacc09c` |
+| COPILOT-RT-20260820-02 | OPEN @ `aacc09c` |
+| COPILOT-RT-20260820-03 | CLOSED (prior) |
+| COPILOT-RT-20260820-11 | FIXED @ `aacc09c` |
+| XSYS-RT-20260820-01 | OPEN (Hub runtime; Integration docs-only) |
+| XSYS-RT-20260820-02 | OPEN @ Hub `940a484` |

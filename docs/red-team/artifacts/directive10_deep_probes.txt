@@ -1,0 +1,925 @@
+===== GCC DETAILED @ b02c132 =====
+--- signup trigger / org-apex ---
+/tmp/rt-d10/gcc/supabase/fix-signup.sql:8:-- That file includes gcc_handle_new_user(), the auth.users trigger, default org seeds,
+/tmp/rt-d10/gcc/supabase/verify-setup.sql:49:  SELECT 5, 'gcc_handle_new_user exists',
+/tmp/rt-d10/gcc/supabase/verify-setup.sql:54:  WHERE n.nspname = 'public' AND p.proname = 'gcc_handle_new_user'
+/tmp/rt-d10/gcc/supabase/verify-setup.sql:62:  WHERE id IN ('org-apex', 'org-summit')
+/tmp/rt-d10/gcc/supabase/schema.sql:4:-- Organizations (tenants) — id matches app org ids e.g. org-apex
+/tmp/rt-d10/gcc/supabase/schema.sql:173:-- Signup trigger — invite-only org mapping; never default to org-apex; never trust metadata role/org
+/tmp/rt-d10/gcc/supabase/schema.sql:174:CREATE OR REPLACE FUNCTION handle_new_user()
+/tmp/rt-d10/gcc/supabase/schema.sql:192:  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+/tmp/rt-d10/gcc/supabase/seed.sql:5:  ('org-apex', 'Apex Construction Group', 'apex-construction', 'Commercial Construction', 'growth'),
+/tmp/rt-d10/gcc/supabase/seed.sql:14:  'org-apex', 487250, 412800, 892400, 6840000,
+/tmp/rt-d10/gcc/supabase/seed.sql:24:  ('org-apex', 'Jan', 520000, 412000, 108000, 380000, 1),
+/tmp/rt-d10/gcc/supabase/seed.sql:25:  ('org-apex', 'Feb', 480000, 398000, 82000, 395000, 2),
+/tmp/rt-d10/gcc/supabase/seed.sql:26:  ('org-apex', 'Mar', 610000, 445000, 165000, 420000, 3),
+/tmp/rt-d10/gcc/supabase/seed.sql:27:  ('org-apex', 'Apr', 580000, 432000, 148000, 445000, 4),
+/tmp/rt-d10/gcc/supabase/seed.sql:28:  ('org-apex', 'May', 720000, 478000, 242000, 462000, 5),
+/tmp/rt-d10/gcc/supabase/seed.sql:29:  ('org-apex', 'Jun', 680000, 465000, 215000, 478000, 6),
+/tmp/rt-d10/gcc/supabase/seed.sql:30:  ('org-apex', 'Jul', 750000, 492000, 258000, 485000, 7),
+/tmp/rt-d10/gcc/supabase/seed.sql:31:  ('org-apex', 'Aug', 710000, 488000, 222000, 487250, 8),
+/tmp/rt-d10/gcc/supabase/seed.sql:32:  ('org-apex', 'Sep', 892400, 512000, 380400, 487250, 9)
+/tmp/rt-d10/gcc/supabase/seed.sql:36:  ('org-apex', 'Revenue', 850000, 892400, 42400, 5.0),
+/tmp/rt-d10/gcc/supabase/seed.sql:37:  ('org-apex', 'Labor', 320000, 298400, 21600, 6.8),
+/tmp/rt-d10/gcc/supabase/seed.sql:38:  ('org-apex', 'Materials', 245000, 268200, -23200, -9.5),
+/tmp/rt-d10/gcc/supabase/seed.sql:39:  ('org-apex', 'Subcontractors', 180000, 172800, 7200, 4.0),
+/tmp/rt-d10/gcc/supabase/seed.sql:40:  ('org-apex', 'Operating Expenses', 95000, 98400, -3400, -3.6),
+/tmp/rt-d10/gcc/supabase/seed.sql:41:  ('org-apex', 'Payroll', 186000, 186400, -400, -0.2)
+/tmp/rt-d10/gcc/supabase/seed.sql:45:  ('org-apex', 'revenue_growth', 'Revenue Growth', 12.4, 'percent', 2.1, 'vs last month', 10),
+/tmp/rt-d10/gcc/supabase/seed.sql:46:  ('org-apex', 'gross_margin', 'Gross Margin', 35.9, 'percent', -1.2, 'vs last month', 32),
+/tmp/rt-d10/gcc/supabase/seed.sql:47:  ('org-apex', 'net_margin', 'Net Margin', 13.0, 'percent', 0.8, 'vs last month', 12),
+/tmp/rt-d10/gcc/supabase/seed.sql:48:  ('org-apex', 'cash_conversion', 'Cash Conversion Cycle', 42, 'days', -3, 'vs last quarter', 45),
+/tmp/rt-d10/gcc/supabase/seed.sql:49:  ('org-apex', 'ar_days', 'AR Days', 48, 'days', 5, 'vs last month', 40),
+/tmp/rt-d10/gcc/supabase/seed.sql:50:  ('org-apex', 'ap_days', 'AP Days', 32, 'days', -2, 'vs last month', 35),
+/tmp/rt-d10/gcc/supabase/seed.sql:51:  ('org-apex', 'close_rate', 'Sales Close Rate', 34, 'percent', 4, 'vs last quarter', 30),
+/tmp/rt-d10/gcc/supabase/seed.sql:52:  ('org-apex', 'avg_deal', 'Average Deal Size', 1420000, 'currency', 8.5, 'vs last quarter', NULL),
+/tmp/rt-d10/gcc/supabase/seed.sql:53:  ('org-apex', 'job_profit', 'Job Profitability', 26.8, 'percent', -2.4, 'vs estimate', 28),
+/tmp/rt-d10/gcc/supabase/seed.sql:54:  ('org-apex', 'opex_ratio', 'Operating Expense Ratio', 22.9, 'percent', -0.5, 'vs last month', 24),
+/tmp/rt-d10/gcc/supabase/seed.sql:55:  ('org-apex', 'dscr', 'Debt Service Coverage', 1.8, 'number', -0.2, 'vs last quarter', 1.5),
+/tmp/rt-d10/gcc/supabase/seed.sql:56:  ('org-apex', 'runway', 'Runway', 3.4, 'number', -0.3, 'months', 6),
+/tmp/rt-d10/gcc/supabase/seed.sql:57:  ('org-apex', 'ebitda', 'EBITDA', 1125600, 'currency', 15.2, 'vs last month', NULL)
+/tmp/rt-d10/gcc/supabase/seed.sql:61:  ('org-apex', 'cash-week8', 'Cash Below Threshold in Week 8', 'Projected cash balance drops to $160,450 during week of Jul 14 due to equipment purchase and payroll cycle.', 'critical', 'Accelerate AR collections on INV-2025-0847 ($285K) and delay equipment deposit by 2 weeks.', 'Cash Balance', 'Jul 14–20, 2025', 'Sarah Chen', false),
+/tmp/rt-d10/gcc/supabase/seed.sql:62:  ('org-apex', 'ar-aging', 'AR Aging Risk — $519K Overdue', 'Three invoices totaling $519K are past due, with Golden Years Corp invoice 39 days outstanding.', 'high', 'Escalate collection calls for INV-2025-0822. Consider lien rights on Senior Living project.', 'Accounts Receivable', NULL, 'Mike Torres', false),
+--- profile policies full ---
+17:CREATE TABLE IF NOT EXISTS gcc_profiles (
+19:  organization_id TEXT REFERENCES gcc_organizations(id),
+21:  role TEXT DEFAULT 'staff',
+28:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+44:  UNIQUE(organization_id)
+49:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+56:  UNIQUE(organization_id, month)
+61:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+67:  UNIQUE(organization_id, category)
+72:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+84:  UNIQUE(organization_id, kpi_key)
+89:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+101:  UNIQUE(organization_id, alert_key)
+106:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+116:  UNIQUE(organization_id, provider)
+125:ALTER TABLE gcc_organizations ADD COLUMN IF NOT EXISTS onboarding_complete BOOLEAN DEFAULT FALSE;
+126:ALTER TABLE gcc_organizations ADD COLUMN IF NOT EXISTS onboarding_step TEXT DEFAULT 'welcome';
+127:ALTER TABLE gcc_organizations ADD COLUMN IF NOT EXISTS company_size TEXT;
+128:ALTER TABLE gcc_organizations ADD COLUMN IF NOT EXISTS business_priorities JSONB DEFAULT '[]'::jsonb;
+129:ALTER TABLE gcc_organizations ADD COLUMN IF NOT EXISTS collected_software JSONB DEFAULT '{}'::jsonb;
+133:  organization_id TEXT NOT NULL REFERENCES gcc_organizations(id) ON DELETE CASCADE,
+134:  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+141:  ON gcc_onboarding_messages (organization_id, created_at);
+144:ALTER TABLE gcc_profiles ENABLE ROW LEVEL SECURITY;
+155:  USING (id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+157:DROP POLICY IF EXISTS "gcc profile read" ON gcc_profiles;
+158:CREATE POLICY "gcc profile read" ON gcc_profiles FOR SELECT USING (id = auth.uid());
+160:DROP POLICY IF EXISTS "gcc profile update" ON gcc_profiles;
+161:CREATE POLICY "gcc profile update" ON gcc_profiles
+162:  FOR UPDATE
+164:  WITH CHECK (
+166:    AND role = (SELECT p.role FROM gcc_profiles p WHERE p.id = auth.uid())
+167:    AND organization_id IS NOT DISTINCT FROM (
+168:      SELECT p.organization_id FROM gcc_profiles p WHERE p.id = auth.uid()
+172:DROP POLICY IF EXISTS "gcc profile insert" ON gcc_profiles;
+173:-- Client inserts may only create an unprivileged, unmapped profile.
+174:-- Org/role assignment is invite/admin/service-role only (SECURITY DEFINER paths).
+175:CREATE POLICY "gcc profile insert" ON gcc_profiles
+177:  WITH CHECK (
+179:    AND role = 'staff'
+180:    AND organization_id IS NULL
+185:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+189:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+193:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+197:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+201:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+205:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+209:  USING (organization_id IN (SELECT organization_id FROM gcc_profiles WHERE id = auth.uid()));
+211:-- GCC-RT-01: never COALESCE to org-apex; never trust signup metadata for role/org.
+219:  INSERT INTO public.gcc_profiles (id, full_name, role, organization_id)
+15:CREATE TABLE IF NOT EXISTS profiles (
+19:  role TEXT DEFAULT 'staff',
+115:ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+125:DROP POLICY IF EXISTS "Users read own profile" ON profiles;
+126:DROP POLICY IF EXISTS "Users update own profile" ON profiles;
+131:    id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+134:CREATE POLICY "Users read own profile" ON profiles
+137:CREATE POLICY "Users update own profile" ON profiles
+138:  FOR UPDATE USING (id = auth.uid());
+140:CREATE POLICY "Users insert own profile" ON profiles
+141:  FOR INSERT WITH CHECK (id = auth.uid());
+145:    organization_id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+150:    organization_id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+155:    organization_id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+160:    organization_id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+165:    organization_id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+170:    organization_id IN (SELECT organization_id FROM profiles WHERE id = auth.uid())
+173:-- Signup trigger — invite-only org mapping; never default to org-apex; never trust metadata role/org
+177:  INSERT INTO profiles (id, full_name, role, organization_id)
+fix-signup.sql
+kpi-editing.sql
+migration-rt-20260820-profile-isolation.sql
+migration-v2.sql
+onboarding.sql
+schema.sql
+seed.sql
+setup.sql
+verify-setup.sql
+/tmp/rt-d10/gcc/supabase/fix-signup.sql
+/tmp/rt-d10/gcc/supabase/kpi-editing.sql
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql
+/tmp/rt-d10/gcc/supabase/migration-v2.sql
+/tmp/rt-d10/gcc/supabase/onboarding.sql
+/tmp/rt-d10/gcc/supabase/schema.sql
+/tmp/rt-d10/gcc/supabase/seed.sql
+/tmp/rt-d10/gcc/supabase/setup.sql
+/tmp/rt-d10/gcc/supabase/verify-setup.sql
+--- QBO connect/callback ---
+import { NextResponse } from "next/server";
+import { isDemoModeAllowed, isQuickBooksConfigured } from "@/lib/config";
+import { authErrorResponse } from "@/lib/auth/api";
+import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+import { sanitizeConnectionForClient } from "@/lib/integrations/types";
+import { connectQuickBooksDemo, getQuickBooksAuthUrl } from "@/lib/integrations/quickbooks";
+import { createSignedQuickBooksState } from "@/lib/integrations/oauth-state";
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { organizationId, demo } = body as { organizationId?: string; demo?: boolean };
+
+    if (!organizationId) {
+      return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+    }
+
+    const access = await requireApiAccess({ organizationId });
+    requirePermission(access, "integrations:manage");
+
+    const useDemo = isDemoModeAllowed() && (Boolean(demo) || !isQuickBooksConfigured());
+    if (useDemo) {
+      const connection = await connectQuickBooksDemo(organizationId);
+      return NextResponse.json({
+        mode: "demo",
+        connection: sanitizeConnectionForClient(connection),
+        message: "QuickBooks connected",
+      });
+    }
+
+    if (!isQuickBooksConfigured()) {
+      return NextResponse.json(
+        { error: "Configure QuickBooks credentials for production" },
+        { status: 400 }
+      );
+    }
+
+    const state = createSignedQuickBooksState({
+      organizationId: access.organizationId,
+      userId: access.userId,
+    });
+    return NextResponse.json({ mode: "oauth", authUrl: getQuickBooksAuthUrl(state) });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+import { NextResponse } from "next/server";
+import { exchangeQuickBooksCode } from "@/lib/integrations/quickbooks";
+import { upsertConnection } from "@/lib/integrations/store";
+import { verifySignedQuickBooksState } from "@/lib/integrations/oauth-state";
+import { requireApiAccess } from "@/lib/auth/access";
+import { authErrorResponse } from "@/lib/auth/api";
+
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url);
+  const code = searchParams.get("code");
+  const realmId = searchParams.get("realmId");
+  const state = searchParams.get("state");
+  const error = searchParams.get("error");
+
+  if (error) {
+    return NextResponse.redirect(`${origin}/integrations?error=${encodeURIComponent(error)}`);
+  }
+
+  if (!code || !realmId || !state) {
+    return NextResponse.redirect(`${origin}/integrations?error=missing_oauth_params`);
+  }
+
+  try {
+    // GCC-RT-03: require authenticated session and verify signed state.
+    const access = await requireApiAccess();
+    const parsed = verifySignedQuickBooksState(state, { userId: access.userId });
+
+    if (parsed.organizationId !== access.organizationId && access.role !== "platform_admin") {
+      return NextResponse.redirect(`${origin}/integrations?error=oauth_org_mismatch`);
+    }
+
+    await requireApiAccess({ organizationId: parsed.organizationId });
+
+    const tokens = await exchangeQuickBooksCode(code, realmId);
+
+    await upsertConnection({
+      organizationId: parsed.organizationId,
+      provider: "quickbooks",
+      status: "connected",
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      realmId: tokens.realmId,
+      connectedAt: new Date().toISOString(),
+      lastSync: new Date().toISOString(),
+      metadata: { expiresAt: tokens.expiresAt },
+    });
+
+    return NextResponse.redirect(`${origin}/integrations?connected=quickbooks`);
+  } catch (err) {
+    if (err && typeof err === "object" && "status" in err) {
+      return authErrorResponse(err);
+    }
+    const message = err instanceof Error ? err.message : "oauth_failed";
+    return NextResponse.redirect(`${origin}/integrations?error=${encodeURIComponent(message)}`);
+  }
+}
+--- oauth state helper ---
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:1:import { createHmac, timingSafeEqual } from "node:crypto";
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:18:  return createHmac("sha256", stateSecret()).update(payloadB64).digest("base64url");
+
+===== GTM CallRail office bind enforcement =====
+  // Prefer office-specific secrets before shared so a shared secret cannot
+  // authorize a cross-office payload when office secrets are configured.
+  for (const candidate of candidates) {
+    const expected = Buffer.from(createHmac('sha256', candidate.secret).update(rawBody).digest('hex'));
+    if (expected.length !== provided.length) continue;
+    if (timingSafeEqual(expected, provided)) {
+      return { ok: true, boundOfficeKey: candidate.boundOfficeKey };
+    }
+  }
+  return { ok: false, boundOfficeKey: null };
+}
+
+export function assertCallRailSecretOfficeBinding(
+  boundOfficeKey: HartOfficeKey | 'shared',
+  tenantOfficeKey: string,
+): void {
+  if (boundOfficeKey === 'shared') return;
+  if (boundOfficeKey !== tenantOfficeKey) {
+    throw new Error('callrail_secret_office_mismatch');
+  }
+}
+
+type HartTenant = {
+  organization_id: string;
+  location_id: string;
+  office_key: string;
+  campaign_name: string | null;
+};
+
+export async function resolveHartTenantByTrackerId(trackerId: string | undefined) {
+  if (!trackerId) return null;
+  const sql = createSqlClient();
+  try {
+    return await sql.begin(async (tx) => {
+      await tx`SELECT set_config('app.is_platform_admin', 'true', true)`;
+      const rows = await tx<HartTenant[]>`
+        SELECT organization_id, location_id, office_key, campaign_name
+        FROM lead_tracking_numbers
+        WHERE status = 'active'
+          AND metadata->>'callrailTrackerId' = ${trackerId}
+        LIMIT 1
+      `;
+      return rows[0] ?? null;
+    });
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
+export async function resolveHartTenantByTrackingNumber(trackingNumber: string | undefined) {
+  const normalized = normalizePhone(trackingNumber);
+  if (!normalized) return null;
+  const sql = createSqlClient();
+  try {
+    return await sql.begin(async (tx) => {
+      await tx`SELECT set_config('app.is_platform_admin', 'true', true)`;
+      const rows = await tx<HartTenant[]>`
+        SELECT organization_id, location_id, office_key, campaign_name
+        FROM lead_tracking_numbers
+        WHERE tracking_number = ${normalized} AND status = 'active'
+        LIMIT 1
+      `;
+      return rows[0] ?? null;
+    });
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
+export type InboundCallResult = {
+  accepted: boolean;
+===== GTM-RT-04 InquiryForm payload =====
+    const submittedAt = new Date().toISOString();
+    const idempotencyKey = atlasIdempotencyKey(leadId);
+    const attr = attribution();
+
+    // Contract-aligned observation payload (360-atlas-lead.v1 + atlas-lead-intake.v1 umbrella fields).
+    const payload = {
+      contractVersion: 'atlas-lead-intake.v1',
+      intakeChannel: '360-growth',
+      leadId,
+      correlationId: leadId,
+      submissionType: '360-Growth',
+      source: '360-growth',
+      submittedAt,
+      nextAction: 'review_in_atlas',
+      atlasHint: 'HVCG_Leads',
+      observationOnly: true,
+      paidAdsRequested: false,
+      contact: {
+        firstName,
+        lastName,
+        name,
+        email,
+        phone,
+        company,
+      },
+      consent: {
+        hvcgProspect: true,
+        disclaimerAccepted: true,
+      },
+      attribution: attr,
+      provenance: {
+        source: '360-growth',
+        submittedAt,
+        campaign: '360-public-inquiry',
+        sourceAttribution: '360growthsolution.com',
+        idempotencyKey,
+      },
+      governance: {
+        observationOnly: true,
+        productionClientDataAllowed: false,
+        createsClientStage: false,
+        createsEntitlement: false,
+        createsOpportunity: false,
+        isCrm: false,
+        liveDispatch: false,
+        paidAdsEnabled: false,
+      },
+      fullPayload: {
+        idempotencyKey,
+        sessionId: leadId,
+        contact: { name, email, phone, company },
+        company: { legalName: company || undefined },
+        growth: {
+          contractVersion: '360-atlas-lead.v1',
+          observationOnly: true,
+          paidAdsRequested: false,
+        },
+        productInterest: '360 Growth Solution',
+        companySite: String(fd.get('companySite') || '').trim(),
+        marketingChallenge: String(fd.get('challenge') || '').trim(),
+        message: String(fd.get('message') || '').trim(),
+      },
+      envelope: {
+        idempotencyKey,
+        sourceSystem: '360',
+        destinationSystem: 'atlas',
+        entity: 'HVCG_Leads',
+        operation: 'stage',
+        version: 'atlas-lead-intake.v1',
+        replaySemantics: 'return-existing',
+        trace: { correlationId: leadId },
+      },
+      fax: '',
+    };
+
+    setStatus('submitting');
+    setMessage('Submitting…');
+    try {
+      const res = await fetch(INTAKE_URL, {
+        method: 'POST',
+        headers: {
+===== GTM dual pause check =====
+54:        return dryRunResult(message, 'EMERGENCY_PAUSE_GLOBAL');
+22: * 1. If any active GLOBAL pause exists → paused for everyone.
+23: * 2. Else if active ORGANIZATION pause for the target org → paused.
+24: * 3. Else if active BRAND pause for the target brand → paused.
+25: * 4. Else if active LOCATION pause for the target location → paused.
+26: * 5. Else if active CHANNEL pause matching org (optional) + channel → paused.
+27: * 6. Otherwise not paused.
+30: * Queued work must remain blocked (status blocked_by_pause), never deleted.
+73:    throw new Error(`Invalid pause scope: ${scope}`);
+60:    callrailWebhookEnabled: envBool('CALLRAIL_WEBHOOK_ENABLED', false),
+
+===== COPILOT assessments start + PUBLIC =====
+/**
+ * Edge-safe session verify for middleware.
+ * Uses Web Crypto HMAC — avoids jose CompressionStream Edge warnings.
+ */
+import { NextRequest, NextResponse } from "next/server";
+
+export const SESSION_COOKIE = "hvcg_copilot_session";
+
+const PUBLIC_API_PREFIXES = [
+  "/api/health",
+  "/api/auth/demo",
+  "/api/auth/session",
+  "/api/auth/logout",
+  "/api/auth/start",
+];
+
+function b64urlToBytes(input: string): Uint8Array {
+  const pad = "=".repeat((4 - (input.length % 4)) % 4);
+  const b64 = (input + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const str = atob(b64);
+  const action = body.action as string;
+
+  if (action === "start") {
+    return NextResponse.json(
+      {
+        error: "Use POST /api/auth/start for unauthenticated intake",
+        code: "START_MOVED",
+      },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const session = await readSessionFromRequest(req);
+    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+
+    if (action === "resume") {
+      const store = updateStore((s) => {
+        s.session = {
+          userId: session.userId,
+          organizationId: session.organizationId,
+          mode: session.mode,
+          sampleData: true,
+        };
+        resumeActive(s);
+      });
+      return NextResponse.json({
+        ...payload(store, session.organizationId, session.assessmentId),
+        resumed: true,
+      });
+    }
+
+    if (action === "update_company") {
+      const store = updateStore((s) => {
+        s.session = {
+          userId: session.userId,
+          organizationId: session.organizationId,
+          mode: session.mode,
+          sampleData: true,
+        };
+        requireTenantContext(s, session);
+        applyCompanyUpdate(s, body.company || body);
+      });
+      return NextResponse.json(payload(store, session.organizationId, session.assessmentId));
+    }
+
+    if (action === "update_goals") {
+      const goals = Array.isArray(body.goals) ? body.goals.map(String) : [];
+      const store = updateStore((s) => {
+        s.session = {
+          userId: session.userId,
+          organizationId: session.organizationId,
+          mode: session.mode,
+          sampleData: true,
+        };
+        requireTenantContext(s, session);
+        applyGoalsUpdate(s, goals);
+      });
+      return NextResponse.json(payload(store, session.organizationId, session.assessmentId));
+    }
+
+    if (action === "progress") {
+      const section = body.section as keyof DiagnosticProgress;
+      const store = updateStore((s) => {
+125 /tmp/rt-d10/copilot/src/lib/store/index.ts
+36:  session?: { userId: string; organizationId: string; mode: "demo" | "uat"; sampleData: true };
+76:          organizationId: raw.session.organizationId,
+120:export function assertTenant(store: AppStore, organizationId: string, resourceOrgId: string) {
+121:  if (organizationId !== resourceOrgId) {
+
+===== XSYS idempotency prefix binding Hub =====
+  return { ...nested, ...top };
+}
+
+export function resolveWebsiteLeadIdempotencyKey(body: Record<string, unknown>): string {
+  const full = asRecord(body.fullPayload);
+  const fromFull = asString(full.idempotencyKey);
+  if (fromFull) return clip(fromFull, TEXT_MAX);
+  const submissionType = asString(body.submissionType);
+  const sessionId = asString(full.sessionId) || asString(body.correlationId);
+  if (submissionType === 'Website-EVA' && sessionId) return clip(`eva|${sessionId}`, TEXT_MAX);
+  const assessmentId = asString(full.assessmentId) || asString(body.assessmentId);
+  if (submissionType === 'Agent-Copilot' && assessmentId) return clip(`copilot|${assessmentId}`, TEXT_MAX);
+  const leadId = asString(body.leadId);
+  if (leadId) return clip(`website|${leadId}`, TEXT_MAX);
+  return '';
+}
+
+function sourceOf(body: Record<string, unknown>): string {
+  const submissionType = asString(body.submissionType);
+  if (submissionType.startsWith('Website-')) return clip(submissionType, TEXT_MAX);
+  const source = asString(body.source);
+  if (source) return clip(source, TEXT_MAX);
+  return 'HVCG Website';
+}
+
+function serviceInterestOf(body: Record<string, unknown>): string {
+  const submissionType = asString(body.submissionType);
+  const sku = asString(asRecord(asRecord(body.fullPayload).eva).recommended_sku).toUpperCase();
+  if (submissionType === 'Website-Funding' || sku.includes('CAP')) return 'Capital Advisory';
+  if (sku.includes('FRA')) return 'Fractional CFO';
+  if (submissionType === 'Website-EVA' || submissionType === 'Website-Book' || submissionType === 'Agent-Copilot') {
+    return 'Assessment';
+  }
+  return 'Other';
+}
+
+function titleOf(body: Record<string, unknown>, contact: Record<string, unknown>): string {
+  const full = asRecord(body.fullPayload);
+  const company = asRecord(full.company);
+  return (
+    asString(contact.company) ||
+57:  const submissionType = asString(body.submissionType);
+59:  if (submissionType === 'Website-EVA' && sessionId) return clip(`eva|${sessionId}`, TEXT_MAX);
+61:  if (submissionType === 'Agent-Copilot' && assessmentId) return clip(`copilot|${assessmentId}`, TEXT_MAX);
+68:  const submissionType = asString(body.submissionType);
+69:  if (submissionType.startsWith('Website-')) return clip(submissionType, TEXT_MAX);
+76:  const submissionType = asString(body.submissionType);
+78:  if (submissionType === 'Website-Funding' || sku.includes('CAP')) return 'Capital Advisory';
+80:  if (submissionType === 'Website-EVA' || submissionType === 'Website-Book' || submissionType === 'Agent-Copilot') {
+103:    submissionType: asString(body.submissionType),
+140:    LeadSourceDetail: clip(asString(body.submissionType) || 'website-intake', TEXT_MAX),
+177:  if (!asString(contact.email) && asString(opts.body.submissionType) !== 'Website-Privacy-Request') {
+57:  const submissionType = asString(body.submissionType);
+59:  if (submissionType === 'Website-EVA' && sessionId) return clip(`eva|${sessionId}`, TEXT_MAX);
+61:  if (submissionType === 'Agent-Copilot' && assessmentId) return clip(`copilot|${assessmentId}`, TEXT_MAX);
+68:  const submissionType = asString(body.submissionType);
+69:  if (submissionType.startsWith('Website-')) return clip(submissionType, TEXT_MAX);
+76:  const submissionType = asString(body.submissionType);
+78:  if (submissionType === 'Website-Funding' || sku.includes('CAP')) return 'Capital Advisory';
+80:  if (submissionType === 'Website-EVA' || submissionType === 'Website-Book' || submissionType === 'Agent-Copilot') {
+103:    submissionType: asString(body.submissionType),
+140:    LeadSourceDetail: clip(asString(body.submissionType) || 'website-intake', TEXT_MAX),
+177:  if (!asString(contact.email) && asString(opts.body.submissionType) !== 'Website-Privacy-Request') {
+===== GCC setup trigger body =====
+-- GCC-RT-01: never COALESCE to org-apex; never trust signup metadata for role/org.
+CREATE OR REPLACE FUNCTION gcc_handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.gcc_profiles (id, full_name, role, organization_id)
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data->>'full_name',
+    'staff',
+    NULL
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+-- GCC-RT-02: belt-and-suspenders — reject role/org mutation even if RLS bypassed by bug.
+CREATE OR REPLACE FUNCTION gcc_prevent_profile_privilege_escalation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.role IS DISTINCT FROM OLD.role OR NEW.organization_id IS DISTINCT FROM OLD.organization_id THEN
+    IF current_setting('request.jwt.claim.role', true) IS DISTINCT FROM 'service_role'
+       AND current_user NOT IN ('service_role', 'supabase_admin', 'postgres') THEN
+      RAISE EXCEPTION 'gcc_profiles.role and organization_id are immutable from client sessions';
+===== GCC schema handle_new_user =====
+-- Signup trigger — invite-only org mapping; never default to org-apex; never trust metadata role/org
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO profiles (id, full_name, role, organization_id)
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data->>'full_name',
+    'staff',
+    NULL
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+===== GCC migration-rt =====
+-- GCC-RT-01 / GCC-RT-02 remediation migration (apply on existing projects)
+-- Fail-closed signup + immutable role/organization_id from client sessions.
+
+CREATE OR REPLACE FUNCTION gcc_handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.gcc_profiles (id, full_name, role, organization_id)
+  VALUES (
+    NEW.id,
+    NEW.raw_user_meta_data->>'full_name',
+    'staff',
+    NULL
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+DROP POLICY IF EXISTS "gcc profile update" ON gcc_profiles;
+CREATE POLICY "gcc profile update" ON gcc_profiles
+  FOR UPDATE
+  USING (id = auth.uid())
+  WITH CHECK (
+    id = auth.uid()
+    AND role = (SELECT p.role FROM gcc_profiles p WHERE p.id = auth.uid())
+    AND organization_id IS NOT DISTINCT FROM (
+      SELECT p.organization_id FROM gcc_profiles p WHERE p.id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "gcc profile insert" ON gcc_profiles;
+CREATE POLICY "gcc profile insert" ON gcc_profiles
+  FOR INSERT
+  WITH CHECK (
+    id = auth.uid()
+    AND role = 'staff'
+    AND organization_id IS NULL
+  );
+
+CREATE OR REPLACE FUNCTION gcc_prevent_profile_privilege_escalation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.role IS DISTINCT FROM OLD.role OR NEW.organization_id IS DISTINCT FROM OLD.organization_id THEN
+    IF current_setting('request.jwt.claim.role', true) IS DISTINCT FROM 'service_role'
+       AND current_user NOT IN ('service_role', 'supabase_admin', 'postgres') THEN
+      RAISE EXCEPTION 'gcc_profiles.role and organization_id are immutable from client sessions';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS gcc_profile_privilege_guard ON gcc_profiles;
+CREATE TRIGGER gcc_profile_privilege_guard
+  BEFORE UPDATE ON gcc_profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION gcc_prevent_profile_privilege_escalation();
+===== QBO oauth helpers =====
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:5:function stateSecret(): string {
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:12:    throw new Error("oauth_state_secret_missing");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:17:function sign(payloadB64: string): string {
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:18:  return createHmac("sha256", stateSecret()).update(payloadB64).digest("base64url");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:27:/** GCC-RT-03: signed, expiring OAuth state bound to authenticated user + org. */
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:39:  return `${payloadB64}.${sign(payloadB64)}`;
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:42:export function verifySignedQuickBooksState(
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:43:  state: string,
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:46:  const [payloadB64, signature] = state.split(".");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:47:  if (!payloadB64 || !signature) {
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:48:    throw new Error("invalid_oauth_state");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:50:  const expectedSig = sign(payloadB64);
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:51:  const a = Buffer.from(signature);
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:54:    throw new Error("oauth_state_tampered");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:58:    throw new Error("invalid_oauth_state_payload");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:61:    throw new Error("oauth_state_expired");
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts:64:    throw new Error("oauth_state_user_mismatch");
+/tmp/rt-d10/gcc/src/lib/integrations/quickbooks.ts:12:export function getQuickBooksAuthUrl(state: string): string {
+/tmp/rt-d10/gcc/src/lib/integrations/quickbooks.ts:18:    state,
+/tmp/rt-d10/gcc/src/lib/integrations/oauth-state.ts
+
+    if (!isQuickBooksConfigured()) {
+      return NextResponse.json(
+        { error: "Configure QuickBooks credentials for production" },
+        { status: 400 }
+      );
+    }
+
+    const state = createSignedQuickBooksState({
+      organizationId: access.organizationId,
+      userId: access.userId,
+    });
+    return NextResponse.json({ mode: "oauth", authUrl: getQuickBooksAuthUrl(state) });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+  if (error) {
+    return NextResponse.redirect(`${origin}/integrations?error=${encodeURIComponent(error)}`);
+  }
+
+  if (!code || !realmId || !state) {
+    return NextResponse.redirect(`${origin}/integrations?error=missing_oauth_params`);
+  }
+
+  try {
+    // GCC-RT-03: require authenticated session and verify signed state.
+    const access = await requireApiAccess();
+    const parsed = verifySignedQuickBooksState(state, { userId: access.userId });
+
+    if (parsed.organizationId !== access.organizationId && access.role !== "platform_admin") {
+      return NextResponse.redirect(`${origin}/integrations?error=oauth_org_mismatch`);
+    }
+
+    await requireApiAccess({ organizationId: parsed.organizationId });
+
+    const tokens = await exchangeQuickBooksCode(code, realmId);
+
+    await upsertConnection({
+      organizationId: parsed.organizationId,
+      provider: "quickbooks",
+      status: "connected",
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      realmId: tokens.realmId,
+      connectedAt: new Date().toISOString(),
+      lastSync: new Date().toISOString(),
+      metadata: { expiresAt: tokens.expiresAt },
+    });
+
+    return NextResponse.redirect(`${origin}/integrations?connected=quickbooks`);
+  } catch (err) {
+    if (err && typeof err === "object" && "status" in err) {
+      return authErrorResponse(err);
+    }
+    const message = err instanceof Error ? err.message : "oauth_failed";
+    return NextResponse.redirect(`${origin}/integrations?error=${encodeURIComponent(message)}`);
+  }
+===== GCC financials permission =====
+/tmp/rt-d10/gcc/src/app/api/settings/route.ts:2:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/settings/route.ts:23:    requirePermission(access, "settings:manage");
+/tmp/rt-d10/gcc/src/app/api/team/invite/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/team/invite/route.ts:13:    requirePermission(access, "team:manage");
+/tmp/rt-d10/gcc/src/app/api/cvos/gtm-feedback/route.ts:3:import { requireApiAccess, requirePermission, requirePlatformAdminAccess } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/gtm-feedback/route.ts:25:      requirePermission(access, "reports:export");
+/tmp/rt-d10/gcc/src/app/api/cvos/cockpit/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/cockpit/route.ts:14:    requirePermission(access, "dashboard:read");
+/tmp/rt-d10/gcc/src/app/api/cvos/executive-brief/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/executive-brief/route.ts:14:    requirePermission(access, "reports:read");
+/tmp/rt-d10/gcc/src/app/api/cvos/executive-brief/route.ts:46:    requirePermission(access, "reports:export");
+/tmp/rt-d10/gcc/src/app/api/cvos/value-creation/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/value-creation/route.ts:14:    requirePermission(access, "financials:read");
+/tmp/rt-d10/gcc/src/app/api/cvos/signals/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/signals/route.ts:19:    requirePermission(access, "dashboard:read");
+/tmp/rt-d10/gcc/src/app/api/integrations/sync-all/route.ts:5:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/sync-all/route.ts:18:    requirePermission(access, "integrations:manage");
+/tmp/rt-d10/gcc/src/app/api/integrations/quickbooks/sync/route.ts:4:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/quickbooks/sync/route.ts:17:    requirePermission(access, "integrations:manage");
+/tmp/rt-d10/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:16:    requirePermission(access, "integrations:manage");
+/tmp/rt-d10/gcc/src/app/api/integrations/plaid/sync/route.ts:4:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/plaid/sync/route.ts:17:    requirePermission(access, "integrations:manage");
+/tmp/rt-d10/gcc/src/app/api/integrations/quickbooks/connect/route.ts:4:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/quickbooks/connect/route.ts:19:    requirePermission(access, "integrations:manage");
+/tmp/rt-d10/gcc/src/app/api/integrations/plaid/disconnect/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/plaid/disconnect/route.ts:16:    requirePermission(access, "integrations:manage");
+/tmp/rt-d10/gcc/src/app/api/integrations/plaid/connect/route.ts:4:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/integrations/plaid/connect/route.ts:18:    requirePermission(access, "integrations:manage");
+===== GCC handoff =====
+atlas-activation
+/tmp/rt-d10/gcc/src/app/api/handoff/atlas-activation/route.ts:9:} from "@/lib/handoff/atlas-activation";
+/tmp/rt-d10/gcc/src/app/api/handoff/atlas-activation/route.ts:16:      contractVersion: "atlas-gcc-client-activation.v1",
+===== Copilot auth/start =====
+demo
+logout
+session
+start
+import { NextRequest, NextResponse } from "next/server";
+import { applySessionCookie, signSession } from "@/lib/auth/session";
+import { buildUatStore } from "@/lib/demo/seed";
+import { addAudit, writeStore } from "@/lib/store";
+
+/**
+ * Public UAT/demo intake start — the only unauthenticated mutating assessment entrypoint.
+ * Sets a fail-closed session cookie; subsequent /api/assessments calls require auth (CC-008).
+ */
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}));
+  const campaignId =
+    typeof body.campaignId === "string"
+      ? body.campaignId
+      : typeof body.campaign === "string"
+        ? body.campaign
+        : "business-mri";
+  const sourceAttribution =
+    typeof body.sourceAttribution === "string"
+      ? body.sourceAttribution
+      : typeof body.utm_source === "string"
+        ? `gtm/${body.utm_source}`
+        : "agent-copilot/business-mri";
+
+  const store = buildUatStore({
+    contactName: String(body.contactName || body.name || "UAT Owner"),
+    contactEmail: String(body.contactEmail || body.email || "uat@example.invalid"),
+    companyName: String(body.companyName || body.company || "Sample Company (UAT)"),
+    website: body.website ? String(body.website) : undefined,
+    jobTitle: body.jobTitle ? String(body.jobTitle) : undefined,
+    employeeCountRange: body.employeeCountRange ? String(body.employeeCountRange) : undefined,
+    industry: body.industry ? String(body.industry) : undefined,
+    primaryObjective: body.primaryObjective ? String(body.primaryObjective) : undefined,
+  });
+
+  addAudit(store, {
+    organizationId: store.organizations[0].id,
+    actorId: store.users[0].id,
+    action: "gtm.attribution.capture",
+    target: store.assessments[0].id,
+    metadata: {
+      campaignId,
+      sourceAttribution,
+      utm: {
+        source: body.utm_source,
+        medium: body.utm_medium,
+        campaign: body.utm_campaign,
+        content: body.utm_content,
+        term: body.utm_term,
+      },
+    },
+  });
+  writeStore(store);
+
+  const { token, session } = await signSession({
+    userId: store.users[0].id,
+    organizationId: store.organizations[0].id,
+    assessmentId: store.assessments[0].id,
+    mode: "uat",
+    role: store.users[0].role,
+  });
+
+  const res = NextResponse.json({
+    started: true,
+    assessment: store.assessments[0],
+    organization: store.organizations[0],
+    mode: session.mode,
+    sampleData: true,
+    productionClientDataAllowed: false,
+    attribution: { campaignId, sourceAttribution },
+  });
+  applySessionCookie(res, token);
+  return res;
+}
+===== CallRail assertOfficeBinding =====
+    if (timingSafeEqual(expected, provided)) {
+      return { ok: true, boundOfficeKey: candidate.boundOfficeKey };
+    }
+  }
+  return { ok: false, boundOfficeKey: null };
+}
+
+export function assertCallRailSecretOfficeBinding(
+  boundOfficeKey: HartOfficeKey | 'shared',
+  tenantOfficeKey: string,
+): void {
+  if (boundOfficeKey === 'shared') return;
+  if (boundOfficeKey !== tenantOfficeKey) {
+    throw new Error('callrail_secret_office_mismatch');
+  }
+}
+
+type HartTenant = {
+  organization_id: string;
+  location_id: string;
+  office_key: string;
+  campaign_name: string | null;
+};
+
+export async function resolveHartTenantByTrackerId(trackerId: string | undefined) {
+  if (!trackerId) return null;
+  const sql = createSqlClient();
+  try {
+    return await sql.begin(async (tx) => {
+      await tx`SELECT set_config('app.is_platform_admin', 'true', true)`;
+      const rows = await tx<HartTenant[]>`
+        SELECT organization_id, location_id, office_key, campaign_name
+        FROM lead_tracking_numbers
+        WHERE status = 'active'
+          AND metadata->>'callrailTrackerId' = ${trackerId}
+        LIMIT 1
+      `;
+      return rows[0] ?? null;
+    });
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
+export async function resolveHartTenantByTrackingNumber(trackingNumber: string | undefined) {
+  const normalized = normalizePhone(trackingNumber);
+  if (!normalized) return null;
+  const sql = createSqlClient();
+  try {
+    return await sql.begin(async (tx) => {
+      await tx`SELECT set_config('app.is_platform_admin', 'true', true)`;
+===== GTM RT tests exist? =====
+/tmp/rt-d10/gtm/packages/lead-intelligence/src/callrail.ts:53: * Office-specific secrets must only authorize that office (GTM-RT-20260820-01).
+/tmp/rt-d10/gtm/packages/lead-intelligence/src/callrail.ts:108:    throw new Error('callrail_secret_office_mismatch');
+/tmp/rt-d10/gtm/packages/lead-intelligence/tests/callrail-office-bind.test.ts:41:        /callrail_secret_office_mismatch/,
+/tmp/rt-d10/gtm/packages/lead-intelligence/tests/callrail-office-binding.test.ts:35:describe('CallRail secret↔office binding (GTM-RT-20260820-01)', () => {
+/tmp/rt-d10/gtm/packages/lead-intelligence/tests/callrail-office-binding.test.ts:50:      /callrail_secret_office_mismatch/,
+/tmp/rt-d10/gtm/packages/publisher/src/index.ts:363:      reasons.push('approval_missing');
