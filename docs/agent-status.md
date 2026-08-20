@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `e6bd584` |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d20-revenue-adapters.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **20** |
 | BASED ON WORKER SHA | `22ab0ef89e6c68168e19af868f672db5040db801` |
 | BASED ON RUN ID | `run-214442cf-2399-468d-aaaa-f77d74cd2057` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `e6bd584fafba5d3174b89530934b6267f1054849` |
 | COMPLETED ACTIONS | First-pass Revenue Dev SharePoint adapters @ `e9b3be8` (Proposals/Engagements); reconfirmed REVOS-ELITE-RT-20260820-01 FIXED; no new P0/P1 |
 | REMAINING ACTIONS | Retest Hub/XSYS when OD-005 authorized or XSYS remediations land |
 | P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
