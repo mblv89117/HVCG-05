@@ -6,7 +6,7 @@
 | durable role | sole Revenue OS worker |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-revenue-engagement-os` |
-| CURRENT SHA | `pending-pin` |
+| CURRENT SHA | `d3d26cb` |
 | workOnCurrentBranch | true |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `7` |
 | based on SHA | `e9b3be8c58a3ea20f8d73806c9dbd6258cec8c56` |
