@@ -1,0 +1,12 @@
+inspected_at_utc=2026-08-20T04:01:23Z
+atlas_hub_frozen=940a484
+atlas_elite_frozen=75d0c59
+atlas_candidate=2a5a605
+atlas_default=b75b19b
+gtm_candidate=e585d0f
+gtm_main=163122e
+gcc_candidate=62f98cc
+gcc_main=fb986cb
+copilot_candidate=51f1cbf
+copilot_main=c356cac
+revenue_os_design=4c0ca6b

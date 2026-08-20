@@ -1,0 +1,362 @@
+# Findings Catalog — 2026-08-20
+
+Status legend: `open` | `closed` | `accepted-risk`  
+Severity: P0 / P1 / P2 (not inflated)
+
+---
+
+## ATLAS
+
+### ATLAS-RT-20260820-01
+- **system:** Atlas
+- **branch/SHA:** `cursor/atlas-hv-completion-52d1` / `2a5a605` (also Hub `940a484`)
+- **severity:** P0
+- **evidence:** `apps/atlas-integration-api/src/pm/sharepoint/repository.ts` `canSeeOpportunity` returns true for all `isInternalStaff` principals, ignoring Entra client entitlements. Projects/Capital/search enforce entitlements; opportunity list/get do not.
+- **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
+- **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
+- **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
+- **regression test:** Staff entitled to A cannot list/get B opportunities.
+- **status:** open
+
+### ATLAS-RT-20260820-02
+- **system:** Atlas
+- **branch/SHA:** `2a5a605`
+- **severity:** P0
+- **evidence:** `patchOpportunity` uses `authorizeOpportunity` (staff sees all) then only checks `isInternalStaff`, not ClientCode ownership. Won/Lost mutations allowed on foreign opps.
+- **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + `If-Match` + `{ "stage": "Won" }` succeeds.
+- **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
+- **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
+- **regression test:** Staff A cannot patch client B opportunity → 404/403.
+- **status:** open
+
+### ATLAS-RT-20260820-03
+- **system:** Atlas
+- **branch/SHA:** `2a5a605`
+- **severity:** P0 (if Plaid API network-reachable)
+- **evidence:** `apps/atlas-plaid-api/src/index.ts` `requirePrincipal` parses `x-atlas-*` headers only; comments claim Entra JWT in production but no `jwtVerify`.
+- **reproduction:** With `PLAID_REQUIRE_AUTH=true`, forge headers without Bearer → today accepted.
+- **impact:** Bank connection/balance/identity isolation collapse.
+- **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
+- **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
+- **status:** open
+
+### ATLAS-RT-20260820-04
+- **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
+- **evidence:** `freefit.owner_decision` skips client context in `atlas_security.py`; `record_owner_decision` does not require Owner/Manny.
+- **reproduction:** Team Member `POST /api/ba/freefit/owner-decision` records as owner.
+- **impact:** Commercial qualification forged by non-owners.
+- **recommended remediation:** Require owner_support_scope / HVCG Owner / Manny OID.
+- **regression test:** Non-owner → 403.
+- **status:** open
+
+### ATLAS-RT-20260820-05
+- **system:** Atlas · **severity:** P2 · **branch/SHA:** `2a5a605`
+- **evidence:** `tokenHasRequiredHubScope` accepts empty `scp` when `oid` present.
+- **impact:** Scope confusion if Hub-aud tokens issued without delegated scope.
+- **recommended remediation:** Require explicit `access_as_user` in production.
+- **regression test:** Empty scp → 401 when hardening flag on.
+- **status:** open
+
+### ATLAS-RT-20260820-06
+- **system:** Atlas · **severity:** P2 · **branch/SHA:** `2a5a605`
+- **evidence:** `INTEGRATION_CAPITAL_ALLOW_SYNTHETIC_GRAPH` not hard-rejected in production.
+- **impact:** Synthetic Graph writes into live SharePoint if mis-set.
+- **recommended remediation:** Throw UnsafeHubConfigurationError when production && flag true.
+- **regression test:** Production + flag → boot fail.
+- **status:** open
+
+### ATLAS-RT-20260820-07
+- **system:** Atlas · **severity:** P2 · **branch/SHA:** `2a5a605`
+- **evidence:** Historical Active Client path accepts any non-empty `provenanceSource` for Manny.
+- **impact:** Activation control-plane bypass with weak provenance.
+- **recommended remediation:** Allowlist provenance; dual control.
+- **regression test:** Non-allowlisted provenance → 400.
+- **status:** open
+
+### ATLAS-RT-20260820-08
+- **system:** Atlas · **severity:** P2 · **branch/SHA:** `2a5a605`
+- **evidence:** Capital `fee` checks clientCode entitlement but not that `capitalOpportunityId` belongs to that client.
+- **impact:** Cross-client fee/event linkage pollution.
+- **recommended remediation:** `requireOpp` + assert opp.clientCode === clientCode.
+- **regression test:** Mismatched fee opp id → 404/422.
+- **status:** open
+
+### ATLAS-RT-20260820-09
+- **system:** Atlas · **severity:** P2 · **branch/SHA:** `2a5a605`
+- **evidence:** Manny `authorize` can skip request/review (auto-create record).
+- **impact:** Governance bypass (Manny-only; entitlements still not provisioned).
+- **recommended remediation:** Require `status==='review'` before authorize.
+- **regression test:** authorize without review → 400.
+- **status:** open
+
+### ATLAS-RT-20260820-10
+- **system:** Atlas · **severity:** P2 · **branch/SHA:** `2a5a605`
+- **evidence:** Unauthenticated `/health` returns `authRequired`, `insecureDevAuth`, backend modes.
+- **impact:** Recon aid for auth misconfig.
+- **recommended remediation:** Strip security flags from public health.
+- **regression test:** Public health omits insecureDevAuth.
+- **status:** open
+
+---
+
+## REVENUE OS
+
+### REVOS-RT-20260820-01
+- **system:** Revenue OS
+- **branch/SHA:** `cursor/revenue-os-atlas-design` / `4c0ca6b`
+- **severity:** P2 (design / not live)
+- **evidence:** Design docs only; no executable pricing/discount/success-fee APIs on mission candidate (branch absent). Risks noted: legacy repricing, early recognition, missing dual-control for exceptions (`ASSUMPTIONS_RISKS_DEBT.md`).
+- **reproduction:** N/A — no runtime surface.
+- **impact:** Future implementation could ship without commercial dual-control if design risks ignored.
+- **recommended remediation:** Before coding: enforce floor pricing, success-fee immutability after approve, referral payout RBAC, proposal ClientCode isolation, approval dual-control in acceptance tests.
+- **regression test:** Design acceptance matrix for discount-below-floor / approval-bypass must fail closed.
+- **status:** open
+
+---
+
+## GTM (360)
+
+### GTM-RT-20260820-01
+- **system:** GTM · **severity:** P0 · **branch/SHA:** `cursor/360-hv-completion-52d1` / `e585d0f`
+- **evidence:** `verifyCallRailSignature` accepts HMAC from any of `CALLRAIL_WEBHOOK_SECRET` / `_YUCCA` / `_DHS` for any tracker; tenant from attacker-chosen tracker_id.
+- **reproduction:** Sign body with Yucca secret + DHS tracker → accepted with DHS office attribution.
+- **impact:** Fabricated call events, wrong-office attribution, poisoned lead pipeline.
+- **recommended remediation:** Bind secret↔office; reject cross-office secret; default webhook disabled.
+- **regression test:** Yucca secret + DHS tracker → 401.
+- **status:** open
+
+### GTM-RT-20260820-02
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** `runExecutionGate` only validates approval when `approval_id` present; missing Guardian ignored; only `approval_invalidated` blocked when approval absent.
+- **impact:** Unapproved content can pass dry-run; same gate becomes production control when live flags flip.
+- **recommended remediation:** Fail closed: require approved row + non-block Guardian.
+- **regression test:** missing approval/guardian → gate fail.
+- **status:** open
+
+### GTM-RT-20260820-03
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** Dual kill-switch: DB pause vs `EMERGENCY_PAUSE_GLOBAL` env; Atlas handoff uses env only.
+- **impact:** Operators can believe pause is on while gates disagree.
+- **recommended remediation:** Single SoT; alert on mismatch.
+- **regression test:** env/DB desync → all outbound blocked or alert.
+- **status:** open
+
+### GTM-RT-20260820-04
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** Public `InquiryForm` posts freeform JSON to HVCG leads API; does not use `360-atlas-lead.v1` contract.
+- **impact:** Leads enter without observation-only / idempotency governance; attribution spoofable.
+- **recommended remediation:** Emit contract-valid payload; server verify.
+- **regression test:** Missing governance literals rejected.
+- **status:** open
+
+### GTM-RT-20260820-05
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** Booking falls back unknown clinic → `yucca_valley`; schedule hard-codes `leadSource: 'Google Ads'`.
+- **impact:** Wrong-office booking attempts; attribution fraud when live create enabled.
+- **recommended remediation:** Reject unknown clinic; bind clinic to call_event.location_id.
+- **regression test:** Unknown clinic → 400.
+- **status:** open
+
+### GTM-RT-20260820-06
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** No unsubscribe / suppression / frequency-cap subsystem; only flags gate send.
+- **impact:** TCPA/CAN-SPAM exposure once outbound ships.
+- **recommended remediation:** Mandatory suppression + frequency checks fail-closed.
+- **regression test:** Unsubscribed → block.
+- **status:** open
+
+### GTM-RT-20260820-07
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** Shallow pattern-based injection filters; several Guardian cases non-block.
+- **impact:** Injected instructions can influence drafts (outbound tools still denied).
+- **recommended remediation:** Treat external text as data; expand detectors; default block injection class.
+- **regression test:** Injection corpus must block.
+- **status:** open
+
+### GTM-RT-20260820-08
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** `startAgentRun` sets `app.is_platform_admin=true`; API run requires only `AGENT_READ`.
+- **impact:** Privilege escalation for agent execution; possible cross-tenant agent selection.
+- **recommended remediation:** Never elevate to platform admin for tenant runs; require AGENT_WRITE.
+- **regression test:** Non-write role → 403 on run.
+- **status:** open
+
+### GTM-RT-20260820-09
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** Brand Brain retrieve accepts client `allowRestricted: true` with only READ perm.
+- **impact:** Restricted facts exposed to any reader.
+- **recommended remediation:** Ignore client flag; elevated permission required.
+- **regression test:** allowRestricted without elevated perm → deny.
+- **status:** open
+
+### GTM-RT-20260820-10
+- **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
+- **evidence:** `callrailWebhookEnabled` / `leadIntelQueueEnabled` default true.
+- **impact:** Inbound PHI-adjacent processing active by default.
+- **recommended remediation:** Default false.
+- **regression test:** Unset env → both false.
+- **status:** open
+
+### GTM-RT-20260820-11..16 (P2)
+- **11** JWT caches memberships indefinitely — stale privilege after revoke.
+- **12** Dev header auth is sole actor path — P0 if mis-deployed non-prod-like.
+- **13** Pricing trust heuristic; Guardian lacks APPROVED_OFFER bind.
+- **14** Experiment table writable at DB without status workflow.
+- **15** Atlas stager in-memory; governance not cryptographically bound.
+- **16** Fact verify without source grounding → human-approved lies become Brand Brain truth.
+- **status:** open
+
+---
+
+## GCC
+
+### GCC-RT-20260820-01
+- **system:** GCC · **severity:** P0 · **branch/SHA:** `62f98cc` / `fb986cb`
+- **evidence:** `supabase/setup.sql` `gcc_handle_new_user` COALESCE to `org-apex`; trusts `raw_user_meta_data.role` / `organization_id`. Feature removed some app defaults but not trigger.
+- **reproduction:** Auth signup → Apex tenant / attacker metadata role.
+- **impact:** Cross-org financial exposure via demo/client tenant attachment.
+- **recommended remediation:** Trigger inserts NULL org; invite-only; never COALESCE to Apex.
+- **regression test:** Signup never assigns org-apex.
+- **status:** open
+
+### GCC-RT-20260820-02
+- **system:** GCC · **severity:** P0 · **branch/SHA:** `62f98cc`
+- **evidence:** Policy `"gcc profile update"` `USING (id = auth.uid())` with no column WITH CHECK — clients can UPDATE `role` / `organization_id`.
+- **reproduction:** Authenticated user PATCH own profile to `platform_admin` + foreign org.
+- **impact:** Platform admin + cross-tenant access.
+- **recommended remediation:** Restrict updatable columns; trigger reject role/org mutations from client.
+- **regression test:** Client cannot UPDATE role/organization_id.
+- **status:** open
+
+### GCC-RT-20260820-03
+- **system:** GCC · **severity:** P0 · **branch/SHA:** `62f98cc`
+- **evidence:** Connect encodes `{organizationId}` base64url unsigned; public callback parses state and upserts tokens with admin client, no session check.
+- **reproduction:** Complete Intuit OAuth with forged state for victim org → victim connection overwritten.
+- **impact:** Financial integration takeover / cross-tenant QBO binding.
+- **recommended remediation:** Signed expiring state tied to session; verify auth on callback.
+- **regression test:** Tampered state rejected.
+- **status:** open
+
+### GCC-RT-20260820-04
+- **system:** GCC · **severity:** P0 on main / mitigated on feature routes · **branch/SHA:** `fb986cb` (main)
+- **evidence:** Main `/api/dashboard` and `/api/tenant` default missing organizationId to `org-apex`.
+- **impact:** Demo/client financial leakage.
+- **recommended remediation:** Keep feature fail-closed; never ship main default.
+- **regression test:** Missing organizationId ≠ Apex.
+- **status:** open (main)
+
+### GCC-RT-20260820-05
+- **system:** GCC · **severity:** P1 · **branch/SHA:** `62f98cc`
+- **evidence:** Browser-supplied organizationId is authorization input; data layer uses service role.
+- **impact:** Classic IDOR if any handler omits requireApiAccess.
+- **recommended remediation:** Derive tenant from server auth only.
+- **regression test:** Mismatched org → 403 on all tenant routes.
+- **status:** open
+
+### GCC-RT-20260820-06
+- **system:** GCC · **severity:** P1 · **branch/SHA:** `62f98cc`
+- **evidence:** `sales` lacks financials:read but `/financials` and `/api/tenant` only require auth+org; export skips reports:export.
+- **impact:** Role model advisory for financial data.
+- **recommended remediation:** Enforce permissions on APIs and layouts.
+- **regression test:** sales → 403 on financial payload/export.
+- **status:** open
+
+### GCC-RT-20260820-07
+- **system:** GCC · **severity:** P1 · **branch/SHA:** `62f98cc`
+- **evidence:** Atlas activation handoff accepts platform_admin body without HMAC/mTLS.
+- **impact:** Poisoned tenant-mapping queue (autoProvision still false).
+- **recommended remediation:** Atlas-issued signed activation token.
+- **regression test:** Unsigned body rejected for machine path.
+- **status:** open
+
+### GCC-RT-20260820-08..10 (P1/P2)
+- **08** P1 Value-signal/KPI write weak under demo; financial truth via admin bypass.
+- **09** P2 API middleware does not auth; relies on handlers; metadata role fallback.
+- **10** P2 Production demo mode cookie when ALLOW_DEMO_MODE=true.
+- **status:** open
+
+---
+
+## COPILOT
+
+### COPILOT-RT-20260820-01
+- **system:** Copilot · **severity:** P0 · **branch/SHA:** `51f1cbf` / `c356cac`
+- **evidence:** No `middleware.ts`; `/api/assessments`, `/api/documents`, `/api/analysis`, `/api/admin/*`, `/api/reports/*`, `/api/atlas/*` have no session checks.
+- **reproduction:** `curl` any mutating route without cookies succeeds.
+- **impact:** Full read/write of assessment workspace if deployed.
+- **recommended remediation:** Entra auth + deny-by-default middleware.
+- **regression test:** Unauthenticated → 401 on all non-public routes.
+- **status:** open
+
+### COPILOT-RT-20260820-02
+- **system:** Copilot · **severity:** P0 · **branch/SHA:** `51f1cbf`
+- **evidence:** Single process-wide `data/store.json`; `assertTenant` unused by API routes.
+- **reproduction:** User A starts UAT; User B GET/start → sees or wipes A.
+- **impact:** Cross-session disclosure/destruction.
+- **recommended remediation:** Per-user durable store; enforce assertTenant.
+- **regression test:** Two sessions isolated.
+- **status:** open
+
+### COPILOT-RT-20260820-03
+- **system:** Copilot · **severity:** P0 · **branch/SHA:** `51f1cbf`
+- **evidence:** `POST /api/admin/review` approve unauthenticated; `adminApproved` client boolean on release.
+- **reproduction:** Anonymous approve clears requiresHumanReview; forge pricing update.
+- **impact:** Protected-result gate bypass; forged HVCG review provenance.
+- **recommended remediation:** Admin-only authZ; never trust client adminApproved.
+- **regression test:** Non-admin cannot approve/release.
+- **status:** open
+
+### COPILOT-RT-20260820-04..10
+- **04** P1 Assessment ID spoofing / active-resolution confusion.
+- **05** P1 Protected-result/report leakage via unauth PDF/admin/atlas GETs.
+- **06** P1 Document/interview injection into shared store.
+- **07** P1 Prompt-injection posture incomplete (no sanitize boundary).
+- **08** P1 Handoff replay + forged campaign context (liveDispatch false mitigates).
+- **09** P1 Intake inference promoted to VERIFIED (`classifyFactClass`).
+- **10** P2 Unsafe external action surface stubbed (residual).
+- **status:** open
+
+---
+
+## CROSS-SYSTEM
+
+### XSYS-RT-20260820-01
+- **system:** Integration · **severity:** P0 · **branch/SHA:** Atlas `2a5a605`
+- **evidence:** `website/http.ts` auth = `x-website-intake-key` equality only; no body HMAC/timestamp/sender id.
+- **impact:** Key holder forges leads/attribution into SharePoint CRM.
+- **recommended remediation:** Per-sender HMAC + key id + timestamp.
+- **regression test:** Valid key + invalid signature → 401.
+- **status:** open
+
+### XSYS-RT-20260820-02
+- **system:** Integration · **severity:** P0 · **branch/SHA:** `2a5a605`
+- **evidence:** Idempotency key accepted without prefix↔source binding (`360|`, `copilot|`, `eva|`).
+- **impact:** Cross-system lead overwrite via colliding keys.
+- **recommended remediation:** Enforce prefix binding; foreign-prefix → 409.
+- **regression test:** 360 type + `eva|` key → reject.
+- **status:** open
+
+### XSYS-RT-20260820-03..12
+- **03** P1 GCC handoff without Atlas attestation.
+- **04** P1 Schema/version confusion; Atlas receiver loosest (`additionalProperties: true`).
+- **05** P1 ID confusion assessmentId≡leadId; optional ClientCode claim.
+- **06** P1 Capital Copilot handoff missing idempotency.
+- **07** P1 EVA capital attribution dual-write drop.
+- **08** P2 Attribution manipulation on lead replay.
+- **09** P2 Client vs marketing tenant confusion (docs only).
+- **10** P2 Prompt injection across handoffs (lead/MRI unscanned).
+- **11** P2 Unsafe autonomous actions conditional on liveDispatch.
+- **12** P2 TOCTOU on filesystem/list dual writers.
+- **status:** open
+
+---
+
+## Severity rollup
+
+| Sev | IDs |
+|---|---|
+| P0 | ATLAS-01,02,03 · GTM-01 · GCC-01,02,03 · COPILOT-01,02,03 · XSYS-01,02 (+ GCC-04 on main) |
+| P1 | ATLAS-04 · GTM-02..10 · GCC-05..08 · COPILOT-04..09 · XSYS-03..07 |
+| P2 | remaining |
+
+**Release gate:** No candidate is production-ready while P0>0 or P1>0.
