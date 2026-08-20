@@ -22,7 +22,7 @@ Frozen Atlas baseline remains Hub `940a484` / Elite `75d0c59` — do not regress
 
 ## 360 Growth (GTM train)
 
-Branch declared (directive 5): `cursor/360-gtm-agent-system` @ `14d8e4d` — sibling git remote **404** here. GitHub MCP opened `.env.example` + `nurture/engine.ts` (`GTM_LIVE_DISPATCH_ENABLED=false`, `PAID_ADS_ENABLED=false`, `GTM_KILL_SWITCH=true`; `nurturePlanSchema` unchanged vs D4).
+Branch declared (directive 6): `cursor/360-gtm-agent-system` @ `14d8e4d` — sibling git remote **404** here. GitHub MCP `get_commit` confirms tip still `14d8e4d`. Opened `.env.example`, `nurture/engine.ts`, `journey/synthetic.ts` (SYN-GTM `book-syn-1` `dryRun===true`; `optimization_variant2` `rolled_back`), and `optimization/engine.ts` (Variant 2; live Level 4 refused).
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -33,10 +33,12 @@ Branch declared (directive 5): `cursor/360-gtm-agent-system` @ `14d8e4d` — sib
 | GTM-INT-005 | Do not present 360 org UUID as Atlas `ClientCode` | P0 |
 | GTM-INT-006 | Keep additive sync aligned to ratified `360-atlas-gtm-sync.v1.json` | P0 |
 | GTM-INT-007 | Emit `nurture-plan.v1` from `createNurturePlan` (`goal=prepare_lead_before_manny_call`, `observationOnly=true`, `liveSend=false`) | P2 |
+| GTM-INT-008 | Emit SoT `booking-event.v1` from SYN-GTM dry-run calendar booking (`dryRun===true`, idempotency `booking\|{bookingId}`). No live dispatch. | P2 |
+| GTM-INT-009 | Emit SoT `experiment-spec.v1` + `optimization-decision.v1` from `runOptimizationCycle` Variant 2 (`campaignId -v2`, `mutatesPaidAds=false`, live Level 4 refused). | P2 |
 
 ## Agent Copilot
 
-Branch declared (directive 5): `cursor/copilot-production-completion` @ `fe3db75` — sibling git remote **404** here. Supervisor V2 2030Z + GitHub MCP: enrichment GET/POST 401 without session; `observationOnly=true`; `liveDispatch=false`; `commercialAuthority=revenue-os`; `toIntegrationPreCallBrief` + `docs/copilot/pre-call-brief-fixture-d26.json`.
+Branch declared (directive 6): `cursor/copilot-production-completion` @ `fe3db75` — sibling git remote **404** here. D5 pre-call coverage kept. Red Team D27 `SECURITY_CERTIFIED=PASS` (not this train's retest). `observationOnly=true`; `liveDispatch=false`; `commercialAuthority=revenue-os`; `toIntegrationPreCallBrief`.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |

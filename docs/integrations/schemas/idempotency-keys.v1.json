@@ -198,7 +198,34 @@
           "version": "booking-event.v1",
           "owner": "GTM / Atlas meetings",
           "collisionBehavior": "return-existing",
-          "replaySemantics": "Retries must not create duplicate meetings."
+          "replaySemantics": "Retries must not create duplicate meetings. SYN-GTM dryRun=true only.",
+          "notes": "Live dispatch impossible. booking.ok && booking.dryRun === true @ 14d8e4d."
+        },
+        {
+          "edge": "360 GTM experiment spec",
+          "pattern": "experiment|{experimentId}",
+          "sourceSystem": "360",
+          "destinationSystem": "360",
+          "entity": "gtm_experiment",
+          "operation": "create",
+          "version": "experiment-spec.v1",
+          "owner": "360 runOptimizationCycle",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not create a second Variant 2 experiment.",
+          "notes": "paidAdsEnabled const false. Variant campaignId ends with -v2."
+        },
+        {
+          "edge": "360 GTM optimization decision",
+          "pattern": "optimize|{decisionId}",
+          "sourceSystem": "360",
+          "destinationSystem": "360",
+          "entity": "gtm_experiment",
+          "operation": "signal",
+          "version": "optimization-decision.v1",
+          "owner": "360 runOptimizationCycle",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not flip mutatesPaidAds or invent spend.",
+          "notes": "mutatesPaidAds const false. Live Level 4 refused; rolled_back → kill."
         },
         {
           "edge": "Engagement create",

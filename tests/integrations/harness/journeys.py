@@ -129,6 +129,33 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
     }
     assert_valid("nurture-plan.v1.json", nurture)
 
+    book_env = envelope(
+        key="booking|book-syn-1",
+        source="360",
+        dest="atlas",
+        entity="booking",
+        operation="create",
+        version="booking-event.v1",
+        correlation=CORRELATION_A,
+        event_id="evt-book-001",
+        entity_id="book-syn-1",
+        campaign_id=campaign_id,
+    )
+    booking = {
+        "contractVersion": "booking-event.v1",
+        "bookingId": "book-syn-1",
+        "envelope": book_env,
+        "leadRef": {"system": "360", "entity": "lead", "id": "360-lead-001"},
+        "contactEmail": "jordan@acme.example",
+        "startsAt": "2026-08-21T14:00:00Z",
+        "endsAt": "2026-08-21T14:45:00Z",
+        "status": "requested",
+        "meetingProvider": "microsoft-mock-dry-run",
+        "attribution": {"source": "360-growth", "campaignId": campaign_id},
+    }
+    assert_valid("booking-event.v1.json", booking)
+    bus.write("booking|book-syn-1", "booking", {"id": "book-syn-1", **booking})
+
     lead_handoff = {
         "contractVersion": "360-atlas-lead.v1",
         "leadId": "360-lead-001",
@@ -289,6 +316,7 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
             "client": bus.count("client"),
             "opportunity": bus.count("opportunity"),
             "engagement": bus.count("engagement"),
+            "booking": bus.count("booking"),
             "gcc_handoff": bus.count("gcc_handoff"),
         },
         "bus": bus,
@@ -487,6 +515,37 @@ def run_journey_c(bus: SyntheticBus | None = None) -> dict[str, Any]:
     assert_valid("closed-won-learning-event.v1.json", learning)
     bus.write("learn-won|rev-900", "learning", {"id": "learn-900", **learning})
 
+    experiment = {
+        "contractVersion": "experiment-spec.v1",
+        "experimentId": "exp-cmp-gtm-001-v2",
+        "campaignId": "cmp-gtm-001",
+        "hypothesis": "Variant 2 improves qualified reply rate with clearer hypothesis framing",
+        "status": "abandoned",
+        "variants": [{"variantId": "cmp-gtm-001-v2", "name": "Variant 2", "allocationPct": 0}],
+        "ownerSystem": "360",
+        "paidAdsEnabled": False,
+    }
+    assert_valid("experiment-spec.v1.json", experiment)
+    bus.write(
+        "experiment|exp-cmp-gtm-001-v2",
+        "experiment",
+        {"id": "exp-cmp-gtm-001-v2", **experiment},
+    )
+
+    decision = {
+        "contractVersion": "optimization-decision.v1",
+        "decisionId": "opt-exp-cmp-gtm-001-v2",
+        "experimentId": "exp-cmp-gtm-001-v2",
+        "decision": "kill",
+        "rationale": "Live Level 4 refused. Variant 2 dry-run rolled back; mutatesPaidAds false.",
+        "decidedAt": NOW,
+        "ownerSystem": "360",
+        "requiresOwnerApproval": True,
+        "mutatesPaidAds": False,
+    }
+    assert_valid("optimization-decision.v1.json", decision)
+    bus.write("optimize|opt-exp-cmp-gtm-001-v2", "optimization", {"id": "opt-exp-cmp-gtm-001-v2", **decision})
+
     return {
         "journey": "C",
         "correlationId": CORRELATION_C,
@@ -494,6 +553,8 @@ def run_journey_c(bus: SyntheticBus | None = None) -> dict[str, Any]:
             "gcc_signal": bus.count("gcc_signal"),
             "opportunity": bus.count("opportunity"),
             "learning": bus.count("learning"),
+            "experiment": bus.count("experiment"),
+            "optimization": bus.count("optimization"),
         },
         "bus": bus,
     }

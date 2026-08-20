@@ -20,9 +20,14 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertEqual(result["counts"]["client"], 1)
         self.assertEqual(result["counts"]["opportunity"], 1)
         self.assertEqual(result["counts"]["engagement"], 1)
+        self.assertEqual(result["counts"]["booking"], 1)
         self.assertEqual(result["counts"]["gcc_handoff"], 1)
         self.assertEqual(result["results"]["lead"], "accepted")
         self.assertEqual(result["clientCode"], "ACME01")
+        booking = result["bus"].store["booking|book-syn-1"]["payload"]
+        self.assertEqual(booking["bookingId"], "book-syn-1")
+        self.assertEqual(booking["status"], "requested")
+        self.assertNotIn("liveDispatch", booking)
 
     def test_journey_a_replay_does_not_duplicate(self):
         result = run_journey_a()
@@ -37,10 +42,13 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertFalse(again.created)
         gcc_again = replay_write(bus, "gcc-activate|ACME01|activate", "gcc_handoff", {"id": "should-not-create"})
         self.assertEqual(gcc_again.outcome, "duplicate")
+        booking_again = replay_write(bus, "booking|book-syn-1", "booking", {"id": "should-not-create"})
+        self.assertEqual(booking_again.outcome, "duplicate")
         self.assertEqual(bus.count("lead"), 1)
         self.assertEqual(bus.count("gcc_handoff"), 1)
         self.assertEqual(bus.count("opportunity"), 1)
         self.assertEqual(bus.count("engagement"), 1)
+        self.assertEqual(bus.count("booking"), 1)
 
     def test_journey_b_copilot_to_engagement(self):
         result = run_journey_b()
@@ -55,10 +63,23 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertEqual(result["counts"]["gcc_signal"], 1)
         self.assertEqual(result["counts"]["learning"], 1)
         self.assertEqual(result["counts"]["opportunity"], 1)
+        self.assertEqual(result["counts"]["experiment"], 1)
+        self.assertEqual(result["counts"]["optimization"], 1)
         # Ensure GCC org id was not used as ClientCode in store payload
         sig = result["bus"].store["gcc-signal|sig-900"]["payload"]
         self.assertEqual(sig["clientCode"], "ACME01")
         self.assertNotEqual(sig["gccOrganizationId"], sig["clientCode"])
+        opt = result["bus"].store["optimize|opt-exp-cmp-gtm-001-v2"]["payload"]
+        self.assertEqual(opt["decision"], "kill")
+        self.assertFalse(opt["mutatesPaidAds"])
+        replay = replay_write(
+            result["bus"],
+            "optimize|opt-exp-cmp-gtm-001-v2",
+            "optimization",
+            {"id": "should-not-create"},
+        )
+        self.assertEqual(replay.outcome, "duplicate")
+        self.assertEqual(result["bus"].count("optimization"), 1)
 
 
 if __name__ == "__main__":

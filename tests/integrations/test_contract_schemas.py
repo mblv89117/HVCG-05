@@ -68,7 +68,7 @@ class ContractSchemaTests(unittest.TestCase):
         data = load_schema("idempotency-keys.v1.json")
         patterns = data["properties"]["patterns"]["default"]
         keys = {p["pattern"].split("|")[0] for p in patterns}
-        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "precall", "booking", "engagement", "gcc-signal", "learn-won"]:
+        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "precall", "booking", "experiment", "optimize", "engagement", "gcc-signal", "learn-won"]:
             self.assertIn(prefix, keys, f"Missing idempotency prefix {prefix}")
 
     def test_website_lead_minimal_valid(self):
@@ -191,6 +191,91 @@ class ContractSchemaTests(unittest.TestCase):
             },
         )
         self.assertTrue(live_dispatch_errors)
+
+    def test_booking_event_dry_run_idempotent(self):
+        from harness.journeys import envelope
+
+        env = envelope(
+            key="booking|book-syn-1",
+            source="360",
+            dest="atlas",
+            entity="booking",
+            operation="create",
+            version="booking-event.v1",
+            correlation="journey-a-corr-001",
+            event_id="evt-book-001",
+            entity_id="book-syn-1",
+            campaign_id="cmp-gtm-001",
+        )
+        assert_valid(
+            "booking-event.v1.json",
+            {
+                "contractVersion": "booking-event.v1",
+                "bookingId": "book-syn-1",
+                "envelope": env,
+                "leadRef": {"system": "360", "entity": "lead", "id": "360-lead-001"},
+                "contactEmail": "jordan@acme.example",
+                "startsAt": "2026-08-21T14:00:00Z",
+                "endsAt": "2026-08-21T14:45:00Z",
+                "status": "requested",
+                "meetingProvider": "microsoft-mock-dry-run",
+                "attribution": {"source": "360-growth", "campaignId": "cmp-gtm-001"},
+            },
+        )
+        live_dispatch_errors = validate(
+            "booking-event.v1.json",
+            {
+                "contractVersion": "booking-event.v1",
+                "bookingId": "book-live-bad",
+                "envelope": env,
+                "startsAt": "2026-08-21T14:00:00Z",
+                "status": "confirmed",
+                "liveDispatch": True,
+            },
+        )
+        self.assertTrue(live_dispatch_errors)
+
+    def test_optimization_decision_cannot_mutate_paid_ads(self):
+        assert_valid(
+            "experiment-spec.v1.json",
+            {
+                "contractVersion": "experiment-spec.v1",
+                "experimentId": "exp-cmp-gtm-001-v2",
+                "campaignId": "cmp-gtm-001",
+                "hypothesis": "Variant 2 improves qualified reply rate with clearer hypothesis framing",
+                "status": "abandoned",
+                "variants": [{"variantId": "cmp-gtm-001-v2", "name": "Variant 2", "allocationPct": 0}],
+                "ownerSystem": "360",
+                "paidAdsEnabled": False,
+            },
+        )
+        assert_valid(
+            "optimization-decision.v1.json",
+            {
+                "contractVersion": "optimization-decision.v1",
+                "decisionId": "opt-exp-cmp-gtm-001-v2",
+                "experimentId": "exp-cmp-gtm-001-v2",
+                "decision": "kill",
+                "rationale": "Live Level 4 refused. Dry-run Variant 2 rolled back.",
+                "decidedAt": "2026-08-20T20:00:00Z",
+                "ownerSystem": "360",
+                "requiresOwnerApproval": True,
+                "mutatesPaidAds": False,
+            },
+        )
+        errors = validate(
+            "optimization-decision.v1.json",
+            {
+                "contractVersion": "optimization-decision.v1",
+                "decisionId": "opt-bad",
+                "experimentId": "exp-bad",
+                "decision": "scale",
+                "decidedAt": "2026-08-20T20:00:00Z",
+                "ownerSystem": "360",
+                "mutatesPaidAds": True,
+            },
+        )
+        self.assertTrue(errors)
 
 
 if __name__ == "__main__":

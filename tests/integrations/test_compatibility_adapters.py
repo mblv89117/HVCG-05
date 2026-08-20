@@ -63,6 +63,85 @@ def map_gcc_atlas_signal(local: dict) -> dict:
     }
 
 
+GTM_EXPERIMENT_STATUS_TO_SOT = {
+    "observed": "draft",
+    "analyzed": "draft",
+    "hypothesized": "draft",
+    "variant_generated": "draft",
+    "qa_passed": "draft",
+    "compliance_checked": "draft",
+    "experimenting": "running",
+    "measured": "running",
+    "attributed": "running",
+    "learned": "completed",
+    "promoted": "completed",
+    "rolled_back": "abandoned",
+}
+
+
+def to_integration_booking_event(producer: dict, *, envelope: dict) -> dict:
+    """Map GTM SYN-GTM dry-run calendar booking @ 14d8e4d → SoT booking-event.v1."""
+    slot = producer.get("slot") or {}
+    return {
+        "contractVersion": "booking-event.v1",
+        "bookingId": producer.get("requestId") or producer.get("bookingId"),
+        "envelope": envelope,
+        "leadRef": {
+            "system": "360",
+            "entity": "lead",
+            "id": producer.get("leadId") or f"lead-{producer.get('companyId', 'unknown')}",
+        },
+        "contactEmail": producer["attendeeEmail"],
+        "startsAt": slot.get("start") or producer["startsAt"],
+        "endsAt": slot.get("end") or producer.get("endsAt"),
+        "status": "requested",
+        "meetingProvider": "microsoft-mock-dry-run",
+        "attribution": {
+            "source": "360-growth",
+            "campaignId": producer.get("campaignId"),
+        },
+    }
+
+
+def to_integration_experiment_spec(producer: dict) -> dict:
+    """Map GTM gtm-experiment.v1 / runOptimizationCycle @ 14d8e4d → SoT experiment-spec.v1."""
+    status = GTM_EXPERIMENT_STATUS_TO_SOT[producer["status"]]
+    return {
+        "contractVersion": "experiment-spec.v1",
+        "experimentId": producer["experimentId"],
+        "campaignId": producer["parentCampaignId"],
+        "hypothesis": producer["hypothesis"],
+        "status": status,
+        "variants": [
+            {
+                "variantId": producer["variantCampaignId"],
+                "name": "Variant 2",
+                "allocationPct": 0,
+            }
+        ],
+        "ownerSystem": "360",
+        "paidAdsEnabled": False,
+    }
+
+
+def to_integration_optimization_decision(producer: dict, *, decided_at: str) -> dict:
+    """Map GTM Variant 2 rollback (live Level 4 refused) → SoT optimization-decision.v1."""
+    decision = "kill" if producer["status"] == "rolled_back" else "hold_for_owner"
+    if producer["status"] == "promoted":
+        decision = "scale"
+    return {
+        "contractVersion": "optimization-decision.v1",
+        "decisionId": f"opt-{producer['experimentId']}",
+        "experimentId": producer["experimentId"],
+        "decision": decision,
+        "rationale": "Live Level 4 refused. Variant 2 remains dry-run; mutatesPaidAds stays false.",
+        "decidedAt": decided_at,
+        "ownerSystem": "360",
+        "requiresOwnerApproval": True,
+        "mutatesPaidAds": False,
+    }
+
+
 def to_integration_pre_call_brief(producer: dict, *, booking_id: str, atlas_client_code: str | None = None, generated_at: str) -> dict:
     """Mirror Copilot `toIntegrationPreCallBrief` @ fe3db75 — adapter only; SoT meaning unchanged."""
     findings = producer.get("structuredFindings") or []
@@ -290,6 +369,57 @@ class CompatibilityTests(unittest.TestCase):
         self.assertNotIn("liveDispatch", sot)
         self.assertNotIn("leadId", sot)
         self.assertNotIn("opportunityId", sot)
+
+    def test_gtm_dry_run_booking_maps_to_sot(self):
+        from harness.journeys import envelope
+
+        producer = {
+            "ok": True,
+            "dryRun": True,
+            "requestId": "book-syn-1",
+            "attendeeEmail": "owner@summitridge.example",
+            "companyId": "SYN-GTM-001",
+            "campaignId": "cmp-SYN-GTM-001",
+            "leadId": "lead-SYN-GTM-001",
+            "slot": {"start": "2026-08-21T14:00:00.000Z", "end": "2026-08-21T14:45:00.000Z"},
+        }
+        self.assertTrue(producer["dryRun"])
+        env = envelope(
+            key="booking|book-syn-1",
+            source="360",
+            dest="atlas",
+            entity="booking",
+            operation="create",
+            version="booking-event.v1",
+            correlation="syn-gtm-d6",
+            event_id="evt-book-syn-1",
+            entity_id="book-syn-1",
+            campaign_id=producer["campaignId"],
+        )
+        sot = to_integration_booking_event(producer, envelope=env)
+        assert_valid("booking-event.v1.json", sot)
+        self.assertEqual(sot["envelope"]["idempotencyKey"], "booking|book-syn-1")
+        self.assertNotIn("liveDispatch", sot)
+
+    def test_gtm_optimization_variant2_maps_to_sot(self):
+        producer = {
+            "version": "gtm-experiment.v1",
+            "experimentId": "exp-cmp-gtm-001-v2",
+            "parentCampaignId": "cmp-gtm-001",
+            "variantCampaignId": "cmp-gtm-001-v2",
+            "hypothesis": "Variant improves qualified reply rate with clearer hypothesis framing",
+            "status": "rolled_back",
+            "createdAt": "2026-08-20T20:00:00.000Z",
+        }
+        spec = to_integration_experiment_spec(producer)
+        decision = to_integration_optimization_decision(producer, decided_at="2026-08-20T20:00:00Z")
+        assert_valid("experiment-spec.v1.json", spec)
+        assert_valid("optimization-decision.v1.json", decision)
+        self.assertTrue(spec["variants"][0]["variantId"].endswith("-v2"))
+        self.assertEqual(spec["status"], "abandoned")
+        self.assertFalse(spec["paidAdsEnabled"])
+        self.assertEqual(decision["decision"], "kill")
+        self.assertFalse(decision["mutatesPaidAds"])
 
     def test_gcc_gtm_feedback_ratified(self):
         assert_valid(
