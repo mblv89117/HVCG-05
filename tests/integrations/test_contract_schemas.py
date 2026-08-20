@@ -27,6 +27,7 @@ REQUIRED_SCHEMAS = [
     "campaign-spec.v1.json",
     "funnel-spec.v1.json",
     "form-spec.v1.json",
+    "nurture-plan.v1.json",
     "booking-event.v1.json",
     "pre-call-brief.v1.json",
     "experiment-spec.v1.json",
@@ -67,7 +68,7 @@ class ContractSchemaTests(unittest.TestCase):
         data = load_schema("idempotency-keys.v1.json")
         patterns = data["properties"]["patterns"]["default"]
         keys = {p["pattern"].split("|")[0] for p in patterns}
-        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "booking", "engagement", "gcc-signal", "learn-won"]:
+        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "booking", "engagement", "gcc-signal", "learn-won"]:
             self.assertIn(prefix, keys, f"Missing idempotency prefix {prefix}")
 
     def test_website_lead_minimal_valid(self):
@@ -99,6 +100,45 @@ class ContractSchemaTests(unittest.TestCase):
                 "sku": "X",
                 "observationOnly": False,
                 "createsCommitment": False,
+            },
+        )
+        self.assertTrue(errors)
+
+    def test_nurture_plan_observation_only(self):
+        # GTM-native createNurturePlan shape @ e0dd445 (nurturePlanSchema.strict())
+        assert_valid(
+            "nurture-plan.v1.json",
+            {
+                "planId": "nurture-360-co-001",
+                "companyId": "360-co-001",
+                "campaignId": "cmp-gtm-001",
+                "goal": "prepare_lead_before_manny_call",
+                "steps": [
+                    {
+                        "stepId": "n1",
+                        "kind": "executive_memo",
+                        "message": "Share personalized High Value summary.",
+                    }
+                ],
+                "createdAt": "2026-08-20T12:00:00Z",
+            },
+        )
+        errors = validate(
+            "nurture-plan.v1.json",
+            {
+                "planId": "nurture-bad",
+                "companyId": "360-co-001",
+                "campaignId": "cmp-gtm-001",
+                "goal": "prepare_lead_before_manny_call",
+                "steps": [
+                    {
+                        "stepId": "n1",
+                        "kind": "executive_memo",
+                        "message": "Must not live-send.",
+                    }
+                ],
+                "createdAt": "2026-08-20T12:00:00Z",
+                "liveSend": True,
             },
         )
         self.assertTrue(errors)

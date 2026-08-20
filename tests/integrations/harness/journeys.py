@@ -108,6 +108,27 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
     }
     assert_valid("form-spec.v1.json", form)
 
+    nurture = {
+        "planId": f"nurture-{company['companyId']}",
+        "companyId": company["companyId"],
+        "campaignId": campaign_id,
+        "goal": "prepare_lead_before_manny_call",
+        "steps": [
+            {
+                "stepId": "n1",
+                "kind": "executive_memo",
+                "message": "Prepare lead before Manny call (observation-only; no live send).",
+            }
+        ],
+        "createdAt": NOW,
+        "observationOnly": True,
+        "liveSend": False,
+        "liveDispatch": False,
+        "paidAdsEnabled": False,
+        "ownerSystem": "360",
+    }
+    assert_valid("nurture-plan.v1.json", nurture)
+
     lead_handoff = {
         "contractVersion": "360-atlas-lead.v1",
         "leadId": "360-lead-001",

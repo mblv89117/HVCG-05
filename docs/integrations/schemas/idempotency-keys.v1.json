@@ -163,6 +163,19 @@
           "replaySemantics": "Persist-only; no second mapping prep record; no auto-provision."
         },
         {
+          "edge": "360 GTM nurture plan",
+          "pattern": "nurture|{planId}",
+          "sourceSystem": "360",
+          "destinationSystem": "360",
+          "entity": "nurture_plan",
+          "operation": "create",
+          "version": "nurture-plan.v1",
+          "owner": "360 createNurturePlan",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not duplicate plans; liveSend stays false.",
+          "notes": "Observation-only. goal=prepare_lead_before_manny_call. No live send."
+        },
+        {
           "edge": "Booking create",
           "pattern": "booking|{bookingId}",
           "sourceSystem": "360",

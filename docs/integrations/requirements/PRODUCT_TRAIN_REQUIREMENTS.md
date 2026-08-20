@@ -22,7 +22,7 @@ Frozen Atlas baseline remains Hub `940a484` / Elite `75d0c59` — do not regress
 
 ## 360 Growth (GTM train)
 
-Branch declared (directive 3): `cursor/360-gtm-agent-system` @ `e0dd445` — sibling remote **404**. Supervisor 1936Z cited (`liveDispatch`/paid ads false, kill switch true). Last RT-opened GTM files remain D19 `7b704111` (stale vs this tip).
+Branch declared (directive 4): `cursor/360-gtm-agent-system` @ `e0dd445` — sibling remote **404** here. Supervisor V2 2013Z opened the tip (`GTM_LIVE_DISPATCH_ENABLED` default false, `PAID_ADS_ENABLED` default false, `GTM_KILL_SWITCH` default true; `nurture/engine.ts` `createNurturePlan`).
 
 | ID | Requirement | Priority |
 | --- | --- | --- |
@@ -32,10 +32,11 @@ Branch declared (directive 3): `cursor/360-gtm-agent-system` @ `e0dd445` — sib
 | GTM-INT-004 | Consume `closed-won-learning-event.v1` as learning only; `mutatesPaidAds:false` | P1 |
 | GTM-INT-005 | Do not present 360 org UUID as Atlas `ClientCode` | P0 |
 | GTM-INT-006 | Keep additive sync aligned to ratified `360-atlas-gtm-sync.v1.json` | P0 |
+| GTM-INT-007 | Emit `nurture-plan.v1` from `createNurturePlan` (`goal=prepare_lead_before_manny_call`, `observationOnly=true`, `liveSend=false`) | P2 |
 
 ## Agent Copilot
 
-Branch declared (directive 3): `cursor/copilot-production-completion` @ `2f02702` — sibling remote **404**. Supervisor 1936Z + RT D26: `jose.jwtVerify` + `/api/assessments` 401. Prior `19a200e` stale for SECURITY_CERTIFIED.
+Branch declared (directive 4): `cursor/copilot-production-completion` @ `2f02702` — sibling remote **404** here. Supervisor V2 2013Z + RT D26: `jose.jwtVerify` in middleware + session; `/api/assessments` GET/POST 401.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |

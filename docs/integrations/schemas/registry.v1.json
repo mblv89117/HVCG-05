@@ -1,5 +1,5 @@
 {
-  "registryVersion": "platform-integration-contracts.v1.1",
+  "registryVersion": "platform-integration-contracts.v1.2",
   "ownedBy": "hvcg-05/docs/integrations",
   "branch": "cursor/platform-integration-contracts",
   "schemas": [
@@ -18,6 +18,7 @@
     "campaign-spec.v1.json",
     "funnel-spec.v1.json",
     "form-spec.v1.json",
+    "nurture-plan.v1.json",
     "booking-event.v1.json",
     "pre-call-brief.v1.json",
     "experiment-spec.v1.json",

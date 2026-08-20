@@ -4,28 +4,26 @@
 |-------|-------|
 | Train | integration (E — Platform Integration / Contracts) |
 | Product branch | `cursor/platform-integration-contracts` (`workOnCurrentBranch=true`) |
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **3** |
-| BASED ON CURRENT SHA | `a29c873729b0539505231c8b82e33b14f3ce2d49` |
-| BASED ON CURRENT RUN ID | `run-4497aaf8-2256-4d77-8905-2768cf566a61` |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **4** |
+| BASED ON CURRENT SHA | `d57a780d6e1b2240b7797393980bcd0429746489` |
+| BASED ON CURRENT RUN ID | `run-e9674448-8c8c-4b01-b09a-edafa99bb6a9` (schema-probe; ignored) |
+| PRIOR D3 RUN | `run-e3622029-2e68-49f3-b517-1208492e54d2` (consumed) |
 | This worker | `bc-0e3c9a74` |
 | Must not reuse | `bc-af57d6b6` / `run-8c5dc9cf` on `cursor/platform-orchestrator-b1fa` |
 | Orchestrator repo | `360-growth-solution` |
 | Orchestrator branch | `cursor/platform-orchestrator-b1fa` (**not pushed**) |
-| Prior consumed | **2** (D2 matrix; stale consumer SHAs superseded by D3) |
+| Prior consumed | **3** (D3 journey pack; TESTED_TOGETHER=NO superseded by D4 reconcile) |
 
 ## Comparison vs branch state at consume time
 
-| Orch expectation (v3) | Branch state @ `a29c873` | Action |
+| Orch expectation (v4) | Branch state @ `d57a780` | Action |
 | --- | --- | --- |
-| Do not repeat D2 | D2 already published | New journey/current-tip pack only |
-| Pin six current SHAs | D2 still listed Revenue `e9b3be8` / GCC `41a59b8` / Copilot `19a200e` | Replaced with `85def0e` / `8d757cf` / `2f02702` + OD-005 `9e5d10a` |
-| 24-step journey table + percent | Absent | Published `CROSS_SYSTEM_JOURNEY_PERCENT.md` (71%) |
-| CURRENT_PRODUCT_TIPS_TESTED_TOGETHER | Absent | Published **NO** (GTM/Copilot 404) |
-| Confirm CC-001/002/003/006 vs current tips | SoT + stale consumer pins | Confirmed on `85def0e` / `8d757cf` + supervisor/RT cites |
-| Re-run harness | 27/27 | Re-ran **27/27 OK**; no new test |
-| XSYS-01/02 Hub-side @ `9e5d10a` | Docs still named `0bbfd87` | Updated to `9e5d10a` FIXED_REVALIDATED (RT D23) |
-| No Hub HMAC / no deploy | Satisfied | No runtime edits |
+| Reconcile TESTED_TOGETHER | SoT matrix NO vs attestation YES | Set **YES** citing Supervisor V2 2013Z |
+| Publish nurture-plan.v1 | Schema absent; NURTURE NOT TESTED | Published matching GTM `nurturePlanSchema` @ `e0dd445` |
+| Keep SoT meaning 773b510 | Unchanged | Additive only; no semantic fork |
+| Re-run harness ≥27 | Supervisor 2013Z independently 27/27 @ `d57a780` | Re-ran after nurture add |
+| No Hub/OD-005/orchestrator | Satisfied | No runtime edits; no second worker |
 
 ## Stale-directive rule
 
-D2 publish-matrix / 27/27-only refresh is consumed. Directive 1 schema publish remains satisfied since `9b46313`. Those items were not re-implemented.
+D3 current-tip journey pack and D2 matrix refresh are consumed. Directive 1 schema publish remains satisfied since `9b46313`. Those items were not re-implemented.

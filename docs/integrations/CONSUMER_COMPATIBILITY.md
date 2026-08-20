@@ -3,79 +3,67 @@
 **Publisher:** Platform Integration / Contracts (sole publisher of canonical contract meaning)  
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
-**SoT meaning SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged)  
-**Contracts self tip (directive 3 based-on):** `a29c873729b0539505231c8b82e33b14f3ce2d49`  
-**Directive consumed:** **3** (D2 consumed; not repeated)  
-**Replacement worker:** `bc-0e3c9a74` · run `run-4497aaf8-2256-4d77-8905-2768cf566a61`  
-**CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **NO**  
-**CROSS_SYSTEM_JOURNEY_PERCENT:** **71%** — see `CROSS_SYSTEM_JOURNEY_PERCENT.md`  
-**Harness:** `python3 tests/integrations/run_integration_contracts.py` → **27/27 OK**  
-**Updated:** 2026-08-20T19:50:00Z
+**SoT meaning SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged; nurture-plan.v1 is additive)  
+**Contracts self tip (directive 4 based-on):** `d57a780d6e1b2240b7797393980bcd0429746489`  
+**Directive consumed:** **4**  
+**Replacement worker:** `bc-0e3c9a74` · engineering run follows finished schema-probe `run-e9674448` (ignored)  
+**CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **YES**  
+**CROSS_SYSTEM_JOURNEY_PERCENT:** **75%** — see `CROSS_SYSTEM_JOURNEY_PERCENT.md`  
+**Harness:** `python3 tests/integrations/run_integration_contracts.py` → **28/28 OK**  
+**Updated:** 2026-08-20T20:25:00Z
+
+D3 recorded TESTED_TOGETHER=NO because this worker cannot fetch GTM/Copilot remotes (404). Supervisor V2 **2013Z** independently opened those tips in the four-repo environment. Orchestrator attestation `docs/integrations/ORCHESTRATOR_D3_SIBLING_TIP_ATTESTATION.md` @ `d57a780` already recorded YES. This SoT matrix now agrees.
 
 This train does not implement product adapters. Consumers must consume these schemas; they must not redefine lead-intake, commercial authority, GCC provision, or value-signal meaning.
 
-## Declared remote tips (directive 3)
+## Declared remote tips (directive 4)
 
-| Consumer | Repo | Branch | Declared tip | Fetch from this worker |
-| --- | --- | --- | --- | --- |
-| GTM | `360-growth-solution` | `cursor/360-gtm-agent-system` | `e0dd445d60161601bd573435c9536d0385a25bdf` | **404** — supervisor 1936Z cited |
-| Revenue | `hvcg-05` | `cursor/atlas-revenue-engagement-os` | `85def0ef30eb7adc4bcf096f4fabd569c6817535` | **Fetched** — origin tip |
-| GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** — equals remote branch tip |
-| Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `2f0270228cdaf1dceed51a52a62200ffde07a9e0` | **404** — supervisor 1936Z + RT D26 cited |
-| OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only (XSYS owner; not merged) |
-| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `a29c873729b0539505231c8b82e33b14f3ce2d49` | **This branch** |
+| Consumer | Repo | Branch | Declared tip | This-worker fetch | Joint evidence |
+| --- | --- | --- | --- | --- | --- |
+| GTM | `360-growth-solution` | `cursor/360-gtm-agent-system` | `e0dd445d60161601bd573435c9536d0385a25bdf` | **404** | Supervisor V2 2013Z opened |
+| Revenue | `hvcg-05` | `cursor/atlas-revenue-engagement-os` | `85def0ef30eb7adc4bcf096f4fabd569c6817535` | **Fetched** | Unchanged vs D3 |
+| GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** | Unchanged vs D3 |
+| Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `2f0270228cdaf1dceed51a52a62200ffde07a9e0` | **404** | Supervisor V2 2013Z + RT D26 |
+| OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only | Unchanged |
+| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `d57a780d6e1b2240b7797393980bcd0429746489` | **This branch** (based-on) | Harness independently 27/27 @ 2013Z |
 
-D2 pins (Revenue `e9b3be8` / GCC `41a59b8` / Copilot `19a200e`) are **stale** and are replaced by the SHAs above.
+No second Integration worker. Orchestrator control-plane was not pushed.
 
-No second Integration product train was created. Orchestrator control-plane branch `cursor/platform-orchestrator-b1fa` was not pushed.
+## Supervisor V2 2013Z — cited (sibling remotes still 404 here)
 
-## Contract hold / no-fork confirmation (current tips)
+| Claim | Disposition |
+| --- | --- |
+| GTM `GTM_LIVE_DISPATCH_ENABLED` default **false** | **Cited.** SoT `liveDispatch` const false unchanged. |
+| GTM `PAID_ADS_ENABLED` default **false** | **Cited.** SoT `paidAdsEnabled` / `paidAdsRequested` const false. |
+| GTM `GTM_KILL_SWITCH` default **true** | **Cited.** Live outbound remains forbidden. |
+| InquiryForm + receive-inquiry + atlas-handoff `liveDispatch` literal false @ `e0dd445` | **Cited.** Matches SoT CC-001 gates. |
+| `nurture/engine.ts` `createNurturePlan` exists @ `e0dd445` | **Cited.** Canonicalized as `nurture-plan.v1` this directive. |
+| Copilot `jose.jwtVerify` in middleware + session @ `2f02702` | **Cited + RT D26 corroboration.** |
+| Copilot `/api/assessments` GET/POST **401** | **Cited + RT D26.** |
+| Revenue `85def0e` / GCC `8d757cf` unchanged | **Reconfirmed** this worker. |
 
-| ID | Canonical meaning | Holds vs current tips? | Evidence |
-| --- | --- | --- | --- |
-| **CC-001** | camelCase lead-intake SoT; PascalCase aliases optional and equal-only | **YES** | Harness @ `a29c873`. Revenue `src/revenue_os/compatibility.py` `reject_pascal_only` / `accept_gtm_lead` @ `85def0e`. SoT schemas unchanged vs `773b510`. GTM `e0dd445` not opened; supervisor 1936Z + SoT `liveDispatch:false` not contradicted. |
-| **CC-002** | Revenue is commercial authority; Copilot/GTM offers stay `observationOnly` until operator accept | **YES** | `offer-recommendation.v1.json` const @ `a29c873`. Revenue `COPILOT_HAS_COMMERCIAL_AUTHORITY=false` + `ingest_copilot_recommendation` → `commercialAuthority=revenue-os` @ `85def0e`. Copilot RT D26: `observationOnly=true` / `liveDispatch=false` retained @ `2f02702` (cited). |
-| **CC-003** | GCC handoff persist-only; `autoProvisionAccess=false` | **YES** | SoT consts @ `a29c873`. GCC `atlas-activation.ts` + route @ `8d757cf`. Revenue `AUTO_PROVISION_ACCESS=false` @ `85def0e`. |
-| **CC-006** | Canonical signal = `gcc-value-signal.v1` | **YES** | Schema **byte-identical** GCC `8d757cf` vs SoT `a29c873`. Adapter still pins `INTEGRATION_SOT_SHA=773b510…`. Harness `test_cc006_adapter_maps_to_canonical`. |
+## Contract hold / no-fork confirmation
 
-Semantics were **not** forked. SoT meaning remains `773b510`.
+| ID | Holds? | Evidence |
+| --- | --- | --- |
+| **CC-001** | **YES** | camelCase SoT + harness. GTM liveDispatch literal false per 2013Z. |
+| **CC-002** | **YES** | Revenue `85def0e` `COPILOT_HAS_COMMERCIAL_AUTHORITY=false`. |
+| **CC-003** | **YES** | GCC `8d757cf` `autoProvisionAccess=false`. |
+| **CC-006** | **YES** | `gcc-value-signal.v1` byte-identical @ `8d757cf`. |
 
-## Per-consumer notes (current tips)
+`nurture-plan.v1` is **additive** (P2 gap close). It does not change 773b510 meaning of lead-intake, commercial authority, GCC provision, or value-signal.
 
-### GTM `e0dd445`
+## Nurture contract
 
-- Sibling remote **404** to this worker's token. SHA recorded.
-- Supervisor 1936Z (orchestrator-declared, no in-repo 1936Z artifact): `liveDispatch` default false, paid ads default false, kill switch default true. **Cited, not independently re-opened.**
-- Last RT-opened GTM source remains D19 `7b704111` (InquiryForm camelCase, receive `liveDispatch_must_remain_false`) — **stale vs this tip**.
-- SoT for 360→Atlas stays observation-only / live Hub POST owner-gated.
+Published `docs/integrations/schemas/nurture-plan.v1.json` matching GTM Zod `nurturePlanSchema.strict()`:
 
-### Revenue `85def0e`
+- required: `planId`, `companyId`, `campaignId`, `goal`, `steps`, `createdAt`
+- `goal` const `prepare_lead_before_manny_call`
+- step `kind`: `executive_memo` | `industry_content` | `eva_invite` | `copilot_invite` | `case_study` | `readiness_checklist` | `faq` | `founder_content`
+- optional SoT gates: `observationOnly=true`, `liveSend`/`liveDispatch`/`paidAdsEnabled=false`, `ownerSystem=360`
+- idempotency `nurture|{planId}`
 
-- Origin tip. Consumes SoT meaning `@ 773b510` (`docs/revenue-os/INTEGRATION_SOT_PIN.md`). `git diff 773b510 85def0e -- docs/integrations/schemas` empty.
-- CC-001 / CC-002 / CC-003 adapters still in `src/revenue_os/compatibility.py`. All production side-effect gates false in `src/revenue_os/gates.py`.
-- Candidate-only adapters; `liveGraphWrites=false`; no production deploy.
-
-### GCC `8d757cf`
-
-- Remote branch tip equals declared SHA.
-- Still pins Integration SoT `773b510` for CC-006. `gcc-value-signal.v1.json` byte-identical.
-- CC-003 preserved. RT D25 SECURITY_CERTIFIED=PASS (cited). Live Atlas dispatch OFF.
-
-### Copilot `2f02702`
-
-- Sibling remote **404**. SHA recorded.
-- Supervisor 1936Z: `jose.jwtVerify` + `/api/assessments` 401. **Corroborated by RT D26** (`src/middleware.ts`, fail-closed, assessments not public). Prior tip `19a200e` is stale for the SECURITY_CERTIFIED gate.
-- Contract CC-001/002 SoT unchanged on this train.
-
-### OD-005 `9e5d10a`
-
-- Read-only. XSYS-01/02 candidate HMAC + prefix bind still present (`intakeAuth.ts`, `leads.ts`).
-- RT D23: REGRESSION=PASS, FIXED_REVALIDATED. Live Hub `940a484` XSYS remains OPEN until owner-authorized deploy.
-- **Not patched from this branch.**
-
-### Contracts self `a29c873`
-
-- Sole publisher of canonical meaning. Live adapters gated. No Hub/Elite runtime edits.
+GTM `createNurturePlan` already emits this core shape (GTM-INT-007). GitHub MCP opened `packages/gtm-agent/src/nurture/engine.ts` `nurturePlanSchema` @ `e0dd445` (sibling git remote still 404 here; cite Supervisor 2013Z). Optional SoT gates (`observationOnly`/`liveSend`/`liveDispatch`/`paidAdsEnabled`) may be present and must stay observation-only / no live send.
 
 ## Live / deploy gates
 
@@ -83,18 +71,12 @@ Semantics were **not** forked. SoT meaning remains `773b510`.
 | --- | --- |
 | Live outbound / paid ads / live Hub POST | **OFF** |
 | `autoProvisionAccess` | **false** |
-| Hub / Elite production runtime | **Frozen** `940a484` / `75d0c59` |
-| `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER` | **NO** |
-| `INTEGRATION_CERTIFIED` | **Open** (weakest release gate — tips not jointly source-tested here) |
-| `SECURITY_CERTIFIED` | **Not this branch** — Atlas/OD-005 |
-| `SYNTHETIC_CERTIFIED` (contracts harness) | **27/27** |
+| Hub / Elite production | **Frozen** `940a484` / `75d0c59` |
+| `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER` | **YES** (Supervisor 2013Z + this-worker fetchable tips + `d57a780` attestation) |
+| `SYNTHETIC_CERTIFIED` | harness green |
+| `SECURITY_CERTIFIED` | **Not this branch** |
 | `DEPLOYMENT_READY` | **Owner-gated** |
 
-## Security regression (docs only)
+## Security
 
-XSYS-01/02 are **Hub-side LIVE_PRODUCTION_P0** on live `940a484`. Remediation lives on `cursor/atlas-security-patch-od005` @ `9e5d10a` (RT D23 FIXED_REVALIDATED). This contracts branch **did not** patch Hub.
-
-| ID | Live Hub `940a484` | OD-005 candidate `9e5d10a` |
-| --- | --- | --- |
-| **XSYS-01** | Intake key only | Candidate HMAC-SHA256(`${timestamp}.${rawBody}`) fail-closed — FIXED_REVALIDATED |
-| **XSYS-02** | Unbound `fullPayload.idempotencyKey` | Prefix bound to `submissionType` — FIXED_REVALIDATED |
+XSYS-01/02 remain Hub LIVE_PRODUCTION_P0 on `940a484`. Candidate `9e5d10a` FIXED_REVALIDATED (RT D23). Not patched here. No `Sites.Manage.All`.

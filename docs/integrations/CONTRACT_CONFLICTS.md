@@ -1,15 +1,15 @@
 # Contract Conflicts and Canonical Resolutions
 
-Inspection sources (fetched read-only, not merged) — directive 3 tips:
+Inspection sources (fetched read-only, not merged) — directive 4 tips:
 
 | Requested branch | Tip | This-worker fetch |
 | --- | --- | --- |
 | `cursor/atlas-revenue-engagement-os` | `85def0e` | Fetched on `hvcg-05` |
-| `cursor/360-gtm-agent-system` | `e0dd445` | Remote 404; supervisor 1936Z cited |
+| `cursor/360-gtm-agent-system` | `e0dd445` | Git remote 404; Supervisor V2 2013Z + GitHub MCP `nurturePlanSchema` cited |
 | `cursor/gcc-client-value-os` | `8d757cf` | Fetched on `growth-command-center` (equals branch tip) |
-| `cursor/copilot-production-completion` | `2f02702` | Remote 404; RT D26 + supervisor 1936Z cited |
+| `cursor/copilot-production-completion` | `2f02702` | Git remote 404; Supervisor V2 2013Z + RT D26 cited |
 | `cursor/atlas-security-patch-od005` | `9e5d10a` | Fetched read-only (XSYS owner; not merged) |
-| `cursor/platform-integration-contracts` | `a29c873` | This branch (SoT meaning `773b510`) |
+| `cursor/platform-integration-contracts` | `d57a780` | This branch based-on (SoT meaning `773b510`) |
 
 Prior substitutes (`360-hv-completion-52d1`, `gcc-hv-completion-52d1`, `copilot-hv-completion-52d1`) remain historical ancestry only.
 
@@ -31,6 +31,7 @@ Prior substitutes (`360-hv-completion-52d1`, `gcc-hv-completion-52d1`, `copilot-
 | Campaign/UTM not on `HVCG_Leads` columns | Atlas data model | Formalized in `attribution-lineage.v1`; product train must preserve in payload until list migration (ATLAS-INT-002). |
 | SYSTEM INDEX points at `integration/atlas-canonical` while contracts lived on hv-completion | Docs | This coordination branch is contract SoT; Atlas product baseline SHAs frozen separately. |
 | XSYS-01/02 intake key without body HMAC + unbound idempotency prefix | Frozen Hub `940a484` (LIVE_PRODUCTION_P0) | **Fail-safe:** documented only on this train. Hub remediation candidate `cursor/atlas-security-patch-od005` @ `9e5d10a` (RT D23 FIXED_REVALIDATED). Do not patch Hub from contracts. |
+| GTM `createNurturePlan` existed without a published Integration schema | GTM `e0dd445` vs Integration | **Published** `nurture-plan.v1.json` matching `nurturePlanSchema` (GitHub MCP @ `e0dd445`). Observation-only; no live send. |
 
 ## Circular dependencies
 
