@@ -9,7 +9,7 @@ Inspection sources (fetched read-only, not merged) — directive 4 tips:
 | `cursor/gcc-client-value-os` | `8d757cf` | Fetched on `growth-command-center` (equals branch tip) |
 | `cursor/copilot-production-completion` | `2f02702` | Git remote 404; Supervisor V2 2013Z + RT D26 cited |
 | `cursor/atlas-security-patch-od005` | `9e5d10a` | Fetched read-only (XSYS owner; not merged) |
-| `cursor/platform-integration-contracts` | `d57a780` | This branch based-on (SoT meaning `773b510`) |
+| `cursor/platform-integration-contracts` | `189281a` | This branch (SoT meaning `773b510`; based-on `d57a780`) |
 
 Prior substitutes (`360-hv-completion-52d1`, `gcc-hv-completion-52d1`, `copilot-hv-completion-52d1`) remain historical ancestry only.
 

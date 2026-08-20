@@ -23,7 +23,7 @@ Live adapters stay gated. No production writes. No Hub thaw.
 | GCC | `8d757cf68157a6054432de7ca57f8431731b2d64` | This worker fetched |
 | Copilot | `2f0270228cdaf1dceed51a52a62200ffde07a9e0` | Supervisor V2 2013Z + RT D26 (this worker 404) |
 | OD-005 | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | This worker fetched read-only |
-| Contracts | `d57a780d6e1b2240b7797393980bcd0429746489` | This branch based-on; Supervisor 2013Z harness 27/27 |
+| Contracts | `189281a07f407b93253d7b552569b2a814a8bfb7` | This branch D4 pack; Supervisor 2013Z harness 27/27 @ `d57a780` |
 
 `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER=YES` reconciles the D3 SoT matrix (`NO`) with Supervisor 2013Z + attestation `ORCHESTRATOR_D3_SIBLING_TIP_ATTESTATION.md` @ `d57a780`.
 

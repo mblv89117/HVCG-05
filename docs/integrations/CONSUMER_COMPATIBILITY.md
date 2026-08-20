@@ -4,7 +4,7 @@
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
 **SoT meaning SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged; nurture-plan.v1 is additive)  
-**Contracts self tip (directive 4 based-on):** `d57a780d6e1b2240b7797393980bcd0429746489`  
+**Contracts self tip:** `189281a07f407b93253d7b552569b2a814a8bfb7` (based-on `d57a780`)  
 **Directive consumed:** **4**  
 **Replacement worker:** `bc-0e3c9a74` · engineering run follows finished schema-probe `run-e9674448` (ignored)  
 **CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **YES**  
@@ -25,7 +25,7 @@ This train does not implement product adapters. Consumers must consume these sch
 | GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** | Unchanged vs D3 |
 | Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `2f0270228cdaf1dceed51a52a62200ffde07a9e0` | **404** | Supervisor V2 2013Z + RT D26 |
 | OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only | Unchanged |
-| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `d57a780d6e1b2240b7797393980bcd0429746489` | **This branch** (based-on) | Harness independently 27/27 @ 2013Z |
+| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `189281a07f407b93253d7b552569b2a814a8bfb7` | **This branch** | D4 pack; Supervisor 2013Z independently 27/27 @ `d57a780` |
 
 No second Integration worker. Orchestrator control-plane was not pushed.
 

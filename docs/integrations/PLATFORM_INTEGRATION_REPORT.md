@@ -1,7 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** `d57a780` (directive 4 based-on; SoT meaning `773b510`)  
+**SHA:** `189281a` (directive 4 pack; based-on `d57a780`; SoT meaning `773b510`)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59` — **not thawed**  
@@ -32,7 +32,7 @@ Live Hub POST, paid ads, and GCC auto-provision remain gated.
 | Field | Value |
 | --- | --- |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **4** |
-| CURRENT SHA | `d57a780` (based-on) |
+| CURRENT SHA | `189281a` |
 | COMPLETED ACTIONS | D4 reconcile TESTED_TOGETHER=YES; published `nurture-plan.v1`; NURTURE PASS; harness 28/28 |
 | REMAINING ACTIONS | SECURITY_CERTIFIED / deploy owner-gated; XSYS Hub-side |
 | P0/P1/P2 | **None on this train.** Hub XSYS-01/02 owned by OD-005 @ `9e5d10a`. Nurture P2 closed. |
@@ -52,7 +52,7 @@ Full matrix: `CONSUMER_COMPATIBILITY.md`. Journey table: `CROSS_SYSTEM_JOURNEY_P
 | GCC | `8d757cf` | Fetched. CC-003/CC-006 hold. Schema byte-identical. |
 | Copilot | `2f02702` | Git remote 404 here. Supervisor V2 2013Z + RT D26 jose/`/api/assessments` 401 cited. |
 | OD-005 | `9e5d10a` | Fetched read-only. XSYS candidate FIXED_REVALIDATED (RT D23). |
-| Contracts self | `d57a780` | Sole publisher of canonical meaning |
+| Contracts self | `189281a` | Sole publisher of canonical meaning |
 
 ## P0 / P1 / P2
 
