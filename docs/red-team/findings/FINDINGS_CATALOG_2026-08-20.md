@@ -222,7 +222,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-org financial exposure via demo/client tenant attachment.
 - **recommended remediation:** Trigger inserts NULL org; invite-only; never COALESCE to Apex.
 - **regression test:** Signup never assigns org-apex.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `32e923c` (D24 `test:security`; prior FIXED @ `41a59b8` D12)
 
 ### GCC-RT-20260820-02
 - **system:** GCC · **severity:** P0 · **branch/SHA:** `62f98cc`
@@ -231,7 +231,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Platform admin + cross-tenant access.
 - **recommended remediation:** Restrict updatable columns; trigger reject role/org mutations from client.
 - **regression test:** Client cannot UPDATE role/organization_id.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `32e923c` (D24)
 
 ### GCC-RT-20260820-03
 - **system:** GCC · **severity:** P0 · **branch/SHA:** `62f98cc`
@@ -240,7 +240,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Financial integration takeover / cross-tenant QBO binding.
 - **recommended remediation:** Signed expiring state tied to session; verify auth on callback.
 - **regression test:** Tampered state rejected.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `32e923c` (D24)
 
 ### GCC-RT-20260820-04
 - **system:** GCC · **severity:** P0 on main / mitigated on feature routes · **branch/SHA:** `fb986cb` (main)
@@ -248,7 +248,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Demo/client financial leakage.
 - **recommended remediation:** Keep feature fail-closed; never ship main default.
 - **regression test:** Missing organizationId ≠ Apex.
-- **status:** open (main)
+- **status:** open (main) — not in D24 `test:security` scope on feature tip
 
 ### GCC-RT-20260820-05
 - **system:** GCC · **severity:** P1 · **branch/SHA:** `62f98cc`
@@ -256,7 +256,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Classic IDOR if any handler omits requireApiAccess.
 - **recommended remediation:** Derive tenant from server auth only.
 - **regression test:** Mismatched org → 403 on all tenant routes.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `32e923c` (D24)
 
 ### GCC-RT-20260820-06
 - **system:** GCC · **severity:** P1 · **branch/SHA:** `62f98cc`
@@ -264,7 +264,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Role model advisory for financial data.
 - **recommended remediation:** Enforce permissions on APIs and layouts.
 - **regression test:** sales → 403 on financial payload/export.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `32e923c` (D24)
 
 ### GCC-RT-20260820-07
 - **system:** GCC · **severity:** P1 · **branch/SHA:** `62f98cc`
@@ -272,7 +272,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Poisoned tenant-mapping queue (autoProvision still false).
 - **recommended remediation:** Atlas-issued signed activation token.
 - **regression test:** Unsigned body rejected for machine path.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `32e923c` (D24)
 
 ### GCC-RT-20260820-08..10 (P1/P2)
 - **08** P1 Value-signal/KPI write weak under demo; financial truth via admin bypass.
@@ -528,3 +528,19 @@ Severity: P0 / P1 / P2 (not inflated)
 | AUTHORIZE PRODUCTION SECURITY PATCH | **NO** (this worker) |
 | Live production P0 | **5** (unchanged) |
 | Report | `docs/red-team/CERTIFIED_WORKFLOW_REGRESSION_9e5d10a.md` |
+
+
+## Directive 24 status appendix (GCC tip `32e923c`)
+
+| Gate / ID | Status @ Directive 24 |
+|-----------|------------------------|
+| Exact GCC SHA | `32e923cb836741a9569b58841b51ceec429f56b4` |
+| GCC-RT-20260820-01/02/03/05/06/07 | **FIXED_REVALIDATED** — `npm run test:security` 6/6 exit 0 |
+| `npm test` | **PASS** exit 0 (isolation 5 + handoff 3 + cvos 8 + security 6) |
+| `npm run fixture:cvos` | **PASS** — `FIXTURE_PATH_PASS`; `autoProvisionAccess=false`; org=`org-syn01` ≠ org-apex; SYN01; live flags false; `gcc-value-signal.v1` |
+| `npm run typecheck` | **FAIL** exit 2 — new `scripts/fixture-synthetic-cvos-path.ts` TS5097/TS2339 only |
+| GCC SECURITY_CERTIFIED | **PARTIAL** (security+tests+fixture PASS; typecheck FAIL) |
+| New fixture-path P0/P1 | **0** (source inspect: no live network / org spoof / entitlement provision) |
+| OD-005 REGRESSION | **PASS** @ `9e5d10a` (D23 cite; not retested) |
+| Live production P0 | **5** OPEN @ Hub `940a484` |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_24_2026-08-20.md` |
