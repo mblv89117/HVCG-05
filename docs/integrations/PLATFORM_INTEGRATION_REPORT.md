@@ -1,6 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
+**SHA:** `9b463134d87216f0602fe8d625c96c207eac937c`  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59`, P0 `0`, P1 `0`  
