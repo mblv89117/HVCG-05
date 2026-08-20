@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | 6ecd9b0f4fbab05a13a67d082082d29e8b5e03e5 |
 | baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **23** |
 | BASED ON WORKER SHA | `b483d35a1297d2bc4cba4a6c674b8f7096d62a36` |
 | BASED ON RUN ID | `run-bc49d9ec-cc34-45f9-a245-6d911d58276a` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | 6ecd9b0f4fbab05a13a67d082082d29e8b5e03e5 |
 | COMPLETED ACTIONS | Independent convert residual + Hub API + staff-bypass retest on OD-005 `9e5d10a`; rollback re-attest; CERTIFIED_WORKFLOW_REGRESSION_9e5d10a.md |
 | REMAINING ACTIONS | Owner gate / authorized Hub deploy still required for live P0=0; RT does not authorize production patch |
 | P0/P1/P2 | Live P0=5 · Candidate P0=0 · P1=0 · P2=none |
