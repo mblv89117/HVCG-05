@@ -1,0 +1,97 @@
+=== D20 Revenue adapters @ e9b3be8 2026-08-20T08:06:17Z ===
+TIP=e9b3be8c58a3ea20f8d73806c9dbd6258cec8c56
+sharepoint_schema_delta=0
+--- adapter unit tests ---
+test_accg01_mismatch_fail_closed (tests.revenue_os.test_sharepoint_adapters.SharePointAdapterTests.test_accg01_mismatch_fail_closed) ... ok
+test_engagement_fixture_replay_uses_sot_key (tests.revenue_os.test_sharepoint_adapters.SharePointAdapterTests.test_engagement_fixture_replay_uses_sot_key) ... ok
+test_live_graph_default_off (tests.revenue_os.test_sharepoint_adapters.SharePointAdapterTests.test_live_graph_default_off) ... ok
+test_proposal_fixture_replay_is_idempotent (tests.revenue_os.test_sharepoint_adapters.SharePointAdapterTests.test_proposal_fixture_replay_is_idempotent) ... ok
+test_unmatched_opportunity_fail_closed (tests.revenue_os.test_sharepoint_adapters.SharePointAdapterTests.test_unmatched_opportunity_fail_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.008s
+
+OK
+adapter_exit:0
+--- full revenue suite (includes adapters if discovered) ---
+test_catalog_integrity (test_catalogs.CatalogTests.test_catalog_integrity) ... ok
+test_decision_engine_ready_for_financing (test_catalogs.CatalogTests.test_decision_engine_ready_for_financing) ... ok
+test_offer_catalog_has_thirteen_offers (test_catalogs.CatalogTests.test_offer_catalog_has_thirteen_offers) ... ok
+test_service_catalog_has_seven_lines (test_catalogs.CatalogTests.test_service_catalog_has_seven_lines) ... ok
+test_cc001_accepts_camelcase_gtm (test_compatibility.CompatibilityTests.test_cc001_accepts_camelcase_gtm) ... ok
+test_cc001_rejects_pascalcase_only (test_compatibility.CompatibilityTests.test_cc001_rejects_pascalcase_only) ... ok
+test_cc002_copilot_stays_advisory (test_compatibility.CompatibilityTests.test_cc002_copilot_stays_advisory) ... ok
+test_cc002_rejects_commitment (test_compatibility.CompatibilityTests.test_cc002_rejects_commitment) ... ok
+test_cc003_gcc_handoff_no_auto_provision (test_compatibility.CompatibilityTests.test_cc003_gcc_handoff_no_auto_provision) ... ok
+test_msa_sow_replay_and_wet_ink (test_documents.DocumentTests.test_msa_sow_replay_and_wet_ink) ... ok
+test_document_and_engagement_keys (test_idempotency.IdempotencyTests.test_document_and_engagement_keys) ... ok
+test_store_return_existing (test_idempotency.IdempotencyTests.test_store_return_existing) ... ok
+test_legacy_does_not_overwrite_accg (test_pricing.PricingTests.test_legacy_does_not_overwrite_accg) ... ok
+test_new_client_observation_contract (test_pricing.PricingTests.test_new_client_observation_contract) ... ok
+test_referral_guidance_collected_only (test_pricing.PricingTests.test_referral_guidance_collected_only) ... ok
+test_draft_and_block_send (test_proposals.ProposalTests.test_draft_and_block_send) ... ok
+test_accg01_mismatch_fail_closed (test_sharepoint_adapters.SharePointAdapterTests.test_accg01_mismatch_fail_closed) ... ok
+test_engagement_fixture_replay_uses_sot_key (test_sharepoint_adapters.SharePointAdapterTests.test_engagement_fixture_replay_uses_sot_key) ... ok
+test_live_graph_default_off (test_sharepoint_adapters.SharePointAdapterTests.test_live_graph_default_off) ... ok
+test_proposal_fixture_replay_is_idempotent (test_sharepoint_adapters.SharePointAdapterTests.test_proposal_fixture_replay_is_idempotent) ... ok
+test_unmatched_opportunity_fail_closed (test_sharepoint_adapters.SharePointAdapterTests.test_unmatched_opportunity_fail_closed) ... ok
+test_offer_to_engagement (test_synthetic_journey.SyntheticJourneyTests.test_offer_to_engagement) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.022s
+
+OK
+suite_exit:0
+--- independent adversarial probes ---
+{'gates': {'LIVE_GRAPH_WRITES': False, 'PRODUCTION_WRITES': False, 'LIVE_DISPATCH': False}, 'unmatched_fail_closed': True, 'accg01_refuse': True, 'live_graph_refuse': True, 'fixture_ok': True, 'autoSend_refuse': True, 'new_p0': 0, 'new_p1': 0}
+--- reconfirm REVOS-ELITE-RT-20260820-01 on tip tree ---
+    # Subtest: does not return ACME01 floor/list for opp-accg-expansion-001
+    ok 2 - does not return ACME01 floor/list for opp-accg-expansion-001
+      ---
+      duration_ms: 0.166174
+      ...
+    # Subtest: fails closed when opportunityId is missing
+    ok 3 - fails closed when opportunityId is missing
+      ---
+      duration_ms: 0.090577
+      ...
+    # Subtest: fails closed when ClientCode does not match the loaded context
+    ok 4 - fails closed when ClientCode does not match the loaded context
+      ---
+      duration_ms: 0.179258
+      ...
+    # Subtest: accepts an explicit matching ClientCode for the loaded ACME context
+    ok 5 - accepts an explicit matching ClientCode for the loaded ACME context
+      ---
+      duration_ms: 0.100098
+      ...
+    # Subtest: preserves closed commercial gates
+    ok 6 - preserves closed commercial gates
+      ---
+      duration_ms: 0.069077
+      ...
+    1..6
+ok 1 - REVOS-ELITE-RT-20260820-01 fail-closed commercial context
+  ---
+  duration_ms: 1.99043
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 169.910739
+p1_exit:0
+{
+  "p1StillFixed": true,
+  "foreign": {
+    "ok": false,
+    "model": null,
+    "error": "No loaded commercial context for opportunity 'opp-accg-expansion-001'. Fail closed — ACME01 prices are not remapped onto unmatched opportunities."
+  }
+}
+p1_probe_exit:0

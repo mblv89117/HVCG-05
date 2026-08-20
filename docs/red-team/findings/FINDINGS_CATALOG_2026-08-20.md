@@ -473,3 +473,13 @@ Severity: P0 / P1 / P2 (not inflated)
 | REVOS-ELITE-RT-20260820-01 | **FIXED** @ `fc92f74` |
 | ATLAS-RT-01/02/03 · XSYS-01/02 | OPEN on Hub (not retested) |
 | New P0/P1 this cycle | 0 / 0 |
+
+
+## Directive 20 status appendix (Revenue Dev SharePoint adapters)
+
+| ID / control | Status @ Directive 20 |
+|----|------------------------|
+| HVCG_Proposals / HVCG_Engagements adapters @ `e9b3be8` | PASS — ClientCode-scoped, fail-closed unmatched opp, ACCG01 refuse, fixture-only, no schema thaw |
+| REVOS-ELITE-RT-20260820-01 | FIXED reconfirmed @ `e9b3be8` |
+| New P0/P1 | 0 / 0 |
+| ATLAS-RT-01/02/03 · XSYS-01/02 | OPEN on Hub (not retested) |

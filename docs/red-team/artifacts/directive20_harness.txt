@@ -1,0 +1,13 @@
+{"id":"LISTS","status":"PASS","detail":"targets frozen HVCG_Proposals / HVCG_Engagements"}
+{"id":"CLIENTCODE_SCOPED","status":"PASS","detail":"ClientCode-scoped fail-closed"}
+{"id":"UNMATCHED_OPP","status":"PASS","detail":"unmatched opportunity fail-closed covered by tests"}
+{"id":"ACCG01_REFUSE","status":"PASS","detail":"ACCG01 writes forbidden"}
+{"id":"FIXTURE_ONLY","status":"PASS","detail":"liveGraphWrites=false / fixture-only"}
+{"id":"NO_SCHEMA_THAW_HELPER","status":"PASS","detail":"unknown columns refused against frozen list schema"}
+{"id":"REVOS-ELITE-RT-20260820-01","status":"PASS","detail":"Elite P1 fail-closed still present"}
+{"id":"ADAPTER_UNIT_TESTS","status":"PASS","detail":"unittest exit=0"}
+{
+  "summary": {
+    "fail": 0
+  }
+}
