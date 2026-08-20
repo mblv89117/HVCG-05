@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `0d37e3c` |
+| current SHA | `20c7bf5` |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d15-od005.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **15** |
 | BASED ON WORKER SHA | `97576c2bc23e3834ae1488e48422656cce894fa1` |
 | BASED ON RUN ID | `run-75ccd61c-6d51-406b-a509-7f245e4f86c1` |
-| CURRENT SHA | `0d37e3cbed5ad07bc5cf6e5ca4c4782c90b77338` |
+| CURRENT SHA | `20c7bf5c66d5444b3b9cc426e7ea3a711d810a68` |
 | COMPLETED ACTIONS | Verified OD-005 `bb7edae` for ATLAS-01/02/03; confirmed XSYS still open; verified GTM-03/04 @ `bd72003`; Revenue OS first-pass @ `9c9c331` (no new P0/P1) |
 | REMAINING ACTIONS | Retest when XSYS remediations land; re-confirm Hub after OD-005 authorized deploy |
 | P0/P1/P2 | P0=XSYS×2 (+ Hub ATLAS until deploy) · P1=0 · P2=none |
