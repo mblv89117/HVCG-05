@@ -1,0 +1,264 @@
+=== P0 REVALIDATION 2026-08-20T04:28:18Z ===
+orchestrator_sha=795d515
+directive=ORCHESTRATOR_REPORT_2026-08-20T0418Z + trains/F-platform-red-team.md
+
+===== ATLAS-RT-01/02 opportunity staff bypass =====
+-- freeze tip atlas-hv-completion 2a5a605 --
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-verify/atlas-candidate/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": true,
+  "status": "OPEN_DEFECT"
+}
+-- atlas-p2 66b77d2 --
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-reval/atlas-p2/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": true,
+  "status": "OPEN_DEFECT"
+}
+-- integration 8fc711f (likely docs) --
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-reval/integration/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": true,
+  "status": "OPEN_DEFECT"
+}
+
+===== ATLAS-RT-03 Plaid JWT =====
+-- atlas-candidate --
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:12:import { parsePrincipal, assertClientAccess } from './middleware/auth.ts';
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:47:function requirePrincipal(req: IncomingMessage, cfg: AppConfig) {
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:60:  const p = parsePrincipal(headers);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:69:  principal: ReturnType<typeof requirePrincipal>,
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:117:          'content-type,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles',
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:145:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:157:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:179:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:232:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:358:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/index.ts:386:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/middleware/auth.ts:16:export function parsePrincipal(headers: Headers): AtlasPrincipal | null {
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/middleware/auth.ts:17:  const userId = headers.get('x-atlas-user-id');
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/middleware/auth.ts:18:  const orgId = headers.get('x-atlas-organization-id') || 'org-hvcg';
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/middleware/auth.ts:19:  const clients = headers.get('x-atlas-client-ids');
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/middleware/auth.ts:23:    email: headers.get('x-atlas-user-email') || undefined,
+/tmp/rt-verify/atlas-candidate/apps/atlas-plaid-api/src/middleware/auth.ts:26:    roles: (headers.get('x-atlas-roles') || 'ClientContact').split(','),
+-- atlas-p2 --
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:12:import { parsePrincipal, assertClientAccess } from './middleware/auth.ts';
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:47:function requirePrincipal(req: IncomingMessage, cfg: AppConfig) {
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:60:  const p = parsePrincipal(headers);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:69:  principal: ReturnType<typeof requirePrincipal>,
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:117:          'content-type,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles',
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:145:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:157:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:179:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:232:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:358:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/index.ts:386:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/middleware/auth.ts:16:export function parsePrincipal(headers: Headers): AtlasPrincipal | null {
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/middleware/auth.ts:17:  const userId = headers.get('x-atlas-user-id');
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/middleware/auth.ts:18:  const orgId = headers.get('x-atlas-organization-id') || 'org-hvcg';
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/middleware/auth.ts:19:  const clients = headers.get('x-atlas-client-ids');
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/middleware/auth.ts:23:    email: headers.get('x-atlas-user-email') || undefined,
+/tmp/rt-reval/atlas-p2/apps/atlas-plaid-api/src/middleware/auth.ts:26:    roles: (headers.get('x-atlas-roles') || 'ClientContact').split(','),
+
+===== GTM-RT-01 CallRail secret binding @ 43f9305 =====
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts:43:export function verifyCallRailSignature(rawBody: string, signatureHeader: string | null): boolean {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-44-  const flags = getSafetyFlags();
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-45-  if (
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-46-    !isProductionLikeRuntime() &&
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-47-    flags.callrailSandbox &&
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-48-    (signatureHeader === 'sandbox' || process.env.NODE_ENV === 'test')
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-49-  ) {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-50-    return true;
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-51-  }
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-52-  if (!signatureHeader) return false;
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-53-  const secrets = [
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts:54:    process.env.CALLRAIL_WEBHOOK_SECRET,
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts:55:    process.env.CALLRAIL_WEBHOOK_SECRET_YUCCA,
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts:56:    process.env.CALLRAIL_WEBHOOK_SECRET_DHS,
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-57-  ].filter((s): s is string => Boolean(s));
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-58-  if (secrets.length === 0) return false;
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-59-  const provided = Buffer.from(signatureHeader);
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-60-  return secrets.some((secret) => {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-61-    const expected = Buffer.from(createHmac('sha256', secret).update(rawBody).digest('hex'));
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-62-    if (expected.length !== provided.length) return false;
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-63-    return timingSafeEqual(expected, provided);
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-64-  });
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-65-}
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-66-
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-67-type HartTenant = {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-68-  organization_id: string;
+--
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts:132:  if (!verifyCallRailSignature(input.rawBody, input.signatureHeader)) {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-133-    throw new Error('invalid_callrail_signature');
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-134-  }
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-135-  const parsed = CallRailWebhookSchema.parse(JSON.parse(input.rawBody));
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-136-  if (input.claimedOrganizationId && input.claimedOrganizationId !== HART_ORG_ID) {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-137-    // Never trust caller-supplied tenant IDs.
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-138-  }
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-139-  const tracking = parsed.tracking_phone_number ?? parsed.tracking_number;
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-140-  const tenant =
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-141-    (await resolveHartTenantByTrackerId(parsed.tracker_id ?? parsed.source_tracker_id)) ??
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-142-    (await resolveHartTenantByTrackingNumber(tracking));
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-143-  if (!tenant || tenant.organization_id !== HART_ORG_ID) {
+/tmp/rt-reval/gtm/packages/lead-intelligence/src/callrail.ts-144-    throw new Error('unresolved_or_unauthorized_tenant');
+
+===== GCC-RT-01/02/03 @ 78cb5d2 =====
+-- profile RLS --
+/tmp/rt-reval/gcc/supabase/fix-signup.sql:8:-- That file includes gcc_handle_new_user(), the auth.users trigger, default org seeds,
+/tmp/rt-reval/gcc/supabase/fix-signup.sql-9--- and all table/RLS definitions. Running setup.sql on an existing project is safe
+/tmp/rt-reval/gcc/supabase/fix-signup.sql-10--- (CREATE IF NOT EXISTS / ON CONFLICT DO NOTHING).
+--
+/tmp/rt-reval/gcc/supabase/verify-setup.sql:49:  SELECT 5, 'gcc_handle_new_user exists',
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-50-    CASE WHEN COUNT(*) = 1 THEN 'PASS' ELSE 'FAIL' END,
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-51-    COUNT(*)::text
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-52-  FROM pg_proc p
+--
+/tmp/rt-reval/gcc/supabase/verify-setup.sql:54:  WHERE n.nspname = 'public' AND p.proname = 'gcc_handle_new_user'
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-55-
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-56-  UNION ALL
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-57-
+--
+/tmp/rt-reval/gcc/supabase/verify-setup.sql:62:  WHERE id IN ('org-apex', 'org-summit')
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-63-
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-64-  UNION ALL
+/tmp/rt-reval/gcc/supabase/verify-setup.sql-65-
+--
+/tmp/rt-reval/gcc/supabase/schema.sql:4:-- Organizations (tenants) — id matches app org ids e.g. org-apex
+/tmp/rt-reval/gcc/supabase/schema.sql-5-CREATE TABLE IF NOT EXISTS organizations (
+/tmp/rt-reval/gcc/supabase/schema.sql-6-  id TEXT PRIMARY KEY,
+/tmp/rt-reval/gcc/supabase/schema.sql-7-  name TEXT NOT NULL,
+--
+/tmp/rt-reval/gcc/supabase/schema.sql:173:-- Signup trigger — organization_id is TEXT e.g. org-apex
+/tmp/rt-reval/gcc/supabase/schema.sql-174-CREATE OR REPLACE FUNCTION handle_new_user()
+/tmp/rt-reval/gcc/supabase/schema.sql-175-RETURNS TRIGGER AS $$
+/tmp/rt-reval/gcc/supabase/schema.sql-176-BEGIN
+--
+/tmp/rt-reval/gcc/supabase/schema.sql:182:    COALESCE(NEW.raw_user_meta_data->>'organization_id', 'org-apex')
+/tmp/rt-reval/gcc/supabase/schema.sql-183-  );
+/tmp/rt-reval/gcc/supabase/schema.sql-184-  RETURN NEW;
+/tmp/rt-reval/gcc/supabase/schema.sql-185-END;
+--
+/tmp/rt-reval/gcc/supabase/seed.sql:5:  ('org-apex', 'Apex Construction Group', 'apex-construction', 'Commercial Construction', 'growth'),
+/tmp/rt-reval/gcc/supabase/seed.sql-6-  ('org-summit', 'Summit Renovations LLC', 'summit-renovations', 'Residential Renovation', 'starter')
+/tmp/rt-reval/gcc/supabase/seed.sql-7-ON CONFLICT (id) DO NOTHING;
+/tmp/rt-reval/gcc/supabase/seed.sql-8-
+--
+/tmp/rt-reval/gcc/supabase/seed.sql:14:  'org-apex', 487250, 412800, 892400, 6840000,
+/tmp/rt-reval/gcc/supabase/setup.sql
+/tmp/rt-reval/gcc/supabase/schema.sql
+/tmp/rt-reval/gcc/supabase/verify-setup.sql
+-- QBO state --
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/sync/route.ts:10:    const { organizationId } = body as { organizationId?: string };
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/sync/route.ts:12:    if (!organizationId) {
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/sync/route.ts:13:      return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/sync/route.ts:16:    const access = await requireApiAccess({ organizationId });
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/sync/route.ts:19:    const result = await syncQuickBooks(organizationId);
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/sync/route.ts:20:    await recordSyncResult(organizationId, "quickbooks", result);
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/callback/route.ts:21:    const { organizationId } = JSON.parse(
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/callback/route.ts:22:      Buffer.from(state, "base64url").toString("utf-8")
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/callback/route.ts:23:    ) as { organizationId: string };
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/callback/route.ts:28:      organizationId,
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:9:    const { organizationId } = body as { organizationId?: string };
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:11:    if (!organizationId) {
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:12:      return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:15:    const access = await requireApiAccess({ organizationId });
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/disconnect/route.ts:18:    const disconnected = await disconnectQuickBooks(organizationId);
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/connect/route.ts:11:    const { organizationId, demo } = body as { organizationId?: string; demo?: boolean };
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/connect/route.ts:13:    if (!organizationId) {
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/connect/route.ts:14:      return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/connect/route.ts:17:    const access = await requireApiAccess({ organizationId });
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/connect/route.ts:22:      const connection = await connectQuickBooksDemo(organizationId);
+/tmp/rt-reval/gcc/src/app/api/integrations/quickbooks/connect/route.ts:37:    const state = Buffer.from(JSON.stringify({ organizationId })).toString("base64url");
+
+===== COPILOT-RT-01/02/03 @ 7e63a6d =====
+-- middleware --
+/tmp/rt-reval/copilot/src/middleware.ts
+middleware.ts PRESENT
+14:  "/api/assessments",
+91:    pathname === "/admin" ||
+92:    pathname.startsWith("/admin/") ||
+113:    if (pathname.startsWith("/admin")) {
+115:      if (role !== "hvcg_admin" && role !== "hvcg_consultant") {
+136:  matcher: [
+138:    "/admin/:path*",
+-- admin review auth --
+import { NextRequest, NextResponse } from "next/server";
+import { AuthError, authErrorResponse, requireRole, requireTenantContext } from "@/lib/auth/guards";
+import { readSessionFromRequest } from "@/lib/auth/session";
+import { addAudit, readStore, updateStore } from "@/lib/store";
+import { DEFAULT_PRICING } from "@/lib/pricing/defaults";
+import { gateCommercialAction } from "@/lib/revenue/offer-interface";
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await readSessionFromRequest(req);
+    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+    requireRole(session, ["hvcg_admin", "hvcg_consultant"]);
+    const store = readStore();
+    return NextResponse.json({
+      assessments: store.assessments.filter((a) => a.organizationId === session.organizationId),
+      audit: store.audit.filter((a) => a.organizationId === session.organizationId).slice(0, 50),
+      pricing: store.pricing.length ? store.pricing : DEFAULT_PRICING,
+    });
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await readSessionFromRequest(req);
+    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+    requireRole(session, ["hvcg_admin", "hvcg_consultant"]);
+    const body = await req.json().catch(() => ({}));
+
+    if (body.action === "approve") {
+      if (body.assessmentId && body.assessmentId !== session.assessmentId) {
+        // Admin may approve only the session-bound assessment in this MVP sandbox.
+        throw new AuthError("CROSS_ASSESSMENT_DENIED", "Assessment is not bound to this session", 403);
+      }
+      const store = updateStore((s) => {
+        s.session = {
+          userId: session.userId,
+          organizationId: session.organizationId,
+          mode: session.mode,
+/tmp/rt-reval/copilot/src/app/api/gtm/enrichment/route.ts:11:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/gtm/enrichment/route.ts:42:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/atlas/handoff/route.ts:10:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/atlas/leads/route.ts:15:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/atlas/leads/route.ts:41:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/documents/route.ts:11:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/documents/route.ts:55:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/admin/review/route.ts:11:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/admin/review/route.ts:27:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/admin/pricing/route.ts:12:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/admin/pricing/route.ts:27:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/reports/pdf/route.ts:15:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/reports/proposal/route.ts:13:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/reports/proposal/route.ts:43:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/assessments/route.ts:47:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/assessments/route.ts:123:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/mri/report/route.ts:11:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+/tmp/rt-reval/copilot/src/app/api/revenue/offers/route.ts:15:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+-- store --
+/tmp/rt-reval/copilot/src/lib/integrations/api.ts:3:import { addAudit, readStore, updateStore } from "@/lib/store";
+/tmp/rt-reval/copilot/src/lib/integrations/api.ts:28:  const store = readStore();
+/tmp/rt-reval/copilot/src/lib/store/index.ts:21:const STORE_FILE = path.join(DATA_DIR, "store.json");
+/tmp/rt-reval/copilot/src/lib/store/index.ts:91:export function readStore(): AppStore {
+/tmp/rt-reval/copilot/src/lib/store/index.ts:103:  const store = readStore();
+/tmp/rt-reval/copilot/src/lib/store/index.ts:120:export function assertTenant(store: AppStore, organizationId: string, resourceOrgId: string) {
+/tmp/rt-reval/copilot/src/lib/store/portal.ts:3:import { readStore } from "@/lib/store";
+/tmp/rt-reval/copilot/src/lib/store/portal.ts:17:  const store = readStore();
+/tmp/rt-reval/copilot/src/lib/store/portal.ts:56:  const store = readStore();
+/tmp/rt-reval/copilot/src/lib/mri/cert-loop.ts:30:import { assertTenant } from "@/lib/store";
+/tmp/rt-reval/copilot/src/lib/mri/cert-loop.ts:398:    assertTenant(store, "org-a", "org-b");
+/tmp/rt-reval/copilot/src/lib/mri/cert-loop.ts:448:      evidence: "MVP uses file-backed data/store.json. Azure SQL + RLS required before production client data.",
+
+===== XSYS-RT-01 website intake HMAC =====
+/tmp/rt-verify/atlas-candidate/apps/atlas-integration-api/src/website/http.ts:3: * Auth is x-website-intake-key only. Bearer does not grant this route.
+/tmp/rt-verify/atlas-candidate/apps/atlas-integration-api/src/website/http.ts:12:import { verifyWebsiteIntakeKey, websiteIntakeKeyConfigured } from './intakeAuth.ts';
+/tmp/rt-verify/atlas-candidate/apps/atlas-integration-api/src/website/http.ts:55:  if (!verifyWebsiteIntakeKey(req.headers['x-website-intake-key'], cfg.websiteIntakeKey)) {
+/tmp/rt-verify/atlas-candidate/apps/atlas-integration-api/src/website/intakeAuth.ts:14:export function verifyWebsiteIntakeKey(provided: unknown, expected: string): boolean {

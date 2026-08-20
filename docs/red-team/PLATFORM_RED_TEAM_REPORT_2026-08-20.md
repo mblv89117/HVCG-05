@@ -48,14 +48,16 @@ Mapped active remote truth:
 
 ## 3. Counts
 
-| Severity | Open |
-|---|---|
-| **P0** | **11** |
-| **P1** | **18** |
-| **P2** | **14** |
-| Closed this run | 0 |
+| Severity | First catalog | After tip revalidation (0428Z) |
+|---|---|---|
+| **P0** | 11 | **9** |
+| **P1** | 18 | **19** |
+| **P2** | 14 | **14** |
+| Closed | 0 | COPILOT-RT-03 on `7e63a6d` |
 
-Full catalog: `docs/red-team/findings/FINDINGS_CATALOG_2026-08-20.md`
+Full catalog: `docs/red-team/findings/FINDINGS_CATALOG_2026-08-20.md`  
+Revalidation: `docs/red-team/REVALIDATION_2026-08-20T0428Z.md`  
+Directive log: `docs/red-team/DIRECTIVE_CONSUMPTION_2026-08-20.md`
 
 ---
 

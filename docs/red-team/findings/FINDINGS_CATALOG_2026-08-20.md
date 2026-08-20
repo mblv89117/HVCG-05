@@ -1,7 +1,11 @@
 # Findings Catalog — 2026-08-20
 
-Status legend: `open` | `closed` | `accepted-risk`  
+Status legend: `open` | `closed` | `accepted-risk` | `partial`  
 Severity: P0 / P1 / P2 (not inflated)
+
+**Tip revalidation:** 2026-08-20T0428Z against GTM `43f9305`, GCC `78cb5d2`, Copilot `7e63a6d`, Atlas P2 `66b77d2`, Integration `8fc711f`. See `../REVALIDATION_2026-08-20T0428Z.md`.
+
+**Post-revalidation counts:** P0=9 · P1=19 · P2=14 · Gate FAIL
 
 ---
 
@@ -280,30 +284,39 @@ Severity: P0 / P1 / P2 (not inflated)
 ## COPILOT
 
 ### COPILOT-RT-20260820-01
-- **system:** Copilot · **severity:** P0 · **branch/SHA:** `51f1cbf` / `c356cac`
-- **evidence:** No `middleware.ts`; `/api/assessments`, `/api/documents`, `/api/analysis`, `/api/admin/*`, `/api/reports/*`, `/api/atlas/*` have no session checks.
-- **reproduction:** `curl` any mutating route without cookies succeeds.
-- **impact:** Full read/write of assessment workspace if deployed.
-- **recommended remediation:** Entra auth + deny-by-default middleware.
-- **regression test:** Unauthenticated → 401 on all non-public routes.
-- **status:** open
+- **system:** Copilot · **severity:** P1 residual (was P0 on `51f1cbf`) · **branch/SHA:** `7e63a6d` (revalidated)
+- **evidence:** Tip adds middleware + route session guards. Residual: `PUBLIC_API_PREFIXES` includes `/api/assessments`; unauth `start` bootstraps session (see COPILOT-RT-11).
+- **reproduction:** Unauth GET `/api/admin/review` → 401 (mitigated). Unauth POST `/api/assessments` `{action:"start"}` still succeeds.
+- **impact:** Blanket unauth API compromise mitigated; bootstrap path remains intentional UAT hole.
+- **recommended remediation:** Narrow public prefix to explicit start-only route; rate-limit; never wipe global store.
+- **regression test:** Unauthenticated mutating routes except controlled start → 401.
+- **status:** partial (narrowed; see RT-11)
 
 ### COPILOT-RT-20260820-02
-- **system:** Copilot · **severity:** P0 · **branch/SHA:** `51f1cbf`
-- **evidence:** Single process-wide `data/store.json`; `assertTenant` unused by API routes.
-- **reproduction:** User A starts UAT; User B GET/start → sees or wipes A.
+- **system:** Copilot · **severity:** P0 · **branch/SHA:** `7e63a6d` (revalidated; still open)
+- **evidence:** Single process-wide `data/store.json`; `start` still `writeStore` replaces workspace. `requireTenantContext` used on many routes but shared file remains.
+- **reproduction:** User A starts UAT; User B `start` → wipes A.
 - **impact:** Cross-session disclosure/destruction.
-- **recommended remediation:** Per-user durable store; enforce assertTenant.
+- **recommended remediation:** Per-user durable store; enforce assertTenant at persistence layer.
 - **regression test:** Two sessions isolated.
 - **status:** open
 
 ### COPILOT-RT-20260820-03
-- **system:** Copilot · **severity:** P0 · **branch/SHA:** `51f1cbf`
-- **evidence:** `POST /api/admin/review` approve unauthenticated; `adminApproved` client boolean on release.
-- **reproduction:** Anonymous approve clears requiresHumanReview; forge pricing update.
-- **impact:** Protected-result gate bypass; forged HVCG review provenance.
-- **recommended remediation:** Admin-only authZ; never trust client adminApproved.
-- **regression test:** Non-admin cannot approve/release.
+- **system:** Copilot · **severity:** P0 → **closed on tip** · **branch/SHA:** `7e63a6d`
+- **evidence:** Admin review/pricing require `readSessionFromRequest` + `requireRole([...admin/consultant])`.
+- **reproduction:** Anonymous approve → 401.
+- **impact:** Original unauth admin bypass remediated on production-completion tip.
+- **recommended remediation:** Keep; add Entra before production client data.
+- **regression test:** Unauthenticated admin → 401 (passing on tip).
+- **status:** closed
+
+### COPILOT-RT-20260820-11
+- **system:** Copilot · **severity:** P1 · **branch/SHA:** `7e63a6d`
+- **evidence:** Middleware public prefix `/api/assessments` + unauth `start` + shared store wipe (CC-008).
+- **reproduction:** `curl -X POST /api/assessments -d '{"action":"start"}'` without cookie → 200 + Set-Cookie; replaces store.
+- **impact:** Amplifies RT-02; forged campaign attribution on start body.
+- **recommended remediation:** Dedicated `/api/assessments/start` with abuse controls; no global wipe.
+- **regression test:** Concurrent starts do not destroy other session data.
 - **status:** open
 
 ### COPILOT-RT-20260820-04..10
