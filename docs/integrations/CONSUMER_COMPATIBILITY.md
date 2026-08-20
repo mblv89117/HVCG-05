@@ -8,6 +8,7 @@
 **Replacement worker:** `bc-0e3c9a74` (does **not** reuse `bc-af57d6b6` / `run-8c5dc9cf` on `cursor/platform-orchestrator-b1fa`)  
 **Refresh method:** read-only remote tip inspection; no semantic forks; live adapters remain gated  
 **Harness:** `python3 tests/integrations/run_integration_contracts.py` → **27/27 OK**  
+**This-branch checkpoint SHA:** `8390c36`  
 **Updated:** 2026-08-20T14:55:00Z
 
 This train does not implement product adapters. Consumers must consume these schemas; they must not redefine lead-intake, commercial authority, GCC provision, or value-signal meaning.

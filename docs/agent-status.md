@@ -6,7 +6,7 @@
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-integration-contracts` |
 | workOnCurrentBranch | **true** |
-| current SHA | `773b510` (pre-directive-2 tip; this checkpoint commits after) |
+| current SHA | `8390c36` |
 | baseline | Hub `940a484` + Elite `75d0c59` via `atlas-hv-completion-52d1` — **not thawed** |
 | owned domains | Cross-system schemas, identity/attribution, idempotency, journey harness, compatibility |
 | files/domains touched | `docs/integrations/**`, `docs/platform-orchestration/**`, `docs/agent-status.md` |
@@ -32,7 +32,7 @@
 | BASED ON CURRENT RUN ID | `none-on-this-worker` (replacement). Prior `bc-af57d6b6` / `run-8c5dc9cf` on `cursor/platform-orchestrator-b1fa` **was not reused**. This worker: `bc-0e3c9a74` |
 | ORCHESTRATOR REMOTE | `360-growth-solution` / `cursor/platform-orchestrator-b1fa` (control plane; **not pushed**) |
 | DIRECTIVE SOURCE | HVCG ORCHESTRATOR FOLLOW-UP DIRECTIVE v2 (integration train) |
-| CURRENT SHA | `773b510` |
+| CURRENT SHA | `8390c36` |
 | COMPLETED ACTIONS | See below |
 | REMAINING ACTIONS | See below |
 | P0/P1/P2 | above |
