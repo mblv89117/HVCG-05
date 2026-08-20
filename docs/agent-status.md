@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | 44280dc8599634164e316267406277371d6e3486 |
 | baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **28** |
 | BASED ON WORKER SHA | `9220be8589b28b9462ded1df78109cc54714eeaf` |
 | BASED ON RUN ID | `run-146f77d7-4ff9-4de0-8fc5-380aa00f8031` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | 44280dc8599634164e316267406277371d6e3486 |
 | COMPLETED ACTIONS | Independent GTM revalidation @ `f53e628` (journey-sot adapters, flag defaults, suites); SECURITY_CERTIFIED=PASS |
 | REMAINING ACTIONS | Owner-gated Hub deploy for live P0=0; RT does not authorize production patch |
 | P0/P1/P2 | Live P0=5 · GTM candidate P0=0 P1=0 · P2=none |
