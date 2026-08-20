@@ -1,0 +1,19 @@
+=== COPILOT-RT-01 smoke ===
+no middleware.ts: CONFIRMED
+admin/review: no auth imports CONFIRMED
+=== GCC-RT-02 smoke ===
+160:DROP POLICY IF EXISTS "gcc profile update" ON gcc_profiles;
+161:CREATE POLICY "gcc profile update" ON gcc_profiles FOR UPDATE USING (id = auth.uid());
+162-
+163-DROP POLICY IF EXISTS "gcc profile insert" ON gcc_profiles;
+=== GCC-RT-03 smoke ===
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/callback/route.ts:21:    const { organizationId } = JSON.parse(
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/callback/route.ts:22:      Buffer.from(state, "base64url").toString("utf-8")
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/callback/route.ts:23:    ) as { organizationId: string };
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/callback/route.ts:28:      organizationId,
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/connect/route.ts:11:    const { organizationId, demo } = body as { organizationId?: string; demo?: boolean };
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/connect/route.ts:13:    if (!organizationId) {
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/connect/route.ts:14:      return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/connect/route.ts:17:    const access = await requireApiAccess({ organizationId });
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/connect/route.ts:22:      const connection = await connectQuickBooksDemo(organizationId);
+/tmp/rt-verify/gcc-candidate/src/app/api/integrations/quickbooks/connect/route.ts:37:    const state = Buffer.from(JSON.stringify({ organizationId })).toString("base64url");
