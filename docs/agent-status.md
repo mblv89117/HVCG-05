@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `c27b14b` |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d18-revenue-elite.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **18** |
 | BASED ON WORKER SHA | `95f57204f6f06661c99173759f4e20ab6f7f652a` |
 | BASED ON RUN ID | `run-42feb9ac-ca22-4906-91a1-05657e3b6cd9` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `c27b14bf71697bc63b692aeabb7b64a7041d2c1b` |
 | COMPLETED ACTIONS | First-pass Revenue Elite UI @ `8cffe34` (/revenue read-models, gates, FinanceRoute/viewFinance, ACCG01 isolation, no SP thaw); published P1 deep-link commercial-context finding |
 | REMAINING ACTIONS | Retest Elite after deep-link fix; XSYS/OD-005 Hub paths when authorized |
 | P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=REVOS-ELITE-01 · P2=none |
