@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(tip after push)* |
+| current SHA | da27919 |
 | baseline | Hub `940a484` / Elite `75d0c59`; product tips per Directive 10 |
 | owned domains | Independent adversarial testing and findings (no feature ownership) |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/**` |
@@ -31,7 +31,7 @@
 | BASED ON WORKER SHA | `0386a53b9b82fd6e6cd351c3348cdfb3f83724c1` |
 | PREVIOUS RUN ID | `run-fb85119f-9632-4808-8d1a-f2bd09deffc4` |
 | ORCHESTRATOR REMOTE SHA (at consume) | `db9629a` (`cursor/platform-orchestrator-b1fa`) |
-| CURRENT SHA | *(git tip)* |
+| CURRENT SHA | da2791986ed85cbd142e182d3e238748da8916a4 |
 | COMPLETED ACTIONS | Directive 10 tip SHA verify; P0/P1 reclassification; report published |
 | REMAINING ACTIONS | Retest after Atlas patch / Copilot store / GCC RBAC+handoff; GTM-04 integration proof |
 | P0/P1/P2 | P0=6 · P1 residuals open · P2 prior debt |
