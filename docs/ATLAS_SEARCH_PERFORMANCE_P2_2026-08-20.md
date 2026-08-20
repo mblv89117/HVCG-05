@@ -4,6 +4,14 @@
 **Base lineage:** `cursor/atlas-hv-completion-52d1` @ certified Hub `940a484` / Elite `75d0c59` (tip at branch cut includes Premium freeze `2a5a605`)  
 **Deployment:** candidate only — **do not deploy production**
 
+## Orchestrator consumption
+
+| Field | Value |
+|-------|-------|
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `ORCH-2026-08-20T0418Z` (Train G + full reconciliation). `directives/` path not yet on orchestrator remote. |
+| ORCHESTRATOR REMOTE SHA | `795d5159d1ba9257e7607701fd7aacb9c4fa2bff` |
+| Status artifact | [`docs/agent-status.md`](./agent-status.md) |
+
 ## Profile (measured critical path)
 
 Authenticated `/api/pm/search` (Manny Premium cert window) was ~14–16s because:
