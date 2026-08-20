@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/engagement-created.v1.json",
+  "title": "Engagement Created v1",
+  "description": "Atlas engagement creation after governed acceptance. Distinct from opportunity Won and from GCC tenant.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "engagementId",
+    "clientCode",
+    "opportunityId",
+    "envelope"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "engagement-created.v1"
+    },
+    "engagementId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "opportunityId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "projectId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "sku": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "startsOn": {
+      "type": "string",
+      "format": "date"
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

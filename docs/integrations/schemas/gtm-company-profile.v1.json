@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/gtm-company-profile.v1.json",
+  "title": "GTM Company Profile v1",
+  "description": "360 Growth company/target profile. Not an Atlas ClientCode and not a GCC organizations.id.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "companyId",
+    "legalName",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "gtm-company-profile.v1"
+    },
+    "companyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "360-owned company/target id"
+    },
+    "legalName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "industry": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "employeeBand": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "geography": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "website": {
+      "type": "string",
+      "maxLength": 2048
+    },
+    "painHypotheses": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "maxLength": 500
+      }
+    },
+    "atlasClientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$",
+      "description": "Optional linked Atlas ClientCode after conversion; never invent."
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

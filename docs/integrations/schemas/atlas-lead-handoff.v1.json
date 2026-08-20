@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/atlas-lead-handoff.v1.json",
+  "title": "Agent Copilot Atlas Lead Handoff v1",
+  "description": "Observation-only lead intake from Agent Copilot Business MRI into Atlas HVCG_Leads. This is not a CRM, ClientStage, entitlement, or opportunity create.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "assessmentId",
+    "organizationName",
+    "source",
+    "observationOnly",
+    "provenance",
+    "assessment",
+    "observations",
+    "contact",
+    "governance"
+  ],
+  "properties": {
+    "contractVersion": { "const": "atlas-lead-handoff.v1" },
+    "assessmentId": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "organizationName": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "clientCode": { "type": "string", "pattern": "^[A-Z][A-Z0-9]{2,15}$" },
+    "recommendedPackage": { "type": "string", "maxLength": 255 },
+    "source": { "const": "agent-copilot" },
+    "observationOnly": { "const": true },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "confidence",
+        "assessmentVersion",
+        "submittedAt",
+        "campaign",
+        "sourceAttribution",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "source": { "const": "agent-copilot" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "assessmentVersion": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "campaign": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "sourceAttribution": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^copilot\\|.+",
+          "description": "Must be copilot|{assessmentId}"
+        }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assessmentId", "assessmentVersion", "status", "completeness", "topOpportunityNames"],
+      "properties": {
+        "assessmentId": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "assessmentVersion": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "status": { "type": "string" },
+        "completeness": { "type": "number", "minimum": 0, "maximum": 100 },
+        "readinessOverall": { "type": "number" },
+        "readinessConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "recommendedPackage": { "type": "string" },
+        "topOpportunityNames": { "type": "array", "maxItems": 8, "items": { "type": "string" } },
+        "expectedAnnualBenefits": { "type": "number" }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["label", "factClass"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "value": { "type": ["string", "number", "boolean", "null"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "factClass": {
+            "type": "string",
+            "enum": ["VERIFIED", "INFERRED", "AI OBSERVATION", "UNKNOWN"]
+          },
+          "provenance": { "type": "string", "maxLength": 500 }
+        }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "maxLength": 255 },
+        "email": { "type": "string", "maxLength": 255 },
+        "company": { "type": "string", "maxLength": 255 },
+        "phone": { "type": "string", "maxLength": 255 }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observationOnly",
+        "productionClientDataAllowed",
+        "createsClientStage",
+        "createsEntitlement",
+        "createsOpportunity",
+        "isCrm",
+        "liveDispatch"
+      ],
+      "properties": {
+        "observationOnly": { "const": true },
+        "productionClientDataAllowed": { "const": false },
+        "createsClientStage": { "const": false },
+        "createsEntitlement": { "const": false },
+        "createsOpportunity": { "const": false },
+        "isCrm": { "const": false },
+        "liveDispatch": { "const": false }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/optimization-decision.v1.json",
+  "title": "Optimization Decision v1",
+  "description": "Recorded optimization decision. Explicit; never silent contract or spend drift.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "decisionId",
+    "experimentId",
+    "decision",
+    "decidedAt",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "optimization-decision.v1"
+    },
+    "decisionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "experimentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "keep",
+        "kill",
+        "scale",
+        "iterate",
+        "hold_for_owner"
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "decidedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ownerSystem": {
+      "type": "string",
+      "enum": [
+        "360",
+        "atlas"
+      ]
+    },
+    "requiresOwnerApproval": {
+      "type": "boolean"
+    },
+    "mutatesPaidAds": {
+      "const": false
+    }
+  }
+}

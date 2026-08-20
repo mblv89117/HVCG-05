@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/experiment-spec.v1.json",
+  "title": "Experiment Spec v1",
+  "description": "GTM experiment definition owned by 360.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "experimentId",
+    "hypothesis",
+    "status",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "experiment-spec.v1"
+    },
+    "experimentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "hypothesis": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "running",
+        "paused",
+        "completed",
+        "abandoned"
+      ]
+    },
+    "variants": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "variantId",
+          "name"
+        ],
+        "properties": {
+          "variantId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "allocationPct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "paidAdsEnabled": {
+      "const": false
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/funnel-spec.v1.json",
+  "title": "Funnel Spec v1",
+  "description": "360/EVA funnel definition linked to a campaign.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "funnelId",
+    "campaignId",
+    "steps",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "funnel-spec.v1"
+    },
+    "funnelId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stepId",
+          "kind"
+        ],
+        "properties": {
+          "stepId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "content",
+              "form",
+              "diagnostic",
+              "booking",
+              "thankyou"
+            ]
+          },
+          "formId": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "contentId": {
+            "type": "string",
+            "maxLength": 255
+          }
+        }
+      }
+    },
+    "ownerSystem": {
+      "type": "string",
+      "enum": [
+        "360",
+        "eva",
+        "website"
+      ]
+    }
+  }
+}

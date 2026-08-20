@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/form-spec.v1.json",
+  "title": "Form Spec v1",
+  "description": "Intake form definition producing attributed leads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "formId",
+    "fields",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "form-spec.v1"
+    },
+    "formId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "funnelId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "email",
+              "phone",
+              "number",
+              "boolean",
+              "enum"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "maxLength": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000
+          }
+        }
+      }
+    },
+    "ownerSystem": {
+      "type": "string",
+      "enum": [
+        "360",
+        "eva",
+        "website"
+      ]
+    }
+  }
+}
