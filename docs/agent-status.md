@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | 20090cd2b57e810dbfc980e0804ef031af6dcbd3 |
 | baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **29** |
 | BASED ON WORKER SHA | `5ed414fc07c4db7a054f2ef12474e44609d6892e` |
 | BASED ON RUN ID | D28 FINISHED / followup-accepted-2026-08-20T2100Z |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | 20090cd2b57e810dbfc980e0804ef031af6dcbd3 |
 | COMPLETED ACTIONS | Independent Integration fail-closed revalidation @ `30964bb` (outbound-dispatch.v1 + icp-studio.v1); GTM outbound adapter cite; no new findings |
 | REMAINING ACTIONS | Owner-gated Hub/OD-005 deploy for live P0=0 |
 | P0/P1/P2 | Live P0=5 · Integration candidate P0=0 P1=0 · P2=none |
