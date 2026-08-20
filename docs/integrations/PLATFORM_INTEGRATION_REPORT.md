@@ -1,7 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** `a29c873` (directive 3 based-on; SoT meaning `773b510`)  
+**SHA:** `0e87d1a` (directive 3 pack; based-on `a29c873`; SoT meaning `773b510`)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59` — **not thawed**  
@@ -32,7 +32,7 @@ Live Hub POST, paid ads, and GCC auto-provision remain gated.
 | Field | Value |
 | --- | --- |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **3** |
-| CURRENT SHA | `a29c873` |
+| CURRENT SHA | `0e87d1a` |
 | COMPLETED ACTIONS | D3 current-tip pack; 24-step journey table; CC confirm; harness 27/27; XSYS docs → `9e5d10a` |
 | REMAINING ACTIONS | GTM/Copilot source when authorized; INTEGRATION_CERTIFIED open; deploy owner-gated |
 | P0/P1/P2 | **None on this train.** Hub XSYS-01/02 owned by OD-005 @ `9e5d10a` |

@@ -11,6 +11,7 @@
 **CROSS_SYSTEM_JOURNEY_PERCENT:** **71%** (weighted: PASS=1.0, PARTIAL=0.5, BLOCKED/NOT TESTED=0 → 17.0 / 24)  
 **Strict PASS-only:** **46%** (11 / 24)  
 **Weakest boundary:** GTM `e0dd445` + Copilot `2f02702` sibling remotes **404** on this worker — early-funnel and Copilot product trees were not jointly source-executed with Revenue/GCC/OD-005/Contracts. Secondary (not this train): live Hub XSYS-01/02 still OPEN on `940a484`.  
+**This-branch checkpoint SHA:** `0e87d1a`  
 **Updated:** 2026-08-20T19:50:00Z
 
 This is an evidence pack. Live adapters stay gated. No production writes. No Hub thaw.
