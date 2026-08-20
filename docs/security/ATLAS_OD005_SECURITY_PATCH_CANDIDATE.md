@@ -20,3 +20,12 @@
 ## Stop line
 
 Do **not** deploy Hub or Elite from this train. Frozen live-cert remains Hub `940a484` / Elite `75d0c59` until OD-005 authorizes a production security patch.
+
+## Orchestrator follow-up (directive version 1)
+
+**LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED = 1**
+
+- Prior SHA: `0bbfd87` — D22 REGRESSION=PARTIAL (convert GET 404 under ACCG01-only principal)
+- This SHA: `533a130` — convert fixture entitles USER_A for `NORTH01`; staff short-circuit still absent; `entitlementProvisioned=false`
+- Evidence: `cd apps/atlas-integration-api && npx tsx --test tests/hub-pm-sharepoint.test.ts` and `cd apps/atlas-integration-api && npm test`
+- Live Hub `940a484` P0 remains **5 OPEN**. DEPLOYMENT_READY not pursued.

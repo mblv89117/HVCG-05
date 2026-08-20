@@ -47,3 +47,30 @@ Do **not** deploy Hub or Elite from this train until:
 2. Owner answers AUTHORIZE PRODUCTION SECURITY PATCH = YES
 
 Incomplete prior tip `bb7edae` (ATLAS-only) is superseded by this complete candidate for OD-005 readiness.
+
+## Orchestrator follow-up (directive version 1)
+
+**LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED = 1**
+
+| Item | Value |
+|------|--------|
+| Prior candidate SHA | `0bbfd877aac88b654a7c9abdf6c63a312d7cfb05` (`0bbfd87`) |
+| This checkpoint SHA | `533a13007753e81f2178393907d63bc8ab16310a` (`533a130`) |
+| Live Hub | `940a484` — **P0 remains 5 OPEN** (ATLAS-01/02/03, XSYS-01/02). Do not claim live close. |
+| Candidate P0/P1 | 0 OPEN on this SHA (fixture alignment only; no product authz rollback) |
+| DEPLOYMENT_READY | Owner-gated — not pursued |
+
+### Residual closed on this SHA
+
+Red Team D22 (`bc-1d522892`) reported REGRESSION=PARTIAL on `0bbfd87`: convert POST succeeded (`company=NORTH01`, `entitlement=false`) but GET `/api/pm/opportunities/{id}` returned 404 because the fixture principal was entitled only for ACCG01.
+
+**Certified contract kept:** convert does **not** provision entitlements (`entitlementProvisioned=false`). Staff short-circuit stays **removed**. Post-convert GET is 200 only under a principal already entitled for the proposed ClientCode (`NORTH01`). Unentitled staff remains 404.
+
+### Evidence commands
+
+```bash
+cd apps/atlas-integration-api && npx tsx --test tests/hub-pm-sharepoint.test.ts
+cd apps/atlas-integration-api && npm test
+```
+
+Do **not** authorize a production security patch from this note. Live Hub P0 count stays 5 until an authorized Hub deploy.
