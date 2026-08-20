@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `6f16d5f` |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS freeze (live not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d21-od005-complete.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **21** |
 | BASED ON WORKER SHA | `8d336b2c4d02cb61044702aa9b91098fc409eab5` |
 | BASED ON RUN ID | `run-38c049ca-7a16-44ee-a200-7faa55e9a2d6` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `6f16d5fa4de07baa2ec63f590604b72fca21d4c6` |
 | COMPLETED ACTIONS | Independently revalidated complete OD-005 @ `0bbfd87` (supersedes `bb7edae`); dual-surface statuses for ATLAS-01/02/03 + XSYS-01/02; website-leads 9/9 + Plaid 6/6 re-run |
 | REMAINING ACTIONS | Live retest after authorized Hub/Elite OD-005 deploy only |
 | P0/P1/P2 | Live P0=5 · Candidate P0=0 · P1=0 · P2=none |
