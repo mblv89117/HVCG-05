@@ -1,0 +1,120 @@
+=== Directive 16 GTM revalidation 2026-08-20T06:55:00Z ===
+TIP=f63b8eb166eb5161bdb9956a9e0cdf939e9c3fcb
+EXPECTED=f63b8eb166eb5161bdb9956a9e0cdf939e9c3fcb
+
+--- Independent probes GTM-RT-03/04 + Revenue consumer ---
+{"id":"GTM-RT-20260820-03","status":"FIXED","detail":"unified pause SoT fail-closed present"}
+{"id":"GTM-RT-20260820-04","status":"FIXED","detail":"InquiryForm camelCase governance + receive liveDispatch=false"}
+{"id":"GTM-REVOS-CONSUMER","status":"FIXED","detail":"Revenue OS consumer: operator accept, autoSend=false, no inventable floors"}
+{
+  "summary": {
+    "fail": 0,
+    "results": [
+      {
+        "id": "GTM-RT-20260820-03",
+        "ok": true,
+        "detail": "unified pause SoT fail-closed present"
+      },
+      {
+        "id": "GTM-RT-20260820-04",
+        "ok": true,
+        "detail": "InquiryForm camelCase governance + receive liveDispatch=false"
+      },
+      {
+        "id": "GTM-REVOS-CONSUMER",
+        "ok": true,
+        "detail": "Revenue OS consumer: operator accept, autoSend=false, no inventable floors"
+      }
+    ]
+  }
+}
+probe_exit:0
+
+--- package tests ---
+
+> @360gs/flags@0.1.0 test /tmp/rt-d16/gtm/packages/flags
+> vitest run
+
+sh: 1: vitest: not found
+/tmp/rt-d16/gtm/packages/flags:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @360gs/flags@0.1.0 test: `vitest run`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+flags_exit:1
+
+> @360gs/atlas-handoff@0.1.0 test /tmp/rt-d16/gtm/packages/atlas-handoff
+> vitest run
+
+sh: 1: vitest: not found
+/tmp/rt-d16/gtm/packages/atlas-handoff:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @360gs/atlas-handoff@0.1.0 test: `vitest run`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+handoff_exit:1
+
+> @360gs/gtm-agent@0.1.0 test /tmp/rt-d16/gtm/packages/gtm-agent
+> vitest run
+
+sh: 1: vitest: not found
+/tmp/rt-d16/gtm/packages/gtm-agent:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @360gs/gtm-agent@0.1.0 test: `vitest run`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+gtm_agent_exit:1
+
+=== Retest with node_modules 2026-08-20T06:55:40Z ===
+
+> @360gs/flags@0.1.0 test /tmp/rt-d16/gtm/packages/flags
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d16/gtm/packages/flags
+
+ ✓ tests/flags.test.ts (9 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  06:55:40
+   Duration  177ms (transform 40ms, setup 0ms, collect 39ms, tests 6ms, environment 0ms, prepare 40ms)
+
+flags_exit:0
+
+> @360gs/atlas-handoff@0.1.0 test /tmp/rt-d16/gtm/packages/atlas-handoff
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d16/gtm/packages/atlas-handoff
+
+ ✓ tests/atlas-handoff.test.ts (5 tests) 7ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  06:55:41
+   Duration  201ms (transform 47ms, setup 0ms, collect 65ms, tests 7ms, environment 0ms, prepare 39ms)
+
+handoff_exit:0
+
+> @360gs/gtm-agent@0.1.0 test /tmp/rt-d16/gtm/packages/gtm-agent
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d16/gtm/packages/gtm-agent
+
+ ✓ tests/gtm-agent.test.ts (9 tests) 28ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  06:55:42
+   Duration  376ms (transform 161ms, setup 0ms, collect 226ms, tests 28ms, environment 0ms, prepare 40ms)
+
+gtm_agent_exit:0
+
+> @360gs/publisher@0.1.0 test /tmp/rt-d16/gtm/packages/publisher
+> vitest run
+
+sh: 1: vitest: not found
+/tmp/rt-d16/gtm/packages/publisher:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @360gs/publisher@0.1.0 test: `vitest run`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
+publisher_exit:1

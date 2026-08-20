@@ -5,20 +5,20 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `45d6e30` |
+| current SHA | *(git tip after push)* |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d15-od005.mjs` |
+| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d16-gtm.mjs` |
 | contracts required | Integration SoT `773b510` (dependency; not retested) |
-| tests | OD-005 Plaid PASS 6/6; opportunity harness exit 0; GTM flags/handoff/agent PASS; Revenue OS suite PASS 17/17 |
+| tests | D16: GTM flags 9/9 · handoff 5/5 · gtm-agent 9/9 · SYN-GTM 28/28 · D16 harness exit 0 |
 | build | N/A |
-| synthetic certification | N/A |
+| synthetic certification | N/A (product SYN-GTM verified dry-run only) |
 | security status | Gate **FAIL** until XSYS P0=0 and OD-005 authorized for Hub |
 | Premium status | **N/A** — no RT UI |
 | integration dependencies | `integration@773b510` |
-| P0 | OD-005 tip: ATLAS-01/02/03 **FIXED**; XSYS-01/02 **OPEN**. Frozen Hub: ATLAS+XSYS still open until deploy |
-| P1 | **0** tracked open (GTM-03/04 **FIXED** @ `bd72003`) |
-| P2 | none |
+| P0 | Hub: ATLAS-01/02/03 + XSYS-01/02 **OPEN**. OD-005 candidate: ATLAS FIXED (D15); XSYS OPEN |
+| P1 | **0** (GTM-03/04 **FIXED**, reconfirmed @ `f63b8eb`) |
+| P2 | none filed (dry-run engagement binding note only) |
 | owner decisions | OD-005 deploy authorization required; XSYS follow-on patch needed |
 | deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY |
 
@@ -26,14 +26,14 @@
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **15** |
-| BASED ON WORKER SHA | `97576c2bc23e3834ae1488e48422656cce894fa1` |
-| BASED ON RUN ID | `run-75ccd61c-6d51-406b-a509-7f245e4f86c1` |
-| CURRENT SHA | `45d6e3065e70519c5f4fae48f62756e3767c0f22` |
-| COMPLETED ACTIONS | Verified OD-005 `bb7edae` for ATLAS-01/02/03; confirmed XSYS still open; verified GTM-03/04 @ `bd72003`; Revenue OS first-pass @ `9c9c331` (no new P0/P1) |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **16** |
+| BASED ON WORKER SHA | `456fee71e3698839c5eee6e63a196441435c6990` |
+| BASED ON RUN ID | `run-d8447acf-4835-4a40-bbfd-7f8367984608` |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | Revalidated GTM tip `f63b8eb` for GTM-RT-03/04 + Revenue OS consumer/SYN-GTM; confirmed pause fail-closed, InquiryForm camelCase, liveDispatch=false, operator-accept required; no new P0/P1 |
 | REMAINING ACTIONS | Retest when XSYS remediations land; re-confirm Hub after OD-005 authorized deploy |
-| P0/P1/P2 | P0=XSYS×2 (+ Hub ATLAS until deploy) · P1=0 · P2=none |
-| TEST STATUS | See Directive 15 report commands — all executed suites PASS |
+| P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
+| TEST STATUS | D16 harness exit 0; flags/handoff/gtm-agent PASS; SYN-GTM 28/28 PASS |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Dependency `773b510`; XSYS Hub authenticity still open |
 | OWNER DECISIONS | Await OD-005 production security-patch authorization |
@@ -42,16 +42,15 @@
 
 | System | SHA |
 |--------|-----|
-| OD-005 | `bb7edae503d91e85fe8f5a6a69943aeed5579c3a` |
-| GTM | `bd720033a646a9b8775d6c5f17f001d182ad2632` |
-| Revenue | `9c9c331d707e59c8e020f28bcaf75528bfe42927` |
-
-| WORKER BRANCH TIP (post-push) | `45d6e3065e70519c5f4fae48f62756e3767c0f22` |
+| GTM (moved) | `f63b8eb166eb5161bdb9956a9e0cdf939e9c3fcb` |
+| Prior OD-005 (not retested) | `bb7edae503d91e85fe8f5a6a69943aeed5579c3a` |
+| Prior Revenue engine (not retested) | `9c9c331d707e59c8e020f28bcaf75528bfe42927` |
 
 ## Notes
 
 - Did not implement Hub runtime fixes on frozen production.
 - Did not deploy OD-005.
-- Design notes from Revenue OS not inherited as P0.
+- Did not retest identical D15/D12/D10 SHA/scope surfaces.
+- Revenue OS engine tip unchanged — consumer path on GTM tip only.
 
-**Updated:** 2026-08-20T06:45:00Z
+**Updated:** 2026-08-20T06:56:30Z

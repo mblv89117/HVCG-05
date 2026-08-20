@@ -429,3 +429,15 @@ Severity: P0 / P1 / P2 (not inflated)
 | XSYS-RT-20260820-02 | OPEN on Hub + OD-005 (unbound `fullPayload.idempotencyKey`) |
 | Revenue OS `9c9c331` | First-pass: no new P0/P1 |
 | GCC / Copilot / Integration / Hub / Elite | Not retested (D12/D10 cover) |
+
+
+## Directive 16 status appendix (GTM tip move)
+
+| ID | Status @ Directive 16 |
+|----|------------------------|
+| GTM-RT-20260820-03 | FIXED reconfirmed @ `f63b8eb` |
+| GTM-RT-20260820-04 | FIXED reconfirmed @ `f63b8eb` |
+| GTM Revenue OS consumer / SYN-GTM | No new P0/P1 @ `f63b8eb` (28/28 SYN PASS) |
+| ATLAS-RT-20260820-01/02/03 | OPEN on Hub (not retested; OD-005 candidate still FIXED per D15) |
+| XSYS-RT-20260820-01/02 | OPEN (not retested) |
+| Revenue OS engine `9c9c331` | Not retested (identical SHA) |
