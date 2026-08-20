@@ -9,7 +9,11 @@ import {
 import { createPlaidClient, approvedProductsEnum, PLAID_COUNTRY } from './plaid/client.ts';
 import { encryptSecret } from './crypto/tokenVault.ts';
 import { PlaidRepository } from './store/repository.ts';
-import { parsePrincipal, assertClientAccess } from './middleware/auth.ts';
+import {
+  assertClientAccess,
+  requireVerifiedPrincipal,
+  type AtlasPrincipal,
+} from './middleware/auth.ts';
 import { audit } from './audit/auditLog.ts';
 import { syncConnection } from './sync/syncService.ts';
 import type { ConnectionSummary } from '../../../packages/atlas-plaid-contracts/src/index.ts';
@@ -44,33 +48,27 @@ function corsOrigin(req: IncomingMessage, cfg: AppConfig): string | null {
   return cfg.allowedOrigins.includes(origin) ? origin : null;
 }
 
-function requirePrincipal(req: IncomingMessage, cfg: AppConfig) {
-  if (!cfg.requireAuth) {
-    return {
-      userId: 'dev-user',
-      organizationId: 'org-hvcg',
-      allowedClientIds: ['*'],
-      roles: ['Admin'],
-    };
-  }
+async function requirePrincipal(req: IncomingMessage, cfg: AppConfig): Promise<AtlasPrincipal> {
   const headers = new Headers();
   for (const [k, v] of Object.entries(req.headers)) {
     if (typeof v === 'string') headers.set(k, v);
   }
-  const p = parsePrincipal(headers);
-  if (!p) {
-    audit({ action: 'auth_failure', outcome: 'denied', detail: 'missing principal headers' });
-    throw Object.assign(new Error('Unauthorized'), { status: 401 });
+  try {
+    return await requireVerifiedPrincipal(headers, cfg);
+  } catch (e) {
+    const status = (e as { status?: number }).status || 401;
+    audit({
+      action: 'auth_failure',
+      outcome: 'denied',
+      detail: status === 401 ? 'missing_or_invalid_bearer' : 'auth_rejected',
+    });
+    throw e;
   }
-  return p;
 }
 
-function guardClient(
-  principal: ReturnType<typeof requirePrincipal>,
-  clientId: string,
-) {
+function guardClient(principal: AtlasPrincipal, clientId: string) {
   if (principal.allowedClientIds.includes('*')) return;
-  assertClientAccess(principal as never, clientId);
+  assertClientAccess(principal, clientId);
 }
 
 function toConnectionSummary(repo: PlaidRepository, clientId: string): ConnectionSummary[] {
@@ -114,7 +112,7 @@ export function startServer() {
         'access-control-allow-origin': origin || '',
         'access-control-allow-methods': 'GET,POST,OPTIONS',
         'access-control-allow-headers':
-          'content-type,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles',
+          'content-type,authorization,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles',
         'access-control-max-age': '86400',
       });
       res.end();
@@ -142,7 +140,7 @@ export function startServer() {
 
       // --- GET connections (browser-safe) ---
       if (req.method === 'GET' && path === '/api/plaid/connections') {
-        const principal = requirePrincipal(req, cfg);
+        const principal = await requirePrincipal(req, cfg);
         const clientId = url.searchParams.get('clientId');
         if (!clientId) {
           send(res, 400, { error: 'clientId required' }, origin);
@@ -154,7 +152,7 @@ export function startServer() {
       }
 
       if (req.method === 'GET' && path === '/api/plaid/cash-snapshot') {
-        const principal = requirePrincipal(req, cfg);
+        const principal = await requirePrincipal(req, cfg);
         const clientId = url.searchParams.get('clientId');
         const clientCode = url.searchParams.get('clientCode') || '';
         if (!clientId) {
@@ -176,7 +174,7 @@ export function startServer() {
 
       // --- link-token ---
       if (path === '/api/plaid/link-token') {
-        const principal = requirePrincipal(req, cfg);
+        const principal = await requirePrincipal(req, cfg);
         const clientId = String(body.clientId || '');
         if (!clientId) {
           send(res, 400, { error: 'clientId required' }, origin);
@@ -229,7 +227,7 @@ export function startServer() {
 
       // --- exchange-token ---
       if (path === '/api/plaid/exchange-token') {
-        const principal = requirePrincipal(req, cfg);
+        const principal = await requirePrincipal(req, cfg);
         const clientId = String(body.clientId || '');
         const publicToken = String(body.publicToken || '');
         const consentAcceptedAt = String(body.consentAcceptedAt || '');
@@ -355,7 +353,7 @@ export function startServer() {
 
       // --- sync ---
       if (path === '/api/plaid/sync') {
-        const principal = requirePrincipal(req, cfg);
+        const principal = await requirePrincipal(req, cfg);
         const clientId = String(body.clientId || '');
         const connectionId = String(body.connectionId || '');
         guardClient(principal, clientId);
@@ -383,7 +381,7 @@ export function startServer() {
 
       // --- disconnect ---
       if (path === '/api/plaid/disconnect') {
-        const principal = requirePrincipal(req, cfg);
+        const principal = await requirePrincipal(req, cfg);
         const clientId = String(body.clientId || '');
         const connectionId = String(body.connectionId || '');
         guardClient(principal, clientId);

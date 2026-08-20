@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "jose": "^5.10.0",
     "plaid": "^30.0.0"
   },
   "devDependencies": {
