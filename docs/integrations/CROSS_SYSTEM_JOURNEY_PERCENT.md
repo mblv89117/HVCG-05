@@ -23,7 +23,7 @@ Live adapters stay gated. No production writes. No Hub thaw. No paid ads.
 | GCC | `8d757cf68157a6054432de7ca57f8431731b2d64` | Unchanged vs D5 |
 | Copilot | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | GitHub MCP + Red Team D27 `SECURITY_CERTIFIED=PASS` (not this train's retest) |
 | OD-005 | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | This worker fetched read-only — unchanged |
-| Contracts | this D6 pack (pin follows) | Based-on `516553f`; Supervisor independently 30/30 @ `516553f` |
+| Contracts | `5f177f0aeddbb258e288a97036a190cdeb5b968b` | This branch D6 pack; Supervisor independently 30/30 @ `516553f` |
 
 `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER=YES` is against these six SHAs — not the stale D4 pair `e0dd445` / `2f02702`.
 

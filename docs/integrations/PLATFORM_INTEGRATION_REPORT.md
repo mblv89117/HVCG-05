@@ -1,7 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** this D6 pack (based-on `516553f`; SoT meaning `773b510`)  
+**SHA:** `5f177f0` (directive 6 pack; based-on `516553f`; SoT meaning `773b510`)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59` — **not thawed**  
@@ -32,7 +32,7 @@ Live Hub POST, paid ads, and GCC auto-provision remain gated.
 | Field | Value |
 | --- | --- |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **6** |
-| CURRENT SHA | this D6 pack |
+| CURRENT SHA | `5f177f0` |
 | COMPLETED ACTIONS | D6 booking + optimization-variant-2 harness; BOOKING/OPT-V2 PASS; CC confirm; TESTED_TOGETHER vs current tips |
 | REMAINING ACTIONS | Early-funnel PARTIAL; SECURITY_CERTIFIED / deploy owner-gated; XSYS Hub-side |
 | P0/P1/P2 | **None P0/P1 on this train.** P2: early-funnel PARTIAL. Hub XSYS owned by OD-005 @ `9e5d10a`. |
@@ -52,7 +52,7 @@ Full matrix: `CONSUMER_COMPATIBILITY.md`. Journey table: `CROSS_SYSTEM_JOURNEY_P
 | GCC | `8d757cf` | Unchanged. CC-003/CC-006 hold. |
 | Copilot | `fe3db75` | Git remote 404. D5 pre-call coverage kept. RT D27 SECURITY_CERTIFIED=PASS (not this retest). |
 | OD-005 | `9e5d10a` | Fetched read-only. XSYS candidate FIXED_REVALIDATED (RT D23). |
-| Contracts self | this D6 pack | Sole publisher of canonical meaning |
+| Contracts self | `5f177f0` | Sole publisher of canonical meaning |
 
 ## P0 / P1 / P2
 
