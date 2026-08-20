@@ -291,7 +291,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Blanket unauth API compromise mitigated; bootstrap path remains intentional UAT hole.
 - **recommended remediation:** Narrow public prefix to explicit start-only route; rate-limit; never wipe global store.
 - **regression test:** Unauthenticated mutating routes except controlled start → 401.
-- **status:** partial (narrowed; see RT-11)
+- **status:** FIXED_REVALIDATED @ `2f02702` (D26; assessments not public; invalid/missing tokens fail closed; prior D12 @ `19a200e`)
 
 ### COPILOT-RT-20260820-02
 - **system:** Copilot · **severity:** P0 · **branch/SHA:** `7e63a6d` (revalidated; still open)
@@ -300,7 +300,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-session disclosure/destruction.
 - **recommended remediation:** Per-user durable store; enforce assertTenant at persistence layer.
 - **regression test:** Two sessions isolated.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `2f02702` (D26 concurrent workspace isolation; prior D12 @ `19a200e`)
 
 ### COPILOT-RT-20260820-03
 - **system:** Copilot · **severity:** P0 → **closed on tip** · **branch/SHA:** `7e63a6d`
@@ -309,7 +309,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Original unauth admin bypass remediated on production-completion tip.
 - **recommended remediation:** Keep; add Entra before production client data.
 - **regression test:** Unauthenticated admin → 401 (passing on tip).
-- **status:** closed
+- **status:** FIXED_REVALIDATED @ `2f02702` (D26)
 
 ### COPILOT-RT-20260820-11
 - **system:** Copilot · **severity:** P1 · **branch/SHA:** `7e63a6d`
@@ -318,7 +318,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Amplifies RT-02; forged campaign attribution on start body.
 - **recommended remediation:** Dedicated `/api/assessments/start` with abuse controls; no global wipe.
 - **regression test:** Concurrent starts do not destroy other session data.
-- **status:** open
+- **status:** FIXED_REVALIDATED @ `2f02702` (D26; `/api/assessments` not in PUBLIC_API_PREFIXES; prior FIXED @ `aacc09c` / D12)
 
 ### COPILOT-RT-20260820-04..10
 - **04** P1 Assessment ID spoofing / active-resolution confusion.
@@ -562,3 +562,24 @@ Severity: P0 / P1 / P2 (not inflated)
 | OD-005 REGRESSION | **PASS** @ `9e5d10a` (D23 cite; not retested) |
 | Live production P0 | **5** OPEN @ Hub `940a484` |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_25_2026-08-20.md` |
+
+
+## Directive 26 status appendix (Copilot tip `2f02702` — jose middleware)
+
+| Gate / ID | Status @ Directive 26 |
+|-----------|------------------------|
+| Exact Copilot SHA | `2f0270228cdaf1dceed51a52a62200ffde07a9e0` (fix `600403b`) |
+| `npm test` | **PASS** — **37/37** exit 0 |
+| `security-rt-revalidation` | **PASS** — **7/7** exit 0 |
+| `npm run build` | **PASS** exit 0 |
+| jose fail-closed probe | **PASS** — missing/forged/incomplete/expired → null; valid HS256 accepted |
+| `/api/assessments` public | **false** (middleware + session) |
+| liveDispatch / observationOnly / productionClientDataAllowed | false / true / false (unchanged; suite asserts) |
+| COPILOT-RT-01/02/03/11 | **FIXED_REVALIDATED** @ `2f02702` |
+| Middleware delta vs `19a200e` | jose.jwtVerify replaces fragile Web Crypto; fail-closed retained; no assessment public / live dispatch thaw |
+| Copilot SECURITY_CERTIFIED | **PASS** @ `2f02702` |
+| New jose-path P0/P1 | **0** |
+| GCC SECURITY_CERTIFIED | **PASS** @ `8d757cf` (D25 cite; not retested) |
+| OD-005 REGRESSION | **PASS** @ `9e5d10a` (D23 cite; not retested) |
+| Live production P0 | **5** OPEN @ Hub `940a484` |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_26_2026-08-20.md` |

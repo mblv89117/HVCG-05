@@ -1,0 +1,149 @@
+SHA=2f0270228cdaf1dceed51a52a62200ffde07a9e0
+CMD: npm run build
+UTC=2026-08-20T16:24:21Z
+CWD=/tmp/rt-d26/copilot
+
+> agent-copilot@0.3.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.5.20
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 787ms
+
+./node_modules/jose/dist/webapi/lib/deflate.js
+A Node.js API is used (CompressionStream at line: 10) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/jose/dist/webapi/lib/deflate.js
+./node_modules/jose/dist/webapi/jwe/flattened/encrypt.js
+./node_modules/jose/dist/webapi/index.js
+
+./node_modules/jose/dist/webapi/lib/deflate.js
+A Node.js API is used (DecompressionStream at line: 26) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/jose/dist/webapi/lib/deflate.js
+./node_modules/jose/dist/webapi/jwe/flattened/encrypt.js
+./node_modules/jose/dist/webapi/index.js
+
+ ✓ Compiled successfully in 7.9s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/91) ...
+   Generating static pages (22/91) 
+   Generating static pages (45/91) 
+   Generating static pages (68/91) 
+ ✓ Generating static pages (91/91)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                      195 B         106 kB
+├ ○ /_not-found                            997 B         103 kB
+├ ○ /about                                 195 B         106 kB
+├ ○ /admin                               3.18 kB         118 kB
+├ ○ /admin/assessments                   2.81 kB         117 kB
+├ ƒ /admin/audit                         1.72 kB         116 kB
+├ ○ /admin/clients                       1.72 kB         116 kB
+├ ƒ /admin/governance                    1.72 kB         116 kB
+├ ○ /admin/implementations                 240 B         103 kB
+├ ○ /admin/integrations                    240 B         103 kB
+├ ○ /admin/opportunities                   240 B         103 kB
+├ ○ /admin/pricing                       2.76 kB         117 kB
+├ ○ /admin/proposals                       240 B         103 kB
+├ ○ /admin/reports                         240 B         103 kB
+├ ○ /admin/review                        2.86 kB         117 kB
+├ ○ /admin/settings                        240 B         103 kB
+├ ○ /admin/templates                       240 B         103 kB
+├ ƒ /api/admin/pricing                     240 B         103 kB
+├ ƒ /api/admin/review                      240 B         103 kB
+├ ƒ /api/analysis                          240 B         103 kB
+├ ƒ /api/assessments                       240 B         103 kB
+├ ƒ /api/atlas/handoff                     240 B         103 kB
+├ ƒ /api/atlas/leads                       240 B         103 kB
+├ ƒ /api/auth/demo                         240 B         103 kB
+├ ƒ /api/auth/logout                       240 B         103 kB
+├ ƒ /api/auth/session                      240 B         103 kB
+├ ƒ /api/auth/start                        240 B         103 kB
+├ ƒ /api/documents                         240 B         103 kB
+├ ƒ /api/gtm/enrichment                    240 B         103 kB
+├ ƒ /api/health                            240 B         103 kB
+├ ƒ /api/integrations/hubspot              240 B         103 kB
+├ ƒ /api/integrations/microsoft            240 B         103 kB
+├ ƒ /api/integrations/quickbooks           240 B         103 kB
+├ ƒ /api/mri/report                        240 B         103 kB
+├ ƒ /api/reports/pdf                       240 B         103 kB
+├ ƒ /api/reports/proposal                  240 B         103 kB
+├ ƒ /api/revenue/offers                    240 B         103 kB
+├ ƒ /app                                 2.78 kB         117 kB
+├ ○ /app/advisor                         2.76 kB         117 kB
+├ ƒ /app/assessment                      3.03 kB         117 kB
+├ ○ /app/assessment/analyze              4.46 kB         119 kB
+├ ○ /app/assessment/assumptions           4.5 kB         119 kB
+├ ○ /app/assessment/company              4.42 kB         119 kB
+├ ○ /app/assessment/connect              5.23 kB         120 kB
+├ ○ /app/assessment/goals                4.15 kB         118 kB
+├ ○ /app/assessment/permissions          4.23 kB         119 kB
+├ ○ /app/assessment/questions            4.21 kB         119 kB
+├ ○ /app/assessment/review               4.47 kB         119 kB
+├ ○ /app/assessment/upload                4.4 kB         119 kB
+├ ƒ /app/consent                         2.76 kB         117 kB
+├ ○ /app/implementation                  4.24 kB         119 kB
+├ ○ /app/integrations                      240 B         103 kB
+├ ƒ /app/map                             2.76 kB         117 kB
+├ ○ /app/more                            2.78 kB         117 kB
+├ ○ /app/notifications                   2.76 kB         117 kB
+├ ƒ /app/opportunities                   2.78 kB         117 kB
+├ ƒ /app/opportunities/[id]              2.78 kB         117 kB
+├ ƒ /app/readiness                       2.78 kB         117 kB
+├ ○ /app/reports                         2.78 kB         117 kB
+├ ƒ /app/results                         2.78 kB         117 kB
+├ ƒ /app/roadmap                         2.76 kB         117 kB
+├ ○ /app/roi                             4.01 kB         118 kB
+├ ○ /app/schedule                        2.76 kB         117 kB
+├ ○ /app/settings                        2.78 kB         117 kB
+├ ○ /app/team                            2.76 kB         117 kB
+├ ○ /assessment/assumptions                240 B         103 kB
+├ ○ /assessment/interview                  240 B         103 kB
+├ ○ /business-mri                          195 B         106 kB
+├ ○ /consent                               240 B         103 kB
+├ ○ /contact                               195 B         106 kB
+├ ○ /how-it-works                          195 B         106 kB
+├ ○ /login                                 195 B         106 kB
+├ ○ /mri/dashboard                         240 B         103 kB
+├ ○ /mri/map                               240 B         103 kB
+├ ○ /mri/opportunities                     240 B         103 kB
+├ ○ /mri/roadmap                           240 B         103 kB
+├ ○ /mri/roi                               240 B         103 kB
+├ ○ /onboarding/analyze                    240 B         103 kB
+├ ○ /onboarding/capture                    240 B         103 kB
+├ ○ /onboarding/company                    240 B         103 kB
+├ ○ /onboarding/connect                    240 B         103 kB
+├ ○ /onboarding/upload                     240 B         103 kB
+├ ○ /pricing                               195 B         106 kB
+├ ○ /proposals                             240 B         103 kB
+├ ○ /resources                             195 B         106 kB
+├ ○ /schedule                              240 B         103 kB
+├ ○ /security                              195 B         106 kB
+├ ○ /signup                               2.9 kB         117 kB
+└ ○ /solutions                             195 B         106 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/1255-d90f22433f14e976.js      46.2 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          1.93 kB
+
+
+ƒ Middleware                             40.2 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+EXIT:0

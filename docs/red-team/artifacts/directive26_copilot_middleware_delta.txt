@@ -1,0 +1,154 @@
+BASE=19a200e
+FIX=600403b4d12629faf434f95d33cd864222d4247d
+TIP=2f0270228cdaf1dceed51a52a62200ffde07a9e0
+==== DIFF 19a200e..600403b -- src/middleware.ts ====
+diff --git a/src/middleware.ts b/src/middleware.ts
+index da7ebb4..1274799 100644
+--- a/src/middleware.ts
++++ b/src/middleware.ts
+@@ -1,7 +1,9 @@
+ /**
+  * Edge-safe session verify for middleware.
+- * Uses Web Crypto HMAC — avoids jose CompressionStream Edge warnings.
++ * Prefer jose jwtVerify (Edge-compatible) — custom Web Crypto previously failed closed
++ * on valid HS256 cookies (demo/UAT), blocking Premium QA of /app/* surfaces.
+  */
++import { jwtVerify } from "jose";
+ import { NextRequest, NextResponse } from "next/server";
+ 
+ export const SESSION_COOKIE = "hvcg_copilot_session";
+@@ -14,16 +16,7 @@ const PUBLIC_API_PREFIXES = [
+   "/api/auth/start",
+ ];
+ 
+-function b64urlToBytes(input: string): Uint8Array {
+-  const pad = "=".repeat((4 - (input.length % 4)) % 4);
+-  const b64 = (input + pad).replace(/-/g, "+").replace(/_/g, "/");
+-  const str = atob(b64);
+-  const bytes = new Uint8Array(str.length);
+-  for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i);
+-  return bytes;
+-}
+-
+-function secretKeyBytes() {
++function secretKey() {
+   const raw =
+     process.env.COPILOT_SESSION_SECRET ||
+     process.env.NEXTAUTH_SECRET ||
+@@ -31,53 +24,25 @@ function secretKeyBytes() {
+   return new TextEncoder().encode(raw);
+ }
+ 
+-async function verifyJwtHs256(token: string | undefined | null): Promise<boolean> {
+-  if (!token) return false;
+-  const parts = token.split(".");
+-  if (parts.length !== 3) return false;
+-  const [header, payload, signature] = parts;
+-  try {
+-    const secret = secretKeyBytes();
+-    const key = await crypto.subtle.importKey(
+-      "raw",
+-      secret.buffer.slice(secret.byteOffset, secret.byteOffset + secret.byteLength) as ArrayBuffer,
+-      { name: "HMAC", hash: "SHA-256" },
+-      false,
+-      ["verify"]
+-    );
+-    const data = new TextEncoder().encode(`${header}.${payload}`);
+-    const sigBytes = b64urlToBytes(signature);
+-    const sig = sigBytes.buffer.slice(
+-      sigBytes.byteOffset,
+-      sigBytes.byteOffset + sigBytes.byteLength
+-    ) as ArrayBuffer;
+-    const ok = await crypto.subtle.verify("HMAC", key, sig, data);
+-    if (!ok) return false;
+-    const claims = JSON.parse(new TextDecoder().decode(b64urlToBytes(payload))) as {
+-      exp?: number;
+-      organizationId?: string;
+-      assessmentId?: string;
+-      workspaceId?: string;
+-      userId?: string;
+-      role?: string;
+-    };
+-    if (!claims.userId || !claims.organizationId || !claims.assessmentId || !claims.workspaceId) {
+-      return false;
+-    }
+-    if (typeof claims.exp === "number" && claims.exp * 1000 < Date.now()) return false;
+-    return true;
+-  } catch {
+-    return false;
+-  }
+-}
++type SessionClaims = {
++  exp?: number;
++  organizationId?: string;
++  assessmentId?: string;
++  workspaceId?: string;
++  userId?: string;
++  role?: string;
++};
+ 
+-async function readRole(token: string | undefined | null): Promise<string | null> {
++async function verifyJwtHs256(token: string | undefined | null): Promise<SessionClaims | null> {
+   if (!token) return null;
+   try {
+-    const payload = token.split(".")[1];
+-    if (!payload) return null;
+-    const claims = JSON.parse(new TextDecoder().decode(b64urlToBytes(payload))) as { role?: string };
+-    return claims.role || null;
++    const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
++    const claims = payload as unknown as SessionClaims;
++    if (!claims.userId || !claims.organizationId || !claims.assessmentId || !claims.workspaceId) {
++      return null;
++    }
++    if (typeof claims.exp === "number" && claims.exp * 1000 < Date.now()) return null;
++    return claims;
+   } catch {
+     return null;
+   }
+@@ -107,14 +72,14 @@ export async function middleware(req: NextRequest) {
+   const token = req.cookies.get(SESSION_COOKIE)?.value;
+ 
+   if (isProtectedPagePath(pathname)) {
+-    const ok = await verifyJwtHs256(token);
+-    if (!ok) {
++    const claims = await verifyJwtHs256(token);
++    if (!claims) {
+       const login = new URL("/login", req.url);
+       login.searchParams.set("next", pathname);
+       return NextResponse.redirect(login);
+     }
+     if (pathname.startsWith("/admin")) {
+-      const role = await readRole(token);
++      const role = claims.role;
+       if (role !== "hvcg_admin" && role !== "hvcg_consultant") {
+         return NextResponse.redirect(new URL("/app", req.url));
+       }
+@@ -123,8 +88,8 @@ export async function middleware(req: NextRequest) {
+   }
+ 
+   if (pathname.startsWith("/api/") && !isPublicApiPath(pathname)) {
+-    const ok = await verifyJwtHs256(token);
+-    if (!ok) {
++    const claims = await verifyJwtHs256(token);
++    if (!claims) {
+       return NextResponse.json(
+         { error: "Authentication required", code: "UNAUTHENTICATED" },
+         { status: 401 }
+==== STAT 19a200e..2f02702 ====
+ docs/agent-status.md                               | 100 ++++++++++-----------
+ docs/copilot/premium/PREMIUM_QA_DIRECTIVE_25.md    |  46 ++++++++++
+ docs/copilot/premium/desktop_01_login_shell.png    | Bin 0 -> 20304 bytes
+ docs/copilot/premium/desktop_02_app_shell_nav.png  | Bin 0 -> 49812 bytes
+ docs/copilot/premium/desktop_03_mri_workflow.png   | Bin 0 -> 30156 bytes
+ .../premium/desktop_04_results_fact_classes.png    | Bin 0 -> 47266 bytes
+ .../copilot/premium/desktop_05_results_density.png | Bin 0 -> 49234 bytes
+ docs/copilot/premium/desktop_06_unauth_error.png   | Bin 0 -> 20452 bytes
+ docs/copilot/premium/mobile_01_app_shell.png       | Bin 0 -> 119678 bytes
+ docs/copilot/premium/mobile_02_mri_workflow.png    | Bin 0 -> 111988 bytes
+ docs/copilot/premium/mobile_03_results.png         | Bin 0 -> 80779 bytes
+ docs/copilot/premium/mobile_viewport_proof.png     | Bin 0 -> 43798 bytes
+ .../premium_mri_desktop_mobile_walkthrough.mp4     | Bin 0 -> 13865773 bytes
+ .../DIRECTIVE_CONSUMPTION.md                       |  15 ++--
+ src/middleware.ts                                  |  85 ++++++------------
+ tests/atlas-lead-handoff.test.ts                   |  43 +++++++++
+ 16 files changed, 167 insertions(+), 122 deletions(-)
