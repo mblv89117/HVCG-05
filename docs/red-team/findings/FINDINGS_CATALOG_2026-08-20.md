@@ -400,3 +400,17 @@ Severity: P0 / P1 / P2 (not inflated)
 | COPILOT-RT-20260820-11 | FIXED @ `aacc09c` |
 | XSYS-RT-20260820-01 | OPEN (Hub runtime; Integration docs-only) |
 | XSYS-RT-20260820-02 | OPEN @ Hub `940a484` |
+
+---
+
+## Directive 12 status appendix (GCC + Copilot tip move)
+
+| ID | Status @ Directive 12 |
+|----|------------------------|
+| GCC-RT-20260820-05 | FIXED @ `41a59b8` |
+| GCC-RT-20260820-06 | FIXED @ `41a59b8` |
+| GCC-RT-20260820-07 | FIXED @ `41a59b8` |
+| COPILOT-RT-20260820-02 | FIXED @ `19a200e` |
+| ATLAS-RT-20260820-01/02/03 | OPEN (Hub unchanged; not re-probed) |
+| XSYS-RT-20260820-01/02 | OPEN (Hub unchanged; not re-probed) |
+| GTM-RT-20260820-03/04 | OPEN (GTM tip unchanged; not re-probed) |

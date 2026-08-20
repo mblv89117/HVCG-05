@@ -1,0 +1,14 @@
+
+> agent-copilot@0.3.0 test
+> vitest run --run tests/security-rt-revalidation.test.ts
+
+
+ RUN  v3.2.7 /tmp/rt-d12/copilot
+
+ ✓ tests/security-rt-revalidation.test.ts (7 tests) 19ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  06:04:09
+   Duration  327ms (transform 96ms, setup 0ms, collect 175ms, tests 19ms, environment 0ms, prepare 44ms)
+

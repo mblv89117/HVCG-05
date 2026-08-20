@@ -5,63 +5,54 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | da27919 |
-| baseline | Hub `940a484` / Elite `75d0c59`; product tips per Directive 10 |
-| owned domains | Independent adversarial testing and findings (no feature ownership) |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/**` |
-| contracts required | Read-only consume Integration SoT `773b510` |
-| tests | Static harness + tip source reproduction (Directive 10) |
-| build | N/A |
+| current SHA | *(tip)* |
+| baseline | Hub `940a484` / Elite `75d0c59` (not retested this cycle) |
+| owned domains | Independent adversarial testing and findings |
+| files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d12-closures.mjs` |
+| contracts required | Integration SoT dependency `773b510` (unchanged; not retested) |
+| tests | GCC `npm run test:security` PASS 6/6; Copilot vitest security-rt PASS 7/7; RT static probe script added |
+| build | N/A (docs + harness) |
 | synthetic certification | N/A |
-| security status | Gate **FAIL** for new production candidates |
-| Premium status | N/A |
-| integration dependencies | Revalidate when Atlas HMAC / Copilot store / GCC RBAC land |
-| P0 | **6 open** (ATLAS×3, COPILOT-02, XSYS-01, XSYS-02) |
-| P1 | Prior ~19; this pass closed GTM-02 + COPILOT-11; residuals GTM-03/04, GCC-05/06/07 open/partial |
-| P2 | ~14+ (not primary this pass) |
-| owner decisions | OD-003/004/005 tracked; OD-005 owns Atlas Hub P0 patch |
-| deployment state | Findings continuous — **not** a deploy candidate |
+| security status | Gate **FAIL** (Atlas/XSYS P0s + GTM P1s remain) |
+| Premium status | **N/A** — RT docs/harness only; no RT UI |
+| integration dependencies | `integration@773b510` |
+| P0 | **5 open** (ATLAS-01/02/03, XSYS-01/02); COPILOT-02 **FIXED** @ `19a200e` |
+| P1 | **2 open** (GTM-03/04); GCC-05/06/07 **FIXED** @ `41a59b8` |
+| P2 | none this cycle |
+| owner decisions | OD-005 Atlas patch still required for remaining P0s |
+| deployment state | REMOTE_REACHABLE findings train — **not** DEPLOYMENT_READY |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **10** |
-| ORCHESTRATOR ACK | Controlled wake test YES; mapping confidence HIGH |
-| BASED ON WORKER SHA | `0386a53b9b82fd6e6cd351c3348cdfb3f83724c1` |
-| PREVIOUS RUN ID | `run-fb85119f-9632-4808-8d1a-f2bd09deffc4` |
-| ORCHESTRATOR REMOTE SHA (at consume) | `db9629a` (`cursor/platform-orchestrator-b1fa`) |
-| CURRENT SHA | da2791986ed85cbd142e182d3e238748da8916a4 |
-| COMPLETED ACTIONS | Directive 10 tip SHA verify; P0/P1 reclassification; report published |
-| REMAINING ACTIONS | Retest after Atlas patch / Copilot store / GCC RBAC+handoff; GTM-04 integration proof |
-| P0/P1/P2 | P0=6 · P1 residuals open · P2 prior debt |
-| TEST STATUS | Source reproduction on exact SHAs; GTM CallRail unit tests present but deps not installed in RT env |
-| PREMIUM STATUS | N/A |
-| INTEGRATION STATUS | Contracts tip reviewed read-only; Hub HMAC/prefix still open |
-| OWNER DECISIONS | Awaiting OD-005 for Atlas P0 closure |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **12** |
+| BASED ON WORKER SHA | `072e56f3b355535d2f2cf421fb6ffa54cd16ea42` |
+| BASED ON RUN ID | `run-c9759931-513d-4435-bd50-f119f7f72676` |
+| CURRENT SHA | *(git tip)* |
+| COMPLETED ACTIONS | Verified GCC `41a59b8` + Copilot `19a200e`; confirmed GCC-05/06/07 + COPILOT-02 FIXED with tests; published D12 report |
+| REMAINING ACTIONS | Retest when Atlas OD-005 tip or GTM tip moves; keep gate FAIL until P0=0 and P1=0 |
+| P0/P1/P2 | P0=5 · P1=2 · P2=none |
+| TEST STATUS | GCC security PASS; Copilot security-rt PASS; `check-d12-closures.mjs` added |
+| PREMIUM STATUS | N/A (no RT UI) |
+| INTEGRATION STATUS | Dependency noted `773b510`; Hub HMAC/prefix still open (unchanged) |
+| OWNER DECISIONS | Awaiting OD-005 for Atlas/XSYS P0s; GTM owns 03/04 |
 
-## SHAs tested (Directive 10)
+## SHAs this cycle
 
 | System | SHA |
 |--------|-----|
-| GTM | `5bd8204dbf2fbb25e78aff7540f26c787604d77c` |
-| GCC | `b02c1322d5e18ef8bc6699b202515e9137cde6a1` |
-| Copilot | `aacc09c4fe7d67d453d4ad6111f8db0cf38ebf12` |
-| Integration | `773b5101032ccd5218d5563d2177c31722ecf575` |
-| Atlas Hub / Elite | `940a484` / `75d0c59` |
+| GCC | `41a59b84335d644effbd7bd84faa31f73a139531` |
+| Copilot | `19a200e8af288ea0c81471b7c6235c002de45c7e` |
 
 ## Notes
 
-- Do not silently fix product branches.
-- Closed this pass: GTM-RT-01, GCC-RT-01/02/03, GTM-RT-02, COPILOT-RT-01/11.
-- Atlas frozen live-cert current-scope PASS unchanged; Hub code defects remain open for patch train.
-
-## Blockers
-
-- New production releases blocked while P0/P1 remain open on candidates that claim deploy readiness.
+- Did not retest unchanged GTM/Integration/Atlas frozen SHAs (Directive 12 scope).
+- Did not implement product features; findings + harness only.
+- Frozen Atlas baseline remains PASS — not mutated.
 
 ## Next milestone
 
-Retest when OD-005 Atlas security-patch tip and Copilot durable per-session store land.
+Atlas security-patch tip revalidation for ATLAS-RT-01/02/03 + XSYS-01/02.
 
-**Updated:** 2026-08-20T05:35:00Z
+**Updated:** 2026-08-20T06:05:00Z
