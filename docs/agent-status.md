@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | 1242d445c81c57ff5f403ed1bc53db8eae4d1c60 |
 | baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **24** |
 | BASED ON WORKER SHA | `eb77e53a3e5636740fb11f11d8f0aee72fe3ff44` |
 | BASED ON RUN ID | `run-f4eea81d-e7b1-405f-9913-56905040c2fe` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | 1242d445c81c57ff5f403ed1bc53db8eae4d1c60 |
 | COMPLETED ACTIONS | Independent GCC revalidation @ `32e923c` (security/full/fixture/typecheck); published REVALIDATION_DIRECTIVE_24; GCC-RT FIXED_REVALIDATED |
 | REMAINING ACTIONS | Product: fix `fixture-synthetic-cvos-path.ts` typecheck so SECURITY_CERTIFIED can go PASS; owner-gated Hub deploy for live P0=0 |
 | P0/P1/P2 | Live P0=5 · Candidate OD-005 P0=0 · GCC tip P0/P1 FIXED_REVALIDATED · P2=none |
