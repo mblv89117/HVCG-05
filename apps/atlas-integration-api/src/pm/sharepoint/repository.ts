@@ -47,6 +47,7 @@ import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
 import {
   CONVERTIBLE_LEAD_STATUSES,
   clientFromLeadIdempotencyKey,
+  companyTitleFromOpportunityTitle,
   normalizeCompanyTitle,
   opportunityHref,
   opportunityIdempotencyKey,
@@ -1354,6 +1355,13 @@ export class SharePointPmService {
       if (!mapped) continue;
       byId.set(mapped.itemId, mapped);
       byId.set(mapped.clientCode, mapped);
+      const titleKey = `title:${normalizeCompanyTitle(mapped.displayName)}`;
+      const existingTitle = byId.get(titleKey);
+      if (existingTitle && existingTitle.clientCode !== mapped.clientCode) {
+        byId.delete(titleKey);
+      } else if (!existingTitle) {
+        byId.set(titleKey, mapped);
+      }
     }
     return byId;
   }
@@ -1366,7 +1374,11 @@ export class SharePointPmService {
     if (!item.id || !title) return null;
     const clientId = lookupId(item.fields, 'ClientId');
     const fromField = asString(item.fields.ClientCode);
-    const linked = (clientId && clients.get(clientId)) || (fromField && clients.get(fromField)) || undefined;
+    const linked =
+      (clientId && clients.get(clientId)) ||
+      (fromField && clients.get(fromField)) ||
+      clients.get(`title:${normalizeCompanyTitle(companyTitleFromOpportunityTitle(title))}`) ||
+      undefined;
     const clientCode =
       (fromField && isCanonicalClientCode(fromField) && fromField !== '*' ? fromField : undefined) ||
       linked?.clientCode;
@@ -1704,8 +1716,7 @@ export class SharePointPmService {
       throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
     }
 
-    const entitled = new Set(entitledClientCodes(principal));
-    const company = await this.ensureCompanyFromLead(existing, entitled);
+    const company = await this.ensureCompanyFromLead(existing);
     const contact = await this.ensureContactFromLead(existing, company.client);
     const opportunity = await this.ensureOpportunityFromLead(existing, company.client);
 
@@ -1724,7 +1735,6 @@ export class SharePointPmService {
         ConvertedClientIdLookupId: Number(company.client.itemId),
         ConvertedOpportunityIdLookupId: Number(opportunity.record.id),
       };
-      if (company.stampClientCode) fields.ClientCode = company.client.clientCode;
       const patched = await this.graph.patchItemFields(this.settings.leadsListId, id, fields, match);
       const mapped = this.mapLead(patched);
       if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Converted lead could not be mapped.');
@@ -1763,8 +1773,7 @@ export class SharePointPmService {
 
   private async ensureCompanyFromLead(
     lead: SharePointLead,
-    entitled: Set<string>,
-  ): Promise<{ client: SharePointClient; reused: boolean; stampClientCode: boolean }> {
+  ): Promise<{ client: SharePointClient; reused: boolean }> {
     const clients = await this.listAll(this.settings.clientsListId);
     const mapped = clients
       .map((item) => this.mapClient(item))
@@ -1772,22 +1781,17 @@ export class SharePointPmService {
     const byItem = new Map(mapped.map((c) => [c.itemId, c]));
     const byCode = new Map(mapped.map((c) => [c.clientCode, c]));
 
-    const stampFor = (client: SharePointClient, reused: boolean): boolean =>
-      Boolean(lead.clientCode) || (reused && entitled.has(client.clientCode));
-
     if (lead.convertedClientId && byItem.has(lead.convertedClientId)) {
-      const client = byItem.get(lead.convertedClientId)!;
-      return { client, reused: true, stampClientCode: stampFor(client, true) };
+      return { client: byItem.get(lead.convertedClientId)!, reused: true };
     }
     if (lead.clientCode && byCode.has(lead.clientCode)) {
-      const client = byCode.get(lead.clientCode)!;
-      return { client, reused: true, stampClientCode: stampFor(client, true) };
+      return { client: byCode.get(lead.clientCode)!, reused: true };
     }
 
     const wanted = normalizeCompanyTitle(lead.title);
     const titleMatch = mapped.find((c) => normalizeCompanyTitle(c.displayName) === wanted);
     if (titleMatch) {
-      return { client: titleMatch, reused: true, stampClientCode: stampFor(titleMatch, true) };
+      return { client: titleMatch, reused: true };
     }
 
     const prior = await this.findByIdempotency(
@@ -1796,7 +1800,7 @@ export class SharePointPmService {
     );
     if (prior) {
       const existing = this.mapClient(prior);
-      if (existing) return { client: existing, reused: true, stampClientCode: stampFor(existing, true) };
+      if (existing) return { client: existing, reused: true };
     }
 
     const clientCode = proposeClientCode(lead.title, mapped.map((c) => c.clientCode));
@@ -1813,7 +1817,7 @@ export class SharePointPmService {
     const created = await this.graph.createItem(this.settings.clientsListId, fields);
     const client = this.mapClient(created);
     if (!client) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
-    return { client, reused: false, stampClientCode: false };
+    return { client, reused: false };
   }
 
   private async ensureContactFromLead(

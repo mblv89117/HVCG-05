@@ -6,8 +6,17 @@ import {
   parseActivationNotes,
   writeActivationNotes,
 } from '../src/pm/sharepoint/clientActivation.ts';
+import { companyTitleFromOpportunityTitle } from '../src/pm/sharepoint/leadConversion.ts';
 
 describe('client activation helpers', () => {
+  it('strips the converted Discovery suffix from opportunity titles', () => {
+    assert.equal(
+      companyTitleFromOpportunityTitle('SYNTHETIC QA — Atlas Capital Operations — Discovery'),
+      'SYNTHETIC QA — Atlas Capital Operations',
+    );
+    assert.equal(companyTitleFromOpportunityTitle('Alder & Co. - Discovery'), 'Alder & Co.');
+  });
+
   it('classifies won prospect as activation required and active client as active', () => {
     assert.equal(
       classifyClientActivation({ clientStage: 'Prospect', winLossStatus: 'Won' }),

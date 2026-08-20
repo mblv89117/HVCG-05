@@ -52,6 +52,11 @@ export function normalizeCompanyTitle(title: string): string {
   return title.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+/** Convert writes `${company} — Discovery`. Graph often drops ClientIdLookupId on HVCG_Opportunities. */
+export function companyTitleFromOpportunityTitle(title: string): string {
+  return title.replace(/\s*[—–-]\s*Discovery\s*$/i, '').trim();
+}
+
 /** Canonical ClientCode from a company title; never returns '*'. */
 export function proposeClientCode(title: string, taken: Iterable<string>): string {
   const used = new Set(taken);

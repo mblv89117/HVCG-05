@@ -1089,10 +1089,36 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       };
       assert.equal(body.company.clientCode, 'ACCG01');
       assert.equal(body.company.reused, true);
-      assert.equal(body.lead.clientCode, 'ACCG01');
+      assert.equal(body.lead.clientCode, undefined);
       const clients = graph.lists.get(CLIENTS) || [];
       assert.equal(clients.filter((c) => c.fields.ClientCode === 'ACCG01').length, 1);
     });
+  });
+
+  it('recovers opportunity clientCode from converted title when Graph drops ClientId', async () => {
+    await withCrmLeads(async ({ base, graph }) => {
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA — Atlas Capital Operations', ClientCode: 'SYN01', ClientStage: 'Lead' },
+        '8',
+      );
+      graph.seed(
+        OPPORTUNITIES,
+        {
+          Title: 'SYNTHETIC QA — Atlas Capital Operations — Discovery',
+          Stage: 'Discovery',
+          WinLossStatus: 'Open',
+          LeadIdLookupId: 21,
+          HVCG_IdempotencyKey: 'opp-from-lead|21',
+        },
+        '4',
+      );
+      const res = await fetch(`${base}/api/pm/opportunities/4`, { headers: auth('staff') });
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as { opportunity: { clientCode?: string; clientStage?: string; title: string } };
+      assert.equal(body.opportunity.clientCode, 'SYN01');
+      assert.equal(body.opportunity.clientStage, 'Lead');
+    }, () => ['SYN01']);
   });
 
   it('does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity', async () => {
