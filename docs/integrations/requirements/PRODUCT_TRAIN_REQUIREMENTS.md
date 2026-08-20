@@ -22,7 +22,7 @@ Frozen Atlas baseline remains Hub `940a484` / Elite `75d0c59` — do not regress
 
 ## 360 Growth (GTM train)
 
-Branch declared (directive 7): `cursor/360-gtm-agent-system` @ `f53e628` — sibling git remote **404** here. GitHub MCP `get_commit` confirms tip `f53e628`. Opened `packages/gtm-agent/src/atlas/journey-sot.ts` (file SHA `6d8d541`: `toBookingEventV1` / `toExperimentSpecV1` / `toOptimizationDecisionV1`) and `.env.example` (`GTM_LIVE_DISPATCH_ENABLED=false`, `PAID_ADS_ENABLED=false`, `GTM_KILL_SWITCH=true`).
+Branch declared (directive 8): `cursor/360-gtm-agent-system` @ `f53e628` — sibling git remote **404** here. GitHub MCP confirms tip still `f53e628`. Opened `icp/model.ts` (`06d1669f`), `icp/studio.ts` (`5452b0bc`), `outbound/orchestrator.ts` (`0e974d67`), plus D7 `journey-sot.ts`. Flags remain off.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |

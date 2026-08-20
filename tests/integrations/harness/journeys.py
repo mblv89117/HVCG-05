@@ -133,6 +133,55 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
     }
     assert_valid("form-spec.v1.json", form)
 
+    icp = {
+        "contractVersion": "icp-studio.v1",
+        "version": "icp.hvcg.v1",
+        "name": "HVCG Founder-Led Growth ICP",
+        "description": "Founder-led companies with operational/capital constraints (SYN-GTM mark icp.version===icp.hvcg.v1).",
+        "criteria": {
+            "founderLed": True,
+            "minRevenueUsdApprox": 2000000,
+            "provenDemandRequired": True,
+            "constraintSignals": ["growth_constraint", "capital_constraint", "operational_constraint"],
+            "ownerBottleneck": True,
+            "limitedCfoCooInfrastructure": True,
+            "opportunityAreas": ["profitability", "systems", "ai", "capital", "contracts", "enterprise_value"],
+        },
+        "verticalHypotheses": [
+            "construction",
+            "professional_services",
+            "healthcare_dental",
+            "home_services",
+            "select_franchises",
+        ],
+        "exclusions": {
+            "sensitivePersonalTraits": True,
+            "notes": "Do not target or store sensitive personal traits.",
+        },
+        "createdAt": NOW,
+        "ownerSystem": "360",
+        "observationOnly": True,
+        "activeVersion": "icp.hvcg.v1",
+    }
+    assert_valid("icp-studio.v1.json", icp)
+    bus.write("icp|icp.hvcg.v1", "icp", {"id": "icp.hvcg.v1", **icp})
+
+    outbound = {
+        "contractVersion": "outbound-dispatch.v1",
+        "messageId": "msg-syn-1",
+        "channel": "email",
+        "mode": "dry_run_record_only",
+        "recorded": True,
+        "dispatched": False,
+        "blockedReason": "GTM_LIVE_DISPATCH_ENABLED=false",
+        "ownerSystem": "360",
+        "observationOnly": True,
+        "liveDispatch": False,
+        "paidAdsEnabled": False,
+    }
+    assert_valid("outbound-dispatch.v1.json", outbound)
+    bus.write("outbound|msg-syn-1", "outbound", {"id": "msg-syn-1", **outbound})
+
     nurture = {
         "planId": f"nurture-{company['companyId']}",
         "companyId": company["companyId"],
@@ -342,6 +391,8 @@ def run_journey_a(bus: SyntheticBus | None = None) -> dict[str, Any]:
             "opportunity": bus.count("opportunity"),
             "engagement": bus.count("engagement"),
             "booking": bus.count("booking"),
+            "icp": bus.count("icp"),
+            "outbound": bus.count("outbound"),
             "gcc_handoff": bus.count("gcc_handoff"),
         },
         "bus": bus,

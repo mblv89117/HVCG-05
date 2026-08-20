@@ -21,6 +21,8 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertEqual(result["counts"]["opportunity"], 1)
         self.assertEqual(result["counts"]["engagement"], 1)
         self.assertEqual(result["counts"]["booking"], 1)
+        self.assertEqual(result["counts"]["icp"], 1)
+        self.assertEqual(result["counts"]["outbound"], 1)
         self.assertEqual(result["counts"]["gcc_handoff"], 1)
         self.assertEqual(result["results"]["lead"], "accepted")
         self.assertEqual(result["clientCode"], "ACME01")
@@ -28,6 +30,12 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertEqual(booking["bookingId"], "mtg-book-syn-1")
         self.assertEqual(booking["status"], "confirmed")
         self.assertNotIn("liveDispatch", booking)
+        icp = result["bus"].store["icp|icp.hvcg.v1"]["payload"]
+        self.assertEqual(icp["version"], "icp.hvcg.v1")
+        self.assertTrue(icp["exclusions"]["sensitivePersonalTraits"])
+        outbound = result["bus"].store["outbound|msg-syn-1"]["payload"]
+        self.assertEqual(outbound["mode"], "dry_run_record_only")
+        self.assertFalse(outbound["dispatched"])
 
     def test_journey_a_replay_does_not_duplicate(self):
         result = run_journey_a()
@@ -44,11 +52,15 @@ class SyntheticJourneyTests(unittest.TestCase):
         self.assertEqual(gcc_again.outcome, "duplicate")
         booking_again = replay_write(bus, "booking|mtg-book-syn-1", "booking", {"id": "should-not-create"})
         self.assertEqual(booking_again.outcome, "duplicate")
+        outbound_again = replay_write(bus, "outbound|msg-syn-1", "outbound", {"id": "should-not-create"})
+        self.assertEqual(outbound_again.outcome, "duplicate")
         self.assertEqual(bus.count("lead"), 1)
         self.assertEqual(bus.count("gcc_handoff"), 1)
         self.assertEqual(bus.count("opportunity"), 1)
         self.assertEqual(bus.count("engagement"), 1)
         self.assertEqual(bus.count("booking"), 1)
+        self.assertEqual(bus.count("icp"), 1)
+        self.assertEqual(bus.count("outbound"), 1)
 
     def test_journey_b_copilot_to_engagement(self):
         result = run_journey_b()

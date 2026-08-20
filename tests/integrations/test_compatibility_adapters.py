@@ -304,6 +304,49 @@ def to_form_spec_v1(producer: dict) -> dict:
     }
 
 
+def to_icp_studio_v1(producer: dict) -> dict:
+    """Map GTM getActiveIcp / IcpModel @ f53e628 → SoT icp-studio.v1."""
+    if producer.get("version") != "icp.hvcg.v1":
+        raise ValueError("icp_studio_requires_icp.hvcg.v1")
+    exclusions = dict(producer.get("exclusions") or {})
+    if exclusions.get("sensitivePersonalTraits") is not True:
+        raise ValueError("icp_studio_requires_exclusions.sensitivePersonalTraits_true")
+    return {
+        "contractVersion": "icp-studio.v1",
+        "version": "icp.hvcg.v1",
+        "name": producer["name"],
+        "description": producer["description"],
+        "criteria": producer["criteria"],
+        "verticalHypotheses": producer["verticalHypotheses"],
+        "exclusions": exclusions,
+        "createdAt": producer["createdAt"],
+        "ownerSystem": "360",
+        "observationOnly": True,
+        "activeVersion": "icp.hvcg.v1",
+    }
+
+
+def to_outbound_dispatch_v1(producer: dict) -> dict:
+    """Map GTM OutboundDispatchResult @ f53e628 → SoT outbound-dispatch.v1. Live send rejected."""
+    if producer.get("mode") != "dry_run_record_only" or producer.get("dispatched") is not False or producer.get("recorded") is not True:
+        raise ValueError("outbound_dispatch_requires_dry_run_record_only_and_not_dispatched")
+    mapped = {
+        "contractVersion": "outbound-dispatch.v1",
+        "messageId": producer["messageId"],
+        "channel": producer["channel"],
+        "mode": "dry_run_record_only",
+        "recorded": True,
+        "dispatched": False,
+        "ownerSystem": "360",
+        "observationOnly": True,
+        "liveDispatch": False,
+        "paidAdsEnabled": False,
+    }
+    if producer.get("blockedReason"):
+        mapped["blockedReason"] = producer["blockedReason"]
+    return mapped
+
+
 def to_integration_pre_call_brief(producer: dict, *, booking_id: str, atlas_client_code: str | None = None, generated_at: str) -> dict:
     """Mirror Copilot `toIntegrationPreCallBrief` @ fe3db75 — adapter only; SoT meaning unchanged."""
     findings = producer.get("structuredFindings") or []
@@ -655,6 +698,63 @@ class CompatibilityTests(unittest.TestCase):
         )
         assert_valid("funnel-spec.v1.json", funnel)
         assert_valid("form-spec.v1.json", form)
+
+    def test_gtm_icp_studio_maps_to_sot(self):
+        producer = {
+            "version": "icp.hvcg.v1",
+            "name": "HVCG Founder-Led Growth ICP",
+            "description": "Founder-led companies ~$2M+ revenue with proven demand and owner bottleneck.",
+            "criteria": {
+                "founderLed": True,
+                "minRevenueUsdApprox": 2_000_000,
+                "provenDemandRequired": True,
+                "constraintSignals": ["growth_constraint", "capital_constraint", "operational_constraint"],
+                "ownerBottleneck": True,
+                "limitedCfoCooInfrastructure": True,
+                "opportunityAreas": ["profitability", "systems", "ai", "capital", "contracts", "enterprise_value"],
+            },
+            "verticalHypotheses": [
+                "construction",
+                "professional_services",
+                "healthcare_dental",
+                "home_services",
+                "select_franchises",
+            ],
+            "exclusions": {
+                "sensitivePersonalTraits": True,
+                "notes": "Do not target or store sensitive personal traits.",
+            },
+            "createdAt": "2026-08-20T21:00:00Z",
+        }
+        sot = to_icp_studio_v1(producer)
+        assert_valid("icp-studio.v1.json", sot)
+        self.assertEqual(sot["version"], "icp.hvcg.v1")
+        self.assertTrue(sot["exclusions"]["sensitivePersonalTraits"])
+        self.assertTrue(sot["observationOnly"])
+        with self.assertRaises(ValueError):
+            to_icp_studio_v1({**producer, "version": "icp.other.v1"})
+        with self.assertRaises(ValueError):
+            to_icp_studio_v1({**producer, "exclusions": {"sensitivePersonalTraits": False}})
+
+    def test_gtm_outbound_dispatch_maps_to_sot(self):
+        producer = {
+            "messageId": "msg-syn-1",
+            "channel": "email",
+            "mode": "dry_run_record_only",
+            "recorded": True,
+            "dispatched": False,
+            "blockedReason": "GTM_LIVE_DISPATCH_ENABLED=false",
+        }
+        sot = to_outbound_dispatch_v1(producer)
+        assert_valid("outbound-dispatch.v1.json", sot)
+        self.assertEqual(sot["mode"], "dry_run_record_only")
+        self.assertTrue(sot["recorded"])
+        self.assertFalse(sot["dispatched"])
+        self.assertFalse(sot["liveDispatch"])
+        with self.assertRaises(ValueError):
+            to_outbound_dispatch_v1({**producer, "mode": "live", "dispatched": True})
+        with self.assertRaises(ValueError):
+            to_outbound_dispatch_v1({**producer, "dispatched": True})
 
     def test_gcc_gtm_feedback_ratified(self):
         assert_valid(

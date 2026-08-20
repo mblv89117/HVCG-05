@@ -27,6 +27,8 @@ REQUIRED_SCHEMAS = [
     "campaign-spec.v1.json",
     "funnel-spec.v1.json",
     "form-spec.v1.json",
+    "icp-studio.v1.json",
+    "outbound-dispatch.v1.json",
     "nurture-plan.v1.json",
     "booking-event.v1.json",
     "pre-call-brief.v1.json",
@@ -68,7 +70,7 @@ class ContractSchemaTests(unittest.TestCase):
         data = load_schema("idempotency-keys.v1.json")
         patterns = data["properties"]["patterns"]["default"]
         keys = {p["pattern"].split("|")[0] for p in patterns}
-        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "precall", "booking", "experiment", "optimize", "engagement", "gcc-signal", "learn-won"]:
+        for prefix in ["eva", "website", "360", "copilot", "client-from-lead", "opp-from-lead", "client-activate", "gcc-activate", "nurture", "icp", "outbound", "precall", "booking", "experiment", "optimize", "engagement", "gcc-signal", "learn-won"]:
             self.assertIn(prefix, keys, f"Missing idempotency prefix {prefix}")
 
     def test_website_lead_minimal_valid(self):
@@ -193,6 +195,62 @@ class ContractSchemaTests(unittest.TestCase):
             },
         )
         self.assertTrue(campaign_live)
+
+    def test_icp_studio_excludes_sensitive_personal_traits(self):
+        valid = {
+            "contractVersion": "icp-studio.v1",
+            "version": "icp.hvcg.v1",
+            "name": "HVCG Founder-Led Growth ICP",
+            "description": "Founder-led companies with operational/capital constraints.",
+            "criteria": {
+                "founderLed": True,
+                "minRevenueUsdApprox": 2000000,
+                "provenDemandRequired": True,
+                "constraintSignals": ["growth_constraint"],
+                "ownerBottleneck": True,
+                "limitedCfoCooInfrastructure": True,
+                "opportunityAreas": ["capital"],
+            },
+            "verticalHypotheses": ["construction"],
+            "exclusions": {"sensitivePersonalTraits": True, "notes": "Do not target or store sensitive personal traits."},
+            "createdAt": "2026-08-20T21:00:00Z",
+            "ownerSystem": "360",
+            "observationOnly": True,
+            "activeVersion": "icp.hvcg.v1",
+        }
+        assert_valid("icp-studio.v1.json", valid)
+        self.assertTrue(
+            validate(
+                "icp-studio.v1.json",
+                {**valid, "exclusions": {"sensitivePersonalTraits": False}},
+            )
+        )
+        self.assertTrue(
+            validate(
+                "icp-studio.v1.json",
+                {**valid, "version": "icp.invented.v2"},
+            )
+        )
+
+    def test_outbound_dispatch_fail_closed(self):
+        valid = {
+            "contractVersion": "outbound-dispatch.v1",
+            "messageId": "msg-syn-1",
+            "channel": "email",
+            "mode": "dry_run_record_only",
+            "recorded": True,
+            "dispatched": False,
+            "blockedReason": "GTM_LIVE_DISPATCH_ENABLED=false",
+            "ownerSystem": "360",
+            "observationOnly": True,
+            "liveDispatch": False,
+            "paidAdsEnabled": False,
+        }
+        assert_valid("outbound-dispatch.v1.json", valid)
+        self.assertTrue(validate("outbound-dispatch.v1.json", {**valid, "dispatched": True}))
+        self.assertTrue(validate("outbound-dispatch.v1.json", {**valid, "mode": "live"}))
+        self.assertTrue(validate("outbound-dispatch.v1.json", {**valid, "liveDispatch": True}))
+        self.assertTrue(validate("outbound-dispatch.v1.json", {**valid, "recorded": False}))
 
     def test_pre_call_brief_observation_only(self):
         # Copilot toIntegrationPreCallBrief output @ fe3db75 (docs/copilot/pre-call-brief-fixture-d26.json)

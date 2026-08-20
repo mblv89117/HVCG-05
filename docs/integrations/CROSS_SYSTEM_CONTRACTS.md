@@ -42,6 +42,8 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 | Atlas lead → opportunity | `POST /api/pm/leads/{LeadId}/convert` | Staff bearer + ETag | `client-from-lead\|…`, `contact-from-lead\|…`, `opp-from-lead\|…` | `ClientCode` after conversion | Hub/Elite implemented | Microsoft auth cert |
 | EVA → Atlas capital | `POST /api/capital/handoffs/eva` | Bearer + client scope | Capital keys | `ClientCode` required | Implemented | Capital gates |
 | Copilot → Atlas capital observation | `POST /api/capital/handoffs/agent-copilot` | Bearer + optional client scope | Handoff record ID | Optional `ClientCode` | Observation-only | Non-fact |
+| 360 ICP studio | Contract `icp-studio.v1` | Local / staging | `icp\|{version}` | ICP_MODEL_VERSION | Schema + harness | Observation-only |
+| 360 dry-run outbound | Contract `outbound-dispatch.v1` | Local / staging | `outbound\|{messageId}` | messageId | Schema + harness | `dispatched=false` |
 | 360 nurture plan | Contract `nurture-plan.v1` | Local / staging | `nurture\|{planId}` | 360 lead | Schema + harness | No live send |
 | 360 → Atlas lead | `@360gs/atlas-handoff` stage | Intake key when live | `360\|{leadId}` | `HVCG_Leads` | Staging only | Owner before live |
 | Copilot → Atlas lead | Copilot `/api/atlas/leads` | Local / future Entra | `copilot\|{assessmentId}` | `HVCG_Leads` | Staging only | Non-fact |
@@ -86,6 +88,8 @@ See `CANONICAL_IDENTITIES.md`. Summary:
 - `schemas/campaign-spec.v1.json`
 - `schemas/funnel-spec.v1.json`
 - `schemas/form-spec.v1.json`
+- `schemas/icp-studio.v1.json`
+- `schemas/outbound-dispatch.v1.json`
 - `schemas/nurture-plan.v1.json`
 - `schemas/booking-event.v1.json`
 - `schemas/pre-call-brief.v1.json`

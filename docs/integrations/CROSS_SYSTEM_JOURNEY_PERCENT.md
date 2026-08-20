@@ -1,79 +1,72 @@
-# Cross-System Journey Percent — Directive 7
+# Cross-System Journey Percent — Directive 8
 
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
-**BASED ON CURRENT SHA:** `d6aff599569a23b6d3501c361925a15c83e0826d`  
-**BASED ON CURRENT RUN ID:** D6 FINISHED (`followup-accepted-2026-08-20T2045Z` → `d6aff59`)  
-**LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED:** **7**  
-**SoT meaning:** `773b510` (unchanged; no semantic fork)  
+**BASED ON CURRENT SHA:** `f2e27a0973592cf324704047edcca2e878ce59ec`  
+**BASED ON CURRENT RUN ID:** D7 FINISHED (`followup-accepted-2026-08-20T2100Z` → `795bbe7` / pin `f2e27a0`)  
+**LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED:** **8**  
+**SoT meaning lineage:** `773b510` (unchanged; `icp-studio.v1` + `outbound-dispatch.v1` additive)  
 **CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **YES**  
-**CROSS_SYSTEM_JOURNEY_PERCENT:** **96%** (weighted: PASS=1.0, PARTIAL=0.5 → 23.0 / 24)  
-**Strict PASS-only:** **92%** (22 / 24)  
-**Weakest boundary:** `icp_studio` and dry-run outbound remain PARTIAL (no Integration SoT schema; depth not invented). Live Hub XSYS-01/02 remain OPEN on `940a484` (not this train).  
-**Updated:** 2026-08-20T21:15:00Z
+**CROSS_SYSTEM_JOURNEY_PERCENT:** **100%** (weighted: PASS=1.0 → 24.0 / 24)  
+**Strict PASS-only:** **100%** (24 / 24)  
+**Weakest boundary:** Live Hub XSYS-01/02 remain OPEN on `940a484` (not this train). No remaining PARTIAL journey steps.  
+**Updated:** 2026-08-20T21:30:00Z
 
-Live adapters stay gated. No production writes. No Hub thaw. No paid ads.
+Live adapters stay gated. No production writes. No Hub thaw. No paid ads. `outbound-dispatch.v1` does not authorize live send.
 
 ## Current tips pinned
 
 | System | Exact SHA | Joint evidence |
 | --- | --- | --- |
-| GTM | `f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb` | GitHub MCP `get_commit` on `cursor/360-gtm-agent-system` — D14 landed; do not pin `14d8e4d` |
-| Revenue | `85def0ef30eb7adc4bcf096f4fabd569c6817535` | This worker fetched — unchanged |
-| GCC | `8d757cf68157a6054432de7ca57f8431731b2d64` | Unchanged vs D6 |
-| Copilot | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | Unchanged vs D6 |
-| OD-005 | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | This worker fetched read-only — unchanged |
-| Contracts | `795bbe7d9d03673bd39eba1bb2d423a14c4e30af` | This branch D7 pack; Supervisor independently 34/34 @ `d6aff59` |
+| GTM | `f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb` | GitHub MCP `get_commit` + `icp/model.ts` `06d1669f` + `icp/studio.ts` `5452b0bc` + `outbound/orchestrator.ts` `0e974d67` |
+| Revenue | `85def0ef30eb7adc4bcf096f4fabd569c6817535` | Unchanged vs D7 |
+| GCC | `8d757cf68157a6054432de7ca57f8431731b2d64` | Unchanged vs D7 |
+| Copilot | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | Unchanged vs D7 |
+| OD-005 | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | Fetched read-only — unchanged |
+| Contracts | this D8 pack (pin follows) | Based-on `f2e27a0`; Supervisor independently 36/36 @ `f2e27a0` |
 
-`CURRENT_PRODUCT_TIPS_TESTED_TOGETHER=YES` is against these six SHAs — GTM **must** be `f53e628`, not `14d8e4d`.
+`CURRENT_PRODUCT_TIPS_TESTED_TOGETHER=YES` remains against these six SHAs. GTM tip still `f53e628` (D14). Red Team D28 `SECURITY_CERTIFIED=PASS` @ GTM `f53e628` (independent; not this retest).
 
-## Supervisor 2100Z (cited) + this-worker GitHub MCP
+## Supervisor 2115Z (cited) + this-worker GitHub MCP
 
-- GTM `packages/gtm-agent/src/atlas/journey-sot.ts` @ `f53e628` file SHA **`6d8d5410c31527af61d77bb80301a12fc9600ba3`**.
-- `toBookingEventV1` throws unless `dryRun===true`; idempotency `booking|{bookingId}`; liveDispatch impossible.
-- `toExperimentSpecV1` maps Variant 2; `paidAdsEnabled` const false; `rolled_back` → SoT `abandoned`.
-- `toOptimizationDecisionV1` `decision=hold_for_owner`; `mutatesPaidAds` const false.
-- Flags: `GTM_LIVE_DISPATCH_ENABLED=false`, `PAID_ADS_ENABLED=false`, `GTM_KILL_SWITCH=true` (`.env.example` file SHA `8e92dfa6`).
-- SYN-GTM marks: `icp_studio`, `company_discovered`, `researched`, `pain_hypotheses`, `score`, `campaign`, `personalized_funnel`, `form`.
-- Harness independently 34/34 @ `d6aff59` (D6). This pack retargets adapters to `f53e628` and adds early-funnel schema/adapter tests.
+- `packages/gtm-agent/src/icp/model.ts` @ `f53e628` file SHA **`06d1669fbb76c42be51f805fa418a630c0a29668`**: `ICP_MODEL_VERSION='icp.hvcg.v1'`; `icpModelSchema` (version, name, description, criteria, verticalHypotheses, `exclusions.sensitivePersonalTraits=true`).
+- `packages/gtm-agent/src/icp/studio.ts` file SHA **`5452b0bc06e076a4ce07bc6c2a75f5903e4d49ee`**: `createIcpStudio` / `getActiveIcp` / `registerIcpRevision`.
+- SYN-GTM marks `icp_studio` when `icp.version === ICP_MODEL_VERSION`.
+- `packages/gtm-agent/src/outbound/orchestrator.ts` file SHA **`0e974d673dcedab38b4ee5bde823c7fba98187c8`**: `OutboundDispatchResult`; `createOutboundAdapter` always returns `dry_run_record_only` / `dispatched=false` in engineering.
+- SYN-GTM marks dry-run outbound when `mode==='dry_run_record_only' && dispatched===false && recorded===true`.
+- Flags remain `GTM_LIVE_DISPATCH_ENABLED=false`, `PAID_ADS_ENABLED=false`, `GTM_KILL_SWITCH=true`.
 
 ## Scoring
 
 | Result | Count | Weight |
 | --- | --- | --- |
-| PASS | 22 | 22.0 |
-| PARTIAL | 2 | 1.0 |
+| PASS | 24 | 24.0 |
+| PARTIAL | 0 | 0.0 |
 | NOT TESTED | 0 | 0.0 |
 | BLOCKED | 0 | 0.0 |
-| **Total** | **24** | **23.0 → 96%** |
+| **Total** | **24** | **24.0 → 100%** |
 
-BOOKING and OPTIMIZATION VARIANT 2 stay **PASS**, now cited against landed `journey-sot.ts` @ `f53e628` (not D6 `14d8e4d` marks). Early-funnel marks with existing SoT schemas moved **PARTIAL → PASS**. `icp_studio` and dry-run outbound stay **PARTIAL**.
+`icp_studio` and dry-run outbound moved **PARTIAL → PASS** after SoT publish + harness + GTM `f53e628` producer cites. No fields invented.
 
-## PRIMARY journey table (delta vs D6)
+## PRIMARY journey table (delta vs D7)
 
 | # | Step | Result | File + SHA evidence |
 | --- | ---: | --- | --- |
-| 1 | icp_studio | **PARTIAL** | SYN-GTM marks `icp.version === ICP_MODEL_VERSION` @ `f53e628`. **No Integration SoT schema** on meaning `773b510`. Depth not invented. |
-| 2 | company_discovered | **PASS** | SoT `gtm-company-profile.v1`. Adapter `to_gtm_company_profile_v1` + `test_syn_gtm_early_funnel_marks_map_to_sot`. Producer: SYN-GTM `SYN-GTM-001` + `toGtmCompanyProfileV1` in `integration-sot.ts` `82a37dc6` @ `f53e628`. |
-| 3 | researched | **PASS** | Same SoT/adapter. Producer `researchCompany` profile → `toGtmCompanyProfileV1` (no invented `atlasClientCode`). |
-| 4 | pain_hypotheses | **PASS** | SoT `pain-hypothesis.v1`. SYN-GTM `status === 'HYPOTHESIS'`. `test_early_funnel_marks_stay_observation_only` rejects `observationOnly=false`. |
-| 5 | score | **PASS** | SoT `gtm-lead-score.v1`. Mirror `toGtmLeadScoreV1` @ `f53e628`. `observationOnly=true`. |
-| 6 | campaign | **PASS** | SoT `campaign-spec.v1`. GTM producer `running_dry` maps to SoT `ready` (never `live`). `paidAdsEnabled` const false. |
-| 7 | personalized_funnel | **PASS** | SoT `funnel-spec.v1`. SYN-GTM `compiled.pages.length > 0`. Journey A + adapter test. |
-| 8 | form | **PASS** | SoT `form-spec.v1`. SYN-GTM `generateDynamicForm` mark. Journey A + adapter test. |
-| 9 | dry-run outbound | **PARTIAL** | SYN-GTM marks `dry_run_record_only`. **No Integration outbound-dispatch SoT**. Flags remain off. Depth not invented. |
-| 10 | NURTURE | **PASS** | Unchanged D4/D6 coverage. |
-| 11 | BOOKING | **PASS** | Landed `toBookingEventV1` @ `f53e628` `6d8d541`. Harness mirrors throw-unless-dryRun; idempotency `booking\|{meetingId}`. |
+| 1 | icp_studio | **PASS** | SoT `icp-studio.v1`. Adapter `to_icp_studio_v1`. Producer: `icp/model.ts` `06d1669f` + `icp/studio.ts` `5452b0bc` @ `f53e628`. `version=icp.hvcg.v1`. `exclusions.sensitivePersonalTraits` const true. |
+| 2–8 | company → form | **PASS** | Unchanged D7 early-funnel SoT coverage. |
+| 9 | dry-run outbound | **PASS** | SoT `outbound-dispatch.v1`. Adapter `to_outbound_dispatch_v1` throws unless `dry_run_record_only && recorded && !dispatched`. Producer: `outbound/orchestrator.ts` `0e974d67` @ `f53e628`. No live-send success shape. |
+| 10 | NURTURE | **PASS** | Unchanged. |
+| 11 | BOOKING | **PASS** | Unchanged D7 `toBookingEventV1` @ `f53e628`. |
 | 12–13 | ATLAS LEAD / OPPORTUNITY | **PASS** | Unchanged (`85def0e` / `9e5d10a`). |
 | 14 | PRE-CALL BRIEF | **PASS** | Unchanged D5 coverage @ `fe3db75`. |
-| 15–23 | Offer → GTM learning | **PASS** | Unchanged on Revenue `85def0e` / GCC `8d757cf`. |
-| 24 | OPTIMIZATION VARIANT 2 | **PASS** | Landed `toExperimentSpecV1` / `toOptimizationDecisionV1` @ `f53e628` `6d8d541`. `decision=hold_for_owner`; `mutatesPaidAds` const false. |
+| 15–23 | Offer → GTM learning | **PASS** | Unchanged. |
+| 24 | OPTIMIZATION VARIANT 2 | **PASS** | Unchanged D7 `hold_for_owner` / `mutatesPaidAds=false`. |
 
 ## Weakest boundary
 
-1. **Integration:** `icp_studio` (no SoT schema) and dry-run outbound (no outbound-dispatch SoT). Not invented this directive.
-2. **Security (not this train):** XSYS-01/02 OPEN on live Hub `940a484`. Remediation stays on `cursor/atlas-security-patch-od005` @ `9e5d10a`.
+1. **Security (not this train):** XSYS-01/02 OPEN on live Hub `940a484`. Remediation stays on `cursor/atlas-security-patch-od005` @ `9e5d10a`.
+2. **Integration:** No remaining PARTIAL 24-step items. Live outbound remains unauthorized by schema const.
 
 ## Live / deploy
 
-Live GTM outbound = **off**. Paid ads = **off**. `liveDispatch` = **false**. `mutatesPaidAds` = **false**. `autoProvisionAccess` = **false**. No Hub thaw. No production deploy.
+Live GTM outbound = **off**. Paid ads = **off**. `liveDispatch` = **false**. `dispatched` = **false**. `mutatesPaidAds` = **false**. `autoProvisionAccess` = **false**. No Hub thaw. No production deploy.

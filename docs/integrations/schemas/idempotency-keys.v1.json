@@ -176,6 +176,32 @@
           "notes": "Observation-only. goal=prepare_lead_before_manny_call. No live send."
         },
         {
+          "edge": "360 GTM ICP studio",
+          "pattern": "icp|{version}",
+          "sourceSystem": "360",
+          "destinationSystem": "360",
+          "entity": "icp_model",
+          "operation": "observe",
+          "version": "icp-studio.v1",
+          "owner": "360 getActiveIcp",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not invent a second ICP meaning. version stays icp.hvcg.v1.",
+          "notes": "exclusions.sensitivePersonalTraits const true. No sensitive personal profiling fields."
+        },
+        {
+          "edge": "360 GTM dry-run outbound",
+          "pattern": "outbound|{messageId}",
+          "sourceSystem": "360",
+          "destinationSystem": "360",
+          "entity": "outbound_dispatch",
+          "operation": "stage",
+          "version": "outbound-dispatch.v1",
+          "owner": "360 createOutboundOrchestrator",
+          "collisionBehavior": "return-existing",
+          "replaySemantics": "Retries must not flip dispatched or invent a live-send success.",
+          "notes": "mode=dry_run_record_only; recorded=true; dispatched=false. Live send unauthorized."
+        },
+        {
           "edge": "Copilot pre-call brief",
           "pattern": "precall|{briefId}",
           "sourceSystem": "copilot",
