@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `34f42da` |
 | baseline | Hub `940a484` / Elite `75d0c59` PASS (frozen; not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md`, `scripts/red-team/check-d16-gtm.mjs` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **16** |
 | BASED ON WORKER SHA | `456fee71e3698839c5eee6e63a196441435c6990` |
 | BASED ON RUN ID | `run-d8447acf-4835-4a40-bbfd-7f8367984608` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `34f42dad0d99561ea743b7d5bc21bc055a1d1b36` |
 | COMPLETED ACTIONS | Revalidated GTM tip `f63b8eb` for GTM-RT-03/04 + Revenue OS consumer/SYN-GTM; confirmed pause fail-closed, InquiryForm camelCase, liveDispatch=false, operator-accept required; no new P0/P1 |
 | REMAINING ACTIONS | Retest when XSYS remediations land; re-confirm Hub after OD-005 authorized deploy |
 | P0/P1/P2 | P0=Hub ATLAS×3 + XSYS×2 · P1=0 · P2=none |
