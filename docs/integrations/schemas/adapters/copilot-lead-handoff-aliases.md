@@ -1,6 +1,6 @@
 # CC-001 Copilot field naming fail-safe
 
-**Conflict:** Copilot tip `7e63a6d` required dual PascalCase + camelCase fields on `atlas-lead-handoff.v1`, diverging from Integration SoT (camelCase authority). Declared Copilot tip for directive 2 is `19a200e8` (source not fetchable from this contracts worker). SoT is unchanged.
+**Conflict:** Copilot tip `7e63a6d` required dual PascalCase + camelCase fields on `atlas-lead-handoff.v1`, diverging from Integration SoT (camelCase authority). Declared Copilot tip for directive 3 is `2f02702` (source not fetchable from this contracts worker; RT D26 inspected jose middleware, not field-naming SoT). SoT is unchanged.
 
 **Fail-safe decision (Platform Integration):**
 - camelCase remains **required** canonical (`assessmentId`, `organizationName`, `source`, `contact`, `provenance`, …).

@@ -19,11 +19,11 @@ No universal cross-platform admin token is defined in these contracts.
 
 ## XSYS-01 / XSYS-02 (intake authenticity + prefix bind) — Hub-side
 
-Independent Red Team findings (D21 catalog). Classification: **Hub LIVE_PRODUCTION_P0** on frozen Hub `940a484`. **Not this contracts branch.**
+Independent Red Team findings (D21 catalog; D23 revalidation). Classification: **Hub LIVE_PRODUCTION_P0** on frozen Hub `940a484`. **Not this contracts branch.** Candidate `9e5d10a` is FIXED_REVALIDATED.
 
 | ID | Live Hub `940a484` | Remediation owner |
 | --- | --- | --- |
-| **XSYS-01** (XSYS-RT-20260820-01) | Website/EVA intake key without body HMAC | `cursor/atlas-security-patch-od005` @ `0bbfd87` — candidate adds key-id + timestamp + HMAC-SHA256(`${timestamp}.${rawBody}`) fail-closed |
+| **XSYS-01** (XSYS-RT-20260820-01) | Website/EVA intake key without body HMAC | `cursor/atlas-security-patch-od005` @ `9e5d10a` — HMAC-SHA256(`${timestamp}.${rawBody}`) fail-closed |
 | **XSYS-02** (XSYS-RT-20260820-02) | `fullPayload.idempotencyKey` accepted unbound to source | Same candidate — prefix must match `submissionType` (`website\|` / `eva\|` / `copilot\|` / `360\|`); mismatch → 409 |
 
 | Rule | Value |

@@ -35,4 +35,4 @@
 GCC must call this adapter before Atlas-bound emission, or emit `gcc-value-signal.v1` directly.
 Atlas consumers validate only the canonical schema.
 
-**Consumer check (directive 2):** `growth-command-center` `cursor/gcc-client-value-os` @ `41a59b8` pins `INTEGRATION_SOT_SHA=773b510…` and ships a byte-identical `gcc-value-signal.v1.json`. Meaning was not forked.
+**Consumer check (directive 3):** `growth-command-center` `cursor/gcc-client-value-os` @ `8d757cf` still pins `INTEGRATION_SOT_SHA=773b510…` and ships a byte-identical `gcc-value-signal.v1.json`. Meaning was not forked.

@@ -3,93 +3,98 @@
 **Publisher:** Platform Integration / Contracts (sole publisher of canonical contract meaning)  
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
-**Contracts self tip:** `773b5101032ccd5218d5563d2177c31722ecf575`  
-**Directive consumed:** **2**  
-**Replacement worker:** `bc-0e3c9a74` (does **not** reuse `bc-af57d6b6` / `run-8c5dc9cf` on `cursor/platform-orchestrator-b1fa`)  
-**Refresh method:** read-only remote tip inspection; no semantic forks; live adapters remain gated  
+**SoT meaning SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged)  
+**Contracts self tip (directive 3 based-on):** `a29c873729b0539505231c8b82e33b14f3ce2d49`  
+**Directive consumed:** **3** (D2 consumed; not repeated)  
+**Replacement worker:** `bc-0e3c9a74` · run `run-4497aaf8-2256-4d77-8905-2768cf566a61`  
+**CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **NO**  
+**CROSS_SYSTEM_JOURNEY_PERCENT:** **71%** — see `CROSS_SYSTEM_JOURNEY_PERCENT.md`  
 **Harness:** `python3 tests/integrations/run_integration_contracts.py` → **27/27 OK**  
-**This-branch checkpoint SHA:** `8390c36`  
-**Updated:** 2026-08-20T14:55:00Z
+**Updated:** 2026-08-20T19:50:00Z
 
 This train does not implement product adapters. Consumers must consume these schemas; they must not redefine lead-intake, commercial authority, GCC provision, or value-signal meaning.
 
-## Declared remote tips (directive 2)
+## Declared remote tips (directive 3)
 
 | Consumer | Repo | Branch | Declared tip | Fetch from this worker |
 | --- | --- | --- | --- | --- |
-| GTM | `360-growth-solution` (expected) | `cursor/360-gtm-agent-system` | `e0dd445d60161601bd573435c9536d0385a25bdf` | **Not authorized** — `git ls-remote` / GitHub API **404** (same as prior single-repo environment) |
-| Revenue | `hvcg-05` / `HVCG-05` | `cursor/atlas-revenue-engagement-os` | `e9b3be8c58a3ea20f8d73806c9dbd6258cec8c56` | **Fetched** — commit present on origin |
-| GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `41a59b84335d644effbd7bd84faa31f73a139531` | **Fetched** — detached checkout equals remote branch tip |
-| Copilot | `hvcg-agent-copilot` (expected) | `cursor/copilot-production-completion` | `19a200e8af288ea0c81471b7c6235c002de45c7e` | **Not authorized** — `git ls-remote` / GitHub API **404** |
-| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `773b5101032ccd5218d5563d2177c31722ecf575` | **This branch** |
+| GTM | `360-growth-solution` | `cursor/360-gtm-agent-system` | `e0dd445d60161601bd573435c9536d0385a25bdf` | **404** — supervisor 1936Z cited |
+| Revenue | `hvcg-05` | `cursor/atlas-revenue-engagement-os` | `85def0ef30eb7adc4bcf096f4fabd569c6817535` | **Fetched** — origin tip |
+| GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** — equals remote branch tip |
+| Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `2f0270228cdaf1dceed51a52a62200ffde07a9e0` | **404** — supervisor 1936Z + RT D26 cited |
+| OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only (XSYS owner; not merged) |
+| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `a29c873729b0539505231c8b82e33b14f3ce2d49` | **This branch** |
+
+D2 pins (Revenue `e9b3be8` / GCC `41a59b8` / Copilot `19a200e`) are **stale** and are replaced by the SHAs above.
 
 No second Integration product train was created. Orchestrator control-plane branch `cursor/platform-orchestrator-b1fa` was not pushed.
 
-## Contract hold / no-fork confirmation
+## Contract hold / no-fork confirmation (current tips)
 
-| ID | Canonical meaning (this train) | Holds? | Evidence |
+| ID | Canonical meaning | Holds vs current tips? | Evidence |
 | --- | --- | --- | --- |
-| **CC-001** | camelCase lead-intake SoT (`atlas-lead-intake.v1` / `360-atlas-lead.v1` / `atlas-lead-handoff.v1`). PascalCase aliases optional and equal-only. PascalCase-only payloads rejected. | **YES on SoT** | Harness `test_pascalcase_only_payload_rejected`, `test_copilot_canonical_without_pascalcase_still_valid`; Revenue consumer `accept_gtm_lead` @ `e9b3be8` (`tests/revenue_os/test_compatibility.py`). GTM source at `e0dd445` not fetchable here; last independent GTM source probe (Red Team D19) `7b704111` held InquiryForm camelCase + `liveDispatch:false` + `360\|` prefix. |
-| **CC-002** | Revenue OS is commercial authority. Copilot/GTM offer/pricing stay `observationOnly` until Revenue operator accept. `COPILOT_HAS_COMMERCIAL_AUTHORITY=false`. | **YES** | SoT `offer-recommendation.v1` (`observationOnly` const true; `createsCommitment` false). Harness `test_offer_cannot_drop_observation_only` + Journey B. Revenue tip `e9b3be8`: `ingest_copilot_recommendation` returns `commercialAuthority=revenue-os`, `promoted=false`; gates.py all production side-effect flags false. |
-| **CC-003** | GCC activation / Atlas→GCC handoff is persist-only. `autoProvisionAccess=false`. | **YES** | SoT `atlas-gcc-client-activation.v1` / `atlas-to-gcc-handoff.v1` const false. GCC tip `41a59b8`: `assertAtlasGccActivationContract` rejects true; route + CVOS `autoProvisionAccess: false`. Schema files **byte-identical** to this SoT. Revenue `emit_gcc_handoff` + `AUTO_PROVISION_ACCESS=false`. |
-| **CC-006** | Canonical signal is `gcc-value-signal.v1`. Local `gcc-atlas-signal.v1` must adapt; no dual SoT. | **YES** | SoT schema + adapter map unchanged. Harness `test_cc006_adapter_maps_to_canonical`. GCC tip `41a59b8`: `value-signal-adapter.ts` pins `INTEGRATION_SOT_SHA=773b510…`; `gcc-value-signal.v1.json` **byte-identical**; journey test `CC-006`. |
+| **CC-001** | camelCase lead-intake SoT; PascalCase aliases optional and equal-only | **YES** | Harness @ `a29c873`. Revenue `src/revenue_os/compatibility.py` `reject_pascal_only` / `accept_gtm_lead` @ `85def0e`. SoT schemas unchanged vs `773b510`. GTM `e0dd445` not opened; supervisor 1936Z + SoT `liveDispatch:false` not contradicted. |
+| **CC-002** | Revenue is commercial authority; Copilot/GTM offers stay `observationOnly` until operator accept | **YES** | `offer-recommendation.v1.json` const @ `a29c873`. Revenue `COPILOT_HAS_COMMERCIAL_AUTHORITY=false` + `ingest_copilot_recommendation` → `commercialAuthority=revenue-os` @ `85def0e`. Copilot RT D26: `observationOnly=true` / `liveDispatch=false` retained @ `2f02702` (cited). |
+| **CC-003** | GCC handoff persist-only; `autoProvisionAccess=false` | **YES** | SoT consts @ `a29c873`. GCC `atlas-activation.ts` + route @ `8d757cf`. Revenue `AUTO_PROVISION_ACCESS=false` @ `85def0e`. |
+| **CC-006** | Canonical signal = `gcc-value-signal.v1` | **YES** | Schema **byte-identical** GCC `8d757cf` vs SoT `a29c873`. Adapter still pins `INTEGRATION_SOT_SHA=773b510…`. Harness `test_cc006_adapter_maps_to_canonical`. |
 
-Semantics were **not** forked on this refresh.
+Semantics were **not** forked. SoT meaning remains `773b510`.
 
-## Per-consumer notes
+## Per-consumer notes (current tips)
 
 ### GTM `e0dd445`
 
-- Orch-declared tip recorded. This worker cannot clone or `cat-file` that SHA (sibling repo not in environment token scope).
-- Last independently inspected GTM source (Red Team Directive 19, not this worker): `7b704111` on `cursor/360-gtm-agent-system` — GTM-RT-03/04 FIXED; SYN-GTM 28/28; `liveDispatch=false`; InquiryForm camelCase governance.
-- Integration SoT for GTM remains `360-atlas-lead.v1` + `360-atlas-gtm-sync.v1` (`liveDispatch:false`, `observationOnly:true`, `paidAdsRequested:false`, idempotency `360|*`).
-- Live Hub POST stays owner-gated.
+- Sibling remote **404** to this worker's token. SHA recorded.
+- Supervisor 1936Z (orchestrator-declared, no in-repo 1936Z artifact): `liveDispatch` default false, paid ads default false, kill switch default true. **Cited, not independently re-opened.**
+- Last RT-opened GTM source remains D19 `7b704111` (InquiryForm camelCase, receive `liveDispatch_must_remain_false`) — **stale vs this tip**.
+- SoT for 360→Atlas stays observation-only / live Hub POST owner-gated.
 
-### Revenue `e9b3be8`
+### Revenue `85def0e`
 
-- Inspected on `origin/cursor/atlas-revenue-engagement-os`.
-- Consumes Integration SoT `@ 773b510` (`docs/revenue-os/INTEGRATION_SOT_PIN.md`). Claims no contract-meaning forks.
-- Implements CC-001 / CC-002 / CC-003 adapters in `src/revenue_os/compatibility.py`.
-- Candidate-only Dev SharePoint adapters; `liveGraphWrites=false`; ACCG01 writes refused; no production deploy.
-- `COPILOT_HAS_COMMERCIAL_AUTHORITY=false` — CC-002 hold.
+- Origin tip. Consumes SoT meaning `@ 773b510` (`docs/revenue-os/INTEGRATION_SOT_PIN.md`). `git diff 773b510 85def0e -- docs/integrations/schemas` empty.
+- CC-001 / CC-002 / CC-003 adapters still in `src/revenue_os/compatibility.py`. All production side-effect gates false in `src/revenue_os/gates.py`.
+- Candidate-only adapters; `liveGraphWrites=false`; no production deploy.
 
-### GCC `41a59b8`
+### GCC `8d757cf`
 
-- Remote branch tip **equals** declared SHA (docs pin after `30388fd`).
-- Consumes SoT `@ 773b510` for CC-006. Local richer `gcc-atlas-signal.v1` remains producer-local only.
-- CC-003 preserved (`autoProvisionAccess=false`, persist-only mapping, no CRM duplicate).
-- Live Atlas dispatch OFF. Lender outreach forbidden. No production deploy from that tip.
+- Remote branch tip equals declared SHA.
+- Still pins Integration SoT `773b510` for CC-006. `gcc-value-signal.v1.json` byte-identical.
+- CC-003 preserved. RT D25 SECURITY_CERTIFIED=PASS (cited). Live Atlas dispatch OFF.
 
-### Copilot `19a200e8`
+### Copilot `2f02702`
 
-- Orch-declared tip recorded. Sibling repo not fetchable from this worker.
-- Last independent inspection of **this exact SHA** (Red Team Directive 12): COPILOT-RT-02 workspace isolation **FIXED**. That revalidation did **not** re-prove CC-001 field naming in source.
-- Last Copilot **contract** conflict on record: tip `7e63a6d` required PascalCase dual fields — rejected as SoT (COP-INT-005 remains a Copilot product obligation until source-confirmed dropped).
-- Integration SoT unchanged: camelCase required; matching aliases allowed; PascalCase-only rejected.
+- Sibling remote **404**. SHA recorded.
+- Supervisor 1936Z: `jose.jwtVerify` + `/api/assessments` 401. **Corroborated by RT D26** (`src/middleware.ts`, fail-closed, assessments not public). Prior tip `19a200e` is stale for the SECURITY_CERTIFIED gate.
+- Contract CC-001/002 SoT unchanged on this train.
 
-### Contracts self `773b510`
+### OD-005 `9e5d10a`
 
-- Still the sole publisher of canonical meaning.
-- Live adapters gated. No Hub/Elite runtime edits. No production deploy. No Hub thaw.
+- Read-only. XSYS-01/02 candidate HMAC + prefix bind still present (`intakeAuth.ts`, `leads.ts`).
+- RT D23: REGRESSION=PASS, FIXED_REVALIDATED. Live Hub `940a484` XSYS remains OPEN until owner-authorized deploy.
+- **Not patched from this branch.**
 
-## Live / deploy gates (unchanged)
+### Contracts self `a29c873`
+
+- Sole publisher of canonical meaning. Live adapters gated. No Hub/Elite runtime edits.
+
+## Live / deploy gates
 
 | Gate | State |
 | --- | --- |
 | Live outbound / paid ads / live Hub POST | **OFF** |
 | `autoProvisionAccess` | **false** |
-| Hub / Elite production runtime | **Frozen** `940a484` / `75d0c59` — not modified here |
-| `DEPLOYMENT_READY` | **Owner-gated / open** |
+| Hub / Elite production runtime | **Frozen** `940a484` / `75d0c59` |
+| `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER` | **NO** |
+| `INTEGRATION_CERTIFIED` | **Open** (weakest release gate — tips not jointly source-tested here) |
 | `SECURITY_CERTIFIED` | **Not this branch** — Atlas/OD-005 |
-| `SYNTHETIC_CERTIFIED` (contracts harness) | **27/27** this refresh |
+| `SYNTHETIC_CERTIFIED` (contracts harness) | **27/27** |
+| `DEPLOYMENT_READY` | **Owner-gated** |
 
 ## Security regression (docs only)
 
-XSYS-01/02 are **Hub-side LIVE_PRODUCTION_P0**. Remediation lives on `cursor/atlas-security-patch-od005` @ `0bbfd877aac88b654a7c9abdf6c63a312d7cfb05` (Red Team D21 candidate). This contracts branch **did not** patch Hub.
+XSYS-01/02 are **Hub-side LIVE_PRODUCTION_P0** on live `940a484`. Remediation lives on `cursor/atlas-security-patch-od005` @ `9e5d10a` (RT D23 FIXED_REVALIDATED). This contracts branch **did not** patch Hub.
 
-| ID | Live Hub `940a484` | OD-005 candidate `0bbfd87` (not this branch) |
+| ID | Live Hub `940a484` | OD-005 candidate `9e5d10a` |
 | --- | --- | --- |
-| **XSYS-01** | Intake key only (no body HMAC) | Candidate adds key-id + timestamp + HMAC-SHA256(`${timestamp}.${rawBody}`) fail-closed |
-| **XSYS-02** | `fullPayload.idempotencyKey` accepted unbound | Candidate binds prefix to `submissionType` (`website\|` / `eva\|` / `copilot\|` / `360\|`); mismatch → 409 |
-
-Independent Red Team must still PASS that exact candidate SHA. Owner must authorize any production security patch. Integration documents the requirement only (`ATLAS-INT-007`).
+| **XSYS-01** | Intake key only | Candidate HMAC-SHA256(`${timestamp}.${rawBody}`) fail-closed — FIXED_REVALIDATED |
+| **XSYS-02** | Unbound `fullPayload.idempotencyKey` | Prefix bound to `submissionType` — FIXED_REVALIDATED |
