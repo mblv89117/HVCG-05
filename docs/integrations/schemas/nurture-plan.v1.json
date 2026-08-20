@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/nurture-plan.v1.json",
+  "title": "Nurture Plan v1",
+  "description": "CANONICAL 360 GTM nurture plan matching product nurturePlanSchema / createNurturePlan in packages/gtm-agent/src/nurture/engine.ts @ e0dd445. Observation-only: prepares a lead before a Manny call. createNurturePlan returns a plan object; it does not live-send messages, enable paid ads, or write Atlas CRM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "planId",
+    "companyId",
+    "campaignId",
+    "goal",
+    "steps",
+    "createdAt"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "nurture-plan.v1"
+    },
+    "planId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "companyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "campaignId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "leadId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "goal": {
+      "const": "prepare_lead_before_manny_call"
+    },
+    "steps": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stepId",
+          "kind",
+          "message"
+        ],
+        "properties": {
+          "stepId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "executive_memo",
+              "industry_content",
+              "eva_invite",
+              "copilot_invite",
+              "case_study",
+              "readiness_checklist",
+              "faq",
+              "founder_content"
+            ]
+          },
+          "assetId": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      }
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "liveSend": {
+      "const": false
+    },
+    "liveDispatch": {
+      "const": false
+    },
+    "paidAdsEnabled": {
+      "const": false
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

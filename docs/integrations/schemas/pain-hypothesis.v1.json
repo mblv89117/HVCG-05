@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/pain-hypothesis.v1.json",
+  "title": "Pain Hypothesis v1",
+  "description": "GTM pain hypothesis for targeting. Observation until Atlas commercial validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "hypothesisId",
+    "companyId",
+    "statement",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "pain-hypothesis.v1"
+    },
+    "hypothesisId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "companyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "statement": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "growth",
+        "operations",
+        "capital",
+        "talent",
+        "other"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "observationOnly": {
+      "const": true
+    }
+  }
+}

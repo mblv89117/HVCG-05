@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/attribution-lineage.v1.json",
+  "title": "Attribution Lineage v1",
+  "description": "Canonical lineage: Source \u2192 Campaign \u2192 Content/Message \u2192 Funnel \u2192 Form \u2192 Diagnostic \u2192 Lead \u2192 Meeting \u2192 Opportunity \u2192 Proposal \u2192 Client \u2192 Engagement \u2192 Revenue \u2192 Client Value/LTV. Preserve; never invent.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "contentId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "messageId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "funnelId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "formId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "diagnosticId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "leadRef": {
+      "$ref": "./typed-ref.v1.json"
+    },
+    "meetingId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "opportunityRef": {
+      "$ref": "./typed-ref.v1.json"
+    },
+    "proposalId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "engagementId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "revenueOutcomeId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "ltvSignalId": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "utm": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "medium": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "campaign": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "term": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    }
+  }
+}

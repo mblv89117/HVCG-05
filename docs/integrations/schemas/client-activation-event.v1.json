@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/client-activation-event.v1.json",
+  "title": "Client Activation Event v1",
+  "description": "Governed Active Client event. Won \u2260 Active Client. Does not provision entitlements or GCC access.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "clientCode",
+    "action",
+    "opportunityId",
+    "envelope"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "client-activation-event.v1"
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "action": {
+      "enum": [
+        "request",
+        "review",
+        "authorize",
+        "verify"
+      ]
+    },
+    "opportunityId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "envelope": {
+      "$ref": "./write-envelope.v1.json"
+    },
+    "provisionsEntitlements": {
+      "const": false
+    },
+    "autoProvisionsGcc": {
+      "const": false
+    }
+  }
+}

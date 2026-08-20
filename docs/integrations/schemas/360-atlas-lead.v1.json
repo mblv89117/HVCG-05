@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/360-atlas-lead.v1.json",
+  "title": "360 Atlas Lead Handoff v1",
+  "description": "Canonical JSON Schema for 360 \u2192 Atlas lead staging. Live Hub POST remains owner-gated.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "leadId",
+    "organizationName",
+    "source",
+    "observationOnly",
+    "paidAdsRequested",
+    "contact",
+    "provenance",
+    "governance"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "360-atlas-lead.v1"
+    },
+    "leadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "organizationName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "source": {
+      "const": "360-growth"
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "paidAdsRequested": {
+      "const": false
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 255
+        },
+        "company": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "submittedAt",
+        "campaign",
+        "sourceAttribution",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "source": {
+          "const": "360-growth"
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "campaign": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "sourceAttribution": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^360\\|.+"
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observationOnly",
+        "productionClientDataAllowed",
+        "createsClientStage",
+        "createsEntitlement",
+        "createsOpportunity",
+        "isCrm",
+        "liveDispatch",
+        "paidAdsEnabled"
+      ],
+      "properties": {
+        "observationOnly": {
+          "const": true
+        },
+        "productionClientDataAllowed": {
+          "const": false
+        },
+        "createsClientStage": {
+          "const": false
+        },
+        "createsEntitlement": {
+          "const": false
+        },
+        "createsOpportunity": {
+          "const": false
+        },
+        "isCrm": {
+          "const": false
+        },
+        "liveDispatch": {
+          "const": false
+        },
+        "paidAdsEnabled": {
+          "const": false
+        }
+      }
+    },
+    "attribution": {
+      "$ref": "./attribution-lineage.v1.json"
+    }
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/360-atlas-gtm-sync.v1.json",
+  "title": "360 Atlas GTM Sync v1",
+  "description": "Additive GTM context sync onto an existing Atlas lead path. Does not create CRM duplicates. HVCG_Leads remains canonical. Ratified by Platform Integration from GTM proposal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "atlasHint",
+    "leadId",
+    "campaignId",
+    "icpVersion",
+    "icpScore",
+    "researchSummary",
+    "engagementState",
+    "recommendedOffer",
+    "attribution",
+    "governance"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "360-atlas-gtm-sync.v1"
+    },
+    "atlasHint": {
+      "const": "HVCG_Leads"
+    },
+    "leadId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "campaignId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "icpVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "icpScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "painHypotheses": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "string",
+        "maxLength": 500
+      }
+    },
+    "researchSummary": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "booking": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "meetingId",
+        "slotStart",
+        "slotEnd"
+      ],
+      "properties": {
+        "meetingId": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "slotStart": {
+          "type": "string"
+        },
+        "slotEnd": {
+          "type": "string"
+        }
+      }
+    },
+    "engagementState": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "recommendedOffer": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "preCallBriefRef": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "campaignId"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "campaignId": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "experimentId": {
+          "type": "string",
+          "maxLength": 255
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "isCrm",
+        "observationOnly",
+        "liveDispatch",
+        "additiveOnly",
+        "doesNotModifyAtlasProductionBaseline"
+      ],
+      "properties": {
+        "isCrm": {
+          "const": false
+        },
+        "observationOnly": {
+          "const": true
+        },
+        "liveDispatch": {
+          "const": false
+        },
+        "additiveOnly": {
+          "const": true
+        },
+        "doesNotModifyAtlasProductionBaseline": {
+          "const": true
+        }
+      }
+    }
+  }
+}

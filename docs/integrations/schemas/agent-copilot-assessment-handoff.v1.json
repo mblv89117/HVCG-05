@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/agent-copilot-assessment-handoff.v1.json",
+  "title": "Agent Copilot Assessment Handoff v1",
+  "description": "Mission-name canonical for Copilot MRI \u2192 Atlas. Prefer atlas-lead-handoff.v1 for lead intake; agent-copilot-handoff.v1 remains capital observation edge.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "assessmentId",
+    "organizationName",
+    "source",
+    "observationOnly",
+    "provenance",
+    "governance"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "agent-copilot-assessment-handoff.v1"
+    },
+    "assessmentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "organizationName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "recommendedPackage": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "source": {
+      "const": "agent-copilot"
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "submittedAt",
+        "idempotencyKey"
+      ],
+      "properties": {
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "assessmentVersion": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "campaign": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "sourceAttribution": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^copilot\\|.+"
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observationOnly",
+        "isCrm",
+        "liveDispatch"
+      ],
+      "properties": {
+        "observationOnly": {
+          "const": true
+        },
+        "isCrm": {
+          "const": false
+        },
+        "liveDispatch": {
+          "const": false
+        },
+        "createsOpportunity": {
+          "const": false
+        },
+        "createsEntitlement": {
+          "const": false
+        }
+      }
+    },
+    "mriOpportunities": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "MRI opportunity scores \u2014 NOT Atlas HVCG_Opportunities records.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "phase": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

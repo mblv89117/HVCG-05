@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/offer-recommendation.v1.json",
+  "title": "Offer Recommendation v1",
+  "description": "Revenue OS / Copilot offer recommendation. Observation until Atlas operator accepts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "recommendationId",
+    "opportunityId",
+    "sku",
+    "observationOnly"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "offer-recommendation.v1"
+    },
+    "recommendationId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "opportunityId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$"
+    },
+    "sku": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "packageName": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "rationale": {
+      "type": "string",
+      "maxLength": 5000
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "sourceSystem": {
+      "type": "string",
+      "enum": [
+        "atlas",
+        "copilot",
+        "360"
+      ]
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "createsCommitment": {
+      "const": false
+    }
+  }
+}
