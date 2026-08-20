@@ -50,11 +50,44 @@ function contactOf(body: Record<string, unknown>): Record<string, unknown> {
   return { ...nested, ...top };
 }
 
+/** Allowed idempotency key prefixes per submissionType (XSYS-RT-20260820-02). */
+export function allowedIdempotencyPrefixes(submissionType: string): string[] {
+  const t = submissionType.trim();
+  if (t === 'Agent-Copilot') return ['copilot|'];
+  if (t === 'Website-EVA') return ['eva|'];
+  if (t.startsWith('Website-')) return ['website|'];
+  if (t.startsWith('360') || t.toLowerCase().includes('gtm')) return ['360|', 'website|'];
+  // Unknown types: only explicit website| — never accept foreign prefixes unbound.
+  return ['website|'];
+}
+
+/**
+ * XSYS-02: reject foreign-prefix overwrite (e.g. Website type + eva| key → 409).
+ */
+export function assertIdempotencyKeyBoundToSource(
+  submissionType: string,
+  idempotencyKey: string,
+): void {
+  const key = idempotencyKey.trim();
+  const allowed = allowedIdempotencyPrefixes(submissionType);
+  if (!allowed.some((prefix) => key.startsWith(prefix))) {
+    throw new PmHttpError(
+      409,
+      'IDEMPOTENCY_PREFIX_MISMATCH',
+      `Idempotency key prefix must match submissionType (${allowed.join(', ')}).`,
+    );
+  }
+}
+
 export function resolveWebsiteLeadIdempotencyKey(body: Record<string, unknown>): string {
   const full = asRecord(body.fullPayload);
-  const fromFull = asString(full.idempotencyKey);
-  if (fromFull) return clip(fromFull, TEXT_MAX);
   const submissionType = asString(body.submissionType);
+  const fromFull = asString(full.idempotencyKey);
+  if (fromFull) {
+    const key = clip(fromFull, TEXT_MAX);
+    assertIdempotencyKeyBoundToSource(submissionType || 'Website-Contact', key);
+    return key;
+  }
   const sessionId = asString(full.sessionId) || asString(body.correlationId);
   if (submissionType === 'Website-EVA' && sessionId) return clip(`eva|${sessionId}`, TEXT_MAX);
   const assessmentId = asString(full.assessmentId) || asString(body.assessmentId);
@@ -173,6 +206,8 @@ export async function upsertWebsiteLead(opts: {
   if (!idempotencyKey) {
     throw new PmHttpError(400, 'invalid_lead', 'idempotencyKey or leadId is required.');
   }
+  // Defense in depth: synthesized keys are already prefix-bound; re-assert before write.
+  assertIdempotencyKeyBoundToSource(asString(opts.body.submissionType) || 'Website-Contact', idempotencyKey);
   const contact = contactOf(opts.body);
   if (!asString(contact.email) && asString(opts.body.submissionType) !== 'Website-Privacy-Request') {
     throw new PmHttpError(400, 'invalid_lead', 'contact.email is required.');
