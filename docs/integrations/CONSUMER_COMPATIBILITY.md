@@ -4,7 +4,7 @@
 **Train:** integration  
 **Branch:** `cursor/platform-integration-contracts`  
 **SoT meaning lineage SHA:** `773b5101032ccd5218d5563d2177c31722ecf575` (unchanged; `icp-studio.v1` + `outbound-dispatch.v1` additive)  
-**Contracts self tip:** this D8 pack (pin follows; based-on `f2e27a0`)  
+**Contracts self tip:** `778defd2f1bb7f80f02a58b8b9cef5bf21919c0e` (based-on `f2e27a0`)  
 **Directive consumed:** **8**  
 **Replacement worker:** `bc-0e3c9a74` · based-on D7 FINISHED `f2e27a0`  
 **CURRENT_PRODUCT_TIPS_TESTED_TOGETHER:** **YES**  
@@ -25,7 +25,7 @@ This train does not implement product runtime. Product adapters are allowed; con
 | GCC | `growth-command-center` | `cursor/gcc-client-value-os` | `8d757cf68157a6054432de7ca57f8431731b2d64` | **Fetched** (prior) | Unchanged vs D7 |
 | Copilot | `hvcg-agent-copilot` | `cursor/copilot-production-completion` | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | git remote **404** | Unchanged vs D7 |
 | OD-005 | `hvcg-05` | `cursor/atlas-security-patch-od005` | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | **Fetched** read-only | Unchanged |
-| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | this D8 pack | **This branch** | Based-on `f2e27a0`; Supervisor independently 36/36 @ `f2e27a0` |
+| Contracts self | `hvcg-05` | `cursor/platform-integration-contracts` | `778defd2f1bb7f80f02a58b8b9cef5bf21919c0e` | **This branch** | D8 pack; Supervisor independently 36/36 @ `f2e27a0` |
 
 No second Integration worker. Orchestrator control-plane was not pushed.
 

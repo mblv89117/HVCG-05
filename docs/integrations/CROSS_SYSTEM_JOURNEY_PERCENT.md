@@ -23,7 +23,7 @@ Live adapters stay gated. No production writes. No Hub thaw. No paid ads. `outbo
 | GCC | `8d757cf68157a6054432de7ca57f8431731b2d64` | Unchanged vs D7 |
 | Copilot | `fe3db7569a0c52e6d25c171c57bba1d85d0fa592` | Unchanged vs D7 |
 | OD-005 | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` | Fetched read-only — unchanged |
-| Contracts | this D8 pack (pin follows) | Based-on `f2e27a0`; Supervisor independently 36/36 @ `f2e27a0` |
+| Contracts | `778defd2f1bb7f80f02a58b8b9cef5bf21919c0e` | This branch D8 pack; Supervisor independently 36/36 @ `f2e27a0` |
 
 `CURRENT_PRODUCT_TIPS_TESTED_TOGETHER=YES` remains against these six SHAs. GTM tip still `f53e628` (D14). Red Team D28 `SECURITY_CERTIFIED=PASS` @ GTM `f53e628` (independent; not this retest).
 

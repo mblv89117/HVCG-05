@@ -35,10 +35,12 @@ Branch declared (directive 8): `cursor/360-gtm-agent-system` @ `f53e628` — sib
 | GTM-INT-007 | Emit `nurture-plan.v1` from `createNurturePlan` (`goal=prepare_lead_before_manny_call`, `observationOnly=true`, `liveSend=false`) | P2 |
 | GTM-INT-008 | Emit SoT `booking-event.v1` via landed `toBookingEventV1` (`dryRun===true` required, idempotency `booking\|{bookingId}`). No live dispatch. | P2 |
 | GTM-INT-009 | Emit SoT `experiment-spec.v1` + `optimization-decision.v1` via landed `toExperimentSpecV1` / `toOptimizationDecisionV1` (`campaignId -v2`, `decision=hold_for_owner`, `mutatesPaidAds=false`). | P2 |
+| GTM-INT-010 | Emit SoT `icp-studio.v1` from `getActiveIcp` (`version=icp.hvcg.v1`, `exclusions.sensitivePersonalTraits=true`). No sensitive personal profiling. | P2 |
+| GTM-INT-011 | Emit SoT `outbound-dispatch.v1` from dry-run `OutboundDispatchResult` only (`mode=dry_run_record_only`, `recorded=true`, `dispatched=false`). Must not authorize live send. | P0 |
 
 ## Agent Copilot
 
-Branch declared (directive 7): `cursor/copilot-production-completion` @ `fe3db75` — sibling git remote **404** here. Unchanged vs D6. `observationOnly=true`; `liveDispatch=false`; `commercialAuthority=revenue-os`.
+Branch declared (directive 8): `cursor/copilot-production-completion` @ `fe3db75` — sibling git remote **404** here. Unchanged vs D7.
 
 | ID | Requirement | Priority |
 | --- | --- | --- |

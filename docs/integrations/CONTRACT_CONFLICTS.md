@@ -9,7 +9,7 @@ Inspection sources (fetched read-only, not merged) — directive 8 tips:
 | `cursor/gcc-client-value-os` | `8d757cf` | Unchanged vs D7 |
 | `cursor/copilot-production-completion` | `fe3db75` | Unchanged vs D7 |
 | `cursor/atlas-security-patch-od005` | `9e5d10a` | Fetched read-only (XSYS owner; not merged) |
-| `cursor/platform-integration-contracts` | this D8 pack | This branch (SoT lineage `773b510`; based-on `f2e27a0`) |
+| `cursor/platform-integration-contracts` | `778defd` | This branch (SoT lineage `773b510`; based-on `f2e27a0`) |
 
 Prior substitutes (`360-hv-completion-52d1`, `gcc-hv-completion-52d1`, `copilot-hv-completion-52d1`) remain historical ancestry only.
 

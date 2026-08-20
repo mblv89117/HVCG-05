@@ -1,7 +1,7 @@
 # Platform Integration Report
 
 **Branch:** `cursor/platform-integration-contracts`  
-**SHA:** this D8 pack (based-on `f2e27a0`; SoT lineage `773b510`)  
+**SHA:** `778defd` (directive 8 pack; based-on `f2e27a0`; SoT lineage `773b510`)  
 **Coordination repo:** `hvcg-05`  
 **Base:** `origin/cursor/atlas-hv-completion-52d1`  
 **Frozen Atlas baseline:** Hub `940a484`, Elite `75d0c59` — **not thawed**  
@@ -32,7 +32,7 @@ Live Hub POST, paid ads, and GCC auto-provision remain gated. `outbound-dispatch
 | Field | Value |
 | --- | --- |
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **8** |
-| CURRENT SHA | this D8 pack |
+| CURRENT SHA | `778defd` |
 | COMPLETED ACTIONS | D8 publish icp-studio.v1 + outbound-dispatch.v1; flip last two PARTIAL steps; 40/40 |
 | REMAINING ACTIONS | SECURITY_CERTIFIED / deploy owner-gated; XSYS Hub-side |
 | P0/P1/P2 | **None P0/P1/P2 on this train.** Hub XSYS owned by OD-005 @ `9e5d10a`. |
@@ -52,7 +52,7 @@ Full matrix: `CONSUMER_COMPATIBILITY.md`. Journey table: `CROSS_SYSTEM_JOURNEY_P
 | GCC | `8d757cf` | Unchanged. CC-003/CC-006 hold. |
 | Copilot | `fe3db75` | Unchanged vs D7. |
 | OD-005 | `9e5d10a` | Fetched read-only. |
-| Contracts self | this D8 pack | Sole publisher of canonical meaning |
+| Contracts self | `778defd` | Sole publisher of canonical meaning |
 
 ## P0 / P1 / P2
 
