@@ -21,7 +21,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** open
+- **status:** fixed on OD-005 candidate `bb7edae`; open on frozen Hub `940a484` until authorized deploy
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
@@ -32,7 +32,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** open
+- **status:** fixed on OD-005 candidate `bb7edae`; open on frozen Hub `940a484` until authorized deploy
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
@@ -43,7 +43,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Bank connection/balance/identity isolation collapse.
 - **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
 - **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** open
+- **status:** fixed on OD-005 candidate `bb7edae` (Plaid `jwtVerify` / `requireVerifiedPrincipal`); open on frozen Hub until authorized deploy
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -144,7 +144,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Operators can believe pause is on while gates disagree.
 - **recommended remediation:** Single SoT; alert on mismatch.
 - **regression test:** env/DB desync → all outbound blocked or alert.
-- **status:** open
+- **status:** fixed @ `bd72003` (`evaluateUnifiedEmergencyPause` fail-closed)
 
 ### GTM-RT-20260820-04
 - **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
@@ -152,7 +152,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Leads enter without observation-only / idempotency governance; attribution spoofable.
 - **recommended remediation:** Emit contract-valid payload; server verify.
 - **regression test:** Missing governance literals rejected.
-- **status:** open
+- **status:** fixed @ `bd72003` (InquiryForm → receive-inquiry camelCase governance)
 
 ### GTM-RT-20260820-05
 - **system:** GTM · **severity:** P1 · **branch/SHA:** `e585d0f`
@@ -414,3 +414,18 @@ Severity: P0 / P1 / P2 (not inflated)
 | ATLAS-RT-20260820-01/02/03 | OPEN (Hub unchanged; not re-probed) |
 | XSYS-RT-20260820-01/02 | OPEN (Hub unchanged; not re-probed) |
 | GTM-RT-20260820-03/04 | OPEN (GTM tip unchanged; not re-probed) |
+
+
+## Directive 15 status appendix (authoritative tip classification)
+
+| ID | Status @ Directive 15 |
+|----|------------------------|
+| ATLAS-RT-20260820-01 | FIXED on OD-005 `bb7edae`; OPEN on Hub `940a484` |
+| ATLAS-RT-20260820-02 | FIXED on OD-005 `bb7edae`; OPEN on Hub `940a484` |
+| ATLAS-RT-20260820-03 | FIXED on OD-005 `bb7edae`; OPEN on Hub/`2a5a605` tip lineage |
+| GTM-RT-20260820-03 | FIXED @ `bd72003` (unified pause SoT fail-closed) |
+| GTM-RT-20260820-04 | FIXED @ `bd72003` (InquiryForm→receive camelCase governance) |
+| XSYS-RT-20260820-01 | OPEN on Hub + OD-005 (intake key only; no body HMAC) |
+| XSYS-RT-20260820-02 | OPEN on Hub + OD-005 (unbound `fullPayload.idempotencyKey`) |
+| Revenue OS `9c9c331` | First-pass: no new P0/P1 |
+| GCC / Copilot / Integration / Hub / Elite | Not retested (D12/D10 cover) |

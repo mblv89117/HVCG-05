@@ -1,0 +1,14 @@
+GTM-RT-03/04 independent probes @ bd720033a646a9b8775d6c5f17f001d182ad2632
+UTC: 2026-08-20T06:42:59Z
+
+GTM-RT-03 FIXED:
+- packages/flags/src/pause.ts evaluateUnifiedEmergencyPause
+- outboundBlocked = env OR db OR desync (fail-closed)
+- assertUnifiedPauseAllowsOutbound / assertUnifiedPauseAllowsObservationStaging
+
+GTM-RT-04 FIXED:
+- apps/web/app/_components/InquiryForm.tsx emits atlas-lead-intake.v1 camelCase
+- packages/gtm-agent/src/atlas/receive-inquiry.ts validates governance; liveDispatch=false
+- idempotencyKey prefix 360|{leadId}
+
+Package tests: flags 9/9, atlas-handoff 5/5, gtm-agent 8/8 PASS

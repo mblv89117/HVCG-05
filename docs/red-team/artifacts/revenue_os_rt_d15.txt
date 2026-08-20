@@ -1,0 +1,48 @@
+=== Revenue OS D15 tip 9c9c331 2026-08-20T06:42:11Z ===
+autoSend hits:
+  ('docs/agent-status.md', '7. Implemented Proposal Engine (`autoSend=false`, BL-C1 send blocked).')
+  ('tests/revenue_os/test_proposals.py', '    self.assertFalse(draft["proposal"]["autoSend"])')
+  ('tests/revenue_os/test_proposals.py', '        self.assertFalse(ctx["autoSend"])')
+  ('tests/integrations/harness/journeys.py', '        "autoSend": False,')
+  ('tests/unit/business/test_risk_claims_sprint9.py', '     self.assertTrue(cleared["matter"]["autoSendBlocked"])')
+  ('config/business/risk_claims.py', '            out["autoSendBlocked"] = True')
+  ('config/business/risk_claims.py', '            out["autoSendBlocked"] = True')
+  ('config/business/proposal-archetypes.json', '    "autoSendForbidden": true,')
+  ('docs/revenue-os/README.md', 'ue_os/proposals.py` | Proposal engine (`autoSend=false`) |')
+  ('docs/revenue-os/INTEGRATION_SOT_PIN.md', '| `proposal-context.v1` | `autoSend=false` |')
+  ('docs/integrations/schemas/proposal-context.v1.json', '    "autoSend": {')
+  ('docs/revenue-os/schemas/commercial-document.v1.json', '    "autoSend",')
+  ('docs/revenue-os/schemas/commercial-document.v1.json', '    "autoSend": { "const": false },')
+  ('src/revenue_os/proposals.py', '            "autoSend": AUTO_SEND_PROPOSAL,')
+  ('src/revenue_os/proposals.py', '            "autoSend": False,')
+  ('src/revenue_os/documents.py', '            "autoSend": AUTO_SEND_DOCUMENT,')
+  ('src/revenue_os/documents.py', '            "autoSend": False,')
+  ('src/revenue_os/gates.py', '    "autoSendProposal": AUTO_SEND_PROPOSAL,')
+  ('src/revenue_os/gates.py', '    "autoSendDocument": AUTO_SEND_DOCUMENT,')
+CC-001 refs 4 ['tests/integrations/test_compatibility_adapters.py', 'tests/revenue_os/test_compatibility.py', 'docs/integrations/schemas/atlas-lead-handoff.v1.json', 'src/revenue_os/compatibility.py']
+CC-002 refs 2 ['tests/revenue_os/test_compatibility.py', 'src/revenue_os/compatibility.py']
+CC-003 refs 2 ['tests/revenue_os/test_compatibility.py', 'src/revenue_os/compatibility.py']
+--- revenue suite ---
+test_catalog_integrity (test_catalogs.CatalogTests.test_catalog_integrity) ... ok
+test_decision_engine_ready_for_financing (test_catalogs.CatalogTests.test_decision_engine_ready_for_financing) ... ok
+test_offer_catalog_has_thirteen_offers (test_catalogs.CatalogTests.test_offer_catalog_has_thirteen_offers) ... ok
+test_service_catalog_has_seven_lines (test_catalogs.CatalogTests.test_service_catalog_has_seven_lines) ... ok
+test_cc001_accepts_camelcase_gtm (test_compatibility.CompatibilityTests.test_cc001_accepts_camelcase_gtm) ... ok
+test_cc001_rejects_pascalcase_only (test_compatibility.CompatibilityTests.test_cc001_rejects_pascalcase_only) ... ok
+test_cc002_copilot_stays_advisory (test_compatibility.CompatibilityTests.test_cc002_copilot_stays_advisory) ... ok
+test_cc002_rejects_commitment (test_compatibility.CompatibilityTests.test_cc002_rejects_commitment) ... ok
+test_cc003_gcc_handoff_no_auto_provision (test_compatibility.CompatibilityTests.test_cc003_gcc_handoff_no_auto_provision) ... ok
+test_msa_sow_replay_and_wet_ink (test_documents.DocumentTests.test_msa_sow_replay_and_wet_ink) ... ok
+test_document_and_engagement_keys (test_idempotency.IdempotencyTests.test_document_and_engagement_keys) ... ok
+test_store_return_existing (test_idempotency.IdempotencyTests.test_store_return_existing) ... ok
+test_legacy_does_not_overwrite_accg (test_pricing.PricingTests.test_legacy_does_not_overwrite_accg) ... ok
+test_new_client_observation_contract (test_pricing.PricingTests.test_new_client_observation_contract) ... ok
+test_referral_guidance_collected_only (test_pricing.PricingTests.test_referral_guidance_collected_only) ... ok
+test_draft_and_block_send (test_proposals.ProposalTests.test_draft_and_block_send) ... ok
+test_offer_to_engagement (test_synthetic_journey.SyntheticJourneyTests.test_offer_to_engagement) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.019s
+
+OK
+revenue_exit:0

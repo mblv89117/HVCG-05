@@ -1,0 +1,51 @@
+=== GTM D15 tip bd72003 2026-08-20T06:42:11Z ===
+pause-related files sample: ['packages/publisher/tests/publisher.test.ts', 'packages/publisher/src/index.ts', 'packages/atlas-handoff/tests/atlas-handoff.test.ts', 'packages/hart-pilot/tests/hart-pilot.test.ts', 'packages/hart-pilot/src/readiness.ts', 'packages/hart-pilot/src/index.ts', 'packages/db/src/seed.ts', 'packages/gtm-agent/tests/gtm-agent.test.ts', 'packages/gtm-agent/src/command-center/views.ts', 'packages/gtm-agent/src/outbound/orchestrator.ts', 'packages/flags/tests/flags.test.ts', 'packages/flags/src/pause.ts', 'packages/flags/src/index.ts', 'apps/web/app/privacy/page.tsx', 'apps/web/app/services/page.tsx', 'apps/web/app/security/page.tsx', 'apps/app/app/page.tsx', 'apps/app/app/gtm/_components/GtmCommandCenterClient.tsx']
+apps/web/src/components/InquiryForm.tsx exists False
+packages/atlas-handoff exists True
+packages/flags exists True
+--- package tests ---
+
+> @360gs/flags@0.1.0 test /tmp/rt-d15/gtm/packages/flags
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d15/gtm/packages/flags
+
+ ✓ tests/flags.test.ts (9 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  06:42:12
+   Duration  206ms (transform 47ms, setup 0ms, collect 52ms, tests 6ms, environment 0ms, prepare 48ms)
+
+flags_exit:0
+
+> @360gs/atlas-handoff@0.1.0 test /tmp/rt-d15/gtm/packages/atlas-handoff
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d15/gtm/packages/atlas-handoff
+
+ ✓ tests/atlas-handoff.test.ts (5 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  06:42:12
+   Duration  220ms (transform 51ms, setup 0ms, collect 73ms, tests 6ms, environment 0ms, prepare 40ms)
+
+handoff_exit:0
+
+> @360gs/gtm-agent@0.1.0 test /tmp/rt-d15/gtm/packages/gtm-agent
+> vitest run
+
+
+ RUN  v2.1.9 /tmp/rt-d15/gtm/packages/gtm-agent
+
+ ✓ tests/gtm-agent.test.ts (8 tests) 21ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  06:42:13
+   Duration  360ms (transform 150ms, setup 0ms, collect 214ms, tests 21ms, environment 0ms, prepare 39ms)
+
+gtm_agent_exit:0
