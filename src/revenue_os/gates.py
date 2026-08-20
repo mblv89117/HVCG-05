@@ -13,6 +13,7 @@ AUTO_QUALIFY_LEAD: Final[bool] = False
 LEGACY_AUTO_REPRICE: Final[bool] = False
 AUTONOMOUS_REFERRAL_PAYOUT: Final[bool] = False
 PRODUCTION_WRITES: Final[bool] = False
+LIVE_GRAPH_WRITES: Final[bool] = False
 COPILOT_HAS_COMMERCIAL_AUTHORITY: Final[bool] = False
 WON_ACTIVATES_CLIENT: Final[bool] = False
 WON_CREATES_GCC_TENANT: Final[bool] = False
@@ -27,6 +28,7 @@ GATES: dict[str, bool] = {
     "legacyAutoReprice": LEGACY_AUTO_REPRICE,
     "autonomousReferralPayout": AUTONOMOUS_REFERRAL_PAYOUT,
     "productionWrites": PRODUCTION_WRITES,
+    "liveGraphWrites": LIVE_GRAPH_WRITES,
     "copilotHasCommercialAuthority": COPILOT_HAS_COMMERCIAL_AUTHORITY,
     "wonActivatesClient": WON_ACTIVATES_CLIENT,
     "wonCreatesGccTenant": WON_CREATES_GCC_TENANT,
