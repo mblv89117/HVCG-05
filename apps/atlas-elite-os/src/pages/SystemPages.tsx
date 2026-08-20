@@ -28,6 +28,7 @@ function capabilityForPath(pathname: string): Capability | null {
     path.startsWith('/capital/') ||
     path === '/financials' ||
     path === '/revenue' ||
+    path.startsWith('/revenue/') ||
     path === '/enterprise-value' ||
     path === '/banking' ||
     path === '/accounting'
