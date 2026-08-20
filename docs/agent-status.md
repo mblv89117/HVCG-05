@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | d945e8944a2ee2ef1d091063592f4c753d1197c1 |
 | baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **22** |
 | BASED ON WORKER SHA | `a7d76a95114d66f5cc338c4fbaac184dc11b5e27` |
 | BASED ON RUN ID | `run-5e3f88b4-dcd3-4927-9bb2-91531596b9a9` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | d945e8944a2ee2ef1d091063592f4c753d1197c1 |
 | COMPLETED ACTIONS | Certified frozen-workflow regression on OD-005 `0bbfd87`; rollback attestation; published CERTIFIED_WORKFLOW_REGRESSION_0bbfd87.md |
 | REMAINING ACTIONS | Owner/product: update convert fixture for entitlement-correct post-convert GET; authorized Hub deploy still required for live P0=0 |
 | P0/P1/P2 | Live P0=5 · Candidate P0=0 · P1=0 · P2=none |
