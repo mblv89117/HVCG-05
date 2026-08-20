@@ -31,6 +31,7 @@ import { ExecutiveOwnerSupportWorkbench } from './pages/ExecutiveOwnerSupportWor
 import { ClientsPage } from './pages/LiveClientsPage';
 import { ClientIntakeWorkbench } from './pages/ClientIntakeWorkbench';
 import { LiveClientDetailPage } from './pages/LiveClientDetailPage';
+import { ClientActivationPage } from './pages/ClientActivationPage';
 import { LeadsPage } from './pages/LeadsPage';
 import { LeadDetailPage } from './pages/LeadDetailPage';
 import { OpportunityDetailPage } from './pages/OpportunityDetailPage';
@@ -216,6 +217,14 @@ export function App() {
                   <ClientsRoute>
                     <ClientIntakeWorkbench />
                   </ClientsRoute>
+                }
+              />
+              <Route
+                path="clients/:workspaceId/activation"
+                element={
+                  <ClientDetailAuthRoute>
+                    <ClientActivationPage />
+                  </ClientDetailAuthRoute>
                 }
               />
               <Route

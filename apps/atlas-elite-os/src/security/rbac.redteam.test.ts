@@ -49,4 +49,15 @@ describe('Elite rbac source contract', () => {
     assert.equal(can('Administrator', 'viewCrmLeads'), false);
     assert.equal(can('HVCG Owner', 'viewCrmLeads'), true);
   });
+
+  it('client activation is a named ClientDetail route and not a public CRM shortcut', () => {
+    const app = readFileSync(join(root, '../App.tsx'), 'utf8');
+    assert.match(app, /path="clients\/:workspaceId\/activation"/);
+    assert.match(app, /ClientActivationPage/);
+    const activationRoute = app.slice(
+      app.indexOf('path="clients/:workspaceId/activation"'),
+      app.indexOf('path="clients/:workspaceId"'),
+    );
+    assert.match(activationRoute, /ClientDetailAuthRoute/);
+  });
 });

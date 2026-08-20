@@ -149,7 +149,7 @@ export function OpportunitiesPage() {
     let overdue = 0;
     for (const row of opportunities) {
       if (isOpenOpportunity(row)) open += 1;
-      if (['OVERDUE', 'NO_NEXT_ACTION', 'NEEDS_ACTION', 'NEEDS_MANNY'].includes(row.attention?.state || '')) exceptions += 1;
+      if (['OVERDUE', 'NO_NEXT_ACTION', 'NEEDS_ACTION', 'NEEDS_MANNY', 'ACTIVATION_REQUIRED'].includes(row.attention?.state || '')) exceptions += 1;
       if (row.attention?.state === 'OVERDUE') overdue += 1;
     }
     return { open, exceptions, overdue };
