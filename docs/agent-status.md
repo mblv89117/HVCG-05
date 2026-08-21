@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `943ce65f4229fcc9f6b83b6428c29342ba94a7ab` |
+| current SHA | `18e876c38bab018df36d8009827d070edac5da64` |
 | baseline | Live Hub post-OD-005 deploy (claimed `9e5d10a`); prior freeze `940a484` superseded as production artifact |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **30** |
 | BASED ON WORKER SHA | `ef00de500eebb949c7d410d498d344ad52b7c383` |
 | BASED ON RUN ID | `followup-accepted-2026-08-20T2130Z` |
-| CURRENT SHA | `943ce65f4229fcc9f6b83b6428c29342ba94a7ab` |
+| CURRENT SHA | `18e876c38bab018df36d8009827d070edac5da64` |
 | COMPLETED ACTIONS | Independent live Hub fail-closed retest post-OD-005 deploy; SECURITY_TRUTH updated; LIVE_CERTIFIED=NO |
 | REMAINING ACTIONS | Staff JWT entitlement retest (ATLAS-01/02); intake-key HMAC+idempotency (XSYS-01/02); Plaid host ATLAS-03 |
 | P0/P1/P2 | Live P0 not closed · Candidate P0=0 · P1=none |
