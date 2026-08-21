@@ -8,6 +8,12 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
+**CURRENT RELEASE STATE:** `REMOTE_REACHABLE` (claimed OneDeploy of `9e5d10a`; live `/health` authRequired=true; LIVE P0 **not** closed — Directive 30)
+
+**CURRENT OPEN (authoritative dual-surface):**
+- LIVE Hub post-deploy (D30): ATLAS-01 **PARTIAL**, ATLAS-02 **PARTIAL**, ATLAS-03 **NEEDS_RETEST**, XSYS-01 **PARTIAL**, XSYS-02 **NEEDS_RETEST** — LIVE P0 ≠ 0; **LIVE_CERTIFIED=NO**.
+- OD-005 candidate `9e5d10a`: same five **FIXED_REVALIDATED** (candidate P0=0).
+
 ---
 
 ## ATLAS
