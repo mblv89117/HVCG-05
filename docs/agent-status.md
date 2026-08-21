@@ -5,53 +5,52 @@
 | project | Platform Red Team (Train F) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | 20090cd2b57e810dbfc980e0804ef031af6dcbd3 |
-| baseline | Hub `940a484` / Elite `75d0c59` live freeze (not mutated) |
+| current SHA | *(git tip after push)* |
+| baseline | Live Hub post-OD-005 deploy (claimed `9e5d10a`); prior freeze `940a484` superseded as production artifact |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
-| contracts required | Integration tip `30964bb` reviewed (SoT publisher remains Integration train) |
-| tests | D29 Integration @ `30964bb`: harness 40/40; outbound-dispatch + icp-studio fail-closed probes PASS |
+| contracts required | Integration `30964bb` prior PASS (not retested) |
+| tests | D30 live Hub probes: /health ok; PM/website fail-closed 401; ATLAS-01/02 PARTIAL; ATLAS-03/XSYS-02 NEEDS_RETEST |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | Live Hub P0=5 OPEN. Integration schema-security **PASS** @ `30964bb` (candidate P0=0 P1=0). GTM/Copilot/GCC/OD-005 prior PASS cites unchanged |
+| security status | **LIVE_CERTIFIED=NO**. Live Hub P0 not 0 (PARTIAL×3 + NEEDS_RETEST×2). Candidate OD-005 still FIXED_REVALIDATED. |
 | Premium status | **N/A** |
-| integration dependencies | SoT meaning lineage unchanged; new schemas additive fail-closed |
-| P0 | LIVE: ATLAS-01/02/03 + XSYS-01/02 OPEN @ Hub `940a484`. Integration candidate P0=0 |
+| integration dependencies | SoT meaning unchanged |
+| P0 | LIVE: ATLAS-01/02 PARTIAL; ATLAS-03 NEEDS_RETEST; XSYS-01 PARTIAL; XSYS-02 NEEDS_RETEST. Candidate P0=0 |
 | P1 | none |
 | P2 | none |
-| owner decisions | No deploy. AUTHORIZE PRODUCTION SECURITY PATCH = **NO**. OD-005 not authorized |
-| deployment state | REMOTE_REACHABLE — **not** DEPLOYMENT_READY |
+| owner decisions | No further deploy from RT. Rollback retain until live FIXED_REVALIDATED. AUTHORIZE PRODUCTION from RT = **NO** (already deployed by supervisor) |
+| deployment state | REMOTE_REACHABLE — Hub post-deploy; LIVE_CERTIFIED not granted |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **29** |
-| BASED ON WORKER SHA | `5ed414fc07c4db7a054f2ef12474e44609d6892e` |
-| BASED ON RUN ID | D28 FINISHED / followup-accepted-2026-08-20T2100Z |
-| CURRENT SHA | 20090cd2b57e810dbfc980e0804ef031af6dcbd3 |
-| COMPLETED ACTIONS | Independent Integration fail-closed revalidation @ `30964bb` (outbound-dispatch.v1 + icp-studio.v1); GTM outbound adapter cite; no new findings |
-| REMAINING ACTIONS | Owner-gated Hub/OD-005 deploy for live P0=0 |
-| P0/P1/P2 | Live P0=5 · Integration candidate P0=0 P1=0 · P2=none |
-| TEST STATUS | Integration schema-security PASS @ `30964bb`; prior product PASS cites not retested |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **30** |
+| BASED ON WORKER SHA | `ef00de500eebb949c7d410d498d344ad52b7c383` |
+| BASED ON RUN ID | `followup-accepted-2026-08-20T2130Z` |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | Independent live Hub fail-closed retest post-OD-005 deploy; SECURITY_TRUTH updated; LIVE_CERTIFIED=NO |
+| REMAINING ACTIONS | Staff JWT entitlement retest (ATLAS-01/02); intake-key HMAC+idempotency (XSYS-01/02); Plaid host ATLAS-03 |
+| P0/P1/P2 | Live P0 not closed · Candidate P0=0 · P1=none |
+| TEST STATUS | Live fail-closed auth PASS; entitlement/HMAC/Plaid live proofs incomplete |
 | PREMIUM STATUS | N/A |
-| INTEGRATION STATUS | Tip `30964bb` fail-closed schemas verified; live Hub XSYS open until deploy |
-| OWNER DECISIONS | No deploy. AUTHORIZE PRODUCTION SECURITY PATCH=NO |
+| INTEGRATION STATUS | Prior Integration PASS cited; not retested |
+| OWNER DECISIONS | No RT deploy/rollback executed. Keep rollback ready while live findings PARTIAL/NEEDS_RETEST |
 
 ## SHAs this cycle
 
-| System | SHA |
-|--------|-----|
-| Integration (D29 target) | `30964bbf437ef0f43708a0e308d554b84ce4c1d7` |
-| Integration D8 pack | `778defd2f1bb7f80f02a58b8b9cef5bf21919c0e` |
-| GTM (cite only; not retested) | `f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb` |
-| Copilot / GCC / Revenue / OD-005 | prior pins; not retested |
-| Live Hub | `940a4849577ad5356da86850e2eccdbf3fe4e86b` |
+| System | SHA / evidence |
+|--------|----------------|
+| Claimed live Hub package | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` |
+| Claimed OneDeploy | `f2eee147-2624-414b-8f16-688729249097` (not Azure-API confirmed by RT) |
+| Live Hub URL | `https://app-atlas-integration-hub.azurewebsites.net` |
+| Prior Hub freeze | `940a484` (pre-deploy baseline) |
 
 ## Notes
 
-- No new findings for outbound-dispatch.v1 / icp-studio.v1.
-- No production deploy / live outbound / paid ads / Hub thaw.
-- Live production P0 count remains **5**.
+- No Entra staff JWT / website intake key / az SP in RT env — limits FIXED_REVALIDATED.
+- No app-settings or Key Vault reads.
+- Live production P0 must **not** be reported as 0.
 
-**Updated:** 2026-08-20T21:38:30Z
+**Updated:** 2026-08-21T00:01:30Z

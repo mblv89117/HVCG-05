@@ -1,0 +1,36 @@
+SHA_CLAIMED_DEPLOY=9e5d10a20639bbeb659fbacd6362cd9f13adb08b
+ONEDEPLOY_CLAIMED=f2eee147-2624-414b-8f16-688729249097
+UTC=2026-08-20T23:59:11Z
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+==== GET /health ====
+{"ok":true,"providers":{"microsoft":true,"google":false,"github":false},"localAi":{"enabled":false,"available":false,"availability":"disabled","reason":"Local AI is disabled"},"ba":{"configured":true,"reachable":true},"port":8080,"authRequired":true,"insecureDevAuth":false,"pmBackend":{"mode":"sharepoint","classification":"sharepoint-graph","credentialMode":"managed_identity","configComplete":true,"listsConfigured":true},"capitalBackend":{"mode":"sharepoint","classification":"sharepoint-graph","credentialMode":"managed_identity","configComplete":true,"listsConfigured":true,"overlay":{"schemaVersion":1,"dataDirectory":"/home/webapp_data/integrations/capital-overlay","persistentStorageConfigured":true,"recycleSurvivable":true,"redeploySurvivable":true,"multiInstanceSafe":false,"authoritativeStateStore":"sharepoint-lists+runtime-overlay","runtimeOverlay":"durable-json","overlayPresent":true,"overlayReadable":true,"overlayCorrupt":false,"overlayUnsupportedSchema":false,"overlaySchemaVersion":1,"scaleConstraint":"single-instance-overlay","deploymentModelObserved":{"homeIsPersistentHint":true,"sku":"Basic","siteNamePresent":true,"instanceIdPresent":true,"runFromPackage":"0","dataDirUnderHome":true}}},"websiteLeads":{"configured":true}}
+==== GET /api/pm/opportunities (no auth) ====
+{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}
+HTTP:401
+==== GET /api/pm/opportunities (forged JWT + x-atlas) ====
+{"error":"unauthorized","message":"Invalid or expired Microsoft token"}
+HTTP:401
+==== PATCH /api/pm/opportunities/1 (no auth) ====
+{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}
+HTTP:401
+==== POST /api/website/leads (no key) ====
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+HTTP:401
+==== POST /api/website/leads (Bearer only) ====
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+HTTP:401
+==== POST /api/website/leads (forged key+HMAC headers) ====
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+HTTP:401
+==== staff-bypass source @ 9e5d10a ====
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-d30/od005/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": false,
+  "status": "PATTERN_ABSENT_RETEST_REQUIRED"
+}
+==== LIMITATIONS ====
+No Entra staff JWT in RT environment — full ACCG01 entitlement isolation not live-executed.
+No WEBSITE_INTAKE_KEY in RT environment — HMAC/idempotency beyond key gate not live-executed.
+No az CLI/SP in RT environment — OneDeploy id not independently confirmed via Azure API.
+Plaid not served on Hub host; ATLAS-03 live surface not reachable here.

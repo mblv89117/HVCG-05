@@ -14,36 +14,36 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** LIVE Hub `940a484` OPEN; CANDIDATE `0bbfd87` FIXED_REVALIDATED
+- **branch/SHA:** LIVE Hub post-OD-005 (claimed `9e5d10a`); CANDIDATE `9e5d10a`/`0bbfd87` lineage FIXED_REVALIDATED
 - **severity:** P0
-- **evidence:** `apps/atlas-integration-api/src/pm/sharepoint/repository.ts` `canSeeOpportunity` returns true for all `isInternalStaff` principals, ignoring Entra client entitlements. Projects/Capital/search enforce entitlements; opportunity list/get do not.
+- **evidence:** `apps/atlas-integration-api/src/pm/sharepoint/repository.ts` `canSeeOpportunity` returns true for all `isInternalStaff` principals, ignoring Entra client entitlements. Projects/Capital/search enforce entitlements; opportunity list/get do not. D30 live: unauth/forged JWT → 401; staff short-circuit absent in `9e5d10a` source; entitlement isolation not live-executed (no staff JWT).
 - **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE OPEN @ Hub `940a484`; CANDIDATE FIXED_REVALIDATED @ `0bbfd87` (complete OD-005)
+- **status:** LIVE **PARTIAL** (D30 post-deploy fail-closed auth); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
-- **branch/SHA:** `2a5a605`
+- **branch/SHA:** claimed live `9e5d10a`
 - **severity:** P0
-- **evidence:** `patchOpportunity` uses `authorizeOpportunity` (staff sees all) then only checks `isInternalStaff`, not ClientCode ownership. Won/Lost mutations allowed on foreign opps.
+- **evidence:** `patchOpportunity` uses `authorizeOpportunity` (staff sees all) then only checks `isInternalStaff`, not ClientCode ownership. Won/Lost mutations allowed on foreign opps. D30: unauth PATCH → 401; foreign Won not live-proven.
 - **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + `If-Match` + `{ "stage": "Won" }` succeeds.
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE OPEN @ Hub `940a484`; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
+- **status:** LIVE **PARTIAL** (D30); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
-- **branch/SHA:** `2a5a605`
+- **branch/SHA:** `2a5a605` / claimed Hub `9e5d10a`
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** `apps/atlas-plaid-api/src/index.ts` `requirePrincipal` parses `x-atlas-*` headers only; comments claim Entra JWT in production but no `jwtVerify`.
+- **evidence:** `apps/atlas-plaid-api/src/index.ts` `requirePrincipal` parses `x-atlas-*` headers only; comments claim Entra JWT in production but no `jwtVerify`. D30: Plaid not reachable on Hub host.
 - **reproduction:** With `PLAID_REQUIRE_AUTH=true`, forge headers without Bearer → today accepted.
 - **impact:** Bank connection/balance/identity isolation collapse.
 - **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
 - **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** LIVE OPEN @ Hub `940a484`; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
+- **status:** LIVE **NEEDS_RETEST** (D30 — Plaid host not reachable); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -346,20 +346,20 @@ Severity: P0 / P1 / P2 (not inflated)
 ## CROSS-SYSTEM
 
 ### XSYS-RT-20260820-01
-- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `940a484` / CANDIDATE `0bbfd87`
-- **evidence:** LIVE: key-only auth. CANDIDATE: HMAC+key-id+timestamp in `intakeAuth.ts` / `http.ts`.
-- **impact:** Key holder forges leads/attribution into SharePoint CRM (live).
-- **recommended remediation:** Deploy OD-005 Hub intake auth.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub post-OD-005 / CANDIDATE `9e5d10a`
+- **evidence:** LIVE D30: unauth/forged-key → 401; HMAC invalid-signature path not live-proven (no intake key). CANDIDATE: HMAC+key-id+timestamp in `intakeAuth.ts` / `http.ts`.
+- **impact:** Key holder forges leads/attribution into SharePoint CRM if HMAC not live.
+- **recommended remediation:** Confirm live signature-invalid 401 with intake key.
 - **regression test:** Valid key + invalid signature → 401.
-- **status:** LIVE OPEN; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
+- **status:** LIVE **PARTIAL** (D30); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### XSYS-RT-20260820-02
-- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `940a484` / CANDIDATE `0bbfd87`
-- **evidence:** LIVE: unbound `fullPayload.idempotencyKey`. CANDIDATE: `assertIdempotencyKeyBoundToSource` → 409.
-- **impact:** Cross-system lead overwrite via colliding keys (live).
-- **recommended remediation:** Deploy OD-005 prefix binding.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub post-OD-005 / CANDIDATE `9e5d10a`
+- **evidence:** LIVE D30: idempotency gate not reached without intake auth. CANDIDATE: `assertIdempotencyKeyBoundToSource` → 409.
+- **impact:** Cross-system lead overwrite via colliding keys if unbound key still accepted.
+- **recommended remediation:** Live website+`eva|` → 409 probe with intake credentials.
 - **regression test:** Website type + `eva|` key → 409.
-- **status:** LIVE OPEN; CANDIDATE FIXED_REVALIDATED @ `0bbfd87`
+- **status:** LIVE **NEEDS_RETEST** (D30); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### XSYS-RT-20260820-03..12
 - **03** P1 GCC handoff without Atlas attestation.
@@ -635,3 +635,21 @@ Severity: P0 / P1 / P2 (not inflated)
 | New findings | **none** (candidate P0=0 P1=0) |
 | Live production P0 | **5** OPEN @ Hub `940a484` |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_29_2026-08-20.md` |
+
+
+## Directive 30 status appendix (LIVE Hub post-OD-005 deploy)
+
+| Gate / ID | Status @ Directive 30 |
+|-----------|------------------------|
+| Live Hub URL | `https://app-atlas-integration-hub.azurewebsites.net` |
+| Claimed package SHA | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` |
+| `/health` | ok; authRequired=true; insecureDevAuth=false |
+| ATLAS-RT-20260820-01 | LIVE **PARTIAL** (fail-closed Entra; entitlement isolation not live-proven) |
+| ATLAS-RT-20260820-02 | LIVE **PARTIAL** |
+| ATLAS-RT-20260820-03 | LIVE **NEEDS_RETEST** (Plaid host not on Hub) |
+| XSYS-RT-20260820-01 | LIVE **PARTIAL** (key gate 401; HMAC not live-proven) |
+| XSYS-RT-20260820-02 | LIVE **NEEDS_RETEST** |
+| LIVE P0 = 0? | **NO** |
+| LIVE_CERTIFIED | **NO** |
+| Rollback | Retain ready until FIXED_REVALIDATED; **not** executed |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_30_2026-08-20.md` |
