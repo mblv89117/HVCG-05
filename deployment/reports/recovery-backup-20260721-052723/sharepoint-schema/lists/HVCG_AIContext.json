@@ -1,0 +1,122 @@
+{
+  "title": "HVCG_AIContext",
+  "description": "AI \u2014 Context packages for jobs (minimized)",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ContextId",
+      "displayName": "ContextId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "DataClassification",
+      "displayName": "DataClassification",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ],
+      "default": "Confidential"
+    },
+    {
+      "internalName": "IncludedEntityRefs",
+      "displayName": "IncludedEntityRefs",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON list of entity type + ids"
+    },
+    {
+      "internalName": "RedactionApplied",
+      "displayName": "RedactionApplied",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "MinimizationNotes",
+      "displayName": "MinimizationNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExpiresOn",
+      "displayName": "ExpiresOn",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "CreatedByEmail",
+      "displayName": "CreatedByEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

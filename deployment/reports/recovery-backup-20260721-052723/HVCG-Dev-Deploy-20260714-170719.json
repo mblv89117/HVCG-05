@@ -1,0 +1,108 @@
+{
+  "DeploymentDateTime": "2026-07-14T17:07:19.4721470-07:00",
+  "Environment": "development",
+  "Tenant": "contoso.onmicrosoft.com",
+  "RepoRoot": "/Volumes/MacMiniPro2TB/HVCG Project Management System",
+  "ResourcesCreated": [],
+  "ResourcesUpdated": [],
+  "ResourcesSkipped": [],
+  "Errors": [],
+  "Warnings": [
+    "WhatIf mode: authentication and tenant mutations skipped after module check / config validation."
+  ],
+  "TestResults": {
+    "started": "2026-07-14T17:07:19.482069-07:00",
+    "checks": [
+      {
+        "name": "schema_integrity",
+        "passed": true,
+        "detail": "validate_predeployment.py exit=0"
+      },
+      {
+        "name": "script_exists:deployment/Deploy-HVCGDevelopment.ps1",
+        "passed": true,
+        "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/Deploy-HVCGDevelopment.ps1"
+      },
+      {
+        "name": "script_exists:deployment/lib/HVCG.Deployment.psm1",
+        "passed": true,
+        "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/lib/HVCG.Deployment.psm1"
+      },
+      {
+        "name": "script_exists:deployment/scripts/Install-HVCGLists.ps1",
+        "passed": true,
+        "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/scripts/Install-HVCGLists.ps1"
+      },
+      {
+        "name": "script_exists:deployment/scripts/New-HVCGEntraGroups.ps1",
+        "passed": true,
+        "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/scripts/New-HVCGEntraGroups.ps1"
+      },
+      {
+        "name": "script_exists:deployment/scripts/New-HVCGClientWorkspace.ps1",
+        "passed": true,
+        "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/scripts/New-HVCGClientWorkspace.ps1"
+      },
+      {
+        "name": "script_exists:deployment/scripts/New-HVCGProjectFromTemplate.ps1",
+        "passed": true,
+        "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/scripts/New-HVCGProjectFromTemplate.ps1"
+      },
+      {
+        "name": "ps_parse:deployment/Deploy-HVCGDevelopment.ps1",
+        "passed": true,
+        "detail": "parsed OK"
+      },
+      {
+        "name": "ps_parse:deployment/lib/HVCG.Deployment.psm1",
+        "passed": true,
+        "detail": "parsed OK"
+      },
+      {
+        "name": "ps_parse:tests/Invoke-HVCGPreDeploymentTests.ps1",
+        "passed": true,
+        "detail": "parsed OK"
+      },
+      {
+        "name": "env_placeholders:config/environments/development.example.json",
+        "passed": true,
+        "detail": "requiredFields=5"
+      },
+      {
+        "name": "env_placeholders:config/environments/production.example.json",
+        "passed": true,
+        "detail": "requiredFields=6"
+      },
+      {
+        "name": "flow_definitions",
+        "passed": true,
+        "detail": "count=11"
+      },
+      {
+        "name": "no_secrets_in_examples",
+        "passed": true,
+        "detail": "scanned example configs"
+      }
+    ],
+    "finished": "2026-07-14T17:07:19.567321-07:00",
+    "passed": true,
+    "failureCount": 0
+  },
+  "OwnerActionsRemaining": [
+    "Run without -WhatIf and complete interactive Microsoft sign-in / consent."
+  ],
+  "NextStep": "Re-run: pwsh -File ./deployment/Deploy-HVCGDevelopment.ps1",
+  "Log": [
+    "[2026-07-14T17:07:19][STEP] HVCG Development deployment starting. Repo=/Volumes/MacMiniPro2TB/HVCG Project Management System",
+    "[2026-07-14T17:07:19][STEP] Running pre-deployment tests...",
+    "[2026-07-14T17:07:19][SUCCESS] Pre-deployment tests passed.",
+    "[2026-07-14T17:07:19][SUCCESS] Configuration validation passed.",
+    "[2026-07-14T17:07:19][STEP] Installing module PnP.PowerShell...",
+    "[2026-07-14T17:07:19][INFO] WhatIf: would install PnP.PowerShell",
+    "[2026-07-14T17:07:19][STEP] Installing module Microsoft.Graph...",
+    "[2026-07-14T17:07:19][INFO] WhatIf: would install Microsoft.Graph",
+    "[2026-07-14T17:07:19][WARN] WhatIf mode: authentication and tenant mutations skipped after module check / config validation.",
+    "[2026-07-14T17:07:19][SUCCESS] WhatIf report written: /Volumes/MacMiniPro2TB/HVCG Project Management System/deployment/reports/HVCG-Dev-Deploy-20260714-170719.json"
+  ],
+  "Success": true
+}

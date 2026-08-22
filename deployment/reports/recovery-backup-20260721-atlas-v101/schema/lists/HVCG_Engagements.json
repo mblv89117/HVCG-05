@@ -1,0 +1,276 @@
+{
+  "title": "HVCG_Engagements",
+  "description": "Commercial engagements with clients",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Engagement name"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementType",
+      "displayName": "EngagementType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Assessment",
+        "Capital Advisory",
+        "Fractional CFO",
+        "Operational Consulting",
+        "Growth",
+        "Retainer",
+        "Success Fee",
+        "Hybrid",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Scope",
+      "displayName": "Scope",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "ServicePackage",
+      "displayName": "ServicePackage",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PricingSummary",
+      "displayName": "PricingSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "BillingStructure",
+      "displayName": "BillingStructure",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Retainer",
+        "Fixed Fee",
+        "Success Fee",
+        "Hybrid",
+        "Hourly",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "SuccessFeeStructure",
+      "displayName": "SuccessFeeStructure",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "StartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TargetCompletionDate",
+      "displayName": "TargetCompletionDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementStatus",
+      "displayName": "EngagementStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Draft",
+        "Proposed",
+        "Active",
+        "On Hold",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "ProjectOwnerEmail",
+      "displayName": "ProjectOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TeamMemberEmails",
+      "displayName": "TeamMemberEmails",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Objectives",
+      "displayName": "Objectives",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "ClientResponsibilities",
+      "displayName": "ClientResponsibilities",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InternalResponsibilities",
+      "displayName": "InternalResponsibilities",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FinancialStatus",
+      "displayName": "FinancialStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Not Invoiced",
+        "Invoiced",
+        "Partial",
+        "Paid",
+        "Past Due",
+        "Written Off"
+      ]
+    },
+    {
+      "internalName": "EngagementHealth",
+      "displayName": "EngagementHealth",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Green",
+        "Yellow",
+        "Red"
+      ],
+      "default": "Green"
+    },
+    {
+      "internalName": "ClientSatisfaction",
+      "displayName": "ClientSatisfaction",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Unknown",
+        "High",
+        "Medium",
+        "Low",
+        "At Risk"
+      ]
+    },
+    {
+      "internalName": "NextExecutiveAction",
+      "displayName": "NextExecutiveAction",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "MonthlyRetainer",
+      "displayName": "MonthlyRetainer",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SetupFee",
+      "displayName": "SetupFee",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementValue",
+      "displayName": "EngagementValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TemplateKey",
+      "displayName": "TemplateKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Project template used"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

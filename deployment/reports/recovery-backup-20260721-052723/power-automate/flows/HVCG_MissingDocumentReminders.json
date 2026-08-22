@@ -1,0 +1,80 @@
+{
+  "flowName": "HVCG_MissingDocumentReminders",
+  "displayName": "HVCG_MissingDocumentReminders",
+  "description": "Reminder cadence for open document requests; escalate after final reminder.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 08:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "GetOpenRequests",
+      "params": {
+        "statuses": [
+          "Requested",
+          "Reminded",
+          "Rejected"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "action": "ComputeBusinessDaysSinceRequestOrLastReminder"
+    },
+    {
+      "id": 3,
+      "action": "ConditionCadence",
+      "params": {
+        "days": [
+          3,
+          7,
+          14
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "action": "SendReminderOrInternalTask"
+    },
+    {
+      "id": 5,
+      "action": "IncrementReminderCount"
+    },
+    {
+      "id": 6,
+      "action": "EscalateToPMIfNeeded"
+    },
+    {
+      "id": 7,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

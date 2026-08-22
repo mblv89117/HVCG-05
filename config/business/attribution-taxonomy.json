@@ -1,0 +1,35 @@
+/**
+ * Lead Source taxonomy — Sprint 4 attribution model.
+ * Lead Source ≠ Referral Partner.
+ * High Value Founder content channels are taxonomy-ready only (DEFERRED_OWNER_GATE).
+ */
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001 Sprint 4",
+  "leadSources": [
+    "Website",
+    "Direct Outreach",
+    "Existing Client",
+    "Referral Partner",
+    "Lender",
+    "SBA Lender",
+    "CPA",
+    "Attorney",
+    "Insurance Partner",
+    "Podcast",
+    "LinkedIn",
+    "YouTube",
+    "Instagram",
+    "TikTok",
+    "Newsletter",
+    "Event",
+    "Other"
+  ],
+  "separationRule": "Lead Source describes acquisition channel; Referral Partner is a distinct attributed entity when source is Referral Partner or partner-originated.",
+  "highValueFounder": {
+    "status": "DEFERRED_OWNER_GATE",
+    "supportedAttributionHooks": ["Podcast", "Content campaign", "Lead magnet", "Channel", "CTA"],
+    "launchForbidden": true
+  }
+}

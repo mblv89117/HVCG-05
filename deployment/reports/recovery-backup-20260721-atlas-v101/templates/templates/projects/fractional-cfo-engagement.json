@@ -1,0 +1,213 @@
+{
+  "templateKey": "fractional-cfo-engagement",
+  "title": "Fractional CFO Engagement",
+  "templateType": "Project",
+  "defaultDurationDays": 90,
+  "workstreams": [
+    "Fractional CFO",
+    "Cash-flow forecasting",
+    "Client reporting",
+    "Financial analysis"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Mobilize",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Rhythm Setup",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Operate",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "First Quarter Review",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Kickoff",
+      "offsetDays": 5,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Reporting pack live",
+      "offsetDays": 20,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "90-day review",
+      "offsetDays": 90,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Access systems & chart of accounts review",
+      "phase": "p1",
+      "offsetDays": 3,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Banking, accounting, payroll access.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 4,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Build KPI dashboard v1",
+      "phase": "p2",
+      "offsetDays": 15,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Cash, runway, margin, AR/AP.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 8,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Implement weekly cash review",
+      "phase": "p2",
+      "offsetDays": 10,
+      "defaultRole": "ProjectManager",
+      "description": "Recurring meeting + task.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Monthly financial package",
+      "phase": "p3",
+      "offsetDays": 30,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Recurring deliverable.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Board/owner report",
+      "phase": "p3",
+      "offsetDays": 30,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Exec narrative.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    },
+    {
+      "key": "t6",
+      "title": "90-day value review",
+      "phase": "p4",
+      "offsetDays": 90,
+      "defaultRole": "Owner",
+      "description": "Renewal recommendation.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Accounting export access",
+      "documentCategory": "Current Financials",
+      "folderTarget": "04 - Current Financials",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Accounting export access"
+    },
+    {
+      "key": "d2",
+      "title": "Bank feeds / statements",
+      "documentCategory": "Bank Statements",
+      "folderTarget": "06 - Bank Statements",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Bank feeds / statements"
+    },
+    {
+      "key": "d3",
+      "title": "Debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Debt schedule"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "KPI dashboard",
+      "deliverableType": "KPI Dashboard",
+      "draftOffsetDays": 15,
+      "finalOffsetDays": 20,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    },
+    {
+      "key": "del2",
+      "title": "Monthly client report",
+      "deliverableType": "Client Report",
+      "draftOffsetDays": 25,
+      "finalOffsetDays": 30,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Incomplete bookkeeping quality",
+      "likelihood": "High",
+      "impact": "Medium",
+      "mitigation": "Phase cleanup work; change request if out of scope"
+    }
+  ],
+  "qualityControlChecks": [
+    "Recurring tasks created",
+    "Retainer milestones loaded"
+  ],
+  "automationTriggers": [
+    "Renewal reminders 60/30/14",
+    "Monthly report draft task"
+  ],
+  "clientResponsibilities": [
+    "Timely bookkeeping",
+    "Decision responsiveness"
+  ],
+  "internalResponsibilities": [
+    "Protect confidential finance data",
+    "Escalate only per rules"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

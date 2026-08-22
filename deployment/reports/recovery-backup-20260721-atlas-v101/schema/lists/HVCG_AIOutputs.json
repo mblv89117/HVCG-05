@@ -1,0 +1,106 @@
+{
+  "title": "HVCG_AIOutputs",
+  "description": "AI \u2014 Job outputs pending/published after approval",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "JobId",
+      "displayName": "JobId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_AIJobs"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OutputType",
+      "displayName": "OutputType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "DraftEmail",
+        "Summary",
+        "Report",
+        "SOP",
+        "Package",
+        "Brief",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "OutputLink",
+      "displayName": "OutputLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OutputBody",
+      "displayName": "OutputBody",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Confidence",
+      "displayName": "Confidence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsPublished",
+      "displayName": "IsPublished",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "HumanApproved",
+      "displayName": "HumanApproved",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "DataClassification",
+      "displayName": "DataClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ],
+      "default": "Confidential"
+    }
+  ]
+}
