@@ -5,14 +5,31 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   ASK_ATLAS_QUESTION,
   extractAskAtlasFromOperatorJson,
+  extractAuthorizedSearchFromRuntime,
+  extractClientContextFromRuntime,
+  extractOperatorRuntimeEnvelope,
   fetchOperatorAskAtlas,
+  fetchOperatorRuntime,
+  operatorRuntimePath,
 } from '../integrations/hub/askAtlas';
 import { HubHttpError } from '../integrations/hub/hubFetch';
-import { HONEST_EMPTY_ASK_ATLAS_FIXTURE, SIGNED_ASK_ATLAS_FIXTURE } from './askAtlas.fixture';
+import {
+  HART_CLIENT_CONTEXT_FIXTURE,
+  HART_RUNTIME_ENVELOPE,
+  HONEST_EMPTY_ASK_ATLAS_FIXTURE,
+  OVERDUE_ASK_ATLAS_FIXTURE,
+  OVERDUE_RUNTIME_ENVELOPE,
+  OWNER_GATED_RUNTIME_ENVELOPE,
+  SEARCH_PRODIGY_AUTHORIZED_SEARCH_FIXTURE,
+  SEARCH_PRODIGY_RUNTIME_ENVELOPE,
+  SIGNED_ASK_ATLAS_FIXTURE,
+  UNKNOWN_RUNTIME_ENVELOPE,
+} from './askAtlas.fixture';
 import {
   ASK_ATLAS_EMPTY_COPY,
   ASK_ATLAS_UNSIGNED_COPY,
   askAtlasView,
+  askAtlasViewFromRuntime,
   renderAskAtlasMarkup,
   serializeAskAtlasCopy,
   type AskAtlasView,
@@ -192,5 +209,221 @@ describe('Ask Atlas unsigned fail-closed', () => {
       error: 'unauthorized',
     });
     assert.equal(unsigned, null);
+  });
+
+  it('unsigned / missing bearer never calls runtime and never renders entitled items', async () => {
+    let called = false;
+    const original = globalThis.fetch;
+    globalThis.fetch = async () => {
+      called = true;
+      throw new Error('runtime fetch must not run without a Hub Bearer');
+    };
+    try {
+      await assert.rejects(
+        () =>
+          fetchOperatorRuntime(
+            { userId: '', organizationId: 'org-hvcg', clientIds: [] },
+            'What is overdue?',
+          ),
+        (err: unknown) => {
+          assert.ok(err instanceof HubHttpError);
+          assert.equal(err.status, 401);
+          assert.equal(err.code, 'missing_bearer');
+          return true;
+        },
+      );
+      assert.equal(called, false);
+
+      const view = askAtlasView({
+        signed: false,
+        payload: OVERDUE_ASK_ATLAS_FIXTURE,
+        clientContext: HART_CLIENT_CONTEXT_FIXTURE,
+        authorizedSearch: SEARCH_PRODIGY_AUTHORIZED_SEARCH_FIXTURE,
+        askedQuestion: 'What is overdue?',
+      });
+      assert.equal(view.kind, 'unsigned');
+      assert.equal(view.items.length, 0);
+      assert.equal(view.clientContext, null);
+      assert.equal(view.authorizedSearch, null);
+      const copy = serializeAskAtlasCopy(view);
+      assert.doesNotMatch(copy, /Hart Family|HFD01|PDG01|Prodigy|Colorado Beef|CCB01|Overdue/);
+      assertNoInventedMoney(copy);
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+});
+
+describe('Ask Atlas signed runtime fetch', () => {
+  it('uses /operator/runtime.json?question= and never /operator.json', async () => {
+    const calls: string[] = [];
+    const original = globalThis.fetch;
+    globalThis.fetch = async (input: RequestInfo | URL) => {
+      calls.push(String(input));
+      return new Response(
+        JSON.stringify({
+          operatorDesk: { askAtlas: OVERDUE_ASK_ATLAS_FIXTURE },
+          runtime: {
+            agent: 'atlas-hub-runtime',
+            toolsInvoked: ['get_attention_items'],
+            policyClass: 'READ_AUTO',
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    };
+    try {
+      const question = 'What is overdue?';
+      const envelope = await fetchOperatorRuntime(
+        {
+          userId: 'u1',
+          organizationId: 'org-hvcg',
+          clientIds: [],
+          accessToken: 'test-hub-bearer',
+        },
+        question,
+      );
+      assert.equal(calls.length, 1);
+      assert.equal(operatorRuntimePath(question), '/operator/runtime.json?question=What%20is%20overdue%3F');
+      assert.match(calls[0], /\/operator\/runtime\.json\?question=/);
+      assert.match(decodeURIComponent(calls[0]), /What is overdue\?/);
+      assert.equal(calls[0].includes('/operator.json'), false);
+      assert.equal(envelope.askedQuestion, question);
+      assert.equal(envelope.askAtlas?.items.length, 2);
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+});
+
+describe('Ask Atlas overdue runtime picture', () => {
+  it('renders 2 Overdue items from operatorDesk.askAtlas without inventing amounts', () => {
+    const view = askAtlasViewFromRuntime({
+      signed: true,
+      envelope: OVERDUE_RUNTIME_ENVELOPE,
+    });
+    assert.equal(view.kind, 'items');
+    assert.equal(view.question, 'What is overdue?');
+    assert.equal(view.items.length, 2);
+    assert.deepEqual(
+      view.items.map((row) => row.state),
+      ['Overdue', 'Overdue'],
+    );
+    assert.equal(view.invented, false);
+    const copy = serializeAskAtlasCopy(view);
+    assert.match(copy, /What is overdue\?/);
+    assert.doesNotMatch(copy, /WHAT ARE THE MOST IMPORTANT THINGS I NEED TO ADDRESS ACROSS HVCG RIGHT NOW/);
+    assertNoInventedMoney(copy);
+    const html = renderToStaticMarkup(createElement(AskAtlasCopy, { view }));
+    assert.match(html, /data-state="Overdue"/);
+    assertNoInventedMoney(html);
+  });
+});
+
+describe('Ask Atlas Hart clientContext', () => {
+  it('renders HFD01 LIKELY recovered_folder_filename and does not leak PDG01', () => {
+    const extracted = extractClientContextFromRuntime({
+      clientContext: HART_CLIENT_CONTEXT_FIXTURE,
+    });
+    assert.equal(extracted?.client.clientCode, 'HFD01');
+    assert.equal(extracted?.classification, 'LIKELY');
+    assert.equal(extracted?.evidenceClass, 'recovered_folder_filename');
+    assert.deepEqual(extracted?.realClientsOperationalized, []);
+    assert.equal(extracted?.client.hubMiOperationalized, false);
+
+    const view = askAtlasViewFromRuntime({
+      signed: true,
+      envelope: HART_RUNTIME_ENVELOPE,
+    });
+    assert.equal(view.kind, 'client-context');
+    assert.equal(view.question, 'What are we doing for Hart?');
+    assert.equal(view.clientContext?.clientCode, 'HFD01');
+    assert.equal(view.clientContext?.classification, 'LIKELY');
+    assert.equal(view.clientContext?.evidenceClass, 'recovered_folder_filename');
+    assert.deepEqual(view.clientContext?.realClientsOperationalized, []);
+    assert.equal(view.clientContext?.hubMiOperationalized, false);
+    const copy = serializeAskAtlasCopy(view);
+    assert.match(copy, /HFD01/);
+    assert.match(copy, /LIKELY/);
+    assert.match(copy, /recovered_folder_filename/);
+    assert.doesNotMatch(copy, /PDG01|Prodigy Games/);
+    assert.equal(copy.includes('Hub-MI row'), false);
+    assertNoInventedMoney(copy);
+  });
+});
+
+describe('Ask Atlas Search Prodigy', () => {
+  it('renders authorizedSearch hits without inventing extras', () => {
+    const extracted = extractAuthorizedSearchFromRuntime({
+      authorizedSearch: SEARCH_PRODIGY_AUTHORIZED_SEARCH_FIXTURE,
+    });
+    assert.equal(extracted?.hitCount, 1);
+    assert.equal(extracted?.hits.length, 1);
+    assert.equal(extracted?.pictureComposed, true);
+    assert.equal(extracted?.entitled, true);
+
+    const view = askAtlasViewFromRuntime({
+      signed: true,
+      envelope: SEARCH_PRODIGY_RUNTIME_ENVELOPE,
+    });
+    assert.equal(view.kind, 'search');
+    assert.equal(view.question, 'Search Prodigy');
+    assert.equal(view.authorizedSearch?.hitCount, 1);
+    assert.equal(view.authorizedSearch?.hits.length, 1);
+    assert.equal(view.authorizedSearch?.hits[0]?.title, 'Prodigy engagement note');
+    assert.equal(view.authorizedSearch?.hits[0]?.clientCode, 'PDG01');
+    const copy = serializeAskAtlasCopy(view);
+    assert.match(copy, /hitCount=1/);
+    assert.match(copy, /Prodigy engagement note/);
+    assert.doesNotMatch(copy, /HFD01|Hart Family|CCB01|Colorado Beef/);
+    assertNoInventedMoney(copy);
+  });
+});
+
+describe('Ask Atlas owner-gated and unknown', () => {
+  it('renders honest empty for owner-gated and unknown questions', () => {
+    const gated = askAtlasViewFromRuntime({
+      signed: true,
+      envelope: OWNER_GATED_RUNTIME_ENVELOPE,
+    });
+    assert.equal(gated.kind, 'empty');
+    assert.equal(gated.question, 'Submit this to the lender');
+    assert.equal(gated.items.length, 0);
+    assert.equal(gated.clientContext, null);
+    assert.equal(gated.authorizedSearch, null);
+    assert.equal(gated.emptyReason, ASK_ATLAS_EMPTY_COPY);
+    const gatedCopy = serializeAskAtlasCopy(gated);
+    assert.match(gatedCopy, /Submit this to the lender/);
+    assert.doesNotMatch(gatedCopy, /Prodigy|Hart|PDG01|HFD01|250000/);
+    assertNoInventedMoney(gatedCopy);
+
+    const unknown = askAtlasViewFromRuntime({
+      signed: true,
+      envelope: UNKNOWN_RUNTIME_ENVELOPE,
+    });
+    assert.equal(unknown.kind, 'empty');
+    assert.equal(unknown.question, 'what is the weather in Denver');
+    assert.equal(unknown.items.length, 0);
+    assert.equal(extractOperatorRuntimeEnvelope({
+      operatorDesk: { askAtlas: OWNER_GATED_RUNTIME_ENVELOPE.askAtlas },
+      runtime: { toolsInvoked: [] },
+    }, 'what is the weather in Denver').runtime?.toolsInvoked.length, 0);
+    assertNoInventedMoney(serializeAskAtlasCopy(unknown));
+  });
+
+  it('does not invent money, lender criteria, LTV, or Hub-MI rows', () => {
+    for (const envelope of [
+      OVERDUE_RUNTIME_ENVELOPE,
+      HART_RUNTIME_ENVELOPE,
+      SEARCH_PRODIGY_RUNTIME_ENVELOPE,
+      OWNER_GATED_RUNTIME_ENVELOPE,
+      UNKNOWN_RUNTIME_ENVELOPE,
+    ]) {
+      const view = askAtlasViewFromRuntime({ signed: true, envelope });
+      const copy = serializeAskAtlasCopy(view);
+      assertNoInventedMoney(copy);
+      assert.equal(/hub-mi/i.test(copy) && /invent/i.test(copy) ? copy.includes('$') : false, false);
+      assert.doesNotMatch(copy, /ltv\s*[:=]\s*\d/i);
+    }
   });
 });

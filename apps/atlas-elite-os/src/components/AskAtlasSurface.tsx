@@ -11,6 +11,9 @@ function classificationTone(label: string): 'success' | 'warning' | 'info' | 'ne
 }
 
 export function AskAtlasSurface({ view }: { view: AskAtlasView }) {
+  const context = view.clientContext;
+  const search = view.authorizedSearch;
+
   return (
     <div data-testid="ask-atlas-surface" data-kind={view.kind}>
     <AtlasCard>
@@ -24,11 +27,11 @@ export function AskAtlasSurface({ view }: { view: AskAtlasView }) {
           ) : null}
           <Caption1 style={{ display: 'block', marginTop: 6 }}>{view.subtitle}</Caption1>
         </div>
-        <StatusChip label={view.kind === 'items' ? 'Hub signed' : 'Fail-closed'} tone={view.kind === 'items' ? 'info' : 'neutral'} />
+        <StatusChip label={view.kind === 'unsigned' || view.kind === 'denied' || view.kind === 'error' ? 'Fail-closed' : view.kind === 'loading' ? 'Loading' : 'Hub signed'} tone={view.kind === 'unsigned' || view.kind === 'denied' || view.kind === 'error' || view.kind === 'loading' ? 'neutral' : 'info'} />
       </div>
 
       {view.kind === 'loading' ? (
-        <Caption1 style={{ display: 'block', marginTop: 12 }}>Loading entitled Ask Atlas attention from Hub…</Caption1>
+        <Caption1 style={{ display: 'block', marginTop: 12 }}>Loading entitled Ask Atlas runtime from Hub…</Caption1>
       ) : null}
 
       {view.emptyReason ? (
@@ -60,6 +63,56 @@ export function AskAtlasSurface({ view }: { view: AskAtlasView }) {
             </li>
           ))}
         </ol>
+      ) : null}
+
+      {context ? (
+        <div style={{ marginTop: 16 }} data-testid="ask-atlas-client-context" data-client-code={context.clientCode || ''} data-classification={context.classification} data-evidence-class={context.evidenceClass}>
+          <Text weight="semibold">Client context</Text>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            {[context.client, context.clientCode].filter(Boolean).join(' · ') || 'Honest empty client bind'}
+          </Caption1>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+            <StatusChip label={context.classification} tone={classificationTone(context.classification)} />
+            <StatusChip label={context.evidenceClass} tone="neutral" />
+          </div>
+          <Text style={{ display: 'block', marginTop: 6 }}>{context.why}</Text>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Based on: {context.basedOn} ({context.classification})
+          </Caption1>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            evidenceClass={context.evidenceClass} · hubMiOperationalized={String(context.hubMiOperationalized)} ·
+            realClientsOperationalized={context.realClientsOperationalized.length ? context.realClientsOperationalized.join(', ') : '[]'}
+          </Caption1>
+        </div>
+      ) : null}
+
+      {search ? (
+        <div style={{ marginTop: 16 }} data-testid="ask-atlas-authorized-search" data-hit-count={String(search.hitCount)}>
+          <Text weight="semibold">Authorized search</Text>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            hitCount={search.hitCount} · pictureComposed={String(search.pictureComposed)} · entitled={String(search.entitled)}
+          </Caption1>
+          <Text style={{ display: 'block', marginTop: 6 }}>{search.why}</Text>
+          <Caption1 style={{ display: 'block', marginTop: 4 }}>
+            Based on: {search.basedOn} ({search.classification})
+          </Caption1>
+          {search.hits.length ? (
+            <ol style={{ margin: '12px 0 0', paddingLeft: 20 }} data-testid="ask-atlas-search-hits">
+              {search.hits.map((hit) => (
+                <li key={hit.id} style={{ marginBottom: 12 }} data-classification={hit.classification}>
+                  <Text>{hit.title}</Text>
+                  {hit.clientCode ? (
+                    <Caption1 style={{ display: 'block', marginTop: 4 }}>{hit.clientCode}</Caption1>
+                  ) : null}
+                  <Caption1 style={{ display: 'block', marginTop: 4 }}>{hit.why}</Caption1>
+                  <Caption1 style={{ display: 'block', marginTop: 4 }}>
+                    Based on: {hit.basedOn} ({hit.classification})
+                  </Caption1>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+        </div>
       ) : null}
     </AtlasCard>
     </div>
