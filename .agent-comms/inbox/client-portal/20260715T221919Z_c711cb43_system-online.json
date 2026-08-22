@@ -1,0 +1,27 @@
+{
+  "messageId": "c711cb43-ae29-43c8-8231-4211c9e79bbe",
+  "threadId": "c711cb43-ae29-43c8-8231-4211c9e79bbe",
+  "timestamp": "2026-07-15T22:19:19Z",
+  "from": "master-pm",
+  "to": [
+    "crm",
+    "executive",
+    "operations",
+    "finance",
+    "client-portal",
+    "ai-governance",
+    "integration"
+  ],
+  "cc": [],
+  "type": "REQUEST",
+  "priority": "HIGH",
+  "subject": "System Online",
+  "body": "HVCG agent communications channel is LIVE (branch cursor/agent-communications). Acknowledge this message, confirm heartbeat, and continue your module work. Do not interrupt CRM Maker OA / auth / smoke. Read inbox at HVCG_REPO_ROOT/.agent-comms/inbox/<your-id>/.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

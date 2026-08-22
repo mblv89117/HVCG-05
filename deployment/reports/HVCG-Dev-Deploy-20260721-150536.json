@@ -1,0 +1,20 @@
+{
+  "DeploymentDateTime": "2026-07-21T15:05:36.7920780-07:00",
+  "Environment": "production-backup",
+  "Tenant": null,
+  "RepoRoot": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release",
+  "ResourcesCreated": [],
+  "ResourcesUpdated": [],
+  "ResourcesSkipped": [],
+  "Errors": [],
+  "Warnings": [],
+  "TestResults": null,
+  "OwnerActionsRemaining": [],
+  "NextStep": "Restore dry-run: pwsh -File ./deployment/restore/Restore-HVCGOS.ps1 -BackupPath './deployment/reports/recovery-backup-20260721-atlas-v101' -WhatIf",
+  "Log": [
+    "[2026-07-21T15:05:36][STEP] Backup starting → ./deployment/reports/recovery-backup-20260721-atlas-v101 (mode=ConfigurationOnly)",
+    "[2026-07-21T15:05:36][INFO] ConfigurationOnly — skipping live tenant data export",
+    "[2026-07-21T15:05:36][SUCCESS] Backup complete: ./deployment/reports/recovery-backup-20260721-atlas-v101"
+  ],
+  "Success": true
+}

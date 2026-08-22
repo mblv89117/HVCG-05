@@ -1,0 +1,22 @@
+{
+  "HVCG_CreateProjectFromTemplate": {
+    "callbackLen": 289,
+    "hasSig": true
+  },
+  "HVCG_CreateDocumentRequests": {
+    "callbackLen": 289,
+    "hasSig": true
+  },
+  "HVCG_ExecutiveDecisionEscalation": {
+    "callbackLen": 289,
+    "hasSig": true
+  },
+  "HVCG_DeliverableApproval": {
+    "callbackLen": 289,
+    "hasSig": true
+  },
+  "HVCG_CreateClientWorkspace": {
+    "callbackLen": 289,
+    "hasSig": true
+  }
+}

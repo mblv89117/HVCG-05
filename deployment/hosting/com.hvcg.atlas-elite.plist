@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.hvcg.atlas-elite</string>
+  <key>WorkingDirectory</key><string>/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"; cd "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release" && npm run dev -w @hvcg/atlas-elite-os -- --host 127.0.0.1 --port 5180</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/Users/macminipro/Library/Logs/HVCG-Atlas/elite.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/macminipro/Library/Logs/HVCG-Atlas/elite.err.log</string>
+</dict>
+</plist>

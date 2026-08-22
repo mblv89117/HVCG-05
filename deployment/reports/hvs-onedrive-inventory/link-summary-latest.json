@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-07-21T05:44:28.325Z",
+  "mode": "link_first",
+  "originalsUnchanged": true,
+  "hvsMutated": false,
+  "inventoryCsv": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/deployment/reports/hvs-onedrive-inventory/inventory-2026-07-21T053754039Z.csv",
+  "totals": {
+    "inventoryFilesScanned": 13584,
+    "linked": 2278,
+    "skippedUnmatched": 11306,
+    "restrictedFlagged": 1237,
+    "reviewQueue": 4,
+    "upsertImported": 1586,
+    "upsertDuplicates": 692
+  },
+  "linkedByClient": {
+    "ACCG Inc.": 1631,
+    "Christie's Place LLC": 79,
+    "Hart Family Dental": 319,
+    "Colorado Craft Beef": 1,
+    "Lien Partners": 20,
+    "Irwin Falk": 1,
+    "Prodigy Games LLC": 223,
+    "That's Kava LLC": 4
+  },
+  "migrationStatusCounts": {
+    "link_only": 2278
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "messageId": "3f01dce1-3317-4f56-bdfc-84e913163f2f",
+  "threadId": "3f01dce1-3317-4f56-bdfc-84e913163f2f",
+  "timestamp": "2026-07-15T22:20:07Z",
+  "from": "master-pm",
+  "to": [
+    "master-pm"
+  ],
+  "cc": [
+    "crm"
+  ],
+  "type": "DECISION",
+  "priority": "CRITICAL",
+  "subject": "OWNER DECISION OPEN: D-001 Maker connector consent (HVCG Development)",
+  "body": "Owner (Manny) must authorize SharePoint/Outlook/Teams/Approvals connections in HVCG Development for imported CRM flows. Teams notify remains Off. Blocks live E2E smoke.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": false,
+  "status": "NEW",
+  "replyTo": null
+}
