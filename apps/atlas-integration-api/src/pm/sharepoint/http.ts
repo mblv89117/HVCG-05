@@ -9,6 +9,9 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import type { IntegrationRepository } from '../../store/repository.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isValidProjectId } from '../projectId.ts';
+import { clientPortalHrefs } from './clientActivation.ts';
+import { createDocumentRequest, listDocumentRequests } from './documentRequests.ts';
+import { buildKnowledgeLedger } from './knowledgeLedger.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
 import { isSharePointItemId } from './ids.ts';
 import {
@@ -43,7 +46,6 @@ const DEFERRED_PATHS = [
   '/api/pm/waiting',
   '/api/pm/decisions',
   '/api/pm/risks',
-  '/api/pm/documents',
   '/api/pm/notes',
   '/api/pm/owner-review',
   '/api/pm/populate/preview',
@@ -100,7 +102,12 @@ function isDeferredPath(path: string): boolean {
     const [code, tail] = rest.split('/');
     if (
       isCanonicalClientCode(code) &&
-      (tail === 'workspace' || tail === 'brief' || tail === 'activation' || tail === 'commercial-context')
+      (tail === 'workspace' ||
+        tail === 'brief' ||
+        tail === 'activation' ||
+        tail === 'commercial-context' ||
+        tail === 'portal' ||
+        tail === 'document-requests')
     ) {
       return false;
     }
@@ -517,6 +524,92 @@ export async function handleSharePointPmRoutes(opts: {
       return true;
     }
 
+    const clientPortal = path.match(/^\/api\/pm\/clients\/([^/]+)\/portal$/);
+    if (method === 'GET' && clientPortal) {
+      const rawCode = decodeURIComponent(clientPortal[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const client = await service.authorizeClient(principal, rawCode);
+      if (client === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const hrefs = clientPortalHrefs(rawCode);
+      send(
+        res,
+        200,
+        {
+          portal: {
+            kind: 'client_portal_v1',
+            operatorChrome: false,
+            atlasOperatorDesk: false,
+            clientCode: rawCode,
+            displayName: client.displayName,
+            ...hrefs,
+            portalAccessProvisioned: true,
+            workspaceProvisioning: 'ready',
+            documentRequestPathProvisioned: true,
+            entitlementProvisioned: false,
+            entraGroupProvisioned: false,
+            sharePointLibraryProvisioned: false,
+          },
+        },
+        origin,
+      );
+      return true;
+    }
+
+    const clientDocRequests = path.match(/^\/api\/pm\/clients\/([^/]+)\/document-requests$/);
+    if (clientDocRequests) {
+      const rawCode = decodeURIComponent(clientDocRequests[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const client = await service.authorizeClient(principal, rawCode);
+      if (client === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      if (method === 'GET') {
+        send(
+          res,
+          200,
+          {
+            documentRequests: listDocumentRequests(dataDir, rawCode),
+            source: 'hub_governed_overlay',
+            binariesInAtlas: false,
+          },
+          origin,
+        );
+        return true;
+      }
+      if (method === 'POST') {
+        const title = typeof body.title === 'string' ? body.title : '';
+        try {
+          const created = createDocumentRequest(dataDir, {
+            clientCode: rawCode,
+            title,
+            createdBy: principal.userId,
+          });
+          audit({
+            repo,
+            actorUserId: principal.userId,
+            action: 'pm_document_request_create',
+            outcome: 'success',
+            detail: `client=${rawCode} request=${created.id}`,
+          });
+          send(res, 200, { documentRequest: created }, origin);
+          return true;
+        } catch {
+          send(res, 400, { error: 'invalid_input', code: 'invalid_input', message: 'title is required.' }, origin);
+          return true;
+        }
+      }
+    }
+
     const clientWorkspace = path.match(/^\/api\/pm\/clients\/([^/]+)\/(workspace|brief)$/);
     if ((method === 'GET' || method === 'POST') && clientWorkspace) {
       const rawCode = decodeURIComponent(clientWorkspace[1]);
@@ -852,9 +945,25 @@ export async function handleSharePointPmRoutes(opts: {
       return true;
     }
 
+    if (method === 'GET' && path === '/api/pm/documents') {
+      const ledger = await buildKnowledgeLedger(service, principal);
+      send(res, 200, { documents: ledger }, origin);
+      return true;
+    }
+
     if (method === 'GET' && path === '/api/pm/my-work') {
-      const tasks = await service.myWorkTasks(principal);
-      send(res, 200, { myWork: myWorkPayload(tasks) }, origin);
+      const { tasks, owner } = await service.myWorkTasks(principal);
+      send(
+        res,
+        200,
+        {
+          myWork: myWorkPayload(tasks),
+          ownerResolution: owner.ok
+            ? { mapped: true, source: owner.source, empty: tasks.length === 0 }
+            : { mapped: false, source: owner.source, reason: owner.reason, empty: true },
+        },
+        origin,
+      );
       return true;
     }
 

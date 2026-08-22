@@ -6,7 +6,7 @@ import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
 import { buildCommandCenter } from '../commandCenter.ts';
 import { readDeskCommercialContext } from '../commercialContext/handle.ts';
-import { entitledClientCodes } from '../sharepoint/authz.ts';
+import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { buildSharePointCommandCenter } from '../sharepoint/http.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
 import { searchSharePointPm } from '../sharepoint/search.ts';
@@ -163,6 +163,29 @@ export async function handleOperatorDesk(opts: {
       return true;
     }
     throw err;
+  }
+
+  if (!canAccessOperatorDesk(principal)) {
+    if (asJson) {
+      sendJson(
+        opts.res,
+        403,
+        {
+          error: 'forbidden',
+          code: 'forbidden',
+          message: 'Operator desk is restricted to HVCG internal staff.',
+        },
+        opts.origin,
+      );
+    } else {
+      sendHtml(
+        opts.res,
+        403,
+        '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Forbidden</title></head><body><p>Operator desk is restricted to HVCG internal staff.</p></body></html>',
+        opts.origin,
+      );
+    }
+    return true;
   }
 
   const model =
