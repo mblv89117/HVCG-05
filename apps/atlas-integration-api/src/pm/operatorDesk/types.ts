@@ -37,10 +37,12 @@ export const ASK_ATLAS_EVENT_MISSION_KEY = 'ATLAS-AGENTIC-OPS-EVENT-001' as cons
 export const ASK_ATLAS_PII_MISSION_KEY = 'ATLAS-AGENTIC-OPS-PII-001' as const;
 export const ASK_ATLAS_LOOP_MISSION_KEY = 'ATLAS-AGENTIC-OPS-LOOP-001' as const;
 export const ASK_ATLAS_CLIENTCTX_MISSION_KEY = 'ATLAS-AGENTIC-OPS-CLIENTCTX-001' as const;
+export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
 export const GET_CLIENT_CONTEXT_TOOL = 'get_client_context' as const;
+export const GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL = 'search_authorized_knowledge' as const;
 export const CREATE_ENGINEERING_MISSION_TOOL = 'create_engineering_mission' as const;
 export const ENGINEERING_MISSION_DISPATCH_STATUS = 'ready_for_bounded_execution' as const;
 export const V4_CHAT_INJECT = 'UNSUPPORTED' as const;
@@ -80,7 +82,8 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_EVENT_MISSION_KEY
   | typeof ASK_ATLAS_PII_MISSION_KEY
   | typeof ASK_ATLAS_LOOP_MISSION_KEY
-  | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY;
+  | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
+  | typeof ASK_ATLAS_SEARCH_MISSION_KEY;
 export type AskAtlasTrigger =
   | 'operator_operating_picture'
   | 'signed_operator_question'
@@ -121,6 +124,29 @@ export interface AtlasClientContext {
   evidenceClass: ClientContextEvidenceClass;
   realClientsOperationalized: string[];
   recoveredKnowledgeOperationalized: boolean;
+}
+
+export interface AtlasAuthorizedSearchHit {
+  kind: string;
+  id: string;
+  title: string;
+  href?: string;
+  source?: string;
+  clientCode?: string;
+}
+
+export interface AtlasAuthorizedSearch {
+  kind: 'atlas_authorized_search_v1';
+  invented: false;
+  honestEmpty: boolean;
+  query: string;
+  hitCount: number;
+  hits: AtlasAuthorizedSearchHit[];
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  why: string;
+  basedOn: string;
+  entitled: boolean;
+  ran: boolean;
 }
 
 export interface ProposedEngineeringMission {
@@ -412,6 +438,10 @@ export function isOperatorClientContextPath(path: string): boolean {
   return path === '/operator/client-context.json';
 }
 
+export function isOperatorSearchPath(path: string): boolean {
+  return path === '/operator/search.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
@@ -422,7 +452,8 @@ export function isOperatorDeskPath(path: string): boolean {
     isOperatorEventsPath(path) ||
     isOperatorImprovementsPath(path) ||
     isOperatorEngineeringMissionsPath(path) ||
-    isOperatorClientContextPath(path)
+    isOperatorClientContextPath(path) ||
+    isOperatorSearchPath(path)
   );
 }
 
@@ -434,7 +465,8 @@ export function wantsOperatorJson(path: string, acceptHeader: string | undefined
     isOperatorEventsPath(path) ||
     isOperatorImprovementsPath(path) ||
     isOperatorEngineeringMissionsPath(path) ||
-    isOperatorClientContextPath(path)
+    isOperatorClientContextPath(path) ||
+    isOperatorSearchPath(path)
   ) {
     return true;
   }

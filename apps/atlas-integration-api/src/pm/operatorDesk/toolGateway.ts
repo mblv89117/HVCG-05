@@ -1,17 +1,19 @@
 /**
  * Governed READ_AUTO tool gateway for the existing Atlas operator desk.
  *
- * Exposes get_attention_items and get_client_context (READ_AUTO) and
- * create_engineering_mission (PROPOSE_AUTO / SAFE_INTERNAL_WRITE only).
- * Wraps buildAskAtlasAnswer / the entitled operator picture already built
- * by handleOperatorDesk. Does not re-query raw admin Graph. No OWNER_GATED
- * tools. create_engineering_mission does not dispatch V4, deploy, merge,
- * or execute code changes.
+ * Exposes get_attention_items, get_client_context, and
+ * search_authorized_knowledge (READ_AUTO) and create_engineering_mission
+ * (PROPOSE_AUTO / SAFE_INTERNAL_WRITE only). Search reuses
+ * searchSharePointPm / GET /api/pm/search / operatorDesk.search. Does not
+ * re-query raw admin Graph or invent a second index. No OWNER_GATED tools.
+ * create_engineering_mission does not dispatch V4, deploy, merge, or
+ * execute code changes.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
+import type { PmSearchHit } from '../sharepoint/search.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
 import {
   ASK_ATLAS_MISSION_KEY,
@@ -23,16 +25,24 @@ import {
   CREATE_ENGINEERING_MISSION_TOOL,
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
+  GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL,
   type AskAtlasAnswer,
   type AskAtlasClassification,
+  type AtlasAuthorizedSearch,
+  type AtlasAuthorizedSearchHit,
   type AtlasClientContext,
   type ClientContextEvidenceClass,
   type OperatorOperatingPicture,
+  type OperatorSearchHit,
   type ProductImprovementEvidenceClass,
   type ProposedEngineeringMission,
 } from './types.ts';
 
-export const READ_AUTO_TOOL_NAMES = [GET_ATTENTION_ITEMS_TOOL, GET_CLIENT_CONTEXT_TOOL] as const;
+export const READ_AUTO_TOOL_NAMES = [
+  GET_ATTENTION_ITEMS_TOOL,
+  GET_CLIENT_CONTEXT_TOOL,
+  GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL,
+] as const;
 export type ReadAutoToolName = (typeof READ_AUTO_TOOL_NAMES)[number];
 export const TOOL_GATEWAY_POLICY_CLASS = 'READ_AUTO' as const;
 export const PROPOSE_AUTO_TOOL_NAMES = [CREATE_ENGINEERING_MISSION_TOOL] as const;
@@ -45,11 +55,28 @@ export interface ToolGatewayContext {
   now?: string;
   clientCode?: string;
   clientQuery?: string;
+  searchQuery?: string;
+  deskSearch?: {
+    q: string;
+    hitCount: number;
+    hits: Array<OperatorSearchHit & { source?: string }>;
+    ran: boolean;
+  };
+  /**
+   * Existing entitled desk search. Must be searchSharePointPm (or a test
+   * double of that function). Do not pass a second index or raw Graph.
+   */
+  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
 }
 
 export interface ClientContextToolResult {
   askAtlas: AskAtlasAnswer;
   clientContext: AtlasClientContext;
+}
+
+export interface AuthorizedSearchToolResult {
+  askAtlas: AskAtlasAnswer;
+  authorizedSearch: AtlasAuthorizedSearch;
 }
 
 function honestEmptyAnswer(opts?: { now?: string; tools?: string[] }): AskAtlasAnswer {
@@ -397,12 +424,258 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
   };
 }
 
+const GENERIC_SEARCH_STOPWORDS = new Set([
+  'document',
+  'documents',
+  'file',
+  'files',
+  'knowledge',
+  'authorized',
+  'invoice',
+  'invoices',
+  'packet',
+  'packets',
+  'project',
+  'projects',
+  'task',
+  'tasks',
+  'meeting',
+  'meetings',
+  'all',
+  'everything',
+]);
+
+export function normalizeAuthorizedSearchQuery(raw: string): string {
+  return raw.trim().slice(0, 120);
+}
+
+function sameSearchQuery(a: string, b: string): boolean {
+  return normalizeAuthorizedSearchQuery(a).toLowerCase() === normalizeAuthorizedSearchQuery(b).toLowerCase();
+}
+
+function toAuthorizedSearchHit(
+  row: PmSearchHit | (OperatorSearchHit & { source?: string }),
+): AtlasAuthorizedSearchHit {
+  return {
+    kind: row.kind || 'document',
+    id: row.id,
+    title: row.title,
+    ...(row.href ? { href: row.href } : {}),
+    ...('source' in row && row.source ? { source: String(row.source) } : {}),
+    ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+  };
+}
+
+function filterHitsToBinding(
+  hits: AtlasAuthorizedSearchHit[],
+  binding: PictureClientBinding | null,
+): AtlasAuthorizedSearchHit[] {
+  if (!binding) return hits;
+  return hits.filter((hit) => {
+    if (binding.clientCode && hit.clientCode) return hit.clientCode === binding.clientCode;
+    if (binding.clientCode && !hit.clientCode) return false;
+    if (binding.client && hit.title) {
+      return normalizeClientToken(hit.title).includes(normalizeClientToken(binding.client));
+    }
+    return false;
+  });
+}
+
+function classifyClientSearchToken(
+  token: string,
+  principal: AtlasPrincipal,
+  picture: OperatorOperatingPicture,
+): { scope: 'bound' | 'unknown' | 'generic'; binding: PictureClientBinding | null } {
+  const binding = resolveAuthorizedClient(principal, picture, token);
+  if (binding) return { scope: 'bound', binding };
+  const asCode = token.trim().toUpperCase();
+  if (isCanonicalClientCode(asCode)) return { scope: 'unknown', binding: null };
+  const words = normalizeClientToken(token).split(' ').filter(Boolean);
+  if (words.length === 1 && words[0]!.length >= 3 && !GENERIC_SEARCH_STOPWORDS.has(words[0]!)) {
+    return { scope: 'unknown', binding: null };
+  }
+  return { scope: 'generic', binding: null };
+}
+
+function emptyAuthorizedSearch(opts?: {
+  query?: string;
+  entitled?: boolean;
+  ran?: boolean;
+}): AtlasAuthorizedSearch {
+  return {
+    kind: 'atlas_authorized_search_v1',
+    invented: false,
+    honestEmpty: true,
+    query: opts?.query || '',
+    hitCount: 0,
+    hits: [],
+    classification: 'HONEST_EMPTY',
+    why:
+      opts?.entitled === false
+        ? 'No entitled authorized knowledge is available for the requested search.'
+        : 'No entitled search hits are available for this query.',
+    basedOn:
+      opts?.entitled === false
+        ? 'Authorization failed closed before retrieval. Search was not executed across the tenant.'
+        : 'Entitled desk search returned no hits. No Hub-MI rows, amounts, or clients were invented.',
+    entitled: opts?.entitled === true,
+    ran: opts?.ran === true,
+  };
+}
+
+function searchActivityAnswer(
+  ctx: ToolGatewayContext,
+  search: AtlasAuthorizedSearch,
+): AskAtlasAnswer {
+  const result = search.honestEmpty ? 'honest_empty' : 'answered';
+  return {
+    kind: 'ask_atlas_attention_v1',
+    question: ASK_ATLAS_QUESTION,
+    invented: false,
+    honestEmpty: search.honestEmpty,
+    ranking: [...ASK_ATLAS_RANKING],
+    items: [],
+    activity: {
+      agent: ASK_ATLAS_OPERATOR_AGENT,
+      missionKey: ASK_ATLAS_MISSION_KEY,
+      trigger: 'operator_operating_picture',
+      timestamp: ctx.now || new Date().toISOString(),
+      tools: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL],
+      classification: neverPromoteClassification(search.classification),
+      result,
+      readWriteStatus: 'READ_AUTO',
+      policyDecision: result,
+    },
+  };
+}
+
+function composeAuthorizedSearch(
+  ctx: ToolGatewayContext,
+  query: string,
+  hits: AtlasAuthorizedSearchHit[],
+  opts: { entitled: boolean; ran: boolean },
+): AuthorizedSearchToolResult {
+  const classification = hits.length ? ('LIKELY' as const) : ('HONEST_EMPTY' as const);
+  const authorizedSearch: AtlasAuthorizedSearch = {
+    kind: 'atlas_authorized_search_v1',
+    invented: false,
+    honestEmpty: hits.length === 0,
+    query,
+    hitCount: hits.length,
+    hits,
+    classification: neverPromoteClassification(classification),
+    why: hits.length
+      ? `Entitled desk search returned ${hits.length} hit(s) for the requested query.`
+      : 'No entitled search hits are available for this query.',
+    basedOn: hits.length
+      ? 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.'
+      : 'Entitled desk search returned no hits. No Hub-MI rows, amounts, or clients were invented.',
+    entitled: opts.entitled,
+    ran: opts.ran,
+  };
+  return {
+    askAtlas: searchActivityAnswer(ctx, authorizedSearch),
+    authorizedSearch,
+  };
+}
+
+function reuseDeskSearchHits(
+  ctx: ToolGatewayContext,
+  query: string,
+): { hits: AtlasAuthorizedSearchHit[]; ran: boolean } | null {
+  const desk = ctx.deskSearch;
+  if (!desk?.ran) return null;
+  if (!sameSearchQuery(desk.q, query)) return null;
+  return { hits: desk.hits.map(toAuthorizedSearchHit), ran: true };
+}
+
+/**
+ * READ_AUTO tool. Authorization (desk principal, then entitledClientCodes,
+ * then optional client binding) happens before any search retrieval.
+ * Reuses searchSharePointPm / already-loaded operatorDesk.search hits.
+ * Unknown / foreign clients fail closed without searching the tenant.
+ * Classification is never promoted. Owner-gated questions must not reach
+ * this function.
+ */
+export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): AuthorizedSearchToolResult {
+  if (!canAccessOperatorDesk(ctx.principal)) {
+    const authorizedSearch = emptyAuthorizedSearch({ entitled: false, ran: false });
+    return {
+      askAtlas: honestEmptyAnswer({ now: ctx.now, tools: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL] }),
+      authorizedSearch,
+    };
+  }
+
+  entitledClientCodes(ctx.principal);
+  const query = normalizeAuthorizedSearchQuery(ctx.searchQuery || ctx.clientQuery || '');
+  if (query.length < 2) {
+    const authorizedSearch = emptyAuthorizedSearch({
+      query,
+      entitled: true,
+      ran: false,
+    });
+    authorizedSearch.why = 'Search query is empty or too short.';
+    authorizedSearch.basedOn = 'Query must be at least 2 characters after trim. Search was not executed.';
+    return {
+      askAtlas: searchActivityAnswer(ctx, authorizedSearch),
+      authorizedSearch,
+    };
+  }
+
+  const scoped = classifyClientSearchToken(query, ctx.principal, ctx.picture);
+  if (scoped.scope === 'unknown') {
+    const authorizedSearch = emptyAuthorizedSearch({ query: '', entitled: false, ran: false });
+    return {
+      askAtlas: searchActivityAnswer(ctx, authorizedSearch),
+      authorizedSearch,
+    };
+  }
+
+  const reused = reuseDeskSearchHits(ctx, query);
+  const rawHits = reused?.hits || [];
+  const hits = filterHitsToBinding(rawHits, scoped.binding);
+  return composeAuthorizedSearch(ctx, query, hits, {
+    entitled: true,
+    ran: reused?.ran === true,
+  });
+}
+
+export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promise<AuthorizedSearchToolResult> {
+  const prepared = searchAuthorizedKnowledgeSync({
+    ...ctx,
+    entitledSearch: undefined,
+    deskSearch: ctx.deskSearch,
+  });
+  if (!canAccessOperatorDesk(ctx.principal)) return prepared;
+  const query = normalizeAuthorizedSearchQuery(ctx.searchQuery || ctx.clientQuery || '');
+  if (query.length < 2) return prepared;
+  const scoped = classifyClientSearchToken(query, ctx.principal, ctx.picture);
+  if (scoped.scope === 'unknown') return prepared;
+
+  const reused = reuseDeskSearchHits(ctx, query);
+  if (reused) {
+    const hits = filterHitsToBinding(reused.hits, scoped.binding);
+    return composeAuthorizedSearch(ctx, query, hits, { entitled: true, ran: true });
+  }
+
+  if (!ctx.entitledSearch) {
+    return composeAuthorizedSearch(ctx, query, [], { entitled: true, ran: false });
+  }
+
+  const found = await ctx.entitledSearch(query);
+  const hits = filterHitsToBinding(found.results.map(toAuthorizedSearchHit), scoped.binding);
+  return composeAuthorizedSearch(ctx, query, hits, { entitled: true, ran: true });
+}
+
 export function invokeReadAutoTool(tool: string, ctx: ToolGatewayContext): AskAtlasAnswer {
   if (tool === GET_ATTENTION_ITEMS_TOOL) {
     return getAttentionItems(ctx);
   }
   if (tool === GET_CLIENT_CONTEXT_TOOL) {
     return getClientContext(ctx).askAtlas;
+  }
+  if (tool === GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL) {
+    return searchAuthorizedKnowledgeSync(ctx).askAtlas;
   }
   return honestEmptyAnswer({ now: ctx.now, tools: [] });
 }

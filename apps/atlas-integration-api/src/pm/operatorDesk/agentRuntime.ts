@@ -2,43 +2,60 @@
  * Deterministic Hub agent runtime. No new LLM or model spend.
  *
  * Maps a signed operator question (default ASK_ATLAS_QUESTION) onto the
- * READ_AUTO get_attention_items gateway, or client-specific questions onto
- * get_client_context. Unknown / owner-gated questions stay honest-empty
- * / fail-closed and do not invent an answer or invoke get_client_context.
+ * READ_AUTO get_attention_items gateway, client-specific questions onto
+ * get_client_context, and search questions onto search_authorized_knowledge.
+ * Unknown / owner-gated questions stay honest-empty / fail-closed and do
+ * not invent an answer or invoke a READ_AUTO tool.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
-import { getClientContext, invokeReadAutoTool } from './toolGateway.ts';
+import type { PmSearchHit } from '../sharepoint/search.ts';
+import {
+  getClientContext,
+  invokeReadAutoTool,
+  searchAuthorizedKnowledge,
+  searchAuthorizedKnowledgeSync,
+  type ToolGatewayContext,
+} from './toolGateway.ts';
 import {
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RANKING,
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
+  ASK_ATLAS_SEARCH_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
+  GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL,
   type AskAtlasAnswer,
   type AskAtlasMissionKey,
+  type AtlasAuthorizedSearch,
   type AtlasClientContext,
   type OperatorOperatingPicture,
+  type OperatorSearchHit,
 } from './types.ts';
 
 export const ATLAS_HUB_RUNTIME_AGENT = ASK_ATLAS_RUNTIME_AGENT;
 export const ATLAS_HUB_RUNTIME_MISSION_KEY = ASK_ATLAS_RUNTIME_MISSION_KEY;
 export const ATLAS_HUB_CLIENTCTX_MISSION_KEY = ASK_ATLAS_CLIENTCTX_MISSION_KEY;
+export const ATLAS_HUB_SEARCH_MISSION_KEY = ASK_ATLAS_SEARCH_MISSION_KEY;
 export const ATLAS_HUB_RUNTIME_POLICY_CLASS = 'READ_AUTO' as const;
 
 export interface AtlasHubRuntime {
   agent: typeof ASK_ATLAS_RUNTIME_AGENT;
   toolsInvoked: string[];
   policyClass: typeof ATLAS_HUB_RUNTIME_POLICY_CLASS;
-  missionKey: typeof ASK_ATLAS_RUNTIME_MISSION_KEY | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY;
+  missionKey:
+    | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
+    | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
+    | typeof ASK_ATLAS_SEARCH_MISSION_KEY;
 }
 
 export interface AtlasHubRuntimeResult {
   askAtlas: AskAtlasAnswer;
   runtime: AtlasHubRuntime;
   clientContext?: AtlasClientContext;
+  authorizedSearch?: AtlasAuthorizedSearch;
 }
 
 function normalizeQuestion(question: string): string {
@@ -109,6 +126,29 @@ export function mapsToGetClientContext(question: string): boolean {
   return extractClientContextQuery(question) !== null;
 }
 
+export function extractSearchAuthorizedQuery(question: string): string | null {
+  const raw = question.trim().replace(/[?!.]+$/g, '').trim();
+  const patterns = [
+    /^search authorized knowledge(?:\s+for)?\s+(.+)$/i,
+    /^what documents do we have(?:\s+for)?\s+(.+)$/i,
+    /^find documents(?:\s+for)?\s+(.+)$/i,
+    /^search\s+(.+)$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = raw.match(pattern);
+    const token = match?.[1]?.trim();
+    if (token) return token;
+  }
+  return null;
+}
+
+export function mapsToSearchAuthorizedKnowledge(question: string): boolean {
+  if (isOwnerGatedQuestion(question)) return false;
+  if (mapsToGetAttentionItems(question)) return false;
+  if (mapsToGetClientContext(question)) return false;
+  return extractSearchAuthorizedQuery(question) !== null;
+}
+
 function stampRuntimeAnswer(
   answer: AskAtlasAnswer,
   toolsInvoked: string[],
@@ -166,18 +206,79 @@ function unknownQuestionAnswer(now?: string): AskAtlasAnswer {
   );
 }
 
+function finishSearchRuntime(invoked: {
+  askAtlas: AskAtlasAnswer;
+  authorizedSearch: AtlasAuthorizedSearch;
+}): AtlasHubRuntimeResult {
+  const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL)
+    ? [...invoked.askAtlas.activity.tools]
+    : [...invoked.askAtlas.activity.tools, GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL];
+  return {
+    askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, ASK_ATLAS_SEARCH_MISSION_KEY),
+    runtime: runtimeEnvelope([GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL], ASK_ATLAS_SEARCH_MISSION_KEY),
+    authorizedSearch: invoked.authorizedSearch,
+  };
+}
+
+function searchToolContext(opts: {
+  principal: AtlasPrincipal;
+  picture: OperatorOperatingPicture;
+  question: string;
+  now?: string;
+  searchQuery?: string;
+  deskSearch?: ToolGatewayContext['deskSearch'];
+  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+}): ToolGatewayContext {
+  return {
+    principal: opts.principal,
+    picture: opts.picture,
+    now: opts.now,
+    searchQuery:
+      opts.searchQuery || extractSearchAuthorizedQuery(opts.question) || '',
+    deskSearch: opts.deskSearch,
+    entitledSearch: opts.entitledSearch,
+  };
+}
+
 export function runAtlasHubRuntime(opts: {
   principal: AtlasPrincipal;
   picture: OperatorOperatingPicture;
   question?: string;
   now?: string;
+  searchQuery?: string;
+  deskSearch?: {
+    q: string;
+    hitCount: number;
+    hits: Array<OperatorSearchHit & { source?: string }>;
+    ran: boolean;
+  };
 }): AtlasHubRuntimeResult {
   const question = (opts.question || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
-  if (isOwnerGatedQuestion(question) || (!mapsToGetAttentionItems(question) && !mapsToGetClientContext(question))) {
+  if (
+    isOwnerGatedQuestion(question) ||
+    (!mapsToGetAttentionItems(question) &&
+      !mapsToGetClientContext(question) &&
+      !mapsToSearchAuthorizedKnowledge(question))
+  ) {
     return {
       askAtlas: unknownQuestionAnswer(opts.now),
       runtime: runtimeEnvelope([]),
     };
+  }
+
+  if (mapsToSearchAuthorizedKnowledge(question)) {
+    return finishSearchRuntime(
+      searchAuthorizedKnowledgeSync(
+        searchToolContext({
+          principal: opts.principal,
+          picture: opts.picture,
+          question,
+          now: opts.now,
+          searchQuery: opts.searchQuery,
+          deskSearch: opts.deskSearch,
+        }),
+      ),
+    );
   }
 
   if (mapsToGetClientContext(question)) {
@@ -209,4 +310,45 @@ export function runAtlasHubRuntime(opts: {
     askAtlas: stampRuntimeAnswer(answer, toolsInvoked, ASK_ATLAS_RUNTIME_MISSION_KEY),
     runtime: runtimeEnvelope([GET_ATTENTION_ITEMS_TOOL]),
   };
+}
+
+/**
+ * Same mapping as runAtlasHubRuntime, but retrieves through the existing
+ * entitled search (searchSharePointPm) after authorization. Used by signed
+ * /operator/runtime.json and /operator/search.json.
+ */
+export async function runAtlasSearchRuntime(opts: {
+  principal: AtlasPrincipal;
+  picture: OperatorOperatingPicture;
+  question?: string;
+  now?: string;
+  searchQuery?: string;
+  deskSearch?: ToolGatewayContext['deskSearch'];
+  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+}): Promise<AtlasHubRuntimeResult> {
+  const question = (opts.question || '').trim();
+  if (question && isOwnerGatedQuestion(question)) {
+    return {
+      askAtlas: unknownQuestionAnswer(opts.now),
+      runtime: runtimeEnvelope([]),
+    };
+  }
+  if (question && !mapsToSearchAuthorizedKnowledge(question)) {
+    return {
+      askAtlas: unknownQuestionAnswer(opts.now),
+      runtime: runtimeEnvelope([]),
+    };
+  }
+  const invoked = await searchAuthorizedKnowledge(
+    searchToolContext({
+      principal: opts.principal,
+      picture: opts.picture,
+      question,
+      now: opts.now,
+      searchQuery: opts.searchQuery,
+      deskSearch: opts.deskSearch,
+      entitledSearch: opts.entitledSearch,
+    }),
+  );
+  return finishSearchRuntime(invoked);
 }

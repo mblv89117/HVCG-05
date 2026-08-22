@@ -28,11 +28,19 @@ import {
   isOperatorEventsPath,
   isOperatorImprovementsPath,
   isOperatorRuntimePath,
+  isOperatorSearchPath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
-import { extractClientContextQuery, isOwnerGatedQuestion, runAtlasHubRuntime } from './agentRuntime.ts';
+import {
+  extractClientContextQuery,
+  extractSearchAuthorizedQuery,
+  isOwnerGatedQuestion,
+  mapsToSearchAuthorizedKnowledge,
+  runAtlasHubRuntime,
+  runAtlasSearchRuntime,
+} from './agentRuntime.ts';
 import { getClientContext } from './toolGateway.ts';
 import { processAtlasEvent, resolveEventClass } from './eventProcessing.ts';
 import {
@@ -213,6 +221,7 @@ export async function handleOperatorDesk(opts: {
   const improvementsOnly = isOperatorImprovementsPath(opts.path);
   const missionsOnly = isOperatorEngineeringMissionsPath(opts.path);
   const clientContextOnly = isOperatorClientContextPath(opts.path);
+  const searchOnly = isOperatorSearchPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
@@ -232,10 +241,13 @@ export async function handleOperatorDesk(opts: {
     improvementsOnly ||
     missionsOnly ||
     clientContextOnly ||
+    searchOnly ||
     wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery =
-    runtimeOnly || eventsOnly || improvementsOnly || missionsOnly || clientContextOnly ? '' : url.searchParams.get('q') || '';
+    runtimeOnly || eventsOnly || improvementsOnly || missionsOnly || clientContextOnly
+      ? ''
+      : url.searchParams.get('q') || '';
 
   let principal;
   try {
@@ -342,13 +354,27 @@ export async function handleOperatorDesk(opts: {
     return true;
   }
 
+  const entitledSearch =
+    opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint
+      ? (query: string) => searchSharePointPm(opts.sharepoint!, principal, query)
+      : undefined;
+
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
-    const result = runAtlasHubRuntime({
-      principal,
-      picture: model.operatingPicture,
-      question,
-    });
+    const result = mapsToSearchAuthorizedKnowledge(question)
+      ? await runAtlasSearchRuntime({
+          principal,
+          picture: model.operatingPicture,
+          question,
+          deskSearch: model.search,
+          entitledSearch,
+        })
+      : runAtlasHubRuntime({
+          principal,
+          picture: model.operatingPicture,
+          question,
+          deskSearch: model.search,
+        });
     if (opts.method === 'GET') {
       try {
         await appendAskAtlasActivity({
@@ -367,6 +393,43 @@ export async function handleOperatorDesk(opts: {
         operatorDesk: { askAtlas: result.askAtlas },
         runtime: result.runtime,
         ...(result.clientContext ? { clientContext: result.clientContext } : {}),
+        ...(result.authorizedSearch ? { authorizedSearch: result.authorizedSearch } : {}),
+      },
+      opts.origin,
+    );
+    return true;
+  }
+
+  if (searchOnly) {
+    const queryQ = (url.searchParams.get('q') || '').trim();
+    const queryQuestion = (url.searchParams.get('question') || '').trim();
+    const question = queryQuestion || (queryQ ? `Search ${queryQ}` : '');
+    const result = await runAtlasSearchRuntime({
+      principal,
+      picture: model.operatingPicture,
+      question,
+      searchQuery: queryQ || extractSearchAuthorizedQuery(question) || '',
+      deskSearch: model.search,
+      entitledSearch,
+    });
+    if (opts.method === 'GET') {
+      try {
+        await appendAskAtlasActivity({
+          dataDir: opts.cfg.dataDir,
+          answer: result.askAtlas,
+          principal,
+        });
+      } catch {
+        /* Search answer stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    sendJson(
+      opts.res,
+      200,
+      {
+        ...(result.authorizedSearch ? { authorizedSearch: result.authorizedSearch } : {}),
+        operatorDesk: { askAtlas: result.askAtlas },
+        runtime: result.runtime,
       },
       opts.origin,
     );
