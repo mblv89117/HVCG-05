@@ -26,7 +26,7 @@ export function isOperatorPrincipal(principal: AtlasPrincipal): boolean {
 }
 
 const CLIENT_ENTITLED_PM = [
-  /^\/api\/pm\/clients\/[^/]+\/(portal|document-requests|workspace|brief|commercial-context)$/,
+  /^\/api\/pm\/clients\/[^/]+\/(portal|document-requests|attention|workspace|brief|commercial-context)$/,
   /^\/api\/pm\/clients\/[^/]+$/,
   /^\/api\/pm\/documents$/,
   /^\/api\/pm\/search$/,

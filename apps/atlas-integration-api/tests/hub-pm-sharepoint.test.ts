@@ -1736,6 +1736,17 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       const listedBody = (await listed.json()) as { documentRequests: Array<{ title: string; binariesInAtlas: boolean }> };
       assert.equal(listedBody.documentRequests[0]?.title, 'W-9');
       assert.equal(listedBody.documentRequests[0]?.binariesInAtlas, false);
+      const attention = await fetch(`${base}/api/pm/clients/SYNTH01/attention`, { headers: auth('staff') });
+      assert.equal(attention.status, 200);
+      const attentionBody = (await attention.json()) as {
+        attention: { kind: string; classification: string; items: Array<{ title: string; invented: boolean }> };
+      };
+      assert.equal(attentionBody.attention.kind, 'client_attention_v1');
+      assert.equal(attentionBody.attention.classification, 'SYNTHETIC_QA');
+      assert.equal(attentionBody.attention.items[0]?.title, 'W-9');
+      assert.equal(attentionBody.attention.items[0]?.invented, false);
+      const foreignAttention = await fetch(`${base}/api/pm/clients/HFD01/attention`, { headers: auth('staff') });
+      assert.equal(foreignAttention.status, 404);
       assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
 
       const store = JSON.parse(readFileSync(join(dataDir, 'integration-store.json'), 'utf8')) as {

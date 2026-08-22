@@ -138,6 +138,7 @@ describe('knowledge operating picture', () => {
     assert.deepEqual(picture.syntheticClientsVisible, ['SYN01']);
     assert.equal(picture.hvsDataAccess, 'BLOCKED');
     assert.equal(picture.honestEmpty, true);
+    assert.deepEqual(picture.syntheticAttention, []);
     assert.equal(picture.queues['Needs Action'].length, 0);
     assert.equal(picture.queues.Projects.length, 0);
     assert.equal(picture.queues.Tasks.length, 0);
@@ -239,5 +240,34 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.binariesInAtlas, false);
     assert.ok(picture.queues['Needs Action'].some((row) => row.kind === 'document_request' && row.clientCode === 'PDG01'));
     assert.equal(picture.documents.items.every((row) => row.provenance.binariesInAtlas === false), true);
+    assert.equal(picture.syntheticAttention.length, 0);
+  });
+
+  it('labels SYN01 document requests as syntheticAttention and never as real work', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'know-syn-attn-'));
+    createDocumentRequest(dir, {
+      clientCode: 'SYN01',
+      title: 'SYNQA W-9 request',
+      createdBy: staff.userId,
+    });
+    const picture = await buildKnowledgeOperatingPicture(
+      stubService({
+        clients: [
+          client({
+            clientCode: 'SYN01',
+            displayName: 'SYNTHETIC QA — Atlas Capital Operations',
+          }),
+        ],
+      }),
+      staff,
+      { dataDir: dir, hvsDataAccess: 'BLOCKED' },
+    );
+    assert.equal(picture.honestEmpty, true);
+    assert.deepEqual(picture.realClientsOperationalized, []);
+    assert.equal(picture.queues['Needs Action'].length, 0);
+    assert.equal(picture.syntheticAttention.length, 1);
+    assert.equal(picture.syntheticAttention[0]?.classification, 'SYNTHETIC_QA');
+    assert.equal(picture.syntheticAttention[0]?.title, 'SYNQA W-9 request');
+    assert.equal(picture.syntheticAttention[0]?.invented, false);
   });
 });

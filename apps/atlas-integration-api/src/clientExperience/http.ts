@@ -238,6 +238,22 @@ export async function handleClientExperience(opts: {
       return true;
     }
 
+    if (opts.method === 'GET' && opts.path === '/api/client/attention') {
+      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      send(
+        opts.res,
+        200,
+        {
+          attention: view.attention,
+          clientCode: view.clientCode,
+          source: 'hub_governed_overlay',
+          binariesInAtlas: false,
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
     if (opts.method === 'GET' && (opts.path === '/api/client/requests' || opts.path === '/api/client/document-requests')) {
       const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(

@@ -137,6 +137,7 @@ describe('client experience helpers', () => {
     );
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/portal`), true);
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/document-requests`), true);
+    assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/attention`), true);
     assert.equal(isClientEntitledPmPath('/api/pm/documents'), true);
     assert.equal(isClientEntitledPmPath('/api/pm/search'), true);
     assert.equal(isClientEntitledPmPath('/api/pm/my-work'), true);
@@ -311,6 +312,20 @@ describe('synthetic client journey isolation', () => {
       assert.ok(workspaceABody.workspace.documentRequests.every((row) => row.binariesInAtlas === false));
       assert.ok(workspaceABody.workspace.attention.length >= 1);
       assert.ok(workspaceABody.workspace.projects.some((p) => p.name.includes('kickoff')));
+      const clientAttention = await fetch(`${base}/api/client/attention`, { headers: auth('client-a') });
+      assert.equal(clientAttention.status, 200);
+      const clientAttentionBody = (await clientAttention.json()) as {
+        clientCode: string;
+        attention: Array<{ title: string }>;
+        binariesInAtlas: boolean;
+      };
+      assert.equal(clientAttentionBody.clientCode, SYN_A);
+      assert.equal(clientAttentionBody.binariesInAtlas, false);
+      assert.ok(clientAttentionBody.attention.length >= 1);
+      const stolenAttention = await fetch(`${base}/api/client/attention`, { headers: auth('client-b') });
+      assert.equal(stolenAttention.status, 200);
+      const stolenAttentionBody = (await stolenAttention.json()) as { clientCode: string };
+      assert.equal(stolenAttentionBody.clientCode, SYN_B);
 
       const crossWorkspace = await fetch(`${base}/api/client/workspace/${SYN_B}`, { headers: auth('client-a') });
       assert.equal(crossWorkspace.status, 403);

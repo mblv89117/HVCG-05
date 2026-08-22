@@ -68,6 +68,8 @@ export function buildOperatorDeskModel(input: {
   searchQuery?: string;
   searchHits?: Array<{ id: string; title: string; kind?: string; href?: string; clientCode?: string }>;
   searchRan?: boolean;
+  attentionItems?: OperatorQueueItem[];
+  realClientsNeedingAttention?: number;
 }): OperatorDeskModel {
   const cc = input.commandCenter && typeof input.commandCenter === 'object' ? input.commandCenter : {};
   const health =
@@ -80,7 +82,8 @@ export function buildOperatorDeskModel(input: {
   const decisions = listItems(myDay.decisionsNeeded, 'decision');
   const overdue = listItems(myDay.overdue, 'overdue');
   const followUps = listItems(myDay.waitingFollowUps, 'follow_up');
-  const needsAction = [...ownerApprovals, ...alerts].slice(0, 20);
+  const attention = (input.attentionItems || []).slice(0, 20);
+  const needsAction = [...attention, ...ownerApprovals, ...alerts].slice(0, 20);
 
   return {
     contractVersion: OPERATOR_DESK_CONTRACT,
@@ -95,7 +98,10 @@ export function buildOperatorDeskModel(input: {
       openTasks: num(health, 'openTasks'),
       overdueTasks: num(health, 'overdueTasks'),
       decisionsNeeded: num(health, 'decisionsNeeded') || decisions.length,
-      clientsNeedingAttention: num(health, 'clientsNeedingAttention'),
+      clientsNeedingAttention: Math.max(
+        num(health, 'clientsNeedingAttention'),
+        input.realClientsNeedingAttention ?? 0,
+      ),
     },
     queues: {
       needsAction,

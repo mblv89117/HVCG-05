@@ -10,6 +10,7 @@ import type { IntegrationRepository } from '../../store/repository.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isValidProjectId } from '../projectId.ts';
 import { clientPortalHrefs } from './clientActivation.ts';
+import { attentionClassification, listClientAttention } from './attention.ts';
 import { createDocumentRequest, listDocumentRequests } from './documentRequests.ts';
 import { assertWritableClientCode } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger } from './knowledgeLedger.ts';
@@ -109,7 +110,8 @@ function isDeferredPath(path: string): boolean {
         tail === 'activation' ||
         tail === 'commercial-context' ||
         tail === 'portal' ||
-        tail === 'document-requests')
+        tail === 'document-requests' ||
+        tail === 'attention')
     ) {
       return false;
     }
@@ -566,6 +568,43 @@ export async function handleSharePointPmRoutes(opts: {
       return true;
     }
 
+    const clientAttention = path.match(/^\/api\/pm\/clients\/([^/]+)\/attention$/);
+    if (clientAttention) {
+      const rawCode = decodeURIComponent(clientAttention[1]);
+      if (!isCanonicalClientCode(rawCode)) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const client = await service.authorizeClient(principal, rawCode);
+      if (client === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      if (method !== 'GET') {
+        send(res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, origin);
+        return true;
+      }
+      const items = listClientAttention(dataDir, rawCode);
+      send(
+        res,
+        200,
+        {
+          attention: {
+            kind: 'client_attention_v1',
+            clientCode: rawCode,
+            items,
+            count: items.length,
+            classification: items[0]?.classification || attentionClassification(rawCode),
+            source: 'hub_governed_overlay',
+            binariesInAtlas: false,
+            invented: false,
+          },
+        },
+        origin,
+      );
+      return true;
+    }
+
     const clientDocRequests = path.match(/^\/api\/pm\/clients\/([^/]+)\/document-requests$/);
     if (clientDocRequests) {
       const rawCode = decodeURIComponent(clientDocRequests[1]);
@@ -620,7 +659,17 @@ export async function handleSharePointPmRoutes(opts: {
     if ((method === 'GET' || method === 'POST') && clientWorkspace) {
       const rawCode = decodeURIComponent(clientWorkspace[1]);
       const workspace = await buildSharePointClientWorkspace(service, principal, rawCode);
-      send(res, 200, { workspace }, origin);
+      send(
+        res,
+        200,
+        {
+          workspace: {
+            ...workspace,
+            attention: listClientAttention(dataDir, rawCode),
+          },
+        },
+        origin,
+      );
       return true;
     }
 
