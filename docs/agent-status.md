@@ -5,20 +5,20 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | `f9c4cfd68102daff3e9e81c3e5f09fdc74008084` |
+| current SHA | *(set on tip pin commit)* |
 | baseline | Hub `940a484` + Elite `75d0c59` via freeze tip `2a5a605` |
-| owned domains | Search performance; operator honesty; dead-chrome nav; project deferred collections |
-| files/domains touched | `ProjectDetailPage.tsx`, `projectCollectionHonesty.ts`; prior D11/D12/search |
+| owned domains | Search performance; operator honesty (D11–D13 consumed); D14 auth search P50 |
+| files/domains touched | D14 report + status only this checkpoint (no D11–D13 redo) |
 | contracts required | None |
-| tests | See TEST STATUS |
-| build | Elite `vite build` PASS this checkpoint (candidate only) |
-| synthetic certification | Modeled search bench prior PASS. Live unauth 401 prior (D11). Auth latency NOT_RUN. |
-| security status | Train P0: 0 · Train P1: SEARCH_LIVE_LATENCY. No LIVE_SECURITY_CERTIFIED / live P0=0 claim. No ATLAS-RT/XSYS. |
-| Premium status | D13 Project Detail tabs — local candidate evidence (desktop + mobile). **Live Elite `75d0c59` will not show this until a later authorized Elite release.** |
+| tests | Prior Hub 325/325; D14 is live timing cert (not unit suite) |
+| build | Prior Elite build PASS (candidate) |
+| synthetic certification | D14 live auth search P50 measured (see report) |
+| security status | Train P0: 0 · No LIVE_SECURITY_CERTIFIED / live P0=0 / live Elite honesty shipped. No ATLAS-RT/XSYS. |
+| Premium status | **ELITE_PREMIUM=NOT_RUN** (MSAL_TOKEN/staff session ABSENT this pod) |
 | integration dependencies | None |
 | P0 | 0 (train) |
-| P1 | SEARCH_LIVE_LATENCY (undeployed search patch; AUTHENTICATED_LATENCY=NOT_RUN) |
-| P2 | Project deferred-collection honesty addressed on this branch (D13); dead-chrome nav (D12) |
+| P1 | See SEARCH note — D14 live P50 recorded; candidate patch still undeployed |
+| P2 | D11–D13 honesty on branch only (not live Elite) |
 | owner decisions | OD-005 out of scope |
 | deployment state | `REMOTE-REACHABLE` · **DO NOT DEPLOY** |
 
@@ -26,46 +26,57 @@
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **13** (`ORCH-D13` / `docs/platform-orchestration/directives/atlas-p2.md`) |
-| ORCHESTRATOR REMOTE SHA | `3473eba` (P2_D12 record + D13 assign) |
-| BASED ON WORKER SHA (directive) | `dcd6efcfef81691a42a80cf039511d9c95098fb1` |
-| ACK | **D13 acknowledged explicitly** (D11+D12 accepted; unauth search / dead-chrome nav not redone; no deploy) |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **14** (`ORCH-D14` authenticated search P50) |
+| ORCHESTRATOR REMOTE SHA | `55cde62` (control plane still showed D13 consumed / idle at fetch; D14 issued in-band) |
+| BASED ON WORKER SHA (directive) | `823e9b8a7d9449ce149f4e4d05cb8674b0954636` |
+| ACK | **D14 acknowledged explicitly** (D11–D13 not redone; no deploy) |
 
-## Live search (carry-forward; not redone)
+## THIS-POD auth names (D14)
+
+| Name | Result |
+|------|--------|
+| `AZURE_CLIENT_ID` / `AZURE_CLIENT_SECRET` / `AZURE_TENANT_ID` / `AZURE_SUBSCRIPTION_ID` | PRESENT |
+| `HUB_TOKEN` | ABSENT |
+| `MSAL_TOKEN` | ABSENT |
+| `STAFF_JWT` | ABSENT |
+| `AUTH_SESSION` | **PRESENT** (Hub API audience via client-credentials; not Graph) |
+| `ELITE_PREMIUM` | **NOT_RUN** |
+
+## Live search (D14)
 
 | Item | Value |
 |------|--------|
-| `AUTHENTICATED_LATENCY` | **NOT_RUN** (`HUB_TOKEN` still absent) |
-| `SEARCH_LIVE_LATENCY` | **P1** (last live auth ~14.5s; candidate undeployed) |
+| `AUTHENTICATED_LATENCY` | **RUN** — 7× `GET /api/pm/search?q=hvcg` → HTTP 200 |
+| **P50_ms** | **2408** |
+| P95 / min / max / mean ms | 2459 / 2194 / 2698 / 2387 |
+| resultCount | 0 (all samples; counts only) |
 | Unauth 401 | Prior D11 PASS — not re-probed |
+| Artifact | `docs/ATLAS_P2_D14_AUTH_SEARCH_P50_2026-08-22.md` + `/opt/cursor/artifacts/d14_auth_search_latency.json` |
 
-## Honesty change list (D13)
+## Honesty change list (carry-forward; not redone)
 
-**Still live Hub surfaces:** project record, tasks / board (Add task), milestones (Add milestone), task-level blockers & owner approvals.
-
-**Deferred-closed by default** (missing Hub persistable/non-deferred confirmation ≠ empty SoR): risks, waiting, commitments, deliverables, documents, notes, decisions, activity.
-
-**UI:** DeferredClosed copy strengthened; create/add/record hidden for those eight unless Hub `persistable`; tab labels Documents / Notes & decisions / Risks & waiting show `(deferred)` when closed; overview does not show “None” / “No notes…” / “No activity events” for deferred collections; createPmNote / createPmDecision fail closed if still reachable.
+D11–D13 remain accepted on this branch. Live Elite `75d0c59` does not show them.
 
 ## COMPLETED ACTIONS
 
-- D13 project-deferred honesty + tests
-- Hub 325/325; D11/D12 honesty redteam PASS; Elite build PASS
-- Status CONSUMED=13
+- D14 this-pod auth inventory
+- Hub audience AUTH_SESSION + authenticated search P50
+- ELITE_PREMIUM=NOT_RUN recorded
+- Status CONSUMED=14
 
 ## REMAINING ACTIONS
 
-1. Authenticated live search when token exists
-2. Authorized Elite release for D12/D13 UI on live `75d0c59` (not this train)
-3. Authorized Hub deploy for search P1 (not this train)
+1. Elite Premium rendered QA when MSAL/staff session exists (not this pod)
+2. Authorized Elite release for D12/D13 (Section-27 still FAIL per orch — not this train)
+3. Authorized Hub deploy for candidate search patch if still required after live P50 context
 
 ## TEST STATUS
 
-PASS — Hub **325/325**; Elite D13 project honesty + D11 + D12 redteam **PASS**; Elite build **PASS**.
+D14 live timing PASS (7/7 HTTP 200). Prior Hub unit **325/325** unchanged this checkpoint.
 
 ## PREMIUM STATUS
 
-Local candidate Project Detail evidence (`d13_project_record_deferred_desktop.webp`, `d13_project_notes_deferred_desktop.webp`, `d13_project_notes_deferred_mobile.webp`) via DEV honesty preview (Hub not called; all eight closed by default). **Live Elite `75d0c59` will not show this until a later authorized Elite release.**
+**ELITE_PREMIUM=NOT_RUN** — no MSAL/staff browser session this pod. Hub token not injected into Elite.
 
 ## INTEGRATION STATUS
 
@@ -75,4 +86,4 @@ N/A.
 
 None.
 
-**Updated:** 2026-08-22T02:20:00Z
+**Updated:** 2026-08-22T03:15:00Z
