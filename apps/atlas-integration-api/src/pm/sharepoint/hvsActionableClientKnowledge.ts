@@ -66,6 +66,17 @@ export type ActionableOverdueItem = {
   filename: string;
 };
 
+export type ActionableCapitalItem = {
+  id: string;
+  client: string;
+  clientCode: string;
+  title: string;
+  party: ResponsibilityParty;
+  classification: Extract<ActionableClassification, 'CONFIRMED'>;
+  evidence: string;
+  filename: string;
+};
+
 export type ActionableClientKnowledge = {
   client: string;
   clientCode: string;
@@ -87,6 +98,14 @@ const PAST_DUE = /past due/i;
 function basename(path: string): string {
   const parts = path.split('/');
   return parts[parts.length - 1] || path;
+}
+
+function fileStem(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\.(docx|pdf|xlsx|doc)$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function slug(value: string): string {
@@ -351,4 +370,32 @@ export function hvsActionableDecisions(): ActionableDecision[] {
   const fromRecords = hvsActionableClientKnowledge().flatMap((row) => row.decisions);
   const existing = new Set(hvsRecoveredActions().map((row) => row.id));
   return fromRecords.filter((row) => !existing.has(row.id));
+}
+
+export function hvsActionableCapitalItems(): ActionableCapitalItem[] {
+  const seen = new Set<string>();
+  const out: ActionableCapitalItem[] = [];
+  for (const folder of hvsConfirmedClientFolders()) {
+    const files = hvsRecoveredDocumentsFor(folder.client).filter(
+      (row) => row.kind === 'file' && row.documentClass === 'capital_package',
+    );
+    const clientKey = slug(folder.clientCode || folder.client);
+    for (const row of files) {
+      const name = basename(row.name);
+      const key = `${folder.client}\0${fileStem(name)}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        id: `hvs-capital:${clientKey}:${slug(fileStem(name))}`,
+        client: folder.client,
+        clientCode: folder.clientCode,
+        title: `${folder.client} — recovered capital-packet filename ${name} (amounts and funding status not extracted)`,
+        party: 'HVCG',
+        classification: 'CONFIRMED',
+        evidence: `CONFIRMED filename ${name}. Classified as capital_package from the recovered name. Amounts, lender criteria, and funding status were not extracted.`,
+        filename: name,
+      });
+    }
+  }
+  return out;
 }

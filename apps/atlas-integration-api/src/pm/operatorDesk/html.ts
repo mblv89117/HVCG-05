@@ -296,7 +296,10 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>Needs Action</h2>
-    ${operatingList(op.queues.needsAction, 'No customer Needs Action items in entitled scope.')}
+    ${operatingList(
+      op.queues.needsAction.filter((row) => row.kind !== 'hvs_actionable_capital'),
+      'No customer Needs Action items in entitled scope.',
+    )}
   </section>
   <section>
     <h2>Waiting</h2>
@@ -305,6 +308,14 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   <section>
     <h2>Decision Required</h2>
     ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Capital</h2>
+    <p class="muted">Filename-derived Capital queue. CONFIRMED means the recovered filename exists. Amounts, lender criteria, and funding status are not extracted.</p>
+    ${operatingList(
+      op.queues.needsAction.filter((row) => row.kind === 'hvs_actionable_capital'),
+      'No recovered capital-packet filenames in this picture.',
+    )}
   </section>
   <section>
     <h2>Overdue</h2>

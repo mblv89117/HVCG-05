@@ -14,6 +14,7 @@ import {
 } from '../sharepoint/hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects } from '../sharepoint/hvsRecoveredProjects.ts';
 import {
+  hvsActionableCapitalItems,
   hvsActionableClientKnowledge,
   hvsActionableOverdueItems,
   hvsActionableWaitingItems,
@@ -144,6 +145,17 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           kind: 'hvs_actionable_overdue',
           provenance: row.classification,
         }));
+  const capital =
+    hvsDataAccess === 'BLOCKED'
+      ? []
+      : hvsActionableCapitalItems().map((row) => ({
+          id: row.id,
+          clientCode: row.clientCode,
+          title: row.title,
+          queue: 'Needs Action',
+          kind: 'hvs_actionable_capital',
+          provenance: row.classification,
+        }));
   const actions =
     hvsDataAccess === 'BLOCKED'
       ? []
@@ -175,7 +187,10 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     syntheticClientsVisible: [],
     honestEmpty: true,
     queues: {
-      needsAction: actions.filter((row) => row.queue === 'Needs Action'),
+      needsAction: [
+        ...capital,
+        ...actions.filter((row) => row.queue === 'Needs Action'),
+      ],
       waiting,
       overdue,
       blocked: [],

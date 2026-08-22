@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  hvsActionableCapitalItems,
   hvsActionableClientKnowledge,
   hvsActionableOverdueItems,
   hvsActionableWaitingItems,
@@ -62,6 +63,18 @@ test('actionable HVS knowledge stays honest and useful', () => {
   assert.ok(prodigyOverdue.some((row) => /April 2026 Past Due Invoice/i.test(row.filename)));
   assert.ok(prodigyOverdue.some((row) => /May 2026 Past Due Invoice/i.test(row.filename)));
   assert.equal(overdue.every((row) => /amounts not extracted/i.test(row.title)), true);
+
+  const capital = hvsActionableCapitalItems();
+  assert.ok(capital.length >= 4);
+  assert.equal(
+    capital.every((row) => row.classification === 'CONFIRMED' && row.party === 'HVCG'),
+    true,
+  );
+  assert.ok(capital.some((row) => row.client === 'Colorado Beef' && /SBA Express/i.test(row.filename)));
+  assert.ok(capital.some((row) => row.client === 'Prodigy Games' && /Capital_Acquisition/i.test(row.filename)));
+  assert.ok(capital.some((row) => /121 Capital offer/i.test(row.filename)));
+  assert.equal(capital.filter((row) => /SBA Express Funding Checklist/i.test(row.filename)).length, 1);
+  assert.equal(capital.every((row) => /amounts and funding status not extracted/i.test(row.title)), true);
 
   const serialized = JSON.stringify(rows);
   assert.equal(serialized.includes('$'), false);
