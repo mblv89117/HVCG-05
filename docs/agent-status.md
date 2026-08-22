@@ -5,55 +5,46 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `c438d08c2514fb6b6b8d9b42d40c1514f43e636f` |
-| baseline | D41 LIVE_CLIENT_PORTAL_ISOLATION @ Hub target `e63279a8` (live drifted `b707049c`) |
+| current SHA | (post-D42 commit) |
+| baseline | D42 LIVE_CLIENT_CX_CK_ISOLATION @ Hub `976bea59` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
 | contracts required | none this cycle |
-| tests | D41: probe1 PASS; probe5 NOT_LIVE; probes2-4 NOT_EXECUTED; D41 **FAIL** |
+| tests | D42: SHA_GATE PASS; scope2 PASS; scopes3-6 NOT_EXECUTED |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_CERT=NO**. Portal surface unsigned P0=0; entitled isolation unverified. |
+| security status | **LIVE_CERT=NO**. Client unsigned P0=0; entitled isolation INCONCLUSIVE. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
-| P0 | Portal surface LIVE_P0_CONFIRMED_OPEN=0; entitled portal isolation unverified |
+| P0 | LIVE_P0_CONFIRMED_OPEN=0; entitled client isolation unverified |
 | P1 | none |
 | P2 | none |
-| owner decisions | No deploy. Do not replace worker. FOLLOWUP_CANNOT_REBIND=YES. |
-| deployment state | Live Hub markers = `b707049c` (directive cited `e63279a8`) |
+| owner decisions | No deploy. Do not replace worker. |
+| deployment state | Live Hub markers = `976bea59` |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **41** |
-| PRIOR | D39 CONSUMED=39 — not redone |
-| COMPLETED ACTIONS | D41 unsigned fail-closed PASS; lineage drift; entitled probes blocked |
-| REMAINING ACTIONS | Inject AZURE_* → self-mint SYN01 session → re-run D41 probes 2–4 on pinned SHA |
-| D41_VERDICT | **FAIL** |
-| LIVE_P0 (portal surface, confirmed open) | **0** |
-| LIVE_P0 (entitled portal, unverified) | **YES** |
-| LIVE_CERT / LIVE_SECURITY_CERTIFIED | **NO** |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **42** |
+| PRIOR | D41 CONSUMED=41 — not redone |
+| COMPLETED ACTIONS | D42 SHA_GATE PASS; unsigned /client isolation PASS; entitled probes blocked |
+| REMAINING ACTIONS | Inject AZURE_* → self-mint SYN01 session → re-run scopes 3–6 |
+| SHA_GATE | **PASS** |
+| CLIENT_ISOLATION | **INCONCLUSIVE** |
+| LIVE_P0_CONFIRMED_OPEN | **0** |
+| LIVE_CERT | **NO** |
 | AUTH_SESSION | **ABSENT** |
-| MISSION | `LIVE_CLIENT_PORTAL_ISOLATION` |
-| TEST STATUS | Probe1 PASS (all 401); probe5 NOT_LIVE (405); probes2-4 NOT_EXECUTED |
-| OWNER DECISIONS | No RT deploy; worker not replaced |
+| MISSION | `LIVE_CLIENT_CX_CK_ISOLATION` |
+| OWNER DECISIONS | No RT deploy; worker not recreated |
 
 ## THIS-POD (names only)
 
 | Field | Value |
 |-------|-------|
-| THIS_POD_ENV_ID | `9e385f28-9c25-11f1-ba66-0e7d0216e441` (= approved) |
 | THIS_POD_ENV_VERSION | `a86e2323-9c2a-11f1-ba66-0e7d0216e441` |
 | THIS_POD_BUILD_ID | `bld-20260820-859ee60c-1350-4ede-89ab-db0836afc9d5` |
 | AZURE_* | all **ABSENT** |
 | AUTH_SESSION | **ABSENT** |
-| INHERIT | **FAIL** |
 
-## Notes
-
-- D41 is not a D39 clone. Entitled portal isolation requires self-minted AUTH_SESSION.
-- `/client` 405 recorded NOT_LIVE — does not fail Hub SHA per D41 rule 5.
-- BUSINESS_USEFUL PASS not claimed.
-
-**Updated:** 2026-08-22T07:10:00Z
+**Updated:** 2026-08-22T07:22:00Z
