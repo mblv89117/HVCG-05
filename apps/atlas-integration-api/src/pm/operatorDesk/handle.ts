@@ -20,12 +20,14 @@ import {
   ASK_ATLAS_QUESTION,
   isOperatorActivityLedgerPath,
   isOperatorDeskPath,
+  isOperatorEventsPath,
   isOperatorRuntimePath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
 import { runAtlasHubRuntime } from './agentRuntime.ts';
+import { processAtlasEvent, resolveEventClass } from './eventProcessing.ts';
 
 export { isOperatorDeskPath };
 
@@ -155,6 +157,29 @@ function loadDevelopmentDesk(opts: {
   });
 }
 
+async function readEventJson(req: IncomingMessage): Promise<Record<string, unknown>> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) chunks.push(chunk as Buffer);
+  const raw = Buffer.concat(chunks).toString('utf8');
+  if (!raw.trim()) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      const err = new Error('Request body must be a JSON object') as Error & { status: number; code: string };
+      err.status = 400;
+      err.code = 'malformed_json';
+      throw err;
+    }
+    return parsed as Record<string, unknown>;
+  } catch (err) {
+    if ((err as { status?: number }).status === 400) throw err;
+    const bad = new Error('Request body is not valid JSON') as Error & { status: number; code: string };
+    bad.status = 400;
+    bad.code = 'malformed_json';
+    throw bad;
+  }
+}
+
 export async function handleOperatorDesk(opts: {
   cfg: AppConfig;
   repo: IntegrationRepository;
@@ -167,7 +192,8 @@ export async function handleOperatorDesk(opts: {
   origin?: string | null;
 }): Promise<boolean> {
   if (!isOperatorDeskPath(opts.path)) return false;
-  if (opts.method !== 'GET' && opts.method !== 'HEAD') {
+  const eventsOnly = isOperatorEventsPath(opts.path);
+  if (opts.method !== 'GET' && opts.method !== 'HEAD' && !(eventsOnly && opts.method === 'POST')) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
     return true;
   }
@@ -175,9 +201,9 @@ export async function handleOperatorDesk(opts: {
   const accept = typeof opts.req.headers.accept === 'string' ? opts.req.headers.accept : '';
   const ledgerOnly = isOperatorActivityLedgerPath(opts.path);
   const runtimeOnly = isOperatorRuntimePath(opts.path);
-  const asJson = ledgerOnly || runtimeOnly || wantsOperatorJson(opts.path, accept);
+  const asJson = ledgerOnly || runtimeOnly || eventsOnly || wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
-  const searchQuery = runtimeOnly ? '' : url.searchParams.get('q') || '';
+  const searchQuery = runtimeOnly || eventsOnly ? '' : url.searchParams.get('q') || '';
 
   let principal;
   try {
@@ -306,6 +332,56 @@ export async function handleOperatorDesk(opts: {
       opts.res,
       200,
       {
+        operatorDesk: { askAtlas: result.askAtlas },
+        runtime: result.runtime,
+      },
+      opts.origin,
+    );
+    return true;
+  }
+
+  if (eventsOnly) {
+    let postedClass = '';
+    if (opts.method === 'POST') {
+      try {
+        const body = await readEventJson(opts.req);
+        postedClass = typeof body.eventClass === 'string' ? body.eventClass : typeof body.event === 'string' ? body.event : '';
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(
+          opts.res,
+          status,
+          { error: 'malformed_json', code: 'malformed_json' },
+          opts.origin,
+        );
+        return true;
+      }
+    }
+    const queryClass = url.searchParams.get('event') || url.searchParams.get('eventClass') || '';
+    const rawClass = postedClass || queryClass;
+    const eventClass = rawClass.trim() ? resolveEventClass(rawClass) : 'scheduled_sweep';
+    const result = processAtlasEvent({
+      principal,
+      picture: model.operatingPicture,
+      eventClass,
+      trigger: eventClass === 'scheduled_sweep' && !rawClass.trim() ? 'scheduled_sweep' : undefined,
+    });
+    if (opts.method === 'GET' || opts.method === 'POST') {
+      try {
+        await appendAskAtlasActivity({
+          dataDir: opts.cfg.dataDir,
+          answer: result.askAtlas,
+          principal,
+        });
+      } catch {
+        /* Event answer stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    sendJson(
+      opts.res,
+      200,
+      {
+        eventProcessing: result.eventProcessing,
         operatorDesk: { askAtlas: result.askAtlas },
         runtime: result.runtime,
       },
