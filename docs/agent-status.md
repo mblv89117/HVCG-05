@@ -5,7 +5,7 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | `0a71012539b0e618ce162f61619c761988e32df2` (`0a71012`) |
+| current SHA | `ddafbd9414c1afb9ddf5ea8cce7d435d0dc9e939` (`ddafbd9`) |
 | baseline | Certified Hub `940a484` + Elite `75d0c59` via freeze tip `2a5a605` on `cursor/atlas-hv-completion-52d1` |
 | owned domains | Search performance; minor certified UI/performance debt; operator honesty on deferred Elite surfaces |
 | files/domains touched | Hub search perf (prior); Elite `/documents/operating` honesty; My Work Quick Capture removal |
