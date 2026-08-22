@@ -343,11 +343,19 @@ describe('operator desk HTTP fail-closed', () => {
       });
       assert.equal(afterRedeem.status, 200);
       const afterRedeemBody = (await afterRedeem.json()) as {
-        operatorDesk: { clientJourneys: Array<{ signedClientSession: boolean; invitationStatus: string; nextAction: string }> };
+        operatorDesk: {
+          clientJourneys: Array<{
+            signedClientSession: boolean;
+            invitationStatus: string;
+            nextAction: string;
+            canReissueInviteFromDesk: boolean;
+          }>;
+        };
       };
       assert.equal(afterRedeemBody.operatorDesk.clientJourneys[0]?.invitationStatus, 'redeemed');
       assert.equal(afterRedeemBody.operatorDesk.clientJourneys[0]?.signedClientSession, true);
-      assert.match(afterRedeemBody.operatorDesk.clientJourneys[0]?.nextAction || '', /Signed SYNQA client session/);
+      assert.equal(afterRedeemBody.operatorDesk.clientJourneys[0]?.canReissueInviteFromDesk, true);
+      assert.match(afterRedeemBody.operatorDesk.clientJourneys[0]?.nextAction || '', /reissueHref/);
 
       const clientStillClosed = await fetch(`${base}/client`, {
         headers: { authorization: 'Bearer valid-member' },

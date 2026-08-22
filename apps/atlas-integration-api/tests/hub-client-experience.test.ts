@@ -604,10 +604,55 @@ describe('synthetic client journey isolation', () => {
         const after = await fetch(`${base}/operator.json`, { headers: auth('entitled-staff') });
         assert.equal(after.status, 200);
         const afterBody = (await after.json()) as {
-          operatorDesk: { clientJourneys: Array<{ signedClientSession: boolean; invitationStatus: string }> };
+          operatorDesk: {
+            clientJourneys: Array<{
+              signedClientSession: boolean;
+              invitationStatus: string;
+              canReissueInviteFromDesk: boolean;
+            }>;
+          };
         };
         assert.equal(afterBody.operatorDesk.clientJourneys[0]?.invitationStatus, 'redeemed');
         assert.equal(afterBody.operatorDesk.clientJourneys[0]?.signedClientSession, true);
+        assert.equal(afterBody.operatorDesk.clientJourneys[0]?.canReissueInviteFromDesk, true);
+
+        const rotate = await fetch(`${base}/api/pm/clients/${SYN_A}/invitation/reissue`, {
+          method: 'POST',
+          headers: auth('entitled-staff'),
+          body: JSON.stringify({}),
+        });
+        assert.equal(rotate.status, 201);
+        const rotateBody = (await rotate.json()) as { inviteToken: string; invitation: { status: string } };
+        assert.equal(rotateBody.invitation.status, 'staged');
+        assert.ok(rotateBody.inviteToken.length >= 32);
+
+        const staleSession = await fetch(`${base}/client.json`, { headers: session });
+        assert.equal(staleSession.status, 401);
+
+        const rotated = await fetch(`${base}/api/client/invitations/redeem`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ token: rotateBody.inviteToken }),
+        });
+        assert.equal(rotated.status, 200);
+        const rotatedBody = (await rotated.json()) as {
+          clientSessionToken: string;
+          signedClientSession: boolean;
+          binding: { clientCode: string };
+        };
+        assert.equal(rotatedBody.signedClientSession, true);
+        assert.equal(rotatedBody.binding.clientCode, SYN_A);
+        assert.notEqual(rotatedBody.clientSessionToken, redeemedBody.clientSessionToken);
+
+        const rotatedDesk = await fetch(`${base}/client.json`, {
+          headers: { authorization: `Bearer ${rotatedBody.clientSessionToken}` },
+        });
+        assert.equal(rotatedDesk.status, 200);
+        const rotatedDeskBody = (await rotatedDesk.json()) as { clientDesk: { clientCode: string } };
+        assert.equal(rotatedDeskBody.clientDesk.clientCode, SYN_A);
+
+        const staffStillClosed = await fetch(`${base}/client`, { headers: auth('entitled-staff') });
+        assert.equal(staffStillClosed.status, 403);
       });
   });
 });

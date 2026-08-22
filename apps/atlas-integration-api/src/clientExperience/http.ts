@@ -345,7 +345,7 @@ export async function handleClientExperience(opts: {
           inviteToken: result.inviteToken,
           outboundSent: false,
           redeemHref: '/api/client/invitations/redeem',
-          note: 'Replacement token is record-only. LIVE_GTM_OUTBOUND stays OFF. Token is shown once and is not emailed. SYNQA may redeem unsigned at redeemHref. Real clients still require a Client Executive principal.',
+          note: 'Replacement token is record-only. LIVE_GTM_OUTBOUND stays OFF. Token is shown once and is not emailed. SYNQA may rotate after redeem; prior SYNQA sessions are revoked. Real clients still require a Client Executive principal and stay 409 after redeem.',
         },
         opts.origin,
       );

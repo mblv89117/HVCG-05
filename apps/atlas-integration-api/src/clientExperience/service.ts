@@ -273,7 +273,8 @@ export function reissueClientInvitation(opts: {
   if (!workspace) fail(404, 'not_found', 'Client workspace is not staged.');
 
   const latest = latestInvitation(snapshot, clientCode);
-  if (latest?.status === 'redeemed') {
+  const synqaRotate = isExperienceSyntheticClient(clientCode);
+  if (latest?.status === 'redeemed' && !synqaRotate) {
     fail(409, 'invitation_redeemed', 'Invitation is already redeemed. Do not mint a replacement token.');
   }
 
@@ -284,7 +285,8 @@ export function reissueClientInvitation(opts: {
 
   const now = new Date();
   for (const row of snapshot.invitations) {
-    if (row.clientCode === clientCode && row.status === 'staged') {
+    if (row.clientCode !== clientCode) continue;
+    if (row.status === 'staged' || (synqaRotate && row.status === 'redeemed')) {
       row.status = 'revoked';
     }
   }
@@ -951,7 +953,9 @@ function journeyNextAction(input: {
   signedClientSession: boolean;
 }): string {
   if (input.signedClientSession) {
-    return 'Signed SYNQA client session is live. /client is isolated to this ClientCode.';
+    return input.canReissueInviteFromDesk
+      ? 'Signed SYNQA client session is live. /client is isolated to this ClientCode. Entitled operator may POST reissueHref to rotate the one-time token. The prior session is revoked.'
+      : 'Signed SYNQA client session is live. /client is isolated to this ClientCode.';
   }
   if (!input.workspaceStaged) {
     return input.canStageFromDesk
@@ -1001,7 +1005,7 @@ export function listOperatorClientJourneys(opts: {
       opts.principal &&
         canReissueClientInvitation(opts.principal, clientCode) &&
         workspaceStaged &&
-        invitationStatus !== 'redeemed',
+        (invitationStatus !== 'redeemed' || isExperienceSyntheticClient(clientCode)),
     );
     return {
       clientCode,
