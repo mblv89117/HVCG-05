@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `33ee5bc0bb59dade50360b73cc7d4552baa6d413` |
 | baseline | D32 EXECUTE — HOLD LIFTED; Step 0 inherit on this pod |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **32** |
 | BASED ON WORKER SHA | `36499af43f92d4e3a4069cff8015f53ce07d1437` |
 | BASED ON PRIOR RUN | D31 FINISHED ABORT — `run-c2b4071e-da35-4ee5-a8dd-3152997cb20f` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `33ee5bc0bb59dade50360b73cc7d4552baa6d413` |
 | COMPLETED ACTIONS | D32 acknowledge; THIS-pod inherit recorded; INHERIT=FAIL abort; CONSUMED=32 published |
 | REMAINING ACTIONS | Inject AZURE_* → inherit PASS → SHA gate → five finding reproducers |
 | LIVE_P0 | **5** |
