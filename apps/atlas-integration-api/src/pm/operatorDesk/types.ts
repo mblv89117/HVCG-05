@@ -74,6 +74,8 @@ export interface OperatorClientJourney {
   documentCount: number;
   gccWorkspaceKey: string;
   previewHref: string;
+  stageHref: string;
+  canStageFromDesk: boolean;
   nextAction: string;
 }
 

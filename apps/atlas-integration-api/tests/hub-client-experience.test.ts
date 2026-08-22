@@ -56,6 +56,14 @@ async function withHub(fn: (ctx: { base: string }) => Promise<void>) {
           scp: 'access_as_user',
         };
       }
+      if (token === 'entitled-staff') {
+        return {
+          oid: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+          preferred_username: 'entitled-staff@hvcg.example',
+          roles: ['HVCG Team Member'],
+          scp: 'access_as_user',
+        };
+      }
       if (token === 'client-a') {
         return {
           oid: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -77,7 +85,8 @@ async function withHub(fn: (ctx: { base: string }) => Promise<void>) {
       err.code = 'invalid_token';
       throw err;
     },
-    resolveAllowedClientIds: async () => [],
+    resolveAllowedClientIds: async (oid?: string) =>
+      oid === 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee' ? [SYN_A] : [],
   };
   const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
   const pm = createAuthorizedPmRepository(cfg);
@@ -187,6 +196,40 @@ describe('synthetic client journey isolation', () => {
         }),
       });
       assert.equal(staffStage.status, 403);
+
+      const foreignStage = await fetch(`${base}/api/pm/clients/${SYN_B}/experience`, {
+        method: 'POST',
+        headers: auth('entitled-staff'),
+        body: JSON.stringify({
+          invitationEmail: 'owner-b@synqb.example',
+          activationGate: 'authorized',
+        }),
+      });
+      assert.equal(foreignStage.status, 403);
+
+      const entitledStage = await fetch(`${base}/api/pm/clients/${SYN_A}/experience`, {
+        method: 'POST',
+        headers: auth('entitled-staff'),
+        body: JSON.stringify({
+          displayName: 'Synthetic QA Client A',
+          invitationEmail: 'entitled-owner-a@synqa.example',
+          activationGate: 'authorized',
+        }),
+      });
+      assert.equal(entitledStage.status, 201);
+      const entitledStaged = (await entitledStage.json()) as {
+        workspace: { clientCode: string };
+        invitation: { outboundSent: boolean };
+        outboundSent: boolean;
+      };
+      assert.equal(entitledStaged.workspace.clientCode, SYN_A);
+      assert.equal(entitledStaged.invitation.outboundSent, false);
+      assert.equal(entitledStaged.outboundSent, false);
+
+      const entitledStatus = await fetch(`${base}/api/pm/clients/${SYN_A}/experience`, {
+        headers: auth('entitled-staff'),
+      });
+      assert.equal(entitledStatus.status, 200);
 
       const stagedA = await fetch(`${base}/api/pm/clients/${SYN_A}/experience`, {
         method: 'POST',

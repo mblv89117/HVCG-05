@@ -223,6 +223,9 @@ describe('operator desk HTTP fail-closed', () => {
             invitationStatus: string;
             signedClientSession: boolean;
             gccWorkspaceKey: string;
+            stageHref: string;
+            canStageFromDesk: boolean;
+            nextAction: string;
           }>;
           commercialContext: { gcc: { available: boolean; emptyReason?: string } };
           operatingPicture: {
@@ -245,6 +248,49 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.clientJourneys[0]?.invitationStatus, 'none');
       assert.equal(body.operatorDesk.clientJourneys[0]?.signedClientSession, false);
       assert.equal(body.operatorDesk.clientJourneys[0]?.gccWorkspaceKey, 'gcc-SYN01');
+      assert.equal(body.operatorDesk.clientJourneys[0]?.canStageFromDesk, true);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.stageHref, `/api/pm/clients/${SYN01}/experience`);
+      assert.match(body.operatorDesk.clientJourneys[0]?.nextAction || '', /stageHref/);
+
+      const staged = await fetch(`${base}/api/pm/clients/${SYN01}/experience`, {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid-member', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          invitationEmail: 'syn01-owner@synqa.example',
+          activationGate: 'authorized',
+        }),
+      });
+      assert.equal(staged.status, 201);
+      const stagedBody = (await staged.json()) as { outboundSent: boolean; invitation: { outboundSent: boolean } };
+      assert.equal(stagedBody.outboundSent, false);
+      assert.equal(stagedBody.invitation.outboundSent, false);
+
+      const after = await fetch(`${base}/operator.json`, {
+        headers: { authorization: 'Bearer valid-member' },
+      });
+      assert.equal(after.status, 200);
+      const afterBody = (await after.json()) as {
+        operatorDesk: { clientJourneys: Array<{ workspaceStaged: boolean; invitationStatus: string; canStageFromDesk: boolean; signedClientSession: boolean }> };
+      };
+      assert.equal(afterBody.operatorDesk.clientJourneys[0]?.workspaceStaged, true);
+      assert.equal(afterBody.operatorDesk.clientJourneys[0]?.invitationStatus, 'staged');
+      assert.equal(afterBody.operatorDesk.clientJourneys[0]?.canStageFromDesk, false);
+      assert.equal(afterBody.operatorDesk.clientJourneys[0]?.signedClientSession, false);
+
+      const rolelessStage = await fetch(`${base}/api/pm/clients/${SYN01}/experience`, {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid-roleless', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          invitationEmail: 'syn01-owner@synqa.example',
+          activationGate: 'authorized',
+        }),
+      });
+      assert.equal(rolelessStage.status, 200);
+
+      const clientStillClosed = await fetch(`${base}/client`, {
+        headers: { authorization: 'Bearer valid-member' },
+      });
+      assert.equal(clientStillClosed.status, 403);
       assert.equal(
         body.operatorDesk.clientJourneys.some((row) => row.clientCode === ACME01),
         false,
