@@ -53,5 +53,6 @@ test('actionable HVS knowledge stays honest and useful', () => {
   const serialized = JSON.stringify(rows);
   assert.equal(serialized.includes('$'), false);
   assert.equal(AMOUNT.test(serialized), false);
-  assert.equal(/ltv/i.test(serialized), false);
+  assert.equal(/\bltv\s*[:=]\s*\d/i.test(serialized), false);
+  assert.match(serialized, /Do not invent Hub MI rows, amounts, LTV, or completion/);
 });
