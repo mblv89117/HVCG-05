@@ -42,10 +42,15 @@ function countPhrase(n: number, singular: string, plural: string): string {
 function stemKey(value: string): string {
   return value
     .toLowerCase()
-    .replace(/\.(docx|pdf|xlsx|doc)$/i, '')
+    .replace(/\.(docx|pdf|xlsx|doc)\b/gi, '')
     .replace(/\s*\(\d+\)\s*/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function filenameStem(title: string): string {
+  const file = title.match(/[\w .,'()&-]+\.(docx|pdf|xlsx|doc)\b/i);
+  return file?.[0] ? stemKey(file[0]) : stemKey(title);
 }
 
 function uniqueBy<T>(rows: T[], key: (row: T) => string): T[] {
@@ -78,7 +83,7 @@ function renderResponsibilityGroups(
         row.hvcgResponsibilities.filter((item) => !isBoilerplateResponsibility(item.title)),
         (item) => stemKey(item.title),
       ),
-      clientItems: uniqueBy(row.clientResponsibilities, (item) => stemKey(item.title)),
+      clientItems: uniqueBy(row.clientResponsibilities, (item) => filenameStem(item.title)),
     }))
     .filter((row) => row.hvcg.length || row.clientItems.length);
   if (!groups.length) {
@@ -294,6 +299,14 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     ${operatingList(op.queues.needsAction, 'No customer Needs Action items in entitled scope.')}
   </section>
   <section>
+    <h2>Waiting</h2>
+    ${operatingList(op.queues.waiting, 'No customer Waiting items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Decision Required</h2>
+    ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
+  </section>
+  <section>
     <h2>Recovered HVS clients</h2>
     <p class="muted">Reference-only HVS-admin folders. First-level documents are indexed. Not Hub MI operationalizations. Atlas does not invent balances, obligations, or entitled HVCG_Clients rows.</p>
     ${
@@ -310,18 +323,12 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>Recovered client operating records</h2>
-    <p class="muted">Per-client stitch of recovered folders, filenames, projects, and proposed actions. Recovered knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
+    <p class="muted">Per-client exception counts only. Recovered knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
     ${
       op.hvsRecoveredClientRecords.length
         ? `<ul>${op.hvsRecoveredClientRecords
             .map((row) => {
               const code = row.clientCode || 'no entitled Hub client code';
-              const projects = row.projectTitles.length
-                ? row.projectTitles.join('; ')
-                : 'no recovered project filenames';
-              const capital = row.capitalPacketNames.length
-                ? countPhrase(row.capitalPacketNames.length, 'capital-packet filename', 'capital-packet filenames')
-                : 'no capital-packet filenames';
               const waiting = row.waitingItems.length
                 ? countPhrase(row.waitingItems.length, 'waiting', 'waiting')
                 : 'no specific waiting item';
@@ -332,7 +339,7 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
                     'missing-document notes',
                   )
                 : 'no invented missing documents';
-              return `<li>${esc(row.client)} · ${esc(code)} · ${esc(countPhrase(row.fileCount, 'file', 'files'))}<br/><span class="muted">${esc(row.nextAction)}</span><br/><span class="muted">${esc(projects)} · ${esc(capital)} · ${esc(waiting)} · ${esc(missing)}</span></li>`;
+              return `<li>${esc(row.client)} · ${esc(code)} · ${esc(countPhrase(row.fileCount, 'file', 'files'))} · ${esc(waiting)} · ${esc(missing)}<br/><span class="muted">${esc(row.nextAction)}</span></li>`;
             })
             .join('')}</ul>`
         : '<p class="empty">No recovered client operating records in this picture.</p>'
@@ -340,12 +347,12 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>HVCG vs client responsibilities</h2>
-    <p class="muted">Filename-derived only. CONFIRMED means the filename exists. LIKELY and PROPOSED stay labeled. Atlas does not invent obligations, amounts, or completion.</p>
+    <p class="muted">Grouped by client. Only items that change action. CONFIRMED means the filename exists. LIKELY and PROPOSED stay labeled. Atlas does not invent obligations, amounts, or completion.</p>
     ${renderResponsibilityGroups(op.hvsActionableClientKnowledge)}
   </section>
   <section>
     <h2>Missing documents</h2>
-    <p class="muted">Honest gaps only: empty structured folders or checklist filenames whose contents were not extracted. Atlas does not invent a document list.</p>
+    <p class="muted">Grouped by client. Honest gaps only: empty structured folders or checklist filenames whose contents were not extracted. Atlas does not invent a document list.</p>
     ${renderMissingGroups(op.hvsActionableClientKnowledge)}
   </section>
   <section>
