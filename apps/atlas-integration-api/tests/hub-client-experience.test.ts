@@ -14,7 +14,7 @@ import { IntegrationRepository } from '../src/store/repository.ts';
 import { MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
 import { renderUnsignedClientDesk } from '../src/clientExperience/desk.ts';
 import { isClientEntitledPmPath, isClientOnlyPrincipal } from '../src/clientExperience/roles.ts';
-import { hashInviteToken, issueInviteToken } from '../src/clientExperience/store.ts';
+import { hashInviteToken, issueInviteToken, SYNQA_CLIENT_SESSION_PREFIX } from '../src/clientExperience/store.ts';
 
 const SYN_A = 'SYNQA01';
 const SYN_B = 'SYNQB02';
@@ -533,5 +533,81 @@ describe('synthetic client journey isolation', () => {
       const bSeesA = await fetch(`${base}/api/client/workspace/${SYN_A}`, { headers: auth('client-b') });
       assert.equal(bSeesA.status, 403);
     });
+  });
+
+  it('redeems SYNQA unsigned and isolates the signed client session', async () => {
+    await withHub(async ({ base }) => {
+        const staged = await fetch(`${base}/api/pm/clients/${SYN_A}/experience`, {
+          method: 'POST',
+          headers: auth('entitled-staff'),
+          body: JSON.stringify({
+            displayName: 'Synthetic QA Client A',
+            invitationEmail: 'entitled-owner-a@synqa.example',
+            activationGate: 'authorized',
+          }),
+        });
+        assert.equal(staged.status, 201);
+        const stagedBody = (await staged.json()) as { inviteToken: string };
+
+        const unsignedEmpty = await fetch(`${base}/api/client/invitations/redeem`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        assert.equal(unsignedEmpty.status, 400);
+
+        const unsignedBad = await fetch(`${base}/api/client/invitations/redeem`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ token: '00'.repeat(32) }),
+        });
+        assert.equal(unsignedBad.status, 403);
+
+        const redeemed = await fetch(`${base}/api/client/invitations/redeem`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ token: stagedBody.inviteToken }),
+        });
+        assert.equal(redeemed.status, 200);
+        const redeemedBody = (await redeemed.json()) as {
+          clientSessionToken: string;
+          signedClientSession: boolean;
+          classification: string;
+          binding: { clientCode: string; email: string };
+        };
+        assert.equal(redeemedBody.signedClientSession, true);
+        assert.equal(redeemedBody.classification, 'SYNTHETIC_QA');
+        assert.equal(redeemedBody.binding.clientCode, SYN_A);
+        assert.equal(redeemedBody.binding.email, 'entitled-owner-a@synqa.example');
+        assert.ok(redeemedBody.clientSessionToken.startsWith(SYNQA_CLIENT_SESSION_PREFIX));
+
+        const session = { authorization: `Bearer ${redeemedBody.clientSessionToken}` };
+        const desk = await fetch(`${base}/client.json`, { headers: session });
+        assert.equal(desk.status, 200);
+        const deskBody = (await desk.json()) as { clientDesk: { clientCode: string } };
+        assert.equal(deskBody.clientDesk.clientCode, SYN_A);
+
+        const workspace = await fetch(`${base}/api/client/workspace`, { headers: session });
+        assert.equal(workspace.status, 200);
+        const workspaceBody = (await workspace.json()) as { workspace: { clientCode: string } };
+        assert.equal(workspaceBody.workspace.clientCode, SYN_A);
+
+        const foreign = await fetch(`${base}/api/client/workspace/${SYN_B}`, { headers: session });
+        assert.equal(foreign.status, 403);
+
+        const operator = await fetch(`${base}/operator.json`, { headers: session });
+        assert.equal(operator.status, 403);
+
+        const staffDesk = await fetch(`${base}/client`, { headers: auth('entitled-staff') });
+        assert.equal(staffDesk.status, 403);
+
+        const after = await fetch(`${base}/operator.json`, { headers: auth('entitled-staff') });
+        assert.equal(after.status, 200);
+        const afterBody = (await after.json()) as {
+          operatorDesk: { clientJourneys: Array<{ signedClientSession: boolean; invitationStatus: string }> };
+        };
+        assert.equal(afterBody.operatorDesk.clientJourneys[0]?.invitationStatus, 'redeemed');
+        assert.equal(afterBody.operatorDesk.clientJourneys[0]?.signedClientSession, true);
+      });
   });
 });

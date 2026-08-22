@@ -15,6 +15,7 @@ import { createRemoteJWKSet, jwtVerify, decodeProtectedHeader, type JWTPayload }
 import type { AppConfig } from '../config.ts';
 import { isCanonicalClientCode } from '../entitlements/clientCode.ts';
 import { resolveAllowedClientIdsFromConfig } from '../entitlements/resolver.ts';
+import { isSynqaClientSessionToken, resolveSynqaClientSession } from '../clientExperience/clientSession.ts';
 
 export interface AtlasPrincipal {
   userId: string;
@@ -327,6 +328,12 @@ export async function requirePrincipal(
   const token = bearerToken(headers);
   if (!token) {
     unauthorized('Microsoft sign-in required (Bearer token missing)', 'missing_bearer');
+  }
+
+  if (isSynqaClientSessionToken(token)) {
+    const synqa = resolveSynqaClientSession(cfg.dataDir, token);
+    if (!synqa) unauthorized('Invalid or expired SYNQA client session', 'invalid_token');
+    return synqa;
   }
 
   const payload = cfg.verifyAccessToken

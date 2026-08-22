@@ -316,6 +316,39 @@ describe('operator desk HTTP fail-closed', () => {
       });
       assert.equal(rolelessStage.status, 200);
 
+      const unsignedRedeem = await fetch(`${base}/api/client/invitations/redeem`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token: reissuedBody.inviteToken }),
+      });
+      assert.equal(unsignedRedeem.status, 200);
+      const unsignedBody = (await unsignedRedeem.json()) as {
+        clientSessionToken: string;
+        signedClientSession: boolean;
+        classification: string;
+      };
+      assert.equal(unsignedBody.signedClientSession, true);
+      assert.equal(unsignedBody.classification, 'SYNTHETIC_QA');
+      assert.ok(unsignedBody.clientSessionToken.length > 32);
+
+      const signedDesk = await fetch(`${base}/client.json`, {
+        headers: { authorization: `Bearer ${unsignedBody.clientSessionToken}` },
+      });
+      assert.equal(signedDesk.status, 200);
+      const signedDeskBody = (await signedDesk.json()) as { clientDesk: { clientCode: string } };
+      assert.equal(signedDeskBody.clientDesk.clientCode, SYN01);
+
+      const afterRedeem = await fetch(`${base}/operator.json`, {
+        headers: { authorization: 'Bearer valid-member' },
+      });
+      assert.equal(afterRedeem.status, 200);
+      const afterRedeemBody = (await afterRedeem.json()) as {
+        operatorDesk: { clientJourneys: Array<{ signedClientSession: boolean; invitationStatus: string; nextAction: string }> };
+      };
+      assert.equal(afterRedeemBody.operatorDesk.clientJourneys[0]?.invitationStatus, 'redeemed');
+      assert.equal(afterRedeemBody.operatorDesk.clientJourneys[0]?.signedClientSession, true);
+      assert.match(afterRedeemBody.operatorDesk.clientJourneys[0]?.nextAction || '', /Signed SYNQA client session/);
+
       const clientStillClosed = await fetch(`${base}/client`, {
         headers: { authorization: 'Bearer valid-member' },
       });

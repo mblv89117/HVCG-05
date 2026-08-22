@@ -19,6 +19,7 @@ import {
   isExperienceSyntheticClient,
   operatorExperienceStatus,
   redeemInvitation,
+  redeemSynqaInvitation,
   reissueClientInvitation,
   stageClientExperience,
   uploadClientDocument,
@@ -113,18 +114,52 @@ export async function handleClientExperience(opts: {
   const isClientApi = isClientExperienceApi(opts.path);
   if (!isClientApi && !stagedCode && !reissueCode && !deskPreview) return false;
 
-  let principal;
+  let principal: Awaited<ReturnType<typeof requirePrincipal>> | null = null;
   try {
     principal = await requirePrincipal(opts.req, opts.cfg);
   } catch (err) {
     const status = (err as { status?: number }).status || 401;
     const code = (err as { code?: string }).code || 'unauthorized';
-    send(
-      opts.res,
-      status === 401 ? 401 : status,
-      { error: code, code, message: (err as Error).message || 'Microsoft sign-in required' },
-      opts.origin,
-    );
+    const unsignedSynqaRedeem =
+      opts.method === 'POST' && opts.path === '/api/client/invitations/redeem' && status === 401;
+    if (!unsignedSynqaRedeem) {
+      send(
+        opts.res,
+        status === 401 ? 401 : status,
+        { error: code, code, message: (err as Error).message || 'Microsoft sign-in required' },
+        opts.origin,
+      );
+      return true;
+    }
+  }
+
+  if (!principal) {
+    try {
+      const body = await readJson(opts.req);
+      const redeemed = redeemSynqaInvitation({
+        dataDir: opts.cfg.dataDir,
+        token: typeof body.token === 'string' ? body.token : '',
+      });
+      send(
+        opts.res,
+        200,
+        {
+          binding: redeemed.binding,
+          workspace: redeemed.workspace,
+          clientSessionToken: redeemed.clientSessionToken,
+          signedClientSession: true,
+          classification: 'SYNTHETIC_QA',
+          note: 'SYNQA client session is scoped to this ClientCode. It is not an operator desk session and cannot open another client.',
+        },
+        opts.origin,
+      );
+    } catch (err) {
+      if (err instanceof ClientExperienceError) {
+        send(opts.res, err.status, { error: err.code, code: err.code, message: err.message }, opts.origin);
+        return true;
+      }
+      throw err;
+    }
     return true;
   }
 
@@ -310,7 +345,7 @@ export async function handleClientExperience(opts: {
           inviteToken: result.inviteToken,
           outboundSent: false,
           redeemHref: '/api/client/invitations/redeem',
-          note: 'Replacement token is record-only. LIVE_GTM_OUTBOUND stays OFF. Token is shown once and is not emailed. Only a Client Executive principal may redeem.',
+          note: 'Replacement token is record-only. LIVE_GTM_OUTBOUND stays OFF. Token is shown once and is not emailed. SYNQA may redeem unsigned at redeemHref. Real clients still require a Client Executive principal.',
         },
         opts.origin,
       );

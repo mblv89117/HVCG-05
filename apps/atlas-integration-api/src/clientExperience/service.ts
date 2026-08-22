@@ -40,6 +40,11 @@ import {
 } from './store.ts';
 import { isClientOnlyPrincipal, isOperatorPrincipal } from './roles.ts';
 import {
+  hasActiveSynqaClientSession,
+  persistSynqaClientSession,
+  revokeClientSessions,
+} from './clientSession.ts';
+import {
   classifyHubClientRow,
   emptyOperatingQueues,
   isSyntheticQaClient,
@@ -283,6 +288,7 @@ export function reissueClientInvitation(opts: {
       row.status = 'revoked';
     }
   }
+  revokeClientSessions(snapshot, clientCode);
   const issued = issueInviteToken();
   const invitation: ClientInvitation = {
     id: newId('inv'),
@@ -353,6 +359,73 @@ export function redeemInvitation(opts: {
   snapshot.bindings.push(binding);
   persist(opts.dataDir, snapshot);
   return { binding, workspace };
+}
+
+/**
+ * SYNQA-only redeem: the one-time invitation token is the credential.
+ * Real CLIENT invitations still require an Entra Client Executive principal.
+ */
+export function redeemSynqaInvitation(opts: {
+  dataDir: string;
+  token: string;
+}): {
+  binding: ClientBinding;
+  workspace: ClientWorkspaceRecord;
+  clientSessionToken: string;
+  signedClientSession: true;
+  classification: 'SYNTHETIC_QA';
+} {
+  const token = typeof opts.token === 'string' ? opts.token.trim() : '';
+  if (!token) fail(400, 'invalid_token', 'Invitation token is required.');
+
+  const snapshot = loadExperienceStore(opts.dataDir);
+  const tokenHash = hashInviteToken(token);
+  const invitation = snapshot.invitations.find((row) => row.tokenHash === tokenHash);
+  if (!invitation) fail(403, 'forbidden', 'Invitation is not valid.');
+  if (!isExperienceSyntheticClient(invitation.clientCode)) {
+    fail(403, 'forbidden', 'Real client invitations require a Client Executive principal.');
+  }
+  if (invitation.status === 'revoked' || invitation.status === 'expired') {
+    fail(403, 'forbidden', 'Invitation is no longer valid.');
+  }
+  if (new Date(invitation.expiresAt).getTime() < Date.now()) {
+    invitation.status = 'expired';
+    persist(opts.dataDir, snapshot);
+    fail(403, 'forbidden', 'Invitation is no longer valid.');
+  }
+
+  const workspace = snapshot.workspaces[invitation.clientCode];
+  if (!workspace) fail(404, 'not_found', 'Client workspace is not staged.');
+
+  const userId = `synqa:${invitation.clientCode}:${invitation.email}`;
+  const existing = snapshot.bindings.find(
+    (row) => row.clientCode === invitation.clientCode && (row.userId === userId || row.email === invitation.email),
+  );
+  const now = new Date().toISOString();
+  invitation.status = 'redeemed';
+  invitation.redeemedAt = invitation.redeemedAt || now;
+  invitation.redeemedByUserId = invitation.redeemedByUserId || userId;
+  const binding: ClientBinding = existing || {
+    userId,
+    email: invitation.email,
+    clientCode: invitation.clientCode,
+    boundAt: invitation.redeemedAt,
+  };
+  if (!existing) snapshot.bindings.push(binding);
+  const issued = persistSynqaClientSession({
+    snapshot,
+    clientCode: invitation.clientCode,
+    email: invitation.email,
+    userId,
+  });
+  persist(opts.dataDir, snapshot);
+  return {
+    binding,
+    workspace,
+    clientSessionToken: issued.token,
+    signedClientSession: true,
+    classification: 'SYNTHETIC_QA',
+  };
 }
 
 function overlayAttention(dataDir: string, clientCode: string): DocumentRequestRecord[] {
@@ -845,7 +918,7 @@ export type OperatorClientJourney = {
   invitationStatus: 'none' | 'staged' | 'redeemed' | 'expired' | 'revoked';
   invitationOutboundSent: false;
   invitationEmail: string | null;
-  signedClientSession: false;
+  signedClientSession: boolean;
   bindingCount: number;
   openRequestCount: number;
   documentCount: number;
@@ -875,7 +948,11 @@ function journeyNextAction(input: {
   bindingCount: number;
   canStageFromDesk: boolean;
   canReissueInviteFromDesk: boolean;
+  signedClientSession: boolean;
 }): string {
+  if (input.signedClientSession) {
+    return 'Signed SYNQA client session is live. /client is isolated to this ClientCode.';
+  }
   if (!input.workspaceStaged) {
     return input.canStageFromDesk
       ? 'Workspace not staged. Entitled operator may POST a record-only SYNQA invitation to stageHref.'
@@ -935,7 +1012,7 @@ export function listOperatorClientJourneys(opts: {
       invitationOutboundSent: false,
       invitationEmail:
         classified.classification === 'SYNTHETIC_QA' && invite?.email ? invite.email : null,
-      signedClientSession: false,
+      signedClientSession: hasActiveSynqaClientSession(snapshot, clientCode),
       bindingCount,
       openRequestCount: snapshot.requests.filter(
         (row) => row.clientCode === clientCode && row.status === 'open',
@@ -954,6 +1031,7 @@ export function listOperatorClientJourneys(opts: {
         bindingCount,
         canStageFromDesk,
         canReissueInviteFromDesk,
+        signedClientSession: hasActiveSynqaClientSession(snapshot, clientCode),
       }),
     };
   });

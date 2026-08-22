@@ -68,7 +68,7 @@ export interface OperatorClientJourney {
   activationGate: string | null;
   invitationStatus: 'none' | 'staged' | 'redeemed' | 'expired' | 'revoked';
   invitationOutboundSent: false;
-  signedClientSession: false;
+  signedClientSession: boolean;
   bindingCount: number;
   openRequestCount: number;
   documentCount: number;

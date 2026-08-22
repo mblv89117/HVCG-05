@@ -12,6 +12,8 @@ import { clientPortalHrefs, type ClientActivationRecord } from '../pm/sharepoint
 
 export const CLIENT_EXPERIENCE_VERSION = 1 as const;
 export const DEFAULT_INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+export const DEFAULT_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+export const SYNQA_CLIENT_SESSION_PREFIX = 'hvcg-cx1.';
 export const MAX_DOCUMENT_BYTES = 1_000_000;
 
 export type ActivationGate = 'authorized' | 'active' | 'verified';
@@ -37,6 +39,20 @@ export type ClientBinding = {
   email: string;
   clientCode: string;
   boundAt: string;
+};
+
+export type ClientSession = {
+  id: string;
+  clientCode: string;
+  email: string;
+  userId: string;
+  tokenHash: string;
+  status: 'active' | 'revoked' | 'expired';
+  classification: 'SYNTHETIC_QA';
+  createdAt: string;
+  expiresAt: string;
+  lastSeenAt?: string;
+  revokedAt?: string;
 };
 
 export type ClientDocument = {
@@ -106,6 +122,7 @@ export type ClientExperienceSnapshot = {
   documents: ClientDocument[];
   requests: ClientAttentionRequest[];
   projects: ClientProjectPriority[];
+  clientSessions: ClientSession[];
 };
 
 export function emptySnapshot(): ClientExperienceSnapshot {
@@ -117,6 +134,7 @@ export function emptySnapshot(): ClientExperienceSnapshot {
     documents: [],
     requests: [],
     projects: [],
+    clientSessions: [],
   };
 }
 
@@ -130,7 +148,17 @@ export function loadExperienceStore(dataDir: string): ClientExperienceSnapshot {
     const raw = readFileSync(path, 'utf8');
     const parsed = JSON.parse(raw) as ClientExperienceSnapshot;
     if (parsed?.version !== CLIENT_EXPERIENCE_VERSION || !parsed.workspaces) return emptySnapshot();
-    return parsed;
+    return {
+      ...emptySnapshot(),
+      ...parsed,
+      workspaces: parsed.workspaces || {},
+      invitations: parsed.invitations || [],
+      bindings: parsed.bindings || [],
+      documents: parsed.documents || [],
+      requests: parsed.requests || [],
+      projects: parsed.projects || [],
+      clientSessions: parsed.clientSessions || [],
+    };
   } catch {
     return emptySnapshot();
   }
