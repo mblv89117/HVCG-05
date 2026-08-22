@@ -17,10 +17,10 @@ import { listOperatorClientJourneys } from '../../clientExperience/service.ts';
 import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
 import {
   AGENT_ACTIVITY_CONTRACT,
-  ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
   GET_CLIENT_CONTEXT_TOOL,
+  clientContextMissionKey,
   isOperatorActivityLedgerPath,
   isOperatorClientContextPath,
   isOperatorDeskPath,
@@ -486,6 +486,7 @@ export async function handleOperatorDesk(opts: {
       : invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
         ? [...invoked.askAtlas.activity.tools]
         : [...invoked.askAtlas.activity.tools, GET_CLIENT_CONTEXT_TOOL];
+    const recoveredMissionKey = clientContextMissionKey(invoked.clientContext);
     const askAtlas = ownerGated
       ? invoked.askAtlas
       : {
@@ -494,7 +495,7 @@ export async function handleOperatorDesk(opts: {
           activity: {
             ...invoked.askAtlas.activity,
             agent: ASK_ATLAS_RUNTIME_AGENT,
-            missionKey: ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+            missionKey: recoveredMissionKey,
             trigger: 'signed_operator_question' as const,
             tools,
           },
@@ -520,7 +521,7 @@ export async function handleOperatorDesk(opts: {
           agent: ASK_ATLAS_RUNTIME_AGENT,
           toolsInvoked: ownerGated ? [] : [GET_CLIENT_CONTEXT_TOOL],
           policyClass: 'READ_AUTO',
-          missionKey: ownerGated ? askAtlas.activity.missionKey : ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+          missionKey: ownerGated ? askAtlas.activity.missionKey : recoveredMissionKey,
         },
       },
       opts.origin,

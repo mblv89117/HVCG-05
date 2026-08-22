@@ -159,6 +159,11 @@ function clientsAlreadyOnPicture(picture: OperatorOperatingPicture): PictureClie
   for (const row of picture.hvsRecoveredProjects) push(row.client, row.clientCode);
   for (const row of picture.hvsRecoveredCapitalPackets) push(row.client, row.clientCode);
   for (const row of picture.hvsRecoveredDocuments) push(row.client, row.clientCode);
+  for (const row of picture.recoveryLedger) {
+    const code = (row.clientCode || '').trim();
+    if (!isCanonicalClientCode(code)) continue;
+    push(row.client, code);
+  }
   for (const queue of Object.values(picture.queues)) {
     for (const row of queue) push(undefined, row.clientCode);
   }
@@ -265,6 +270,10 @@ function resolveAuthorizedClient(
   return null;
 }
 
+function presentRows<T>(rows: T[] | undefined): T[] | undefined {
+  return rows && rows.length ? rows : undefined;
+}
+
 function composeClientContext(
   picture: OperatorOperatingPicture,
   binding: PictureClientBinding,
@@ -280,11 +289,23 @@ function composeClientContext(
   const knowledge = picture.hvsActionableClientKnowledge.find((row) =>
     code ? row.clientCode === code : row.client === binding.client,
   );
-  const clientName = record?.client || recoveredClient?.client || knowledge?.client || binding.client;
-  const clientCode = record?.clientCode || recoveredClient?.clientCode || knowledge?.clientCode || binding.clientCode;
+  const ledger = picture.recoveryLedger.find((row) =>
+    code
+      ? row.clientCode === code
+      : Boolean(row.client && binding.client && row.client === binding.client),
+  );
+  const clientName =
+    record?.client || recoveredClient?.client || knowledge?.client || ledger?.client || binding.client;
+  const clientCode =
+    record?.clientCode ||
+    recoveredClient?.clientCode ||
+    knowledge?.clientCode ||
+    ledger?.clientCode ||
+    binding.clientCode;
   const hubMiOperationalized = picture.realClientsOperationalized.includes(clientCode);
   const recoveredKnowledgeOperationalized = picture.recoveredClientsKnowledgeOperationalized.includes(clientCode);
   const realClientsOperationalized = picture.realClientsOperationalized.filter((row) => row === clientCode);
+  const ledgerEvidence = Boolean(ledger?.clientCode || ledger?.client);
 
   const basedOnParts: string[] = [];
   if (record?.nextAction) basedOnParts.push(record.nextAction);
@@ -303,12 +324,26 @@ function composeClientContext(
   if (recoveredClient?.nextAction && !basedOnParts.includes(recoveredClient.nextAction)) {
     basedOnParts.push(recoveredClient.nextAction);
   }
+  if (
+    ledgerEvidence &&
+    !record &&
+    !recoveredClient &&
+    !knowledge &&
+    ledger?.dataType
+  ) {
+    basedOnParts.push(
+      `Authorized recovery ledger ${ledger.dataType} (${ledger.provenance}). Not an operational client row.`,
+    );
+  }
 
   const why =
     items[0]?.why ||
     record?.nextAction ||
     recoveredClient?.nextAction ||
-    'No entitled recovered or Hub operating evidence is available for this client.';
+    (ledgerEvidence
+      ? ledger?.blocker ||
+        'Recovered inventory lists this client on the entitled operator picture. No operational client row exists.'
+      : 'No entitled recovered or Hub operating evidence is available for this client.');
   const basedOn =
     basedOnParts[0] ||
     'Entitled operator picture contained no recovered or Hub-MI evidence for this client.';
@@ -327,6 +362,9 @@ function composeClientContext(
   } else if (record || recoveredClient) {
     evidenceClass = 'recovered_folder_filename';
     classification = neverPromoteClassification(record?.provenance || recoveredClient?.provenance);
+  } else if (ledgerEvidence) {
+    evidenceClass = 'recovered_folder_filename';
+    classification = 'LIKELY';
   }
 
   const honestEmpty =
@@ -335,7 +373,16 @@ function composeClientContext(
     !recoveredKnowledgeOperationalized &&
     !hubMiOperationalized &&
     !record &&
-    !recoveredClient;
+    !recoveredClient &&
+    !ledgerEvidence;
+
+  const waitingItems = presentRows(record?.waitingItems || knowledge?.waitingItems);
+  const missingDocuments = presentRows(record?.missingDocuments || knowledge?.missingDocuments);
+  const hvcgResponsibilities = presentRows(record?.hvcgResponsibilities || knowledge?.hvcgResponsibilities);
+  const clientResponsibilities = presentRows(record?.clientResponsibilities || knowledge?.clientResponsibilities);
+  const decisions = presentRows(record?.decisions || knowledge?.decisions);
+  const nextActions = presentRows(record?.nextActions);
+  const nextAction = record?.nextAction || recoveredClient?.nextAction;
 
   return {
     kind: 'atlas_client_context_v1',
@@ -354,6 +401,13 @@ function composeClientContext(
     evidenceClass,
     realClientsOperationalized,
     recoveredKnowledgeOperationalized,
+    ...(waitingItems ? { waitingItems } : {}),
+    ...(missingDocuments ? { missingDocuments } : {}),
+    ...(hvcgResponsibilities ? { hvcgResponsibilities } : {}),
+    ...(clientResponsibilities ? { clientResponsibilities } : {}),
+    ...(decisions ? { decisions } : {}),
+    ...(nextActions ? { nextActions } : {}),
+    ...(nextAction ? { nextAction } : {}),
   };
 }
 

@@ -37,6 +37,7 @@ export const ASK_ATLAS_EVENT_MISSION_KEY = 'ATLAS-AGENTIC-OPS-EVENT-001' as cons
 export const ASK_ATLAS_PII_MISSION_KEY = 'ATLAS-AGENTIC-OPS-PII-001' as const;
 export const ASK_ATLAS_LOOP_MISSION_KEY = 'ATLAS-AGENTIC-OPS-LOOP-001' as const;
 export const ASK_ATLAS_CLIENTCTX_MISSION_KEY = 'ATLAS-AGENTIC-OPS-CLIENTCTX-001' as const;
+export const ASK_ATLAS_RECOVERED_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RECOVERED-001' as const;
 export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as const;
 export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
@@ -84,6 +85,7 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_PII_MISSION_KEY
   | typeof ASK_ATLAS_LOOP_MISSION_KEY
   | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
+  | typeof ASK_ATLAS_RECOVERED_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY;
 export type AskAtlasTrigger =
@@ -126,6 +128,25 @@ export interface AtlasClientContext {
   evidenceClass: ClientContextEvidenceClass;
   realClientsOperationalized: string[];
   recoveredKnowledgeOperationalized: boolean;
+  waitingItems?: ActionableWaitingItem[];
+  missingDocuments?: ActionableMissingDocument[];
+  hvcgResponsibilities?: ActionableResponsibility[];
+  clientResponsibilities?: ActionableResponsibility[];
+  decisions?: ActionableDecision[];
+  nextActions?: string[];
+  nextAction?: string;
+}
+
+export function clientContextMissionKey(
+  ctx?: AtlasClientContext,
+): typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY | typeof ASK_ATLAS_RECOVERED_MISSION_KEY {
+  if (
+    ctx &&
+    (ctx.evidenceClass === 'recovered_folder_filename' || ctx.evidenceClass === 'recovered_knowledge')
+  ) {
+    return ASK_ATLAS_RECOVERED_MISSION_KEY;
+  }
+  return ASK_ATLAS_CLIENTCTX_MISSION_KEY;
 }
 
 export interface AtlasAuthorizedSearchHit {

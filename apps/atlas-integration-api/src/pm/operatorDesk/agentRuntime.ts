@@ -22,6 +22,7 @@ import {
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RANKING,
+  ASK_ATLAS_RECOVERED_MISSION_KEY,
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
   ASK_ATLAS_SEARCH_002_MISSION_KEY,
@@ -29,6 +30,7 @@ import {
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
   GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL,
+  clientContextMissionKey,
   type AskAtlasAnswer,
   type AskAtlasMissionKey,
   type AtlasAuthorizedSearch,
@@ -40,6 +42,7 @@ import {
 export const ATLAS_HUB_RUNTIME_AGENT = ASK_ATLAS_RUNTIME_AGENT;
 export const ATLAS_HUB_RUNTIME_MISSION_KEY = ASK_ATLAS_RUNTIME_MISSION_KEY;
 export const ATLAS_HUB_CLIENTCTX_MISSION_KEY = ASK_ATLAS_CLIENTCTX_MISSION_KEY;
+export const ATLAS_HUB_RECOVERED_MISSION_KEY = ASK_ATLAS_RECOVERED_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_MISSION_KEY = ASK_ATLAS_SEARCH_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_002_MISSION_KEY = ASK_ATLAS_SEARCH_002_MISSION_KEY;
 export const ATLAS_HUB_RUNTIME_POLICY_CLASS = 'READ_AUTO' as const;
@@ -51,6 +54,7 @@ export interface AtlasHubRuntime {
   missionKey:
     | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
     | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
+    | typeof ASK_ATLAS_RECOVERED_MISSION_KEY
     | typeof ASK_ATLAS_SEARCH_MISSION_KEY
     | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY;
 }
@@ -298,9 +302,10 @@ export function runAtlasHubRuntime(opts: {
     const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
       ? [...invoked.askAtlas.activity.tools]
       : [...invoked.askAtlas.activity.tools, GET_CLIENT_CONTEXT_TOOL];
+    const missionKey = clientContextMissionKey(invoked.clientContext);
     return {
-      askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, ASK_ATLAS_CLIENTCTX_MISSION_KEY),
-      runtime: runtimeEnvelope([GET_CLIENT_CONTEXT_TOOL], ASK_ATLAS_CLIENTCTX_MISSION_KEY),
+      askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, missionKey),
+      runtime: runtimeEnvelope([GET_CLIENT_CONTEXT_TOOL], missionKey),
       clientContext: invoked.clientContext,
     };
   }

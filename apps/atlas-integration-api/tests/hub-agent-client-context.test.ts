@@ -25,6 +25,7 @@ import { getClientContext, invokeReadAutoTool, READ_AUTO_TOOL_NAMES } from '../s
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+  ASK_ATLAS_RECOVERED_MISSION_KEY,
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
@@ -87,6 +88,33 @@ function noInventedFacts(value: unknown): void {
   assert.equal(AMOUNT.test(serialized), false);
   assert.equal(/\bltv\s*[:=]\s*\d/i.test(serialized), false);
   assert.equal(serialized.includes('Hub-MI'), false);
+}
+
+function entitledHartPicture(): OperatorOperatingPicture {
+  const picture = emptyHonestOperatingPicture();
+  assert.equal(
+    picture.hvsRecoveredClients.some((row) => row.clientCode === 'HFD01'),
+    false,
+  );
+  assert.equal(
+    picture.recoveryLedger.some((row) => row.clientCode === 'HFD01'),
+    false,
+  );
+  return {
+    ...picture,
+    recoveryLedger: [
+      ...picture.recoveryLedger,
+      {
+        client: 'Hart Family Dental',
+        clientCode: 'HFD01',
+        dataType: 'HVS_ABSENT_FROM_ROSTER',
+        accessible: false,
+        operationalized: false,
+        provenance: 'STALE_OR_UNCERTAIN',
+        blocker: 'STALE_OR_UNCERTAIN. Do not operationalize from the Hub entitlement catalog alone.',
+      },
+    ],
+  };
 }
 
 function emptyUnauthorized(ctx: AtlasClientContext): void {
@@ -220,6 +248,15 @@ describe('Ask Atlas READ_AUTO get_client_context', () => {
     assert.match(viaTool.clientContext.why, /.+/);
     assert.match(viaTool.clientContext.basedOn, /.+/);
     assert.ok(viaTool.clientContext.classification === 'LIKELY' || viaTool.clientContext.classification === 'CONFIRMED' || viaTool.clientContext.classification === 'PROPOSED');
+    if (viaTool.clientContext.waitingItems) {
+      assert.ok(viaTool.clientContext.waitingItems.length > 0);
+    }
+    if (viaTool.clientContext.hvcgResponsibilities) {
+      assert.ok(viaTool.clientContext.hvcgResponsibilities.length > 0);
+    }
+    if (viaTool.clientContext.nextActions) {
+      assert.ok(viaTool.clientContext.nextActions.length > 0);
+    }
     noInventedFacts(viaTool);
 
     const viaRuntime = runAtlasHubRuntime({
@@ -316,6 +353,101 @@ describe('Ask Atlas READ_AUTO get_client_context', () => {
     assert.equal(JSON.stringify(hart).includes('HFD01'), false);
   });
 
+  it('binds entitled Hart / HFD01 / Hart Family Dental from recovered ledger evidence without Hub-MI', () => {
+    const picture = entitledHartPicture();
+    assert.ok(picture.recoveryLedger.some((row) => row.clientCode === 'HFD01'));
+    assert.equal(picture.hvsRecoveredClients.some((row) => row.clientCode === 'HFD01'), false);
+    assert.deepEqual(picture.realClientsOperationalized, []);
+
+    const viaHart = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'What are we doing for Hart?',
+      now: '2026-08-22T22:40:00.000Z',
+    });
+    assert.equal(viaHart.askAtlas.honestEmpty, false);
+    assert.equal(viaHart.askAtlas.invented, false);
+    assert.ok(viaHart.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL));
+    assert.equal(viaHart.askAtlas.activity.missionKey, ASK_ATLAS_RECOVERED_MISSION_KEY);
+    assert.deepEqual(viaHart.runtime, {
+      agent: ASK_ATLAS_RUNTIME_AGENT,
+      toolsInvoked: [GET_CLIENT_CONTEXT_TOOL],
+      policyClass: 'READ_AUTO',
+      missionKey: ASK_ATLAS_RECOVERED_MISSION_KEY,
+    });
+    assert.equal(viaHart.clientContext?.kind, 'atlas_client_context_v1');
+    assert.equal(viaHart.clientContext?.invented, false);
+    assert.equal(viaHart.clientContext?.honestEmpty, false);
+    assert.equal(viaHart.clientContext?.client.client, 'Hart Family Dental');
+    assert.equal(viaHart.clientContext?.client.clientCode, 'HFD01');
+    assert.equal(viaHart.clientContext?.client.entitled, true);
+    assert.equal(viaHart.clientContext?.client.hubMiOperationalized, false);
+    assert.deepEqual(viaHart.clientContext?.realClientsOperationalized, []);
+    assert.equal(viaHart.clientContext?.recoveredKnowledgeOperationalized, false);
+    assert.equal(viaHart.clientContext?.classification, 'LIKELY');
+    assert.equal(viaHart.clientContext?.evidenceClass, 'recovered_folder_filename');
+    assert.equal(viaHart.clientContext?.waitingItems, undefined);
+    assert.equal(viaHart.clientContext?.missingDocuments, undefined);
+    assert.equal(viaHart.clientContext?.hvcgResponsibilities, undefined);
+    assert.equal(viaHart.clientContext?.clientResponsibilities, undefined);
+    assert.equal(viaHart.clientContext?.decisions, undefined);
+    assert.equal(viaHart.clientContext?.nextActions, undefined);
+    assert.match(viaHart.clientContext?.why || '', /./);
+    assert.match(viaHart.clientContext?.basedOn || '', /recovery ledger|Not an operational client row/i);
+    noInventedFacts(viaHart);
+
+    const viaName = getClientContext({
+      principal: staffPrincipal(),
+      picture,
+      clientQuery: 'Hart Family Dental',
+      now: '2026-08-22T22:40:10.000Z',
+    });
+    assert.equal(viaName.clientContext.client.clientCode, 'HFD01');
+    assert.equal(viaName.clientContext.client.entitled, true);
+    assert.equal(viaName.clientContext.client.hubMiOperationalized, false);
+    assert.equal(viaName.clientContext.classification, 'LIKELY');
+    assert.equal(viaName.clientContext.evidenceClass, 'recovered_folder_filename');
+
+    const viaCode = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Hart Family Dental',
+    });
+    assert.equal(viaCode.clientContext?.client.clientCode, 'HFD01');
+    assert.equal(viaCode.askAtlas.activity.missionKey, ASK_ATLAS_RECOVERED_MISSION_KEY);
+    assert.equal(viaCode.clientContext?.classification === 'CONFIRMED', false);
+    noInventedFacts(viaCode);
+
+    const viaHfd = getClientContext({
+      principal: staffPrincipal(),
+      picture,
+      clientCode: 'HFD01',
+    });
+    assert.equal(viaHfd.clientContext.client.client, 'Hart Family Dental');
+    assert.equal(viaHfd.clientContext.client.hubMiOperationalized, false);
+  });
+
+  it('does not leak Hart from an entitled picture when the requested client is unknown or unauthorized', () => {
+    const picture = entitledHartPicture();
+    const unknown = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Globex',
+    });
+    emptyUnauthorized(unknown.clientContext!);
+    assert.equal(JSON.stringify(unknown).includes('Hart'), false);
+    assert.equal(JSON.stringify(unknown).includes('HFD01'), false);
+
+    const unauthorized = getClientContext({
+      principal: clientPrincipal(),
+      picture,
+      clientQuery: 'Hart Family Dental',
+    });
+    emptyUnauthorized(unauthorized.clientContext);
+    assert.equal(JSON.stringify(unauthorized).includes('Hart'), false);
+    assert.equal(JSON.stringify(unauthorized).includes('HFD01'), false);
+  });
+
   it('does not invoke get_client_context for owner-gated or unknown questions', () => {
     const picture = emptyHonestOperatingPicture();
     assert.equal(isOwnerGatedQuestion('what is the LTV of Prodigy and the Hub-MI payment status'), true);
@@ -391,6 +523,26 @@ describe('Ask Atlas READ_AUTO get_client_context', () => {
       if (persisted?.classification === 'LIKELY') {
         assert.equal(persisted.classification, 'LIKELY');
       }
+
+      const hartAnswered = runAtlasHubRuntime({
+        principal: staffPrincipal('hart-writer'),
+        picture: entitledHartPicture(),
+        question: 'What are we doing for Hart?',
+        now: '2026-08-22T22:41:00.000Z',
+      });
+      await appendAskAtlasActivity({
+        dataDir: dir,
+        answer: hartAnswered.askAtlas,
+        principal: staffPrincipal('hart-writer'),
+      });
+      const afterHart = readAgentActivityOverlay(join(dir, 'agent-activity'));
+      const hartEntry = afterHart.entries.find((row) => row.writerUserId === 'hart-writer');
+      assert.equal(hartEntry?.missionKey, ASK_ATLAS_RECOVERED_MISSION_KEY);
+      assert.ok(hartEntry?.tools.includes(GET_CLIENT_CONTEXT_TOOL));
+      assert.equal(hartEntry?.result, 'answered');
+      assert.equal(hartEntry?.readWriteStatus, 'READ_AUTO');
+      assert.equal(hartEntry?.classification, 'LIKELY');
+      assert.equal(hartEntry?.affected, undefined);
 
       const empty = runAtlasHubRuntime({
         principal: staffPrincipal('empty-writer'),
