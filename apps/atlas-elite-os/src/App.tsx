@@ -7,6 +7,7 @@ import { RequireMicrosoftAuth } from './security/RequireMicrosoftAuth';
 import { AppShell } from './layout/AppShell';
 import { ExecutiveDashboardPage } from './pages/ExecutiveDashboard';
 import { CommandCenterPage } from './pages/CommandCenterPage';
+import { AskAtlasPage } from './pages/AskAtlasPage';
 import { MyWorkPage } from './pages/MyWorkPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { UniversalInboxPage, TeamAgentsPage } from './pages/OperatingSystemPages';
@@ -130,6 +131,14 @@ export function App() {
                 }
               />
               <Route path="command-center" element={<Navigate to="/" replace />} />
+              <Route
+                path="ask-atlas"
+                element={
+                  <PrivateRoute>
+                    <AskAtlasPage />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="my-work"
                 element={

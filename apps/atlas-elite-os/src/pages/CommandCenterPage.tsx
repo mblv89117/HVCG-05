@@ -35,6 +35,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { ATLAS_STATUS, atlasStatusTone } from '../ui/statusLanguage';
+import { AskAtlasPanel } from '../components/AskAtlasPanel';
 import { CommercialContextPanel } from '../components/CommercialContextPanel';
 import {
   CapitalAccessError,
@@ -545,6 +546,9 @@ export function CommandCenterPage() {
           >
             Refresh
           </Button>
+          <Button appearance="subtle" onClick={() => navigate('/ask-atlas')}>
+            Ask Atlas
+          </Button>
           <Button appearance="subtle" onClick={() => navigate('/my-work')}>
             My Work
           </Button>
@@ -560,6 +564,8 @@ export function CommandCenterPage() {
         </div>
       }
     >
+      <AskAtlasPanel />
+
       {actionError ? (
         <MessageBar intent="error">
           <MessageBarBody>
