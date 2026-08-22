@@ -33,6 +33,7 @@ export const ASK_ATLAS_QUESTION =
 
 export const ASK_ATLAS_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ASK-ATTENTION-001' as const;
 export const ASK_ATLAS_RUNTIME_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RUNTIME-001' as const;
+export const ASK_ATLAS_EVENT_MISSION_KEY = 'ATLAS-AGENTIC-OPS-EVENT-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -66,8 +67,15 @@ export type AskAtlasPolicyDecision = 'answered' | 'honest_empty' | 'hvs_blocked'
 export type AskAtlasReadWriteStatus = 'READ_AUTO';
 
 export type AskAtlasAgent = typeof ASK_ATLAS_OPERATOR_AGENT | typeof ASK_ATLAS_RUNTIME_AGENT;
-export type AskAtlasMissionKey = typeof ASK_ATLAS_MISSION_KEY | typeof ASK_ATLAS_RUNTIME_MISSION_KEY;
-export type AskAtlasTrigger = 'operator_operating_picture' | 'signed_operator_question';
+export type AskAtlasMissionKey =
+  | typeof ASK_ATLAS_MISSION_KEY
+  | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
+  | typeof ASK_ATLAS_EVENT_MISSION_KEY;
+export type AskAtlasTrigger =
+  | 'operator_operating_picture'
+  | 'signed_operator_question'
+  | 'authorized_internal_event'
+  | 'scheduled_sweep';
 
 export interface AskAtlasActivity {
   agent: AskAtlasAgent;
@@ -298,18 +306,28 @@ export function isOperatorRuntimePath(path: string): boolean {
   return path === '/operator/runtime.json';
 }
 
+export function isOperatorEventsPath(path: string): boolean {
+  return path === '/operator/events.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
     path === '/desk' ||
     path === '/operator.json' ||
     isOperatorActivityLedgerPath(path) ||
-    isOperatorRuntimePath(path)
+    isOperatorRuntimePath(path) ||
+    isOperatorEventsPath(path)
   );
 }
 
 export function wantsOperatorJson(path: string, acceptHeader: string | undefined): boolean {
-  if (path === '/operator.json' || isOperatorActivityLedgerPath(path) || isOperatorRuntimePath(path)) {
+  if (
+    path === '/operator.json' ||
+    isOperatorActivityLedgerPath(path) ||
+    isOperatorRuntimePath(path) ||
+    isOperatorEventsPath(path)
+  ) {
     return true;
   }
   const accept = (acceptHeader || '').toLowerCase();
