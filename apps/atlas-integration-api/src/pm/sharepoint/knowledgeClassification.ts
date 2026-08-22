@@ -241,3 +241,25 @@ export function projectOperatingStates(input: { health?: string; status?: string
   if (status === 'completed') states.push('Outcomes');
   return [...new Set(states)];
 }
+
+/** Map an existing opportunity attention state. Does not invent next actions or money. */
+export function opportunityOperatingStates(input: { state?: string }): OperatingState[] {
+  switch ((input.state || '').trim()) {
+    case 'OVERDUE':
+      return ['Overdue', 'Needs Action'];
+    case 'NEEDS_ACTION':
+    case 'NO_NEXT_ACTION':
+      return ['Needs Action'];
+    case 'NEEDS_MANNY':
+      return ['Decision Required'];
+    case 'ACTIVATION_REQUIRED':
+      return ['Needs Action', 'Decision Required'];
+    case 'WON':
+    case 'LOST':
+      return ['Outcomes'];
+    case 'OPEN':
+      return ['Ready'];
+    default:
+      return [];
+  }
+}
