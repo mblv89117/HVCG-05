@@ -947,8 +947,8 @@ describe('GCC session binding contract', () => {
         recordedSignals: [],
         emptyReason: 'No GCC value signal on record.',
       },
-      copilot: { available: false, recordedOnly: true as const, recordedCount: 0 },
-      gtm: { available: false, recordedOnly: true as const, recordedCount: 0 },
+      copilot: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: undefined },
+      gtm: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: undefined },
     };
     const bound = bindIsolatedGccWorkspace({
       workspaceKey: `gcc-${SYN_A}`,

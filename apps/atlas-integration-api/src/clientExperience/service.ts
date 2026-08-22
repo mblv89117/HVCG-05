@@ -1005,10 +1005,27 @@ export function buildOperatorClientDeskPreview(opts: {
       invented: false as const,
       available: false,
       signalCount: 0,
-      recordedSignals: [] as Array<{ signalId: string; clientCode: string; invented: false }>,
+      recordedSignals: [] as Array<{
+        signalId: string;
+        clientCode: string;
+        signalType?: string;
+        severity?: string;
+        summary?: string;
+        emittedAt?: string;
+        invented: false;
+      }>,
       crossClientFallback: false as const,
       sharePointNavigation: false as const,
       emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.',
+      binding: {
+        kind: 'hub_gcc_session_v1' as const,
+        liveDispatch: false as const,
+        invented: false as const,
+        recordedOnly: true as const,
+        isolated: true as const,
+        crossClientFallback: false as const,
+      },
+      gccHref: undefined as string | undefined,
     },
     commercial: {
       clientCode,
@@ -1016,7 +1033,21 @@ export function buildOperatorClientDeskPreview(opts: {
       liveGtmOutbound: false as const,
       paidAds: false as const,
       invented: false as const,
-      gcc: { available: false, recordedOnly: true as const, signalCount: 0, recordedSignals: [], emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.' },
+      gcc: {
+        available: false,
+        recordedOnly: true as const,
+        signalCount: 0,
+        recordedSignals: [] as Array<{
+          signalId: string;
+          clientCode: string;
+          signalType?: string;
+          severity?: string;
+          summary?: string;
+          emittedAt?: string;
+          invented: false;
+        }>,
+        emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.',
+      },
       copilot: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: 'No Copilot assessment or pre-call brief on record. Atlas does not invent MRI findings.' },
       gtm: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: 'No GTM attribution on record. Live GTM outbound is OFF. Atlas does not invent campaigns.' },
     },
@@ -1059,7 +1090,7 @@ function emptyClientOperatingPicture(clientCode: string, displayName?: string) {
     classification,
     entityKind,
     customerRecord,
-    hvsDataAccess: 'BLOCKED' as const,
+    hvsDataAccess: 'BLOCKED' as 'BLOCKED' | 'PARTIAL' | 'AVAILABLE',
     realClientOperationalized: false,
     honestEmpty: true,
     clientVisible: false as const,
@@ -1189,19 +1220,19 @@ export function attachOperatorDeskOperatingPicture<
           emittedAt: row.emittedAt,
           invented: false as const,
         })),
-        emptyReason: gccCount > 0 ? undefined : opts.commercial.gcc.honesty.emptyReason,
+        emptyReason: gccCount > 0 ? view.commercial.gcc.emptyReason : opts.commercial.gcc.honesty.emptyReason || view.commercial.gcc.emptyReason,
       },
       copilot: {
         available: copilotCount > 0,
         recordedOnly: true,
         recordedCount: copilotCount,
-        emptyReason: copilotCount > 0 ? undefined : opts.commercial.copilot.honesty.emptyReason,
+        emptyReason: copilotCount > 0 ? view.commercial.copilot.emptyReason : opts.commercial.copilot.honesty.emptyReason || view.commercial.copilot.emptyReason,
       },
       gtm: {
         available: gtmCount > 0,
         recordedOnly: true,
         recordedCount: gtmCount,
-        emptyReason: gtmCount > 0 ? undefined : opts.commercial.gtm.honesty.emptyReason,
+        emptyReason: gtmCount > 0 ? view.commercial.gtm.emptyReason : opts.commercial.gtm.honesty.emptyReason || view.commercial.gtm.emptyReason,
       },
     };
   }
