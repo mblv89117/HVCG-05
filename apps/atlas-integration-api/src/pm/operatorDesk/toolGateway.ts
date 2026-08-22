@@ -522,7 +522,7 @@ function composeEntitledPictureHits(
       source: 'operator_operating_picture',
       ...(row.clientCode ? { clientCode: row.clientCode } : {}),
       why: row.nextAction,
-      basedOn: 'Recovered HVS client folder already on the entitled operator operating picture. Not a Hub-MI row.',
+      basedOn: 'Recovered HVS client folder already on the entitled operator operating picture. Not an operational client row.',
       provenance: classification,
       classification,
     });
@@ -533,7 +533,7 @@ function composeEntitledPictureHits(
     const classification = neverPromoteClassification(row.provenance);
     const basedOn = row.capitalPacketNames.length
       ? `CONFIRMED-as-filename capital packets: ${row.capitalPacketNames.join(', ')}. Classification is not promoted.`
-      : 'Recovered client record already on the entitled operator picture. No Hub-MI row was invented.';
+      : 'Recovered client record already on the entitled operator picture. No operational client row was invented.';
     push({
       kind: 'recovered_client_record',
       id: `picture:recovered-record:${row.clientCode || row.client}`,
@@ -773,11 +773,11 @@ function composeAuthorizedSearch(
   if (hits.length && pictureComposed && pmHits.length) {
     why = `Entitled picture and desk search returned ${hits.length} hit(s) for the requested query.`;
     basedOn =
-      'OperatorOperatingPicture recovered/attention/project/capital/document context plus searchSharePointPm / GET /api/pm/search / operatorDesk.search. Classification is not promoted. No Hub-MI rows were invented.';
+      'OperatorOperatingPicture recovered/attention/project/capital/document context plus searchSharePointPm / GET /api/pm/search / operatorDesk.search. Classification is not promoted. No operational client rows were invented.';
   } else if (hits.length && pictureComposed) {
     why = `Entitled operator picture returned ${hits.length} hit(s) for the requested query.`;
     basedOn =
-      'Already-authorized OperatorOperatingPicture recovered clients, actionable knowledge, queues, projects, capital packets, documents, and attention items. Classification is not promoted. No Hub-MI rows were invented.';
+      'Already-authorized OperatorOperatingPicture recovered clients, actionable knowledge, queues, projects, capital packets, documents, and attention items. Classification is not promoted. No operational client rows were invented.';
   } else if (hits.length) {
     why = `Entitled desk search returned ${hits.length} hit(s) for the requested query.`;
     basedOn =
