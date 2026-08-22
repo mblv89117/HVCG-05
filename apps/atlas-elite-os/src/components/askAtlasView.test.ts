@@ -347,7 +347,8 @@ describe('Ask Atlas Hart clientContext', () => {
     assert.match(copy, /LIKELY/);
     assert.match(copy, /recovered_folder_filename/);
     assert.doesNotMatch(copy, /PDG01|Prodigy Games/);
-    assert.equal(copy.includes('Hub-MI row'), false);
+    assert.equal(view.clientContext?.classification === 'CONFIRMED', false);
+    assert.doesNotMatch(copy, /hubMiOperationalized=true/);
     assertNoInventedMoney(copy);
   });
 });

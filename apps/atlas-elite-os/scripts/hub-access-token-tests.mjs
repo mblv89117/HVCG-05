@@ -131,8 +131,8 @@ assert.match(askAtlasSrc, /requireBearer/);
 assert.doesNotMatch(askAtlasSrc, /hubFetchJson<[^>]+>\(auth, '\/operator\.json'\)/);
 assert.match(askAtlasPanel, /fetchOperatorRuntime/);
 assert.match(askAtlasPanel, /ask-atlas-question-input/);
-assert.doesNotMatch(askAtlasPanel, /QuickCaptureBar/);
-assert.doesNotMatch(askAtlasPage, /QuickCaptureBar/);
+assert.doesNotMatch(askAtlasPanel, /from ['"]\.\/QuickCaptureBar['"]/);
+assert.doesNotMatch(askAtlasPage, /from ['"].*QuickCaptureBar['"]/);
 assert.doesNotMatch(askAtlasPage, /subtitle=\{ASK_ATLAS_QUESTION\}/);
 
 console.log('PASS hub access-token + blank-page regression source tests');

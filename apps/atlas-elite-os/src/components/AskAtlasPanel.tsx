@@ -15,7 +15,7 @@ function operatorMessage(err: unknown): string {
 /**
  * Signed Elite Ask Atlas surface. Fetches Hub GET /operator/runtime.json?question=
  * only after a Hub Bearer exists. Unsigned / missing bearer never renders entitled items.
- * Question input is Ask Atlas only — not QuickCaptureBar (PM capture is unsupported).
+ * Question input is Ask Atlas only. PM capture is unsupported in production.
  */
 export function AskAtlasPanel() {
   const auth = useHubAuth();
