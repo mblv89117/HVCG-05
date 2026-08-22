@@ -69,8 +69,24 @@ assert.match(live, /AccessDeniedState/);
 assert.doesNotMatch(live, /fetchClient360/);
 assert.doesNotMatch(live, /Growth Command Center/);
 assert.doesNotMatch(live, /fetchGcc/);
+assert.match(live, /CommercialContextPanel/);
+assert.match(live, /fetchClientCommercialContext/);
+assert.doesNotMatch(live, /\/api\/capital\/handoffs/);
 assert.doesNotMatch(live, /ACCG01/);
 assert.doesNotMatch(live, /Jane Doe|John Smith|sample@client/i);
+
+const home = readFileSync(join(root, 'src/pages/CommandCenterPage.tsx'), 'utf8');
+assert.match(home, /CommercialContextPanel/);
+assert.match(home, /cc\.commercialContext/);
+assert.doesNotMatch(home, /LIVE_GTM_OUTBOUND/);
+
+const opp = readFileSync(join(root, 'src/pages/OpportunityDetailPage.tsx'), 'utf8');
+assert.match(opp, /CommercialContextPanel/);
+assert.match(opp, /fetchOpportunityCommercialContext/);
+
+const tasks = readFileSync(join(root, 'src/pages/TasksApprovalsPage.tsx'), 'utf8');
+assert.match(tasks, /CommercialContextPanel/);
+assert.match(tasks, /commercialContext/);
 
 const docs = readFileSync(join(root, 'src/pages/DocumentsOperatingPage.tsx'), 'utf8');
 assert.match(docs, /fetchPmDocuments/);

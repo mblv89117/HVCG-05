@@ -160,6 +160,8 @@ export type SharePointOpportunity = {
   lastModified?: string;
   notes?: string;
   idempotencyKey?: string;
+  copilotSummary?: string;
+  copilotKeywords?: string;
   attention: OpportunityAttention;
 };
 
@@ -1447,6 +1449,8 @@ export class SharePointPmService {
       lastModified: isoDate(item.fields.Modified),
       notes: asString(item.fields.Notes) || asString(item.fields.Summary),
       idempotencyKey: asString(item.fields.HVCG_IdempotencyKey),
+      copilotSummary: asString(item.fields.CopilotSummary),
+      copilotKeywords: asString(item.fields.CopilotKeywords),
     };
     return { ...opportunity, attention: classifyOpportunityAttention(opportunity) };
   }
@@ -1503,12 +1507,16 @@ export class SharePointPmService {
       'capitalOpportunityId',
       'CapitalHandoffStatus',
       'capitalHandoffStatus',
+      'CopilotSummary',
+      'copilotSummary',
+      'CopilotKeywords',
+      'copilotKeywords',
     ];
     if (immutable.some((field) => field in body)) {
       throw new PmHttpError(
         400,
         'immutable_field',
-        'Opportunity linkage, activation, capital handoff, and idempotency fields cannot be changed via PATCH.',
+        'Opportunity linkage, activation, capital handoff, Copilot observation fields, and idempotency cannot be changed via PATCH.',
       );
     }
 

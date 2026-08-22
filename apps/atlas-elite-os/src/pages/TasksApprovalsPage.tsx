@@ -15,12 +15,14 @@ import {
   patchPmTask,
   HubHttpError,
   type CommandCenter,
+  type DeskCommercialContext,
   type PmTask,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
 import { isCanonicalClientCode } from '../security/clientCode';
 import { ATLAS_STATUS, atlasStatusDisplay, atlasStatusTone } from '../ui/statusLanguage';
+import { CommercialContextPanel } from '../components/CommercialContextPanel';
 
 type CommandCenterWithDeferred = CommandCenter & { deferred?: Record<string, string> };
 
@@ -91,6 +93,7 @@ export function TasksPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [commercial, setCommercial] = useState<DeskCommercialContext | null>(null);
 
   const refresh = useCallback(async () => {
     if (!auth.tokenReady) return;
@@ -100,6 +103,7 @@ export function TasksPage() {
       setLoadError(null);
       setAuthFailure('Microsoft sign-in required (Bearer token missing)');
       setQueue([]);
+      setCommercial(null);
       return;
     }
     setLoading(true);
@@ -110,6 +114,7 @@ export function TasksPage() {
       const res = await fetchCommandCenter(auth);
       const cc = res.commandCenter as CommandCenterWithDeferred;
       setDeferred(cc.deferred || {});
+      setCommercial(cc.commercialContext || null);
       const approvals = cc.ownerApprovals || [];
       const extra = cc.teamAndAgents?.approvalRequests || [];
       const seen = new Set<string>();
@@ -123,6 +128,7 @@ export function TasksPage() {
     } catch (err) {
       const status = hubStatus(err);
       setQueue([]);
+      setCommercial(null);
       if (status === 401) {
         setAuthFailure(
           safeErrorMessage(err, 'Microsoft sign-in required (Bearer token missing)'),
@@ -274,6 +280,8 @@ export function TasksPage() {
           </MessageBarBody>
         </MessageBar>
       ) : null}
+
+      <CommercialContextPanel context={commercial} />
 
       {decisionsRegisterDeferred ? (
         <MessageBar intent="info">

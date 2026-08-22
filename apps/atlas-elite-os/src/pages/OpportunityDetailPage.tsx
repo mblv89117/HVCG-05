@@ -29,11 +29,14 @@ import { FieldGrid, ModuleScaffold } from './shared/ModuleScaffold';
 import {
   applyClientActivation,
   fetchClientActivation,
+  fetchOpportunityCommercialContext,
   fetchPmOpportunity,
   HubHttpError,
   patchPmOpportunity,
+  type OperatorCommercialContext,
   type PmOpportunity,
 } from '../integrations/hub/pmApi';
+import { CommercialContextPanel } from '../components/CommercialContextPanel';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { atlasStatusDisplay, atlasStatusTone, type AtlasStatusTone } from '../ui/statusLanguage';
 
@@ -84,6 +87,8 @@ export function OpportunityDetailPage() {
   const [lostReason, setLostReason] = useState('');
   const [notes, setNotes] = useState('');
   const [activating, setActivating] = useState(false);
+  const [commercial, setCommercial] = useState<OperatorCommercialContext | null>(null);
+  const [commercialError, setCommercialError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!auth.tokenReady) return;
@@ -108,6 +113,14 @@ export function OpportunityDetailPage() {
       setRequiresExecutiveAttention(Boolean(data.opportunity.requiresExecutiveAttention));
       setLostReason(data.opportunity.lostReason || '');
       setNotes(data.opportunity.notes || '');
+      try {
+        const ctx = await fetchOpportunityCommercialContext(auth, opportunityId);
+        setCommercial(ctx.commercialContext);
+        setCommercialError(null);
+      } catch (err) {
+        setCommercial(null);
+        setCommercialError(classify(err).message);
+      }
     } catch (err) {
       setOpportunity(null);
       setFailure(classify(err));
@@ -274,6 +287,9 @@ export function OpportunityDetailPage() {
             <StatusChip label="Client activation required" tone="gold" />
           ) : null}
           {closedLost ? <StatusChip label="Removed from active pipeline" tone="neutral" /> : null}
+          {opportunity.capitalHandoffStatus ? (
+            <StatusChip label={`Handoff ${opportunity.capitalHandoffStatus}`} tone="neutral" />
+          ) : null}
         </div>
         <Caption1 style={{ display: 'block', marginTop: 8 }}>
           {[
@@ -299,6 +315,8 @@ export function OpportunityDetailPage() {
           { label: 'Outcome', value: opportunity.winLossStatus || 'Open' },
         ]}
       />
+
+      <CommercialContextPanel context={commercial} error={commercialError} />
 
       <ResponsiveGrid>
         <AtlasCard title="Operate opportunity">

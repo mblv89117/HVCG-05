@@ -18,6 +18,14 @@ import { quickCapture } from './quickCapture.ts';
 import { pmBackendUnavailableBody } from './backend.ts';
 import type { PmRepository } from './repository.ts';
 import { handleSharePointPmRoutes } from './sharepoint/http.ts';
+import {
+  ObserveError,
+  assertEntitledClient,
+  matchCommercialContextPath,
+  observeCommercialContext,
+  readCommercialContext,
+  readDeskCommercialContext,
+} from './commercialContext/handle.ts';
 import type { SharePointPmService } from './sharepoint/repository.ts';
 import type {
   DecisionRecord,
@@ -114,10 +122,68 @@ export async function handlePmRoutes(opts: {
 
   const pm = opts.pm;
 
+  const commercial = matchCommercialContextPath(path);
+  if (commercial) {
+    try {
+      if (commercial.kind === 'observe') {
+        if (method !== 'POST') {
+          send(res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, origin);
+          return true;
+        }
+        const observeBody = await readJson(req);
+        const result = observeCommercialContext({ dataDir: cfg.dataDir, principal, body: observeBody });
+        audit({
+          repo,
+          actorUserId: principal.userId,
+          action: 'pm_commercial_context_observe',
+          outcome: result.replay ? 'replay' : 'success',
+          detail: `kind=${result.kind} replay=${result.replay}`,
+        });
+        send(res, result.replay ? 200 : 201, { replay: result.replay, kind: result.kind, record: result.record }, origin);
+        return true;
+      }
+      if (method !== 'GET') {
+        send(res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, origin);
+        return true;
+      }
+      if (commercial.kind === 'client') {
+        const code = assertEntitledClient(principal, commercial.clientCode);
+        if (code === 'not_found') {
+          send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+          return true;
+        }
+        send(res, 200, { commercialContext: readCommercialContext({ dataDir: cfg.dataDir, principal, clientCode: code }) }, origin);
+        return true;
+      }
+      if (commercial.kind === 'opportunity') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      send(res, 200, { commercialContext: readDeskCommercialContext({ dataDir: cfg.dataDir, principal }) }, origin);
+      return true;
+    } catch (err) {
+      if (err instanceof ObserveError) {
+        send(res, err.status, { error: err.code, code: err.code, message: err.message }, origin);
+        return true;
+      }
+      throw err;
+    }
+  }
+
   // GET routes
   if (method === 'GET') {
     if (path === '/api/pm/command-center') {
-      send(res, 200, { commandCenter: buildCommandCenter(pm, repo) }, origin);
+      send(
+        res,
+        200,
+        {
+          commandCenter: {
+            ...buildCommandCenter(pm, repo),
+            commercialContext: readDeskCommercialContext({ dataDir: cfg.dataDir, principal }),
+          },
+        },
+        origin,
+      );
       return true;
     }
     if (path === '/api/pm/my-work') {

@@ -30,13 +30,16 @@ import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import {
   createPmProject,
   createPmTask,
+  fetchClientCommercialContext,
   fetchClientPmWorkspace,
   HubHttpError,
   type ClientPmWorkspace,
+  type OperatorCommercialContext,
   type PmProject,
   type PmTask,
   type WorkspaceSection,
 } from '../integrations/hub/pmApi';
+import { CommercialContextPanel } from '../components/CommercialContextPanel';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { projectDetailPath } from '../routing/projectId';
 import { isCanonicalClientCode } from '../security/clientCode';
@@ -260,6 +263,8 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
   const [forbidden, setForbidden] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
+  const [commercial, setCommercial] = useState<OperatorCommercialContext | null>(null);
+  const [commercialError, setCommercialError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setBusy(true);
@@ -283,6 +288,14 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
       const scoped = { ...auth, clientIds: [clientId] };
       const detail = await fetchClientPmWorkspace(scoped, clientId);
       setWorkspace(detail.workspace || null);
+      try {
+        const ctx = await fetchClientCommercialContext(scoped, clientId);
+        setCommercial(ctx.commercialContext);
+        setCommercialError(null);
+      } catch (err) {
+        setCommercial(null);
+        setCommercialError(err instanceof Error ? err.message : String(err));
+      }
     } catch (err) {
       const status = hubStatus(err);
       const message = err instanceof Error ? err.message : String(err);
@@ -545,7 +558,7 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
 
       <AtlasCard
         title="Client record"
-        subtitle="Hub workspace — not Client 360. GCC financial dashboards are not on this page."
+        subtitle="Hub workspace — not Client 360. GCC financial dashboards stay in GCC; recorded value signals appear below."
       >
         <RecordRow label="What is this">
           <Text weight="semibold">{title}</Text>
@@ -568,6 +581,11 @@ export function LiveClientDetailPage({ clientId }: { clientId: string }) {
             Contacts: {sectionHonesty(workspace.contacts)}
           </Caption1>
         </RecordRow>
+      </AtlasCard>
+
+      <CommercialContextPanel context={commercial} error={commercialError} />
+
+      <AtlasCard title="State" subtitle="Recorded Hub workspace only">
 
         <RecordRow label="State">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
