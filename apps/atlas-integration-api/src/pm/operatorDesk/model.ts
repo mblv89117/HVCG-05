@@ -25,6 +25,7 @@ import {
   hvsRecoveredClientRecords,
   recoveredClientsKnowledgeOperationalized,
 } from '../sharepoint/hvsRecoveredClientRecords.ts';
+import { buildAskAtlasAnswer } from './askAtlas.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -99,6 +100,7 @@ function mapQueue(
       isHvsRecoveredKind(row.kind) || !row.clientCode
         ? undefined
         : `/api/pm/clients/${row.clientCode}/desk`,
+    evidence: row.source,
   }));
 }
 
@@ -134,6 +136,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           queue: 'Waiting',
           kind: 'hvs_actionable_waiting',
           provenance: row.classification,
+          evidence: row.evidence,
         }));
   const overdue =
     hvsDataAccess === 'BLOCKED'
@@ -145,6 +148,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           queue: 'Overdue',
           kind: 'hvs_actionable_overdue',
           provenance: row.classification,
+          evidence: row.evidence,
         }));
   const capital =
     hvsDataAccess === 'BLOCKED'
@@ -156,6 +160,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           queue: 'Needs Action',
           kind: 'hvs_actionable_capital',
           provenance: row.classification,
+          evidence: row.evidence,
         }));
   const atRisk =
     hvsDataAccess === 'BLOCKED'
@@ -167,6 +172,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           queue: 'At Risk',
           kind: 'hvs_actionable_at_risk',
           provenance: row.classification,
+          evidence: row.evidence,
         }));
   const actions =
     hvsDataAccess === 'BLOCKED'
@@ -178,6 +184,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           queue: row.queue,
           kind: row.kind,
           provenance: row.provenance,
+          evidence: row.evidence,
         }));
   const documents =
     hvsDataAccess === 'BLOCKED'
@@ -426,6 +433,7 @@ export function buildOperatorDeskModel(input: {
   const followUps = listItems(myDay.waitingFollowUps, 'follow_up');
   const attention = (input.attentionItems || []).slice(0, 20);
   const needsAction = [...attention, ...ownerApprovals, ...alerts].slice(0, 20);
+  const operatingPicture = input.operatingPicture || emptyHonestOperatingPicture();
 
   return {
     contractVersion: OPERATOR_DESK_CONTRACT,
@@ -459,7 +467,8 @@ export function buildOperatorDeskModel(input: {
       followUps,
     },
     commercialContext: input.commercialContext,
-    operatingPicture: input.operatingPicture || emptyHonestOperatingPicture(),
+    operatingPicture,
+    askAtlas: buildAskAtlasAnswer(operatingPicture),
     search: {
       q: (input.searchQuery || '').trim().slice(0, 120),
       hitCount: input.searchHits?.length ?? 0,

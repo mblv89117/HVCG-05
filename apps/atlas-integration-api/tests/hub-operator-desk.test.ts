@@ -117,9 +117,11 @@ describe('operator desk copy', () => {
     const html = renderUnsignedOperatorDesk();
     assert.match(html, /Microsoft sign-in required/);
     assert.match(html, /fail-closed/);
+    assert.match(html, /Ask Atlas attention is fail-closed/);
     assert.equal(html.includes(SYN01), false);
     assert.equal(html.includes(ACME01), false);
     assert.equal(html.includes('250000'), false);
+    assert.equal(html.includes('Prodigy Games'), false);
     assert.match(html, /does not invent LTV/);
   });
 
@@ -258,6 +260,37 @@ describe('operator desk copy', () => {
           !row.href,
       ),
     );
+    assert.match(html, /Ask Atlas — What needs attention/);
+    assert.match(html, /WHAT ARE THE MOST IMPORTANT THINGS I NEED TO ADDRESS ACROSS HVCG RIGHT NOW/);
+    assert.match(html, /Based on:/);
+    const askHtml = html.slice(
+      html.indexOf('<h2>Ask Atlas — What needs attention</h2>'),
+      html.indexOf('<h2>Client workspace preview</h2>'),
+    );
+    assert.match(askHtml, /Prodigy Games/);
+    assert.match(askHtml, /PDG01/);
+    assert.match(askHtml, /LIKELY/);
+    assert.match(askHtml, /past-due invoice filenames and capital-packet filenames/i);
+    assert.equal(askHtml.includes('$'), false);
+    assert.equal(askHtml.includes('250000'), false);
+    assert.equal(/At Risk[\s\S]*Colorado Beef|Colorado Beef[\s\S]*At Risk/.test(askHtml), false);
+    assert.equal(model.askAtlas.invented, false);
+    assert.equal(model.askAtlas.honestEmpty, false);
+    assert.ok(
+      model.askAtlas.items.some(
+        (row) =>
+          row.state === 'At Risk' &&
+          row.client === 'Prodigy Games' &&
+          row.clientCode === 'PDG01' &&
+          row.classification === 'LIKELY',
+      ),
+    );
+    assert.equal(
+      model.askAtlas.items.some(
+        (row) => row.state === 'At Risk' && (row.client === 'Colorado Beef' || row.clientCode === 'CCB01'),
+      ),
+      false,
+    );
     assert.match(html, /<span class="muted">Waiting<\/span><strong>/);
     assert.match(html, /<span class="muted">Capital<\/span><strong>/);
     assert.match(html, /<span class="muted">At Risk<\/span><strong>1<\/strong>/);
@@ -298,8 +331,10 @@ describe('operator desk HTTP fail-closed', () => {
 
       const unauthJson = await fetch(`${base}/operator.json`);
       assert.equal(unauthJson.status, 401);
-      const unauthJsonBody = (await unauthJson.json()) as { error: string };
+      const unauthJsonBody = (await unauthJson.json()) as { error: string; askAtlas?: unknown; operatorDesk?: unknown };
       assert.equal(unauthJsonBody.error, 'unauthorized');
+      assert.equal(unauthJsonBody.askAtlas, undefined);
+      assert.equal(unauthJsonBody.operatorDesk, undefined);
 
       const entitled = await fetch(`${base}/operator`, {
         headers: { authorization: 'Bearer valid-member' },
@@ -308,6 +343,7 @@ describe('operator desk HTTP fail-closed', () => {
       assert.match(entitled.headers.get('content-type') || '', /text\/html/);
       const html = await entitled.text();
       assert.match(html, /Atlas Hub operator desk/);
+      assert.match(html, /Ask Atlas — What needs attention/);
       assert.match(html, /does not invent LTV/);
       assert.match(html, /liveGtmOutbound=false/);
       assert.match(html, /Client journey/);
@@ -359,6 +395,19 @@ describe('operator desk HTTP fail-closed', () => {
             }>;
             queues: { waiting: Array<{ kind: string; href?: string }> };
             syntheticQueues: { needsAction: unknown[] };
+          };
+          askAtlas: {
+            kind: string;
+            invented: boolean;
+            honestEmpty: boolean;
+            items: Array<{
+              state: string;
+              client?: string;
+              clientCode?: string;
+              classification: string;
+              why: string;
+              basedOn: string;
+            }>;
           };
         };
       };
@@ -507,6 +556,25 @@ describe('operator desk HTTP fail-closed', () => {
         true,
       );
       assert.deepEqual(body.operatorDesk.operatingPicture.syntheticQueues.needsAction, []);
+      assert.equal(body.operatorDesk.askAtlas.kind, 'ask_atlas_attention_v1');
+      assert.equal(body.operatorDesk.askAtlas.invented, false);
+      assert.equal(body.operatorDesk.askAtlas.honestEmpty, false);
+      assert.ok(
+        body.operatorDesk.askAtlas.items.some(
+          (row) =>
+            row.state === 'At Risk' &&
+            row.client === 'Prodigy Games' &&
+            row.clientCode === 'PDG01' &&
+            row.classification === 'LIKELY',
+        ),
+      );
+      assert.equal(
+        body.operatorDesk.askAtlas.items.some(
+          (row) => row.state === 'At Risk' && (row.client === 'Colorado Beef' || row.clientCode === 'CCB01'),
+        ),
+        false,
+      );
+      assert.equal(JSON.stringify(body.operatorDesk.askAtlas).includes('$'), false);
 
       const root = await fetch(base);
       assert.equal(root.status, 405);
