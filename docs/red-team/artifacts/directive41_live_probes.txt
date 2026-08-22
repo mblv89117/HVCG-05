@@ -1,0 +1,61 @@
+D41_LIVE_PROBES UTC=2026-08-22T07:09:43Z
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+DIRECTIVE_TARGET_SHA=e63279a8a6c7939f0ecf4b434117383dbd15b62e
+LIVE_SHA_AT_PROBE=b707049c5cfaac1b0643327359a91200ac72879e
+ONEDEPLOY_CITE=66960454 (directive; not verified by RT)
+AUTH_SESSION=ABSENT
+AZURE_CLIENT_ID=ABSENT AZURE_CLIENT_SECRET=ABSENT AZURE_TENANT_ID=ABSENT
+
+LINEAGE_GATE=FAIL (live=b707049c5cfaac1b0643327359a91200ac72879e)
+
+=== PROBE 1 UNSIGNED GET (expect 401) ===
+GET /operator -> 401
+GET /desk -> 401
+GET /operator.json -> 401
+GET /api/pm/opportunities -> 401
+GET /api/pm/clients -> 401
+GET /api/pm/documents -> 401
+GET /api/pm/my-work -> 401
+GET /api/pm/clients/SYN01/portal -> 401
+GET /api/pm/clients/SYN01/workspace -> 401
+GET /api/pm/clients/SYN01/document-requests -> 401
+GET /api/pm/clients/HFD01/portal -> 401
+GET /api/pm/clients/ACCG01/portal -> 401
+GET /api/pm/clients/CPL01/portal -> 401
+GET /api/pm/clients/PDG01/portal -> 401
+GET /api/pm/clients/KAVA01/portal -> 401
+GET /api/pm/clients/HFD01/workspace -> 401
+GET /api/pm/clients/ACCG01/workspace -> 401
+GET /api/pm/clients/CPL01/workspace -> 401
+GET /api/pm/clients/PDG01/workspace -> 401
+GET /api/pm/clients/KAVA01/workspace -> 401
+GET /api/pm/clients/HFD01/document-requests -> 401
+GET /api/pm/clients/ACCG01/document-requests -> 401
+GET /api/pm/knowledge-ledger -> 401
+GET /api/pm/clients/SYN01/knowledge-ledger -> 401
+PROBE1_FAIL_COUNT=0
+
+=== PROBE 1 UNSIGNED POST foreign (expect 401) ===
+POST /api/pm/clients/HFD01/portal -> 401
+POST /api/pm/clients/HFD01/workspace -> 401
+POST /api/pm/clients/HFD01/document-requests -> 401
+POST /api/pm/clients/ACCG01/portal -> 401
+POST /api/pm/clients/ACCG01/workspace -> 401
+POST /api/pm/clients/ACCG01/document-requests -> 401
+POST /api/pm/clients/CPL01/portal -> 401
+POST /api/pm/clients/CPL01/workspace -> 401
+POST /api/pm/clients/CPL01/document-requests -> 401
+POST /api/pm/clients/PDG01/portal -> 401
+POST /api/pm/clients/PDG01/workspace -> 401
+POST /api/pm/clients/PDG01/document-requests -> 401
+POST /api/pm/clients/KAVA01/portal -> 401
+POST /api/pm/clients/KAVA01/workspace -> 401
+POST /api/pm/clients/KAVA01/document-requests -> 401
+
+=== PROBE 5 /client ===
+GET /client -> 405
+CLIENT_ROUTE=NOT_LIVE
+
+=== PROBE 2 SYN01 /operator staff-only 403 (NOT_EXECUTED) ===
+=== PROBE 3 SYN01 own vs foreign (NOT_EXECUTED) ===
+=== PROBE 4 knowledge ledger no foreign invent (NOT_EXECUTED) ===

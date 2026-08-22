@@ -5,43 +5,38 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `7c8ad98ce5f774529d083a2f34a4ef73eb0034e7` |
-| baseline | D39 ENTITLED_CLASSIFY_SELF_MINTED_SESSION @ Hub `4b9631a` |
+| current SHA | (post-D41 commit) |
+| baseline | D41 LIVE_CLIENT_PORTAL_ISOLATION @ Hub target `e63279a8` (live drifted `b707049c`) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
 | contracts required | none this cycle |
-| tests | D39: self-mint FAIL; ARTIFACT-REVIEW → ATLAS-01/02 VERIFIED_FIXED; LIVE_CERT=NO |
+| tests | D41: probe1 PASS; probe5 NOT_LIVE; probes2-4 NOT_EXECUTED; D41 **FAIL** |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_CERT=NO**. Finding LIVE_P0=0 via artifact-review. AUTH_SESSION ABSENT. |
+| security status | **LIVE_CERT=NO**. Portal surface unsigned P0=0; entitled isolation unverified. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
-| P0 | Finding rollup LIVE_P0=0 (ATLAS-01/02 VERIFIED_FIXED via artifact-review); LIVE_CERT withheld |
+| P0 | Portal surface LIVE_P0_CONFIRMED_OPEN=0; entitled portal isolation unverified |
 | P1 | none |
 | P2 | none |
 | owner decisions | No deploy. Do not replace worker. FOLLOWUP_CANNOT_REBIND=YES. |
-| deployment state | Live Hub markers = `4b9631a` |
+| deployment state | Live Hub markers = `b707049c` (directive cited `e63279a8`) |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **39** |
-| BASED ON WORKER SHA | `9803b8aed5d97585a38f2dbec77e693f7dab49b0` |
-| PRIOR | D38 CONSUMED=38 — not redone |
-| CURRENT SHA | `7c8ad98ce5f774529d083a2f34a4ef73eb0034e7` |
-| COMPLETED ACTIONS | D39 self-mint fail → artifact-review ATLAS-01/02 VERIFIED_FIXED; CONSUMED=39 |
-| REMAINING ACTIONS | Optional: inject AZURE_* then RT self-mint entitled re-probe for LIVE_CERT path |
-| LIVE_P0 | **0** (findings) |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **41** |
+| PRIOR | D39 CONSUMED=39 — not redone |
+| COMPLETED ACTIONS | D41 unsigned fail-closed PASS; lineage drift; entitled probes blocked |
+| REMAINING ACTIONS | Inject AZURE_* → self-mint SYN01 session → re-run D41 probes 2–4 on pinned SHA |
+| D41_VERDICT | **FAIL** |
+| LIVE_P0 (portal surface, confirmed open) | **0** |
+| LIVE_P0 (entitled portal, unverified) | **YES** |
 | LIVE_CERT / LIVE_SECURITY_CERTIFIED | **NO** |
 | AUTH_SESSION | **ABSENT** |
-| CLASSIFICATION_PATH | **ARTIFACT_REVIEW** |
-| INHERIT | **FAIL** |
-| FOLLOWUP_CANNOT_REBIND | **YES** |
-| MISSION | `ENTITLED_CLASSIFY_SELF_MINTED_SESSION` |
-| TEST STATUS | Lineage gate PASS; self-mint FAIL; artifact-review complete |
-| PREMIUM STATUS | N/A |
-| INTEGRATION STATUS | Not retested |
+| MISSION | `LIVE_CLIENT_PORTAL_ISOLATION` |
+| TEST STATUS | Probe1 PASS (all 401); probe5 NOT_LIVE (405); probes2-4 NOT_EXECUTED |
 | OWNER DECISIONS | No RT deploy; worker not replaced |
 
 ## THIS-POD (names only)
@@ -57,7 +52,8 @@
 
 ## Notes
 
-- Not a D38 clone. Self-mint is the mission; artifact-review is the authorized fallback.
-- LIVE_CERT=NO despite finding LIVE_P0=0 (no RT-held session).
+- D41 is not a D39 clone. Entitled portal isolation requires self-minted AUTH_SESSION.
+- `/client` 405 recorded NOT_LIVE — does not fail Hub SHA per D41 rule 5.
+- BUSINESS_USEFUL PASS not claimed.
 
-**Updated:** 2026-08-22T05:07:00Z
+**Updated:** 2026-08-22T07:10:00Z
