@@ -49,6 +49,14 @@ async function withHub(
           scp: 'access_as_user',
         };
       }
+      if (token === 'valid-client') {
+        return {
+          oid: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+          preferred_username: 'client@example.com',
+          roles: ['Client Executive'],
+          scp: 'access_as_user',
+        };
+      }
       const err = new Error('Invalid or expired Microsoft token') as Error & { status: number; code: string };
       err.status = 401;
       err.code = 'invalid_token';
@@ -172,6 +180,12 @@ describe('operator desk HTTP fail-closed', () => {
 
       const root = await fetch(base);
       assert.equal(root.status, 405);
+
+      const clientDesk = await fetch(`${base}/operator`, {
+        headers: { authorization: 'Bearer valid-client' },
+      });
+      assert.equal(clientDesk.status, 403);
+      assert.equal((await clientDesk.text()).includes('Atlas Hub operator desk'), false);
     });
   });
 });

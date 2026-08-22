@@ -24,6 +24,7 @@ import {
   activationIdempotencyKey,
   classifyClientActivation,
   emptyProvisioning,
+  governedHubProvisioning,
   parseActivationNotes,
   writeActivationNotes,
   type ClientActivationAction,
@@ -69,6 +70,10 @@ export const DEFERRED_COLLECTIONS = [
   'documents',
   'activity',
 ] as const;
+
+export type MyWorkOwnerResolution =
+  | { ok: true; email: string; source: 'jwt' | 'directory' }
+  | { ok: false; reason: 'PM_DIRECTORY_UNAVAILABLE' | 'PM_IDENTITY_UNMAPPED'; source: 'unmapped' };
 
 export type SharePointProject = ProjectRecord & {
   etag: string;
@@ -815,6 +820,26 @@ export class SharePointPmService {
       throw pmInfrastructureError('PM_IDENTITY_UNMAPPED', 'Directory profile has no mail or userPrincipalName.');
     }
     return email;
+  }
+
+  /**
+   * Read-path owner mapping for My Work. JWT email wins so an app/SP caller
+   * with a verified mailbox claim does not depend on Graph /users/{oid}.
+   * Directory failure on this path is honest-empty, not 503 (writes still fail closed).
+   */
+  private async resolveMyWorkOwner(principal: AtlasPrincipal): Promise<MyWorkOwnerResolution> {
+    const jwtEmail = normalizeEmail(principal.email);
+    if (jwtEmail) return { ok: true, email: jwtEmail, source: 'jwt' };
+    const result = await this.lookupUser(principal.userId);
+    if (result.ok) {
+      const email = ownerEmailFromProfile(result.profile);
+      if (email) return { ok: true, email, source: 'directory' };
+      return { ok: false, reason: 'PM_IDENTITY_UNMAPPED', source: 'unmapped' };
+    }
+    if (result.reason === 'empty' || result.reason === 'mismatch') {
+      return { ok: false, reason: 'PM_IDENTITY_UNMAPPED', source: 'unmapped' };
+    }
+    return { ok: false, reason: 'PM_DIRECTORY_UNAVAILABLE', source: 'unmapped' };
   }
 
   async createProject(
@@ -2168,13 +2193,19 @@ export class SharePointPmService {
       (action === 'authorize' || action === 'verify') &&
       record?.opportunityId === opportunityId;
     if (replayActive && record) {
-      if (action === 'verify' && record.status !== 'verified') {
+      const needsGovernedPath =
+        action === 'verify' &&
+        (record.status !== 'verified' ||
+          record.portalAccessProvisioned !== true ||
+          record.documentRequestPathProvisioned !== true ||
+          record.workspaceProvisioning !== 'ready');
+      if (needsGovernedPath) {
         record = {
           ...record,
-          ...emptyProvisioning(),
+          ...governedHubProvisioning(),
           status: 'verified',
-          verifiedAt: now,
-          verifiedBy: actor,
+          verifiedAt: record.verifiedAt || now,
+          verifiedBy: record.verifiedBy || actor,
         };
       } else {
         return {
@@ -2234,12 +2265,11 @@ export class SharePointPmService {
       }
       record = {
         ...record,
-        ...emptyProvisioning(),
+        ...governedHubProvisioning(),
         status: 'authorized',
         authorizedAt: now,
         authorizedBy: actor,
         notes: asString(body.notes) || record.notes,
-        workspaceProvisioning: 'staged',
       };
     } else {
       if (current.client.clientStage !== 'Active Client') {
@@ -2253,12 +2283,11 @@ export class SharePointPmService {
           idempotencyKey: key,
           ...emptyProvisioning(),
         }),
-        ...emptyProvisioning(),
+        ...governedHubProvisioning(),
         status: 'verified',
         verifiedAt: now,
         verifiedBy: actor,
         notes: asString(body.notes) || record?.notes,
-        workspaceProvisioning: 'staged',
       };
     }
 
@@ -2284,15 +2313,20 @@ export class SharePointPmService {
     };
   }
 
-  async myWorkTasks(principal: AtlasPrincipal): Promise<SharePointTask[]> {
-    const email = await this.ownerEmailForPrincipal(principal);
+  async myWorkTasks(principal: AtlasPrincipal): Promise<{
+    tasks: SharePointTask[];
+    owner: MyWorkOwnerResolution;
+  }> {
+    const owner = await this.resolveMyWorkOwner(principal);
+    if (!owner.ok) return { tasks: [], owner };
+    const email = owner.email;
     const items = await this.listAll(this.settings.tasksListId, fieldsEq('OwnerEmail', email));
     const out: SharePointTask[] = [];
     for (const item of items) {
       const task = this.mapTask(item);
       if (!task?.projectId) continue;
-      const owner = normalizeEmail(asString(item.fields.OwnerEmail));
-      if (owner !== email) continue;
+      const mappedOwner = normalizeEmail(asString(item.fields.OwnerEmail));
+      if (mappedOwner !== email) continue;
       const project = await this.authorizeProject(principal, task.projectId);
       if (project === 'not_found') continue;
       const taskCode = (task.clientCode || '').trim();
@@ -2300,6 +2334,6 @@ export class SharePointPmService {
       if (project.classification.kind === 'client' && taskCode && taskCode !== projectCode) continue;
       out.push(task);
     }
-    return out;
+    return { tasks: out, owner };
   }
 }

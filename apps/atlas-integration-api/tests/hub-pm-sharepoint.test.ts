@@ -151,6 +151,12 @@ function envSharePoint() {
 async function verify(token: string): Promise<Record<string, unknown>> {
   const map: Record<string, Record<string, unknown>> = {
     a: { oid: USER_A, roles: ['HVCG Team Member'], scp: 'access_as_user' },
+    'a-mail': {
+      oid: USER_A,
+      preferred_username: `${USER_A.slice(0, 8)}@hvcg.example`,
+      roles: ['HVCG Team Member'],
+      scp: 'access_as_user',
+    },
     b: { oid: USER_B, roles: ['HVCG Team Member'], scp: 'access_as_user' },
     staff: { oid: USER_STAFF, roles: ['HVCG Owner'], scp: 'access_as_user' },
     manny: { oid: MANNY_ENTRA_OID, roles: ['HVCG Owner'], scp: 'access_as_user' },
@@ -597,7 +603,7 @@ describe('SharePoint PM HTTP', () => {
     });
   });
 
-  it('My Work uses oid directory mail, ignores owner query, fails closed on directory errors', async () => {
+  it('My Work uses oid directory mail, ignores owner query, honest-empty on directory errors', async () => {
     const mail = `${USER_A.slice(0, 8)}@hvcg.example`;
     await withSpHub({ entitlements: () => ['ACCG01'] }, async ({ base, graph }) => {
       graph.seed(PROJECTS, {
@@ -634,20 +640,58 @@ describe('SharePoint PM HTTP', () => {
     const failLookup: UserBasicLookup = async () => ({ ok: false, reason: 'failed' });
     await withSpHub({ entitlements: () => ['ACCG01'], lookup: failLookup }, async ({ base }) => {
       const res = await fetch(`${base}/api/pm/my-work`, { headers: auth('a') });
-      assert.equal(res.status, 503);
-      const body = (await res.json()) as { code: string };
-      assert.equal(body.code, 'PM_DIRECTORY_UNAVAILABLE');
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as {
+        myWork: { overdue: unknown[] };
+        ownerResolution: { mapped: boolean; reason?: string; empty: boolean };
+      };
+      assert.equal(body.ownerResolution.mapped, false);
+      assert.equal(body.ownerResolution.reason, 'PM_DIRECTORY_UNAVAILABLE');
+      assert.equal(body.ownerResolution.empty, true);
+      assert.deepEqual(body.myWork.overdue, []);
     });
 
-    const emptyLookup: UserBasicLookup = async (oid) => ({
+    const emptyLookup: UserBasicLookup = async () => ({
       ok: false,
       reason: 'empty',
     });
     await withSpHub({ entitlements: () => ['ACCG01'], lookup: emptyLookup }, async ({ base }) => {
       const res = await fetch(`${base}/api/pm/my-work`, { headers: auth('a') });
-      assert.equal(res.status, 503);
-      const body = (await res.json()) as { code: string };
-      assert.equal(body.code, 'PM_IDENTITY_UNMAPPED');
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as {
+        ownerResolution: { mapped: boolean; reason?: string };
+      };
+      assert.equal(body.ownerResolution.mapped, false);
+      assert.equal(body.ownerResolution.reason, 'PM_IDENTITY_UNMAPPED');
+    });
+
+    await withSpHub({ entitlements: () => ['ACCG01'], lookup: failLookup }, async ({ base, graph }) => {
+      graph.seed(PROJECTS, {
+        Title: 'Alder',
+        ClientCode: 'ACCG01',
+        IsInternalProject: false,
+        ProjectStatus: 'In Progress',
+        ProjectHealth: 'Green',
+        Priority: 'Medium',
+      }, '63');
+      graph.seed(TASKS, {
+        Title: 'JWT mine',
+        ProjectIdLookupId: 63,
+        ClientCode: 'ACCG01',
+        TaskStatus: 'In Progress',
+        Priority: 'High',
+        OwnerEmail: `${USER_A.slice(0, 8)}@hvcg.example`,
+        DueDate: '2020-01-01',
+      }, '64');
+      const res = await fetch(`${base}/api/pm/my-work`, { headers: auth('a-mail') });
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as {
+        myWork: { overdue: Array<{ id: string }> };
+        ownerResolution: { mapped: boolean; source?: string };
+      };
+      assert.equal(body.ownerResolution.mapped, true);
+      assert.equal(body.ownerResolution.source, 'jwt');
+      assert.deepEqual(body.myWork.overdue.map((t) => t.id), ['64']);
     });
   });
 
@@ -816,6 +860,7 @@ describe('SharePoint PM HTTP', () => {
 const LEADS = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2';
 const CONTACTS = 'ffffffff-ffff-4fff-8fff-fffffffffff1';
 const OPPORTUNITIES = 'ffffffff-ffff-4fff-8fff-fffffffffff2';
+const COMMS = 'ffffffff-ffff-4fff-8fff-fffffffffff3';
 
 describe('SharePoint HVCG_Leads operator queue', () => {
   async function withLeads(
@@ -1592,7 +1637,14 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(authorized.status, 200);
       const authorizedBody = (await authorized.json()) as {
         client: { clientStage?: string; etag?: string };
-        activation: { status: string; entitlementProvisioned: boolean; entraGroupProvisioned: boolean };
+        activation: {
+          status: string;
+          entitlementProvisioned: boolean;
+          entraGroupProvisioned: boolean;
+          portalAccessProvisioned: boolean;
+          documentRequestPathProvisioned: boolean;
+          workspaceProvisioning: string;
+        };
         created: boolean;
         replay: boolean;
       };
@@ -1600,6 +1652,9 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(authorizedBody.activation.status, 'authorized');
       assert.equal(authorizedBody.activation.entitlementProvisioned, false);
       assert.equal(authorizedBody.activation.entraGroupProvisioned, false);
+      assert.equal(authorizedBody.activation.portalAccessProvisioned, true);
+      assert.equal(authorizedBody.activation.documentRequestPathProvisioned, true);
+      assert.equal(authorizedBody.activation.workspaceProvisioning, 'ready');
       assert.equal(authorizedBody.created, true);
       assert.equal(authorizedBody.replay, false);
 
@@ -1620,9 +1675,40 @@ describe('SharePoint HVCG_Leads operator queue', () => {
         body: JSON.stringify({ action: 'verify', opportunityId: '130' }),
       });
       assert.equal(verified.status, 200);
-      const verifiedBody = (await verified.json()) as { activation: { status: string; entitlementProvisioned: boolean } };
+      const verifiedBody = (await verified.json()) as {
+        activation: {
+          status: string;
+          entitlementProvisioned: boolean;
+          portalAccessProvisioned: boolean;
+          documentRequestPathProvisioned: boolean;
+          workspaceProvisioning: string;
+        };
+      };
       assert.equal(verifiedBody.activation.status, 'verified');
       assert.equal(verifiedBody.activation.entitlementProvisioned, false);
+      assert.equal(verifiedBody.activation.portalAccessProvisioned, true);
+      assert.equal(verifiedBody.activation.documentRequestPathProvisioned, true);
+      assert.equal(verifiedBody.activation.workspaceProvisioning, 'ready');
+
+      const portal = await fetch(`${base}/api/pm/clients/SYNTH01/portal`, { headers: auth('staff') });
+      assert.equal(portal.status, 200);
+      const portalBody = (await portal.json()) as {
+        portal: { kind: string; operatorChrome: boolean; atlasOperatorDesk: boolean; documentRequestHref: string };
+      };
+      assert.equal(portalBody.portal.kind, 'client_portal_v1');
+      assert.equal(portalBody.portal.operatorChrome, false);
+      assert.equal(portalBody.portal.atlasOperatorDesk, false);
+      assert.equal(JSON.stringify(portalBody).includes('Atlas Hub operator desk'), false);
+      const reqs = await fetch(`${base}/api/pm/clients/SYNTH01/document-requests`, {
+        method: 'POST',
+        headers: auth('staff'),
+        body: JSON.stringify({ title: 'W-9' }),
+      });
+      assert.equal(reqs.status, 200);
+      const listed = await fetch(`${base}/api/pm/clients/SYNTH01/document-requests`, { headers: auth('staff') });
+      const listedBody = (await listed.json()) as { documentRequests: Array<{ title: string; binariesInAtlas: boolean }> };
+      assert.equal(listedBody.documentRequests[0]?.title, 'W-9');
+      assert.equal(listedBody.documentRequests[0]?.binariesInAtlas, false);
       assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
 
       const store = JSON.parse(readFileSync(join(dataDir, 'integration-store.json'), 'utf8')) as {
@@ -1656,6 +1742,72 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       });
       assert.equal(res.status, 503);
     });
+  });
+
+  it('client portal is isolated from operator chrome and foreign codes', async () => {
+    await withCrmLeads(async ({ base, graph }) => {
+      graph.seed(CLIENTS, { Title: 'SYNTHETIC QA Portal', ClientCode: 'SYNTH01', ClientStage: 'Active Client' }, '93');
+      graph.seed(CLIENTS, { Title: 'Alder', ClientCode: 'ACCG01', ClientStage: 'Active Client' }, '94');
+      const clientPortal = await fetch(`${base}/api/pm/clients/SYNTH01/portal`, { headers: auth('client') });
+      assert.equal(clientPortal.status, 200);
+      const body = (await clientPortal.json()) as { portal: { operatorChrome: boolean; clientCode: string } };
+      assert.equal(body.portal.clientCode, 'SYNTH01');
+      assert.equal(body.portal.operatorChrome, false);
+      const foreign = await fetch(`${base}/api/pm/clients/ACCG01/portal`, { headers: auth('client') });
+      assert.equal(foreign.status, 404);
+      const operator = await fetch(`${base}/operator`, { headers: auth('client') });
+      assert.equal(operator.status, 403);
+      assert.equal((await operator.text()).includes('Atlas Hub operator desk'), false);
+    }, (oid) => (oid === USER_CLIENT ? ['SYNTH01'] : ['SYNTH01', 'ACCG01']));
+  });
+
+  it('knowledge ledger uses Hub SharePoint MI and stays entitled-honest', async () => {
+    const prevComms = process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID;
+    process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID = COMMS;
+    try {
+      await withCrmLeads(async ({ base, graph }) => {
+        graph.seed(CLIENTS, { Title: 'SYNTHETIC QA Knowledge', ClientCode: 'SYNTH01' }, '95');
+        graph.seed(
+          COMMS,
+          {
+            Title: 'SYNTH01 intake memo',
+            ClientCode: 'SYNTH01',
+            Summary: 'File metadata index. Binary remains in OneDrive/SharePoint.',
+            SourceItemId: 'file:synth01-intake',
+          },
+          '201',
+        );
+        graph.seed(
+          COMMS,
+          {
+            Title: 'Hart invented file',
+            ClientCode: 'HART01',
+            Summary: 'File metadata index. Binary remains in OneDrive/SharePoint.',
+            SourceItemId: 'file:hart-invented',
+          },
+          '202',
+        );
+        const emptyish = await fetch(`${base}/api/pm/documents`, { headers: auth('client') });
+        assert.equal(emptyish.status, 200);
+        const emptyBody = (await emptyish.json()) as {
+          documents: { kind: string; graphSitesSearch: boolean; items: Array<{ clientCode: string; title: string }> };
+        };
+        assert.equal(emptyBody.documents.kind, 'knowledge_ledger_v1');
+        assert.equal(emptyBody.documents.graphSitesSearch, false);
+        assert.equal(emptyBody.documents.items.some((i) => i.clientCode === 'HART01'), false);
+        assert.equal(emptyBody.documents.items.some((i) => /Hart|Prodigy|Christie|Kava/i.test(i.title)), false);
+        assert.ok(emptyBody.documents.items.some((i) => i.clientCode === 'SYNTH01'));
+
+        const staff = await fetch(`${base}/api/pm/documents`, { headers: auth('staff') });
+        const staffBody = (await staff.json()) as {
+          documents: { empty: boolean; items: Array<{ clientCode: string }> };
+        };
+        assert.equal(staffBody.documents.items.some((i) => i.clientCode === 'HART01'), false);
+      }, (oid) => (oid === USER_CLIENT || oid === USER_STAFF ? ['SYNTH01'] : ['SYNTH01']));
+    } finally {
+      if (prevComms === undefined) delete process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID;
+      else process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID = prevComms;
+    }
   });
 
   it('portfolio blockerCount uses blocked tasks and dataQuality.needsOwnerReview', async () => {

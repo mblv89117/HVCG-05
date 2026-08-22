@@ -1,8 +1,9 @@
 /**
  * Governed Client Activation — separate from Opportunity Won.
  * Won creates Activation Required. Authorize (Manny-only) is the only
- * path that sets ClientStage=Active Client. This workflow never provisions
- * Entra groups, SharePoint libraries, portal access, or entitlements.
+ * path that sets ClientStage=Active Client.
+ * Authorize/verify attach Hub-governed portal + workspace + document-request
+ * paths. They never provision Entra groups or SharePoint libraries.
  */
 
 export const CLIENT_ACTIVATION_MARKER = 'HVCG_ACTIVATION_V1:';
@@ -47,8 +48,9 @@ export type ClientActivationRecord = {
   entitlementProvisioned: false;
   entraGroupProvisioned: false;
   sharePointLibraryProvisioned: false;
-  portalAccessProvisioned: false;
-  workspaceProvisioning: 'not_started' | 'staged' | 'blocked_pending_owner';
+  portalAccessProvisioned: boolean;
+  documentRequestPathProvisioned: boolean;
+  workspaceProvisioning: 'not_started' | 'staged' | 'ready' | 'blocked_pending_owner';
 };
 
 export function activationIdempotencyKey(clientCode: string, opportunityId: string): string {
@@ -69,7 +71,11 @@ export function parseActivationNotes(notes?: string): ClientActivationRecord | u
   try {
     const parsed = JSON.parse(json) as ClientActivationRecord;
     if (parsed?.version !== 1 || !parsed.clientCode || !parsed.opportunityId) return undefined;
-    return parsed;
+    return {
+      ...parsed,
+      documentRequestPathProvisioned: parsed.documentRequestPathProvisioned === true,
+      portalAccessProvisioned: parsed.portalAccessProvisioned === true,
+    };
   } catch {
     return undefined;
   }
@@ -110,6 +116,7 @@ export function emptyProvisioning(): Pick<
   | 'entraGroupProvisioned'
   | 'sharePointLibraryProvisioned'
   | 'portalAccessProvisioned'
+  | 'documentRequestPathProvisioned'
   | 'workspaceProvisioning'
 > {
   return {
@@ -117,6 +124,35 @@ export function emptyProvisioning(): Pick<
     entraGroupProvisioned: false,
     sharePointLibraryProvisioned: false,
     portalAccessProvisioned: false,
+    documentRequestPathProvisioned: false,
     workspaceProvisioning: 'not_started',
+  };
+}
+
+/** Hub-local paths only. Never claims Entra / SharePoint library / entitlement groups. */
+export function governedHubProvisioning(): Pick<
+  ClientActivationRecord,
+  | 'entitlementProvisioned'
+  | 'entraGroupProvisioned'
+  | 'sharePointLibraryProvisioned'
+  | 'portalAccessProvisioned'
+  | 'documentRequestPathProvisioned'
+  | 'workspaceProvisioning'
+> {
+  return {
+    entitlementProvisioned: false,
+    entraGroupProvisioned: false,
+    sharePointLibraryProvisioned: false,
+    portalAccessProvisioned: true,
+    documentRequestPathProvisioned: true,
+    workspaceProvisioning: 'ready',
+  };
+}
+
+export function clientPortalHrefs(clientCode: string) {
+  return {
+    portalHref: `/api/pm/clients/${clientCode}/portal`,
+    workspaceHref: `/api/pm/clients/${clientCode}/workspace`,
+    documentRequestHref: `/api/pm/clients/${clientCode}/document-requests`,
   };
 }

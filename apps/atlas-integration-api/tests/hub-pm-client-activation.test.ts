@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   activationIdempotencyKey,
   classifyClientActivation,
+  clientPortalHrefs,
+  governedHubProvisioning,
   parseActivationNotes,
   writeActivationNotes,
 } from '../src/pm/sharepoint/clientActivation.ts';
@@ -36,6 +38,7 @@ describe('client activation helpers', () => {
           entraGroupProvisioned: false,
           sharePointLibraryProvisioned: false,
           portalAccessProvisioned: false,
+          documentRequestPathProvisioned: false,
           workspaceProvisioning: 'staged',
         },
       }),
@@ -55,6 +58,7 @@ describe('client activation helpers', () => {
       entraGroupProvisioned: false,
       sharePointLibraryProvisioned: false,
       portalAccessProvisioned: false,
+      documentRequestPathProvisioned: false,
       workspaceProvisioning: 'not_started',
     });
     assert.match(notes, /Existing operator note/);
@@ -62,5 +66,17 @@ describe('client activation helpers', () => {
     assert.equal(parsed?.clientCode, 'SYNTH01');
     assert.equal(parsed?.status, 'activation_required');
     assert.equal(parsed?.entitlementProvisioned, false);
+  });
+
+  it('governed Hub provisioning sets portal/workspace/document-request without Entra', () => {
+    const provisioned = governedHubProvisioning();
+    assert.equal(provisioned.portalAccessProvisioned, true);
+    assert.equal(provisioned.documentRequestPathProvisioned, true);
+    assert.equal(provisioned.workspaceProvisioning, 'ready');
+    assert.equal(provisioned.entitlementProvisioned, false);
+    assert.equal(provisioned.entraGroupProvisioned, false);
+    assert.equal(provisioned.sharePointLibraryProvisioned, false);
+    assert.equal(clientPortalHrefs('SYNTH01').portalHref, '/api/pm/clients/SYNTH01/portal');
+    assert.equal(clientPortalHrefs('SYNTH01').documentRequestHref.includes('operator'), false);
   });
 });
