@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AppConfig } from '../../config.ts';
 import { requirePrincipal } from '../../middleware/auth.ts';
+import { isClientOnlyPrincipal } from '../../clientExperience/roles.ts';
 import { resolveHubCommit } from '../../http/hubCommit.ts';
 import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
@@ -163,6 +164,20 @@ export async function handleOperatorDesk(opts: {
       return true;
     }
     throw err;
+  }
+
+  if (isClientOnlyPrincipal(principal)) {
+    sendJson(
+      opts.res,
+      403,
+      {
+        error: 'forbidden',
+        code: 'forbidden',
+        message: 'Client principals cannot use the Atlas operator desk.',
+      },
+      opts.origin,
+    );
+    return true;
   }
 
   const model =

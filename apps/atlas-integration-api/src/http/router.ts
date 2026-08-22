@@ -35,6 +35,7 @@ import type { LocalAiAdapter } from '../local-ai/adapter.ts';
 import { handleLocalAiRoutes } from '../local-ai/http.ts';
 import { handleWebsiteLeadRoutes } from '../website/http.ts';
 import { handleOperatorDesk } from '../pm/operatorDesk/handle.ts';
+import { handleClientExperience } from '../clientExperience/http.ts';
 import { resolveHubBuild, resolveHubCommit } from './hubCommit.ts';
 
 export interface RouterDeps {
@@ -200,6 +201,17 @@ export async function handleRequest(
         origin,
       });
       if (handled) return;
+    }
+
+    if (await handleClientExperience({
+      cfg,
+      req,
+      res,
+      method,
+      path,
+      origin,
+    })) {
+      return;
     }
 
     if (path.startsWith('/api/pm')) {
