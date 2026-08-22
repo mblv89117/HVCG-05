@@ -423,18 +423,32 @@ describe('synthetic client journey isolation', () => {
       const mannyPreviewHtml = await mannyPreview.text();
       assert.match(mannyPreviewHtml, /Operator preview/);
       assert.match(mannyPreviewHtml, new RegExp(SYN_A));
+      assert.match(mannyPreviewHtml, /What we are working on/);
+      assert.match(mannyPreviewHtml, /Commercial context/);
+      assert.match(mannyPreviewHtml, /HVS_DATA_ACCESS=BLOCKED/);
       assert.equal(mannyPreviewHtml.includes(SYN_B), false);
       const mannyPreviewJson = await fetch(`${base}/api/pm/clients/${SYN_A}/desk.json`, { headers: auth('manny') });
       assert.equal(mannyPreviewJson.status, 200);
       const mannyPreviewBody = (await mannyPreviewJson.json()) as {
         preview: boolean;
         signedClientSession: boolean;
-        clientDesk: { clientCode: string; gcc: { workspaceKey: string } };
+        clientDesk: {
+          clientCode: string;
+          gcc: { workspaceKey: string };
+          operatingPicture: { classification: string; hvsDataAccess: string; invented: boolean; customerRecord: boolean };
+          commercial: { liveGtmOutbound: boolean; gcc: { recordedOnly: boolean } };
+        };
       };
       assert.equal(mannyPreviewBody.preview, true);
       assert.equal(mannyPreviewBody.signedClientSession, false);
       assert.equal(mannyPreviewBody.clientDesk.clientCode, SYN_A);
       assert.equal(mannyPreviewBody.clientDesk.gcc.workspaceKey.includes(SYN_B), false);
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.classification, 'CLIENT');
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.invented, false);
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.customerRecord, true);
+      assert.equal(mannyPreviewBody.clientDesk.commercial.liveGtmOutbound, false);
+      assert.equal(mannyPreviewBody.clientDesk.commercial.gcc.recordedOnly, true);
       const mannyForeign = await fetch(`${base}/api/pm/clients/HFD01/desk`, { headers: auth('manny') });
       assert.equal(mannyForeign.status, 404);
       const mannyClientDesk = await fetch(`${base}/client`, { headers: auth('manny') });

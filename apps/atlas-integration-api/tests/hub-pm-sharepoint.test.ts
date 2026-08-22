@@ -1759,19 +1759,31 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.match(staffDeskHtml, /SYNTH01/);
       assert.match(staffDeskHtml, /Needs your attention/);
       assert.match(staffDeskHtml, /W-9/);
+      assert.match(staffDeskHtml, /What we are working on/);
+      assert.match(staffDeskHtml, /Commercial context/);
       assert.equal(staffDeskHtml.includes('HFD01'), false);
       const staffDeskJson = await fetch(`${base}/api/pm/clients/SYNTH01/desk.json`, { headers: auth('staff') });
       assert.equal(staffDeskJson.status, 200);
       const staffDeskBody = (await staffDeskJson.json()) as {
         preview: boolean;
         signedClientSession: boolean;
-        clientDesk: { clientCode: string; attention: Array<{ title: string }>; gcc: { workspaceKey: string } };
+        clientDesk: {
+          clientCode: string;
+          attention: Array<{ title: string }>;
+          gcc: { workspaceKey: string };
+          operatingPicture: { classification: string; hvsDataAccess: string; invented: boolean };
+          commercial: { gcc: { recordedOnly: boolean; available: boolean } };
+        };
       };
       assert.equal(staffDeskBody.preview, true);
       assert.equal(staffDeskBody.signedClientSession, false);
       assert.equal(staffDeskBody.clientDesk.clientCode, 'SYNTH01');
       assert.equal(staffDeskBody.clientDesk.gcc.workspaceKey, 'gcc-SYNTH01');
       assert.ok(staffDeskBody.clientDesk.attention.some((row) => row.title === 'W-9'));
+      assert.equal(staffDeskBody.clientDesk.operatingPicture.classification, 'SYNTHETIC_QA');
+      assert.equal(staffDeskBody.clientDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
+      assert.equal(staffDeskBody.clientDesk.operatingPicture.invented, false);
+      assert.equal(staffDeskBody.clientDesk.commercial.gcc.recordedOnly, true);
       const foreignDesk = await fetch(`${base}/api/pm/clients/HFD01/desk`, { headers: auth('staff') });
       assert.equal(foreignDesk.status, 404);
       const staffClientPath = await fetch(`${base}/client`, { headers: auth('staff') });

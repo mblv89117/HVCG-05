@@ -39,6 +39,14 @@ import {
   saveExperienceStore,
 } from './store.ts';
 import { isClientOnlyPrincipal, isOperatorPrincipal } from './roles.ts';
+import {
+  classifyHubClientRow,
+  emptyOperatingQueues,
+  type OperatingState,
+  type RecoveryLedgerRow,
+} from '../pm/sharepoint/knowledgeClassification.ts';
+import type { KnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
+import type { OperatorCommercialContext } from '../pm/commercialContext/types.ts';
 
 export class ClientExperienceError extends Error {
   readonly status: number;
@@ -568,10 +576,15 @@ export function buildOperatorClientDeskPreview(opts: {
     },
     commercial: {
       clientCode,
-      permitted: true,
-      liveGtmOutbound: false,
-      paidAds: false,
+      permitted: true as const,
+      liveGtmOutbound: false as const,
+      paidAds: false as const,
+      invented: false as const,
+      gcc: { available: false, recordedOnly: true as const, signalCount: 0, emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.' },
+      copilot: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: 'No Copilot assessment or pre-call brief on record. Atlas does not invent MRI findings.' },
+      gtm: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: 'No GTM attribution on record. Live GTM outbound is OFF. Atlas does not invent campaigns.' },
     },
+    operatingPicture: emptyClientOperatingPicture(clientCode, workspace.displayName),
     isolation: {
       failClosed: true,
       sharePointPrimaryUx: false,
@@ -579,6 +592,136 @@ export function buildOperatorClientDeskPreview(opts: {
       signedClientSession: false,
     },
   };
+}
+
+function emptyClientOperatingPicture(clientCode: string, displayName?: string) {
+  const classified = classifyHubClientRow({ clientCode, displayName });
+  const missingData: string[] = [];
+  if (classified.entityKind === 'synthetic_qa') {
+    missingData.push('SYNTHETIC_QA — labeled fixture, not a customer operationalization.');
+  }
+  missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
+  if (classified.entityKind === 'client') {
+    missingData.push('No entitled Hub-visible work has been operationalized for this ClientCode.');
+  }
+  return {
+    kind: 'client_operating_picture_v1' as const,
+    clientCode,
+    invented: false as const,
+    classification: classified.classification,
+    entityKind: classified.entityKind,
+    customerRecord: classified.customerRecord,
+    hvsDataAccess: 'BLOCKED' as const,
+    realClientOperationalized: false,
+    honestEmpty: true,
+    queues: emptyOperatingQueues() as Record<OperatingState, Array<{ id: string; title: string; queue: OperatingState; kind: string; provenance: string }>>,
+    recovery: undefined as RecoveryLedgerRow | undefined,
+    missingData,
+  };
+}
+
+export function attachOperatorDeskOperatingPicture<
+  T extends ReturnType<typeof buildOperatorClientDeskPreview>,
+>(
+  view: T,
+  opts?: {
+    commercial?: OperatorCommercialContext;
+    knowledge?: KnowledgeOperatingPicture;
+  },
+): T {
+  const clientCode = view.clientCode;
+  const classified = classifyHubClientRow({
+    clientCode,
+    displayName: view.workspace.displayName,
+  });
+  let commercial = view.commercial;
+  if (opts?.commercial) {
+    const gccCount = opts.commercial.gcc.signals.filter((s) => s.clientCode === clientCode).length;
+    const copilotCount =
+      opts.commercial.copilot.assessments.filter((a) => a.clientCode === clientCode).length +
+      opts.commercial.copilot.preCall.filter((b) => b.atlasClientCode === clientCode).length +
+      opts.commercial.copilot.sharepoint.filter((s) => s.clientCode === clientCode).length;
+    const gtmCount =
+      opts.commercial.gtm.attributions.filter((a) => a.clientCode === clientCode).length +
+      opts.commercial.gtm.crmSources.filter((s) => s.clientCode === clientCode).length;
+    commercial = {
+      clientCode,
+      permitted: true,
+      liveGtmOutbound: false,
+      paidAds: false,
+      invented: false,
+      gcc: {
+        available: gccCount > 0,
+        recordedOnly: true,
+        signalCount: gccCount,
+        emptyReason: gccCount > 0 ? undefined : opts.commercial.gcc.honesty.emptyReason,
+      },
+      copilot: {
+        available: copilotCount > 0,
+        recordedOnly: true,
+        recordedCount: copilotCount,
+        emptyReason: copilotCount > 0 ? undefined : opts.commercial.copilot.honesty.emptyReason,
+      },
+      gtm: {
+        available: gtmCount > 0,
+        recordedOnly: true,
+        recordedCount: gtmCount,
+        emptyReason: gtmCount > 0 ? undefined : opts.commercial.gtm.honesty.emptyReason,
+      },
+    };
+  }
+
+  let operatingPicture = view.operatingPicture;
+  if (opts?.knowledge) {
+    const queues = emptyOperatingQueues() as typeof operatingPicture.queues;
+    for (const [state, rows] of Object.entries(opts.knowledge.queues) as Array<
+      [OperatingState, KnowledgeOperatingPicture['queues'][OperatingState]]
+    >) {
+      queues[state] = rows
+        .filter((row) => row.clientCode === clientCode)
+        .map((row) => ({
+          id: row.id,
+          title: row.title,
+          queue: row.queue,
+          kind: row.kind,
+          provenance: row.provenance,
+        }));
+    }
+    const recovery = opts.knowledge.recoveryLedger.find((row) => row.clientCode === clientCode);
+    const realClientOperationalized =
+      classified.customerRecord &&
+      Object.values(queues).some((rows) => rows.length > 0);
+    const missingData: string[] = [];
+    if (classified.entityKind === 'synthetic_qa') {
+      missingData.push('SYNTHETIC_QA — labeled fixture, not a customer operationalization.');
+    }
+    if (opts.knowledge.hvsDataAccess === 'BLOCKED') {
+      missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
+    } else if (opts.knowledge.hvsDataAccess === 'PARTIAL') {
+      missingData.push('Historical HVS access is partial. Unreadable repositories stay blocked.');
+    }
+    if (classified.customerRecord && !realClientOperationalized) {
+      missingData.push('No entitled Hub-visible work has been operationalized for this ClientCode.');
+    }
+    if (recovery?.exceptions) missingData.push(recovery.exceptions);
+    if (recovery?.blocker) missingData.push(recovery.blocker);
+    operatingPicture = {
+      kind: 'client_operating_picture_v1',
+      clientCode,
+      invented: false,
+      classification: classified.classification,
+      entityKind: classified.entityKind,
+      customerRecord: classified.customerRecord,
+      hvsDataAccess: opts.knowledge.hvsDataAccess,
+      realClientOperationalized,
+      honestEmpty: !realClientOperationalized,
+      queues,
+      recovery,
+      missingData: [...new Set(missingData)],
+    };
+  }
+
+  return { ...view, commercial, operatingPicture };
 }
 
 export function operatorExperienceStatus(opts: { dataDir: string; principal: AtlasPrincipal; clientCode: string }) {

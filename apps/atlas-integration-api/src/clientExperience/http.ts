@@ -11,6 +11,7 @@ import type { SharePointPmService } from '../pm/sharepoint/repository.ts';
 import { isClientOnlyPrincipal } from './roles.ts';
 import {
   ClientExperienceError,
+  attachOperatorDeskOperatingPicture,
   buildClientWorkspaceView,
   buildOperatorClientDeskPreview,
   decideClientRequest,
@@ -23,6 +24,8 @@ import {
 import { handleClientDesk, renderClientDeskHtml } from './desk.ts';
 import { canAccessOperatorDesk } from '../pm/sharepoint/authz.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
+import { readCommercialContext } from '../pm/commercialContext/handle.ts';
+import { buildKnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
   const headers: Record<string, string> = {
@@ -148,12 +151,32 @@ export async function handleClientExperience(opts: {
         }
         displayName = live.displayName;
       }
-      const view = buildOperatorClientDeskPreview({
+      let view = buildOperatorClientDeskPreview({
         dataDir: opts.cfg.dataDir,
         principal,
         clientCode: deskPreview.code,
         displayName,
       });
+      if (opts.sharepoint) {
+        const [opportunities, leads, knowledge] = await Promise.all([
+          opts.sharepoint.listAuthorizedOpportunities(principal),
+          opts.sharepoint.listAuthorizedLeads(principal),
+          buildKnowledgeOperatingPicture(opts.sharepoint, principal, {
+            dataDir: opts.cfg.dataDir,
+            hvsDataAccess: 'BLOCKED',
+          }),
+        ]);
+        view = attachOperatorDeskOperatingPicture(view, {
+          commercial: readCommercialContext({
+            dataDir: opts.cfg.dataDir,
+            principal,
+            opportunities,
+            leads,
+            clientCode: deskPreview.code,
+          }),
+          knowledge,
+        });
+      }
       const hubSha = resolveHubCommit() || undefined;
       if (deskPreview.asJson) {
         send(
