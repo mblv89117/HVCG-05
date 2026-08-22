@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** D37 — Hub `1ac6257` SHA_GATE=PASS; ATLAS-03 + XSYS VERIFIED_FIXED; ATLAS-01/02 STILL_INCONCLUSIVE; LIVE_CERTIFIED=**NO**; LIVE_P0=**2**
+**CURRENT RELEASE STATE:** D38 — Hub `4b9631a` LINEAGE=PASS; ATLAS-01/02 **STILL_INCONCLUSIVE** (AUTH_SESSION missing); ATLAS-03 + XSYS **VERIFIED_FIXED**; LIVE_CERT=**NO**; LIVE_P0=**2**
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D37 @ `1ac6257`): ATLAS-01/02 **STILL_INCONCLUSIVE** (owner-gated SYN01). ATLAS-03 **VERIFIED_FIXED**. XSYS-01/02 **VERIFIED_FIXED**. **LIVE_CERTIFIED=NO**. **LIVE_P0=2**.
-- Mission `INDEPENDENT_LIVE_VALIDATION_1ac6257` — not a D36/D35/D34/D33/D32 clone.
+- LIVE Hub (D38 @ `4b9631a`): ATLAS-01/02 **STILL_INCONCLUSIVE**. ATLAS-03 **VERIFIED_FIXED**. XSYS-01/02 **VERIFIED_FIXED**. **LIVE_CERT=NO**. **LIVE_P0=2**.
+- Mission `ENTITLED_ATLAS0102_CLASSIFY` — not a D37 clone.
 
 ---
 
@@ -20,36 +20,36 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** LIVE Hub `1ac6257` (D37); prior `64b56dc`
+- **branch/SHA:** LIVE Hub `4b9631a` (D38); prior `1ac6257`
 - **severity:** P0
-- **evidence:** Staff entitlement isolation not live-executed. V3 0407Z SYN01 EMPTY (Capital 403 / clients SYN01 404). D37: no entitled GET/PATCH; no opportunities/1|999999.
-- **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
+- **evidence:** D38: lineage PASS on entitlement-group-members build; unauth 401 holds. AUTH_SESSION not obtainable on RT pod (AZURE_* ABSENT). Entitled SYN01 isolation not independently executed. V3 session claims not accepted as VERIFIED_FIXED.
+- **reproduction:** Authenticate as Team Member entitled only to `ACCG01`/SYN01. `GET /api/pm/opportunities` must not return foreign clients' opportunities.
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
-- **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
-- **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D37 owner-gated SYN01); no staff JWT
+- **recommended remediation:** Entitlement intersection for all principals; Hub AUTH_SESSION for RT retest.
+- **regression test:** Staff entitled to SYN01 cannot list/get foreign opportunities.
+- **status:** LIVE **STILL_INCONCLUSIVE** (D38 AUTH_SESSION missing)
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
-- **branch/SHA:** live `1ac6257` (D37)
+- **branch/SHA:** live `4b9631a` (D38)
 - **severity:** P0
-- **evidence:** D37: entitled foreign Won PATCH not executed (SYN01 empty / owner-gated). Unauth fail-closed 401 holds on opportunities list.
-- **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + `If-Match` + `{ "stage": "Won" }` succeeds.
+- **evidence:** D38: entitled foreign Won PATCH not executed (no AUTH_SESSION). Unauth opportunities 401 holds.
+- **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + Won must fail closed.
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
-- **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
+- **recommended remediation:** ClientCode gate before field write; AUTH_SESSION for RT.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D37 owner-gated SYN01)
+- **status:** LIVE **STILL_INCONCLUSIVE** (D38 AUTH_SESSION missing)
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
-- **branch/SHA:** live Hub `1ac6257` (D37)
+- **branch/SHA:** live Hub `4b9631a` (D38 reconfirm)
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** D37: `GET /api/plaid/link` + `/api/plaid/create` → **405**; `/health` no Plaid key. Same public absence as D36 on new SHA.
-- **reproduction:** With `PLAID_REQUIRE_AUTH=true` on a reachable Plaid host, forge headers without Bearer → accepted (historical). Live Hub does not route Plaid.
-- **impact:** Bank connection/balance/identity isolation collapse **if** a Plaid surface is reachable.
-- **recommended remediation:** If/when Plaid is published, require Hub JWT + server-side entitlements; ignore client headers for authz. Reopen finding if `/api/plaid/*` begins serving.
-- **regression test:** Missing Bearer → 401 on any live Plaid host; Hub `/api/plaid/link` remains non-served (405/404).
-- **status:** LIVE **VERIFIED_FIXED** (D37 reconfirm on `1ac6257`); prior D36
+- **evidence:** D38: `GET /api/plaid/link` + `/create` → **405**; `/health` no Plaid key. No contrary evidence.
+- **reproduction:** Historical header-auth on reachable Plaid host. Live Hub does not route Plaid.
+- **impact:** Bank isolation collapse **if** a Plaid surface is reachable.
+- **recommended remediation:** If/when Plaid is published, require Hub JWT + entitlements.
+- **regression test:** Hub `/api/plaid/link` remains non-served (405).
+- **status:** LIVE **VERIFIED_FIXED** (D38 reconfirm); prior D37/D36
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -752,3 +752,18 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_P0 | **2** (not 0) |
 | LIVE_CERTIFIED | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_37_2026-08-22.md` |
+
+## Directive 38 status appendix (ENTITLED_ATLAS0102_CLASSIFY)
+
+| Gate / ID | Status @ Directive 38 |
+|-----------|------------------------|
+| Live Hub SHA (RT) | `4b9631a0a50e06591dd9100fb48b07e5aea7d008` |
+| LINEAGE | **PASS** |
+| Unauth PM/capital | **401** |
+| AUTH_SESSION | **MISSING** |
+| ATLAS-01 / ATLAS-02 | **STILL_INCONCLUSIVE** |
+| ATLAS-03 | **VERIFIED_FIXED** (reconfirm) |
+| XSYS-01/02 | **VERIFIED_FIXED** (reconfirm) |
+| LIVE_P0 | **2** (not 0) |
+| LIVE_CERT | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_38_2026-08-22.md` |
