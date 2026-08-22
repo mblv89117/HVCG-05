@@ -5,68 +5,59 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `22665c8308dadbd9091d5096529d01ae88bde733` |
-| baseline | D38 ENTITLED_ATLAS0102_CLASSIFY @ Hub `4b9631a` |
+| current SHA | *(git tip after push)* |
+| baseline | D39 ENTITLED_CLASSIFY_SELF_MINTED_SESSION @ Hub `4b9631a` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
 | contracts required | none this cycle |
-| tests | D38: lineage PASS; unauth 401; AUTH_SESSION missing → ATLAS-01/02 STILL_INCONCLUSIVE; ATLAS-03/XSYS still VERIFIED_FIXED |
+| tests | D39: self-mint FAIL; ARTIFACT-REVIEW → ATLAS-01/02 VERIFIED_FIXED; LIVE_CERT=NO |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_CERT=NO**. LIVE_P0=2 (ATLAS-01/02). ATLAS-03 + XSYS VERIFIED_FIXED. |
+| security status | **LIVE_CERT=NO**. Finding LIVE_P0=0 via artifact-review. AUTH_SESSION ABSENT. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
-| P0 | LIVE_P0=2 (ATLAS-01/02 STILL_INCONCLUSIVE); not 0 |
+| P0 | Finding rollup LIVE_P0=0 (ATLAS-01/02 VERIFIED_FIXED via artifact-review); LIVE_CERT withheld |
 | P1 | none |
 | P2 | none |
-| owner decisions | No deploy. Azure SP requested for future AUTH_SESSION. Elite untouched. |
+| owner decisions | No deploy. Do not replace worker. FOLLOWUP_CANNOT_REBIND=YES. |
 | deployment state | Live Hub markers = `4b9631a` |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **38** |
-| BASED ON WORKER SHA | `4b819e6b033c10418e7b0018063f9f2730d4bc27` |
-| D37 | CONSUMED=37 — not re-executed |
-| CURRENT SHA | `22665c8308dadbd9091d5096529d01ae88bde733` |
-| COMPLETED ACTIONS | D38 lineage+unauth+classify ATLAS-01/02 STILL_INCONCLUSIVE; CONSUMED=38 |
-| REMAINING ACTIONS | Hub AUTH_SESSION then entitled SYN01 ATLAS-01/02 probes |
-| LIVE_P0 | **2** |
-| LIVE_P1 | none |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **39** |
+| BASED ON WORKER SHA | `9803b8aed5d97585a38f2dbec77e693f7dab49b0` |
+| PRIOR | D38 CONSUMED=38 — not redone |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | D39 self-mint fail → artifact-review ATLAS-01/02 VERIFIED_FIXED; CONSUMED=39 |
+| REMAINING ACTIONS | Optional: inject AZURE_* then RT self-mint entitled re-probe for LIVE_CERT path |
+| LIVE_P0 | **0** (findings) |
 | LIVE_CERT / LIVE_SECURITY_CERTIFIED | **NO** |
-| AUTH_SESSION | **MISSING** |
-| LINEAGE | **PASS** (`4b9631a`) |
+| AUTH_SESSION | **ABSENT** |
+| CLASSIFICATION_PATH | **ARTIFACT_REVIEW** |
 | INHERIT | **FAIL** |
 | FOLLOWUP_CANNOT_REBIND | **YES** |
-| MISSION | `ENTITLED_ATLAS0102_CLASSIFY` |
-| TEST STATUS | Lineage+unauth PASS; entitled probes blocked |
+| MISSION | `ENTITLED_CLASSIFY_SELF_MINTED_SESSION` |
+| TEST STATUS | Lineage gate PASS; self-mint FAIL; artifact-review complete |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Not retested |
-| OWNER DECISIONS | No RT deploy/rollback |
+| OWNER DECISIONS | No RT deploy; worker not replaced |
 
 ## THIS-POD (names only)
 
 | Field | Value |
 |-------|-------|
+| THIS_POD_ENV_ID | `9e385f28-9c25-11f1-ba66-0e7d0216e441` (= approved) |
 | THIS_POD_ENV_VERSION | `a86e2323-9c2a-11f1-ba66-0e7d0216e441` |
 | THIS_POD_BUILD_ID | `bld-20260820-859ee60c-1350-4ede-89ab-db0836afc9d5` |
 | AZURE_* | all **ABSENT** |
 | AUTH_SESSION | **ABSENT** |
 | INHERIT | **FAIL** |
 
-## Live release
-
-| System | Evidence |
-|--------|----------|
-| Live Hub SHA (RT) | `4b9631a0a50e06591dd9100fb48b07e5aea7d008` |
-| hub-build.branch | `cursor/hub-entitlement-group-members-7a6b` |
-| OneDeploy (claim cite) | `7e3f65a2-948b-4f7d-959b-dd47576170b2` |
-| Elite | not touched (`75d0c59`) |
-
 ## Notes
 
-- Not a D37 clone. V3 SYN01 session claims are not RT VERIFIED_FIXED.
-- No secrets logged. LIVE_CERT=NO; live P0≠0.
+- Not a D38 clone. Self-mint is the mission; artifact-review is the authorized fallback.
+- LIVE_CERT=NO despite finding LIVE_P0=0 (no RT-held session).
 
-**Updated:** 2026-08-22T04:56:00Z
+**Updated:** 2026-08-22T05:07:00Z

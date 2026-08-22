@@ -1,0 +1,15 @@
+DIRECTIVE=39
+UTC=2026-08-22T05:07:05Z
+LINEAGE_GATE_ONLY=YES
+NOT_D38_CLONE=YES
+EXPECTED=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+ATLAS_HUB_COMMIT.txt=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+hub-build.gitSha=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+hub-build.branch=cursor/hub-entitlement-group-members-7a6b
+health.commit=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+ok=true authRequired=true insecureDevAuth=false
+GET /api/pm/opportunities HTTP=401
+GET /api/capital HTTP=401
+GET /api/plaid/link HTTP=405
+POST /api/website/leads bare HTTP=401
+LINEAGE_GATE=PASS
