@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-07-21T05:40:54.846Z",
+  "mode": "read_only_inventory",
+  "originalsUnchanged": true,
+  "hvsAccounts": [
+    {
+      "id": "a5858db9-96e3-497f-a964-969c6667f8bf",
+      "account": "Manuel Barela",
+      "tenant": "highvaluesolution.com"
+    },
+    {
+      "id": "07ed195b-e325-4abd-a138-1a09b533ca6c",
+      "account": "HVS Engagements",
+      "tenant": "highvaluesolution.com"
+    }
+  ],
+  "totals": {
+    "items": 84151,
+    "folders": 28222,
+    "files": 55929,
+    "restrictedFiles": 1861,
+    "duplicateCandidates": 43403,
+    "reviewQueue": 7079,
+    "errors": 0,
+    "unmatchedFiles": 51716
+  },
+  "filesByClient": {
+    "Unmatched": 51716,
+    "ACCG Inc.": 1640,
+    "Lien Partners": 1858,
+    "Hart Family Dental": 333,
+    "Christie's Place LLC": 136,
+    "That's Kava LLC": 6,
+    "Irwin Falk": 3,
+    "Prodigy Games LLC": 237
+  },
+  "filesByClassification": {
+    "Unknown or needs review": 8377,
+    "Marketing": 372,
+    "Contracts": 771,
+    "Investor documents": 233,
+    "Funding documents": 42535,
+    "Accounts receivable": 98,
+    "NDAs": 434,
+    "Ownership information": 14,
+    "Financial statements": 439,
+    "Legal correspondence": 218,
+    "Formation documents": 230,
+    "Tax returns": 732,
+    "Final": 107,
+    "Accounts payable": 146,
+    "Proposals": 277,
+    "Draft": 9,
+    "Meeting records": 89,
+    "Bank statements": 706,
+    "Insurance": 44,
+    "Payroll": 21,
+    "Email attachments": 77
+  },
+  "priorityClients": [
+    {
+      "name": "ACCG Inc.",
+      "files": 1640
+    },
+    {
+      "name": "Prodigy Games LLC",
+      "files": 237
+    },
+    {
+      "name": "That's Kava LLC",
+      "files": 6
+    },
+    {
+      "name": "Christie's Place LLC",
+      "files": 136
+    },
+    {
+      "name": "Christie Falk",
+      "files": 0
+    },
+    {
+      "name": "Irwin Falk",
+      "files": 3
+    },
+    {
+      "name": "Hart Family Dental",
+      "files": 333
+    },
+    {
+      "name": "Colorado Craft Beef",
+      "files": 0
+    },
+    {
+      "name": "Lien Partners",
+      "files": 1858
+    }
+  ]
+}

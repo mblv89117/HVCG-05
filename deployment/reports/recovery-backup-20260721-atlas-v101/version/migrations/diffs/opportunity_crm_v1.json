@@ -1,0 +1,101 @@
+{
+  "description": "Opportunity CRM module additive schema — activity timeline + sales↔capital bridge fields",
+  "addLists": [
+    {
+      "title": "HVCG_OpportunityActivities",
+      "description": "CRM — activity timeline for leads and opportunities",
+      "template": "genericList",
+      "columns": [
+        { "internalName": "Title", "displayName": "Title", "type": "Text", "required": true },
+        { "internalName": "OpportunityId", "displayName": "OpportunityId", "type": "Lookup", "lookupList": "HVCG_Opportunities", "indexed": true },
+        { "internalName": "LeadId", "displayName": "LeadId", "type": "Lookup", "lookupList": "HVCG_Leads", "indexed": true },
+        { "internalName": "ClientId", "displayName": "ClientId", "type": "Lookup", "lookupList": "HVCG_Clients", "indexed": true },
+        {
+          "internalName": "ActivityType",
+          "displayName": "ActivityType",
+          "type": "Choice",
+          "required": true,
+          "indexed": true,
+          "choices": ["Call", "Email", "Meeting", "Note", "StageChange", "Proposal", "Handoff", "FundingUpdate", "Other"],
+          "default": "Note"
+        },
+        { "internalName": "ActivityDate", "displayName": "ActivityDate", "type": "DateTime", "required": true, "indexed": true },
+        { "internalName": "OwnerEmail", "displayName": "OwnerEmail", "type": "Text", "indexed": true },
+        { "internalName": "Outcome", "displayName": "Outcome", "type": "Text" },
+        { "internalName": "Notes", "displayName": "Notes", "type": "Note" },
+        { "internalName": "PriorStage", "displayName": "PriorStage", "type": "Text" },
+        { "internalName": "NewStage", "displayName": "NewStage", "type": "Text" },
+        { "internalName": "CopilotKeywords", "displayName": "CopilotKeywords", "type": "Note" },
+        { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+      ]
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_Opportunities",
+      "column": {
+        "internalName": "CapitalOpportunityId",
+        "displayName": "CapitalOpportunityId",
+        "type": "Lookup",
+        "lookupList": "HVCG_CapitalOpportunities",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": {
+        "internalName": "CapitalHandoffStatus",
+        "displayName": "CapitalHandoffStatus",
+        "type": "Choice",
+        "indexed": true,
+        "choices": ["NotApplicable", "Ready", "HandedOff", "InFunding", "Funded", "Declined"],
+        "default": "NotApplicable"
+      }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "NextActionDate", "displayName": "NextActionDate", "type": "DateTime", "indexed": true }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "NextActionNotes", "displayName": "NextActionNotes", "type": "Note" }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "CopilotKeywords", "displayName": "CopilotKeywords", "type": "Note" }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "CopilotSummary", "displayName": "CopilotSummary", "type": "Note" }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "TeamsThreadUrl", "displayName": "TeamsThreadUrl", "type": "Text" }
+    },
+    {
+      "list": "HVCG_Opportunities",
+      "column": { "internalName": "HVCG_IdempotencyKey", "displayName": "HVCG IdempotencyKey", "type": "Text", "indexed": true }
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "column": {
+        "internalName": "OpportunityId",
+        "displayName": "OpportunityId",
+        "type": "Lookup",
+        "lookupList": "HVCG_Opportunities",
+        "indexed": true
+      }
+    },
+    {
+      "list": "HVCG_CapitalOpportunities",
+      "column": {
+        "internalName": "HandoffSource",
+        "displayName": "HandoffSource",
+        "type": "Choice",
+        "indexed": true,
+        "choices": ["SalesWin", "Direct", "Referral", "Expansion", "Other"],
+        "default": "Direct"
+      }
+    }
+  ]
+}

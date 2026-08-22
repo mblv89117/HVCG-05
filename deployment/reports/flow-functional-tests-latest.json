@@ -1,0 +1,270 @@
+{
+  "generatedAt": "2026-07-22T02:55:38.645585+00:00",
+  "createMode": "HttpRequest-REST-AtlasClientRefId",
+  "fixesApplied": [
+    "InternalOwnerEmail",
+    "ApproverEmail=manny@"
+  ],
+  "docReqsCreated": [
+    {
+      "Title": "ATLAS Harden Doc 015425 A",
+      "AtlasClientRefLookupId": "1",
+      "InternalOwnerEmail": "manny@highvaluecapitalgroup.com",
+      "RequestStatus": "Requested",
+      "ClientCode": "ACCG01"
+    },
+    {
+      "Title": "ATLAS Harden Doc 015425 B",
+      "AtlasClientRefLookupId": "1",
+      "InternalOwnerEmail": "manny@highvaluecapitalgroup.com",
+      "RequestStatus": "Requested",
+      "ClientCode": "ACCG01"
+    },
+    {
+      "Title": "ATLAS Harden Doc S015653 A",
+      "AtlasClientRefLookupId": "1",
+      "InternalOwnerEmail": "manny@highvaluecapitalgroup.com",
+      "RequestStatus": "Requested",
+      "ClientCode": "ACCG01"
+    },
+    {
+      "Title": "ATLAS Harden Doc S015653 B",
+      "AtlasClientRefLookupId": "1",
+      "InternalOwnerEmail": "manny@highvaluecapitalgroup.com",
+      "RequestStatus": "Requested",
+      "ClientCode": "ACCG01"
+    }
+  ],
+  "results": [
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "runStatus": "Succeeded",
+      "runId": "08584169216163361325081182434CU17",
+      "startTime": "2026-07-22T01:54:29.1435212Z",
+      "fails": [],
+      "evidence": {
+        "Create_Folder": {
+          "status": "Failed"
+        },
+        "Create_Library": {
+          "status": "Skipped"
+        },
+        "Get_Client_ByCode": {
+          "status": "Skipped"
+        },
+        "Log_Failed": {
+          "status": "Skipped"
+        },
+        "Log_Result": {
+          "status": "Succeeded",
+          "ID": 162,
+          "Title": "Workspace SkippedDuplicate",
+          "ClientCode": "ACCG01"
+        },
+        "Log_Start": {
+          "status": "Succeeded",
+          "ID": 161,
+          "Title": "Started",
+          "ClientCode": "ACCG01"
+        },
+        "Patch_Client_Url": {
+          "status": "Succeeded",
+          "ID": 1,
+          "Title": "ACCG Inc.",
+          "ClientCode": "ACCG01"
+        }
+      }
+    },
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "runStatus": "Succeeded",
+      "runId": "08584169215579444431226385183CU03",
+      "startTime": "2026-07-22T01:55:27.5353333Z",
+      "fails": [],
+      "evidence": {
+        "Create_Milestone_CriticalDocs": {
+          "status": "Succeeded",
+          "Id": 8,
+          "ID": 8,
+          "Title": "Critical documents collected",
+          "ClientCode": "ACCG01"
+        },
+        "Create_Milestone_Kickoff": {
+          "status": "Succeeded",
+          "Id": 7,
+          "ID": 7,
+          "Title": "Kickoff completed",
+          "ClientCode": "ACCG01"
+        },
+        "Create_Milestone_OnboardingComplete": {
+          "status": "Succeeded",
+          "Id": 9,
+          "ID": 9,
+          "Title": "Onboarding complete",
+          "ClientCode": "ACCG01"
+        },
+        "Create_Project": {
+          "status": "Succeeded",
+          "Id": 27,
+          "ID": 27,
+          "Title": "ACCG01 - Onboarding",
+          "AtlasClientRefId": 1,
+          "ClientCode": "ACCG01"
+        },
+        "Create_Task_CollectDocs": {
+          "status": "Succeeded",
+          "Id": 12,
+          "ID": 12,
+          "Title": "Collect critical onboarding documents",
+          "AtlasClientRefId": 1,
+          "ClientCode": "ACCG01"
+        },
+        "Create_Task_Kickoff": {
+          "status": "Succeeded",
+          "Id": 11,
+          "ID": 11,
+          "Title": "Schedule and run kickoff call",
+          "AtlasClientRefId": 1,
+          "ClientCode": "ACCG01"
+        },
+        "Create_Task_OnboardingReview": {
+          "status": "Succeeded",
+          "Id": 13,
+          "ID": 13,
+          "Title": "Complete onboarding review",
+          "AtlasClientRefId": 1,
+          "ClientCode": "ACCG01"
+        },
+        "Get_Client_ByCode": {
+          "status": "Skipped"
+        },
+        "Get_Existing_Project": {
+          "status": "Succeeded"
+        },
+        "Log_Skipped": {
+          "status": "Skipped"
+        },
+        "Log_Start": {
+          "status": "Succeeded",
+          "ID": 163,
+          "Title": "Started",
+          "ClientCode": "ACCG01"
+        },
+        "Log_Success": {
+          "status": "Succeeded",
+          "ID": 164,
+          "Title": "Project created",
+          "ClientCode": "ACCG01"
+        }
+      }
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "runStatus": "Succeeded",
+      "runId": "08584169214701205183293146817CU19",
+      "startTime": "2026-07-22T01:56:55.3588194Z",
+      "fails": [],
+      "evidence": {
+        "Create_Document_Request": {
+          "status": "Succeeded"
+        },
+        "Get_Client_ByCode": {
+          "status": "Skipped"
+        },
+        "Log_Start": {
+          "status": "Succeeded",
+          "ID": 167,
+          "Title": "Started",
+          "ClientCode": "ACCG01"
+        },
+        "Log_Success": {
+          "status": "Succeeded",
+          "ID": 168,
+          "Title": "Document requests created",
+          "ClientCode": "ACCG01"
+        }
+      }
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "runStatus": "Succeeded",
+      "runId": "08584169181821856627151136758CU11",
+      "startTime": "2026-07-22T02:51:43.2940248Z",
+      "fails": [],
+      "lifecycle": true,
+      "approvalOutcome": "Approve",
+      "approvalId": "6baa1960-5bd3-4dc7-acbc-c4db0534303f",
+      "sharePointAfter": {
+        "DeliverableStatus": "Approved",
+        "InternalReviewStatus": "Approved",
+        "ApproverEmail": "manny@highvaluecapitalgroup.com",
+        "CompletionEvidence": "Approved 2026-07-22T02:53:38.4823057Z by manny@highvaluecapitalgroup.com. Comments: ATLAS GO lifecycle",
+        "ClientCode": "ACCG01",
+        "AtlasClientRefLookupId": "1"
+      },
+      "evidence": {
+        "Start_an_approval": {
+          "status": "Succeeded",
+          "outcome": "Approve"
+        },
+        "Patch_Deliverable_Approved": {
+          "status": "Succeeded"
+        },
+        "Log_Approved": {
+          "status": "Succeeded"
+        },
+        "deliverableId": 6,
+        "DeliverableStatus": "Approved",
+        "InternalReviewStatus": "Approved",
+        "note": "Real approval completed; prior Cancelled Waiting run is superseded"
+      }
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "runStatus": "Succeeded",
+      "runId": "08584169219702596907179209949CU10",
+      "startTime": "2026-07-22T01:48:35.2196608Z",
+      "fails": [],
+      "evidence": {
+        "Create_Decision": {
+          "status": "Succeeded",
+          "Id": 6,
+          "ID": 6,
+          "Title": "ATLAS Harden Decision M014703",
+          "AtlasClientRefId": 1,
+          "ClientCode": "ACCG01"
+        },
+        "Create_Notification": {
+          "status": "Succeeded",
+          "ID": 4,
+          "Title": "Executive decision required: ATLAS Harden Decision M014703"
+        },
+        "Get_Client_ByCode": {
+          "status": "Skipped"
+        },
+        "Get_Existing_Decision": {
+          "status": "Succeeded"
+        },
+        "Log_Skipped": {
+          "status": "Skipped"
+        },
+        "Log_Start": {
+          "status": "Succeeded",
+          "ID": 157,
+          "Title": "Started",
+          "ClientCode": "ACCG01"
+        },
+        "Log_Success": {
+          "status": "Succeeded",
+          "ID": 158,
+          "Title": "Executive decision escalated",
+          "ClientCode": "ACCG01"
+        }
+      }
+    }
+  ],
+  "absoluteGoFlows": true,
+  "notes": "DeliverableApproval real lifecycle Succeeded with Approve + SP Approved. Other four flows previously Succeeded. Button triggers restored after Http test.",
+  "absoluteGoDeliverableApprovalLifecycle": true,
+  "supersededCancelledApprovalRun": "08584169210094707357478215272CU15"
+}

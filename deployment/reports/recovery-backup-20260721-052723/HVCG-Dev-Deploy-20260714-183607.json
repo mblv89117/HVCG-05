@@ -1,0 +1,24 @@
+{
+  "DeploymentDateTime": "2026-07-14T18:35:04.7964560-07:00",
+  "Environment": "pnp-register-development",
+  "Tenant": null,
+  "RepoRoot": "/Volumes/MacMiniPro2TB/HVCG Project Management System",
+  "ResourcesCreated": [],
+  "ResourcesUpdated": [],
+  "ResourcesSkipped": [
+    "PSModule:PnP.PowerShell",
+    "PSModule:Microsoft.Graph"
+  ],
+  "Errors": [],
+  "Warnings": [],
+  "TestResults": null,
+  "OwnerActionsRemaining": [],
+  "NextStep": null,
+  "Log": [
+    "[2026-07-14T18:35:04][INFO] Module present: PnP.PowerShell 3.3.0",
+    "[2026-07-14T18:35:04][INFO] Module present: Microsoft.Graph 2.38.1",
+    "[2026-07-14T18:35:22][STEP] Resolving initial .onmicrosoft.com domain via Microsoft Graph...",
+    "[2026-07-14T18:36:07][SUCCESS] Saved pnpEntraAppClientId to /Volumes/MacMiniPro2TB/HVCG Project Management System/config/environments/development.json"
+  ],
+  "Success": false
+}

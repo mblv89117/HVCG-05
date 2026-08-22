@@ -1,0 +1,146 @@
+{
+  "title": "HVCG_Invoices",
+  "description": "Finance \u2014 Operational invoices (not GL)",
+  "template": "genericList",
+  "domain": "Finance",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "InvoiceNumber",
+      "displayName": "InvoiceNumber",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "InvoiceDate",
+      "displayName": "InvoiceDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AmountCollected",
+      "displayName": "AmountCollected",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InvoiceStatus",
+      "displayName": "InvoiceStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Draft",
+        "Sent",
+        "Partial",
+        "Paid",
+        "Past Due",
+        "Void"
+      ],
+      "default": "Draft"
+    },
+    {
+      "internalName": "InvoiceType",
+      "displayName": "InvoiceType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Retainer",
+        "Setup",
+        "Success Fee",
+        "Expense",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ExternalAccountingId",
+      "displayName": "ExternalAccountingId",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "QuickBooks etc. id"
+    },
+    {
+      "internalName": "FileLink",
+      "displayName": "FileLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

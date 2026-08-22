@@ -1,0 +1,97 @@
+{
+  "title": "HVCG_Budgets",
+  "description": "Finance \u2014 Engagement/client budgets",
+  "template": "genericList",
+  "domain": "Finance",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ApprovedBudget",
+      "displayName": "ApprovedBudget",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "BudgetUsed",
+      "displayName": "BudgetUsed",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "DiscretionarySpendLimit",
+      "displayName": "DiscretionarySpendLimit",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DiscretionarySpendUsed",
+      "displayName": "DiscretionarySpendUsed",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "BudgetStatus",
+      "displayName": "BudgetStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "On Track",
+        "Watch",
+        "Over"
+      ],
+      "default": "On Track"
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

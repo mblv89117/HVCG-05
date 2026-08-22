@@ -1,0 +1,27 @@
+{
+  "messageId": "c8fa82ea-c1ae-4268-925b-04a51e7d6cd3",
+  "threadId": "c8fa82ea-c1ae-4268-925b-04a51e7d6cd3",
+  "timestamp": "2026-07-15T22:19:57Z",
+  "from": "master-pm",
+  "to": [
+    "crm",
+    "executive",
+    "operations",
+    "finance",
+    "client-portal",
+    "ai-governance",
+    "integration"
+  ],
+  "cc": [],
+  "type": "REQUEST",
+  "priority": "HIGH",
+  "subject": "Master PM directive: ACK + status report required",
+  "body": "Master PM is the routing authority on .agent-comms (do not fork/duplicate the bus).\n\nREQUIRED ACTIONS (ack this message):\n1) ACK prior messages requiring ack: System Online (c711cb43...) and Status request (ca2aedb6...).\n2) Heartbeat with accurate status (IN_PROGRESS|IDLE|BLOCKED).\n3) Reply on thread ca2aedb6 with: status, tip commit, blockers, locks needed, next milestone, READY_FOR_INTEGRATION yes/no.\n4) CRM: do NOT interrupt Maker OA / smoke / auth. Report only.\n5) Operations: STOP further edits to locked shared indexes (_index.json, command-center-views.json); file lock request if still needed.\n6) Executive: hold READY FOR INTEGRATION; no shared-file writes.\n7) Portal/AI: commit WIP on your branch; stay exclusive.\n8) Finance: start exclusive scaffold only.\n9) Escalate DECISION types only for owner gates (Prod, merge, consent, licenses, sharing).\n\nOwner decisions already escalated offline: D-001 Maker connector consent; D-002 CRM canvas Maker build.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

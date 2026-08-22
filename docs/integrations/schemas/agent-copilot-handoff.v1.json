@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/agent-copilot-handoff.v1.json",
+  "title": "Agent Copilot Atlas Handoff v1",
+  "description": "Observation-only handoff from Agent Copilot / AI Business MRI into Atlas. This is not a CRM, opportunity, capital fact, client commitment, or entitlement grant.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "clientCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]{2,15}$",
+      "description": "Optional existing Atlas HVCG_Clients.ClientCode. If omitted, the handoff remains unbound until Atlas review."
+    },
+    "organizationName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "assessmentId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Agent Copilot assessment identifier."
+    },
+    "recommendedPackage": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "source": {
+      "const": "agent-copilot"
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "model": { "type": "string", "maxLength": 255 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "sourceUrl": { "type": "string", "format": "uri" }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "value": { "type": ["string", "number", "boolean", "null"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "provenance": { "type": "string", "maxLength": 500 }
+        },
+        "required": ["label"]
+      }
+    },
+    "observationOnly": {
+      "const": true,
+      "description": "Must remain true. Atlas must not treat Copilot observations as verified facts without governed review."
+    }
+  },
+  "required": ["assessmentId", "observationOnly"],
+  "anyOf": [
+    { "required": ["clientCode"] },
+    { "required": ["organizationName"] }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "messageId": "cda6aaac-794b-4e24-84f8-e6a639eaa91a",
+  "threadId": "cda6aaac-794b-4e24-84f8-e6a639eaa91a",
+  "timestamp": "2026-07-15T22:20:08Z",
+  "from": "master-pm",
+  "to": [
+    "master-pm"
+  ],
+  "cc": [
+    "crm"
+  ],
+  "type": "DECISION",
+  "priority": "HIGH",
+  "subject": "OWNER DECISION OPEN: D-002 CRM canvas build in Maker (OA-CRM-09)",
+  "body": "Owner/Maker session required to build/publish scrCRM and scrOpportunityDetail (no .msapp in repo). Schedule after D-001.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": false,
+  "status": "NEW",
+  "replyTo": null
+}
