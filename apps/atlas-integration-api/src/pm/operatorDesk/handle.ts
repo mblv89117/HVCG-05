@@ -11,6 +11,7 @@ import { buildSharePointCommandCenter } from '../sharepoint/http.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
 import { searchSharePointPm } from '../sharepoint/search.ts';
 import { renderOperatorDeskHtml, renderUnsignedOperatorDesk } from './html.ts';
+import { listEntitledAttention, realClientsNeedingAttention } from '../sharepoint/attention.ts';
 import { buildOperatorDeskModel } from './model.ts';
 import { isOperatorDeskPath, wantsOperatorJson, type OperatorDeskModel } from './types.ts';
 
@@ -77,9 +78,11 @@ async function loadSharePointDesk(opts: {
   const q = opts.searchQuery.trim().slice(0, 120);
   const searchRan = q.length >= 2;
   const found = searchRan ? await searchSharePointPm(service, principal, q) : { results: [] };
+  const entitled = entitledClientCodes(principal);
+  const attention = listEntitledAttention(cfg.dataDir, entitled);
   return buildOperatorDeskModel({
     hubSha: resolveHubCommit(),
-    entitledClients: entitledClientCodes(principal),
+    entitledClients: entitled,
     commandCenter: commandCenter as unknown as Record<string, unknown>,
     commercialContext,
     searchQuery: q,
@@ -91,6 +94,13 @@ async function loadSharePointDesk(opts: {
       href: hit.href,
       clientCode: hit.clientCode,
     })),
+    attentionItems: attention.map((row) => ({
+      id: row.id,
+      title: row.classification === 'SYNTHETIC_QA' ? `${row.title} (SYNTHETIC QA)` : row.title,
+      href: row.href,
+      kind: row.kind,
+    })),
+    realClientsNeedingAttention: realClientsNeedingAttention(attention).length,
   });
 }
 

@@ -134,9 +134,14 @@ describe('operator desk copy', () => {
         criticalAlerts: [],
       },
       commercialContext: emptyHonestDesk(1),
+      attentionItems: [{ id: 'docreq-1', title: 'SYNQA W-9 request (SYNTHETIC QA)', href: '/api/pm/clients/SYN01/document-requests', kind: 'document_request' }],
+      realClientsNeedingAttention: 0,
     });
     const html = renderOperatorDeskHtml(model);
+    assert.match(html, /SYNQA W-9 request/);
     assert.match(html, /Approve SYN01 activation/);
+    assert.equal(model.businessHealth.clientsNeedingAttention, 0);
+    assert.equal(model.queues.needsAction[0]?.title.includes('SYNQA W-9'), true);
     assert.match(html, /does not invent LTV/);
     assert.match(html, /does not invent MRI/);
     assert.match(html, /does not invent campaign history/);

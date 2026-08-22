@@ -19,6 +19,7 @@ import {
 } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger, type KnowledgeLedgerItem } from './knowledgeLedger.ts';
 import type { SharePointClient, SharePointPmService, SharePointProject, SharePointTask } from './repository.ts';
+import { listEntitledAttention, type ClientAttentionItem } from './attention.ts';
 
 export type KnowledgeOperatingItem = {
   id: string;
@@ -46,6 +47,7 @@ export type KnowledgeOperatingPicture = {
   documents: Awaited<ReturnType<typeof buildKnowledgeLedger>>;
   classifiedClients: ReturnType<typeof classifyHubClientRow>[];
   queues: Record<OperatingState, KnowledgeOperatingItem[]>;
+  syntheticAttention: ClientAttentionItem[];
   recoveryLedger: RecoveryLedgerRow[];
   honestEmpty: boolean;
 };
@@ -260,6 +262,12 @@ export async function buildKnowledgeOperatingPicture(
     ledgerItems: ledger.items,
     today: opts?.today || new Date().toISOString(),
   });
+  const syntheticAttention = opts?.dataDir
+    ? listEntitledAttention(
+        opts.dataDir,
+        clients.map((c) => c.clientCode).filter((code) => isSyntheticQaClient(code)),
+      )
+    : [];
   const realClientsOperationalized = [
     ...new Set(Object.values(queues).flat().map((row) => row.clientCode)),
   ].sort();
@@ -279,6 +287,7 @@ export async function buildKnowledgeOperatingPicture(
     documents: ledger,
     classifiedClients,
     queues,
+    syntheticAttention,
     recoveryLedger,
     honestEmpty: realClientsOperationalized.length === 0,
   };

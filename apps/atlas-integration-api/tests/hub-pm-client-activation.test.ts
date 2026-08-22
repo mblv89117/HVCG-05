@@ -115,6 +115,7 @@ describe('client activation helpers', () => {
     const hrefs = clientPortalHrefs('SYN01');
     assert.equal(hrefs.portalHref, '/api/pm/clients/SYN01/portal');
     assert.equal(hrefs.documentRequestHref, '/api/pm/clients/SYN01/document-requests');
+    assert.equal(hrefs.attentionHref, '/api/pm/clients/SYN01/attention');
     assert.equal(hrefs.clientDeskHref, '/client');
     assert.equal(hrefs.workspaceHref, '/api/pm/clients/SYN01/workspace');
   });

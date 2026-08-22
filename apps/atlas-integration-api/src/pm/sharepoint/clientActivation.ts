@@ -179,6 +179,7 @@ export function clientPortalHrefs(clientCode: string) {
     portalHref: `/api/pm/clients/${clientCode}/portal`,
     workspaceHref: `/api/pm/clients/${clientCode}/workspace`,
     documentRequestHref: `/api/pm/clients/${clientCode}/document-requests`,
+    attentionHref: `/api/pm/clients/${clientCode}/attention`,
     clientDeskHref: '/client',
     experienceHref: `/api/pm/clients/${clientCode}/experience`,
   };
