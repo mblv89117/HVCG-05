@@ -52,7 +52,8 @@ import {
   type RecoveryLedgerRow,
 } from '../pm/sharepoint/knowledgeClassification.ts';
 import type { KnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
-import type { OperatorCommercialContext } from '../pm/commercialContext/types.ts';
+import { readCommercialContext } from '../pm/commercialContext/handle.ts';
+import { EMPTY_REASON, type OperatorCommercialContext } from '../pm/commercialContext/types.ts';
 
 export class ClientExperienceError extends Error {
   readonly status: number;
@@ -486,6 +487,11 @@ export function buildClientWorkspaceView(opts: {
     seen.add(key);
     return true;
   });
+  const commercial = bindClientVisibleCommercial({
+    dataDir: opts.dataDir,
+    principal: opts.principal,
+    clientCode: requested,
+  });
 
   return {
     kind: 'client_experience_v1' as const,
@@ -510,22 +516,80 @@ export function buildClientWorkspaceView(opts: {
       documentRequestPathProvisioned: true,
       workspaceProvisioning: 'ready' as const,
     },
-    gcc: {
+    gcc: bindIsolatedGccWorkspace({
       workspaceKey: workspace.gccWorkspaceKey,
-      isolated: true,
       clientCode: requested,
-    },
-    commercial: {
-      clientCode: requested,
-      permitted: true,
-      liveGtmOutbound: false,
-      paidAds: false,
-    },
+      commercial,
+    }),
+    commercial,
     isolation: {
       failClosed: true,
       sharePointPrimaryUx: false,
       operatorDesk: false,
     },
+  };
+}
+
+export function bindClientVisibleCommercial(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  clientCode: string;
+}) {
+  const ctx = readCommercialContext({
+    dataDir: opts.dataDir,
+    principal: opts.principal,
+    clientCode: opts.clientCode,
+  });
+  const gccCount = ctx.gcc.signals.filter((row) => row.clientCode === opts.clientCode).length;
+  const copilotCount =
+    ctx.copilot.assessments.filter((row) => row.clientCode === opts.clientCode).length +
+    ctx.copilot.preCall.filter((row) => row.atlasClientCode === opts.clientCode).length +
+    ctx.copilot.sharepoint.filter((row) => row.clientCode === opts.clientCode).length;
+  const gtmCount =
+    ctx.gtm.attributions.filter((row) => row.clientCode === opts.clientCode).length +
+    ctx.gtm.crmSources.filter((row) => row.clientCode === opts.clientCode).length;
+  return {
+    clientCode: opts.clientCode,
+    permitted: true as const,
+    liveGtmOutbound: false as const,
+    paidAds: false as const,
+    invented: false as const,
+    gcc: {
+      available: gccCount > 0,
+      recordedOnly: true as const,
+      signalCount: gccCount,
+      emptyReason: gccCount > 0 ? undefined : ctx.gcc.honesty.emptyReason || EMPTY_REASON.gcc,
+    },
+    copilot: {
+      available: copilotCount > 0,
+      recordedOnly: true as const,
+      recordedCount: copilotCount,
+      emptyReason: copilotCount > 0 ? undefined : ctx.copilot.honesty.emptyReason || EMPTY_REASON.copilot,
+    },
+    gtm: {
+      available: gtmCount > 0,
+      recordedOnly: true as const,
+      recordedCount: gtmCount,
+      emptyReason: gtmCount > 0 ? undefined : ctx.gtm.honesty.emptyReason || EMPTY_REASON.gtm,
+    },
+  };
+}
+
+export function bindIsolatedGccWorkspace(opts: {
+  workspaceKey: string;
+  clientCode: string;
+  commercial: ReturnType<typeof bindClientVisibleCommercial>;
+}) {
+  return {
+    workspaceKey: opts.workspaceKey,
+    isolated: true as const,
+    clientCode: opts.clientCode,
+    recordedOnly: true as const,
+    liveDispatch: false as const,
+    invented: false as const,
+    available: opts.commercial.gcc.available,
+    signalCount: opts.commercial.gcc.signalCount,
+    emptyReason: opts.commercial.gcc.emptyReason,
   };
 }
 

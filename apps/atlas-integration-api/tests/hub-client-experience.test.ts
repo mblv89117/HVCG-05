@@ -465,14 +465,39 @@ describe('synthetic client journey isolation', () => {
       const projects = await fetch(`${base}/api/client/projects`, { headers: auth('client-a') });
       assert.equal(projects.status, 200);
       const gcc = await fetch(`${base}/api/client/gcc`, { headers: auth('client-a') });
-      const gccBody = (await gcc.json()) as { gcc: { workspaceKey: string; clientCode: string } };
+      const gccBody = (await gcc.json()) as {
+        gcc: {
+          workspaceKey: string;
+          clientCode: string;
+          isolated: boolean;
+          recordedOnly: boolean;
+          liveDispatch: boolean;
+          invented: boolean;
+          available: boolean;
+        };
+      };
       assert.equal(gccBody.gcc.clientCode, SYN_A);
+      assert.equal(gccBody.gcc.isolated, true);
+      assert.equal(gccBody.gcc.recordedOnly, true);
+      assert.equal(gccBody.gcc.liveDispatch, false);
+      assert.equal(gccBody.gcc.invented, false);
+      assert.equal(gccBody.gcc.available, false);
       assert.equal(gccBody.gcc.workspaceKey.includes(SYN_B), false);
 
       const commercial = await fetch(`${base}/api/client/commercial-context`, { headers: auth('client-a') });
-      const commercialBody = (await commercial.json()) as { commercial: { clientCode: string; paidAds: boolean } };
+      const commercialBody = (await commercial.json()) as {
+        commercial: {
+          clientCode: string;
+          paidAds: boolean;
+          invented: boolean;
+          gcc: { recordedOnly: boolean; available: boolean };
+        };
+      };
       assert.equal(commercialBody.commercial.clientCode, SYN_A);
       assert.equal(commercialBody.commercial.paidAds, false);
+      assert.equal(commercialBody.commercial.invented, false);
+      assert.equal(commercialBody.commercial.gcc.recordedOnly, true);
+      assert.equal(commercialBody.commercial.gcc.available, false);
 
       const portal = await fetch(`${base}/api/client/portal`, { headers: auth('client-a') });
       assert.equal(portal.status, 200);
@@ -486,6 +511,9 @@ describe('synthetic client journey isolation', () => {
       assert.match(deskHtml, /SYNQA01/);
       assert.equal(deskHtml.includes(SYN_B), false);
       assert.match(deskHtml, /Needs your attention/);
+      assert.match(deskHtml, /Growth Command Center/);
+      assert.match(deskHtml, /Commercial context/);
+      assert.match(deskHtml, /does not invent LTV/);
 
       const unsignedPreview = await fetch(`${base}/api/pm/clients/${SYN_A}/desk`);
       assert.equal(unsignedPreview.status, 401);
@@ -584,8 +612,28 @@ describe('synthetic client journey isolation', () => {
         const session = { authorization: `Bearer ${redeemedBody.clientSessionToken}` };
         const desk = await fetch(`${base}/client.json`, { headers: session });
         assert.equal(desk.status, 200);
-        const deskBody = (await desk.json()) as { clientDesk: { clientCode: string } };
+        const deskBody = (await desk.json()) as {
+          clientDesk: {
+            clientCode: string;
+            gcc: { isolated: boolean; invented: boolean; liveDispatch: boolean; clientCode: string };
+            commercial: { invented: boolean; gcc: { recordedOnly: boolean } };
+          };
+        };
         assert.equal(deskBody.clientDesk.clientCode, SYN_A);
+        assert.equal(deskBody.clientDesk.gcc.isolated, true);
+        assert.equal(deskBody.clientDesk.gcc.invented, false);
+        assert.equal(deskBody.clientDesk.gcc.liveDispatch, false);
+        assert.equal(deskBody.clientDesk.gcc.clientCode, SYN_A);
+        assert.equal(deskBody.clientDesk.commercial.invented, false);
+        assert.equal(deskBody.clientDesk.commercial.gcc.recordedOnly, true);
+
+        const gcc = await fetch(`${base}/api/client/gcc`, { headers: session });
+        assert.equal(gcc.status, 200);
+        const gccBody = (await gcc.json()) as { gcc: { clientCode: string; isolated: boolean } };
+        assert.equal(gccBody.gcc.clientCode, SYN_A);
+        assert.equal(gccBody.gcc.isolated, true);
+        const foreignGcc = await fetch(`${base}/api/client/workspace/${SYN_B}`, { headers: session });
+        assert.equal(foreignGcc.status, 403);
 
         const workspace = await fetch(`${base}/api/client/workspace`, { headers: session });
         assert.equal(workspace.status, 200);

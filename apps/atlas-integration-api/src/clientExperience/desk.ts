@@ -101,7 +101,21 @@ export function renderClientDeskHtml(
     ? (view as ReturnType<typeof buildOperatorClientDeskPreview>)
     : undefined;
   const operating = previewView?.operatingPicture;
-  const commercial = previewView?.commercial;
+  const commercial =
+    view.commercial && 'gcc' in view.commercial && view.commercial.gcc
+      ? view.commercial
+      : undefined;
+  const gccHonesty =
+    'recordedOnly' in view.gcc
+      ? (view.gcc as typeof view.gcc & {
+          available?: boolean;
+          recordedOnly: boolean;
+          liveDispatch?: boolean;
+          invented?: boolean;
+          emptyReason?: string;
+          signalCount?: number;
+        })
+      : undefined;
   const queueLines = operating
     ? (['Needs Action', 'Waiting', 'Overdue', 'Blocked', 'Decision Required', 'At Risk'] as const)
         .flatMap((queue) =>
@@ -159,6 +173,12 @@ export function renderClientDeskHtml(
   <section>
     <h2>Growth Command Center</h2>
     <p>Your isolated GCC workspace is <code>${esc(view.gcc.workspaceKey)}</code>. It cannot see another client.</p>
+    <p class="off">recorded-only · liveDispatch=false · invented=false</p>
+    ${
+      gccHonesty?.available
+        ? `<p>${esc(String(gccHonesty.signalCount || 0))} recorded GCC signal(s) for this ClientCode only.</p>`
+        : `<p class="empty">${esc(gccHonesty?.emptyReason || 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.')}</p>`
+    }
   </section>
   ${commercialSection}
 </main>
