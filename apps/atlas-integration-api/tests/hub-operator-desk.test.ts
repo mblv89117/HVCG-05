@@ -140,7 +140,9 @@ describe('operator desk copy', () => {
     const html = renderOperatorDeskHtml(model);
     assert.match(html, /SYNQA W-9 request/);
     assert.match(html, /Client workspace preview/);
+    assert.match(html, /Client journey/);
     assert.match(html, /\/api\/pm\/clients\/SYN01\/desk/);
+    assert.deepEqual(model.clientJourneys, []);
     assert.match(html, /Approve SYN01 activation/);
     assert.match(html, /What we are working on/);
     assert.match(html, /Synthetic QA work/);
@@ -198,6 +200,9 @@ describe('operator desk HTTP fail-closed', () => {
       assert.match(html, /Atlas Hub operator desk/);
       assert.match(html, /does not invent LTV/);
       assert.match(html, /liveGtmOutbound=false/);
+      assert.match(html, /Client journey/);
+      assert.match(html, /signedClientSession=false/);
+      assert.match(html, /Workspace not staged/);
       assert.equal(html.includes(ACME01), false);
       assert.equal(html.includes('250000'), false);
 
@@ -211,6 +216,14 @@ describe('operator desk HTTP fail-closed', () => {
           liveGtmOutbound: boolean;
           paidAds: boolean;
           entitledClients: string[];
+          clientJourneys: Array<{
+            clientCode: string;
+            classification: string;
+            workspaceStaged: boolean;
+            invitationStatus: string;
+            signedClientSession: boolean;
+            gccWorkspaceKey: string;
+          }>;
           commercialContext: { gcc: { available: boolean; emptyReason?: string } };
           operatingPicture: {
             invented: boolean;
@@ -225,6 +238,17 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.liveGtmOutbound, false);
       assert.equal(body.operatorDesk.paidAds, false);
       assert.deepEqual(body.operatorDesk.entitledClients, [SYN01]);
+      assert.equal(body.operatorDesk.clientJourneys.length, 1);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.clientCode, SYN01);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.classification, 'SYNTHETIC_QA');
+      assert.equal(body.operatorDesk.clientJourneys[0]?.workspaceStaged, false);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.invitationStatus, 'none');
+      assert.equal(body.operatorDesk.clientJourneys[0]?.signedClientSession, false);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.gccWorkspaceKey, 'gcc-SYN01');
+      assert.equal(
+        body.operatorDesk.clientJourneys.some((row) => row.clientCode === ACME01),
+        false,
+      );
       assert.equal(body.operatorDesk.commercialContext.gcc.available, false);
       assert.match(body.operatorDesk.commercialContext.gcc.emptyReason || '', /does not invent LTV/);
       assert.equal(body.operatorDesk.operatingPicture.invented, false);

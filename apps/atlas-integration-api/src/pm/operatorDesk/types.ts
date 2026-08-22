@@ -61,6 +61,22 @@ export interface OperatorOperatingPicture {
   recoveryLedger: OperatorRecoveryRow[];
 }
 
+export interface OperatorClientJourney {
+  clientCode: string;
+  classification: 'SYNTHETIC_QA' | 'CLIENT' | 'READ_ONLY_CLIENT';
+  workspaceStaged: boolean;
+  activationGate: string | null;
+  invitationStatus: 'none' | 'staged' | 'redeemed' | 'expired' | 'revoked';
+  invitationOutboundSent: false;
+  signedClientSession: false;
+  bindingCount: number;
+  openRequestCount: number;
+  documentCount: number;
+  gccWorkspaceKey: string;
+  previewHref: string;
+  nextAction: string;
+}
+
 export interface OperatorSearchHit {
   id: string;
   title: string;
@@ -77,6 +93,7 @@ export interface OperatorDeskModel {
   hubSha: string | null;
   entitledClients: string[];
   clientDeskPreviews: Array<{ clientCode: string; href: string }>;
+  clientJourneys: OperatorClientJourney[];
   businessHealth: {
     activeProjects: number;
     atRiskProjects: number;

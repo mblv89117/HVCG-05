@@ -1,7 +1,7 @@
 import type { DeskCommercialContext } from '../commercialContext/types.ts';
 import { EMPTY_REASON } from '../commercialContext/types.ts';
 import type { KnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
-import { OPERATOR_DESK_CONTRACT, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
+import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
   if (!value || typeof value !== 'object') return typeof value === 'string' ? value : '';
@@ -181,6 +181,7 @@ export function buildOperatorDeskModel(input: {
   attentionItems?: OperatorQueueItem[];
   realClientsNeedingAttention?: number;
   operatingPicture?: OperatorOperatingPicture;
+  clientJourneys?: OperatorClientJourney[];
 }): OperatorDeskModel {
   const cc = input.commandCenter && typeof input.commandCenter === 'object' ? input.commandCenter : {};
   const health =
@@ -207,6 +208,9 @@ export function buildOperatorDeskModel(input: {
       clientCode,
       href: `/api/pm/clients/${clientCode}/desk`,
     })),
+    clientJourneys: (input.clientJourneys || []).filter((row) =>
+      input.entitledClients.includes(row.clientCode),
+    ),
     businessHealth: {
       activeProjects: num(health, 'activeProjects'),
       atRiskProjects: num(health, 'atRiskProjects'),
