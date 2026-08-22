@@ -158,12 +158,16 @@ describe('operator desk copy', () => {
     assert.match(html, /No inventoried files yet in/);
     assert.ok(html.indexOf('<h2>Needs Action</h2>') < html.indexOf('<h2>Waiting</h2>'));
     assert.ok(html.indexOf('<h2>Waiting</h2>') < html.indexOf('<h2>Decision Required</h2>'));
-    assert.ok(html.indexOf('<h2>Decision Required</h2>') < html.indexOf('<h2>Overdue</h2>'));
+    assert.ok(html.indexOf('<h2>Decision Required</h2>') < html.indexOf('<h2>Capital</h2>'));
+    assert.ok(html.indexOf('<h2>Capital</h2>') < html.indexOf('<h2>Overdue</h2>'));
     assert.ok(html.indexOf('<h2>Overdue</h2>') < html.indexOf('<h2>Blocked</h2>'));
     assert.ok(html.indexOf('<h2>Blocked</h2>') < html.indexOf('<h2>At Risk</h2>'));
     assert.ok(html.indexOf('<h2>At Risk</h2>') < html.indexOf('<h2>Recovered HVS clients</h2>'));
     assert.match(html, /Past Due Invoice/);
     assert.match(html, /payment status and amounts not extracted/);
+    assert.match(html, /<h2>Capital<\/h2>/);
+    assert.match(html, /amounts and funding status not extracted/);
+    assert.equal((html.match(/<h2>Capital<\/h2>/g) || []).length, 1);
     assert.equal((html.match(/<h2>Waiting<\/h2>/g) || []).length, 1);
     assert.equal((html.match(/<h2>Decision Required<\/h2>/g) || []).length, 1);
     const recoveredRecordsHtml = html.slice(
@@ -228,6 +232,20 @@ describe('operator desk copy', () => {
       ),
     );
     assert.equal(model.operatingPicture.queues.overdue.length, 2);
+    assert.ok(
+      model.operatingPicture.queues.needsAction.some(
+        (row) =>
+          row.kind === 'hvs_actionable_capital' &&
+          row.clientCode === 'CCB01' &&
+          /capital-packet filename/i.test(row.title) &&
+          !row.href,
+      ),
+    );
+    assert.ok(
+      model.operatingPicture.queues.needsAction.some(
+        (row) => row.kind === 'hvs_actionable_capital' && /Prodigy Games/i.test(row.title),
+      ),
+    );
     assert.equal(model.operatingPicture.hvsActionableClientKnowledge.length, 12);
     assert.ok(
       model.operatingPicture.hvsActionableClientKnowledge.some(

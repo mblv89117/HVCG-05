@@ -239,6 +239,16 @@ describe('knowledge operating picture', () => {
     assert.ok(picture.queues.Overdue.some((row) => row.kind === 'hvs_actionable_overdue' && row.clientCode === 'PDG01'));
     assert.equal(picture.queues.Overdue.filter((row) => row.kind === 'hvs_actionable_overdue').length, 2);
     assert.ok(
+      picture.queues['Needs Action'].some(
+        (row) => row.kind === 'hvs_actionable_capital' && row.clientCode === 'CCB01',
+      ),
+    );
+    assert.ok(
+      picture.queues['Needs Action'].some(
+        (row) => row.kind === 'hvs_actionable_capital' && /capital-packet filename/i.test(row.title),
+      ),
+    );
+    assert.ok(
       picture.hvsActionableClientKnowledge.some(
         (row) =>
           row.client === 'Colorado Beef' &&
