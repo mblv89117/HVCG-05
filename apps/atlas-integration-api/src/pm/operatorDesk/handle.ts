@@ -67,7 +67,6 @@ async function loadSharePointDesk(opts: {
     service.listAuthorizedOpportunities(principal),
     buildKnowledgeOperatingPicture(service, principal, {
       dataDir: cfg.dataDir,
-      hvsDataAccess: 'BLOCKED',
     }),
   ]);
   const milestones = [];

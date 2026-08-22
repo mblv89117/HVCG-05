@@ -81,6 +81,7 @@ describe('knowledge classification', () => {
   it('keeps Christie Place distinct from Falk and Loanspark as vendor', () => {
     const cpl = ENTITY_BOUNDARIES.find((row) => row.clientCode === 'CPL01');
     assert.ok(cpl?.keepDistinctFrom?.includes('Christie Falk'));
+    assert.ok(cpl?.keepDistinctFrom?.includes('Irwin Falk'));
     const loan = ENTITY_BOUNDARIES.find((row) => row.legalName === 'Loanspark');
     assert.equal(loan?.kind, 'vendor_referral');
     const bestDay = ENTITY_BOUNDARIES.find((row) => row.legalName.startsWith('Best Day'));
@@ -160,10 +161,68 @@ describe('knowledge operating picture', () => {
     assert.equal(hart?.provenance, 'STALE_OR_UNCERTAIN');
     assert.equal(hart?.accessible, false);
     assert.equal(hart?.operationalized, false);
-    const hvs = picture.recoveryLedger.find((row) => row.dataType === 'HVS_HISTORICAL');
-    assert.equal(hvs?.accessible, false);
-    assert.equal(hvs?.provenance, 'CONFIRMED');
+    const hvsFolder = picture.recoveryLedger.find((row) => row.dataType === 'HVS_CLIENT_FOLDER' && row.client === 'Prodigy Games');
+    assert.equal(hvsFolder?.provenance, 'CONFIRMED');
+    assert.equal(hvsFolder?.accessible, true);
+    assert.equal(hvsFolder?.operationalized, false);
     assert.equal(Object.values(picture.syntheticQueues).flat().length, 0);
+  });
+
+  it('defaults HVS_DATA_ACCESS to PARTIAL and keeps Hub MI fail-closed', async () => {
+    const picture = await buildKnowledgeOperatingPicture(
+      stubService({
+        clients: [
+          client({
+            clientCode: 'SYN01',
+            displayName: 'SYNTHETIC QA — Atlas Capital Operations',
+          }),
+        ],
+      }),
+      staff,
+      { today: '2026-08-22' },
+    );
+    assert.equal(picture.hvsDataAccess, 'PARTIAL');
+    assert.equal(picture.hvsAccess.status, 'PARTIAL');
+    assert.equal(picture.hvsAccess.hubManagedIdentity, 'BLOCKED');
+    assert.equal(picture.hvsAccess.hvsAdminIdentity, 'HVCG-V3-HVS-Admin');
+    assert.equal(picture.hvsAccess.binariesInAtlas, false);
+    assert.equal(picture.hvsAccess.referenceOnly, true);
+    assert.equal(picture.hvsAccess.confirmedClientFolderCount, 11);
+    assert.deepEqual(picture.realClientsOperationalized, []);
+    assert.equal(picture.honestEmpty, true);
+    assert.equal(picture.binariesInAtlas, false);
+    const pierlo = picture.recoveryLedger.find((row) => row.client.startsWith('Pierlo Inc') && row.dataType === 'HVS_CLIENT_FOLDER');
+    assert.equal(pierlo?.provenance, 'CONFIRMED');
+    assert.equal(pierlo?.operationalized, false);
+    assert.equal(pierlo?.clientCode, '');
+    const mcl = picture.recoveryLedger.find((row) => row.dataType === 'HVS_MASTER_CLIENT_LIST');
+    assert.equal(mcl?.client, 'Pierlo Inc.');
+    assert.equal(mcl?.provenance, 'CONFIRMED');
+    assert.equal(mcl?.operationalized, false);
+    const lead = picture.recoveryLedger.find((row) => row.client === 'Helping Hands');
+    assert.equal(lead?.provenance, 'STALE_OR_UNCERTAIN');
+    const hart = picture.recoveryLedger.find((row) => row.clientCode === 'HFD01');
+    assert.equal(hart?.provenance, 'STALE_OR_UNCERTAIN');
+    assert.equal(hart?.operationalized, false);
+    const kava = picture.recoveryLedger.find((row) => row.clientCode === 'KAVA01');
+    assert.equal(kava?.provenance, 'STALE_OR_UNCERTAIN');
+    assert.equal(kava?.operationalized, false);
+    const christie = picture.recoveryLedger.find((row) => row.client === 'Christie Falk');
+    assert.equal(christie?.provenance, 'STALE_OR_UNCERTAIN');
+    assert.equal(christie?.dataType, 'RELATED_PERSON');
+    const irwin = picture.recoveryLedger.find((row) => row.client === 'Irwin Falk');
+    assert.equal(irwin?.provenance, 'STALE_OR_UNCERTAIN');
+    const template = picture.recoveryLedger.find((row) => row.client.includes('Template'));
+    assert.equal(template?.dataType, 'HVS_TEMPLATE_FOLDER');
+    const workbook = picture.recoveryLedger.find((row) => row.dataType === 'HVS_TRANSACTION_WORKBOOK');
+    assert.match(workbook?.exceptions || '', /must not be invented/);
+    assert.equal(/\b\d+\.\d{2}\b/.test(JSON.stringify(workbook)), false);
+    assert.equal(picture.entitledClientCodes.includes('PDG01'), false);
+    assert.equal(
+      picture.recoveryLedger.filter((row) => row.operationalized).every((row) => row.clientCode !== 'SYN01'),
+      true,
+    );
+    assert.equal(picture.recoveryLedger.some((row) => row.operationalized && row.source.startsWith('hvs_admin')), false);
   });
 
   it('labels entitled SYN01 CRM work as syntheticQueues and never as real operationalization', async () => {

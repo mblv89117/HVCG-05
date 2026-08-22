@@ -209,7 +209,6 @@ export async function handleClientExperience(opts: {
           opts.sharepoint.listAuthorizedLeads(principal),
           buildKnowledgeOperatingPicture(opts.sharepoint, principal, {
             dataDir: opts.cfg.dataDir,
-            hvsDataAccess: 'BLOCKED',
           }),
         ]);
         view = attachOperatorDeskOperatingPicture(view, {

@@ -151,11 +151,11 @@ describe('operator desk copy', () => {
     assert.match(html, /At Risk/);
     assert.match(html, /Decision Required/);
     assert.match(html, /Missing or blocked data/);
-    assert.match(html, /HVS_DATA_ACCESS=BLOCKED/);
+    assert.match(html, /HVS_DATA_ACCESS=PARTIAL/);
     assert.match(html, /does not invent work/);
     assert.match(html, /SYN01 is not a customer operationalization/);
     assert.equal(model.operatingPicture.invented, false);
-    assert.equal(model.operatingPicture.hvsDataAccess, 'BLOCKED');
+    assert.equal(model.operatingPicture.hvsDataAccess, 'PARTIAL');
     assert.equal(model.operatingPicture.honestEmpty, true);
     assert.deepEqual(model.operatingPicture.realClientsOperationalized, []);
     assert.equal(model.businessHealth.clientsNeedingAttention, 0);
@@ -368,7 +368,7 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.commercialContext.gcc.available, false);
       assert.match(body.operatorDesk.commercialContext.gcc.emptyReason || '', /does not invent LTV/);
       assert.equal(body.operatorDesk.operatingPicture.invented, false);
-      assert.equal(body.operatorDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
+      assert.equal(body.operatorDesk.operatingPicture.hvsDataAccess, 'PARTIAL');
       assert.equal(body.operatorDesk.operatingPicture.honestEmpty, true);
       assert.deepEqual(body.operatorDesk.operatingPicture.realClientsOperationalized, []);
       assert.deepEqual(body.operatorDesk.operatingPicture.syntheticQueues.needsAction, []);

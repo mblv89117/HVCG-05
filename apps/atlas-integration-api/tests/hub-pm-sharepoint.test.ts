@@ -1781,7 +1781,7 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(staffDeskBody.clientDesk.gcc.workspaceKey, 'gcc-SYNTH01');
       assert.ok(staffDeskBody.clientDesk.attention.some((row) => row.title === 'W-9'));
       assert.equal(staffDeskBody.clientDesk.operatingPicture.classification, 'SYNTHETIC_QA');
-      assert.equal(staffDeskBody.clientDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
+      assert.equal(staffDeskBody.clientDesk.operatingPicture.hvsDataAccess, 'PARTIAL');
       assert.equal(staffDeskBody.clientDesk.operatingPicture.invented, false);
       assert.equal(staffDeskBody.clientDesk.commercial.gcc.recordedOnly, true);
       const foreignDesk = await fetch(`${base}/api/pm/clients/HFD01/desk`, { headers: auth('staff') });

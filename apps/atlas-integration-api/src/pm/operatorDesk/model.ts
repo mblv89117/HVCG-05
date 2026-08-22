@@ -1,6 +1,7 @@
 import type { DeskCommercialContext } from '../commercialContext/types.ts';
 import { EMPTY_REASON } from '../commercialContext/types.ts';
 import type { KnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
+import { hvsAccessMissingData, resolveHvsDataAccess } from '../sharepoint/hvsRecoveryInventory.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -79,7 +80,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
   return {
     kind: 'operator_operating_picture_v1',
     invented: false,
-    hvsDataAccess: 'BLOCKED',
+    hvsDataAccess: resolveHvsDataAccess(),
     realClientsOperationalized: [],
     syntheticClientsVisible: [],
     honestEmpty: true,
@@ -104,7 +105,8 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
       outcomes: [],
     },
     missingData: [
-      'Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).',
+      hvsAccessMissingData(resolveHvsDataAccess()),
+      'Hub MI HVCG_Clients remain fail-closed. Atlas does not invent unseen SharePoint rows.',
       'No entitled Hub-visible customer work has been operationalized for this principal.',
     ],
     recoveryLedger: [],
@@ -116,11 +118,7 @@ export function operatorOperatingPictureFromKnowledge(
 ): OperatorOperatingPicture {
   if (!knowledge) return emptyHonestOperatingPicture();
   const missingData: string[] = [];
-  if (knowledge.hvsDataAccess === 'BLOCKED') {
-    missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
-  } else if (knowledge.hvsDataAccess === 'PARTIAL') {
-    missingData.push('Historical HVS access is partial. Unreadable repositories stay blocked.');
-  }
+  missingData.push(hvsAccessMissingData(knowledge.hvsDataAccess));
   if (knowledge.syntheticClientsVisible.length) {
     missingData.push('SYNTHETIC_QA clients are labeled fixtures, not customer operationalizations.');
   }
@@ -158,7 +156,7 @@ export function operatorOperatingPictureFromKnowledge(
       outcomes: mapQueue(knowledge.syntheticQueues?.Outcomes),
     },
     missingData: [...new Set(missingData)].slice(0, 12),
-    recoveryLedger: knowledge.recoveryLedger.slice(0, 20).map((row) => ({
+    recoveryLedger: knowledge.recoveryLedger.slice(0, 80).map((row) => ({
       client: row.client,
       clientCode: row.clientCode,
       dataType: row.dataType,

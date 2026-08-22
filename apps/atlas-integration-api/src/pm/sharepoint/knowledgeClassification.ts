@@ -54,50 +54,56 @@ export const ENTITY_BOUNDARIES: readonly EntityBoundary[] = [
     legalName: 'Hart Family Dental',
     kind: 'client',
     writePolicy: 'normal',
-    notes: 'Known example. Operationalize only from a Hub-visible entitled row.',
+    notes:
+      'Catalog-only. 2026-08-22 HVS-admin discovery found no 00_Client Files folder, Master Client List row, or hart-named files. Remain STALE_OR_UNCERTAIN until Hub-visible.',
   },
   {
     clientCode: 'CPL01',
     legalName: "Christie's Place LLC",
     kind: 'client',
     writePolicy: 'normal',
-    keepDistinctFrom: ['Christie Falk'],
-    notes: "Christie's Place is the client entity. Falk is a related person, not a second client code.",
+    keepDistinctFrom: ['Christie Falk', 'Irwin Falk'],
+    notes:
+      "HVS 00_Client Files folder CONFIRMED. Christie's Place is the client entity. Falk is a related person, not a second client code.",
   },
   {
     clientCode: 'PDG01',
     legalName: 'Prodigy Games LLC',
     kind: 'client',
     writePolicy: 'normal',
-    notes: 'Known example. Operationalize only from a Hub-visible entitled row.',
+    notes:
+      'HVS 00_Client Files folder CONFIRMED. Transaction workbooks exist at Documents root. Operationalize only from a Hub-visible entitled row. Do not invent balances.',
   },
   {
     clientCode: "KAVA01",
     legalName: "That's Kava LLC",
     kind: 'client',
     writePolicy: 'normal',
-    notes: 'Known example. Operationalize only from a Hub-visible entitled row.',
+    notes:
+      'HVS materials found by admin search but no 00_Client Files folder and no Master Client List row. Client-roster status remains STALE_OR_UNCERTAIN.',
   },
   {
     clientCode: 'ACCG01',
     legalName: 'ACCG',
     kind: 'client',
     writePolicy: 'read_only',
-    notes: 'Read-only unless an approved write window exists. This cycle has no approved window.',
+    notes:
+      'HVS 00_Client Files folder CONFIRMED (ACCG Inc). Read-only unless an approved write window exists. This cycle has no approved window.',
   },
   {
     clientCode: 'CCB01',
     legalName: 'Colorado Craft Beef',
     kind: 'client',
     writePolicy: 'normal',
-    notes: 'Present on the Hub entitlement/code catalog. Operationalize only from a Hub-visible entitled row.',
+    notes:
+      'HVS folder name is Colorado Beef. Catalog code CCB01. Operationalize only from a Hub-visible entitled row.',
   },
   {
     clientCode: 'LIEN01',
     legalName: 'Lien Partners',
     kind: 'client',
     writePolicy: 'normal',
-    notes: 'Present on the Hub entitlement/code catalog. Operationalize only from a Hub-visible entitled row.',
+    notes: 'HVS 00_Client Files folder CONFIRMED (Lien Partners LLC). Operationalize only from a Hub-visible entitled row.',
   },
   {
     clientCode: 'SYN01',
@@ -105,6 +111,20 @@ export const ENTITY_BOUNDARIES: readonly EntityBoundary[] = [
     kind: 'synthetic_qa',
     writePolicy: 'normal',
     notes: 'Synthetic QA tenant. Never treat as a customer operating record.',
+  },
+  {
+    legalName: 'Christie Falk',
+    kind: 'unknown_code',
+    writePolicy: 'none',
+    keepDistinctFrom: ["Christie's Place LLC"],
+    notes: "Related person, not a client. Remain STALE_OR_UNCERTAIN. Do not mint a client code.",
+  },
+  {
+    legalName: 'Irwin Falk',
+    kind: 'unknown_code',
+    writePolicy: 'none',
+    keepDistinctFrom: ["Christie's Place LLC"],
+    notes: "Related person, not a client. Remain STALE_OR_UNCERTAIN. Do not mint a client code.",
   },
   {
     legalName: 'Loanspark',

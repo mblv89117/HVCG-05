@@ -52,6 +52,7 @@ import {
   type RecoveryLedgerRow,
 } from '../pm/sharepoint/knowledgeClassification.ts';
 import type { KnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
+import { hvsAccessMissingData, resolveHvsDataAccess } from '../pm/sharepoint/hvsRecoveryInventory.ts';
 import { readCommercialContext } from '../pm/commercialContext/handle.ts';
 import { EMPTY_REASON, type OperatorCommercialContext } from '../pm/commercialContext/types.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
@@ -1079,7 +1080,7 @@ function emptyClientOperatingPicture(clientCode: string, displayName?: string) {
   if (entityKind === 'synthetic_qa') {
     missingData.push('SYNTHETIC_QA — labeled fixture, not a customer operationalization.');
   }
-  missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
+  missingData.push(hvsAccessMissingData(resolveHvsDataAccess()));
   if (entityKind === 'client') {
     missingData.push('No entitled Hub-visible work has been operationalized for this ClientCode.');
   }
@@ -1090,7 +1091,7 @@ function emptyClientOperatingPicture(clientCode: string, displayName?: string) {
     classification,
     entityKind,
     customerRecord,
-    hvsDataAccess: 'BLOCKED' as 'BLOCKED' | 'PARTIAL' | 'AVAILABLE',
+    hvsDataAccess: resolveHvsDataAccess(),
     realClientOperationalized: false,
     honestEmpty: true,
     clientVisible: false as const,
@@ -1261,11 +1262,7 @@ export function attachOperatorDeskOperatingPicture<
     if (entityKind === 'synthetic_qa') {
       missingData.push('SYNTHETIC_QA — labeled fixture, not a customer operationalization.');
     }
-    if (opts.knowledge.hvsDataAccess === 'BLOCKED') {
-      missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
-    } else if (opts.knowledge.hvsDataAccess === 'PARTIAL') {
-      missingData.push('Historical HVS access is partial. Unreadable repositories stay blocked.');
-    }
+    missingData.push(hvsAccessMissingData(opts.knowledge.hvsDataAccess));
     if (customerRecord && !realClientOperationalized) {
       missingData.push('No entitled Hub-visible work has been operationalized for this ClientCode.');
     }

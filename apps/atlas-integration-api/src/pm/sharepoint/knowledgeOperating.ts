@@ -1,5 +1,7 @@
 /**
- * Entitled knowledge operating picture. Hub SharePoint MI only.
+ * Entitled knowledge operating picture.
+ * Hub SharePoint MI remains fail-closed for HVCG_Clients.
+ * HVS-admin-discovered folders/lists are reference-only recovery rows.
  * Does not call Graph sites search. Does not populate Atlas from unseen clients.
  */
 
@@ -19,6 +21,14 @@ import {
   type RecoveryLedgerRow,
 } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger, type KnowledgeLedgerItem } from './knowledgeLedger.ts';
+import {
+  buildHvsAccessPicture,
+  hvsInventoryCoversBoundary,
+  hvsInventoryLedgerRows,
+  resolveHvsDataAccess,
+  type HvsAccessPicture,
+  type HvsAccessStatus,
+} from './hvsRecoveryInventory.ts';
 import type {
   SharePointClient,
   SharePointOpportunity,
@@ -50,7 +60,8 @@ export type KnowledgeOperatingPicture = {
   entitledClientCodes: string[];
   realClientsOperationalized: string[];
   syntheticClientsVisible: string[];
-  hvsDataAccess: 'AVAILABLE' | 'PARTIAL' | 'BLOCKED';
+  hvsDataAccess: HvsAccessStatus;
+  hvsAccess: HvsAccessPicture;
   documents: Awaited<ReturnType<typeof buildKnowledgeLedger>>;
   classifiedClients: ReturnType<typeof classifyHubClientRow>[];
   queues: Record<OperatingState, KnowledgeOperatingItem[]>;
@@ -217,8 +228,24 @@ function recoveryFromEntitled(input: {
     });
   }
 
+  for (const row of hvsInventoryLedgerRows()) {
+    if (
+      row.clientCode &&
+      visible.has(row.clientCode) &&
+      (row.dataType === 'HVS_ABSENT_FROM_ROSTER' || row.dataType === 'HVS_MATERIALS_NOT_ON_CLIENT_ROSTER')
+    ) {
+      continue;
+    }
+    rows.push(row);
+  }
+  const coveredCodes = new Set([
+    ...visible,
+    ...rows.map((row) => row.clientCode).filter(Boolean),
+  ]);
+
   for (const boundary of ENTITY_BOUNDARIES) {
-    if (!boundary.clientCode || visible.has(boundary.clientCode)) continue;
+    if (!boundary.clientCode || coveredCodes.has(boundary.clientCode)) continue;
+    if (hvsInventoryCoversBoundary(boundary)) continue;
     rows.push({
       source: 'entity_boundary_catalog',
       client: boundary.legalName,
@@ -237,6 +264,7 @@ function recoveryFromEntitled(input: {
   }
 
   for (const boundary of ENTITY_BOUNDARIES.filter((row) => !row.clientCode)) {
+    if (hvsInventoryCoversBoundary(boundary)) continue;
     rows.push({
       source: 'entity_boundary_catalog',
       client: boundary.legalName,
@@ -250,25 +278,9 @@ function recoveryFromEntitled(input: {
       validated: false,
       exceptions: boundary.notes,
       blocker: 'Not a Hub client row',
-      provenance: 'LIKELY',
+      provenance: boundary.kind === 'vendor_referral' || boundary.kind === 'reference_tenant' ? 'LIKELY' : 'STALE_OR_UNCERTAIN',
     });
   }
-
-  rows.push({
-    source: 'graph_sites_search',
-    client: 'High Value Solutions historical libraries',
-    clientCode: '',
-    dataType: 'HVS_HISTORICAL',
-    discovered: true,
-    accessible: false,
-    indexed: false,
-    classified: true,
-    operationalized: false,
-    validated: false,
-    exceptions: 'Cursor automation SP Graph sites search returns 401 generalException/spException',
-    blocker: 'HVS_DATA_ACCESS=BLOCKED for this principal; Hub MI entitled HVCG lists do not imply HVS',
-    provenance: 'CONFIRMED',
-  });
 
   return rows;
 }
@@ -276,7 +288,7 @@ function recoveryFromEntitled(input: {
 export async function buildKnowledgeOperatingPicture(
   service: SharePointPmService,
   principal: AtlasPrincipal,
-  opts?: { dataDir?: string; today?: string; hvsDataAccess?: 'AVAILABLE' | 'PARTIAL' | 'BLOCKED' },
+  opts?: { dataDir?: string; today?: string; hvsDataAccess?: HvsAccessStatus },
 ): Promise<KnowledgeOperatingPicture> {
   const clients = await service.listAuthorizedClients(principal);
   const projects = await service.listAuthorizedProjects(principal);
@@ -328,7 +340,8 @@ export async function buildKnowledgeOperatingPicture(
     syntheticClientsVisible: classifiedClients
       .filter((c) => c.entityKind === 'synthetic_qa')
       .map((c) => c.clientCode),
-    hvsDataAccess: opts?.hvsDataAccess || 'BLOCKED',
+    hvsDataAccess: resolveHvsDataAccess(opts?.hvsDataAccess),
+    hvsAccess: buildHvsAccessPicture(resolveHvsDataAccess(opts?.hvsDataAccess)),
     documents: ledger,
     classifiedClients,
     queues,

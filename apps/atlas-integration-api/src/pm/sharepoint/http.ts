@@ -1098,7 +1098,6 @@ export async function handleSharePointPmRoutes(opts: {
     if (method === 'GET' && path === '/api/pm/knowledge') {
       const knowledge = await buildKnowledgeOperatingPicture(service, principal, {
         dataDir,
-        hvsDataAccess: 'BLOCKED',
       });
       send(res, 200, { knowledge }, origin);
       return true;

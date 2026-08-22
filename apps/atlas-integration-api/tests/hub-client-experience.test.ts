@@ -616,7 +616,7 @@ describe('synthetic client journey isolation', () => {
       assert.match(mannyPreviewHtml, new RegExp(SYN_A));
       assert.match(mannyPreviewHtml, /What we are working on/);
       assert.match(mannyPreviewHtml, /Commercial context/);
-      assert.match(mannyPreviewHtml, /HVS_DATA_ACCESS=BLOCKED/);
+      assert.match(mannyPreviewHtml, /HVS_DATA_ACCESS=PARTIAL/);
       assert.equal(mannyPreviewHtml.includes(SYN_B), false);
       const mannyPreviewJson = await fetch(`${base}/api/pm/clients/${SYN_A}/desk.json`, { headers: auth('manny') });
       assert.equal(mannyPreviewJson.status, 200);
@@ -635,7 +635,7 @@ describe('synthetic client journey isolation', () => {
       assert.equal(mannyPreviewBody.clientDesk.clientCode, SYN_A);
       assert.equal(mannyPreviewBody.clientDesk.gcc.workspaceKey.includes(SYN_B), false);
       assert.equal(mannyPreviewBody.clientDesk.operatingPicture.classification, 'SYNTHETIC_QA');
-      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.hvsDataAccess, 'PARTIAL');
       assert.equal(mannyPreviewBody.clientDesk.operatingPicture.invented, false);
       assert.equal(mannyPreviewBody.clientDesk.operatingPicture.customerRecord, false);
       assert.equal(mannyPreviewBody.clientDesk.commercial.liveGtmOutbound, false);
