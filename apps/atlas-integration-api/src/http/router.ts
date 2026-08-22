@@ -338,6 +338,16 @@ export async function handleRequest(
               cfg.websiteIntakeKey && cfg.pmBackend.sharepoint?.leadsListId,
             ),
           },
+          clientDocumentPersistence: {
+            mode: cfg.clientDocumentStore ? 'sharepoint-list' : 'overlay',
+            classification: cfg.clientDocumentStore
+              ? cfg.clientDocumentStore.persistenceClass
+              : 'hub_governed_overlay_SYNQA',
+            authoritativeStore: cfg.clientDocumentStore
+              ? cfg.clientDocumentStore.sharePointList
+              : 'hub_governed_overlay',
+            configured: Boolean(cfg.clientDocumentStore),
+          },
         },
         origin,
       );

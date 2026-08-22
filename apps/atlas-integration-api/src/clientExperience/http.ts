@@ -432,7 +432,7 @@ export async function handleClientExperience(opts: {
         principal,
         clientCode: typeof body.clientCode === 'string' ? body.clientCode : undefined,
       });
-      const doc = uploadClientDocument({
+      const doc = await uploadClientDocument({
         dataDir: opts.cfg.dataDir,
         principal,
         clientCode: view.clientCode,
@@ -441,21 +441,41 @@ export async function handleClientExperience(opts: {
         contentType: typeof body.contentType === 'string' ? body.contentType : undefined,
         contentB64: typeof body.contentB64 === 'string' ? body.contentB64 : '',
         requestedId: typeof body.requestedId === 'string' ? body.requestedId : undefined,
+        documentStore: opts.cfg.clientDocumentStore,
       });
       const { contentB64: _omit, ...meta } = doc;
       void _omit;
-      send(opts.res, 201, { document: meta }, opts.origin);
+      send(
+        opts.res,
+        201,
+        {
+          document: meta,
+          persistenceClass: doc.persistenceClass,
+          binariesInSharePoint: doc.binariesInSharePoint,
+        },
+        opts.origin,
+      );
       return true;
     }
 
     const documentGet = opts.path.match(/^\/api\/client\/documents\/([^/]+)$/);
     if (opts.method === 'GET' && documentGet) {
-      const doc = getClientDocument({
+      const doc = await getClientDocument({
         dataDir: opts.cfg.dataDir,
         principal,
         documentId: decodeURIComponent(documentGet[1]),
+        documentStore: opts.cfg.clientDocumentStore,
       });
-      send(opts.res, 200, { document: doc }, opts.origin);
+      send(
+        opts.res,
+        200,
+        {
+          document: doc,
+          persistenceClass: doc.persistenceClass,
+          binariesInSharePoint: doc.binariesInSharePoint,
+        },
+        opts.origin,
+      );
       return true;
     }
 

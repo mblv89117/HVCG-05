@@ -56,6 +56,12 @@ import { hvsAccessMissingData, resolveHvsDataAccess } from '../pm/sharepoint/hvs
 import { readCommercialContext } from '../pm/commercialContext/handle.ts';
 import { EMPTY_REASON, type OperatorCommercialContext } from '../pm/commercialContext/types.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
+import {
+  OVERLAY_DOCUMENT_PROVENANCE,
+  SHAREPOINT_DOCUMENT_PROVENANCE,
+  sha256Hex,
+  type ClientDocumentBackingStore,
+} from './sharePointDocuments.ts';
 
 export class ClientExperienceError extends Error {
   readonly status: number;
@@ -71,6 +77,16 @@ export class ClientExperienceError extends Error {
 
 function fail(status: number, code: string, message: string): never {
   throw new ClientExperienceError(status, code, message);
+}
+
+function rethrowDocumentStoreError(err: unknown): never {
+  if (err instanceof ClientExperienceError) throw err;
+  const status = Number((err as { status?: number }).status || 0);
+  const code = typeof (err as { code?: string }).code === 'string' ? (err as { code: string }).code : '';
+  if (status >= 400 && status < 600 && code) {
+    fail(status, code, err instanceof Error ? err.message : 'Document persistence failed.');
+  }
+  fail(503, 'persistence_unavailable', 'SharePoint document persistence failed.');
 }
 
 const SYNTHETIC_EXPERIENCE_CODE = /^SYN[A-Z]{0,3}[0-9]{2}$/;
@@ -787,7 +803,7 @@ export function buildClientPriorityContext(opts: {
   };
 }
 
-export function uploadClientDocument(opts: {
+export async function uploadClientDocument(opts: {
   dataDir: string;
   principal: AtlasPrincipal;
   clientCode: string;
@@ -796,36 +812,85 @@ export function uploadClientDocument(opts: {
   contentType?: string;
   contentB64: string;
   requestedId?: string;
-}): ClientDocument {
+  documentStore?: ClientDocumentBackingStore;
+}): Promise<ClientDocument> {
   const snapshot = loadExperienceStore(opts.dataDir);
   const clientCode = assertClientWorkspaceAccess(opts.principal, snapshot, opts.clientCode);
   if (!snapshot.workspaces[clientCode]) fail(404, 'not_found', 'Client workspace is not staged.');
   if (!opts.contentB64 || typeof opts.contentB64 !== 'string') {
     fail(400, 'invalid_document', 'Document content is required.');
   }
-  let bytes: number;
+  let raw: Buffer;
   try {
-    bytes = Buffer.from(opts.contentB64, 'base64').length;
+    raw = Buffer.from(opts.contentB64, 'base64');
   } catch {
     fail(400, 'invalid_document', 'Document content is not valid base64.');
   }
+  const bytes = raw.length;
   if (!bytes || bytes > MAX_DOCUMENT_BYTES) {
     fail(400, 'invalid_document', 'Document exceeds the synthetic exchange limit.');
   }
   const now = new Date().toISOString();
+  const id = newId('doc');
+  const fileName = (opts.fileName || 'upload.bin').trim();
+  let persisted: {
+    provenance: ClientDocument['provenance'];
+    persistenceClass: ClientDocument['persistenceClass'];
+    binariesInSharePoint: boolean;
+    sharePointItemId?: string;
+    sharePointList?: ClientDocument['sharePointList'];
+    contentB64?: string;
+    contentSha256: string;
+  } = {
+    provenance: OVERLAY_DOCUMENT_PROVENANCE,
+    persistenceClass: 'hub_governed_overlay_SYNQA',
+    binariesInSharePoint: false,
+    sharePointList: null,
+    contentB64: opts.contentB64,
+    contentSha256: sha256Hex(raw),
+  };
+  if (opts.documentStore) {
+    let written;
+    try {
+      written = await opts.documentStore.put({
+        clientCode,
+        documentId: id,
+        fileName,
+        contentType: (opts.contentType || 'text/plain; charset=utf-8').trim(),
+        bytes: raw,
+      });
+    } catch (err) {
+      rethrowDocumentStoreError(err);
+    }
+    if (written.clientCode !== clientCode) {
+      fail(403, 'forbidden', 'SharePoint document does not belong to the authorized client.');
+    }
+    persisted = {
+      provenance: SHAREPOINT_DOCUMENT_PROVENANCE,
+      persistenceClass: SHAREPOINT_DOCUMENT_PROVENANCE,
+      binariesInSharePoint: true,
+      sharePointItemId: written.itemId,
+      sharePointList: written.sharePointList,
+      contentSha256: written.contentSha256,
+    };
+  }
   const doc: ClientDocument = {
-    id: newId('doc'),
+    id,
     clientCode,
     title: (opts.title || opts.fileName || 'Untitled').trim(),
-    fileName: (opts.fileName || 'upload.bin').trim(),
+    fileName,
     contentType: (opts.contentType || 'application/octet-stream').trim(),
     bytes,
     uploadedBy: opts.principal.userId,
     uploadedAt: now,
     requestedId: opts.requestedId,
-    contentB64: opts.contentB64,
-    provenance: 'synthetic_qa_overlay',
-    binariesInSharePoint: true,
+    contentB64: persisted.contentB64,
+    contentSha256: persisted.contentSha256,
+    provenance: persisted.provenance,
+    persistenceClass: persisted.persistenceClass,
+    binariesInSharePoint: persisted.binariesInSharePoint,
+    sharePointItemId: persisted.sharePointItemId,
+    sharePointList: persisted.sharePointList,
   };
   snapshot.documents.push(doc);
   if (opts.requestedId) {
@@ -854,15 +919,41 @@ export function uploadClientDocument(opts: {
   return doc;
 }
 
-export function getClientDocument(opts: {
+export async function getClientDocument(opts: {
   dataDir: string;
   principal: AtlasPrincipal;
   documentId: string;
-}): ClientDocument {
+  documentStore?: ClientDocumentBackingStore;
+}): Promise<ClientDocument> {
   const snapshot = loadExperienceStore(opts.dataDir);
   const doc = snapshot.documents.find((row) => row.id === opts.documentId);
   if (!doc) fail(404, 'not_found', 'not_found');
   assertClientWorkspaceAccess(opts.principal, snapshot, doc.clientCode);
+  if (doc.sharePointItemId && opts.documentStore) {
+    let persisted;
+    try {
+      persisted = await opts.documentStore.get({
+        clientCode: doc.clientCode,
+        itemId: doc.sharePointItemId,
+      });
+    } catch (err) {
+      rethrowDocumentStoreError(err);
+    }
+    if (persisted.clientCode !== doc.clientCode) {
+      fail(403, 'forbidden', 'SharePoint document does not belong to the authorized client.');
+    }
+    return {
+      ...doc,
+      contentB64: persisted.contentB64,
+      contentSha256: persisted.contentSha256,
+      bytes: persisted.bytes,
+      provenance: SHAREPOINT_DOCUMENT_PROVENANCE,
+      persistenceClass: SHAREPOINT_DOCUMENT_PROVENANCE,
+      binariesInSharePoint: true,
+      sharePointItemId: persisted.itemId,
+      sharePointList: persisted.sharePointList,
+    };
+  }
   return doc;
 }
 

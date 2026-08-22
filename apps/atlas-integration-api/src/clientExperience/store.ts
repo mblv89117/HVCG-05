@@ -55,6 +55,10 @@ export type ClientSession = {
   revokedAt?: string;
 };
 
+export type ClientDocumentProvenance =
+  | 'synthetic_qa_overlay'
+  | 'sharepoint_list_HVCG_DocumentRequests';
+
 export type ClientDocument = {
   id: string;
   clientCode: string;
@@ -65,9 +69,13 @@ export type ClientDocument = {
   uploadedBy: string;
   uploadedAt: string;
   requestedId?: string;
-  contentB64: string;
-  provenance: 'synthetic_qa_overlay';
-  binariesInSharePoint: true;
+  contentB64?: string;
+  contentSha256: string;
+  provenance: ClientDocumentProvenance;
+  persistenceClass: ClientDocumentProvenance | 'hub_governed_overlay_SYNQA';
+  binariesInSharePoint: boolean;
+  sharePointItemId?: string;
+  sharePointList?: 'HVCG_DocumentRequests' | null;
 };
 
 export type ClientAttentionRequest = {

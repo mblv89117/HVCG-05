@@ -21,6 +21,7 @@ import type { PmGraphTransport } from './pm/sharepoint/graph.ts';
 import type { SharePointPmSettings } from './pm/sharepoint/settings.ts';
 import { resolveSharePointPmSettings, SharePointPmSettingsError } from './pm/sharepoint/settings.ts';
 import { createManagedIdentityTokenProvider, type PmGraphTokenProvider } from './pm/sharepoint/token.ts';
+import type { ClientDocumentBackingStore } from './clientExperience/sharePointDocuments.ts';
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
 
@@ -507,6 +508,8 @@ export function loadConfig() {
     capitalFileSource: undefined as CapitalFileSource | undefined,
     /** Test-only PM token provider. Production uses the App Service managed-identity local token endpoint. */
     pmTokenProvider: undefined as PmGraphTokenProvider | undefined,
+    /** Client document backing store. Production uses SharePoint HVCG_DocumentRequests when Capital Graph is live. */
+    clientDocumentStore: undefined as ClientDocumentBackingStore | undefined,
     allowedOrigins: (
       process.env.INTEGRATION_ALLOWED_ORIGINS ||
       [

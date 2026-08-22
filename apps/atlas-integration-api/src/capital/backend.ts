@@ -14,6 +14,7 @@ import { createGraphCapitalFileSource } from './sharepoint/files.ts';
 import { AsyncCapitalStore, GraphCapitalStore } from './sharepoint/repository.ts';
 import { CapitalStore, type CapitalPersistence } from './store.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../pm/sharepoint/token.ts';
+import { createGraphClientDocumentStore } from '../clientExperience/sharePointDocuments.ts';
 
 export { CAPITAL_BACKEND_UNAVAILABLE };
 
@@ -49,6 +50,12 @@ export function createSharePointCapitalService(cfg: AppConfig): CapitalPersisten
   const graph = cfg.capitalGraphTransport || createCapitalGraphTransport(settings, tokenProvider);
   if (!cfg.capitalFileSource) {
     cfg.capitalFileSource = createGraphCapitalFileSource(tokenProvider);
+  }
+  if (!cfg.clientDocumentStore) {
+    cfg.clientDocumentStore = createGraphClientDocumentStore({
+      graph,
+      listId: settings.documentRequestsListId,
+    });
   }
   return new AsyncCapitalStore(new GraphCapitalStore(settings, graph), { dataDir: cfg.dataDir });
 }
