@@ -52,7 +52,7 @@ Footer: input box + send + "create proposed action" / "create engineering missio
 | `txtAskAtlas` | Natural-language operator question |
 | `btnAskAtlasSend` | Creates/updates `HVCG_AskAtlasSessions`; invokes governed Ask Atlas API/flow |
 | `galAskTranscript` | Shows questions and response summaries from `HVCG_AskAtlasSessions` |
-| `galAskEvidence` | Shows human-friendly evidence references and classifications |
+| `galAskEvidence` | Shows human-friendly `EvidenceReferences` and classifications |
 | `galAskActions` | Shows PROPOSED actions only until approved or converted |
 | `btnCreateEngineeringMission` | Enabled only for product-improvement intent and governed technical write policy |
 
@@ -81,8 +81,8 @@ Footer: input box + send + "create proposed action" / "create engineering missio
 
 Every material answer card shows:
 
-- classification: `CONFIRMED`, `LIKELY`, `PROPOSED`, `STALE_OR_UNCERTAIN`, or
-  `COMPLETE`;
+- `OutputClassification`: `CONFIRMED`, `LIKELY`, `PROPOSED`,
+  `STALE_OR_UNCERTAIN`, or `COMPLETE`;
 - source label in human language;
 - client/project/entity when applicable;
 - "why this matters";
