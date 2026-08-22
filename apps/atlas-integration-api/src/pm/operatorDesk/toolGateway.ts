@@ -517,7 +517,7 @@ function emptyAuthorizedSearch(opts?: {
     basedOn:
       opts?.entitled === false
         ? 'Authorization failed closed before retrieval. Search was not executed across the tenant.'
-        : 'Entitled desk search returned no hits. No Hub-MI rows, amounts, or clients were invented.',
+        : 'Entitled desk search returned no hits. No operational client rows, amounts, or clients were invented.',
     entitled: opts?.entitled === true,
     ran: opts?.ran === true,
   };
@@ -569,7 +569,7 @@ function composeAuthorizedSearch(
       : 'No entitled search hits are available for this query.',
     basedOn: hits.length
       ? 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.'
-      : 'Entitled desk search returned no hits. No Hub-MI rows, amounts, or clients were invented.',
+      : 'Entitled desk search returned no hits. No operational client rows, amounts, or clients were invented.',
     entitled: opts.entitled,
     ran: opts.ran,
   };
