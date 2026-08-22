@@ -310,7 +310,7 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>Recovered client operating records</h2>
-    <p class="muted">Per-client stitch of recovered folders, filenames, projects, and proposed actions. Knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
+    <p class="muted">Per-client stitch of recovered folders, filenames, projects, and proposed actions. Recovered knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
     ${
       op.hvsRecoveredClientRecords.length
         ? `<ul>${op.hvsRecoveredClientRecords
