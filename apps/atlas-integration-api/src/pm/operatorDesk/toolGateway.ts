@@ -28,6 +28,7 @@ import {
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
   GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL,
+  isReservedOperatingStateToken,
   type AskAtlasAnswer,
   type AskAtlasClassification,
   type AtlasAuthorizedSearch,
@@ -250,6 +251,7 @@ function resolveAuthorizedClient(
 ): PictureClientBinding | null {
   const token = requested.trim();
   if (!token) return null;
+  if (isReservedOperatingStateToken(token)) return null;
   const entitled = new Set(entitledClientCodes(principal));
   const onPicture = clientsAlreadyOnPicture(picture);
   const asCode = token.toUpperCase();
@@ -747,6 +749,7 @@ function classifyClientSearchToken(
   principal: AtlasPrincipal,
   picture: OperatorOperatingPicture,
 ): { scope: 'bound' | 'unknown' | 'generic'; binding: PictureClientBinding | null } {
+  if (isReservedOperatingStateToken(token)) return { scope: 'generic', binding: null };
   const binding = resolveAuthorizedClient(principal, picture, token);
   if (binding) return { scope: 'bound', binding };
   const asCode = token.trim().toUpperCase();
