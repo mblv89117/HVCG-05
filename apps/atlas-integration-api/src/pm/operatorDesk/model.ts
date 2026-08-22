@@ -6,6 +6,12 @@ import {
   hvsConfirmedClientFolders,
   resolveHvsDataAccess,
 } from '../sharepoint/hvsRecoveryInventory.ts';
+import {
+  hvsRecoveredActions,
+  hvsRecoveredDocumentSummary,
+  hvsRecoveredDocuments,
+  isHvsRecoveredKind,
+} from '../sharepoint/hvsRecoveredDocuments.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -77,7 +83,7 @@ function mapQueue(
     kind: row.kind,
     provenance: row.provenance,
     href:
-      row.kind === 'hvs_recovered_reference' || !row.clientCode
+      isHvsRecoveredKind(row.kind) || !row.clientCode
         ? undefined
         : `/api/pm/clients/${row.clientCode}/desk`,
   }));
@@ -88,14 +94,23 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
   const recovered =
     hvsDataAccess === 'BLOCKED'
       ? []
-      : hvsConfirmedClientFolders().map((row) => ({
-          client: row.client,
-          clientCode: row.clientCode,
-          provenance: 'CONFIRMED' as const,
-          operationalized: false as const,
-          hubMiAccessible: false as const,
-          nextAction: row.nextAction,
-        }));
+      : hvsConfirmedClientFolders().map((row) => {
+          const summary = hvsRecoveredDocumentSummary(row.client);
+          return {
+            client: row.client,
+            clientCode: row.clientCode,
+            provenance: 'CONFIRMED' as const,
+            operationalized: false as const,
+            hubMiAccessible: false as const,
+            knowledgeIndexed: true as const,
+            documentCount: summary.documentCount,
+            documentClasses: summary.documentClasses,
+            nextAction:
+              summary.fileCount > 0
+                ? 'Review recovered first-level files as reference-only knowledge. Do not invent Hub MI rows or amounts.'
+                : row.nextAction,
+          };
+        });
   const waiting = recovered.map((row) => ({
     id: `hvs-recovered:${row.client}:${row.clientCode || 'uncoded'}`,
     clientCode: row.clientCode,
@@ -104,6 +119,29 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     kind: 'hvs_recovered_reference',
     provenance: 'CONFIRMED' as const,
   }));
+  const actions =
+    hvsDataAccess === 'BLOCKED'
+      ? []
+      : hvsRecoveredActions().map((row) => ({
+          id: row.id,
+          clientCode: row.clientCode,
+          title: row.title,
+          queue: row.queue,
+          kind: row.kind,
+          provenance: row.provenance,
+        }));
+  const documents =
+    hvsDataAccess === 'BLOCKED'
+      ? []
+      : hvsRecoveredDocuments().map((row) => ({
+          client: row.client,
+          clientCode: row.clientCode,
+          name: row.name,
+          kind: row.kind,
+          documentClass: row.documentClass,
+          provenance: 'CONFIRMED' as const,
+          amountsExtracted: false as const,
+        }));
   return {
     kind: 'operator_operating_picture_v1',
     invented: false,
@@ -112,13 +150,13 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     syntheticClientsVisible: [],
     honestEmpty: true,
     queues: {
-      needsAction: [],
+      needsAction: actions.filter((row) => row.queue === 'Needs Action'),
       waiting,
       overdue: [],
       blocked: [],
-      decisionRequired: [],
+      decisionRequired: actions.filter((row) => row.queue === 'Decision Required'),
       atRisk: [],
-      ready: [],
+      ready: actions.filter((row) => row.queue === 'Ready'),
       outcomes: [],
     },
     syntheticQueues: {
@@ -138,6 +176,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     ],
     recoveryLedger: [],
     hvsRecoveredClients: recovered,
+    hvsRecoveredDocuments: documents,
   };
 }
 
@@ -199,7 +238,19 @@ export function operatorOperatingPictureFromKnowledge(
       provenance: 'CONFIRMED' as const,
       operationalized: false as const,
       hubMiAccessible: false as const,
+      knowledgeIndexed: true as const,
+      documentCount: row.documentCount,
+      documentClasses: row.documentClasses,
       nextAction: row.nextAction,
+    })),
+    hvsRecoveredDocuments: (knowledge.hvsRecoveredDocuments || []).slice(0, 80).map((row) => ({
+      client: row.client,
+      clientCode: row.clientCode,
+      name: row.name,
+      kind: row.kind,
+      documentClass: row.documentClass,
+      provenance: 'CONFIRMED' as const,
+      amountsExtracted: false as const,
     })),
   };
 }

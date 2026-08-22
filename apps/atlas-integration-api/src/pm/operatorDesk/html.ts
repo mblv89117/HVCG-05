@@ -1,4 +1,5 @@
 import { EMPTY_REASON } from '../commercialContext/types.ts';
+import { isHvsRecoveredKind } from '../sharepoint/hvsRecoveredDocuments.ts';
 import type { OperatorDeskModel, OperatorOperatingItem, OperatorQueueItem } from './types.ts';
 
 function esc(value: string | number | undefined | null): string {
@@ -46,7 +47,7 @@ function flatQueues(
     ...queues.atRisk,
     ...queues.ready,
     ...queues.outcomes,
-  ].filter((row) => row.kind !== 'hvs_recovered_reference');
+  ].filter((row) => !isHvsRecoveredKind(row.kind));
 }
 
 const SHELL = `<!doctype html>
@@ -183,16 +184,33 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>Recovered HVS clients</h2>
-    <p class="muted">Reference-only HVS-admin folders. Not Hub MI operationalizations. Atlas does not invent balances, obligations, or entitled HVCG_Clients rows.</p>
+    <p class="muted">Reference-only HVS-admin folders. First-level documents are indexed. Not Hub MI operationalizations. Atlas does not invent balances, obligations, or entitled HVCG_Clients rows.</p>
     ${
       op.hvsRecoveredClients.length
         ? `<ul>${op.hvsRecoveredClients
             .map((row) => {
               const code = row.clientCode || 'no Hub client code';
-              return `<li><span class="kind">reference</span> ${esc(row.client)} · ${esc(code)} <span class="muted">(CONFIRMED · not operationalized)</span></li>`;
+              const docs = row.documentCount ? `${row.documentCount} indexed` : 'folder only';
+              return `<li><span class="kind">reference</span> ${esc(row.client)} · ${esc(code)} <span class="muted">(CONFIRMED · ${esc(docs)} · not Hub-operationalized)</span></li>`;
             })
             .join('')}</ul>`
         : '<p class="empty">No CONFIRMED HVS client folders in this picture.</p>'
+    }
+  </section>
+  <section>
+    <h2>Recovered documents</h2>
+    <p class="muted">Filename + class only. amountsExtracted=false. Binaries stay in SharePoint.</p>
+    ${
+      op.hvsRecoveredDocuments.length
+        ? `<ul>${op.hvsRecoveredDocuments
+            .filter((row) => row.kind === 'file')
+            .slice(0, 40)
+            .map((row) => {
+              const code = row.clientCode || row.client;
+              return `<li><span class="kind">${esc(row.documentClass)}</span> ${esc(row.name)} · ${esc(code)} <span class="muted">(CONFIRMED)</span></li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No CONFIRMED recovered files in this picture.</p>'
     }
   </section>
   <section>

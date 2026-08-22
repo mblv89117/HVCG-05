@@ -31,6 +31,15 @@ import {
   type HvsAccessStatus,
   type HvsInventoryRow,
 } from './hvsRecoveryInventory.ts';
+import {
+  hvsRecoveredActions,
+  hvsRecoveredDocumentSummary,
+  hvsRecoveredDocuments,
+  isHvsRecoveredKind,
+  type HvsDocumentClass,
+  type HvsRecoveredAction,
+  type HvsRecoveredDocument,
+} from './hvsRecoveredDocuments.ts';
 import type {
   SharePointClient,
   SharePointOpportunity,
@@ -45,7 +54,15 @@ export type KnowledgeOperatingItem = {
   clientCode: string;
   title: string;
   queue: OperatingState;
-  kind: 'task' | 'project' | 'document_request' | 'knowledge_item' | 'opportunity' | 'hvs_recovered_reference';
+  kind:
+    | 'task'
+    | 'project'
+    | 'document_request'
+    | 'knowledge_item'
+    | 'opportunity'
+    | 'hvs_recovered_reference'
+    | 'hvs_recovered_action'
+    | 'hvs_recovered_document';
   provenance: KnowledgeProvenance;
   source: string;
   webUrl?: string;
@@ -60,6 +77,9 @@ export type HvsRecoveredClient = {
   provenance: 'CONFIRMED';
   operationalized: false;
   hubMiAccessible: false;
+  knowledgeIndexed: true;
+  documentCount: number;
+  documentClasses: HvsDocumentClass[];
   nextAction: string;
 };
 
@@ -81,6 +101,7 @@ export type KnowledgeOperatingPicture = {
   syntheticAttention: ClientAttentionItem[];
   recoveryLedger: RecoveryLedgerRow[];
   hvsRecoveredClients: HvsRecoveredClient[];
+  hvsRecoveredDocuments: HvsRecoveredDocument[];
   honestEmpty: boolean;
 };
 
@@ -91,6 +112,7 @@ function item(
 }
 
 function recoveredClientFromFolder(row: HvsInventoryRow): HvsRecoveredClient {
+  const summary = hvsRecoveredDocumentSummary(row.client);
   return {
     client: row.client,
     clientCode: row.clientCode,
@@ -98,8 +120,29 @@ function recoveredClientFromFolder(row: HvsInventoryRow): HvsRecoveredClient {
     provenance: 'CONFIRMED',
     operationalized: false,
     hubMiAccessible: false,
-    nextAction: row.nextAction,
+    knowledgeIndexed: true,
+    documentCount: summary.documentCount,
+    documentClasses: summary.documentClasses,
+    nextAction:
+      summary.fileCount > 0
+        ? 'Review recovered first-level files as reference-only knowledge. Do not invent Hub MI rows or amounts.'
+        : row.nextAction,
   };
+}
+
+function hvsRecoveredActionItems(status: HvsAccessStatus): KnowledgeOperatingItem[] {
+  if (status === 'BLOCKED') return [];
+  return hvsRecoveredActions().map((row: HvsRecoveredAction) =>
+    item({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      queue: row.queue,
+      kind: 'hvs_recovered_action',
+      provenance: row.provenance,
+      source: row.evidence,
+    }),
+  );
 }
 
 function hvsRecoveredWaitingItems(status: HvsAccessStatus): KnowledgeOperatingItem[] {
@@ -369,7 +412,7 @@ export async function buildKnowledgeOperatingPicture(
     ...new Set(
       Object.values(queues)
         .flat()
-        .filter((row) => row.kind !== 'hvs_recovered_reference')
+        .filter((row) => !isHvsRecoveredKind(row.kind))
         .map((row) => row.clientCode)
         .filter(Boolean),
     ),
@@ -378,6 +421,10 @@ export async function buildKnowledgeOperatingPicture(
   const hvsRecoveredClients =
     hvsDataAccess === 'BLOCKED' ? [] : hvsConfirmedClientFolders().map(recoveredClientFromFolder);
   queues.Waiting.push(...hvsRecoveredWaitingItems(hvsDataAccess));
+  for (const row of hvsRecoveredActionItems(hvsDataAccess)) {
+    queues[row.queue].push(row);
+  }
+  const recoveredDocuments = hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredDocuments();
   const recoveryLedger = recoveryFromEntitled({ clients, ledger, queues });
   return {
     kind: 'knowledge_operating_picture_v1',
@@ -399,6 +446,7 @@ export async function buildKnowledgeOperatingPicture(
     syntheticAttention,
     recoveryLedger,
     hvsRecoveredClients,
+    hvsRecoveredDocuments: recoveredDocuments,
     honestEmpty: realClientsOperationalized.length === 0,
   };
 }

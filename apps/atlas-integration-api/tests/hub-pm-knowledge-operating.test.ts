@@ -153,6 +153,7 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.queues['Needs Action'].length, 0);
     assert.equal(picture.queues.Waiting.length, 0);
     assert.deepEqual(picture.hvsRecoveredClients, []);
+    assert.deepEqual(picture.hvsRecoveredDocuments, []);
     assert.equal(picture.queues.Projects.length, 0);
     assert.equal(picture.queues.Tasks.length, 0);
     const syn = picture.recoveryLedger.find((row) => row.clientCode === 'SYN01');
@@ -195,7 +196,16 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.hvsRecoveredClients.length, 11);
     assert.equal(picture.hvsRecoveredClients.every((row) => row.operationalized === false), true);
     assert.equal(picture.hvsRecoveredClients.every((row) => row.hubMiAccessible === false), true);
+    assert.equal(picture.hvsRecoveredClients.every((row) => row.knowledgeIndexed === true), true);
     assert.equal(picture.hvsRecoveredClients.every((row) => row.provenance === 'CONFIRMED'), true);
+    assert.ok(picture.hvsRecoveredDocuments.length >= 20);
+    assert.equal(picture.hvsRecoveredDocuments.every((row) => row.amountsExtracted === false), true);
+    assert.equal(picture.hvsRecoveredDocuments.every((row) => row.binariesInAtlas === false), true);
+    assert.ok(picture.hvsRecoveredDocuments.some((row) => row.client === 'Colorado Beef' && row.documentClass === 'capital_package'));
+    assert.ok(picture.queues['Needs Action'].some((row) => row.kind === 'hvs_recovered_action' && row.clientCode === 'CCB01'));
+    assert.ok(picture.queues['Decision Required'].some((row) => row.kind === 'hvs_recovered_action' && row.title.includes('SBA Express')));
+    assert.equal(JSON.stringify(picture.hvsRecoveredDocuments).includes('$'), false);
+    assert.equal(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/.test(JSON.stringify(picture.hvsRecoveredDocuments)), false);
     assert.equal(
       picture.hvsRecoveredClients.some((row) => row.client === 'ACCG Inc' && row.clientCode === 'ACCG01'),
       true,

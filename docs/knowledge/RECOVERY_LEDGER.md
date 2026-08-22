@@ -1,8 +1,8 @@
 # Client knowledge recovery ledger
 
-Cycle: 2026-08-22T14:05Z
+Cycle: 2026-08-22T14:20Z
 Durable specialist: `bc-cb506396-3ccc-5ac1-b2e3-58b3cd1b8438` (do not persist Task IDs as this specialist)
-Live Hub at start of increment: `ebee641` (document-exchange live). This increment stacks on `7fc2f5b`.
+Live Hub at start of increment: `ba491c2` (recovered-clients desk). This increment stacks on `ba491c2`.
 HVS admin identity: `HVCG-V3-HVS-Admin` (Sites.Read.All / Files.Read.All)
 
 Two principals, two honesty rules:
@@ -26,17 +26,17 @@ Path: `HIGH VALUE SOLUTION / Documents / 4_Engagements / 00_Client Files`
 
 | CLIENT | CLIENTCODE | OPERATIONALIZED | NOTES |
 | --- | --- | --- | --- |
-| ACCG Inc | ACCG01 | no | Folder only. ACCG remains read-only on Hub. |
-| Christie's Place | CPL01 | no | Folder only. Keep Falk persons distinct. |
-| Prodigy Games | PDG01 | no | Folder + Documents-root transaction workbooks. Do not invent balances. |
-| Pierlo Inc (DBA Baker's Travertine Power Clean) | — | no | Also the sole Master Client List row. |
-| Colorado Beef | CCB01 | no | Folder name Colorado Beef / catalog Colorado Craft Beef. |
-| Comic Books | — | no | No Hub client code invented. |
-| Frocovery | — | no | No Hub client code invented. |
-| Integrity Lift Solutions LLC | — | no | No Hub client code invented. |
-| Lien Partners LLC | LIEN01 | no | Folder only. |
-| LV Appraisals | — | no | No Hub client code invented. |
-| Victory Contracting | — | no | No Hub client code invented. |
+| ACCG Inc | ACCG01 | no | First-level structured folders indexed. ACCG remains read-only on Hub. |
+| Christie's Place | CPL01 | no | Invoice filenames 6.19.26 indexed. Amounts not extracted. Keep Falk persons distinct. |
+| Prodigy Games | PDG01 | no | Engagement / onboarding / capital-plan filenames + P&L filenames indexed. Balances not extracted. |
+| Pierlo Inc (DBA Baker's Travertine Power Clean) | — | no | New Client Template folder only. Also the sole Master Client List row. |
+| Colorado Beef | CCB01 | no | HVCG Engagement 7.20.26 + SBA Express filenames indexed. No invented terms. |
+| Comic Books | — | no | System-doc filenames indexed. No Hub client code invented. |
+| Frocovery | — | no | Formation / BDA / operating-agreement filenames indexed. No invented obligations. |
+| Integrity Lift Solutions LLC | — | no | First-level structured folders indexed. |
+| Lien Partners LLC | LIEN01 | no | First-level structured folders indexed. |
+| LV Appraisals | — | no | First-level structured folders indexed. |
+| Victory Contracting | — | no | First-level structured folders indexed. |
 
 Template/upload folders (not clients): `0_Client_Folder (Template)`, `00_HVS Connect_Client Secure Document Upload`. `2nd Location` and `Final Installment` are not treated as standalone clients.
 
@@ -76,7 +76,8 @@ Loanspark remains vendor_referral. Best Day Of My Life remains reference_tenant.
 ## Operationalized vs reference-only
 
 - **Operationalized on Hub MI:** none for real customers. SYN01 remains labeled SYNTHETIC_QA.
-- **Reference-only (this increment):** all CONFIRMED HVS folders/lists above, plus Prodigy workbook filenames.
+- **Reference-only (this increment):** all CONFIRMED HVS folders/lists above, first-level recovered filenames/classes, plus Prodigy workbook filenames.
+- **Proposed operator actions (not Hub MI rows):** Colorado Beef SBA Express review/decision; Christie Place invoice review; Frocovery formation packet; Prodigy engagement/capital packet.
 - **Not dumped into Atlas:** binaries, balances, contacts, emails, phones, fees, deadlines.
 
 Do not merge stale drafts #18 / #19 / #25.

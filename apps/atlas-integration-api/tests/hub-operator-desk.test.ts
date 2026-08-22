@@ -148,7 +148,10 @@ describe('operator desk copy', () => {
     assert.match(html, /Synthetic QA work/);
     assert.match(html, /Waiting/);
     assert.match(html, /Recovered HVS clients/);
+    assert.match(html, /Recovered documents/);
     assert.match(html, /ACCG Inc/);
+    assert.match(html, /SBA Express/);
+    assert.match(html, /amountsExtracted=false/);
     assert.match(html, /reference-only/);
     assert.match(html, /Blocked/);
     assert.match(html, /At Risk/);
@@ -163,6 +166,9 @@ describe('operator desk copy', () => {
     assert.deepEqual(model.operatingPicture.realClientsOperationalized, []);
     assert.equal(model.operatingPicture.hvsRecoveredClients.length, 11);
     assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.operationalized, false);
+    assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.knowledgeIndexed, true);
+    assert.ok((model.operatingPicture.hvsRecoveredDocuments?.length || 0) >= 20);
+    assert.ok(model.operatingPicture.queues.needsAction.some((row) => row.kind === 'hvs_recovered_action'));
     assert.equal(
       model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_recovered_reference' && !row.href),
       true,
@@ -211,7 +217,9 @@ describe('operator desk HTTP fail-closed', () => {
       assert.match(html, /liveGtmOutbound=false/);
       assert.match(html, /Client journey/);
       assert.match(html, /Recovered HVS clients/);
+      assert.match(html, /Recovered documents/);
       assert.match(html, /ACCG Inc/);
+      assert.match(html, /SBA Express/);
       assert.match(html, /signedClientSession=false/);
       assert.match(html, /Workspace not staged/);
       assert.equal(html.includes(ACME01), false);

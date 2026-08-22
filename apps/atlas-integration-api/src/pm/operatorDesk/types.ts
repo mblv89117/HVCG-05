@@ -36,7 +36,20 @@ export interface OperatorRecoveredHvsClient {
   provenance: 'CONFIRMED';
   operationalized: false;
   hubMiAccessible: false;
+  knowledgeIndexed: true;
+  documentCount: number;
+  documentClasses: string[];
   nextAction: string;
+}
+
+export interface OperatorRecoveredHvsDocument {
+  client: string;
+  clientCode: string;
+  name: string;
+  kind: 'file' | 'folder';
+  documentClass: string;
+  provenance: 'CONFIRMED';
+  amountsExtracted: false;
 }
 
 export interface OperatorOperatingPicture {
@@ -69,6 +82,7 @@ export interface OperatorOperatingPicture {
   missingData: string[];
   recoveryLedger: OperatorRecoveryRow[];
   hvsRecoveredClients: OperatorRecoveredHvsClient[];
+  hvsRecoveredDocuments: OperatorRecoveredHvsDocument[];
 }
 
 export interface OperatorClientJourney {
