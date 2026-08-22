@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** D38 — Hub `4b9631a` LINEAGE=PASS; ATLAS-01/02 **STILL_INCONCLUSIVE** (AUTH_SESSION missing); ATLAS-03 + XSYS **VERIFIED_FIXED**; LIVE_CERT=**NO**; LIVE_P0=**2**
+**CURRENT RELEASE STATE:** D39 — Hub `4b9631a`; AUTH_SESSION ABSENT → ARTIFACT-REVIEW; ATLAS-01/02 **VERIFIED_FIXED**; LIVE_CERT=**NO**; finding LIVE_P0=**0**
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D38 @ `4b9631a`): ATLAS-01/02 **STILL_INCONCLUSIVE**. ATLAS-03 **VERIFIED_FIXED**. XSYS-01/02 **VERIFIED_FIXED**. **LIVE_CERT=NO**. **LIVE_P0=2**.
-- Mission `ENTITLED_ATLAS0102_CLASSIFY` — not a D37 clone.
+- LIVE Hub (D39 @ `4b9631a`): ATLAS-01/02 **VERIFIED_FIXED** (artifact-review of V3 0448Z/0500Z + RT lineage gate). ATLAS-03 + XSYS **VERIFIED_FIXED**. **LIVE_CERT=NO** (no RT self-mint). Finding **LIVE_P0=0**.
+- Mission `ENTITLED_CLASSIFY_SELF_MINTED_SESSION` — not a D38 clone.
 
 ---
 
@@ -20,36 +20,36 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** LIVE Hub `4b9631a` (D38); prior `1ac6257`
+- **branch/SHA:** LIVE Hub `4b9631a` (D39)
 - **severity:** P0
-- **evidence:** D38: lineage PASS on entitlement-group-members build; unauth 401 holds. AUTH_SESSION not obtainable on RT pod (AZURE_* ABSENT). Entitled SYN01 isolation not independently executed. V3 session claims not accepted as VERIFIED_FIXED.
-- **reproduction:** Authenticate as Team Member entitled only to `ACCG01`/SYN01. `GET /api/pm/opportunities` must not return foreign clients' opportunities.
-- **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
-- **recommended remediation:** Entitlement intersection for all principals; Hub AUTH_SESSION for RT retest.
-- **regression test:** Staff entitled to SYN01 cannot list/get foreign opportunities.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D38 AUTH_SESSION missing)
+- **evidence:** D39 ARTIFACT-REVIEW: V3 0500Z opportunities 200 count 1 clientCodes=SYN01 staffAllSee=false; clients count 1; foreign NOT-A-CLIENT 501 not a dump. 0448Z SYN01 client/opps 200. RT lineage gate PASS; AUTH_SESSION not self-minted.
+- **reproduction:** Entitled SYN01 session list/get must not dump foreign clients.
+- **impact:** Cross-client CRM opportunity disclosure.
+- **recommended remediation:** Retain entitlement intersection; optional RT self-mint re-probe for LIVE_CERT.
+- **regression test:** Entitled list clientCodes ⊆ SYN01; staffAllSee=false.
+- **status:** LIVE **VERIFIED_FIXED** (D39 artifact-review); prior D38 STILL_INCONCLUSIVE
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
-- **branch/SHA:** live `4b9631a` (D38)
+- **branch/SHA:** live `4b9631a` (D39)
 - **severity:** P0
-- **evidence:** D38: entitled foreign Won PATCH not executed (no AUTH_SESSION). Unauth opportunities 401 holds.
-- **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + Won must fail closed.
-- **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
-- **recommended remediation:** ClientCode gate before field write; AUTH_SESSION for RT.
-- **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D38 AUTH_SESSION missing)
+- **evidence:** D39 ARTIFACT-REVIEW: PATCH atlas02-out-of-scope Won → 404 not_found; upsert NO; real SYN01 not patched; 1/999999 not called.
+- **reproduction:** Out-of-scope Won must fail closed without mutating in-scope rows.
+- **impact:** Pipeline integrity failure; forged Won.
+- **recommended remediation:** Keep authorizeOpportunity fail-closed; optional RT self-mint re-probe.
+- **regression test:** Out-of-scope PATCH Won → 404/403; no upsert.
+- **status:** LIVE **VERIFIED_FIXED** (D39 artifact-review); prior D38 STILL_INCONCLUSIVE
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
-- **branch/SHA:** live Hub `4b9631a` (D38 reconfirm)
+- **branch/SHA:** live Hub `4b9631a` (D39 reconfirm)
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** D38: `GET /api/plaid/link` + `/create` → **405**; `/health` no Plaid key. No contrary evidence.
-- **reproduction:** Historical header-auth on reachable Plaid host. Live Hub does not route Plaid.
-- **impact:** Bank isolation collapse **if** a Plaid surface is reachable.
-- **recommended remediation:** If/when Plaid is published, require Hub JWT + entitlements.
-- **regression test:** Hub `/api/plaid/link` remains non-served (405).
-- **status:** LIVE **VERIFIED_FIXED** (D38 reconfirm); prior D37/D36
+- **evidence:** D39 gate: GET /api/plaid/link → 405. No contrary evidence.
+- **reproduction:** Historical header-auth on reachable Plaid host.
+- **impact:** Bank isolation collapse if Plaid reachable.
+- **recommended remediation:** If/when Plaid published, require Hub JWT + entitlements.
+- **regression test:** Hub /api/plaid/link remains 405.
+- **status:** LIVE **VERIFIED_FIXED** (D39 reconfirm)
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -767,3 +767,18 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_P0 | **2** (not 0) |
 | LIVE_CERT | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_38_2026-08-22.md` |
+
+## Directive 39 status appendix (ENTITLED_CLASSIFY_SELF_MINTED_SESSION)
+
+| Gate / ID | Status @ Directive 39 |
+|-----------|------------------------|
+| AUTH_SESSION self-mint | **FAIL** (AZURE_* ABSENT) |
+| Classification path | **ARTIFACT_REVIEW** |
+| Approved env id match | **YES** (`9e385f28…`) |
+| FOLLOWUP_CANNOT_REBIND | **YES** |
+| ATLAS-01 | **VERIFIED_FIXED** |
+| ATLAS-02 | **VERIFIED_FIXED** |
+| ATLAS-03 / XSYS | **VERIFIED_FIXED** |
+| LIVE_P0 (findings) | **0** |
+| LIVE_CERT | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_39_2026-08-22.md` |
