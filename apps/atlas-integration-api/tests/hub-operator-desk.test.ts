@@ -149,6 +149,8 @@ describe('operator desk copy', () => {
     assert.match(html, /Waiting/);
     assert.match(html, /Recovered HVS clients/);
     assert.match(html, /Recovered client operating records/);
+    assert.match(html, /HVCG vs client responsibilities/);
+    assert.match(html, /Missing documents/);
     assert.match(html, /Recovered capital packets/);
     assert.match(html, /Recovered documents/);
     assert.match(html, /Recovered projects/);
@@ -182,8 +184,14 @@ describe('operator desk copy', () => {
     assert.ok((model.operatingPicture.hvsRecoveredDocuments?.length || 0) >= 20);
     assert.ok(model.operatingPicture.queues.needsAction.some((row) => row.kind === 'hvs_recovered_action'));
     assert.equal(
-      model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_recovered_reference' && !row.href),
+      model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_actionable_waiting' && !row.href),
       true,
+    );
+    assert.equal(model.operatingPicture.hvsActionableClientKnowledge.length, 12);
+    assert.ok(
+      model.operatingPicture.hvsActionableClientKnowledge.some(
+        (row) => row.client === 'Colorado Beef' && row.clientResponsibilities.length > 0,
+      ),
     );
     assert.equal(model.businessHealth.clientsNeedingAttention, 0);
     assert.equal(model.queues.needsAction[0]?.title.includes('SYNQA W-9'), true);
@@ -419,7 +427,7 @@ describe('operator desk HTTP fail-closed', () => {
       );
       assert.equal(
         body.operatorDesk.operatingPicture.queues.waiting.some(
-          (row) => row.kind === 'hvs_recovered_reference' && !row.href,
+          (row) => row.kind === 'hvs_actionable_waiting' && !row.href,
         ),
         true,
       );

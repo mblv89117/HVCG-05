@@ -1,5 +1,12 @@
 import type { DeskCommercialContext } from '../commercialContext/types.ts';
 import type { KnowledgeProvenance } from '../sharepoint/knowledgeClassification.ts';
+import type {
+  ActionableClientKnowledge,
+  ActionableDecision,
+  ActionableMissingDocument,
+  ActionableResponsibility,
+  ActionableWaitingItem,
+} from '../sharepoint/hvsActionableClientKnowledge.ts';
 
 export const OPERATOR_DESK_CONTRACT = 'atlas-hub-operator-desk.v1' as const;
 
@@ -76,6 +83,11 @@ export interface OperatorRecoveredClientRecord {
   invoiceFilenames: string[];
   nextActions: string[];
   decisionsRequired: string[];
+  waitingItems: ActionableWaitingItem[];
+  missingDocuments: ActionableMissingDocument[];
+  hvcgResponsibilities: ActionableResponsibility[];
+  clientResponsibilities: ActionableResponsibility[];
+  decisions: ActionableDecision[];
   nextAction: string;
 }
 
@@ -124,6 +136,7 @@ export interface OperatorOperatingPicture {
   hvsRecoveredClientRecords: OperatorRecoveredClientRecord[];
   hvsRecoveredCapitalPackets: OperatorRecoveredCapitalPacket[];
   recoveredClientsKnowledgeOperationalized: string[];
+  hvsActionableClientKnowledge: ActionableClientKnowledge[];
 }
 
 export interface OperatorClientJourney {

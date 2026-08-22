@@ -214,10 +214,54 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
               const capital = row.capitalPacketNames.length
                 ? `${row.capitalPacketNames.length} capital packet filename(s)`
                 : 'no capital packet filenames';
-              return `<li><span class="kind">${esc(state)}</span> ${esc(row.client)} · ${esc(code)} · ${esc(String(row.fileCount))} file(s)<br/><span class="muted">${esc(row.nextAction)}</span><br/><span class="muted">${esc(projects)} · ${esc(capital)}</span></li>`;
+              const waiting = row.waitingItems.length
+                ? `${row.waitingItems.length} waiting item(s)`
+                : 'no specific waiting item';
+              const missing = row.missingDocuments.length
+                ? `${row.missingDocuments.length} missing-document note(s)`
+                : 'no invented missing documents';
+              return `<li><span class="kind">${esc(state)}</span> ${esc(row.client)} · ${esc(code)} · ${esc(String(row.fileCount))} file(s)<br/><span class="muted">${esc(row.nextAction)}</span><br/><span class="muted">${esc(projects)} · ${esc(capital)} · ${esc(waiting)} · ${esc(missing)}</span></li>`;
             })
             .join('')}</ul>`
         : '<p class="empty">No recovered client operating records in this picture.</p>'
+    }
+  </section>
+  <section>
+    <h2>HVCG vs client responsibilities</h2>
+    <p class="muted">Filename-derived only. CONFIRMED means the filename exists. LIKELY/PROPOSED stay labeled. Atlas does not invent obligations, amounts, or completion.</p>
+    ${
+      op.hvsActionableClientKnowledge.some(
+        (row) => row.hvcgResponsibilities.length || row.clientResponsibilities.length,
+      )
+        ? `<ul>${op.hvsActionableClientKnowledge
+            .flatMap((row) => [
+              ...row.hvcgResponsibilities.map(
+                (item) =>
+                  `<li><span class="kind">${esc(item.classification)}</span> HVCG · ${esc(row.client)} · ${esc(item.title)}<br/><span class="muted">${esc(item.evidence)}</span></li>`,
+              ),
+              ...row.clientResponsibilities.map(
+                (item) =>
+                  `<li><span class="kind">${esc(item.classification)}</span> CLIENT · ${esc(row.client)} · ${esc(item.title)}<br/><span class="muted">${esc(item.evidence)}</span></li>`,
+              ),
+            ])
+            .join('')}</ul>`
+        : '<p class="empty">No filename-derived HVCG vs client responsibilities in this picture.</p>'
+    }
+  </section>
+  <section>
+    <h2>Missing documents</h2>
+    <p class="muted">Honest gaps only: uninventoried structured folders or checklist filenames whose contents were not extracted. Atlas does not invent a document list.</p>
+    ${
+      op.hvsActionableClientKnowledge.some((row) => row.missingDocuments.length)
+        ? `<ul>${op.hvsActionableClientKnowledge
+            .flatMap((row) =>
+              row.missingDocuments.map(
+                (item) =>
+                  `<li><span class="kind">${esc(item.classification)}</span> ${esc(row.client)} · ${esc(item.title)}<br/><span class="muted">${esc(item.evidence)}</span></li>`,
+              ),
+            )
+            .join('')}</ul>`
+        : '<p class="empty">No honest missing-document notes in this picture.</p>'
     }
   </section>
   <section>

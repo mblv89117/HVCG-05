@@ -1336,7 +1336,12 @@ export function attachOperatorDeskOperatingPicture<
       [OperatingState, KnowledgeOperatingPicture['queues'][OperatingState]]
     >) {
       queues[state] = rows
-        .filter((row) => row.clientCode === clientCode && row.kind !== 'hvs_recovered_reference')
+        .filter(
+          (row) =>
+            row.clientCode === clientCode &&
+            row.kind !== 'hvs_recovered_reference' &&
+            row.kind !== 'hvs_actionable_waiting',
+        )
         .map((row) => ({
           id: row.id,
           title: row.title,

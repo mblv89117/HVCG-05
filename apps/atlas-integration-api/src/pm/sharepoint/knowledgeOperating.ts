@@ -42,6 +42,11 @@ import {
 } from './hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects, type HvsRecoveredProject } from './hvsRecoveredProjects.ts';
 import {
+  hvsActionableClientKnowledge,
+  hvsActionableWaitingItems,
+  type ActionableClientKnowledge,
+} from './hvsActionableClientKnowledge.ts';
+import {
   hvsRecoveredCapitalPackets,
   hvsRecoveredClientRecords,
   recoveredClientsKnowledgeOperationalized,
@@ -70,7 +75,8 @@ export type KnowledgeOperatingItem = {
     | 'opportunity'
     | 'hvs_recovered_reference'
     | 'hvs_recovered_action'
-    | 'hvs_recovered_document';
+    | 'hvs_recovered_document'
+    | 'hvs_actionable_waiting';
   provenance: KnowledgeProvenance;
   source: string;
   webUrl?: string;
@@ -114,6 +120,7 @@ export type KnowledgeOperatingPicture = {
   hvsRecoveredClientRecords: HvsRecoveredClientRecord[];
   hvsRecoveredCapitalPackets: HvsRecoveredCapitalPacket[];
   recoveredClientsKnowledgeOperationalized: string[];
+  hvsActionableClientKnowledge: ActionableClientKnowledge[];
   honestEmpty: boolean;
 };
 
@@ -159,15 +166,15 @@ function hvsRecoveredActionItems(status: HvsAccessStatus): KnowledgeOperatingIte
 
 function hvsRecoveredWaitingItems(status: HvsAccessStatus): KnowledgeOperatingItem[] {
   if (status === 'BLOCKED') return [];
-  return hvsConfirmedClientFolders().map((row) =>
+  return hvsActionableWaitingItems().map((row) =>
     item({
-      id: `hvs-recovered:${row.client}:${row.clientCode || 'uncoded'}`,
+      id: row.id,
       clientCode: row.clientCode,
-      title: `${row.client} — HVS folder recovered (reference-only)`,
+      title: row.title,
       queue: 'Waiting',
-      kind: 'hvs_recovered_reference',
-      provenance: 'CONFIRMED',
-      source: row.source,
+      kind: 'hvs_actionable_waiting',
+      provenance: row.classification,
+      source: row.evidence,
     }),
   );
 }
@@ -464,6 +471,8 @@ export async function buildKnowledgeOperatingPicture(
     hvsRecoveredCapitalPackets: hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredCapitalPackets(),
     recoveredClientsKnowledgeOperationalized:
       hvsDataAccess === 'BLOCKED' ? [] : recoveredClientsKnowledgeOperationalized(),
+    hvsActionableClientKnowledge:
+      hvsDataAccess === 'BLOCKED' ? [] : hvsActionableClientKnowledge(),
     honestEmpty: realClientsOperationalized.length === 0,
   };
 }
