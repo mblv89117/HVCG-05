@@ -177,6 +177,63 @@
       "required": false,
       "indexed": true,
       "description": ""
+    },
+    {
+      "internalName": "Classification",
+      "displayName": "Classification",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Knowledge honesty label",
+      "choices": [
+        "CONFIRMED",
+        "LIKELY",
+        "PROPOSED",
+        "STALE_OR_UNCERTAIN",
+        "COMPLETE"
+      ]
+    },
+    {
+      "internalName": "SourceSystem",
+      "displayName": "SourceSystem",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Governed source. Atlas stores the reference, not a file dump.",
+      "choices": [
+        "SharePoint",
+        "OneDrive",
+        "HVS",
+        "Hub",
+        "Entra",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "SourceRef",
+      "displayName": "SourceRef",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "URL or list/item path in the governed repository"
+    },
+    {
+      "internalName": "OperationalQueue",
+      "displayName": "OperationalQueue",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Needs Action",
+        "Waiting",
+        "Overdue",
+        "Blocked",
+        "Decision Required",
+        "At Risk",
+        "Ready",
+        "Outcomes"
+      ]
     }
   ]
 }

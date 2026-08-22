@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/eva-crm-payload.v1.json",
+  "title": "EVA CRM Payload v1",
+  "description": "EVA/front-door assessment payload routed into Atlas Hub as a website lead. Atlas stores it as HVCG_Leads with Source=Website-EVA; it does not create a client entitlement or opportunity until governed Atlas conversion.",
+  "allOf": [
+    { "$ref": "./website-lead-upsert.v1.json" },
+    {
+      "type": "object",
+      "properties": {
+        "submissionType": { "const": "Website-EVA" },
+        "fullPayload": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "sessionId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "eva": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "band": {
+                  "type": "string",
+                  "maxLength": 255,
+                  "description": "Assessment band as supplied by EVA. Atlas stores as source context, not verified business fact."
+                },
+                "composite_score_proxy": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "recommended_sku": {
+                  "type": "string",
+                  "maxLength": 255
+                }
+              }
+            }
+          },
+          "required": ["sessionId"]
+        }
+      },
+      "required": ["submissionType", "fullPayload"]
+    }
+  ]
+}

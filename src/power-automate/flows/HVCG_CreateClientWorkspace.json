@@ -1,21 +1,22 @@
 {
   "flowName": "HVCG_CreateClientWorkspace",
   "displayName": "HVCG_CreateClientWorkspace",
-  "description": "Creates client library, folders 00-23, permissions, updates client URL.",
+  "description": "Creates the client document library HVCG_{ClientCode} (BaseTemplate 101) with the standard 00-23 folder structure on the Clients site, links SharePointLibraryUrl back on the client record, and audit-logs the run. Idempotent.",
   "trigger": {
     "type": "ManualOrChild",
     "inputs": [
       "ClientCode",
-      "ClientDisplayName",
-      "ClientListItemId"
+      "ClientListItemId",
+      "ClientDisplayName"
     ]
   },
   "connections": [
     "SharePoint"
   ],
   "idempotency": {
-    "column": "HVCG_IdempotencyKey",
-    "onDuplicate": "SkippedDuplicate"
+    "strategy": "LibraryExistenceCheck",
+    "onDuplicate": "SkippedDuplicate",
+    "notes": "Existence checked via _api/web/lists/getbytitle; re-runs re-ensure folders + URL and log SkippedDuplicate."
   },
   "logging": {
     "list": "HVCG_AutomationLogs",
@@ -27,38 +28,74 @@
   "steps": [
     {
       "id": 1,
-      "action": "EnsureSecurityGroup",
+      "action": "LogStarted",
       "params": {
-        "name": "HVCG-Client-{ClientCode}"
+        "list": "HVCG_AutomationLogs",
+        "status": "Started"
       }
     },
     {
       "id": 2,
-      "action": "CreateDocumentLibrary",
+      "action": "ResolveClientId",
       "params": {
-        "site": "HVCG_CLIENTS_HUB_URL",
-        "title": "HVCG_{ClientCode}"
+        "list": "HVCG_Clients",
+        "byId": "ClientListItemId",
+        "elseFilter": "ClientCode eq '{ClientCode}'"
       }
     },
     {
       "id": 3,
-      "action": "CreateFolders",
+      "action": "ComposeLibraryTitle",
       "params": {
-        "fromConfig": "documentFolderStructure"
+        "pattern": "HVCG_{ClientCode}"
       }
     },
     {
       "id": 4,
-      "action": "BreakInheritanceAndGrant"
+      "action": "CheckLibraryExists",
+      "params": {
+        "site": "hvcg_ClientsSiteUrl",
+        "rest": "_api/web/lists/getbytitle('HVCG_{ClientCode}')"
+      }
     },
     {
       "id": 5,
-      "action": "UpdateClientSharePointLibraryUrl"
+      "action": "CreateDocumentLibraryIfMissing",
+      "params": {
+        "site": "hvcg_ClientsSiteUrl",
+        "rest": "POST _api/web/lists",
+        "baseTemplate": 101
+      }
     },
     {
       "id": 6,
-      "action": "LogSuccess"
+      "action": "EnsureFolders",
+      "params": {
+        "fromConfig": "documentFolderStructure",
+        "rest": "POST _api/web/folders/addUsingPath",
+        "ignoreExisting": true
+      }
+    },
+    {
+      "id": 7,
+      "action": "UpdateClientSharePointLibraryUrl",
+      "params": {
+        "list": "HVCG_Clients",
+        "field": "SharePointLibraryUrl"
+      }
+    },
+    {
+      "id": 8,
+      "action": "LogResult",
+      "params": {
+        "list": "HVCG_AutomationLogs",
+        "status": "Succeeded|SkippedDuplicate"
+      }
     }
+  ],
+  "notes": [
+    "Permissions grant / break-inheritance is handled out-of-band by deployment/scripts/New-HVCGClientWorkspace.ps1 (PnP). This flow keeps the library + folders + URL link + audit log path.",
+    "No client or prospect emails are sent (EnableClientEmails stays false)."
   ],
   "errorHandling": {
     "notifyGroup": "HVCG-Role-Administrator",
@@ -66,10 +103,10 @@
     "retryDelaySeconds": 60
   },
   "environmentVariables": [
-    "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
+    "hvcg_EnableClientEmails"
   ]
 }

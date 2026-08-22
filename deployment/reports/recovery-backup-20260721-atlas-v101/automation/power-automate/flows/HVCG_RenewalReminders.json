@@ -1,0 +1,61 @@
+{
+  "flowName": "HVCG_RenewalReminders",
+  "displayName": "HVCG_RenewalReminders",
+  "description": "Creates renewal tasks 60/30/14 days before RenewalDate.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 07:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "GetClientsInRenewalWindows",
+      "params": {
+        "windows": [
+          60,
+          30,
+          14
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "action": "CreateIdempotentRenewalTasks"
+    },
+    {
+      "id": 3,
+      "action": "NotifyRelationshipOwnerAt14Days"
+    },
+    {
+      "id": 4,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

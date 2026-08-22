@@ -1,0 +1,99 @@
+{
+  "title": "HVCG_ClosingConditions",
+  "description": "Capital — Closing condition tracker",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Condition name."
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ConditionStatus",
+      "displayName": "ConditionStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "open|in_progress|satisfied|waived|blocked.",
+      "choices": [
+        "open",
+        "in_progress",
+        "satisfied",
+        "waived",
+        "blocked"
+      ],
+      "default": "open"
+    },
+    {
+      "internalName": "Blocker",
+      "displayName": "Blocker",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DocumentRequestId",
+      "displayName": "DocumentRequestId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_DocumentRequests"
+    },
+    {
+      "internalName": "RelatedLenderId",
+      "displayName": "RelatedLenderId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}
