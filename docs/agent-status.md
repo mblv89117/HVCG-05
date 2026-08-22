@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | (post-D41 commit) |
+| current SHA | `c438d08c2514fb6b6b8d9b42d40c1514f43e636f` |
 | baseline | D41 LIVE_CLIENT_PORTAL_ISOLATION @ Hub target `e63279a8` (live drifted `b707049c`) |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
