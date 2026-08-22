@@ -5,68 +5,67 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | `909e4822eb73eed50656ea763b001aae27cc941b` |
-| baseline | Live Hub now `ed34f2f` (empty-scope short-circuit). Elite still `75d0c59` (untouched). |
-| owned domains | D16 Hub post-deploy Search empty-scope floor recert (not Elite) |
-| files/domains touched | D16 report + status only this checkpoint |
+| current SHA | *(set on tip pin commit)* |
+| baseline | Live Hub **`4b9631a`** (entitlement group members). Immediate rollback Hub: `ed34f2f` / `798f0dd6`. Elite still `75d0c59` (untouched). |
+| owned domains | D17 Search recert on `4b9631a` (not D16 clone; not Elite) |
+| files/domains touched | D17 report + status only |
 | contracts required | None |
-| tests | D16 live Hub lineage + unauth 401 + auth search n=7 |
-| build | N/A this checkpoint (Hub deployed by V3; worker verify-only) |
-| synthetic certification | D16 empty-scope floor **LIVE** (P50=328 ms) |
-| security status | No LIVE_SECURITY_CERTIFIED / live P0=0 / entitled-desk Search closed. No ATLAS-RT/XSYS. |
-| Premium status | Elite Premium **NOT** in scope for D16 (NOT_RUN / not requested) |
+| tests | D17 live lineage + unauth 401 + auth Search n≥7 |
+| build | N/A (worker verify-only; no deploy) |
+| synthetic certification | D17 Search P50 recorded on live `4b9631a` |
+| security status | No LIVE_SECURITY_CERTIFIED / live P0=0. No ATLAS-RT/XSYS. |
+| Premium status | **ELITE_PREMIUM=NOT_RUN** |
 | integration dependencies | None |
 | P0 | 0 (train) — not a live P0=0 claim |
-| P1 | Prior search latency P1 superseded for empty-scope floor on live `ed34f2f` (see D16) |
-| P2 | D11–D13 honesty remain branch-only vs live Elite `75d0c59` |
-| owner decisions | OD-005 out of scope; SYN01 entitled-desk still EMPTY (not claimed closed) |
-| deployment state | Hub live `ed34f2f` (V3). Worker **DID NOT DEPLOY**. Elite **NOT TOUCHED**. |
+| P1 | Entitled Search still ~2.0–2.1s P50 on `4b9631a` (see D17) |
+| P2 | D11–D13 honesty remain branch-only vs live Elite |
+| owner decisions | Out of scope this directive |
+| deployment state | Hub live `4b9631a` (V3). Worker **DID NOT DEPLOY**. Elite **NOT TOUCHED**. |
 
 ## Orchestrator control protocol
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **16** (`ORCH-D16` Hub Search empty-scope floor recert) |
-| BASED ON WORKER SHA (directive) | `bc31cf8` (D14 tip) |
-| ISSUER RUN | `run-221ab1a6-43e9-45f0-acf7-203f65f3cc11` |
-| ACK | **D16 acknowledged explicitly** (D11–D14 not redone; not D15; no deploy) |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **17** (`SEARCH_RECERT_ON_4b9631a`) |
+| BASED ON PRIOR | D16 CONSUMED=16 @ `89e7f0f` (ed34f2f — now rollback; not redone) |
+| ISSUER RUN | `run-a58fafe7-0ba1-402b-bd1c-afcd8f2c44b4` |
+| ACK | **D17 acknowledged explicitly** (not D16 clone; not D15; no deploy) |
 
-## D16 summary
+## D17 summary
 
 | Item | Value |
 |------|--------|
-| Live Hub commit | `ed34f2f86fa1a0ce0c4c6ff6ab255d6eff32aa3a` |
-| Lineage match | YES (`/health`, `/ATLAS_HUB_COMMIT.txt`, `/hub-build.json`) |
-| Unauth `/api/pm` + `/api/capital` | 401 |
-| `AUTH_SESSION` | PRESENT |
-| Search n | 7 × `q=hvcg` → HTTP 200 |
-| **P50_ms** | **328** |
-| resultsCount / scope | 0 / `entitled` (all samples) |
-| Classification | **LIVE** (empty-scope floor on `ed34f2f`) |
-| Report | `docs/ATLAS_P2_D16_HUB_SEARCH_EMPTY_FLOOR_2026-08-22.md` |
+| Live Hub commit | `4b9631a0a50e06591dd9100fb48b07e5aea7d008` |
+| Lineage match | YES |
+| Unauth `/api/pm/search` + `/api/capital` | 401 |
+| `AUTH_SESSION` | PRESENT (self-minted this pod) |
+| Empty-result `q=hvcg` P50 | **2022 ms** (resultsCount=0, scope=entitled) |
+| Entitled `q=SYN01` P50 | **2074 ms** (resultsCount=2, syn01HitCount=2) |
+| `ELITE_PREMIUM` | NOT_RUN |
+| deployed | NO |
+| Report | `docs/ATLAS_P2_D17_SEARCH_RECERT_4b9631a_2026-08-22.md` |
 
 ## Carry-forward (not redone)
 
-D11–D14 remain CONSUMED. D15 / Elite honesty / Elite Premium / Elite MSAL not executed.
+D11–D16 remain CONSUMED. D15 / Elite not executed. D16 empty-scope floor on `ed34f2f` is historical only.
 
 ## COMPLETED ACTIONS
 
-- D16 lineage + unauth + auth Search P50 + LIVE classification
-- Status CONSUMED=16
+- D17 lineage + unauth + AUTH_SESSION Search P50 (empty-result + entitled SYN01)
+- Status CONSUMED=17
 
 ## REMAINING ACTIONS
 
-1. Entitled-desk Search (SYN01) remains owner-batched — not closed by D16
-2. Elite honesty release still separate / Section-27 (not this directive)
-3. Immediate Hub rollback ref only if orch directs: `1ac6257` / OneDeploy `333912dc…`
+1. Elite Premium / D15 only if separately issued
+2. Hub/Elite deploy only if separately authorized (not this worker)
 
 ## TEST STATUS
 
-D16 verify PASS — lineage, unauth 401, AUTH_SESSION PRESENT, Search n=7 P50=328 ms, classification **LIVE**.
+D17 verify PASS — lineage `4b9631a`, unauth 401, AUTH_SESSION PRESENT, Search P50 empty=2022 / entitled=2074, ELITE_PREMIUM=NOT_RUN, deployed=NO.
 
 ## PREMIUM STATUS
 
-Out of scope for D16 (Elite not touched).
+**ELITE_PREMIUM=NOT_RUN**
 
 ## INTEGRATION STATUS
 
@@ -76,4 +75,4 @@ N/A.
 
 None from this worker.
 
-**Updated:** 2026-08-22T04:35:00Z
+**Updated:** 2026-08-22T05:10:00Z
