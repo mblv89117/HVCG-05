@@ -8,6 +8,8 @@ import {
   AtlasCard,
 } from '@hvcg/atlas-design-system';
 import { Button, MessageBar, MessageBarBody } from '@fluentui/react-components';
+import { AskAtlasSurface } from '../components/AskAtlasSurface';
+import { askAtlasView } from '../components/askAtlasView';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
 import { useAtlasRole } from '../security/RoleProvider';
 import type { Capability } from '../security/rbac';
@@ -91,6 +93,7 @@ export function AccessDeniedPage() {
           <MessageBarBody>{error}</MessageBarBody>
         </MessageBar>
       ) : null}
+      {unauthenticated ? <AskAtlasSurface view={askAtlasView({ signed: false })} /> : null}
       <AccessDeniedState
         title={unauthenticated ? 'Choose a session' : title}
         description={description}

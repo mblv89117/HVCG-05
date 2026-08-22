@@ -26,6 +26,7 @@ import {
   ShieldRegular,
   PlugConnectedRegular,
   ApprovalsAppRegular,
+  ChatRegular,
 } from '@fluentui/react-icons';
 import { Button, makeStyles } from '@fluentui/react-components';
 import { useMicrosoftAuth } from '../microsoft/auth/AuthProvider';
@@ -59,6 +60,7 @@ const allSections: NavSection[] = [
     title: 'Operate',
     items: [
       { id: 'home', label: 'Command Center', to: '/', icon: <HomeRegular /> },
+      { id: 'ask-atlas', label: 'Ask Atlas', to: '/ask-atlas', icon: <ChatRegular /> },
       { id: 'my-work', label: 'My Work', to: '/my-work', icon: <CheckboxCheckedRegular /> },
       { id: 'tasks', label: 'Decisions', to: '/tasks', icon: <ApprovalsAppRegular /> },
     ],
@@ -103,6 +105,7 @@ const allSections: NavSection[] = [
 
 const catalog: SearchResult[] = [
   { id: 's1', title: 'Command Center', category: 'Navigation', subtitle: 'What needs you today', to: '/' },
+  { id: 's1a', title: 'Ask Atlas', category: 'Navigation', subtitle: 'What needs attention across HVCG', to: '/ask-atlas' },
   { id: 's1b', title: 'My Work', category: 'Navigation', to: '/my-work' },
   { id: 's-decisions', title: 'Decisions', category: 'Navigation', subtitle: 'Approvals that need you', to: '/tasks' },
   { id: 's16', title: 'Clients', category: 'CRM', to: '/clients' },
@@ -137,6 +140,7 @@ const KIND_LABEL: Record<string, string> = {
 const routeLabels: Record<string, string> = {
   '/': 'Command Center',
   '/command-center': 'Command Center',
+  '/ask-atlas': 'Ask Atlas',
   '/my-work': 'My Work',
   '/portfolio': 'Projects',
   '/inbox': 'Inbox',
