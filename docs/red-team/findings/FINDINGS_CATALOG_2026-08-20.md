@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** `REMOTE_REACHABLE` ambient; D31 exact live SHA `9e5d10a` + deployment `698f7e92…` **NOT independently verified** — **LIVE_VALIDATION_ABORTED=YES**
+**CURRENT RELEASE STATE:** D32 Step 0 **INHERIT=FAIL** (AZURE_* ABSENT on this pod) — **LIVE_VALIDATION_ABORTED=YES**; exact Hub SHA unverified
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D31): ATLAS-01/02/03 + XSYS-01/02 all **INCONCLUSIVE** (SHA gate abort). **LIVE_SECURITY_CERTIFIED=NO**. LIVE P0 ≠ 0.
-- Prior D30 live labels (PARTIAL/NEEDS_RETEST) superseded for D31 vocabulary; candidate `9e5d10a` FIXED_REVALIDATED unchanged as candidate-only.
+- LIVE Hub (D32): ATLAS-01/02/03 + XSYS-01/02 all **INCONCLUSIVE** (inherit FAIL; no probes). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=5**.
+- D31 abort not overridden. Candidate `9e5d10a` FIXED_REVALIDATED remains candidate-only.
 
 ---
 
@@ -676,3 +676,17 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_P0 = 0? | **NO** |
 | LIVE_SECURITY_CERTIFIED | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_31_2026-08-22.md` |
+
+## Directive 32 status appendix (EXECUTE — HOLD LIFTED; Step 0 inherit)
+
+| Gate / ID | Status @ Directive 32 |
+|-----------|------------------------|
+| THIS_POD_ENV_VERSION | `a86e2323-9c2a-11f1-ba66-0e7d0216e441` |
+| THIS_POD_BUILD_ID | `bld-20260820-859ee60c-1350-4ede-89ab-db0836afc9d5` |
+| AZURE_* (all four) | **ABSENT** |
+| INHERIT | **FAIL** |
+| LIVE_VALIDATION_ABORTED | **YES** |
+| ATLAS-01/02/03 · XSYS-01/02 | **INCONCLUSIVE** (no probes — inherit FAIL) |
+| LIVE_P0 | **5** |
+| LIVE_SECURITY_CERTIFIED | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_32_2026-08-22.md` |
