@@ -8,7 +8,12 @@
 import type { AppConfig } from '../config.ts';
 
 const GRAPH_SCOPE = 'https://graph.microsoft.com/.default';
-const CHECK_MEMBER_GROUPS = 'https://graph.microsoft.com/v1.0/users';
+/** Directory objects (users and application service principals). `/users/{id}` is user-only. */
+export const GRAPH_CHECK_MEMBER_GROUPS_BASE = 'https://graph.microsoft.com/v1.0/directoryObjects';
+
+export function checkMemberGroupsUrl(oid: string): string {
+  return `${GRAPH_CHECK_MEMBER_GROUPS_BASE}/${encodeURIComponent(oid)}/checkMemberGroups`;
+}
 
 type TokenCache = { accessToken: string; expiresAtMs: number };
 
@@ -65,7 +70,10 @@ export async function getGraphAppToken(cfg: AppConfig, nowMs = Date.now()): Prom
   }
 }
 
-/** Returns group IDs from `groupIds` that the user is a member of. Fail closed → []. */
+/**
+ * Returns group IDs from `groupIds` that the directory object (user or
+ * application service principal) is a member of. Fail closed → [] / 'failed'.
+ */
 export async function checkMemberGroups(
   cfg: AppConfig,
   oid: string,
@@ -81,7 +89,7 @@ export async function checkMemberGroups(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), graphTimeoutMs(cfg));
     try {
-      const resp = await fetch(`${CHECK_MEMBER_GROUPS}/${encodeURIComponent(oid)}/checkMemberGroups`, {
+      const resp = await fetch(checkMemberGroupsUrl(oid), {
         method: 'POST',
         headers: {
           authorization: `Bearer ${token}`,
