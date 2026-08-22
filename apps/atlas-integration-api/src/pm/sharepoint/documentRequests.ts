@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
+import { assertWritableClientCode } from './knowledgeClassification.ts';
 
 export const DOCUMENT_REQUESTS_FILENAME = 'client-document-requests.json';
 
@@ -66,6 +67,7 @@ export function createDocumentRequest(
   dataDir: string,
   input: { clientCode: string; title: string; createdBy: string },
 ): DocumentRequestRecord {
+  assertWritableClientCode(input.clientCode, 'document-request create');
   const title = input.title.trim().slice(0, 200);
   if (!title) {
     throw new Error('title_required');
