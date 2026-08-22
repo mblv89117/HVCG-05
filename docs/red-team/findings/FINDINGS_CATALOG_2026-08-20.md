@@ -357,7 +357,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Key holder forges leads/attribution into SharePoint CRM if HMAC not live.
 - **recommended remediation:** Confirm live signature-invalid 401 with intake key.
 - **regression test:** Valid key + invalid signature → 401.
-- **status:** LIVE **PARTIAL** (D30); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 PARTIAL; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### XSYS-RT-20260820-02
 - **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub post-OD-005 / CANDIDATE `9e5d10a`
@@ -365,7 +365,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-system lead overwrite via colliding keys if unbound key still accepted.
 - **recommended remediation:** Live website+`eva|` → 409 probe with intake credentials.
 - **regression test:** Website type + `eva|` key → 409.
-- **status:** LIVE **NEEDS_RETEST** (D30); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 NEEDS_RETEST; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### XSYS-RT-20260820-03..12
 - **03** P1 GCC handoff without Atlas attestation.
