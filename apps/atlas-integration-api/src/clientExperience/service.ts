@@ -742,3 +742,90 @@ export function operatorExperienceStatus(opts: { dataDir: string; principal: Atl
     gccWorkspaceKey: gccWorkspaceKey(clientCode),
   };
 }
+
+export type OperatorClientJourney = {
+  clientCode: string;
+  classification: 'SYNTHETIC_QA' | 'CLIENT' | 'READ_ONLY_CLIENT';
+  workspaceStaged: boolean;
+  activationGate: string | null;
+  invitationStatus: 'none' | 'staged' | 'redeemed' | 'expired' | 'revoked';
+  invitationOutboundSent: false;
+  signedClientSession: false;
+  bindingCount: number;
+  openRequestCount: number;
+  documentCount: number;
+  gccWorkspaceKey: string;
+  previewHref: string;
+  nextAction: string;
+};
+
+function latestInvitation(
+  snapshot: ReturnType<typeof loadExperienceStore>,
+  clientCode: string,
+) {
+  return snapshot.invitations
+    .filter((row) => row.clientCode === clientCode)
+    .slice()
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
+}
+
+function journeyNextAction(input: {
+  workspaceStaged: boolean;
+  invitationStatus: OperatorClientJourney['invitationStatus'];
+  bindingCount: number;
+}): string {
+  if (!input.workspaceStaged) {
+    return 'Workspace not staged. Governed activation must complete before invitation.';
+  }
+  if (input.invitationStatus === 'none') {
+    return 'Workspace staged. No invitation recorded.';
+  }
+  if (input.invitationStatus === 'expired' || input.invitationStatus === 'revoked') {
+    return 'Invitation is no longer valid. Re-stage a record-only invitation.';
+  }
+  if (input.invitationStatus === 'staged') {
+    return 'Invitation staged (record-only, outbound not sent). Waiting for a Client Executive principal to redeem.';
+  }
+  if (input.bindingCount > 0) {
+    return 'Invitation redeemed. signedClientSession remains false until a client principal uses /client.';
+  }
+  return 'Invitation redeemed. No signed client session on this operator desk.';
+}
+
+/** Entitled-only client journey status for the operator desk. Never lists foreign ClientCodes. */
+export function listOperatorClientJourneys(opts: {
+  dataDir: string;
+  entitledClientCodes: string[];
+}): OperatorClientJourney[] {
+  const snapshot = loadExperienceStore(opts.dataDir);
+  const codes = [...new Set(opts.entitledClientCodes.filter((code) => isCanonicalClientCode(code)))];
+  return codes.map((clientCode) => {
+    const classified = classifyHubClientRow({ clientCode });
+    const workspace = snapshot.workspaces[clientCode];
+    const invite = latestInvitation(snapshot, clientCode);
+    const bindingCount = snapshot.bindings.filter((row) => row.clientCode === clientCode).length;
+    const invitationStatus = invite?.status || 'none';
+    const workspaceStaged = Boolean(workspace);
+    return {
+      clientCode,
+      classification: classified.classification,
+      workspaceStaged,
+      activationGate: workspace?.activationGate || null,
+      invitationStatus,
+      invitationOutboundSent: false,
+      signedClientSession: false,
+      bindingCount,
+      openRequestCount: snapshot.requests.filter(
+        (row) => row.clientCode === clientCode && row.status === 'open',
+      ).length,
+      documentCount: snapshot.documents.filter((row) => row.clientCode === clientCode).length,
+      gccWorkspaceKey: gccWorkspaceKey(clientCode),
+      previewHref: `/api/pm/clients/${clientCode}/desk`,
+      nextAction: journeyNextAction({
+        workspaceStaged,
+        invitationStatus,
+        bindingCount,
+      }),
+    };
+  });
+}

@@ -153,6 +153,20 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     }
   </section>
   <section>
+    <h2>Client journey</h2>
+    <p class="muted">Governed activation → invitation → signed client session. Staff preview is not a Client Executive session.</p>
+    ${
+      model.clientJourneys.length
+        ? `<ul>${model.clientJourneys
+            .map((row) => {
+              const session = row.signedClientSession ? 'signed client session' : 'signedClientSession=false';
+              return `<li><span class="kind">${esc(row.classification)}</span> <a href="${esc(row.previewHref)}">${esc(row.clientCode)}</a> · workspace ${row.workspaceStaged ? 'staged' : 'not staged'} · invite ${esc(row.invitationStatus)} · ${esc(session)} · GCC <code>${esc(row.gccWorkspaceKey)}</code><br/><span class="muted">${esc(row.nextAction)}</span></li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No entitled client journey in this session. Atlas does not invent clients.</p>'
+    }
+  </section>
+  <section>
     <h2>What we are working on</h2>
     <p class="muted">HVS ${esc(op.hvsDataAccess)} · ${op.honestEmpty ? 'honest empty for real clients' : `${esc(String(op.realClientsOperationalized.length))} real client(s) operationalized`} · SYNQA ${syntheticWork.length ? 'labeled' : 'none'}</p>
     ${operatingList(realWork, 'No entitled customer operating items. Atlas does not invent work.')}

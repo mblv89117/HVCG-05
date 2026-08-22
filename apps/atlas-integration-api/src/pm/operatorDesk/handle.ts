@@ -13,6 +13,7 @@ import { searchSharePointPm } from '../sharepoint/search.ts';
 import { renderOperatorDeskHtml, renderUnsignedOperatorDesk } from './html.ts';
 import { listEntitledAttention, realClientsNeedingAttention } from '../sharepoint/attention.ts';
 import { buildKnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
+import { listOperatorClientJourneys } from '../../clientExperience/service.ts';
 import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
 import { isOperatorDeskPath, wantsOperatorJson, type OperatorDeskModel } from './types.ts';
 
@@ -107,6 +108,10 @@ async function loadSharePointDesk(opts: {
     })),
     realClientsNeedingAttention: realClientsNeedingAttention(attention).length,
     operatingPicture: operatorOperatingPictureFromKnowledge(knowledge),
+    clientJourneys: listOperatorClientJourneys({
+      dataDir: cfg.dataDir,
+      entitledClientCodes: entitled,
+    }),
   });
 }
 
@@ -132,6 +137,10 @@ function loadDevelopmentDesk(opts: {
     searchRan: q.length >= 2,
     searchHits: [],
     operatingPicture: emptyHonestOperatingPicture(),
+    clientJourneys: listOperatorClientJourneys({
+      dataDir: opts.cfg.dataDir,
+      entitledClientCodes: entitledClientCodes(opts.principal),
+    }),
   });
 }
 
