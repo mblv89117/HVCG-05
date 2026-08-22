@@ -1,6 +1,7 @@
 import type { DeskCommercialContext } from '../commercialContext/types.ts';
 import { EMPTY_REASON } from '../commercialContext/types.ts';
-import { OPERATOR_DESK_CONTRACT, type OperatorDeskModel, type OperatorQueueItem } from './types.ts';
+import type { KnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
+import { OPERATOR_DESK_CONTRACT, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
   if (!value || typeof value !== 'object') return typeof value === 'string' ? value : '';
@@ -60,6 +61,91 @@ export function emptyHonestDesk(entitledClientCount: number): DeskCommercialCont
   };
 }
 
+function mapQueue(
+  rows: KnowledgeOperatingPicture['queues'][keyof KnowledgeOperatingPicture['queues']] | undefined,
+): OperatorOperatingItem[] {
+  return (rows || []).slice(0, 20).map((row) => ({
+    id: row.id,
+    clientCode: row.clientCode,
+    title: row.title,
+    queue: row.queue,
+    kind: row.kind,
+    provenance: row.provenance,
+    href: row.clientCode ? `/api/pm/clients/${row.clientCode}/desk` : undefined,
+  }));
+}
+
+export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
+  return {
+    kind: 'operator_operating_picture_v1',
+    invented: false,
+    hvsDataAccess: 'BLOCKED',
+    realClientsOperationalized: [],
+    syntheticClientsVisible: [],
+    honestEmpty: true,
+    queues: {
+      needsAction: [],
+      waiting: [],
+      overdue: [],
+      blocked: [],
+      decisionRequired: [],
+      atRisk: [],
+    },
+    missingData: [
+      'Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).',
+      'No entitled Hub-visible customer work has been operationalized for this principal.',
+    ],
+    recoveryLedger: [],
+  };
+}
+
+export function operatorOperatingPictureFromKnowledge(
+  knowledge?: KnowledgeOperatingPicture | null,
+): OperatorOperatingPicture {
+  if (!knowledge) return emptyHonestOperatingPicture();
+  const missingData: string[] = [];
+  if (knowledge.hvsDataAccess === 'BLOCKED') {
+    missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
+  } else if (knowledge.hvsDataAccess === 'PARTIAL') {
+    missingData.push('Historical HVS access is partial. Unreadable repositories stay blocked.');
+  }
+  if (knowledge.syntheticClientsVisible.length) {
+    missingData.push('SYNTHETIC_QA clients are labeled fixtures, not customer operationalizations.');
+  }
+  if (knowledge.honestEmpty) {
+    missingData.push('No entitled Hub-visible customer work has been operationalized for this principal.');
+  }
+  for (const row of knowledge.recoveryLedger) {
+    if (row.accessible === false && row.blocker) missingData.push(`${row.client}: ${row.blocker}`);
+  }
+  return {
+    kind: 'operator_operating_picture_v1',
+    invented: false,
+    hvsDataAccess: knowledge.hvsDataAccess,
+    realClientsOperationalized: knowledge.realClientsOperationalized,
+    syntheticClientsVisible: knowledge.syntheticClientsVisible,
+    honestEmpty: knowledge.honestEmpty,
+    queues: {
+      needsAction: mapQueue(knowledge.queues['Needs Action']),
+      waiting: mapQueue(knowledge.queues.Waiting),
+      overdue: mapQueue(knowledge.queues.Overdue),
+      blocked: mapQueue(knowledge.queues.Blocked),
+      decisionRequired: mapQueue(knowledge.queues['Decision Required']),
+      atRisk: mapQueue(knowledge.queues['At Risk']),
+    },
+    missingData: [...new Set(missingData)].slice(0, 12),
+    recoveryLedger: knowledge.recoveryLedger.slice(0, 20).map((row) => ({
+      client: row.client,
+      clientCode: row.clientCode,
+      dataType: row.dataType,
+      accessible: row.accessible,
+      operationalized: row.operationalized,
+      provenance: row.provenance,
+      blocker: row.blocker,
+    })),
+  };
+}
+
 export function buildOperatorDeskModel(input: {
   hubSha: string | null;
   entitledClients: string[];
@@ -70,6 +156,7 @@ export function buildOperatorDeskModel(input: {
   searchRan?: boolean;
   attentionItems?: OperatorQueueItem[];
   realClientsNeedingAttention?: number;
+  operatingPicture?: OperatorOperatingPicture;
 }): OperatorDeskModel {
   const cc = input.commandCenter && typeof input.commandCenter === 'object' ? input.commandCenter : {};
   const health =
@@ -114,6 +201,7 @@ export function buildOperatorDeskModel(input: {
       followUps,
     },
     commercialContext: input.commercialContext,
+    operatingPicture: input.operatingPicture || emptyHonestOperatingPicture(),
     search: {
       q: (input.searchQuery || '').trim().slice(0, 120),
       hitCount: input.searchHits?.length ?? 0,

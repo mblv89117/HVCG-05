@@ -1,4 +1,5 @@
 import type { DeskCommercialContext } from '../commercialContext/types.ts';
+import type { KnowledgeProvenance } from '../sharepoint/knowledgeClassification.ts';
 
 export const OPERATOR_DESK_CONTRACT = 'atlas-hub-operator-desk.v1' as const;
 
@@ -7,6 +8,45 @@ export interface OperatorQueueItem {
   title: string;
   href?: string;
   kind: string;
+}
+
+export interface OperatorOperatingItem {
+  id: string;
+  clientCode: string;
+  title: string;
+  queue: string;
+  kind: string;
+  provenance: KnowledgeProvenance;
+  href?: string;
+}
+
+export interface OperatorRecoveryRow {
+  client: string;
+  clientCode: string;
+  dataType: string;
+  accessible: boolean;
+  operationalized: boolean;
+  provenance: KnowledgeProvenance;
+  blocker: string;
+}
+
+export interface OperatorOperatingPicture {
+  kind: 'operator_operating_picture_v1';
+  invented: false;
+  hvsDataAccess: 'AVAILABLE' | 'PARTIAL' | 'BLOCKED';
+  realClientsOperationalized: string[];
+  syntheticClientsVisible: string[];
+  honestEmpty: boolean;
+  queues: {
+    needsAction: OperatorOperatingItem[];
+    waiting: OperatorOperatingItem[];
+    overdue: OperatorOperatingItem[];
+    blocked: OperatorOperatingItem[];
+    decisionRequired: OperatorOperatingItem[];
+    atRisk: OperatorOperatingItem[];
+  };
+  missingData: string[];
+  recoveryLedger: OperatorRecoveryRow[];
 }
 
 export interface OperatorSearchHit {
@@ -40,6 +80,7 @@ export interface OperatorDeskModel {
     followUps: OperatorQueueItem[];
   };
   commercialContext: DeskCommercialContext;
+  operatingPicture: OperatorOperatingPicture;
   search: {
     q: string;
     hitCount: number;

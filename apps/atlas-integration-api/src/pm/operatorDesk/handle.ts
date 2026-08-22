@@ -12,7 +12,8 @@ import type { SharePointPmService } from '../sharepoint/repository.ts';
 import { searchSharePointPm } from '../sharepoint/search.ts';
 import { renderOperatorDeskHtml, renderUnsignedOperatorDesk } from './html.ts';
 import { listEntitledAttention, realClientsNeedingAttention } from '../sharepoint/attention.ts';
-import { buildOperatorDeskModel } from './model.ts';
+import { buildKnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
+import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
 import { isOperatorDeskPath, wantsOperatorJson, type OperatorDeskModel } from './types.ts';
 
 export { isOperatorDeskPath };
@@ -58,11 +59,15 @@ async function loadSharePointDesk(opts: {
   searchQuery: string;
 }): Promise<OperatorDeskModel> {
   const { sharepoint: service, principal, cfg } = opts;
-  const [projects, tasks, leads, opportunities] = await Promise.all([
+  const [projects, tasks, leads, opportunities, knowledge] = await Promise.all([
     service.listAuthorizedProjects(principal),
     service.listAuthorizedTasks(principal),
     service.listAuthorizedLeads(principal),
     service.listAuthorizedOpportunities(principal),
+    buildKnowledgeOperatingPicture(service, principal, {
+      dataDir: cfg.dataDir,
+      hvsDataAccess: 'BLOCKED',
+    }),
   ]);
   const milestones = [];
   for (const project of projects) {
@@ -101,6 +106,7 @@ async function loadSharePointDesk(opts: {
       kind: row.kind,
     })),
     realClientsNeedingAttention: realClientsNeedingAttention(attention).length,
+    operatingPicture: operatorOperatingPictureFromKnowledge(knowledge),
   });
 }
 
@@ -125,6 +131,7 @@ function loadDevelopmentDesk(opts: {
     searchQuery: q,
     searchRan: q.length >= 2,
     searchHits: [],
+    operatingPicture: emptyHonestOperatingPicture(),
   });
 }
 

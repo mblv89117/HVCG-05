@@ -12,7 +12,7 @@ import { createLocalAiAdapter } from '../src/local-ai/adapter.ts';
 import { createAuthorizedPmRepository } from '../src/pm/backend.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
 import { renderOperatorDeskHtml, renderUnsignedOperatorDesk } from '../src/pm/operatorDesk/html.ts';
-import { buildOperatorDeskModel, emptyHonestDesk } from '../src/pm/operatorDesk/model.ts';
+import { buildOperatorDeskModel, emptyHonestDesk, emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 
 const SYN01 = 'SYN01';
 const ACME01 = 'ACME01';
@@ -142,6 +142,14 @@ describe('operator desk copy', () => {
     assert.match(html, /Client workspace preview/);
     assert.match(html, /\/api\/pm\/clients\/SYN01\/desk/);
     assert.match(html, /Approve SYN01 activation/);
+    assert.match(html, /What we are working on/);
+    assert.match(html, /Missing or blocked data/);
+    assert.match(html, /HVS_DATA_ACCESS=BLOCKED/);
+    assert.match(html, /does not invent work/);
+    assert.equal(model.operatingPicture.invented, false);
+    assert.equal(model.operatingPicture.hvsDataAccess, 'BLOCKED');
+    assert.equal(model.operatingPicture.honestEmpty, true);
+    assert.deepEqual(model.operatingPicture.realClientsOperationalized, []);
     assert.equal(model.businessHealth.clientsNeedingAttention, 0);
     assert.equal(model.queues.needsAction[0]?.title.includes('SYNQA W-9'), true);
     assert.match(html, /does not invent LTV/);
@@ -151,6 +159,9 @@ describe('operator desk copy', () => {
     assert.equal(html.includes('250000'), false);
     assert.equal(model.liveGtmOutbound, false);
     assert.equal(model.paidAds, false);
+    const empty = emptyHonestOperatingPicture();
+    assert.equal(empty.kind, 'operator_operating_picture_v1');
+    assert.equal(empty.invented, false);
   });
 });
 
@@ -195,6 +206,12 @@ describe('operator desk HTTP fail-closed', () => {
           paidAds: boolean;
           entitledClients: string[];
           commercialContext: { gcc: { available: boolean; emptyReason?: string } };
+          operatingPicture: {
+            invented: boolean;
+            hvsDataAccess: string;
+            honestEmpty: boolean;
+            realClientsOperationalized: string[];
+          };
         };
       };
       assert.equal(body.operatorDesk.entitled, true);
@@ -203,6 +220,10 @@ describe('operator desk HTTP fail-closed', () => {
       assert.deepEqual(body.operatorDesk.entitledClients, [SYN01]);
       assert.equal(body.operatorDesk.commercialContext.gcc.available, false);
       assert.match(body.operatorDesk.commercialContext.gcc.emptyReason || '', /does not invent LTV/);
+      assert.equal(body.operatorDesk.operatingPicture.invented, false);
+      assert.equal(body.operatorDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
+      assert.equal(body.operatorDesk.operatingPicture.honestEmpty, true);
+      assert.deepEqual(body.operatorDesk.operatingPicture.realClientsOperationalized, []);
 
       const root = await fetch(base);
       assert.equal(root.status, 405);

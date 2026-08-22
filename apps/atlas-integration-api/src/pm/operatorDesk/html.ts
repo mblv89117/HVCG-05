@@ -1,5 +1,5 @@
 import { EMPTY_REASON } from '../commercialContext/types.ts';
-import type { OperatorDeskModel, OperatorQueueItem } from './types.ts';
+import type { OperatorDeskModel, OperatorOperatingItem, OperatorQueueItem } from './types.ts';
 
 function esc(value: string | number | undefined | null): string {
   return String(value ?? '')
@@ -95,6 +95,22 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
           .join('')}</ul>`
       : `<p class="empty">No entitled matches for “${esc(model.search.q)}”. Atlas does not invent results.</p>`
     : `<p class="empty">Enter at least two characters. Search is entitled and fail-closed.</p>`;
+  const op = model.operatingPicture;
+  const operatingLines = (
+    [
+      ...op.queues.needsAction,
+      ...op.queues.waiting,
+      ...op.queues.overdue,
+      ...op.queues.blocked,
+      ...op.queues.decisionRequired,
+      ...op.queues.atRisk,
+    ] as OperatorOperatingItem[]
+  )
+    .map(
+      (row) =>
+        `<li><span class="kind">${esc(row.queue)}</span> ${esc(row.title)} · ${esc(row.clientCode)} <span class="muted">(${esc(row.provenance)})</span></li>`,
+    )
+    .join('');
 
   return `${SHELL}
 <header>
@@ -121,6 +137,33 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
             )
             .join('')}</ul>`
         : '<p class="empty">No entitled client workspace to preview. Atlas does not invent clients.</p>'
+    }
+  </section>
+  <section>
+    <h2>What we are working on</h2>
+    <p class="muted">HVS ${esc(op.hvsDataAccess)} · ${op.honestEmpty ? 'honest empty' : `${esc(String(op.realClientsOperationalized.length))} real client(s) operationalized`}</p>
+    ${operatingLines ? `<ul>${operatingLines}</ul>` : '<p class="empty">No entitled operating items. Atlas does not invent work.</p>'}
+  </section>
+  <section>
+    <h2>Missing or blocked data</h2>
+    ${
+      op.missingData.length
+        ? `<ul>${op.missingData.map((row) => `<li>${esc(row)}</li>`).join('')}</ul>`
+        : '<p class="empty">No recorded gaps for this entitled session.</p>'
+    }
+  </section>
+  <section>
+    <h2>Recovery ledger</h2>
+    ${
+      op.recoveryLedger.length
+        ? `<ul>${op.recoveryLedger
+            .map((row) => {
+              const code = row.clientCode || 'n/a';
+              const state = row.accessible ? (row.operationalized ? 'operationalized' : 'accessible') : 'inaccessible';
+              return `<li><span class="kind">${esc(row.provenance)}</span> ${esc(row.client)} · ${esc(code)} · ${esc(state)}</li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No recovery rows for this entitled session.</p>'
     }
   </section>
   <section>
