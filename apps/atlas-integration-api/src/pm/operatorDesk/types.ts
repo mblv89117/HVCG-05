@@ -58,6 +58,9 @@ export interface AskAtlasAttentionItem {
   kind: string;
 }
 
+export type AskAtlasPolicyDecision = 'answered' | 'honest_empty' | 'hvs_blocked' | 'fail_closed';
+export type AskAtlasReadWriteStatus = 'READ_AUTO';
+
 export interface AskAtlasActivity {
   agent: 'atlas-hub-operator';
   missionKey: typeof ASK_ATLAS_MISSION_KEY;
@@ -66,7 +69,32 @@ export interface AskAtlasActivity {
   tools: string[];
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   result: 'answered' | 'honest_empty' | 'hvs_blocked';
+  readWriteStatus: AskAtlasReadWriteStatus;
+  policyDecision: Exclude<AskAtlasPolicyDecision, 'fail_closed'>;
 }
+
+export interface AgentActivityAffectedEntity {
+  client?: string;
+  clientCode?: string;
+  classification?: AskAtlasClassification;
+}
+
+export interface AgentActivityLedgerEntry {
+  agent: string;
+  missionKey: string;
+  trigger: string;
+  timestamp: string;
+  tools: string[];
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  confidence: AskAtlasClassification | 'HONEST_EMPTY';
+  result: AskAtlasPolicyDecision;
+  readWriteStatus: AskAtlasReadWriteStatus;
+  policyDecision: AskAtlasPolicyDecision;
+  affected?: AgentActivityAffectedEntity[];
+  writerUserId: string;
+}
+
+export const AGENT_ACTIVITY_CONTRACT = 'atlas-hub-agent-activity.v1' as const;
 
 export interface AskAtlasAnswer {
   kind: 'ask_atlas_attention_v1';
@@ -254,12 +282,16 @@ export interface OperatorDeskModel {
   };
 }
 
+export function isOperatorActivityLedgerPath(path: string): boolean {
+  return path === '/operator/activity.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
-  return path === '/operator' || path === '/desk' || path === '/operator.json';
+  return path === '/operator' || path === '/desk' || path === '/operator.json' || isOperatorActivityLedgerPath(path);
 }
 
 export function wantsOperatorJson(path: string, acceptHeader: string | undefined): boolean {
-  if (path === '/operator.json') return true;
+  if (path === '/operator.json' || isOperatorActivityLedgerPath(path)) return true;
   const accept = (acceptHeader || '').toLowerCase();
   return accept.includes('application/json') && !accept.includes('text/html');
 }

@@ -15,7 +15,14 @@ import { listEntitledAttention, realClientsNeedingAttention } from '../sharepoin
 import { buildKnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
 import { listOperatorClientJourneys } from '../../clientExperience/service.ts';
 import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
-import { isOperatorDeskPath, wantsOperatorJson, type OperatorDeskModel } from './types.ts';
+import {
+  AGENT_ACTIVITY_CONTRACT,
+  isOperatorActivityLedgerPath,
+  isOperatorDeskPath,
+  wantsOperatorJson,
+  type OperatorDeskModel,
+} from './types.ts';
+import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
 
 export { isOperatorDeskPath };
 
@@ -163,7 +170,8 @@ export async function handleOperatorDesk(opts: {
   }
 
   const accept = typeof opts.req.headers.accept === 'string' ? opts.req.headers.accept : '';
-  const asJson = wantsOperatorJson(opts.path, accept);
+  const ledgerOnly = isOperatorActivityLedgerPath(opts.path);
+  const asJson = ledgerOnly || wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery = url.searchParams.get('q') || '';
 
@@ -215,6 +223,35 @@ export async function handleOperatorDesk(opts: {
     return true;
   }
 
+  if (ledgerOnly) {
+    try {
+      const entries = listVisibleAgentActivity({
+        dataDir: opts.cfg.dataDir,
+        principal,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          agentActivity: {
+            contractVersion: AGENT_ACTIVITY_CONTRACT,
+            entitled: true,
+            entries,
+          },
+        },
+        opts.origin,
+      );
+    } catch {
+      sendJson(
+        opts.res,
+        503,
+        { error: 'overlay_unavailable', code: 'overlay_unavailable' },
+        opts.origin,
+      );
+    }
+    return true;
+  }
+
   const model =
     opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint
       ? await loadSharePointDesk({
@@ -241,6 +278,18 @@ export async function handleOperatorDesk(opts: {
       opts.origin,
     );
     return true;
+  }
+
+  if (opts.method === 'GET') {
+    try {
+      await appendAskAtlasActivity({
+        dataDir: opts.cfg.dataDir,
+        answer: model.askAtlas,
+        principal,
+      });
+    } catch {
+      /* Desk answer stays request-scoped if overlay write fails. Do not leak. */
+    }
   }
 
   if (asJson) {
