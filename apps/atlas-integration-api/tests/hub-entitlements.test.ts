@@ -298,3 +298,176 @@ describe('entitlement config defaults', () => {
     assert.equal(e.groupPrefix, 'HVCG-Client-');
   });
 });
+
+describe('Graph checkMemberGroups uses directoryObjects (user + SP oid)', () => {
+  const USER_OID_GRAPH = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  const SP_OID_GRAPH = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+  const TENANT = '11111111-1111-1111-1111-111111111111';
+  const origFetch = globalThis.fetch;
+
+  function graphCfg(overrides?: { tenantId?: string; clientSecret?: string }): AppConfig {
+    return {
+      microsoft: {
+        tenantId: overrides?.tenantId ?? TENANT,
+        clientId: '22222222-2222-2222-2222-222222222222',
+        clientSecret: overrides?.clientSecret ?? 'test-graph-client-secret',
+        redirectUri: 'http://127.0.0.1/cb',
+      },
+      clientEntitlement: {
+        enabled: true,
+        groupPrefix: 'HVCG-Client-',
+        approvedGroups: new Map(),
+        cacheTtlMs: 0,
+        cacheMaxEntries: 8,
+        graphTimeoutMs: 3_000,
+      },
+    } as AppConfig;
+  }
+
+  function jsonResponse(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  async function withMockedFetch(
+    handler: typeof fetch,
+    fn: () => Promise<void>,
+  ): Promise<void> {
+    const { resetGraphTokenCacheForTests } = await import('../src/entitlements/graphMembership.ts');
+    resetGraphTokenCacheForTests();
+    globalThis.fetch = handler;
+    try {
+      await fn();
+    } finally {
+      globalThis.fetch = origFetch;
+      resetGraphTokenCacheForTests();
+    }
+  }
+
+  it('POSTs /directoryObjects/{userOid}/checkMemberGroups and returns member group ids', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl, GRAPH_CHECK_MEMBER_GROUPS_BASE } =
+      await import('../src/entitlements/graphMembership.ts');
+    assert.equal(GRAPH_CHECK_MEMBER_GROUPS_BASE, 'https://graph.microsoft.com/v1.0/directoryObjects');
+    assert.equal(
+      checkMemberGroupsUrl(USER_OID_GRAPH),
+      `https://graph.microsoft.com/v1.0/directoryObjects/${USER_OID_GRAPH}/checkMemberGroups`,
+    );
+    const seen: { url: string; method: string; usersPath: boolean }[] = [];
+    await withMockedFetch(async (input, init) => {
+      const url = String(input);
+      seen.push({
+        url,
+        method: String(init?.method || 'GET'),
+        usersPath: url.includes('/v1.0/users/'),
+      });
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(USER_OID_GRAPH)) {
+        return jsonResponse(200, { value: [GROUP_ACCG] });
+      }
+      return jsonResponse(500, { error: 'unexpected' });
+    }, async () => {
+      const result = await checkMemberGroups(graphCfg(), USER_OID_GRAPH, [GROUP_ACCG, GROUP_LIEN]);
+      assert.deepEqual(result, [GROUP_ACCG]);
+    });
+    assert.equal(seen.some((s) => s.usersPath), false);
+    assert.equal(
+      seen.some((s) => s.method === 'POST' && s.url === checkMemberGroupsUrl(USER_OID_GRAPH)),
+      true,
+    );
+  });
+
+  it('POSTs /directoryObjects/{spOid}/checkMemberGroups for an Application SP oid', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    const seen: string[] = [];
+    await withMockedFetch(async (input, init) => {
+      const url = String(input);
+      seen.push(url);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(SP_OID_GRAPH) && init?.method === 'POST') {
+        return jsonResponse(200, { value: [GROUP_LIEN] });
+      }
+      return jsonResponse(404, { error: { code: 'Request_ResourceNotFound' } });
+    }, async () => {
+      const result = await checkMemberGroups(graphCfg(), SP_OID_GRAPH, [GROUP_ACCG, GROUP_LIEN]);
+      assert.deepEqual(result, [GROUP_LIEN]);
+    });
+    assert.equal(seen.some((u) => u.includes('/v1.0/users/')), false);
+    assert.equal(seen.includes(checkMemberGroupsUrl(SP_OID_GRAPH)), true);
+  });
+
+  it('Graph HTTP error fail-closed returns failed', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(USER_OID_GRAPH)) {
+        return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
+      }
+      return jsonResponse(500, {});
+    }, async () => {
+      assert.equal(await checkMemberGroups(graphCfg(), USER_OID_GRAPH, [GROUP_ACCG]), 'failed');
+    });
+  });
+
+  it('non-array Graph value fail-closed returns failed', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(SP_OID_GRAPH)) {
+        return jsonResponse(200, { value: { not: 'an-array' } });
+      }
+      return jsonResponse(500, {});
+    }, async () => {
+      assert.equal(await checkMemberGroups(graphCfg(), SP_OID_GRAPH, [GROUP_ACCG]), 'failed');
+    });
+  });
+
+  it('missing Graph token fail-closed returns failed without calling users path', async () => {
+    const { checkMemberGroups } = await import('../src/entitlements/graphMembership.ts');
+    const seen: string[] = [];
+    await withMockedFetch(async (input) => {
+      seen.push(String(input));
+      return jsonResponse(500, {});
+    }, async () => {
+      assert.equal(
+        await checkMemberGroups(graphCfg({ tenantId: 'common' }), USER_OID_GRAPH, [GROUP_ACCG]),
+        'failed',
+      );
+      assert.equal(
+        await checkMemberGroups(graphCfg({ clientSecret: '' }), SP_OID_GRAPH, [GROUP_ACCG]),
+        'failed',
+      );
+    });
+    assert.equal(seen.length, 0);
+  });
+
+  it('Graph fetch throw fail-closed returns failed', async () => {
+    const { checkMemberGroups } = await import('../src/entitlements/graphMembership.ts');
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      throw new Error('network');
+    }, async () => {
+      assert.equal(await checkMemberGroups(graphCfg(), USER_OID_GRAPH, [GROUP_ACCG]), 'failed');
+    });
+  });
+});
