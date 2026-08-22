@@ -17,6 +17,7 @@ import type {
   AskAtlasActivity,
   AskAtlasAnswer,
   AskAtlasClassification,
+  AskAtlasReadWriteStatus,
 } from './types.ts';
 
 export const AGENT_ACTIVITY_OVERLAY_SCHEMA_VERSION = 1;
@@ -28,6 +29,12 @@ const CLASSIFICATIONS = new Set<AskAtlasClassification | 'HONEST_EMPTY'>([
   'LIKELY',
   'PROPOSED',
   'HONEST_EMPTY',
+]);
+
+const READ_WRITE_STATUSES = new Set<AskAtlasReadWriteStatus>([
+  'READ_AUTO',
+  'PROPOSE_AUTO',
+  'SAFE_INTERNAL_WRITE',
 ]);
 
 export class AgentActivityOverlayCorruptError extends Error {
@@ -162,6 +169,10 @@ function isClassification(value: unknown): value is AskAtlasClassification | 'HO
   return typeof value === 'string' && CLASSIFICATIONS.has(value as AskAtlasClassification | 'HONEST_EMPTY');
 }
 
+function isReadWriteStatus(value: unknown): value is AskAtlasReadWriteStatus {
+  return typeof value === 'string' && READ_WRITE_STATUSES.has(value as AskAtlasReadWriteStatus);
+}
+
 function neverPromote(
   value: AskAtlasClassification | 'HONEST_EMPTY',
 ): AskAtlasClassification | 'HONEST_EMPTY' {
@@ -206,7 +217,7 @@ export function ledgerEntryFromAskAtlas(opts: {
     classification,
     confidence: classification,
     result: activity.result,
-    readWriteStatus: 'READ_AUTO',
+    readWriteStatus: isReadWriteStatus(activity.readWriteStatus) ? activity.readWriteStatus : 'READ_AUTO',
     policyDecision: activity.policyDecision,
     ...(affected.length ? { affected } : {}),
     writerUserId: opts.principal.userId,
