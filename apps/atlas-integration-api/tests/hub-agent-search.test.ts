@@ -34,6 +34,7 @@ import {
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
+  ASK_ATLAS_SEARCH_002_MISSION_KEY,
   ASK_ATLAS_SEARCH_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
@@ -43,6 +44,7 @@ import {
   isOperatorSearchPath,
   type AskAtlasAnswer,
   type AtlasAuthorizedSearch,
+  type AtlasAuthorizedSearchHit,
 } from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { PmSearchHit } from '../src/pm/sharepoint/search.ts';
@@ -97,6 +99,26 @@ function noInventedFacts(value: unknown): void {
   assert.equal(AMOUNT.test(serialized), false);
   assert.equal(/\bltv\s*[:=]\s*\d/i.test(serialized), false);
   assert.equal(serialized.includes('Hub-MI'), false);
+}
+
+function assertGroundedHit(hit: AtlasAuthorizedSearchHit): void {
+  assert.ok(hit.why.trim().length > 0, 'hit missing why');
+  assert.ok(hit.basedOn.trim().length > 0, 'hit missing basedOn');
+  assert.ok(
+    hit.classification === 'CONFIRMED' || hit.classification === 'LIKELY' || hit.classification === 'PROPOSED',
+    `hit classification ${hit.classification} is not preserved evidence`,
+  );
+  assert.equal(hit.classification, hit.provenance);
+}
+
+function assertOnlyBoundClient(value: unknown, clientCode: string): void {
+  const serialized = JSON.stringify(value);
+  assert.equal(serialized.includes('CCB01'), false);
+  assert.equal(serialized.includes('Colorado Beef'), false);
+  assert.equal(serialized.includes('HFD01'), false);
+  assert.equal(serialized.includes('Hart Family'), false);
+  const hits = (value as { authorizedSearch?: AtlasAuthorizedSearch }).authorizedSearch?.hits || [];
+  assert.ok(hits.every((hit) => !hit.clientCode || hit.clientCode === clientCode));
 }
 
 function prodigyHit(): PmSearchHit {
@@ -320,6 +342,8 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
     assert.equal(unknown.authorizedSearch.invented, false);
     assert.equal(unknown.authorizedSearch.honestEmpty, true);
     assert.equal(unknown.authorizedSearch.hitCount, 0);
+    assert.equal(unknown.authorizedSearch.pictureComposed, false);
+    assert.equal(unknown.authorizedSearch.ran, false);
     assert.equal(JSON.stringify(unknown).includes('Prodigy'), false);
     assert.equal(JSON.stringify(unknown).includes('PDG01'), false);
     assert.equal(JSON.stringify(unknown).includes('Globex'), false);
@@ -377,12 +401,20 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
     assert.equal(result.authorizedSearch.honestEmpty, false);
     assert.equal(result.authorizedSearch.entitled, true);
     assert.equal(result.authorizedSearch.ran, true);
-    assert.equal(result.authorizedSearch.hitCount, 1);
-    assert.equal(result.authorizedSearch.hits.length, 1);
-    assert.equal(result.authorizedSearch.hits[0]?.clientCode, 'PDG01');
-    assert.equal(result.authorizedSearch.hits[0]?.id, 'doc-pdg-1');
-    assert.equal(result.authorizedSearch.classification, 'LIKELY');
-    assert.notEqual(result.authorizedSearch.classification, 'CONFIRMED');
+    assert.equal(result.authorizedSearch.pictureComposed, true);
+    assert.ok(result.authorizedSearch.hitCount >= 2);
+    assert.ok(result.authorizedSearch.hits.some((hit) => hit.id === 'doc-pdg-1'));
+    const pmHit = result.authorizedSearch.hits.find((hit) => hit.id === 'doc-pdg-1');
+    assert.equal(pmHit?.clientCode, 'PDG01');
+    assert.equal(pmHit?.classification, 'LIKELY');
+    assert.notEqual(pmHit?.classification, 'CONFIRMED');
+    assert.ok(
+      result.authorizedSearch.hits.some(
+        (hit) => hit.clientCode === 'PDG01' && hit.source === 'operator_operating_picture',
+      ),
+    );
+    for (const hit of result.authorizedSearch.hits) assertGroundedHit(hit);
+    assertOnlyBoundClient(result, 'PDG01');
     assert.equal(JSON.stringify(result).includes('CCB01'), false);
     assert.equal(JSON.stringify(result).includes('Colorado Beef'), false);
     noInventedFacts(result);
@@ -394,18 +426,73 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       entitledSearch: async (query) => ({ query, results: [prodigyHit()] }),
     });
     assert.equal(viaRuntime.askAtlas.activity.agent, ASK_ATLAS_RUNTIME_AGENT);
-    assert.equal(viaRuntime.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_MISSION_KEY);
+    assert.equal(viaRuntime.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
     assert.equal(viaRuntime.askAtlas.activity.readWriteStatus, 'READ_AUTO');
     assert.ok(viaRuntime.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
     assert.deepEqual(viaRuntime.runtime, {
       agent: ASK_ATLAS_RUNTIME_AGENT,
       toolsInvoked: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL],
       policyClass: 'READ_AUTO',
-      missionKey: ASK_ATLAS_SEARCH_MISSION_KEY,
+      missionKey: ASK_ATLAS_SEARCH_002_MISSION_KEY,
     });
-    assert.equal(viaRuntime.authorizedSearch?.hitCount, 1);
+    assert.ok((viaRuntime.authorizedSearch?.hitCount || 0) >= 2);
     assert.equal(viaRuntime.authorizedSearch?.invented, false);
+    assert.equal(viaRuntime.authorizedSearch?.pictureComposed, true);
     noInventedFacts(viaRuntime);
+  });
+
+  it('composes recovered PDG01 picture hits when entitled PM search is empty', async () => {
+    const picture = emptyHonestOperatingPicture();
+    assert.ok(picture.hvsRecoveredClients.some((row) => row.clientCode === 'PDG01'));
+    assert.deepEqual(picture.realClientsOperationalized, []);
+
+    const result = await searchAuthorizedKnowledge({
+      principal: staffPrincipal(),
+      picture,
+      searchQuery: 'Prodigy',
+      entitledSearch: async (query) => ({ query, results: [] }),
+    });
+    assert.equal(result.authorizedSearch.kind, 'atlas_authorized_search_v1');
+    assert.equal(result.authorizedSearch.invented, false);
+    assert.equal(result.authorizedSearch.honestEmpty, false);
+    assert.equal(result.authorizedSearch.entitled, true);
+    assert.equal(result.authorizedSearch.ran, true);
+    assert.equal(result.authorizedSearch.pictureComposed, true);
+    assert.ok(result.authorizedSearch.hitCount > 0);
+    assert.ok(result.authorizedSearch.hits.some((hit) => hit.clientCode === 'PDG01'));
+    assert.ok(result.authorizedSearch.hits.some((hit) => /Prodigy/i.test(hit.title)));
+    assert.ok(
+      result.authorizedSearch.hits.some(
+        (hit) =>
+          hit.kind === 'recovered_client' ||
+          hit.kind === 'recovered_client_record' ||
+          hit.kind === 'recovered_document',
+      ),
+    );
+    for (const hit of result.authorizedSearch.hits) {
+      assertGroundedHit(hit);
+      assert.equal(hit.clientCode, 'PDG01');
+    }
+    const likelyHits = result.authorizedSearch.hits.filter((hit) => hit.classification === 'LIKELY');
+    assert.ok(likelyHits.every((hit) => hit.provenance === 'LIKELY'));
+    const proposedHits = result.authorizedSearch.hits.filter((hit) => hit.classification === 'PROPOSED');
+    assert.ok(proposedHits.every((hit) => hit.provenance === 'PROPOSED'));
+    assert.equal(JSON.stringify(result).includes('realClientsOperationalized'), false);
+    assertOnlyBoundClient(result, 'PDG01');
+    noInventedFacts(result);
+
+    const viaQ = await runAtlasSearchRuntime({
+      principal: staffPrincipal(),
+      picture,
+      searchQuery: 'Prodigy',
+      entitledSearch: async (query) => ({ query, results: [] }),
+    });
+    assert.equal(viaQ.runtime.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+    assert.deepEqual(viaQ.runtime.toolsInvoked, [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL]);
+    assert.equal(viaQ.authorizedSearch?.pictureComposed, true);
+    assert.ok((viaQ.authorizedSearch?.hitCount || 0) > 0);
+    assert.ok(viaQ.authorizedSearch?.hits.some((hit) => hit.clientCode === 'PDG01'));
+    noInventedFacts(viaQ);
   });
 
   it('reuses already-loaded operatorDesk.search hits for the exact q', async () => {
@@ -435,12 +522,14 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       },
     });
     assert.equal(searched, false);
-    assert.equal(result.authorizedSearch.hits[0]?.id, 'desk-1');
+    assert.ok(result.authorizedSearch.hits.some((hit) => hit.id === 'desk-1'));
     assert.equal(result.authorizedSearch.ran, true);
     assert.equal(result.authorizedSearch.invented, false);
+    assert.equal(result.authorizedSearch.pictureComposed, true);
+    assert.ok(result.authorizedSearch.hits.some((hit) => hit.source === 'operator_operating_picture'));
   });
 
-  it('records SEARCH-001 activity ledger fields', async () => {
+  it('records SEARCH-002 activity ledger fields for composed runs', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'atlas-search-ledger-'));
     try {
       const answered = await runAtlasSearchRuntime({
@@ -457,10 +546,11 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       });
       const overlay = readAgentActivityOverlay(join(dir, 'agent-activity'));
       assert.equal(overlay.entries[0]?.agent, ASK_ATLAS_RUNTIME_AGENT);
-      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_MISSION_KEY);
+      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
       assert.ok(overlay.entries[0]?.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.equal(overlay.entries[0]?.readWriteStatus, 'READ_AUTO');
       assert.equal(overlay.entries[0]?.classification, answered.askAtlas.activity.classification);
+      assert.equal(answered.authorizedSearch?.pictureComposed, true);
 
       const empty = runAtlasHubRuntime({
         principal: staffPrincipal('empty-writer'),
@@ -500,23 +590,28 @@ describe('Ask Atlas authorized-search HTTP', () => {
       };
       assert.equal(body.operatorDesk.askAtlas.invented, false);
       assert.equal(body.operatorDesk.askAtlas.activity.agent, ASK_ATLAS_RUNTIME_AGENT);
-      assert.equal(body.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_MISSION_KEY);
+      assert.equal(body.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
       assert.ok(body.operatorDesk.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.deepEqual(body.runtime, {
         agent: ASK_ATLAS_RUNTIME_AGENT,
         toolsInvoked: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL],
         policyClass: 'READ_AUTO',
-        missionKey: ASK_ATLAS_SEARCH_MISSION_KEY,
+        missionKey: ASK_ATLAS_SEARCH_002_MISSION_KEY,
       });
       assert.equal(body.authorizedSearch.kind, 'atlas_authorized_search_v1');
       assert.equal(body.authorizedSearch.invented, false);
+      assert.equal(body.authorizedSearch.pictureComposed, true);
+      assert.equal(body.authorizedSearch.entitled, true);
+      assert.ok(body.authorizedSearch.hitCount > 0);
+      assert.ok(body.authorizedSearch.hits.some((hit) => hit.clientCode === 'PDG01'));
+      for (const hit of body.authorizedSearch.hits) assertGroundedHit(hit);
       assert.equal(body.operatorDesk.operatingPicture, undefined);
       assert.equal(body.operatorDesk.entitledClients, undefined);
       noInventedFacts(body);
 
       const overlay = readAgentActivityOverlay(join(dir, 'agent-activity'));
       assert.equal(overlay.entries[0]?.agent, ASK_ATLAS_RUNTIME_AGENT);
-      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_MISSION_KEY);
+      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
       assert.ok(overlay.entries[0]?.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.equal(overlay.entries[0]?.readWriteStatus, 'READ_AUTO');
 
@@ -530,7 +625,9 @@ describe('Ask Atlas authorized-search HTTP', () => {
         runtime: { toolsInvoked: string[]; missionKey: string };
       };
       assert.equal(dedicatedBody.authorizedSearch.invented, false);
-      assert.equal(dedicatedBody.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_MISSION_KEY);
+      assert.equal(dedicatedBody.authorizedSearch.pictureComposed, true);
+      assert.ok(dedicatedBody.authorizedSearch.hits.some((hit) => hit.clientCode === 'PDG01'));
+      assert.equal(dedicatedBody.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
       assert.deepEqual(dedicatedBody.runtime.toolsInvoked, [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL]);
       noInventedFacts(dedicatedBody);
 

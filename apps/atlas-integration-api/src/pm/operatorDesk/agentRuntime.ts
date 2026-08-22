@@ -3,7 +3,8 @@
  *
  * Maps a signed operator question (default ASK_ATLAS_QUESTION) onto the
  * READ_AUTO get_attention_items gateway, client-specific questions onto
- * get_client_context, and search questions onto search_authorized_knowledge.
+ * get_client_context, and search questions onto search_authorized_knowledge
+ * (SEARCH-001 PM reuse plus SEARCH-002 entitled picture composition).
  * Unknown / owner-gated questions stay honest-empty / fail-closed and do
  * not invent an answer or invoke a READ_AUTO tool.
  */
@@ -23,6 +24,7 @@ import {
   ASK_ATLAS_RANKING,
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
+  ASK_ATLAS_SEARCH_002_MISSION_KEY,
   ASK_ATLAS_SEARCH_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
@@ -39,6 +41,7 @@ export const ATLAS_HUB_RUNTIME_AGENT = ASK_ATLAS_RUNTIME_AGENT;
 export const ATLAS_HUB_RUNTIME_MISSION_KEY = ASK_ATLAS_RUNTIME_MISSION_KEY;
 export const ATLAS_HUB_CLIENTCTX_MISSION_KEY = ASK_ATLAS_CLIENTCTX_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_MISSION_KEY = ASK_ATLAS_SEARCH_MISSION_KEY;
+export const ATLAS_HUB_SEARCH_002_MISSION_KEY = ASK_ATLAS_SEARCH_002_MISSION_KEY;
 export const ATLAS_HUB_RUNTIME_POLICY_CLASS = 'READ_AUTO' as const;
 
 export interface AtlasHubRuntime {
@@ -48,7 +51,8 @@ export interface AtlasHubRuntime {
   missionKey:
     | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
     | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
-    | typeof ASK_ATLAS_SEARCH_MISSION_KEY;
+    | typeof ASK_ATLAS_SEARCH_MISSION_KEY
+    | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY;
 }
 
 export interface AtlasHubRuntimeResult {
@@ -213,9 +217,12 @@ function finishSearchRuntime(invoked: {
   const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL)
     ? [...invoked.askAtlas.activity.tools]
     : [...invoked.askAtlas.activity.tools, GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL];
+  const missionKey = invoked.authorizedSearch.pictureComposed
+    ? ASK_ATLAS_SEARCH_002_MISSION_KEY
+    : ASK_ATLAS_SEARCH_MISSION_KEY;
   return {
-    askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, ASK_ATLAS_SEARCH_MISSION_KEY),
-    runtime: runtimeEnvelope([GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL], ASK_ATLAS_SEARCH_MISSION_KEY),
+    askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, missionKey),
+    runtime: runtimeEnvelope([GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL], missionKey),
     authorizedSearch: invoked.authorizedSearch,
   };
 }

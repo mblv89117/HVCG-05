@@ -38,6 +38,7 @@ export const ASK_ATLAS_PII_MISSION_KEY = 'ATLAS-AGENTIC-OPS-PII-001' as const;
 export const ASK_ATLAS_LOOP_MISSION_KEY = 'ATLAS-AGENTIC-OPS-LOOP-001' as const;
 export const ASK_ATLAS_CLIENTCTX_MISSION_KEY = 'ATLAS-AGENTIC-OPS-CLIENTCTX-001' as const;
 export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as const;
+export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -83,7 +84,8 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_PII_MISSION_KEY
   | typeof ASK_ATLAS_LOOP_MISSION_KEY
   | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
-  | typeof ASK_ATLAS_SEARCH_MISSION_KEY;
+  | typeof ASK_ATLAS_SEARCH_MISSION_KEY
+  | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY;
 export type AskAtlasTrigger =
   | 'operator_operating_picture'
   | 'signed_operator_question'
@@ -133,6 +135,10 @@ export interface AtlasAuthorizedSearchHit {
   href?: string;
   source?: string;
   clientCode?: string;
+  why: string;
+  basedOn: string;
+  provenance: AskAtlasClassification | 'HONEST_EMPTY';
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
 }
 
 export interface AtlasAuthorizedSearch {
@@ -147,6 +153,7 @@ export interface AtlasAuthorizedSearch {
   basedOn: string;
   entitled: boolean;
   ran: boolean;
+  pictureComposed: boolean;
 }
 
 export interface ProposedEngineeringMission {

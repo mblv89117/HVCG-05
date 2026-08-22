@@ -4,8 +4,10 @@
  * Exposes get_attention_items, get_client_context, and
  * search_authorized_knowledge (READ_AUTO) and create_engineering_mission
  * (PROPOSE_AUTO / SAFE_INTERNAL_WRITE only). Search reuses
- * searchSharePointPm / GET /api/pm/search / operatorDesk.search. Does not
- * re-query raw admin Graph or invent a second index. No OWNER_GATED tools.
+ * searchSharePointPm / GET /api/pm/search / operatorDesk.search and, after
+ * an entitled binding is resolved, composes additive hits from the already-
+ * authorized OperatorOperatingPicture. Does not re-query raw admin Graph or
+ * invent a second index. No OWNER_GATED tools.
  * create_engineering_mission does not dispatch V4, deploy, merge, or
  * execute code changes.
  */
@@ -461,9 +463,214 @@ function toAuthorizedSearchHit(
     id: row.id,
     title: row.title,
     ...(row.href ? { href: row.href } : {}),
-    ...('source' in row && row.source ? { source: String(row.source) } : {}),
+    ...('source' in row && row.source ? { source: String(row.source) } : { source: 'pm_search' }),
     ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+    why: 'Entitled desk search returned this hit for the requested query.',
+    basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
+    provenance: 'LIKELY',
+    classification: 'LIKELY',
   };
+}
+
+function rowMatchesAuthorizedBinding(
+  row: { client?: string; clientCode?: string },
+  binding: PictureClientBinding,
+): boolean {
+  if (binding.clientCode && row.clientCode) return row.clientCode === binding.clientCode;
+  if (binding.client && row.client) return row.client === binding.client;
+  return false;
+}
+
+const PICTURE_DOCUMENT_LIMIT = 8;
+const PICTURE_PROJECT_LIMIT = 4;
+const PICTURE_CAPITAL_LIMIT = 4;
+const PICTURE_QUEUE_LIMIT = 8;
+
+/**
+ * Compose entitled hits from the already-authorized operator picture for one
+ * resolved binding only. Must not be called for unknown/foreign tokens.
+ * Does not invent clients, amounts, lenders, Hub-MI rows, or completion.
+ */
+function composeEntitledPictureHits(
+  picture: OperatorOperatingPicture,
+  binding: PictureClientBinding,
+): AtlasAuthorizedSearchHit[] {
+  if (picture.hvsDataAccess === 'BLOCKED') return [];
+  const hits: AtlasAuthorizedSearchHit[] = [];
+  const seen = new Set<string>();
+  const push = (hit: AtlasAuthorizedSearchHit) => {
+    if (seen.has(hit.id)) return;
+    if (hit.clientCode && binding.clientCode && hit.clientCode !== binding.clientCode) return;
+    if (
+      hit.classification !== 'CONFIRMED' &&
+      hit.classification !== 'LIKELY' &&
+      hit.classification !== 'PROPOSED'
+    ) {
+      return;
+    }
+    seen.add(hit.id);
+    hits.push(hit);
+  };
+
+  for (const row of picture.hvsRecoveredClients) {
+    if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+    const classification = neverPromoteClassification(row.provenance);
+    push({
+      kind: 'recovered_client',
+      id: `picture:recovered-client:${row.clientCode || row.client}`,
+      title: row.client,
+      source: 'operator_operating_picture',
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      why: row.nextAction,
+      basedOn: 'Recovered HVS client folder already on the entitled operator operating picture. Not an operational client row.',
+      provenance: classification,
+      classification,
+    });
+  }
+
+  for (const row of picture.hvsRecoveredClientRecords) {
+    if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+    const classification = neverPromoteClassification(row.provenance);
+    const basedOn = row.capitalPacketNames.length
+      ? `CONFIRMED-as-filename capital packets: ${row.capitalPacketNames.join(', ')}. Classification is not promoted.`
+      : 'Recovered client record already on the entitled operator picture. No operational client row was invented.';
+    push({
+      kind: 'recovered_client_record',
+      id: `picture:recovered-record:${row.clientCode || row.client}`,
+      title: row.client,
+      source: 'operator_operating_picture',
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      why: row.nextAction,
+      basedOn,
+      provenance: classification,
+      classification,
+    });
+  }
+
+  for (const row of picture.hvsActionableClientKnowledge) {
+    if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+    const classification = neverPromoteClassification(row.provenance);
+    push({
+      kind: 'actionable_knowledge',
+      id: `picture:actionable:${row.clientCode || row.client}`,
+      title: `${row.client} recovered actionable knowledge`,
+      source: 'operator_operating_picture',
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      why: 'Recovered actionable knowledge already classified on the entitled operator picture.',
+      basedOn: 'hvsActionableClientKnowledge on OperatorOperatingPicture. Classification is not promoted.',
+      provenance: classification,
+      classification,
+    });
+  }
+
+  let documents = 0;
+  for (const row of picture.hvsRecoveredDocuments) {
+    if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+    if (row.kind !== 'file') continue;
+    if (documents >= PICTURE_DOCUMENT_LIMIT) break;
+    documents += 1;
+    const classification = neverPromoteClassification(row.provenance);
+    push({
+      kind: 'recovered_document',
+      id: `picture:document:${row.clientCode}:${row.name}`,
+      title: row.name,
+      source: 'operator_operating_picture',
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      why: 'Recovered filename already present on the entitled operator picture. Amounts were not extracted.',
+      basedOn: `CONFIRMED-as-filename ${row.name}. Classification is not promoted.`,
+      provenance: classification,
+      classification,
+    });
+  }
+
+  let projects = 0;
+  for (const row of picture.hvsRecoveredProjects) {
+    if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+    if (projects >= PICTURE_PROJECT_LIMIT) break;
+    projects += 1;
+    const classification = neverPromoteClassification(row.provenance);
+    push({
+      kind: 'recovered_project',
+      id: `picture:project:${row.clientCode}:${row.title}`,
+      title: row.title,
+      source: 'operator_operating_picture',
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      why: row.nextAction,
+      basedOn: row.evidence,
+      provenance: classification,
+      classification,
+    });
+  }
+
+  let packets = 0;
+  for (const row of picture.hvsRecoveredCapitalPackets) {
+    if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+    if (packets >= PICTURE_CAPITAL_LIMIT) break;
+    packets += 1;
+    const classification = neverPromoteClassification(row.provenance);
+    push({
+      kind: 'recovered_capital_packet',
+      id: `picture:capital:${row.clientCode}:${row.name}`,
+      title: row.name,
+      source: 'operator_operating_picture',
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      why: row.nextAction,
+      basedOn: `CONFIRMED-as-filename ${row.name}. Amounts were not extracted. Classification is not promoted.`,
+      provenance: classification,
+      classification,
+    });
+  }
+
+  let queued = 0;
+  for (const rows of Object.values(picture.queues)) {
+    for (const row of rows) {
+      if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+      if (queued >= PICTURE_QUEUE_LIMIT) break;
+      queued += 1;
+      const classification = neverPromoteClassification(row.provenance);
+      push({
+        kind: row.kind || 'attention_item',
+        id: row.id || `picture:queue:${row.clientCode}:${row.title}`,
+        title: row.title,
+        source: 'operator_operating_picture',
+        ...(row.href ? { href: row.href } : {}),
+        ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+        why: row.title,
+        basedOn: row.evidence || 'Entitled operator picture queue item. Classification is not promoted.',
+        provenance: classification,
+        classification,
+      });
+    }
+    if (queued >= PICTURE_QUEUE_LIMIT) break;
+  }
+
+  return hits;
+}
+
+function strongestHitClassification(
+  hits: AtlasAuthorizedSearchHit[],
+): AskAtlasClassification | 'HONEST_EMPTY' {
+  let best: AskAtlasClassification | 'HONEST_EMPTY' = 'HONEST_EMPTY';
+  const rank = { HONEST_EMPTY: 0, PROPOSED: 1, LIKELY: 2, CONFIRMED: 3 } as const;
+  for (const hit of hits) {
+    const next = neverPromoteClassification(hit.classification);
+    if (rank[next] > rank[best]) best = next;
+  }
+  return best;
+}
+
+function mergeAuthorizedHits(
+  pmHits: AtlasAuthorizedSearchHit[],
+  pictureHits: AtlasAuthorizedSearchHit[],
+): AtlasAuthorizedSearchHit[] {
+  const out: AtlasAuthorizedSearchHit[] = [];
+  const seen = new Set<string>();
+  for (const hit of [...pmHits, ...pictureHits]) {
+    if (seen.has(hit.id)) continue;
+    seen.add(hit.id);
+    out.push(hit);
+  }
+  return out;
 }
 
 function filterHitsToBinding(
@@ -520,6 +727,7 @@ function emptyAuthorizedSearch(opts?: {
         : 'Entitled desk search returned no hits. No operational client rows, amounts, or clients were invented.',
     entitled: opts?.entitled === true,
     ran: opts?.ran === true,
+    pictureComposed: false,
   };
 }
 
@@ -552,10 +760,29 @@ function searchActivityAnswer(
 function composeAuthorizedSearch(
   ctx: ToolGatewayContext,
   query: string,
-  hits: AtlasAuthorizedSearchHit[],
+  pmHits: AtlasAuthorizedSearchHit[],
+  pictureHits: AtlasAuthorizedSearchHit[],
   opts: { entitled: boolean; ran: boolean },
 ): AuthorizedSearchToolResult {
-  const classification = hits.length ? ('LIKELY' as const) : ('HONEST_EMPTY' as const);
+  const hits = mergeAuthorizedHits(pmHits, pictureHits);
+  const pictureComposed = pictureHits.length > 0;
+  const classification = hits.length ? strongestHitClassification(hits) : ('HONEST_EMPTY' as const);
+  let why = 'No entitled search hits are available for this query.';
+  let basedOn =
+    'Entitled desk search returned no hits. No operational client rows, amounts, or clients were invented.';
+  if (hits.length && pictureComposed && pmHits.length) {
+    why = `Entitled picture and desk search returned ${hits.length} hit(s) for the requested query.`;
+    basedOn =
+      'OperatorOperatingPicture recovered/attention/project/capital/document context plus searchSharePointPm / GET /api/pm/search / operatorDesk.search. Classification is not promoted. No operational client rows were invented.';
+  } else if (hits.length && pictureComposed) {
+    why = `Entitled operator picture returned ${hits.length} hit(s) for the requested query.`;
+    basedOn =
+      'Already-authorized OperatorOperatingPicture recovered clients, actionable knowledge, queues, projects, capital packets, documents, and attention items. Classification is not promoted. No operational client rows were invented.';
+  } else if (hits.length) {
+    why = `Entitled desk search returned ${hits.length} hit(s) for the requested query.`;
+    basedOn =
+      'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.';
+  }
   const authorizedSearch: AtlasAuthorizedSearch = {
     kind: 'atlas_authorized_search_v1',
     invented: false,
@@ -564,19 +791,30 @@ function composeAuthorizedSearch(
     hitCount: hits.length,
     hits,
     classification: neverPromoteClassification(classification),
-    why: hits.length
-      ? `Entitled desk search returned ${hits.length} hit(s) for the requested query.`
-      : 'No entitled search hits are available for this query.',
-    basedOn: hits.length
-      ? 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.'
-      : 'Entitled desk search returned no hits. No operational client rows, amounts, or clients were invented.',
+    why,
+    basedOn,
     entitled: opts.entitled,
-    ran: opts.ran,
+    ran: opts.ran || pictureComposed,
+    pictureComposed,
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),
     authorizedSearch,
   };
+}
+
+function composeBoundAuthorizedSearch(
+  ctx: ToolGatewayContext,
+  query: string,
+  binding: PictureClientBinding | null,
+  pmHits: AtlasAuthorizedSearchHit[],
+  ran: boolean,
+): AuthorizedSearchToolResult {
+  const pictureHits = binding ? composeEntitledPictureHits(ctx.picture, binding) : [];
+  return composeAuthorizedSearch(ctx, query, pmHits, pictureHits, {
+    entitled: true,
+    ran: ran || pictureHits.length > 0,
+  });
 }
 
 function reuseDeskSearchHits(
@@ -591,11 +829,13 @@ function reuseDeskSearchHits(
 
 /**
  * READ_AUTO tool. Authorization (desk principal, then entitledClientCodes,
- * then optional client binding) happens before any search retrieval.
- * Reuses searchSharePointPm / already-loaded operatorDesk.search hits.
- * Unknown / foreign clients fail closed without searching the tenant.
- * Classification is never promoted. Owner-gated questions must not reach
- * this function.
+ * then optional client binding) happens before any search retrieval or
+ * picture walk. Reuses searchSharePointPm / already-loaded
+ * operatorDesk.search hits and, when a binding is entitled, composes
+ * additive hits from the already-authorized OperatorOperatingPicture.
+ * Unknown / foreign clients fail closed without searching the tenant or
+ * walking another client's picture. Classification is never promoted.
+ * Owner-gated questions must not reach this function.
  */
 export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): AuthorizedSearchToolResult {
   if (!canAccessOperatorDesk(ctx.principal)) {
@@ -632,12 +872,8 @@ export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): Authoriz
   }
 
   const reused = reuseDeskSearchHits(ctx, query);
-  const rawHits = reused?.hits || [];
-  const hits = filterHitsToBinding(rawHits, scoped.binding);
-  return composeAuthorizedSearch(ctx, query, hits, {
-    entitled: true,
-    ran: reused?.ran === true,
-  });
+  const pmHits = filterHitsToBinding(reused?.hits || [], scoped.binding);
+  return composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, reused?.ran === true);
 }
 
 export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promise<AuthorizedSearchToolResult> {
@@ -654,17 +890,17 @@ export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promis
 
   const reused = reuseDeskSearchHits(ctx, query);
   if (reused) {
-    const hits = filterHitsToBinding(reused.hits, scoped.binding);
-    return composeAuthorizedSearch(ctx, query, hits, { entitled: true, ran: true });
+    const pmHits = filterHitsToBinding(reused.hits, scoped.binding);
+    return composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true);
   }
 
   if (!ctx.entitledSearch) {
-    return composeAuthorizedSearch(ctx, query, [], { entitled: true, ran: false });
+    return composeBoundAuthorizedSearch(ctx, query, scoped.binding, [], false);
   }
 
   const found = await ctx.entitledSearch(query);
-  const hits = filterHitsToBinding(found.results.map(toAuthorizedSearchHit), scoped.binding);
-  return composeAuthorizedSearch(ctx, query, hits, { entitled: true, ran: true });
+  const pmHits = filterHitsToBinding(found.results.map(toAuthorizedSearchHit), scoped.binding);
+  return composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true);
 }
 
 export function invokeReadAutoTool(tool: string, ctx: ToolGatewayContext): AskAtlasAnswer {
