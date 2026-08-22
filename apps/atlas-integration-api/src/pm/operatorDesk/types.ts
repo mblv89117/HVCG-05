@@ -25,6 +25,57 @@ export interface OperatorOperatingItem {
   kind: string;
   provenance: KnowledgeProvenance;
   href?: string;
+  evidence?: string;
+}
+
+export const ASK_ATLAS_QUESTION =
+  'WHAT ARE THE MOST IMPORTANT THINGS I NEED TO ADDRESS ACROSS HVCG RIGHT NOW, WHY, AND WHAT IS EACH BASED ON?' as const;
+
+export const ASK_ATLAS_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ASK-ATTENTION-001' as const;
+
+export const ASK_ATLAS_RANKING = [
+  'At Risk',
+  'Overdue',
+  'Decision Required',
+  'Capital',
+  'Waiting',
+  'Blocked',
+] as const;
+
+export type AskAtlasAttentionState = (typeof ASK_ATLAS_RANKING)[number];
+export type AskAtlasClassification = 'CONFIRMED' | 'LIKELY' | 'PROPOSED';
+
+export interface AskAtlasAttentionItem {
+  id: string;
+  state: AskAtlasAttentionState;
+  why: string;
+  basedOn: string;
+  evidence: string;
+  provenance: AskAtlasClassification;
+  classification: AskAtlasClassification;
+  client?: string;
+  clientCode?: string;
+  kind: string;
+}
+
+export interface AskAtlasActivity {
+  agent: 'atlas-hub-operator';
+  missionKey: typeof ASK_ATLAS_MISSION_KEY;
+  trigger: 'operator_operating_picture';
+  timestamp: string;
+  tools: string[];
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  result: 'answered' | 'honest_empty' | 'hvs_blocked';
+}
+
+export interface AskAtlasAnswer {
+  kind: 'ask_atlas_attention_v1';
+  question: typeof ASK_ATLAS_QUESTION;
+  invented: false;
+  honestEmpty: boolean;
+  ranking: AskAtlasAttentionState[];
+  items: AskAtlasAttentionItem[];
+  activity: AskAtlasActivity;
 }
 
 export interface OperatorRecoveryRow {
@@ -194,6 +245,7 @@ export interface OperatorDeskModel {
   };
   commercialContext: DeskCommercialContext;
   operatingPicture: OperatorOperatingPicture;
+  askAtlas: AskAtlasAnswer;
   search: {
     q: string;
     hitCount: number;

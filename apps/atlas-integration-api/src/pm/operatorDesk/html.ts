@@ -1,6 +1,6 @@
 import { EMPTY_REASON } from '../commercialContext/types.ts';
 import { isHvsRecoveredKind } from '../sharepoint/hvsRecoveredDocuments.ts';
-import type { OperatorDeskModel, OperatorOperatingItem, OperatorQueueItem } from './types.ts';
+import type { AskAtlasAnswer, OperatorDeskModel, OperatorOperatingItem, OperatorQueueItem } from './types.ts';
 
 function esc(value: string | number | undefined | null): string {
   return String(value ?? '')
@@ -196,6 +196,27 @@ const SHELL = `<!doctype html>
 <body>
 `;
 
+function renderAskAtlas(answer: AskAtlasAnswer): string {
+  if (!answer.items.length) {
+    return `<section>
+    <h2>Ask Atlas — What needs attention</h2>
+    <p class="muted">${esc(answer.question)}</p>
+    <p class="empty">No entitled attention items in this picture. Atlas does not invent work, amounts, lenders, or Hub-MI rows.</p>
+  </section>`;
+  }
+  return `<section>
+    <h2>Ask Atlas — What needs attention</h2>
+    <p class="muted">${esc(answer.question)}</p>
+    <p class="muted">Ranked from entitled operator queues: ${esc(answer.ranking.join(' → '))}. Classification stays labeled. Atlas does not invent amounts, lenders, or Hub-MI rows.</p>
+    <ul>${answer.items
+      .map((item) => {
+        const who = [item.client, item.clientCode].filter(Boolean).join(' · ');
+        return `<li><span class="kind">${esc(item.state)}</span> ${esc(item.why)}${who ? ` · ${esc(who)}` : ''}<br/><span class="muted">Based on: ${esc(item.basedOn)} (${esc(item.classification)})</span></li>`;
+      })
+      .join('')}</ul>
+  </section>`;
+}
+
 export function renderUnsignedOperatorDesk(): string {
   return `${SHELL}
 <header>
@@ -206,7 +227,7 @@ export function renderUnsignedOperatorDesk(): string {
   <section>
     <h2>Signed out</h2>
     <p>Use the same Hub API access token required by <code>/api/pm/*</code>. Live GTM outbound and paid ads stay OFF. Atlas does not invent LTV, MRI, or campaign history.</p>
-    <p class="empty">No queues. No clients. No search results.</p>
+    <p class="empty">No queues. No clients. No search results. Ask Atlas attention is fail-closed without a Hub Bearer token.</p>
   </section>
 </main>
 </body></html>`;
@@ -257,6 +278,7 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     <div class="card"><span class="muted">At Risk</span><strong>${esc(op.queues.atRisk.length)}</strong></div>
   </div>
   <p class="muted">Recovered exception counts from filename evidence. Hub MI customer rows stay honestly empty. Atlas does not invent balances, payment status, or funding status.</p>
+  ${renderAskAtlas(model.askAtlas)}
   <section>
     <h2>Client workspace preview</h2>
     ${
