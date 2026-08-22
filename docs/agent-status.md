@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `358efc2142d72a486ebd6fedd3d63978a720a07c` |
 | baseline | D31 exact-release gate for Hub `9e5d10a` + deployment `698f7e92…` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **31** |
 | BASED ON WORKER SHA | `7faca45a52c47cad1e1ba894f33b59877916aa2b` |
 | BASED ON PRIOR RUN | D30 artifact @ `7faca45` |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `358efc2142d72a486ebd6fedd3d63978a720a07c` |
 | COMPLETED ACTIONS | D31 acknowledge; independent SHA/deployment gate; abort documented; secrets requested |
 | REMAINING ACTIONS | Verify live SHA=`9e5d10a` + deployment=`698f7e92…` via az deployment history; then ATLAS/XSYS reproducers |
 | LIVE_P0 | not 0 (INCONCLUSIVE×5) |
