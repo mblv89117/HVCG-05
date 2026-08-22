@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** D36 — Hub `64b56dc`; ATLAS-03 **VERIFIED_FIXED** (public Plaid absence); ATLAS-01/02 **STILL_INCONCLUSIVE**; XSYS-01/02 **VERIFIED_FIXED** (D34); LIVE_SECURITY_CERTIFIED=**NO**; LIVE_P0=**2**
+**CURRENT RELEASE STATE:** D37 — Hub `1ac6257` SHA_GATE=PASS; ATLAS-03 + XSYS VERIFIED_FIXED; ATLAS-01/02 STILL_INCONCLUSIVE; LIVE_CERTIFIED=**NO**; LIVE_P0=**2**
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D36 @ `64b56dc`): ATLAS-01/02 **STILL_INCONCLUSIVE**. ATLAS-03 **VERIFIED_FIXED**. XSYS-01/02 **VERIFIED_FIXED** (D34, not reclassified). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=2**.
-- D36 mission `CLASSIFY_ATLAS03_PUBLIC_ABSENCE` — not a D34/D35/D33/D32 clone.
+- LIVE Hub (D37 @ `1ac6257`): ATLAS-01/02 **STILL_INCONCLUSIVE** (owner-gated SYN01). ATLAS-03 **VERIFIED_FIXED**. XSYS-01/02 **VERIFIED_FIXED**. **LIVE_CERTIFIED=NO**. **LIVE_P0=2**.
+- Mission `INDEPENDENT_LIVE_VALIDATION_1ac6257` — not a D36/D35/D34/D33/D32 clone.
 
 ---
 
@@ -20,36 +20,36 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** LIVE Hub public marker `64b56dc` (D33/D34)
+- **branch/SHA:** LIVE Hub `1ac6257` (D37); prior `64b56dc`
 - **severity:** P0
-- **evidence:** `canSeeOpportunity` uses entitlement intersection only (staff short-circuit absent @ `64b56dc`). Fail-closed 401; staff entitlement isolation not live-executed (no RT staff JWT). D34: left STILL_INCONCLUSIVE (no session mint).
+- **evidence:** Staff entitlement isolation not live-executed. V3 0407Z SYN01 EMPTY (Capital 403 / clients SYN01 404). D37: no entitled GET/PATCH; no opportunities/1|999999.
 - **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D34); no staff JWT
+- **status:** LIVE **STILL_INCONCLUSIVE** (D37 owner-gated SYN01); no staff JWT
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
-- **branch/SHA:** live `64b56dc`
+- **branch/SHA:** live `1ac6257` (D37)
 - **severity:** P0
-- **evidence:** Unauth/forged PATCH → 401; authorizeOpportunity → canSeeOpportunity (no staff all-see). Foreign Won not live-proven. D34: no staff session.
+- **evidence:** D37: entitled foreign Won PATCH not executed (SYN01 empty / owner-gated). Unauth fail-closed 401 holds on opportunities list.
 - **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + `If-Match` + `{ "stage": "Won" }` succeeds.
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D34); no staff JWT
+- **status:** LIVE **STILL_INCONCLUSIVE** (D37 owner-gated SYN01)
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
-- **branch/SHA:** live Hub `64b56dc` (D36)
+- **branch/SHA:** live Hub `1ac6257` (D37)
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** D36 public absence: `GET /api/plaid/link` (+ peers) → **405** `method_not_allowed`; `POST /api/plaid/link` → **404**; forged `x-atlas-*` still **405**; `/health` has **no** Plaid host/config key. Capital mode=sharepoint (non-authoritative note). Established Hub-path header-auth bypass **not reachable**.
+- **evidence:** D37: `GET /api/plaid/link` + `/api/plaid/create` → **405**; `/health` no Plaid key. Same public absence as D36 on new SHA.
 - **reproduction:** With `PLAID_REQUIRE_AUTH=true` on a reachable Plaid host, forge headers without Bearer → accepted (historical). Live Hub does not route Plaid.
 - **impact:** Bank connection/balance/identity isolation collapse **if** a Plaid surface is reachable.
 - **recommended remediation:** If/when Plaid is published, require Hub JWT + server-side entitlements; ignore client headers for authz. Reopen finding if `/api/plaid/*` begins serving.
 - **regression test:** Missing Bearer → 401 on any live Plaid host; Hub `/api/plaid/link` remains non-served (405/404).
-- **status:** LIVE **VERIFIED_FIXED** (D36 public absence); prior D34 STILL_INCONCLUSIVE
+- **status:** LIVE **VERIFIED_FIXED** (D37 reconfirm on `1ac6257`); prior D36
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -736,3 +736,19 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_P0 | **2** |
 | LIVE_SECURITY_CERTIFIED | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_36_2026-08-22.md` |
+
+## Directive 37 status appendix (INDEPENDENT_LIVE_VALIDATION_1ac6257)
+
+| Gate / ID | Status @ Directive 37 |
+|-----------|------------------------|
+| Live Hub SHA (RT re-GET) | `1ac62572e2f0d4206f78539c25041fb7f69430f8` |
+| SHA_GATE | **PASS** |
+| directoryObjects `/checkMemberGroups` POST | **CONFIRMED** in `graphMembership.ts` |
+| users `{oid}/checkMemberGroups` | **ABSENT** |
+| userLookup | mail/UPN GET only |
+| ATLAS-03 | **VERIFIED_FIXED** (`/api/plaid/link|create` 405) |
+| XSYS-01/02 | **VERIFIED_FIXED** (D34 + unauth 401 reconfirm) |
+| ATLAS-01/02 | **STILL_INCONCLUSIVE** (owner-gated SYN01; no entitled probes) |
+| LIVE_P0 | **2** (not 0) |
+| LIVE_CERTIFIED | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_37_2026-08-22.md` |
