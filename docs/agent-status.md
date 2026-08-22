@@ -5,7 +5,7 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | *(set on tip pin commit)* |
+| current SHA | `7cdef149bfd18423bab1b3f515e99f1c36166962` |
 | baseline | Live Hub **`4b9631a`** (entitlement group members). Immediate rollback Hub: `ed34f2f` / `798f0dd6`. Elite still `75d0c59` (untouched). |
 | owned domains | D17 Search recert on `4b9631a` (not D16 clone; not Elite) |
 | files/domains touched | D17 report + status only |
