@@ -250,12 +250,13 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
 </header>
 <main>
   <div class="cards">
-    <div class="card"><span class="muted">Active projects</span><strong>${esc(model.businessHealth.activeProjects)}</strong></div>
-    <div class="card"><span class="muted">Open tasks</span><strong>${esc(model.businessHealth.openTasks)}</strong></div>
-    <div class="card"><span class="muted">Overdue</span><strong>${esc(model.businessHealth.overdueTasks)}</strong></div>
-    <div class="card"><span class="muted">Decisions</span><strong>${esc(model.businessHealth.decisionsNeeded)}</strong></div>
-    <div class="card"><span class="muted">Entitled clients</span><strong>${esc(model.entitledClients.length)}</strong></div>
+    <div class="card"><span class="muted">Waiting</span><strong>${esc(op.queues.waiting.length)}</strong></div>
+    <div class="card"><span class="muted">Decisions</span><strong>${esc(op.queues.decisionRequired.length)}</strong></div>
+    <div class="card"><span class="muted">Capital</span><strong>${esc(op.queues.needsAction.filter((row) => row.kind === 'hvs_actionable_capital').length)}</strong></div>
+    <div class="card"><span class="muted">Overdue</span><strong>${esc(op.queues.overdue.length)}</strong></div>
+    <div class="card"><span class="muted">At Risk</span><strong>${esc(op.queues.atRisk.length)}</strong></div>
   </div>
+  <p class="muted">Recovered exception counts from filename evidence. Hub MI customer rows stay honestly empty. Atlas does not invent balances, payment status, or funding status.</p>
   <section>
     <h2>Client workspace preview</h2>
     ${
@@ -328,7 +329,8 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>At Risk</h2>
-    ${operatingList(op.queues.atRisk, 'No customer At Risk items in entitled scope.')}
+    <p class="muted">Filename-derived only. LIKELY means a recovered client has both past-due invoice filenames and capital-packet filenames. Amounts, payment status, and funding status are not extracted.</p>
+    ${operatingList(op.queues.atRisk, 'No recovered past-due-plus-capital combinations in this picture.')}
   </section>
   <section>
     <h2>Recovered HVS clients</h2>

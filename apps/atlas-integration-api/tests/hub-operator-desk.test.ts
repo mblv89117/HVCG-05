@@ -163,6 +163,8 @@ describe('operator desk copy', () => {
     assert.ok(html.indexOf('<h2>Overdue</h2>') < html.indexOf('<h2>Blocked</h2>'));
     assert.ok(html.indexOf('<h2>Blocked</h2>') < html.indexOf('<h2>At Risk</h2>'));
     assert.ok(html.indexOf('<h2>At Risk</h2>') < html.indexOf('<h2>Recovered HVS clients</h2>'));
+    assert.match(html, /Recovered exception counts/);
+    assert.match(html, /past-due invoice filenames and capital-packet filenames/);
     assert.match(html, /Past Due Invoice/);
     assert.match(html, /payment status and amounts not extracted/);
     assert.match(html, /<h2>Capital<\/h2>/);
@@ -246,6 +248,20 @@ describe('operator desk copy', () => {
         (row) => row.kind === 'hvs_actionable_capital' && /Prodigy Games/i.test(row.title),
       ),
     );
+    assert.equal(model.operatingPicture.queues.atRisk.length, 1);
+    assert.ok(
+      model.operatingPicture.queues.atRisk.some(
+        (row) =>
+          row.kind === 'hvs_actionable_at_risk' &&
+          row.clientCode === 'PDG01' &&
+          /past-due invoice filenames and capital-packet filenames/i.test(row.title) &&
+          !row.href,
+      ),
+    );
+    assert.match(html, /<span class="muted">Waiting<\/span><strong>/);
+    assert.match(html, /<span class="muted">Capital<\/span><strong>/);
+    assert.match(html, /<span class="muted">At Risk<\/span><strong>1<\/strong>/);
+    assert.equal(html.includes('Active projects'), false);
     assert.equal(model.operatingPicture.hvsActionableClientKnowledge.length, 12);
     assert.ok(
       model.operatingPicture.hvsActionableClientKnowledge.some(

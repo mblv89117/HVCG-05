@@ -77,6 +77,17 @@ export type ActionableCapitalItem = {
   filename: string;
 };
 
+export type ActionableAtRiskItem = {
+  id: string;
+  client: string;
+  clientCode: string;
+  title: string;
+  classification: Extract<ActionableClassification, 'LIKELY'>;
+  evidence: string;
+  overdueFilenames: string[];
+  capitalFilenames: string[];
+};
+
 export type ActionableClientKnowledge = {
   client: string;
   clientCode: string;
@@ -396,6 +407,38 @@ export function hvsActionableCapitalItems(): ActionableCapitalItem[] {
         filename: name,
       });
     }
+  }
+  return out;
+}
+
+export function hvsActionableAtRiskItems(): ActionableAtRiskItem[] {
+  const overdueByClient = new Map<string, ActionableOverdueItem[]>();
+  for (const row of hvsActionableOverdueItems()) {
+    const list = overdueByClient.get(row.client) || [];
+    list.push(row);
+    overdueByClient.set(row.client, list);
+  }
+  const capitalByClient = new Map<string, ActionableCapitalItem[]>();
+  for (const row of hvsActionableCapitalItems()) {
+    const list = capitalByClient.get(row.client) || [];
+    list.push(row);
+    capitalByClient.set(row.client, list);
+  }
+  const out: ActionableAtRiskItem[] = [];
+  for (const [client, overdue] of overdueByClient) {
+    const capital = capitalByClient.get(client);
+    if (!capital?.length) continue;
+    const first = overdue[0];
+    out.push({
+      id: `hvs-risk:${slug(first.clientCode || client)}:past-due-and-capital`,
+      client,
+      clientCode: first.clientCode,
+      title: `${client} — recovered past-due invoice filenames and capital-packet filenames (amounts, payment status, and funding status not extracted)`,
+      classification: 'LIKELY',
+      evidence: `CONFIRMED overdue filenames: ${overdue.map((row) => row.filename).join('; ')}. CONFIRMED capital-packet filenames: ${capital.map((row) => row.filename).join('; ')}. Combination is filename-derived only.`,
+      overdueFilenames: overdue.map((row) => row.filename),
+      capitalFilenames: capital.map((row) => row.filename),
+    });
   }
   return out;
 }

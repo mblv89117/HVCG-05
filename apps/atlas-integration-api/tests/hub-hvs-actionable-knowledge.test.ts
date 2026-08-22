@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  hvsActionableAtRiskItems,
   hvsActionableCapitalItems,
   hvsActionableClientKnowledge,
   hvsActionableOverdueItems,
@@ -75,6 +76,16 @@ test('actionable HVS knowledge stays honest and useful', () => {
   assert.ok(capital.some((row) => /121 Capital offer/i.test(row.filename)));
   assert.equal(capital.filter((row) => /SBA Express Funding Checklist/i.test(row.filename)).length, 1);
   assert.equal(capital.every((row) => /amounts and funding status not extracted/i.test(row.title)), true);
+
+  const atRisk = hvsActionableAtRiskItems();
+  assert.equal(atRisk.length, 1);
+  assert.equal(atRisk[0]?.client, 'Prodigy Games');
+  assert.equal(atRisk[0]?.clientCode, 'PDG01');
+  assert.equal(atRisk[0]?.classification, 'LIKELY');
+  assert.ok(atRisk[0]?.overdueFilenames.some((name) => /Past Due Invoice/i.test(name)));
+  assert.ok(atRisk[0]?.capitalFilenames.some((name) => /Capital_Acquisition/i.test(name)));
+  assert.equal(atRisk.every((row) => /amounts, payment status, and funding status not extracted/i.test(row.title)), true);
+  assert.equal(atRisk.every((row) => row.client !== 'Colorado Beef'), true);
 
   const serialized = JSON.stringify(rows);
   assert.equal(serialized.includes('$'), false);

@@ -586,6 +586,7 @@ export const HVS_RECOVERED_KIND = [
   'hvs_actionable_waiting',
   'hvs_actionable_overdue',
   'hvs_actionable_capital',
+  'hvs_actionable_at_risk',
 ] as const;
 
 export function isHvsRecoveredKind(kind: string): boolean {
