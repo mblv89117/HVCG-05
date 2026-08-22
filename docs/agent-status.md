@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | (post-D44 commit) |
+| current SHA | `ced9b57f94ac8a0e882d701252a7060ce07f46ca` |
 | baseline | D44 LIVE_SYNQA_CLIENT_SESSION @ Hub `101b1a7` (PR #35) |
 | tests | D44: SHA_GATE PASS; steps 1–11 FAIL (AUTH absent) |
 | security status | **LIVE_CERT=NO**. SYNQA entitled isolation unverified. |
