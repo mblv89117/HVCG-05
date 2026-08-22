@@ -25,10 +25,15 @@ export function isOperatorPrincipal(principal: AtlasPrincipal): boolean {
   return hasOperatorRole(principal);
 }
 
-const CLIENT_ENTITLED_PM =
-  /^\/api\/pm\/clients\/[^/]+\/(portal|document-requests|workspace|brief)$/;
+const CLIENT_ENTITLED_PM = [
+  /^\/api\/pm\/clients\/[^/]+\/(portal|document-requests|workspace|brief|commercial-context)$/,
+  /^\/api\/pm\/clients\/[^/]+$/,
+  /^\/api\/pm\/documents$/,
+  /^\/api\/pm\/search$/,
+  /^\/api\/pm\/my-work$/,
+];
 
-/** Client-only callers may use their entitled portal/document-request paths. Everything else is operator. */
+/** Client-only callers may use entitled-honest portal/document/search paths. Operator collections stay denied. */
 export function isClientEntitledPmPath(path: string): boolean {
-  return CLIENT_ENTITLED_PM.test(path);
+  return CLIENT_ENTITLED_PM.some((pattern) => pattern.test(path));
 }
