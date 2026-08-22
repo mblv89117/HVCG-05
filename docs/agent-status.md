@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `90ce0d8b4ce39267fb470016d75c47d986681bb4` |
 | baseline | D34 classify XSYS packaged evidence @ Hub `64b56dc` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **34** |
 | BASED ON WORKER SHA | `557aa6faf203183cf2fec26afb67de7a40ddd1bd` |
 | PREVIOUS | D33 CONSUMED=33 SHA_GATE=PASS 5/5 INCONCLUSIVE — not replayed as mission |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `90ce0d8b4ce39267fb470016d75c47d986681bb4` |
 | COMPLETED ACTIONS | D34 classify XSYS-01/02 VERIFIED_FIXED; ATLAS STILL_INCONCLUSIVE; CONSUMED=34 |
 | REMAINING ACTIONS | Staff/synthetic session for ATLAS-01/02; Plaid host for ATLAS-03 |
 | LIVE_P0 | **3** |
