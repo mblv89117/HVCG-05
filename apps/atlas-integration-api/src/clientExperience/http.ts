@@ -489,6 +489,23 @@ export async function handleClientExperience(opts: {
       return true;
     }
 
+    if (opts.method === 'GET' && opts.path === '/api/client/operating-picture') {
+      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      send(
+        opts.res,
+        200,
+        {
+          operatingPicture: view.operatingPicture,
+          clientCode: view.clientCode,
+          source: 'hub_governed_overlay',
+          invented: false,
+          operatorChrome: false,
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
     if (opts.method === 'GET' && opts.path === '/api/client/commercial-context') {
       const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
       send(opts.res, 200, { commercial: view.commercial, clientCode: view.clientCode }, opts.origin);

@@ -564,10 +564,10 @@ describe('synthetic client journey isolation', () => {
       assert.equal(mannyPreviewBody.signedClientSession, false);
       assert.equal(mannyPreviewBody.clientDesk.clientCode, SYN_A);
       assert.equal(mannyPreviewBody.clientDesk.gcc.workspaceKey.includes(SYN_B), false);
-      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.classification, 'CLIENT');
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.classification, 'SYNTHETIC_QA');
       assert.equal(mannyPreviewBody.clientDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
       assert.equal(mannyPreviewBody.clientDesk.operatingPicture.invented, false);
-      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.customerRecord, true);
+      assert.equal(mannyPreviewBody.clientDesk.operatingPicture.customerRecord, false);
       assert.equal(mannyPreviewBody.clientDesk.commercial.liveGtmOutbound, false);
       assert.equal(mannyPreviewBody.clientDesk.commercial.gcc.recordedOnly, true);
       const mannyForeign = await fetch(`${base}/api/pm/clients/HFD01/desk`, { headers: auth('manny') });
@@ -634,6 +634,14 @@ describe('synthetic client journey isolation', () => {
             clientCode: string;
             gcc: { isolated: boolean; invented: boolean; liveDispatch: boolean; clientCode: string };
             commercial: { invented: boolean; gcc: { recordedOnly: boolean } };
+            operatingPicture: {
+              classification: string;
+              invented: boolean;
+              clientVisible: boolean;
+              operatorChrome: boolean;
+              honestEmpty: boolean;
+              queues: Record<string, Array<{ title: string; queue: string }>>;
+            };
           };
         };
         assert.equal(deskBody.clientDesk.clientCode, SYN_A);
@@ -643,6 +651,38 @@ describe('synthetic client journey isolation', () => {
         assert.equal(deskBody.clientDesk.gcc.clientCode, SYN_A);
         assert.equal(deskBody.clientDesk.commercial.invented, false);
         assert.equal(deskBody.clientDesk.commercial.gcc.recordedOnly, true);
+        assert.equal(deskBody.clientDesk.operatingPicture.classification, 'SYNTHETIC_QA');
+        assert.equal(deskBody.clientDesk.operatingPicture.invented, false);
+        assert.equal(deskBody.clientDesk.operatingPicture.clientVisible, true);
+        assert.equal(deskBody.clientDesk.operatingPicture.operatorChrome, false);
+        assert.equal(deskBody.clientDesk.operatingPicture.honestEmpty, false);
+        assert.equal(
+          deskBody.clientDesk.operatingPicture.queues['Decision Required']?.some((row) =>
+            row.title.includes('kickoff'),
+          ),
+          true,
+        );
+        const picture = await fetch(`${base}/api/client/operating-picture`, { headers: session });
+        assert.equal(picture.status, 200);
+        const pictureBody = (await picture.json()) as {
+          clientCode: string;
+          invented: boolean;
+          operatorChrome: boolean;
+          operatingPicture: { clientVisible: boolean };
+        };
+        assert.equal(pictureBody.clientCode, SYN_A);
+        assert.equal(pictureBody.invented, false);
+        assert.equal(pictureBody.operatorChrome, false);
+        assert.equal(pictureBody.operatingPicture.clientVisible, true);
+        const staffPicture = await fetch(`${base}/api/client/operating-picture`, {
+          headers: auth('entitled-staff'),
+        });
+        assert.equal(staffPicture.status, 403);
+        const signedHtml = await fetch(`${base}/client`, { headers: session });
+        assert.equal(signedHtml.status, 200);
+        const signedHtmlBody = await signedHtml.text();
+        assert.match(signedHtmlBody, /What we are working on/);
+        assert.match(signedHtmlBody, /Confirm kickoff week/);
 
         const gcc = await fetch(`${base}/api/client/gcc`, { headers: session });
         assert.equal(gcc.status, 200);

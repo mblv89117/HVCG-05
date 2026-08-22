@@ -97,10 +97,7 @@ export function renderClientDeskHtml(
   const previewBanner = opts?.operatorPreview
     ? `<p class="muted">Operator preview of the isolated client workspace. This is not a signed Client Executive session. <code>/client</code> stays fail-closed for staff.</p>`
     : '';
-  const previewView = opts?.operatorPreview && 'operatingPicture' in view
-    ? (view as ReturnType<typeof buildOperatorClientDeskPreview>)
-    : undefined;
-  const operating = previewView?.operatingPicture;
+  const operating = 'operatingPicture' in view ? view.operatingPicture : undefined;
   const commercial =
     view.commercial && 'gcc' in view.commercial && view.commercial.gcc
       ? view.commercial

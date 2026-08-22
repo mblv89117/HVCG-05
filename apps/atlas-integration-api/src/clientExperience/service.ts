@@ -526,6 +526,12 @@ export function buildClientWorkspaceView(opts: {
       hubSha: resolveHubCommit(),
     }),
     commercial,
+    operatingPicture: buildClientVisibleOperatingPicture({
+      clientCode: requested,
+      displayName: workspace.displayName,
+      requests,
+      projects,
+    }),
     isolation: {
       failClosed: true,
       sharePointPrimaryUx: false,
@@ -857,27 +863,104 @@ export function buildOperatorClientDeskPreview(opts: {
 
 function emptyClientOperatingPicture(clientCode: string, displayName?: string) {
   const classified = classifyHubClientRow({ clientCode, displayName });
+  const synthetic = isExperienceSyntheticClient(clientCode) || classified.entityKind === 'synthetic_qa';
+  const entityKind = synthetic ? 'synthetic_qa' : classified.entityKind;
+  const classification = synthetic ? 'SYNTHETIC_QA' : classified.classification;
+  const customerRecord = synthetic ? false : classified.customerRecord;
   const missingData: string[] = [];
-  if (classified.entityKind === 'synthetic_qa') {
+  if (entityKind === 'synthetic_qa') {
     missingData.push('SYNTHETIC_QA — labeled fixture, not a customer operationalization.');
   }
   missingData.push('Historical HVS repositories are not accessible to this principal (HVS_DATA_ACCESS=BLOCKED).');
-  if (classified.entityKind === 'client') {
+  if (entityKind === 'client') {
     missingData.push('No entitled Hub-visible work has been operationalized for this ClientCode.');
   }
   return {
     kind: 'client_operating_picture_v1' as const,
     clientCode,
     invented: false as const,
-    classification: classified.classification,
-    entityKind: classified.entityKind,
-    customerRecord: classified.customerRecord,
+    classification,
+    entityKind,
+    customerRecord,
     hvsDataAccess: 'BLOCKED' as const,
     realClientOperationalized: false,
     honestEmpty: true,
+    clientVisible: false as const,
+    operatorChrome: true as const,
+    source: 'hub_operator_preview' as const,
     queues: emptyOperatingQueues() as Record<OperatingState, Array<{ id: string; title: string; queue: OperatingState; kind: string; provenance: string }>>,
     recovery: undefined as RecoveryLedgerRow | undefined,
     missingData,
+  };
+}
+
+/** Client-safe queues from the signed workspace overlay. Never leaks operator SharePoint work. */
+export function buildClientVisibleOperatingPicture(opts: {
+  clientCode: string;
+  displayName?: string;
+  requests: Array<{
+    id: string;
+    clientCode: string;
+    kind: string;
+    title: string;
+    status: string;
+    decision: string;
+  }>;
+  projects: Array<{
+    id: string;
+    clientCode: string;
+    name: string;
+    health: string;
+    nextAction: string;
+  }>;
+}) {
+  const picture = emptyClientOperatingPicture(opts.clientCode, opts.displayName);
+  const queues = emptyOperatingQueues() as typeof picture.queues;
+  const push = (queue: OperatingState, row: { id: string; title: string; kind: string }) => {
+    queues[queue].push({
+      id: row.id,
+      title: row.title,
+      queue,
+      kind: row.kind,
+      provenance: 'CONFIRMED',
+    });
+  };
+
+  for (const req of opts.requests) {
+    if (req.clientCode !== opts.clientCode) continue;
+    if (req.status !== 'open' && req.decision !== 'pending') continue;
+    if (req.kind === 'decision') {
+      push('Decision Required', { id: req.id, title: req.title, kind: 'decision' });
+    } else {
+      push('Needs Action', { id: req.id, title: req.title, kind: req.kind });
+    }
+  }
+
+  for (const project of opts.projects) {
+    if (project.clientCode !== opts.clientCode) continue;
+    push('Projects', { id: project.id, title: project.name, kind: 'project' });
+    if (project.health === 'blocked') {
+      push('Blocked', { id: `${project.id}:blocked`, title: project.name, kind: 'project' });
+    } else if (project.health === 'watch') {
+      push('At Risk', { id: `${project.id}:watch`, title: project.name, kind: 'project' });
+    }
+    if (project.nextAction) {
+      push('Needs Action', {
+        id: `${project.id}:next`,
+        title: project.nextAction,
+        kind: 'project',
+      });
+    }
+  }
+
+  const hasItems = Object.values(queues).some((rows) => rows.length > 0);
+  return {
+    ...picture,
+    clientVisible: true as const,
+    operatorChrome: false as const,
+    source: 'hub_governed_overlay' as const,
+    honestEmpty: !hasItems,
+    queues,
   };
 }
 
@@ -895,6 +978,10 @@ export function attachOperatorDeskOperatingPicture<
     clientCode,
     displayName: view.workspace.displayName,
   });
+  const synthetic = isExperienceSyntheticClient(clientCode) || classified.entityKind === 'synthetic_qa';
+  const entityKind = synthetic ? 'synthetic_qa' : classified.entityKind;
+  const classification = synthetic ? 'SYNTHETIC_QA' : classified.classification;
+  const customerRecord = synthetic ? false : classified.customerRecord;
   let commercial = view.commercial;
   if (opts?.commercial) {
     const gccCount = opts.commercial.gcc.signals.filter((s) => s.clientCode === clientCode).length;
@@ -950,10 +1037,10 @@ export function attachOperatorDeskOperatingPicture<
     }
     const recovery = opts.knowledge.recoveryLedger.find((row) => row.clientCode === clientCode);
     const realClientOperationalized =
-      classified.customerRecord &&
+      customerRecord &&
       Object.values(queues).some((rows) => rows.length > 0);
     const missingData: string[] = [];
-    if (classified.entityKind === 'synthetic_qa') {
+    if (entityKind === 'synthetic_qa') {
       missingData.push('SYNTHETIC_QA — labeled fixture, not a customer operationalization.');
     }
     if (opts.knowledge.hvsDataAccess === 'BLOCKED') {
@@ -961,7 +1048,7 @@ export function attachOperatorDeskOperatingPicture<
     } else if (opts.knowledge.hvsDataAccess === 'PARTIAL') {
       missingData.push('Historical HVS access is partial. Unreadable repositories stay blocked.');
     }
-    if (classified.customerRecord && !realClientOperationalized) {
+    if (customerRecord && !realClientOperationalized) {
       missingData.push('No entitled Hub-visible work has been operationalized for this ClientCode.');
     }
     if (recovery?.exceptions) missingData.push(recovery.exceptions);
@@ -970,12 +1057,15 @@ export function attachOperatorDeskOperatingPicture<
       kind: 'client_operating_picture_v1',
       clientCode,
       invented: false,
-      classification: classified.classification,
-      entityKind: classified.entityKind,
-      customerRecord: classified.customerRecord,
+      classification,
+      entityKind,
+      customerRecord,
       hvsDataAccess: opts.knowledge.hvsDataAccess,
       realClientOperationalized,
       honestEmpty: !realClientOperationalized,
+      clientVisible: false,
+      operatorChrome: true,
+      source: 'hub_operator_preview',
       queues,
       recovery,
       missingData: [...new Set(missingData)],
