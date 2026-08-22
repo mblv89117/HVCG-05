@@ -27,8 +27,12 @@ def main() -> int:
     indexed = {i["name"] for i in index["lists"]}
     if "HVCG_OpportunityActivities" not in indexed:
         fail("OpportunityActivities missing from _index.json")
-    if index.get("version") != "2.3":
-        fail("_index.json version should be 2.3 for Opportunity CRM")
+    try:
+        major, minor = (int(part) for part in str(index.get("version", "0.0")).split(".", 1))
+    except ValueError:
+        major, minor = 0, 0
+    if (major, minor) < (2, 3):
+        fail("_index.json version should be at least 2.3 for Opportunity CRM")
 
     opp = load(ROOT / "src/sharepoint/lists/HVCG_Opportunities.json")
     onames = col_names(opp)

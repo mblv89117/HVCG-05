@@ -1,7 +1,7 @@
 {
   "name": "HVCG_ExecutiveDecisionEscalation",
   "displayName": "HVCG_ExecutiveDecisionEscalation",
-  "description": "Notify executive on RequiresExecutiveAttention",
+  "description": "Create an executive decision record requiring attention and an internal-only escalation notification (no external emails). Idempotent per client/title/day.",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
@@ -23,24 +23,39 @@
           "schema": {
             "type": "object",
             "properties": {
+              "Title": {
+                "type": "string",
+                "title": "Title",
+                "description": "Short decision title"
+              },
+              "Background": {
+                "type": "string",
+                "title": "Background",
+                "description": "Context / background for the decision"
+              },
               "ClientCode": {
-                "type": "string"
+                "type": "string",
+                "title": "ClientCode",
+                "description": "Optional client code"
               },
               "ClientListItemId": {
-                "type": "integer"
+                "type": "integer",
+                "title": "ClientListItemId",
+                "description": "Optional HVCG_Clients item Id"
               },
-              "TemplateKey": {
-                "type": "string"
+              "DecisionType": {
+                "type": "string",
+                "title": "DecisionType",
+                "description": "Optional decision type / category"
               },
-              "EngagementId": {
-                "type": "integer"
-              },
-              "StartDate": {
-                "type": "string"
+              "Reason": {
+                "type": "string",
+                "title": "Reason",
+                "description": "Optional escalation reason description"
               }
             },
             "required": [
-              "ClientCode"
+              "Title"
             ]
           }
         }
@@ -60,16 +75,24 @@
             "table": "HVCG_AutomationLogs",
             "item/Title": "Started",
             "item/FlowName": "@workflow()?['name']",
-            "item/Status": "Started"
+            "item/Status": {
+              "Value": "Started"
+            },
+            "item/ClientCode": "@triggerBody()?['ClientCode']"
           }
         },
         "runAfter": {}
       },
-      "Compose_Inputs": {
-        "type": "Compose",
+      "Init_ClientId": {
+        "type": "InitializeVariable",
         "inputs": {
-          "note": "Manual or child flow: Notify executive on RequiresExecutiveAttention",
-          "buildSheet": "src/power-automate/flows/HVCG_ExecutiveDecisionEscalation.json"
+          "variables": [
+            {
+              "name": "ClientId",
+              "type": "integer",
+              "value": "@coalesce(triggerBody()?['ClientListItemId'], 0)"
+            }
+          ]
         },
         "runAfter": {
           "Log_Start": [
@@ -77,11 +100,236 @@
           ]
         }
       },
-      "Log_Success": {
+      "Compose_IdempotencyKey": {
         "type": "Compose",
-        "inputs": "Succeeded scaffold",
+        "inputs": "@concat('decision|', coalesce(triggerBody()?['ClientCode'], 'na'), '|', triggerBody()?['Title'], '|', formatDateTime(utcNow(), 'yyyyMMdd'))",
         "runAfter": {
-          "Compose_Inputs": [
+          "Init_ClientId": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_NeedClientLookup": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "lessOrEquals": [
+                "@variables('ClientId')",
+                0
+              ]
+            },
+            {
+              "not": [
+                {
+                  "equals": [
+                    "@coalesce(triggerBody()?['ClientCode'], '')",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Get_Client_ByCode": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "GetItems",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_Clients",
+                "$filter": "ClientCode eq '@{triggerBody()?['ClientCode']}'",
+                "$top": 1
+              }
+            },
+            "runAfter": {}
+          },
+          "Set_ClientId": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "ClientId",
+              "value": "@int(coalesce(first(outputs('Get_Client_ByCode')?['body/value'])?['ID'], 0))"
+            },
+            "runAfter": {
+              "Get_Client_ByCode": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "runAfter": {
+          "Compose_IdempotencyKey": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Get_Existing_Decision": {
+        "type": "OpenApiConnection",
+        "inputs": {
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetItems",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Decisions",
+            "$filter": "Title eq '@{triggerBody()?['Title']}' and ClientCode eq '@{coalesce(triggerBody()?['ClientCode'], '')}' and DecisionStatus ne 'Decided' and DecisionStatus ne 'Cancelled'",
+            "$top": 1
+          }
+        },
+        "runAfter": {
+          "Condition_NeedClientLookup": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_Duplicate": {
+        "type": "If",
+        "expression": {
+          "and": [
+            {
+              "greater": [
+                "@length(outputs('Get_Existing_Decision')?['body/value'])",
+                0
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Log_Skipped": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PostItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_AutomationLogs",
+                "item/Title": "Decision SkippedDuplicate",
+                "item/FlowName": "@workflow()?['name']",
+                "item/Status": {
+                  "Value": "SkippedDuplicate"
+                },
+                "item/ClientCode": "@triggerBody()?['ClientCode']",
+                "item/IdempotencyKey": "@outputs('Compose_IdempotencyKey')",
+                "item/RelatedList": "HVCG_Decisions",
+                "item/RelatedItemId": "@int(first(outputs('Get_Existing_Decision')?['body/value'])?['ID'])"
+              }
+            },
+            "runAfter": {}
+          },
+          "Terminate_Skipped": {
+            "type": "Terminate",
+            "inputs": {
+              "runStatus": "Succeeded"
+            },
+            "runAfter": {
+              "Log_Skipped": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "else": {
+          "actions": {
+            "Create_Decision": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                  "table": "HVCG_Decisions",
+                  "item/Title": "@triggerBody()?['Title']",
+                  "item/Background": "@triggerBody()?['Background']",
+                  "item/Options": "@concat('Decision type: ', coalesce(triggerBody()?['DecisionType'], 'n/a'), '. Reason: ', coalesce(triggerBody()?['Reason'], 'n/a'))",
+                  "item/AtlasClientRefId": "@if(greater(variables('ClientId'), 0), variables('ClientId'), null)",
+                  "item/ClientCode": "@triggerBody()?['ClientCode']",
+                  "item/DecisionStatus": {
+                    "Value": "Pending Decision"
+                  },
+                  "item/DecisionMakerEmail": "@parameters('hvcg_ExecutiveEmail')",
+                  "item/OwnerEmail": "@parameters('hvcg_OpsEmail')",
+                  "item/Deadline": "@addDays(utcNow(), 2)",
+                  "item/RequiresExecutiveAttention": true
+                }
+              },
+              "runAfter": {}
+            },
+            "Create_Notification": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                  "table": "HVCG_Notifications",
+                  "item/Title": "@concat('Executive decision required: ', triggerBody()?['Title'])",
+                  "item/RecipientEmail": "@parameters('hvcg_ExecutiveEmail')",
+                  "item/NotificationType": {
+                    "Value": "Escalation"
+                  },
+                  "item/Channel": {
+                    "Value": "None"
+                  },
+                  "item/Body": "@concat('A decision requires executive attention by ', formatDateTime(addDays(utcNow(), 2), 'yyyy-MM-dd'), '. ', coalesce(triggerBody()?['Background'], ''))",
+                  "item/RelatedClientCode": "@triggerBody()?['ClientCode']",
+                  "item/IsExecutive": true
+                }
+              },
+              "runAfter": {
+                "Create_Decision": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Log_Success": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                  "table": "HVCG_AutomationLogs",
+                  "item/Title": "Executive decision escalated",
+                  "item/FlowName": "@workflow()?['name']",
+                  "item/Status": {
+                    "Value": "Succeeded"
+                  },
+                  "item/ClientCode": "@triggerBody()?['ClientCode']",
+                  "item/IdempotencyKey": "@outputs('Compose_IdempotencyKey')",
+                  "item/RelatedList": "HVCG_Decisions",
+                  "item/RelatedItemId": "@outputs('Create_Decision')?['body/ID']",
+                  "item/Message": "@concat('Created decision id ', string(outputs('Create_Decision')?['body/ID']), ' (internal escalation only, no client email)')"
+                }
+              },
+              "runAfter": {
+                "Create_Notification": [
+                  "Succeeded"
+                ]
+              }
+            }
+          }
+        },
+        "runAfter": {
+          "Get_Existing_Decision": [
             "Succeeded"
           ]
         }
@@ -120,6 +368,8 @@
     "Flow appears in solution or My flows",
     "Connection references resolved",
     "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
-    "Idempotent re-run does not duplicate business records"
+    "HVCG_Decisions row created with RequiresExecutiveAttention, DecisionMakerEmail=executive, Deadline +2 days, ClientId when known",
+    "Internal HVCG_Notifications escalation created (Channel=None); no external client email",
+    "Idempotent re-run (same client/title/day) logs SkippedDuplicate"
   ]
 }

@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-PRC-008"],
+  "doNotSellCheaplyAsStandalone": [
+    "Basic bookkeeping coordination",
+    "Basic website builds",
+    "Small one-off HR forms",
+    "Generic business plans without implementation",
+    "Low-dollar administrative work",
+    "Unscoped owner errands",
+    "Underpriced emergency tax/claims work"
+  ],
+  "recommendedDispositions": [
+    "Bundle into premium engagement",
+    "Scope as special project",
+    "Premium hourly",
+    "Refer out",
+    "Decline"
+  ]
+}

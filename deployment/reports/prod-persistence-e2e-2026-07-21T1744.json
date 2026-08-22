@@ -1,0 +1,282 @@
+{
+  "when": "2026-07-21T17:44:00.489Z",
+  "siteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+  "marker": "ATLAS-E2E-1784655827954",
+  "pass": true,
+  "passed": [
+    "client",
+    "project",
+    "task",
+    "document_request",
+    "time_entry",
+    "decision",
+    "financial_milestone",
+    "ai_approval"
+  ],
+  "failed": [],
+  "results": [
+    {
+      "entity": "client",
+      "list": "HVCG_Clients",
+      "ok": true,
+      "detail": {
+        "count": 7,
+        "titles": [
+          "ACCG Inc.",
+          "Prodigy Games LLC",
+          "Colorado Craft Beef",
+          "That's Kava LLC",
+          "Christie's Place LLC",
+          "Hart Family Dental",
+          "Lien Partners"
+        ]
+      },
+      "steps": [
+        {
+          "step": "read_count",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "entity": "project",
+      "list": "HVCG_Projects",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "ClientCode",
+            "ProjectStatus",
+            "HVCG_IdempotencyKey"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 Project"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 Project PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    },
+    {
+      "entity": "task",
+      "list": "HVCG_Tasks",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "ClientCode",
+            "TaskStatus",
+            "HVCG_IdempotencyKey"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 Task"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 Task PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    },
+    {
+      "entity": "document_request",
+      "list": "HVCG_DocumentRequests",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "ClientCode",
+            "RequestStatus",
+            "HVCG_IdempotencyKey"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 DocRequest"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 DocRequest PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    },
+    {
+      "entity": "time_entry",
+      "list": "HVCG_TimeEntries",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "Hours"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 Time"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 Time PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    },
+    {
+      "entity": "decision",
+      "list": "HVCG_Decisions",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "ClientCode",
+            "DecisionStatus"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 Decision"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 Decision PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    },
+    {
+      "entity": "financial_milestone",
+      "list": "HVCG_FinancialMilestones",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "ClientCode",
+            "Amount"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 FinMilestone"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 FinMilestone PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    },
+    {
+      "entity": "ai_approval",
+      "list": "HVCG_AIApprovals",
+      "ok": true,
+      "steps": [
+        {
+          "step": "create_fields",
+          "fields": [
+            "Title",
+            "ClientCode",
+            "ApprovalStatus"
+          ]
+        },
+        {
+          "step": "create",
+          "id": "1"
+        },
+        {
+          "step": "read",
+          "title": "ATLAS-E2E-1784655827954 AIApproval"
+        },
+        {
+          "step": "patch",
+          "fields": {
+            "Title": "ATLAS-E2E-1784655827954 AIApproval PATCHED"
+          }
+        },
+        {
+          "step": "delete",
+          "id": "1"
+        }
+      ],
+      "itemId": "1"
+    }
+  ]
+}

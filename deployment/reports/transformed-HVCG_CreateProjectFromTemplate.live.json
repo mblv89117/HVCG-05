@@ -1,0 +1,56 @@
+{
+  "name": "HVCG_CreateProjectFromTemplate",
+  "top": [
+    "Log_Start",
+    "Init_ClientId",
+    "Init_TemplateKey",
+    "Init_StartDate",
+    "Compose_IdempotencyKey",
+    "Condition_NeedClientLookup",
+    "Get_Existing_Project",
+    "Condition_Duplicate"
+  ],
+  "Get_Existing_Project": {
+    "type": "OpenApiConnection",
+    "inputs": {
+      "host": {
+        "connectionName": "shared_sharepointonline",
+        "operationId": "HttpRequest",
+        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+      },
+      "parameters": {
+        "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+        "parameters/method": "GET",
+        "parameters/uri": "_api/web/lists/getbytitle('HVCG_Projects')/items?$select=Id,Title,ClientCode,HVCG_IdempotencyKey,ProjectStatus,ProjectTemplateKey&$filter=HVCG_IdempotencyKey eq '@{outputs('Compose_IdempotencyKey')}'&$top=1",
+        "parameters/headers": {
+          "Accept": "application/json;odata=nometadata"
+        }
+      }
+    },
+    "runAfter": {
+      "Condition_NeedClientLookup": [
+        "Succeeded"
+      ]
+    }
+  },
+  "else_keys": [
+    "Create_Project",
+    "Create_Milestone_Kickoff",
+    "Create_Milestone_CriticalDocs",
+    "Create_Milestone_OnboardingComplete",
+    "Create_Task_Kickoff",
+    "Create_Task_CollectDocs",
+    "Create_Task_OnboardingReview",
+    "Log_Success",
+    "Compose_ProjectId"
+  ],
+  "Log_Success_paths": [
+    "/Condition_Duplicate/else/actions/Log_Success"
+  ],
+  "getType": "OpenApiConnection",
+  "getHost": {
+    "connectionName": "shared_sharepointonline",
+    "operationId": "HttpRequest",
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+  }
+}

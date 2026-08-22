@@ -1,6 +1,6 @@
 {
   "title": "HVCG_CapitalSources",
-  "description": "Capital \u2014 Lenders, funds, investors (master capital sources)",
+  "description": "Capital — Lenders, funds, investors (master capital sources)",
   "template": "genericList",
   "domain": "Capital",
   "columns": [
@@ -134,6 +134,36 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "LastVerifiedAt",
+      "displayName": "LastVerifiedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "When source criteria were last human-verified."
+    },
+    {
+      "internalName": "CriteriaFreshness",
+      "displayName": "CriteriaFreshness",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Freshness of stated criteria.",
+      "choices": [
+        "CURRENT",
+        "STALE",
+        "UNKNOWN"
+      ],
+      "default": "UNKNOWN"
+    },
+    {
+      "internalName": "VerificationSource",
+      "displayName": "VerificationSource",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Where criteria were verified."
     }
   ]
 }

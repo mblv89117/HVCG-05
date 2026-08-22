@@ -1,6 +1,6 @@
 {
   "title": "HVCG_LenderOutreach",
-  "description": "Capital \u2014 Lender outreach tracker",
+  "description": "Capital — Lender outreach tracker",
   "template": "genericList",
   "domain": "Capital",
   "columns": [
@@ -77,6 +77,91 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "SubmissionMethod",
+      "displayName": "SubmissionMethod",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "How the package was or will be submitted.",
+      "choices": [
+        "package",
+        "email",
+        "portal_instructions",
+        "approved_api"
+      ]
+    },
+    {
+      "internalName": "SubmissionStatus",
+      "displayName": "SubmissionStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Submission lifecycle. Additive to Response.",
+      "choices": [
+        "draft",
+        "submitted",
+        "acknowledged",
+        "rfi",
+        "underwriting",
+        "offer",
+        "declined",
+        "withdrawn"
+      ],
+      "default": "draft"
+    },
+    {
+      "internalName": "SubmittedAt",
+      "displayName": "SubmittedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "When submitted to the lender."
+    },
+    {
+      "internalName": "SubmittedBy",
+      "displayName": "SubmittedBy",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Who submitted (email)."
+    },
+    {
+      "internalName": "ConfirmationNumber",
+      "displayName": "ConfirmationNumber",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Lender confirmation / reference number if provided."
+    },
+    {
+      "internalName": "PackageVersion",
+      "displayName": "PackageVersion",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Version of the package sent."
+    },
+    {
+      "internalName": "MessageClass",
+      "displayName": "MessageClass",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Latest inbound lender message class.",
+      "choices": [
+        "ACKNOWLEDGMENT",
+        "REQUEST_FOR_INFORMATION",
+        "MISSING_DOCUMENT",
+        "UNDERWRITING_QUESTION",
+        "DECLINE",
+        "CONDITIONAL_APPROVAL",
+        "TERM_SHEET",
+        "CLOSING_CONDITION",
+        "FUNDED",
+        "OTHER"
+      ]
     }
   ]
 }

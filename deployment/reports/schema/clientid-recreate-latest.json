@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-07-22T00:21:12.9748600Z",
+  "method": "pnp-devicelogin",
+  "clientsListId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+  "lists": {
+    "HVCG_Projects": {
+      "ok": true,
+      "lookup": {
+        "allowMultipleValues": false,
+        "allowUnlimitedLength": false,
+        "columnName": "Title",
+        "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+      },
+      "getItemsOk": true,
+      "getItemsError": null
+    },
+    "HVCG_Tasks": {
+      "ok": true,
+      "lookup": {
+        "allowMultipleValues": false,
+        "allowUnlimitedLength": false,
+        "columnName": "Title",
+        "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+      },
+      "getItemsOk": true,
+      "getItemsError": null
+    },
+    "HVCG_Deliverables": {
+      "ok": true,
+      "lookup": {
+        "allowMultipleValues": false,
+        "allowUnlimitedLength": false,
+        "columnName": "Title",
+        "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+      },
+      "getItemsOk": true,
+      "getItemsError": null
+    },
+    "HVCG_Decisions": {
+      "ok": true,
+      "lookup": {
+        "allowMultipleValues": false,
+        "allowUnlimitedLength": false,
+        "columnName": "Title",
+        "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+      },
+      "getItemsOk": true,
+      "getItemsError": null
+    },
+    "HVCG_DocumentRequests": {
+      "ok": true,
+      "lookup": {
+        "allowMultipleValues": false,
+        "allowUnlimitedLength": false,
+        "columnName": "Title",
+        "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+      },
+      "getItemsOk": true,
+      "getItemsError": null
+    }
+  },
+  "writeReadOk": false,
+  "writeReadValue": "ACCG Inc.",
+  "writeReadLookupId": null,
+  "tasksWriteReadLookupId": null,
+  "hubHealth": "separate"
+}

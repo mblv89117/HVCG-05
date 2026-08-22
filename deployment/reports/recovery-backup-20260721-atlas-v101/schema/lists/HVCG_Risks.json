@@ -1,0 +1,130 @@
+{
+  "title": "HVCG_Risks",
+  "description": "Risk register",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Likelihood",
+      "displayName": "Likelihood",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High"
+      ]
+    },
+    {
+      "internalName": "Impact",
+      "displayName": "Impact",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "internalName": "RiskLevel",
+      "displayName": "RiskLevel",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "internalName": "Mitigation",
+      "displayName": "Mitigation",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RiskStatus",
+      "displayName": "RiskStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Open",
+        "Mitigating",
+        "Accepted",
+        "Closed"
+      ],
+      "default": "Open"
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    }
+  ]
+}
