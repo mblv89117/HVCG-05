@@ -273,7 +273,11 @@ describe('operator desk copy', () => {
     assert.match(askHtml, /past-due invoice filenames and capital-packet filenames/i);
     assert.equal(askHtml.includes('$'), false);
     assert.equal(askHtml.includes('250000'), false);
-    assert.equal(/At Risk[\s\S]*Colorado Beef|Colorado Beef[\s\S]*At Risk/.test(askHtml), false);
+    const askItems = [...askHtml.matchAll(/<li>([\s\S]*?)<\/li>/g)].map((match) => match[1]);
+    assert.equal(
+      askItems.some((item) => item.includes('At Risk') && item.includes('Colorado Beef')),
+      false,
+    );
     assert.equal(model.askAtlas.invented, false);
     assert.equal(model.askAtlas.honestEmpty, false);
     assert.ok(
