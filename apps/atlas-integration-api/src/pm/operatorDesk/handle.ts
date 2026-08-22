@@ -17,12 +17,15 @@ import { listOperatorClientJourneys } from '../../clientExperience/service.ts';
 import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
 import {
   AGENT_ACTIVITY_CONTRACT,
+  ASK_ATLAS_QUESTION,
   isOperatorActivityLedgerPath,
   isOperatorDeskPath,
+  isOperatorRuntimePath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
+import { runAtlasHubRuntime } from './agentRuntime.ts';
 
 export { isOperatorDeskPath };
 
@@ -171,9 +174,10 @@ export async function handleOperatorDesk(opts: {
 
   const accept = typeof opts.req.headers.accept === 'string' ? opts.req.headers.accept : '';
   const ledgerOnly = isOperatorActivityLedgerPath(opts.path);
-  const asJson = ledgerOnly || wantsOperatorJson(opts.path, accept);
+  const runtimeOnly = isOperatorRuntimePath(opts.path);
+  const asJson = ledgerOnly || runtimeOnly || wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
-  const searchQuery = url.searchParams.get('q') || '';
+  const searchQuery = runtimeOnly ? '' : url.searchParams.get('q') || '';
 
   let principal;
   try {
@@ -275,6 +279,36 @@ export async function handleOperatorDesk(opts: {
       opts.res,
       503,
       { error: 'pm_backend_unavailable', code: 'pm_backend_unavailable' },
+      opts.origin,
+    );
+    return true;
+  }
+
+  if (runtimeOnly) {
+    const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+    const result = runAtlasHubRuntime({
+      principal,
+      picture: model.operatingPicture,
+      question,
+    });
+    if (opts.method === 'GET') {
+      try {
+        await appendAskAtlasActivity({
+          dataDir: opts.cfg.dataDir,
+          answer: result.askAtlas,
+          principal,
+        });
+      } catch {
+        /* Runtime answer stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    sendJson(
+      opts.res,
+      200,
+      {
+        operatorDesk: { askAtlas: result.askAtlas },
+        runtime: result.runtime,
+      },
       opts.origin,
     );
     return true;
