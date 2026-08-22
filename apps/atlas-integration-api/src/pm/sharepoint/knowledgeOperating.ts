@@ -43,6 +43,7 @@ import {
 import { hvsRecoveredProjects, type HvsRecoveredProject } from './hvsRecoveredProjects.ts';
 import {
   hvsActionableClientKnowledge,
+  hvsActionableOverdueItems,
   hvsActionableWaitingItems,
   type ActionableClientKnowledge,
 } from './hvsActionableClientKnowledge.ts';
@@ -76,7 +77,8 @@ export type KnowledgeOperatingItem = {
     | 'hvs_recovered_reference'
     | 'hvs_recovered_action'
     | 'hvs_recovered_document'
-    | 'hvs_actionable_waiting';
+    | 'hvs_actionable_waiting'
+    | 'hvs_actionable_overdue';
   provenance: KnowledgeProvenance;
   source: string;
   webUrl?: string;
@@ -173,6 +175,21 @@ function hvsRecoveredWaitingItems(status: HvsAccessStatus): KnowledgeOperatingIt
       title: row.title,
       queue: 'Waiting',
       kind: 'hvs_actionable_waiting',
+      provenance: row.classification,
+      source: row.evidence,
+    }),
+  );
+}
+
+function hvsRecoveredOverdueItems(status: HvsAccessStatus): KnowledgeOperatingItem[] {
+  if (status === 'BLOCKED') return [];
+  return hvsActionableOverdueItems().map((row) =>
+    item({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      queue: 'Overdue',
+      kind: 'hvs_actionable_overdue',
       provenance: row.classification,
       source: row.evidence,
     }),
@@ -440,6 +457,7 @@ export async function buildKnowledgeOperatingPicture(
   const hvsRecoveredClients =
     hvsDataAccess === 'BLOCKED' ? [] : hvsConfirmedClientFolders().map(recoveredClientFromFolder);
   queues.Waiting.push(...hvsRecoveredWaitingItems(hvsDataAccess));
+  queues.Overdue.push(...hvsRecoveredOverdueItems(hvsDataAccess));
   for (const row of hvsRecoveredActionItems(hvsDataAccess)) {
     queues[row.queue].push(row);
   }

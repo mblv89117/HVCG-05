@@ -55,12 +55,24 @@ export type ActionableDecision = {
   evidence: string;
 };
 
+export type ActionableOverdueItem = {
+  id: string;
+  client: string;
+  clientCode: string;
+  title: string;
+  party: ResponsibilityParty;
+  classification: ActionableClassification;
+  evidence: string;
+  filename: string;
+};
+
 export type ActionableClientKnowledge = {
   client: string;
   clientCode: string;
   provenance: 'CONFIRMED';
   hubMiOperationalized: false;
   waitingItems: ActionableWaitingItem[];
+  overdueItems: ActionableOverdueItem[];
   missingDocuments: ActionableMissingDocument[];
   hvcgResponsibilities: ActionableResponsibility[];
   clientResponsibilities: ActionableResponsibility[];
@@ -215,8 +227,19 @@ export function hvsActionableClientKnowledge(): ActionableClientKnowledge[] {
       });
     }
 
-    const waitingItems: ActionableWaitingItem[] = [];
     const clientKey = slug(folder.clientCode || folder.client);
+    const overdueItems: ActionableOverdueItem[] = pastDueFiles.map((name) => ({
+      id: `hvs-overdue:${clientKey}:${slug(name)}`,
+      client: folder.client,
+      clientCode: folder.clientCode,
+      title: `${folder.client} — recovered past-due invoice filename ${name} (payment status and amounts not extracted)`,
+      party: 'CLIENT' as const,
+      classification: 'LIKELY' as const,
+      evidence: `CONFIRMED filename ${name}. The words Past Due appear in the filename. Payment status and amounts were not extracted. Do not invent a balance.`,
+      filename: name,
+    }));
+
+    const waitingItems: ActionableWaitingItem[] = [];
     if (checklistFiles.length) {
       waitingItems.push({
         id: `hvs-wait:${clientKey}:client-checklist`,
@@ -307,6 +330,7 @@ export function hvsActionableClientKnowledge(): ActionableClientKnowledge[] {
       provenance: 'CONFIRMED' as const,
       hubMiOperationalized: false as const,
       waitingItems: unique(waitingItems, (row) => row.id).slice(0, 3),
+      overdueItems: unique(overdueItems, (row) => row.id).slice(0, 4),
       missingDocuments: unique(missingDocuments, (row) => row.title).slice(0, 6),
       hvcgResponsibilities: unique(hvcgResponsibilities, (row) => row.title).slice(0, 6),
       clientResponsibilities: unique(clientResponsibilities, (row) => row.title).slice(0, 6),
@@ -317,6 +341,10 @@ export function hvsActionableClientKnowledge(): ActionableClientKnowledge[] {
 
 export function hvsActionableWaitingItems(): ActionableWaitingItem[] {
   return hvsActionableClientKnowledge().flatMap((row) => row.waitingItems);
+}
+
+export function hvsActionableOverdueItems(): ActionableOverdueItem[] {
+  return hvsActionableClientKnowledge().flatMap((row) => row.overdueItems);
 }
 
 export function hvsActionableDecisions(): ActionableDecision[] {
