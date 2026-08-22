@@ -42,6 +42,7 @@ import {
 } from './hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects, type HvsRecoveredProject } from './hvsRecoveredProjects.ts';
 import {
+  hvsActionableAtRiskItems,
   hvsActionableCapitalItems,
   hvsActionableClientKnowledge,
   hvsActionableOverdueItems,
@@ -80,7 +81,8 @@ export type KnowledgeOperatingItem = {
     | 'hvs_recovered_document'
     | 'hvs_actionable_waiting'
     | 'hvs_actionable_overdue'
-    | 'hvs_actionable_capital';
+    | 'hvs_actionable_capital'
+    | 'hvs_actionable_at_risk';
   provenance: KnowledgeProvenance;
   source: string;
   webUrl?: string;
@@ -207,6 +209,21 @@ function hvsRecoveredCapitalItems(status: HvsAccessStatus): KnowledgeOperatingIt
       title: row.title,
       queue: 'Needs Action',
       kind: 'hvs_actionable_capital',
+      provenance: row.classification,
+      source: row.evidence,
+    }),
+  );
+}
+
+function hvsRecoveredAtRiskItems(status: HvsAccessStatus): KnowledgeOperatingItem[] {
+  if (status === 'BLOCKED') return [];
+  return hvsActionableAtRiskItems().map((row) =>
+    item({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      queue: 'At Risk',
+      kind: 'hvs_actionable_at_risk',
       provenance: row.classification,
       source: row.evidence,
     }),
@@ -476,6 +493,7 @@ export async function buildKnowledgeOperatingPicture(
   queues.Waiting.push(...hvsRecoveredWaitingItems(hvsDataAccess));
   queues.Overdue.push(...hvsRecoveredOverdueItems(hvsDataAccess));
   queues['Needs Action'].push(...hvsRecoveredCapitalItems(hvsDataAccess));
+  queues['At Risk'].push(...hvsRecoveredAtRiskItems(hvsDataAccess));
   for (const row of hvsRecoveredActionItems(hvsDataAccess)) {
     queues[row.queue].push(row);
   }

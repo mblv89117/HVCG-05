@@ -249,6 +249,15 @@ describe('knowledge operating picture', () => {
       ),
     );
     assert.ok(
+      picture.queues['At Risk'].some(
+        (row) =>
+          row.kind === 'hvs_actionable_at_risk' &&
+          row.clientCode === 'PDG01' &&
+          /past-due invoice filenames and capital-packet filenames/i.test(row.title),
+      ),
+    );
+    assert.equal(picture.queues['At Risk'].filter((row) => row.kind === 'hvs_actionable_at_risk').length, 1);
+    assert.ok(
       picture.hvsActionableClientKnowledge.some(
         (row) =>
           row.client === 'Colorado Beef' &&
