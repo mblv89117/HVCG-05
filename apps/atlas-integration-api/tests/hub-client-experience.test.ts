@@ -137,8 +137,11 @@ describe('client experience helpers', () => {
     );
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/portal`), true);
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/document-requests`), true);
+    assert.equal(isClientEntitledPmPath('/api/pm/documents'), true);
+    assert.equal(isClientEntitledPmPath('/api/pm/search'), true);
+    assert.equal(isClientEntitledPmPath('/api/pm/my-work'), true);
     assert.equal(isClientEntitledPmPath('/api/pm/clients'), false);
-    assert.equal(isClientEntitledPmPath('/api/pm/my-work'), false);
+    assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/activation`), false);
   });
 
   it('hashes invitation tokens and never treats the raw token as the stored secret', () => {
