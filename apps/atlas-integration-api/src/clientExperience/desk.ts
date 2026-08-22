@@ -97,6 +97,43 @@ export function renderClientDeskHtml(
   const previewBanner = opts?.operatorPreview
     ? `<p class="muted">Operator preview of the isolated client workspace. This is not a signed Client Executive session. <code>/client</code> stays fail-closed for staff.</p>`
     : '';
+  const previewView = opts?.operatorPreview && 'operatingPicture' in view
+    ? (view as ReturnType<typeof buildOperatorClientDeskPreview>)
+    : undefined;
+  const operating = previewView?.operatingPicture;
+  const commercial = previewView?.commercial;
+  const queueLines = operating
+    ? (['Needs Action', 'Waiting', 'Overdue', 'Blocked', 'Decision Required', 'At Risk'] as const)
+        .flatMap((queue) =>
+          (operating.queues[queue] || []).map(
+            (row) => `<li><strong>${esc(queue)}</strong> — ${esc(row.title)} <span class="muted">(${esc(row.provenance)})</span></li>`,
+          ),
+        )
+        .join('')
+    : '';
+  const missing = operating?.missingData.map((row) => `<li>${esc(row)}</li>`).join('') || '';
+  const operatingSection = operating
+    ? `<section>
+    <h2>What we are working on</h2>
+    <p class="muted">${esc(operating.classification)} · HVS ${esc(operating.hvsDataAccess)} · ${operating.realClientOperationalized ? 'operationalized' : 'honest empty'}</p>
+    ${queueLines ? `<ul>${queueLines}</ul>` : '<p class="empty">No entitled operating items. Atlas does not invent work.</p>'}
+  </section>
+  <section>
+    <h2>Missing or blocked data</h2>
+    ${missing ? `<ul>${missing}</ul>` : '<p class="empty">No recorded gaps for this ClientCode.</p>'}
+  </section>`
+    : '';
+  const commercialSection = commercial
+    ? `<section>
+    <h2>Commercial context</h2>
+    <p class="off">liveGtmOutbound=false · paidAds=false · recorded-only</p>
+    <ul>
+      <li>GCC ${commercial.gcc.available ? `${esc(String(commercial.gcc.signalCount))} recorded signal(s)` : esc(commercial.gcc.emptyReason || 'No GCC value signal on record.')}</li>
+      <li>Copilot ${commercial.copilot.available ? `${esc(String(commercial.copilot.recordedCount))} recorded item(s)` : esc(commercial.copilot.emptyReason || 'No Copilot record.')}</li>
+      <li>GTM ${commercial.gtm.available ? `${esc(String(commercial.gtm.recordedCount))} recorded item(s)` : esc(commercial.gtm.emptyReason || 'No GTM record.')}</li>
+    </ul>
+  </section>`
+    : '';
   return `${SHELL}
 <header>
   <h1>${esc(view.workspace.displayName)}</h1>
@@ -109,6 +146,7 @@ export function renderClientDeskHtml(
     <h2>Needs your attention</h2>
     ${attention ? `<ul>${attention}</ul>` : '<p class="empty">No open requests.</p>'}
   </section>
+  ${operatingSection}
   <section>
     <h2>Documents</h2>
     ${documents ? `<ul>${documents}</ul>` : '<p class="empty">No documents exchanged yet.</p>'}
@@ -122,6 +160,7 @@ export function renderClientDeskHtml(
     <h2>Growth Command Center</h2>
     <p>Your isolated GCC workspace is <code>${esc(view.gcc.workspaceKey)}</code>. It cannot see another client.</p>
   </section>
+  ${commercialSection}
 </main>
 </body></html>`;
 }
