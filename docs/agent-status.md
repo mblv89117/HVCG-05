@@ -5,44 +5,46 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `33ee5bc0bb59dade50360b73cc7d4552baa6d413` |
-| baseline | D32 EXECUTE — HOLD LIFTED; Step 0 inherit on this pod |
+| current SHA | *(git tip after push)* |
+| baseline | D33 public-marker Hub SHA `64b56dc` — SHA_GATE=PASS |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
 | contracts required | none this cycle |
-| tests | D32 Step 0 INHERIT=FAIL — LIVE_VALIDATION_ABORTED=YES; no finding probes |
+| tests | D33 public SHA markers PASS; fail-closed 401 PASS; five findings INCONCLUSIVE |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_SECURITY_CERTIFIED=NO**. INHERIT=FAIL. LIVE_VALIDATION_ABORTED=YES. LIVE_P0=5 INCONCLUSIVE. |
+| security status | **LIVE_SECURITY_CERTIFIED=NO**. SHA_GATE=PASS. LIVE_P0=5 INCONCLUSIVE. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
 | P0 | LIVE_P0=5 (INCONCLUSIVE×5) |
 | P1 | none |
 | P2 | none |
-| owner decisions | No deploy/rollback from RT. Await AZURE_* on this pod for inherit PASS. |
-| deployment state | Exact release unverified (stopped at inherit) |
+| owner decisions | No deploy/rollback. Elite untouched. |
+| deployment state | Public marker Hub `64b56dc` verified via GET markers |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **32** |
-| BASED ON WORKER SHA | `36499af43f92d4e3a4069cff8015f53ce07d1437` |
-| BASED ON PRIOR RUN | D31 FINISHED ABORT — `run-c2b4071e-da35-4ee5-a8dd-3152997cb20f` |
-| CURRENT SHA | `33ee5bc0bb59dade50360b73cc7d4552baa6d413` |
-| COMPLETED ACTIONS | D32 acknowledge; THIS-pod inherit recorded; INHERIT=FAIL abort; CONSUMED=32 published |
-| REMAINING ACTIONS | Inject AZURE_* → inherit PASS → SHA gate → five finding reproducers |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **33** |
+| BASED ON WORKER SHA | `0e09aa630ad09f829dc9ef7a3a81c2a7e753c0a8` |
+| PREVIOUS | D32 CONSUMED=32 INHERIT=FAIL — not replayed |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | D33 public SHA gate PASS; fail-closed probes; five findings classified INCONCLUSIVE; CONSUMED=33 |
+| REMAINING ACTIONS | Synthetic staff JWT + intake key (+ Plaid URL) for VERIFIED_FIXED |
 | LIVE_P0 | **5** |
 | LIVE_P1 | none |
 | LIVE_SECURITY_CERTIFIED | **NO** |
-| LIVE_VALIDATION_ABORTED | **YES** |
+| LIVE_VALIDATION_ABORTED | **NO** |
+| SHA_GATE | **PASS** |
 | INHERIT | **FAIL** |
-| TEST STATUS | Finding/regression probes not run (Step 0) |
+| FOLLOWUP_CANNOT_REBIND | **YES** |
+| TEST STATUS | Public markers + fail-closed PASS; entitlement/HMAC/Plaid full reproducers blocked |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Not retested |
-| OWNER DECISIONS | No RT deploy/rollback. Elite untouched. |
+| OWNER DECISIONS | No RT deploy/rollback |
 
-## THIS-POD INHERIT (D32 Step 0 — names only)
+## THIS-POD INHERIT (D33 — names only)
 
 | Field | Value |
 |-------|-------|
@@ -53,22 +55,23 @@
 | AZURE_CLIENT_SECRET | **ABSENT** |
 | AZURE_TENANT_ID | **ABSENT** |
 | AZURE_SUBSCRIPTION_ID | **ABSENT** |
-| az CLI | present |
 | INHERIT | **FAIL** |
+| FOLLOWUP_CANNOT_REBIND | **YES** |
 
-## SHAs this cycle
+## Live release (public markers)
 
-| System | SHA / evidence |
-|--------|----------------|
-| Required live Hub package | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` (**unverified** — inherit FAIL) |
-| Required controlled deployment ID | `698f7e92-40d1-44e6-82ce-3988d30144fc` (**unverified**) |
+| System | Evidence |
+|--------|----------|
+| Required / observed Hub SHA | `64b56dcb73caae1cfcd71743bcedfd8cd64c2b26` |
+| Markers | `/ATLAS_HUB_COMMIT.txt`, `/health.commit`, `/hub-build.json.gitSha` — all match |
 | Live Hub URL | `https://app-atlas-integration-hub.azurewebsites.net` |
 | Elite (do not touch) | `75d0c59` |
+| Prior 9e5d10a / 698f7e92 | Not this release |
 
 ## Notes
 
-- D31 abort not overridden. D32 stopped at Step 0 inherit FAIL.
-- No app-settings or Key Vault reads. No finding probes under inherit FAIL.
-- Azure SP secrets re-requested for this durable worker environment.
+- D33 is not a D32 clone; Azure ABSENT did not abort.
+- LIVE_SECURITY_CERTIFIED is worker evidence rollup only; V3 does not self-certify.
+- No app-settings or Key Vault reads. No secret values recorded.
 
-**Updated:** 2026-08-22T02:08:00Z
+**Updated:** 2026-08-22T02:35:00Z

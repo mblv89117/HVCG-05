@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** D32 Step 0 **INHERIT=FAIL** (AZURE_* ABSENT on this pod) — **LIVE_VALIDATION_ABORTED=YES**; exact Hub SHA unverified
+**CURRENT RELEASE STATE:** D33 public-marker Hub SHA `64b56dc` — **SHA_GATE=PASS**; LIVE_SECURITY_CERTIFIED=**NO**; LIVE_P0=5 INCONCLUSIVE
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D32): ATLAS-01/02/03 + XSYS-01/02 all **INCONCLUSIVE** (inherit FAIL; no probes). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=5**.
-- D31 abort not overridden. Candidate `9e5d10a` FIXED_REVALIDATED remains candidate-only.
+- LIVE Hub (D33 @ `64b56dc`): ATLAS-01/02/03 + XSYS-01/02 all **INCONCLUSIVE** (fail-closed PASS; full entitlement/HMAC/Plaid reproducers blocked). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=5**.
+- D32 inherit FAIL not replayed. Candidate lineage FIXED_REVALIDATED remains candidate-only.
 
 ---
 
@@ -20,36 +20,36 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** LIVE Hub post-OD-005 (claimed `9e5d10a`); CANDIDATE `9e5d10a`/`0bbfd87` lineage FIXED_REVALIDATED
+- **branch/SHA:** LIVE Hub public marker `64b56dc` (D33 SHA_GATE=PASS); prior claimed `9e5d10a` lineage
 - **severity:** P0
-- **evidence:** `apps/atlas-integration-api/src/pm/sharepoint/repository.ts` `canSeeOpportunity` returns true for all `isInternalStaff` principals, ignoring Entra client entitlements. Projects/Capital/search enforce entitlements; opportunity list/get do not. D30 live: unauth/forged JWT → 401; staff short-circuit absent in `9e5d10a` source; entitlement isolation not live-executed (no staff JWT).
+- **evidence:** `canSeeOpportunity` uses entitlement intersection only (staff short-circuit absent @ `64b56dc`). D33 live: unauth/forged JWT → 401; staff entitlement isolation not live-executed (no RT staff JWT).
 - **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 PARTIAL; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
-- **branch/SHA:** claimed live `9e5d10a`
+- **branch/SHA:** live `64b56dc`
 - **severity:** P0
-- **evidence:** `patchOpportunity` uses `authorizeOpportunity` (staff sees all) then only checks `isInternalStaff`, not ClientCode ownership. Won/Lost mutations allowed on foreign opps. D30: unauth PATCH → 401; foreign Won not live-proven.
+- **evidence:** D33: unauth/forged PATCH → 401; authorizeOpportunity → canSeeOpportunity (no staff all-see). Foreign Won not live-proven.
 - **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + `If-Match` + `{ "stage": "Won" }` succeeds.
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 PARTIAL; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
-- **branch/SHA:** `2a5a605` / claimed Hub `9e5d10a`
+- **branch/SHA:** live Hub `64b56dc` / plaid app source
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** `apps/atlas-plaid-api/src/index.ts` `requirePrincipal` parses `x-atlas-*` headers only; comments claim Entra JWT in production but no `jwtVerify`. D30: Plaid not reachable on Hub host.
+- **evidence:** D33: Hub `/api/plaid/*` → 405; plaid source still header-oriented without jwtVerify in inspect. No separate Plaid URL in RT env.
 - **reproduction:** With `PLAID_REQUIRE_AUTH=true`, forge headers without Bearer → today accepted.
 - **impact:** Bank connection/balance/identity isolation collapse.
 - **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
 - **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 NEEDS_RETEST; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -690,3 +690,20 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_P0 | **5** |
 | LIVE_SECURITY_CERTIFIED | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_32_2026-08-22.md` |
+
+## Directive 33 status appendix (public-marker SHA gate)
+
+| Gate / ID | Status @ Directive 33 |
+|-----------|------------------------|
+| Required / observed live SHA | `64b56dcb73caae1cfcd71743bcedfd8cd64c2b26` |
+| Public markers | `/ATLAS_HUB_COMMIT.txt` + `/health.commit` + `/hub-build.json.gitSha` — **PASS** |
+| SHA_GATE | **PASS** |
+| INHERIT | **FAIL** (Azure ABSENT; continued) |
+| FOLLOWUP_CANNOT_REBIND | **YES** |
+| Fail-closed PM GET opportunities/search/leads | **401** |
+| Staff-bypass harness | exit 0; pattern ABSENT |
+| ATLAS-01/02/03 · XSYS-01/02 | **INCONCLUSIVE** |
+| LIVE_P0 | **5** |
+| LIVE_SECURITY_CERTIFIED | **NO** |
+| LIVE_VALIDATION_ABORTED | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_33_2026-08-22.md` |

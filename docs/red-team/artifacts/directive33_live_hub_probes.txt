@@ -1,0 +1,84 @@
+DIRECTIVE=33
+UTC=2026-08-22T02:33:26Z
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+REQUIRED_LIVE_SHA=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+SHA_GATE=PASS
+==== public markers ====
+ATLAS_HUB_COMMIT.txt=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+health.commit=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+authRequired=True
+insecureDevAuth=False
+ok=True
+hub-build.gitSha=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+hub-build.branch=cursor/hub-public-sha-marker-7a6b
+==== staff-bypass source @ 64b56dcb73caae1cfcd71743bcedfd8cd64c2b26 ====
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-d33/hub/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "fileExists": true,
+  "staffShortCircuitPresent": false,
+  "canSeeOpportunitySnippetPresent": false,
+  "status": "PATTERN_ABSENT"
+}
+==== plaid source inspect ====
+{
+  "finding": "ATLAS-RT-20260820-03",
+  "files": [
+    "/tmp/rt-d33/hub/apps/atlas-plaid-api/src/index.ts"
+  ],
+  "hasJwtVerify": false,
+  "headerOnlyAuth": true,
+  "requirePrincipalPresent": true
+}
+==== GET /api/pm/opportunities (no auth) ====
+HTTP:401
+{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}
+==== GET /api/pm/search (no auth) ====
+HTTP:401
+{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}
+==== GET /api/pm/leads (no auth) ====
+HTTP:401
+{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}
+==== GET /api/pm/opportunities (forged JWT + x-atlas) ====
+HTTP:401
+{"error":"unauthorized","message":"Invalid or expired Microsoft token"}
+==== PATCH /api/pm/opportunities/1 (no auth) ====
+HTTP:401
+{"error":"unauthorized","message":"Microsoft sign-in required (Bearer token missing)"}
+==== PATCH /api/pm/opportunities/1 (forged JWT) ====
+HTTP:401
+{"error":"unauthorized","message":"Invalid or expired Microsoft token"}
+==== GET /api/plaid/link/token (no auth) ====
+HTTP:405
+{"error":"method_not_allowed"}
+==== GET /api/plaid/accounts (no auth) ====
+HTTP:405
+{"error":"method_not_allowed"}
+==== GET /api/plaid/health (no auth) ====
+HTTP:405
+{"error":"method_not_allowed"}
+==== GET /plaid/health (no auth) ====
+HTTP:405
+{"error":"method_not_allowed"}
+==== POST /api/website/leads (no key) ====
+HTTP:401
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+==== POST /api/website/leads (Bearer only) ====
+HTTP:401
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+==== POST /api/website/leads (forged key+HMAC headers) ====
+HTTP:401
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+==== LIMITATIONS ====
+No Entra staff JWT in RT env — ACCG01 entitlement isolation not live-executed.
+No WEBSITE_INTAKE_KEY in RT env — HMAC signature-invalid and idempotency 409 not live-executed.
+No HVCG_RT_PLAID_BASE_URL — Plaid host not probed beyond Hub origin.
+Azure SP ABSENT — Azure/Kudu corroboration skipped (optional).
+==== check-opportunity-staff-bypass.mjs @ 64b56dc ====
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": false,
+  "status": "PATTERN_ABSENT_RETEST_REQUIRED"
+}
+EXIT=0
