@@ -40,6 +40,7 @@ export const ASK_ATLAS_CLIENTCTX_MISSION_KEY = 'ATLAS-AGENTIC-OPS-CLIENTCTX-001'
 export const ASK_ATLAS_RECOVERED_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RECOVERED-001' as const;
 export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as const;
 export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' as const;
+export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-NL-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -87,7 +88,29 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
   | typeof ASK_ATLAS_RECOVERED_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_MISSION_KEY
-  | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY;
+  | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY
+  | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
+
+/**
+ * Operating-state words. These are Ask Atlas attention filters, not client
+ * names. extractClientContextQuery / resolveAuthorizedClient must not bind
+ * them to recovered folders (e.g. SYN01 "Atlas Capital Operations").
+ */
+export const RESERVED_OPERATING_STATE_TOKENS = [
+  'CAPITAL',
+  'OVERDUE',
+  'WAITING',
+  'BLOCKED',
+  'AT RISK',
+  'DECISION',
+  'DECISIONS',
+  'ATTENTION',
+] as const;
+
+export function isReservedOperatingStateToken(token: string): boolean {
+  const normalized = token.trim().replace(/\s+/g, ' ').replace(/[?!.]+$/g, '').toUpperCase();
+  return (RESERVED_OPERATING_STATE_TOKENS as readonly string[]).includes(normalized);
+}
 export type AskAtlasTrigger =
   | 'operator_operating_picture'
   | 'signed_operator_question'

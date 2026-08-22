@@ -5,8 +5,12 @@
  * READ_AUTO get_attention_items gateway, client-specific questions onto
  * get_client_context, and search questions onto search_authorized_knowledge
  * (SEARCH-001 PM reuse plus SEARCH-002 entitled picture composition).
- * Unknown / owner-gated questions stay honest-empty / fail-closed and do
- * not invent an answer or invoke a READ_AUTO tool.
+ * Owner-facing operating-state questions (overdue / waiting / blocked /
+ * decisions / Capital / at risk / next / changed today) alias the same
+ * get_attention_items engine (ATTENTION-NL-001). Reserved operating-state
+ * tokens are never treated as client names. Unknown / owner-gated
+ * questions stay honest-empty / fail-closed and do not invent an answer
+ * or invoke a READ_AUTO tool.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
@@ -19,6 +23,7 @@ import {
   type ToolGatewayContext,
 } from './toolGateway.ts';
 import {
+  ASK_ATLAS_ATTENTION_NL_MISSION_KEY,
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RANKING,
@@ -31,7 +36,10 @@ import {
   GET_CLIENT_CONTEXT_TOOL,
   GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL,
   clientContextMissionKey,
+  isReservedOperatingStateToken,
   type AskAtlasAnswer,
+  type AskAtlasAttentionState,
+  type AskAtlasClassification,
   type AskAtlasMissionKey,
   type AtlasAuthorizedSearch,
   type AtlasClientContext,
@@ -45,6 +53,7 @@ export const ATLAS_HUB_CLIENTCTX_MISSION_KEY = ASK_ATLAS_CLIENTCTX_MISSION_KEY;
 export const ATLAS_HUB_RECOVERED_MISSION_KEY = ASK_ATLAS_RECOVERED_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_MISSION_KEY = ASK_ATLAS_SEARCH_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_002_MISSION_KEY = ASK_ATLAS_SEARCH_002_MISSION_KEY;
+export const ATLAS_HUB_ATTENTION_NL_MISSION_KEY = ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
 export const ATLAS_HUB_RUNTIME_POLICY_CLASS = 'READ_AUTO' as const;
 
 export interface AtlasHubRuntime {
@@ -56,7 +65,8 @@ export interface AtlasHubRuntime {
     | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY
     | typeof ASK_ATLAS_RECOVERED_MISSION_KEY
     | typeof ASK_ATLAS_SEARCH_MISSION_KEY
-    | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY;
+    | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY
+    | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
 }
 
 export interface AtlasHubRuntimeResult {
@@ -81,6 +91,117 @@ const ATTENTION_QUESTIONS = new Set(
   ].map(normalizeQuestion),
 );
 
+export interface AttentionQuestionIntent {
+  filterState?: AskAtlasAttentionState;
+  missionKey: typeof ASK_ATLAS_RUNTIME_MISSION_KEY | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
+}
+
+function reservedTokenToAttentionState(
+  token: string,
+): AskAtlasAttentionState | 'ALL' | undefined {
+  const normalized = normalizeQuestion(token);
+  if (normalized === 'CAPITAL') return 'Capital';
+  if (normalized === 'OVERDUE') return 'Overdue';
+  if (normalized === 'WAITING') return 'Waiting';
+  if (normalized === 'BLOCKED') return 'Blocked';
+  if (normalized === 'AT RISK') return 'At Risk';
+  if (normalized === 'DECISION' || normalized === 'DECISIONS') return 'Decision Required';
+  if (normalized === 'ATTENTION') return 'ALL';
+  return undefined;
+}
+
+/**
+ * State-intent matcher for owner-facing operating-state questions.
+ * Used BEFORE extractClientContextQuery so "Summarize Capital" is attention,
+ * not a recovered-folder client bind.
+ */
+function matchAttentionState(
+  normalized: string,
+  raw: string,
+): AskAtlasAttentionState | 'ALL' | undefined {
+  if (
+    normalized === 'WHAT SHOULD I WORK ON NEXT' ||
+    normalized === 'WHAT SHOULD I DO NEXT' ||
+    normalized === 'WHAT CHANGED TODAY' ||
+    normalized === 'WHAT CHANGED'
+  ) {
+    return 'ALL';
+  }
+  if (
+    normalized === 'WHAT IS OVERDUE' ||
+    normalized === 'WHAT ARE OVERDUE' ||
+    normalized === "WHAT'S OVERDUE" ||
+    normalized === 'WHICH ITEMS ARE OVERDUE' ||
+    normalized === 'OVERDUE'
+  ) {
+    return 'Overdue';
+  }
+  if (
+    normalized === 'WHAT IS WAITING' ||
+    normalized === 'WHAT ARE WE WAITING ON' ||
+    normalized === 'WHAT ARE WE WAITING FOR' ||
+    normalized === 'WAITING'
+  ) {
+    return 'Waiting';
+  }
+  if (
+    normalized === 'WHAT IS BLOCKED' ||
+    normalized === 'WHAT IS BLOCKED RIGHT NOW' ||
+    normalized === 'BLOCKED'
+  ) {
+    return 'Blocked';
+  }
+  const whyBlocked = raw.trim().replace(/[?!.]+$/g, '').trim().match(/^why is\s+(.+?)\s+blocked$/i);
+  if (whyBlocked && isReservedOperatingStateToken(whyBlocked[1] || '')) {
+    return 'Blocked';
+  }
+  if (
+    normalized === 'WHAT DECISIONS DO I NEED TO MAKE' ||
+    normalized === 'WHAT DECISIONS NEED TO BE MADE' ||
+    normalized === 'WHAT DECISION IS REQUIRED' ||
+    normalized === 'WHAT DECISIONS ARE REQUIRED' ||
+    normalized === 'DECISION REQUIRED' ||
+    normalized === 'WHAT DECISIONS'
+  ) {
+    return 'Decision Required';
+  }
+  if (
+    normalized === 'SUMMARIZE CAPITAL' ||
+    normalized === 'WHAT CAPITAL MATTERS NEED ATTENTION' ||
+    normalized === 'WHAT CAPITAL NEEDS ATTENTION' ||
+    normalized === 'WHAT CAPITAL' ||
+    normalized === 'CAPITAL'
+  ) {
+    return 'Capital';
+  }
+  if (
+    normalized === 'WHICH CLIENTS ARE AT RISK' ||
+    normalized === 'WHAT IS AT RISK' ||
+    normalized === 'WHO IS AT RISK' ||
+    normalized === 'AT RISK'
+  ) {
+    return 'At Risk';
+  }
+  const summarize = raw.trim().replace(/[?!.]+$/g, '').trim().match(/^summarize\s+(.+)$/i);
+  if (summarize && isReservedOperatingStateToken(summarize[1] || '')) {
+    return reservedTokenToAttentionState(summarize[1] || '');
+  }
+  return undefined;
+}
+
+export function extractAttentionIntent(question: string): AttentionQuestionIntent | null {
+  const normalized = normalizeQuestion(question);
+  if (ATTENTION_QUESTIONS.has(normalized)) {
+    return { missionKey: ASK_ATLAS_RUNTIME_MISSION_KEY };
+  }
+  const state = matchAttentionState(normalized, question);
+  if (state === undefined) return null;
+  return {
+    ...(state !== 'ALL' ? { filterState: state } : {}),
+    missionKey: ASK_ATLAS_ATTENTION_NL_MISSION_KEY,
+  };
+}
+
 const OWNER_GATED_QUESTION_MARKERS = [
   'LTV',
   'HUB-MI',
@@ -104,7 +225,7 @@ const OWNER_GATED_QUESTION_MARKERS = [
 ];
 
 export function mapsToGetAttentionItems(question: string): boolean {
-  return ATTENTION_QUESTIONS.has(normalizeQuestion(question));
+  return extractAttentionIntent(question) !== null;
 }
 
 export function isOwnerGatedQuestion(question: string): boolean {
@@ -123,7 +244,7 @@ export function extractClientContextQuery(question: string): string | null {
   for (const pattern of patterns) {
     const match = raw.match(pattern);
     const token = match?.[1]?.trim();
-    if (token) return token;
+    if (token && !isReservedOperatingStateToken(token)) return token;
   }
   return null;
 }
@@ -155,6 +276,50 @@ export function mapsToSearchAuthorizedKnowledge(question: string): boolean {
   if (mapsToGetAttentionItems(question)) return false;
   if (mapsToGetClientContext(question)) return false;
   return extractSearchAuthorizedQuery(question) !== null;
+}
+
+function neverPromoteClassification(
+  value: AskAtlasClassification | 'HONEST_EMPTY' | string | undefined,
+): AskAtlasClassification | 'HONEST_EMPTY' {
+  if (value === 'CONFIRMED' || value === 'LIKELY' || value === 'PROPOSED' || value === 'HONEST_EMPTY') {
+    return value;
+  }
+  return 'HONEST_EMPTY';
+}
+
+/**
+ * Local composition of already-built entitled attention items. Not a second
+ * exception engine: get_attention_items still builds the set; this only
+ * filters by the asked operating state. Empty filter → honest-empty.
+ */
+function composeAttentionAnswer(
+  answer: AskAtlasAnswer,
+  filterState: AskAtlasAttentionState | undefined,
+  toolsInvoked: string[],
+  missionKey: AskAtlasMissionKey,
+): AskAtlasAnswer {
+  const items = filterState ? answer.items.filter((item) => item.state === filterState) : answer.items;
+  const honestEmpty = items.length === 0;
+  const blocked = answer.activity.result === 'hvs_blocked';
+  const result = blocked && honestEmpty ? 'hvs_blocked' : honestEmpty ? 'honest_empty' : 'answered';
+  return stampRuntimeAnswer(
+    {
+      ...answer,
+      invented: false,
+      honestEmpty,
+      items,
+      activity: {
+        ...answer.activity,
+        classification: honestEmpty
+          ? 'HONEST_EMPTY'
+          : neverPromoteClassification(items[0]?.classification),
+        result,
+        policyDecision: result,
+      },
+    },
+    toolsInvoked,
+    missionKey,
+  );
 }
 
 function stampRuntimeAnswer(
@@ -310,6 +475,9 @@ export function runAtlasHubRuntime(opts: {
     };
   }
 
+  const intent = extractAttentionIntent(question) || {
+    missionKey: ASK_ATLAS_RUNTIME_MISSION_KEY,
+  };
   const answer = invokeReadAutoTool(GET_ATTENTION_ITEMS_TOOL, {
     principal: opts.principal,
     picture: opts.picture,
@@ -318,9 +486,10 @@ export function runAtlasHubRuntime(opts: {
   const toolsInvoked = answer.activity.tools.includes(GET_ATTENTION_ITEMS_TOOL)
     ? [...answer.activity.tools]
     : [...answer.activity.tools, GET_ATTENTION_ITEMS_TOOL];
+  const missionKey = intent.missionKey;
   return {
-    askAtlas: stampRuntimeAnswer(answer, toolsInvoked, ASK_ATLAS_RUNTIME_MISSION_KEY),
-    runtime: runtimeEnvelope([GET_ATTENTION_ITEMS_TOOL]),
+    askAtlas: composeAttentionAnswer(answer, intent.filterState, toolsInvoked, missionKey),
+    runtime: runtimeEnvelope([GET_ATTENTION_ITEMS_TOOL], missionKey),
   };
 }
 

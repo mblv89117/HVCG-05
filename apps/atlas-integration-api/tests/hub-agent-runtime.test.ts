@@ -15,10 +15,18 @@ import {
   appendAskAtlasActivity,
   readAgentActivityOverlay,
 } from '../src/pm/operatorDesk/activityLedger.ts';
-import { runAtlasHubRuntime } from '../src/pm/operatorDesk/agentRuntime.ts';
-import { getAttentionItems, invokeReadAutoTool } from '../src/pm/operatorDesk/toolGateway.ts';
+import {
+  extractAttentionIntent,
+  extractClientContextQuery,
+  isOwnerGatedQuestion,
+  mapsToGetAttentionItems,
+  mapsToGetClientContext,
+  runAtlasHubRuntime,
+} from '../src/pm/operatorDesk/agentRuntime.ts';
+import { getAttentionItems, getClientContext, invokeReadAutoTool } from '../src/pm/operatorDesk/toolGateway.ts';
 import { buildOperatorDeskModel, emptyHonestDesk, emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
+  ASK_ATLAS_ATTENTION_NL_MISSION_KEY,
   ASK_ATLAS_MISSION_KEY,
   ASK_ATLAS_OPERATOR_AGENT,
   ASK_ATLAS_QUESTION,
@@ -26,8 +34,10 @@ import {
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
+  GET_CLIENT_CONTEXT_TOOL,
   isOperatorRuntimePath,
   type AskAtlasAnswer,
+  type AskAtlasAttentionState,
   type OperatorOperatingPicture,
 } from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
@@ -257,6 +267,162 @@ describe('Ask Atlas READ_AUTO runtime', () => {
     assert.deepEqual(unknownTool.activity.tools, []);
   });
 
+  it('maps owner-facing operating-state questions onto get_attention_items without inventing items', () => {
+    const picture = emptyHonestOperatingPicture();
+    const stateQuestions: Array<{ question: string; state?: AskAtlasAttentionState }> = [
+      { question: 'What is overdue?', state: 'Overdue' },
+      { question: 'What is waiting?', state: 'Waiting' },
+      { question: 'What are we waiting on?', state: 'Waiting' },
+      { question: 'What is blocked?', state: 'Blocked' },
+      { question: 'What decisions do I need to make?', state: 'Decision Required' },
+      { question: 'What Capital matters need attention?', state: 'Capital' },
+      { question: 'Which clients are at risk?', state: 'At Risk' },
+      { question: 'What should I work on next?' },
+      { question: 'What changed today?' },
+    ];
+
+    for (const row of stateQuestions) {
+      assert.equal(mapsToGetAttentionItems(row.question), true, row.question);
+      assert.equal(mapsToGetClientContext(row.question), false, row.question);
+      assert.equal(extractClientContextQuery(row.question), null, row.question);
+      const intent = extractAttentionIntent(row.question);
+      assert.equal(intent?.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY, row.question);
+      assert.equal(intent?.filterState, row.state, row.question);
+
+      const result = runAtlasHubRuntime({
+        principal: staffPrincipal(),
+        picture,
+        question: row.question,
+        now: '2026-08-22T23:05:00.000Z',
+      });
+      assert.deepEqual(result.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL], row.question);
+      assert.equal(result.runtime.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY, row.question);
+      assert.equal(result.askAtlas.invented, false, row.question);
+      assert.equal(result.askAtlas.activity.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY, row.question);
+      assert.ok(result.askAtlas.activity.tools.includes(GET_ATTENTION_ITEMS_TOOL), row.question);
+      assert.equal(result.clientContext, undefined, row.question);
+      if (row.state) {
+        assert.ok(result.askAtlas.items.every((item) => item.state === row.state), row.question);
+      }
+      if (result.askAtlas.items.length === 0) {
+        assert.equal(result.askAtlas.honestEmpty, true, row.question);
+        assert.equal(result.askAtlas.activity.result, 'honest_empty', row.question);
+      } else {
+        assert.equal(result.askAtlas.honestEmpty, false, row.question);
+        assert.equal(result.askAtlas.activity.result, 'answered', row.question);
+      }
+      noInventedFacts(result);
+    }
+
+    const overdue = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'What is overdue?',
+    });
+    assert.ok(overdue.askAtlas.items.length > 0);
+    assert.ok(overdue.askAtlas.items.every((item) => item.state === 'Overdue'));
+
+    const waiting = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'What are we waiting on?',
+    });
+    assert.ok(waiting.askAtlas.items.length > 0);
+    assert.ok(waiting.askAtlas.items.every((item) => item.state === 'Waiting'));
+
+    const blocked = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'What is blocked?',
+    });
+    assert.equal(blocked.askAtlas.honestEmpty, true);
+    assert.equal(blocked.askAtlas.items.length, 0);
+    assert.deepEqual(blocked.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL]);
+
+    const unknownStillEmpty = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'what is the weather in Denver',
+    });
+    assert.equal(unknownStillEmpty.askAtlas.honestEmpty, true);
+    assert.deepEqual(unknownStillEmpty.runtime.toolsInvoked, []);
+    assert.equal(unknownStillEmpty.askAtlas.items.length, 0);
+  });
+
+  it('does not treat Summarize Capital as a client bind and keeps owner-gated fail-closed', () => {
+    const base = emptyHonestOperatingPicture();
+    const picture: OperatorOperatingPicture = {
+      ...base,
+      hvsRecoveredClients: [
+        ...base.hvsRecoveredClients,
+        {
+          client: 'SYNTHETIC QA — Atlas Capital Operations',
+          clientCode: 'SYN01',
+          provenance: 'CONFIRMED',
+          operationalized: false,
+          hubMiAccessible: false,
+          knowledgeIndexed: true,
+          documentCount: 0,
+          documentClasses: [],
+          nextAction: 'Do not treat this synthetic recovered folder as Capital attention.',
+        },
+      ],
+    };
+    assert.equal(extractClientContextQuery('Summarize Capital'), null);
+    assert.equal(mapsToGetClientContext('Summarize Capital'), false);
+    assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
+    assert.equal(extractAttentionIntent('Summarize Capital')?.filterState, 'Capital');
+
+    const viaRuntime = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Capital',
+    });
+    assert.deepEqual(viaRuntime.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL]);
+    assert.equal(viaRuntime.runtime.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY);
+    assert.equal(viaRuntime.clientContext, undefined);
+    assert.equal(viaRuntime.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL), false);
+    assert.ok(viaRuntime.askAtlas.items.every((item) => item.state === 'Capital'));
+    assert.equal(
+      viaRuntime.askAtlas.items.some((item) => item.clientCode === 'SYN01' && item.state !== 'Capital'),
+      false,
+    );
+    const serialized = JSON.stringify(viaRuntime);
+    assert.equal(serialized.includes('"clientCode":"SYN01"') && viaRuntime.runtime.toolsInvoked.includes(GET_CLIENT_CONTEXT_TOOL), false);
+    noInventedFacts(viaRuntime);
+
+    const viaTool = getClientContext({
+      principal: staffPrincipal(),
+      picture,
+      clientQuery: 'Capital',
+    });
+    assert.equal(viaTool.clientContext.honestEmpty, true);
+    assert.equal(viaTool.clientContext.client.clientCode, undefined);
+    assert.equal(JSON.stringify(viaTool.clientContext).includes('SYN01'), false);
+
+    assert.equal(isOwnerGatedQuestion('Submit this to the lender'), true);
+    assert.equal(isOwnerGatedQuestion('Move money to the client'), true);
+    for (const question of ['Submit this to the lender', 'Move money to the client']) {
+      const gated = runAtlasHubRuntime({
+        principal: staffPrincipal(),
+        picture,
+        question,
+      });
+      assert.deepEqual(gated.runtime.toolsInvoked, []);
+      assert.equal(gated.askAtlas.honestEmpty, true);
+      assert.equal(gated.askAtlas.items.length, 0);
+      assert.equal(gated.clientContext, undefined);
+    }
+
+    const prodigy = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Prodigy',
+    });
+    assert.deepEqual(prodigy.runtime.toolsInvoked, [GET_CLIENT_CONTEXT_TOOL]);
+    assert.equal(prodigy.clientContext?.client.clientCode, 'PDG01');
+  });
+
   it('does not persist recovered-client leakage on the HVS-blocked runtime path', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'atlas-runtime-hvs-blocked-'));
     try {
@@ -463,6 +629,39 @@ describe('Ask Atlas runtime HTTP', () => {
       assert.equal(unknownBody.operatorDesk.askAtlas.items.length, 0);
       assert.deepEqual(unknownBody.runtime.toolsInvoked, []);
       noInventedFacts(unknownBody);
+
+      const overdue = await fetch(
+        `${base}/operator/runtime.json?question=${encodeURIComponent('What is overdue?')}`,
+        { headers: { authorization: 'Bearer valid-member' } },
+      );
+      assert.equal(overdue.status, 200);
+      const overdueBody = (await overdue.json()) as {
+        operatorDesk: { askAtlas: AskAtlasAnswer };
+        runtime: { toolsInvoked: string[]; missionKey: string };
+        clientContext?: unknown;
+      };
+      assert.deepEqual(overdueBody.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL]);
+      assert.equal(overdueBody.runtime.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY);
+      assert.equal(overdueBody.operatorDesk.askAtlas.invented, false);
+      assert.ok(overdueBody.operatorDesk.askAtlas.items.every((row) => row.state === 'Overdue'));
+      assert.equal(overdueBody.clientContext, undefined);
+      noInventedFacts(overdueBody);
+
+      const capital = await fetch(
+        `${base}/operator/runtime.json?question=${encodeURIComponent('Summarize Capital')}`,
+        { headers: { authorization: 'Bearer valid-member' } },
+      );
+      assert.equal(capital.status, 200);
+      const capitalBody = (await capital.json()) as {
+        operatorDesk: { askAtlas: AskAtlasAnswer };
+        runtime: { toolsInvoked: string[]; missionKey: string };
+        clientContext?: { client?: { clientCode?: string } };
+      };
+      assert.deepEqual(capitalBody.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL]);
+      assert.equal(capitalBody.runtime.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY);
+      assert.equal(capitalBody.clientContext, undefined);
+      assert.ok(capitalBody.operatorDesk.askAtlas.items.every((row) => row.state === 'Capital'));
+      noInventedFacts(capitalBody);
     });
   });
 });
