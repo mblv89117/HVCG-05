@@ -5,7 +5,7 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | *(set on tip pin commit)* |
+| current SHA | `4ece6aa71b0c1a0b11f85b0f1a89ce32cf2f5ea9` |
 | baseline | Hub `940a484` + Elite `75d0c59` via freeze tip `2a5a605` |
 | owned domains | Search performance; operator honesty (D11–D13 consumed); D14 auth search P50 |
 | files/domains touched | D14 report + status only this checkpoint (no D11–D13 redo) |
