@@ -407,6 +407,21 @@ describe('Agent Activity Ledger HTTP', () => {
         assert.equal(unsignedLedgerBody.agentActivity, undefined);
         assert.equal(unsignedLedgerBody.entries, undefined);
 
+        const unsignedRuntime = await fetch(`${base}/operator/runtime.json`);
+        assert.equal(unsignedRuntime.status, 401);
+        const unsignedRuntimeText = await unsignedRuntime.text();
+        leakFree(unsignedRuntimeText);
+        const unsignedRuntimeBody = JSON.parse(unsignedRuntimeText) as {
+          error: string;
+          askAtlas?: unknown;
+          runtime?: unknown;
+          operatorDesk?: unknown;
+        };
+        assert.equal(unsignedRuntimeBody.error, 'unauthorized');
+        assert.equal(unsignedRuntimeBody.askAtlas, undefined);
+        assert.equal(unsignedRuntimeBody.runtime, undefined);
+        assert.equal(unsignedRuntimeBody.operatorDesk, undefined);
+
         const clientLedger = await fetch(`${base}/operator/activity.json`, {
           headers: { authorization: 'Bearer valid-client' },
         });
