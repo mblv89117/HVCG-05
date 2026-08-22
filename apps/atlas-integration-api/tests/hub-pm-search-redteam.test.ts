@@ -508,6 +508,67 @@ describe('PM search / Elite Hub routes — SYN isolation', () => {
     assert.ok(hung.results.some((r) => r.kind === 'client' && r.clientCode === 'SYN01'));
   });
 
+  it('empty entitlement non-staff does not query SharePoint catalogs', async () => {
+    let calls = 0;
+    const bump = async <T>(value: T): Promise<T> => {
+      calls += 1;
+      return value;
+    };
+    const service = operatingIndexService({
+      async listAuthorizedClients() {
+        return bump([]);
+      },
+      async listAuthorizedProjects() {
+        return bump([]);
+      },
+      async listAuthorizedTasks() {
+        return bump([]);
+      },
+      async listOpportunities() {
+        return bump([{ id: 'leak', title: 'hvcg secret book', clientCode: 'SYN02' }]);
+      },
+      async listLeads() {
+        return bump([{ id: 'l1', title: 'hvcg inbound lead' }]);
+      },
+      async listCapitalOpportunities() {
+        return bump([{ id: 'c1', title: 'hvcg capital', clientCode: 'SYN02' }]);
+      },
+    });
+    const empty: AtlasPrincipal = {
+      userId: SYN_A,
+      organizationId: 'org-hvcg',
+      allowedClientIds: [],
+      roles: [],
+    };
+    const found = await searchSharePointPm(service, empty, 'hvcg');
+    assert.equal(found.scope, 'entitled');
+    assert.equal(found.results.length, 0);
+    assert.equal(calls, 0, 'empty non-staff must not fan out to SharePoint lists');
+  });
+
+  it('staff with empty entitlement still searches unclassified leads', async () => {
+    let leadsCalled = 0;
+    const service = operatingIndexService({
+      async listAuthorizedClients() {
+        return [];
+      },
+      async listLeads() {
+        leadsCalled += 1;
+        return [{ id: 'l1', title: 'hvcg inbound lead', notes: 'unconverted' }];
+      },
+    });
+    const staff: AtlasPrincipal = {
+      userId: SYN_A,
+      organizationId: 'org-hvcg',
+      allowedClientIds: [],
+      roles: ['HVCG Team Member'],
+    };
+    const found = await searchSharePointPm(service, staff, 'hvcg');
+    assert.equal(leadsCalled, 1);
+    assert.ok(found.results.some((r) => r.kind === 'lead' && r.id === 'l1'));
+    assert.equal(found.results.some((r) => r.clientCode === 'SYN02'), false);
+  });
+
   it('capital opportunity search stays client-scoped and uses the file route', async () => {
     const service = operatingIndexService({
       async listCapitalOpportunities() {

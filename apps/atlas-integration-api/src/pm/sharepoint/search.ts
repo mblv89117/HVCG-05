@@ -7,7 +7,7 @@
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isMannyPrincipal } from './manny.ts';
-import { isInternalStaff } from './authz.ts';
+import { entitledClientCodes, isInternalStaff } from './authz.ts';
 import type { SharePointPmService } from './repository.ts';
 
 import { isFileIndexRow } from './fabric/fileIndex.ts';
@@ -164,6 +164,12 @@ export async function searchSharePointPm(
   const q = query.toLowerCase();
   const results: PmSearchHit[] = [];
   const manny = isMannyPrincipal(principal);
+  const staff = isInternalStaff(principal);
+  // Fail-closed empty-scope: non-Manny non-staff with no entitled ClientCodes
+  // cannot see client-bound or unclassified records. Do not call SharePoint.
+  if (!manny && !staff && entitledClientCodes(principal).length === 0) {
+    return { query, results: [], scope: 'entitled' };
+  }
   const extrasBudgetMs = opts?.extrasBudgetMs ?? EXTRAS_BUDGET_MS;
   const coreBudgetMs = opts?.coreBudgetMs ?? CORE_BUDGET_MS;
   const clients = await service.listAuthorizedClients(principal);
