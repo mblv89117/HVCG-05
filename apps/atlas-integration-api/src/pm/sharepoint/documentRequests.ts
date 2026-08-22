@@ -10,16 +10,25 @@ import { assertWritableClientCode } from './knowledgeClassification.ts';
 
 export const DOCUMENT_REQUESTS_FILENAME = 'client-document-requests.json';
 
+export const DOCUMENT_REQUEST_STATUSES = ['requested', 'received', 'cancelled'] as const;
+export type DocumentRequestStatus = (typeof DOCUMENT_REQUEST_STATUSES)[number];
+
 export type DocumentRequestRecord = {
   id: string;
   clientCode: string;
   title: string;
-  status: 'requested' | 'received' | 'cancelled';
+  status: DocumentRequestStatus;
   createdAt: string;
   createdBy: string;
+  updatedAt?: string;
+  updatedBy?: string;
   provenance: 'hub_governed_overlay';
   binariesInAtlas: false;
 };
+
+export function isDocumentRequestStatus(value: unknown): value is DocumentRequestStatus {
+  return typeof value === 'string' && (DOCUMENT_REQUEST_STATUSES as readonly string[]).includes(value);
+}
 
 type Store = { requests: DocumentRequestRecord[] };
 
@@ -65,13 +74,17 @@ export function listDocumentRequests(dataDir: string, clientCode: string): Docum
 
 export function updateDocumentRequest(
   dataDir: string,
-  input: { clientCode: string; id: string; status: DocumentRequestRecord['status'] },
+  input: { clientCode: string; id: string; status: DocumentRequestStatus; updatedBy: string },
 ): DocumentRequestRecord | undefined {
-  if (!isCanonicalClientCode(input.clientCode)) return undefined;
+  if (!isCanonicalClientCode(input.clientCode) || !input.id.trim()) return undefined;
+  assertWritableClientCode(input.clientCode, 'document-request update');
+  if (!isDocumentRequestStatus(input.status)) return undefined;
   const store = loadStore(dataDir);
   const row = store.requests.find((item) => item.id === input.id && item.clientCode === input.clientCode);
   if (!row) return undefined;
   row.status = input.status;
+  row.updatedAt = new Date().toISOString();
+  row.updatedBy = input.updatedBy;
   saveStore(dataDir, store);
   return row;
 }
