@@ -5,46 +5,45 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `7eb15ac3c74374c0a0d9a94f381edd5d815e5dff` |
-| baseline | D33 public-marker Hub SHA `64b56dc` — SHA_GATE=PASS |
+| current SHA | *(git tip after push)* |
+| baseline | D34 classify XSYS packaged evidence @ Hub `64b56dc` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
 | contracts required | none this cycle |
-| tests | D33 public SHA markers PASS; fail-closed 401 PASS; five findings INCONCLUSIVE |
+| tests | D34: XSYS-01/02 VERIFIED_FIXED from packaged 0253Z + public re-probes; ATLAS STILL_INCONCLUSIVE |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_SECURITY_CERTIFIED=NO**. SHA_GATE=PASS. LIVE_P0=5 INCONCLUSIVE. |
+| security status | **LIVE_SECURITY_CERTIFIED=NO**. XSYS-01/02 VERIFIED_FIXED. ATLAS-01/02/03 STILL_INCONCLUSIVE. LIVE_P0=3. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
-| P0 | LIVE_P0=5 (INCONCLUSIVE×5) |
+| P0 | LIVE_P0=3 (ATLAS-01/02/03 STILL_INCONCLUSIVE); XSYS-01/02 VERIFIED_FIXED |
 | P1 | none |
 | P2 | none |
 | owner decisions | No deploy/rollback. Elite untouched. |
-| deployment state | Public marker Hub `64b56dc` verified via GET markers |
+| deployment state | Public marker Hub `64b56dc` corroborated |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **33** |
-| BASED ON WORKER SHA | `0e09aa630ad09f829dc9ef7a3a81c2a7e753c0a8` |
-| PREVIOUS | D32 CONSUMED=32 INHERIT=FAIL — not replayed |
-| CURRENT SHA | `7eb15ac3c74374c0a0d9a94f381edd5d815e5dff` |
-| COMPLETED ACTIONS | D33 public SHA gate PASS; fail-closed probes; five findings classified INCONCLUSIVE; CONSUMED=33 |
-| REMAINING ACTIONS | Synthetic staff JWT + intake key (+ Plaid URL) for VERIFIED_FIXED |
-| LIVE_P0 | **5** |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **34** |
+| BASED ON WORKER SHA | `557aa6faf203183cf2fec26afb67de7a40ddd1bd` |
+| PREVIOUS | D33 CONSUMED=33 SHA_GATE=PASS 5/5 INCONCLUSIVE — not replayed as mission |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | D34 classify XSYS-01/02 VERIFIED_FIXED; ATLAS STILL_INCONCLUSIVE; CONSUMED=34 |
+| REMAINING ACTIONS | Staff/synthetic session for ATLAS-01/02; Plaid host for ATLAS-03 |
+| LIVE_P0 | **3** |
 | LIVE_P1 | none |
 | LIVE_SECURITY_CERTIFIED | **NO** |
 | LIVE_VALIDATION_ABORTED | **NO** |
-| SHA_GATE | **PASS** |
 | INHERIT | **FAIL** |
 | FOLLOWUP_CANNOT_REBIND | **YES** |
-| TEST STATUS | Public markers + fail-closed PASS; entitlement/HMAC/Plaid full reproducers blocked |
+| TEST STATUS | XSYS closed via (a) V3 package 0253Z + (b) RT public fail-closed; ATLAS blocked |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Not retested |
 | OWNER DECISIONS | No RT deploy/rollback |
 
-## THIS-POD INHERIT (D33 — names only)
+## THIS-POD INHERIT (D34 — names only)
 
 | Field | Value |
 |-------|-------|
@@ -58,20 +57,18 @@
 | INHERIT | **FAIL** |
 | FOLLOWUP_CANNOT_REBIND | **YES** |
 
-## Live release (public markers)
+## Live release (corroboration)
 
 | System | Evidence |
 |--------|----------|
-| Required / observed Hub SHA | `64b56dcb73caae1cfcd71743bcedfd8cd64c2b26` |
-| Markers | `/ATLAS_HUB_COMMIT.txt`, `/health.commit`, `/hub-build.json.gitSha` — all match |
-| Live Hub URL | `https://app-atlas-integration-hub.azurewebsites.net` |
+| Observed Hub SHA | `64b56dcb73caae1cfcd71743bcedfd8cd64c2b26` |
+| V3 package cite | `360-growth-solution` `cursor/platform-orchestrator-b1fa` @ `55cde62` — `V3_AZURE_BACKED_P0_PROBES_2026-08-22T0253Z.md` |
 | Elite (do not touch) | `75d0c59` |
-| Prior 9e5d10a / 698f7e92 | Not this release |
 
 ## Notes
 
-- D33 is not a D32 clone; Azure ABSENT did not abort.
-- LIVE_SECURITY_CERTIFIED is worker evidence rollup only; V3 does not self-certify.
-- No app-settings or Key Vault reads. No secret values recorded.
+- D34 is not a D33/D32 clone. Azure ABSENT did not abort.
+- LIVE_SECURITY_CERTIFIED is worker evidence rollup only; V3 does not self-certify; V3 evidence alone is not LIVE_CERT.
+- No secret values recorded.
 
-**Updated:** 2026-08-22T02:35:00Z
+**Updated:** 2026-08-22T03:11:00Z

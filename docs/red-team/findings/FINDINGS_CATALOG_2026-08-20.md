@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** D33 public-marker Hub SHA `64b56dc` — **SHA_GATE=PASS**; LIVE_SECURITY_CERTIFIED=**NO**; LIVE_P0=5 INCONCLUSIVE
+**CURRENT RELEASE STATE:** D34 — Hub `64b56dc` corroborated; XSYS-01/02 **VERIFIED_FIXED**; ATLAS-01/02/03 **STILL_INCONCLUSIVE**; LIVE_SECURITY_CERTIFIED=**NO**; LIVE_P0=**3**
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D33 @ `64b56dc`): ATLAS-01/02/03 + XSYS-01/02 all **INCONCLUSIVE** (fail-closed PASS; full entitlement/HMAC/Plaid reproducers blocked). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=5**.
-- D32 inherit FAIL not replayed. Candidate lineage FIXED_REVALIDATED remains candidate-only.
+- LIVE Hub (D34 @ `64b56dc`): ATLAS-01/02/03 **STILL_INCONCLUSIVE**. XSYS-01/02 **VERIFIED_FIXED** (V3 0253Z package + RT public re-probes). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=3**.
+- D34 is not a D33/D32 clone.
 
 ---
 
@@ -27,9 +27,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
-
-### ATLAS-RT-20260820-02
+- **status:** LIVE **STILL_INCONCLUSIVE** (D34; prior D33 INCONCLUSIVE); no staff JWT
 - **system:** Atlas
 - **branch/SHA:** live `64b56dc`
 - **severity:** P0
@@ -352,20 +350,20 @@ Severity: P0 / P1 / P2 (not inflated)
 ## CROSS-SYSTEM
 
 ### XSYS-RT-20260820-01
-- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `64b56dc` (D33)
-- **evidence:** D33 live: unauth/Bearer-only/forged-key → 401 key required; HMAC signature-invalid not live-proven (no intake key). Source has HMAC path.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `64b56dc` (D34)
+- **evidence:** D34: V3 packaged 0253Z live probe — valid key-id + timestamp + signature `'0'*64` → **401** `Website intake signature invalid.` RT public re-probes: missing headers / Bearer-only → **401** key required. Same SHA via public markers.
 - **impact:** Key holder forges leads/attribution into SharePoint CRM if HMAC not live.
-- **recommended remediation:** Confirm live signature-invalid 401 with intake key.
+- **recommended remediation:** Keep HMAC required in production; retain RT public fail-closed monitors.
 - **regression test:** Valid key + invalid signature → 401.
-- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
+- **status:** LIVE **VERIFIED_FIXED** (D34); prior D33 INCONCLUSIVE
 
 ### XSYS-RT-20260820-02
-- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `64b56dc` (D33)
-- **evidence:** D33: idempotency gate not reached without intake auth. Source has `assertIdempotencyKeyBoundToSource`.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `64b56dc` (D34)
+- **evidence:** D34: V3 packaged 0253Z — valid HMAC + `Website-Contact` + `eva|…` idempotency → **409** `IDEMPOTENCY_PREFIX_MISMATCH` before SharePoint upsert. RT corroborated Hub SHA + intake fail-closed.
 - **impact:** Cross-system lead overwrite via colliding keys if unbound key still accepted.
-- **recommended remediation:** Live website+`eva|` → 409 probe with intake credentials.
+- **recommended remediation:** Retain prefix binding; monitor 409 path.
 - **regression test:** Website type + `eva|` key → 409.
-- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
+- **status:** LIVE **VERIFIED_FIXED** (D34); prior D33 INCONCLUSIVE
 
 ### XSYS-RT-20260820-03..12
 - **03** P1 GCC handoff without Atlas attestation.
