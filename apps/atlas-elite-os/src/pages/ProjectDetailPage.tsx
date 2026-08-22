@@ -99,6 +99,44 @@ function safeErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+/** DEV-only Premium / UAT fixture — never invents persistable rows; all eight stay deferred-closed. */
+function isD13HonestyPreview(): boolean {
+  return (
+    import.meta.env.DEV === true &&
+    typeof sessionStorage !== 'undefined' &&
+    sessionStorage.getItem('atlas.d13HonestyPreview') === '1'
+  );
+}
+
+function d13HonestyPreviewPayload(projectId: string) {
+  return {
+    project: {
+      id: projectId,
+      name: 'D13 Honesty Preview (DEV)',
+      clientName: 'SYNTHETIC preview client',
+      clientId: 'SYN01',
+      clientCode: 'SYN01',
+      businessEntity: 'HVCG',
+      projectType: 'Operating',
+      status: 'active',
+      health: 'unknown',
+      priority: 'normal',
+      progressPercent: 0,
+      ownerName: 'Local Owner (Dev)',
+      teamMemberIds: [] as string[],
+      nextAction: undefined as string | undefined,
+      objective: 'Candidate-only honesty preview — not a live Hub record.',
+      lastActivityAt: undefined as string | undefined,
+      targetCompletionDate: undefined as string | undefined,
+    },
+    tasks: [] as PmTask[],
+    board: { todo: [] as PmTask[], inProgress: [] as PmTask[], review: [] as PmTask[], done: [] as PmTask[] },
+    milestones: [] as Array<{ id: string; title: string; dueDate?: string; status: string }>,
+    // Omit deferred + persistable so Elite defaults all eight to deferred-closed (D13).
+    collectionMeta: {} as ProjectCollectionHonestyMeta,
+  };
+}
+
 function DeferredClosed({ label }: { label: string }) {
   return (
     <AtlasCard title={label}>
@@ -194,6 +232,29 @@ export function ProjectDetailPage({
       setMessage(
         'This project link is invalid (missing, undefined, unknown, or obsolete demo id).',
       );
+      return;
+    }
+    if (isD13HonestyPreview()) {
+      const fixture = d13HonestyPreviewPayload(projectId);
+      setProject(fixture.project as PmProject);
+      setTasks(fixture.tasks);
+      setBoard(fixture.board);
+      setMilestones(fixture.milestones);
+      setRisks([]);
+      setDecisions([]);
+      setCommitments([]);
+      setDeliverables([]);
+      setWaiting([]);
+      setNotes([]);
+      setActivity([]);
+      setDocuments([]);
+      setCollectionMeta(fixture.collectionMeta);
+      setMissing(false);
+      setAuthFailure(null);
+      setForbidden(false);
+      setLoadError(null);
+      setMessage('DEV honesty preview — Hub not called; deferred collections closed by default.');
+      setLoading(false);
       return;
     }
     if (!auth.tokenReady) return;
@@ -552,6 +613,15 @@ export function ProjectDetailPage({
         </div>
       }
     >
+      {isD13HonestyPreview() ? (
+        <MessageBar intent="warning">
+          <MessageBarBody>
+            <MessageBarTitle>DEV honesty preview</MessageBarTitle>
+            Hub is not called. Deferred collections default closed (missing persistable flag). Not a live
+            record.
+          </MessageBarBody>
+        </MessageBar>
+      ) : null}
       {actionError ? (
         <MessageBar intent="error">
           <MessageBarBody>

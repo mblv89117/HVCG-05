@@ -65,7 +65,7 @@ PASS — Hub **325/325**; Elite D13 project honesty + D11 + D12 redteam **PASS**
 
 ## PREMIUM STATUS
 
-Local candidate Project Detail tab evidence (desktop + mobile). Live Elite `75d0c59` unchanged until separately authorized Elite release.
+Local candidate Project Detail evidence (`d13_project_record_deferred_desktop.webp`, `d13_project_notes_deferred_desktop.webp`, `d13_project_notes_deferred_mobile.webp`) via DEV honesty preview (Hub not called; all eight closed by default). **Live Elite `75d0c59` will not show this until a later authorized Elite release.**
 
 ## INTEGRATION STATUS
 

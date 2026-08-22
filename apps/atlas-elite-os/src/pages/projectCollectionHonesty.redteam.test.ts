@@ -131,9 +131,11 @@ describe('D13 ProjectDetailPage source honesty', () => {
     );
   });
 
-  it('defaults closed when Hub omits deferred map (does not treat missing as live empty)', () => {
-    assert.match(page, /resolveDeferredClosedMap\(collectionMeta\)/);
-    assert.doesNotMatch(page, /setDeferred\(res\.deferred \|\| \{\}\)/);
-    assert.match(page, /setCollectionMeta\(/);
+  it('DEV honesty preview is gated and does not invent persistable rows', () => {
+    assert.match(page, /isD13HonestyPreview/);
+    assert.match(page, /atlas\.d13HonestyPreview/);
+    assert.match(page, /import\.meta\.env\.DEV === true/);
+    assert.match(page, /collectionMeta: \{\} as ProjectCollectionHonestyMeta/);
+    assert.doesNotMatch(page, /persistable:\s*\{\s*notes:\s*true/);
   });
 });
