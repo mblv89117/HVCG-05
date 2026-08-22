@@ -5,60 +5,68 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `fc8ea8d3313bf316eb22f9edd05517a2f7fec9a9` |
-| baseline | D36 CLASSIFY_ATLAS03_PUBLIC_ABSENCE @ Hub `64b56dc` |
+| current SHA | *(git tip after push)* |
+| baseline | D37 INDEPENDENT_LIVE_VALIDATION_1ac6257 |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
 | contracts required | none this cycle |
-| tests | D36: ATLAS-03 VERIFIED_FIXED via public Plaid absence; XSYS unchanged; ATLAS-01/02 untouched |
+| tests | D37: SHA_GATE PASS on 1ac6257; fail-closed 401; directoryObjects CONFIRMED; ATLAS-03 VERIFIED_FIXED; ATLAS-01/02 STILL_INCONCLUSIVE |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_SECURITY_CERTIFIED=NO**. ATLAS-03 VERIFIED_FIXED. ATLAS-01/02 STILL_INCONCLUSIVE. LIVE_P0=2. |
+| security status | **LIVE_CERTIFIED=NO**. LIVE_P0=2 (ATLAS-01/02). ATLAS-03 + XSYS VERIFIED_FIXED. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
-| P0 | LIVE_P0=2 (ATLAS-01/02); ATLAS-03 VERIFIED_FIXED; XSYS-01/02 VERIFIED_FIXED (D34) |
+| P0 | LIVE_P0=2 (ATLAS-01/02 STILL_INCONCLUSIVE); not 0 |
 | P1 | none |
 | P2 | none |
-| owner decisions | No deploy/rollback. Elite untouched. |
-| deployment state | Public marker Hub `64b56dc` corroborated |
+| owner decisions | No deploy/rollback. SYN01 owner-gated. Elite untouched. |
+| deployment state | Live Hub public markers = `1ac6257` |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **36** |
-| BASED ON WORKER SHA | `435824f1df84ddc02f362460a7c53356fbc91e0f` |
-| PREVIOUS | D34 CONSUMED=34 XSYS VERIFIED_FIXED — not replayed; D35 skipped |
-| CURRENT SHA | `fc8ea8d3313bf316eb22f9edd05517a2f7fec9a9` |
-| COMPLETED ACTIONS | D36 ATLAS-03 public-absence VERIFIED_FIXED; CONSUMED=36 |
-| REMAINING ACTIONS | Staff/synthetic session for ATLAS-01/02 only |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **37** |
+| BASED ON WORKER SHA | `635772cf57cb02170e7f6b8c9e99cc4d8d0cf81f` |
+| PRIOR | D36 CONSUMED — not cloned as mission |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | D37 independent live validation of `1ac6257`; CONSUMED=37; stop for V3 |
+| REMAINING ACTIONS | Owner-gated SYN01 / staff session for ATLAS-01/02 only |
 | LIVE_P0 | **2** |
 | LIVE_P1 | none |
+| LIVE_CERTIFIED | **NO** |
 | LIVE_SECURITY_CERTIFIED | **NO** |
-| LIVE_VALIDATION_ABORTED | **NO** |
+| SHA_GATE | **PASS** (`1ac6257`) |
 | INHERIT | **FAIL** |
 | FOLLOWUP_CANNOT_REBIND | **YES** |
-| MISSION_HASH | `CLASSIFY_ATLAS03_PUBLIC_ABSENCE` |
-| TEST STATUS | `/api/plaid/*` 405/404; `/health` no Plaid key |
+| MISSION | `INDEPENDENT_LIVE_VALIDATION_1ac6257` |
+| TEST STATUS | Markers+health+fail-closed+directoryObjects+plaid+XSYS-unauth complete; ATLAS-01/02 not entitled-probed |
 | PREMIUM STATUS | N/A |
 | INTEGRATION STATUS | Not retested |
-| OWNER DECISIONS | No RT deploy/rollback |
+| OWNER DECISIONS | No RT deploy; no D38 from RT |
 
-## THIS-POD INHERIT (D36 — names only)
+## THIS-POD (names only)
 
 | Field | Value |
 |-------|-------|
-| THIS_POD_ENV_ID | `9e385f28-9c25-11f1-ba66-0e7d0216e441` |
 | THIS_POD_ENV_VERSION | `a86e2323-9c2a-11f1-ba66-0e7d0216e441` |
 | THIS_POD_BUILD_ID | `bld-20260820-859ee60c-1350-4ede-89ab-db0836afc9d5` |
 | AZURE_* | all **ABSENT** |
 | INHERIT | **FAIL** |
-| FOLLOWUP_CANNOT_REBIND | **YES** |
+
+## Live release
+
+| System | Evidence |
+|--------|----------|
+| Live Hub SHA (RT re-GET) | `1ac62572e2f0d4206f78539c25041fb7f69430f8` |
+| hub-build.branch | `cursor/hub-directory-objects-entitle-7a6b` |
+| OneDeploy (claim cite) | `333912dc-e3e1-48e7-aefa-946142e6185f` |
+| Elite | not touched |
 
 ## Notes
 
-- D36 is not a D34/D35/D33/D32 clone.
-- LIVE_SECURITY_CERTIFIED is worker evidence rollup only; V3 does not self-certify.
-- No secret values recorded.
+- Not a D36/D35/D34/D33/D32 clone.
+- Do not claim LIVE_CERTIFIED or live P0=0.
+- Stop — V3 consumes next.
 
-**Updated:** 2026-08-22T03:39:00Z
+**Updated:** 2026-08-22T04:10:00Z
