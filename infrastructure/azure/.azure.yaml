@@ -1,0 +1,7 @@
+# Atlas Azure subscription & CLI defaults (Sprint 11+)
+# Permanent production subscription — HVCG Production
+# DEPRECATED forever for Atlas: 866189c6-5aa0-4037-8094-05771caceb0d
+
+subscription: ebc84d85-b5ff-4c4b-add1-b0a8de31b319
+location: westus3
+tenant: 3df46563-86f3-4414-87fd-84ba967741ef

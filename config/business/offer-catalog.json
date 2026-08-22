@@ -1,0 +1,618 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "rule": "No custom consulting without a category. No category without an offer. No offer without a price. No price without a signed scope.",
+  "commercialClasses": [
+    "STRUCTURED_OFFER",
+    "RECURRING_RETAINER",
+    "PREMIUM_SPECIAL_PROJECT"
+  ],
+  "offers": [
+    {
+      "offerCode": "OFF-CAP-DIAG",
+      "name": "Capital Readiness Diagnostic",
+      "serviceLine": "SL-CAPITAL",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [
+        "SKU-FRA"
+      ],
+      "description": "Diagnostic assessment of capital readiness and lender package gaps.",
+      "idealClient": "Founder-led company seeking capital but not yet lender-ready",
+      "painPoint": "Disorganized financials/docs blocking financing conversations",
+      "deliverables": [
+        "Readiness assessment",
+        "Gap list",
+        "Recommended capital path",
+        "Diagnostic findings memo"
+      ],
+      "setupFeeGuidance": {
+        "min": 1500,
+        "max": 5000,
+        "typical": 2500
+      },
+      "monthlyRetainerOption": null,
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Basic financials",
+        "Debt overview",
+        "Entity docs",
+        "Use of funds intent"
+      ],
+      "aiAutomation": [
+        "Document checklist",
+        "Gap classification"
+      ],
+      "humanApproval": [
+        "Findings review",
+        "Offer recommendation"
+      ],
+      "complianceRequirements": [
+        "financing disclaimer"
+      ],
+      "salesAngle": "Paid front door that protects HVCG from free complex strategy work",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-CAP-PKG",
+      "name": "Lender-Ready Capital Package",
+      "serviceLine": "SL-CAPITAL",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [
+        "SKU-CAP-CORE",
+        "SKU-CAP-GROWTH",
+        "SKU-CAP-ENT"
+      ],
+      "description": "Preparation of lender-ready capital documentation, data room, and submission package.",
+      "idealClient": "Business ready to pursue financing with organized inputs",
+      "painPoint": "Needs lender-ready package, data room, and submission coordination",
+      "deliverables": [
+        "Financial package",
+        "Debt schedule",
+        "Projections",
+        "Document checklist",
+        "Lender memo",
+        "Data room"
+      ],
+      "setupFeeGuidance": {
+        "min": 10000,
+        "max": 35000
+      },
+      "monthlyRetainerOption": {
+        "min": 5000,
+        "max": 10000
+      },
+      "successFeeApplicable": true,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Tax returns",
+        "Bank statements",
+        "AR/AP",
+        "Debt schedule inputs"
+      ],
+      "aiAutomation": [
+        "Checklist",
+        "Package assembly drafts"
+      ],
+      "humanApproval": [
+        "Lender submission",
+        "External lender contact"
+      ],
+      "complianceRequirements": [
+        "financing disclaimer"
+      ],
+      "salesAngle": "Named outcome package \u2014 not 'loan help'",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-FCFO-OP",
+      "name": "Fractional CFO Operating Partner",
+      "serviceLine": "SL-FCFO",
+      "category": "RECURRING_RETAINER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [
+        "SKU-FCFO"
+      ],
+      "pricingStatus": "REQUIRES_OWNER_REVIEW",
+      "description": "Ongoing fractional CFO leadership, reporting, and financial operating cadence.",
+      "idealClient": "Owner needing monthly financial leadership and visibility",
+      "painPoint": "No reliable monthly operating finance cadence",
+      "deliverables": [
+        "Monthly reporting",
+        "Cash visibility",
+        "Cadence meetings",
+        "Lender-ready packs as needed"
+      ],
+      "setupFeeGuidance": {
+        "min": 7500,
+        "max": 25000
+      },
+      "monthlyRetainerOption": {
+        "min": 7500,
+        "max": 15000
+      },
+      "successFeeApplicable": false,
+      "minimumTermMonths": 3,
+      "requiredInputs": [
+        "Accounting access",
+        "Bank feeds",
+        "AP/AR",
+        "Payroll summary"
+      ],
+      "aiAutomation": [
+        "Report drafting",
+        "Variance flags"
+      ],
+      "humanApproval": [
+        "Client-facing financial interpretations"
+      ],
+      "complianceRequirements": [
+        "generalAdvisory",
+        "aiSystems"
+      ],
+      "salesAngle": "Operating partner retainer, not bookkeeping tasks",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-PROC-READY",
+      "name": "Contract Procurement Readiness Package",
+      "serviceLine": "SL-PROCUREMENT",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Private and public contract readiness documentation and pipeline preparation.",
+      "idealClient": "Company pursuing larger private/government contracts",
+      "painPoint": "Not contract-ready (docs, registrations, capability statement)",
+      "deliverables": [
+        "Readiness checklist",
+        "Capability statement support",
+        "Pipeline/process",
+        "Required docs package"
+      ],
+      "setupFeeGuidance": {
+        "min": 7500,
+        "max": 25000
+      },
+      "monthlyRetainerOption": {
+        "min": 2500,
+        "max": 10000
+      },
+      "successFeeApplicable": true,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "NAICS",
+        "past performance",
+        "licenses/insurance",
+        "capacity"
+      ],
+      "aiAutomation": [
+        "Fit scoring drafts",
+        "Checklist"
+      ],
+      "humanApproval": [
+        "Bid submission \u2014 never automatic"
+      ],
+      "complianceRequirements": [
+        "generalAdvisory"
+      ],
+      "salesAngle": "Contract readiness package, not 'help with bids'",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-GOV-SETUP",
+      "name": "Government Contractor Setup Package",
+      "serviceLine": "SL-PROCUREMENT",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "SAM.gov, UEI/CAGE, NAICS, certifications, and capability statement setup.",
+      "idealClient": "Business entering government contracting",
+      "painPoint": "SAM/UEI/CAGE/NAICS/certifications incomplete",
+      "deliverables": [
+        "Registration support package",
+        "Capability statement",
+        "Compliance checklist"
+      ],
+      "setupFeeGuidance": {
+        "min": 7500,
+        "max": 25000
+      },
+      "monthlyRetainerOption": null,
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Legal entity info",
+        "ownership",
+        "NAICS",
+        "banking"
+      ],
+      "aiAutomation": [
+        "Checklist",
+        "form prep drafts"
+      ],
+      "humanApproval": [
+        "Any registration submit"
+      ],
+      "complianceRequirements": [
+        "generalAdvisory"
+      ],
+      "salesAngle": "Setup package with human approval gates",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-RISK-REVIEW",
+      "name": "Risk Reduction & Liability Review",
+      "serviceLine": "SL-RISK",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Structured review of liability exposure, documentation gaps, and risk-reduction actions.",
+      "idealClient": "Owner with liability/agency/insurance exposure concerns",
+      "painPoint": "Unorganized risk exposure and documentation gaps",
+      "deliverables": [
+        "Risk review memo",
+        "Gap list",
+        "Recommended actions",
+        "Professional referral plan"
+      ],
+      "setupFeeGuidance": {
+        "min": 5000,
+        "max": 20000
+      },
+      "monthlyRetainerOption": null,
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Notices",
+        "policies",
+        "timelines",
+        "exposure estimates"
+      ],
+      "aiAutomation": [
+        "Doc classification",
+        "timeline drafts"
+      ],
+      "humanApproval": [
+        "External agency/insurer contact"
+      ],
+      "complianceRequirements": [
+        "legalSensitive",
+        "insuranceReview",
+        "taxMatters"
+      ],
+      "salesAngle": "Premium structured review \u2014 not cheap admin",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-TAX-UE",
+      "name": "Employer Tax / Unemployment Appeal Support",
+      "serviceLine": "SL-RISK",
+      "category": "PREMIUM_SPECIAL_PROJECT",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Documentation and coordination support for employer tax and unemployment matters.",
+      "idealClient": "Employer facing tax/unemployment agency matters",
+      "painPoint": "Agency notice, rate issue, or appeal deadline",
+      "deliverables": [
+        "Matter file",
+        "Timeline",
+        "Documentation package",
+        "Professional coordination plan"
+      ],
+      "setupFeeGuidance": {
+        "min": 5000,
+        "max": 20000
+      },
+      "monthlyRetainerOption": null,
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Notices",
+        "payroll history",
+        "deadlines"
+      ],
+      "aiAutomation": [
+        "Checklist",
+        "draft internal summaries"
+      ],
+      "humanApproval": [
+        "Always before external use"
+      ],
+      "complianceRequirements": [
+        "taxMatters",
+        "hrTermination"
+      ],
+      "salesAngle": "Premium special project \u2014 not low-fee standalone",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-CLAIMS",
+      "name": "Business Recovery & Claims Support",
+      "serviceLine": "SL-RISK",
+      "category": "PREMIUM_SPECIAL_PROJECT",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Claims documentation, evidence organization, and recovery coordination support.",
+      "idealClient": "Business with loss/theft/vendor negligence/recovery need",
+      "painPoint": "Need organized claim/recovery documentation and coordination",
+      "deliverables": [
+        "Evidence file",
+        "Loss documentation",
+        "Recovery plan",
+        "Professional coordination"
+      ],
+      "setupFeeGuidance": {
+        "min": 5000,
+        "max": 25000
+      },
+      "monthlyRetainerOption": {
+        "min": 2500,
+        "max": 10000
+      },
+      "successFeeApplicable": true,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Incident facts",
+        "policies",
+        "evidence",
+        "parties"
+      ],
+      "aiAutomation": [
+        "Evidence indexing",
+        "timeline drafts"
+      ],
+      "humanApproval": [
+        "Insurer/attorney contact"
+      ],
+      "complianceRequirements": [
+        "claimsRecovery",
+        "insuranceReview"
+      ],
+      "salesAngle": "Recovery support with compliance controls",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-GROWTH-OS",
+      "name": "Growth Operating System",
+      "serviceLine": "SL-GROWTH",
+      "category": "RECURRING_RETAINER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "90-day growth plans, KPI cadence, SOP/workflow installation, and accountability systems.",
+      "idealClient": "Owner scaling without operating cadence/systems",
+      "painPoint": "No 90-day plan, KPIs, SOPs, or accountability",
+      "deliverables": [
+        "90-day plan",
+        "KPI scorecard",
+        "SOP/workflow starters",
+        "Cadence"
+      ],
+      "setupFeeGuidance": {
+        "min": 10000,
+        "max": 25000
+      },
+      "monthlyRetainerOption": {
+        "min": 5000,
+        "max": 12500
+      },
+      "successFeeApplicable": false,
+      "minimumTermMonths": 3,
+      "requiredInputs": [
+        "Goals",
+        "org chart",
+        "current CRM/process"
+      ],
+      "aiAutomation": [
+        "SOP drafts",
+        "task generation"
+      ],
+      "humanApproval": [
+        "Client-facing plan"
+      ],
+      "complianceRequirements": [
+        "generalAdvisory"
+      ],
+      "salesAngle": "Install operating system \u2014 not random consulting hours",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-OWNER-SUPPORT",
+      "name": "Executive Owner Support Program",
+      "serviceLine": "SL-OWNER",
+      "category": "RECURRING_RETAINER",
+      "public": false,
+      "active": true,
+      "restricted": true,
+      "legacySkuMap": [],
+      "description": "Restricted owner support for sensitive personal/business continuity matters.",
+      "idealClient": "Owner needing private high-trust support",
+      "painPoint": "Sensitive personal/business continuity matters",
+      "deliverables": [
+        "Restricted workspace",
+        "Document organization",
+        "Professional coordination"
+      ],
+      "setupFeeGuidance": {
+        "min": 7500,
+        "max": 25000
+      },
+      "monthlyRetainerOption": {
+        "min": 5000,
+        "max": 25000
+      },
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Owner authorization",
+        "restricted docs"
+      ],
+      "aiAutomation": [
+        "Restricted \u2014 limited processing"
+      ],
+      "humanApproval": [
+        "Always"
+      ],
+      "complianceRequirements": [
+        "mortgageRealEstate",
+        "estateTrust"
+      ],
+      "salesAngle": "Private program \u2014 not public menu marketing",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-AI-BRAIN",
+      "name": "AI Second Brain for Business Owners",
+      "serviceLine": "SL-AI",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Company knowledge base, document vault, and AI retrieval system for the business.",
+      "idealClient": "Owner with knowledge/process disorder",
+      "painPoint": "Institutional knowledge trapped in people/inboxes",
+      "deliverables": [
+        "Knowledge architecture",
+        "Document vault design",
+        "Retrieval rules",
+        "Adoption plan"
+      ],
+      "setupFeeGuidance": {
+        "min": 10000,
+        "max": 35000
+      },
+      "monthlyRetainerOption": {
+        "min": 2500,
+        "max": 10000
+      },
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Source systems",
+        "permission model",
+        "priority knowledge"
+      ],
+      "aiAutomation": [
+        "Indexing drafts",
+        "SOP extraction"
+      ],
+      "humanApproval": [
+        "Permission model",
+        "external publish"
+      ],
+      "complianceRequirements": [
+        "aiSystems"
+      ],
+      "salesAngle": "Second Brain product \u2014 not chatbot toy",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-AI-OPS",
+      "name": "AI Operations Agent System",
+      "serviceLine": "SL-AI",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Configured AI agents and operating automations under Atlas AI governance.",
+      "idealClient": "Company needing multi-agent operating automation",
+      "painPoint": "Manual workflows across CRM/docs/finance/procurement",
+      "deliverables": [
+        "Agent architecture",
+        "governance",
+        "priority automations",
+        "training"
+      ],
+      "setupFeeGuidance": {
+        "min": 25000,
+        "max": 150000
+      },
+      "monthlyRetainerOption": {
+        "min": 5000,
+        "max": 15000
+      },
+      "successFeeApplicable": false,
+      "minimumTermMonths": 3,
+      "requiredInputs": [
+        "Process map",
+        "systems access",
+        "approval matrix"
+      ],
+      "aiAutomation": [
+        "Agent configs on Atlas governance plane"
+      ],
+      "humanApproval": [
+        "High-risk actions always"
+      ],
+      "complianceRequirements": [
+        "aiSystems"
+      ],
+      "salesAngle": "Enterprise AI operations under governance",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    },
+    {
+      "offerCode": "OFF-REF-ENGINE",
+      "name": "Referral Partner Pipeline Engine",
+      "serviceLine": "SL-GROWTH",
+      "category": "STRUCTURED_OFFER",
+      "public": true,
+      "active": true,
+      "legacySkuMap": [],
+      "description": "Referral partner agreements, deal tracking, and collected-revenue payout workflow.",
+      "idealClient": "Partners who refer capital/CFO/growth opportunities",
+      "painPoint": "No formal referral tracking/payout discipline",
+      "deliverables": [
+        "Partner agreement framework",
+        "Deal tracking",
+        "Collected-revenue payout workflow"
+      ],
+      "setupFeeGuidance": {
+        "min": 0,
+        "max": 10000
+      },
+      "monthlyRetainerOption": null,
+      "successFeeApplicable": false,
+      "minimumTermMonths": null,
+      "requiredInputs": [
+        "Partner identity",
+        "compensation model"
+      ],
+      "aiAutomation": [
+        "CRM updates",
+        "payout draft calc"
+      ],
+      "humanApproval": [
+        "All payouts"
+      ],
+      "complianceRequirements": [
+        "generalAdvisory"
+      ],
+      "salesAngle": "Pay only on collected revenue",
+      "offerVersion": "1.0.0",
+      "pricingVersionId": "HVCG-PRICE-2026-08-11-v2"
+    }
+  ]
+}

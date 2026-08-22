@@ -1,0 +1,274 @@
+{
+  "title": "HVCG_CapitalProfiles",
+  "description": "Capital — Client capital profile snapshots (provenance flattened; Hub maps verification)",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Profile title (typically legal name or client code)."
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Client code denormalized for filtering."
+    },
+    {
+      "internalName": "LegalName",
+      "displayName": "LegalName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Legal name. Unverified until confirmed against formation docs."
+    },
+    {
+      "internalName": "DBA",
+      "displayName": "DBA",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Doing-business-as name if any."
+    },
+    {
+      "internalName": "EINProtected",
+      "displayName": "EINProtected",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "True when EIN is stored elsewhere / redacted. Do not put raw EIN here.",
+      "default": true
+    },
+    {
+      "internalName": "EntityType",
+      "displayName": "EntityType",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Entity type (LLC, C-Corp, etc.) if known."
+    },
+    {
+      "internalName": "FormationState",
+      "displayName": "FormationState",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FormationDate",
+      "displayName": "FormationDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Addresses",
+      "displayName": "Addresses",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Address narrative. Not a structured address book."
+    },
+    {
+      "internalName": "Ownership",
+      "displayName": "Ownership",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Guarantors",
+      "displayName": "Guarantors",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Industry",
+      "displayName": "Industry",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NAICS",
+      "displayName": "NAICS",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AnnualRevenue",
+      "displayName": "AnnualRevenue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Profitability",
+      "displayName": "Profitability",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "EBITDA / profitability snapshot."
+    },
+    {
+      "internalName": "Employees",
+      "displayName": "Employees",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExistingDebt",
+      "displayName": "ExistingDebt",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MonthlyDebtService",
+      "displayName": "MonthlyDebtService",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "BankRelationships",
+      "displayName": "BankRelationships",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AR",
+      "displayName": "AR",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Inventory",
+      "displayName": "Inventory",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Equipment",
+      "displayName": "Equipment",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RealEstate",
+      "displayName": "RealEstate",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Collateral",
+      "displayName": "Collateral",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "FinancingHistory",
+      "displayName": "FinancingHistory",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Narrative",
+      "displayName": "Narrative",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VerificationStatus",
+      "displayName": "VerificationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Overall profile verification. Per-field provenance may live in FieldProvenance.",
+      "choices": [
+        "VERIFIED",
+        "DERIVED",
+        "UNVERIFIED",
+        "CONFLICTING",
+        "MISSING"
+      ],
+      "default": "MISSING"
+    },
+    {
+      "internalName": "FieldProvenance",
+      "displayName": "FieldProvenance",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Optional JSON of per-field verification/source refs. Hub-owned."
+    },
+    {
+      "internalName": "ProfileUpdatedAt",
+      "displayName": "ProfileUpdatedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "When this profile snapshot was last updated."
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

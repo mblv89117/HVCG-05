@@ -1,0 +1,99 @@
+{
+  "title": "HVCG_InvestorOutreach",
+  "description": "Capital \u2014 Investor outreach tracker",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "InvestorId",
+      "displayName": "InvestorId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Investors"
+    },
+    {
+      "internalName": "OutreachDate",
+      "displayName": "OutreachDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Channel",
+      "displayName": "Channel",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Email",
+        "Call",
+        "Meeting",
+        "Intro",
+        "Conference",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Response",
+      "displayName": "Response",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "None",
+        "Interested",
+        "Pass",
+        "Meeting Set",
+        "NDA",
+        "Diligence",
+        "Term Sheet"
+      ]
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NextAction",
+      "displayName": "NextAction",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}
