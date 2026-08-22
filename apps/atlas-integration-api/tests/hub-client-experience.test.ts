@@ -644,6 +644,13 @@ describe('synthetic client journey isolation', () => {
         assert.equal(rotatedBody.binding.clientCode, SYN_A);
         assert.notEqual(rotatedBody.clientSessionToken, redeemedBody.clientSessionToken);
 
+        const replayRotated = await fetch(`${base}/api/client/invitations/redeem`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ token: rotateBody.inviteToken }),
+        });
+        assert.equal(replayRotated.status, 403);
+
         const rotatedDesk = await fetch(`${base}/client.json`, {
           headers: { authorization: `Bearer ${rotatedBody.clientSessionToken}` },
         });

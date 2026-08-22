@@ -387,7 +387,11 @@ export function redeemSynqaInvitation(opts: {
   if (!isExperienceSyntheticClient(invitation.clientCode)) {
     fail(403, 'forbidden', 'Real client invitations require a Client Executive principal.');
   }
-  if (invitation.status === 'revoked' || invitation.status === 'expired') {
+  if (
+    invitation.status === 'revoked' ||
+    invitation.status === 'expired' ||
+    invitation.status === 'redeemed'
+  ) {
     fail(403, 'forbidden', 'Invitation is no longer valid.');
   }
   if (new Date(invitation.expiresAt).getTime() < Date.now()) {
