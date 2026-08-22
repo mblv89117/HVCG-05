@@ -5,7 +5,7 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | *(set on tip pin commit)* |
+| current SHA | `88d21f84bb64a898a9e985a2d0e9de4063e3c612` |
 | baseline | Live Hub **`070e093`** (entitled hot-path). Immediate rollback: `4b9631a` / `7e3f65a2…`. Elite still `75d0c59` (untouched). |
 | owned domains | D18 Search recert on `070e093` (not D17 clone; not Elite) |
 | files/domains touched | D18 report + status only |
