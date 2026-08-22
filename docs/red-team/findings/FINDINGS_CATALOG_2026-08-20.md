@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** D34 — Hub `64b56dc` corroborated; XSYS-01/02 **VERIFIED_FIXED**; ATLAS-01/02/03 **STILL_INCONCLUSIVE**; LIVE_SECURITY_CERTIFIED=**NO**; LIVE_P0=**3**
+**CURRENT RELEASE STATE:** D36 — Hub `64b56dc`; ATLAS-03 **VERIFIED_FIXED** (public Plaid absence); ATLAS-01/02 **STILL_INCONCLUSIVE**; XSYS-01/02 **VERIFIED_FIXED** (D34); LIVE_SECURITY_CERTIFIED=**NO**; LIVE_P0=**2**
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub (D34 @ `64b56dc`): ATLAS-01/02/03 **STILL_INCONCLUSIVE**. XSYS-01/02 **VERIFIED_FIXED** (V3 0253Z package + RT public re-probes). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=3**.
-- D34 is not a D33/D32 clone.
+- LIVE Hub (D36 @ `64b56dc`): ATLAS-01/02 **STILL_INCONCLUSIVE**. ATLAS-03 **VERIFIED_FIXED**. XSYS-01/02 **VERIFIED_FIXED** (D34, not reclassified). **LIVE_SECURITY_CERTIFIED=NO**. **LIVE_P0=2**.
+- D36 mission `CLASSIFY_ATLAS03_PUBLIC_ABSENCE` — not a D34/D35/D33/D32 clone.
 
 ---
 
@@ -42,14 +42,14 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
-- **branch/SHA:** live Hub `64b56dc` / plaid app source
+- **branch/SHA:** live Hub `64b56dc` (D36)
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** Hub `/api/plaid/*` → 405; no Plaid host opened (D34). Source still header-oriented without jwtVerify in prior inspect.
-- **reproduction:** With `PLAID_REQUIRE_AUTH=true`, forge headers without Bearer → today accepted.
-- **impact:** Bank connection/balance/identity isolation collapse.
-- **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
-- **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D34); no Plaid surface
+- **evidence:** D36 public absence: `GET /api/plaid/link` (+ peers) → **405** `method_not_allowed`; `POST /api/plaid/link` → **404**; forged `x-atlas-*` still **405**; `/health` has **no** Plaid host/config key. Capital mode=sharepoint (non-authoritative note). Established Hub-path header-auth bypass **not reachable**.
+- **reproduction:** With `PLAID_REQUIRE_AUTH=true` on a reachable Plaid host, forge headers without Bearer → accepted (historical). Live Hub does not route Plaid.
+- **impact:** Bank connection/balance/identity isolation collapse **if** a Plaid surface is reachable.
+- **recommended remediation:** If/when Plaid is published, require Hub JWT + server-side entitlements; ignore client headers for authz. Reopen finding if `/api/plaid/*` begins serving.
+- **regression test:** Missing Bearer → 401 on any live Plaid host; Hub `/api/plaid/link` remains non-served (405/404).
+- **status:** LIVE **VERIFIED_FIXED** (D36 public absence); prior D34 STILL_INCONCLUSIVE
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -721,3 +721,18 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_P0 | **3** |
 | LIVE_SECURITY_CERTIFIED | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_34_2026-08-22.md` |
+
+## Directive 36 status appendix (CLASSIFY_ATLAS03_PUBLIC_ABSENCE)
+
+| Gate / ID | Status @ Directive 36 |
+|-----------|------------------------|
+| Mission hash | `CLASSIFY_ATLAS03_PUBLIC_ABSENCE` |
+| Observed Hub SHA | `64b56dcb73caae1cfcd71743bcedfd8cd64c2b26` |
+| `/api/plaid/link` | **405** |
+| `/health` Plaid key | **ABSENT** |
+| ATLAS-RT-20260820-03 | **VERIFIED_FIXED** |
+| ATLAS-01/02 | unchanged **STILL_INCONCLUSIVE** (not in mission) |
+| XSYS-01/02 | unchanged **VERIFIED_FIXED** (D34; not reclassified) |
+| LIVE_P0 | **2** |
+| LIVE_SECURITY_CERTIFIED | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_36_2026-08-22.md` |
