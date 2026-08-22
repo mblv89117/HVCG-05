@@ -12,6 +12,7 @@ import { isClientOnlyPrincipal } from './roles.ts';
 import {
   ClientExperienceError,
   buildClientWorkspaceView,
+  buildOperatorClientDeskPreview,
   decideClientRequest,
   getClientDocument,
   operatorExperienceStatus,
@@ -19,7 +20,9 @@ import {
   stageClientExperience,
   uploadClientDocument,
 } from './service.ts';
-import { handleClientDesk } from './desk.ts';
+import { handleClientDesk, renderClientDeskHtml } from './desk.ts';
+import { canAccessOperatorDesk } from '../pm/sharepoint/authz.ts';
+import { resolveHubCommit } from '../http/hubCommit.ts';
 
 function send(res: ServerResponse, status: number, body: unknown, origin?: string | null) {
   const headers: Record<string, string> = {
@@ -62,6 +65,14 @@ function experienceStagePath(path: string): string | null {
   return isCanonicalClientCode(code) ? code : null;
 }
 
+function clientDeskPreviewPath(path: string): { code: string; asJson: boolean } | null {
+  const match = path.match(/^\/api\/pm\/clients\/([^/]+)\/desk(\.json)?$/);
+  if (!match) return null;
+  const code = decodeURIComponent(match[1]);
+  if (!isCanonicalClientCode(code)) return null;
+  return { code, asJson: Boolean(match[2]) };
+}
+
 function clientCodeFromPath(path: string, prefix: string): string | null {
   if (!path.startsWith(prefix)) return null;
   const rest = decodeURIComponent(path.slice(prefix.length));
@@ -85,8 +96,9 @@ export async function handleClientExperience(opts: {
   if (await handleClientDesk(opts)) return true;
 
   const stagedCode = experienceStagePath(opts.path);
+  const deskPreview = clientDeskPreviewPath(opts.path);
   const isClientApi = isClientExperienceApi(opts.path);
-  if (!isClientApi && !stagedCode) return false;
+  if (!isClientApi && !stagedCode && !deskPreview) return false;
 
   let principal;
   try {
@@ -104,6 +116,78 @@ export async function handleClientExperience(opts: {
   }
 
   try {
+    if (deskPreview) {
+      if (opts.method !== 'GET' && opts.method !== 'HEAD') {
+        send(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
+        return true;
+      }
+      if (isClientOnlyPrincipal(principal)) {
+        send(
+          opts.res,
+          403,
+          { error: 'forbidden', code: 'forbidden', message: 'Client principals use /client, not the operator preview.' },
+          opts.origin,
+        );
+        return true;
+      }
+      if (!canAccessOperatorDesk(principal)) {
+        send(
+          opts.res,
+          403,
+          { error: 'forbidden', code: 'forbidden', message: 'Operator preview requires an operator or entitled Hub principal.' },
+          opts.origin,
+        );
+        return true;
+      }
+      let displayName: string | undefined;
+      if (opts.sharepoint) {
+        const live = await opts.sharepoint.authorizeClient(principal, deskPreview.code);
+        if (live === 'not_found') {
+          send(opts.res, 404, { error: 'not_found', code: 'not_found' }, opts.origin);
+          return true;
+        }
+        displayName = live.displayName;
+      }
+      const view = buildOperatorClientDeskPreview({
+        dataDir: opts.cfg.dataDir,
+        principal,
+        clientCode: deskPreview.code,
+        displayName,
+      });
+      const hubSha = resolveHubCommit() || undefined;
+      if (deskPreview.asJson) {
+        send(
+          opts.res,
+          200,
+          {
+            clientDesk: view,
+            hubSha,
+            preview: true,
+            signedClientSession: false,
+            source: 'hub_governed_overlay',
+            binariesInAtlas: false,
+          },
+          opts.origin,
+        );
+        return true;
+      }
+      const headers: Record<string, string> = {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+        'x-atlas-client-desk': 'v1',
+        'x-atlas-client-desk-preview': 'operator',
+      };
+      if (opts.origin) {
+        headers['access-control-allow-origin'] = opts.origin;
+        headers['access-control-allow-credentials'] = 'true';
+        headers['vary'] = 'Origin';
+      }
+      opts.res.writeHead(200, headers);
+      opts.res.end(renderClientDeskHtml(view, hubSha, { operatorPreview: true }));
+      return true;
+    }
+
     if (stagedCode) {
       if (opts.method === 'GET') {
         send(

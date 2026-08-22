@@ -6,7 +6,7 @@
  */
 
 import type { AtlasPrincipal } from '../middleware/auth.ts';
-import { entitledClientCodes } from '../pm/sharepoint/authz.ts';
+import { canAccessOperatorDesk, entitledClientCodes } from '../pm/sharepoint/authz.ts';
 import { isMannyPrincipal } from '../pm/sharepoint/manny.ts';
 import { isCanonicalClientCode } from '../entitlements/clientCode.ts';
 import { isReadyClientActivation } from '../pm/sharepoint/clientActivation.ts';
@@ -470,6 +470,115 @@ export function decideClientRequest(opts: {
     }
   }
   fail(404, 'not_found', 'not_found');
+}
+
+export function buildOperatorClientDeskPreview(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  clientCode: string;
+  displayName?: string;
+}) {
+  if (isClientOnlyPrincipal(opts.principal)) {
+    fail(403, 'forbidden', 'Client principals use /client, not the operator preview.');
+  }
+  if (!canAccessOperatorDesk(opts.principal)) {
+    fail(403, 'forbidden', 'Operator preview requires an operator or entitled Hub principal.');
+  }
+  const clientCode = assertIsolatedClientCode(opts.clientCode);
+  const entitled = entitledClientCodes(opts.principal);
+  const snapshot = loadExperienceStore(opts.dataDir);
+  const existing = snapshot.workspaces[clientCode];
+  const mannyStaged = isMannyPrincipal(opts.principal) && Boolean(existing);
+  if (!entitled.includes(clientCode) && !mannyStaged) {
+    fail(404, 'not_found', 'not_found');
+  }
+  const workspace =
+    existing ||
+    bindGovernedWorkspace({
+      clientCode,
+      displayName: (opts.displayName || clientCode).trim() || clientCode,
+      stagedAt: new Date().toISOString(),
+      stagedBy: 'operator-preview',
+      activationGate: 'authorized',
+    });
+
+  const documents = snapshot.documents
+    .filter((row) => row.clientCode === clientCode)
+    .map(({ contentB64: _omit, ...meta }) => {
+      void _omit;
+      return meta;
+    });
+  const requests = snapshot.requests.filter((row) => row.clientCode === clientCode);
+  const projects = snapshot.projects.filter((row) => row.clientCode === clientCode);
+  const documentRequests = listDocumentRequests(opts.dataDir, clientCode);
+  const attention = [
+    ...requests.filter((row) => row.status === 'open' || row.decision === 'pending'),
+    ...overlayAttention(opts.dataDir, clientCode).map((row) => ({
+      id: row.id,
+      clientCode,
+      kind: 'document' as const,
+      title: row.title,
+      detail: 'Governed document request. Upload through the client workspace, not SharePoint.',
+      status: 'open' as const,
+      decision: 'pending' as const,
+      createdAt: row.createdAt,
+      updatedAt: row.createdAt,
+      documentRequestId: row.id,
+    })),
+  ];
+  const seen = new Set<string>();
+  const uniqueAttention = attention.filter((row) => {
+    const key = row.documentRequestId || row.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return {
+    kind: 'client_experience_v1' as const,
+    preview: true as const,
+    operatorPreview: true as const,
+    signedClientSession: false as const,
+    clientCode,
+    workspace,
+    documents,
+    requests,
+    documentRequests,
+    attention: uniqueAttention,
+    projects,
+    portal: {
+      kind: 'client_portal_v1' as const,
+      operatorChrome: false,
+      atlasOperatorDesk: false,
+      clientCode,
+      displayName: workspace.displayName,
+      portalHref: workspace.portalHref,
+      workspaceHref: workspace.workspaceHref,
+      documentRequestHref: workspace.documentRequestHref,
+      clientDeskHref: workspace.clientDeskHref,
+      operatorPreviewHref: `/api/pm/clients/${clientCode}/desk`,
+      portalAccessProvisioned: true,
+      documentRequestPathProvisioned: true,
+      workspaceProvisioning: 'ready' as const,
+    },
+    gcc: {
+      workspaceKey: workspace.gccWorkspaceKey,
+      isolated: true,
+      clientCode,
+    },
+    commercial: {
+      clientCode,
+      permitted: true,
+      liveGtmOutbound: false,
+      paidAds: false,
+    },
+    isolation: {
+      failClosed: true,
+      sharePointPrimaryUx: false,
+      operatorDesk: false,
+      signedClientSession: false,
+    },
+  };
 }
 
 export function operatorExperienceStatus(opts: { dataDir: string; principal: AtlasPrincipal; clientCode: string }) {
