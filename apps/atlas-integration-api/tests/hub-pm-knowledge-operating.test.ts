@@ -157,6 +157,7 @@ describe('knowledge operating picture', () => {
     assert.deepEqual(picture.hvsRecoveredClientRecords, []);
     assert.deepEqual(picture.hvsRecoveredCapitalPackets, []);
     assert.deepEqual(picture.recoveredClientsKnowledgeOperationalized, []);
+    assert.deepEqual(picture.hvsActionableClientKnowledge, []);
     assert.equal(picture.queues.Projects.length, 0);
     assert.equal(picture.queues.Tasks.length, 0);
     const syn = picture.recoveryLedger.find((row) => row.clientCode === 'SYN01');
@@ -231,14 +232,30 @@ describe('knowledge operating picture', () => {
     assert.equal(JSON.stringify(picture.hvsRecoveredClientRecords).includes('$'), false);
     assert.equal(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/.test(JSON.stringify(picture.hvsRecoveredCapitalPackets)), false);
     assert.ok(picture.queues['Needs Action'].some((row) => row.title.includes('ACCG SOW')));
-    assert.equal(
-      picture.queues.Waiting.filter((row) => row.kind === 'hvs_recovered_reference').length,
-      12,
+    assert.equal(picture.hvsActionableClientKnowledge.length, 12);
+    assert.equal(picture.hvsActionableClientKnowledge.every((row) => row.hubMiOperationalized === false), true);
+    assert.ok(picture.queues.Waiting.some((row) => row.kind === 'hvs_actionable_waiting'));
+    assert.ok(picture.queues.Waiting.some((row) => row.title.includes('checklist') || row.title.includes('Hub client code')));
+    assert.ok(
+      picture.hvsActionableClientKnowledge.some(
+        (row) =>
+          row.client === 'Colorado Beef' &&
+          row.clientResponsibilities.some((item) => item.classification === 'PROPOSED' && /checklist/i.test(item.title)),
+      ),
     );
-    assert.equal(
-      picture.queues.Waiting.every((row) => row.title.includes('reference-only')),
-      true,
+    assert.ok(
+      picture.hvsActionableClientKnowledge.some(
+        (row) =>
+          row.client === 'ACCG Inc' &&
+          row.hvcgResponsibilities.some((item) => item.classification === 'CONFIRMED' && item.party === 'HVCG'),
+      ),
     );
+    assert.ok(
+      picture.hvsActionableClientKnowledge.some(
+        (row) => row.client.startsWith('Pierlo Inc') && row.missingDocuments.some((item) => item.classification === 'LIKELY'),
+      ),
+    );
+    assert.equal(JSON.stringify(picture.hvsActionableClientKnowledge).includes('$'), false);
     assert.equal(picture.binariesInAtlas, false);
     const pierlo = picture.recoveryLedger.find((row) => row.client.startsWith('Pierlo Inc') && row.dataType === 'HVS_CLIENT_FOLDER');
     assert.equal(pierlo?.provenance, 'CONFIRMED');

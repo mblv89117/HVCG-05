@@ -149,6 +149,34 @@ describe('operator desk copy', () => {
     assert.match(html, /Waiting/);
     assert.match(html, /Recovered HVS clients/);
     assert.match(html, /Recovered client operating records/);
+    assert.match(html, /HVCG vs client responsibilities/);
+    assert.match(html, /Missing documents/);
+    assert.match(html, /HVCG —/);
+    assert.match(html, /Client —/);
+    assert.match(html, /1 waiting/);
+    assert.match(html, /4 missing-document notes/);
+    assert.match(html, /No inventoried files yet in/);
+    assert.ok(html.indexOf('<h2>Needs Action</h2>') < html.indexOf('<h2>Waiting</h2>'));
+    assert.ok(html.indexOf('<h2>Waiting</h2>') < html.indexOf('<h2>Decision Required</h2>'));
+    assert.ok(html.indexOf('<h2>Decision Required</h2>') < html.indexOf('<h2>Recovered HVS clients</h2>'));
+    assert.equal((html.match(/<h2>Waiting<\/h2>/g) || []).length, 1);
+    assert.equal((html.match(/<h2>Decision Required<\/h2>/g) || []).length, 1);
+    const recoveredRecordsHtml = html.slice(
+      html.indexOf('<h2>Recovered client operating records</h2>'),
+      html.indexOf('<h2>HVCG vs client responsibilities</h2>'),
+    );
+    const responsibilitiesHtml = html.slice(
+      html.indexOf('<h2>HVCG vs client responsibilities</h2>'),
+      html.indexOf('<h2>Missing documents</h2>'),
+    );
+    const missingHtml = html.slice(
+      html.indexOf('<h2>Missing documents</h2>'),
+      html.indexOf('<h2>Recovered capital packets</h2>'),
+    );
+    assert.equal(recoveredRecordsHtml.includes('class="kind"'), false);
+    assert.equal(responsibilitiesHtml.includes('class="kind"'), false);
+    assert.equal(missingHtml.includes('class="kind"'), false);
+    assert.equal(html.includes('Use recovered filenames as reference-only knowledge'), false);
     assert.match(html, /Recovered capital packets/);
     assert.match(html, /Recovered documents/);
     assert.match(html, /Recovered projects/);
@@ -182,8 +210,14 @@ describe('operator desk copy', () => {
     assert.ok((model.operatingPicture.hvsRecoveredDocuments?.length || 0) >= 20);
     assert.ok(model.operatingPicture.queues.needsAction.some((row) => row.kind === 'hvs_recovered_action'));
     assert.equal(
-      model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_recovered_reference' && !row.href),
+      model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_actionable_waiting' && !row.href),
       true,
+    );
+    assert.equal(model.operatingPicture.hvsActionableClientKnowledge.length, 12);
+    assert.ok(
+      model.operatingPicture.hvsActionableClientKnowledge.some(
+        (row) => row.client === 'Colorado Beef' && row.clientResponsibilities.length > 0,
+      ),
     );
     assert.equal(model.businessHealth.clientsNeedingAttention, 0);
     assert.equal(model.queues.needsAction[0]?.title.includes('SYNQA W-9'), true);
@@ -419,7 +453,7 @@ describe('operator desk HTTP fail-closed', () => {
       );
       assert.equal(
         body.operatorDesk.operatingPicture.queues.waiting.some(
-          (row) => row.kind === 'hvs_recovered_reference' && !row.href,
+          (row) => row.kind === 'hvs_actionable_waiting' && !row.href,
         ),
         true,
       );

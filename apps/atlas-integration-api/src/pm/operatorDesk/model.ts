@@ -13,6 +13,7 @@ import {
   isHvsRecoveredKind,
 } from '../sharepoint/hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects } from '../sharepoint/hvsRecoveredProjects.ts';
+import { hvsActionableClientKnowledge, hvsActionableWaitingItems } from '../sharepoint/hvsActionableClientKnowledge.ts';
 import {
   hvsRecoveredCapitalPackets,
   hvsRecoveredClientRecords,
@@ -117,14 +118,17 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
                 : row.nextAction,
           };
         });
-  const waiting = recovered.map((row) => ({
-    id: `hvs-recovered:${row.client}:${row.clientCode || 'uncoded'}`,
-    clientCode: row.clientCode,
-    title: `${row.client} — HVS folder recovered (reference-only)`,
-    queue: 'Waiting',
-    kind: 'hvs_recovered_reference',
-    provenance: 'CONFIRMED' as const,
-  }));
+  const waiting =
+    hvsDataAccess === 'BLOCKED'
+      ? []
+      : hvsActionableWaitingItems().map((row) => ({
+          id: row.id,
+          clientCode: row.clientCode,
+          title: row.title,
+          queue: 'Waiting',
+          kind: 'hvs_actionable_waiting',
+          provenance: row.classification,
+        }));
   const actions =
     hvsDataAccess === 'BLOCKED'
       ? []
@@ -212,6 +216,11 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
             invoiceFilenames: row.invoiceFilenames,
             nextActions: row.nextActions,
             decisionsRequired: row.decisionsRequired,
+            waitingItems: row.waitingItems,
+            missingDocuments: row.missingDocuments,
+            hvcgResponsibilities: row.hvcgResponsibilities,
+            clientResponsibilities: row.clientResponsibilities,
+            decisions: row.decisions,
             nextAction: row.nextAction,
           })),
     hvsRecoveredCapitalPackets:
@@ -228,6 +237,8 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           })),
     recoveredClientsKnowledgeOperationalized:
       hvsDataAccess === 'BLOCKED' ? [] : recoveredClientsKnowledgeOperationalized(),
+    hvsActionableClientKnowledge:
+      hvsDataAccess === 'BLOCKED' ? [] : hvsActionableClientKnowledge(),
   };
 }
 
@@ -326,6 +337,11 @@ export function operatorOperatingPictureFromKnowledge(
       invoiceFilenames: row.invoiceFilenames,
       nextActions: row.nextActions,
       decisionsRequired: row.decisionsRequired,
+      waitingItems: row.waitingItems || [],
+      missingDocuments: row.missingDocuments || [],
+      hvcgResponsibilities: row.hvcgResponsibilities || [],
+      clientResponsibilities: row.clientResponsibilities || [],
+      decisions: row.decisions || [],
       nextAction: row.nextAction,
     })),
     hvsRecoveredCapitalPackets: (knowledge.hvsRecoveredCapitalPackets || []).slice(0, 20).map((row) => ({
@@ -338,6 +354,7 @@ export function operatorOperatingPictureFromKnowledge(
       nextAction: row.nextAction,
     })),
     recoveredClientsKnowledgeOperationalized: knowledge.recoveredClientsKnowledgeOperationalized || [],
+    hvsActionableClientKnowledge: knowledge.hvsActionableClientKnowledge || [],
   };
 }
 

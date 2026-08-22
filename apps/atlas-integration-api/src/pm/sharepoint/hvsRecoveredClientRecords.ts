@@ -6,6 +6,13 @@
  * Not Hub MI HVCG_Clients. No invented balances, completion, or obligations.
  */
 
+import { hvsActionableClientKnowledge } from './hvsActionableClientKnowledge.ts';
+import type {
+  ActionableDecision,
+  ActionableMissingDocument,
+  ActionableResponsibility,
+  ActionableWaitingItem,
+} from './hvsActionableClientKnowledge.ts';
 import {
   hvsRecoveredActions,
   hvsRecoveredDocumentsFor,
@@ -28,6 +35,11 @@ export type HvsRecoveredClientRecord = {
   invoiceFilenames: string[];
   nextActions: string[];
   decisionsRequired: string[];
+  waitingItems: ActionableWaitingItem[];
+  missingDocuments: ActionableMissingDocument[];
+  hvcgResponsibilities: ActionableResponsibility[];
+  clientResponsibilities: ActionableResponsibility[];
+  decisions: ActionableDecision[];
   nextAction: string;
 };
 
@@ -47,6 +59,9 @@ function basename(path: string): string {
 }
 
 export function hvsRecoveredClientRecords(): HvsRecoveredClientRecord[] {
+  const actionableByClient = new Map(
+    hvsActionableClientKnowledge().map((row) => [row.client, row]),
+  );
   return hvsConfirmedClientFolders().map((folder) => {
     const docs = hvsRecoveredDocumentsFor(folder.client);
     const files = docs.filter((row) => row.kind === 'file');
@@ -71,6 +86,13 @@ export function hvsRecoveredClientRecords(): HvsRecoveredClientRecord[] {
         projects[0]?.nextAction ||
         'Review recovered filenames as reference-only knowledge. Do not invent Hub MI rows or amounts.'
       : folder.nextAction;
+    const actionable = actionableByClient.get(folder.client) || {
+      waitingItems: [],
+      missingDocuments: [],
+      hvcgResponsibilities: [],
+      clientResponsibilities: [],
+      decisions: [],
+    };
     return {
       client: folder.client,
       clientCode: folder.clientCode,
@@ -85,6 +107,11 @@ export function hvsRecoveredClientRecords(): HvsRecoveredClientRecord[] {
       invoiceFilenames,
       nextActions,
       decisionsRequired,
+      waitingItems: actionable.waitingItems,
+      missingDocuments: actionable.missingDocuments,
+      hvcgResponsibilities: actionable.hvcgResponsibilities,
+      clientResponsibilities: actionable.clientResponsibilities,
+      decisions: actionable.decisions,
       nextAction,
     };
   });

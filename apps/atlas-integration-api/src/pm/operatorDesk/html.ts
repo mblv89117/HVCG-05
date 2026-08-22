@@ -35,6 +35,120 @@ function operatingList(items: OperatorOperatingItem[], empty: string, synthetic 
     .join('')}</ul>`;
 }
 
+function countPhrase(n: number, singular: string, plural: string): string {
+  return n === 1 ? `1 ${singular}` : `${n} ${plural}`;
+}
+
+function stemKey(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\.(docx|pdf|xlsx|doc)\b/gi, '')
+    .replace(/\s*\(\d+\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function filenameStem(title: string): string {
+  const file = title.match(/[\w .,'()&-]+\.(docx|pdf|xlsx|doc)\b/i);
+  return file?.[0] ? stemKey(file[0]) : stemKey(title);
+}
+
+function uniqueBy<T>(rows: T[], key: (row: T) => string): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const row of rows) {
+    const id = key(row);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(row);
+  }
+  return out;
+}
+
+function classNote(label: string): string {
+  return `<span class="muted">${esc(label)}</span>`;
+}
+
+function isBoilerplateResponsibility(title: string): boolean {
+  return /use recovered filenames as reference-only knowledge/i.test(title);
+}
+
+function renderResponsibilityGroups(
+  rows: OperatorDeskModel['operatingPicture']['hvsActionableClientKnowledge'],
+): string {
+  const groups = rows
+    .map((row) => ({
+      client: row.client,
+      hvcg: uniqueBy(
+        row.hvcgResponsibilities.filter((item) => !isBoilerplateResponsibility(item.title)),
+        (item) => stemKey(item.title),
+      ),
+      clientItems: uniqueBy(row.clientResponsibilities, (item) => filenameStem(item.title)),
+    }))
+    .filter((row) => row.hvcg.length || row.clientItems.length);
+  if (!groups.length) {
+    return '<p class="empty">No filename-derived HVCG vs client responsibilities in this picture.</p>';
+  }
+  return `<ul class="grouped">${groups
+    .map((row) => {
+      const items = [
+        ...row.hvcg.map(
+          (item) =>
+            `<li>HVCG — ${esc(item.title)} ${classNote(item.classification)}</li>`,
+        ),
+        ...row.clientItems.map(
+          (item) =>
+            `<li>Client — ${esc(item.title)} ${classNote(item.classification)}</li>`,
+        ),
+      ].join('');
+      return `<li><strong>${esc(row.client)}</strong><ul>${items}</ul></li>`;
+    })
+    .join('')}</ul>`;
+}
+
+const FOLDER_GAP = /^No inventoried files under (.+)$/i;
+
+function renderMissingGroups(
+  rows: OperatorDeskModel['operatingPicture']['hvsActionableClientKnowledge'],
+): string {
+  const groups = rows
+    .map((row) => {
+      const folders: string[] = [];
+      const notes: Array<{ title: string; classification: string }> = [];
+      for (const item of row.missingDocuments) {
+        const folder = item.title.match(FOLDER_GAP);
+        if (folder?.[1]) {
+          folders.push(folder[1]);
+          continue;
+        }
+        notes.push({ title: item.title, classification: item.classification });
+      }
+      return {
+        client: row.client,
+        folders,
+        notes: uniqueBy(notes, (item) => stemKey(item.title)),
+      };
+    })
+    .filter((row) => row.folders.length || row.notes.length);
+  if (!groups.length) {
+    return '<p class="empty">No honest missing-document notes in this picture.</p>';
+  }
+  return `<ul class="grouped">${groups
+    .map((row) => {
+      const items: string[] = [];
+      if (row.folders.length) {
+        items.push(
+          `<li>No inventoried files yet in ${esc(row.folders.join('; '))} ${classNote('LIKELY')}</li>`,
+        );
+      }
+      for (const note of row.notes) {
+        items.push(`<li>${esc(note.title)} ${classNote(note.classification)}</li>`);
+      }
+      return `<li><strong>${esc(row.client)}</strong><ul>${items.join('')}</ul></li>`;
+    })
+    .join('')}</ul>`;
+}
+
 function flatQueues(
   queues: OperatorDeskModel['operatingPicture']['queues'],
 ): OperatorOperatingItem[] {
@@ -67,9 +181,11 @@ const SHELL = `<!doctype html>
   .card, section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin:12px 0; }
   .card strong { display:block; font-size:1.4rem; }
   .empty { color:var(--muted); margin:0; }
-  .kind { display:inline-block; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--warn); margin-right:6px; }
+  .kind { color:var(--muted); font-size:12px; margin-right:6px; }
   ul { margin:0; padding-left:18px; }
   li { margin:4px 0; }
+  ul.grouped > li { list-style:none; margin:10px 0; padding-left:0; }
+  ul.grouped > li > ul { margin-top:4px; padding-left:18px; }
   a { color:#8cb4ff; }
   form { display:flex; gap:8px; }
   input[type=search] { flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#0c1116; color:var(--ink); }
@@ -183,6 +299,14 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     ${operatingList(op.queues.needsAction, 'No customer Needs Action items in entitled scope.')}
   </section>
   <section>
+    <h2>Waiting</h2>
+    ${operatingList(op.queues.waiting, 'No customer Waiting items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Decision Required</h2>
+    ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
+  </section>
+  <section>
     <h2>Recovered HVS clients</h2>
     <p class="muted">Reference-only HVS-admin folders. First-level documents are indexed. Not Hub MI operationalizations. Atlas does not invent balances, obligations, or entitled HVCG_Clients rows.</p>
     ${
@@ -199,26 +323,37 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>Recovered client operating records</h2>
-    <p class="muted">Per-client stitch of recovered folders, filenames, projects, and proposed actions. Knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
+    <p class="muted">Per-client exception counts only. Recovered knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
     ${
       op.hvsRecoveredClientRecords.length
         ? `<ul>${op.hvsRecoveredClientRecords
             .map((row) => {
-              const code = row.clientCode || 'no Hub client code';
-              const state = row.knowledgeOperationalized
-                ? 'knowledge operationalized'
-                : 'folder only';
-              const projects = row.projectTitles.length
-                ? row.projectTitles.join('; ')
-                : 'no recovered project filenames';
-              const capital = row.capitalPacketNames.length
-                ? `${row.capitalPacketNames.length} capital packet filename(s)`
-                : 'no capital packet filenames';
-              return `<li><span class="kind">${esc(state)}</span> ${esc(row.client)} · ${esc(code)} · ${esc(String(row.fileCount))} file(s)<br/><span class="muted">${esc(row.nextAction)}</span><br/><span class="muted">${esc(projects)} · ${esc(capital)}</span></li>`;
+              const code = row.clientCode || 'no entitled Hub client code';
+              const waiting = row.waitingItems.length
+                ? countPhrase(row.waitingItems.length, 'waiting', 'waiting')
+                : 'no specific waiting item';
+              const missing = row.missingDocuments.length
+                ? countPhrase(
+                    row.missingDocuments.length,
+                    'missing-document note',
+                    'missing-document notes',
+                  )
+                : 'no invented missing documents';
+              return `<li>${esc(row.client)} · ${esc(code)} · ${esc(countPhrase(row.fileCount, 'file', 'files'))} · ${esc(waiting)} · ${esc(missing)}<br/><span class="muted">${esc(row.nextAction)}</span></li>`;
             })
             .join('')}</ul>`
         : '<p class="empty">No recovered client operating records in this picture.</p>'
     }
+  </section>
+  <section>
+    <h2>HVCG vs client responsibilities</h2>
+    <p class="muted">Grouped by client. Only items that change action. CONFIRMED means the filename exists. LIKELY and PROPOSED stay labeled. Atlas does not invent obligations, amounts, or completion.</p>
+    ${renderResponsibilityGroups(op.hvsActionableClientKnowledge)}
+  </section>
+  <section>
+    <h2>Missing documents</h2>
+    <p class="muted">Grouped by client. Honest gaps only: empty structured folders or checklist filenames whose contents were not extracted. Atlas does not invent a document list.</p>
+    ${renderMissingGroups(op.hvsActionableClientKnowledge)}
   </section>
   <section>
     <h2>Recovered capital packets</h2>
@@ -265,20 +400,12 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     }
   </section>
   <section>
-    <h2>Waiting</h2>
-    ${operatingList(op.queues.waiting, 'No customer Waiting items in entitled scope.')}
-  </section>
-  <section>
     <h2>Overdue</h2>
     ${operatingList(op.queues.overdue, 'No customer Overdue items in entitled scope.')}
   </section>
   <section>
     <h2>Blocked</h2>
     ${operatingList(op.queues.blocked, 'No customer Blocked items in entitled scope.')}
-  </section>
-  <section>
-    <h2>Decision Required</h2>
-    ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
   </section>
   <section>
     <h2>At Risk</h2>
