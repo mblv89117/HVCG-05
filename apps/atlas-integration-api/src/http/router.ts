@@ -34,6 +34,7 @@ import { probeBaHealth } from '../ba/client.ts';
 import type { LocalAiAdapter } from '../local-ai/adapter.ts';
 import { handleLocalAiRoutes } from '../local-ai/http.ts';
 import { handleWebsiteLeadRoutes } from '../website/http.ts';
+import { resolveHubBuild, resolveHubCommit } from './hubCommit.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
@@ -79,6 +80,21 @@ export function send(res: ServerResponse, status: number, body: unknown, origin?
   }
   res.writeHead(status, headers);
   res.end(JSON.stringify(body));
+}
+
+function sendText(res: ServerResponse, status: number, body: string, origin?: string | null) {
+  const headers: Record<string, string> = {
+    'content-type': 'text/plain; charset=utf-8',
+    'cache-control': 'no-store',
+    'x-content-type-options': 'nosniff',
+  };
+  if (origin) {
+    headers['access-control-allow-origin'] = origin;
+    headers['access-control-allow-credentials'] = 'true';
+    headers['vary'] = 'Origin';
+  }
+  res.writeHead(status, headers);
+  res.end(body);
 }
 
 function corsOrigin(req: IncomingMessage, cfg: AppConfig): string | null {
@@ -225,6 +241,27 @@ export async function handleRequest(
       if (handled) return;
     }
 
+    // Public SHA markers — worker-readable without Azure inherit.
+    if (method === 'GET' && path === '/ATLAS_HUB_COMMIT.txt') {
+      const commit = resolveHubCommit();
+      if (!commit) {
+        sendText(res, 404, 'unknown\n', origin);
+        return;
+      }
+      sendText(res, 200, `${commit}\n`, origin);
+      return;
+    }
+
+    if (method === 'GET' && path === '/hub-build.json') {
+      const build = resolveHubBuild();
+      if (!build) {
+        send(res, 404, { error: 'not_found' }, origin);
+        return;
+      }
+      send(res, 200, build, origin);
+      return;
+    }
+
     // GET /health
     if (method === 'GET' && path === '/health') {
       const localAi = deps.localAi.snapshot();
@@ -234,6 +271,7 @@ export async function handleRequest(
         200,
         {
           ok: true,
+          commit: resolveHubCommit(),
           providers: {
             microsoft: isMicrosoftConfigured(cfg),
             google: isGoogleConfigured(cfg),
