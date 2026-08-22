@@ -1,0 +1,155 @@
+{
+  "templateKey": "retainer-renewal",
+  "title": "Retainer Renewal",
+  "templateType": "Project",
+  "defaultDurationDays": 30,
+  "workstreams": [
+    "Retainer renewal",
+    "Client reporting"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Prepare",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Propose",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Close",
+      "seq": 3
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Renewal packet ready",
+      "offsetDays": 14,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Decision",
+      "offsetDays": 30,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Pull value delivered summary",
+      "phase": "p1",
+      "offsetDays": 5,
+      "defaultRole": "ProjectManager",
+      "description": "Deliverables + outcomes.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 3,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Financial milestone & pricing recommendation",
+      "phase": "p1",
+      "offsetDays": 7,
+      "defaultRole": "OperationsManager",
+      "description": "Internal only.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t3",
+      "title": "Executive pricing approval if exception",
+      "phase": "p2",
+      "offsetDays": 10,
+      "defaultRole": "Owner",
+      "description": "Only if exception.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 1,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Client renewal discussion",
+      "phase": "p2",
+      "offsetDays": 20,
+      "defaultRole": "Owner",
+      "description": "Relationship lead.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    },
+    {
+      "key": "t5",
+      "title": "Execute renewal docs & update dates",
+      "phase": "p3",
+      "offsetDays": 30,
+      "defaultRole": "OperationsAssistant",
+      "description": "Update client/engagement.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Prior engagement letter",
+      "documentCategory": "Engagement Administration",
+      "folderTarget": "00 - Engagement Administration",
+      "dueOffsetDays": 3,
+      "isCritical": true,
+      "description": "Please provide: Prior engagement letter"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Renewal proposal summary",
+      "deliverableType": "Executive Summary",
+      "draftOffsetDays": 10,
+      "finalOffsetDays": 18,
+      "requiresExecutiveApproval": true,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "Owner"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Silent non-renewal",
+      "likelihood": "Medium",
+      "impact": "High",
+      "mitigation": "60/30/14 automated tasks"
+    }
+  ],
+  "qualityControlChecks": [
+    "RenewalDate updated",
+    "Retainer milestone created"
+  ],
+  "automationTriggers": [
+    "HVCG_RenewalReminders"
+  ],
+  "clientResponsibilities": [
+    "Decision by deadline"
+  ],
+  "internalResponsibilities": [
+    "No surprise fee changes without approval"
+  ],
+  "approvalPoints": [
+    "Renewal proposal summary",
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

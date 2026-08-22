@@ -1,0 +1,180 @@
+{
+  "templateKey": "financial-model-development",
+  "title": "Financial Model Development",
+  "templateType": "Project",
+  "defaultDurationDays": 25,
+  "workstreams": [
+    "Financial modeling",
+    "Financial analysis"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Design",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Build",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "QC",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "Handoff",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Model structure approved",
+      "offsetDays": 5,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Model QC passed",
+      "offsetDays": 20,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Handoff",
+      "offsetDays": 25,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Requirements workshop",
+      "phase": "p1",
+      "offsetDays": 2,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Outputs, scenarios, audience.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Build model skeleton",
+      "phase": "p2",
+      "offsetDays": 7,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Drivers, statements, checks.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 8,
+      "isCritical": false
+    },
+    {
+      "key": "t3",
+      "title": "Populate history & forecast",
+      "phase": "p2",
+      "offsetDays": 15,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Link source docs.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 10,
+      "isCritical": true
+    },
+    {
+      "key": "t4",
+      "title": "Model QC checklist",
+      "phase": "p3",
+      "offsetDays": 20,
+      "defaultRole": "ProjectManager",
+      "description": "Balance checks, sensitivity.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 3,
+      "isCritical": true
+    },
+    {
+      "key": "t5",
+      "title": "Client training handoff",
+      "phase": "p4",
+      "offsetDays": 25,
+      "defaultRole": "FinancialAnalyst",
+      "description": "How to update.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Historical financials",
+      "documentCategory": "Historical Financials",
+      "folderTarget": "03 - Historical Financials",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Historical financials"
+    },
+    {
+      "key": "d2",
+      "title": "Driver assumptions from management",
+      "documentCategory": "Other",
+      "folderTarget": "15 - Financial Models",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Driver assumptions from management"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Financial model",
+      "deliverableType": "Financial Model",
+      "draftOffsetDays": 18,
+      "finalOffsetDays": 25,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Circular refs / broken checks",
+      "likelihood": "Medium",
+      "impact": "High",
+      "mitigation": "Mandatory QC checklist"
+    }
+  ],
+  "qualityControlChecks": [
+    "Error checks sheet present",
+    "Version in 15 - Financial Models"
+  ],
+  "automationTriggers": [
+    "Deliverable approval"
+  ],
+  "clientResponsibilities": [
+    "Provide driver assumptions"
+  ],
+  "internalResponsibilities": [
+    "No silent changes post-QC"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

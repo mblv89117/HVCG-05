@@ -1,0 +1,15 @@
+{
+  "eventId": "1bbf6de3-a2ef-4c92-b42a-720af002ec6e",
+  "timestamp": "2026-07-15T22:20:07Z",
+  "kind": "CRITICAL_MESSAGE",
+  "messageId": "3f01dce1-3317-4f56-bdfc-84e913163f2f",
+  "from": "master-pm",
+  "to": [
+    "master-pm"
+  ],
+  "cc": [
+    "crm"
+  ],
+  "subject": "OWNER DECISION OPEN: D-001 Maker connector consent (HVCG Development)",
+  "type": "DECISION"
+}

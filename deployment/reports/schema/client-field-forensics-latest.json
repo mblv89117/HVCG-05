@@ -1,0 +1,900 @@
+{
+  "generatedAt": "2026-07-22T00:48:39.010116+00:00",
+  "method": "read-only-forensics",
+  "authPaths": {
+    "microsoftGraph": "success",
+    "sharePointRestViaAz": {
+      "azTokenAcquired": true,
+      "restCallsHttp": 401,
+      "error": "invalid_request",
+      "audiencesTried": [
+        "https://highvaluecapitalgroup.sharepoint.com",
+        "https://highvaluecapitalgroup.sharepoint.com/"
+      ],
+      "conclusion": "Delegated SharePoint REST not usable with current az session; Graph works. PnP DeviceLogin intentionally not used per owner order."
+    },
+    "pnpDeviceLogin": "not_used_owner_ordered_stop",
+    "priorPnpSchemaXmlCapture": "used_as_evidence_from_/tmp/atlas-harden/pnp-clientid-repair.log"
+  },
+  "commandCenterSite": {
+    "id": "highvaluecapitalgroup.sharepoint.com,92b2d35f-6f09-4ec2-8cba-28469e3588d9,ddc8e675-aa6a-46f8-9fd6-86f91dce728e",
+    "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+    "name": "HVCG-CommandCenter",
+    "displayName": "HVCG Project Command Center"
+  },
+  "hvgcClientsList": {
+    "id": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+    "name": "HVCG_Clients",
+    "displayName": "HVCG_Clients",
+    "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter/Lists/HVCG_Clients",
+    "createdDateTime": "2026-07-21T05:54:08Z",
+    "lastModifiedDateTime": "2026-07-22T00:39:00Z",
+    "sameSiteAsCommandCenterLists": true,
+    "titleField": {
+      "columnGroup": "Custom Columns",
+      "description": "",
+      "displayName": "Title",
+      "enforceUniqueValues": false,
+      "hidden": false,
+      "id": "fa564e0f-0c70-4ab9-b863-0177e6ddd247",
+      "indexed": false,
+      "name": "Title",
+      "readOnly": false,
+      "required": true,
+      "text": {
+        "allowMultipleLines": false,
+        "appendChangesToExistingText": false,
+        "linesForEditing": 0,
+        "maxLength": 255
+      }
+    },
+    "note": "Clients list lives on Command Center site (not HVCG-Clients site). Created 2026-07-21 \u2014 recent recreate relative to older orphaned lookups."
+  },
+  "lists": {
+    "HVCG_Projects": {
+      "listId": "05e972c6-d724-4221-a61b-251c4fc8122d",
+      "name": "HVCG_Projects",
+      "displayName": "HVCG_Projects",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter/Lists/HVCG_Projects",
+      "createdDateTime": "2026-07-21T06:00:11Z",
+      "lastModifiedDateTime": "2026-07-22T00:43:34Z",
+      "clientRelatedFields": [
+        {
+          "graphColumnId": "b3db3c7e-da48-4ab5-8741-c674bdb95182",
+          "graphName": "ClientCode",
+          "displayName": "ClientCode",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": true,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": false,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 0,
+            "maxLength": 255
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientCode",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "b3db3c7e-da48-4ab5-8741-c674bdb95182",
+            "indexed": true,
+            "name": "ClientCode",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": false,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 0,
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "graphColumnId": "ae60dbdf-00c7-4bcd-bb42-06c3b90bbcd7",
+          "graphName": "ClientId",
+          "displayName": "ClientId",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "HVCG",
+          "type": "lookup",
+          "lookup": {
+            "allowMultipleValues": false,
+            "allowUnlimitedLength": false,
+            "columnName": "Title",
+            "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+          },
+          "text": null,
+          "choice": null,
+          "full": {
+            "columnGroup": "HVCG",
+            "description": "",
+            "displayName": "ClientId",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "ae60dbdf-00c7-4bcd-bb42-06c3b90bbcd7",
+            "indexed": false,
+            "name": "ClientId",
+            "readOnly": false,
+            "required": false,
+            "lookup": {
+              "allowMultipleValues": false,
+              "allowUnlimitedLength": false,
+              "columnName": "Title",
+              "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+            }
+          },
+          "schemaXmlFromPriorPnPSession": "<Field Type=\"Lookup\" DisplayName=\"ClientId\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"ClientId\" Name=\"ClientId\" Group=\"HVCG\" ID=\"{01bfb3e6-92cf-4ede-bb23-49fd695cf70d}\" SourceID=\"{05e972c6-d724-4221-a61b-251c4fc8122d}\" ColName=\"int1\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+          "schemaXmlParsed": {
+            "Type": "Lookup",
+            "DisplayName": "ClientId",
+            "StaticName": "ClientId",
+            "Name": "ClientId",
+            "ID": "{01bfb3e6-92cf-4ede-bb23-49fd695cf70d}",
+            "List": "{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}",
+            "ShowField": "Title",
+            "SourceID": "{05e972c6-d724-4221-a61b-251c4fc8122d}",
+            "ColName": "int1",
+            "Hidden": "FALSE",
+            "Version": "1"
+          },
+          "graphVsSchemaXmlIdMatch": false
+        }
+      ],
+      "atlasClientRefExists": false,
+      "graphItemSampleFieldKeys": [
+        "@odata.etag",
+        "AppAuthorLookupId",
+        "AppEditorLookupId",
+        "Attachments",
+        "AuthorLookupId",
+        "ClientCode",
+        "ClientId",
+        "ContentType",
+        "Created",
+        "Edit",
+        "EditorLookupId",
+        "FolderChildCount",
+        "IsInternalProject",
+        "ItemChildCount",
+        "LinkTitle",
+        "LinkTitleNoMenu",
+        "Modified",
+        "RequiresExecutiveAttention",
+        "Title",
+        "_ComplianceFlags",
+        "_ComplianceTag",
+        "_ComplianceTagUserId",
+        "_ComplianceTagWrittenTime",
+        "_UIVersionString",
+        "id"
+      ],
+      "graphItemClientRelatedProps": [
+        {
+          "itemId": "16",
+          "props": {
+            "ClientCode": "ACCG01",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "2",
+            "AppEditorLookupId": "2"
+          }
+        },
+        {
+          "itemId": "18",
+          "props": {
+            "ClientCode": "ACCG01",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "2",
+            "AppEditorLookupId": "2"
+          }
+        },
+        {
+          "itemId": "19",
+          "props": {
+            "ClientCode": "ACCG01",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "3",
+            "AppEditorLookupId": "3"
+          }
+        },
+        {
+          "itemId": "20",
+          "props": {
+            "ClientCode": "ACCG01",
+            "ClientId": "ACCG Inc.",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "2",
+            "AppEditorLookupId": "2"
+          }
+        }
+      ],
+      "graphExposesClientIdOnItems": true,
+      "expectedGraphLookupIdPropertyIfHealthy": "ClientIdLookupId"
+    },
+    "HVCG_Tasks": {
+      "listId": "6cfc50e6-3ea2-43fd-a053-09091a4f4e4c",
+      "name": "HVCG_Tasks",
+      "displayName": "HVCG_Tasks",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter/Lists/HVCG_Tasks",
+      "createdDateTime": "2026-07-21T06:01:39Z",
+      "lastModifiedDateTime": "2026-07-22T00:43:18Z",
+      "clientRelatedFields": [
+        {
+          "graphColumnId": "b7e0ca4c-88a8-4e1d-ba20-3125c4a7d272",
+          "graphName": "ClientCode",
+          "displayName": "ClientCode",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": true,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": false,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 0,
+            "maxLength": 255
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientCode",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "b7e0ca4c-88a8-4e1d-ba20-3125c4a7d272",
+            "indexed": true,
+            "name": "ClientCode",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": false,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 0,
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "graphColumnId": "008a2479-69ea-419a-b489-91cf2b97f627",
+          "graphName": "ClientId",
+          "displayName": "ClientId",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "HVCG",
+          "type": "lookup",
+          "lookup": {
+            "allowMultipleValues": false,
+            "allowUnlimitedLength": false,
+            "columnName": "Title",
+            "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+          },
+          "text": null,
+          "choice": null,
+          "full": {
+            "columnGroup": "HVCG",
+            "description": "",
+            "displayName": "ClientId",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "008a2479-69ea-419a-b489-91cf2b97f627",
+            "indexed": false,
+            "name": "ClientId",
+            "readOnly": false,
+            "required": false,
+            "lookup": {
+              "allowMultipleValues": false,
+              "allowUnlimitedLength": false,
+              "columnName": "Title",
+              "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+            }
+          },
+          "schemaXmlFromPriorPnPSession": "<Field Type=\"Lookup\" DisplayName=\"ClientId\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"ClientId\" Name=\"ClientId\" Group=\"HVCG\" ID=\"{35941598-a2f8-4f41-a525-553ab16456ae}\" SourceID=\"{6cfc50e6-3ea2-43fd-a053-09091a4f4e4c}\" ColName=\"int1\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+          "schemaXmlParsed": {
+            "Type": "Lookup",
+            "DisplayName": "ClientId",
+            "StaticName": "ClientId",
+            "Name": "ClientId",
+            "ID": "{35941598-a2f8-4f41-a525-553ab16456ae}",
+            "List": "{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}",
+            "ShowField": "Title",
+            "SourceID": "{6cfc50e6-3ea2-43fd-a053-09091a4f4e4c}",
+            "ColName": "int1",
+            "Hidden": "FALSE",
+            "Version": "1"
+          },
+          "graphVsSchemaXmlIdMatch": false
+        }
+      ],
+      "atlasClientRefExists": false,
+      "graphItemSampleFieldKeys": [],
+      "graphItemClientRelatedProps": [],
+      "graphExposesClientIdOnItems": false,
+      "expectedGraphLookupIdPropertyIfHealthy": "ClientIdLookupId"
+    },
+    "HVCG_Deliverables": {
+      "listId": "9b9555d4-589b-4fea-b7e5-f1da24b224d9",
+      "name": "HVCG_Deliverables",
+      "displayName": "HVCG_Deliverables",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter/Lists/HVCG_Deliverables",
+      "createdDateTime": "2026-07-21T06:03:53Z",
+      "lastModifiedDateTime": "2026-07-22T00:43:23Z",
+      "clientRelatedFields": [
+        {
+          "graphColumnId": "3f70caf7-f779-484a-8a1e-3acce4331385",
+          "graphName": "ClientCode",
+          "displayName": "ClientCode",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": true,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": false,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 0,
+            "maxLength": 255
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientCode",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "3f70caf7-f779-484a-8a1e-3acce4331385",
+            "indexed": true,
+            "name": "ClientCode",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": false,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 0,
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "graphColumnId": "513cf63b-19b7-4df1-982f-34f398f47e14",
+          "graphName": "ClientApprovalStatus",
+          "displayName": "ClientApprovalStatus",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "Custom Columns",
+          "type": "choice",
+          "lookup": null,
+          "text": null,
+          "choice": {
+            "allowTextEntry": false,
+            "choices": [
+              "Not Required",
+              "Pending",
+              "Approved",
+              "Rejected"
+            ],
+            "displayAs": "dropDownMenu"
+          },
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientApprovalStatus",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "513cf63b-19b7-4df1-982f-34f398f47e14",
+            "indexed": false,
+            "name": "ClientApprovalStatus",
+            "readOnly": false,
+            "required": false,
+            "choice": {
+              "allowTextEntry": false,
+              "choices": [
+                "Not Required",
+                "Pending",
+                "Approved",
+                "Rejected"
+              ],
+              "displayAs": "dropDownMenu"
+            }
+          }
+        },
+        {
+          "graphColumnId": "6dfd0a93-a60d-46c0-9b06-b50879d79b59",
+          "graphName": "ClientId",
+          "displayName": "ClientId",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "HVCG",
+          "type": "lookup",
+          "lookup": {
+            "allowMultipleValues": false,
+            "allowUnlimitedLength": false,
+            "columnName": "Title",
+            "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+          },
+          "text": null,
+          "choice": null,
+          "full": {
+            "columnGroup": "HVCG",
+            "description": "",
+            "displayName": "ClientId",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "6dfd0a93-a60d-46c0-9b06-b50879d79b59",
+            "indexed": false,
+            "name": "ClientId",
+            "readOnly": false,
+            "required": false,
+            "lookup": {
+              "allowMultipleValues": false,
+              "allowUnlimitedLength": false,
+              "columnName": "Title",
+              "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+            }
+          },
+          "schemaXmlFromPriorPnPSession": "<Field Type=\"Lookup\" DisplayName=\"ClientId\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"ClientId\" Name=\"ClientId\" Group=\"HVCG\" ID=\"{1d2c6db5-e7c8-414f-9e10-4b7a357307ac}\" SourceID=\"{9b9555d4-589b-4fea-b7e5-f1da24b224d9}\" ColName=\"int1\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+          "schemaXmlParsed": {
+            "Type": "Lookup",
+            "DisplayName": "ClientId",
+            "StaticName": "ClientId",
+            "Name": "ClientId",
+            "ID": "{1d2c6db5-e7c8-414f-9e10-4b7a357307ac}",
+            "List": "{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}",
+            "ShowField": "Title",
+            "SourceID": "{9b9555d4-589b-4fea-b7e5-f1da24b224d9}",
+            "ColName": "int1",
+            "Hidden": "FALSE",
+            "Version": "1"
+          },
+          "graphVsSchemaXmlIdMatch": false
+        }
+      ],
+      "atlasClientRefExists": false,
+      "graphItemSampleFieldKeys": [
+        "@odata.etag",
+        "AIGenerated",
+        "AppAuthorLookupId",
+        "AppEditorLookupId",
+        "Attachments",
+        "AuthorLookupId",
+        "ClientCode",
+        "ContentType",
+        "Created",
+        "DeliverableStatus",
+        "Edit",
+        "EditorLookupId",
+        "FolderChildCount",
+        "InternalReviewStatus",
+        "ItemChildCount",
+        "LinkTitle",
+        "LinkTitleNoMenu",
+        "Modified",
+        "PortalVisible",
+        "RequiresExecutiveApproval",
+        "Title",
+        "_ComplianceFlags",
+        "_ComplianceTag",
+        "_ComplianceTagUserId",
+        "_ComplianceTagWrittenTime",
+        "_UIVersionString",
+        "id"
+      ],
+      "graphItemClientRelatedProps": [
+        {
+          "itemId": "1",
+          "props": {
+            "ClientCode": "ACCG01",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "5",
+            "AppEditorLookupId": "5"
+          }
+        },
+        {
+          "itemId": "2",
+          "props": {
+            "ClientCode": "ACCG01",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "5",
+            "AppEditorLookupId": "5"
+          }
+        }
+      ],
+      "graphExposesClientIdOnItems": false,
+      "expectedGraphLookupIdPropertyIfHealthy": "ClientIdLookupId"
+    },
+    "HVCG_Decisions": {
+      "listId": "94bf4c6d-339c-4578-9094-7247d346e993",
+      "name": "HVCG_Decisions",
+      "displayName": "HVCG_Decisions",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter/Lists/HVCG_Decisions",
+      "createdDateTime": "2026-07-21T06:06:04Z",
+      "lastModifiedDateTime": "2026-07-22T00:43:27Z",
+      "clientRelatedFields": [
+        {
+          "graphColumnId": "a66e0578-fea0-4e69-988f-9ebedc967e7a",
+          "graphName": "ClientCode",
+          "displayName": "ClientCode",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": true,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": false,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 0,
+            "maxLength": 255
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientCode",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "a66e0578-fea0-4e69-988f-9ebedc967e7a",
+            "indexed": true,
+            "name": "ClientCode",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": false,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 0,
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "graphColumnId": "60c3757c-ab5c-414e-8348-a986d90a9e24",
+          "graphName": "ClientImpact",
+          "displayName": "ClientImpact",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": true,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 6,
+            "textType": "plain"
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientImpact",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "60c3757c-ab5c-414e-8348-a986d90a9e24",
+            "indexed": false,
+            "name": "ClientImpact",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": true,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 6,
+              "textType": "plain"
+            }
+          }
+        },
+        {
+          "graphColumnId": "da298a2e-6409-41ff-9b63-f16259e4d5ac",
+          "graphName": "ClientId",
+          "displayName": "ClientId",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "HVCG",
+          "type": "lookup",
+          "lookup": {
+            "allowMultipleValues": false,
+            "allowUnlimitedLength": false,
+            "columnName": "Title",
+            "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+          },
+          "text": null,
+          "choice": null,
+          "full": {
+            "columnGroup": "HVCG",
+            "description": "",
+            "displayName": "ClientId",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "da298a2e-6409-41ff-9b63-f16259e4d5ac",
+            "indexed": false,
+            "name": "ClientId",
+            "readOnly": false,
+            "required": false,
+            "lookup": {
+              "allowMultipleValues": false,
+              "allowUnlimitedLength": false,
+              "columnName": "Title",
+              "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+            }
+          },
+          "schemaXmlFromPriorPnPSession": "<Field Type=\"Lookup\" DisplayName=\"ClientId\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"ClientId\" Name=\"ClientId\" Group=\"HVCG\" ID=\"{f6f21b12-500d-45af-a55a-67f74e800d7f}\" SourceID=\"{94bf4c6d-339c-4578-9094-7247d346e993}\" ColName=\"int1\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+          "schemaXmlParsed": {
+            "Type": "Lookup",
+            "DisplayName": "ClientId",
+            "StaticName": "ClientId",
+            "Name": "ClientId",
+            "ID": "{f6f21b12-500d-45af-a55a-67f74e800d7f}",
+            "List": "{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}",
+            "ShowField": "Title",
+            "SourceID": "{94bf4c6d-339c-4578-9094-7247d346e993}",
+            "ColName": "int1",
+            "Hidden": "FALSE",
+            "Version": "1"
+          },
+          "graphVsSchemaXmlIdMatch": false
+        }
+      ],
+      "atlasClientRefExists": false,
+      "graphItemSampleFieldKeys": [
+        "@odata.etag",
+        "AppAuthorLookupId",
+        "AppEditorLookupId",
+        "Attachments",
+        "AuthorLookupId",
+        "Background",
+        "ClientCode",
+        "ContentType",
+        "Created",
+        "Deadline",
+        "DecisionMakerEmail",
+        "DecisionStatus",
+        "Edit",
+        "EditorLookupId",
+        "FolderChildCount",
+        "ItemChildCount",
+        "LinkTitle",
+        "LinkTitleNoMenu",
+        "Modified",
+        "Options",
+        "OwnerEmail",
+        "RequiresExecutiveAttention",
+        "Title",
+        "_ComplianceFlags",
+        "_ComplianceTag",
+        "_ComplianceTagUserId",
+        "_ComplianceTagWrittenTime",
+        "_UIVersionString",
+        "id"
+      ],
+      "graphItemClientRelatedProps": [
+        {
+          "itemId": "2",
+          "props": {
+            "ClientCode": "ACCG01",
+            "AuthorLookupId": "7",
+            "EditorLookupId": "7",
+            "AppAuthorLookupId": "3",
+            "AppEditorLookupId": "3"
+          }
+        }
+      ],
+      "graphExposesClientIdOnItems": false,
+      "expectedGraphLookupIdPropertyIfHealthy": "ClientIdLookupId"
+    },
+    "HVCG_DocumentRequests": {
+      "listId": "89a421e9-3086-47ef-80c3-214500d3d92c",
+      "name": "HVCG_DocumentRequests",
+      "displayName": "HVCG_DocumentRequests",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter/Lists/HVCG_DocumentRequests",
+      "createdDateTime": "2026-07-21T06:02:41Z",
+      "lastModifiedDateTime": "2026-07-22T00:43:31Z",
+      "clientRelatedFields": [
+        {
+          "graphColumnId": "dacd62a8-2ba3-470a-b18a-5f46c80b76f5",
+          "graphName": "ClientCode",
+          "displayName": "ClientCode",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": true,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": false,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 0,
+            "maxLength": 255
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ClientCode",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "dacd62a8-2ba3-470a-b18a-5f46c80b76f5",
+            "indexed": true,
+            "name": "ClientCode",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": false,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 0,
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "graphColumnId": "54170b4f-57b6-4c1d-a03f-e342865f31d7",
+          "graphName": "ResponsibleClientContactEmail",
+          "displayName": "ResponsibleClientContactEmail",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "Custom Columns",
+          "type": "text",
+          "lookup": null,
+          "text": {
+            "allowMultipleLines": false,
+            "appendChangesToExistingText": false,
+            "linesForEditing": 0,
+            "maxLength": 255
+          },
+          "choice": null,
+          "full": {
+            "columnGroup": "Custom Columns",
+            "description": "",
+            "displayName": "ResponsibleClientContactEmail",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "54170b4f-57b6-4c1d-a03f-e342865f31d7",
+            "indexed": false,
+            "name": "ResponsibleClientContactEmail",
+            "readOnly": false,
+            "required": false,
+            "text": {
+              "allowMultipleLines": false,
+              "appendChangesToExistingText": false,
+              "linesForEditing": 0,
+              "maxLength": 255
+            }
+          }
+        },
+        {
+          "graphColumnId": "5de34824-3d34-48a2-9202-56a4486aea30",
+          "graphName": "ClientId",
+          "displayName": "ClientId",
+          "hidden": false,
+          "readOnly": false,
+          "required": false,
+          "indexed": false,
+          "columnGroup": "HVCG",
+          "type": "lookup",
+          "lookup": {
+            "allowMultipleValues": false,
+            "allowUnlimitedLength": false,
+            "columnName": "Title",
+            "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+          },
+          "text": null,
+          "choice": null,
+          "full": {
+            "columnGroup": "HVCG",
+            "description": "",
+            "displayName": "ClientId",
+            "enforceUniqueValues": false,
+            "hidden": false,
+            "id": "5de34824-3d34-48a2-9202-56a4486aea30",
+            "indexed": false,
+            "name": "ClientId",
+            "readOnly": false,
+            "required": false,
+            "lookup": {
+              "allowMultipleValues": false,
+              "allowUnlimitedLength": false,
+              "columnName": "Title",
+              "listId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104"
+            }
+          },
+          "schemaXmlFromPriorPnPSession": "<Field Type=\"Lookup\" DisplayName=\"ClientId\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"ClientId\" Name=\"ClientId\" Group=\"HVCG\" ID=\"{df809347-9b17-44ef-873b-652aa43783e0}\" SourceID=\"{89a421e9-3086-47ef-80c3-214500d3d92c}\" ColName=\"int1\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+          "schemaXmlParsed": {
+            "Type": "Lookup",
+            "DisplayName": "ClientId",
+            "StaticName": "ClientId",
+            "Name": "ClientId",
+            "ID": "{df809347-9b17-44ef-873b-652aa43783e0}",
+            "List": "{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}",
+            "ShowField": "Title",
+            "SourceID": "{89a421e9-3086-47ef-80c3-214500d3d92c}",
+            "ColName": "int1",
+            "Hidden": "FALSE",
+            "Version": "1"
+          },
+          "graphVsSchemaXmlIdMatch": false
+        }
+      ],
+      "atlasClientRefExists": false,
+      "graphItemSampleFieldKeys": [],
+      "graphItemClientRelatedProps": [],
+      "graphExposesClientIdOnItems": false,
+      "expectedGraphLookupIdPropertyIfHealthy": "ClientIdLookupId"
+    }
+  },
+  "connectorEvidence": {
+    "Create_Project_PostItem": {
+      "error": "The passed-in field \"ClientIdId\" could not be found",
+      "runId": "08584169261413649953184586654CU02",
+      "inputsUsed": "item.ClientIdId=1"
+    },
+    "Create_Decision_PostItem": {
+      "error": "The passed-in field \"ClientIdId\" could not be found",
+      "runId": "08584169261247250016234358884CU28"
+    },
+    "Get_Deliverable_GetItem": {
+      "error": "The field or property 'ClientId' does not exist.",
+      "runId": "08584169261156790172056104976CU05"
+    },
+    "Graph_write_ClientIdLookupId": {
+      "result": "HTTP 201 but reread ClientIdLookupId=null (silent drop)",
+      "when": "2026-07-22T00:14Z session"
+    }
+  },
+  "decision": {
+    "case": "B",
+    "caseName": "Existing ClientId field malformed / inconsistently exposed \u2014 replace with AtlasClientRef",
+    "caseARejectedBecause": [
+      "Graph list items do not expose ClientId or ClientIdLookupId on any of the five lists despite columnDefinition.lookup metadata.",
+      "SharePoint connector PostItem rejects ClientIdId (\"could not be found\").",
+      "SharePoint connector GetItem rejects property ClientId on Deliverables.",
+      "Graph writes using ClientIdLookupId return 201 but value does not persist on reread.",
+      "Prior PnP session: item-level REST $select=ClientIdId failed with \"ClientIdId does not exist\" even though SchemaXml Type=Lookup.",
+      "Graph column GUID for Projects ClientId differs from SchemaXml ID captured earlier the same day (field churn / recreate history under same InternalName).",
+      "Graph item fields inconsistently expose a ClientId key on rare items (e.g. Projects item 20) but never ClientIdLookupId; connector still rejects ClientIdId on PostItem."
+    ],
+    "replacement": {
+      "internalName": "AtlasClientRef",
+      "displayName": "Client",
+      "type": "Lookup single-value",
+      "lookupListId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+      "lookupField": "Title",
+      "expectedGraphWriteProperty": "AtlasClientRefLookupId",
+      "expectedConnectorProperty": "AtlasClientRefId (typical SharePoint connector) \u2014 prove live after create"
+    },
+    "legacyClientIdPolicy": "Do not delete in this release; leave in place; stop writing to it; hide/mark legacy only after cutover.",
+    "mutationAuthPath": "Microsoft Graph column create API using existing az Graph token (no PnP DeviceLogin / MFA)."
+  },
+  "inconsistencyNote": {
+    "projectsItem20HasClientIdKey": true,
+    "projectsItem20HasClientIdLookupId": false,
+    "implication": "Graph metadata and occasional ClientId key are insufficient; connector/REST Id projection remains unusable."
+  }
+}

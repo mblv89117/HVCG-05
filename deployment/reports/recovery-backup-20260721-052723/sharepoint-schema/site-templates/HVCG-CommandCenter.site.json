@@ -1,0 +1,21 @@
+{
+  "siteTitle": "HVCG Command Center",
+  "siteAlias": "HVCG-CommandCenter",
+  "hub": true,
+  "associatedSites": ["HVCG-Clients", "HVCG-Knowledge"],
+  "listsFrom": "src/sharepoint/lists",
+  "quickLaunch": [
+    "HVCG_Clients",
+    "HVCG_Projects",
+    "HVCG_Tasks",
+    "HVCG_DocumentRequests",
+    "HVCG_Deliverables",
+    "HVCG_Decisions",
+    "HVCG_FinancialMilestones",
+    "HVCG_AutomationLogs"
+  ],
+  "features": {
+    "versioningOnLibraries": true,
+    "externalSharing": "ExistingGuestsOnlyRecommended"
+  }
+}
