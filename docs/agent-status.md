@@ -2,55 +2,59 @@
 
 | Field | Value |
 |-------|-------|
-| project | Platform Red Team (Train F) |
+| project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `18e876c38bab018df36d8009827d070edac5da64` |
-| baseline | Live Hub post-OD-005 deploy (claimed `9e5d10a`); prior freeze `940a484` superseded as production artifact |
+| current SHA | *(git tip after push)* |
+| baseline | D31 exact-release gate for Hub `9e5d10a` + deployment `698f7e92…` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
-| contracts required | Integration `30964bb` prior PASS (not retested) |
-| tests | D30 live Hub probes: /health ok; PM/website fail-closed 401; ATLAS-01/02 PARTIAL; ATLAS-03/XSYS-02 NEEDS_RETEST |
+| contracts required | none this cycle |
+| tests | D31 SHA/deployment gate — LIVE_VALIDATION_ABORTED=YES (SHA not independently verified) |
 | build | N/A |
 | synthetic certification | N/A |
-| security status | **LIVE_CERTIFIED=NO**. Live Hub P0 not 0 (PARTIAL×3 + NEEDS_RETEST×2). Candidate OD-005 still FIXED_REVALIDATED. |
+| security status | **LIVE_SECURITY_CERTIFIED=NO**. LIVE_VALIDATION_ABORTED=YES. Five findings INCONCLUSIVE. |
 | Premium status | **N/A** |
 | integration dependencies | SoT meaning unchanged |
-| P0 | LIVE: ATLAS-01/02 PARTIAL; ATLAS-03 NEEDS_RETEST; XSYS-01 PARTIAL; XSYS-02 NEEDS_RETEST. Candidate P0=0 |
+| P0 | LIVE: five findings **INCONCLUSIVE** (D31); not closable as 0 |
 | P1 | none |
 | P2 | none |
-| owner decisions | No further deploy from RT. Rollback retain until live FIXED_REVALIDATED. AUTHORIZE PRODUCTION from RT = **NO** (already deployed by supervisor) |
-| deployment state | REMOTE_REACHABLE — Hub post-deploy; LIVE_CERTIFIED not granted |
+| owner decisions | No deploy/rollback from RT. Await Azure SP for deployment-history SHA verify. |
+| deployment state | REMOTE_REACHABLE ambient; exact release **unverified** |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **30** |
-| BASED ON WORKER SHA | `ef00de500eebb949c7d410d498d344ad52b7c383` |
-| BASED ON RUN ID | `followup-accepted-2026-08-20T2130Z` |
-| CURRENT SHA | `18e876c38bab018df36d8009827d070edac5da64` |
-| COMPLETED ACTIONS | Independent live Hub fail-closed retest post-OD-005 deploy; SECURITY_TRUTH updated; LIVE_CERTIFIED=NO |
-| REMAINING ACTIONS | Staff JWT entitlement retest (ATLAS-01/02); intake-key HMAC+idempotency (XSYS-01/02); Plaid host ATLAS-03 |
-| P0/P1/P2 | Live P0 not closed · Candidate P0=0 · P1=none |
-| TEST STATUS | Live fail-closed auth PASS; entitlement/HMAC/Plaid live proofs incomplete |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **31** |
+| BASED ON WORKER SHA | `7faca45a52c47cad1e1ba894f33b59877916aa2b` |
+| BASED ON PRIOR RUN | D30 artifact @ `7faca45` |
+| CURRENT SHA | *(git tip after push)* |
+| COMPLETED ACTIONS | D31 acknowledge; independent SHA/deployment gate; abort documented; secrets requested |
+| REMAINING ACTIONS | Verify live SHA=`9e5d10a` + deployment=`698f7e92…` via az deployment history; then ATLAS/XSYS reproducers |
+| LIVE_P0 | not 0 (INCONCLUSIVE×5) |
+| LIVE_P1 | none |
+| LIVE_SECURITY_CERTIFIED | **NO** |
+| LIVE_VALIDATION_ABORTED | **YES** |
+| TEST STATUS | Finding probes not run (SHA gate abort). Ambient /health ok only. |
 | PREMIUM STATUS | N/A |
-| INTEGRATION STATUS | Prior Integration PASS cited; not retested |
-| OWNER DECISIONS | No RT deploy/rollback executed. Keep rollback ready while live findings PARTIAL/NEEDS_RETEST |
+| INTEGRATION STATUS | Not retested |
+| OWNER DECISIONS | No RT deploy/rollback. Elite untouched. |
 
 ## SHAs this cycle
 
 | System | SHA / evidence |
 |--------|----------------|
-| Claimed live Hub package | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` |
-| Claimed OneDeploy | `f2eee147-2624-414b-8f16-688729249097` (not Azure-API confirmed by RT) |
+| Required live Hub package | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` (**unverified** on live) |
+| Required controlled deployment ID | `698f7e92-40d1-44e6-82ce-3988d30144fc` (**unverified**) |
 | Live Hub URL | `https://app-atlas-integration-hub.azurewebsites.net` |
-| Prior Hub freeze | `940a484` (pre-deploy baseline) |
+| Elite (do not touch) | `75d0c59` |
 
 ## Notes
 
-- No Entra staff JWT / website intake key / az SP in RT env — limits FIXED_REVALIDATED.
+- Azure SP secrets requested for deployment-history-only verify.
+- Optional synthetic staff JWT / WEBSITE_INTAKE_KEY / Plaid base URL requested for post-gate reproducers.
 - No app-settings or Key Vault reads.
-- Live production P0 must **not** be reported as 0.
+- Do not report LIVE_SECURITY_CERTIFIED=YES while any of the five is not VERIFIED_FIXED.
 
-**Updated:** 2026-08-21T00:01:30Z
+**Updated:** 2026-08-22T00:56:00Z

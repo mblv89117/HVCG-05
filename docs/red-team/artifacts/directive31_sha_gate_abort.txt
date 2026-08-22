@@ -1,0 +1,15 @@
+DIRECTIVE=31
+UTC=2026-08-22T00:55:20Z
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+REQUIRED_LIVE_SHA=9e5d10a20639bbeb659fbacd6362cd9f13adb08b
+REQUIRED_DEPLOYMENT_ID=698f7e92-40d1-44e6-82ce-3988d30144fc
+SHA_VERIFIED=NO
+DEPLOYMENT_ID_VERIFIED=NO
+LIVE_VALIDATION_ABORTED=YES
+ABORT_REASON=Cannot independently verify live Hub SHA/deployment id (az installed; not logged in; no AZURE_* SP secrets; SCM /api/deployments 401; hub-build.json/ATLAS_HUB_COMMIT.txt not publicly readable)
+==== ambient GET /health (not used as SHA proof) ====
+{"ok":true,"providers":{"microsoft":true,"google":false,"github":false},"localAi":{"enabled":false,"available":false,"availability":"disabled","reason":"Local AI is disabled"},"ba":{"configured":true,"reachable":true},"port":8080,"authRequired":true,"insecureDevAuth":false,"pmBackend":{"mode":"sharepoint","classification":"sharepoint-graph","credentialMode":"managed_identity","configComplete":true,"listsConfigured":true},"capitalBackend":{"mode":"sharepoint","classification":"sharepoint-graph","credentialMode":"managed_identity","configComplete":true,"listsConfigured":true,"overlay":{"schemaVersion":1,"dataDirectory":"/home/webapp_data/integrations/capital-overlay","persistentStorageConfigured":true,"recycleSurvivable":true,"redeploySurvivable":true,"multiInstanceSafe":false,"authoritativeStateStore":"sharepoint-lists+runtime-overlay","runtimeOverlay":"durable-json","overlayPresent":true,"overlayReadable":true,"overlayCorrupt":false,"overlayUnsupportedSchema":false,"overlaySchemaVersion":1,"scaleConstraint":"single-instance-overlay","deploymentModelObserved":{"homeIsPersistentHint":true,"sku":"Basic","siteNamePresent":true,"instanceIdPresent":true,"runFromPackage":"0","dataDirUnderHome":true}}},"websiteLeads":{"configured":true}}
+==== ambient SCM deployments ====
+
+HTTP=401
+

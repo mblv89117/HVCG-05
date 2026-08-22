@@ -8,11 +8,11 @@ Severity: P0 / P1 / P2 (not inflated)
 
 **Post-Directive-10 counts:** P0 open=6 · P0 closed this pass=4 · P1 closed this pass include GTM-02 + COPILOT-11 · Gate FAIL for new deploys
 
-**CURRENT RELEASE STATE:** `REMOTE_REACHABLE` (claimed OneDeploy of `9e5d10a`; live `/health` authRequired=true; LIVE P0 **not** closed — Directive 30)
+**CURRENT RELEASE STATE:** `REMOTE_REACHABLE` ambient; D31 exact live SHA `9e5d10a` + deployment `698f7e92…` **NOT independently verified** — **LIVE_VALIDATION_ABORTED=YES**
 
 **CURRENT OPEN (authoritative dual-surface):**
-- LIVE Hub post-deploy (D30): ATLAS-01 **PARTIAL**, ATLAS-02 **PARTIAL**, ATLAS-03 **NEEDS_RETEST**, XSYS-01 **PARTIAL**, XSYS-02 **NEEDS_RETEST** — LIVE P0 ≠ 0; **LIVE_CERTIFIED=NO**.
-- OD-005 candidate `9e5d10a`: same five **FIXED_REVALIDATED** (candidate P0=0).
+- LIVE Hub (D31): ATLAS-01/02/03 + XSYS-01/02 all **INCONCLUSIVE** (SHA gate abort). **LIVE_SECURITY_CERTIFIED=NO**. LIVE P0 ≠ 0.
+- Prior D30 live labels (PARTIAL/NEEDS_RETEST) superseded for D31 vocabulary; candidate `9e5d10a` FIXED_REVALIDATED unchanged as candidate-only.
 
 ---
 
@@ -27,7 +27,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE **PARTIAL** (D30 post-deploy fail-closed auth); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 PARTIAL; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### ATLAS-RT-20260820-02
 - **system:** Atlas
@@ -38,7 +38,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE **PARTIAL** (D30); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 PARTIAL; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
@@ -49,7 +49,7 @@ Severity: P0 / P1 / P2 (not inflated)
 - **impact:** Bank connection/balance/identity isolation collapse.
 - **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
 - **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** LIVE **NEEDS_RETEST** (D30 — Plaid host not reachable); CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 NEEDS_RETEST; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -659,3 +659,20 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_CERTIFIED | **NO** |
 | Rollback | Retain ready until FIXED_REVALIDATED; **not** executed |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_30_2026-08-20.md` |
+
+## Directive 31 status appendix (independent live validation — SHA gate)
+
+| Gate / ID | Status @ Directive 31 |
+|-----------|------------------------|
+| Required live SHA | `9e5d10a20639bbeb659fbacd6362cd9f13adb08b` |
+| Required deployment ID | `698f7e92-40d1-44e6-82ce-3988d30144fc` |
+| SHA independently verified | **NO** |
+| LIVE_VALIDATION_ABORTED | **YES** |
+| ATLAS-RT-20260820-01 | **INCONCLUSIVE** |
+| ATLAS-RT-20260820-02 | **INCONCLUSIVE** |
+| ATLAS-RT-20260820-03 | **INCONCLUSIVE** |
+| XSYS-RT-20260820-01 | **INCONCLUSIVE** |
+| XSYS-RT-20260820-02 | **INCONCLUSIVE** |
+| LIVE_P0 = 0? | **NO** |
+| LIVE_SECURITY_CERTIFIED | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_31_2026-08-22.md` |
