@@ -474,6 +474,9 @@ describe('synthetic client journey isolation', () => {
           liveDispatch: boolean;
           invented: boolean;
           available: boolean;
+          classification: string;
+          gccHref?: string;
+          binding: { kind: string; liveDispatch: boolean; invented: boolean };
         };
       };
       assert.equal(gccBody.gcc.clientCode, SYN_A);
@@ -482,7 +485,21 @@ describe('synthetic client journey isolation', () => {
       assert.equal(gccBody.gcc.liveDispatch, false);
       assert.equal(gccBody.gcc.invented, false);
       assert.equal(gccBody.gcc.available, false);
+      assert.equal(gccBody.gcc.classification, 'SYNTHETIC_QA');
+      assert.equal(gccBody.gcc.binding.kind, 'hub_gcc_session_v1');
+      assert.equal(gccBody.gcc.binding.liveDispatch, false);
+      assert.equal(gccBody.gcc.binding.invented, false);
+      assert.equal(gccBody.gcc.gccHref, undefined);
       assert.equal(gccBody.gcc.workspaceKey.includes(SYN_B), false);
+
+      const ownKey = await fetch(`${base}/api/client/gcc?workspaceKey=${encodeURIComponent(gccBody.gcc.workspaceKey)}`, {
+        headers: auth('client-a'),
+      });
+      assert.equal(ownKey.status, 200);
+      const foreignKey = await fetch(`${base}/api/client/gcc?workspaceKey=gcc-${SYN_B}`, {
+        headers: auth('client-a'),
+      });
+      assert.equal(foreignKey.status, 403);
 
       const commercial = await fetch(`${base}/api/client/commercial-context`, { headers: auth('client-a') });
       const commercialBody = (await commercial.json()) as {
@@ -629,11 +646,17 @@ describe('synthetic client journey isolation', () => {
 
         const gcc = await fetch(`${base}/api/client/gcc`, { headers: session });
         assert.equal(gcc.status, 200);
-        const gccBody = (await gcc.json()) as { gcc: { clientCode: string; isolated: boolean } };
+        const gccBody = (await gcc.json()) as {
+          gcc: { clientCode: string; isolated: boolean; binding: { kind: string }; gccHref?: string };
+        };
         assert.equal(gccBody.gcc.clientCode, SYN_A);
         assert.equal(gccBody.gcc.isolated, true);
-        const foreignGcc = await fetch(`${base}/api/client/workspace/${SYN_B}`, { headers: session });
-        assert.equal(foreignGcc.status, 403);
+        assert.equal(gccBody.gcc.binding.kind, 'hub_gcc_session_v1');
+        assert.equal(gccBody.gcc.gccHref, undefined);
+        const foreignWorkspace = await fetch(`${base}/api/client/workspace/${SYN_B}`, { headers: session });
+        assert.equal(foreignWorkspace.status, 403);
+        const foreignGccKey = await fetch(`${base}/api/client/gcc?workspaceKey=gcc-${SYN_B}`, { headers: session });
+        assert.equal(foreignGccKey.status, 403);
 
         const workspace = await fetch(`${base}/api/client/workspace`, { headers: session });
         assert.equal(workspace.status, 200);
@@ -709,5 +732,38 @@ describe('synthetic client journey isolation', () => {
         const staffStillClosed = await fetch(`${base}/client`, { headers: auth('entitled-staff') });
         assert.equal(staffStillClosed.status, 403);
       });
+  });
+});
+
+describe('GCC session binding contract', () => {
+  it('emits gccHref only when an origin is provided and never enables live dispatch', async () => {
+    const { bindIsolatedGccWorkspace } = await import('../src/clientExperience/service.ts');
+    const { resolveGccAppOrigin } = await import('../src/config.ts');
+    const commercial = {
+      clientCode: SYN_A,
+      permitted: true as const,
+      liveGtmOutbound: false as const,
+      paidAds: false as const,
+      invented: false as const,
+      gcc: {
+        available: false,
+        recordedOnly: true as const,
+        signalCount: 0,
+        emptyReason: 'No GCC value signal on record.',
+      },
+      copilot: { available: false, recordedOnly: true as const, recordedCount: 0 },
+      gtm: { available: false, recordedOnly: true as const, recordedCount: 0 },
+    };
+    const bound = bindIsolatedGccWorkspace({
+      workspaceKey: `gcc-${SYN_A}`,
+      clientCode: SYN_A,
+      commercial,
+      gccAppOrigin: resolveGccAppOrigin({ INTEGRATION_GCC_APP_ORIGIN: 'https://gcc.example.test' }),
+    });
+    assert.equal(bound.gccHref, 'https://gcc.example.test');
+    assert.equal(bound.liveDispatch, false);
+    assert.equal(bound.invented, false);
+    assert.equal(bound.binding.kind, 'hub_gcc_session_v1');
+    assert.equal(resolveGccAppOrigin({}), null);
   });
 });

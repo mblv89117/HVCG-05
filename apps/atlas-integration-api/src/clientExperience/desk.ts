@@ -173,7 +173,12 @@ export function renderClientDeskHtml(
   <section>
     <h2>Growth Command Center</h2>
     <p>Your isolated GCC workspace is <code>${esc(view.gcc.workspaceKey)}</code>. It cannot see another client.</p>
-    <p class="off">recorded-only · liveDispatch=false · invented=false</p>
+    <p class="off">recorded-only · liveDispatch=false · invented=false${view.gcc.binding?.kind ? ` · ${esc(view.gcc.binding.kind)}` : ''}</p>
+    ${
+      view.gcc.gccHref
+        ? `<p class="muted">GCC app origin is configured. Live dispatch remains OFF. <span>${esc(view.gcc.gccHref)}</span></p>`
+        : ''
+    }
     ${
       gccHonesty?.available
         ? `<p>${esc(String(gccHonesty.signalCount || 0))} recorded GCC signal(s) for this ClientCode only.</p>`
@@ -264,7 +269,11 @@ export async function handleClientDesk(opts: {
   }
 
   try {
-    const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+    const view = buildClientWorkspaceView({
+      dataDir: opts.cfg.dataDir,
+      principal,
+      gccAppOrigin: opts.cfg.gccAppOrigin,
+    });
     if (asJson) {
       sendJson(opts.res, 200, { clientDesk: view, hubSha: resolveHubCommit() }, opts.origin);
     } else {

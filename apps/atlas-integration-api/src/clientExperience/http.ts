@@ -12,6 +12,7 @@ import { isClientOnlyPrincipal } from './roles.ts';
 import {
   ClientExperienceError,
   attachOperatorDeskOperatingPicture,
+  assertRequestedGccWorkspaceKey,
   buildClientWorkspaceView,
   buildOperatorClientDeskPreview,
   decideClientRequest,
@@ -495,7 +496,13 @@ export async function handleClientExperience(opts: {
     }
 
     if (opts.method === 'GET' && opts.path === '/api/client/gcc') {
-      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      const view = buildClientWorkspaceView({
+        dataDir: opts.cfg.dataDir,
+        principal,
+        gccAppOrigin: opts.cfg.gccAppOrigin,
+      });
+      const requestedKey = new URL(opts.req.url || '/', 'http://local').searchParams.get('workspaceKey');
+      assertRequestedGccWorkspaceKey(requestedKey, view.gcc.workspaceKey);
       send(opts.res, 200, { gcc: view.gcc }, opts.origin);
       return true;
     }

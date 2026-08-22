@@ -168,6 +168,38 @@ export function resolveBaClientSettings(env: EnvMap = process.env): BaClientSett
   return { baseUrl: raw, timeoutMs, healthTimeoutMs };
 }
 
+/**
+ * Optional GCC app origin for recorded-only client handoff.
+ * Unset keeps gccHref absent. Never invents a live GCC session or dispatch.
+ */
+export function resolveGccAppOrigin(env: EnvMap = process.env): string | null {
+  const isProduction = (env.NODE_ENV || 'development') === 'production';
+  const raw = (env.INTEGRATION_GCC_APP_ORIGIN || '').trim().replace(/\/$/, '');
+  if (!raw) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new UnsafeHubConfigurationError('INTEGRATION_GCC_APP_ORIGIN is not a valid URL');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new UnsafeHubConfigurationError('INTEGRATION_GCC_APP_ORIGIN must be http or https');
+  }
+  if (parsed.pathname !== '/' && parsed.pathname !== '') {
+    throw new UnsafeHubConfigurationError('INTEGRATION_GCC_APP_ORIGIN must be an origin only');
+  }
+  if (parsed.search || parsed.hash) {
+    throw new UnsafeHubConfigurationError('INTEGRATION_GCC_APP_ORIGIN must be an origin only');
+  }
+  if (isProduction && LOOPBACK_HOSTS.has(parsed.hostname.toLowerCase())) {
+    throw new UnsafeHubConfigurationError('INTEGRATION_GCC_APP_ORIGIN must not be localhost in production');
+  }
+  if (isProduction && parsed.protocol !== 'https:') {
+    throw new UnsafeHubConfigurationError('INTEGRATION_GCC_APP_ORIGIN must be https in production');
+  }
+  return `${parsed.protocol}//${parsed.host}`;
+}
+
 const BA_APPLICATION_ID_URI = /^api:\/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
@@ -518,6 +550,11 @@ export function loadConfig() {
       process.env.INTEGRATION_WEBSITE_LEAD_OWNER_EMAIL || 'manny@highvaluecapitalgroup.com'
     ).trim(),
     publicBaseUrl: process.env.PUBLIC_BASE_URL || 'http://localhost:8790',
+    /**
+     * Optional GCC app origin for recorded-only client handoff hrefs.
+     * Unset keeps gccHref absent. Never enables live GCC dispatch.
+     */
+    gccAppOrigin: resolveGccAppOrigin(),
     ba,
     /**
      * Production: App Service managed-identity token for INTEGRATION_BA_RESOURCE.

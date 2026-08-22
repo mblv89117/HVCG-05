@@ -54,6 +54,7 @@ import {
 import type { KnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
 import { readCommercialContext } from '../pm/commercialContext/handle.ts';
 import { EMPTY_REASON, type OperatorCommercialContext } from '../pm/commercialContext/types.ts';
+import { resolveHubCommit } from '../http/hubCommit.ts';
 
 export class ClientExperienceError extends Error {
   readonly status: number;
@@ -443,6 +444,7 @@ export function buildClientWorkspaceView(opts: {
   dataDir: string;
   principal: AtlasPrincipal;
   clientCode?: string;
+  gccAppOrigin?: string | null;
 }) {
   const snapshot = loadExperienceStore(opts.dataDir);
   const bound = listBoundClientCodes(opts.principal, snapshot);
@@ -520,6 +522,8 @@ export function buildClientWorkspaceView(opts: {
       workspaceKey: workspace.gccWorkspaceKey,
       clientCode: requested,
       commercial,
+      gccAppOrigin: opts.gccAppOrigin,
+      hubSha: resolveHubCommit(),
     }),
     commercial,
     isolation: {
@@ -579,7 +583,10 @@ export function bindIsolatedGccWorkspace(opts: {
   workspaceKey: string;
   clientCode: string;
   commercial: ReturnType<typeof bindClientVisibleCommercial>;
+  gccAppOrigin?: string | null;
+  hubSha?: string | null;
 }) {
+  const origin = (opts.gccAppOrigin || '').trim().replace(/\/$/, '');
   return {
     workspaceKey: opts.workspaceKey,
     isolated: true as const,
@@ -590,7 +597,30 @@ export function bindIsolatedGccWorkspace(opts: {
     available: opts.commercial.gcc.available,
     signalCount: opts.commercial.gcc.signalCount,
     emptyReason: opts.commercial.gcc.emptyReason,
+    classification: isExperienceSyntheticClient(opts.clientCode)
+      ? 'SYNTHETIC_QA'
+      : classifyHubClientRow({ clientCode: opts.clientCode }).classification,
+    hubSha: opts.hubSha || undefined,
+    binding: {
+      kind: 'hub_gcc_session_v1' as const,
+      liveDispatch: false as const,
+      invented: false as const,
+      recordedOnly: true as const,
+    },
+    gccHref: origin || undefined,
   };
+}
+
+/** Foreign GCC workspace keys fail closed. Matching or omitted keys are allowed. */
+export function assertRequestedGccWorkspaceKey(
+  requestedKey: string | null | undefined,
+  boundKey: string,
+): void {
+  const key = (requestedKey || '').trim();
+  if (!key) return;
+  if (key !== boundKey) {
+    fail(403, 'forbidden', 'GCC workspace is isolated to the signed client.');
+  }
 }
 
 export function uploadClientDocument(opts: {
