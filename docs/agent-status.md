@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `7eb15ac3c74374c0a0d9a94f381edd5d815e5dff` |
 | baseline | D33 public-marker Hub SHA `64b56dc` — SHA_GATE=PASS |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **33** |
 | BASED ON WORKER SHA | `0e09aa630ad09f829dc9ef7a3a81c2a7e753c0a8` |
 | PREVIOUS | D32 CONSUMED=32 INHERIT=FAIL — not replayed |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `7eb15ac3c74374c0a0d9a94f381edd5d815e5dff` |
 | COMPLETED ACTIONS | D33 public SHA gate PASS; fail-closed probes; five findings classified INCONCLUSIVE; CONSUMED=33 |
 | REMAINING ACTIONS | Synthetic staff JWT + intake key (+ Plaid URL) for VERIFIED_FIXED |
 | LIVE_P0 | **5** |
