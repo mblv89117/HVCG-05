@@ -19,6 +19,7 @@ import {
   isExperienceSyntheticClient,
   operatorExperienceStatus,
   redeemInvitation,
+  reissueClientInvitation,
   stageClientExperience,
   uploadClientDocument,
 } from './service.ts';
@@ -69,6 +70,13 @@ function experienceStagePath(path: string): string | null {
   return isCanonicalClientCode(code) ? code : null;
 }
 
+function invitationReissuePath(path: string): string | null {
+  const match = path.match(/^\/api\/pm\/clients\/([^/]+)\/invitation\/reissue$/);
+  if (!match) return null;
+  const code = decodeURIComponent(match[1]);
+  return isCanonicalClientCode(code) ? code : null;
+}
+
 function clientDeskPreviewPath(path: string): { code: string; asJson: boolean } | null {
   const match = path.match(/^\/api\/pm\/clients\/([^/]+)\/desk(\.json)?$/);
   if (!match) return null;
@@ -100,9 +108,10 @@ export async function handleClientExperience(opts: {
   if (await handleClientDesk(opts)) return true;
 
   const stagedCode = experienceStagePath(opts.path);
+  const reissueCode = invitationReissuePath(opts.path);
   const deskPreview = clientDeskPreviewPath(opts.path);
   const isClientApi = isClientExperienceApi(opts.path);
-  if (!isClientApi && !stagedCode && !deskPreview) return false;
+  if (!isClientApi && !stagedCode && !reissueCode && !deskPreview) return false;
 
   let principal;
   try {
@@ -274,6 +283,34 @@ export async function handleClientExperience(opts: {
           portalAccessProvisioned: true,
           documentRequestPathProvisioned: true,
           note: 'Invitation is record-only. LIVE_GTM_OUTBOUND stays OFF. Token is shown once and is not emailed. Workspace is bound to the governed Hub portal and document-request paths.',
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (reissueCode) {
+      if (opts.method !== 'POST') {
+        send(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
+        return true;
+      }
+      const body = await readJson(opts.req);
+      const result = reissueClientInvitation({
+        dataDir: opts.cfg.dataDir,
+        principal,
+        clientCode: reissueCode,
+        invitationEmail: typeof body.invitationEmail === 'string' ? body.invitationEmail : undefined,
+      });
+      send(
+        opts.res,
+        201,
+        {
+          workspace: result.workspace,
+          invitation: result.invitation,
+          inviteToken: result.inviteToken,
+          outboundSent: false,
+          redeemHref: '/api/client/invitations/redeem',
+          note: 'Replacement token is record-only. LIVE_GTM_OUTBOUND stays OFF. Token is shown once and is not emailed. Only a Client Executive principal may redeem.',
         },
         opts.origin,
       );

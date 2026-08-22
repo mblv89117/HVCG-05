@@ -163,7 +163,10 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
               const stage = row.canStageFromDesk
                 ? ` · stage <code>${esc(row.stageHref)}</code>`
                 : '';
-              return `<li><span class="kind">${esc(row.classification)}</span> <a href="${esc(row.previewHref)}">${esc(row.clientCode)}</a> · workspace ${row.workspaceStaged ? 'staged' : 'not staged'} · invite ${esc(row.invitationStatus)} · ${esc(session)} · GCC <code>${esc(row.gccWorkspaceKey)}</code>${stage}<br/><span class="muted">${esc(row.nextAction)}</span></li>`;
+              const reissue = row.canReissueInviteFromDesk
+                ? ` · reissue <code>${esc(row.reissueHref)}</code>`
+                : '';
+              return `<li><span class="kind">${esc(row.classification)}</span> <a href="${esc(row.previewHref)}">${esc(row.clientCode)}</a> · workspace ${row.workspaceStaged ? 'staged' : 'not staged'} · invite ${esc(row.invitationStatus)} · ${esc(session)} · GCC <code>${esc(row.gccWorkspaceKey)}</code>${stage}${reissue}<br/><span class="muted">${esc(row.nextAction)}</span></li>`;
             })
             .join('')}</ul>`
         : '<p class="empty">No entitled client journey in this session. Atlas does not invent clients.</p>'
