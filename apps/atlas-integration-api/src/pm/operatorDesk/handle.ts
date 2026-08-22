@@ -20,6 +20,7 @@ import {
   ASK_ATLAS_QUESTION,
   isOperatorActivityLedgerPath,
   isOperatorDeskPath,
+  isOperatorEngineeringMissionsPath,
   isOperatorEventsPath,
   isOperatorImprovementsPath,
   isOperatorRuntimePath,
@@ -29,6 +30,11 @@ import {
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
 import { runAtlasHubRuntime } from './agentRuntime.ts';
 import { processAtlasEvent, resolveEventClass } from './eventProcessing.ts';
+import {
+  inspectEngineeringMissions,
+  listPersistedEngineeringMissions,
+  persistEngineeringMissionRecords,
+} from './engineeringLoop.ts';
 import {
   classifyImprovementPolicy,
   inspectProductImprovements,
@@ -200,10 +206,11 @@ export async function handleOperatorDesk(opts: {
   if (!isOperatorDeskPath(opts.path)) return false;
   const eventsOnly = isOperatorEventsPath(opts.path);
   const improvementsOnly = isOperatorImprovementsPath(opts.path);
+  const missionsOnly = isOperatorEngineeringMissionsPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly) && opts.method === 'POST')
+    !((eventsOnly || improvementsOnly || missionsOnly) && opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
     return true;
@@ -212,9 +219,10 @@ export async function handleOperatorDesk(opts: {
   const accept = typeof opts.req.headers.accept === 'string' ? opts.req.headers.accept : '';
   const ledgerOnly = isOperatorActivityLedgerPath(opts.path);
   const runtimeOnly = isOperatorRuntimePath(opts.path);
-  const asJson = ledgerOnly || runtimeOnly || eventsOnly || improvementsOnly || wantsOperatorJson(opts.path, accept);
+  const asJson =
+    ledgerOnly || runtimeOnly || eventsOnly || improvementsOnly || missionsOnly || wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
-  const searchQuery = runtimeOnly || eventsOnly || improvementsOnly ? '' : url.searchParams.get('q') || '';
+  const searchQuery = runtimeOnly || eventsOnly || improvementsOnly || missionsOnly ? '' : url.searchParams.get('q') || '';
 
   let principal;
   try {
@@ -470,6 +478,104 @@ export async function handleOperatorDesk(opts: {
       200,
       {
         productImprovement: result.productImprovement,
+        operatorDesk: { askAtlas: result.askAtlas },
+        runtime: result.runtime,
+      },
+      opts.origin,
+    );
+    return true;
+  }
+
+  if (missionsOnly) {
+    let postedClass = '';
+    if (opts.method === 'POST') {
+      try {
+        const body = await readEventJson(opts.req);
+        postedClass =
+          typeof body.inspectClass === 'string'
+            ? body.inspectClass
+            : typeof body.inspect === 'string'
+              ? body.inspect
+              : typeof body.class === 'string'
+                ? body.class
+                : '';
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(
+          opts.res,
+          status,
+          { error: 'malformed_json', code: 'malformed_json' },
+          opts.origin,
+        );
+        return true;
+      }
+    }
+    const queryClass =
+      url.searchParams.get('inspect') ||
+      url.searchParams.get('inspectClass') ||
+      url.searchParams.get('class') ||
+      '';
+    const rawClass = postedClass || queryClass;
+    const inspectClass = rawClass.trim() ? resolveInspectClass(rawClass) : 'inspect';
+    const policy = classifyImprovementPolicy(inspectClass, principal);
+    const hvsBlocked = model.operatingPicture.hvsDataAccess === 'BLOCKED';
+    let ledger: ReturnType<typeof listVisibleAgentActivity> = [];
+    let persisted: ReturnType<typeof listPersistedEngineeringMissions> = [];
+    if (policy.allowed && !hvsBlocked) {
+      try {
+        ledger = listVisibleAgentActivity({
+          dataDir: opts.cfg.dataDir,
+          principal,
+        });
+      } catch {
+        ledger = [];
+      }
+      try {
+        persisted = listPersistedEngineeringMissions({
+          dataDir: opts.cfg.dataDir,
+        });
+      } catch {
+        persisted = [];
+      }
+    }
+    const result = inspectEngineeringMissions({
+      principal,
+      picture: model.operatingPicture,
+      ledger: policy.allowed && !hvsBlocked ? ledger : [],
+      search: policy.allowed && !hvsBlocked ? { ran: model.search.ran } : undefined,
+      health:
+        policy.allowed && !hvsBlocked
+          ? { authRequired: opts.cfg.requireAuth, insecureDevAuth: opts.cfg.insecureDevAuth }
+          : undefined,
+      inspectClass,
+      persisted: policy.allowed && !hvsBlocked ? persisted : [],
+    });
+    if ((opts.method === 'GET' || opts.method === 'POST') && result.recordsToPersist.length) {
+      try {
+        await persistEngineeringMissionRecords({
+          dataDir: opts.cfg.dataDir,
+          records: result.recordsToPersist,
+        });
+      } catch {
+        /* Persist stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    if (opts.method === 'GET' || opts.method === 'POST') {
+      try {
+        await appendAskAtlasActivity({
+          dataDir: opts.cfg.dataDir,
+          answer: result.askAtlas,
+          principal,
+        });
+      } catch {
+        /* Loop answer stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    sendJson(
+      opts.res,
+      200,
+      {
+        engineeringMission: result.engineeringMission,
         operatorDesk: { askAtlas: result.askAtlas },
         runtime: result.runtime,
       },

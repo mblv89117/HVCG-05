@@ -35,10 +35,13 @@ export const ASK_ATLAS_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ASK-ATTENTION-001' as co
 export const ASK_ATLAS_RUNTIME_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RUNTIME-001' as const;
 export const ASK_ATLAS_EVENT_MISSION_KEY = 'ATLAS-AGENTIC-OPS-EVENT-001' as const;
 export const ASK_ATLAS_PII_MISSION_KEY = 'ATLAS-AGENTIC-OPS-PII-001' as const;
+export const ASK_ATLAS_LOOP_MISSION_KEY = 'ATLAS-AGENTIC-OPS-LOOP-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
 export const CREATE_ENGINEERING_MISSION_TOOL = 'create_engineering_mission' as const;
+export const ENGINEERING_MISSION_DISPATCH_STATUS = 'ready_for_bounded_execution' as const;
+export const V4_CHAT_INJECT = 'UNSUPPORTED' as const;
 
 export const ASK_ATLAS_RANKING = [
   'At Risk',
@@ -73,7 +76,8 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_MISSION_KEY
   | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
   | typeof ASK_ATLAS_EVENT_MISSION_KEY
-  | typeof ASK_ATLAS_PII_MISSION_KEY;
+  | typeof ASK_ATLAS_PII_MISSION_KEY
+  | typeof ASK_ATLAS_LOOP_MISSION_KEY;
 export type AskAtlasTrigger =
   | 'operator_operating_picture'
   | 'signed_operator_question'
@@ -106,6 +110,30 @@ export interface ProposedEngineeringMission {
   merges: false;
   executesCodeChanges: false;
   ownerGated: false;
+}
+
+export interface PersistedEngineeringMissionRecord {
+  kind: 'persisted_engineering_mission_v1';
+  authoritative: false;
+  invented: false;
+  status: 'PROPOSED';
+  dispatchStatus: typeof ENGINEERING_MISSION_DISPATCH_STATUS;
+  v4ChatInject: typeof V4_CHAT_INJECT;
+  policyClass: 'SAFE_INTERNAL_WRITE';
+  readWriteStatus: 'SAFE_INTERNAL_WRITE';
+  agent: typeof ASK_ATLAS_RUNTIME_AGENT;
+  missionKey: typeof ASK_ATLAS_LOOP_MISSION_KEY;
+  sourceMissionKey: typeof ASK_ATLAS_PII_MISSION_KEY;
+  why: string;
+  basedOn: string;
+  evidenceClass: ProductImprovementEvidenceClass;
+  classification: AskAtlasClassification;
+  dispatchesV4: false;
+  deploys: false;
+  merges: false;
+  executesCodeChanges: false;
+  ownerGated: false;
+  persistedAt: string;
 }
 
 export interface AskAtlasActivity {
@@ -345,6 +373,10 @@ export function isOperatorImprovementsPath(path: string): boolean {
   return path === '/operator/improvements.json';
 }
 
+export function isOperatorEngineeringMissionsPath(path: string): boolean {
+  return path === '/operator/engineering-missions.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
@@ -353,7 +385,8 @@ export function isOperatorDeskPath(path: string): boolean {
     isOperatorActivityLedgerPath(path) ||
     isOperatorRuntimePath(path) ||
     isOperatorEventsPath(path) ||
-    isOperatorImprovementsPath(path)
+    isOperatorImprovementsPath(path) ||
+    isOperatorEngineeringMissionsPath(path)
   );
 }
 
@@ -363,7 +396,8 @@ export function wantsOperatorJson(path: string, acceptHeader: string | undefined
     isOperatorActivityLedgerPath(path) ||
     isOperatorRuntimePath(path) ||
     isOperatorEventsPath(path) ||
-    isOperatorImprovementsPath(path)
+    isOperatorImprovementsPath(path) ||
+    isOperatorEngineeringMissionsPath(path)
   ) {
     return true;
   }
