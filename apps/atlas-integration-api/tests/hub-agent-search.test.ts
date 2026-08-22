@@ -248,6 +248,9 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
     assert.equal(mapsToGetAttentionItems('What needs my attention'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('Summarize Prodigy'), false);
     assert.equal(mapsToGetClientContext('Summarize Prodigy'), true);
+    assert.equal(mapsToSearchAuthorizedKnowledge('Summarize Capital'), false);
+    assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
+    assert.equal(mapsToGetClientContext('Summarize Capital'), false);
     assert.equal(mapsToSearchAuthorizedKnowledge('What are we doing for Hart'), false);
     assert.equal(mapsToGetClientContext('What are we doing for Hart'), true);
 

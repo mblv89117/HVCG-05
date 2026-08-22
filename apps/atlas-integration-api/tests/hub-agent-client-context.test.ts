@@ -16,6 +16,7 @@ import {
   readAgentActivityOverlay,
 } from '../src/pm/operatorDesk/activityLedger.ts';
 import {
+  extractClientContextQuery,
   isOwnerGatedQuestion,
   mapsToGetAttentionItems,
   mapsToGetClientContext,
@@ -24,6 +25,7 @@ import {
 import { getClientContext, invokeReadAutoTool, READ_AUTO_TOOL_NAMES } from '../src/pm/operatorDesk/toolGateway.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
+  ASK_ATLAS_ATTENTION_NL_MISSION_KEY,
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_RECOVERED_MISSION_KEY,
   ASK_ATLAS_RUNTIME_AGENT,
@@ -454,6 +456,9 @@ describe('Ask Atlas READ_AUTO get_client_context', () => {
     assert.equal(mapsToGetClientContext('what is the LTV of Prodigy and the Hub-MI payment status'), false);
     assert.equal(mapsToGetClientContext('Summarize Prodigy'), true);
     assert.equal(mapsToGetAttentionItems('Summarize Prodigy'), false);
+    assert.equal(extractClientContextQuery('Summarize Capital'), null);
+    assert.equal(mapsToGetClientContext('Summarize Capital'), false);
+    assert.equal(mapsToGetAttentionItems('Summarize Capital'), true);
 
     const ownerGated = runAtlasHubRuntime({
       principal: staffPrincipal(),
@@ -495,6 +500,47 @@ describe('Ask Atlas READ_AUTO get_client_context', () => {
     assert.equal(attention.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL), false);
     assert.equal(attention.clientContext, undefined);
     assert.ok(attention.askAtlas.items.some((row) => row.clientCode === 'PDG01' && row.classification === 'LIKELY'));
+  });
+
+  it('does not bind Summarize Capital to SYN01 or any recovered folder', () => {
+    const picture = emptyHonestOperatingPicture();
+    const capital = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Capital',
+    });
+    assert.equal(capital.askAtlas.invented, false);
+    assert.deepEqual(capital.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL]);
+    assert.equal(capital.runtime.missionKey, ASK_ATLAS_ATTENTION_NL_MISSION_KEY);
+    assert.equal(capital.clientContext, undefined);
+    assert.equal(capital.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL), false);
+    assert.ok(capital.askAtlas.items.every((row) => row.state === 'Capital'));
+    noInventedFacts(capital);
+
+    const viaQuery = getClientContext({
+      principal: staffPrincipal(),
+      picture,
+      clientQuery: 'Capital',
+    });
+    emptyUnauthorized(viaQuery.clientContext);
+    assert.equal(JSON.stringify(viaQuery.clientContext).includes('SYN01'), false);
+    assert.equal(JSON.stringify(viaQuery.clientContext).includes('PDG01'), false);
+
+    const prodigy = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Prodigy',
+    });
+    assert.equal(prodigy.clientContext?.client.clientCode, 'PDG01');
+    assert.deepEqual(prodigy.runtime.toolsInvoked, [GET_CLIENT_CONTEXT_TOOL]);
+
+    const globex = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Globex',
+    });
+    emptyUnauthorized(globex.clientContext!);
+    assert.equal(JSON.stringify(globex).includes('PDG01'), false);
   });
 
   it('records CLIENTCTX-001 activity ledger fields and omits affected on honest-empty', async () => {
