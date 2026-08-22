@@ -33,6 +33,14 @@
         "Draft",
         "Analyze",
         "Export",
+        "Attention",
+        "ClientContext",
+        "CapitalContext",
+        "RevenueContext",
+        "GCCContext",
+        "CopilotContext",
+        "EngineeringMission",
+        "SafeInternalWrite",
         "Other"
       ]
     },
@@ -44,6 +52,39 @@
       "indexed": true,
       "description": "",
       "default": true
+    },
+    {
+      "internalName": "PermissionClass",
+      "displayName": "PermissionClass",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Authorization class for this tool",
+      "choices": [
+        "READ_AUTO",
+        "PROPOSE_AUTO",
+        "SAFE_INTERNAL_WRITE",
+        "GOVERNED_TECHNICAL_WRITE",
+        "OWNER_GATED"
+      ],
+      "default": "READ_AUTO"
+    },
+    {
+      "internalName": "ToolInputScope",
+      "displayName": "ToolInputScope",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Required retrieval scope before the tool may execute",
+      "choices": [
+        "OperatorPortfolio",
+        "AssignedClients",
+        "SingleClient",
+        "CapitalDesk",
+        "InternalPlatform",
+        "Engineering"
+      ],
+      "default": "OperatorPortfolio"
     },
     {
       "internalName": "RequiresApproval",
@@ -84,6 +125,14 @@
       "required": false,
       "indexed": false,
       "description": "e.g. SendEmail, CreateExternalShare"
+    },
+    {
+      "internalName": "PolicyNotes",
+      "displayName": "PolicyNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Policy detail: retrieval-before-synthesis, fail-closed behavior, owner-gated boundaries"
     },
     {
       "internalName": "Notes",

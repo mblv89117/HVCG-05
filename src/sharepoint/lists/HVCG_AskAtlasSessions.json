@@ -1,0 +1,204 @@
+{
+  "title": "HVCG_AskAtlasSessions",
+  "description": "Atlas AI - Ask Atlas operator conversations and grounded answer state",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Human-readable session label"
+    },
+    {
+      "internalName": "SessionId",
+      "displayName": "SessionId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable session key ask-atlas|operator|timestamp"
+    },
+    {
+      "internalName": "OperatorEmail",
+      "displayName": "OperatorEmail",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Signed Atlas operator"
+    },
+    {
+      "internalName": "OperatorRole",
+      "displayName": "OperatorRole",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Role resolved before retrieval"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Optional client isolation key when conversation is client-scoped"
+    },
+    {
+      "internalName": "ConversationScope",
+      "displayName": "ConversationScope",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Authorization scope used before tools/retrieval",
+      "choices": [
+        "OperatorPortfolio",
+        "AssignedClients",
+        "SingleClient",
+        "CapitalDesk",
+        "InternalPlatform",
+        "Engineering"
+      ],
+      "default": "OperatorPortfolio"
+    },
+    {
+      "internalName": "Question",
+      "displayName": "Question",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Natural-language operator request"
+    },
+    {
+      "internalName": "ResolvedIntent",
+      "displayName": "ResolvedIntent",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Ask Atlas intent class",
+      "choices": [
+        "Attention",
+        "ClientContext",
+        "ProjectStatus",
+        "CapitalContext",
+        "RevenueContext",
+        "KnowledgeSearch",
+        "ProductImprovement",
+        "AgentActivity",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ResponseSummary",
+      "displayName": "ResponseSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Grounded response summary shown to the operator"
+    },
+    {
+      "internalName": "EvidenceReferences",
+      "displayName": "EvidenceReferences",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON references to source records/files used in the answer"
+    },
+    {
+      "internalName": "OutputClassification",
+      "displayName": "OutputClassification",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Highest evidence classification in the response",
+      "choices": [
+        "CONFIRMED",
+        "LIKELY",
+        "PROPOSED",
+        "STALE_OR_UNCERTAIN",
+        "COMPLETE"
+      ],
+      "default": "PROPOSED"
+    },
+    {
+      "internalName": "PolicyDecision",
+      "displayName": "PolicyDecision",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Policy result for retrieval/tool use",
+      "choices": [
+        "Allowed",
+        "AllowedWithRedaction",
+        "ProposedOnly",
+        "ApprovalRequired",
+        "Denied"
+      ],
+      "default": "Allowed"
+    },
+    {
+      "internalName": "SessionStatus",
+      "displayName": "SessionStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Conversation lifecycle",
+      "choices": [
+        "Open",
+        "WaitingOnTool",
+        "Answered",
+        "Escalated",
+        "Failed",
+        "Archived"
+      ],
+      "default": "Open"
+    },
+    {
+      "internalName": "LastInteractionDate",
+      "displayName": "LastInteractionDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": "Most recent operator or agent interaction"
+    },
+    {
+      "internalName": "SourceChannel",
+      "displayName": "SourceChannel",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Where the operator asked",
+      "choices": [
+        "Atlas",
+        "AgentCenter",
+        "PowerApps",
+        "Teams",
+        "System"
+      ],
+      "default": "Atlas"
+    },
+    {
+      "internalName": "RelatedJobId",
+      "displayName": "RelatedJobId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Optional HVCG_AIJobs.JobId"
+    },
+    {
+      "internalName": "RelatedActivityId",
+      "displayName": "RelatedActivityId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Optional HVCG_AgentActivity.ActivityId"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Duplicate-prevention key"
+    }
+  ]
+}

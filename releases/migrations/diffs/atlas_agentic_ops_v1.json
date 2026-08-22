@@ -1,0 +1,71 @@
+{
+  "description": "Atlas Agentic Operations additive schema - Ask Atlas, event queue, activity ledger, engineering missions, and tool permission classes",
+  "addLists": [
+    {
+      "schemaPath": "src/sharepoint/lists/HVCG_AskAtlasSessions.json",
+      "title": "HVCG_AskAtlasSessions",
+      "description": "Atlas AI - Ask Atlas operator conversations and grounded answer state"
+    },
+    {
+      "schemaPath": "src/sharepoint/lists/HVCG_AgentEvents.json",
+      "title": "HVCG_AgentEvents",
+      "description": "Atlas AI - normalized event queue for agentic operating signals"
+    },
+    {
+      "schemaPath": "src/sharepoint/lists/HVCG_AgentActivity.json",
+      "title": "HVCG_AgentActivity",
+      "description": "Atlas AI - permanent activity ledger for autonomous and assisted agent operations"
+    },
+    {
+      "schemaPath": "src/sharepoint/lists/HVCG_EngineeringMissions.json",
+      "title": "HVCG_EngineeringMissions",
+      "description": "Atlas AI - governed engineering missions created from Atlas operating evidence"
+    }
+  ],
+  "addColumns": [
+    {
+      "list": "HVCG_AIToolRegistry",
+      "column": {
+        "internalName": "PermissionClass",
+        "displayName": "PermissionClass",
+        "type": "Choice",
+        "required": true,
+        "indexed": true,
+        "choices": [
+          "READ_AUTO",
+          "PROPOSE_AUTO",
+          "SAFE_INTERNAL_WRITE",
+          "GOVERNED_TECHNICAL_WRITE",
+          "OWNER_GATED"
+        ],
+        "default": "READ_AUTO"
+      }
+    },
+    {
+      "list": "HVCG_AIToolRegistry",
+      "column": {
+        "internalName": "ToolInputScope",
+        "displayName": "ToolInputScope",
+        "type": "Choice",
+        "indexed": true,
+        "choices": [
+          "OperatorPortfolio",
+          "AssignedClients",
+          "SingleClient",
+          "CapitalDesk",
+          "InternalPlatform",
+          "Engineering"
+        ],
+        "default": "OperatorPortfolio"
+      }
+    },
+    {
+      "list": "HVCG_AIToolRegistry",
+      "column": {
+        "internalName": "PolicyNotes",
+        "displayName": "PolicyNotes",
+        "type": "Note"
+      }
+    }
+  ]
+}

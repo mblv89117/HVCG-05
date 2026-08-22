@@ -11,6 +11,8 @@ Build this **after** `Deploy-HVCGDevelopment.ps1` has provisioned lists (includi
 5. Create screens from `src/power-apps/screens/`:
    - scrHomeOps
    - scrHomeExec
+   - **scrAskAtlas** (operator conversational intelligence)
+   - **scrAgentCenter** (AI operations / activity / approvals / missions)
    - **scrCRM** / **scrOpportunityDetail** (Opportunity CRM module — see below)
    - scrCapital
    - scrClientDetail
@@ -19,8 +21,9 @@ Build this **after** `Deploy-HVCGDevelopment.ps1` has provisioned lists (includi
 7. OnStart: set role-based navigate (Owner → Exec, else Ops). Initialize `varCRMScope`, `varSelectedOpportunity` as Blank.
 8. Hide finance controls unless role in Owner/Administrator/OperationsManager (`nfIsFinanceViewer`).
 9. Wire CRM nav + behavior per `docs/crm/POWER_APPS_BUILD_GUIDE.md`.
-10. **File → Save → Publish** (Maker/owner only — do not publish from this repo agent).
-11. **Share** with Entra groups `HVCG-DEV-Role-Owner`, `Administrator`, `OperationsManager`, `ProjectManager`, `FinancialAnalyst`, `OperationsAssistant`, `CapitalAdvisor`.
+10. Wire Ask Atlas / Agent Center per `src/power-apps/screens/scrAskAtlas.md` and `src/power-apps/screens/scrAgentCenter.md`.
+11. **File → Save → Publish** (Maker/owner only — do not publish from this repo agent).
+12. **Share** with Entra groups `HVCG-DEV-Role-Owner`, `Administrator`, `OperationsManager`, `ProjectManager`, `FinancialAnalyst`, `OperationsAssistant`, `CapitalAdvisor`.
 
 ## Opportunity CRM screens (Maker checklist)
 
@@ -62,6 +65,11 @@ Minimum controls on **scrOpportunityDetail**:
 - [ ] Phone layout usable for My Tasks **and** CRM Board/Next segments
 - [ ] Search finds ClientCode `SRM01`
 - [ ] Contractor OnVisible redirects away from CRM screens
+- [ ] Ask Atlas answers “What needs my attention?” from authorized attention lists or shows an honest empty state
+- [ ] Ask Atlas evidence cards show classification and source references
+- [ ] Single-client Ask Atlas scope never returns another client’s records
+- [ ] Agent Center shows recent `HVCG_AgentActivity`, pending approvals, failed jobs, and engineering missions
+- [ ] Owner-gated actions remain blocked/proposed only
 
 ## After first publish
 

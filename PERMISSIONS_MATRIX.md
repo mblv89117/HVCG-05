@@ -48,6 +48,10 @@ Contractors see only relationships for assigned `ClientCode`. Guests have **no**
 | **HVCG_AIFeedback** | E | E | E | E | E | E | E | N | N | N | **N** |
 | **HVCG_AIAuditLog** | E | E | R | N | N | N | N | N | N | N | **N** |
 | **HVCG_AICostTracking** | E | E | R | R | N | R | N | N | N | N | **N** |
+| **HVCG_AskAtlasSessions** | E | E | E | R | R | R | R | N | N | N | **N** |
+| **HVCG_AgentEvents** | E | E | E | R | R | R | R | N | N | N | **N** |
+| **HVCG_AgentActivity** | E | E | R | R | R | R | N | N | N | N | **N** |
+| **HVCG_EngineeringMissions** | E | E | E | R | N | R | N | N | N | N | **N** |
 
 All AI orchestration lists are **internal staff only**. Guests and client contacts have **no** access. Contractors have **no** access.
 
@@ -64,6 +68,7 @@ Hide from non-Owner/Admin/OpsMgr in Power Apps:
 - Invoice amounts (non-finance roles), ExpenseApprovals, Subscriptions/RecurringExpenses amounts (non-Ops)
 - All `HVCG_AI_*` queues (hide from Contractor / Client Contact)
 - All AI orchestration lists (hide from Contractor / Client Contact / Guest)
+- Ask Atlas and Agent Center detail panes must apply `ClientCode` filters before showing session/activity/event rows.
 - Relationships with `IsCrossClient=true` (hide from non-Owner/Admin)
 - Portal* lists until PortalEnabled and V2 launch
 

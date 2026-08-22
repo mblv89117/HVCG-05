@@ -414,7 +414,7 @@
     {
       "name": "HVCG_AIToolRegistry",
       "path": "src/sharepoint/lists/HVCG_AIToolRegistry.json",
-      "columnCount": 9,
+      "columnCount": 12,
       "description": "AI \u2014 Tool permissions registry"
     },
     {
@@ -464,6 +464,30 @@
       "path": "src/sharepoint/lists/HVCG_AICostTracking.json",
       "columnCount": 11,
       "description": "AI \u2014 Cost tracking per job/provider"
+    },
+    {
+      "name": "HVCG_AskAtlasSessions",
+      "path": "src/sharepoint/lists/HVCG_AskAtlasSessions.json",
+      "columnCount": 18,
+      "description": "Atlas AI \u2014 Ask Atlas operator conversations and grounded answer state"
+    },
+    {
+      "name": "HVCG_AgentEvents",
+      "path": "src/sharepoint/lists/HVCG_AgentEvents.json",
+      "columnCount": 20,
+      "description": "Atlas AI \u2014 normalized event queue for agentic operating signals"
+    },
+    {
+      "name": "HVCG_AgentActivity",
+      "path": "src/sharepoint/lists/HVCG_AgentActivity.json",
+      "columnCount": 26,
+      "description": "Atlas AI \u2014 permanent activity ledger for autonomous and assisted agent operations"
+    },
+    {
+      "name": "HVCG_EngineeringMissions",
+      "path": "src/sharepoint/lists/HVCG_EngineeringMissions.json",
+      "columnCount": 21,
+      "description": "Atlas AI \u2014 governed engineering missions created from Atlas operating evidence"
     },
     {
       "name": "HVCG_OperationalAlerts",
