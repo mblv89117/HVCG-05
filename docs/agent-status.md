@@ -5,7 +5,7 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | `00c6f00b727c6d320e627c9643cfc8a035fe2823` |
+| current SHA | `f9c4cfd68102daff3e9e81c3e5f09fdc74008084` |
 | baseline | Hub `940a484` + Elite `75d0c59` via freeze tip `2a5a605` |
 | owned domains | Search performance; operator honesty; dead-chrome nav; project deferred collections |
 | files/domains touched | `ProjectDetailPage.tsx`, `projectCollectionHonesty.ts`; prior D11/D12/search |
