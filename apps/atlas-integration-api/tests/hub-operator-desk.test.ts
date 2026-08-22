@@ -57,6 +57,22 @@ async function withHub(
           scp: 'access_as_user',
         };
       }
+      if (token === 'valid-roleless') {
+        return {
+          oid: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+          preferred_username: 'sp@example.com',
+          roles: [],
+          scp: 'access_as_user',
+        };
+      }
+      if (token === 'valid-roleless-empty') {
+        return {
+          oid: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+          preferred_username: 'empty-sp@example.com',
+          roles: [],
+          scp: 'access_as_user',
+        };
+      }
       const err = new Error('Invalid or expired Microsoft token') as Error & { status: number; code: string };
       err.status = 401;
       err.code = 'invalid_token';
@@ -133,7 +149,10 @@ describe('operator desk copy', () => {
 
 describe('operator desk HTTP fail-closed', () => {
   it('unauth HTML/JSON are 401 and entitled desk is Premium-rendered without invented LTV', async () => {
-    await withHub(async (oid) => (oid?.startsWith('aaaaaaaa') ? [SYN01] : []), async ({ base }) => {
+    await withHub(
+      async (oid) =>
+        oid?.startsWith('aaaaaaaa') || oid?.startsWith('dddddddd') ? [SYN01] : [],
+      async ({ base }) => {
       const unauthHtml = await fetch(`${base}/operator`);
       assert.equal(unauthHtml.status, 401);
       assert.match(unauthHtml.headers.get('content-type') || '', /text\/html/);
@@ -186,6 +205,18 @@ describe('operator desk HTTP fail-closed', () => {
       });
       assert.equal(clientDesk.status, 403);
       assert.equal((await clientDesk.text()).includes('Atlas Hub operator desk'), false);
+
+      const roleless = await fetch(`${base}/operator`, {
+        headers: { authorization: 'Bearer valid-roleless' },
+      });
+      assert.equal(roleless.status, 200);
+      assert.match(await roleless.text(), /Atlas Hub operator desk/);
+
+      const rolelessEmpty = await fetch(`${base}/operator`, {
+        headers: { authorization: 'Bearer valid-roleless-empty' },
+      });
+      assert.equal(rolelessEmpty.status, 403);
+      assert.equal((await rolelessEmpty.text()).includes('Atlas Hub operator desk'), false);
     });
   });
 });

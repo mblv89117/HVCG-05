@@ -14,7 +14,12 @@ import { createAuthorizedPmRepository, createSharePointPmService } from '../src/
 import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { createGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { fieldsEq, fieldsEqTrue, itemMatchesFieldsFilter } from '../src/pm/sharepoint/odata.ts';
-import { classifyProjectFields, canAccessClassification, isInternalStaff } from '../src/pm/sharepoint/authz.ts';
+import {
+  classifyProjectFields,
+  canAccessClassification,
+  canAccessOperatorDesk,
+  isInternalStaff,
+} from '../src/pm/sharepoint/authz.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { UserBasicLookup } from '../src/entitlements/userLookup.ts';
@@ -269,9 +274,26 @@ describe('SharePoint PM unit: authz / odata / mapping safety', () => {
       allowedClientIds: [],
       roles: ['HVCG Owner'],
     };
+    const roleless: AtlasPrincipal = {
+      userId: '11111111-1111-4111-8111-111111111007',
+      organizationId: 'org-hvcg',
+      allowedClientIds: ['SYN01'],
+      roles: [],
+    };
+    const rolelessEmpty: AtlasPrincipal = {
+      userId: '11111111-1111-4111-8111-111111111008',
+      organizationId: 'org-hvcg',
+      allowedClientIds: [],
+      roles: [],
+    };
     assert.equal(isInternalStaff(admin), false);
     assert.equal(isInternalStaff(advisor), false);
     assert.equal(isInternalStaff(owner), true);
+    assert.equal(canAccessOperatorDesk(owner), true);
+    assert.equal(canAccessOperatorDesk(roleless), true);
+    assert.equal(canAccessOperatorDesk(advisor), false);
+    assert.equal(canAccessOperatorDesk(admin), false);
+    assert.equal(canAccessOperatorDesk(rolelessEmpty), false);
     assert.equal(canAccessClassification(admin, { kind: 'internal' }), false);
     assert.equal(canAccessClassification(owner, { kind: 'internal' }), true);
     assert.equal(canAccessClassification(owner, { kind: 'client', clientCode: 'ACCG01' }), false);

@@ -6,7 +6,7 @@ import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
 import { buildCommandCenter } from '../commandCenter.ts';
 import { readDeskCommercialContext } from '../commercialContext/handle.ts';
-import { entitledClientCodes, isInternalStaff } from '../sharepoint/authz.ts';
+import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { buildSharePointCommandCenter } from '../sharepoint/http.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
 import { searchSharePointPm } from '../sharepoint/search.ts';
@@ -165,7 +165,7 @@ export async function handleOperatorDesk(opts: {
     throw err;
   }
 
-  if (!isInternalStaff(principal)) {
+  if (!canAccessOperatorDesk(principal)) {
     if (asJson) {
       sendJson(
         opts.res,
