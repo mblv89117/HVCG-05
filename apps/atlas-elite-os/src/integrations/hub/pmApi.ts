@@ -169,6 +169,7 @@ export async function fetchPmProject(auth: AtlasHubAuthHeaders, id: string) {
     activity?: unknown[];
     documents?: OperatingDocument[];
     deferred?: Record<string, string>;
+    persistable?: Record<string, boolean> | string[];
   }>(auth, `/api/pm/projects/${encodeURIComponent(id)}`);
 }
 
