@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `fc8ea8d3313bf316eb22f9edd05517a2f7fec9a9` |
 | baseline | D36 CLASSIFY_ATLAS03_PUBLIC_ABSENCE @ Hub `64b56dc` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **36** |
 | BASED ON WORKER SHA | `435824f1df84ddc02f362460a7c53356fbc91e0f` |
 | PREVIOUS | D34 CONSUMED=34 XSYS VERIFIED_FIXED — not replayed; D35 skipped |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `fc8ea8d3313bf316eb22f9edd05517a2f7fec9a9` |
 | COMPLETED ACTIONS | D36 ATLAS-03 public-absence VERIFIED_FIXED; CONSUMED=36 |
 | REMAINING ACTIONS | Staff/synthetic session for ATLAS-01/02 only |
 | LIVE_P0 | **2** |
