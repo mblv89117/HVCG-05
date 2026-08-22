@@ -36,9 +36,11 @@ export const ASK_ATLAS_RUNTIME_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RUNTIME-001' as 
 export const ASK_ATLAS_EVENT_MISSION_KEY = 'ATLAS-AGENTIC-OPS-EVENT-001' as const;
 export const ASK_ATLAS_PII_MISSION_KEY = 'ATLAS-AGENTIC-OPS-PII-001' as const;
 export const ASK_ATLAS_LOOP_MISSION_KEY = 'ATLAS-AGENTIC-OPS-LOOP-001' as const;
+export const ASK_ATLAS_CLIENTCTX_MISSION_KEY = 'ATLAS-AGENTIC-OPS-CLIENTCTX-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
+export const GET_CLIENT_CONTEXT_TOOL = 'get_client_context' as const;
 export const CREATE_ENGINEERING_MISSION_TOOL = 'create_engineering_mission' as const;
 export const ENGINEERING_MISSION_DISPATCH_STATUS = 'ready_for_bounded_execution' as const;
 export const V4_CHAT_INJECT = 'UNSUPPORTED' as const;
@@ -77,7 +79,8 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
   | typeof ASK_ATLAS_EVENT_MISSION_KEY
   | typeof ASK_ATLAS_PII_MISSION_KEY
-  | typeof ASK_ATLAS_LOOP_MISSION_KEY;
+  | typeof ASK_ATLAS_LOOP_MISSION_KEY
+  | typeof ASK_ATLAS_CLIENTCTX_MISSION_KEY;
 export type AskAtlasTrigger =
   | 'operator_operating_picture'
   | 'signed_operator_question'
@@ -91,6 +94,34 @@ export type ProductImprovementEvidenceClass =
   | 'entitled_search_failure'
   | 'production_health_degradation'
   | 'repeated_failed_workflow';
+
+export type ClientContextEvidenceClass =
+  | 'recovered_folder_filename'
+  | 'recovered_knowledge'
+  | 'attention_item'
+  | 'hub_mi_row'
+  | 'honest_empty';
+
+export interface AtlasClientContextBinding {
+  client?: string;
+  clientCode?: string;
+  entitled: boolean;
+  hubMiOperationalized: boolean;
+}
+
+export interface AtlasClientContext {
+  kind: 'atlas_client_context_v1';
+  invented: false;
+  honestEmpty: boolean;
+  client: AtlasClientContextBinding;
+  why: string;
+  basedOn: string;
+  provenance: AskAtlasClassification | 'HONEST_EMPTY';
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  evidenceClass: ClientContextEvidenceClass;
+  realClientsOperationalized: string[];
+  recoveredKnowledgeOperationalized: boolean;
+}
 
 export interface ProposedEngineeringMission {
   kind: 'proposed_engineering_mission_v1';
@@ -377,6 +408,10 @@ export function isOperatorEngineeringMissionsPath(path: string): boolean {
   return path === '/operator/engineering-missions.json';
 }
 
+export function isOperatorClientContextPath(path: string): boolean {
+  return path === '/operator/client-context.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
@@ -386,7 +421,8 @@ export function isOperatorDeskPath(path: string): boolean {
     isOperatorRuntimePath(path) ||
     isOperatorEventsPath(path) ||
     isOperatorImprovementsPath(path) ||
-    isOperatorEngineeringMissionsPath(path)
+    isOperatorEngineeringMissionsPath(path) ||
+    isOperatorClientContextPath(path)
   );
 }
 
@@ -397,7 +433,8 @@ export function wantsOperatorJson(path: string, acceptHeader: string | undefined
     isOperatorRuntimePath(path) ||
     isOperatorEventsPath(path) ||
     isOperatorImprovementsPath(path) ||
-    isOperatorEngineeringMissionsPath(path)
+    isOperatorEngineeringMissionsPath(path) ||
+    isOperatorClientContextPath(path)
   ) {
     return true;
   }
