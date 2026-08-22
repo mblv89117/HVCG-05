@@ -307,6 +307,19 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
   </section>
   <section>
+    <h2>Overdue</h2>
+    <p class="muted">Filename-derived collections only. LIKELY means the words Past Due appear on a recovered invoice filename. Payment status and amounts are not extracted.</p>
+    ${operatingList(op.queues.overdue, 'No recovered past-due invoice filenames in this picture.')}
+  </section>
+  <section>
+    <h2>Blocked</h2>
+    ${operatingList(op.queues.blocked, 'No customer Blocked items in entitled scope.')}
+  </section>
+  <section>
+    <h2>At Risk</h2>
+    ${operatingList(op.queues.atRisk, 'No customer At Risk items in entitled scope.')}
+  </section>
+  <section>
     <h2>Recovered HVS clients</h2>
     <p class="muted">Reference-only HVS-admin folders. First-level documents are indexed. Not Hub MI operationalizations. Atlas does not invent balances, obligations, or entitled HVCG_Clients rows.</p>
     ${
@@ -398,18 +411,6 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
             .join('')}</ul>`
         : '<p class="empty">No CONFIRMED recovered files in this picture.</p>'
     }
-  </section>
-  <section>
-    <h2>Overdue</h2>
-    ${operatingList(op.queues.overdue, 'No customer Overdue items in entitled scope.')}
-  </section>
-  <section>
-    <h2>Blocked</h2>
-    ${operatingList(op.queues.blocked, 'No customer Blocked items in entitled scope.')}
-  </section>
-  <section>
-    <h2>At Risk</h2>
-    ${operatingList(op.queues.atRisk, 'No customer At Risk items in entitled scope.')}
   </section>
   <section>
     <h2>Synthetic QA work</h2>

@@ -236,6 +236,8 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.hvsActionableClientKnowledge.every((row) => row.hubMiOperationalized === false), true);
     assert.ok(picture.queues.Waiting.some((row) => row.kind === 'hvs_actionable_waiting'));
     assert.ok(picture.queues.Waiting.some((row) => row.title.includes('checklist') || row.title.includes('Hub client code')));
+    assert.ok(picture.queues.Overdue.some((row) => row.kind === 'hvs_actionable_overdue' && row.clientCode === 'PDG01'));
+    assert.equal(picture.queues.Overdue.filter((row) => row.kind === 'hvs_actionable_overdue').length, 2);
     assert.ok(
       picture.hvsActionableClientKnowledge.some(
         (row) =>

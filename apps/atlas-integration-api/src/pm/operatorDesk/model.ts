@@ -13,7 +13,11 @@ import {
   isHvsRecoveredKind,
 } from '../sharepoint/hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects } from '../sharepoint/hvsRecoveredProjects.ts';
-import { hvsActionableClientKnowledge, hvsActionableWaitingItems } from '../sharepoint/hvsActionableClientKnowledge.ts';
+import {
+  hvsActionableClientKnowledge,
+  hvsActionableOverdueItems,
+  hvsActionableWaitingItems,
+} from '../sharepoint/hvsActionableClientKnowledge.ts';
 import {
   hvsRecoveredCapitalPackets,
   hvsRecoveredClientRecords,
@@ -129,6 +133,17 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
           kind: 'hvs_actionable_waiting',
           provenance: row.classification,
         }));
+  const overdue =
+    hvsDataAccess === 'BLOCKED'
+      ? []
+      : hvsActionableOverdueItems().map((row) => ({
+          id: row.id,
+          clientCode: row.clientCode,
+          title: row.title,
+          queue: 'Overdue',
+          kind: 'hvs_actionable_overdue',
+          provenance: row.classification,
+        }));
   const actions =
     hvsDataAccess === 'BLOCKED'
       ? []
@@ -162,7 +177,7 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     queues: {
       needsAction: actions.filter((row) => row.queue === 'Needs Action'),
       waiting,
-      overdue: [],
+      overdue,
       blocked: [],
       decisionRequired: actions.filter((row) => row.queue === 'Decision Required'),
       atRisk: [],

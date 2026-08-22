@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   hvsActionableClientKnowledge,
+  hvsActionableOverdueItems,
   hvsActionableWaitingItems,
 } from '../src/pm/sharepoint/hvsActionableClientKnowledge.ts';
 
@@ -49,6 +50,18 @@ test('actionable HVS knowledge stays honest and useful', () => {
     waiting.every((row) => ['CONFIRMED', 'LIKELY', 'PROPOSED'].includes(row.classification)),
     true,
   );
+
+  const overdue = hvsActionableOverdueItems();
+  assert.ok(overdue.length >= 2);
+  assert.equal(
+    overdue.every((row) => row.classification === 'LIKELY' && /past-due invoice filename/i.test(row.title)),
+    true,
+  );
+  const prodigyOverdue = overdue.filter((row) => row.client === 'Prodigy Games');
+  assert.equal(prodigyOverdue.length, 2);
+  assert.ok(prodigyOverdue.some((row) => /April 2026 Past Due Invoice/i.test(row.filename)));
+  assert.ok(prodigyOverdue.some((row) => /May 2026 Past Due Invoice/i.test(row.filename)));
+  assert.equal(overdue.every((row) => /amounts not extracted/i.test(row.title)), true);
 
   const serialized = JSON.stringify(rows);
   assert.equal(serialized.includes('$'), false);

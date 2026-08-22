@@ -52,6 +52,7 @@ import {
   type RecoveryLedgerRow,
 } from '../pm/sharepoint/knowledgeClassification.ts';
 import type { KnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
+import { isHvsRecoveredKind } from '../pm/sharepoint/hvsRecoveredDocuments.ts';
 import { hvsAccessMissingData, resolveHvsDataAccess } from '../pm/sharepoint/hvsRecoveryInventory.ts';
 import { readCommercialContext } from '../pm/commercialContext/handle.ts';
 import { EMPTY_REASON, type OperatorCommercialContext } from '../pm/commercialContext/types.ts';
@@ -1339,8 +1340,7 @@ export function attachOperatorDeskOperatingPicture<
         .filter(
           (row) =>
             row.clientCode === clientCode &&
-            row.kind !== 'hvs_recovered_reference' &&
-            row.kind !== 'hvs_actionable_waiting',
+            !isHvsRecoveredKind(row.kind),
         )
         .map((row) => ({
           id: row.id,

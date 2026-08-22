@@ -158,7 +158,12 @@ describe('operator desk copy', () => {
     assert.match(html, /No inventoried files yet in/);
     assert.ok(html.indexOf('<h2>Needs Action</h2>') < html.indexOf('<h2>Waiting</h2>'));
     assert.ok(html.indexOf('<h2>Waiting</h2>') < html.indexOf('<h2>Decision Required</h2>'));
-    assert.ok(html.indexOf('<h2>Decision Required</h2>') < html.indexOf('<h2>Recovered HVS clients</h2>'));
+    assert.ok(html.indexOf('<h2>Decision Required</h2>') < html.indexOf('<h2>Overdue</h2>'));
+    assert.ok(html.indexOf('<h2>Overdue</h2>') < html.indexOf('<h2>Blocked</h2>'));
+    assert.ok(html.indexOf('<h2>Blocked</h2>') < html.indexOf('<h2>At Risk</h2>'));
+    assert.ok(html.indexOf('<h2>At Risk</h2>') < html.indexOf('<h2>Recovered HVS clients</h2>'));
+    assert.match(html, /Past Due Invoice/);
+    assert.match(html, /payment status and amounts not extracted/);
     assert.equal((html.match(/<h2>Waiting<\/h2>/g) || []).length, 1);
     assert.equal((html.match(/<h2>Decision Required<\/h2>/g) || []).length, 1);
     const recoveredRecordsHtml = html.slice(
@@ -213,6 +218,16 @@ describe('operator desk copy', () => {
       model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_actionable_waiting' && !row.href),
       true,
     );
+    assert.ok(
+      model.operatingPicture.queues.overdue.some(
+        (row) =>
+          row.kind === 'hvs_actionable_overdue' &&
+          row.clientCode === 'PDG01' &&
+          /past-due invoice filename/i.test(row.title) &&
+          !row.href,
+      ),
+    );
+    assert.equal(model.operatingPicture.queues.overdue.length, 2);
     assert.equal(model.operatingPicture.hvsActionableClientKnowledge.length, 12);
     assert.ok(
       model.operatingPicture.hvsActionableClientKnowledge.some(
