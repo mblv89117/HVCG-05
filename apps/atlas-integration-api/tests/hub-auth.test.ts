@@ -325,6 +325,9 @@ describe('authentication route matrix', () => {
     await withAuthOnHub(async (base) => {
       const paths = [
         '/api/pm/projects',
+        '/api/pm/opportunities',
+        '/api/pm/search',
+        '/api/pm/leads',
         '/api/ba/health',
         '/api/local-ai/flags',
         '/api/connections',
