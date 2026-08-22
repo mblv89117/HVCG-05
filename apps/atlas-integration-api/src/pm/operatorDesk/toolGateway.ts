@@ -332,7 +332,7 @@ function composeClientContext(
     ledger?.dataType
   ) {
     basedOnParts.push(
-      `Authorized recovery ledger ${ledger.dataType} (${ledger.provenance}). Not an operational Hub-MI client.`,
+      `Authorized recovery ledger ${ledger.dataType} (${ledger.provenance}). Not an operational client row.`,
     );
   }
 
@@ -342,7 +342,7 @@ function composeClientContext(
     recoveredClient?.nextAction ||
     (ledgerEvidence
       ? ledger?.blocker ||
-        'Recovered inventory lists this client on the entitled operator picture. No Hub-MI row exists.'
+        'Recovered inventory lists this client on the entitled operator picture. No operational client row exists.'
       : 'No entitled recovered or Hub operating evidence is available for this client.');
   const basedOn =
     basedOnParts[0] ||

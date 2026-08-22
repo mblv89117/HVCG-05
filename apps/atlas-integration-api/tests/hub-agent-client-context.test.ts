@@ -393,7 +393,7 @@ describe('Ask Atlas READ_AUTO get_client_context', () => {
     assert.equal(viaHart.clientContext?.decisions, undefined);
     assert.equal(viaHart.clientContext?.nextActions, undefined);
     assert.match(viaHart.clientContext?.why || '', /./);
-    assert.match(viaHart.clientContext?.basedOn || '', /recovery ledger|Not an operational Hub-MI/i);
+    assert.match(viaHart.clientContext?.basedOn || '', /recovery ledger|Not an operational client row/i);
     noInventedFacts(viaHart);
 
     const viaName = getClientContext({
