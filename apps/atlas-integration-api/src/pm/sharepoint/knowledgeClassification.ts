@@ -126,7 +126,7 @@ export function entityBoundaryFor(clientCode: string | undefined): EntityBoundar
 }
 
 export function isSyntheticQaClient(clientCode: string | undefined): boolean {
-  return clientCode === 'SYN01';
+  return clientCode === 'SYN01' || clientCode === 'SYNTH01';
 }
 
 export function isAccgReadOnly(clientCode: string | undefined): boolean {
@@ -192,7 +192,9 @@ export function classifyHubClientRow(input: {
   classification: 'SYNTHETIC_QA' | 'CLIENT' | 'READ_ONLY_CLIENT';
 } {
   const boundary = entityBoundaryFor(input.clientCode);
-  const entityKind = boundary?.kind || 'client';
+  const entityKind = isSyntheticQaClient(input.clientCode)
+    ? 'synthetic_qa'
+    : boundary?.kind || 'client';
   const writePolicy = boundary?.writePolicy || (isAccgReadOnly(input.clientCode) ? 'read_only' : 'normal');
   const classification =
     entityKind === 'synthetic_qa'

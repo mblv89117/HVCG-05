@@ -70,6 +70,8 @@ describe('knowledge classification', () => {
     assert.equal(row.customerRecord, false);
     assert.equal(row.provenance, 'CONFIRMED');
     assert.equal(isSyntheticQaClient('SYN01'), true);
+    assert.equal(isSyntheticQaClient('SYNTH01'), true);
+    assert.equal(classifyHubClientRow({ clientCode: 'SYNTH01' }).customerRecord, false);
     assert.equal(isSyntheticQaClient('HFD01'), false);
   });
 
