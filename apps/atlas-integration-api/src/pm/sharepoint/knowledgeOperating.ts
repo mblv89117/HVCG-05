@@ -11,6 +11,7 @@ import {
   emptyOperatingQueues,
   entityBoundaryFor,
   isSyntheticQaClient,
+  opportunityOperatingStates,
   projectOperatingStates,
   taskOperatingStates,
   type KnowledgeProvenance,
@@ -18,7 +19,13 @@ import {
   type RecoveryLedgerRow,
 } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger, type KnowledgeLedgerItem } from './knowledgeLedger.ts';
-import type { SharePointClient, SharePointPmService, SharePointProject, SharePointTask } from './repository.ts';
+import type {
+  SharePointClient,
+  SharePointOpportunity,
+  SharePointPmService,
+  SharePointProject,
+  SharePointTask,
+} from './repository.ts';
 import { listEntitledAttention, type ClientAttentionItem } from './attention.ts';
 
 export type KnowledgeOperatingItem = {
@@ -26,7 +33,7 @@ export type KnowledgeOperatingItem = {
   clientCode: string;
   title: string;
   queue: OperatingState;
-  kind: 'task' | 'project' | 'document_request' | 'knowledge_item';
+  kind: 'task' | 'project' | 'document_request' | 'knowledge_item' | 'opportunity';
   provenance: KnowledgeProvenance;
   source: string;
   webUrl?: string;
@@ -47,6 +54,7 @@ export type KnowledgeOperatingPicture = {
   documents: Awaited<ReturnType<typeof buildKnowledgeLedger>>;
   classifiedClients: ReturnType<typeof classifyHubClientRow>[];
   queues: Record<OperatingState, KnowledgeOperatingItem[]>;
+  syntheticQueues: Record<OperatingState, KnowledgeOperatingItem[]>;
   syntheticAttention: ClientAttentionItem[];
   recoveryLedger: RecoveryLedgerRow[];
   honestEmpty: boolean;
@@ -62,18 +70,20 @@ function queuesFromEntitledWork(input: {
   clients: SharePointClient[];
   projects: SharePointProject[];
   tasks: SharePointTask[];
+  opportunities?: SharePointOpportunity[];
   documentRequests: DocumentRequestRecord[];
   ledgerItems: KnowledgeLedgerItem[];
   today: string;
+  includeCode: (clientCode: string) => boolean;
 }): Record<OperatingState, KnowledgeOperatingItem[]> {
   const queues = emptyOperatingQueues() as Record<OperatingState, KnowledgeOperatingItem[]>;
-  const customerCodes = new Set(
-    input.clients.filter((c) => !isSyntheticQaClient(c.clientCode)).map((c) => c.clientCode),
+  const entitledCodes = new Set(
+    input.clients.map((c) => c.clientCode).filter((code) => input.includeCode(code)),
   );
 
   for (const project of input.projects) {
     const code = project.clientCode || project.clientId || '';
-    if (!customerCodes.has(code)) continue;
+    if (!entitledCodes.has(code)) continue;
     for (const queue of projectOperatingStates({ health: project.health, status: project.status })) {
       queues[queue].push(
         item({
@@ -91,7 +101,7 @@ function queuesFromEntitledWork(input: {
 
   for (const task of input.tasks) {
     const code = task.clientCode || task.clientId || '';
-    if (!customerCodes.has(code)) continue;
+    if (!entitledCodes.has(code)) continue;
     for (const queue of taskOperatingStates({
       status: task.status,
       dueDate: task.dueDate,
@@ -112,8 +122,30 @@ function queuesFromEntitledWork(input: {
     }
   }
 
+  for (const opportunity of input.opportunities || []) {
+    const code = opportunity.clientCode || opportunity.clientId || '';
+    if (!entitledCodes.has(code)) continue;
+    const title = opportunity.nextAction
+      ? `${opportunity.title} — ${opportunity.nextAction}`
+      : opportunity.title;
+    for (const queue of opportunityOperatingStates({ state: opportunity.attention?.state })) {
+      queues[queue].push(
+        item({
+          id: `opportunity:${opportunity.id}:${queue}`,
+          clientCode: code,
+          title,
+          queue,
+          kind: 'opportunity',
+          provenance: 'CONFIRMED',
+          source: 'HVCG_Opportunities',
+          dueDate: opportunity.nextActionDate,
+        }),
+      );
+    }
+  }
+
   for (const req of input.documentRequests) {
-    if (!customerCodes.has(req.clientCode)) continue;
+    if (!entitledCodes.has(req.clientCode)) continue;
     const queue: OperatingState = req.status === 'received' ? 'Outcomes' : 'Needs Action';
     queues[queue].push(
       item({
@@ -129,7 +161,7 @@ function queuesFromEntitledWork(input: {
   }
 
   for (const row of input.ledgerItems) {
-    if (!customerCodes.has(row.clientCode)) continue;
+    if (!entitledCodes.has(row.clientCode)) continue;
     queues.Ready.push(
       item({
         id: `ledger:${row.id}:Ready`,
@@ -249,18 +281,31 @@ export async function buildKnowledgeOperatingPicture(
   const clients = await service.listAuthorizedClients(principal);
   const projects = await service.listAuthorizedProjects(principal);
   const tasks = await service.listAuthorizedTasks(principal);
+  const opportunities =
+    typeof service.listAuthorizedOpportunities === 'function'
+      ? await service.listAuthorizedOpportunities(principal)
+      : [];
   const ledger = await buildKnowledgeLedger(service, principal);
   const documentRequests = clients.flatMap((client) =>
     opts?.dataDir ? listDocumentRequests(opts.dataDir, client.clientCode) : [],
   );
   const classifiedClients = clients.map((client) => classifyHubClientRow(client));
-  const queues = queuesFromEntitledWork({
+  const workInput = {
     clients,
     projects,
     tasks,
+    opportunities,
     documentRequests,
     ledgerItems: ledger.items,
     today: opts?.today || new Date().toISOString(),
+  };
+  const queues = queuesFromEntitledWork({
+    ...workInput,
+    includeCode: (code) => !isSyntheticQaClient(code),
+  });
+  const syntheticQueues = queuesFromEntitledWork({
+    ...workInput,
+    includeCode: (code) => isSyntheticQaClient(code),
   });
   const syntheticAttention = opts?.dataDir
     ? listEntitledAttention(
@@ -287,6 +332,7 @@ export async function buildKnowledgeOperatingPicture(
     documents: ledger,
     classifiedClients,
     queues,
+    syntheticQueues,
     syntheticAttention,
     recoveryLedger,
     honestEmpty: realClientsOperationalized.length === 0,

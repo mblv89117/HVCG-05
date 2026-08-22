@@ -23,6 +23,32 @@ function queueList(items: OperatorQueueItem[], empty: string): string {
     .join('')}</ul>`;
 }
 
+function operatingList(items: OperatorOperatingItem[], empty: string, synthetic = false): string {
+  if (!items.length) return `<p class="empty">${esc(empty)}</p>`;
+  return `<ul>${items
+    .map((row) => {
+      const qa = synthetic || row.clientCode === 'SYN01' || row.clientCode === 'SYNTH01';
+      const title = qa ? `${row.title} (SYNTHETIC QA)` : row.title;
+      return `<li><span class="kind">${esc(row.queue)}</span> ${esc(title)} · ${esc(row.clientCode)} <span class="muted">(${esc(row.provenance)})</span></li>`;
+    })
+    .join('')}</ul>`;
+}
+
+function flatQueues(
+  queues: OperatorDeskModel['operatingPicture']['queues'],
+): OperatorOperatingItem[] {
+  return [
+    ...queues.needsAction,
+    ...queues.waiting,
+    ...queues.overdue,
+    ...queues.blocked,
+    ...queues.decisionRequired,
+    ...queues.atRisk,
+    ...queues.ready,
+    ...queues.outcomes,
+  ];
+}
+
 const SHELL = `<!doctype html>
 <html lang="en">
 <head>
@@ -96,21 +122,8 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
       : `<p class="empty">No entitled matches for “${esc(model.search.q)}”. Atlas does not invent results.</p>`
     : `<p class="empty">Enter at least two characters. Search is entitled and fail-closed.</p>`;
   const op = model.operatingPicture;
-  const operatingLines = (
-    [
-      ...op.queues.needsAction,
-      ...op.queues.waiting,
-      ...op.queues.overdue,
-      ...op.queues.blocked,
-      ...op.queues.decisionRequired,
-      ...op.queues.atRisk,
-    ] as OperatorOperatingItem[]
-  )
-    .map(
-      (row) =>
-        `<li><span class="kind">${esc(row.queue)}</span> ${esc(row.title)} · ${esc(row.clientCode)} <span class="muted">(${esc(row.provenance)})</span></li>`,
-    )
-    .join('');
+  const realWork = flatQueues(op.queues);
+  const syntheticWork = flatQueues(op.syntheticQueues);
 
   return `${SHELL}
 <header>
@@ -141,8 +154,37 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   </section>
   <section>
     <h2>What we are working on</h2>
-    <p class="muted">HVS ${esc(op.hvsDataAccess)} · ${op.honestEmpty ? 'honest empty' : `${esc(String(op.realClientsOperationalized.length))} real client(s) operationalized`}</p>
-    ${operatingLines ? `<ul>${operatingLines}</ul>` : '<p class="empty">No entitled operating items. Atlas does not invent work.</p>'}
+    <p class="muted">HVS ${esc(op.hvsDataAccess)} · ${op.honestEmpty ? 'honest empty for real clients' : `${esc(String(op.realClientsOperationalized.length))} real client(s) operationalized`} · SYNQA ${syntheticWork.length ? 'labeled' : 'none'}</p>
+    ${operatingList(realWork, 'No entitled customer operating items. Atlas does not invent work.')}
+  </section>
+  <section>
+    <h2>Needs Action</h2>
+    ${operatingList(op.queues.needsAction, 'No customer Needs Action items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Waiting</h2>
+    ${operatingList(op.queues.waiting, 'No customer Waiting items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Overdue</h2>
+    ${operatingList(op.queues.overdue, 'No customer Overdue items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Blocked</h2>
+    ${operatingList(op.queues.blocked, 'No customer Blocked items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Decision Required</h2>
+    ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
+  </section>
+  <section>
+    <h2>At Risk</h2>
+    ${operatingList(op.queues.atRisk, 'No customer At Risk items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Synthetic QA work</h2>
+    <p class="muted">Labeled fixtures only. SYN01 is not a customer operationalization.</p>
+    ${operatingList(syntheticWork, 'No labeled SYNTHETIC_QA work in this entitled session.', true)}
   </section>
   <section>
     <h2>Missing or blocked data</h2>

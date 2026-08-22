@@ -143,9 +143,15 @@ describe('operator desk copy', () => {
     assert.match(html, /\/api\/pm\/clients\/SYN01\/desk/);
     assert.match(html, /Approve SYN01 activation/);
     assert.match(html, /What we are working on/);
+    assert.match(html, /Synthetic QA work/);
+    assert.match(html, /Waiting/);
+    assert.match(html, /Blocked/);
+    assert.match(html, /At Risk/);
+    assert.match(html, /Decision Required/);
     assert.match(html, /Missing or blocked data/);
     assert.match(html, /HVS_DATA_ACCESS=BLOCKED/);
     assert.match(html, /does not invent work/);
+    assert.match(html, /SYN01 is not a customer operationalization/);
     assert.equal(model.operatingPicture.invented, false);
     assert.equal(model.operatingPicture.hvsDataAccess, 'BLOCKED');
     assert.equal(model.operatingPicture.honestEmpty, true);
@@ -211,6 +217,7 @@ describe('operator desk HTTP fail-closed', () => {
             hvsDataAccess: string;
             honestEmpty: boolean;
             realClientsOperationalized: string[];
+            syntheticQueues: { needsAction: unknown[] };
           };
         };
       };
@@ -224,6 +231,7 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.operatingPicture.hvsDataAccess, 'BLOCKED');
       assert.equal(body.operatorDesk.operatingPicture.honestEmpty, true);
       assert.deepEqual(body.operatorDesk.operatingPicture.realClientsOperationalized, []);
+      assert.deepEqual(body.operatorDesk.operatingPicture.syntheticQueues.needsAction, []);
 
       const root = await fetch(base);
       assert.equal(root.status, 405);

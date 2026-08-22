@@ -9,6 +9,7 @@ import {
   assertWritableClientCode,
   classifyHubClientRow,
   isSyntheticQaClient,
+  opportunityOperatingStates,
   projectOperatingStates,
   taskOperatingStates,
 } from '../src/pm/sharepoint/knowledgeClassification.ts';
@@ -16,7 +17,7 @@ import { buildKnowledgeOperatingPicture } from '../src/pm/sharepoint/knowledgeOp
 import { createDocumentRequest, updateDocumentRequest } from '../src/pm/sharepoint/documentRequests.ts';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
-import type { SharePointClient, SharePointPmService, SharePointProject, SharePointTask } from '../src/pm/sharepoint/repository.ts';
+import type { SharePointClient, SharePointOpportunity, SharePointPmService, SharePointProject, SharePointTask } from '../src/pm/sharepoint/repository.ts';
 
 const staff: AtlasPrincipal = {
   userId: '11111111-1111-4111-8111-111111111003',
@@ -38,12 +39,14 @@ function stubService(input: {
   clients?: SharePointClient[];
   projects?: SharePointProject[];
   tasks?: SharePointTask[];
+  opportunities?: SharePointOpportunity[];
   files?: Array<{ id: string; title: string; clientCode: string; webUrl?: string; summary?: string }>;
 }): SharePointPmService {
   return {
     listAuthorizedClients: async () => input.clients || [],
     listAuthorizedProjects: async () => input.projects || [],
     listAuthorizedTasks: async () => input.tasks || [],
+    listAuthorizedOpportunities: async () => input.opportunities || [],
     listWorkspaceCollections: async (_principal, clientCode) => ({
       communications: {
         items: (input.files || [])
@@ -113,6 +116,13 @@ describe('knowledge classification', () => {
       'Projects',
     ]);
     assert.ok(!taskOperatingStates({ status: 'ready' }).includes('Overdue'));
+    assert.deepEqual(opportunityOperatingStates({ state: 'NEEDS_MANNY' }), ['Decision Required']);
+    assert.deepEqual(opportunityOperatingStates({ state: 'OVERDUE' }).sort(), [
+      'Needs Action',
+      'Overdue',
+    ]);
+    assert.deepEqual(opportunityOperatingStates({ state: 'OPEN' }), ['Ready']);
+    assert.deepEqual(opportunityOperatingStates({ state: 'INVENTED' }), []);
   });
 });
 
@@ -153,6 +163,73 @@ describe('knowledge operating picture', () => {
     const hvs = picture.recoveryLedger.find((row) => row.dataType === 'HVS_HISTORICAL');
     assert.equal(hvs?.accessible, false);
     assert.equal(hvs?.provenance, 'CONFIRMED');
+    assert.equal(Object.values(picture.syntheticQueues).flat().length, 0);
+  });
+
+  it('labels entitled SYN01 CRM work as syntheticQueues and never as real operationalization', async () => {
+    const picture = await buildKnowledgeOperatingPicture(
+      stubService({
+        clients: [
+          client({
+            clientCode: 'SYN01',
+            displayName: 'SYNTHETIC QA — Atlas Capital Operations',
+          }),
+        ],
+        projects: [
+          {
+            id: '80',
+            name: 'SYNQA capital fixture',
+            clientId: 'SYN01',
+            clientCode: 'SYN01',
+            businessEntity: 'HVCG',
+            projectType: 'client_engagement',
+            ownerId: staff.userId,
+            ownerName: 'Staff',
+            teamMemberIds: [],
+            status: 'active',
+            priority: 'high',
+            health: 'at_risk',
+            progressPercent: 0,
+            sourceLinks: [],
+            tags: [],
+            createdAt: '2026-08-22T00:00:00.000Z',
+            updatedAt: '2026-08-22T00:00:00.000Z',
+            etag: '"1"',
+            isInternalProject: false,
+            classification: { kind: 'client', clientCode: 'SYN01' },
+          } as SharePointProject,
+        ],
+        opportunities: [
+          {
+            id: '81',
+            etag: '"1"',
+            title: 'SYNQA fixture opportunity',
+            stage: 'Proposal',
+            clientCode: 'SYN01',
+            nextAction: 'Review fixture packet',
+            attention: {
+              state: 'NEEDS_MANNY',
+              label: 'Needs Manny',
+              severity: 'warning',
+              reason: 'Executive attention flag is set.',
+            },
+          },
+        ],
+      }),
+      staff,
+      { hvsDataAccess: 'BLOCKED', today: '2026-08-22' },
+    );
+    assert.deepEqual(picture.realClientsOperationalized, []);
+    assert.equal(picture.honestEmpty, true);
+    assert.equal(picture.queues['At Risk'].length, 0);
+    assert.equal(picture.queues['Decision Required'].length, 0);
+    assert.ok(picture.syntheticQueues['At Risk'].some((row) => row.kind === 'project' && row.clientCode === 'SYN01'));
+    assert.ok(
+      picture.syntheticQueues['Decision Required'].some(
+        (row) => row.kind === 'opportunity' && row.title.includes('Review fixture packet'),
+      ),
+    );
+    assert.equal(picture.syntheticQueues['At Risk'].every((row) => row.invented === false), true);
   });
 
   it('operationalizes only Hub-visible real-client tasks with CONFIRMED provenance', async () => {
@@ -205,6 +282,23 @@ describe('knowledge operating picture', () => {
             etag: '"1"',
           } as SharePointTask,
         ],
+        opportunities: [
+          {
+            id: '92',
+            etag: '"1"',
+            title: 'Hart working capital',
+            stage: 'Proposal',
+            clientCode: 'HFD01',
+            nextAction: 'Collect insurance packet',
+            nextActionDate: '2026-08-01',
+            attention: {
+              state: 'OVERDUE',
+              label: 'Overdue',
+              severity: 'danger',
+              reason: 'Next action was due 2026-08-01.',
+            },
+          },
+        ],
       }),
       entitled,
       { hvsDataAccess: 'BLOCKED', today: '2026-08-22' },
@@ -213,6 +307,8 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.honestEmpty, false);
     assert.ok(picture.queues.Blocked.some((row) => row.kind === 'task' && row.provenance === 'CONFIRMED'));
     assert.ok(picture.queues['At Risk'].some((row) => row.kind === 'project' && row.clientCode === 'HFD01'));
+    assert.ok(picture.queues.Overdue.some((row) => row.kind === 'opportunity' && row.clientCode === 'HFD01'));
+    assert.equal(picture.syntheticQueues.Overdue.length, 0);
     assert.equal(picture.queues.Blocked.every((row) => row.invented === false), true);
     assert.equal(
       picture.recoveryLedger.some((row) => row.clientCode === 'PDG01' && row.operationalized === false),

@@ -44,6 +44,18 @@ export interface OperatorOperatingPicture {
     blocked: OperatorOperatingItem[];
     decisionRequired: OperatorOperatingItem[];
     atRisk: OperatorOperatingItem[];
+    ready: OperatorOperatingItem[];
+    outcomes: OperatorOperatingItem[];
+  };
+  syntheticQueues: {
+    needsAction: OperatorOperatingItem[];
+    waiting: OperatorOperatingItem[];
+    overdue: OperatorOperatingItem[];
+    blocked: OperatorOperatingItem[];
+    decisionRequired: OperatorOperatingItem[];
+    atRisk: OperatorOperatingItem[];
+    ready: OperatorOperatingItem[];
+    outcomes: OperatorOperatingItem[];
   };
   missingData: string[];
   recoveryLedger: OperatorRecoveryRow[];
