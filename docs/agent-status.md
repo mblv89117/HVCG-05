@@ -5,7 +5,7 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | *(set on tip pin commit)* |
+| current SHA | `909e4822eb73eed50656ea763b001aae27cc941b` |
 | baseline | Live Hub now `ed34f2f` (empty-scope short-circuit). Elite still `75d0c59` (untouched). |
 | owned domains | D16 Hub post-deploy Search empty-scope floor recert (not Elite) |
 | files/domains touched | D16 report + status only this checkpoint |
