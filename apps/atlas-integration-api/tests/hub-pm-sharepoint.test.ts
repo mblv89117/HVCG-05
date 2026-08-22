@@ -1748,6 +1748,34 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(attentionBody.attention.classification, 'SYNTHETIC_QA');
       assert.equal(attentionBody.attention.items[0]?.title, 'W-9');
       assert.equal(attentionBody.attention.items[0]?.invented, false);
+      const unsignedDesk = await fetch(`${base}/api/pm/clients/SYNTH01/desk`);
+      assert.equal(unsignedDesk.status, 401);
+      const clientPreviewDenied = await fetch(`${base}/api/pm/clients/SYNTH01/desk`, { headers: auth('client') });
+      assert.equal(clientPreviewDenied.status, 403);
+      const staffDesk = await fetch(`${base}/api/pm/clients/SYNTH01/desk`, { headers: auth('staff') });
+      assert.equal(staffDesk.status, 200);
+      const staffDeskHtml = await staffDesk.text();
+      assert.match(staffDeskHtml, /Operator preview/);
+      assert.match(staffDeskHtml, /SYNTH01/);
+      assert.match(staffDeskHtml, /Needs your attention/);
+      assert.match(staffDeskHtml, /W-9/);
+      assert.equal(staffDeskHtml.includes('HFD01'), false);
+      const staffDeskJson = await fetch(`${base}/api/pm/clients/SYNTH01/desk.json`, { headers: auth('staff') });
+      assert.equal(staffDeskJson.status, 200);
+      const staffDeskBody = (await staffDeskJson.json()) as {
+        preview: boolean;
+        signedClientSession: boolean;
+        clientDesk: { clientCode: string; attention: Array<{ title: string }>; gcc: { workspaceKey: string } };
+      };
+      assert.equal(staffDeskBody.preview, true);
+      assert.equal(staffDeskBody.signedClientSession, false);
+      assert.equal(staffDeskBody.clientDesk.clientCode, 'SYNTH01');
+      assert.equal(staffDeskBody.clientDesk.gcc.workspaceKey, 'gcc-SYNTH01');
+      assert.ok(staffDeskBody.clientDesk.attention.some((row) => row.title === 'W-9'));
+      const foreignDesk = await fetch(`${base}/api/pm/clients/HFD01/desk`, { headers: auth('staff') });
+      assert.equal(foreignDesk.status, 404);
+      const staffClientPath = await fetch(`${base}/client`, { headers: auth('staff') });
+      assert.equal(staffClientPath.status, 403);
       const unsignedPatch = await fetch(
         `${base}/api/pm/clients/SYNTH01/document-requests/${createdBody.documentRequest.id}`,
         { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'received' }) },

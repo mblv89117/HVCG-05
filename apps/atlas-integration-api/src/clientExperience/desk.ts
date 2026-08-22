@@ -8,7 +8,7 @@ import type { AppConfig } from '../config.ts';
 import { requirePrincipal } from '../middleware/auth.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
 import { isClientOnlyPrincipal } from './roles.ts';
-import { ClientExperienceError, buildClientWorkspaceView } from './service.ts';
+import { ClientExperienceError, buildClientWorkspaceView, buildOperatorClientDeskPreview } from './service.ts';
 
 export function isClientDeskPath(path: string): boolean {
   return path === '/client' || path === '/client.json';
@@ -78,7 +78,13 @@ export function renderForbiddenClientDesk(): string {
 </body></html>`;
 }
 
-export function renderClientDeskHtml(view: ReturnType<typeof buildClientWorkspaceView>, hubSha?: string): string {
+type ClientDeskView = ReturnType<typeof buildClientWorkspaceView> | ReturnType<typeof buildOperatorClientDeskPreview>;
+
+export function renderClientDeskHtml(
+  view: ClientDeskView,
+  hubSha?: string,
+  opts?: { operatorPreview?: boolean },
+): string {
   const attention = view.attention
     .map((row) => `<li><strong>${esc(row.title)}</strong> — ${esc(row.detail)}</li>`)
     .join('');
@@ -88,11 +94,15 @@ export function renderClientDeskHtml(view: ReturnType<typeof buildClientWorkspac
   const projects = view.projects
     .map((row) => `<li>${esc(row.name)} · ${esc(row.priority)} · ${esc(row.nextAction)}</li>`)
     .join('');
+  const previewBanner = opts?.operatorPreview
+    ? `<p class="muted">Operator preview of the isolated client workspace. This is not a signed Client Executive session. <code>/client</code> stays fail-closed for staff.</p>`
+    : '';
   return `${SHELL}
 <header>
   <h1>${esc(view.workspace.displayName)}</h1>
   <p class="muted">ClientCode ${esc(view.clientCode)} · isolated workspace · hub ${esc(hubSha || 'unknown')}</p>
   <p class="off">LIVE_GTM_OUTBOUND=OFF · PAID_ADS=OFF · SharePoint is not the client UX</p>
+  ${previewBanner}
 </header>
 <main>
   <section>

@@ -24,6 +24,7 @@ export interface OperatorDeskModel {
   paidAds: false;
   hubSha: string | null;
   entitledClients: string[];
+  clientDeskPreviews: Array<{ clientCode: string; href: string }>;
   businessHealth: {
     activeProjects: number;
     atRiskProjects: number;

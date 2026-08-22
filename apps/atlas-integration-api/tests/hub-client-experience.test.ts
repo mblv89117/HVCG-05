@@ -138,6 +138,8 @@ describe('client experience helpers', () => {
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/portal`), true);
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/document-requests`), true);
     assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/attention`), true);
+    assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/desk`), true);
+    assert.equal(isClientEntitledPmPath(`/api/pm/clients/${SYN_A}/desk.json`), true);
     assert.equal(isClientEntitledPmPath('/api/pm/documents'), true);
     assert.equal(isClientEntitledPmPath('/api/pm/search'), true);
     assert.equal(isClientEntitledPmPath('/api/pm/my-work'), true);
@@ -408,6 +410,35 @@ describe('synthetic client journey isolation', () => {
       assert.match(deskHtml, /SYNQA01/);
       assert.equal(deskHtml.includes(SYN_B), false);
       assert.match(deskHtml, /Needs your attention/);
+
+      const unsignedPreview = await fetch(`${base}/api/pm/clients/${SYN_A}/desk`);
+      assert.equal(unsignedPreview.status, 401);
+      const clientUsesPreview = await fetch(`${base}/api/pm/clients/${SYN_A}/desk`, { headers: auth('client-a') });
+      assert.equal(clientUsesPreview.status, 403);
+      const staffPreviewDenied = await fetch(`${base}/api/pm/clients/${SYN_A}/desk`, { headers: auth('staff') });
+      assert.equal(staffPreviewDenied.status, 404);
+      const mannyPreview = await fetch(`${base}/api/pm/clients/${SYN_A}/desk`, { headers: auth('manny') });
+      assert.equal(mannyPreview.status, 200);
+      assert.match(mannyPreview.headers.get('content-type') || '', /text\/html/);
+      const mannyPreviewHtml = await mannyPreview.text();
+      assert.match(mannyPreviewHtml, /Operator preview/);
+      assert.match(mannyPreviewHtml, new RegExp(SYN_A));
+      assert.equal(mannyPreviewHtml.includes(SYN_B), false);
+      const mannyPreviewJson = await fetch(`${base}/api/pm/clients/${SYN_A}/desk.json`, { headers: auth('manny') });
+      assert.equal(mannyPreviewJson.status, 200);
+      const mannyPreviewBody = (await mannyPreviewJson.json()) as {
+        preview: boolean;
+        signedClientSession: boolean;
+        clientDesk: { clientCode: string; gcc: { workspaceKey: string } };
+      };
+      assert.equal(mannyPreviewBody.preview, true);
+      assert.equal(mannyPreviewBody.signedClientSession, false);
+      assert.equal(mannyPreviewBody.clientDesk.clientCode, SYN_A);
+      assert.equal(mannyPreviewBody.clientDesk.gcc.workspaceKey.includes(SYN_B), false);
+      const mannyForeign = await fetch(`${base}/api/pm/clients/HFD01/desk`, { headers: auth('manny') });
+      assert.equal(mannyForeign.status, 404);
+      const mannyClientDesk = await fetch(`${base}/client`, { headers: auth('manny') });
+      assert.equal(mannyClientDesk.status, 403);
 
       const bSeesA = await fetch(`${base}/api/client/workspace/${SYN_A}`, { headers: auth('client-b') });
       assert.equal(bSeesA.status, 403);

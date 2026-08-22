@@ -111,6 +111,19 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     <div class="card"><span class="muted">Entitled clients</span><strong>${esc(model.entitledClients.length)}</strong></div>
   </div>
   <section>
+    <h2>Client workspace preview</h2>
+    ${
+      model.clientDeskPreviews.length
+        ? `<ul>${model.clientDeskPreviews
+            .map(
+              (row) =>
+                `<li><span class="kind">preview</span> <a href="${esc(row.href)}">${esc(row.clientCode)}</a> · isolated client desk</li>`,
+            )
+            .join('')}</ul>`
+        : '<p class="empty">No entitled client workspace to preview. Atlas does not invent clients.</p>'
+    }
+  </section>
+  <section>
     <h2>Needs action</h2>
     ${queueList(model.queues.needsAction, 'No needs-action items in entitled scope.')}
   </section>

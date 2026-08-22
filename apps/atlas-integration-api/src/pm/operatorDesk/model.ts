@@ -92,6 +92,10 @@ export function buildOperatorDeskModel(input: {
     paidAds: false,
     hubSha: input.hubSha,
     entitledClients: input.entitledClients,
+    clientDeskPreviews: input.entitledClients.map((clientCode) => ({
+      clientCode,
+      href: `/api/pm/clients/${clientCode}/desk`,
+    })),
     businessHealth: {
       activeProjects: num(health, 'activeProjects'),
       atRiskProjects: num(health, 'atRiskProjects'),

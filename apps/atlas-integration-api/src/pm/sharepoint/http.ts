@@ -116,7 +116,9 @@ function isDeferredPath(path: string): boolean {
         tail === 'commercial-context' ||
         tail === 'portal' ||
         tail === 'document-requests' ||
-        tail === 'attention')
+        tail === 'attention' ||
+        tail === 'desk' ||
+        tail === 'desk.json')
     ) {
       return false;
     }

@@ -139,6 +139,8 @@ describe('operator desk copy', () => {
     });
     const html = renderOperatorDeskHtml(model);
     assert.match(html, /SYNQA W-9 request/);
+    assert.match(html, /Client workspace preview/);
+    assert.match(html, /\/api\/pm\/clients\/SYN01\/desk/);
     assert.match(html, /Approve SYN01 activation/);
     assert.equal(model.businessHealth.clientsNeedingAttention, 0);
     assert.equal(model.queues.needsAction[0]?.title.includes('SYNQA W-9'), true);
