@@ -5,89 +5,86 @@
 | project | Atlas P2 Performance / Polish (Train G) |
 | primary repo | `hvcg-05` |
 | branch | `cursor/atlas-search-performance-p2` |
-| current SHA | `66b77d2867b2adfdfc9168ad6012f8a67740a9ba` (`66b77d2`) |
-| baseline | Certified Hub `940a484` + Elite `75d0c59` via freeze tip `2a5a605` on `cursor/atlas-hv-completion-52d1` (both SHAs are ancestors of this tip) |
-| owned domains | Search performance; minor certified UI/performance debt only |
-| files/domains touched | Hub `search.ts`, `listCache.ts`, `repository.ts` (listAll cache + write invalidation); Elite Command-K abort; Opportunity date input; Projects Draft/Unverified presentation |
-| contracts required | None new (CC-001/Integration SoT not owned by this train). Watch CC-004/005 Hub contention — **no file overlap** with Integration docs tip `8fc711f` |
-| tests | Hub integration **325 pass / 0 fail** (`npm run test:integration-api`). Search redteam + `hub-pm-search-perf` pass. Elite Command-K / date redteam pass. |
-| build | Candidate Hub/Elite build not production-packaged this window (candidate-only) |
-| synthetic certification | Modeled Graph-latency bench PASS (P50/P95 ≤ targets). Live Hub API re-cert **pending** controlled deploy + `HUB_TOKEN` |
-| security status | P0: 0 (this train) · P1: 0 (this train). Does **not** claim platform RT catalog closed. Does **not** patch ATLAS-RT IDOR (OD-005 / separate security-patch train). RBAC/search authz preserved. |
-| Premium status | Frozen production Premium PASS remains on Elite `75d0c59`. This train’s polish is candidate-only (date + Draft presentation). |
-| integration dependencies | None blocking. Background vs Priority A (Revenue/GTM). Live outbound / lead adapters N/A. |
-| P0 | 0 |
-| P1 | 0 |
-| P2 | Search live re-measure after candidate deploy; platform RT catalog items owned elsewhere |
-| owner decisions | OD-005 (narrow Atlas security-patch for ATLAS-RT-01/02/03) — **out of scope** for this train; fail-safe: do not thaw features or patch IDOR here. OD-003/004 — N/A to P2. |
-| deployment state | `REMOTE-REACHABLE` · **not** `DEPLOYMENT-READY` · **not authorized to deploy** |
+| current SHA | *(tip after this commit)* |
+| baseline | Certified Hub `940a484` + Elite `75d0c59` via freeze tip `2a5a605` on `cursor/atlas-hv-completion-52d1` |
+| owned domains | Search performance; minor certified UI/performance debt; operator honesty on deferred Elite surfaces |
+| files/domains touched | Hub search perf (prior); Elite `/documents/operating` honesty; My Work Quick Capture removal |
+| contracts required | None |
+| tests | See TEST STATUS |
+| build | Candidate only — **not deployed** |
+| synthetic certification | Modeled search bench PASS (prior). Live unauth 401 PASS. Live authenticated latency **NOT_RUN** (no token). |
+| security status | Train P0: 0 · Train P1: SEARCH_LIVE_LATENCY (business usability). Does **not** claim LIVE_SECURITY_CERTIFIED or live P0=0. Does **not** patch ATLAS-RT/XSYS. |
+| Premium status | Frozen Elite `75d0c59` Premium PASS unchanged. D11 honesty is source-verified; no new Premium live walkthrough claimed this checkpoint (deferred empty state only). |
+| integration dependencies | None |
+| P0 | 0 (this train; not platform RT catalog) |
+| P1 | **SEARCH_LIVE_LATENCY** — last known live authenticated Hub search ~14.5s; live Hub `9e5d10a` does not include this branch’s search patch; auth remeasure blocked without token |
+| P2 | Candidate search patch remains ready undeployed; date/Draft polish already on branch |
+| owner decisions | OD-005 out of scope (fail-safe). No new OD. |
+| deployment state | `REMOTE-REACHABLE` · **not** `DEPLOYMENT-READY` · **DO NOT DEPLOY** |
 
 ## Orchestrator control protocol
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | `ORCH-2026-08-20T0418Z` (Train G sheet `G-atlas-p2.md` + full reconciliation report). Note: `docs/platform-orchestration/directives/` **does not exist yet** on orchestrator remote — consumed `trains/` + `reports/` as published control plane. |
-| ORCHESTRATOR REMOTE SHA | `795d5159d1ba9257e7607701fd7aacb9c4fa2bff` (`origin/cursor/platform-orchestrator-b1fa` @ 360-growth-solution) |
-| PRODUCT BRANCH (unchanged) | `cursor/atlas-search-performance-p2` @ `66b77d2` — fetched orchestrator without checkout/replace |
-| DIRECTIVE vs BRANCH | Orchestrator already records this tip (`66b77d2`, PR #9). Scope match: search latency + date/Draft polish + Hub list cache. Freeze ancestry YES. |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **11** (`ORCH-D11` / `docs/platform-orchestration/directives/atlas-p2.md`) |
+| ORCHESTRATOR REMOTE SHA | `316ad2c13abc564c96f4277d1ce4b97bfdd08c4f` |
+| BASED ON WORKER SHA (directive) | `c0015ce8ea825c60b01d3eb6bf910539d04cbb59` |
+| PRODUCT BRANCH | `cursor/atlas-search-performance-p2` (fetch-only orchestrator; not replaced) |
+| ACK | **D11 acknowledged explicitly** |
+
+## Live search measurements (D11)
+
+| Probe | Result |
+|-------|--------|
+| Live Hub (V3-verified) | `9e5d10a` / OneDeploy `698f7e92` — `https://app-atlas-integration-hub.azurewebsites.net` |
+| Unauth `GET /api/pm/search?q=Atlas` | **401** ×3 · latency **425 / 267 / 239 ms** |
+| Body | `unauthorized` / Microsoft sign-in required |
+| `AUTHENTICATED_LATENCY` | **NOT_RUN** |
+| Reason | `HUB_TOKEN` / synthetic staff JWT **not present** in this environment; tokens not invented |
+| `Invoke-HVCGSearchAuthzCert.mjs` | Not executed (no token) |
+| Modeled candidate bench (prior, undeployed) | P50 **1602 ms** / P95 **1603 ms** |
+| `SEARCH_LIVE_LATENCY` | **P1** — last live authenticated cert ~14.5s P50; live Hub is not this P2 patch; keep candidate ready; **do not deploy** |
+
+Artifact: `/opt/cursor/artifacts/d11_live_search_unauth.json`
+
+## Honesty-fix list (D11)
+
+1. `/documents/operating` — **no longer calls** deferred `GET /api/pm/documents` (501 / `PM_COLLECTION_NOT_IN_MVP`). Explicit Deferred / Not live Hub API empty state + SharePoint site links only.
+2. My Work — **removed** `QuickCaptureBar` mount (`supported=false` already returned null; mount eliminated so no Quick Capture slot).
+3. Executive / Revenue / Inbox / Team — already deferred boundaries; **not retouched** this checkpoint.
 
 ## COMPLETED ACTIONS
 
-- Profiled authenticated search critical path (serialized Graph `listAll`, duplicate fetches, unbounded Manny/CRM catalogs)
-- Parallel catalog kickoff + overall/catalog/Manny budgets (4.5s overall ceiling)
-- Bounded raw `listId` TTL cache + inflight dedupe; invalidate on write; authz after load
-- Elite Command-K `AbortController` + debounce retained
-- Repeatable bench: modeled P50 **1602ms** / P95 **1603ms** (live baseline P50 14474 / P95 15622)
-- Opportunity date input: `YYYY-MM-DD` only
-- Projects Draft/Unverified honesty presentation + Draft filter
-- Pushed PR https://github.com/mblv89117/HVCG-05/pull/9 (draft)
-- Published this status artifact under orchestrator STATUS_PROTOCOL
+- D11 live unauth search 401 + latency recorded
+- AUTHENTICATED_LATENCY=NOT_RUN documented
+- SEARCH_LIVE_LATENCY classified **P1** (undeployed candidate retained)
+- Elite documents + Quick Capture honesty fixes
+- Automated Hub/search suite + Elite honesty/route tests
 
 ## REMAINING ACTIONS
 
-1. **Live Hub search re-cert** via `deployment/scripts/Invoke-HVCGSearchAuthzCert.mjs` after a **separately authorized** candidate/Hub deploy — blocked by release boundary (no deploy this train)
-2. Continue orchestrator fetch cadence; consume future `directives/` when published
-3. Do **not** expand into OD-005 IDOR / opportunity staff authz patches (conflict with frozen Atlas production rules + Train G ownership)
-
-## Ignored / already satisfied (and why)
-
-| Directive / note | Disposition |
-|------------------|-------------|
-| Create search perf candidate on freeze lineage | Satisfied — tip `66b77d2` contains `940a484`+`75d0c59` |
-| Do not weaken RBAC for latency | Satisfied — budgets/cache are fail-soft; authz filter post-load |
-| Date + Draft/Unverified polish | Satisfied in tip commits |
-| Deploy / live-certify Hub search | Deferred — production deploy separately authorized; state remains REMOTE-REACHABLE |
-| Fix platform RT opportunity IDOR / Plaid P0s | **Conflict / fail-safe** — owned by OD-005 security-patch path + Red Team gate; not Train G scope; would thaw frozen Atlas security surface |
-
-## P0 / P1 / P2
-
-- **P0:** 0 (train)
-- **P1:** 0 (train)
-- **P2:** live search re-measure pending authorized deploy; background only
+1. Authenticated live search P50/P95 when `HUB_TOKEN` exists in env (still no invent)
+2. Candidate Hub deploy of search patch — **separately authorized only**
+3. Continue orchestrator cadence; do not deploy; do not patch ATLAS-RT/XSYS
 
 ## TEST STATUS
 
-PASS — Hub 325/325; search redteam + perf suite; Elite search/date redteam.
+PASS
+
+- Hub integration: **325 pass / 0 fail** (`npm run test:integration-api`)
+- Search redteam + perf: **17 pass / 0 fail**
+- Elite project-route + operating-data + D11 honesty/search/date redteam: **PASS**
 
 ## PREMIUM STATUS
 
-Frozen Elite Premium PASS unchanged (`75d0c59`). Candidate polish only; not a new Premium live cert claim.
+Frozen Elite Premium PASS (`75d0c59`) unchanged. No new Premium live claim for D11 honesty empty-state.
 
 ## INTEGRATION STATUS
 
-N/A / none overlapping Integration SoT. CC-004/005 watch only.
+N/A / no SoT overlap.
 
 ## OWNER DECISIONS
 
-None required from this train. OD-005 explicitly out of scope (fail-safe).
+None required from this train.
 
-## Blockers
-
-- Live search latency proof requires authorized Hub package deploy + `HUB_TOKEN` (not held/used for production deploy by this agent)
-- Platform production release gate FAIL until independent RT P0=0 (orchestrator OD-005) — does not block background P2 engineering
-
-## Next milestone
-
-Remain background: keep freeze ancestry; await orchestrator `directives/` publication; prepare for live search cert **only when** a deploy slot is separately authorized. Do not deploy.
-
-**Updated:** 2026-08-20T04:28:00Z
+**Updated:** 2026-08-22T01:30:00Z
