@@ -67,6 +67,8 @@ function lookupClient(picture: OperatorOperatingPicture, clientCode: string): st
   if (fromRecord?.client) return fromRecord.client;
   const fromFolder = picture.hvsRecoveredClients.find((row) => row.clientCode === clientCode);
   if (fromFolder?.client) return fromFolder.client;
+  const fromLedger = picture.recoveryLedger.find((row) => row.clientCode === clientCode);
+  if (fromLedger?.client) return fromLedger.client;
   return undefined;
 }
 
