@@ -102,7 +102,6 @@ const RAW_TO_ATLAS: Record<string, AtlasStatusLabel> = {
   completed: ATLAS_STATUS.complete,
   complete: ATLAS_STATUS.complete,
   ready: ATLAS_STATUS.ready,
-  'not started': ATLAS_STATUS.ready,
   'ready for submission': ATLAS_STATUS.readyForSubmission,
   funded: ATLAS_STATUS.funded,
   verified: ATLAS_STATUS.verified,
