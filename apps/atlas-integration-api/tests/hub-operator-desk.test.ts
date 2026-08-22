@@ -156,8 +156,21 @@ describe('operator desk copy', () => {
     assert.match(html, /1 waiting/);
     assert.match(html, /4 missing-document notes/);
     assert.match(html, /No inventoried files yet in/);
-    assert.equal(html.includes('class="kind">CONFIRMED'), false);
-    assert.equal(html.includes('class="kind">knowledge operationalized'), false);
+    const recoveredRecordsHtml = html.slice(
+      html.indexOf('<h2>Recovered client operating records</h2>'),
+      html.indexOf('<h2>HVCG vs client responsibilities</h2>'),
+    );
+    const responsibilitiesHtml = html.slice(
+      html.indexOf('<h2>HVCG vs client responsibilities</h2>'),
+      html.indexOf('<h2>Missing documents</h2>'),
+    );
+    const missingHtml = html.slice(
+      html.indexOf('<h2>Missing documents</h2>'),
+      html.indexOf('<h2>Recovered capital packets</h2>'),
+    );
+    assert.equal(recoveredRecordsHtml.includes('class="kind"'), false);
+    assert.equal(responsibilitiesHtml.includes('class="kind"'), false);
+    assert.equal(missingHtml.includes('class="kind"'), false);
     assert.equal(html.includes('Use recovered filenames as reference-only knowledge'), false);
     assert.match(html, /Recovered capital packets/);
     assert.match(html, /Recovered documents/);
