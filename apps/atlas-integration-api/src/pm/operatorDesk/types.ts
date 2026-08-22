@@ -34,9 +34,11 @@ export const ASK_ATLAS_QUESTION =
 export const ASK_ATLAS_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ASK-ATTENTION-001' as const;
 export const ASK_ATLAS_RUNTIME_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RUNTIME-001' as const;
 export const ASK_ATLAS_EVENT_MISSION_KEY = 'ATLAS-AGENTIC-OPS-EVENT-001' as const;
+export const ASK_ATLAS_PII_MISSION_KEY = 'ATLAS-AGENTIC-OPS-PII-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
+export const CREATE_ENGINEERING_MISSION_TOOL = 'create_engineering_mission' as const;
 
 export const ASK_ATLAS_RANKING = [
   'At Risk',
@@ -64,18 +66,47 @@ export interface AskAtlasAttentionItem {
 }
 
 export type AskAtlasPolicyDecision = 'answered' | 'honest_empty' | 'hvs_blocked' | 'fail_closed';
-export type AskAtlasReadWriteStatus = 'READ_AUTO';
+export type AskAtlasReadWriteStatus = 'READ_AUTO' | 'PROPOSE_AUTO' | 'SAFE_INTERNAL_WRITE';
 
 export type AskAtlasAgent = typeof ASK_ATLAS_OPERATOR_AGENT | typeof ASK_ATLAS_RUNTIME_AGENT;
 export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_MISSION_KEY
   | typeof ASK_ATLAS_RUNTIME_MISSION_KEY
-  | typeof ASK_ATLAS_EVENT_MISSION_KEY;
+  | typeof ASK_ATLAS_EVENT_MISSION_KEY
+  | typeof ASK_ATLAS_PII_MISSION_KEY;
 export type AskAtlasTrigger =
   | 'operator_operating_picture'
   | 'signed_operator_question'
   | 'authorized_internal_event'
-  | 'scheduled_sweep';
+  | 'scheduled_sweep'
+  | 'signed_operator_inspect';
+
+export type ProductImprovementEvidenceClass =
+  | 'failed_agent_action'
+  | 'event_processing_failure'
+  | 'entitled_search_failure'
+  | 'production_health_degradation'
+  | 'repeated_failed_workflow';
+
+export interface ProposedEngineeringMission {
+  kind: 'proposed_engineering_mission_v1';
+  authoritative: false;
+  invented: false;
+  status: 'PROPOSED';
+  policyClass: 'PROPOSE_AUTO';
+  readWriteStatus: 'SAFE_INTERNAL_WRITE';
+  agent: typeof ASK_ATLAS_RUNTIME_AGENT;
+  missionKey: typeof ASK_ATLAS_PII_MISSION_KEY;
+  why: string;
+  basedOn: string;
+  evidenceClass: ProductImprovementEvidenceClass;
+  classification: AskAtlasClassification;
+  dispatchesV4: false;
+  deploys: false;
+  merges: false;
+  executesCodeChanges: false;
+  ownerGated: false;
+}
 
 export interface AskAtlasActivity {
   agent: AskAtlasAgent;
@@ -310,6 +341,10 @@ export function isOperatorEventsPath(path: string): boolean {
   return path === '/operator/events.json';
 }
 
+export function isOperatorImprovementsPath(path: string): boolean {
+  return path === '/operator/improvements.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
@@ -317,7 +352,8 @@ export function isOperatorDeskPath(path: string): boolean {
     path === '/operator.json' ||
     isOperatorActivityLedgerPath(path) ||
     isOperatorRuntimePath(path) ||
-    isOperatorEventsPath(path)
+    isOperatorEventsPath(path) ||
+    isOperatorImprovementsPath(path)
   );
 }
 
@@ -326,7 +362,8 @@ export function wantsOperatorJson(path: string, acceptHeader: string | undefined
     path === '/operator.json' ||
     isOperatorActivityLedgerPath(path) ||
     isOperatorRuntimePath(path) ||
-    isOperatorEventsPath(path)
+    isOperatorEventsPath(path) ||
+    isOperatorImprovementsPath(path)
   ) {
     return true;
   }

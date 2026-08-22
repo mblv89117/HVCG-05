@@ -21,6 +21,7 @@ import {
   isOperatorActivityLedgerPath,
   isOperatorDeskPath,
   isOperatorEventsPath,
+  isOperatorImprovementsPath,
   isOperatorRuntimePath,
   wantsOperatorJson,
   type OperatorDeskModel,
@@ -28,6 +29,11 @@ import {
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
 import { runAtlasHubRuntime } from './agentRuntime.ts';
 import { processAtlasEvent, resolveEventClass } from './eventProcessing.ts';
+import {
+  classifyImprovementPolicy,
+  inspectProductImprovements,
+  resolveInspectClass,
+} from './productImprovement.ts';
 
 export { isOperatorDeskPath };
 
@@ -193,7 +199,12 @@ export async function handleOperatorDesk(opts: {
 }): Promise<boolean> {
   if (!isOperatorDeskPath(opts.path)) return false;
   const eventsOnly = isOperatorEventsPath(opts.path);
-  if (opts.method !== 'GET' && opts.method !== 'HEAD' && !(eventsOnly && opts.method === 'POST')) {
+  const improvementsOnly = isOperatorImprovementsPath(opts.path);
+  if (
+    opts.method !== 'GET' &&
+    opts.method !== 'HEAD' &&
+    !((eventsOnly || improvementsOnly) && opts.method === 'POST')
+  ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
     return true;
   }
@@ -201,9 +212,9 @@ export async function handleOperatorDesk(opts: {
   const accept = typeof opts.req.headers.accept === 'string' ? opts.req.headers.accept : '';
   const ledgerOnly = isOperatorActivityLedgerPath(opts.path);
   const runtimeOnly = isOperatorRuntimePath(opts.path);
-  const asJson = ledgerOnly || runtimeOnly || eventsOnly || wantsOperatorJson(opts.path, accept);
+  const asJson = ledgerOnly || runtimeOnly || eventsOnly || improvementsOnly || wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
-  const searchQuery = runtimeOnly || eventsOnly ? '' : url.searchParams.get('q') || '';
+  const searchQuery = runtimeOnly || eventsOnly || improvementsOnly ? '' : url.searchParams.get('q') || '';
 
   let principal;
   try {
@@ -382,6 +393,83 @@ export async function handleOperatorDesk(opts: {
       200,
       {
         eventProcessing: result.eventProcessing,
+        operatorDesk: { askAtlas: result.askAtlas },
+        runtime: result.runtime,
+      },
+      opts.origin,
+    );
+    return true;
+  }
+
+  if (improvementsOnly) {
+    let postedClass = '';
+    if (opts.method === 'POST') {
+      try {
+        const body = await readEventJson(opts.req);
+        postedClass =
+          typeof body.inspectClass === 'string'
+            ? body.inspectClass
+            : typeof body.inspect === 'string'
+              ? body.inspect
+              : typeof body.class === 'string'
+                ? body.class
+                : '';
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(
+          opts.res,
+          status,
+          { error: 'malformed_json', code: 'malformed_json' },
+          opts.origin,
+        );
+        return true;
+      }
+    }
+    const queryClass =
+      url.searchParams.get('inspect') ||
+      url.searchParams.get('inspectClass') ||
+      url.searchParams.get('class') ||
+      '';
+    const rawClass = postedClass || queryClass;
+    const inspectClass = rawClass.trim() ? resolveInspectClass(rawClass) : 'inspect';
+    const policy = classifyImprovementPolicy(inspectClass, principal);
+    let ledger: ReturnType<typeof listVisibleAgentActivity> = [];
+    if (policy.allowed) {
+      try {
+        ledger = listVisibleAgentActivity({
+          dataDir: opts.cfg.dataDir,
+          principal,
+        });
+      } catch {
+        ledger = [];
+      }
+    }
+    const result = inspectProductImprovements({
+      principal,
+      picture: model.operatingPicture,
+      ledger: policy.allowed ? ledger : [],
+      search: policy.allowed ? { ran: model.search.ran } : undefined,
+      health: policy.allowed
+        ? { authRequired: opts.cfg.requireAuth, insecureDevAuth: opts.cfg.insecureDevAuth }
+        : undefined,
+      inspectClass,
+    });
+    if (opts.method === 'GET' || opts.method === 'POST') {
+      try {
+        await appendAskAtlasActivity({
+          dataDir: opts.cfg.dataDir,
+          answer: result.askAtlas,
+          principal,
+        });
+      } catch {
+        /* Improvement answer stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    sendJson(
+      opts.res,
+      200,
+      {
+        productImprovement: result.productImprovement,
         operatorDesk: { askAtlas: result.askAtlas },
         runtime: result.runtime,
       },
