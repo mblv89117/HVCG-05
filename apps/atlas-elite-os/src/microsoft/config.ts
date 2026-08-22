@@ -51,6 +51,12 @@ function env(name: string, fallback = ''): string {
   return (v ?? fallback).trim();
 }
 
+/** Wire the existing Elite SPA app when a build omits VITE_ENTRA_CLIENT_ID. */
+export function resolveEntraClientId(fromEnv: string | undefined | null): string {
+  const trimmed = (fromEnv ?? '').trim();
+  return trimmed || ELITE_SPA_CLIENT_ID;
+}
+
 function resolveEnvironment(): AtlasEnvironmentName {
   const raw = env('VITE_ATLAS_ENV', 'local').toLowerCase();
   if (raw === 'development' || raw === 'dev') return 'development';
@@ -72,7 +78,9 @@ export function loadMicrosoftConfig(): AtlasMicrosoftConfig {
           ? 'STAGING — NO LIVE CLIENT ACTIONS'
           : 'DEVELOPMENT / UAT — NO LIVE CLIENT ACTIONS',
     tenantId: env('VITE_ENTRA_TENANT_ID', HVCG_TENANT),
-    entraClientId: env('VITE_ENTRA_CLIENT_ID', ''),
+    // Existing public Elite SPA (49d20328…). Empty VITE_ENTRA_CLIENT_ID must not
+    // disable MSAL on a rebuild — live 75d0c59 already bakes this same app id.
+    entraClientId: resolveEntraClientId(env('VITE_ENTRA_CLIENT_ID')),
     redirectUri: env('VITE_REDIRECT_URI', typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:5180'),
     postLogoutRedirectUri: env(
       'VITE_POST_LOGOUT_REDIRECT_URI',

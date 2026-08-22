@@ -127,7 +127,7 @@ function deferredMeta() {
   return deferred;
 }
 
-function commandCenterPayload(
+export function buildSharePointCommandCenter(
   projects: SharePointProject[],
   tasks: SharePointTask[],
   milestones: Awaited<ReturnType<SharePointPmService['listAuthorizedMilestones']>>,
@@ -872,7 +872,7 @@ export async function handleSharePointPmRoutes(opts: {
         200,
         {
           commandCenter: {
-            ...commandCenterPayload(projects, tasks, milestones, leads, opportunities),
+            ...buildSharePointCommandCenter(projects, tasks, milestones, leads, opportunities),
             commercialContext: readDeskCommercialContext({ dataDir, principal, opportunities, leads }),
           },
         },
