@@ -691,12 +691,17 @@ describe('SharePoint PM HTTP', () => {
           deferred: Record<string, string>;
           myDay: { overdue: unknown[] };
           criticalAlerts: unknown[];
+          commercialContext?: { liveGtmOutbound: boolean; paidAds: boolean; gcc: { available: boolean; count: number } };
         };
       };
       assert.equal(ccBody.commandCenter.businessHealth.activeProjects, 1);
       assert.equal(ccBody.commandCenter.deferred.decisions, 'PM_COLLECTION_NOT_IN_MVP');
       assert.ok(Array.isArray(ccBody.commandCenter.myDay.overdue));
       assert.ok(Array.isArray(ccBody.commandCenter.criticalAlerts));
+      assert.equal(ccBody.commandCenter.commercialContext?.liveGtmOutbound, false);
+      assert.equal(ccBody.commandCenter.commercialContext?.paidAds, false);
+      assert.equal(ccBody.commandCenter.commercialContext?.gcc.available, false);
+      assert.equal(ccBody.commandCenter.commercialContext?.gcc.count, 0);
       const port = await fetch(`${base}/api/pm/portfolio`, { headers: auth('a') });
       const portBody = (await port.json()) as { portfolio: Array<{ id: string }> };
       assert.deepEqual(portBody.portfolio.map((p) => p.id), ['70']);

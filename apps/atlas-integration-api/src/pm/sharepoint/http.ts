@@ -22,6 +22,14 @@ import {
 } from './repository.ts';
 import { searchSharePointPm } from './search.ts';
 import { buildSharePointClientWorkspace } from './workspace.ts';
+import {
+  ObserveError,
+  assertEntitledClient,
+  matchCommercialContextPath,
+  observeCommercialContext,
+  readCommercialContext,
+  readDeskCommercialContext,
+} from '../commercialContext/handle.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './token.ts';
 import { createFabricGraphClient } from './fabric/graph.ts';
 import { runFabricSync } from './fabric/sync.ts';
@@ -90,7 +98,12 @@ function isDeferredPath(path: string): boolean {
     const rest = decodeURIComponent(path.slice('/api/pm/clients/'.length));
     if (!rest.includes('/') && isCanonicalClientCode(rest)) return false;
     const [code, tail] = rest.split('/');
-    if (isCanonicalClientCode(code) && (tail === 'workspace' || tail === 'brief' || tail === 'activation')) return false;
+    if (
+      isCanonicalClientCode(code) &&
+      (tail === 'workspace' || tail === 'brief' || tail === 'activation' || tail === 'commercial-context')
+    ) {
+      return false;
+    }
     return true;
   }
   if (path === '/api/pm/search') return false;
@@ -114,7 +127,7 @@ function deferredMeta() {
   return deferred;
 }
 
-function commandCenterPayload(
+export function buildSharePointCommandCenter(
   projects: SharePointProject[],
   tasks: SharePointTask[],
   milestones: Awaited<ReturnType<SharePointPmService['listAuthorizedMilestones']>>,
@@ -321,9 +334,14 @@ export async function handleSharePointPmRoutes(opts: {
   body?: Record<string, unknown>;
 }): Promise<boolean> {
   const { repo, service, principal, req, res, method, path, origin } = opts;
+  const dataDir = opts.cfg.dataDir;
   const body = opts.body || {};
 
   const fail = (err: unknown) => {
+    if (err instanceof ObserveError) {
+      send(res, err.status, { error: err.code, code: err.code, message: err.message }, origin);
+      return true;
+    }
     if (err instanceof PmHttpError) {
       send(res, err.status, toErrorBody(err), origin);
       return true;
@@ -343,6 +361,86 @@ export async function handleSharePointPmRoutes(opts: {
   };
 
   try {
+    const commercial = matchCommercialContextPath(path);
+    if (commercial) {
+      if (commercial.kind === 'observe') {
+        if (method !== 'POST') {
+          send(res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, origin);
+          return true;
+        }
+        const result = observeCommercialContext({ dataDir, principal, body });
+        audit({
+          repo,
+          actorUserId: principal.userId,
+          action: 'pm_commercial_context_observe',
+          outcome: result.replay ? 'replay' : 'success',
+          detail: `kind=${result.kind} replay=${result.replay}`,
+        });
+        send(res, result.replay ? 200 : 201, { replay: result.replay, kind: result.kind, record: result.record }, origin);
+        return true;
+      }
+      if (method !== 'GET') {
+        send(res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, origin);
+        return true;
+      }
+      if (commercial.kind === 'client') {
+        const code = assertEntitledClient(principal, commercial.clientCode);
+        if (code === 'not_found') {
+          send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+          return true;
+        }
+        const opportunities = await service.listAuthorizedOpportunities(principal);
+        const leads = await service.listAuthorizedLeads(principal);
+        send(
+          res,
+          200,
+          {
+            commercialContext: readCommercialContext({
+              dataDir,
+              principal,
+              opportunities,
+              leads,
+              clientCode: code,
+            }),
+          },
+          origin,
+        );
+        return true;
+      }
+      if (commercial.kind === 'opportunity') {
+        const opportunity = await service.authorizeOpportunity(principal, commercial.id);
+        if (opportunity === 'not_found') {
+          send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+          return true;
+        }
+        const leads = await service.listAuthorizedLeads(principal);
+        send(
+          res,
+          200,
+          {
+            commercialContext: readCommercialContext({
+              dataDir,
+              principal,
+              opportunities: [opportunity],
+              leads,
+              clientCode: opportunity.clientCode,
+            }),
+          },
+          origin,
+        );
+        return true;
+      }
+      const opportunities = await service.listAuthorizedOpportunities(principal);
+      const leads = await service.listAuthorizedLeads(principal);
+      send(
+        res,
+        200,
+        { commercialContext: readDeskCommercialContext({ dataDir, principal, opportunities, leads }) },
+        origin,
+      );
+      return true;
+    }
+
     if (isDeferredPath(path)) {
       throw pmNotImplemented();
     }
@@ -769,7 +867,17 @@ export async function handleSharePointPmRoutes(opts: {
       for (const p of projects) {
         milestones.push(...(await service.listAuthorizedMilestones(principal, p.id)));
       }
-      send(res, 200, { commandCenter: commandCenterPayload(projects, tasks, milestones, leads, opportunities) }, origin);
+      send(
+        res,
+        200,
+        {
+          commandCenter: {
+            ...buildSharePointCommandCenter(projects, tasks, milestones, leads, opportunities),
+            commercialContext: readDeskCommercialContext({ dataDir, principal, opportunities, leads }),
+          },
+        },
+        origin,
+      );
       return true;
     }
 

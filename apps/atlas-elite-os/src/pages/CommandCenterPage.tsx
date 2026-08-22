@@ -35,6 +35,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { ATLAS_STATUS, atlasStatusTone } from '../ui/statusLanguage';
+import { CommercialContextPanel } from '../components/CommercialContextPanel';
 import {
   CapitalAccessError,
   isAuthorizationFailure,
@@ -624,6 +625,8 @@ export function CommandCenterPage() {
           </AtlasCard>
 
           <CapitalAttentionStrip state={capitalStrip} />
+
+          <CommercialContextPanel context={cc.commercialContext} />
 
           <ResponsiveGrid>
             <GridSpan span={2}>

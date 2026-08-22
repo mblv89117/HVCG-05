@@ -34,6 +34,7 @@ import { probeBaHealth } from '../ba/client.ts';
 import type { LocalAiAdapter } from '../local-ai/adapter.ts';
 import { handleLocalAiRoutes } from '../local-ai/http.ts';
 import { handleWebsiteLeadRoutes } from '../website/http.ts';
+import { handleOperatorDesk } from '../pm/operatorDesk/handle.ts';
 import { resolveHubBuild, resolveHubCommit } from './hubCommit.ts';
 
 export interface RouterDeps {
@@ -259,6 +260,20 @@ export async function handleRequest(
         return;
       }
       send(res, 200, build, origin);
+      return;
+    }
+
+    if (await handleOperatorDesk({
+      cfg,
+      repo,
+      pm: deps.pm,
+      sharepoint: deps.sharepoint,
+      req,
+      res,
+      method,
+      path,
+      origin,
+    })) {
       return;
     }
 

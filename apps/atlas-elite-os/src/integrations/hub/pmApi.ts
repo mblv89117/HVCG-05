@@ -8,6 +8,24 @@ export async function fetchCommandCenter(auth: AtlasHubAuthHeaders) {
   return hubFetchJson<{ commandCenter: CommandCenter }>(auth, '/api/pm/command-center');
 }
 
+export async function fetchDeskCommercialContext(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{ commercialContext: DeskCommercialContext }>(auth, '/api/pm/commercial-context');
+}
+
+export async function fetchClientCommercialContext(auth: AtlasHubAuthHeaders, clientCode: string) {
+  return hubFetchJson<{ commercialContext: OperatorCommercialContext }>(
+    auth,
+    `/api/pm/clients/${encodeURIComponent(clientCode)}/commercial-context`,
+  );
+}
+
+export async function fetchOpportunityCommercialContext(auth: AtlasHubAuthHeaders, opportunityId: string) {
+  return hubFetchJson<{ commercialContext: OperatorCommercialContext }>(
+    auth,
+    `/api/pm/opportunities/${encodeURIComponent(opportunityId)}/commercial-context`,
+  );
+}
+
 export async function fetchMyWork(auth: AtlasHubAuthHeaders) {
   return hubFetchJson<{ myWork: MyWork }>(auth, '/api/pm/my-work');
 }
@@ -495,6 +513,8 @@ export interface PmOpportunity {
   capitalHandoffStatus?: string;
   lastModified?: string;
   notes?: string;
+  copilotSummary?: string;
+  copilotKeywords?: string;
   attention?: {
     state: string;
     label: string;
@@ -701,6 +721,74 @@ export interface CommandCenter {
     noRecentActivity: PmProject[];
     lackingNextAction: PmProject[];
   };
+  commercialContext?: DeskCommercialContext;
+}
+
+export interface CommercialHonesty {
+  available: boolean;
+  recordedOnly: true;
+  emptyReason?: string;
+}
+
+export interface DeskCommercialContext {
+  contractVersion: 'atlas-operator-commercial-context.v1';
+  entitled: true;
+  liveGtmOutbound: false;
+  paidAds: false;
+  entitledClientCount: number;
+  gcc: CommercialHonesty & { count: number };
+  copilot: CommercialHonesty & { count: number };
+  gtm: CommercialHonesty & { count: number };
+  rows: Array<{
+    clientCode: string;
+    opportunityId?: string;
+    title?: string;
+    stage?: string;
+    capitalHandoffStatus?: string;
+    hasGcc: boolean;
+    hasCopilot: boolean;
+    hasGtm: boolean;
+  }>;
+}
+
+export interface OperatorCommercialContext {
+  contractVersion: 'atlas-operator-commercial-context.v1';
+  entitled: true;
+  liveGtmOutbound: false;
+  paidAds: false;
+  clientCode?: string;
+  gcc: {
+    contractVersion: 'gcc-value-signal.v1';
+    honesty: CommercialHonesty;
+    signals: Array<{
+      signalId: string;
+      clientCode: string;
+      signalType: string;
+      severity?: string;
+      summary?: string;
+      metrics?: Record<string, number | string | boolean | null>;
+      emittedAt: string;
+    }>;
+  };
+  copilot: {
+    honesty: CommercialHonesty;
+    assessments: Array<{ assessmentId: string; clientCode?: string; summary?: string; observationOnly: true }>;
+    preCall: Array<{ briefId: string; bookingId: string; atlasClientCode?: string; summary?: string; ownerSystem?: string }>;
+    sharepoint: Array<{ opportunityId: string; clientCode?: string; copilotSummary?: string; copilotKeywords?: string }>;
+  };
+  gtm: {
+    honesty: CommercialHonesty;
+    attributions: Array<{ clientCode: string; lineage: { source?: string; campaignId?: string } }>;
+    crmSources: Array<{ leadId: string; clientCode?: string; source?: string; leadSourceDetail?: string }>;
+  };
+  opportunities: Array<{
+    opportunityId: string;
+    clientCode: string;
+    title?: string;
+    stage: string;
+    capitalHandoffStatus?: string;
+    estimatedValue?: number;
+  }>;
 }
 
 export interface MyWork {
