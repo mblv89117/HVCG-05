@@ -95,6 +95,7 @@ export type ClientWorkspaceRecord = {
   documentRequestHref: string;
   clientDeskHref: '/client';
   experienceHref: string;
+  clientPortalHrefs: ReturnType<typeof clientPortalHrefs>;
 };
 
 export type ClientExperienceSnapshot = {
@@ -205,6 +206,7 @@ export function bindGovernedWorkspace(opts: {
     documentRequestHref: hrefs.documentRequestHref,
     clientDeskHref: '/client',
     experienceHref: hrefs.experienceHref,
+    clientPortalHrefs: hrefs,
   };
 }
 
