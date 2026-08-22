@@ -352,20 +352,20 @@ Severity: P0 / P1 / P2 (not inflated)
 ## CROSS-SYSTEM
 
 ### XSYS-RT-20260820-01
-- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub post-OD-005 / CANDIDATE `9e5d10a`
-- **evidence:** LIVE D30: unauth/forged-key → 401; HMAC invalid-signature path not live-proven (no intake key). CANDIDATE: HMAC+key-id+timestamp in `intakeAuth.ts` / `http.ts`.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `64b56dc` (D33)
+- **evidence:** D33 live: unauth/Bearer-only/forged-key → 401 key required; HMAC signature-invalid not live-proven (no intake key). Source has HMAC path.
 - **impact:** Key holder forges leads/attribution into SharePoint CRM if HMAC not live.
 - **recommended remediation:** Confirm live signature-invalid 401 with intake key.
 - **regression test:** Valid key + invalid signature → 401.
-- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 PARTIAL; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
 
 ### XSYS-RT-20260820-02
-- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub post-OD-005 / CANDIDATE `9e5d10a`
-- **evidence:** LIVE D30: idempotency gate not reached without intake auth. CANDIDATE: `assertIdempotencyKeyBoundToSource` → 409.
+- **system:** Integration · **severity:** P0 · **branch/SHA:** LIVE Hub `64b56dc` (D33)
+- **evidence:** D33: idempotency gate not reached without intake auth. Source has `assertIdempotencyKeyBoundToSource`.
 - **impact:** Cross-system lead overwrite via colliding keys if unbound key still accepted.
 - **recommended remediation:** Live website+`eva|` → 409 probe with intake credentials.
 - **regression test:** Website type + `eva|` key → 409.
-- **status:** LIVE **INCONCLUSIVE** (D31 SHA gate abort); prior D30 NEEDS_RETEST; CANDIDATE FIXED_REVALIDATED @ `9e5d10a`
+- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
 
 ### XSYS-RT-20260820-03..12
 - **03** P1 GCC handoff without Atlas attestation.
