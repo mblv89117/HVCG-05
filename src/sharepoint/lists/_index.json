@@ -1,12 +1,12 @@
 {
-  "version": "2.4",
+  "version": "2.5",
   "prefix": "HVCG_",
   "product": "HVCG OS",
   "lists": [
     {
       "name": "HVCG_Clients",
       "path": "src/sharepoint/lists/HVCG_Clients.json",
-      "columnCount": 52,
+      "columnCount": 58,
       "description": "Client master records"
     },
     {
@@ -432,7 +432,7 @@
     {
       "name": "HVCG_AI_KnowledgeExtraction",
       "path": "src/sharepoint/lists/HVCG_AI_KnowledgeExtraction.json",
-      "columnCount": 19,
+      "columnCount": 23,
       "description": "AI — AI knowledge extraction from transcripts/notes"
     },
     {

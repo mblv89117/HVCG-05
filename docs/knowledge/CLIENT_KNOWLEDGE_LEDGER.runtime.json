@@ -1,0 +1,29 @@
+{
+  "hvs_data_access": "BLOCKED",
+  "owner_action": "Grant application permission Sites.Selected to HVCG-Cursor-Automation-Azure-MCP, then SharePoint admin Read on HVCG-CommandCenter, HVCG-Clients, HVCG-Knowledge. Do not add this app to HVCG-Client-* groups (Manny-only). For HVS: Sites.Selected Read on HVS libraries or complete Hub delegated HVS connector. Do not manually download/re-upload.",
+  "live_hub_codes": [
+    "SYN01"
+  ],
+  "entitlement_map_codes": [
+    "ACCG01",
+    "CCB01",
+    "CPL01",
+    "HFD01",
+    "KAVA01",
+    "LIEN01",
+    "PDG01",
+    "SYN01"
+  ],
+  "writes": [],
+  "skipped": [
+    "SYN01"
+  ],
+  "can_pass": false,
+  "hub_clients_labeled": [
+    {
+      "clientCode": "SYN01",
+      "displayName": "SYNTHETIC QA \u2014 Atlas Capital Operations",
+      "source": "sharepoint"
+    }
+  ]
+}

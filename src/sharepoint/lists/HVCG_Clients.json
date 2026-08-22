@@ -499,6 +499,76 @@
       "required": false,
       "indexed": false,
       "description": "Curated summary for Copilot grounding"
+    },
+    {
+      "internalName": "KnowledgeClassification",
+      "displayName": "KnowledgeClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "CONFIRMED / LIKELY / PROPOSED / STALE_OR_UNCERTAIN / COMPLETE — never invent values",
+      "choices": [
+        "CONFIRMED",
+        "LIKELY",
+        "PROPOSED",
+        "STALE_OR_UNCERTAIN",
+        "COMPLETE"
+      ]
+    },
+    {
+      "internalName": "KnowledgeProvenance",
+      "displayName": "KnowledgeProvenance",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Source system + ref for operational knowledge. SharePoint/OneDrive remain SoR."
+    },
+    {
+      "internalName": "SourceRepositoryUrl",
+      "displayName": "SourceRepositoryUrl",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": "Governed SharePoint/OneDrive location — do not dump files into Atlas"
+    },
+    {
+      "internalName": "EntityBoundaryNotes",
+      "displayName": "EntityBoundaryNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "What this ClientCode is and is not"
+    },
+    {
+      "internalName": "HvsHistoricalAccess",
+      "displayName": "HvsHistoricalAccess",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "HVS historical repository access for this client",
+      "choices": [
+        "AVAILABLE",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    {
+      "internalName": "OperationalQueueState",
+      "displayName": "OperationalQueueState",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Exception-driven operating state. Empty means unknown — do not invent Ready.",
+      "choices": [
+        "Needs Action",
+        "Waiting",
+        "Overdue",
+        "Blocked",
+        "Decision Required",
+        "At Risk",
+        "Ready",
+        "Outcomes"
+      ]
     }
   ],
   "views": [
