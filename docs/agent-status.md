@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `61c49b2efa16824955956d5a673afd1d68e05d59` |
 | baseline | D37 INDEPENDENT_LIVE_VALIDATION_1ac6257 |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **37** |
 | BASED ON WORKER SHA | `635772cf57cb02170e7f6b8c9e99cc4d8d0cf81f` |
 | PRIOR | D36 CONSUMED — not cloned as mission |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `61c49b2efa16824955956d5a673afd1d68e05d59` |
 | COMPLETED ACTIONS | D37 independent live validation of `1ac6257`; CONSUMED=37; stop for V3 |
 | REMAINING ACTIONS | Owner-gated SYN01 / staff session for ATLAS-01/02 only |
 | LIVE_P0 | **2** |
