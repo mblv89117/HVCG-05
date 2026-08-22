@@ -77,6 +77,7 @@ describe('client activation helpers', () => {
     assert.equal(provisioned.entraGroupProvisioned, false);
     assert.equal(provisioned.sharePointLibraryProvisioned, false);
     assert.equal(clientPortalHrefs('SYNTH01').portalHref, '/api/pm/clients/SYNTH01/portal');
+    assert.equal(clientPortalHrefs('SYNTH01').clientDeskHref, '/client');
     assert.equal(clientPortalHrefs('SYNTH01').documentRequestHref.includes('operator'), false);
   });
 });

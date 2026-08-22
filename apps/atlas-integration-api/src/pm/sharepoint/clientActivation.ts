@@ -149,10 +149,16 @@ export function governedHubProvisioning(): Pick<
   };
 }
 
+export function isReadyClientActivation(status: string | undefined): boolean {
+  return status === 'authorized' || status === 'active' || status === 'verified';
+}
+
 export function clientPortalHrefs(clientCode: string) {
   return {
     portalHref: `/api/pm/clients/${clientCode}/portal`,
     workspaceHref: `/api/pm/clients/${clientCode}/workspace`,
     documentRequestHref: `/api/pm/clients/${clientCode}/document-requests`,
+    clientDeskHref: '/client',
+    experienceHref: `/api/pm/clients/${clientCode}/experience`,
   };
 }

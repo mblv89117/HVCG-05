@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { audit } from '../audit/auditLog.ts';
 import type { AppConfig } from '../config.ts';
 import { requirePrincipal } from '../middleware/auth.ts';
+import { isClientEntitledPmPath, isClientOnlyPrincipal } from '../clientExperience/roles.ts';
 import type { IntegrationRepository } from '../store/repository.ts';
 import { bootstrapKnownProjects, extractWorkFromSources } from './bootstrap.ts';
 import { populateRealWorkFromMicrosoft, previewPopulateFromMicrosoft } from './populateReal.ts';
@@ -91,6 +92,25 @@ export async function handlePmRoutes(opts: {
 
   // Authentication is evaluated before PM availability so 401 is never a 503.
   const principal = await requirePrincipal(req, cfg);
+  // SharePoint mode already fail-closes with existing 404/403 semantics.
+  // Development-json has no SharePoint authz, so deny operator collections here.
+  if (
+    cfg.pmBackend.mode !== 'sharepoint' &&
+    isClientOnlyPrincipal(principal) &&
+    !isClientEntitledPmPath(path)
+  ) {
+    send(
+      res,
+      403,
+      {
+        error: 'forbidden',
+        code: 'forbidden',
+        message: 'Client principals cannot use Atlas operator PM routes.',
+      },
+      origin,
+    );
+    return true;
+  }
 
   if (cfg.pmBackend.mode === 'sharepoint') {
     if (!opts.sharepoint) {
