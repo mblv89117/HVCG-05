@@ -1,0 +1,35 @@
+DIRECTIVE=38
+UTC=2026-08-22T04:56:15Z
+MISSION=ENTITLED_ATLAS0102_CLASSIFY
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+EXPECTED_SHA=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+ONEDEPLOY_CLAIMED=7e3f65a2-948b-4f7d-959b-dd47576170b2
+BRANCH_CLAIMED=cursor/hub-entitlement-group-members-7a6b
+==== 1 LINEAGE (RT verify) ====
+ATLAS_HUB_COMMIT.txt=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+hub-build.gitSha=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+hub-build.branch=cursor/hub-entitlement-group-members-7a6b
+health.commit=4b9631a0a50e06591dd9100fb48b07e5aea7d008
+ok=true authRequired=true insecureDevAuth=false
+LINEAGE=PASS
+==== 2 UNAUTH ====
+GET /api/pm/search HTTP=401
+GET /api/pm/opportunities HTTP=401
+GET /api/pm/leads HTTP=401
+GET /api/pm/clients HTTP=401
+GET /api/capital HTTP=401
+GET /api/capital/needs HTTP=401
+==== 3 AUTH_SESSION ====
+OBTAINABLE=NO
+REASON=AZURE_SP_ABSENT az_not_logged_in HUB_TOKEN/STAFF_JWT_ABSENT
+ENTITLED_SYN01_PROBES=NOT_EXECUTED
+NO_FAKE_ID_1_999999=YES
+NO_STAFF_ALL_SEE_INVENTED=YES
+==== 4 RECONFIRM ====
+GET /api/plaid/link HTTP=405
+GET /api/plaid/create HTTP=405
+health_plaid_keys=NONE
+POST /api/website/leads no-key HTTP=401
+POST /api/website/leads bearer-only HTTP=401
+==== SOURCE CITE (raw @ 4b9631a) ====
+graphMembership_fallback=GET /groups/{id}/members/microsoft.graph.user + servicePrincipal on checkMemberGroups 401/403

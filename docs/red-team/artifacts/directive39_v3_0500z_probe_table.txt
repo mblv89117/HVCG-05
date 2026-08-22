@@ -1,0 +1,9 @@
+SOURCE=D39_prompt_0500Z_V3_PACKAGED_PROBE_TABLE
+ORCH_TIP_CITE=50c8473+
+NOTE=V3_does_not_self_certify
+Lineage 4b9631a PASS. Unauth 401.
+Opportunities 200 count 1 clientCodes=SYN01 staffAllSee=false.
+Clients 200 count 1 SYN01. SYN01 client 200. SYN01 opps 200 count 1.
+Foreign client NOT-A-CLIENT 501 PM_OPERATION_NOT_IMPLEMENTED (not a dump).
+PATCH /api/pm/opportunities/atlas02-out-of-scope {stage:Won} 404 not_found. Upsert NO (1→1). Real SYN01 not patched. IDs 1/999999 NOT CALLED.
+Capital 404 not_found.

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/outbound-dispatch.v1.json",
+  "title": "Outbound Dispatch v1",
+  "description": "CANONICAL 360 GTM outbound dispatch record from packages/gtm-agent/src/outbound/orchestrator.ts OutboundDispatchResult @ f53e628. Engineering payload is fail-closed: mode is dry_run_record_only, recorded is true, dispatched is false. Does not authorize live send. No live-send success shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "messageId",
+    "channel",
+    "mode",
+    "recorded",
+    "dispatched",
+    "ownerSystem"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "outbound-dispatch.v1"
+    },
+    "messageId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "email",
+        "sms",
+        "social"
+      ]
+    },
+    "mode": {
+      "const": "dry_run_record_only"
+    },
+    "recorded": {
+      "const": true
+    },
+    "dispatched": {
+      "const": false
+    },
+    "blockedReason": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "ownerSystem": {
+      "const": "360"
+    },
+    "observationOnly": {
+      "const": true
+    },
+    "liveDispatch": {
+      "const": false
+    },
+    "paidAdsEnabled": {
+      "const": false
+    }
+  }
+}

@@ -1,0 +1,70 @@
+D42_LIVE_PROBES UTC=2026-08-22T07:20:56Z
+TARGET_SHA=976bea591bb43879667407c1e8a8afc66bb8556d
+AUTH_SESSION=ABSENT
+
+=== SCOPE 1 LINEAGE ===
+health_commit=976bea591bb43879667407c1e8a8afc66bb8556d
+authRequired=True
+insecureDevAuth=False
+SHA_GATE=PASS
+hub_build_branch=cursor/hub-cx-ck-stack-7a6b
+
+=== SCOPE 2 UNSIGNED /client and /api/client/* (expect 401) ===
+GET /client -> 401
+GET /api/client -> 401
+GET /api/client/ -> 401
+GET /api/client/me -> 401
+GET /api/client/portal -> 401
+GET /api/client/workspace -> 401
+GET /api/client/documents -> 401
+GET /api/client/document-requests -> 401
+GET /api/client/knowledge -> 401
+GET /api/client/search -> 401
+GET /api/client/gcc -> 401
+GET /api/client/gcc/key -> 401
+GET /api/client/SYN01 -> 401
+GET /api/client/SYN01/portal -> 401
+GET /api/client/HFD01 -> 401
+GET /api/client/HFD01/portal -> 401
+GET /api/pm/clients/SYN01/portal -> 401
+GET /api/pm/clients/SYN01/workspace -> 401
+GET /api/pm/clients/SYN01/document-requests -> 401
+GET /api/pm/clients/HFD01/portal -> 401
+GET /api/pm/clients/CPL01/portal -> 401
+GET /api/pm/clients/PDG01/portal -> 401
+GET /api/pm/clients/ACCG01/portal -> 401
+GET /api/pm/knowledge -> 401
+GET /api/pm/knowledge-ledger -> 401
+GET /api/pm/search -> 401
+GET /api/pm/search?q=synthetic -> 401
+GET /operator -> 401
+GET /api/pm/documents -> 401
+SCOPE2_FAIL_COUNT=0
+
+=== SCOPE 3-6 ENTITLED (NOT_EXECUTED) ===
+NON_CLIENT_SP_OPERATOR_403=NOT_EXECUTED
+SYN01_PORTAL_ENTITLED=NOT_EXECUTED
+FOREIGN_404=NOT_EXECUTED
+KNOWLEDGE_OPERATING_PICTURE=NOT_EXECUTED
+CLIENT_A_VS_B=NOT_EXECUTED
+
+=== SCOPE 2 SUPPLEMENTAL /api/client discovery (all 401) ===
+GET /api/client/profile -> 401
+GET /api/client/context -> 401
+GET /api/client/home -> 401
+GET /api/client/v1 -> 401
+GET /api/client/v1/portal -> 401
+GET /api/client/v1/workspace -> 401
+GET /api/client/v1/documents -> 401
+GET /api/client/v1/knowledge -> 401
+GET /api/client/v1/search -> 401
+GET /api/client/v1/gcc -> 401
+GET /api/client/v1/gcc/key -> 401
+GET /api/client/portal/SYN01 -> 401
+GET /api/client/workspace/SYN01 -> 401
+GET /api/client/documents/SYN01 -> 401
+GET /api/client/knowledge/SYN01 -> 401
+POST /api/client -> 401
+POST /api/client/portal -> 401
+POST /api/client/gcc/key -> 401
+CLIENT_ROUTE=LIVE (401 not 405)

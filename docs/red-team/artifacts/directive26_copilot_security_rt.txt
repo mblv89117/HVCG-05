@@ -1,0 +1,15 @@
+SHA=2f0270228cdaf1dceed51a52a62200ffde07a9e0
+CMD: npx vitest run tests/security-rt-revalidation.test.ts
+UTC=2026-08-20T16:24:21Z
+CWD=/tmp/rt-d26/copilot
+
+ RUN  v3.2.7 /tmp/rt-d26/copilot
+
+ ✓ tests/security-rt-revalidation.test.ts (7 tests) 19ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  16:24:21
+   Duration  321ms (transform 99ms, setup 0ms, collect 176ms, tests 19ms, environment 0ms, prepare 41ms)
+
+EXIT:0

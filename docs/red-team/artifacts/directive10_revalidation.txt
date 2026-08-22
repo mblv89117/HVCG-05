@@ -1,0 +1,436 @@
+=== DIRECTIVE 10 REVALIDATION 2026-08-20T05:30:51Z ===
+directive_version=10
+worker_base=0386a53
+
+########## ATLAS (frozen Hub 940a484 + tip 2a5a605 for Plaid) ##########
+--- ATLAS-RT-01/02 canSeeOpportunity on Hub ---
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-d10/atlas-hub/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": true,
+  "status": "OPEN_DEFECT"
+}
+--- ATLAS-RT-01/02 on tip 2a5a605 ---
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": true,
+  "status": "OPEN_DEFECT"
+}
+--- ATLAS-RT-03 Plaid JWT Hub ---
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:12:import { parsePrincipal, assertClientAccess } from './middleware/auth.ts';
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:47:function requirePrincipal(req: IncomingMessage, cfg: AppConfig) {
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:60:  const p = parsePrincipal(headers);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:69:  principal: ReturnType<typeof requirePrincipal>,
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:145:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:157:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:179:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:232:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:358:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/index.ts:386:        const principal = requirePrincipal(req, cfg);
+/tmp/rt-d10/atlas-hub/apps/atlas-plaid-api/src/middleware/auth.ts:16:export function parsePrincipal(headers: Headers): AtlasPrincipal | null {
+--- ATLAS-RT-03 Plaid tip ---
+/tmp/rt-d10/atlas-tip/apps/atlas-plaid-api/src/index.ts:12:import { parsePrincipal, assertClientAccess } from './middleware/auth.ts';
+/tmp/rt-d10/atlas-tip/apps/atlas-plaid-api/src/index.ts:47:function requirePrincipal(req: IncomingMessage, cfg: AppConfig) {
+/tmp/rt-d10/atlas-tip/apps/atlas-plaid-api/src/index.ts:60:  const p = parsePrincipal(headers);
+/tmp/rt-d10/atlas-tip/apps/atlas-plaid-api/src/index.ts:117:          'content-type,x-atlas-user-id,x-atlas-organization-id,x-atlas-client-ids,x-atlas-user-email,x-atlas-roles',
+/tmp/rt-d10/atlas-tip/apps/atlas-plaid-api/src/middleware/auth.ts:16:export function parsePrincipal(headers: Headers): AtlasPrincipal | null {
+/tmp/rt-d10/atlas-tip/apps/atlas-plaid-api/src/middleware/auth.ts:17:  const userId = headers.get('x-atlas-user-id');
+package.json
+src
+tests
+tsconfig.json
+
+########## GTM @ 5bd8204 ##########
+--- live flags ---
+26:  callrailWebhookEnabled: boolean;
+42:    publishEnabled: envBool('PUBLISH_ENABLED', false),
+43:    paidAdsEnabled: envBool('PAID_ADS_ENABLED', false),
+44:    emailSendEnabled: envBool('EMAIL_SEND_ENABLED', false),
+45:    smsSendEnabled: envBool('SMS_SEND_ENABLED', false),
+55:    dryRunPublishEnabled: envBool('DRY_RUN_PUBLISH_ENABLED', true),
+56:    livePublishEnabled: envBool('LIVE_PUBLISH_ENABLED', false),
+60:    callrailWebhookEnabled: envBool('CALLRAIL_WEBHOOK_ENABLED', false),
+107:/** Global PUBLISH_ENABLED=false overrides every narrower live publish flag. */
+--- GTM-RT-01 CallRail ---
+43:export function verifyCallRailSignature(rawBody: string, signatureHeader: string | null): boolean {
+44-  return matchCallRailSignature(rawBody, signatureHeader).ok;
+45-}
+46-
+47-export type CallRailSecretBinding =
+48-  | { ok: true; boundOfficeKey: HartOfficeKey | 'shared' }
+49-  | { ok: false; boundOfficeKey: null };
+50-
+51-/**
+--
+53: * Office-specific secrets must only authorize that office (GTM-RT-20260820-01).
+54- */
+55-export function matchCallRailSignature(
+56-  rawBody: string,
+57-  signatureHeader: string | null,
+58-): CallRailSecretBinding {
+59-  const flags = getSafetyFlags();
+60-  if (
+61-    !isProductionLikeRuntime() &&
+--
+70:  if (process.env.CALLRAIL_WEBHOOK_SECRET_YUCCA) {
+71-    candidates.push({
+72-      boundOfficeKey: 'yucca_valley',
+73:      secret: process.env.CALLRAIL_WEBHOOK_SECRET_YUCCA,
+74-    });
+75-  }
+76:  if (process.env.CALLRAIL_WEBHOOK_SECRET_DHS) {
+77-    candidates.push({
+78-      boundOfficeKey: 'desert_hot_springs',
+79:      secret: process.env.CALLRAIL_WEBHOOK_SECRET_DHS,
+80-    });
+81-  }
+82:  // Shared secret cannot authorize when office-specific secrets exist (GTM-RT-01 hardening).
+83-  const officeSpecificConfigured = candidates.length > 0;
+84:  if (!officeSpecificConfigured && process.env.CALLRAIL_WEBHOOK_SECRET) {
+85:    candidates.push({ boundOfficeKey: 'shared', secret: process.env.CALLRAIL_WEBHOOK_SECRET });
+86-  }
+87-  if (candidates.length === 0) return { ok: false, boundOfficeKey: null };
+88-
+89-  const provided = Buffer.from(signatureHeader);
+90-  // Prefer office-specific secrets before shared so a shared secret cannot
+91-  // authorize a cross-office payload when office secrets are configured.
+92-  for (const candidate of candidates) {
+93-    const expected = Buffer.from(createHmac('sha256', candidate.secret).update(rawBody).digest('hex'));
+--
+108:    throw new Error('callrail_secret_office_mismatch');
+109-  }
+110-}
+111-
+112-type HartTenant = {
+113-  organization_id: string;
+114-  location_id: string;
+115-  office_key: string;
+116-  campaign_name: string | null;
+--- GTM-RT-02 publisher gate ---
+
+    // Content version + approval — fail closed (GTM-RT-02): require approved row + Guardian.
+    const versions =
+      await sql`SELECT * FROM content_versions WHERE id = ${job.content_version_id}::uuid`;
+    const version = versions[0];
+    if (!version) reasons.push('internal_system_failure');
+
+    if (!job.approval_id) {
+      reasons.push('approval_missing');
+    } else {
+      const approvals = await sql`SELECT * FROM approvals WHERE id = ${job.approval_id}::uuid`;
+      const approval = approvals[0];
+      if (
+        !approval ||
+        approval.state !== 'approved' ||
+        approval.content_version_id !== job.content_version_id
+      ) {
+        reasons.push('approval_invalid');
+      }
+    }
+
+    if (!job.guardian_result_id) {
+      reasons.push('guardian_missing');
+    } else {
+      const g =
+        await sql`SELECT * FROM guardian_results WHERE id = ${job.guardian_result_id}::uuid`;
+      if (!g[0]) {
+        reasons.push('guardian_missing');
+      } else if (g[0].decision === 'block' || g[0].decision === 'escalate') {
+        reasons.push('guardian_block');
+      }
+    }
+
+    if (version && version.approval_state === 'approval_invalidated') {
+      reasons.push('approval_invalid');
+    }
+--- GTM-RT-03 dual pause ---
+/tmp/rt-d10/gtm/packages/system-monitor/src/checks.ts
+/tmp/rt-d10/gtm/packages/system-monitor/src/cycle.ts
+/tmp/rt-d10/gtm/packages/system-monitor/tests/synthetic.test.ts
+/tmp/rt-d10/gtm/packages/flags/src/index.ts
+/tmp/rt-d10/gtm/packages/flags/tests/flags.test.ts
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts
+/tmp/rt-d10/gtm/packages/gtm-agent/tests/gtm-agent.test.ts
+/tmp/rt-d10/gtm/packages/gtm-agent/src/optimization/engine.ts
+/tmp/rt-d10/gtm/packages/open-dental/src/client.ts
+/tmp/rt-d10/gtm/packages/gtm-agent/src/outbound/orchestrator.ts
+/tmp/rt-d10/gtm/packages/gtm-agent/src/command-center/views.ts
+/tmp/rt-d10/gtm/packages/db/src/pause.ts
+/tmp/rt-d10/gtm/packages/db/src/seed.ts
+/tmp/rt-d10/gtm/packages/lead-intelligence/src/cmo.ts
+/tmp/rt-d10/gtm/packages/lead-intelligence/src/callrail-api.ts
+41:      throw new Error('EMERGENCY_PAUSE_GLOBAL must remain true for observation-only handoff');
+--- GTM-RT-04 InquiryForm / atlas contract ---
+/tmp/rt-d10/gtm/apps/web/app/security/page.tsx:27:        Report suspected vulnerabilities to manny@highvaluecapitalgroup.com. Do not include live
+/tmp/rt-d10/gtm/apps/web/app/page.tsx:73:          <a href="https://www.highvaluecapitalgroup.com/">highvaluecapitalgroup.com</a>. 360 Growth
+/tmp/rt-d10/gtm/apps/web/app/services/page.tsx:132:        <a className="btn secondary" href="https://www.highvaluecapitalgroup.com/services">
+/tmp/rt-d10/gtm/apps/web/app/terms/page.tsx:32:        https://www.highvaluecapitalgroup.com/
+/tmp/rt-d10/gtm/apps/web/app/terms/page.tsx:105:      <p>manny@highvaluecapitalgroup.com</p>
+/tmp/rt-d10/gtm/apps/web/app/privacy/page.tsx:32:        Privacy contact: manny@highvaluecapitalgroup.com
+/tmp/rt-d10/gtm/apps/web/app/privacy/page.tsx:34:        Corporate website: https://www.highvaluecapitalgroup.com/
+/tmp/rt-d10/gtm/apps/web/app/privacy/page.tsx:84:        <strong>Deletion requests:</strong> email manny@highvaluecapitalgroup.com. We will respond
+/tmp/rt-d10/gtm/apps/web/app/privacy/page.tsx:119:        Privacy, access, and deletion requests: manny@highvaluecapitalgroup.com
+/tmp/rt-d10/gtm/apps/web/app/_components/InquiryForm.tsx:8: * Payload is shaped for Integration SoT / 360-atlas-lead.v1 observation governance (GTM-RT-04).
+/tmp/rt-d10/gtm/apps/web/app/_components/InquiryForm.tsx:11:const INTAKE_URL = 'https://www.highvaluecapitalgroup.com/api/leads/contact';
+/tmp/rt-d10/gtm/apps/web/app/_components/InquiryForm.tsx:84:    // Contract-aligned observation payload (360-atlas-lead.v1 + atlas-lead-intake.v1 umbrella fields).
+/tmp/rt-d10/gtm/apps/web/app/_components/InquiryForm.tsx:133:          contractVersion: '360-atlas-lead.v1',
+/tmp/rt-d10/gtm/apps/web/app/_components/InquiryForm.tsx:177:      setMessage('We could not reach intake. Please retry or email manny@highvaluecapitalgroup.com.');
+/tmp/rt-d10/gtm/apps/web/app/_components/SiteChrome.tsx:34:            <a className="ext" href="https://www.highvaluecapitalgroup.com/" rel="noopener noreferrer">
+/tmp/rt-d10/gtm/apps/web/app/_components/SiteChrome.tsx:58:            <a href="https://www.highvaluecapitalgroup.com/" rel="noopener noreferrer">
+/tmp/rt-d10/gtm/apps/web/app/contact/page.tsx:21:        Privacy and deletion requests: manny@highvaluecapitalgroup.com
+--- suppression/unsubscribe ---
+/tmp/rt-d10/gtm/packages/system-monitor/src/incidents.ts:33:        SELECT id FROM monitor_suppressions
+/tmp/rt-d10/gtm/packages/system-monitor/src/incidents.ts:253:export async function createSuppression(input: {
+/tmp/rt-d10/gtm/packages/system-monitor/src/incidents.ts:267:      INSERT INTO monitor_suppressions (fingerprint, check_id, until_at, reason, created_by)
+/tmp/rt-d10/gtm/packages/system-monitor/src/incidents.ts:280:      action: 'system_monitor.suppression_created',
+/tmp/rt-d10/gtm/packages/system-monitor/src/incidents.ts:281:      targetType: 'monitor_suppression',
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:5:  addSuppression,
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:7:} from '../compliance/suppression';
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:71:  // 1. Suppression bypass
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:74:    registry = addSuppression(registry, {
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:78:      reason: 'unsubscribe',
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:87:    if (suppressed && !decision.allowed) pass('rt-suppress', 'suppression_bypass', 'Suppressed address blocked');
+/tmp/rt-d10/gtm/packages/gtm-agent/src/security/redteam.ts:88:    else fail('rt-suppress', 'suppression_bypass', 'P0', 'Suppression could be bypassed');
+/tmp/rt-d10/gtm/packages/gtm-agent/src/index.ts:102:  addSuppression,
+/tmp/rt-d10/gtm/packages/gtm-agent/src/index.ts:106:  type SuppressionEntry,
+/tmp/rt-d10/gtm/packages/gtm-agent/src/index.ts:108:} from './compliance/suppression';
+/tmp/rt-d10/gtm/packages/gtm-agent/src/compliance/suppression.ts:3:export const suppressionEntrySchema = z.object({
+/tmp/rt-d10/gtm/packages/gtm-agent/src/compliance/suppression.ts:8:    'unsubscribe',
+/tmp/rt-d10/gtm/packages/gtm-agent/src/compliance/suppression.ts:11:    'frequency_cap',
+/tmp/rt-d10/gtm/packages/gtm-agent/src/compliance/suppression.ts:20:export type SuppressionEntry = z.infer<typeof suppressionEntrySchema>;
+/tmp/rt-d10/gtm/packages/gtm-agent/src/compliance/suppression.ts:40:  suppressions: SuppressionEntry[];
+--- kill switch / outbound tools ---
+13:  PUBLISH: 'publish',
+14:  SEND_EMAIL: 'send_email',
+15:  SEND_SMS: 'send_sms',
+230:  if (input.toolKey === AGENT_TOOLS.PUBLISH && !flags.publishEnabled) {
+7:  'allow' | 'allow_with_warning' | 'require_approval' | 'block' | 'escalate';
+25:  requestedAction?: string;
+81:    action: 'block',
+91:    action: 'block',
+111:    action: 'block',
+151:    action: 'block',
+152:    reason: 'Individualized financial advice / return guarantee blocked',
+165:    'block',
+210:      const outbound = ['publish', 'email', 'sms', 'ads'].includes(input.requestedAction ?? '');
+213:      decision = outbound ? 'block' : stricter(decision, 'require_approval');
+231:      decision = stricter(decision, 'block');
+237:      decision = stricter(decision, 'block');
+263:  if (input.requestedAction && ['publish', 'email', 'sms', 'ads'].includes(input.requestedAction)) {
+265:    decision = 'block';
+271:  if (riskLevel === 'critical') decision = stricter(decision, 'block');
+
+########## GCC @ b02c132 ##########
+--- GCC-RT-01 org-apex COALESCE ---
+/tmp/rt-d10/gcc/supabase/verify-setup.sql:62:  WHERE id IN ('org-apex', 'org-summit')
+/tmp/rt-d10/gcc/supabase/schema.sql:4:-- Organizations (tenants) — id matches app org ids e.g. org-apex
+/tmp/rt-d10/gcc/supabase/schema.sql:173:-- Signup trigger — invite-only org mapping; never default to org-apex; never trust metadata role/org
+/tmp/rt-d10/gcc/supabase/seed.sql:5:  ('org-apex', 'Apex Construction Group', 'apex-construction', 'Commercial Construction', 'growth'),
+/tmp/rt-d10/gcc/supabase/seed.sql:14:  'org-apex', 487250, 412800, 892400, 6840000,
+/tmp/rt-d10/gcc/supabase/seed.sql:24:  ('org-apex', 'Jan', 520000, 412000, 108000, 380000, 1),
+/tmp/rt-d10/gcc/supabase/seed.sql:25:  ('org-apex', 'Feb', 480000, 398000, 82000, 395000, 2),
+/tmp/rt-d10/gcc/supabase/seed.sql:26:  ('org-apex', 'Mar', 610000, 445000, 165000, 420000, 3),
+/tmp/rt-d10/gcc/supabase/seed.sql:27:  ('org-apex', 'Apr', 580000, 432000, 148000, 445000, 4),
+/tmp/rt-d10/gcc/supabase/seed.sql:28:  ('org-apex', 'May', 720000, 478000, 242000, 462000, 5),
+/tmp/rt-d10/gcc/supabase/seed.sql:29:  ('org-apex', 'Jun', 680000, 465000, 215000, 478000, 6),
+/tmp/rt-d10/gcc/supabase/seed.sql:30:  ('org-apex', 'Jul', 750000, 492000, 258000, 485000, 7),
+/tmp/rt-d10/gcc/supabase/seed.sql:31:  ('org-apex', 'Aug', 710000, 488000, 222000, 487250, 8),
+/tmp/rt-d10/gcc/supabase/seed.sql:32:  ('org-apex', 'Sep', 892400, 512000, 380400, 487250, 9)
+/tmp/rt-d10/gcc/supabase/seed.sql:36:  ('org-apex', 'Revenue', 850000, 892400, 42400, 5.0),
+/tmp/rt-d10/gcc/supabase/seed.sql:37:  ('org-apex', 'Labor', 320000, 298400, 21600, 6.8),
+/tmp/rt-d10/gcc/supabase/seed.sql:38:  ('org-apex', 'Materials', 245000, 268200, -23200, -9.5),
+/tmp/rt-d10/gcc/supabase/seed.sql:39:  ('org-apex', 'Subcontractors', 180000, 172800, 7200, 4.0),
+/tmp/rt-d10/gcc/supabase/seed.sql:40:  ('org-apex', 'Operating Expenses', 95000, 98400, -3400, -3.6),
+/tmp/rt-d10/gcc/supabase/seed.sql:41:  ('org-apex', 'Payroll', 186000, 186400, -400, -0.2)
+--- GCC-RT-02 profile update policy ---
+/tmp/rt-d10/gcc/supabase/schema.sql:126:DROP POLICY IF EXISTS "Users update own profile" ON profiles;
+/tmp/rt-d10/gcc/supabase/schema.sql-127-DROP POLICY IF EXISTS "Users manage org integrations" ON integration_connections;
+/tmp/rt-d10/gcc/supabase/schema.sql-128-
+--
+/tmp/rt-d10/gcc/supabase/schema.sql:137:CREATE POLICY "Users update own profile" ON profiles
+/tmp/rt-d10/gcc/supabase/schema.sql-138-  FOR UPDATE USING (id = auth.uid());
+/tmp/rt-d10/gcc/supabase/schema.sql-139-
+--
+/tmp/rt-d10/gcc/supabase/schema.sql:141:  FOR INSERT WITH CHECK (id = auth.uid());
+/tmp/rt-d10/gcc/supabase/schema.sql-142-
+/tmp/rt-d10/gcc/supabase/schema.sql-143-CREATE POLICY "Users manage org integrations" ON integration_connections
+--
+/tmp/rt-d10/gcc/supabase/setup.sql:160:DROP POLICY IF EXISTS "gcc profile update" ON gcc_profiles;
+/tmp/rt-d10/gcc/supabase/setup.sql:161:CREATE POLICY "gcc profile update" ON gcc_profiles
+/tmp/rt-d10/gcc/supabase/setup.sql-162-  FOR UPDATE
+/tmp/rt-d10/gcc/supabase/setup.sql-163-  USING (id = auth.uid())
+/tmp/rt-d10/gcc/supabase/setup.sql:164:  WITH CHECK (
+/tmp/rt-d10/gcc/supabase/setup.sql-165-    id = auth.uid()
+/tmp/rt-d10/gcc/supabase/setup.sql-166-    AND role = (SELECT p.role FROM gcc_profiles p WHERE p.id = auth.uid())
+--
+/tmp/rt-d10/gcc/supabase/setup.sql:177:  WITH CHECK (
+/tmp/rt-d10/gcc/supabase/setup.sql-178-    id = auth.uid()
+/tmp/rt-d10/gcc/supabase/setup.sql-179-    AND role = 'staff'
+--
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql:23:DROP POLICY IF EXISTS "gcc profile update" ON gcc_profiles;
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql:24:CREATE POLICY "gcc profile update" ON gcc_profiles
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql-25-  FOR UPDATE
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql-26-  USING (id = auth.uid())
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql:27:  WITH CHECK (
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql-28-    id = auth.uid()
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql-29-    AND role = (SELECT p.role FROM gcc_profiles p WHERE p.id = auth.uid())
+--
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql:38:  WITH CHECK (
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql-39-    id = auth.uid()
+/tmp/rt-d10/gcc/supabase/migration-rt-20260820-profile-isolation.sql-40-    AND role = 'staff'
+--- GCC-RT-03 QBO state ---
+--- GCC-RT-05 browser org ---
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:9:  selectOrganizationId,
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:34:    const spoof = selectOrganizationId({
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:41:    const admin = selectOrganizationId({
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:47:    assert.equal(admin.organizationId, DEMO_TENANT_ID);
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:51:    const result = selectOrganizationId({
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:63:    const idor = selectOrganizationId({
+/tmp/rt-d10/gcc/src/lib/auth/organization.test.ts:70:    assert.equal(idor.organizationId, "org-syn01");
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:18:export function selectOrganizationId(input: {
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:22:}): { organizationId: string; denied: boolean; reason?: string } {
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:26:    return { organizationId: "", denied: true, reason: "organization_mapping_required" };
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:29:    return { organizationId: authOrg, denied: false };
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:32:    return { organizationId: requested, denied: false };
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:34:  return { organizationId: authOrg, denied: true, reason: "organization_mismatch" };
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:41:export function isDemoOrganizationId(organizationId: string | null | undefined): boolean {
+/tmp/rt-d10/gcc/src/lib/auth/organization.ts:42:  return String(organizationId || "").trim() === DEMO_TENANT_ID;
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:37:export async function requireApiAccess(options?: {
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:38:  organizationId?: string | null;
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:41:    const requestedOrg = options?.organizationId ?? DEMO_ORGANIZATION_ID;
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:50:      organizationId: DEMO_ORGANIZATION_ID,
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:57:  if (!auth.organizationId) throw new AuthError("Organization mapping required", 403);
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:60:    options?.organizationId &&
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:61:    options.organizationId !== auth.organizationId &&
+/tmp/rt-d10/gcc/src/lib/auth/api.ts:10:  organizationId: string;
+/tmp/rt-d10/gcc/src/lib/auth/api.ts:38:  const organizationId =
+/tmp/rt-d10/gcc/src/lib/auth/api.ts:48:    organizationId,
+--- GCC-RT-06 financials permission ---
+/tmp/rt-d10/gcc/src/app/api/settings/route.ts:2:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/settings/route.ts:23:    requirePermission(access, "settings:manage");
+/tmp/rt-d10/gcc/src/app/api/team/invite/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/team/invite/route.ts:13:    requirePermission(access, "team:manage");
+/tmp/rt-d10/gcc/src/app/api/cvos/gtm-feedback/route.ts:3:import { requireApiAccess, requirePermission, requirePlatformAdminAccess } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/gtm-feedback/route.ts:10: * Aggregated GTM feedback — platform_admin or advisor with reports:export.
+/tmp/rt-d10/gcc/src/app/api/cvos/gtm-feedback/route.ts:25:      requirePermission(access, "reports:export");
+/tmp/rt-d10/gcc/src/app/api/cvos/cockpit/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/cockpit/route.ts:14:    requirePermission(access, "dashboard:read");
+/tmp/rt-d10/gcc/src/app/api/cvos/executive-brief/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/executive-brief/route.ts:14:    requirePermission(access, "reports:read");
+/tmp/rt-d10/gcc/src/app/api/cvos/executive-brief/route.ts:46:    requirePermission(access, "reports:export");
+/tmp/rt-d10/gcc/src/lib/auth/access.ts:31:export function requirePermission(access: AccessContext, permission: Permission): void {
+/tmp/rt-d10/gcc/src/app/api/cvos/value-creation/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/value-creation/route.ts:14:    requirePermission(access, "financials:read");
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:5:  | "financials:read"
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:14:  | "reports:export";
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:18:    "dashboard:read", "financials:read", "financials:write",
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:21:    "reports:read", "reports:export",
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:24:    "dashboard:read", "financials:read", "financials:write",
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:26:    "team:manage", "settings:manage", "reports:read", "reports:export",
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:28:  operations: ["dashboard:read", "financials:read", "forecast:read", "reports:read"],
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:30:  project_manager: ["dashboard:read", "financials:read", "forecast:read", "reports:read"],
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:32:    "dashboard:read", "financials:read", "team:manage", "settings:manage", "reports:read",
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:34:  staff: ["dashboard:read", "financials:read", "reports:read"],
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:35:  advisor: ["dashboard:read", "financials:read", "forecast:read", "reports:read", "reports:export"],
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:37:    "dashboard:read", "financials:read", "financials:write",
+/tmp/rt-d10/gcc/src/lib/auth/permissions.ts:40:    "reports:read", "reports:export",
+/tmp/rt-d10/gcc/src/app/api/cvos/signals/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/cvos/signals/route.ts:19:    requirePermission(access, "dashboard:read");
+--- GCC-RT-07 atlas handoff hmac ---
+/tmp/rt-d10/gcc/src/app/api/handoff/atlas-activation/route.ts:5:import { requirePlatformAdminAccess } from "@/lib/auth/access";
+/tmp/rt-d10/gcc/src/app/api/handoff/atlas-activation/route.ts:9:} from "@/lib/handoff/atlas-activation";
+/tmp/rt-d10/gcc/src/app/api/handoff/atlas-activation/route.ts:14:    await requirePlatformAdminAccess();
+/tmp/rt-d10/gcc/src/app/api/handoff/atlas-activation/route.ts:27:    await requirePlatformAdminAccess();
+
+########## COPILOT @ aacc09c ##########
+--- middleware public prefixes ---
+9:const PUBLIC_API_PREFIXES = [
+84:  return PUBLIC_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+--- store ---
+21:const STORE_FILE = path.join(DATA_DIR, "store.json");
+86:  if (!fs.existsSync(STORE_FILE)) {
+87:    fs.writeFileSync(STORE_FILE, JSON.stringify(emptyStore(), null, 2));
+93:  const raw = fs.readFileSync(STORE_FILE, "utf8");
+97:export function writeStore(store: AppStore) {
+99:  fs.writeFileSync(STORE_FILE, JSON.stringify(store, null, 2));
+105:  writeStore(store);
+120:export function assertTenant(store: AppStore, organizationId: string, resourceOrgId: string) {
+--- assessments start auth ---
+46:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+59:  if (action === "start") {
+71:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+--- admin auth ---
+2:import { AuthError, authErrorResponse, requireRole, requireTenantContext } from "@/lib/auth/guards";
+11:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+12:    requireRole(session, ["hvcg_admin", "hvcg_consultant"]);
+27:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+28:    requireRole(session, ["hvcg_admin", "hvcg_consultant"]);
+--- per-session store? ---
+/tmp/rt-d10/copilot/src/lib/store/index.ts:20:const DATA_DIR = path.join(process.cwd(), "data");
+/tmp/rt-d10/copilot/src/lib/store/index.ts:21:const STORE_FILE = path.join(DATA_DIR, "store.json");
+/tmp/rt-d10/copilot/src/lib/store/index.ts:85:  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+########## INTEGRATION @ 773b510 (read-only) ##########
+--- intake auth model ---
+/tmp/rt-d10/integration/docs/integrations/IDENTITY_AND_ATTRIBUTION.md:12:| Lead | Atlas `HVCG_Leads` | SP item ID, `HVCG_IdempotencyKey`, `Email`, `Source`, `LeadSourceDetail` |
+/tmp/rt-d10/integration/docs/integrations/IDENTITY_AND_ATTRIBUTION.md:13:| Opportunity | Atlas `HVCG_Opportunities` | SP item ID, `LeadId`, `ClientCode`, `HVCG_IdempotencyKey` |
+/tmp/rt-d10/integration/docs/integrations/requirements/PRODUCT_TRAIN_REQUIREMENTS.md:15:| ATLAS-INT-001 | Accept website-compatible intakes whose `fullPayload.idempotencyKey` matches `360\|*`, `copilot\|*`, `eva\|*`, `website\|*` without remapping meaning | P0 |
+/tmp/rt-d10/integration/docs/integrations/requirements/PRODUCT_TRAIN_REQUIREMENTS.md:21:| ATLAS-INT-007 | XSYS-RT-01: before any **new** live intake hardening release, require body HMAC (or equivalent request authenticity) in addition to intake key — **owned by Atlas security patch train**; Integration documents only (no Hub churn on this branch) | P0 |
+/tmp/rt-d10/integration/docs/integrations/VERSIONING.md:18:- Idempotency key patterns
+/tmp/rt-d10/integration/docs/integrations/IDENTITY_AUTH_MODEL.md:11:| `system_service` | Product-to-product service | Edge API keys / app registration | Single edge + idempotency |
+/tmp/rt-d10/integration/docs/integrations/IDENTITY_AUTH_MODEL.md:22:| Website/EVA → Atlas | `x-website-intake-key` | Intake only; not staff admin |
+/tmp/rt-d10/integration/docs/integrations/IDENTITY_AUTH_MODEL.md:25:| 360 → Atlas (future live) | Service/intake key | Live dispatch owner-gated |
+/tmp/rt-d10/integration/docs/integrations/schemas/adapters/gcc-atlas-signal-to-value-signal.md:29:6. Attach `write-envelope.v1` with idempotency `gcc-signal|{signalId}`.
+/tmp/rt-d10/integration/docs/integrations/CONTRACT_CONFLICTS.md:24:| Idempotency registry incomplete vs handoff table | Atlas docs | **Expanded** `idempotency-keys.v1.json` with 360/copilot/activation/GCC/booking/engagement/learning. |
+/tmp/rt-d10/integration/docs/integrations/CONTRACT_CONFLICTS.md:29:| XSYS-RT-01 intake key without body HMAC | Integration + frozen Hub | **Fail-safe:** documented requirement only; Hub runtime patch belongs to Atlas security train (freeze boundary). |
+/tmp/rt-d10/integration/docs/integrations/CANONICAL_IDENTITIES.md:25:| Lead | Atlas `HVCG_Leads` | SP item ID + `HVCG_IdempotencyKey` | Source lead IDs are provenance, not Atlas Lead IDs until written |
+/tmp/rt-d10/integration/docs/integrations/CANONICAL_IDENTITIES.md:53:- Idempotency keys: `{source-or-action}|{natural-id}` with `|` separators
+/tmp/rt-d10/integration/docs/integrations/IDEMPOTENCY_AND_FAILURE_ATOMICITY.md:1:# Idempotency and Failure Atomicity
+/tmp/rt-d10/integration/docs/integrations/IDEMPOTENCY_AND_FAILURE_ATOMICITY.md:9:| `idempotencyKey` | Stable natural key for the operation |
+/tmp/rt-d10/integration/docs/integrations/IDEMPOTENCY_AND_FAILURE_ATOMICITY.md:16:Pattern registry: `schemas/idempotency-keys.v1.json`.
+/tmp/rt-d10/integration/docs/integrations/PLATFORM_INTEGRATION_REPORT.md:18:| Idempotency registry | Expanded to all critical edges | 100 |
+/tmp/rt-d10/integration/docs/integrations/PLATFORM_INTEGRATION_REPORT.md:36:| REMAINING ACTIONS | OD-003; Copilot/GCC adapter code on product trains; Atlas HMAC patch train |
+/tmp/rt-d10/integration/docs/integrations/PLATFORM_INTEGRATION_REPORT.md:43:## Canonical IDs / Attribution / Schemas / Idempotency / Failure / Identity
+/tmp/rt-d10/integration/docs/integrations/PLATFORM_INTEGRATION_REPORT.md:68:3. Hub HMAC patch is **not** executed on this contracts branch (freeze fail-safe).
+/tmp/rt-d10/integration/docs/integrations/SECURITY_CONTRACT.md:11:| Replay abuse | Same idempotency key → duplicate/return-existing, not new entity |
+/tmp/rt-d10/integration/docs/integrations/SECURITY_CONTRACT.md:22:Independent Red Team finding: website/EVA intake key without body HMAC.
+/tmp/rt-d10/integration/docs/integrations/SECURITY_CONTRACT.md:26:| Contract posture | Live intake MUST plan for request authenticity beyond a static header key (HMAC or signed body) before new production intake hardening |
+/tmp/rt-d10/integration/docs/integrations/OBSERVABILITY.md:23:3. Atlas Hub logs include idempotency key + correlation id.
+/tmp/rt-d10/integration/docs/integrations/CROSS_SYSTEM_CONTRACTS.md:30:| Lead | Atlas `HVCG_Leads` | SP item ID + `HVCG_IdempotencyKey` |
+/tmp/rt-d10/integration/docs/integrations/CROSS_SYSTEM_CONTRACTS.md:39:| Edge | Transport | Auth | Idempotency | Identity anchor | Status | Owner gate |
+/tmp/rt-d10/integration/docs/integrations/CROSS_SYSTEM_CONTRACTS.md:41:| EVA / website → Atlas lead | `POST /api/website/leads` | `x-website-intake-key` | `eva\|{sessionId}`, `website\|{leadId}` | `HVCG_Leads` | Hub implemented | Intake key |
+/tmp/rt-d10/integration/docs/integrations/CROSS_SYSTEM_CONTRACTS.md:45:| 360 → Atlas lead | `@360gs/atlas-handoff` stage | Intake key when live | `360\|{leadId}` | `HVCG_Leads` | Staging only | Owner before live |
+/tmp/rt-d10/integration/docs/integrations/CROSS_SYSTEM_CONTRACTS.md:61:8. Every cross-system write carries a `write-envelope.v1` (idempotency key, source, destination, entity, operation, version, replay semantics, trace).
+/tmp/rt-d10/integration/docs/integrations/CROSS_SYSTEM_CONTRACTS.md:71:- `schemas/idempotency-keys.v1.json`
+--- website intake code still on this branch? ---
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/http.ts:12:import { verifyWebsiteIntakeKey, websiteIntakeKeyConfigured } from './intakeAuth.ts';
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/http.ts:55:  if (!verifyWebsiteIntakeKey(req.headers['x-website-intake-key'], cfg.websiteIntakeKey)) {
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/intakeAuth.ts:14:export function verifyWebsiteIntakeKey(provided: unknown, expected: string): boolean {
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:30:  idempotencyKey: string;
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:55:  const fromFull = asString(full.idempotencyKey);
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:128:  idempotencyKey: string,
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:139:    HVCG_IdempotencyKey: idempotencyKey,
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:172:  const idempotencyKey = resolveWebsiteLeadIdempotencyKey(opts.body);
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:173:  if (!idempotencyKey) {
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:174:    throw new PmHttpError(400, 'invalid_lead', 'idempotencyKey or leadId is required.');
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:180:  const fields = fieldsFromPayload(opts.body, idempotencyKey, opts.ownerEmail);
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:182:  const matches = items.filter((item) => itemMatchesFieldsFilter(item, fieldsEq('HVCG_IdempotencyKey', idempotencyKey)));
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:198:      idempotencyKey,
+/tmp/rt-d10/integration/apps/atlas-integration-api/src/website/leads.ts:207:    idempotencyKey,
+/tmp/rt-d10/atlas-hub/apps/atlas-integration-api/src/website/http.ts:12:import { verifyWebsiteIntakeKey, websiteIntakeKeyConfigured } from './intakeAuth.ts';
+/tmp/rt-d10/atlas-hub/apps/atlas-integration-api/src/website/http.ts:55:  if (!verifyWebsiteIntakeKey(req.headers['x-website-intake-key'], cfg.websiteIntakeKey)) {
+/tmp/rt-d10/atlas-hub/apps/atlas-integration-api/src/website/intakeAuth.ts:14:export function verifyWebsiteIntakeKey(provided: unknown, expected: string): boolean {
+/tmp/rt-d10/atlas-hub/apps/atlas-integration-api/src/website/leads.ts:53:export function resolveWebsiteLeadIdempotencyKey(body: Record<string, unknown>): string {
+/tmp/rt-d10/atlas-hub/apps/atlas-integration-api/src/website/leads.ts:172:  const idempotencyKey = resolveWebsiteLeadIdempotencyKey(opts.body);
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:30:  idempotencyKey: string;
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:55:  const fromFull = asString(full.idempotencyKey);
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:128:  idempotencyKey: string,
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:139:    HVCG_IdempotencyKey: idempotencyKey,
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:172:  const idempotencyKey = resolveWebsiteLeadIdempotencyKey(opts.body);
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:173:  if (!idempotencyKey) {
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:174:    throw new PmHttpError(400, 'invalid_lead', 'idempotencyKey or leadId is required.');
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:180:  const fields = fieldsFromPayload(opts.body, idempotencyKey, opts.ownerEmail);
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:182:  const matches = items.filter((item) => itemMatchesFieldsFilter(item, fieldsEq('HVCG_IdempotencyKey', idempotencyKey)));
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:198:      idempotencyKey,
+/tmp/rt-d10/atlas-tip/apps/atlas-integration-api/src/website/leads.ts:207:    idempotencyKey,

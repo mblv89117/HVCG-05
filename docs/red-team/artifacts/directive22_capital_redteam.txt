@@ -1,0 +1,128 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-capital-redteam.test.ts
+UTC=2026-08-20T15:05:54Z
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Capital red team
+    # Subtest: malformed JSON POST is 400 not 500
+    ok 1 - malformed JSON POST is 400 not 500
+      ---
+      duration_ms: 26.630944
+      ...
+# {"level":"audit","id":"eb0702da-b334-4036-812b-0d2b78cbf30e","at":"2026-08-20T15:05:54.504Z","actorUserId":"user-star","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: blocks wildcard ClientCode and wildcard principal scope
+    ok 2 - blocks wildcard ClientCode and wildcard principal scope
+      ---
+      duration_ms: 8.869855
+      ...
+# {"level":"audit","id":"0de8701c-1773-43eb-b54d-c89eb951f080","at":"2026-08-20T15:05:54.512Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-a69a4fa4-c82e-4f6f-9ba0-aacf0cf82355 created=true","sensitive":false}
+# {"level":"audit","id":"9841fa8f-bb1e-4584-936f-732877fe4dfe","at":"2026-08-20T15:05:54.516Z","actorUserId":"user-other","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-198042f8-66e9-44de-9d17-796c784d5aa2 created=true","sensitive":false}
+# {"level":"audit","id":"ef8fa1f1-a404-40e5-9bfb-2e17561c70d3","at":"2026-08-20T15:05:54.525Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: isolates SYN01 from ACCG01 — no list, get, KPI, or idempotency leakage
+    ok 3 - isolates SYN01 from ACCG01 — no list, get, KPI, or idempotency leakage
+      ---
+      duration_ms: 18.76038
+      ...
+# {"level":"audit","id":"a562522c-c33e-47b3-9a85-a31d94b7f990","at":"2026-08-20T15:05:54.532Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-1d170cdb-f9d2-49ab-a17b-211ea4105116 created=true","sensitive":false}
+# {"level":"audit","id":"64b91975-0c4e-494b-a0aa-80dc453cd393","at":"2026-08-20T15:05:54.534Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-1d170cdb-f9d2-49ab-a17b-211ea4105116","sensitive":false}
+# {"level":"audit","id":"afce06d1-ab44-42eb-97a1-1b3caedc8e7c","at":"2026-08-20T15:05:54.539Z","actorUserId":"user-1","action":"capital_document_review","outcome":"success","detail":"id=cap-1d170cdb-f9d2-49ab-a17b-211ea4105116 doc=doc-2614d59e-5d7e-4962-b444-340ad85556b8","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects VERIFIED financials without SourceRef and does not apply hallucinated review numbers
+    ok 4 - rejects VERIFIED financials without SourceRef and does not apply hallucinated review numbers
+      ---
+      duration_ms: 15.039253
+      ...
+# {"level":"audit","id":"ccc7dd10-e1f4-4afe-8f3c-f6d64a7e73b4","at":"2026-08-20T15:05:54.545Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-d839bca1-edd3-4461-bc2b-d6f6be6744d3 created=true","sensitive":false}
+# {"level":"audit","id":"1c5893f6-f6b4-4d9e-9450-7b863e6deb85","at":"2026-08-20T15:05:54.562Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-d839bca1-edd3-4461-bc2b-d6f6be6744d3/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"2ec08502-6631-4aed-9f00-edb350c222ce","at":"2026-08-20T15:05:54.565Z","actorUserId":"user-admin","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-d839bca1-edd3-4461-bc2b-d6f6be6744d3/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"011e93c9-a3ea-4d65-9186-0be8b7e34db2","at":"2026-08-20T15:05:54.567Z","actorUserId":"user-advisor","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-d839bca1-edd3-4461-bc2b-d6f6be6744d3/strategy/decision forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects non-Manny strategy/shortlist and records the denial
+    ok 5 - rejects non-Manny strategy/shortlist and records the denial
+      ---
+      duration_ms: 27.457281
+      ...
+# {"level":"audit","id":"f8452cfd-9069-45b1-aa0a-3acded774811","at":"2026-08-20T15:05:54.572Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-858c1192-caf0-4549-99e8-9980547f9b0e created=true","sensitive":false}
+# {"level":"audit","id":"3eb46098-3fef-4c22-bc71-bdb78af5b67e","at":"2026-08-20T15:05:54.577Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"dee7c44e-cefb-4176-a3b4-1779cd9e6b7d","at":"2026-08-20T15:05:54.583Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"e429b948-dec4-4d91-b5cc-e32d833bee76","at":"2026-08-20T15:05:54.588Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"217e5ca8-764e-4e9e-9f3a-9ee4daa85a61","at":"2026-08-20T15:05:54.590Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"bb6d5235-52d6-475c-9607-a715ee9f0d06","at":"2026-08-20T15:05:54.592Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"df984c50-aea0-42ca-8d3c-6be2b9da0186","at":"2026-08-20T15:05:54.595Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"audit","id":"9eb93caa-9bea-4174-b6e1-c5d114340b43","at":"2026-08-20T15:05:54.596Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-858c1192-caf0-4549-99e8-9980547f9b0e recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: externalSubmit stays recorded-only and duplicate submissions are idempotent
+    ok 6 - externalSubmit stays recorded-only and duplicate submissions are idempotent
+      ---
+      duration_ms: 30.651207
+      ...
+# {"level":"audit","id":"816cae32-f72e-4f2b-8ced-9b141b35b97c","at":"2026-08-20T15:05:54.602Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b created=true","sensitive":false}
+# {"level":"audit","id":"0ebab48c-1bff-4580-8efb-1cb92d41a3ea","at":"2026-08-20T15:05:54.607Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"beacd5e8-9b03-4ed1-bd42-ddb48c850ae7","at":"2026-08-20T15:05:54.614Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"52fb5b1e-5fd4-49ea-87e8-57ff0226300f","at":"2026-08-20T15:05:54.626Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"9d30753b-9e86-4c5b-9605-14bb3745d680","at":"2026-08-20T15:05:54.628Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"d4d5614c-7ce5-4b36-9eb5-bce9059325aa","at":"2026-08-20T15:05:54.630Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"6ff8ec77-3f29-4260-84e1-da3297d5c159","at":"2026-08-20T15:05:54.632Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-3f53222d-132f-44e2-b2fd-6eb79e1e4c6b recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not skip client attestation by submitting a different lenderId than the prepared package
+    ok 7 - does not skip client attestation by submitting a different lenderId than the prepared package
+      ---
+      duration_ms: 33.257367
+      ...
+# {"level":"audit","id":"d739c490-ee6b-4b1f-81d7-4bd450ac44ce","at":"2026-08-20T15:05:54.635Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-5a50535b-598f-401e-bace-85d459911f6e created=true","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: persists capital create audit trails to the Hub store
+    ok 8 - persists capital create audit trails to the Hub store
+      ---
+      duration_ms: 4.569881
+      ...
+# {"level":"audit","id":"305f8252-3938-4efe-9a6a-74d20bd904e4","at":"2026-08-20T15:05:54.641Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-bc3b1e4f-fca6-402c-a21f-63b08a91869c created=true","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects send / sendToClient / externalSend on document-intelligence (draft only)
+    ok 9 - rejects send / sendToClient / externalSend on document-intelligence (draft only)
+      ---
+      duration_ms: 9.641703
+      ...
+# {"level":"audit","id":"1f971b8d-9cd6-4ca4-a4ea-b8e21270a4e4","at":"2026-08-20T15:05:54.650Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-2d0c2170-a99a-4e65-995c-40ac399ac859 created=true","sensitive":false}
+# {"level":"audit","id":"c58fb23b-9955-447b-95b8-be312f860f21","at":"2026-08-20T15:05:54.652Z","actorUserId":"user-other","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-7ef571d5-8f71-4dd0-94f4-d39fec49d057 created=true","sensitive":false}
+# {"level":"audit","id":"68f5f359-afcd-4f1a-8bfa-775a08b7f7e8","at":"2026-08-20T15:05:54.655Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-2d0c2170-a99a-4e65-995c-40ac399ac859","sensitive":false}
+# {"level":"audit","id":"86592b1d-7bb2-4fb1-a166-bdffc6356de2","at":"2026-08-20T15:05:54.660Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-2d0c2170-a99a-4e65-995c-40ac399ac859 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: blocks cross-client document attach and keeps SYN01 bound when filename says ACCG01
+    ok 10 - blocks cross-client document attach and keeps SYN01 bound when filename says ACCG01
+      ---
+      duration_ms: 13.725483
+      ...
+# {"level":"audit","id":"648f88a3-b87c-47df-ac09-8f2750fea1db","at":"2026-08-20T15:05:54.663Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-11d65a57-7676-406f-866d-0091776423d8 created=true","sensitive":false}
+# {"level":"audit","id":"c3c3929f-5b58-446a-b15c-53a69fda321d","at":"2026-08-20T15:05:54.667Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-11d65a57-7676-406f-866d-0091776423d8","sensitive":false}
+# {"level":"audit","id":"1efc2b1d-f2a0-458f-a8ac-831bd3cee718","at":"2026-08-20T15:05:54.669Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-11d65a57-7676-406f-866d-0091776423d8 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: treats injected document instructions as content and demotes VERIFIED smuggling
+    ok 11 - treats injected document instructions as content and demotes VERIFIED smuggling
+      ---
+      duration_ms: 10.218472
+      ...
+    # Subtest: rejects wildcard ClientCode on writes even for Owner/Administrator
+    ok 12 - rejects wildcard ClientCode on writes even for Owner/Administrator
+      ---
+      duration_ms: 5.137045
+      ...
+    1..12
+ok 1 - Capital red team
+  ---
+  duration_ms: 205.12072
+  type: 'suite'
+  ...
+1..1
+# tests 12
+# suites 1
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 451.288958
+EXIT:0

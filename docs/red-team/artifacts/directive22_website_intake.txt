@@ -1,0 +1,90 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npx tsx --test tests/hub-website-leads.test.ts
+UTC=2026-08-20T15:05:51Z
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: website intake key
+    # Subtest: rejects empty, short, and mismatched keys without accepting Bearer as a substitute
+    ok 1 - rejects empty, short, and mismatched keys without accepting Bearer as a substitute
+      ---
+      duration_ms: 0.600509
+      ...
+    1..1
+ok 1 - website intake key
+  ---
+  duration_ms: 1.169326
+  type: 'suite'
+  ...
+# Subtest: website lead idempotency
+    # Subtest: prefers fullPayload.idempotencyKey then eva|session then website|leadId
+    ok 1 - prefers fullPayload.idempotencyKey then eva|session then website|leadId
+      ---
+      duration_ms: 0.238703
+      ...
+    # Subtest: rejects foreign-prefix overwrite (XSYS-02)
+    ok 2 - rejects foreign-prefix overwrite (XSYS-02)
+      ---
+      duration_ms: 0.30784
+      ...
+    1..2
+ok 2 - website lead idempotency
+  ---
+  duration_ms: 0.652939
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: POST /api/website/leads
+    # Subtest: is 503 when the intake key is not configured (not a fake 200)
+    ok 1 - is 503 when the intake key is not configured (not a fake 200)
+      ---
+      duration_ms: 22.904571
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: is 401 without signed intake auth and Bearer does not grant ingest (XSYS-01)
+    ok 2 - is 401 without signed intake auth and Bearer does not grant ingest (XSYS-01)
+      ---
+      duration_ms: 13.824683
+      ...
+# {"level":"audit","id":"2ad43799-c937-4e1f-a7e7-be4f4a9fd7f5","at":"2026-08-20T15:05:52.487Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"created list=HVCG_Leads item=1 keyId=website","sensitive":false}
+# {"level":"audit","id":"3eda87e9-35b1-4a9a-bf87-80f60c54b63a","at":"2026-08-20T15:05:52.490Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"updated list=HVCG_Leads item=1 keyId=website","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: upserts HVCG_Leads by idempotency key and does not duplicate
+    ok 3 - upserts HVCG_Leads by idempotency key and does not duplicate
+      ---
+      duration_ms: 7.78298
+      ...
+# {"level":"audit","id":"d009f91e-3237-4626-a9a0-0c12b0671545","at":"2026-08-20T15:05:52.495Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"created list=HVCG_Leads item=1 keyId=website","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: maps EVA session idempotency and does not mix Graph with BA audience
+    ok 4 - maps EVA session idempotency and does not mix Graph with BA audience
+      ---
+      duration_ms: 4.817406
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects Website type with eva| idempotency key (XSYS-02)
+    ok 5 - rejects Website type with eva| idempotency key (XSYS-02)
+      ---
+      duration_ms: 5.841776
+      ...
+# {"level":"audit","id":"8a312716-4e0f-48a9-a38d-c5c543715420","at":"2026-08-20T15:05:52.505Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"updated list=HVCG_Leads item=9 keyId=website","sensitive":false}
+    # Subtest: does not reset a Qualified lead to New on replay
+    ok 6 - does not reset a Qualified lead to New on replay
+      ---
+      duration_ms: 4.294947
+      ...
+    1..6
+ok 3 - POST /api/website/leads
+  ---
+  duration_ms: 59.973405
+  type: 'suite'
+  ...
+1..3
+# tests 9
+# suites 3
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 296.843086
+EXIT:0

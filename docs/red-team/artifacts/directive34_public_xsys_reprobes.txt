@@ -1,0 +1,25 @@
+DIRECTIVE=34
+UTC=2026-08-22T03:11:20Z
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+OBSERVED_SHA=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+ATLAS_HUB_COMMIT.txt=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+health.commit=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+hub-build.gitSha=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+authRequired=true
+insecureDevAuth=false
+ok=true
+==== GET /api/pm/opportunities unauth ====
+HTTP=401 Microsoft sign-in required (Bearer token missing)
+==== GET /api/pm/search unauth ====
+HTTP=401 Microsoft sign-in required (Bearer token missing)
+==== GET /api/pm/leads unauth ====
+HTTP=401 Microsoft sign-in required (Bearer token missing)
+==== POST /api/website/leads no intake headers ====
+HTTP=401
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+==== POST /api/website/leads Authorization Bearer forged-not-a-session only ====
+HTTP=401
+{"error":"unauthorized","code":"unauthorized","message":"Website intake key required."}
+NO_APP_SETTINGS_READ=YES
+NO_V3_SECRETS=YES
+NO_STAFF_SESSION=YES

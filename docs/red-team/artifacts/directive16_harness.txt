@@ -1,0 +1,8 @@
+{"id":"GTM-RT-20260820-03","status":"FIXED","detail":"unified pause SoT fail-closed"}
+{"id":"GTM-RT-20260820-04","status":"FIXED","detail":"InquiryForm camelCase governance + receive liveDispatch=false"}
+{"id":"GTM-REVOS-CONSUMER","status":"FIXED","detail":"Revenue OS consumer operator-accept + autoSend=false + tip pin"}
+{
+  "summary": {
+    "fail": 0
+  }
+}

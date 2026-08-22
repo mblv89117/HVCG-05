@@ -1,0 +1,25 @@
+SHA=fe3db7569a0c52e6d25c171c57bba1d85d0fa592
+CMD: npm test
+UTC=2026-08-20T20:37:10Z
+CWD=/tmp/rt-d27/copilot
+
+> agent-copilot@0.3.0 test
+> vitest run
+
+
+ RUN  v3.2.7 /tmp/rt-d27/copilot
+
+ ✓ tests/atlas-lead-handoff.test.ts (8 tests) 31ms
+ ✓ tests/synthetic-journey.test.ts (8 tests) 27ms
+ ✓ tests/pre-call-brief.test.ts (7 tests) 26ms
+ ✓ tests/engines.test.ts (8 tests) 5ms
+ ✓ tests/security-rt-revalidation.test.ts (7 tests) 19ms
+ ✓ tests/mri-flow.test.ts (4 tests) 20ms
+ ✓ tests/mri-certification.test.ts (2 tests) 25ms
+
+ Test Files  7 passed (7)
+      Tests  44 passed (44)
+   Start at  20:37:12
+   Duration  815ms (transform 290ms, setup 0ms, collect 1.07s, tests 153ms, environment 1ms, prepare 384ms)
+
+EXIT:0

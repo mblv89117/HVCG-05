@@ -1,0 +1,930 @@
+=== DIRECTIVE 12 2026-08-20T06:03:21Z ===
+gcc=41a59b84335d644effbd7bd84faa31f73a139531
+copilot=19a200e8af288ea0c81471b7c6235c002de45c7e
+
+########## GCC-RT-05 browser org trust ##########
+19: * GCC-RT-05: organization is derived from the authenticated session only.
+20: * Browser-supplied organizationId may be compared for mismatch detection but is
+21- * never authoritative for non-platform_admin roles.
+22- */
+23:export function selectOrganizationId(input: {
+24:  authOrganizationId: string;
+25-  requestedOrganizationId?: string | null;
+26-  role: string;
+27:}): { organizationId: string; denied: boolean; reason?: string } {
+28:  const authOrg = String(input.authOrganizationId || "").trim();
+29-  const requested = String(input.requestedOrganizationId || "").trim();
+30-  if (!authOrg) {
+31:    return { organizationId: "", denied: true, reason: "organization_mapping_required" };
+32-  }
+33-  if (!requested || requested === authOrg) {
+34:    return { organizationId: authOrg, denied: false };
+35-  }
+36-  if (input.role === "platform_admin") {
+37-    // Platform admin may switch tenant deliberately; session still authenticates the actor.
+38:    return { organizationId: requested, denied: false };
+39-  }
+40-  // Fail closed: keep session org, deny the request.
+41:  return { organizationId: authOrg, denied: true, reason: "organization_mismatch" };
+42-}
+43-
+44-/**
+45- * Resolve the organization id that MUST be used for data access.
+46- * Always returns the session org for non-admins (never the browser string).
+--
+49:  authOrganizationId: string;
+50-  requestedOrganizationId?: string | null;
+51-  role: string;
+52-}): string {
+53:  const selected = selectOrganizationId(input);
+54-  if (selected.denied) {
+55-    throw new Error(selected.reason ?? "organization_mismatch");
+56-  }
+57:  return selected.organizationId;
+58-}
+59-
+60-export function publicSignupOrganizationId(): null {
+61-  return null;
+62-}
+--
+64:export function isDemoOrganizationId(organizationId: string | null | undefined): boolean {
+65:  return String(organizationId || "").trim() === DEMO_TENANT_ID;
+66-}
+--- tenant route ---
+import { NextResponse } from "next/server";
+import { getFullTenantData } from "@/lib/data/tenant";
+import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+import { AuthError, authErrorResponse } from "@/lib/auth/api";
+import { selectOrganizationId } from "@/lib/auth/organization";
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const requested = searchParams.get("organizationId");
+    // Session is authoritative; browser org is compared only.
+    const access = await requireApiAccess();
+    requirePermission(access, "financials:read");
+
+    const selected = selectOrganizationId({
+      authOrganizationId: access.organizationId,
+      requestedOrganizationId: requested,
+      role: access.role,
+    });
+    if (selected.denied) throw new AuthError("Forbidden", 403);
+
+    // GCC-RT-05: never use the raw browser string for data access.
+    const result = await getFullTenantData(selected.organizationId);
+    return NextResponse.json(result);
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+--- git diff organization.ts vs b02c132 ---
+diff --git a/src/app/api/dashboard/route.ts b/src/app/api/dashboard/route.ts
+index c50a62a..f2e2888 100644
+--- a/src/app/api/dashboard/route.ts
++++ b/src/app/api/dashboard/route.ts
+@@ -1,14 +1,16 @@
+ import { NextResponse } from "next/server";
+ import { getDashboardData } from "@/lib/data/dashboard";
+ import { AuthError, authErrorResponse } from "@/lib/auth/api";
+-import { requireApiAccess } from "@/lib/auth/access";
++import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+ import { selectOrganizationId } from "@/lib/auth/organization";
+ 
+ export async function GET(request: Request) {
+   try {
+     const { searchParams } = new URL(request.url);
+     const requested = searchParams.get("organizationId");
+-    const access = await requireApiAccess(requested ? { organizationId: requested } : undefined);
++    const access = await requireApiAccess();
++    requirePermission(access, "dashboard:read");
++
+     const selected = selectOrganizationId({
+       authOrganizationId: access.organizationId,
+       requestedOrganizationId: requested,
+diff --git a/src/app/api/tenant/route.ts b/src/app/api/tenant/route.ts
+index 31f2919..c39e20a 100644
+--- a/src/app/api/tenant/route.ts
++++ b/src/app/api/tenant/route.ts
+@@ -1,6 +1,6 @@
+ import { NextResponse } from "next/server";
+ import { getFullTenantData } from "@/lib/data/tenant";
+-import { requireApiAccess } from "@/lib/auth/access";
++import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+ import { AuthError, authErrorResponse } from "@/lib/auth/api";
+ import { selectOrganizationId } from "@/lib/auth/organization";
+ 
+@@ -8,7 +8,10 @@ export async function GET(request: Request) {
+   try {
+     const { searchParams } = new URL(request.url);
+     const requested = searchParams.get("organizationId");
+-    const access = await requireApiAccess(requested ? { organizationId: requested } : undefined);
++    // Session is authoritative; browser org is compared only.
++    const access = await requireApiAccess();
++    requirePermission(access, "financials:read");
++
+     const selected = selectOrganizationId({
+       authOrganizationId: access.organizationId,
+       requestedOrganizationId: requested,
+@@ -16,6 +19,7 @@ export async function GET(request: Request) {
+     });
+     if (selected.denied) throw new AuthError("Forbidden", 403);
+ 
++    // GCC-RT-05: never use the raw browser string for data access.
+     const result = await getFullTenantData(selected.organizationId);
+     return NextResponse.json(result);
+   } catch (error) {
+diff --git a/src/lib/auth/organization.ts b/src/lib/auth/organization.ts
+index 71f650f..195ac47 100644
+--- a/src/lib/auth/organization.ts
++++ b/src/lib/auth/organization.ts
+@@ -15,6 +15,11 @@ export function resolveAuthenticatedOrganizationId(input: {
+   return null;
+ }
+ 
++/**
++ * GCC-RT-05: organization is derived from the authenticated session only.
++ * Browser-supplied organizationId may be compared for mismatch detection but is
++ * never authoritative for non-platform_admin roles.
++ */
+ export function selectOrganizationId(input: {
+   authOrganizationId: string;
+   requestedOrganizationId?: string | null;
+@@ -29,11 +34,29 @@ export function selectOrganizationId(input: {
+     return { organizationId: authOrg, denied: false };
+   }
+   if (input.role === "platform_admin") {
++    // Platform admin may switch tenant deliberately; session still authenticates the actor.
+     return { organizationId: requested, denied: false };
+   }
++  // Fail closed: keep session org, deny the request.
+   return { organizationId: authOrg, denied: true, reason: "organization_mismatch" };
+ }
+ 
++/**
++ * Resolve the organization id that MUST be used for data access.
++ * Always returns the session org for non-admins (never the browser string).
++ */
++export function resolveDataOrganizationId(input: {
++  authOrganizationId: string;
++  requestedOrganizationId?: string | null;
++  role: string;
++}): string {
++  const selected = selectOrganizationId(input);
++  if (selected.denied) {
++    throw new Error(selected.reason ?? "organization_mismatch");
++  }
++  return selected.organizationId;
++}
++
+ export function publicSignupOrganizationId(): null {
+   return null;
+ }
+
+########## GCC-RT-06 financials RBAC ##########
+/tmp/rt-d12/gcc/src/app/api/tenant/route.ts:3:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d12/gcc/src/app/api/tenant/route.ts:13:    requirePermission(access, "financials:read");
+/tmp/rt-d12/gcc/src/app/api/dashboard/route.ts:4:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d12/gcc/src/app/api/dashboard/route.ts:12:    requirePermission(access, "dashboard:read");
+/tmp/rt-d12/gcc/src/app/api/reports/export/route.ts:5:import { requireApiAccess, requirePermission } from "@/lib/auth/access";
+/tmp/rt-d12/gcc/src/app/api/reports/export/route.ts:29:    requirePermission(access, "reports:export");
+/tmp/rt-d12/gcc/src/app/(dashboard)/financials/page.tsx
+/tmp/rt-d12/gcc/src/app/api/tenant/route.ts:13:    requirePermission(access, "financials:read");
+/tmp/rt-d12/gcc/src/app/api/cvos/value-creation/route.ts:14:    requirePermission(access, "financials:read");
+/tmp/rt-d12/gcc/src/lib/security/rt-remediation.test.ts:74:  it("GCC-RT-06: sales lacks financials:read and reports:export", () => {
+/tmp/rt-d12/gcc/src/lib/security/rt-remediation.test.ts:75:    assert.equal(hasPermission("sales", "financials:read"), false);
+/tmp/rt-d12/gcc/src/lib/security/rt-remediation.test.ts:79:    assert.match(tenantRoute, /requirePermission\(access,\s*"financials:read"\)/);
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:5:  | "financials:read"
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:18:    "dashboard:read", "financials:read", "financials:write",
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:24:    "dashboard:read", "financials:read", "financials:write",
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:28:  operations: ["dashboard:read", "financials:read", "forecast:read", "reports:read"],
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:30:  project_manager: ["dashboard:read", "financials:read", "forecast:read", "reports:read"],
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:32:    "dashboard:read", "financials:read", "team:manage", "settings:manage", "reports:read",
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:34:  staff: ["dashboard:read", "financials:read", "reports:read"],
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:35:  advisor: ["dashboard:read", "financials:read", "forecast:read", "reports:read", "reports:export"],
+/tmp/rt-d12/gcc/src/lib/auth/permissions.ts:37:    "dashboard:read", "financials:read", "financials:write",
+
+########## GCC-RT-07 handoff HMAC ##########
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+import { AuthError, authErrorResponse } from "@/lib/auth/api";
+import { requirePlatformAdminAccess } from "@/lib/auth/access";
+import {
+  assertAtlasGccActivationContract,
+  type AtlasGccActivationHandoff,
+} from "@/lib/handoff/atlas-activation";
+import { verifyAtlasHandoffAttestation } from "@/lib/handoff/attestation";
+import { listAtlasGccActivations, stageAtlasGccActivation } from "@/lib/handoff/store";
+
+export async function GET() {
+  try {
+    await requirePlatformAdminAccess();
+    return NextResponse.json({
+      contractVersion: "atlas-gcc-client-activation.v1",
+      autoProvisionAccess: false,
+      events: listAtlasGccActivations(),
+    });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+
+/**
+ * GCC-RT-07: accept either
+ * 1) valid Atlas HMAC service attestation, or
+ * 2) authenticated platform_admin session.
+ * Unsigned machine POSTs are rejected.
+ */
+export async function POST(req: Request) {
+  try {
+    const rawBody = await req.text();
+    const attestation = verifyAtlasHandoffAttestation({
+      rawBody,
+      timestampHeader: req.headers.get("x-atlas-gcc-timestamp"),
+      signatureHeader: req.headers.get("x-atlas-gcc-signature"),
+    });
+
+    let authMode: "hmac" | "platform_admin";
+    if (attestation.ok) {
+      authMode = "hmac";
+    } else {
+      try {
+        await requirePlatformAdminAccess();
+        authMode = "platform_admin";
+      } catch {
+        return NextResponse.json(
+          {
+            error: "handoff_attestation_required",
+            reason: attestation.reason,
+            hint: "Provide X-Atlas-Gcc-Timestamp + X-Atlas-Gcc-Signature HMAC, or authenticate as platform_admin",
+          },
+          { status: 401 },
+        );
+      }
+    }
+
+    let body: AtlasGccActivationHandoff;
+    try {
+      body = JSON.parse(rawBody) as AtlasGccActivationHandoff;
+    } catch {
+      throw new AuthError("Invalid JSON body", 400);
+    }
+
+    const issues = assertAtlasGccActivationContract(body);
+    if (issues.length > 0) {
+      return NextResponse.json({ error: "invalid_contract", issues }, { status: 400 });
+    }
+    if (body.governance.autoProvisionAccess !== false) {
+      return NextResponse.json({ error: "auto_provision_forbidden" }, { status: 400 });
+    }
+
+    const staged = stageAtlasGccActivation(body);
+    return NextResponse.json({
+      ok: true,
+      created: staged.created,
+      replay: !staged.created,
+      provisioned: false,
+      authMode,
+      event: staged,
+    });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:4: * GCC-RT-07: Atlas → GCC activation handoff service attestation.
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:5: * Accepts HMAC-SHA256 over `${timestamp}.${rawBody}` using ATLAS_GCC_HANDOFF_HMAC_SECRET.
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:14:  const secret = process.env.ATLAS_GCC_HANDOFF_HMAC_SECRET?.trim();
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:22:export function verifyAtlasHandoffAttestation(input: {
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:25:  signatureHeader: string | null;
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:31:    return { ok: false, reason: "handoff_hmac_secret_unconfigured" };
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:34:  const sigRaw = String(input.signatureHeader || "").trim().toLowerCase();
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:50:    return { ok: false, reason: "handoff_signature_invalid" };
+/tmp/rt-d12/gcc/src/app/api/handoff/atlas-activation/route.ts:10:import { verifyAtlasHandoffAttestation } from "@/lib/handoff/attestation";
+/tmp/rt-d12/gcc/src/app/api/handoff/atlas-activation/route.ts:28: * 1) valid Atlas HMAC service attestation, or
+/tmp/rt-d12/gcc/src/app/api/handoff/atlas-activation/route.ts:35:    const attestation = verifyAtlasHandoffAttestation({
+/tmp/rt-d12/gcc/src/app/api/handoff/atlas-activation/route.ts:38:      signatureHeader: req.headers.get("x-atlas-gcc-signature"),
+/tmp/rt-d12/gcc/src/app/api/handoff/atlas-activation/route.ts:41:    let authMode: "hmac" | "platform_admin";
+/tmp/rt-d12/gcc/src/app/api/handoff/atlas-activation/route.ts:43:      authMode = "hmac";
+
+########## COPILOT-RT-02 store isolation ##########
+/tmp/rt-d12/copilot/src/lib/store/index.ts:20:const DATA_DIR = path.join(process.cwd(), "data");
+/tmp/rt-d12/copilot/src/lib/store/index.ts:21:const WORKSPACES_DIR = path.join(DATA_DIR, "workspaces");
+/tmp/rt-d12/copilot/src/lib/store/index.ts:23:export const LEGACY_GLOBAL_STORE_FILE = path.join(DATA_DIR, "store.json");
+/tmp/rt-d12/copilot/src/lib/store/index.ts:39:  /** Durable workspace key — mirrors session.workspaceId */
+/tmp/rt-d12/copilot/src/lib/store/index.ts:40:  workspaceId?: string;
+/tmp/rt-d12/copilot/src/lib/store/index.ts:47:/** Fail closed: only UUID workspace ids are accepted (path-traversal safe). */
+/tmp/rt-d12/copilot/src/lib/store/index.ts:48:export function assertSafeWorkspaceId(workspaceId: string): string {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:49:  const id = String(workspaceId || "").trim();
+/tmp/rt-d12/copilot/src/lib/store/index.ts:56:function workspaceFile(workspaceId: string): string {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:57:  const id = assertSafeWorkspaceId(workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:61:function emptyStore(workspaceId?: string): AppStore {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:75:    workspaceId,
+/tmp/rt-d12/copilot/src/lib/store/index.ts:79:function normalizeStore(raw: Partial<AppStore>, workspaceId?: string): AppStore {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:80:  const base = emptyStore(workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:96:    workspaceId: workspaceId || raw.workspaceId,
+/tmp/rt-d12/copilot/src/lib/store/index.ts:109:  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+/tmp/rt-d12/copilot/src/lib/store/index.ts:114: * Read a per-session durable workspace store.
+/tmp/rt-d12/copilot/src/lib/store/index.ts:117:export function readStore(workspaceId: string): AppStore {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:119:  const file = workspaceFile(workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:121:    return emptyStore(assertSafeWorkspaceId(workspaceId));
+/tmp/rt-d12/copilot/src/lib/store/index.ts:124:  return normalizeStore(JSON.parse(raw) as Partial<AppStore>, assertSafeWorkspaceId(workspaceId));
+/tmp/rt-d12/copilot/src/lib/store/index.ts:128: * Persist a per-session durable workspace store.
+/tmp/rt-d12/copilot/src/lib/store/index.ts:131:export function writeStore(store: AppStore, workspaceId: string) {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:133:  const id = assertSafeWorkspaceId(workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:134:  const file = workspaceFile(id);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:135:  if (path.resolve(file) === path.resolve(LEGACY_GLOBAL_STORE_FILE)) {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:138:  const next = normalizeStore({ ...store, workspaceId: id }, id);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:142:export function updateStore(mutator: (store: AppStore) => void, workspaceId: string): AppStore {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:143:  const store = readStore(workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:145:  writeStore(store, workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/index.ts:149:export function workspaceExists(workspaceId: string): boolean {
+/tmp/rt-d12/copilot/src/lib/store/index.ts:151:    return fs.existsSync(workspaceFile(workspaceId));
+/tmp/rt-d12/copilot/src/lib/store/index.ts:172:/** Test/helper: list workspace files (not exposed via API). */
+/tmp/rt-d12/copilot/src/lib/store/portal.ts:3:import { readStore } from "@/lib/store";
+/tmp/rt-d12/copilot/src/lib/store/portal.ts:8: * Reads the session-bound per-workspace durable store only (COPILOT-RT-02).
+/tmp/rt-d12/copilot/src/lib/store/portal.ts:16:  const store = readStore(session.workspaceId);
+/tmp/rt-d12/copilot/src/lib/store/portal.ts:53:export function getPortalDataSync(workspaceId: string) {
+/tmp/rt-d12/copilot/src/lib/store/portal.ts:54:  const store = readStore(workspaceId);
+--- store/index.ts head ---
+import { randomUUID } from "crypto";
+import fs from "fs";
+import path from "path";
+import { DEFAULT_PRICING } from "@/lib/pricing/defaults";
+import type {
+  Assessment,
+  AtlasOpportunityHandoff,
+  AuditEvent,
+  StagedAtlasLeadHandoff,
+  ConsentRecord,
+  DocumentAsset,
+  HvgcSalesOpportunity,
+  IntegrationConnection,
+  Organization,
+  PricingPackage,
+  UserAccount,
+  WorkflowCapture,
+} from "@/lib/types";
+
+const DATA_DIR = path.join(process.cwd(), "data");
+const WORKSPACES_DIR = path.join(DATA_DIR, "workspaces");
+/** Legacy global path — retained only to detect/forbid accidental shared writes. */
+export const LEGACY_GLOBAL_STORE_FILE = path.join(DATA_DIR, "store.json");
+
+export interface AppStore {
+  organizations: Organization[];
+  users: UserAccount[];
+  assessments: Assessment[];
+  integrations: IntegrationConnection[];
+  documents: DocumentAsset[];
+  captures: WorkflowCapture[];
+  consents: ConsentRecord[];
+  audit: AuditEvent[];
+  pricing: PricingPackage[];
+  salesOpportunities: HvgcSalesOpportunity[];
+  atlasHandoffs: AtlasOpportunityHandoff[];
+  atlasLeadHandoffs: StagedAtlasLeadHandoff[];
+  session?: { userId: string; organizationId: string; mode: "demo" | "uat"; sampleData: true };
+  /** Durable workspace key — mirrors session.workspaceId */
+  workspaceId?: string;
+}
+
+export function newWorkspaceId(): string {
+  return randomUUID();
+}
+
+/** Fail closed: only UUID workspace ids are accepted (path-traversal safe). */
+export function assertSafeWorkspaceId(workspaceId: string): string {
+  const id = String(workspaceId || "").trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error("INVALID_WORKSPACE_ID");
+  }
+  return id.toLowerCase();
+}
+
+function workspaceFile(workspaceId: string): string {
+  const id = assertSafeWorkspaceId(workspaceId);
+  return path.join(WORKSPACES_DIR, `${id}.json`);
+}
+
+function emptyStore(workspaceId?: string): AppStore {
+  return {
+    organizations: [],
+    users: [],
+    assessments: [],
+    integrations: [],
+    documents: [],
+    captures: [],
+    consents: [],
+    audit: [],
+    pricing: DEFAULT_PRICING,
+    salesOpportunities: [],
+    atlasHandoffs: [],
+    atlasLeadHandoffs: [],
+    workspaceId,
+  };
+}
+
+function normalizeStore(raw: Partial<AppStore>, workspaceId?: string): AppStore {
+  const base = emptyStore(workspaceId);
+  return {
+    ...base,
+    ...raw,
+    organizations: raw.organizations || [],
+    users: raw.users || [],
+    assessments: raw.assessments || [],
+    integrations: raw.integrations || [],
+    documents: raw.documents || [],
+    captures: raw.captures || [],
+    consents: raw.consents || [],
+    audit: raw.audit || [],
+    pricing: raw.pricing?.length ? raw.pricing : DEFAULT_PRICING,
+    salesOpportunities: raw.salesOpportunities || [],
+    atlasHandoffs: raw.atlasHandoffs || [],
+    atlasLeadHandoffs: raw.atlasLeadHandoffs || [],
+    workspaceId: workspaceId || raw.workspaceId,
+    session: raw.session
+      ? {
+          userId: raw.session.userId,
+          organizationId: raw.session.organizationId,
+          mode: raw.session.mode === "demo" ? "demo" : "uat",
+          sampleData: true,
+        }
+      : undefined,
+  };
+}
+
+function ensureDirs() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(WORKSPACES_DIR)) fs.mkdirSync(WORKSPACES_DIR, { recursive: true });
+}
+
+/**
+ * Read a per-session durable workspace store.
+ * COPILOT-RT-02: never falls back to a shared global store.json.
+ */
+export function readStore(workspaceId: string): AppStore {
+  ensureDirs();
+  const file = workspaceFile(workspaceId);
+  if (!fs.existsSync(file)) {
+    return emptyStore(assertSafeWorkspaceId(workspaceId));
+  }
+  const raw = fs.readFileSync(file, "utf8");
+  return normalizeStore(JSON.parse(raw) as Partial<AppStore>, assertSafeWorkspaceId(workspaceId));
+}
+
+/**
+ * Persist a per-session durable workspace store.
+ * Refuses to write the legacy global path.
+ */
+export function writeStore(store: AppStore, workspaceId: string) {
+  ensureDirs();
+  const id = assertSafeWorkspaceId(workspaceId);
+  const file = workspaceFile(id);
+  if (path.resolve(file) === path.resolve(LEGACY_GLOBAL_STORE_FILE)) {
+    throw new Error("GLOBAL_STORE_WRITE_FORBIDDEN");
+  }
+  const next = normalizeStore({ ...store, workspaceId: id }, id);
+  fs.writeFileSync(file, JSON.stringify(next, null, 2));
+}
+
+export function updateStore(mutator: (store: AppStore) => void, workspaceId: string): AppStore {
+  const store = readStore(workspaceId);
+  mutator(store);
+  writeStore(store, workspaceId);
+  return store;
+}
+
+export function workspaceExists(workspaceId: string): boolean {
+  try {
+    return fs.existsSync(workspaceFile(workspaceId));
+  } catch {
+    return false;
+  }
+}
+
+export function addAudit(store: AppStore, event: Omit<AuditEvent, "id" | "createdAt">) {
+  store.audit.unshift({
+    ...event,
+    id: randomUUID(),
+--- auth/start ---
+import { NextRequest, NextResponse } from "next/server";
+import { applySessionCookie, signSession } from "@/lib/auth/session";
+import { buildUatStore } from "@/lib/demo/seed";
+import { addAudit, newWorkspaceId, writeStore } from "@/lib/store";
+
+/**
+ * Public UAT intake start — creates an isolated per-session workspace (COPILOT-RT-02).
+ * Does not write global data/store.json. Concurrent starts cannot wipe each other.
+ */
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}));
+  const campaignId =
+    typeof body.campaignId === "string"
+      ? body.campaignId
+      : typeof body.campaign === "string"
+        ? body.campaign
+        : "business-mri";
+  const sourceAttribution =
+    typeof body.sourceAttribution === "string"
+      ? body.sourceAttribution
+      : typeof body.utm_source === "string"
+        ? `gtm/${body.utm_source}`
+        : "agent-copilot/business-mri";
+
+  const workspaceId = newWorkspaceId();
+  const store = buildUatStore({
+    contactName: String(body.contactName || body.name || "UAT Owner"),
+    contactEmail: String(body.contactEmail || body.email || "uat@example.invalid"),
+    companyName: String(body.companyName || body.company || "Sample Company (UAT)"),
+    website: body.website ? String(body.website) : undefined,
+    jobTitle: body.jobTitle ? String(body.jobTitle) : undefined,
+    employeeCountRange: body.employeeCountRange ? String(body.employeeCountRange) : undefined,
+    industry: body.industry ? String(body.industry) : undefined,
+    primaryObjective: body.primaryObjective ? String(body.primaryObjective) : undefined,
+  });
+  store.workspaceId = workspaceId;
+
+  addAudit(store, {
+    organizationId: store.organizations[0].id,
+    actorId: store.users[0].id,
+    action: "gtm.attribution.capture",
+    target: store.assessments[0].id,
+    metadata: {
+      campaignId,
+      sourceAttribution,
+      workspaceId,
+      utm: {
+        source: body.utm_source,
+        medium: body.utm_medium,
+        campaign: body.utm_campaign,
+        content: body.utm_content,
+        term: body.utm_term,
+      },
+    },
+  });
+  writeStore(store, workspaceId);
+
+  const { token, session } = await signSession({
+    userId: store.users[0].id,
+    organizationId: store.organizations[0].id,
+    assessmentId: store.assessments[0].id,
+    workspaceId,
+    mode: "uat",
+    role: store.users[0].role,
+  });
+
+  const res = NextResponse.json({
+    started: true,
+    workspaceId,
+    assessment: store.assessments[0],
+    organization: store.organizations[0],
+    mode: session.mode,
+    sampleData: true,
+    productionClientDataAllowed: false,
+    attribution: { campaignId, sourceAttribution },
+  });
+  applySessionCookie(res, token);
+  return res;
+}
+===== GCC handoff full route + hmac lib =====
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+import { AuthError, authErrorResponse } from "@/lib/auth/api";
+import { requirePlatformAdminAccess } from "@/lib/auth/access";
+import {
+  assertAtlasGccActivationContract,
+  type AtlasGccActivationHandoff,
+} from "@/lib/handoff/atlas-activation";
+import { verifyAtlasHandoffAttestation } from "@/lib/handoff/attestation";
+import { listAtlasGccActivations, stageAtlasGccActivation } from "@/lib/handoff/store";
+
+export async function GET() {
+  try {
+    await requirePlatformAdminAccess();
+    return NextResponse.json({
+      contractVersion: "atlas-gcc-client-activation.v1",
+      autoProvisionAccess: false,
+      events: listAtlasGccActivations(),
+    });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+
+/**
+ * GCC-RT-07: accept either
+ * 1) valid Atlas HMAC service attestation, or
+ * 2) authenticated platform_admin session.
+ * Unsigned machine POSTs are rejected.
+ */
+export async function POST(req: Request) {
+  try {
+    const rawBody = await req.text();
+    const attestation = verifyAtlasHandoffAttestation({
+      rawBody,
+      timestampHeader: req.headers.get("x-atlas-gcc-timestamp"),
+      signatureHeader: req.headers.get("x-atlas-gcc-signature"),
+    });
+
+    let authMode: "hmac" | "platform_admin";
+    if (attestation.ok) {
+      authMode = "hmac";
+    } else {
+      try {
+        await requirePlatformAdminAccess();
+        authMode = "platform_admin";
+      } catch {
+        return NextResponse.json(
+          {
+            error: "handoff_attestation_required",
+            reason: attestation.reason,
+            hint: "Provide X-Atlas-Gcc-Timestamp + X-Atlas-Gcc-Signature HMAC, or authenticate as platform_admin",
+          },
+          { status: 401 },
+        );
+      }
+    }
+
+    let body: AtlasGccActivationHandoff;
+    try {
+      body = JSON.parse(rawBody) as AtlasGccActivationHandoff;
+    } catch {
+      throw new AuthError("Invalid JSON body", 400);
+    }
+
+    const issues = assertAtlasGccActivationContract(body);
+    if (issues.length > 0) {
+      return NextResponse.json({ error: "invalid_contract", issues }, { status: 400 });
+    }
+    if (body.governance.autoProvisionAccess !== false) {
+      return NextResponse.json({ error: "auto_provision_forbidden" }, { status: 400 });
+    }
+
+    const staged = stageAtlasGccActivation(body);
+    return NextResponse.json({
+      ok: true,
+      created: staged.created,
+      replay: !staged.created,
+      provisioned: false,
+      authMode,
+      event: staged,
+    });
+  } catch (error) {
+    return authErrorResponse(error);
+  }
+}
+atlas-activation.test.ts
+atlas-activation.ts
+attestation.ts
+store.ts
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:14:  const secret = process.env.ATLAS_GCC_HANDOFF_HMAC_SECRET?.trim();
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:15:  return secret || null;
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:18:export function signAtlasHandoffBody(rawBody: string, timestampSec: number, secret: string): string {
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:19:  return createHmac("sha256", secret).update(`${timestampSec}.${rawBody}`).digest("hex");
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:22:export function verifyAtlasHandoffAttestation(input: {
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:25:  signatureHeader: string | null;
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:27:  secret?: string | null;
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:29:  const secret = input.secret === undefined ? getAtlasHandoffHmacSecret() : input.secret;
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:30:  if (!secret) {
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:31:    return { ok: false, reason: "handoff_hmac_secret_unconfigured" };
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:34:  const sigRaw = String(input.signatureHeader || "").trim().toLowerCase();
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:46:  const expected = signAtlasHandoffBody(input.rawBody, ts, secret);
+/tmp/rt-d12/gcc/src/lib/handoff/attestation.ts:50:    return { ok: false, reason: "handoff_signature_invalid" };
+===== financials page RBAC =====
+"use client";
+
+import { ExpensePieChart, TrendChart } from "@/components/charts";
+import { DataSourceBanner, DataTable, PageHeader } from "@/components/shared";
+import { MetricCard } from "@/components/dashboard/metric-card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { useTenantData } from "@/hooks/use-tenant-data";
+import { formatCurrency } from "@/lib/utils";
+import { activeMonthlyTrends } from "@/lib/forecast/validate";
+import { Loader2 } from "lucide-react";
+
+export default function FinancialsPage() {
+  const { data, source, loading } = useTenantData();
+  const { financialSnapshot, monthlyTrends, expenseCategories, revenueSources, arAging, apAging, transactions, invoices, bills } = data;
+  const chartTrends = activeMonthlyTrends(monthlyTrends);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Financials"
+        description="Revenue, expenses, profit, AR/AP, and financial trends"
+      />
+      <DataSourceBanner source={source} />
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard title="Revenue MTD" value={financialSnapshot.revenueMTD} change={12.4} changeLabel="vs last month" />
+        <MetricCard title="Gross Profit" value={financialSnapshot.grossProfit} />
+        <MetricCard title="Net Profit" value={financialSnapshot.netProfit} />
+        <MetricCard title="Operating Expenses" value={financialSnapshot.operatingExpenses} />
+      </div>
+===== rt-remediation.test.ts =====
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+import {
+  createSignedQuickBooksState,
+  verifySignedQuickBooksState,
+} from "../integrations/oauth-state.ts";
+import { hasPermission } from "../auth/permissions.ts";
+import {
+  signAtlasHandoffBody,
+  verifyAtlasHandoffAttestation,
+} from "../handoff/attestation.ts";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+
+describe("GCC-RT security remediations", () => {
+  it("GCC-RT-01: signup trigger never COALESCE to org-apex or trusts metadata role/org", () => {
+    const setup = readFileSync(join(root, "supabase/setup.sql"), "utf8");
+    assert.match(setup, /gcc_handle_new_user/);
+    assert.doesNotMatch(
+      setup,
+      /COALESCE\(NEW\.raw_user_meta_data->>'organization_id',\s*'org-apex'\)/,
+    );
+    assert.match(setup, /'staff',\s*\n\s*NULL/);
+    assert.doesNotMatch(setup, /COALESCE\(NEW\.raw_user_meta_data->>'role'/);
+  });
+
+  it("GCC-RT-02: profile update policy freezes role and organization_id", () => {
+    const setup = readFileSync(join(root, "supabase/setup.sql"), "utf8");
+    assert.match(setup, /gcc_prevent_profile_privilege_escalation/);
+    assert.match(setup, /organization_id IS NOT DISTINCT FROM/);
+    assert.match(setup, /role = \(SELECT p\.role FROM gcc_profiles/);
+  });
+
+  it("GCC-RT-03: signed OAuth state rejects tampering and expiry", () => {
+    process.env.QUICKBOOKS_STATE_SECRET = "test-secret-for-rt-03";
+    const state = createSignedQuickBooksState({
+      organizationId: "org-victim",
+      userId: "user-1",
+      nowMs: 1_000_000,
+    });
+    const ok = verifySignedQuickBooksState(state, { userId: "user-1", nowMs: 1_000_100 });
+    assert.equal(ok.organizationId, "org-victim");
+
+    assert.throws(
+      () =>
+        verifySignedQuickBooksState(state.slice(0, -2) + "aa", {
+          userId: "user-1",
+          nowMs: 1_000_100,
+        }),
+      /tampered|invalid/,
+    );
+    assert.throws(
+      () =>
+        verifySignedQuickBooksState(state, {
+          userId: "user-1",
+          nowMs: 1_000_000 + 16 * 60 * 1000,
+        }),
+      /expired/,
+    );
+    assert.throws(
+      () => verifySignedQuickBooksState(state, { userId: "user-other", nowMs: 1_000_100 }),
+      /user_mismatch/,
+    );
+
+    const unsigned = Buffer.from(JSON.stringify({ organizationId: "org-victim" })).toString(
+      "base64url",
+    );
+    assert.throws(() => verifySignedQuickBooksState(unsigned), /invalid_oauth_state/);
+  });
+
+  it("GCC-RT-06: sales lacks financials:read and reports:export", () => {
+    assert.equal(hasPermission("sales", "financials:read"), false);
+    assert.equal(hasPermission("sales", "reports:export"), false);
+    assert.equal(hasPermission("sales", "dashboard:read"), true);
+    const tenantRoute = readFileSync(join(root, "src/app/api/tenant/route.ts"), "utf8");
+    assert.match(tenantRoute, /requirePermission\(access,\s*"financials:read"\)/);
+    const exportRoute = readFileSync(join(root, "src/app/api/reports/export/route.ts"), "utf8");
+    assert.match(exportRoute, /requirePermission\(access,\s*"reports:export"\)/);
+  });
+
+  it("GCC-RT-07: unsigned Atlas handoff attestation is rejected; valid HMAC accepted", () => {
+    const secret = "test-atlas-gcc-handoff-hmac";
+    const rawBody = JSON.stringify({ contractVersion: "atlas-gcc-client-activation.v1" });
+    const ts = 1_700_000_000;
+    const missing = verifyAtlasHandoffAttestation({
+      rawBody,
+      timestampHeader: null,
+      signatureHeader: null,
+      secret,
+      nowSec: ts,
+    });
+    assert.equal(missing.ok, false);
+
+    const bad = verifyAtlasHandoffAttestation({
+      rawBody,
+      timestampHeader: String(ts),
+      signatureHeader: "deadbeef",
+      secret,
+      nowSec: ts,
+    });
+    assert.equal(bad.ok, false);
+
+    const sig = signAtlasHandoffBody(rawBody, ts, secret);
+    const ok = verifyAtlasHandoffAttestation({
+      rawBody,
+      timestampHeader: String(ts),
+      signatureHeader: sig,
+      secret,
+      nowSec: ts,
+    });
+    assert.equal(ok.ok, true);
+
+    const handoffRoute = readFileSync(
+      join(root, "src/app/api/handoff/atlas-activation/route.ts"),
+      "utf8",
+    );
+    assert.match(handoffRoute, /verifyAtlasHandoffAttestation/);
+    assert.match(handoffRoute, /handoff_attestation_required/);
+  });
+
+  it("GCC-RT-05: tenant/dashboard/export derive org from session helpers", () => {
+    for (const rel of [
+      "src/app/api/tenant/route.ts",
+      "src/app/api/dashboard/route.ts",
+      "src/app/api/reports/export/route.ts",
+      "src/lib/api/secure-access.ts",
+    ]) {
+      const src = readFileSync(join(root, rel), "utf8");
+      assert.match(src, /selectOrganizationId/);
+      assert.match(src, /authOrganizationId:\s*access\.organizationId/);
+    }
+  });
+});
+===== Copilot RT-02 tests =====
+/tmp/rt-d12/copilot/src/app/(admin-new)/admin/clients/page.tsx:21:      body="Client list and workspace entry points for HVCG delivery teams."
+/tmp/rt-d12/copilot/src/app/(auth)/login/page.tsx:25:              Enter sample workspace
+/tmp/rt-d12/copilot/src/components/layout/app-shell.tsx:46:  const [companyName, setCompanyName] = useState("Sample workspace");
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:11:  LEGACY_GLOBAL_STORE_FILE,
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:41:  it("COPILOT-RT-02: session binds assessment; spoofed assessment id yields no context", async () => {
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:43:    const workspaceId = newWorkspaceId();
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:44:    store.workspaceId = workspaceId;
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:49:      workspaceId,
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:62:  it("COPILOT-RT-02: no default tenant without session org", () => {
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:70:  it("COPILOT-RT-02: per-session durable store — concurrent starts do not wipe each other", async () => {
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:72:    const legacyBefore = fs.existsSync(LEGACY_GLOBAL_STORE_FILE)
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:73:      ? fs.readFileSync(LEGACY_GLOBAL_STORE_FILE, "utf8")
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:98:    const bodyA = (await resA.json()) as { workspaceId: string; organization: { name: string } };
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:99:    const bodyB = (await resB.json()) as { workspaceId: string; organization: { name: string } };
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:101:    expect(bodyA.workspaceId).toBeTruthy();
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:102:    expect(bodyB.workspaceId).toBeTruthy();
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:103:    expect(bodyA.workspaceId).not.toBe(bodyB.workspaceId);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:105:    const storeA = readStore(bodyA.workspaceId);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:106:    const storeB = readStore(bodyB.workspaceId);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:107:    expect(storeA.workspaceId).toBe(bodyA.workspaceId);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:108:    expect(storeB.workspaceId).toBe(bodyB.workspaceId);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:116:    expect(after).toContain(`${bodyA.workspaceId}.json`);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:117:    expect(after).toContain(`${bodyB.workspaceId}.json`);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:121:    const legacyAfter = fs.existsSync(LEGACY_GLOBAL_STORE_FILE)
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:122:      ? fs.readFileSync(LEGACY_GLOBAL_STORE_FILE, "utf8")
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:126:    // Workspace files live under data/workspaces/, not data/store.json
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:127:    const workspacesDir = path.join(process.cwd(), "data", "workspaces");
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:128:    expect(fs.existsSync(path.join(workspacesDir, `${bodyA.workspaceId}.json`))).toBe(true);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:129:    expect(fs.existsSync(path.join(workspacesDir, `${bodyB.workspaceId}.json`))).toBe(true);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:132:  it("COPILOT-RT-02: writeStore refuses legacy global path semantics (distinct workspace files)", () => {
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:137:    storeA.workspaceId = a;
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:141:    storeB.workspaceId = b;
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts:152:      workspaceId: newWorkspaceId(),
+/tmp/rt-d12/copilot/src/app/api/gtm/enrichment/route.ts:12:    const store = readStore(session.workspaceId);
+/tmp/rt-d12/copilot/src/app/api/gtm/enrichment/route.ts:44:    const store = readStore(session.workspaceId);
+/tmp/rt-d12/copilot/tests/synthetic-journey.test.ts:21:    const workspaceId = "11111111-1111-4111-8111-111111111111";
+/tmp/rt-d12/copilot/tests/synthetic-journey.test.ts:26:      workspaceId,
+/tmp/rt-d12/copilot/tests/synthetic-journey.test.ts:33:    expect(verified?.workspaceId).toBe(workspaceId);
+/tmp/rt-d12/copilot/tests/synthetic-journey.test.ts:56:      workspaceId: "22222222-2222-4222-8222-222222222222",
+/tmp/rt-d12/copilot/src/app/api/atlas/handoff/route.ts:11:    const store = readStore(session.workspaceId);
+/tmp/rt-d12/copilot/tests/security-rt-revalidation.test.ts
+/tmp/rt-d12/copilot/tests/mri-certification.test.ts
+/tmp/rt-d12/copilot/docs/integrations/schemas/website-lead-upsert.v1.json
+/tmp/rt-d12/copilot/src/components/layout/portal-shell.tsx
+/tmp/rt-d12/copilot/src/lib/mri/cert-loop.ts
+/tmp/rt-d12/copilot/src/lib/store/portal.ts
+/tmp/rt-d12/copilot/src/lib/reports
+/tmp/rt-d12/copilot/src/app/(app)/app/opportunities
+/tmp/rt-d12/copilot/src/app/(app)/app/reports
+/tmp/rt-d12/copilot/src/app/(portal)
+/tmp/rt-d12/copilot/src/app/(portal)/mri/opportunities
+/tmp/rt-d12/copilot/src/app/api/mri/report
+/tmp/rt-d12/copilot/src/app/api/reports
+/tmp/rt-d12/copilot/src/app/api/auth/start
+/tmp/rt-d12/copilot/src/app/(admin-new)/admin/opportunities
+/tmp/rt-d12/copilot/src/app/(admin-new)/admin/reports

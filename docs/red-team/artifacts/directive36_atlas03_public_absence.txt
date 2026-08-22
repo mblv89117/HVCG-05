@@ -1,0 +1,34 @@
+DIRECTIVE=36
+UTC=2026-08-22T03:38:43Z
+MISSION_HASH=CLASSIFY_ATLAS03_PUBLIC_ABSENCE
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+OBSERVED_SHA=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+ATLAS_HUB_COMMIT.txt=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+health.commit=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+hub-build.gitSha=64b56dcb73caae1cfcd71743bcedfd8cd64c2b26
+authRequired=true
+insecureDevAuth=false
+ok=true
+health_top_keys=authRequired,ba,capitalBackend,commit,insecureDevAuth,localAi,ok,pmBackend,port,providers,websiteLeads
+health_plaid_key_present=NO
+websiteLeads.configured=true
+capitalBackend.mode=sharepoint
+pmBackend.mode=sharepoint
+==== fail-closed corroboration ====
+GET /api/pm/search HTTP=401
+GET /api/capital HTTP=401
+GET /api/capital/opportunities HTTP=401
+==== plaid public probes ====
+GET /api/plaid/link HTTP=405 method_not_allowed
+GET /api/plaid/link/token HTTP=405
+GET /api/plaid/accounts HTTP=405
+GET /api/plaid/health HTTP=405
+GET /api/plaid HTTP=405
+GET /plaid/link HTTP=405
+GET /plaid/health HTTP=405
+POST /api/plaid/link HTTP=404 not_found
+GET /api/plaid/link forged-x-atlas-headers HTTP=405
+NO_APP_SETTINGS_READ=YES
+NO_AZURE_INVENTORY=YES
+NO_STAFF_SESSION=YES
+XSYS_NOT_REPROBED=YES

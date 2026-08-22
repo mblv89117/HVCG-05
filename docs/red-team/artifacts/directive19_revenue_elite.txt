@@ -1,0 +1,178 @@
+=== D19 Revenue Elite @ fc92f74 2026-08-20T07:35:02Z ===
+TIP=fc92f74d5e1f7e04c6779dd6f784ce04601c7147
+sharepoint_delta=0
+
+11 vulnerabilities (4 moderate, 7 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+--- commercial-route-tests ---
+commercial-route-tests: ok
+route_exit:0
+--- P1 regression test ---
+TAP version 13
+# Subtest: REVOS-ELITE-RT-20260820-01 fail-closed commercial context
+    # Subtest: returns the ACME01 record only for opp-revos-001
+    ok 1 - returns the ACME01 record only for opp-revos-001
+      ---
+      duration_ms: 0.597691
+      ...
+    # Subtest: does not return ACME01 floor/list for opp-accg-expansion-001
+    ok 2 - does not return ACME01 floor/list for opp-accg-expansion-001
+      ---
+      duration_ms: 0.153479
+      ...
+    # Subtest: fails closed when opportunityId is missing
+    ok 3 - fails closed when opportunityId is missing
+      ---
+      duration_ms: 0.067355
+      ...
+    # Subtest: fails closed when ClientCode does not match the loaded context
+    ok 4 - fails closed when ClientCode does not match the loaded context
+      ---
+      duration_ms: 0.148651
+      ...
+    # Subtest: accepts an explicit matching ClientCode for the loaded ACME context
+    ok 5 - accepts an explicit matching ClientCode for the loaded ACME context
+      ---
+      duration_ms: 0.082285
+      ...
+    # Subtest: preserves closed commercial gates
+    ok 6 - preserves closed commercial gates
+      ---
+      duration_ms: 0.055221
+      ...
+    1..6
+ok 1 - REVOS-ELITE-RT-20260820-01 fail-closed commercial context
+  ---
+  duration_ms: 1.74929
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 142.433614
+p1_exit:0
+--- commercialWorkspace.test.ts ---
+TAP version 13
+# Subtest: Elite commercial workspace read-models
+    # Subtest: keeps observation-only offer/pricing and closed gates
+    ok 1 - keeps observation-only offer/pricing and closed gates
+      ---
+      duration_ms: 0.386012
+      ...
+    # Subtest: requires an operator to accept offer and pricing
+    ok 2 - requires an operator to accept offer and pricing
+      ---
+      duration_ms: 0.199474
+      ...
+    # Subtest: blocks send and keeps liveDispatch false
+    ok 3 - blocks send and keeps liveDispatch false
+      ---
+      duration_ms: 0.158426
+      ...
+    # Subtest: opens engagement only after operator-accepted proposal
+    ok 4 - opens engagement only after operator-accepted proposal
+      ---
+      duration_ms: 0.276166
+      ...
+    1..4
+ok 1 - Elite commercial workspace read-models
+  ---
+  duration_ms: 1.621492
+  type: 'suite'
+  ...
+1..1
+# tests 4
+# suites 1
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 142.207057
+workspace_exit:0
+--- test:security ---
+      ---
+      duration_ms: 0.073444
+      ...
+    # Subtest: resolves known Entra roles and ignores unknown values
+    ok 4 - resolves known Entra roles and ignores unknown values
+      ---
+      duration_ms: 0.14749
+      ...
+    # Subtest: DEV Owner session is ignored in production/staging
+    ok 5 - DEV Owner session is ignored in production/staging
+      ---
+      duration_ms: 0.070914
+      ...
+    1..5
+ok 9 - Elite RBAC fail closed
+  ---
+  duration_ms: 1.621472
+  type: 'suite'
+  ...
+# Subtest: SWA sign-in helpers
+    # Subtest: detects hosted Static Web Apps hosts and not local Vite
+    ok 1 - detects hosted Static Web Apps hosts and not local Vite
+      ---
+      duration_ms: 0.393093
+      ...
+    1..1
+ok 10 - SWA sign-in helpers
+  ---
+  duration_ms: 0.8575
+  type: 'suite'
+  ...
+1..10
+# tests 53
+# suites 10
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 626.263341
+security_exit:0
+--- independent P1 probe ---
+{
+  "p1Closed": true,
+  "foreign": {
+    "ok": false,
+    "model": null,
+    "error": "No loaded commercial context for opportunity 'opp-accg-expansion-001'. Fail closed — ACME01 prices are not remapped onto unmatched opportunities."
+  },
+  "missingOk": false,
+  "mismatchOk": false,
+  "acmeOk": true,
+  "gates": {
+    "liveDispatch": false,
+    "autoSend": false,
+    "autoProvisionAccess": false,
+    "mutatesPaidAds": false,
+    "copilotHasCommercialAuthority": false,
+    "wonActivatesClient": false
+  }
+}
+p1_probe_exit:0
+{"id":"ROUTE_FINANCE","status":"PASS","detail":"/revenue behind FinanceRoute"}
+{"id":"GATES_CLOSED","status":"PASS","detail":"commercial gates closed + observationOnly"}
+{"id":"OPERATOR_ACCEPT_AND_SEND_BLOCK","status":"PASS","detail":"operator accept + BL-C1 send block"}
+{"id":"NO_ACCG01_REWRITE_SURFACE","status":"FAIL","detail":"ACCG01 absent from commercial read-model/workspace (no rewrite path)"}
+{"id":"REVOS-ELITE-RT-20260820-01","status":"ABSENT","detail":"opportunityId deep-link cosmetic; clientCode/pricing remain ACME synthetic"}
+{
+  "summary": {
+    "fail": 1,
+    "p1DeepLink": false
+  }
+}

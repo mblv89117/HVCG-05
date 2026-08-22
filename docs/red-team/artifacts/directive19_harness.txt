@@ -1,0 +1,11 @@
+{"id":"ROUTE_FINANCE","status":"PASS","detail":"/revenue behind FinanceRoute"}
+{"id":"GATES_CLOSED","status":"PASS","detail":"commercial gates closed"}
+{"id":"REVOS-ELITE-RT-20260820-01","status":"PASS","detail":"P1 fail-closed opportunity/ClientCode binding"}
+{"id":"NO_ACCG01_LOADED_CONTEXT","status":"PASS","detail":"ACCG01 not a loaded commercial context"}
+{"id":"SEND_BLOCK","status":"PASS","detail":"BL-C1 send block"}
+{"id":"P1_UNIT_TEST","status":"PASS","detail":"tsx --test rt-20260820-01 exit=0"}
+{
+  "summary": {
+    "fail": 0
+  }
+}

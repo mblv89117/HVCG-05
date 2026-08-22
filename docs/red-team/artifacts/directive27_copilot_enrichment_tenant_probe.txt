@@ -1,0 +1,25 @@
+{
+  "SHA": "fe3db7569a0c52e6d25c171c57bba1d85d0fa592",
+  "enrichmentOkStatus": 200,
+  "observationOnly": true,
+  "liveDispatch": false,
+  "commercialAuthority": "revenue-os",
+  "commercialBinding": false,
+  "assessmentId": "assess-meridian-mri",
+  "spoofMissingAssessment": {
+    "status": 403,
+    "code": "TENANT_CONTEXT_REQUIRED"
+  },
+  "spoofForeignOrg": {
+    "status": 403,
+    "code": "TENANT_CONTEXT_REQUIRED",
+    "error": "No tenant context bound to session"
+  },
+  "productionClientDataAllowedInBrief": "absent",
+  "sot": {
+    "observationOnly": true,
+    "ownerSystem": "copilot"
+  }
+}
+TENANT_GOVERNANCE_PASS
+EXIT:0

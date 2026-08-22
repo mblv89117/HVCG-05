@@ -1,0 +1,9 @@
+SHA=8d757cf68157a6054432de7ca57f8431731b2d64
+CMD: npm run typecheck
+UTC=2026-08-20T16:20:44Z
+CWD=/tmp/rt-d25/gcc
+
+> growth-command-center@0.1.0 typecheck
+> tsc --noEmit --incremental false
+
+EXIT:0

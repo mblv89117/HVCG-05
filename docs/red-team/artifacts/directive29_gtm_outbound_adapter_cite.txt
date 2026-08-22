@@ -1,0 +1,132 @@
+GTM_SHA=f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb
+FILE=packages/gtm-agent/src/outbound/orchestrator.ts
+NOTE=cite only; full D28 suite not re-run
+==== createOutboundAdapter excerpt ====
+import { assertGtmOutboundAllowed, getSafetyFlags, isGtmLiveDispatchAllowed } from '@360gs/flags';
+import { z } from 'zod';
+
+export const OUTBOUND_CHANNELS = ['email', 'sms', 'social'] as const;
+export type OutboundChannel = (typeof OUTBOUND_CHANNELS)[number];
+
+export const outboundMessageSchema = z.object({
+  messageId: z.string().min(1).max(128),
+  channel: z.enum(OUTBOUND_CHANNELS),
+  to: z.string().min(1).max(255),
+  subject: z.string().max(255).optional(),
+  body: z.string().min(1).max(10000),
+  campaignId: z.string().min(1).max(128),
+  companyId: z.string().min(1).max(128),
+  createdAt: z.string(),
+});
+
+export type OutboundMessage = z.infer<typeof outboundMessageSchema>;
+
+export type OutboundDispatchResult = {
+  messageId: string;
+  channel: OutboundChannel;
+  mode: 'dry_run_record_only' | 'live';
+  recorded: boolean;
+  dispatched: boolean;
+  blockedReason?: string;
+};
+
+export type OutboundAdapter = {
+  channel: OutboundChannel;
+  send(message: OutboundMessage): Promise<OutboundDispatchResult>;
+};
+
+function dryRunResult(message: OutboundMessage, reason?: string): OutboundDispatchResult {
+  return {
+    messageId: message.messageId,
+    channel: message.channel,
+    mode: 'dry_run_record_only',
+    recorded: true,
+    dispatched: false,
+    blockedReason: reason,
+  };
+}
+
+export function createOutboundAdapter(channel: OutboundChannel): OutboundAdapter {
+  return {
+    channel,
+    async send(message) {
+      const flags = getSafetyFlags();
+      if (flags.gtmKillSwitch) {
+        return dryRunResult(message, 'GTM_KILL_SWITCH');
+      }
+      if (flags.emergencyPauseGlobal) {
+        return dryRunResult(message, 'EMERGENCY_PAUSE_GLOBAL');
+      }
+      if (!isGtmLiveDispatchAllowed()) {
+        return dryRunResult(message, 'GTM_LIVE_DISPATCH_ENABLED=false');
+      }
+      try {
+        assertGtmOutboundAllowed(channel);
+      } catch (err) {
+        return dryRunResult(message, err instanceof Error ? err.message : 'channel_blocked');
+      }
+      // Live path is architected but not enabled in engineering builds.
+      return dryRunResult(message, 'live_path_not_wired_in_engineering');
+    },
+  };
+}
+
+export function createOutboundOrchestrator(adapters?: OutboundAdapter[]) {
+  const map = new Map(
+    (adapters ?? OUTBOUND_CHANNELS.map(createOutboundAdapter)).map((a) => [a.channel, a]),
+  );
+  const ledger: OutboundDispatchResult[] = [];
+
+  return {
+    ledger,
+    async dispatch(message: OutboundMessage): Promise<OutboundDispatchResult> {
+      const parsed = outboundMessageSchema.parse(message);
+      const adapter = map.get(parsed.channel);
+      if (!adapter) {
+        const blocked = dryRunResult(parsed, `no_adapter_${parsed.channel}`);
+        ledger.push(blocked);
+        return blocked;
+      }
+      const result = await adapter.send(parsed);
+      ledger.push(result);
+      return result;
+    },
+  };
+==== verify SHA of file at f53e628 ====
+function dryRunResult(message: OutboundMessage, reason?: string): OutboundDispatchResult {
+  return {
+    messageId: message.messageId,
+    channel: message.channel,
+    mode: 'dry_run_record_only',
+    recorded: true,
+    dispatched: false,
+    blockedReason: reason,
+  };
+}
+
+export function createOutboundAdapter(channel: OutboundChannel): OutboundAdapter {
+  return {
+    channel,
+    async send(message) {
+      const flags = getSafetyFlags();
+      if (flags.gtmKillSwitch) {
+        return dryRunResult(message, 'GTM_KILL_SWITCH');
+      }
+      if (flags.emergencyPauseGlobal) {
+        return dryRunResult(message, 'EMERGENCY_PAUSE_GLOBAL');
+      }
+      if (!isGtmLiveDispatchAllowed()) {
+        return dryRunResult(message, 'GTM_LIVE_DISPATCH_ENABLED=false');
+      }
+      try {
+        assertGtmOutboundAllowed(channel);
+      } catch (err) {
+        return dryRunResult(message, err instanceof Error ? err.message : 'channel_blocked');
+      }
+      // Live path is architected but not enabled in engineering builds.
+      return dryRunResult(message, 'live_path_not_wired_in_engineering');
+    },
+  };
+}
+
+export function createOutboundOrchestrator(adapters?: OutboundAdapter[]) {

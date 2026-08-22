@@ -1,0 +1,43 @@
+DIRECTIVE=37
+UTC=2026-08-22T04:09:10Z
+MISSION=INDEPENDENT_LIVE_VALIDATION_1ac6257
+HUB=https://app-atlas-integration-hub.azurewebsites.net
+EXPECTED_SHA=1ac62572e2f0d4206f78539c25041fb7f69430f8
+ONEDEPLOY_CLAIMED=333912dc-e3e1-48e7-aefa-946142e6185f
+BRANCH_CLAIMED=cursor/hub-directory-objects-entitle-7a6b
+==== SHA_GATE (RT re-GET) ====
+ATLAS_HUB_COMMIT.txt=1ac62572e2f0d4206f78539c25041fb7f69430f8
+hub-build.gitSha=1ac62572e2f0d4206f78539c25041fb7f69430f8
+hub-build.branch=cursor/hub-directory-objects-entitle-7a6b
+health.commit=1ac62572e2f0d4206f78539c25041fb7f69430f8
+GET /health/commit HTTP=405
+SHA_GATE=PASS
+==== HEALTH ====
+ok=true
+authRequired=true
+insecureDevAuth=false
+health_plaid_keys=NONE
+capitalBackend.mode=sharepoint
+websiteLeads.configured=true
+==== UNAUTH FAIL-CLOSED ====
+GET /api/pm/search HTTP=401
+GET /api/pm/opportunities HTTP=401
+GET /api/pm/leads HTTP=401
+GET /api/capital HTTP=401
+GET /api/capital/needs HTTP=401
+==== ATLAS-03 ====
+GET /api/plaid/link HTTP=405
+GET /api/plaid/create HTTP=405
+==== XSYS unauth only (no HMAC/eva replay) ====
+POST /api/website/leads no-key HTTP=401 Website intake key required.
+POST /api/website/leads Bearer forged-not-a-session HTTP=401 Website intake key required.
+==== directoryObjects source ====
+RAW_graphMembership=200
+RAW_userLookup=200
+directoryObjects_checkMemberGroups=YES
+users_oid_checkMemberGroups=NO
+userLookup_mail_upn_only=YES
+==== ATLAS-01/02 ====
+NOT_EXECUTED_entitled_GET_PATCH=YES
+SYN01_V3_0407Z_cite=EMPTY_owner_gated
+NO_GET_opportunities_1_or_999999=YES

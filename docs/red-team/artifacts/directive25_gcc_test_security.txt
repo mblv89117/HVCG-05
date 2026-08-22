@@ -1,0 +1,56 @@
+SHA=8d757cf68157a6054432de7ca57f8431731b2d64
+CMD: npm run test:security
+UTC=2026-08-20T16:20:44Z
+CWD=/tmp/rt-d25/gcc
+
+> growth-command-center@0.1.0 test:security
+> tsx --test src/lib/security/rt-remediation.test.ts
+
+TAP version 13
+# Subtest: GCC-RT security remediations
+    # Subtest: GCC-RT-01: signup trigger never COALESCE to org-apex or trusts metadata role/org
+    ok 1 - GCC-RT-01: signup trigger never COALESCE to org-apex or trusts metadata role/org
+      ---
+      duration_ms: 0.668685
+      ...
+    # Subtest: GCC-RT-02: profile update policy freezes role and organization_id
+    ok 2 - GCC-RT-02: profile update policy freezes role and organization_id
+      ---
+      duration_ms: 0.157056
+      ...
+    # Subtest: GCC-RT-03: signed OAuth state rejects tampering and expiry
+    ok 3 - GCC-RT-03: signed OAuth state rejects tampering and expiry
+      ---
+      duration_ms: 0.861035
+      ...
+    # Subtest: GCC-RT-06: sales lacks financials:read and reports:export
+    ok 4 - GCC-RT-06: sales lacks financials:read and reports:export
+      ---
+      duration_ms: 0.284722
+      ...
+    # Subtest: GCC-RT-07: unsigned Atlas handoff attestation is rejected; valid HMAC accepted
+    ok 5 - GCC-RT-07: unsigned Atlas handoff attestation is rejected; valid HMAC accepted
+      ---
+      duration_ms: 0.28997
+      ...
+    # Subtest: GCC-RT-05: tenant/dashboard/export derive org from session helpers
+    ok 6 - GCC-RT-05: tenant/dashboard/export derive org from session helpers
+      ---
+      duration_ms: 0.1748
+      ...
+    1..6
+ok 1 - GCC-RT security remediations
+  ---
+  duration_ms: 3.128934
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 217.392489
+EXIT:0

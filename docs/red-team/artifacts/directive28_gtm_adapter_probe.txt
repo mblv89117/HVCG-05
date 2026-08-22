@@ -1,0 +1,25 @@
+{
+  "SHA": "f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb",
+  "defaults": {
+    "gtmLiveDispatchEnabled": false,
+    "paidAdsEnabled": false,
+    "gtmKillSwitch": true
+  },
+  "booking": {
+    "contractVersion": "booking-event.v1",
+    "hasLiveDispatch": false,
+    "hasDryRun": false,
+    "refuseNonDryRun": true
+  },
+  "experiment": {
+    "paidAdsEnabled": false,
+    "ownerSystem": "360"
+  },
+  "optimization": {
+    "mutatesPaidAds": false,
+    "decision": "hold_for_owner",
+    "requiresOwnerApproval": true
+  }
+}
+GTM_ADAPTER_GOVERNANCE_PASS
+EXIT:0

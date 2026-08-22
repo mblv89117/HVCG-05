@@ -1,0 +1,9 @@
+{
+  "SHA": "2f0270228cdaf1dceed51a52a62200ffde07a9e0",
+  "missing": true,
+  "forged": true,
+  "incompleteClaims": true,
+  "validHasUserId": true,
+  "expired": true
+}
+JOSE_FAILCLOSED_PASS

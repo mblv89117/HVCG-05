@@ -1,0 +1,99 @@
+=== Directive 15 regression evidence 2026-08-20T06:42:11Z ===
+
+--- OD-005 opportunity staff bypass ---
+{
+  "finding": "ATLAS-RT-20260820-01",
+  "file": "/tmp/rt-d15/od005/apps/atlas-integration-api/src/pm/sharepoint/repository.ts",
+  "staffShortCircuitPresent": false,
+  "status": "PATTERN_ABSENT_RETEST_REQUIRED"
+}
+exit:0
+
+--- OD-005 D15 harness ---
+{"id":"ATLAS-RT-20260820-01","status":"FIXED_ON_CANDIDATE","detail":"staff short-circuit absent"}
+{"id":"ATLAS-RT-20260820-02","status":"FIXED_ON_CANDIDATE","detail":"same canSeeOpportunity path"}
+{"id":"ATLAS-RT-20260820-03","status":"FIXED_ON_CANDIDATE","detail":"Plaid Bearer JWT gate"}
+{"id":"XSYS-RT-20260820-01","status":"OPEN","detail":"intake key only — still open"}
+{"id":"XSYS-RT-20260820-02","status":"OPEN","detail":"unbound fullPayload.idempotencyKey — still open"}
+{
+  "summary": {
+    "atlasFail": 0,
+    "xsysStillOpen": 2
+  }
+}
+exit:3
+
+--- OD-005 atlas-plaid-api npm test ---
+
+> @hvcg/atlas-plaid-api@0.1.0 test
+> tsx --test tests/**/*.test.ts
+
+TAP version 13
+# Subtest: token vault
+    # Subtest: round-trips secrets
+    ok 1 - round-trips secrets
+      ---
+      duration_ms: 2.742487
+      ...
+    # Subtest: redacts sensitive strings
+    ok 2 - redacts sensitive strings
+      ---
+      duration_ms: 0.151528
+      ...
+    1..2
+ok 1 - token vault
+  ---
+  duration_ms: 3.510267
+  type: 'suite'
+  ...
+# Subtest: tenant isolation
+    # Subtest: parses principal and denies foreign client
+    ok 1 - parses principal and denies foreign client
+      ---
+      duration_ms: 0.745074
+      ...
+    # Subtest: ATLAS-03: requireAuth rejects header-only principal without Bearer
+    ok 2 - ATLAS-03: requireAuth rejects header-only principal without Bearer
+      ---
+      duration_ms: 0.368584
+      ...
+    1..2
+ok 2 - tenant isolation
+  ---
+  duration_ms: 1.267096
+  type: 'suite'
+  ...
+# Subtest: approved products
+    # Subtest: matches Atlas-approved set only
+    ok 1 - matches Atlas-approved set only
+      ---
+      duration_ms: 0.41531
+      ...
+    1..1
+ok 3 - approved products
+  ---
+  duration_ms: 0.480538
+  type: 'suite'
+  ...
+# Subtest: finance mapping
+    # Subtest: labels verified bank cash only when accounts exist
+    ok 1 - labels verified bank cash only when accounts exist
+      ---
+      duration_ms: 1.073101
+      ...
+    1..1
+ok 4 - finance mapping
+  ---
+  duration_ms: 1.26641
+  type: 'suite'
+  ...
+1..4
+# tests 6
+# suites 4
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 241.808565
+plaid_exit:0

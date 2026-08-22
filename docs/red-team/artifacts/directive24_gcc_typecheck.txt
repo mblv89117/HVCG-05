@@ -1,0 +1,15 @@
+SHA=32e923cb836741a9569b58841b51ceec429f56b4
+CMD: npm run typecheck
+UTC=2026-08-20T15:49:37Z
+CWD=/tmp/rt-d24/gcc
+
+> growth-command-center@0.1.0 typecheck
+> tsc --noEmit --incremental false
+
+scripts/fixture-synthetic-cvos-path.ts(3,74): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/fixture-synthetic-cvos-path.ts(4,39): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/fixture-synthetic-cvos-path.ts(5,31): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/fixture-synthetic-cvos-path.ts(6,81): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/fixture-synthetic-cvos-path.ts(7,57): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/fixture-synthetic-cvos-path.ts(21,40): error TS2339: Property 'issues' does not exist on type 'never'.
+EXIT:2

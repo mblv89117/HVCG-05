@@ -1,0 +1,15 @@
+SHA=fe3db7569a0c52e6d25c171c57bba1d85d0fa592
+CMD: npx vitest run tests/pre-call-brief.test.ts
+UTC=2026-08-20T20:37:10Z
+CWD=/tmp/rt-d27/copilot
+
+ RUN  v3.2.7 /tmp/rt-d27/copilot
+
+ ✓ tests/pre-call-brief.test.ts (7 tests) 25ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  20:37:11
+   Duration  470ms (transform 162ms, setup 0ms, collect 302ms, tests 25ms, environment 0ms, prepare 41ms)
+
+EXIT:0

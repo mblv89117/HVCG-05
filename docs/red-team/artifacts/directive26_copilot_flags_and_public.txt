@@ -1,0 +1,82 @@
+SHA=2f0270228cdaf1dceed51a52a62200ffde07a9e0
+==== FLAG SEARCH ====
+src/app/api/health/route.ts:16:    productionClientDataAllowed: allowProductionClientData(),
+src/lib/atlas/handoff.ts:107:      observationOnly: true,
+src/lib/atlas/handoff.ts:109:      productionClientDataAllowed: false,
+src/lib/atlas/handoff.ts:126:  if (handoff.governance.productionClientDataAllowed !== false) {
+src/lib/atlas/handoff.ts:129:  if (handoff.governance.observationOnly !== true) issues.push("observationOnly must be true");
+src/lib/atlas/lead-handoff.ts:85:    observationOnly: z.literal(true),
+src/lib/atlas/lead-handoff.ts:96:      observationOnly: z.literal(true),
+src/lib/atlas/lead-handoff.ts:97:      productionClientDataAllowed: z.literal(false),
+src/lib/atlas/lead-handoff.ts:102:      liveDispatch: z.literal(false),
+src/lib/atlas/lead-handoff.ts:143:        observationOnly: z.literal(true),
+src/lib/atlas/lead-handoff.ts:388:    observationOnly: true,
+src/lib/atlas/lead-handoff.ts:412:      observationOnly: true,
+src/lib/atlas/lead-handoff.ts:413:      productionClientDataAllowed: false,
+src/lib/atlas/lead-handoff.ts:418:      liveDispatch: false,
+src/lib/atlas/lead-handoff.ts:481:        observationOnly: true,
+src/lib/atlas/lead-handoff.ts:542:      metadata: { idempotencyKey, created: false, liveDispatch: false },
+src/lib/atlas/lead-handoff.ts:556:    liveDispatch: false,
+src/lib/atlas/lead-handoff.ts:575:      liveDispatch: false,
+src/lib/auth/session.ts:110:export const PUBLIC_API_PREFIXES = [
+src/lib/auth/session.ts:118:export function isPublicApiPath(pathname: string) {
+src/lib/auth/session.ts:119:  return PUBLIC_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+src/lib/auth/guards.ts:6:  isPublicApiPath,
+src/lib/auth/guards.ts:30:  if (isPublicApiPath(req.nextUrl.pathname)) {
+src/lib/auth/guards.ts:31:    throw new AuthError("PUBLIC_ROUTE", "Public route does not require session", 400);
+src/app/api/atlas/handoff/route.ts:23:      productionClientDataAllowed: false,
+tests/mri-flow.test.ts:61:    expect(handoff.governance.productionClientDataAllowed).toBe(false);
+src/app/api/atlas/leads/route.ts:23:      liveDispatch: false,
+src/app/api/atlas/leads/route.ts:24:      productionClientDataAllowed: false,
+src/app/api/atlas/leads/route.ts:25:      observationOnly: true,
+src/app/api/atlas/leads/route.ts:76:      liveDispatch: false,
+src/app/api/atlas/leads/route.ts:79:      productionClientDataAllowed: false,
+src/app/api/atlas/leads/route.ts:80:      observationOnly: true,
+src/lib/demo/seed.ts:327:        metadata: { sampleWorkspace: true, productionClientDataAllowed: false },
+tests/atlas-lead-handoff.test.ts:39:    expect(handoff.observationOnly).toBe(true);
+tests/atlas-lead-handoff.test.ts:40:    expect(handoff.governance.liveDispatch).toBe(false);
+tests/atlas-lead-handoff.test.ts:93:      observationOnly: false,
+tests/atlas-lead-handoff.test.ts:112:    expect(first.staged.liveDispatch).toBe(false);
+tests/atlas-lead-handoff.test.ts:123:      expect.arrayContaining(["assessmentId", "organizationName", "provenance", "observationOnly"])
+tests/atlas-lead-handoff.test.ts:137:    expect(first.staged.liveDispatch).toBe(false);
+tests/atlas-lead-handoff.test.ts:138:    expect(first.staged.handoff.observationOnly).toBe(true);
+tests/atlas-lead-handoff.test.ts:141:    expect(first.staged.handoff.governance.liveDispatch).toBe(false);
+tests/atlas-lead-handoff.test.ts:155:    expect(replay.staged.liveDispatch).toBe(false);
+tests/atlas-lead-handoff.test.ts:174:        "observationOnly",
+tests/security-rt-revalidation.test.ts:5:import { PUBLIC_API_PREFIXES, isPublicApiPath, signSession, verifySessionToken } from "../src/lib/auth/session";
+tests/security-rt-revalidation.test.ts:25:    expect(PUBLIC_API_PREFIXES).not.toContain("/api/assessments");
+tests/security-rt-revalidation.test.ts:26:    expect(PUBLIC_API_PREFIXES).toContain("/api/auth/start");
+tests/security-rt-revalidation.test.ts:27:    expect(isPublicApiPath("/api/assessments")).toBe(false);
+tests/security-rt-revalidation.test.ts:28:    expect(isPublicApiPath("/api/admin/review")).toBe(false);
+tests/security-rt-revalidation.test.ts:29:    expect(isPublicApiPath("/api/reports/pdf")).toBe(false);
+tests/security-rt-revalidation.test.ts:30:    expect(isPublicApiPath("/api/atlas/leads")).toBe(false);
+tests/security-rt-revalidation.test.ts:31:    expect(isPublicApiPath("/api/documents")).toBe(false);
+tests/security-rt-revalidation.test.ts:32:    expect(isPublicApiPath("/api/auth/start")).toBe(true);
+tests/security-rt-revalidation.test.ts:33:    expect(isPublicApiPath("/api/health")).toBe(true);
+tests/synthetic-journey.test.ts:107:    expect(analyzed.leadHandoff.liveDispatch).toBe(false);
+tests/synthetic-journey.test.ts:187:  it("keeps lead handoff liveDispatch false under replay", () => {
+tests/synthetic-journey.test.ts:197:    expect(a.staged.liveDispatch).toBe(false);
+tests/synthetic-journey.test.ts:198:    expect(b.staged.liveDispatch).toBe(false);
+src/lib/types/index.ts:442:    observationOnly: true;
+src/lib/types/index.ts:444:    productionClientDataAllowed: false;
+src/lib/types/index.ts:510:  observationOnly: true;
+src/lib/types/index.ts:521:    observationOnly: true;
+src/lib/types/index.ts:522:    productionClientDataAllowed: false;
+src/lib/types/index.ts:527:    liveDispatch: false;
+src/lib/types/index.ts:586:      observationOnly: true;
+src/lib/types/index.ts:599:  liveDispatch: false;
+src/app/api/auth/start/route.ts:74:    productionClientDataAllowed: false,
+src/lib/mri/workflow.ts:384:      liveDispatch: false,
+src/app/api/auth/session/route.ts:21:    productionClientDataAllowed: false,
+src/lib/mri/cert-loop.ts:116:      `productionClientDataAllowed=${allowProductionClientData()} sampleWorkspace=${store.organizations[0].sampleWorkspace}`
+src/lib/mri/cert-loop.ts:381:          firstLead?.staged.handoff.observationOnly === true &&
+src/lib/mri/cert-loop.ts:382:          firstLead.staged.handoff.governance.productionClientDataAllowed === false &&
+src/lib/mri/cert-loop.ts:383:          firstLead.staged.liveDispatch === false &&
+src/middleware.ts:11:const PUBLIC_API_PREFIXES = [
+src/middleware.ts:51:function isPublicApiPath(pathname: string) {
+src/middleware.ts:52:  return PUBLIC_API_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+src/middleware.ts:90:  if (pathname.startsWith("/api/") && !isPublicApiPath(pathname)) {
+src/app/api/auth/logout/route.ts:11:  const res = NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
+src/app/api/assessments/route.ts:28:    productionClientDataAllowed: false,
+src/app/api/mri/report/route.ts:17:      productionClientDataAllowed: false,
+src/app/(app)/app/assessment/permissions/page.tsx:25:    fetch("/api/assessments")

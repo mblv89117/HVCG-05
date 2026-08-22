@@ -1,0 +1,115 @@
+==== route.ts ====
+import { NextRequest, NextResponse } from "next/server";
+import { AuthError, authErrorResponse, requireTenantContext } from "@/lib/auth/guards";
+import { readSessionFromRequest } from "@/lib/auth/session";
+import {
+  buildPreCallBrief,
+  buildQualificationHints,
+  normalizeAttribution,
+  toIntegrationPreCallBrief,
+} from "@/lib/gtm/enrichment";
+import { readStore } from "@/lib/store";
+
+/** GTM enrichment — producer only; does not orchestrate campaigns or write CRM. */
+export async function GET(req: NextRequest) {
+  try {
+    const session = await readSessionFromRequest(req);
+    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+    const store = readStore(session.workspaceId);
+    const { assessment, organization } = requireTenantContext(store, session);
+    const attributionAudit = store.audit.find(
+      (a) => a.action === "gtm.attribution.capture" && a.target === assessment.id
+    );
+    const meta = (attributionAudit?.metadata || {}) as Record<string, unknown>;
+    const attribution = normalizeAttribution({
+      campaignId: typeof meta.campaignId === "string" ? meta.campaignId : undefined,
+      sourceAttribution:
+        typeof meta.sourceAttribution === "string" ? meta.sourceAttribution : undefined,
+      utm: meta.utm as never,
+    });
+    const brief = buildPreCallBrief({ organization, assessment, attribution });
+    const qualification = buildQualificationHints(assessment);
+    return NextResponse.json({
+      contractVersion: "gtm.assessment-enrichment.v1",
+      liveOrchestration: false,
+      commercialBinding: false,
+      observationOnly: true,
+      commercialAuthority: "revenue-os",
+      liveDispatch: false,
+      attribution,
+      qualificationHints: qualification,
+      preCallBrief: brief,
+      integrationPreCallBrief: null,
+      note: "Producer enrichment only. Map via toIntegrationPreCallBrief when a bookingId exists. Not CRM/GTM orchestration.",
+    });
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await readSessionFromRequest(req);
+    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+    const body = await req.json().catch(() => ({}));
+    const store = readStore(session.workspaceId);
+    const { assessment, organization } = requireTenantContext(store, session);
+    const attribution = normalizeAttribution({
+      campaignId: body.campaignId || body.campaign,
+      sourceAttribution: body.sourceAttribution,
+      source: body.source,
+      utm: body.utm,
+    });
+    const brief = buildPreCallBrief({ organization, assessment, attribution });
+    const bookingId = typeof body.bookingId === "string" ? body.bookingId : undefined;
+    return NextResponse.json({
+      ok: true,
+      liveOrchestration: false,
+      commercialBinding: false,
+      observationOnly: true,
+      commercialAuthority: "revenue-os",
+      liveDispatch: false,
+      attribution,
+      qualificationHints: buildQualificationHints(assessment),
+      preCallBrief: brief,
+      integrationPreCallBrief: bookingId
+        ? toIntegrationPreCallBrief(brief, {
+            bookingId,
+            atlasClientCode: typeof body.atlasClientCode === "string" ? body.atlasClientCode : undefined,
+          })
+        : null,
+    });
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+}
+==== enrichment.ts (governance/auth excerpts via rg) ====
+src/app/api/gtm/enrichment/route.ts:2:import { AuthError, authErrorResponse, requireTenantContext } from "@/lib/auth/guards";
+src/app/api/gtm/enrichment/route.ts:3:import { readSessionFromRequest } from "@/lib/auth/session";
+src/app/api/gtm/enrichment/route.ts:9:} from "@/lib/gtm/enrichment";
+src/app/api/gtm/enrichment/route.ts:12:/** GTM enrichment — producer only; does not orchestrate campaigns or write CRM. */
+src/app/api/gtm/enrichment/route.ts:15:    const session = await readSessionFromRequest(req);
+src/app/api/gtm/enrichment/route.ts:16:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+src/app/api/gtm/enrichment/route.ts:17:    const store = readStore(session.workspaceId);
+src/app/api/gtm/enrichment/route.ts:18:    const { assessment, organization } = requireTenantContext(store, session);
+src/app/api/gtm/enrichment/route.ts:32:      contractVersion: "gtm.assessment-enrichment.v1",
+src/app/api/gtm/enrichment/route.ts:35:      observationOnly: true,
+src/app/api/gtm/enrichment/route.ts:36:      commercialAuthority: "revenue-os",
+src/app/api/gtm/enrichment/route.ts:37:      liveDispatch: false,
+src/app/api/gtm/enrichment/route.ts:42:      note: "Producer enrichment only. Map via toIntegrationPreCallBrief when a bookingId exists. Not CRM/GTM orchestration.",
+src/app/api/gtm/enrichment/route.ts:51:    const session = await readSessionFromRequest(req);
+src/app/api/gtm/enrichment/route.ts:52:    if (!session) throw new AuthError("UNAUTHENTICATED", "Authentication required", 401);
+src/app/api/gtm/enrichment/route.ts:54:    const store = readStore(session.workspaceId);
+src/app/api/gtm/enrichment/route.ts:55:    const { assessment, organization } = requireTenantContext(store, session);
+src/app/api/gtm/enrichment/route.ts:68:      observationOnly: true,
+src/app/api/gtm/enrichment/route.ts:69:      commercialAuthority: "revenue-os",
+src/app/api/gtm/enrichment/route.ts:70:      liveDispatch: false,
+src/lib/gtm/enrichment.ts:30:/** Provenanced finding row for GTM pre-call enrichment (not a CRM field). */
+src/lib/gtm/enrichment.ts:41: * Copilot producer enrichment for GTM Pre-Call Brief consumers.
+src/lib/gtm/enrichment.ts:63:  observationOnly: true;
+src/lib/gtm/enrichment.ts:67:  commercialAuthority: "revenue-os";
+src/lib/gtm/enrichment.ts:82:  observationOnly: true;
+src/lib/gtm/enrichment.ts:226:    observationOnly: true,
+src/lib/gtm/enrichment.ts:229:    commercialAuthority: "revenue-os",
+src/lib/gtm/enrichment.ts:234: * Map Copilot producer enrichment → Integration SoT `pre-call-brief.v1`.
+src/lib/gtm/enrichment.ts:259:    observationOnly: true,

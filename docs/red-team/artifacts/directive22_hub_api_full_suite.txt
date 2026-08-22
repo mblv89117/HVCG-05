@@ -1,0 +1,2608 @@
+SHA=0bbfd877aac88b654a7c9abdf6c63a312d7cfb05
+CMD: npm test
+UTC=2026-08-20T15:05:56Z
+
+> @hvcg/atlas-integration-api@0.1.0 test
+> tsx --test tests/*.test.ts
+
+TAP version 13
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub BA HTTP client isolation
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: 17. BA-down simulation fails only /api/ba/*
+    ok 1 - 17. BA-down simulation fails only /api/ba/*
+      ---
+      duration_ms: 28.004553
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: 18. BA timeout maps to BA route failure only
+    ok 2 - 18. BA timeout maps to BA route failure only
+      ---
+      duration_ms: 57.496337
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: 19. malformed BA response is rejected at Hub client
+    ok 3 - 19. malformed BA response is rejected at Hub client
+      ---
+      duration_ms: 13.410977
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: 20. Hub PM routes continue under BA-down simulation
+    ok 4 - 20. Hub PM routes continue under BA-down simulation
+      ---
+      duration_ms: 10.360781
+      ...
+    # Subtest: 21. Hub health remains operational when BA is unavailable
+    ok 5 - 21. Hub health remains operational when BA is unavailable
+      ---
+      duration_ms: 5.673272
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: 21b. configured but unreachable BA does not flip Hub ok
+    ok 6 - 21b. configured but unreachable BA does not flip Hub ok
+      ---
+      duration_ms: 4.080548
+      ...
+    # Subtest: 22. production mode cannot invoke local spawn fallback
+    ok 7 - 22. production mode cannot invoke local spawn fallback
+      ---
+      duration_ms: 0.372852
+      ...
+    # Subtest: 23. no developer-machine paths in Hub BA client
+    ok 8 - 23. no developer-machine paths in Hub BA client
+      ---
+      duration_ms: 0.227873
+      ...
+    # Subtest: 24. no localhost production BA dependency
+    ok 9 - 24. no localhost production BA dependency
+      ---
+      duration_ms: 1.852363
+      ...
+    # Subtest: production ignores static INTEGRATION_BA_S2S_TOKEN
+    ok 10 - production ignores static INTEGRATION_BA_S2S_TOKEN
+      ---
+      duration_ms: 1.706341
+      ...
+    # Subtest: production BA URL without INTEGRATION_BA_RESOURCE fail-closes at config
+    ok 11 - production BA URL without INTEGRATION_BA_RESOURCE fail-closes at config
+      ---
+      duration_ms: 0.203339
+      ...
+    # Subtest: production BA URL with invalid INTEGRATION_BA_RESOURCE fail-closes at config
+    ok 12 - production BA URL with invalid INTEGRATION_BA_RESOURCE fail-closes at config
+      ---
+      duration_ms: 0.163954
+      ...
+    # Subtest: production wires managed-identity baS2sToken when BASE_URL and RESOURCE are set
+    ok 13 - production wires managed-identity baS2sToken when BASE_URL and RESOURCE are set
+      ---
+      duration_ms: 0.151019
+      ...
+    # Subtest: non-production and unset BA URL do not wire managed-identity baS2sToken
+    ok 14 - non-production and unset BA URL do not wire managed-identity baS2sToken
+      ---
+      duration_ms: 0.152772
+      ...
+    # Subtest: unconfigured BA dispatch fails closed without contacting the network
+    ok 15 - unconfigured BA dispatch fails closed without contacting the network
+      ---
+      duration_ms: 0.210187
+      ...
+    # Subtest: successful authenticated dispatch through Hub
+    ok 16 - successful authenticated dispatch through Hub
+      ---
+      duration_ms: 14.38585
+      ...
+    # Subtest: Owner principal does not project wildcard clients or DEV
+    ok 17 - Owner principal does not project wildcard clients or DEV
+      ---
+      duration_ms: 0.181695
+      ...
+    # Subtest: 25. secret scan of Hub BA sources
+    ok 18 - 25. secret scan of Hub BA sources
+      ---
+      duration_ms: 0.175722
+      ...
+    1..18
+ok 1 - Hub BA HTTP client isolation
+  ---
+  duration_ms: 140.012921
+  type: 'suite'
+  ...
+# Subtest: canonical BA engine resolution
+    # Subtest: resolves in-tree config/business without sibling worktrees
+    ok 1 - resolves in-tree config/business without sibling worktrees
+      ---
+      duration_ms: 0.612024
+      ...
+    # Subtest: uses HVCG_BA_BUSINESS_DIR only as an explicit override
+    ok 2 - uses HVCG_BA_BUSINESS_DIR only as an explicit override
+      ---
+      duration_ms: 0.132574
+      ...
+    1..2
+ok 2 - canonical BA engine resolution
+  ---
+  duration_ms: 1.379384
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub role mapping
+    # Subtest: accepts Hub API Azure CLI tokens with access_as_user, full URI, or oid-only empty scp
+    ok 1 - accepts Hub API Azure CLI tokens with access_as_user, full URI, or oid-only empty scp
+      ---
+      duration_ms: 0.615184
+      ...
+    # Subtest: maps Admin to Administrator and keeps HVCG Owner distinct
+    ok 2 - maps Admin to Administrator and keeps HVCG Owner distinct
+      ---
+      duration_ms: 0.137218
+      ...
+    1..2
+ok 3 - Hub role mapping
+  ---
+  duration_ms: 1.28121
+  type: 'suite'
+  ...
+# Subtest: verified JWT principal construction
+    # Subtest: uses oid as user id and token roles only
+    ok 1 - uses oid as user id and token roles only
+      ---
+      duration_ms: 0.550826
+      ...
+    # Subtest: missing roles do not become Admin or Owner
+    ok 2 - missing roles do not become Admin or Owner
+      ---
+      duration_ms: 0.147622
+      ...
+    # Subtest: unknown role claims are ignored
+    ok 3 - unknown role claims are ignored
+      ---
+      duration_ms: 0.075381
+      ...
+    # Subtest: missing client scope does not become wildcard
+    ok 4 - missing client scope does not become wildcard
+      ---
+      duration_ms: 0.081982
+      ...
+    # Subtest: wildcard client claim is rejected
+    ok 5 - wildcard client claim is rejected
+      ---
+      duration_ms: 0.126312
+      ...
+    # Subtest: JWT client claims do not become allowedClientIds
+    ok 6 - JWT client claims do not become allowedClientIds
+      ---
+      duration_ms: 0.147853
+      ...
+    1..6
+ok 4 - verified JWT principal construction
+  ---
+  duration_ms: 1.381172
+  type: 'suite'
+  ...
+# Subtest: header spoofing cannot elevate a JWT principal
+    # Subtest: x-atlas-roles does not grant Administrator
+    ok 1 - x-atlas-roles does not grant Administrator
+      ---
+      duration_ms: 2.24104
+      ...
+    # Subtest: x-atlas-client-ids cannot broaden server-resolved scope
+    ok 2 - x-atlas-client-ids cannot broaden server-resolved scope
+      ---
+      duration_ms: 0.747905
+      ...
+    1..2
+ok 5 - header spoofing cannot elevate a JWT principal
+  ---
+  duration_ms: 3.090057
+  type: 'suite'
+  ...
+# Subtest: client scope fail-closed
+    # Subtest: empty scope denies a canonical client
+    ok 1 - empty scope denies a canonical client
+      ---
+      duration_ms: 0.362253
+      ...
+    # Subtest: server-resolved canonical client id is allowed
+    ok 2 - server-resolved canonical client id is allowed
+      ---
+      duration_ms: 0.545019
+      ...
+    # Subtest: JWT client claims cannot satisfy assertClientAccess
+    ok 3 - JWT client claims cannot satisfy assertClientAccess
+      ---
+      duration_ms: 0.150193
+      ...
+    1..3
+ok 6 - client scope fail-closed
+  ---
+  duration_ms: 1.167374
+  type: 'suite'
+  ...
+# Subtest: insecure development principal
+    # Subtest: is Administrator with wildcard only as the documented loopback bypass identity
+    ok 1 - is Administrator with wildcard only as the documented loopback bypass identity
+      ---
+      duration_ms: 0.187985
+      ...
+    1..1
+ok 7 - insecure development principal
+  ---
+  duration_ms: 0.247862
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: authentication route matrix
+    # Subtest: public health remains public and reports authRequired
+    ok 1 - public health remains public and reports authRequired
+      ---
+      duration_ms: 25.299534
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: OAuth callback remains reachable without bearer
+    ok 2 - OAuth callback remains reachable without bearer
+      ---
+      duration_ms: 5.952876
+      ...
+# {"level":"audit","id":"77e31698-9145-4dd8-963f-f1d84596dece","at":"2026-08-20T15:05:57.368Z","actorUserId":"system","action":"webhook_received","providerId":"github","outcome":"success","detail":"github:e3b0c44298fc1c14","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: GitHub webhook is not bearer-gated
+    ok 3 - GitHub webhook is not bearer-gated
+      ---
+      duration_ms: 8.322851
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: protected routes reject missing bearer with 401
+    ok 4 - protected routes reject missing bearer with 401
+      ---
+      duration_ms: 15.804582
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: protected routes reject invalid bearer with 401
+    ok 5 - protected routes reject invalid bearer with 401
+      ---
+      duration_ms: 3.518178
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: valid synthetic bearer authenticates PM and Local AI reads
+    ok 6 - valid synthetic bearer authenticates PM and Local AI reads
+      ---
+      duration_ms: 4.187288
+      ...
+    1..6
+ok 8 - authentication route matrix
+  ---
+  duration_ms: 63.381271
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: admin authorization uses trusted roles
+    # Subtest: non-admin token is 403 even with spoofed admin header
+    ok 1 - non-admin token is 403 even with spoofed admin header
+      ---
+      duration_ms: 4.017985
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: HVCG Owner is not Administrator
+    ok 2 - HVCG Owner is not Administrator
+      ---
+      duration_ms: 4.659091
+      ...
+    # Subtest: verified Administrator may access admin dashboard
+    ok 3 - verified Administrator may access admin dashboard
+      ---
+      duration_ms: 5.154373
+      ...
+    1..3
+ok 9 - admin authorization uses trusted roles
+  ---
+  duration_ms: 14.00444
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: auth-on BA client scope
+    # Subtest: missing trusted client scope does not become wildcard
+    ok 1 - missing trusted client scope does not become wildcard
+      ---
+      duration_ms: 7.699583
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: non-canonical client alias is denied even when a ClientCode is entitled
+    ok 2 - non-canonical client alias is denied even when a ClientCode is entitled
+      ---
+      duration_ms: 4.086242
+      ...
+    # Subtest: unauthorized canonical ClientCode is 403
+    ok 3 - unauthorized canonical ClientCode is 403
+      ---
+      duration_ms: 5.558162
+      ...
+    1..3
+ok 10 - auth-on BA client scope
+  ---
+  duration_ms: 17.520756
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"audit","id":"f76ebf03-0c69-496a-8883-82deda619e85","at":"2026-08-20T15:05:57.529Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c created=true","sensitive":false}
+# {"level":"audit","id":"ab9cf1e2-9f1b-480e-a341-68ab61a8f8bc","at":"2026-08-20T15:05:57.537Z","actorUserId":"user-other","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-098a2954-7b2a-4439-9b6a-c2e0bc23d1b1 created=true","sensitive":false}
+# {"level":"audit","id":"a73bb40a-19c7-4873-b980-bf320e83feaf","at":"2026-08-20T15:05:57.540Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c","sensitive":false}
+# {"level":"audit","id":"25c6cb56-25f2-4271-b95f-dbac998fd9be","at":"2026-08-20T15:05:57.555Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c sendAttempted=false","sensitive":false}
+# {"level":"audit","id":"f2c40ea8-27ad-4f62-b70e-0d68a8788e19","at":"2026-08-20T15:05:57.561Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c/facts/fact-doc-534698a5-a215-450f-853e-410f558a9d34-revenue/review forbidden","sensitive":false}
+# {"level":"audit","id":"a7aad587-c450-4d1d-8588-81ef15f98814","at":"2026-08-20T15:05:57.564Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-098a2954-7b2a-4439-9b6a-c2e0bc23d1b1/facts/fact-doc-534698a5-a215-450f-853e-410f558a9d34-revenue/review forbidden","sensitive":false}
+# {"level":"audit","id":"3be3d21c-804d-41ef-9179-b35438a46a99","at":"2026-08-20T15:05:57.566Z","actorUserId":"user-owner","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c/facts/fact-doc-534698a5-a215-450f-853e-410f558a9d34-revenue/review forbidden","sensitive":false}
+# {"level":"audit","id":"16f14866-44ed-40c8-bf6b-c9daa7efcaae","at":"2026-08-20T15:05:57.570Z","actorUserId":"user-owner","action":"capital_fact_review","outcome":"success","detail":"id=cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c fact=fact-doc-534698a5-a215-450f-853e-410f558a9d34-revenue decision=VERIFY client=SYN01","sensitive":false}
+# {"level":"audit","id":"5c7341cc-9a31-448e-a474-8d08496fd48a","at":"2026-08-20T15:05:57.573Z","actorUserId":"user-other","action":"capital_document_add","outcome":"success","detail":"id=cap-098a2954-7b2a-4439-9b6a-c2e0bc23d1b1","sensitive":false}
+# {"level":"audit","id":"782a5f87-6cf4-44f7-beae-8e3af95c85f5","at":"2026-08-20T15:05:57.577Z","actorUserId":"user-other","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-098a2954-7b2a-4439-9b6a-c2e0bc23d1b1 sendAttempted=false","sensitive":false}
+# {"level":"audit","id":"3b2624a7-e68e-4a1b-8656-035ec05a0e05","at":"2026-08-20T15:05:57.580Z","actorUserId":"user-owner","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-21f4e6fc-2aaf-4770-9460-e64441d17b1c/facts/fact-doc-519f3b42-643f-4e04-bc6b-1470204c12f8-revenue/review forbidden","sensitive":false}
+# Subtest: Hub evidence review
+    # Subtest: authorizes VERIFY, rejects unauthorized and cross-client, preserves original on correct
+    ok 1 - authorizes VERIFY, rejects unauthorized and cross-client, preserves original on correct
+      ---
+      duration_ms: 73.141429
+      ...
+    1..1
+ok 11 - Hub evidence review
+  ---
+  duration_ms: 73.761751
+  type: 'suite'
+  ...
+# Subtest: Graph capital file content download
+    # Subtest: allows only HTTPS SharePoint/Graph download hosts without userinfo
+    ok 1 - allows only HTTPS SharePoint/Graph download hosts without userinfo
+      ---
+      duration_ms: 0.616091
+      ...
+    # Subtest: returns Graph 200 content bytes without a redirect
+    ok 2 - returns Graph 200 content bytes without a redirect
+      ---
+      duration_ms: 11.798333
+      ...
+    # Subtest: follows exactly one Graph 302 Location without forwarding the Graph token
+    ok 3 - follows exactly one Graph 302 Location without forwarding the Graph token
+      ---
+      duration_ms: 0.477217
+      ...
+    # Subtest: fail-closes 302 without Location
+    ok 4 - fail-closes 302 without Location
+      ---
+      duration_ms: 3.198104
+      ...
+    # Subtest: rejects non-HTTPS Location
+    ok 5 - rejects non-HTTPS Location
+      ---
+      duration_ms: 0.413719
+      ...
+    # Subtest: rejects a second redirect
+    ok 6 - rejects a second redirect
+      ---
+      duration_ms: 0.427641
+      ...
+    # Subtest: rejects off-domain content redirects and metadata redirects
+    ok 7 - rejects off-domain content redirects and metadata redirects
+      ---
+      duration_ms: 0.65165
+      ...
+    # Subtest: does not accept a user-supplied download URL as a Graph request
+    ok 8 - does not accept a user-supplied download URL as a Graph request
+      ---
+      duration_ms: 0.728092
+      ...
+    # Subtest: rejects oversized content-length on the download
+    ok 9 - rejects oversized content-length on the download
+      ---
+      duration_ms: 0.729213
+      ...
+    # Subtest: times out safely without leaking URLs
+    ok 10 - times out safely without leaking URLs
+      ---
+      duration_ms: 20.515016
+      ...
+    # Subtest: maps Graph 401/403 to fail-closed unavailable and 404 to not_found
+    ok 11 - maps Graph 401/403 to fail-closed unavailable and 404 to not_found
+      ---
+      duration_ms: 1.150312
+      ...
+    # Subtest: returns item metadata on Graph 200 JSON
+    ok 12 - returns item metadata on Graph 200 JSON
+      ---
+      duration_ms: 0.732842
+      ...
+    1..12
+ok 12 - Graph capital file content download
+  ---
+  duration_ms: 42.39429
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"audit","id":"53edb219-071f-4a57-ab5e-b5d48adffb43","at":"2026-08-20T15:05:57.871Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-ad751db2-37e8-48d0-87bc-6de697441dad created=true","sensitive":false}
+# {"level":"audit","id":"a9b36ee8-7995-4767-b569-65f1e50086b7","at":"2026-08-20T15:05:57.894Z","actorUserId":"user-1","action":"capital_file_ingest","outcome":"success","detail":"id=cap-ad751db2-37e8-48d0-87bc-6de697441dad drive=drive-syn01 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub capital SharePoint file ingest
+    # Subtest: ingests a SYN01 library PDF, extracts revenue, and never sends
+    ok 1 - ingests a SYN01 library PDF, extracts revenue, and never sends
+      ---
+      duration_ms: 46.97278
+      ...
+# {"level":"audit","id":"05dc915c-22a9-4c78-8b56-3d5828f02914","at":"2026-08-20T15:05:57.903Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-1bd4e7b7-60bd-4e17-84f1-648554c7a46d created=true","sensitive":false}
+# {"level":"audit","id":"27da1009-0291-49f8-9e36-ee63606a996d","at":"2026-08-20T15:05:57.907Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-1bd4e7b7-60bd-4e17-84f1-648554c7a46d/ingest forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: denies ACCG01 item substitution against a SYN01 opportunity
+    ok 2 - denies ACCG01 item substitution against a SYN01 opportunity
+      ---
+      duration_ms: 11.799132
+      ...
+# {"level":"audit","id":"2a4ec3dd-884f-4712-9624-d570bfb6a7a3","at":"2026-08-20T15:05:57.912Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-8d8c62b6-52fb-469b-a6b6-4f90d28a90d2 created=true","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects webUrl-only ingest and send flags
+    ok 3 - rejects webUrl-only ingest and send flags
+      ---
+      duration_ms: 8.389507
+      ...
+# {"level":"audit","id":"54dddd53-5d9b-44bc-adc9-3d55fddf5574","at":"2026-08-20T15:05:57.921Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-6e25c9d0-b4f6-453b-a834-79c6907688d3 created=true","sensitive":false}
+# {"level":"audit","id":"c83e0770-65d4-4cc1-8565-7d45a6be3d4a","at":"2026-08-20T15:05:57.925Z","actorUserId":"user-1","action":"capital_file_ingest","outcome":"success","detail":"id=cap-6e25c9d0-b4f6-453b-a834-79c6907688d3 drive=drive-syn01 sendAttempted=false","sensitive":false}
+    # Subtest: treats prompt-injection PDF text as content and extracts no facts
+    ok 4 - treats prompt-injection PDF text as content and extracts no facts
+      ---
+      duration_ms: 9.48502
+      ...
+    1..4
+ok 13 - Hub capital SharePoint file ingest
+  ---
+  duration_ms: 77.464897
+  type: 'suite'
+  ...
+# Subtest: Capital Graph allowlist
+    # Subtest: maps EVA and unknown handoff sources to Other
+    ok 1 - maps EVA and unknown handoff sources to Other
+      ---
+      duration_ms: 0.477835
+      ...
+    # Subtest: maps HVCG_Lenders read-only without inventing product criteria from PreferredProducts
+    ok 2 - maps HVCG_Lenders read-only without inventing product criteria from PreferredProducts
+      ---
+      duration_ms: 0.204461
+      ...
+    # Subtest: accepts configured capital lists and rejects random and PM list IDs
+    ok 3 - accepts configured capital lists and rejects random and PM list IDs
+      ---
+      duration_ms: 14.002398
+      ...
+    # Subtest: permits capital opportunity writes and rejects client creates before Graph
+    ok 4 - permits capital opportunity writes and rejects client creates before Graph
+      ---
+      duration_ms: 1.815082
+      ...
+    # Subtest: does not treat PM allowlist capability as capital authorization
+    ok 5 - does not treat PM allowlist capability as capital authorization
+      ---
+      duration_ms: 0.172837
+      ...
+    # Subtest: never grants Sites.Manage.All — Hub capital Graph stays Selected + Sites.Read.All
+    ok 6 - never grants Sites.Manage.All — Hub capital Graph stays Selected + Sites.Read.All
+      ---
+      duration_ms: 3.363301
+      ...
+    1..6
+ok 14 - Capital Graph allowlist
+  ---
+  duration_ms: 20.782572
+  type: 'suite'
+  ...
+# Subtest: HVCG_LenderOutreach mapping
+    # Subtest: maps Response, MessageClass, and lookup display name without inventing outcomes
+    ok 1 - maps Response, MessageClass, and lookup display name without inventing outcomes
+      ---
+      duration_ms: 0.316524
+      ...
+    1..1
+ok 15 - HVCG_LenderOutreach mapping
+  ---
+  duration_ms: 0.555347
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"audit","id":"d5f6feff-a6f6-49ac-8a37-c136bb1e69f0","at":"2026-08-20T15:05:58.147Z","actorUserId":"user-a","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=1 created=true","sensitive":false}
+# {"level":"audit","id":"1f169693-5d0f-433b-a76b-0e6dbf5a766d","at":"2026-08-20T15:05:58.150Z","actorUserId":"user-a","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=1 created=false","sensitive":false}
+# {"level":"audit","id":"abd51722-52ae-4e91-a560-bbf4148c5051","at":"2026-08-20T15:05:58.155Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"audit","id":"2812b480-cbfb-4ddc-8576-654b953bf88d","at":"2026-08-20T15:05:58.158Z","actorUserId":"user-a","action":"capital_opportunity_transition","outcome":"success","detail":"id=1 to=InitialQualification","sensitive":false}
+# {"level":"audit","id":"bb4d9ed7-8ec3-4b6c-8e83-4134297774cc","at":"2026-08-20T15:05:58.161Z","actorUserId":"user-a","action":"capital_next_action_update","outcome":"success","detail":"id=1","sensitive":false}
+# {"level":"audit","id":"1b7cc855-d758-4406-a984-8dee65d70a2b","at":"2026-08-20T15:05:58.187Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=1 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"0109a9a3-0f9c-4ffe-add5-b964f3af87ef","at":"2026-08-20T15:05:58.213Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=1 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"21a0ccec-17fa-4c4e-bf62-d14f5e7d4d82","at":"2026-08-20T15:05:58.218Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=1 attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"3ebacc18-f473-42d4-9fed-ee0e5f450648","at":"2026-08-20T15:05:58.220Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=1 attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"3738e361-c6f7-48d5-8746-74522f8aedf7","at":"2026-08-20T15:05:58.223Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=1 attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"82b48c6c-1454-4e8a-811a-8feff380a6d9","at":"2026-08-20T15:05:58.226Z","actorUserId":"user-a","action":"capital_submission","outcome":"success","detail":"id=1 recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"audit","id":"13b3cce5-ef26-4750-b573-ca7b0df4cb2e","at":"2026-08-20T15:05:58.228Z","actorUserId":"user-a","action":"capital_submission","outcome":"success","detail":"id=1 recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Capital Graph live slice (in-memory)
+    # Subtest: creates, reads, transitions, persists checklist, strategy notes, shortlist outreach, and recorded-only submission
+    ok 1 - creates, reads, transitions, persists checklist, strategy notes, shortlist outreach, and recorded-only submission
+      ---
+      duration_ms: 111.043496
+      ...
+# {"level":"audit","id":"12111c79-c4c6-4a5f-bd60-89c6edfe9690","at":"2026-08-20T15:05:58.239Z","actorUserId":"user-a","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-04d026e9-66a6-4b29-b4f3-a2265c61a1eb created=true","sensitive":false}
+    # Subtest: rejects synthetic Graph writes unless ALLOW_SYNTHETIC_GRAPH is set
+    ok 2 - rejects synthetic Graph writes unless ALLOW_SYNTHETIC_GRAPH is set
+      ---
+      duration_ms: 14.716401
+      ...
+    # Subtest: ALLOW_SYNTHETIC_GRAPH is captured at Graph store construction — env mutation is not enough
+    ok 3 - ALLOW_SYNTHETIC_GRAPH is captured at Graph store construction — env mutation is not enough
+      ---
+      duration_ms: 0.442538
+      ...
+    1..3
+ok 16 - Capital Graph live slice (in-memory)
+  ---
+  duration_ms: 126.84023
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub capital operations API
+    # Subtest: requires auth on capital routes
+    ok 1 - requires auth on capital routes
+      ---
+      duration_ms: 23.58583
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: returns 400 for malformed JSON without leaking a stack
+    ok 2 - returns 400 for malformed JSON without leaking a stack
+      ---
+      duration_ms: 8.972598
+      ...
+# {"level":"audit","id":"80185815-fde8-4771-859d-b8f9fa2767fe","at":"2026-08-20T15:05:58.269Z","actorUserId":"user-empty","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"audit","id":"463748fd-21d8-4d65-a176-ee54b6180fb9","at":"2026-08-20T15:05:58.274Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-dd899fb5-6421-4a5f-840e-98ba6464d775 created=true","sensitive":false}
+# {"level":"audit","id":"a784c5a2-a399-4bb9-b33d-4e543ff1258e","at":"2026-08-20T15:05:58.277Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: enforces client isolation and empty staff scope
+    ok 3 - enforces client isolation and empty staff scope
+      ---
+      duration_ms: 14.394495
+      ...
+# {"level":"audit","id":"8e94650c-5a31-4026-b34c-75e62e322d84","at":"2026-08-20T15:05:58.285Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 created=true","sensitive":false}
+# {"level":"audit","id":"9a728922-0bc1-47c4-a21a-7cb48eb35c71","at":"2026-08-20T15:05:58.288Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 created=false","sensitive":false}
+# {"level":"audit","id":"127bbc93-9749-497d-a35d-6a416794cc53","at":"2026-08-20T15:05:58.293Z","actorUserId":"user-1","action":"capital_opportunity_transition","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 to=InitialQualification","sensitive":false}
+# {"level":"audit","id":"0c3a015a-5c0f-412f-a95c-2712b37ba722","at":"2026-08-20T15:05:58.299Z","actorUserId":"user-1","action":"capital_checklist_override","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 item=chk-org-formation","sensitive":false}
+# {"level":"audit","id":"a7ac7cfa-7dc6-4d55-afca-f9e40e98a071","at":"2026-08-20T15:05:58.303Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453","sensitive":false}
+# {"level":"audit","id":"1f222b8c-2a1a-438c-886d-a0e8cf33a97d","at":"2026-08-20T15:05:58.305Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453","sensitive":false}
+# {"level":"audit","id":"62bc4f71-a2eb-41be-9020-f9be01d2499b","at":"2026-08-20T15:05:58.310Z","actorUserId":"user-1","action":"capital_document_review","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 doc=doc-753f6621-91e2-487b-ac27-e31695752cfd","sensitive":false}
+# {"level":"audit","id":"cbb90f2d-ce4e-46b7-8c0d-bc6e2473a6c5","at":"2026-08-20T15:05:58.328Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 sendAttempted=false","sensitive":false}
+# {"level":"audit","id":"e851ef8d-e03a-4767-a15d-b909b54d7842","at":"2026-08-20T15:05:58.339Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"11e131ed-91a4-43a8-8191-f2cbaa2acca8","at":"2026-08-20T15:05:58.343Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"f84dc5d8-5bc8-41eb-b57b-7d9a618fbb30","at":"2026-08-20T15:05:58.361Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453/shortlist/decision forbidden","sensitive":false}
+# {"level":"audit","id":"ef92f5bc-8adc-41b5-bbb2-2531657e8bf5","at":"2026-08-20T15:05:58.363Z","actorUserId":"user-admin","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453/shortlist/decision forbidden","sensitive":false}
+# {"level":"audit","id":"a8611144-d4bd-4a94-83e6-b0b298fd148a","at":"2026-08-20T15:05:58.366Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"a6a0df48-b2fc-4b2b-85e0-9890d73f0f2d","at":"2026-08-20T15:05:58.373Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"394b1a6f-00c3-41f3-8a11-f4eab61dee08","at":"2026-08-20T15:05:58.376Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"60ffc25e-8fa9-4e94-906a-4f52f5add290","at":"2026-08-20T15:05:58.379Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"dde0a720-fd63-459e-a30c-cbc2bd0c1c20","at":"2026-08-20T15:05:58.386Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-7e76cbb2-a856-40e5-ab55-e420b6d2b132 created=true","sensitive":false}
+# {"level":"audit","id":"5b3d6f5d-454e-4d29-ae42-5470666b60d5","at":"2026-08-20T15:05:58.393Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453 recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"audit","id":"6e7c8139-7da1-4e76-a594-1e01c3a0f0e6","at":"2026-08-20T15:05:58.399Z","actorUserId":"user-1","action":"capital_offer_add","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453","sensitive":false}
+# {"level":"audit","id":"839768bc-b4c0-4e72-bf17-8ebed8a2d6e2","at":"2026-08-20T15:05:58.402Z","actorUserId":"user-1","action":"capital_offer_add","outcome":"success","detail":"id=cap-02a8c0c2-be3e-4344-8a9f-629bc1c35453","sensitive":false}
+# {"level":"audit","id":"0f745df2-6aaf-41fe-ba31-848cc4f07120","at":"2026-08-20T15:05:58.408Z","actorUserId":"user-1","action":"capital_fee_record","outcome":"success","detail":"client=SYN01","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: creates, transitions, checklists, documents, strategy, matching, application, submission, fees, and handoffs
+    ok 4 - creates, transitions, checklists, documents, strategy, matching, application, submission, fees, and handoffs
+      ---
+      duration_ms: 147.45847
+      ...
+# {"level":"audit","id":"f9576c72-ff9c-4440-a3c7-23054a58aa52","at":"2026-08-20T15:05:58.431Z","actorUserId":"user-star","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"audit","id":"3d7ce49b-f291-47b6-ac16-e641fdf4de07","at":"2026-08-20T15:05:58.435Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-a8d7dbcb-e38b-489a-ac2c-3d15ed9987ce created=true","sensitive":false}
+# {"level":"audit","id":"e356f648-6203-4bc9-bb4b-1f4f10815afa","at":"2026-08-20T15:05:58.436Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-a8d7dbcb-e38b-489a-ac2c-3d15ed9987ce/submissions forbidden","sensitive":false}
+# {"level":"audit","id":"1f0735d4-d978-4565-9cfd-370e660e996b","at":"2026-08-20T15:05:58.437Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/lenders forbidden","sensitive":false}
+# {"level":"audit","id":"bd0de33c-c65a-4d6d-a5d8-d1bfcdd1107d","at":"2026-08-20T15:05:58.438Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/handoffs/attribution forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects wildcard principal, unapproved submission, and member catalog writes
+    ok 5 - rejects wildcard principal, unapproved submission, and member catalog writes
+      ---
+      duration_ms: 9.871377
+      ...
+# {"level":"audit","id":"de177d8a-0892-418a-b047-4ed0200002b2","at":"2026-08-20T15:05:58.441Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-e50e088f-be9b-4aa1-868d-461e56849347 created=true","sensitive":false}
+# {"level":"audit","id":"bf97cc88-5c61-44b6-a5e3-0aba80470d89","at":"2026-08-20T15:05:58.445Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-e50e088f-be9b-4aa1-868d-461e56849347","sensitive":false}
+# {"level":"audit","id":"e101c756-9ff5-4946-beb8-7fc47909ce5e","at":"2026-08-20T15:05:58.448Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-e50e088f-be9b-4aa1-868d-461e56849347 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: runs document intelligence as a draft-only, fail-closed package review
+    ok 6 - runs document intelligence as a draft-only, fail-closed package review
+      ---
+      duration_ms: 10.674634
+      ...
+    # Subtest: unauthenticated capital requests remain 401 when the backend is unavailable
+    ok 7 - unauthenticated capital requests remain 401 when the backend is unavailable
+      ---
+      duration_ms: 4.109843
+      ...
+    1..7
+ok 17 - Hub capital operations API
+  ---
+  duration_ms: 219.94511
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"audit","id":"6d6004ff-f4c2-4684-b2bd-76f10c23f8c9","at":"2026-08-20T15:05:58.541Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-230c5bd3-8bc1-472e-9d9a-07376115b927 created=true","sensitive":false}
+# {"level":"audit","id":"5f4d9fde-4a28-4587-8143-112d4a185aba","at":"2026-08-20T15:05:58.549Z","actorUserId":"user-other","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-a7ebd20c-403c-472c-a129-6c23512c2de9 created=true","sensitive":false}
+# Subtest: Hub outreach history
+    # Subtest: returns lender-level counts without other-client identifiers, amounts, or notes
+    ok 1 - returns lender-level counts without other-client identifiers, amounts, or notes
+      ---
+      duration_ms: 47.923737
+      ...
+    1..1
+ok 18 - Hub outreach history
+  ---
+  duration_ms: 49.042791
+  type: 'suite'
+  ...
+# Subtest: capital overlay persistence
+    # Subtest: resolves App Service /home/data before wwwroot
+    ok 1 - resolves App Service /home/data before wwwroot
+      ---
+      duration_ms: 0.419558
+      ...
+    # Subtest: writes and reloads facts, reviews, SourceRefs, and audits
+    ok 2 - writes and reloads facts, reviews, SourceRefs, and audits
+      ---
+      duration_ms: 1.076747
+      ...
+    1..2
+ok 19 - capital overlay persistence
+  ---
+  duration_ms: 2.142525
+  type: 'suite'
+  ...
+# Subtest: SharePoint overlay recycle + ingest identity
+    # Subtest: survives a new store (recycle), does not duplicate, and preserves reviews
+    ok 1 - survives a new store (recycle), does not duplicate, and preserves reviews
+      ---
+      duration_ms: 49.549056
+      ...
+    1..1
+ok 20 - SharePoint overlay recycle + ingest identity
+  ---
+  duration_ms: 49.643134
+  type: 'suite'
+  ...
+# Subtest: overlay fail-closed + durability health truth
+    # Subtest: throws on empty, malformed, and future schema overlay files
+    ok 1 - throws on empty, malformed, and future schema overlay files
+      ---
+      duration_ms: 1.194607
+      ...
+    # Subtest: reports recycleSurvivable from /home data dir, not HOME===/home
+    ok 2 - reports recycleSurvivable from /home data dir, not HOME===/home
+      ---
+      duration_ms: 0.324105
+      ...
+    # Subtest: keeps strategy workbench closed on Submitted and open on NeedIdentified
+    ok 3 - keeps strategy workbench closed on Submitted and open on NeedIdentified
+      ---
+      duration_ms: 4.672083
+      ...
+    # Subtest: commits SYN recorded submission to overlay when Graph returns 503
+    ok 4 - commits SYN recorded submission to overlay when Graph returns 503
+      ---
+      duration_ms: 11.124848
+      ...
+    1..4
+ok 21 - overlay fail-closed + durability health truth
+  ---
+  duration_ms: 17.590603
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub capital phase 2 QA — isolation and idempotency
+    # Subtest: returns 401 for unauthenticated and invalid-token capital requests
+    ok 1 - returns 401 for unauthenticated and invalid-token capital requests
+      ---
+      duration_ms: 25.935144
+      ...
+# {"level":"audit","id":"5c2bef6b-b013-43fc-af17-790b7a228b7c","at":"2026-08-20T15:05:58.836Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-1cc10a75-edcb-4ad7-913b-8be703a210c6 created=true","sensitive":false}
+# {"level":"audit","id":"4313a165-89e6-43de-964d-bb761773d76f","at":"2026-08-20T15:05:58.843Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: returns 403 when the principal is entitled to a different client
+    ok 2 - returns 403 when the principal is entitled to a different client
+      ---
+      duration_ms: 22.365385
+      ...
+# {"level":"audit","id":"fed5f558-4551-44d5-a285-c6d14da47f8d","at":"2026-08-20T15:05:58.852Z","actorUserId":"user-star","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects wildcard ClientCode with 422 unprocessable
+    ok 3 - rejects wildcard ClientCode with 422 unprocessable
+      ---
+      duration_ms: 6.40435
+      ...
+# {"level":"audit","id":"2b29f388-d2e1-4d05-8ea1-a1a7ca39f920","at":"2026-08-20T15:05:58.859Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-d2f65b01-1317-4b5b-a4a8-cca22479f289 created=true","sensitive":false}
+# {"level":"audit","id":"929d70d5-4650-452e-902c-f7c41e983b45","at":"2026-08-20T15:05:58.865Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-d2f65b01-1317-4b5b-a4a8-cca22479f289","sensitive":false}
+# {"level":"audit","id":"ddfa82cf-443f-4e80-8773-4683dce33bdf","at":"2026-08-20T15:05:58.869Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-d2f65b01-1317-4b5b-a4a8-cca22479f289","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: treats duplicate document sha256 as idempotent
+    ok 4 - treats duplicate document sha256 as idempotent
+      ---
+      duration_ms: 15.379943
+      ...
+# {"level":"audit","id":"5b6fc983-c316-4b50-851d-8f7e81b18721","at":"2026-08-20T15:05:58.875Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-b2ac9164-8dc2-4836-8291-c92879cbb2e9 created=true","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: blocks document-intelligence send / sendToClient / externalSend with 422
+    ok 5 - blocks document-intelligence send / sendToClient / externalSend with 422
+      ---
+      duration_ms: 11.7563
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: returns 400 for malformed JSON without leaking a stack
+    ok 6 - returns 400 for malformed JSON without leaking a stack
+      ---
+      duration_ms: 5.718718
+      ...
+# {"level":"audit","id":"8e2b6d73-b88b-4898-8287-5dfcf630da73","at":"2026-08-20T15:05:58.892Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-1f3b7a24-c6a8-4ae5-bb4c-f60249df0608 created=true","sensitive":false}
+# {"level":"audit","id":"011e4cde-6907-4ad6-81c1-186960c59eb7","at":"2026-08-20T15:05:58.894Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-1f3b7a24-c6a8-4ae5-bb4c-f60249df0608/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"fdd22180-fc8f-40cd-97e6-6c45eded9554","at":"2026-08-20T15:05:58.896Z","actorUserId":"user-admin","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-1f3b7a24-c6a8-4ae5-bb4c-f60249df0608/strategy/decision forbidden","sensitive":false}
+    # Subtest: returns 403 when a non-owner posts a strategy decision
+    ok 7 - returns 403 when a non-owner posts a strategy decision
+      ---
+      duration_ms: 8.808097
+      ...
+    1..7
+ok 22 - Hub capital phase 2 QA — isolation and idempotency
+  ---
+  duration_ms: 97.762516
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"audit","id":"473fa3e9-c3b2-4a79-b392-c337ae13a9f1","at":"2026-08-20T15:05:58.862Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 created=true","sensitive":false}
+# {"level":"audit","id":"00b89920-0ba2-46bc-86d9-02e920f6ab1b","at":"2026-08-20T15:05:58.888Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"49efb529-6583-4f4c-866c-f8cfd51b59a2","at":"2026-08-20T15:05:58.897Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"63aeba97-bedf-4ad8-8e72-f5d51503d43d","at":"2026-08-20T15:05:58.907Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"8aa81c6e-9fd9-4ef5-928f-240755499b84","at":"2026-08-20T15:05:58.910Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"a1bb6e8d-468a-4e2d-a209-e35164d0be0d","at":"2026-08-20T15:05:58.913Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"29bcccee-c0fc-4157-8fd8-743aa3e15d83","at":"2026-08-20T15:05:58.916Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"audit","id":"94d99180-cdcd-4ffc-902e-10bfe8191c6b","at":"2026-08-20T15:05:58.919Z","actorUserId":"user-owner","action":"capital_rfi_ingest","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4 injection=true","sensitive":false}
+# {"level":"audit","id":"f60ffce7-e07d-4d94-ae71-305bf27a38bf","at":"2026-08-20T15:05:58.927Z","actorUserId":"user-1","action":"capital_offer_extract","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4","sensitive":false}
+# {"level":"audit","id":"3d0b6b68-f035-42c7-92b5-c348ff327d4d","at":"2026-08-20T15:05:58.930Z","actorUserId":"user-1","action":"capital_offer_add","outcome":"success","detail":"id=cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4","sensitive":false}
+# {"level":"audit","id":"6cd74b99-56f2-4903-815e-70de2783494d","at":"2026-08-20T15:05:58.935Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-4d9d0318-10ab-4984-b3f7-dd4dca96b9b4/recommendation forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Phase 4 transaction execution Hub
+    # Subtest: prepares package, requires attestation, records-only submit, decomposes RFI, compares terms, blocks unfunded
+    ok 1 - prepares package, requires attestation, records-only submit, decomposes RFI, compares terms, blocks unfunded
+      ---
+      duration_ms: 99.576617
+      ...
+# {"level":"audit","id":"d6819c45-97b8-48c0-9828-260fab0ad4eb","at":"2026-08-20T15:05:58.947Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-9b973d4e-885d-4baf-bb20-87665b1a7c57 created=true","sensitive":false}
+# {"level":"audit","id":"56705e41-bd23-48fc-9e71-c0c43e833b7b","at":"2026-08-20T15:05:58.955Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-9b973d4e-885d-4baf-bb20-87665b1a7c57 decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"15c3df7d-f0db-4101-9cd6-4f12286d9b7b","at":"2026-08-20T15:05:58.962Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-9b973d4e-885d-4baf-bb20-87665b1a7c57 decision=APPROVED","sensitive":false}
+    # Subtest: blocks cross-client RFI and does not guess lender lookup ids
+    ok 2 - blocks cross-client RFI and does not guess lender lookup ids
+      ---
+      duration_ms: 25.830082
+      ...
+    1..2
+ok 23 - Phase 4 transaction execution Hub
+  ---
+  duration_ms: 126.106989
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Capital red team
+    # Subtest: malformed JSON POST is 400 not 500
+    ok 1 - malformed JSON POST is 400 not 500
+      ---
+      duration_ms: 27.711257
+      ...
+# {"level":"audit","id":"d1b7d274-d054-4ab4-8de7-81c37a8ad3a9","at":"2026-08-20T15:05:58.959Z","actorUserId":"user-star","action":"capital_access_denied","outcome":"denied","detail":"GET /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: blocks wildcard ClientCode and wildcard principal scope
+    ok 2 - blocks wildcard ClientCode and wildcard principal scope
+      ---
+      duration_ms: 15.132068
+      ...
+# {"level":"audit","id":"74f87596-af2b-4739-a3f6-e68cae4badbf","at":"2026-08-20T15:05:58.973Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-70c80825-2fd3-47d9-ae51-a8d7819efacf created=true","sensitive":false}
+# {"level":"audit","id":"674a9880-8bb2-4f58-91a5-5e706792cdb0","at":"2026-08-20T15:05:58.977Z","actorUserId":"user-other","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-949794ed-09dc-41f1-b9d3-19a675b30dd2 created=true","sensitive":false}
+# {"level":"audit","id":"48f59672-fc8f-4da1-a1cf-9a8879f1ce0d","at":"2026-08-20T15:05:58.990Z","actorUserId":"user-other","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: isolates SYN01 from ACCG01 — no list, get, KPI, or idempotency leakage
+    ok 3 - isolates SYN01 from ACCG01 — no list, get, KPI, or idempotency leakage
+      ---
+      duration_ms: 23.515965
+      ...
+# {"level":"audit","id":"65e31849-068a-42b3-8672-8b0efb22841d","at":"2026-08-20T15:05:59.000Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-b4029f23-8ecd-4068-b2b2-cb27cf63d7c4 created=true","sensitive":false}
+# {"level":"audit","id":"08e34fb6-c540-47fd-9cf5-5249c3144d7e","at":"2026-08-20T15:05:59.003Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-b4029f23-8ecd-4068-b2b2-cb27cf63d7c4","sensitive":false}
+# {"level":"audit","id":"5dca6b3b-78f6-4f77-9c98-2ae811e3f980","at":"2026-08-20T15:05:59.008Z","actorUserId":"user-1","action":"capital_document_review","outcome":"success","detail":"id=cap-b4029f23-8ecd-4068-b2b2-cb27cf63d7c4 doc=doc-e37ff8dd-1d39-48dc-8032-645fdee06df0","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects VERIFIED financials without SourceRef and does not apply hallucinated review numbers
+    ok 4 - rejects VERIFIED financials without SourceRef and does not apply hallucinated review numbers
+      ---
+      duration_ms: 19.425779
+      ...
+# {"level":"audit","id":"ffd6c879-690d-446e-8e40-1d3b91940613","at":"2026-08-20T15:05:59.016Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-ad353425-6c6e-4aea-81d5-dfdc072155c1 created=true","sensitive":false}
+# {"level":"audit","id":"3e68236d-1c5c-4f45-ae2a-941bd7972548","at":"2026-08-20T15:05:59.038Z","actorUserId":"user-1","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-ad353425-6c6e-4aea-81d5-dfdc072155c1/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"c275278e-4a90-451d-8d3c-82330e7a645a","at":"2026-08-20T15:05:59.039Z","actorUserId":"user-admin","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-ad353425-6c6e-4aea-81d5-dfdc072155c1/strategy/decision forbidden","sensitive":false}
+# {"level":"audit","id":"c3a40a95-eba0-46fd-a4e7-55b88e6cdbe2","at":"2026-08-20T15:05:59.040Z","actorUserId":"user-advisor","action":"capital_access_denied","outcome":"denied","detail":"POST /api/capital/opportunities/cap-ad353425-6c6e-4aea-81d5-dfdc072155c1/strategy/decision forbidden","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects non-Manny strategy/shortlist and records the denial
+    ok 5 - rejects non-Manny strategy/shortlist and records the denial
+      ---
+      duration_ms: 31.552934
+      ...
+# {"level":"audit","id":"9ce4ad52-cf4c-4775-a8e0-8571faa35a29","at":"2026-08-20T15:05:59.048Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb created=true","sensitive":false}
+# {"level":"audit","id":"8b4fa348-6a5c-4e50-ad6a-4f86b6b966df","at":"2026-08-20T15:05:59.053Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"0fa7312d-3a3c-4e51-be1a-e7bd47df69e1","at":"2026-08-20T15:05:59.059Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"80e14b70-381c-4ea8-92e6-4a95c2e944b7","at":"2026-08-20T15:05:59.064Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"a3b939dc-ea07-4951-b4d0-930604aef805","at":"2026-08-20T15:05:59.066Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"4c930c1b-7848-4f53-bbe0-d91c9de0b475","at":"2026-08-20T15:05:59.069Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"dd798b87-ea15-4c89-b95a-c38476751908","at":"2026-08-20T15:05:59.071Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"audit","id":"e8e49032-6018-4d16-997d-3162a4454bc8","at":"2026-08-20T15:05:59.073Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-73d17b57-31e2-4975-a67a-d082dc26d5bb recordedOnly=true externalSubmit=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: externalSubmit stays recorded-only and duplicate submissions are idempotent
+    ok 6 - externalSubmit stays recorded-only and duplicate submissions are idempotent
+      ---
+      duration_ms: 34.552917
+      ...
+# {"level":"audit","id":"5cd5db7d-cb25-49b6-979d-9ac81705de6f","at":"2026-08-20T15:05:59.080Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c created=true","sensitive":false}
+# {"level":"audit","id":"a7e2566c-243b-46b6-b938-0e278901f964","at":"2026-08-20T15:05:59.085Z","actorUserId":"user-owner","action":"capital_strategy_decision","outcome":"success","detail":"id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"54490f99-7b0c-4bce-a1e7-4b8c47685f5d","at":"2026-08-20T15:05:59.093Z","actorUserId":"user-owner","action":"capital_shortlist_decision","outcome":"success","detail":"id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c decision=APPROVED","sensitive":false}
+# {"level":"audit","id":"574c2896-70b2-47bd-90c6-c91ce72d7491","at":"2026-08-20T15:05:59.104Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c attestation=CLIENT_CONFIRMATION_REQUIRED","sensitive":false}
+# {"level":"audit","id":"35cbcbe4-e1a4-435c-9a2a-29dde2f8fb6e","at":"2026-08-20T15:05:59.106Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c attestation=CLIENT_CONFIRMED","sensitive":false}
+# {"level":"audit","id":"4e189a9d-0f3f-45b2-bd94-b3f2a99f9d06","at":"2026-08-20T15:05:59.108Z","actorUserId":"user-owner","action":"capital_application_attest","outcome":"success","detail":"id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c attestation=APPROVED_FOR_SUBMISSION","sensitive":false}
+# {"level":"audit","id":"a4b2d1f1-2436-4c00-9828-59c8b4662382","at":"2026-08-20T15:05:59.110Z","actorUserId":"user-1","action":"capital_submission","outcome":"success","detail":"id=cap-406df10f-77eb-487f-8aa8-54d969f5ed0c recordedOnly=true externalSubmit=false","sensitive":false}
+    # Subtest: does not skip client attestation by submitting a different lenderId than the prepared package
+    ok 7 - does not skip client attestation by submitting a different lenderId than the prepared package
+      ---
+      duration_ms: 33.989382
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"audit","id":"91885e00-a5c7-4e80-a8fb-7741de244613","at":"2026-08-20T15:05:59.114Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-ca5d86d1-a877-4379-81db-a4f0d3b5d59d created=true","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: persists capital create audit trails to the Hub store
+    ok 8 - persists capital create audit trails to the Hub store
+      ---
+      duration_ms: 5.032133
+      ...
+# {"level":"audit","id":"dfe4dbe2-61aa-4d8d-ace9-168cd0bb8b28","at":"2026-08-20T15:05:59.120Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-9b68c9ef-ca0a-404a-b1e0-95ab76886ca7 created=true","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects send / sendToClient / externalSend on document-intelligence (draft only)
+    ok 9 - rejects send / sendToClient / externalSend on document-intelligence (draft only)
+      ---
+      duration_ms: 9.742628
+      ...
+# {"level":"audit","id":"467d8dab-0f79-4ee0-b7ef-05789e92425b","at":"2026-08-20T15:05:59.129Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-af563698-32a3-4156-9272-82da0e244406 created=true","sensitive":false}
+# {"level":"audit","id":"bacc49dd-dc8c-4ae8-89e6-4cc2dea4f79e","at":"2026-08-20T15:05:59.131Z","actorUserId":"user-other","action":"capital_opportunity_create","outcome":"success","detail":"client=ACCG01 id=cap-2a951e42-fbfa-4396-9582-ac375d0001b4 created=true","sensitive":false}
+# {"level":"audit","id":"3e9274e2-c5f9-4ad5-89c7-27bc73b162b1","at":"2026-08-20T15:05:59.135Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-af563698-32a3-4156-9272-82da0e244406","sensitive":false}
+# {"level":"audit","id":"0b9deb3d-60f0-4502-9cbe-74e6f2c16752","at":"2026-08-20T15:05:59.141Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-af563698-32a3-4156-9272-82da0e244406 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: blocks cross-client document attach and keeps SYN01 bound when filename says ACCG01
+    ok 10 - blocks cross-client document attach and keeps SYN01 bound when filename says ACCG01
+      ---
+      duration_ms: 15.865532
+      ...
+# {"level":"audit","id":"65836e30-d779-4443-8908-e4f01585e48d","at":"2026-08-20T15:05:59.145Z","actorUserId":"user-1","action":"capital_opportunity_create","outcome":"success","detail":"client=SYN01 id=cap-973bcfbd-704e-4926-adfa-5e51707fb0d1 created=true","sensitive":false}
+# {"level":"audit","id":"ee656050-8128-407d-b3b0-33a694ea62d3","at":"2026-08-20T15:05:59.148Z","actorUserId":"user-1","action":"capital_document_add","outcome":"success","detail":"id=cap-973bcfbd-704e-4926-adfa-5e51707fb0d1","sensitive":false}
+# {"level":"audit","id":"0424f8bb-7159-4078-8c0e-3aabcafae888","at":"2026-08-20T15:05:59.151Z","actorUserId":"user-1","action":"capital_document_intelligence","outcome":"success","detail":"id=cap-973bcfbd-704e-4926-adfa-5e51707fb0d1 sendAttempted=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: treats injected document instructions as content and demotes VERIFIED smuggling
+    ok 11 - treats injected document instructions as content and demotes VERIFIED smuggling
+      ---
+      duration_ms: 10.922412
+      ...
+    # Subtest: rejects wildcard ClientCode on writes even for Owner/Administrator
+    ok 12 - rejects wildcard ClientCode on writes even for Owner/Administrator
+      ---
+      duration_ms: 5.599729
+      ...
+    1..12
+ok 24 - Capital red team
+  ---
+  duration_ms: 234.207455
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Client 360 mapping contract
+    # Subtest: does not map a Client 360 UUID to a ClientCode
+    ok 1 - does not map a Client 360 UUID to a ClientCode
+      ---
+      duration_ms: 0.445844
+      ...
+    # Subtest: missing or malformed ClientCode values fail closed
+    ok 2 - missing or malformed ClientCode values fail closed
+      ---
+      duration_ms: 0.145503
+      ...
+    1..2
+ok 25 - Client 360 mapping contract
+  ---
+  duration_ms: 1.182756
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Client 360 authentication
+    # Subtest: no bearer → 401
+    ok 1 - no bearer → 401
+      ---
+      duration_ms: 21.116081
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: invalid bearer → 401
+    ok 2 - invalid bearer → 401
+      ---
+      duration_ms: 6.832823
+      ...
+    1..2
+ok 26 - Client 360 authentication
+  ---
+  duration_ms: 28.134905
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Client 360 fail-closed without trusted mapping
+    # Subtest: entitled user cannot access Client A or Client B by UUID
+    ok 1 - entitled user cannot access Client A or Client B by UUID
+      ---
+      duration_ms: 8.29613
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: empty membership cannot access Client A
+    ok 2 - empty membership cannot access Client A
+      ---
+      duration_ms: 4.834333
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: Administrator without Client A entitlement does not gain access
+    ok 3 - Administrator without Client A entitlement does not gain access
+      ---
+      duration_ms: 4.062451
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: HVCG Owner without Client A entitlement does not gain access
+    ok 4 - HVCG Owner without Client A entitlement does not gain access
+      ---
+      duration_ms: 3.974126
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: unknown UUID is denied the same way as a known UUID
+    ok 5 - unknown UUID is denied the same way as a known UUID
+      ---
+      duration_ms: 3.72681
+      ...
+    1..5
+ok 27 - Client 360 fail-closed without trusted mapping
+  ---
+  duration_ms: 25.37339
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Client 360 spoofing cannot create a mapping
+    # Subtest: x-atlas-client-ids: * does not broaden
+    ok 1 - x-atlas-client-ids: * does not broaden
+      ---
+      duration_ms: 10.652454
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: request body ClientCode does not override the server mapping
+    ok 2 - request body ClientCode does not override the server mapping
+      ---
+      duration_ms: 6.974748
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: query-string ClientCode does not override the server mapping
+    ok 3 - query-string ClientCode does not override the server mapping
+      ---
+      duration_ms: 3.59215
+      ...
+    1..3
+ok 28 - Client 360 spoofing cannot create a mapping
+  ---
+  duration_ms: 23.284319
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Client 360 IDOR
+    # Subtest: changing UUID from A to B does not expose B
+    ok 1 - changing UUID from A to B does not expose B
+      ---
+      duration_ms: 4.249042
+      ...
+    1..1
+ok 29 - Client 360 IDOR
+  ---
+  duration_ms: 6.05498
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Client 360 collection and mutation routes
+    # Subtest: list, dashboard, migration, ingest, and rebuild stay unavailable
+    ok 1 - list, dashboard, migration, ingest, and rebuild stay unavailable
+      ---
+      duration_ms: 11.15729
+      ...
+    # Subtest: inventory does not dump Client 360 candidates
+    ok 2 - inventory does not dump Client 360 candidates
+      ---
+      duration_ms: 2.987108
+      ...
+    1..2
+ok 30 - Client 360 collection and mutation routes
+  ---
+  duration_ms: 14.321422
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: connection ownership helper
+    # Subtest: matches only the verified principal userId
+    ok 1 - matches only the verified principal userId
+      ---
+      duration_ms: 0.622034
+      ...
+    # Subtest: ownerless records fail closed
+    ok 2 - ownerless records fail closed
+      ---
+      duration_ms: 0.150581
+      ...
+    # Subtest: does not treat email as ownership
+    ok 3 - does not treat email as ownership
+      ---
+      duration_ms: 0.072288
+      ...
+    1..3
+ok 31 - connection ownership helper
+  ---
+  duration_ms: 1.434708
+  type: 'suite'
+  ...
+# Subtest: production connector content policy
+    # Subtest: disables search and sync only in production, with no override flag
+    ok 1 - disables search and sync only in production, with no override flag
+      ---
+      duration_ms: 0.106685
+      ...
+    1..1
+ok 32 - production connector content policy
+  ---
+  duration_ms: 0.218083
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: connection listing
+    # Subtest: anonymous listing is 401
+    ok 1 - anonymous listing is 401
+      ---
+      duration_ms: 26.714398
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: user A sees only A connections and user B sees only B
+    ok 2 - user A sees only A connections and user B sees only B
+      ---
+      duration_ms: 10.973516
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: caller-supplied ownerUserId cannot enumerate another user
+    ok 3 - caller-supplied ownerUserId cannot enumerate another user
+      ---
+      duration_ms: 5.894483
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: ownerless connections are not listed
+    ok 4 - ownerless connections are not listed
+      ---
+      duration_ms: 8.097905
+      ...
+    1..4
+ok 33 - connection listing
+  ---
+  duration_ms: 52.267693
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: by-id connection IDOR
+    # Subtest: owner can read own connection and not another
+    ok 1 - owner can read own connection and not another
+      ---
+      duration_ms: 9.653227
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: Administrator and HVCG Owner cannot operate another user connection
+    ok 2 - Administrator and HVCG Owner cannot operate another user connection
+      ---
+      duration_ms: 12.601832
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: ownerless connection is 404 for an ordinary principal
+    ok 3 - ownerless connection is 404 for an ordinary principal
+      ---
+      duration_ms: 11.248276
+      ...
+    1..3
+ok 34 - by-id connection IDOR
+  ---
+  duration_ms: 33.697257
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: provider call ordering
+    # Subtest: unauthorized by-id actions do not call provider or decrypt tokens
+    ok 1 - unauthorized by-id actions do not call provider or decrypt tokens
+      ---
+      duration_ms: 21.458826
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: owned resources in development may call the adapter after ownership
+    ok 2 - owned resources in development may call the adapter after ownership
+      ---
+      duration_ms: 10.765461
+      ...
+    1..2
+ok 35 - provider call ordering
+  ---
+  duration_ms: 32.381954
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: spoofing cannot change ownership
+    # Subtest: body, query, headers, email, and client group do not grant another connection
+    ok 1 - body, query, headers, email, and client group do not grant another connection
+      ---
+      duration_ms: 10.632649
+      ...
+    1..1
+ok 36 - spoofing cannot change ownership
+  ---
+  duration_ms: 10.733965
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: production search and sync policy
+    # Subtest: owned search is denied in production without invoking the provider
+    ok 1 - owned search is denied in production without invoking the provider
+      ---
+      duration_ms: 7.511722
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: owned per-connection sync is denied in production
+    ok 2 - owned per-connection sync is denied in production
+      ---
+      duration_ms: 11.221267
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: sync/all in production does not process any connection
+    ok 3 - sync/all in production does not process any connection
+      ---
+      duration_ms: 4.024341
+      ...
+# {"level":"audit","id":"415c80c0-d62a-42ac-952e-7853aa7e5b36","at":"2026-08-20T15:05:59.472Z","actorUserId":"11111111-1111-1111-1111-1111111110aa","action":"sync_started","providerId":"microsoft","connectionId":"conn-owner-a","outcome":"info","detail":"","sensitive":false}
+# {"level":"audit","id":"144294eb-9a10-4f72-898f-a22134797b62","at":"2026-08-20T15:05:59.473Z","actorUserId":"11111111-1111-1111-1111-1111111110aa","action":"sync_completed","providerId":"microsoft","connectionId":"conn-owner-a","outcome":"success","detail":"","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: development still allows owned search/sync while enforcing ownership
+    ok 4 - development still allows owned search/sync while enforcing ownership
+      ---
+      duration_ms: 9.575631
+      ...
+# {"level":"audit","id":"4719d365-2617-4c43-88ff-48323199685c","at":"2026-08-20T15:05:59.479Z","actorUserId":"11111111-1111-1111-1111-1111111110aa","action":"sync_all","outcome":"success","detail":"synced 1 connections","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: development sync/all processes only the caller owned connections
+    ok 5 - development sync/all processes only the caller owned connections
+      ---
+      duration_ms: 5.305469
+      ...
+    1..5
+ok 37 - production search and sync policy
+  ---
+  duration_ms: 37.877139
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: inventory and audit scoping
+    # Subtest: inventory does not expose another user connection or token
+    ok 1 - inventory does not expose another user connection or token
+      ---
+      duration_ms: 5.98207
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: audit returns only the principal actor events
+    ok 2 - audit returns only the principal actor events
+      ---
+      duration_ms: 4.657291
+      ...
+    1..2
+ok 38 - inventory and audit scoping
+  ---
+  duration_ms: 10.782997
+  type: 'suite'
+  ...
+# Subtest: getOwnedConnection does not load credentials
+    # Subtest: ownership lookup uses connection metadata only
+    ok 1 - ownership lookup uses connection metadata only
+      ---
+      duration_ms: 2.474591
+      ...
+    1..1
+ok 39 - getOwnedConnection does not load credentials
+  ---
+  duration_ms: 2.533505
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: canonical ClientCode validation
+    # Subtest: accepts live-shaped codes and rejects aliases/UUIDs/wildcard
+    ok 1 - accepts live-shaped codes and rejects aliases/UUIDs/wildcard
+      ---
+      duration_ms: 0.443301
+      ...
+    # Subtest: parses only exact HVCG-Client-{ClientCode} names
+    ok 2 - parses only exact HVCG-Client-{ClientCode} names
+      ---
+      duration_ms: 0.106718
+      ...
+    1..2
+ok 40 - canonical ClientCode validation
+  ---
+  duration_ms: 1.136739
+  type: 'suite'
+  ...
+# Subtest: approved group map parsing
+    # Subtest: keeps a valid 1:1 map
+    ok 1 - keeps a valid 1:1 map
+      ---
+      duration_ms: 0.222111
+      ...
+    # Subtest: malformed GUID, malformed ClientCode, or wildcard fail the entire map
+    ok 2 - malformed GUID, malformed ClientCode, or wildcard fail the entire map
+      ---
+      duration_ms: 0.080145
+      ...
+    # Subtest: duplicate group IDs or duplicate ClientCodes fail closed
+    ok 3 - duplicate group IDs or duplicate ClientCodes fail closed
+      ---
+      duration_ms: 0.099912
+      ...
+    # Subtest: empty input is a valid empty map
+    ok 4 - empty input is a valid empty map
+      ---
+      duration_ms: 0.051621
+      ...
+    1..4
+ok 41 - approved group map parsing
+  ---
+  duration_ms: 0.721113
+  type: 'suite'
+  ...
+# Subtest: ClientEntitlementResolver
+    # Subtest: missing oid fails closed
+    ok 1 - missing oid fails closed
+      ---
+      duration_ms: 0.566807
+      ...
+    # Subtest: no membership → empty scope
+    ok 2 - no membership → empty scope
+      ---
+      duration_ms: 0.130594
+      ...
+    # Subtest: one approved client group → exactly one ClientCode
+    ok 3 - one approved client group → exactly one ClientCode
+      ---
+      duration_ms: 0.169436
+      ...
+    # Subtest: multiple approved groups → exact list only
+    ok 4 - multiple approved groups → exact list only
+      ---
+      duration_ms: 0.167207
+      ...
+    # Subtest: unrelated Entra groups and malformed codes are ignored
+    ok 5 - unrelated Entra groups and malformed codes are ignored
+      ---
+      duration_ms: 0.079355
+      ...
+    # Subtest: Graph failure and timeout fail closed
+    ok 6 - Graph failure and timeout fail closed
+      ---
+      duration_ms: 0.107535
+      ...
+    # Subtest: never returns wildcard
+    ok 7 - never returns wildcard
+      ---
+      duration_ms: 0.07425
+      ...
+    # Subtest: cache hit returns previously resolved exact scope
+    ok 8 - cache hit returns previously resolved exact scope
+      ---
+      duration_ms: 0.088595
+      ...
+    # Subtest: expired cache requires fresh resolution
+    ok 9 - expired cache requires fresh resolution
+      ---
+      duration_ms: 0.215421
+      ...
+    # Subtest: failed refresh does not keep stale authorization
+    ok 10 - failed refresh does not keep stale authorization
+      ---
+      duration_ms: 0.103148
+      ...
+    1..10
+ok 42 - ClientEntitlementResolver
+  ---
+  duration_ms: 1.953821
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Hub principal client scope from resolver
+    # Subtest: Administrator and HVCG Owner do not gain wildcard client scope
+    ok 1 - Administrator and HVCG Owner do not gain wildcard client scope
+      ---
+      duration_ms: 10.860138
+      ...
+    # Subtest: missing oid fails closed for client entitlement
+    ok 2 - missing oid fails closed for client entitlement
+      ---
+      duration_ms: 0.502202
+      ...
+    1..2
+ok 43 - Hub principal client scope from resolver
+  ---
+  duration_ms: 11.456113
+  type: 'suite'
+  ...
+# Subtest: Client 360 identifiers are not ClientCodes
+    # Subtest: random UUID client-360 path is forbidden without a trusted mapping
+    ok 1 - random UUID client-360 path is forbidden without a trusted mapping
+      ---
+      duration_ms: 19.318928
+      ...
+    1..1
+ok 44 - Client 360 identifiers are not ClientCodes
+  ---
+  duration_ms: 19.430516
+  type: 'suite'
+  ...
+# Subtest: entitlement config defaults
+    # Subtest: is enabled by default with 120s cache and empty approved groups
+    ok 1 - is enabled by default with 120s cache and empty approved groups
+      ---
+      duration_ms: 0.086413
+      ...
+    1..1
+ok 45 - entitlement config defaults
+  ---
+  duration_ms: 0.138749
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: PM backend configuration
+    # Subtest: development default is unavailable — local JSON is not silently authoritative
+    ok 1 - development default is unavailable — local JSON is not silently authoritative
+      ---
+      duration_ms: 0.561524
+      ...
+    # Subtest: explicit development-json is local-only and not SharePoint or production
+    ok 2 - explicit development-json is local-only and not SharePoint or production
+      ---
+      duration_ms: 0.116686
+      ...
+    # Subtest: local-json is an alias of development-json
+    ok 3 - local-json is an alias of development-json
+      ---
+      duration_ms: 0.066113
+      ...
+    # Subtest: production with no PM backend is unavailable, not a JSON fallback
+    ok 4 - production with no PM backend is unavailable, not a JSON fallback
+      ---
+      duration_ms: 0.053495
+      ...
+    # Subtest: production plus development-json is rejected at configuration time
+    ok 5 - production plus development-json is rejected at configuration time
+      ---
+      duration_ms: 0.257134
+      ...
+    # Subtest: production plus local-json is rejected at configuration time
+    ok 6 - production plus local-json is rejected at configuration time
+      ---
+      duration_ms: 0.07156
+      ...
+    # Subtest: sharepoint without required IDs is rejected at configuration time
+    ok 7 - sharepoint without required IDs is rejected at configuration time
+      ---
+      duration_ms: 0.209834
+      ...
+    # Subtest: sharepoint with valid IDs is selected and does not authorize JSON
+    ok 8 - sharepoint with valid IDs is selected and does not authorize JSON
+      ---
+      duration_ms: 0.232646
+      ...
+    # Subtest: sharepoint with malformed list ID is rejected
+    ok 9 - sharepoint with malformed list ID is rejected
+      ---
+      duration_ms: 0.147043
+      ...
+    # Subtest: sharepoint wildcard list ID is rejected
+    ok 10 - sharepoint wildcard list ID is rejected
+      ---
+      duration_ms: 0.28449
+      ...
+    # Subtest: sharepoint duplicate list IDs are rejected
+    ok 11 - sharepoint duplicate list IDs are rejected
+      ---
+      duration_ms: 0.122932
+      ...
+    # Subtest: sharepoint optional leads list is accepted when distinct
+    ok 12 - sharepoint optional leads list is accepted when distinct
+      ---
+      duration_ms: 0.149461
+      ...
+    # Subtest: sharepoint duplicate leads list ID is rejected
+    ok 13 - sharepoint duplicate leads list ID is rejected
+      ---
+      duration_ms: 0.110669
+      ...
+    1..13
+ok 46 - PM backend configuration
+  ---
+  duration_ms: 3.202006
+  type: 'suite'
+  ...
+# Subtest: authorized PM repository factory
+    # Subtest: does not instantiate PmRepository when the backend is unavailable
+    ok 1 - does not instantiate PmRepository when the backend is unavailable
+      ---
+      duration_ms: 1.48584
+      ...
+    # Subtest: production unavailable does not instantiate or touch pm-store.json
+    ok 2 - production unavailable does not instantiate or touch pm-store.json
+      ---
+      duration_ms: 0.499357
+      ...
+    # Subtest: production plus development-json fails closed before any JSON I/O
+    ok 3 - production plus development-json fails closed before any JSON I/O
+      ---
+      duration_ms: 0.323323
+      ...
+    # Subtest: explicit development-json initializes only the configured local path
+    ok 4 - explicit development-json initializes only the configured local path
+      ---
+      duration_ms: 1.258849
+      ...
+    1..4
+ok 47 - authorized PM repository factory
+  ---
+  duration_ms: 3.696537
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: authenticated PM + explicit local-development JSON
+    # Subtest: reads and writes only the configured local path and does not claim SharePoint or Live
+    ok 1 - reads and writes only the configured local path and does not claim SharePoint or Live
+      ---
+      duration_ms: 39.016359
+      ...
+    1..1
+ok 48 - authenticated PM + explicit local-development JSON
+  ---
+  duration_ms: 39.676094
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: development without local JSON authorization
+    # Subtest: does not silently use JSON and fails closed for PM reads and writes
+    ok 1 - does not silently use JSON and fails closed for PM reads and writes
+      ---
+      duration_ms: 10.462797
+      ...
+    1..1
+ok 49 - development without local JSON authorization
+  ---
+  duration_ms: 10.656235
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: production with no approved PM backend
+    # Subtest: keeps Hub operational and returns 503 for PM persistence without touching JSON
+    ok 1 - keeps Hub operational and returns 503 for PM persistence without touching JSON
+      ---
+      duration_ms: 9.217627
+      ...
+    1..1
+ok 50 - production with no approved PM backend
+  ---
+  duration_ms: 9.351259
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: no silent PM fallback
+    # Subtest: unavailable production path does not return development data or claim SharePoint success
+    ok 1 - unavailable production path does not return development data or claim SharePoint success
+      ---
+      duration_ms: 6.80693
+      ...
+    1..1
+ok 51 - no silent PM fallback
+  ---
+  duration_ms: 6.948658
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: Gate 8B-1 authentication still governs PM routes
+    # Subtest: unauthenticated PM request remains 401 and is not a backend-unavailable 503
+    ok 1 - unauthenticated PM request remains 401 and is not a backend-unavailable 503
+      ---
+      duration_ms: 3.706276
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: unauthenticated PM request is 401 even when local JSON is authorized
+    ok 2 - unauthenticated PM request is 401 even when local JSON is authorized
+      ---
+      duration_ms: 6.768997
+      ...
+    # Subtest: authenticated unavailable PM is 503, not 401
+    ok 3 - authenticated unavailable PM is 503, not 401
+      ---
+      duration_ms: 2.471135
+      ...
+    1..3
+ok 52 - Gate 8B-1 authentication still governs PM routes
+  ---
+  duration_ms: 13.287412
+  type: 'suite'
+  ...
+# Subtest: client activation helpers
+    # Subtest: strips the converted Discovery suffix from opportunity titles
+    ok 1 - strips the converted Discovery suffix from opportunity titles
+      ---
+      duration_ms: 0.534771
+      ...
+    # Subtest: classifies won prospect as activation required and active client as active
+    ok 2 - classifies won prospect as activation required and active client as active
+      ---
+      duration_ms: 0.123423
+      ...
+    # Subtest: round-trips activation notes without dropping other operator notes
+    ok 3 - round-trips activation notes without dropping other operator notes
+      ---
+      duration_ms: 0.193601
+      ...
+    1..3
+ok 53 - client activation helpers
+  ---
+  duration_ms: 1.424951
+  type: 'suite'
+  ...
+# Subtest: PM Graph transport resource allowlist
+    # Subtest: accepts the four configured lists and rejects any other list before Graph
+    ok 1 - accepts the four configured lists and rejects any other list before Graph
+      ---
+      duration_ms: 17.006496
+      ...
+    # Subtest: allows HVCG_Leads write only when leadsListId is configured
+    ok 2 - allows HVCG_Leads write only when leadsListId is configured
+      ---
+      duration_ms: 0.649499
+      ...
+    1..2
+ok 54 - PM Graph transport resource allowlist
+  ---
+  duration_ms: 18.231632
+  type: 'suite'
+  ...
+# Subtest: PM Graph transport capability matrix
+    # Subtest: permits Projects/Tasks/Milestones/Clients selected-list writes and rejects unknown lists
+    ok 1 - permits Projects/Tasks/Milestones/Clients selected-list writes and rejects unknown lists
+      ---
+      duration_ms: 4.722738
+      ...
+    1..1
+ok 55 - PM Graph transport capability matrix
+  ---
+  duration_ms: 4.808687
+  type: 'suite'
+  ...
+# Subtest: PM Graph origin, site, and redirect controls
+    # Subtest: accepts the Graph origin and rejects alternate HTTPS, HTTP, and malformed continuation URLs before token use
+    ok 1 - accepts the Graph origin and rejects alternate HTTPS, HTTP, and malformed continuation URLs before token use
+      ---
+      duration_ms: 0.525561
+      ...
+    # Subtest: rejects a continuation path for a different site before an authenticated Graph request
+    ok 2 - rejects a continuation path for a different site before an authenticated Graph request
+      ---
+      duration_ms: 0.194375
+      ...
+    # Subtest: does not follow Graph 301/302/307/308 or forward the bearer token to a Location URL
+    ok 3 - does not follow Graph 301/302/307/308 or forward the bearer token to a Location URL
+      ---
+      duration_ms: 1.723091
+      ...
+    1..3
+ok 56 - PM Graph origin, site, and redirect controls
+  ---
+  duration_ms: 2.736363
+  type: 'suite'
+  ...
+# Subtest: PM Graph pagination nextLink confinement
+    # Subtest: accepts a same-list nextLink and rejects cross-list, catalog, columns, and permissions links before Graph
+    ok 1 - accepts a same-list nextLink and rejects cross-list, catalog, columns, and permissions links before Graph
+      ---
+      duration_ms: 0.549494
+      ...
+    # Subtest: rejects a Graph-returned nextLink that switches lists without issuing another request
+    ok 2 - rejects a Graph-returned nextLink that switches lists without issuing another request
+      ---
+      duration_ms: 0.344249
+      ...
+    1..2
+ok 57 - PM Graph pagination nextLink confinement
+  ---
+  duration_ms: 1.061309
+  type: 'suite'
+  ...
+# Subtest: PM Graph metadata surface absence
+    # Subtest: exposes only item list/get/create/patch operations
+    ok 1 - exposes only item list/get/create/patch operations
+      ---
+      duration_ms: 0.534266
+      ...
+    1..1
+ok 58 - PM Graph metadata surface absence
+  ---
+  duration_ms: 0.65643
+  type: 'suite'
+  ...
+# Subtest: PM Graph Selected-permission collection reads
+    # Subtest: does not send $filter to Graph even when a Hub field predicate is supplied
+    ok 1 - does not send $filter to Graph even when a Hub field predicate is supplied
+      ---
+      duration_ms: 0.406546
+      ...
+    # Subtest: maps Graph 401 and 403 to a permission/token rejection without leaking the body
+    ok 2 - maps Graph 401 and 403 to a permission/token rejection without leaking the body
+      ---
+      duration_ms: 0.706032
+      ...
+    1..2
+ok 59 - PM Graph Selected-permission collection reads
+  ---
+  duration_ms: 1.190965
+  type: 'suite'
+  ...
+# Subtest: Lead conversion helpers
+    # Subtest: maps ServiceInterest onto existing OpportunityType choices
+    ok 1 - maps ServiceInterest onto existing OpportunityType choices
+      ---
+      duration_ms: 0.393139
+      ...
+    # Subtest: reuses the Power Automate opportunity idempotency pattern
+    ok 2 - reuses the Power Automate opportunity idempotency pattern
+      ---
+      duration_ms: 0.076473
+      ...
+    # Subtest: proposes a canonical ClientCode without colliding
+    ok 3 - proposes a canonical ClientCode without colliding
+      ---
+      duration_ms: 0.261767
+      ...
+    # Subtest: strips the converted Discovery suffix from opportunity titles
+    ok 4 - strips the converted Discovery suffix from opportunity titles
+      ---
+      duration_ms: 0.125779
+      ...
+    # Subtest: promotes only Lead-stage reused companies and never ACCG01
+    ok 5 - promotes only Lead-stage reused companies and never ACCG01
+      ---
+      duration_ms: 0.137876
+      ...
+    1..5
+ok 60 - Lead conversion helpers
+  ---
+  duration_ms: 1.61683
+  type: 'suite'
+  ...
+# Subtest: App Service managed-identity token provider
+    # Subtest: requests the platform IDENTITY_ENDPOINT with X-IDENTITY-HEADER, UAMI client_id, and Graph resource
+    ok 1 - requests the platform IDENTITY_ENDPOINT with X-IDENTITY-HEADER, UAMI client_id, and Graph resource
+      ---
+      duration_ms: 13.245161
+      ...
+    # Subtest: SharePoint production Graph token resource is Microsoft Graph, never the BA Application ID URI
+    ok 2 - SharePoint production Graph token resource is Microsoft Graph, never the BA Application ID URI
+      ---
+      duration_ms: 0.086174
+      ...
+    # Subtest: requests a custom resource URI when provided (Hub→BA Application ID URI)
+    ok 3 - requests a custom resource URI when provided (Hub→BA Application ID URI)
+      ---
+      duration_ms: 0.540252
+      ...
+    # Subtest: accepts the App Service Linux link-local token endpoint from IDENTITY_ENDPOINT
+    ok 4 - accepts the App Service Linux link-local token endpoint from IDENTITY_ENDPOINT
+      ---
+      duration_ms: 0.54487
+      ...
+    # Subtest: ignores MANAGED_IDENTITY_ENDPOINT and never uses VM IMDS
+    ok 5 - ignores MANAGED_IDENTITY_ENDPOINT and never uses VM IMDS
+      ---
+      duration_ms: 0.391715
+      ...
+    # Subtest: fails closed when IDENTITY_ENDPOINT is missing and does not fetch
+    ok 6 - fails closed when IDENTITY_ENDPOINT is missing and does not fetch
+      ---
+      duration_ms: 4.218445
+      ...
+    # Subtest: fails closed when IDENTITY_HEADER is missing and does not fetch
+    ok 7 - fails closed when IDENTITY_HEADER is missing and does not fetch
+      ---
+      duration_ms: 0.347294
+      ...
+    # Subtest: fails closed when the identity endpoint is VM IMDS or a non-local host
+    ok 8 - fails closed when the identity endpoint is VM IMDS or a non-local host
+      ---
+      duration_ms: 0.604385
+      ...
+    # Subtest: fails closed when the user-assigned client ID is missing or malformed
+    ok 9 - fails closed when the user-assigned client ID is missing or malformed
+      ---
+      duration_ms: 0.411756
+      ...
+    # Subtest: SharePoint production mode rejects missing AZURE_CLIENT_ID at configuration time
+    ok 10 - SharePoint production mode rejects missing AZURE_CLIENT_ID at configuration time
+      ---
+      duration_ms: 0.469189
+      ...
+    # Subtest: fails closed on malformed token responses
+    ok 11 - fails closed on malformed token responses
+      ---
+      duration_ms: 4.138626
+      ...
+    # Subtest: fails closed on token-service 4xx without leaking the response body
+    ok 12 - fails closed on token-service 4xx without leaking the response body
+      ---
+      duration_ms: 0.301889
+      ...
+    # Subtest: fails closed on token-service 5xx without a second credential attempt
+    ok 13 - fails closed on token-service 5xx without a second credential attempt
+      ---
+      duration_ms: 0.28153
+      ...
+    # Subtest: fails closed on timeout
+    ok 14 - fails closed on timeout
+      ---
+      duration_ms: 20.39286
+      ...
+    # Subtest: does not follow redirects or forward X-IDENTITY-HEADER off the local endpoint
+    ok 15 - does not follow redirects or forward X-IDENTITY-HEADER off the local endpoint
+      ---
+      duration_ms: 0.460902
+      ...
+    # Subtest: does not fall back to another identity after a failed App Service token request
+    ok 16 - does not fall back to another identity after a failed App Service token request
+      ---
+      duration_ms: 0.355019
+      ...
+    1..16
+ok 61 - App Service managed-identity token provider
+  ---
+  duration_ms: 47.752168
+  type: 'suite'
+  ...
+# Subtest: Manny-only authorization
+    # Subtest: accepts only the authenticated Manny Entra oid
+    ok 1 - accepts only the authenticated Manny Entra oid
+      ---
+      duration_ms: 0.585904
+      ...
+    1..1
+ok 62 - Manny-only authorization
+  ---
+  duration_ms: 1.162394
+  type: 'suite'
+  ...
+# Subtest: Information fabric classification
+    # Subtest: HIGH-associates known client names and does not treat Loanspark as a client
+    ok 1 - HIGH-associates known client names and does not treat Loanspark as a client
+      ---
+      duration_ms: 1.252026
+      ...
+    # Subtest: keeps restricted content as metadata-only and redacts secrets
+    ok 2 - keeps restricted content as metadata-only and redacts secrets
+      ---
+      duration_ms: 0.200698
+      ...
+    # Subtest: skips personal/unrelated mail
+    ok 3 - skips personal/unrelated mail
+      ---
+      duration_ms: 0.075988
+      ...
+    # Subtest: HIGH-associates HVCG_{ClientCode} libraries and marks restricted folders
+    ok 4 - HIGH-associates HVCG_{ClientCode} libraries and marks restricted folders
+      ---
+      duration_ms: 0.413918
+      ...
+    1..4
+ok 63 - Information fabric classification
+  ---
+  duration_ms: 2.142615
+  type: 'suite'
+  ...
+# Subtest: File index markers
+    # Subtest: does not treat Channel=Other email as a document
+    ok 1 - does not treat Channel=Other email as a document
+      ---
+      duration_ms: 0.241733
+      ...
+    1..1
+ok 64 - File index markers
+  ---
+  duration_ms: 0.456114
+  type: 'suite'
+  ...
+# Subtest: Fabric Graph allowlist
+    # Subtest: allows known site/drive reads and Search POST, rejects tenant-wide site search
+    ok 1 - allows known site/drive reads and Search POST, rejects tenant-wide site search
+      ---
+      duration_ms: 0.83964
+      ...
+    1..1
+ok 65 - Fabric Graph allowlist
+  ---
+  duration_ms: 0.925749
+  type: 'suite'
+  ...
+# Subtest: Search extracts drive items and includes Atlas records
+    # Subtest: parses Graph search hits without copying binaries
+    ok 1 - parses Graph search hits without copying binaries
+      ---
+      duration_ms: 0.192996
+      ...
+    # Subtest: returns entitled engagements/files and keeps other ClientCodes out
+    ok 2 - returns entitled engagements/files and keeps other ClientCodes out
+      ---
+      duration_ms: 1.104196
+      ...
+    # Subtest: keeps non-entitled ClientCodes out of opportunity/lead/capital hits and does not use /pipeline
+    ok 3 - keeps non-entitled ClientCodes out of opportunity/lead/capital hits and does not use /pipeline
+      ---
+      duration_ms: 1.649027
+      ...
+    1..3
+ok 66 - Search extracts drive items and includes Atlas records
+  ---
+  duration_ms: 3.059668
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: PM search / Elite Hub routes — SYN isolation
+    # Subtest: SYN01 search cannot see SYN02 clients, projects, tasks, docs, or opportunities
+    ok 1 - SYN01 search cannot see SYN02 clients, projects, tasks, docs, or opportunities
+      ---
+      duration_ms: 31.744143
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: prompt-injection and oversized search queries do not broaden scope
+    ok 2 - prompt-injection and oversized search queries do not broaden scope
+      ---
+      duration_ms: 12.634208
+      ...
+    # Subtest: x-atlas spoofing cannot become Manny or broaden SYN01 to SYN02
+    ok 3 - x-atlas spoofing cannot become Manny or broaden SYN01 to SYN02
+      ---
+      duration_ms: 7.322918
+      ...
+    # Subtest: non-Manny cannot read unclassified files or tenant vendors via search
+    ok 4 - non-Manny cannot read unclassified files or tenant vendors via search
+      ---
+      duration_ms: 0.424532
+      ...
+    # Subtest: SYN / SYN01 / exact and partial client name hit the authorized client
+    ok 5 - SYN / SYN01 / exact and partial client name hit the authorized client
+      ---
+      duration_ms: 2.296576
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: workspace extras throw or hang cannot drop an authorized SYN01 client hit
+    ok 6 - workspace extras throw or hang cannot drop an authorized SYN01 client hit
+      ---
+      duration_ms: 81.051806
+      ...
+    # Subtest: capital opportunity search stays client-scoped and uses the file route
+    ok 7 - capital opportunity search stays client-scoped and uses the file route
+      ---
+      duration_ms: 0.479186
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: foreign project/task ID substitution is 404/403 and create cannot plant SYN02
+    ok 8 - foreign project/task ID substitution is 404/403 and create cannot plant SYN02
+      ---
+      duration_ms: 14.815592
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: SharePoint my-work ignores ownerId impersonation; fabric sync is Manny-only
+    ok 9 - SharePoint my-work ignores ownerId impersonation; fabric sync is Manny-only
+      ---
+      duration_ms: 13.897268
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: search query-param manipulation cannot broaden SYN01 onto SYN02
+    ok 10 - search query-param manipulation cannot broaden SYN01 onto SYN02
+      ---
+      duration_ms: 5.604008
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: unauthenticated search is 401; missing bearer is not a 200 empty leak
+    ok 11 - unauthenticated search is 401; missing bearer is not a 200 empty leak
+      ---
+      duration_ms: 3.455498
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: SYN01 search cannot see a SYN02 lead; unclassified leads do not use clientIds *
+    ok 12 - SYN01 search cannot see a SYN02 lead; unclassified leads do not use clientIds *
+      ---
+      duration_ms: 7.239811
+      ...
+# {"level":"audit","id":"e506944c-c91c-4069-a5da-10fecc407024","at":"2026-08-20T15:06:00.378Z","actorUserId":"11111111-1111-4111-8111-aaaaaaaaaa02","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=100 client=SYN02","sensitive":false}
+    # Subtest: duplicate project idempotency does not leak SYN02 rows to SYN01
+    ok 13 - duplicate project idempotency does not leak SYN02 rows to SYN01
+      ---
+      duration_ms: 7.511372
+      ...
+    1..13
+ok 67 - PM search / Elite Hub routes — SYN isolation
+  ---
+  duration_ms: 189.693357
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: SharePoint PM unit: authz / odata / mapping safety
+    # Subtest: missing ClientCode is not internal
+    ok 1 - missing ClientCode is not internal
+      ---
+      duration_ms: 0.59815
+      ...
+    # Subtest: Administrator and client roles are not internal staff
+    ok 2 - Administrator and client roles are not internal staff
+      ---
+      duration_ms: 0.187411
+      ...
+    # Subtest: wildcard is not a client scope
+    ok 3 - wildcard is not a client scope
+      ---
+      duration_ms: 0.075184
+      ...
+    # Subtest: OData escaping doubles quotes
+    ok 4 - OData escaping doubles quotes
+      ---
+      duration_ms: 0.084305
+      ...
+    # Subtest: Hub matches field filters in memory without sending them to Graph
+    ok 5 - Hub matches field filters in memory without sending them to Graph
+      ---
+      duration_ms: 0.189631
+      ...
+    # Subtest: pagination nextLink off graph.microsoft.com is rejected
+    ok 6 - pagination nextLink off graph.microsoft.com is rejected
+      ---
+      duration_ms: 0.610759
+      ...
+    1..6
+ok 68 - SharePoint PM unit: authz / odata / mapping safety
+  ---
+  duration_ms: 2.430422
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: SharePoint PM HTTP
+    # Subtest: health reports sharepoint without raw IDs or tokens and does not write JSON
+    ok 1 - health reports sharepoint without raw IDs or tokens and does not write JSON
+      ---
+      duration_ms: 24.121332
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: lists only entitled client projects and excludes others
+    ok 2 - lists only entitled client projects and excludes others
+      ---
+      duration_ms: 11.999101
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: internal projects require staff; missing ClientCode is not internal; admin denied
+    ok 3 - internal projects require staff; missing ClientCode is not internal; admin denied
+      ---
+      duration_ms: 8.164706
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: creates client project with lookup; rejects UUID/display/unauthorized/duplicate/missing ClientCode
+    ok 4 - creates client project with lookup; rejects UUID/display/unauthorized/duplicate/missing ClientCode
+      ---
+      duration_ms: 13.991708
+      ...
+# {"level":"audit","id":"c2f706e1-bc05-4e70-a459-a24f816eefaa","at":"2026-08-20T15:06:00.335Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=1 client=ACCG01","sensitive":false}
+# {"level":"audit","id":"177682a9-a581-4d8a-b4ae-bb66ce2b4cb2","at":"2026-08-20T15:06:00.341Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=2 client=internal","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: creates client and internal projects; patch keeps classification immutable
+    ok 5 - creates client and internal projects; patch keeps classification immutable
+      ---
+      duration_ms: 16.337829
+      ...
+# {"level":"audit","id":"137d6371-37a5-43b8-aa32-f1fe7fd1c38e","at":"2026-08-20T15:06:00.348Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_project_create","outcome":"success","detail":"list=HVCG_Projects item=1 client=ACCG01","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: ETag conflict is 412; archive is not implemented
+    ok 6 - ETag conflict is 412; archive is not implemented
+      ---
+      duration_ms: 10.193892
+      ...
+# {"level":"audit","id":"90b69217-655c-462b-8e8f-cbfad7fbd97d","at":"2026-08-20T15:06:00.363Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_task_create","outcome":"success","detail":"list=HVCG_Tasks item=1 project=30","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: tasks require authorized parent and inherit ClientCode; ProjectId immutable
+    ok 7 - tasks require authorized parent and inherit ClientCode; ProjectId immutable
+      ---
+      duration_ms: 15.874714
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: inconsistent task/project ClientCode fails closed
+    ok 8 - inconsistent task/project ClientCode fails closed
+      ---
+      duration_ms: 4.050721
+      ...
+# {"level":"audit","id":"5b9e2e20-9ca9-47c8-b6c6-1a3b6bf6d730","at":"2026-08-20T15:06:00.381Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_milestone_create","outcome":"success","detail":"list=HVCG_Milestones item=1 project=50","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: milestones require project authorization
+    ok 9 - milestones require project authorization
+      ---
+      duration_ms: 7.889104
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: My Work uses oid directory mail, ignores owner query, fails closed on directory errors
+    ok 10 - My Work uses oid directory mail, ignores owner query, fails closed on directory errors
+      ---
+      duration_ms: 8.04001
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: My Work UPN fallback and command center / portfolio stay in scope
+    ok 11 - My Work UPN fallback and command center / portfolio stay in scope
+      ---
+      duration_ms: 6.195723
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: Command Center Graph 403 is a permission rejection, not an empty success
+    ok 12 - Command Center Graph 403 is a permission rejection, not an empty success
+      ---
+      duration_ms: 4.351616
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: clients directory is SharePoint HVCG_Clients by ClientCode, not Client 360
+    ok 13 - clients directory is SharePoint HVCG_Clients by ClientCode, not Client 360
+      ---
+      duration_ms: 9.481169
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: deferred routes are not implemented and do not fall back to JSON
+    ok 14 - deferred routes are not implemented and do not fall back to JSON
+      ---
+      duration_ms: 7.595927
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: pagination follows in-origin nextLink
+    ok 15 - pagination follows in-origin nextLink
+      ---
+      duration_ms: 3.207939
+      ...
+    1..15
+ok 69 - SharePoint PM HTTP
+  ---
+  duration_ms: 152.227613
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: SharePoint HVCG_Leads operator queue
+    # Subtest: lists unclassified leads for internal staff and surfaces them on Command Center
+    ok 1 - lists unclassified leads for internal staff and surfaces them on Command Center
+      ---
+      duration_ms: 5.713471
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: Administrator and Advisor cannot read unclassified HVCG_Leads
+    ok 2 - Administrator and Advisor cannot read unclassified HVCG_Leads
+      ---
+      duration_ms: 3.853866
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not leak a foreign converted lead and rejects Converted PATCH
+    ok 3 - does not leak a foreign converted lead and rejects Converted PATCH
+      ---
+      duration_ms: 4.784545
+      ...
+# {"level":"audit","id":"9651916a-1f91-44fd-9cd8-6a639bf879cf","at":"2026-08-20T15:06:00.441Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=84 prev=New next=Converted company=NORTH01 stage=Prospect opportunity=3 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: converts a New website lead into Company, Contact, and Discovery Opportunity
+    not ok 4 - converts a New website lead into Company, Contact, and Discovery Opportunity
+      ---
+      duration_ms: 15.367829
+      location: '/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:1:28969'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        
+        404 !== 200
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 200
+      actual: 404
+      operator: 'strictEqual'
+      stack: |-
+        <anonymous> (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:1003:14)
+        process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        async withSpHub (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:224:5)
+        async withCrmLeads (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:845:7)
+        async TestContext.<anonymous> (/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:929:5)
+        async Test.run (node:internal/test_runner/test:980:9)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:677:7)
+      ...
+# {"level":"audit","id":"29c7b2b1-c346-4a7f-8278-a66d3630c90d","at":"2026-08-20T15:06:00.456Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=85 prev=Contacted next=Converted company=ACCG01 stage= opportunity=2 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: reuses an existing HVCG_Clients company by title and denies Converted PATCH
+    ok 5 - reuses an existing HVCG_Clients company by title and denies Converted PATCH
+      ---
+      duration_ms: 5.131988
+      ...
+# {"level":"audit","id":"60f6a7a3-c0ac-417e-bf87-0ef012bd6686","at":"2026-08-20T15:06:00.460Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=201 prev=New next=Converted company=SYNQA stage=Prospect opportunity=2 entitlement=false","sensitive":false}
+# {"level":"audit","id":"84e732df-b7f8-4eca-aba8-1a9663757387","at":"2026-08-20T15:06:00.463Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=202 prev=New next=Converted company=SYNACT stage=Active Client opportunity=4 entitlement=false","sensitive":false}
+# {"level":"audit","id":"e14a07e9-515e-47ab-8c4e-53e367c73c1b","at":"2026-08-20T15:06:00.467Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=203 prev=Contacted next=Converted company=ACCG01 stage=Lead opportunity=6 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: promotes a reused Lead-stage company to Prospect and never downgrades Active Client or ACCG01
+    ok 6 - promotes a reused Lead-stage company to Prospect and never downgrades Active Client or ACCG01
+      ---
+      duration_ms: 12.463517
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: recovers opportunity clientCode from converted title when Graph drops ClientId
+    ok 7 - recovers opportunity clientCode from converted title when Graph drops ClientId
+      ---
+      duration_ms: 2.543547
+      ...
+# {"level":"audit","id":"1fc5a341-66c6-4afc-bad2-1aae7611e7a3","at":"2026-08-20T15:06:00.479Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=88 prev=New next=Converted company=SYNCO01 stage=Prospect opportunity=3 entitlement=false","sensitive":false}
+# {"level":"audit","id":"20c1ca64-1e8a-4f21-bbf4-e795029b419b","at":"2026-08-20T15:06:00.483Z","actorUserId":"11111111-1111-4111-8111-111111111001","action":"pm_lead_convert","outcome":"success","detail":"list=HVCG_Leads item=89 prev=New next=Converted company=SYNPA01 stage=Prospect opportunity=6 entitlement=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity
+    ok 8 - does not grant entitlement and reconciles Graph 503 without duplicating the Opportunity
+      ---
+      duration_ms: 13.12722
+      ...
+# {"level":"audit","id":"1316c9c2-5587-4834-913f-937995babc21","at":"2026-08-20T15:06:00.489Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_opportunity_patch","outcome":"success","detail":"list=HVCG_Opportunities item=120 stage=Proposal winLoss=Open attention=NEEDS_MANNY clientStage=Prospect","sensitive":false}
+# {"level":"audit","id":"55c118e9-901c-48d7-b2d4-3d660d666adb","at":"2026-08-20T15:06:00.494Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_opportunity_patch","outcome":"success","detail":"list=HVCG_Opportunities item=120 stage=Won winLoss=Won attention=ACTIVATION_REQUIRED clientStage=Prospect","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: operates Opportunities with attention states, ETag safety, audit, and no client activation
+    ok 9 - operates Opportunities with attention states, ETag safety, audit, and no client activation
+      ---
+      duration_ms: 10.08585
+      ...
+# {"level":"audit","id":"f933ed03-de22-45e7-b490-dbdc57e7b77e","at":"2026-08-20T15:06:00.506Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_client_activation_request","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=activation_required stage=Prospect entitlement=false replay=false","sensitive":false}
+# {"level":"audit","id":"50d680c1-96d0-4f19-9377-ea7aac42b34b","at":"2026-08-20T15:06:00.507Z","actorUserId":"11111111-1111-4111-8111-111111111003","action":"pm_client_activation_review","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=review stage=Prospect entitlement=false replay=false","sensitive":false}
+# {"level":"audit","id":"fc57ddec-ff98-420b-b16c-6e87d84a0e36","at":"2026-08-20T15:06:00.510Z","actorUserId":"e4835ea2-3c45-493a-95f5-472f6339661d","action":"pm_client_activation_authorize","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=authorized stage=Active Client entitlement=false replay=false","sensitive":false}
+# {"level":"audit","id":"0d6595f5-2ae8-4cf8-af35-61063d637a09","at":"2026-08-20T15:06:00.511Z","actorUserId":"e4835ea2-3c45-493a-95f5-472f6339661d","action":"pm_client_activation_authorize","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=authorized stage=Active Client entitlement=false replay=true","sensitive":false}
+# {"level":"audit","id":"5669281f-b7f0-4ce7-a513-f9a6941e6be8","at":"2026-08-20T15:06:00.512Z","actorUserId":"e4835ea2-3c45-493a-95f5-472f6339661d","action":"pm_client_activation_verify","outcome":"success","detail":"list=HVCG_Clients client=SYNTH01 opp=130 status=verified stage=Active Client entitlement=false replay=false","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: governs client activation separately from Won and never provisions entitlements
+    ok 10 - governs client activation separately from Won and never provisions entitlements
+      ---
+      duration_ms: 18.277991
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: does not convert Disqualified leads and returns 503 when Opportunities are unconfigured
+    ok 11 - does not convert Disqualified leads and returns 503 when Opportunities are unconfigured
+      ---
+      duration_ms: 6.244177
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: portfolio blockerCount uses blocked tasks and dataQuality.needsOwnerReview
+    ok 12 - portfolio blockerCount uses blocked tasks and dataQuality.needsOwnerReview
+      ---
+      duration_ms: 2.48798
+      ...
+    1..12
+not ok 70 - SharePoint HVCG_Leads operator queue
+  ---
+  duration_ms: 100.597174
+  type: 'suite'
+  location: '/tmp/rt-d21/od005/apps/atlas-integration-api/tests/hub-pm-sharepoint.test.ts:1:25206'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: SharePoint config does not fall back to JSON
+    # Subtest: createAuthorizedPmRepository is null when sharepoint is selected
+    ok 1 - createAuthorizedPmRepository is null when sharepoint is selected
+      ---
+      duration_ms: 0.514709
+      ...
+    1..1
+ok 71 - SharePoint config does not fall back to JSON
+  ---
+  duration_ms: 0.564791
+  type: 'suite'
+  ...
+# Subtest: Hub bind host classification
+    # Subtest: treats 127.0.0.1, ::1, and localhost as loopback
+    ok 1 - treats 127.0.0.1, ::1, and localhost as loopback
+      ---
+      duration_ms: 0.446828
+      ...
+    1..1
+ok 72 - Hub bind host classification
+  ---
+  duration_ms: 0.997839
+  type: 'suite'
+  ...
+# Subtest: Hub runtime security configuration
+    # Subtest: A. development default requires auth and loopback bind
+    ok 1 - A. development default requires auth and loopback bind
+      ---
+      duration_ms: 0.265872
+      ...
+    # Subtest: B. production default requires auth
+    ok 2 - B. production default requires auth
+      ---
+      duration_ms: 0.071849
+      ...
+    # Subtest: C. production INTEGRATION_REQUIRE_AUTH=false fails startup
+    ok 3 - C. production INTEGRATION_REQUIRE_AUTH=false fails startup
+      ---
+      duration_ms: 0.273878
+      ...
+    # Subtest: D. auth disable without explicit insecure-dev opt-in is rejected
+    ok 4 - D. auth disable without explicit insecure-dev opt-in is rejected
+      ---
+      duration_ms: 0.215722
+      ...
+    # Subtest: E. explicit insecure dev + loopback is permitted
+    ok 5 - E. explicit insecure dev + loopback is permitted
+      ---
+      duration_ms: 0.079725
+      ...
+    # Subtest: F. explicit insecure dev + 0.0.0.0 is rejected
+    ok 6 - F. explicit insecure dev + 0.0.0.0 is rejected
+      ---
+      duration_ms: 0.126725
+      ...
+    # Subtest: G. any auth-off + non-loopback is rejected
+    ok 7 - G. any auth-off + non-loopback is rejected
+      ---
+      duration_ms: 0.170578
+      ...
+    # Subtest: H. auth-on + explicit 0.0.0.0 is allowed
+    ok 8 - H. auth-on + explicit 0.0.0.0 is allowed
+      ---
+      duration_ms: 0.09814
+      ...
+    # Subtest: production cannot enable insecure-dev opt-in
+    ok 9 - production cannot enable insecure-dev opt-in
+      ---
+      duration_ms: 0.18955
+      ...
+    1..9
+ok 73 - Hub runtime security configuration
+  ---
+  duration_ms: 1.799585
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: website intake key
+    # Subtest: rejects empty, short, and mismatched keys without accepting Bearer as a substitute
+    ok 1 - rejects empty, short, and mismatched keys without accepting Bearer as a substitute
+      ---
+      duration_ms: 0.618562
+      ...
+    1..1
+ok 74 - website intake key
+  ---
+  duration_ms: 1.190775
+  type: 'suite'
+  ...
+# Subtest: website lead idempotency
+    # Subtest: prefers fullPayload.idempotencyKey then eva|session then website|leadId
+    ok 1 - prefers fullPayload.idempotencyKey then eva|session then website|leadId
+      ---
+      duration_ms: 0.244799
+      ...
+    # Subtest: rejects foreign-prefix overwrite (XSYS-02)
+    ok 2 - rejects foreign-prefix overwrite (XSYS-02)
+      ---
+      duration_ms: 0.303353
+      ...
+    1..2
+ok 75 - website lead idempotency
+  ---
+  duration_ms: 0.646981
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: POST /api/website/leads
+    # Subtest: is 503 when the intake key is not configured (not a fake 200)
+    ok 1 - is 503 when the intake key is not configured (not a fake 200)
+      ---
+      duration_ms: 23.250203
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: is 401 without signed intake auth and Bearer does not grant ingest (XSYS-01)
+    ok 2 - is 401 without signed intake auth and Bearer does not grant ingest (XSYS-01)
+      ---
+      duration_ms: 20.196548
+      ...
+# {"level":"audit","id":"2f237a3f-43c0-4bfe-9b33-25fe6ea52a5b","at":"2026-08-20T15:06:00.466Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"created list=HVCG_Leads item=1 keyId=website","sensitive":false}
+# {"level":"audit","id":"6c7270b7-9c89-4e83-8309-240d78c8e942","at":"2026-08-20T15:06:00.469Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"updated list=HVCG_Leads item=1 keyId=website","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: upserts HVCG_Leads by idempotency key and does not duplicate
+    ok 3 - upserts HVCG_Leads by idempotency key and does not duplicate
+      ---
+      duration_ms: 9.04756
+      ...
+# {"level":"audit","id":"6466d8c7-5f7a-46d7-a0f9-4119e132086b","at":"2026-08-20T15:06:00.477Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"created list=HVCG_Leads item=1 keyId=website","sensitive":false}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: maps EVA session idempotency and does not mix Graph with BA audience
+    ok 4 - maps EVA session idempotency and does not mix Graph with BA audience
+      ---
+      duration_ms: 8.794915
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: rejects Website type with eva| idempotency key (XSYS-02)
+    ok 5 - rejects Website type with eva| idempotency key (XSYS-02)
+      ---
+      duration_ms: 4.648938
+      ...
+# {"level":"audit","id":"0db71774-88b1-4b5f-aac0-589faf64afc0","at":"2026-08-20T15:06:00.488Z","actorUserId":"system","action":"website_lead_upsert","outcome":"success","detail":"updated list=HVCG_Leads item=9 keyId=website","sensitive":false}
+    # Subtest: does not reset a Qualified lead to New on replay
+    ok 6 - does not reset a Qualified lead to New on replay
+      ---
+      duration_ms: 4.05173
+      ...
+    1..6
+ok 76 - POST /api/website/leads
+  ---
+  duration_ms: 70.490518
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: integration-api registry
+    # Subtest: lists microsoft, google, and github providers
+    ok 1 - lists microsoft, google, and github providers
+      ---
+      duration_ms: 7.546256
+      ...
+    1..1
+ok 77 - integration-api registry
+  ---
+  duration_ms: 8.122063
+  type: 'suite'
+  ...
+# Subtest: source record dedupe
+    # Subtest: prevents duplicate import by dedupe key
+    ok 1 - prevents duplicate import by dedupe key
+      ---
+      duration_ms: 1.384827
+      ...
+    1..1
+ok 78 - source record dedupe
+  ---
+  duration_ms: 1.460662
+  type: 'suite'
+  ...
+# Subtest: read-only permission mode
+    # Subtest: blocks createRecord on github adapter in read_only_discovery
+    ok 1 - blocks createRecord on github adapter in read_only_discovery
+      ---
+      duration_ms: 1.568783
+      ...
+    1..1
+ok 79 - read-only permission mode
+  ---
+  duration_ms: 1.654828
+  type: 'suite'
+  ...
+# Subtest: oauth state roundtrip
+    # Subtest: saves and consumes oauth state
+    ok 1 - saves and consumes oauth state
+      ---
+      duration_ms: 1.229604
+      ...
+    1..1
+ok 80 - oauth state roundtrip
+  ---
+  duration_ms: 1.315974
+  type: 'suite'
+  ...
+# Subtest: microsoft adapter unsupported send
+    # Subtest: rejects createRecord with UnsupportedOperationError
+    ok 1 - rejects createRecord with UnsupportedOperationError
+      ---
+      duration_ms: 1.164238
+      ...
+    1..1
+ok 81 - microsoft adapter unsupported send
+  ---
+  duration_ms: 1.331159
+  type: 'suite'
+  ...
+# Subtest: multi-account microsoft connections
+    # Subtest: allows two microsoft connection records with different ids and credential slots
+    ok 1 - allows two microsoft connection records with different ids and credential slots
+      ---
+      duration_ms: 2.583038
+      ...
+    # Subtest: listConnections does not collapse by provider; inferBusinessEntity distinguishes entities
+    ok 2 - listConnections does not collapse by provider; inferBusinessEntity distinguishes entities
+      ---
+      duration_ms: 1.501173
+      ...
+    1..2
+ok 82 - multi-account microsoft connections
+  ---
+  duration_ms: 4.208832
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: local-ai optional adapter — OFF mode
+    # Subtest: defaults disabled and does not require Ollama or .data
+    ok 1 - defaults disabled and does not require Ollama or .data
+      ---
+      duration_ms: 0.743149
+      ...
+    # Subtest: complete fails soft when disabled and does not invent a response
+    ok 2 - complete fails soft when disabled and does not invent a response
+      ---
+      duration_ms: 0.267109
+      ...
+    # Subtest: rejects non-loopback provider URLs without crashing
+    ok 3 - rejects non-loopback provider URLs without crashing
+      ---
+      duration_ms: 0.115093
+      ...
+    1..3
+ok 83 - local-ai optional adapter — OFF mode
+  ---
+  duration_ms: 1.682792
+  type: 'suite'
+  ...
+# Subtest: local-ai loopback URL policy
+    # Subtest: accepts loopback and rejects remote/file URLs
+    ok 1 - accepts loopback and rejects remote/file URLs
+      ---
+      duration_ms: 0.127641
+      ...
+    1..1
+ok 84 - local-ai loopback URL policy
+  ---
+  duration_ms: 0.193597
+  type: 'suite'
+  ...
+# Subtest: local-ai mocked ON mode
+    # Subtest: returns validated output from a mocked provider
+    ok 1 - returns validated output from a mocked provider
+      ---
+      duration_ms: 3.401585
+      ...
+    # Subtest: reports unavailable when the mocked provider is offline
+    ok 2 - reports unavailable when the mocked provider is offline
+      ---
+      duration_ms: 1.035352
+      ...
+    1..2
+ok 85 - local-ai mocked ON mode
+  ---
+  duration_ms: 4.671853
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: local-ai Hub routes — OFF mode
+    # Subtest: Hub /health stays ok and does not probe Ollama
+    ok 1 - Hub /health stays ok and does not probe Ollama
+      ---
+      duration_ms: 23.021497
+      ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+    # Subtest: GET /api/local-ai/health reports disabled without crashing
+    ok 2 - GET /api/local-ai/health reports disabled without crashing
+      ---
+      duration_ms: 7.732788
+      ...
+    # Subtest: POST /api/local-ai/complete returns 503 when disabled
+    ok 3 - POST /api/local-ai/complete returns 503 when disabled
+      ---
+      duration_ms: 6.442808
+      ...
+    1..3
+ok 86 - local-ai Hub routes — OFF mode
+  ---
+  duration_ms: 37.531482
+  type: 'suite'
+  ...
+# Subtest: feature flag defaults
+    # Subtest: loadLocalAiFeatureFlags stays off when env is empty
+    ok 1 - loadLocalAiFeatureFlags stays off when env is empty
+      ---
+      duration_ms: 0.154475
+      ...
+    1..1
+ok 87 - feature flag defaults
+  ---
+  duration_ms: 0.205514
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: project id validation
+    # Subtest: rejects undefined/null/unknown/empty/demo ids
+    ok 1 - rejects undefined/null/unknown/empty/demo ids
+      ---
+      duration_ms: 0.377705
+      ...
+    # Subtest: accepts real uuid-like ids
+    ok 2 - accepts real uuid-like ids
+      ---
+      duration_ms: 0.07457
+      ...
+    1..2
+ok 88 - project id validation
+  ---
+  duration_ms: 0.994865
+  type: 'suite'
+  ...
+# Subtest: PM project CRUD + routing
+    # Subtest: lists projects, opens valid project, rejects invalid id, archives
+    ok 1 - lists projects, opens valid project, rejects invalid id, archives
+      ---
+      duration_ms: 6.393349
+      ...
+    1..1
+ok 89 - PM project CRUD + routing
+  ---
+  duration_ms: 6.472736
+  type: 'suite'
+  ...
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# {"level":"warn","msg":"Using ephemeral INTEGRATION_TOKEN_ENCRYPTION_KEY — tokens will not survive restart"}
+# Subtest: populate matching + preview idempotency
+    # Subtest: matches Lienpartners to Lien Partners without creating a second project
+    ok 1 - matches Lienpartners to Lien Partners without creating a second project
+      ---
+      duration_ms: 60.461996
+      ...
+    # Subtest: create project defaults health to unknown and omits fabricated next action
+    ok 2 - create project defaults health to unknown and omits fabricated next action
+      ---
+      duration_ms: 2.791577
+      ...
+    1..2
+ok 90 - populate matching + preview idempotency
+  ---
+  duration_ms: 63.403059
+  type: 'suite'
+  ...
+1..90
+# tests 323
+# suites 90
+# pass 322
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3858.663719
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /tmp/rt-d21/od005/apps/atlas-integration-api
+npm error workspace @hvcg/atlas-integration-api@0.1.0
+npm error location /tmp/rt-d21/od005/apps/atlas-integration-api
+npm error command failed
+npm error command sh -c tsx --test tests/*.test.ts
+EXIT:1

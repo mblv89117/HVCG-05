@@ -1,0 +1,51 @@
+BASE=32e923cb836741a9569b58841b51ceec429f56b4
+FIX=430eea4c00420d33e6541ea4ba1391c61cb47ab3
+TIP=8d757cf68157a6054432de7ca57f8431731b2d64
+==== DIFF 32e923c..430eea4 -- scripts/fixture-synthetic-cvos-path.ts ====
+diff --git a/scripts/fixture-synthetic-cvos-path.ts b/scripts/fixture-synthetic-cvos-path.ts
+index 362350d..e5c84c7 100644
+--- a/scripts/fixture-synthetic-cvos-path.ts
++++ b/scripts/fixture-synthetic-cvos-path.ts
+@@ -1,10 +1,10 @@
+ import assert from "node:assert/strict";
+ import { writeFileSync, mkdirSync } from "node:fs";
+-import { syntheticActivationHandoff, mapActivationToClientContext } from "../src/lib/cvos/client-context.ts";
+-import { buildExecutiveCockpit } from "../src/lib/cvos/cockpit.ts";
+-import { detectSignals } from "../src/lib/cvos/signals.ts";
+-import { toGccValueSignal, capitalToGccValueSignal, assertGccValueSignal } from "../src/lib/cvos/value-signal-adapter.ts";
+-import { SYNTHETIC_ORG_ID, SYNTHETIC_CLIENT_CODE } from "../src/lib/cvos/synthetic.ts";
++import { syntheticActivationHandoff, mapActivationToClientContext } from "../src/lib/cvos/client-context";
++import { buildExecutiveCockpit } from "../src/lib/cvos/cockpit";
++import { detectSignals } from "../src/lib/cvos/signals";
++import { toGccValueSignal, capitalToGccValueSignal, assertGccValueSignal } from "../src/lib/cvos/value-signal-adapter";
++import { SYNTHETIC_ORG_ID, SYNTHETIC_CLIENT_CODE } from "../src/lib/cvos/synthetic";
+ 
+ const steps: string[] = [];
+ function step(name: string, detail: string) {
+@@ -17,7 +17,6 @@ assert.equal(activation.governance.autoProvisionAccess, false);
+ step("activation_handoff", `contract=${activation.contractVersion} autoProvisionAccess=false`);
+ 
+ const mapped = mapActivationToClientContext({ activation, gccOrganizationId: SYNTHETIC_ORG_ID });
+-assert.equal(mapped.ok, true);
+ if (!mapped.ok) throw new Error(mapped.issues.join("; "));
+ assert.equal(mapped.context.gccOrganizationId, SYNTHETIC_ORG_ID);
+ assert.notEqual(mapped.context.gccOrganizationId, "org-apex");
+@@ -35,9 +34,9 @@ step("value_signals", `count=${valueSignals.length} canonical=gcc-value-signal.v
+ 
+ mkdirSync("/opt/cursor/artifacts", { recursive: true });
+ writeFileSync(
+-  "/opt/cursor/artifacts/gcc_d25_synthetic_fixture_path.json",
++  "/opt/cursor/artifacts/gcc_d26_synthetic_fixture_path.json",
+   JSON.stringify({
+-    directive: 25,
++    directive: 26,
+     path: "activation→context→cockpit→gcc-value-signal.v1",
+     organizationId: SYNTHETIC_ORG_ID,
+     clientCode: SYNTHETIC_CLIENT_CODE,
+==== FILES CHANGED 32e923c..8d757cf ====
+ docs/agent-status.md                   | 39 +++++++++++++++++-----------------
+ scripts/fixture-synthetic-cvos-path.ts | 15 ++++++-------
+ 2 files changed, 27 insertions(+), 27 deletions(-)
+==== FILES CHANGED 32e923c..430eea4 ====
+ scripts/fixture-synthetic-cvos-path.ts | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)

@@ -1,0 +1,404 @@
+BASE=14d8e4d (or prior tip before f61d29c)
+FEAT=f61d29c3f5b12398871a58d5cfa25b38f97434f1
+TIP=f53e628a2ef8e7eceb91e12d5a91f59a78c5bdbb
+==== DIFF parent..f61d29c -- journey-sot related ====
+commit f61d29c3f5b12398871a58d5cfa25b38f97434f1
+Author: Cursor Agent <cursoragent@cursor.com>
+Date:   Thu Aug 20 20:53:05 2026 +0000
+
+    feat(gtm): emit booking-event + opt SoT from SYN-GTM (directive 14)
+    
+    Add Integration tip 516553f adapters for booking-event.v1,
+    experiment-spec.v1, and optimization-decision.v1. Wire dry-run
+    booking and Variant 2 hold_for_owner emissions into existing
+    SYN-GTM marks; keep live outbound and paid ads off.
+    
+    Co-authored-by: mblv89117 <mblv89117@users.noreply.github.com>
+
+diff --git a/packages/gtm-agent/src/atlas/journey-sot.ts b/packages/gtm-agent/src/atlas/journey-sot.ts
+new file mode 100644
+index 0000000..6d8d541
+--- /dev/null
++++ b/packages/gtm-agent/src/atlas/journey-sot.ts
+@@ -0,0 +1,262 @@
++import { z } from 'zod';
++import type { BookingResult } from '../calendar/microsoft';
++import type { GtmExperiment, OptimizationCycleResult } from '../optimization/engine';
++
++/**
++ * Journey SoT adapters — Integration tip `516553f` (meaning lineage `773b510`).
++ * Product adapters only; no semantic forks of booking/experiment/optimization contracts.
++ */
++
++export const INTEGRATION_CONTRACTS_TIP_SHA =
++  '516553f18ac43085f704632f1b54ad94da5eed41' as const;
++export const BOOKING_EVENT_CONTRACT_VERSION = 'booking-event.v1' as const;
++export const EXPERIMENT_SPEC_CONTRACT_VERSION = 'experiment-spec.v1' as const;
++export const OPTIMIZATION_DECISION_CONTRACT_VERSION = 'optimization-decision.v1' as const;
++
++const writeEnvelopeSchema = z
++  .object({
++    idempotencyKey: z.string().min(3).max(255),
++    sourceSystem: z.enum(['atlas', '360', 'gcc', 'copilot', 'eva', 'website', 'hvcg-internal']),
++    destinationSystem: z.enum(['atlas', '360', 'gcc', 'copilot', 'eva', 'website', 'hvcg-internal']),
++    entity: z.string().min(1).max(128),
++    operation: z.enum(['create', 'upsert', 'update', 'convert', 'activate', 'handoff', 'signal', 'stage']),
++    version: z.string().regex(/^[a-z0-9._-]+\.v[0-9]+$/),
++    replaySemantics: z.enum(['return-existing', 'update-existing', 'reject-conflict']),
++    trace: z.object({
++      correlationId: z.string().min(1).max(255),
++      sourceSystem: z.enum(['atlas', '360', 'gcc', 'copilot', 'eva', 'website', 'hvcg-internal']),
++      destinationSystem: z
++        .enum(['atlas', '360', 'gcc', 'copilot', 'eva', 'website', 'hvcg-internal'])
++        .optional(),
++      eventId: z.string().min(1).max(255),
++      entityId: z.string().max(255).optional(),
++      campaignId: z.string().max(255).optional(),
++      timestamp: z.string(),
++      version: z.string(),
++      outcome: z.string(),
++    }),
++    actor: z
++      .object({
++        identityClass: z.enum([
++          'hvcg_human',
++          'client_user',
++          'system_service',
++          'marketing_tenant',
++          'assessment_session',
++          'gcc_client_user',
++        ]),
++        principalId: z.string().max(255).optional(),
++        scopes: z.array(z.string()).max(32).optional(),
++      })
++      .optional(),
++  })
++  .strict();
++
++export const bookingEventV1Schema = z
++  .object({
++    contractVersion: z.literal(BOOKING_EVENT_CONTRACT_VERSION),
++    bookingId: z.string().min(1).max(255),
++    envelope: writeEnvelopeSchema,
++    leadRef: z
++      .object({
++        system: z.enum(['atlas', '360', 'gcc', 'copilot', 'eva', 'website', 'hvcg-internal']),
++        entity: z.literal('lead'),
++        id: z.string().min(1).max(255),
++      })
++      .optional(),
++    contactEmail: z.string().email().max(255).optional(),
++    startsAt: z.string(),
++    endsAt: z.string().optional(),
++    status: z.enum(['requested', 'confirmed', 'cancelled', 'completed', 'no_show']),
++    meetingProvider: z.string().max(128).optional(),
++    attribution: z
++      .object({
++        source: z.string().max(255).optional(),
++        campaignId: z.string().max(255).optional(),
++      })
++      .optional(),
++  })
++  .strict()
++  .superRefine((value, ctx) => {
++    const expected = `booking|${value.bookingId}`;
++    if (value.envelope.idempotencyKey !== expected) {
++      ctx.addIssue({
++        code: z.ZodIssueCode.custom,
++        message: `envelope.idempotencyKey must be ${expected}`,
++        path: ['envelope', 'idempotencyKey'],
++      });
++    }
++  });
++
++export type BookingEventV1 = z.infer<typeof bookingEventV1Schema>;
++
++export const experimentSpecV1Schema = z
++  .object({
++    contractVersion: z.literal(EXPERIMENT_SPEC_CONTRACT_VERSION),
++    experimentId: z.string().min(1).max(255),
++    campaignId: z.string().max(255).optional(),
++    hypothesis: z.string().min(1).max(2000),
++    status: z.enum(['draft', 'running', 'paused', 'completed', 'abandoned']),
++    variants: z
++      .array(
++        z.object({
++          variantId: z.string(),
++          name: z.string(),
++          allocationPct: z.number().min(0).max(100).optional(),
++        }),
++      )
++      .max(10)
++      .optional(),
++    ownerSystem: z.literal('360'),
++    paidAdsEnabled: z.literal(false),
++  })
++  .strict();
++
++export type ExperimentSpecV1 = z.infer<typeof experimentSpecV1Schema>;
++
++export const optimizationDecisionV1Schema = z
++  .object({
++    contractVersion: z.literal(OPTIMIZATION_DECISION_CONTRACT_VERSION),
++    decisionId: z.string().min(1).max(255),
++    experimentId: z.string().min(1).max(255),
++    decision: z.enum(['keep', 'kill', 'scale', 'iterate', 'hold_for_owner']),
++    rationale: z.string().max(2000).optional(),
++    decidedAt: z.string(),
++    ownerSystem: z.enum(['360', 'atlas']),
++    requiresOwnerApproval: z.boolean().optional(),
++    mutatesPaidAds: z.literal(false),
++  })
++  .strict();
++
++export type OptimizationDecisionV1 = z.infer<typeof optimizationDecisionV1Schema>;
++
++function mapExperimentStatus(status: GtmExperiment['status']): ExperimentSpecV1['status'] {
++  switch (status) {
++    case 'promoted':
++    case 'learned':
++    case 'measured':
++    case 'attributed':
++      return 'completed';
++    case 'experimenting':
++      return 'running';
++    case 'rolled_back':
++      return 'abandoned';
++    case 'observed':
++    case 'analyzed':
++    case 'hypothesized':
++    case 'variant_generated':
++    case 'qa_passed':
++    case 'compliance_checked':
++    default:
++      return 'draft';
++  }
++}
++
++/**
++ * Emit booking-event.v1 from an existing SYN-GTM dry-run booking.
++ * Refuses non-dry-run bookings (liveDispatch impossible on this path).
++ */
++export function toBookingEventV1(input: {
++  booking: Extract<BookingResult, { ok: true }>;
++  leadId: string;
++  contactEmail: string;
++  campaignId: string;
++  correlationId?: string;
++}): BookingEventV1 {
++  if (input.booking.dryRun !== true) {
++    throw new Error('booking_event_requires_dryRun_true — liveDispatch impossible');
++  }
++  const bookingId = input.booking.meetingId;
++  const now = new Date().toISOString();
++  return bookingEventV1Schema.parse({
++    contractVersion: BOOKING_EVENT_CONTRACT_VERSION,
++    bookingId,
++    envelope: {
++      idempotencyKey: `booking|${bookingId}`,
++      sourceSystem: '360',
++      destinationSystem: 'atlas',
++      entity: 'booking',
++      operation: 'stage',
++      version: BOOKING_EVENT_CONTRACT_VERSION,
++      replaySemantics: 'return-existing',
++      trace: {
++        correlationId: input.correlationId ?? bookingId,
++        sourceSystem: '360',
++        destinationSystem: 'atlas',
++        eventId: `evt-book-${bookingId}`,
++        entityId: bookingId,
++        campaignId: input.campaignId,
++        timestamp: now,
++        version: BOOKING_EVENT_CONTRACT_VERSION,
++        outcome: 'accepted',
++      },
++      actor: {
++        identityClass: 'system_service',
++        principalId: '360-gtm-synthetic',
++        scopes: ['booking:stage'],
++      },
++    },
++    leadRef: {
++      system: '360',
++      entity: 'lead',
++      id: input.leadId,
++    },
++    contactEmail: input.contactEmail,
++    startsAt: input.booking.slot.start,
++    endsAt: input.booking.slot.end,
++    status: input.booking.status === 'confirmed' ? 'confirmed' : 'requested',
++    meetingProvider: 'microsoft_calendar_mock',
++    attribution: {
++      source: 'SYN-GTM',
++      campaignId: input.campaignId,
++    },
++  });
++}
++
++/** Emit experiment-spec.v1 from runOptimizationCycle Variant 2 (ownerSystem=360, paidAdsEnabled=false). */
++export function toExperimentSpecV1(input: {
++  cycle: OptimizationCycleResult;
++}): ExperimentSpecV1 {
++  const { experiment, variant } = input.cycle;
++  return experimentSpecV1Schema.parse({
++    contractVersion: EXPERIMENT_SPEC_CONTRACT_VERSION,
++    experimentId: experiment.experimentId,
++    campaignId: experiment.parentCampaignId,
++    hypothesis: experiment.hypothesis,
++    status: mapExperimentStatus(experiment.status),
++    variants: [
++      {
++        variantId: variant.campaignId,
++        name: `Variant 2 · ${variant.campaignId}`,
++        allocationPct: 0,
++      },
++    ],
++    ownerSystem: '360',
++    paidAdsEnabled: false,
++  });
++}
++
++/**
++ * Emit optimization-decision.v1 from Variant 2 cycle.
++ * mutatesPaidAds const false; decision hold_for_owner (non-spend); no live promotion.
++ */
++export function toOptimizationDecisionV1(input: {
++  cycle: OptimizationCycleResult;
++  decidedAt?: string;
++}): OptimizationDecisionV1 {
++  const { experiment } = input.cycle;
++  return optimizationDecisionV1Schema.parse({
++    contractVersion: OPTIMIZATION_DECISION_CONTRACT_VERSION,
++    decisionId: `dec-${experiment.experimentId}`,
++    experimentId: experiment.experimentId,
++    decision: 'hold_for_owner',
++    rationale:
++      experiment.status === 'rolled_back'
++        ? 'Variant 2 rolled back — insufficient wins / kill switch; hold for owner. No paid-ads mutation.'
++        : 'Optimization remains observation-only; hold for owner before any spend or live promotion.',
++    decidedAt: input.decidedAt ?? new Date().toISOString(),
++    ownerSystem: '360',
++    requiresOwnerApproval: true,
++    mutatesPaidAds: false,
++  });
++}
+diff --git a/packages/gtm-agent/src/journey/synthetic.ts b/packages/gtm-agent/src/journey/synthetic.ts
+index c0a6d09..d25d7e8 100644
+--- a/packages/gtm-agent/src/journey/synthetic.ts
++++ b/packages/gtm-agent/src/journey/synthetic.ts
+@@ -23,6 +23,11 @@ import { runOptimizationCycle } from '../optimization/engine';
+ import { createAutonomyPolicy } from '../autonomy/levels';
+ import { createComplianceRegistry, addSuppression, checkOutboundEligibility } from '../compliance/suppression';
+ import { createGtmStore, setProcessGtmStore, type GtmStore } from '../store/memory';
++import {
++  toBookingEventV1,
++  toExperimentSpecV1,
++  toOptimizationDecisionV1,
++} from '../atlas/journey-sot';
+ import { ICP_MODEL_VERSION } from '../icp/model';
+ import { getSafetyFlags } from '@360gs/flags';
+ 
+@@ -238,7 +243,27 @@ export async function runSyntheticGtmJourney(): Promise<SyntheticJourneyReport>
+       bufferMinutes: 15,
+     });
+     store.bookings.push(booking);
+-    mark('booking', booking.ok === true && booking.ok && booking.dryRun === true);
++    let bookingEventOk = false;
++    if (booking.ok === true && booking.dryRun === true) {
++      const bookingEvent = toBookingEventV1({
++        booking,
++        leadId: 'lead-SYN-GTM-001',
++        contactEmail: 'owner@summitridge.example',
++        campaignId: campaign.campaignId,
++        correlationId: 'corr-SYN-GTM-booking',
++      });
++      store.bookingEvents.push(bookingEvent);
++      bookingEventOk =
++        bookingEvent.contractVersion === 'booking-event.v1' &&
++        bookingEvent.envelope.idempotencyKey === `booking|${bookingEvent.bookingId}` &&
++        bookingEvent.startsAt.length > 0 &&
++        bookingEvent.status === 'confirmed';
++    }
++    mark(
++      'booking',
++      booking.ok === true && booking.ok && booking.dryRun === true && bookingEventOk,
++      bookingEventOk ? 'booking-event.v1 emitted' : 'booking-event.v1 missing',
++    );
+ 
+     const handoff = buildObservationLeadHandoff({
+       leadId: 'lead-SYN-GTM-001',
+@@ -451,12 +476,26 @@ export async function runSyntheticGtmJourney(): Promise<SyntheticJourneyReport>
+     });
+     store.campaigns.push(opt.variant);
+     store.experiments.push(opt.experiment);
++    const experimentSpec = toExperimentSpecV1({ cycle: opt });
++    const optimizationDecision = toOptimizationDecisionV1({ cycle: opt });
++    store.experimentSpecs.push(experimentSpec);
++    store.optimizationDecisions.push(optimizationDecision);
++    const sotOptOk =
++      experimentSpec.contractVersion === 'experiment-spec.v1' &&
++      experimentSpec.ownerSystem === '360' &&
++      experimentSpec.paidAdsEnabled === false &&
++      experimentSpec.status === 'abandoned' &&
++      optimizationDecision.contractVersion === 'optimization-decision.v1' &&
++      optimizationDecision.decision === 'hold_for_owner' &&
++      optimizationDecision.mutatesPaidAds === false &&
++      optimizationDecision.ownerSystem === '360';
+     mark(
+       'optimization_variant2',
+       opt.variant.campaignId.includes('-v2') &&
+         opt.stages.includes('QA') &&
+-        opt.experiment.status === 'rolled_back',
+-      `status=${opt.experiment.status}`,
++        opt.experiment.status === 'rolled_back' &&
++        sotOptOk,
++      `status=${opt.experiment.status}; experiment-spec+optimization-decision.v1`,
+     );
+ 
+     store.approvals.push({
+diff --git a/packages/gtm-agent/tests/journey-sot.test.ts b/packages/gtm-agent/tests/journey-sot.test.ts
+new file mode 100644
+index 0000000..9e59d7d
+--- /dev/null
++++ b/packages/gtm-agent/tests/journey-sot.test.ts
+@@ -0,0 +1,200 @@
++import { describe, expect, it } from 'vitest';
++import { getSafetyFlags, isGtmLiveDispatchAllowed } from '@360gs/flags';
++import {
++  BOOKING_EVENT_CONTRACT_VERSION,
++  EXPERIMENT_SPEC_CONTRACT_VERSION,
++  INTEGRATION_CONTRACTS_TIP_SHA,
++  OPTIMIZATION_DECISION_CONTRACT_VERSION,
++  bookingEventV1Schema,
++  createAutonomyPolicy,
++  createDefaultHvcgIcp,
++  createMockMicrosoftCalendarAdapter,
++  createSyntheticDiscoveryAdapter,
++  experimentSpecV1Schema,
++  generateCampaign,
++  generatePainHypotheses,
++  optimizationDecisionV1Schema,
++  researchCompany,
++  routeOffer,
++  runOptimizationCycle,
++  runSyntheticGtmJourney,
++  scoreOpportunity,
++  toBookingEventV1,
++  toExperimentSpecV1,
++  toOptimizationDecisionV1,
++  createClosedWonLearning,
++} from '../src/index';
++
++/**
++ * Directive 14 — emit booking-event.v1 + experiment-spec.v1 / optimization-decision.v1
++ * from existing SYN-GTM dry-run booking and Variant 2 optimization (Integration tip 516553f).
++ */
++describe('GTM journey SoT adapters (directive 14)', () => {
++  it('pins Integration contracts tip consumed for booking/opt schemas', () => {
++    expect(INTEGRATION_CONTRACTS_TIP_SHA).toBe('516553f18ac43085f704632f1b54ad94da5eed41');
++  });
++
++  it('toBookingEventV1 emits schema-valid dry-run booking-event.v1 with booking|{id} idempotency', async () => {
++    const calendar = createMockMicrosoftCalendarAdapter();
++    const slots = await calendar.listAvailability({

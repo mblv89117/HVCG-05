@@ -1,0 +1,213 @@
+SHA=8d757cf68157a6054432de7ca57f8431731b2d64
+CMD: npm test
+UTC=2026-08-20T16:20:44Z
+CWD=/tmp/rt-d25/gcc
+
+> growth-command-center@0.1.0 test
+> npm run test:isolation && npm run test:handoff && npm run test:cvos && npm run test:security
+
+
+> growth-command-center@0.1.0 test:isolation
+> node --experimental-strip-types --test src/lib/auth/organization.test.ts
+
+TAP version 13
+# (node:26161) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:26161) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///tmp/rt-d25/gcc/src/lib/auth/organization.test.ts is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /tmp/rt-d25/gcc/package.json.
+# Subtest: GCC organization isolation
+    # Subtest: never invents org-apex when organization mapping is missing
+    ok 1 - never invents org-apex when organization mapping is missing
+      ---
+      duration_ms: 0.446837
+      ...
+    # Subtest: prefers profile mapping over metadata and rejects query spoofing
+    ok 2 - prefers profile mapping over metadata and rejects query spoofing
+      ---
+      duration_ms: 0.122763
+      ...
+    # Subtest: fails closed when an authenticated user has no organization
+    ok 3 - fails closed when an authenticated user has no organization
+      ---
+      duration_ms: 0.090956
+      ...
+    # Subtest: denies cross-org CVOS IDOR for non-admin roles
+    ok 4 - denies cross-org CVOS IDOR for non-admin roles
+      ---
+      duration_ms: 0.11937
+      ...
+    # Subtest: GCC-RT-05: session org remains authoritative when browser supplies another id
+    ok 5 - GCC-RT-05: session org remains authoritative when browser supplies another id
+      ---
+      duration_ms: 0.089024
+      ...
+    1..5
+ok 1 - GCC organization isolation
+  ---
+  duration_ms: 1.519211
+  type: 'suite'
+  ...
+1..1
+# tests 5
+# suites 1
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 74.734435
+
+> growth-command-center@0.1.0 test:handoff
+> node --experimental-strip-types --test src/lib/handoff/atlas-activation.test.ts
+
+TAP version 13
+# (node:26190) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:26190) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///tmp/rt-d25/gcc/src/lib/handoff/atlas-activation.test.ts is not specified and it doesn't parse as CommonJS.
+# Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+# To eliminate this warning, add "type": "module" to /tmp/rt-d25/gcc/package.json.
+# Subtest: Atlas → GCC activation handoff contract
+    # Subtest: accepts a SYN01 Active Client observation-only payload
+    ok 1 - accepts a SYN01 Active Client observation-only payload
+      ---
+      duration_ms: 0.723421
+      ...
+    # Subtest: rejects Lead-stage clients, CRM duplication, and auto-provision
+    ok 2 - rejects Lead-stage clients, CRM duplication, and auto-provision
+      ---
+      duration_ms: 0.160954
+      ...
+    # Subtest: requires gcc-activate idempotency and a canonical ClientCode
+    ok 3 - requires gcc-activate idempotency and a canonical ClientCode
+      ---
+      duration_ms: 0.130959
+      ...
+    1..3
+ok 1 - Atlas → GCC activation handoff contract
+  ---
+  duration_ms: 1.610803
+  type: 'suite'
+  ...
+1..1
+# tests 3
+# suites 1
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 70.171712
+
+> growth-command-center@0.1.0 test:cvos
+> tsx --test src/lib/cvos/journey.test.ts
+
+TAP version 13
+# Subtest: CVOS synthetic client journey
+    # Subtest: maps Atlas Active Client activation → GCC client context without provisioning
+    ok 1 - maps Atlas Active Client activation → GCC client context without provisioning
+      ---
+      duration_ms: 1.057091
+      ...
+    # Subtest: builds populated executive cockpit with exceptions, KPIs, value, decisions
+    ok 2 - builds populated executive cockpit with exceptions, KPIs, value, decisions
+      ---
+      duration_ms: 9.581539
+      ...
+    # Subtest: never fabricates financial improvement on INFERRED initiatives
+    ok 3 - never fabricates financial improvement on INFERRED initiatives
+      ---
+      duration_ms: 0.300034
+      ...
+    # Subtest: drafts monthly brief requiring human approval before external delivery
+    ok 4 - drafts monthly brief requiring human approval before external delivery
+      ---
+      duration_ms: 0.341231
+      ...
+    # Subtest: stages renewal/expansion and capital signals for Atlas without lender outreach
+    ok 5 - stages renewal/expansion and capital signals for Atlas without lender outreach
+      ---
+      duration_ms: 0.181695
+      ...
+    # Subtest: CC-006: adapts local signals to Integration SoT gcc-value-signal.v1
+    ok 6 - CC-006: adapts local signals to Integration SoT gcc-value-signal.v1
+      ---
+      duration_ms: 0.274611
+      ...
+    # Subtest: emits aggregated GTM feedback without sensitive financials
+    ok 7 - emits aggregated GTM feedback without sensitive financials
+      ---
+      duration_ms: 0.185953
+      ...
+    # Subtest: fails closed for unmapped tenants
+    ok 8 - fails closed for unmapped tenants
+      ---
+      duration_ms: 0.188198
+      ...
+    1..8
+ok 1 - CVOS synthetic client journey
+  ---
+  duration_ms: 12.901742
+  type: 'suite'
+  ...
+1..1
+# tests 8
+# suites 1
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 228.780502
+
+> growth-command-center@0.1.0 test:security
+> tsx --test src/lib/security/rt-remediation.test.ts
+
+TAP version 13
+# Subtest: GCC-RT security remediations
+    # Subtest: GCC-RT-01: signup trigger never COALESCE to org-apex or trusts metadata role/org
+    ok 1 - GCC-RT-01: signup trigger never COALESCE to org-apex or trusts metadata role/org
+      ---
+      duration_ms: 0.594086
+      ...
+    # Subtest: GCC-RT-02: profile update policy freezes role and organization_id
+    ok 2 - GCC-RT-02: profile update policy freezes role and organization_id
+      ---
+      duration_ms: 0.155971
+      ...
+    # Subtest: GCC-RT-03: signed OAuth state rejects tampering and expiry
+    ok 3 - GCC-RT-03: signed OAuth state rejects tampering and expiry
+      ---
+      duration_ms: 0.787277
+      ...
+    # Subtest: GCC-RT-06: sales lacks financials:read and reports:export
+    ok 4 - GCC-RT-06: sales lacks financials:read and reports:export
+      ---
+      duration_ms: 0.217866
+      ...
+    # Subtest: GCC-RT-07: unsigned Atlas handoff attestation is rejected; valid HMAC accepted
+    ok 5 - GCC-RT-07: unsigned Atlas handoff attestation is rejected; valid HMAC accepted
+      ---
+      duration_ms: 0.273904
+      ...
+    # Subtest: GCC-RT-05: tenant/dashboard/export derive org from session helpers
+    ok 6 - GCC-RT-05: tenant/dashboard/export derive org from session helpers
+      ---
+      duration_ms: 0.163361
+      ...
+    1..6
+ok 1 - GCC-RT security remediations
+  ---
+  duration_ms: 2.875375
+  type: 'suite'
+  ...
+1..1
+# tests 6
+# suites 1
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 136.272146
+EXIT:0

@@ -1,0 +1,216 @@
+=== Directive 18 Revenue Elite UI @ 8cffe34 2026-08-20T07:09:50Z ===
+TIP=8cffe34e266b4ff3869d840ecf394930041b4c3d
+
+--- commercial-route-tests ---
+commercial-route-tests: ok
+route_exit:0
+--- commercialWorkspace.test.ts ---
+TAP version 13
+# Subtest: Elite commercial workspace read-models
+    # Subtest: keeps observation-only offer/pricing and closed gates
+    ok 1 - keeps observation-only offer/pricing and closed gates
+      ---
+      duration_ms: 0.388894
+      ...
+    # Subtest: requires an operator to accept offer and pricing
+    ok 2 - requires an operator to accept offer and pricing
+      ---
+      duration_ms: 0.205613
+      ...
+    # Subtest: blocks send and keeps liveDispatch false
+    ok 3 - blocks send and keeps liveDispatch false
+      ---
+      duration_ms: 0.160734
+      ...
+    # Subtest: opens engagement only after operator-accepted proposal
+    ok 4 - opens engagement only after operator-accepted proposal
+      ---
+      duration_ms: 0.246325
+      ...
+    1..4
+ok 1 - Elite commercial workspace read-models
+  ---
+  duration_ms: 1.604384
+  type: 'suite'
+  ...
+1..1
+# tests 4
+# suites 1
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 145.504186
+workspace_exit:0
+--- rbac.redteam.test.ts ---
+TAP version 13
+# Subtest: Elite rbac source contract
+    # Subtest: never defaults to Owner and denies Unauthenticated/Unresolved
+    ok 1 - never defaults to Owner and denies Unauthenticated/Unresolved
+      ---
+      duration_ms: 0.522058
+      ...
+    # Subtest: production/staging cannot use role sim or silent Owner
+    ok 2 - production/staging cannot use role sim or silent Owner
+      ---
+      duration_ms: 0.089461
+      ...
+    # Subtest: Client Executive and Read-Only Advisor cannot viewFinance or viewAdmin
+    ok 3 - Client Executive and Read-Only Advisor cannot viewFinance or viewAdmin
+      ---
+      duration_ms: 0.15781
+      ...
+    # Subtest: /revenue commercial workspace still requires viewFinance (FinanceRoute)
+    ok 4 - /revenue commercial workspace still requires viewFinance (FinanceRoute)
+      ---
+      duration_ms: 0.202509
+      ...
+    # Subtest: /capital?opportunity= still requires viewFinance (FinanceRoute)
+    ok 5 - /capital?opportunity= still requires viewFinance (FinanceRoute)
+      ---
+      duration_ms: 0.093821
+      ...
+    # Subtest: /leads requires viewCrmLeads and is not granted to Client Executive or Administrator
+    ok 6 - /leads requires viewCrmLeads and is not granted to Client Executive or Administrator
+      ---
+      duration_ms: 0.087763
+      ...
+    # Subtest: client activation is a named ClientDetail route and not a public CRM shortcut
+    ok 7 - client activation is a named ClientDetail route and not a public CRM shortcut
+      ---
+      duration_ms: 0.100797
+      ...
+    1..7
+ok 1 - Elite rbac source contract
+  ---
+  duration_ms: 1.944448
+  type: 'suite'
+  ...
+1..1
+# tests 7
+# suites 1
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 142.224434
+rbac_exit:0
+--- test:security (scoped suite) ---
+      ...
+    # Subtest: /revenue commercial workspace still requires viewFinance (FinanceRoute)
+    ok 4 - /revenue commercial workspace still requires viewFinance (FinanceRoute)
+      ---
+      duration_ms: 0.221121
+      ...
+    # Subtest: /capital?opportunity= still requires viewFinance (FinanceRoute)
+    ok 5 - /capital?opportunity= still requires viewFinance (FinanceRoute)
+      ---
+      duration_ms: 0.096113
+      ...
+    # Subtest: /leads requires viewCrmLeads and is not granted to Client Executive or Administrator
+    ok 6 - /leads requires viewCrmLeads and is not granted to Client Executive or Administrator
+      ---
+      duration_ms: 0.084803
+      ...
+    # Subtest: client activation is a named ClientDetail route and not a public CRM shortcut
+    ok 7 - client activation is a named ClientDetail route and not a public CRM shortcut
+      ---
+      duration_ms: 0.121055
+      ...
+    1..7
+ok 7 - Elite rbac source contract
+  ---
+  duration_ms: 2.843367
+  type: 'suite'
+  ...
+# Subtest: Elite RBAC fail closed
+    # Subtest: never defaults to Owner when unsigned or when claims are missing
+    ok 1 - never defaults to Owner when unsigned or when claims are missing
+      ---
+      duration_ms: 0.513334
+      ...
+    # Subtest: denies every capability for Unauthenticated and Unresolved
+    ok 2 - denies every capability for Unauthenticated and Unresolved
+      ---
+      duration_ms: 0.129016
+      ...
+    # Subtest: does not treat Client Executive as Owner/Admin
+    ok 3 - does not treat Client Executive as Owner/Admin
+      ---
+      duration_ms: 0.074087
+      ...
+    # Subtest: resolves known Entra roles and ignores unknown values
+    ok 4 - resolves known Entra roles and ignores unknown values
+      ---
+      duration_ms: 0.15055
+      ...
+    # Subtest: DEV Owner session is ignored in production/staging
+    ok 5 - DEV Owner session is ignored in production/staging
+      ---
+      duration_ms: 0.06181
+      ...
+    1..5
+ok 8 - Elite RBAC fail closed
+  ---
+  duration_ms: 1.600436
+  type: 'suite'
+  ...
+# Subtest: SWA sign-in helpers
+    # Subtest: detects hosted Static Web Apps hosts and not local Vite
+    ok 1 - detects hosted Static Web Apps hosts and not local Vite
+      ---
+      duration_ms: 0.416395
+      ...
+    1..1
+ok 9 - SWA sign-in helpers
+  ---
+  duration_ms: 0.974413
+  type: 'suite'
+  ...
+1..9
+# tests 47
+# suites 9
+# pass 47
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 506.906185
+security_exit:0
+--- independent ACCG / deep-link probe ---
+node:internal/modules/esm/get_format:219
+  throw new ERR_UNKNOWN_FILE_EXTENSION(ext, filepath);
+        ^
+
+TypeError [ERR_UNKNOWN_FILE_EXTENSION]: Unknown file extension ".ts" for /tmp/rt-d18/revenue/apps/atlas-elite-os/src/pages/revenue/commercialReadModel.ts
+    at Object.getFileProtocolModuleFormat [as file:] (node:internal/modules/esm/get_format:219:9)
+    at defaultGetFormat (node:internal/modules/esm/get_format:245:36)
+    at defaultLoad (node:internal/modules/esm/load:120:22)
+    at async ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:514:32) {
+  code: 'ERR_UNKNOWN_FILE_EXTENSION'
+}
+
+Node.js v22.14.0
+{
+  "emptyOperatorBlocked": true,
+  "liveDispatch": false,
+  "autoSend": false,
+  "sendBlocked": true,
+  "foreignClientCode": "ACME01",
+  "foreignOppId": "opp-accg-expansion-001",
+  "foreignFloor": 10000,
+  "findings": [
+    {
+      "id": "REVOS-ELITE-RT-20260820-01",
+      "severity": "P1",
+      "detail": "Deep-link opportunityId swapped but clientCode/pricing remain ACME01 synthetic — commercial context not opportunity-bound"
+    },
+    {
+      "id": "ACCG01_in_commercial_read_model",
+      "present": false,
+      "status": "ABSENT_OK"
+    }
+  ]
+}

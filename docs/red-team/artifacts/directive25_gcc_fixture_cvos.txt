@@ -1,0 +1,14 @@
+SHA=8d757cf68157a6054432de7ca57f8431731b2d64
+CMD: npm run fixture:cvos
+UTC=2026-08-20T16:20:44Z
+CWD=/tmp/rt-d25/gcc
+
+> growth-command-center@0.1.0 fixture:cvos
+> tsx scripts/fixture-synthetic-cvos-path.ts
+
+✓ activation_handoff: contract=atlas-gcc-client-activation.v1 autoProvisionAccess=false
+✓ client_context: org=org-syn01 kpis=5
+✓ cockpit_kpis: kpis=5 exceptions=5
+✓ value_signals: count=5 canonical=gcc-value-signal.v1
+FIXTURE_PATH_PASS
+EXIT:0
