@@ -73,7 +73,14 @@ assert.doesNotMatch(live, /ACCG01/);
 assert.doesNotMatch(live, /Jane Doe|John Smith|sample@client/i);
 
 const docs = readFileSync(join(root, 'src/pages/DocumentsOperatingPage.tsx'), 'utf8');
-assert.match(docs, /fetchPmDocuments/);
+assert.doesNotMatch(docs, /fetchPmDocuments/);
+assert.doesNotMatch(docs, /hubFetchJson[\s\S]*\/api\/pm\/documents/);
+assert.match(docs, /Deferred/);
+assert.match(docs, /PM_COLLECTION_NOT_IN_MVP|document index unavailable/i);
 assert.match(docs, /Open HVCG-Clients/);
+assert.match(docs, /does not call that route|Not live Hub API/i);
+
+const myWork = readFileSync(join(root, 'src/pages/MyWorkPage.tsx'), 'utf8');
+assert.doesNotMatch(myWork, /QuickCaptureBar/);
 
 console.log('PASS project route + operating layer source tests');

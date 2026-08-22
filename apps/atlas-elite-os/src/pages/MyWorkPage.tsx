@@ -27,7 +27,6 @@ import {
   type PmTask,
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
-import { QuickCaptureBar } from '../components/QuickCaptureBar';
 import { projectDetailPath } from '../routing/projectId';
 import { isCanonicalClientCode } from '../security/clientCode';
 import { ATLAS_STATUS, atlasStatusTone } from '../ui/statusLanguage';
@@ -279,7 +278,6 @@ export function MyWorkPage() {
       subtitle="Manny’s exception queues — overdue, waiting, decisions, and delegated work."
       showPendingBanner={false}
     >
-      <QuickCaptureBar auth={auth} onCreated={() => void refresh()} />
       {actionError ? (
         <MessageBar intent="error">
           <MessageBarBody>

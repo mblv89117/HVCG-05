@@ -34,6 +34,7 @@ import { microsoftConfig } from '../microsoft/config';
 import { workspaceCatalog } from '../data/workspaces';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { searchPm } from '../integrations/hub/pmApi';
+import { isDeadChromePath, isPrimaryNavAllowedPath } from './deadChrome';
 
 const ATLAS_SCHEME_KEY = 'atlas.colorScheme';
 const ATLAS_FAVORITES_KEY = 'atlas.favorites';
@@ -214,6 +215,7 @@ function shortcutAllowed(
   can: (capability: 'viewAdmin' | 'viewFinance' | 'viewClients' | 'viewCrmLeads') => boolean,
 ): boolean {
   const to = item.to || '';
+  if (isDeadChromePath(to)) return false;
   const path = to.split(/[?#]/)[0];
   if (path === '/admin' || path.startsWith('/admin/')) return can('viewAdmin');
   if (
@@ -324,6 +326,8 @@ export function AppShell() {
 
   useEffect(() => {
     const path = location.pathname;
+    // Dead-chrome / deferred routes stay URL-reachable but must not pollute recents chrome.
+    if (isDeadChromePath(path)) return;
     const base = Object.keys(routeLabels).find((k) => k === path) || (path.startsWith('/clients/') ? path : null);
     if (!base) return;
     const label =
@@ -355,10 +359,11 @@ export function AppShell() {
       return;
     }
     let cancelled = false;
+    const abort = new AbortController();
     setHubSearchBusy(true);
     setHubSearchError(null);
     const timer = window.setTimeout(() => {
-      void searchPm(hubAuth, q)
+      void searchPm(hubAuth, q, { signal: abort.signal })
         .then((found) => {
           if (cancelled) return;
           setHubHits(
@@ -373,7 +378,7 @@ export function AppShell() {
           setHubSearchBusy(false);
         })
         .catch((err) => {
-          if (cancelled) return;
+          if (cancelled || abort.signal.aborted) return;
           setHubHits([]);
           setHubSearchBusy(false);
           setHubSearchError(err instanceof Error ? err.message : 'Hub search failed');
@@ -381,6 +386,7 @@ export function AppShell() {
     }, 280);
     return () => {
       cancelled = true;
+      abort.abort();
       window.clearTimeout(timer);
     };
   }, [query, searchOpen, hubAuth.hasBearer, hubAuth.accessToken]);
@@ -408,6 +414,7 @@ export function AppShell() {
       .map((section) => ({
         ...section,
         items: section.items.filter((item) => {
+          if (!isPrimaryNavAllowedPath(item.to) || isDeadChromePath(item.to)) return false;
           if (item.id === 'admin') return can('viewAdmin');
           if (financeIds.has(item.id)) return can('viewFinance');
           if (item.id === 'clients') return can('viewClients');
@@ -432,6 +439,7 @@ export function AppShell() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const pool = catalog.filter((r) => {
+      if (isDeadChromePath(r.to) || !isPrimaryNavAllowedPath(r.to)) return false;
       if (!signedIn) return r.category === 'Navigation';
       if (r.to === '/admin') return can('viewAdmin');
       if (r.to === '/capital') return can('viewFinance');

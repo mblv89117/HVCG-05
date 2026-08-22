@@ -41,6 +41,14 @@ import { isValidProjectId } from '../routing/projectId';
 import { displayHealth, displayLastActivity, displayNextAction, isBootstrapNextAction } from '../operating/projectDisplay';
 import { isCanonicalClientCode } from '../security/clientCode';
 import { ATLAS_STATUS, atlasStatusDisplay, atlasStatusTone } from '../ui/statusLanguage';
+import {
+  DEFERRED_CLOSED_COPY,
+  DEFERRED_WRITE_BLOCKED,
+  deferredTabLabel,
+  isCollectionDeferredClosed,
+  resolveDeferredClosedMap,
+  type ProjectCollectionHonestyMeta,
+} from './projectCollectionHonesty';
 
 const BOARD_STATUS: Record<string, string> = {
   todo: 'ready',
@@ -91,12 +99,49 @@ function safeErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+/** DEV-only Premium / UAT fixture — never invents persistable rows; all eight stay deferred-closed. */
+function isD13HonestyPreview(): boolean {
+  return (
+    import.meta.env.DEV === true &&
+    typeof sessionStorage !== 'undefined' &&
+    sessionStorage.getItem('atlas.d13HonestyPreview') === '1'
+  );
+}
+
+function d13HonestyPreviewPayload(projectId: string) {
+  return {
+    project: {
+      id: projectId,
+      name: 'D13 Honesty Preview (DEV)',
+      clientName: 'SYNTHETIC preview client',
+      clientId: 'SYN01',
+      clientCode: 'SYN01',
+      businessEntity: 'HVCG',
+      projectType: 'Operating',
+      status: 'active',
+      health: 'unknown',
+      priority: 'normal',
+      progressPercent: 0,
+      ownerName: 'Local Owner (Dev)',
+      teamMemberIds: [] as string[],
+      nextAction: undefined as string | undefined,
+      objective: 'Candidate-only honesty preview — not a live Hub record.',
+      lastActivityAt: undefined as string | undefined,
+      targetCompletionDate: undefined as string | undefined,
+    },
+    tasks: [] as PmTask[],
+    board: { todo: [] as PmTask[], inProgress: [] as PmTask[], review: [] as PmTask[], done: [] as PmTask[] },
+    milestones: [] as Array<{ id: string; title: string; dueDate?: string; status: string }>,
+    // Omit deferred + persistable so Elite defaults all eight to deferred-closed (D13).
+    collectionMeta: {} as ProjectCollectionHonestyMeta,
+  };
+}
+
 function DeferredClosed({ label }: { label: string }) {
   return (
     <AtlasCard title={label}>
       <Caption1>
-        {label} is not in the SharePoint production MVP. Hub marked this collection deferred —
-        Atlas will not treat missing rows as “none yet.”
+        {label} {DEFERRED_CLOSED_COPY}
       </Caption1>
     </AtlasCard>
   );
@@ -175,7 +220,7 @@ export function ProjectDetailPage({
   const [noteBody, setNoteBody] = useState('');
   const [milestoneTitle, setMilestoneTitle] = useState('');
   const [decisionTitle, setDecisionTitle] = useState('');
-  const [deferred, setDeferred] = useState<Record<string, string>>({});
+  const [collectionMeta, setCollectionMeta] = useState<ProjectCollectionHonestyMeta>({});
   const [actionError, setActionError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -187,6 +232,29 @@ export function ProjectDetailPage({
       setMessage(
         'This project link is invalid (missing, undefined, unknown, or obsolete demo id).',
       );
+      return;
+    }
+    if (isD13HonestyPreview()) {
+      const fixture = d13HonestyPreviewPayload(projectId);
+      setProject(fixture.project as PmProject);
+      setTasks(fixture.tasks);
+      setBoard(fixture.board);
+      setMilestones(fixture.milestones);
+      setRisks([]);
+      setDecisions([]);
+      setCommitments([]);
+      setDeliverables([]);
+      setWaiting([]);
+      setNotes([]);
+      setActivity([]);
+      setDocuments([]);
+      setCollectionMeta(fixture.collectionMeta);
+      setMissing(false);
+      setAuthFailure(null);
+      setForbidden(false);
+      setLoadError(null);
+      setMessage('DEV honesty preview — Hub not called; deferred collections closed by default.');
+      setLoading(false);
       return;
     }
     if (!auth.tokenReady) return;
@@ -227,7 +295,10 @@ export function ProjectDetailPage({
       setNotes((res.notes as typeof notes) || []);
       setActivity((res.activity as typeof activity) || []);
       setDocuments(res.documents || []);
-      setDeferred(res.deferred || {});
+      setCollectionMeta({
+        deferred: res.deferred || {},
+        persistable: res.persistable,
+      });
       setMessage('');
     } catch (err) {
       const status = err instanceof HubHttpError ? err.status : (err as { status?: number }).status;
@@ -463,6 +534,58 @@ export function ProjectDetailPage({
   const relatedClientHref = clientPath(project.clientCode || project.clientId);
   const taskBlockers = tasks.filter((t) => t.blocker || t.status === 'blocked');
   const ownerDecisions = tasks.filter(taskNeedsOwner);
+  const closed = resolveDeferredClosedMap(collectionMeta);
+  const notesDeferred = closed.notes;
+  const decisionsDeferred = closed.decisions;
+  const risksDeferred = closed.risks;
+  const waitingDeferred = closed.waiting;
+  const commitmentsDeferred = closed.commitments;
+  const deliverablesDeferred = closed.deliverables;
+  const documentsDeferred = closed.documents;
+  const activityDeferred = closed.activity;
+
+  const recordNote = () => {
+    if (isCollectionDeferredClosed('notes', collectionMeta)) {
+      setActionError(DEFERRED_WRITE_BLOCKED);
+      return;
+    }
+    void createPmNote(auth, {
+      body: noteBody,
+      projectId: project.id,
+      clientId: project.clientId,
+      clientName: project.clientName,
+    })
+      .then(() => {
+        setNoteBody('');
+        setActionError(null);
+        return refresh();
+      })
+      .catch((err) => {
+        setActionError(safeErrorMessage(err, 'Could not record this note.'));
+      });
+  };
+
+  const recordDecision = () => {
+    if (isCollectionDeferredClosed('decisions', collectionMeta)) {
+      setActionError(DEFERRED_WRITE_BLOCKED);
+      return;
+    }
+    void createPmDecision(auth, {
+      title: decisionTitle,
+      decision: decisionTitle,
+      projectId: project.id,
+      clientId: project.clientId,
+      clientName: project.clientName,
+    })
+      .then(() => {
+        setDecisionTitle('');
+        setActionError(null);
+        return refresh();
+      })
+      .catch((err) => {
+        setActionError(safeErrorMessage(err, 'Could not record this decision.'));
+      });
+  };
 
   return (
     <ModuleScaffold
@@ -490,6 +613,15 @@ export function ProjectDetailPage({
         </div>
       }
     >
+      {isD13HonestyPreview() ? (
+        <MessageBar intent="warning">
+          <MessageBarBody>
+            <MessageBarTitle>DEV honesty preview</MessageBarTitle>
+            Hub is not called. Deferred collections default closed (missing persistable flag). Not a live
+            record.
+          </MessageBarBody>
+        </MessageBar>
+      ) : null}
       {actionError ? (
         <MessageBar intent="error">
           <MessageBarBody>
@@ -502,9 +634,13 @@ export function ProjectDetailPage({
         <Tab value="record">Record</Tab>
         <Tab value="board">Board</Tab>
         <Tab value="milestones">Milestones</Tab>
-        <Tab value="documents">Documents</Tab>
-        <Tab value="notes">Notes & decisions</Tab>
-        <Tab value="risks">Risks & waiting</Tab>
+        <Tab value="documents">{deferredTabLabel('Documents', ['documents'], collectionMeta)}</Tab>
+        <Tab value="notes">
+          {deferredTabLabel('Notes & decisions', ['notes', 'decisions'], collectionMeta)}
+        </Tab>
+        <Tab value="risks">
+          {deferredTabLabel('Risks & waiting', ['risks', 'waiting'], collectionMeta)}
+        </Tab>
       </TabList>
 
       {tab === 'record' ? (
@@ -536,13 +672,13 @@ export function ProjectDetailPage({
               </Caption1>
             </RecordRow>
             <RecordRow label="Blocker">
-              {deferred.risks ? (
+              {risksDeferred ? (
                 <Caption1>
-                  Risk/blocker register is not in the SharePoint production MVP. Showing task-level
-                  blockers only.
+                  Risk/blocker register is not in the SharePoint production MVP (deferred or
+                  unconfirmed). Showing task-level blockers only.
                 </Caption1>
               ) : null}
-              {taskBlockers.length === 0 && !deferred.risks ? (
+              {taskBlockers.length === 0 && !risksDeferred ? (
                 <Caption1>No blockers on Hub tasks for this project.</Caption1>
               ) : null}
               {taskBlockers.map((t) => (
@@ -575,10 +711,11 @@ export function ProjectDetailPage({
             </RecordRow>
             <RecordRow label="Changed">
               <Text>{displayLastActivity(project.lastActivityAt)}</Text>
-              {deferred.activity ? (
+              {activityDeferred ? (
                 <Caption1 style={{ display: 'block' }}>
-                  Activity feed is not in the SharePoint production MVP. Hub did not send a change
-                  summary — only lastActivityAt.
+                  Activity feed is not in the SharePoint production MVP (deferred or unconfirmed).
+                  Hub did not confirm a persistable change log — only lastActivityAt on the project
+                  record.
                 </Caption1>
               ) : activity.length === 0 ? (
                 <Caption1 style={{ display: 'block' }}>No activity events on this record.</Caption1>
@@ -591,10 +728,10 @@ export function ProjectDetailPage({
               )}
             </RecordRow>
             <RecordRow label="Requires me">
-              {deferred.decisions ? (
+              {decisionsDeferred ? (
                 <Caption1>
-                  Decisions register is not in the SharePoint production MVP. Showing Hub task
-                  approvals on this project only.
+                  Decisions register is not in the SharePoint production MVP (deferred or
+                  unconfirmed). Showing Hub task approvals on this project only.
                 </Caption1>
               ) : null}
               {ownerDecisions.length === 0 ? (
@@ -616,7 +753,7 @@ export function ProjectDetailPage({
             </div>
           </AtlasCard>
 
-          {deferred.deliverables ? (
+          {deliverablesDeferred ? (
             <DeferredClosed label="Deliverables" />
           ) : (
             <AtlasCard title="Deliverables">
@@ -632,7 +769,7 @@ export function ProjectDetailPage({
             </AtlasCard>
           )}
 
-          {deferred.commitments ? (
+          {commitmentsDeferred ? (
             <DeferredClosed label="Commitments" />
           ) : (
             <AtlasCard title="Commitments">
@@ -742,7 +879,7 @@ export function ProjectDetailPage({
       ) : null}
 
       {tab === 'documents' ? (
-        deferred.documents ? (
+        documentsDeferred ? (
           <DeferredClosed label="Documents" />
         ) : documents.length === 0 ? (
           <EmptyState
@@ -781,99 +918,58 @@ export function ProjectDetailPage({
       ) : null}
 
       {tab === 'notes' ? (
-        deferred.notes || deferred.decisions ? (
-          <div style={{ display: 'grid', gap: 16 }}>
-            {deferred.notes ? <DeferredClosed label="Notes" /> : null}
-            {deferred.decisions ? <DeferredClosed label="Decisions" /> : null}
-          </div>
-        ) : (
         <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
-          <AtlasCard title="Notes">
-            <Field label="New note">
-              <Input value={noteBody} onChange={(_, d) => setNoteBody(d.value)} />
-            </Field>
-            <Button
-              style={{ marginTop: 8 }}
-              disabled={!noteBody.trim()}
-              onClick={() =>
-                void createPmNote(auth, {
-                  body: noteBody,
-                  projectId: project.id,
-                  clientId: project.clientId,
-                  clientName: project.clientName,
-                })
-                  .then(() => {
-                    setNoteBody('');
-                    setActionError(null);
-                    return refresh();
-                  })
-                  .catch((err) => {
-                    setActionError(safeErrorMessage(err, 'Could not record this note.'));
-                  })
-              }
-            >
-              Record note
-            </Button>
-            {notes.length === 0 ? (
-              <Caption1 style={{ display: 'block', marginTop: 8 }}>No notes on this record.</Caption1>
-            ) : (
-              notes.map((n) => (
-                <Caption1 key={n.id} style={{ display: 'block', marginTop: 8 }}>
-                  {n.title ? `${n.title}: ` : ''}
-                  {n.body}
-                </Caption1>
-              ))
-            )}
-          </AtlasCard>
-          <AtlasCard title="Decisions">
-            <Field label="Decision">
-              <Input value={decisionTitle} onChange={(_, d) => setDecisionTitle(d.value)} />
-            </Field>
-            <Button
-              style={{ marginTop: 8 }}
-              disabled={!decisionTitle.trim()}
-              onClick={() =>
-                void createPmDecision(auth, {
-                  title: decisionTitle,
-                  decision: decisionTitle,
-                  projectId: project.id,
-                  clientId: project.clientId,
-                  clientName: project.clientName,
-                })
-                  .then(() => {
-                    setDecisionTitle('');
-                    setActionError(null);
-                    return refresh();
-                  })
-                  .catch((err) => {
-                    setActionError(safeErrorMessage(err, 'Could not record this decision.'));
-                  })
-              }
-            >
-              Record decision
-            </Button>
-            {decisions.length === 0 ? (
-              <Caption1 style={{ display: 'block', marginTop: 8 }}>No decisions on this record.</Caption1>
-            ) : (
-              decisions.map((d) => (
-                <Caption1 key={d.id} style={{ display: 'block', marginTop: 8 }}>
-                  {d.title} ({atlasChip(d.status).label})
-                </Caption1>
-              ))
-            )}
-          </AtlasCard>
+          {notesDeferred ? (
+            <DeferredClosed label="Notes" />
+          ) : (
+            <AtlasCard title="Notes">
+              <Field label="New note">
+                <Input value={noteBody} onChange={(_, d) => setNoteBody(d.value)} />
+              </Field>
+              <Button style={{ marginTop: 8 }} disabled={!noteBody.trim()} onClick={recordNote}>
+                Record note
+              </Button>
+              {notes.length === 0 ? (
+                <Caption1 style={{ display: 'block', marginTop: 8 }}>No notes on this record.</Caption1>
+              ) : (
+                notes.map((n) => (
+                  <Caption1 key={n.id} style={{ display: 'block', marginTop: 8 }}>
+                    {n.title ? `${n.title}: ` : ''}
+                    {n.body}
+                  </Caption1>
+                ))
+              )}
+            </AtlasCard>
+          )}
+          {decisionsDeferred ? (
+            <DeferredClosed label="Decisions" />
+          ) : (
+            <AtlasCard title="Decisions">
+              <Field label="Decision">
+                <Input value={decisionTitle} onChange={(_, d) => setDecisionTitle(d.value)} />
+              </Field>
+              <Button
+                style={{ marginTop: 8 }}
+                disabled={!decisionTitle.trim()}
+                onClick={recordDecision}
+              >
+                Record decision
+              </Button>
+              {decisions.length === 0 ? (
+                <Caption1 style={{ display: 'block', marginTop: 8 }}>No decisions on this record.</Caption1>
+              ) : (
+                decisions.map((d) => (
+                  <Caption1 key={d.id} style={{ display: 'block', marginTop: 8 }}>
+                    {d.title} ({atlasChip(d.status).label})
+                  </Caption1>
+                ))
+              )}
+            </AtlasCard>
+          )}
         </div>
-        )
       ) : null}
 
       {tab === 'risks' ? (
-        deferred.risks || deferred.waiting ? (
-          <div style={{ display: 'grid', gap: 16 }}>
-            {deferred.risks ? <DeferredClosed label="Risks" /> : null}
-            {deferred.waiting ? <DeferredClosed label="Waiting" /> : null}
-            {deferred.commitments ? <DeferredClosed label="Commitments" /> : null}
-          </div>
-        ) : (
         <div
           style={{
             display: 'grid',
@@ -881,28 +977,37 @@ export function ProjectDetailPage({
             gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
           }}
         >
-          <AtlasCard title="Risks / blockers">
-            {risks.length === 0 ? (
-              <Caption1>None</Caption1>
-            ) : (
-              risks.map((r) => (
-                <Caption1 key={r.id} style={{ display: 'block', padding: '4px 0' }}>
-                  [{r.kind}/{r.severity}] {r.description}
-                </Caption1>
-              ))
-            )}
-          </AtlasCard>
-          <AtlasCard title="Waiting on">
-            {waiting.length === 0 ? (
-              <Caption1>None</Caption1>
-            ) : (
-              waiting.map((w) => (
-                <Caption1 key={w.id} style={{ display: 'block', padding: '4px 0' }}>
-                  {w.whatIsNeeded} — {w.owedByName}
-                </Caption1>
-              ))
-            )}
-          </AtlasCard>
+          {risksDeferred ? (
+            <DeferredClosed label="Risks" />
+          ) : (
+            <AtlasCard title="Risks / blockers">
+              {risks.length === 0 ? (
+                <Caption1>None</Caption1>
+              ) : (
+                risks.map((r) => (
+                  <Caption1 key={r.id} style={{ display: 'block', padding: '4px 0' }}>
+                    [{r.kind}/{r.severity}] {r.description}
+                  </Caption1>
+                ))
+              )}
+            </AtlasCard>
+          )}
+          {waitingDeferred ? (
+            <DeferredClosed label="Waiting" />
+          ) : (
+            <AtlasCard title="Waiting on">
+              {waiting.length === 0 ? (
+                <Caption1>None</Caption1>
+              ) : (
+                waiting.map((w) => (
+                  <Caption1 key={w.id} style={{ display: 'block', padding: '4px 0' }}>
+                    {w.whatIsNeeded} — {w.owedByName}
+                  </Caption1>
+                ))
+              )}
+            </AtlasCard>
+          )}
+          {commitmentsDeferred ? <DeferredClosed label="Commitments" /> : null}
           <AtlasCard title="Approvals">
             {ownerDecisions.length === 0 ? (
               <Caption1>No pending project approvals</Caption1>
@@ -915,7 +1020,6 @@ export function ProjectDetailPage({
             )}
           </AtlasCard>
         </div>
-        )
       ) : null}
     </ModuleScaffold>
   );

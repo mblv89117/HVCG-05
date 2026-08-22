@@ -62,3 +62,5 @@ deployment/artifacts/accg01-acl-inventory.json
 deployment/reports/HVCG-Dev-Deploy-20*.json
 deployment/reports/HVCG-Dev-Deploy-20*.md
 
+.env.development.local
+**/.env.development.local

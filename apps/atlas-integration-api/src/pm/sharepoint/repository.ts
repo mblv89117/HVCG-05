@@ -43,6 +43,7 @@ import {
   taskStatusToSharePoint,
   type MilestoneHubStatus,
 } from './mapping.ts';
+import { createListItemCache, type ListItemCache } from './listCache.ts';
 import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
 import {
   CONVERTIBLE_LEAD_STATUSES,
@@ -326,20 +327,58 @@ function isoDate(v: unknown): string | undefined {
 }
 
 export class SharePointPmService {
+  private readonly listCache: ListItemCache;
+
   constructor(
     private readonly settings: SharePointPmSettings,
     private readonly graph: PmGraphTransport,
     private readonly lookupUser: UserBasicLookup,
-  ) {}
+    listCache?: ListItemCache,
+  ) {
+    this.listCache = listCache || createListItemCache();
+  }
+
+  /** Operator/test visibility into raw list cache (never includes principal scope). */
+  listCacheStats() {
+    return this.listCache.stats();
+  }
+
+  clearListCache() {
+    this.listCache.clear();
+  }
+
+  private invalidateList(listId: string | undefined) {
+    if (listId) this.listCache.invalidate(listId);
+  }
+
+  private async createListItem(listId: string, fields: Record<string, unknown>): Promise<GraphListItem> {
+    const created = await this.graph.createItem(listId, fields);
+    this.invalidateList(listId);
+    return created;
+  }
+
+  private async patchListItemFields(
+    listId: string,
+    itemId: string,
+    fields: Record<string, unknown>,
+    etag: string,
+  ): Promise<GraphListItem> {
+    const patched = await this.graph.patchItemFields(listId, itemId, fields, etag);
+    this.invalidateList(listId);
+    return patched;
+  }
 
   private async listAll(listId: string, filter?: string): Promise<GraphListItem[]> {
-    const items: GraphListItem[] = [];
-    let nextLink: string | undefined;
-    do {
-      const page = await this.graph.listItems(listId, { nextLink, top: 100 });
-      items.push(...page.items);
-      nextLink = page.nextLink;
-    } while (nextLink);
+    const items = (await this.listCache.getOrLoad(listId, async () => {
+      const pages: GraphListItem[] = [];
+      let nextLink: string | undefined;
+      do {
+        const page = await this.graph.listItems(listId, { nextLink, top: 100 });
+        pages.push(...page.items);
+        nextLink = page.nextLink;
+      } while (nextLink);
+      return pages;
+    })) as GraphListItem[];
     return filter ? items.filter((item) => itemMatchesFieldsFilter(item, filter)) : items;
   }
 
@@ -843,7 +882,7 @@ export class SharePointPmService {
       fields.AtlasClientRefLookupId = Number(client.itemId);
     }
 
-    const created = await this.graph.createItem(this.settings.projectsListId, fields);
+    const created = await this.createListItem(this.settings.projectsListId, fields);
     const mapped = this.mapProject(created);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created project could not be mapped.');
     return mapped;
@@ -880,7 +919,7 @@ export class SharePointPmService {
     if ('targetCompletionDate' in body) fields.TargetEndDate = asString(body.targetCompletionDate) || null;
     if (Object.keys(fields).length === 0) return existing;
 
-    const patched = await this.graph.patchItemFields(this.settings.projectsListId, id, fields, etag);
+    const patched = await this.patchListItemFields(this.settings.projectsListId, id, fields, etag);
     const mapped = this.mapProject(patched);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched project could not be mapped.');
     if (!canAccessClassification(principal, mapped.classification)) {
@@ -1012,7 +1051,7 @@ export class SharePointPmService {
     }
     if (idempotencyKey) fields.HVCG_IdempotencyKey = idempotencyKey;
 
-    const created = await this.graph.createItem(this.settings.tasksListId, fields);
+    const created = await this.createListItem(this.settings.tasksListId, fields);
     const mapped = this.mapTask(created);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created task could not be mapped.');
     return mapped;
@@ -1043,7 +1082,7 @@ export class SharePointPmService {
     if ('blocker' in body) fields.Blockers = asString(body.blocker) || '';
     if ('nextAction' in body) fields.Notes = asString(body.nextAction) || '';
     if (Object.keys(fields).length === 0) return existing;
-    const patched = await this.graph.patchItemFields(this.settings.tasksListId, id, fields, etag);
+    const patched = await this.patchListItemFields(this.settings.tasksListId, id, fields, etag);
     const mapped = this.mapTask(patched);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched task could not be mapped.');
     return mapped;
@@ -1078,7 +1117,7 @@ export class SharePointPmService {
     };
     if (project.classification.kind === 'client') fields.ClientCode = project.classification.clientCode;
     else fields.ClientCode = '';
-    const created = await this.graph.createItem(this.settings.milestonesListId, fields);
+    const created = await this.createListItem(this.settings.milestonesListId, fields);
     const mapped = this.mapMilestone(created);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created milestone could not be mapped.');
     return mapped;
@@ -1130,7 +1169,7 @@ export class SharePointPmService {
     }
     if (requestedStage) fields.ClientStage = requestedStage;
     if (idempotencyKey) fields.HVCG_IdempotencyKey = idempotencyKey;
-    const created = await this.graph.createItem(this.settings.clientsListId, fields);
+    const created = await this.createListItem(this.settings.clientsListId, fields);
     const mapped = this.mapClient(created);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
     return mapped;
@@ -1166,7 +1205,7 @@ export class SharePointPmService {
     }
     if ('website' in body) fields.Website = asString(body.website) || '';
     if (Object.keys(fields).length === 0) return current;
-    const patched = await this.graph.patchItemFields(this.settings.clientsListId, current.itemId, fields, etag);
+    const patched = await this.patchListItemFields(this.settings.clientsListId, current.itemId, fields, etag);
     const mapped = this.mapClient(patched);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched client could not be mapped.');
     return mapped;
@@ -1192,11 +1231,11 @@ export class SharePointPmService {
       HVCG_IdempotencyKey: fields.idempotencyKey,
     };
     try {
-      const created = await this.graph.createItem(this.settings.vendorsListId, payload);
+      const created = await this.createListItem(this.settings.vendorsListId, payload);
       return { id: created.id, title: asString(created.fields.Title) || fields.title };
     } catch {
       delete payload.HVCG_IdempotencyKey;
-      const created = await this.graph.createItem(this.settings.vendorsListId, payload);
+      const created = await this.createListItem(this.settings.vendorsListId, payload);
       return { id: created.id, title: asString(created.fields.Title) || fields.title };
     }
   }
@@ -1238,7 +1277,7 @@ export class SharePointPmService {
     if (row.provenanceSource) fields.ProvenanceSource = row.provenanceSource;
     if (row.sourceOrg) fields.SourceOrg = row.sourceOrg;
     try {
-      await this.graph.createItem(this.settings.communicationsListId, fields);
+      await this.createListItem(this.settings.communicationsListId, fields);
     } catch {
       delete fields.SourceMessageId;
       delete fields.ConversationId;
@@ -1246,7 +1285,7 @@ export class SharePointPmService {
       delete fields.Classification;
       delete fields.ProvenanceSource;
       delete fields.SourceOrg;
-      await this.graph.createItem(this.settings.communicationsListId, fields);
+      await this.createListItem(this.settings.communicationsListId, fields);
     }
   }
 
@@ -1273,10 +1312,10 @@ export class SharePointPmService {
     if (row.date) fields.MeetingDate = row.date;
     if (row.webUrl) fields.OutlookEventLink = row.webUrl;
     try {
-      await this.graph.createItem(this.settings.meetingsListId, fields);
+      await this.createListItem(this.settings.meetingsListId, fields);
     } catch {
       delete fields.HVCG_IdempotencyKey;
-      await this.graph.createItem(this.settings.meetingsListId, fields);
+      await this.createListItem(this.settings.meetingsListId, fields);
     }
   }
 
@@ -1304,7 +1343,7 @@ export class SharePointPmService {
     ) {
       return;
     }
-    await this.graph.createItem(this.settings.contactsListId, {
+    await this.createListItem(this.settings.contactsListId, {
       Title: row.title.slice(0, 255),
       Email: row.email || '',
       ClientCode: row.clientCode,
@@ -1537,7 +1576,7 @@ export class SharePointPmService {
       fields.Notes = (asString(body.notes) || asString(body.Notes) || '').slice(0, 2000);
     }
     if (Object.keys(fields).length === 0) return existing;
-    const patched = await this.graph.patchItemFields(this.settings.opportunitiesListId, id, fields, etag);
+    const patched = await this.patchListItemFields(this.settings.opportunitiesListId, id, fields, etag);
     const mapped = this.mapOpportunity(patched, await this.clientIndex());
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched opportunity could not be mapped.');
     return mapped;
@@ -1680,7 +1719,7 @@ export class SharePointPmService {
     if ('discoveryCallDate' in body) fields.DiscoveryCallDate = asString(body.discoveryCallDate) || null;
     if ('notes' in body) fields.Notes = asString(body.notes) || '';
     if (Object.keys(fields).length === 0) return existing;
-    const patched = await this.graph.patchItemFields(this.settings.leadsListId, id, fields, etag);
+    const patched = await this.patchListItemFields(this.settings.leadsListId, id, fields, etag);
     const mapped = this.mapLead(patched);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Patched lead could not be mapped.');
     return mapped;
@@ -1736,7 +1775,7 @@ export class SharePointPmService {
         ConvertedClientIdLookupId: Number(company.client.itemId),
         ConvertedOpportunityIdLookupId: Number(opportunity.record.id),
       };
-      const patched = await this.graph.patchItemFields(this.settings.leadsListId, id, fields, match);
+      const patched = await this.patchListItemFields(this.settings.leadsListId, id, fields, match);
       const mapped = this.mapLead(patched);
       if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Converted lead could not be mapped.');
       lead = mapped;
@@ -1823,7 +1862,7 @@ export class SharePointPmService {
     if (lead.serviceInterest) fields.EngagementTypePrimary = lead.serviceInterest;
     if (lead.source) fields.ReferralSource = lead.source.slice(0, 255);
     if (lead.ownerEmail) fields.RelationshipOwnerEmail = lead.ownerEmail;
-    const created = await this.graph.createItem(this.settings.clientsListId, fields);
+    const created = await this.createListItem(this.settings.clientsListId, fields);
     const client = this.mapClient(created);
     if (!client) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created client could not be mapped.');
     return { client, reused: false };
@@ -1834,7 +1873,7 @@ export class SharePointPmService {
     if (!client.etag) {
       throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required to promote a reused Lead company to Prospect.');
     }
-    const patched = await this.graph.patchItemFields(
+    const patched = await this.patchListItemFields(
       this.settings.clientsListId,
       client.itemId,
       { ClientStage: 'Prospect' },
@@ -1885,7 +1924,7 @@ export class SharePointPmService {
     };
     if (lead.email) fields.Email = lead.email;
     if (lead.phone) fields.Phone = lead.phone;
-    const created = await this.graph.createItem(listId, fields);
+    const created = await this.createListItem(listId, fields);
     return {
       record: {
         id: created.id,
@@ -1938,7 +1977,7 @@ export class SharePointPmService {
     if (lead.serviceInterest) fields.ServicePackage = lead.serviceInterest;
     if (lead.source) fields.Notes = `Source=${lead.source}${lead.leadSourceDetail ? `; Detail=${lead.leadSourceDetail}` : ''}`;
     if (lead.referralPartnerId) fields.ReferralPartnerIdLookupId = Number(lead.referralPartnerId);
-    const created = await this.graph.createItem(listId, fields);
+    const created = await this.createListItem(listId, fields);
     const mapped = this.mapOpportunity(created, await this.clientIndex());
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Created opportunity could not be mapped.');
     return { record: mapped, reused: false };
@@ -2223,7 +2262,7 @@ export class SharePointPmService {
       fields.ClientStage = 'Active Client';
       fields.IsActive = true;
     }
-    const patched = await this.graph.patchItemFields(this.settings.clientsListId, current.client.itemId, fields, etag);
+    const patched = await this.patchListItemFields(this.settings.clientsListId, current.client.itemId, fields, etag);
     const mapped = this.mapClient(patched);
     if (!mapped) throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Activated client could not be mapped.');
     return {
