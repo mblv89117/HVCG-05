@@ -1,0 +1,111 @@
+{
+  "title": "HVCG_RevenueForecastLines",
+  "description": "Finance \u2014 Revenue forecast lines",
+  "template": "genericList",
+  "domain": "Finance",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "OpportunityId",
+      "displayName": "OpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "ForecastMonth",
+      "displayName": "ForecastMonth",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "YYYY-MM"
+    },
+    {
+      "internalName": "RevenueType",
+      "displayName": "RevenueType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "MRR",
+        "Setup",
+        "Success Fee",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Probability",
+      "displayName": "Probability",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "WeightedAmount",
+      "displayName": "WeightedAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ForecastCategory",
+      "displayName": "ForecastCategory",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pipeline",
+        "Best Case",
+        "Commit",
+        "Closed"
+      ]
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

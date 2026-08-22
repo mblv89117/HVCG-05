@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-07-21T05:45:52.478Z",
+  "attached": 2278,
+  "restrictedHidden": 600,
+  "byClient": {
+    "ACCG Inc.": 1631,
+    "Christie's Place LLC": 79,
+    "Hart Family Dental": 319,
+    "Colorado Craft Beef": 1,
+    "Lien Partners": 20,
+    "Irwin Falk": 1,
+    "Prodigy Games LLC": 223,
+    "That's Kava LLC": 4
+  },
+  "prioritySnapshot": [
+    {
+      "id": "a35ca4b3-08c9-40ac-860f-f52787dcdc7a",
+      "name": "Lienpartners",
+      "docs": 3,
+      "hvsRefs": 618
+    },
+    {
+      "id": "f432a0a6-c84f-42f4-a5f6-63804183a46a",
+      "name": "Accg-inc",
+      "docs": 0,
+      "hvsRefs": 256
+    },
+    {
+      "id": "d8d6667f-c505-42a5-8177-782f75ef2af0",
+      "name": "Coloradocraftbeef",
+      "docs": 0,
+      "hvsRefs": 52
+    },
+    {
+      "id": "3373dbc5-43ff-401b-967f-ec493cfe8f7e",
+      "name": "Prodigygames",
+      "docs": 12,
+      "hvsRefs": 38
+    },
+    {
+      "id": "116d8b09-2655-47d3-8412-c0e312283bfb",
+      "name": "Scaleclients",
+      "docs": 0,
+      "hvsRefs": 2
+    },
+    {
+      "id": "client-accg01",
+      "name": "ACCG Inc.",
+      "docs": 800,
+      "hvsRefs": 800
+    },
+    {
+      "id": "client-pdg01",
+      "name": "Prodigy Games LLC",
+      "docs": 223,
+      "hvsRefs": 223
+    },
+    {
+      "id": "client-kava01",
+      "name": "That's Kava LLC",
+      "docs": 4,
+      "hvsRefs": 4
+    },
+    {
+      "id": "client-cpl01",
+      "name": "Christie's Place LLC",
+      "docs": 79,
+      "hvsRefs": 79
+    },
+    {
+      "id": "client-cfalk01",
+      "name": "Christie Falk",
+      "docs": 0,
+      "hvsRefs": 0
+    },
+    {
+      "id": "client-falk01",
+      "name": "Irwin Falk",
+      "docs": 1,
+      "hvsRefs": 1
+    },
+    {
+      "id": "client-hfd01",
+      "name": "Hart Family Dental",
+      "docs": 319,
+      "hvsRefs": 319
+    },
+    {
+      "id": "client-ccb01",
+      "name": "Colorado Craft Beef",
+      "docs": 1,
+      "hvsRefs": 1
+    },
+    {
+      "id": "client-lien01",
+      "name": "Lien Partners",
+      "docs": 20,
+      "hvsRefs": 20
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001 Sprint 7 BA-D",
+  "offerCode": "OFF-FCFO-OP",
+  "serviceLine": "SL-FCFO",
+  "blC1Active": true,
+  "canAutoSendClient": false,
+  "canAutoEmailBookkeeper": false,
+  "canAutoEmailCpa": false,
+  "pricingFromCanonicalCatalog": true,
+  "onboardingStates": [
+    "ENGAGEMENT_CREATED",
+    "ACCESS_REQUESTED",
+    "DATA_SOURCES_MAPPED",
+    "BASELINE_FINANCIALS_RECEIVED",
+    "FINANCIAL_STRUCTURE_REVIEW",
+    "FORECAST_SETUP",
+    "KPI_BASELINE",
+    "MONTHLY_CADENCE_READY"
+  ],
+  "monthlyCycleStates": [
+    "WAITING_FOR_PERIOD_CLOSE",
+    "DATA_COLLECTION",
+    "DATA_VALIDATION",
+    "FINANCIAL_REVIEW",
+    "FORECAST_UPDATE",
+    "KPI_REVIEW",
+    "ADVISOR_INTERPRETATION",
+    "CLIENT_REVIEW_READY",
+    "MONTH_COMPLETE",
+    "REOPENED"
+  ],
+  "provenanceKinds": [
+    "SOURCE_ACCOUNTING_DATA",
+    "BANK_DATA",
+    "CLIENT_PROVIDED_DATA",
+    "HVCG_CALCULATION",
+    "HVCG_FORECAST",
+    "AI_INFERENCE",
+    "ADVISOR_JUDGMENT"
+  ],
+  "forecastInputOrigins": [
+    "Historical Pattern",
+    "Open AR",
+    "Contracted Revenue",
+    "Management Estimate",
+    "Scheduled Expense",
+    "Known Debt Payment",
+    "Advisor Assumption",
+    "AI Suggested Estimate"
+  ],
+  "forecastScenarios": ["BASE", "CONSERVATIVE", "GROWTH"],
+  "reconciliationStatuses": [
+    "RECONCILED",
+    "UNRECONCILED",
+    "PARTIALLY_RECONCILED",
+    "SOURCE_CONFLICT",
+    "NOT_APPLICABLE"
+  ],
+  "capitalMonitorStatuses": [
+    "Stable",
+    "Improved",
+    "Watch",
+    "Material Change",
+    "Reassessment Recommended"
+  ],
+  "freshnessPolicyDays": {
+    "BANK_DATA": 7,
+    "AR": 14,
+    "AP": 14,
+    "FINANCIAL_STATEMENTS": 45,
+    "TAX_RETURNS": 400,
+    "WIP": 30,
+    "FORECAST": 14
+  },
+  "cashAlertThresholds": {
+    "minimumCash": 25000,
+    "payrollCoverageWeeks": 2,
+    "materialVariancePercent": 10
+  },
+  "budgetMaterialityPercent": 10,
+  "kpiCatalog": [
+    "Revenue",
+    "Gross Margin %",
+    "Operating Margin",
+    "Net Income",
+    "Cash",
+    "Working Capital",
+    "AR Days",
+    "AP Days",
+    "Debt Service",
+    "DSCR",
+    "Backlog",
+    "WIP Margin",
+    "Payroll %",
+    "Customer Concentration",
+    "Cash Runway",
+    "Forecast Accuracy"
+  ],
+  "recurringTasks": [
+    "request monthly financials",
+    "validate close",
+    "update cash forecast",
+    "review AR",
+    "review AP",
+    "update budget variance",
+    "review WIP",
+    "update KPI scorecard",
+    "prepare management report",
+    "advisor review",
+    "schedule monthly client review"
+  ],
+  "aiMay": [
+    "financial summaries",
+    "variance identification",
+    "missing data",
+    "forecast suggestions",
+    "KPI commentary drafts",
+    "question generation",
+    "meeting agendas",
+    "management report drafts"
+  ],
+  "aiMustNot": [
+    "certify financials",
+    "modify books",
+    "fabricate values",
+    "issue tax advice",
+    "perform audit/attestation",
+    "make bank transfers",
+    "approve distributions",
+    "execute payroll",
+    "commit client spending",
+    "send final financial interpretations automatically"
+  ]
+}

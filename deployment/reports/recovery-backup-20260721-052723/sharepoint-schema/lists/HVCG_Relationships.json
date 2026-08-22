@@ -1,0 +1,327 @@
+{
+  "title": "HVCG_Relationships",
+  "description": "Intelligence \u2014 Cross-domain relationship graph edges",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Display: Source \u2192 Type \u2192 Target"
+    },
+    {
+      "internalName": "RelationshipId",
+      "displayName": "RelationshipId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable unique key e.g. rel|{source}|{type}|{target}"
+    },
+    {
+      "internalName": "SourceEntityType",
+      "displayName": "SourceEntityType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Person",
+        "Contact",
+        "Organization",
+        "Client",
+        "Prospect",
+        "ReferralPartner",
+        "Vendor",
+        "Lender",
+        "Investor",
+        "CapitalSource",
+        "Opportunity",
+        "CapitalOpportunity",
+        "Engagement",
+        "Project",
+        "Workstream",
+        "Document",
+        "DocumentRequest",
+        "Meeting",
+        "Communication",
+        "Task",
+        "Deliverable",
+        "Decision",
+        "Risk",
+        "Issue",
+        "FundingMilestone",
+        "Invoice",
+        "TeamMember",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "SourceRecordId",
+      "displayName": "SourceRecordId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "SharePoint item ID or business key"
+    },
+    {
+      "internalName": "SourceDisplayName",
+      "displayName": "SourceDisplayName",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "SourceClientCode",
+      "displayName": "SourceClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Denormalized client isolation key when applicable"
+    },
+    {
+      "internalName": "TargetEntityType",
+      "displayName": "TargetEntityType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Person",
+        "Contact",
+        "Organization",
+        "Client",
+        "Prospect",
+        "ReferralPartner",
+        "Vendor",
+        "Lender",
+        "Investor",
+        "CapitalSource",
+        "Opportunity",
+        "CapitalOpportunity",
+        "Engagement",
+        "Project",
+        "Workstream",
+        "Document",
+        "DocumentRequest",
+        "Meeting",
+        "Communication",
+        "Task",
+        "Deliverable",
+        "Decision",
+        "Risk",
+        "Issue",
+        "FundingMilestone",
+        "Invoice",
+        "TeamMember",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "TargetRecordId",
+      "displayName": "TargetRecordId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TargetDisplayName",
+      "displayName": "TargetDisplayName",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TargetClientCode",
+      "displayName": "TargetClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RelationshipType",
+      "displayName": "RelationshipType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Referred by",
+        "Referred",
+        "Owns",
+        "Manages",
+        "Advises",
+        "Works for",
+        "Invested in",
+        "Lent to",
+        "Funded",
+        "Introduced",
+        "Partnered with",
+        "Vendor to",
+        "Depends on",
+        "Blocks",
+        "Related document",
+        "Related meeting",
+        "Related opportunity",
+        "Related engagement",
+        "Related project",
+        "Related capital transaction",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "RelationshipStrength",
+      "displayName": "RelationshipStrength",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Weak",
+        "Medium",
+        "Strong",
+        "Strategic"
+      ],
+      "default": "Medium"
+    },
+    {
+      "internalName": "RelationshipStatus",
+      "displayName": "RelationshipStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Dormant",
+        "Ended",
+        "Disputed"
+      ],
+      "default": "Active"
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "StartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EndDate",
+      "displayName": "EndDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastMeaningfulInteraction",
+      "displayName": "LastMeaningfulInteraction",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "NextPlannedInteraction",
+      "displayName": "NextPlannedInteraction",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RelationshipOwnerEmail",
+      "displayName": "RelationshipOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "StrategicValue",
+      "displayName": "StrategicValue",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ],
+      "default": "Medium"
+    },
+    {
+      "internalName": "RevenueInfluenced",
+      "displayName": "RevenueInfluenced",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalInfluenced",
+      "displayName": "CapitalInfluenced",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SourceSystem",
+      "displayName": "SourceSystem",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "HVCG OS",
+        "Manual",
+        "Import",
+        "AI Suggested",
+        "Graph"
+      ],
+      "default": "HVCG OS"
+    },
+    {
+      "internalName": "IsCrossClient",
+      "displayName": "IsCrossClient",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "True if SourceClientCode\u2260TargetClientCode \u2014 restricted visibility",
+      "default": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ],
+  "views": [
+    "Active Relationships",
+    "By Owner",
+    "Strategic High",
+    "Pending Interactions",
+    "Cross-Client Review"
+  ]
+}

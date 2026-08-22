@@ -1,0 +1,22 @@
+{
+  "contentTypes": [
+    {
+      "id": "HVCG_ClientDocument",
+      "columns": ["ClientCode", "DocumentCategory", "ReceivedDate", "ExpirationDate", "SubmittedBy", "ReviewStatus", "CopilotKeywords"]
+    },
+    {
+      "id": "HVCG_KnowledgeArticle",
+      "columns": ["ArticleType", "Audience", "LastReviewed", "Status", "CopilotKeywords", "RelatedTemplateKeys"]
+    },
+    {
+      "id": "HVCG_DeliverableDocument",
+      "columns": ["ClientCode", "DeliverableType", "VersionLabel", "PortalVisible", "CopilotKeywords"]
+    },
+    {
+      "id": "HVCG_CapitalPackageDocument",
+      "columns": ["ClientCode", "CapitalType", "FundingStatus", "PackageKind", "CopilotKeywords"]
+    }
+  ],
+  "articleTypes": ["SOP", "Policy", "Playbook", "SalesScript", "Training", "Template"],
+  "packageKinds": ["Lender", "Investor", "SBA", "CRE", "Equipment", "WorkingCapital", "Other"]
+}
