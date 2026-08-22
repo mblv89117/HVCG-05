@@ -1,0 +1,6 @@
+{
+  "name": "@hvcg/atlas-business-analyst-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Isolated CPython 3.11 HTTP wrapper around canonical config/business. Not a Node runtime."
+}

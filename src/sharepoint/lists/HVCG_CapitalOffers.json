@@ -1,0 +1,257 @@
+{
+  "title": "HVCG_CapitalOffers",
+  "description": "Capital — Term sheets / offers received (comparison is informational; HVCG does not guarantee terms)",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "LenderOutreachId",
+      "displayName": "LenderOutreachId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_LenderOutreach"
+    },
+    {
+      "internalName": "LenderId",
+      "displayName": "LenderId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "LenderName",
+      "displayName": "LenderName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Denormalized lender name for display if lookup is empty."
+    },
+    {
+      "internalName": "Product",
+      "displayName": "Product",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InterestRate",
+      "displayName": "InterestRate",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Stated rate percent. Not effective cost unless fees/term are comparable."
+    },
+    {
+      "internalName": "IndexName",
+      "displayName": "Index",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Rate index if variable."
+    },
+    {
+      "internalName": "Spread",
+      "displayName": "Spread",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RateType",
+      "displayName": "RateType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "fixed",
+        "variable",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    {
+      "internalName": "TermMonths",
+      "displayName": "TermMonths",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AmortizationMonths",
+      "displayName": "AmortizationMonths",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EstimatedPayment",
+      "displayName": "EstimatedPayment",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Origination",
+      "displayName": "Origination",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClosingFees",
+      "displayName": "ClosingFees",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Collateral",
+      "displayName": "Collateral",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PersonalGuarantee",
+      "displayName": "PersonalGuarantee",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Prepayment",
+      "displayName": "Prepayment",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Covenants",
+      "displayName": "Covenants",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ReportingObligations",
+      "displayName": "ReportingObligations",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Deposits",
+      "displayName": "Deposits",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Conditions",
+      "displayName": "Conditions",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExpectedClosingDays",
+      "displayName": "ExpectedClosingDays",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MajorRisks",
+      "displayName": "MajorRisks",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EffectiveCostNotes",
+      "displayName": "EffectiveCostNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Assumptions",
+      "displayName": "Assumptions",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Required for honest comparison. Empty assumptions = do not treat figures as complete."
+    },
+    {
+      "internalName": "OfferReceivedAt",
+      "displayName": "OfferReceivedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

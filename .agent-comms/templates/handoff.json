@@ -1,0 +1,8 @@
+{
+  "type": "HANDOFF",
+  "priority": "NORMAL",
+  "subject": "Ready for integration",
+  "body": "Workstream complete offline. Branch: ... Tests: PASS",
+  "requestedAction": "Review and schedule integration",
+  "requiresAcknowledgement": true
+}

@@ -13,12 +13,22 @@
     },
     {
       "internalName": "ClientId",
-      "displayName": "ClientId",
+      "displayName": "ClientId (legacy)",
       "type": "Lookup",
       "required": false,
       "indexed": true,
-      "description": "",
+      "description": "LEGACY \u2014 do not write. Preserved in place; use AtlasClientRef.",
       "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "AtlasClientRef",
+      "displayName": "Client",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Primary client lookup (Case B). Write via AtlasClientRefId (REST/connector) or AtlasClientRefLookupId (Graph).",
+      "lookupList": "HVCG_Clients",
+      "lookupField": "Title"
     },
     {
       "internalName": "EngagementId",

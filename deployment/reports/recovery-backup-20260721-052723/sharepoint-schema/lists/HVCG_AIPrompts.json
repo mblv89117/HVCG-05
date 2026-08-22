@@ -1,0 +1,101 @@
+{
+  "title": "HVCG_AIPrompts",
+  "description": "AI \u2014 Versioned prompts",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PromptKey",
+      "displayName": "PromptKey",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PromptVersion",
+      "displayName": "PromptVersion",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "JobType",
+      "displayName": "JobType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "MeetingSummary",
+        "TaskExtraction",
+        "StatusReport",
+        "MissingDocs",
+        "ClientFollowUp",
+        "SOPDraft",
+        "ExecutiveBrief",
+        "NextActions",
+        "InconsistencyDetect",
+        "LenderPackageDraft",
+        "InvestorPackageDraft",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "PromptBody",
+      "displayName": "PromptBody",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsActive",
+      "displayName": "IsActive",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "DataClassification",
+      "displayName": "DataClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ],
+      "default": "Confidential"
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ChangeNotes",
+      "displayName": "ChangeNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

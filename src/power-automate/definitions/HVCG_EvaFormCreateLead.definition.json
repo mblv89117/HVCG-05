@@ -1,0 +1,387 @@
+{
+  "name": "HVCG_EvaFormCreateLead",
+  "displayName": "HVCG_EvaFormCreateLead",
+  "description": "EVA intake → HVCG_Leads (Dev only). HTTP body per EVA_CRM_PAYLOAD_SCHEMA. defaultState Off. No prospect email. No Prod writes.",
+  "defaultState": "Off",
+  "module": "RevenueOS",
+  "packageVersion": "1.0.0",
+  "definition": {
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "10.0.0.0",
+    "parameters": {
+      "$authentication": {
+        "defaultValue": {},
+        "type": "SecureObject"
+      },
+      "$connections": {
+        "defaultValue": {},
+        "type": "Object"
+      },
+      "hvcg_CommandCenterSiteUrl": {
+        "type": "String",
+        "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev"
+      },
+      "hvcg_EnableClientEmails": {
+        "type": "Bool",
+        "defaultValue": false
+      },
+      "hvcg_CrmEnableTeamsNotify": {
+        "type": "Bool",
+        "defaultValue": false
+      },
+      "hvcg_OpsEmail": {
+        "type": "String",
+        "defaultValue": "manny@highvaluecapitalgroup.com"
+      }
+    },
+    "triggers": {
+      "manual": {
+        "type": "Request",
+        "kind": "Http",
+        "inputs": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "sessionId": { "type": "string" },
+              "submittedAt": { "type": "string" },
+              "source": { "type": "string" },
+              "leadSourceDetail": { "type": "string" },
+              "contact": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "role": { "type": "string" },
+                  "isDecisionMaker": { "type": "boolean" }
+                }
+              },
+              "company": {
+                "type": "object",
+                "properties": {
+                  "legalName": { "type": "string" },
+                  "revenueBand": { "type": "string" },
+                  "books": { "type": "string" },
+                  "capital": { "type": "string" },
+                  "timeline": { "type": "string" },
+                  "challenge": { "type": "string" },
+                  "valueDriverThemes": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              },
+              "consent": {
+                "type": "object",
+                "properties": {
+                  "hvcgProspect": { "type": "boolean" },
+                  "notLegacyEngagementChange": { "type": "boolean" },
+                  "disclaimerAccepted": { "type": "boolean" }
+                }
+              },
+              "eva": {
+                "type": "object",
+                "properties": {
+                  "variant": { "type": "string" },
+                  "composite_score_proxy": { "type": "integer" },
+                  "band": { "type": "string" },
+                  "confidence_index": { "type": "number" },
+                  "recommended_sku": { "type": "string" },
+                  "package_label": { "type": "string" },
+                  "rate_card_version": { "type": "string" },
+                  "legacy_guard": { "type": "string" },
+                  "owner_approval_required": { "type": "boolean" },
+                  "proposed_price": {
+                    "type": "object",
+                    "properties": {
+                      "setup": { "type": "number" },
+                      "monthly": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["sessionId", "contact", "company", "eva"]
+          }
+        }
+      }
+    },
+    "actions": {
+      "Compose_LegalName": {
+        "type": "Compose",
+        "inputs": "@trim(triggerBody()?['company']?['legalName'])",
+        "runAfter": {}
+      },
+      "Compose_Email": {
+        "type": "Compose",
+        "inputs": "@toLower(trim(coalesce(triggerBody()?['contact']?['email'], '')))",
+        "runAfter": {
+          "Compose_LegalName": ["Succeeded"]
+        }
+      },
+      "Compose_ContactName": {
+        "type": "Compose",
+        "inputs": "@trim(coalesce(triggerBody()?['contact']?['name'], concat(coalesce(triggerBody()?['contact']?['firstName'], ''), ' ', coalesce(triggerBody()?['contact']?['lastName'], ''))))",
+        "runAfter": {
+          "Compose_Email": ["Succeeded"]
+        }
+      },
+      "Compose_IdempotencyKey": {
+        "type": "Compose",
+        "inputs": "eva|@{coalesce(triggerBody()?['sessionId'], triggerBody()?['submittedAt'], guid())}",
+        "runAfter": {
+          "Compose_ContactName": ["Succeeded"]
+        }
+      },
+      "Compose_Legacy_Name_Lower": {
+        "type": "Compose",
+        "inputs": "@toLower(outputs('Compose_LegalName'))",
+        "runAfter": {
+          "Compose_IdempotencyKey": ["Succeeded"]
+        }
+      },
+      "Compose_Legacy_Block": {
+        "type": "Compose",
+        "inputs": "@or(contains(outputs('Compose_Legacy_Name_Lower'), 'accg'), contains(outputs('Compose_Legacy_Name_Lower'), 'prodigy games'), contains(outputs('Compose_Legacy_Name_Lower'), 'kava'), contains(outputs('Compose_Legacy_Name_Lower'), 'christie'), contains(outputs('Compose_Legacy_Name_Lower'), 'hart family'), contains(outputs('Compose_Legacy_Name_Lower'), 'outstanding auto'), contains(outputs('Compose_Legacy_Name_Lower'), 'arboretum'), contains(outputs('Compose_Legacy_Name_Lower'), 'pierlo'), contains(outputs('Compose_Legacy_Name_Lower'), 'integrity lift'), contains(outputs('Compose_Legacy_Name_Lower'), 'lien partners'), contains(outputs('Compose_Legacy_Name_Lower'), 'frocovery'), contains(outputs('Compose_Legacy_Name_Lower'), 'victory contracting'))",
+        "runAfter": {
+          "Compose_Legacy_Name_Lower": ["Succeeded"]
+        }
+      },
+      "Condition_Legacy_Guard": {
+        "type": "If",
+        "expression": {
+          "equals": ["@outputs('Compose_Legacy_Block')", true]
+        },
+        "actions": {
+          "Compose_Legacy_Abort": {
+            "type": "Compose",
+            "inputs": {
+              "status": "BLOCKED",
+              "reason": "Legacy HVS name match — no HVCG EVA pricing lead create",
+              "legalName": "@outputs('Compose_LegalName')",
+              "idempotencyKey": "@outputs('Compose_IdempotencyKey')",
+              "route": "migration / preserve existing engagement"
+            }
+          },
+          "Terminate_Legacy": {
+            "type": "Terminate",
+            "inputs": {
+              "runStatus": "Succeeded",
+              "runError": {
+                "code": "LegacyGuardBlock",
+                "message": "Legacy HVS client — EVA lead create blocked"
+              }
+            },
+            "runAfter": {
+              "Compose_Legacy_Abort": ["Succeeded"]
+            }
+          }
+        },
+        "else": {
+          "actions": {
+            "Http_Find_Existing_Lead": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "HttpRequest",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                  "parameters/method": "GET",
+                  "parameters/uri": "_api/web/lists/getbytitle('HVCG_Leads')/items?$filter=HVCG_IdempotencyKey eq '@{outputs('Compose_IdempotencyKey')}'&$select=Id,Title,LeadStatus&$top=1",
+                  "parameters/headers": {
+                    "Accept": "application/json;odata=nometadata"
+                  }
+                }
+              }
+            },
+            "Compose_Existing_LeadId": {
+              "type": "Compose",
+              "inputs": "@coalesce(body('Http_Find_Existing_Lead')?['value']?[0]?['Id'], body('Http_Find_Existing_Lead')?['value']?[0]?['ID'])",
+              "runAfter": {
+                "Http_Find_Existing_Lead": ["Succeeded", "Failed"]
+              }
+            },
+            "Compose_Band": {
+              "type": "Compose",
+              "inputs": "@coalesce(triggerBody()?['eva']?['band'], 'C')",
+              "runAfter": {
+                "Compose_Existing_LeadId": ["Succeeded"]
+              }
+            },
+            "Compose_Proxy": {
+              "type": "Compose",
+              "inputs": "@int(coalesce(triggerBody()?['eva']?['composite_score_proxy'], 0))",
+              "runAfter": {
+                "Compose_Band": ["Succeeded"]
+              }
+            },
+            "Compose_LeadScore": {
+              "type": "Compose",
+              "inputs": "@min(100, add(if(or(equals(outputs('Compose_Band'), 'A'), greaterOrEquals(outputs('Compose_Proxy'), 75)), 40, if(or(equals(outputs('Compose_Band'), 'B'), greaterOrEquals(outputs('Compose_Proxy'), 55)), 25, 10)), add(if(or(equals(string(triggerBody()?['company']?['timeline']), '3'), equals(string(triggerBody()?['company']?['timeline']), '4')), 20, 0), add(if(or(equals(string(triggerBody()?['company']?['revenueBand']), '3'), equals(string(triggerBody()?['company']?['revenueBand']), '4')), 15, 0), add(if(or(equals(string(triggerBody()?['company']?['books']), '3'), equals(string(triggerBody()?['company']?['books']), '4')), 15, 0), add(if(or(contains(toLower(coalesce(triggerBody()?['contact']?['role'], '')), 'owner'), contains(toLower(coalesce(triggerBody()?['contact']?['role'], '')), 'ceo'), contains(toLower(coalesce(triggerBody()?['contact']?['role'], '')), 'cfo')), 10, 0), if(or(equals(toLower(coalesce(triggerBody()?['company']?['capital'], '')), 'debt'), equals(toLower(coalesce(triggerBody()?['company']?['capital'], '')), 'equity'), equals(toLower(coalesce(triggerBody()?['company']?['capital'], '')), 'both')), 10, 0)))))))",
+              "runAfter": {
+                "Compose_Proxy": ["Succeeded"]
+              }
+            },
+            "Compose_ServiceInterest": {
+              "type": "Compose",
+              "inputs": "@if(and(or(equals(string(triggerBody()?['company']?['books']), '1'), equals(string(triggerBody()?['company']?['books']), '2')), or(equals(string(triggerBody()?['company']?['timeline']), '3'), equals(string(triggerBody()?['company']?['timeline']), '4'))), 'Fractional CFO', if(and(or(equals(outputs('Compose_Band'), 'A'), equals(outputs('Compose_Band'), 'B')), or(equals(toLower(coalesce(triggerBody()?['company']?['capital'], '')), 'debt'), equals(toLower(coalesce(triggerBody()?['company']?['capital'], '')), 'equity'))), 'Capital Advisory', if(equals(toLower(coalesce(triggerBody()?['company']?['capital'], '')), 'both'), 'Hybrid', 'Assessment')))",
+              "runAfter": {
+                "Compose_LeadScore": ["Succeeded"]
+              }
+            },
+            "Compose_Notes_Json": {
+              "type": "Compose",
+              "inputs": {
+                "eva_summary": {
+                  "eva_variant": "@{coalesce(triggerBody()?['eva']?['variant'], 'EVA-FREE')}",
+                  "composite_score": "@outputs('Compose_Proxy')",
+                  "band": "@outputs('Compose_Band')",
+                  "recommended_sku_primary": "@{coalesce(triggerBody()?['eva']?['recommended_sku'], 'SKU-FRA')}",
+                  "rate_card_version": "@{coalesce(triggerBody()?['eva']?['rate_card_version'], 'HVCG-PRICE-2026-07-15-v1')}",
+                  "legacy_guard": "PASS",
+                  "next_step": "CAPITAL_READINESS",
+                  "owner_approval_required": true,
+                  "lead_score": "@outputs('Compose_LeadScore')"
+                },
+                "eva_answers": {
+                  "Q0.1": "@outputs('Compose_LegalName')",
+                  "Q0.6": "@{outputs('Compose_ContactName')} / @{triggerBody()?['contact']?['role']} / @{outputs('Compose_Email')}",
+                  "Q2.1": "@{triggerBody()?['company']?['revenueBand']}",
+                  "Q12.1": "@{triggerBody()?['company']?['capital']}",
+                  "Q12.4": "@{triggerBody()?['company']?['timeline']}",
+                  "challenge": "@{triggerBody()?['company']?['challenge']}"
+                },
+                "crm": {
+                  "assessmentType": "EVA",
+                  "recommendedNextStep": "CAPITAL_READINESS",
+                  "auto_contact": false,
+                  "environment": "Dev"
+                }
+              },
+              "runAfter": {
+                "Compose_ServiceInterest": ["Succeeded"]
+              }
+            },
+            "Condition_Create_If_Missing": {
+              "type": "If",
+              "expression": {
+                "or": [
+                  {
+                    "equals": ["@outputs('Compose_Existing_LeadId')", "@null"]
+                  },
+                  {
+                    "equals": ["@string(outputs('Compose_Existing_LeadId'))", ""]
+                  }
+                ]
+              },
+              "actions": {
+                "Create_Lead": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_Leads",
+                      "item/Title": "@outputs('Compose_LegalName')",
+                      "item/ContactName": "@outputs('Compose_ContactName')",
+                      "item/Email": "@outputs('Compose_Email')",
+                      "item/Phone": "@{coalesce(triggerBody()?['contact']?['phone'], '')}",
+                      "item/Source": "@{coalesce(triggerBody()?['source'], 'Website-EVA')}",
+                      "item/LeadStatus": {
+                        "Value": "New"
+                      },
+                      "item/ServiceInterest": {
+                        "Value": "@outputs('Compose_ServiceInterest')"
+                      },
+                      "item/LeadScore": "@outputs('Compose_LeadScore')",
+                      "item/Notes": "@{string(outputs('Compose_Notes_Json'))}",
+                      "item/HVCG_IdempotencyKey": "@outputs('Compose_IdempotencyKey')",
+                      "item/LeadSourceDetail": "@{coalesce(triggerBody()?['leadSourceDetail'], 'eva-form-v1')}",
+                      "item/IsReferral": "@or(contains(toLower(coalesce(triggerBody()?['contact']?['role'], '')), 'referral'), contains(toLower(coalesce(triggerBody()?['contact']?['role'], '')), 'advisor'))",
+                      "item/OwnerEmail": "@parameters('hvcg_OpsEmail')"
+                    }
+                  }
+                },
+                "Compose_Create_Result": {
+                  "type": "Compose",
+                  "inputs": {
+                    "status": "CREATED",
+                    "environment": "Dev",
+                    "leadStatus": "New",
+                    "idempotencyKey": "@outputs('Compose_IdempotencyKey')",
+                    "leadScore": "@outputs('Compose_LeadScore')",
+                    "serviceInterest": "@outputs('Compose_ServiceInterest')",
+                    "emailSend": false,
+                    "teamsNotify": false,
+                    "note": "Qualify manually in CRM; LeadQualified flow creates Opportunity when LeadStatus=Qualified"
+                  },
+                  "runAfter": {
+                    "Create_Lead": ["Succeeded"]
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Compose_Idempotent_Skip": {
+                    "type": "Compose",
+                    "inputs": {
+                      "status": "SKIPPED_EXISTING",
+                      "existingLeadId": "@outputs('Compose_Existing_LeadId')",
+                      "idempotencyKey": "@outputs('Compose_IdempotencyKey')"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Compose_Notes_Json": ["Succeeded"]
+              }
+            }
+          }
+        },
+        "runAfter": {
+          "Compose_Legacy_Block": ["Succeeded"]
+        }
+      }
+    },
+    "outputs": {}
+  },
+  "connectionReferences": {
+    "shared_sharepointonline": {
+      "runtimeSource": "embedded",
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedsharepointonline"
+      },
+      "api": {
+        "name": "shared_sharepointonline"
+      }
+    }
+  },
+  "environmentVariables": [
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_EnableClientEmails",
+    "hvcg_CrmEnableTeamsNotify",
+    "hvcg_OpsEmail"
+  ],
+  "acceptanceCriteria": [
+    "defaultState Off — never activate in Prod without owner gate",
+    "hvcg_CommandCenterSiteUrl points at Dev Command Center",
+    "HTTP smoke with fixtures/eva_smoke_pass.json creates HVCG_Leads row LeadStatus=New Source=Website-EVA",
+    "fixtures/eva_smoke_legacy_block.json does not create a priced HVCG lead",
+    "Repeat submit same sessionId is idempotent (skip)",
+    "No Office365 SendEmail / Teams notify actions in flow",
+    "EstimatedValue and PipelineValue not set from form"
+  ],
+  "makerNotes": {
+    "formsWiring": "Replace HTTP trigger with Microsoft Forms 'When a new response is submitted' then Compose the same JSON shape before Create_Lead. See docs/business-launch/funnel/EVA_DEV_FORMS_CRM_RUNBOOK.md",
+    "prodGate": "Prod site URL and Turn On require explicit owner decision after Track 1 + BL-PUBLISH / Forms UAT"
+  }
+}

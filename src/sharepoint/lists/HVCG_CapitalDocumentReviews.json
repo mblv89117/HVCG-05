@@ -1,0 +1,170 @@
+{
+  "title": "HVCG_CapitalDocumentReviews",
+  "description": "Capital — AI/human document reviews. Extracted values stay unverified until a human confirms them.",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "DocumentRequestId",
+      "displayName": "DocumentRequestId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_DocumentRequests"
+    },
+    {
+      "internalName": "ClassifiedType",
+      "displayName": "ClassifiedType",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Period",
+      "displayName": "Period",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EntityName",
+      "displayName": "EntityName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Summary",
+      "displayName": "Summary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ExtractedFacts",
+      "displayName": "ExtractedFacts",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON of extracted facts. AI extraction cannot promote verification to VERIFIED."
+    },
+    {
+      "internalName": "IncompletePages",
+      "displayName": "IncompletePages",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "Stale",
+      "displayName": "Stale",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "DuplicateOf",
+      "displayName": "DuplicateOf",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Id of original document if this is a duplicate."
+    },
+    {
+      "internalName": "InconsistentPeriod",
+      "displayName": "InconsistentPeriod",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "Conflicts",
+      "displayName": "Conflicts",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Confidence",
+      "displayName": "Confidence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "0-1 classifier/review confidence. Advisory only."
+    },
+    {
+      "internalName": "Reviewer",
+      "displayName": "Reviewer",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "ai",
+        "human"
+      ],
+      "default": "ai"
+    },
+    {
+      "internalName": "Disclaimer",
+      "displayName": "Disclaimer",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "AI output is advisory. Extracted values are unverified until a human confirms them against source documents."
+    },
+    {
+      "internalName": "CreatedAt",
+      "displayName": "CreatedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

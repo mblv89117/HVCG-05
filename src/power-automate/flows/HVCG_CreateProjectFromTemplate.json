@@ -1,14 +1,13 @@
 {
   "flowName": "HVCG_CreateProjectFromTemplate",
   "displayName": "HVCG_CreateProjectFromTemplate",
-  "description": "Expands project template into project, milestones, tasks, docs, deliverables.",
+  "description": "Creates a delivery project (ClientId lookup + ClientCode), 3 onboarding milestones and 3 onboarding tasks for a client. Idempotent per client/template/day via HVCG_IdempotencyKey.",
   "trigger": {
     "type": "ManualOrChild",
     "inputs": [
-      "ClientListItemId",
       "ClientCode",
+      "ClientListItemId",
       "TemplateKey",
-      "EngagementId",
       "StartDate"
     ]
   },
@@ -17,6 +16,7 @@
   ],
   "idempotency": {
     "column": "HVCG_IdempotencyKey",
+    "keyPattern": "proj|{ClientCode}|{TemplateKey}|{yyyyMMdd}",
     "onDuplicate": "SkippedDuplicate"
   },
   "logging": {
@@ -29,51 +29,85 @@
   "steps": [
     {
       "id": 1,
-      "action": "GetTemplateJson",
-      "params": {
-        "source": "HVCG_Templates.ConfigJsonPath"
-      }
+      "action": "LogStarted"
     },
     {
       "id": 2,
-      "action": "CreateProjectIfNotExists"
+      "action": "ResolveClientId",
+      "params": {
+        "list": "HVCG_Clients",
+        "byId": "ClientListItemId",
+        "elseFilter": "ClientCode eq '{ClientCode}'"
+      }
     },
     {
       "id": 3,
-      "action": "ForeachMilestone",
+      "action": "ComputeIdempotencyKey",
       "params": {
-        "list": "HVCG_Milestones"
+        "pattern": "proj|{ClientCode}|{TemplateKey}|{yyyyMMdd}"
       }
     },
     {
       "id": 4,
-      "action": "ForeachTask",
+      "action": "GetItemsByIdempotencyKey",
       "params": {
-        "list": "HVCG_Tasks",
-        "resolveOwnerFromRole": true
+        "list": "HVCG_Projects",
+        "onFoundLog": "SkippedDuplicate",
+        "onFoundTerminate": "Succeeded"
       }
     },
     {
       "id": 5,
-      "action": "ForeachDocumentRequest",
+      "action": "CreateProject",
       "params": {
-        "list": "HVCG_DocumentRequests"
+        "list": "HVCG_Projects",
+        "fields": {
+          "AtlasClientRefId": "{ClientId}",
+          "ClientCode": "{ClientCode}",
+          "ProjectTemplateKey": "{TemplateKey}",
+          "ProjectStatus": "Not Started",
+          "ProjectHealth": "Green",
+          "StartDate": "{StartDate}",
+          "TargetEndDate": "{StartDate}+21d",
+          "HVCG_IdempotencyKey": "{key}"
+        }
       }
     },
     {
       "id": 6,
-      "action": "ForeachDeliverable",
+      "action": "CreateMilestones",
       "params": {
-        "list": "HVCG_Deliverables"
+        "list": "HVCG_Milestones",
+        "items": [
+          "Kickoff completed (+2d, critical)",
+          "Critical documents received (+14d, critical)",
+          "Onboarding complete (+21d)"
+        ],
+        "linkField": "ProjectIdId"
       }
     },
     {
       "id": 7,
-      "action": "SeedDefaultRisks"
+      "action": "CreateTasks",
+      "params": {
+        "list": "HVCG_Tasks",
+        "items": [
+          "Schedule and run kickoff call (kickoff, +2d)",
+          "Collect critical onboarding documents (collect-critical-docs, +7d, DependsOn kickoff)",
+          "Complete onboarding review (onboarding-review, +21d, DependsOn collect-critical-docs)"
+        ],
+        "linkFields": [
+          "AtlasClientRefId",
+          "ProjectIdId"
+        ]
+      }
     },
     {
       "id": 8,
-      "action": "LogSuccess"
+      "action": "LogSuccess",
+      "params": {
+        "message": "project id + milestone/task count"
+      }
     }
   ],
   "errorHandling": {
@@ -82,10 +116,10 @@
     "retryDelaySeconds": 60
   },
   "environmentVariables": [
-    "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
+    "hvcg_EnableClientEmails"
   ]
 }

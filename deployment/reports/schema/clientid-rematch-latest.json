@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-07-21T23:50:36Z",
+  "lists": {
+    "HVCG_Projects": {
+      "items": 0,
+      "updated": 0,
+      "skipped": 0,
+      "failed": 0,
+      "errors": []
+    },
+    "HVCG_Tasks": {
+      "items": 0,
+      "updated": 0,
+      "skipped": 0,
+      "failed": 0,
+      "errors": []
+    },
+    "HVCG_Deliverables": {
+      "items": 1,
+      "updated": 1,
+      "skipped": 0,
+      "failed": 0,
+      "errors": []
+    },
+    "HVCG_Decisions": {
+      "items": 0,
+      "updated": 0,
+      "skipped": 0,
+      "failed": 0,
+      "errors": []
+    },
+    "HVCG_DocumentRequests": {
+      "items": 0,
+      "updated": 0,
+      "skipped": 0,
+      "failed": 0,
+      "errors": []
+    }
+  }
+}

@@ -1,0 +1,302 @@
+{
+  "title": "HVCG_LenderProducts",
+  "description": "Capital — Lender product criteria (never invent missing criteria)",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Product name."
+    },
+    {
+      "internalName": "LenderId",
+      "displayName": "LenderId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "ProductCategory",
+      "displayName": "ProductCategory",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MinAmount",
+      "displayName": "MinAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MaxAmount",
+      "displayName": "MaxAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MinRevenue",
+      "displayName": "MinRevenue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TimeInBusinessMonths",
+      "displayName": "TimeInBusinessMonths",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IndustriesPreferred",
+      "displayName": "IndustriesPreferred",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IndustriesRestricted",
+      "displayName": "IndustriesRestricted",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Geography",
+      "displayName": "Geography",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CreditExpectations",
+      "displayName": "CreditExpectations",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DSCRMin",
+      "displayName": "DSCRMin",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LeverageMax",
+      "displayName": "LeverageMax",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Collateral",
+      "displayName": "Collateral",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PersonalGuarantee",
+      "displayName": "PersonalGuarantee",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AREligible",
+      "displayName": "AREligible",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "InventoryEligible",
+      "displayName": "InventoryEligible",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "RealEstateAppetite",
+      "displayName": "RealEstateAppetite",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "AcquisitionAppetite",
+      "displayName": "AcquisitionAppetite",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "ConstructionAppetite",
+      "displayName": "ConstructionAppetite",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "EquipmentAppetite",
+      "displayName": "EquipmentAppetite",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "SBAParticipation",
+      "displayName": "SBAParticipation",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "ExpectedCloseDays",
+      "displayName": "ExpectedCloseDays",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "KnownFees",
+      "displayName": "KnownFees",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Pricing",
+      "displayName": "Pricing",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiredDocuments",
+      "displayName": "RequiredDocuments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OtherCriteria",
+      "displayName": "OtherCriteria",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CriteriaFreshness",
+      "displayName": "CriteriaFreshness",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "CURRENT",
+        "STALE",
+        "UNKNOWN"
+      ],
+      "default": "UNKNOWN"
+    },
+    {
+      "internalName": "LastVerifiedAt",
+      "displayName": "LastVerifiedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "VerifiedBy",
+      "displayName": "VerifiedBy",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VerificationSource",
+      "displayName": "VerificationSource",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VerificationMethod",
+      "displayName": "VerificationMethod",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Confidence",
+      "displayName": "Confidence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "0-1 stated confidence. Null/blank means unknown — do not invent."
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

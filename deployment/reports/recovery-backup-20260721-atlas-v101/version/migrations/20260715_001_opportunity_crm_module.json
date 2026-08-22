@@ -1,0 +1,15 @@
+{
+  "id": "20260715_001_opportunity_crm_module",
+  "fromVersion": "1.1.0",
+  "toVersion": "1.1.0",
+  "title": "Opportunity CRM module — additive schema (activities + sales↔capital bridge)",
+  "status": "Active",
+  "additiveOnly": true,
+  "notes": "Does not bump product semver. Apply via Repair-HVCGOSSharePointSchema / ApplyListDiff after checking out this commit. No deployment code changes.",
+  "steps": [
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/opportunity_crm_v1.json"
+    }
+  ]
+}
