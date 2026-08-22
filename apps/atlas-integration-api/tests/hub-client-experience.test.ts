@@ -231,6 +231,39 @@ describe('synthetic client journey isolation', () => {
       });
       assert.equal(entitledStatus.status, 200);
 
+      const foreignReissue = await fetch(`${base}/api/pm/clients/${SYN_B}/invitation/reissue`, {
+        method: 'POST',
+        headers: auth('entitled-staff'),
+        body: JSON.stringify({}),
+      });
+      assert.equal(foreignReissue.status, 403);
+
+      const staffReissue = await fetch(`${base}/api/pm/clients/${SYN_A}/invitation/reissue`, {
+        method: 'POST',
+        headers: auth('staff'),
+        body: JSON.stringify({}),
+      });
+      assert.equal(staffReissue.status, 403);
+
+      const entitledReissue = await fetch(`${base}/api/pm/clients/${SYN_A}/invitation/reissue`, {
+        method: 'POST',
+        headers: auth('entitled-staff'),
+        body: JSON.stringify({}),
+      });
+      assert.equal(entitledReissue.status, 201);
+      const reissued = (await entitledReissue.json()) as {
+        inviteToken: string;
+        outboundSent: boolean;
+        invitation: { email: string; outboundSent: boolean; status: string };
+        redeemHref: string;
+      };
+      assert.equal(reissued.outboundSent, false);
+      assert.equal(reissued.invitation.outboundSent, false);
+      assert.equal(reissued.invitation.status, 'staged');
+      assert.equal(reissued.invitation.email, 'entitled-owner-a@synqa.example');
+      assert.equal(reissued.redeemHref, '/api/client/invitations/redeem');
+      assert.ok(reissued.inviteToken.length >= 32);
+
       const stagedA = await fetch(`${base}/api/pm/clients/${SYN_A}/experience`, {
         method: 'POST',
         headers: auth('manny'),

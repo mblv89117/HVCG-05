@@ -85,6 +85,11 @@ export function canStageClientExperience(principal: AtlasPrincipal, clientCode: 
   return isExperienceSyntheticClient(clientCode);
 }
 
+/** Manny may reissue any staged invite. Entitled operators may reissue SYNQA only. */
+export function canReissueClientInvitation(principal: AtlasPrincipal, clientCode: string): boolean {
+  return canStageClientExperience(principal, clientCode);
+}
+
 function persist(dataDir: string, snapshot: ClientExperienceSnapshot): ClientExperienceSnapshot {
   saveExperienceStore(dataDir, snapshot);
   return snapshot;
@@ -237,6 +242,65 @@ export function stageClientExperience(opts: {
     invitation: publicInvitation(invitation),
     inviteToken: issued.token,
     replay: false,
+  };
+}
+
+export function reissueClientInvitation(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  clientCode: string;
+  invitationEmail?: string;
+}): {
+  workspace: ClientWorkspaceRecord;
+  invitation: Omit<ClientInvitation, 'tokenHash'>;
+  inviteToken: string;
+  outboundSent: false;
+} {
+  const clientCode = assertIsolatedClientCode(opts.clientCode);
+  if (!canReissueClientInvitation(opts.principal, clientCode)) {
+    if (isExperienceSyntheticClient(clientCode)) {
+      fail(403, 'forbidden', 'SYNQA invitation reissue requires an entitled operator principal.');
+    }
+    fail(403, 'PM_MANNY_ONLY', 'Client invitation reissue is restricted to the authenticated HVCG owner principal.');
+  }
+  const snapshot = loadExperienceStore(opts.dataDir);
+  const workspace = snapshot.workspaces[clientCode];
+  if (!workspace) fail(404, 'not_found', 'Client workspace is not staged.');
+
+  const latest = latestInvitation(snapshot, clientCode);
+  if (latest?.status === 'redeemed') {
+    fail(409, 'invitation_redeemed', 'Invitation is already redeemed. Do not mint a replacement token.');
+  }
+
+  const email = normalizeEmail(opts.invitationEmail || latest?.email || '');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    fail(400, 'invalid_invitation_email', 'A real invitation email is required to reissue.');
+  }
+
+  const now = new Date();
+  for (const row of snapshot.invitations) {
+    if (row.clientCode === clientCode && row.status === 'staged') {
+      row.status = 'revoked';
+    }
+  }
+  const issued = issueInviteToken();
+  const invitation: ClientInvitation = {
+    id: newId('inv'),
+    clientCode,
+    email,
+    tokenHash: issued.tokenHash,
+    status: 'staged',
+    outboundSent: false,
+    createdAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + DEFAULT_INVITE_TTL_MS).toISOString(),
+  };
+  snapshot.invitations.push(invitation);
+  persist(opts.dataDir, snapshot);
+  return {
+    workspace,
+    invitation: publicInvitation(invitation),
+    inviteToken: issued.token,
+    outboundSent: false,
   };
 }
 
@@ -780,6 +844,7 @@ export type OperatorClientJourney = {
   activationGate: string | null;
   invitationStatus: 'none' | 'staged' | 'redeemed' | 'expired' | 'revoked';
   invitationOutboundSent: false;
+  invitationEmail: string | null;
   signedClientSession: false;
   bindingCount: number;
   openRequestCount: number;
@@ -787,7 +852,10 @@ export type OperatorClientJourney = {
   gccWorkspaceKey: string;
   previewHref: string;
   stageHref: string;
+  reissueHref: string;
+  redeemHref: '/api/client/invitations/redeem';
   canStageFromDesk: boolean;
+  canReissueInviteFromDesk: boolean;
   nextAction: string;
 };
 
@@ -806,6 +874,7 @@ function journeyNextAction(input: {
   invitationStatus: OperatorClientJourney['invitationStatus'];
   bindingCount: number;
   canStageFromDesk: boolean;
+  canReissueInviteFromDesk: boolean;
 }): string {
   if (!input.workspaceStaged) {
     return input.canStageFromDesk
@@ -813,13 +882,19 @@ function journeyNextAction(input: {
       : 'Workspace not staged. Governed activation must complete before invitation.';
   }
   if (input.invitationStatus === 'none') {
-    return 'Workspace staged. No invitation recorded.';
+    return input.canReissueInviteFromDesk
+      ? 'Workspace staged. Entitled operator may POST a record-only SYNQA invitation to reissueHref.'
+      : 'Workspace staged. No invitation recorded.';
   }
   if (input.invitationStatus === 'expired' || input.invitationStatus === 'revoked') {
-    return 'Invitation is no longer valid. Re-stage a record-only invitation.';
+    return input.canReissueInviteFromDesk
+      ? 'Invitation is no longer valid. Entitled operator may POST a replacement token to reissueHref.'
+      : 'Invitation is no longer valid. Re-stage a record-only invitation.';
   }
   if (input.invitationStatus === 'staged') {
-    return 'Invitation staged (record-only, outbound not sent). Waiting for a Client Executive principal to redeem.';
+    return input.canReissueInviteFromDesk
+      ? 'Invitation staged (record-only, outbound not sent). Entitled operator may POST reissueHref for a one-time token. A Client Executive principal redeems at redeemHref.'
+      : 'Invitation staged (record-only, outbound not sent). Waiting for a Client Executive principal to redeem.';
   }
   if (input.bindingCount > 0) {
     return 'Invitation redeemed. signedClientSession remains false until a client principal uses /client.';
@@ -845,6 +920,12 @@ export function listOperatorClientJourneys(opts: {
     const canStageFromDesk = Boolean(
       opts.principal && canStageClientExperience(opts.principal, clientCode) && !workspaceStaged,
     );
+    const canReissueInviteFromDesk = Boolean(
+      opts.principal &&
+        canReissueClientInvitation(opts.principal, clientCode) &&
+        workspaceStaged &&
+        invitationStatus !== 'redeemed',
+    );
     return {
       clientCode,
       classification: classified.classification,
@@ -852,6 +933,8 @@ export function listOperatorClientJourneys(opts: {
       activationGate: workspace?.activationGate || null,
       invitationStatus,
       invitationOutboundSent: false,
+      invitationEmail:
+        classified.classification === 'SYNTHETIC_QA' && invite?.email ? invite.email : null,
       signedClientSession: false,
       bindingCount,
       openRequestCount: snapshot.requests.filter(
@@ -861,12 +944,16 @@ export function listOperatorClientJourneys(opts: {
       gccWorkspaceKey: gccWorkspaceKey(clientCode),
       previewHref: `/api/pm/clients/${clientCode}/desk`,
       stageHref: `/api/pm/clients/${clientCode}/experience`,
+      reissueHref: `/api/pm/clients/${clientCode}/invitation/reissue`,
+      redeemHref: '/api/client/invitations/redeem',
       canStageFromDesk,
+      canReissueInviteFromDesk,
       nextAction: journeyNextAction({
         workspaceStaged,
         invitationStatus,
         bindingCount,
         canStageFromDesk,
+        canReissueInviteFromDesk,
       }),
     };
   });

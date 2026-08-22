@@ -75,7 +75,11 @@ export interface OperatorClientJourney {
   gccWorkspaceKey: string;
   previewHref: string;
   stageHref: string;
+  reissueHref: string;
+  redeemHref: '/api/client/invitations/redeem';
+  invitationEmail: string | null;
   canStageFromDesk: boolean;
+  canReissueInviteFromDesk: boolean;
   nextAction: string;
 }
 

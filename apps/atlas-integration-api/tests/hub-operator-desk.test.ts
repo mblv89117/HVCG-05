@@ -224,7 +224,10 @@ describe('operator desk HTTP fail-closed', () => {
             signedClientSession: boolean;
             gccWorkspaceKey: string;
             stageHref: string;
+            reissueHref: string;
+            redeemHref: string;
             canStageFromDesk: boolean;
+            canReissueInviteFromDesk: boolean;
             nextAction: string;
           }>;
           commercialContext: { gcc: { available: boolean; emptyReason?: string } };
@@ -249,7 +252,10 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.clientJourneys[0]?.signedClientSession, false);
       assert.equal(body.operatorDesk.clientJourneys[0]?.gccWorkspaceKey, 'gcc-SYN01');
       assert.equal(body.operatorDesk.clientJourneys[0]?.canStageFromDesk, true);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.canReissueInviteFromDesk, false);
       assert.equal(body.operatorDesk.clientJourneys[0]?.stageHref, `/api/pm/clients/${SYN01}/experience`);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.reissueHref, `/api/pm/clients/${SYN01}/invitation/reissue`);
+      assert.equal(body.operatorDesk.clientJourneys[0]?.redeemHref, '/api/client/invitations/redeem');
       assert.match(body.operatorDesk.clientJourneys[0]?.nextAction || '', /stageHref/);
 
       const staged = await fetch(`${base}/api/pm/clients/${SYN01}/experience`, {
@@ -270,12 +276,35 @@ describe('operator desk HTTP fail-closed', () => {
       });
       assert.equal(after.status, 200);
       const afterBody = (await after.json()) as {
-        operatorDesk: { clientJourneys: Array<{ workspaceStaged: boolean; invitationStatus: string; canStageFromDesk: boolean; signedClientSession: boolean }> };
+        operatorDesk: {
+          clientJourneys: Array<{
+            workspaceStaged: boolean;
+            invitationStatus: string;
+            canStageFromDesk: boolean;
+            canReissueInviteFromDesk: boolean;
+            invitationEmail: string | null;
+            signedClientSession: boolean;
+            nextAction: string;
+          }>;
+        };
       };
       assert.equal(afterBody.operatorDesk.clientJourneys[0]?.workspaceStaged, true);
       assert.equal(afterBody.operatorDesk.clientJourneys[0]?.invitationStatus, 'staged');
       assert.equal(afterBody.operatorDesk.clientJourneys[0]?.canStageFromDesk, false);
+      assert.equal(afterBody.operatorDesk.clientJourneys[0]?.canReissueInviteFromDesk, true);
+      assert.equal(afterBody.operatorDesk.clientJourneys[0]?.invitationEmail, 'syn01-owner@synqa.example');
       assert.equal(afterBody.operatorDesk.clientJourneys[0]?.signedClientSession, false);
+      assert.match(afterBody.operatorDesk.clientJourneys[0]?.nextAction || '', /reissueHref/);
+
+      const reissued = await fetch(`${base}/api/pm/clients/${SYN01}/invitation/reissue`, {
+        method: 'POST',
+        headers: { authorization: 'Bearer valid-member', 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      assert.equal(reissued.status, 201);
+      const reissuedBody = (await reissued.json()) as { inviteToken: string; outboundSent: boolean };
+      assert.equal(reissuedBody.outboundSent, false);
+      assert.ok(reissuedBody.inviteToken.length >= 32);
 
       const rolelessStage = await fetch(`${base}/api/pm/clients/${SYN01}/experience`, {
         method: 'POST',
