@@ -20,34 +20,36 @@ Severity: P0 / P1 / P2 (not inflated)
 
 ### ATLAS-RT-20260820-01
 - **system:** Atlas
-- **branch/SHA:** LIVE Hub public marker `64b56dc` (D33 SHA_GATE=PASS); prior claimed `9e5d10a` lineage
+- **branch/SHA:** LIVE Hub public marker `64b56dc` (D33/D34)
 - **severity:** P0
-- **evidence:** `canSeeOpportunity` uses entitlement intersection only (staff short-circuit absent @ `64b56dc`). D33 live: unauth/forged JWT → 401; staff entitlement isolation not live-executed (no RT staff JWT).
+- **evidence:** `canSeeOpportunity` uses entitlement intersection only (staff short-circuit absent @ `64b56dc`). Fail-closed 401; staff entitlement isolation not live-executed (no RT staff JWT). D34: left STILL_INCONCLUSIVE (no session mint).
 - **reproduction:** Authenticate as Team Member entitled only to `ACCG01`. `GET /api/pm/opportunities` and `GET /api/pm/opportunities/{foreignId}` return other clients' opportunities (expect 404).
 - **impact:** Cross-client CRM opportunity disclosure (titles, notes, stages, amounts).
 - **recommended remediation:** Remove staff short-circuit; require `entitledClientCodes(principal).includes(clientCode)` for all principals (explicit Manny tenant-wide exception only if product-approved).
 - **regression test:** Staff entitled to A cannot list/get B opportunities.
-- **status:** LIVE **STILL_INCONCLUSIVE** (D34; prior D33 INCONCLUSIVE); no staff JWT
+- **status:** LIVE **STILL_INCONCLUSIVE** (D34); no staff JWT
+
+### ATLAS-RT-20260820-02
 - **system:** Atlas
 - **branch/SHA:** live `64b56dc`
 - **severity:** P0
-- **evidence:** D33: unauth/forged PATCH → 401; authorizeOpportunity → canSeeOpportunity (no staff all-see). Foreign Won not live-proven.
+- **evidence:** Unauth/forged PATCH → 401; authorizeOpportunity → canSeeOpportunity (no staff all-see). Foreign Won not live-proven. D34: no staff session.
 - **reproduction:** With 01 setup, `PATCH /api/pm/opportunities/{foreignId}` + `If-Match` + `{ "stage": "Won" }` succeeds.
 - **impact:** Pipeline integrity failure; forged Won; activation queue pollution.
 - **recommended remediation:** Same ClientCode gate before any field write; optionally restrict Won to Owner/Manny.
 - **regression test:** Staff A cannot patch client B opportunity → 404/403.
-- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
+- **status:** LIVE **STILL_INCONCLUSIVE** (D34); no staff JWT
 
 ### ATLAS-RT-20260820-03
 - **system:** Atlas
 - **branch/SHA:** live Hub `64b56dc` / plaid app source
 - **severity:** P0 (if Plaid API network-reachable)
-- **evidence:** D33: Hub `/api/plaid/*` → 405; plaid source still header-oriented without jwtVerify in inspect. No separate Plaid URL in RT env.
+- **evidence:** Hub `/api/plaid/*` → 405; no Plaid host opened (D34). Source still header-oriented without jwtVerify in prior inspect.
 - **reproduction:** With `PLAID_REQUIRE_AUTH=true`, forge headers without Bearer → today accepted.
 - **impact:** Bank connection/balance/identity isolation collapse.
 - **recommended remediation:** Reuse Hub JWT + server-side group entitlements; ignore client headers for authz.
 - **regression test:** Missing Bearer → 401; forged headers + invalid JWT → 401.
-- **status:** LIVE **INCONCLUSIVE** (D33); CANDIDATE FIXED_REVALIDATED lineage
+- **status:** LIVE **STILL_INCONCLUSIVE** (D34); no Plaid surface
 
 ### ATLAS-RT-20260820-04
 - **system:** Atlas · **severity:** P1 · **branch/SHA:** `2a5a605`
@@ -705,3 +707,17 @@ Severity: P0 / P1 / P2 (not inflated)
 | LIVE_SECURITY_CERTIFIED | **NO** |
 | LIVE_VALIDATION_ABORTED | **NO** |
 | Report | `docs/red-team/REVALIDATION_DIRECTIVE_33_2026-08-22.md` |
+
+## Directive 34 status appendix (classify packaged XSYS evidence)
+
+| Gate / ID | Status @ Directive 34 |
+|-----------|------------------------|
+| Mission | Classify XSYS-01/02 from V3 0253Z package + RT public re-probes |
+| Observed Hub SHA | `64b56dcb73caae1cfcd71743bcedfd8cd64c2b26` |
+| INHERIT | **FAIL** (continued; not abort) |
+| XSYS-RT-20260820-01 | **VERIFIED_FIXED** |
+| XSYS-RT-20260820-02 | **VERIFIED_FIXED** |
+| ATLAS-RT-20260820-01/02/03 | **STILL_INCONCLUSIVE** |
+| LIVE_P0 | **3** |
+| LIVE_SECURITY_CERTIFIED | **NO** |
+| Report | `docs/red-team/REVALIDATION_DIRECTIVE_34_2026-08-22.md` |
