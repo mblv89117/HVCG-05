@@ -122,4 +122,17 @@ const pmApiSrc = readFileSync(join(root, 'src/integrations/hub/pmApi.ts'), 'utf8
 assert.match(pmApiSrc, /\/api\/pm\/clients/);
 assert.match(pmApiSrc, /If-Match/);
 
+const askAtlasSrc = readFileSync(join(root, 'src/integrations/hub/askAtlas.ts'), 'utf8');
+const askAtlasPanel = readFileSync(join(root, 'src/components/AskAtlasPanel.tsx'), 'utf8');
+const askAtlasPage = readFileSync(join(root, 'src/pages/AskAtlasPage.tsx'), 'utf8');
+assert.match(askAtlasSrc, /\/operator\/runtime\.json\?question=/);
+assert.match(askAtlasSrc, /encodeURIComponent/);
+assert.match(askAtlasSrc, /requireBearer/);
+assert.doesNotMatch(askAtlasSrc, /hubFetchJson<[^>]+>\(auth, '\/operator\.json'\)/);
+assert.match(askAtlasPanel, /fetchOperatorRuntime/);
+assert.match(askAtlasPanel, /ask-atlas-question-input/);
+assert.doesNotMatch(askAtlasPanel, /from ['"]\.\/QuickCaptureBar['"]/);
+assert.doesNotMatch(askAtlasPage, /from ['"].*QuickCaptureBar['"]/);
+assert.doesNotMatch(askAtlasPage, /subtitle=\{ASK_ATLAS_QUESTION\}/);
+
 console.log('PASS hub access-token + blank-page regression source tests');

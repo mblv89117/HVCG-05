@@ -2,7 +2,6 @@ import { Button } from '@fluentui/react-components';
 import { ArrowSyncRegular } from '@fluentui/react-icons';
 import { useNavigate } from 'react-router-dom';
 import { AskAtlasPanel } from '../components/AskAtlasPanel';
-import { ASK_ATLAS_QUESTION } from '../integrations/hub/askAtlas';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 
@@ -13,7 +12,7 @@ export function AskAtlasPage() {
   return (
     <ModuleScaffold
       title="Ask Atlas"
-      subtitle={ASK_ATLAS_QUESTION}
+      subtitle="Ask a question. Atlas answers from the signed Hub runtime only and does not invent work, amounts, lenders, or Hub-MI rows."
       showPendingBanner={false}
       actions={
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
