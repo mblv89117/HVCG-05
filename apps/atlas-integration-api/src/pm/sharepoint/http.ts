@@ -11,7 +11,9 @@ import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isValidProjectId } from '../projectId.ts';
 import { clientPortalHrefs } from './clientActivation.ts';
 import { createDocumentRequest, listDocumentRequests } from './documentRequests.ts';
+import { assertWritableClientCode } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger } from './knowledgeLedger.ts';
+import { buildKnowledgeOperatingPicture } from './knowledgeOperating.ts';
 import { PmHttpError, pmNotImplemented, toErrorBody } from './errors.ts';
 import { isSharePointItemId } from './ids.ts';
 import {
@@ -494,6 +496,7 @@ export async function handleSharePointPmRoutes(opts: {
         send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
         return true;
       }
+      assertWritableClientCode(rawCode, 'HVCG_Clients update');
       const client = await service.patchVerifiedClient(principal, rawCode, body, readEtag(req, body));
       audit({
         repo,
@@ -587,6 +590,7 @@ export async function handleSharePointPmRoutes(opts: {
         return true;
       }
       if (method === 'POST') {
+        assertWritableClientCode(rawCode, 'document-request create');
         const title = typeof body.title === 'string' ? body.title : '';
         try {
           const created = createDocumentRequest(dataDir, {
@@ -948,6 +952,15 @@ export async function handleSharePointPmRoutes(opts: {
     if (method === 'GET' && path === '/api/pm/documents') {
       const ledger = await buildKnowledgeLedger(service, principal);
       send(res, 200, { documents: ledger }, origin);
+      return true;
+    }
+
+    if (method === 'GET' && path === '/api/pm/knowledge') {
+      const knowledge = await buildKnowledgeOperatingPicture(service, principal, {
+        dataDir,
+        hvsDataAccess: 'BLOCKED',
+      });
+      send(res, 200, { knowledge }, origin);
       return true;
     }
 
