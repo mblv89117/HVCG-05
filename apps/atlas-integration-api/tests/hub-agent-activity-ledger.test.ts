@@ -218,13 +218,32 @@ describe('Agent Activity Ledger overlay', () => {
     assert.equal(entry.classification, 'LIKELY');
     assert.equal(entry.confidence, 'LIKELY');
     assert.equal(entry.classification === 'CONFIRMED', false);
+    const persistedAtRisk = entry.affected?.find(
+      (row) => row.clientCode === 'PDG01' && row.classification === atRisk?.classification,
+    );
+    assert.equal(persistedAtRisk?.classification, 'LIKELY');
+    const labeledItems = model.askAtlas.items.filter((item) => item.client || item.clientCode);
     assert.equal(
-      entry.affected?.some((row) => row.clientCode === 'PDG01' && row.classification === 'LIKELY'),
+      labeledItems.every((item) =>
+        (entry.affected || []).some(
+          (row) =>
+            row.clientCode === item.clientCode &&
+            row.client === item.client &&
+            row.classification === item.classification,
+        ),
+      ),
       true,
     );
     assert.equal(
-      entry.affected?.some((row) => row.clientCode === 'PDG01' && row.classification === 'CONFIRMED'),
-      false,
+      (entry.affected || []).every((row) =>
+        labeledItems.some(
+          (item) =>
+            item.clientCode === row.clientCode &&
+            item.client === row.client &&
+            item.classification === row.classification,
+        ),
+      ),
+      true,
     );
   });
 });
