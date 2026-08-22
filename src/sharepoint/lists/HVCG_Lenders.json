@@ -1,6 +1,6 @@
 {
   "title": "HVCG_Lenders",
-  "description": "Capital \u2014 Lender tracking (operational subtype of capital sources)",
+  "description": "Capital — Lender tracking (operational subtype of capital sources)",
   "template": "genericList",
   "domain": "Capital",
   "columns": [
@@ -85,6 +85,75 @@
       "required": false,
       "indexed": false,
       "description": ""
+    },
+    {
+      "internalName": "Website",
+      "displayName": "Website",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": "Lender website."
+    },
+    {
+      "internalName": "Geography",
+      "displayName": "Geography",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Geographic coverage. Text, not a guaranteed enum."
+    },
+    {
+      "internalName": "RelationshipStatus",
+      "displayName": "RelationshipStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "HVCG relationship status with this lender.",
+      "choices": [
+        "Active",
+        "Inactive",
+        "Prospect",
+        "Do Not Contact"
+      ],
+      "default": "Prospect"
+    },
+    {
+      "internalName": "RelationshipOwner",
+      "displayName": "RelationshipOwner",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "HVCG relationship owner (email)."
+    },
+    {
+      "internalName": "LastVerifiedAt",
+      "displayName": "LastVerifiedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "When stated criteria were last human-verified."
+    },
+    {
+      "internalName": "CriteriaFreshness",
+      "displayName": "CriteriaFreshness",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Freshness of lender criteria. CURRENT|STALE|UNKNOWN.",
+      "choices": [
+        "CURRENT",
+        "STALE",
+        "UNKNOWN"
+      ],
+      "default": "UNKNOWN"
+    },
+    {
+      "internalName": "VerificationSource",
+      "displayName": "VerificationSource",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Where criteria were verified (call, email, portal, public site, etc.)."
     }
   ]
 }

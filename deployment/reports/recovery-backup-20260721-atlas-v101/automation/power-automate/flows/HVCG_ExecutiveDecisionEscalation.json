@@ -1,0 +1,59 @@
+{
+  "flowName": "HVCG_ExecutiveDecisionEscalation",
+  "displayName": "HVCG_ExecutiveDecisionEscalation",
+  "description": "Notifies executive only for qualifying items.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "condition": "RequiresExecutiveAttention eq true"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook",
+    "Teams"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "DeduplicateNotification24h"
+    },
+    {
+      "id": 2,
+      "action": "ComposeExecutiveBrief"
+    },
+    {
+      "id": 3,
+      "action": "EmailExecutive"
+    },
+    {
+      "id": 4,
+      "action": "CreateNotificationRow"
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

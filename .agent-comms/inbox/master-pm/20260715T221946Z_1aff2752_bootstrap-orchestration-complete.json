@@ -1,0 +1,21 @@
+{
+  "messageId": "1aff2752-539d-4834-bb72-338b3af5f53e",
+  "threadId": "1aff2752-539d-4834-bb72-338b3af5f53e",
+  "timestamp": "2026-07-15T22:19:46Z",
+  "from": "integration",
+  "to": [
+    "master-pm"
+  ],
+  "cc": [],
+  "type": "INFO",
+  "priority": "HIGH",
+  "subject": "Bootstrap orchestration complete",
+  "body": "Comms infrastructure on cursor/agent-communications. All 8 agents pre-registered with heartbeats. Activate packets + System Online delivered to inboxes. Cursor chat injection unsupported \u2014 paste AGENT_BOOTSTRAP_PROMPT.md or follow AGENT_COMMS_ACTIVATE.md in each worktree. CRM Maker OA not interrupted.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}
