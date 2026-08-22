@@ -5,7 +5,7 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | *(git tip after push)* |
+| current SHA | `22665c8308dadbd9091d5096529d01ae88bde733` |
 | baseline | D38 ENTITLED_ATLAS0102_CLASSIFY @ Hub `4b9631a` |
 | owned domains | Independent adversarial testing and findings |
 | files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
@@ -29,7 +29,7 @@
 | LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **38** |
 | BASED ON WORKER SHA | `4b819e6b033c10418e7b0018063f9f2730d4bc27` |
 | D37 | CONSUMED=37 — not re-executed |
-| CURRENT SHA | *(git tip after push)* |
+| CURRENT SHA | `22665c8308dadbd9091d5096529d01ae88bde733` |
 | COMPLETED ACTIONS | D38 lineage+unauth+classify ATLAS-01/02 STILL_INCONCLUSIVE; CONSUMED=38 |
 | REMAINING ACTIONS | Hub AUTH_SESSION then entitled SYN01 ATLAS-01/02 probes |
 | LIVE_P0 | **2** |
