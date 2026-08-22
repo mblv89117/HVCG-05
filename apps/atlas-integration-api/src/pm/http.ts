@@ -92,7 +92,13 @@ export async function handlePmRoutes(opts: {
 
   // Authentication is evaluated before PM availability so 401 is never a 503.
   const principal = await requirePrincipal(req, cfg);
-  if (isClientOnlyPrincipal(principal) && !isClientEntitledPmPath(path)) {
+  // SharePoint mode already fail-closes with existing 404/403 semantics.
+  // Development-json has no SharePoint authz, so deny operator collections here.
+  if (
+    cfg.pmBackend.mode !== 'sharepoint' &&
+    isClientOnlyPrincipal(principal) &&
+    !isClientEntitledPmPath(path)
+  ) {
     send(
       res,
       403,
