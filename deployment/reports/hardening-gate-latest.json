@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-07-22T04:41:34Z",
+  "absoluteGo": true,
+  "finalMatrix": "deployment/reports/ATLAS_V1_PRODUCTION_ABSOLUTE_GO.md",
+  "ownerUat": "GREEN",
+  "commitTag": "ALLOWED",
+  "tagName": "atlas-v1.0.1-production",
+  "notes": "Supersedes prior blocked hardening-gate snapshot; see Absolute GO matrix for full checklist."
+}

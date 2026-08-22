@@ -1,7 +1,7 @@
 {
   "name": "HVCG_DeliverableApproval",
   "displayName": "HVCG_DeliverableApproval",
-  "description": "Approval routing for deliverables",
+  "description": "Route a deliverable through a Basic approval. On approve, mark Approved (never auto-release). On reject, move to Revisions. Records an HVCG_Approvals row and audit logs.",
   "definition": {
     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
     "contentVersion": "10.0.0.0",
@@ -13,6 +13,26 @@
       "$connections": {
         "defaultValue": {},
         "type": "Object"
+      },
+      "hvcg_CommandCenterSiteUrl": {
+        "type": "String",
+        "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter"
+      },
+      "hvcg_ClientsSiteUrl": {
+        "type": "String",
+        "defaultValue": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients"
+      },
+      "hvcg_ExecutiveEmail": {
+        "type": "String",
+        "defaultValue": "manny@highvaluecapitalgroup.com"
+      },
+      "hvcg_OpsEmail": {
+        "type": "String",
+        "defaultValue": "manny@highvaluecapitalgroup.com"
+      },
+      "hvcg_EnableClientEmails": {
+        "type": "Bool",
+        "defaultValue": false
       }
     },
     "triggers": {
@@ -23,24 +43,19 @@
           "schema": {
             "type": "object",
             "properties": {
-              "ClientCode": {
-                "type": "string"
+              "DeliverableListItemId": {
+                "type": "integer",
+                "title": "DeliverableListItemId",
+                "description": "HVCG_Deliverables item Id to route for approval"
               },
-              "ClientListItemId": {
-                "type": "integer"
-              },
-              "TemplateKey": {
-                "type": "string"
-              },
-              "EngagementId": {
-                "type": "integer"
-              },
-              "StartDate": {
-                "type": "string"
+              "ApproverEmail": {
+                "type": "string",
+                "title": "ApproverEmail",
+                "description": "Optional approver; defaults to hvcg_ExecutiveEmail"
               }
             },
             "required": [
-              "ClientCode"
+              "DeliverableListItemId"
             ]
           }
         }
@@ -58,18 +73,32 @@
           "parameters": {
             "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
             "table": "HVCG_AutomationLogs",
-            "item/Title": "Started",
-            "item/FlowName": "@workflow()?['name']",
-            "item/Status": "Started"
+            "item": {
+              "Title": "Started",
+              "FlowName": "@workflow()?['name']",
+              "Status": {
+                "Value": "Started"
+              },
+              "RelatedList": "HVCG_Deliverables",
+              "RelatedItemId": "@triggerBody()?['DeliverableListItemId']"
+            }
           }
         },
         "runAfter": {}
       },
-      "Compose_Inputs": {
-        "type": "Compose",
+      "Get_Deliverable": {
+        "type": "OpenApiConnection",
         "inputs": {
-          "note": "Manual or child flow: Approval routing for deliverables",
-          "buildSheet": "src/power-automate/flows/HVCG_DeliverableApproval.json"
+          "host": {
+            "connectionName": "shared_sharepointonline",
+            "operationId": "GetItem",
+            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+            "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+            "table": "HVCG_Deliverables",
+            "id": "@triggerBody()?['DeliverableListItemId']"
+          }
         },
         "runAfter": {
           "Log_Start": [
@@ -77,11 +106,328 @@
           ]
         }
       },
-      "Log_Success": {
-        "type": "Compose",
-        "inputs": "Succeeded scaffold",
+      "Init_ApproverEmail": {
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "ApproverEmail",
+              "type": "string",
+              "value": "@if(or(empty(triggerBody()?['ApproverEmail']), equals(triggerBody()?['ApproverEmail'], null)), 'manny@highvaluecapitalgroup.com', triggerBody()?['ApproverEmail'])"
+            }
+          ]
+        },
         "runAfter": {
-          "Compose_Inputs": [
+          "Get_Deliverable": [
+            "Succeeded"
+          ]
+        }
+      },
+      "Condition_AlreadyApproved": {
+        "type": "If",
+        "expression": {
+          "or": [
+            {
+              "equals": [
+                "@outputs('Get_Deliverable')?['body/DeliverableStatus/Value']",
+                "Approved"
+              ]
+            },
+            {
+              "equals": [
+                "@outputs('Get_Deliverable')?['body/DeliverableStatus/Value']",
+                "Delivered"
+              ]
+            }
+          ]
+        },
+        "actions": {
+          "Log_Skipped": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PostItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                "table": "HVCG_AutomationLogs",
+                "item": {
+                  "Title": "Deliverable already approved",
+                  "FlowName": "@workflow()?['name']",
+                  "Status": {
+                    "Value": "SkippedDuplicate"
+                  },
+                  "ClientCode": "@outputs('Get_Deliverable')?['body/ClientCode']",
+                  "RelatedList": "HVCG_Deliverables",
+                  "RelatedItemId": "@triggerBody()?['DeliverableListItemId']"
+                }
+              }
+            },
+            "runAfter": {}
+          },
+          "Terminate_Skipped": {
+            "type": "Terminate",
+            "inputs": {
+              "runStatus": "Succeeded"
+            },
+            "runAfter": {
+              "Log_Skipped": [
+                "Succeeded"
+              ]
+            }
+          }
+        },
+        "else": {
+          "actions": {
+            "Create_Approval": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PostItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                  "table": "HVCG_Approvals",
+                  "item": {
+                    "Title": "@concat('Deliverable approval - ', outputs('Get_Deliverable')?['body/Title'])",
+                    "ClientCode": "@outputs('Get_Deliverable')?['body/ClientCode']",
+                    "RelatedList": "HVCG_Deliverables",
+                    "RelatedItemId": "@triggerBody()?['DeliverableListItemId']",
+                    "ApprovalType": {
+                      "Value": "Deliverable"
+                    },
+                    "ApproverEmail": "@variables('ApproverEmail')",
+                    "ApprovalStatus": {
+                      "Value": "Pending"
+                    },
+                    "RequestedDate": "@utcNow()"
+                  }
+                }
+              },
+              "runAfter": {}
+            },
+            "Start_an_approval": {
+              "type": "OpenApiConnectionWebhook",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_approvals",
+                  "operationId": "StartAndWaitForAnApproval",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+                },
+                "parameters": {
+                  "approvalType": "Basic",
+                  "WebhookApprovalCreationInput/title": "@concat('Approve deliverable: ', outputs('Get_Deliverable')?['body/Title'])",
+                  "WebhookApprovalCreationInput/assignedTo": "@variables('ApproverEmail')",
+                  "WebhookApprovalCreationInput/details": "@concat('Client: ', coalesce(outputs('Get_Deliverable')?['body/ClientCode'], 'n/a'), '. Type: ', coalesce(outputs('Get_Deliverable')?['body/DeliverableType/Value'], 'n/a'), '. Please review and approve. Approval does not release the deliverable to the client.')"
+                }
+              },
+              "runAfter": {
+                "Create_Approval": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Condition_Approved": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@outputs('Start_an_approval')?['body/outcome']",
+                      "Approve"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Patch_Deliverable_Approved": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_Deliverables",
+                      "id": "@triggerBody()?['DeliverableListItemId']",
+                      "item": {
+                        "Title": "@outputs('Get_Deliverable')?['body/Title']",
+                        "DeliverableStatus": {
+                          "Value": "Approved"
+                        },
+                        "ApproverEmail": "@variables('ApproverEmail')",
+                        "InternalReviewStatus": {
+                          "Value": "Approved"
+                        },
+                        "CompletionEvidence": "@concat('Approved ', utcNow(), ' by ', variables('ApproverEmail'), '. Comments: ', coalesce(first(outputs('Start_an_approval')?['body/responses'])?['comments'], ''))"
+                      }
+                    }
+                  },
+                  "runAfter": {}
+                },
+                "Patch_Approval_Approved": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PatchItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_Approvals",
+                      "id": "@outputs('Create_Approval')?['body/ID']",
+                      "item": {
+                        "Title": "@concat('Deliverable approval - ', outputs('Get_Deliverable')?['body/Title'])",
+                        "ApprovalStatus": {
+                          "Value": "Approved"
+                        },
+                        "CompletedDate": "@utcNow()",
+                        "Comments": "@first(outputs('Start_an_approval')?['body/responses'])?['comments']"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Patch_Deliverable_Approved": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Log_Approved": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "PostItem",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                      "table": "HVCG_AutomationLogs",
+                      "item": {
+                        "Title": "Deliverable approved",
+                        "FlowName": "@workflow()?['name']",
+                        "Status": {
+                          "Value": "Succeeded"
+                        },
+                        "ClientCode": "@outputs('Get_Deliverable')?['body/ClientCode']",
+                        "RelatedList": "HVCG_Deliverables",
+                        "RelatedItemId": "@triggerBody()?['DeliverableListItemId']",
+                        "Message": "Deliverable marked Approved (not released)."
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Patch_Approval_Approved": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Patch_Deliverable_Revisions": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PatchItem",
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                      },
+                      "parameters": {
+                        "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                        "table": "HVCG_Deliverables",
+                        "id": "@triggerBody()?['DeliverableListItemId']",
+                        "item": {
+                          "Title": "@outputs('Get_Deliverable')?['body/Title']",
+                          "DeliverableStatus": {
+                            "Value": "Revisions"
+                          },
+                          "InternalReviewStatus": {
+                            "Value": "Rejected"
+                          },
+                          "RevisionRequest": "@concat('Rejected ', utcNow(), ' by ', variables('ApproverEmail'), '. Comments: ', coalesce(first(outputs('Start_an_approval')?['body/responses'])?['comments'], ''))"
+                        }
+                      }
+                    },
+                    "runAfter": {}
+                  },
+                  "Patch_Approval_Rejected": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PatchItem",
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                      },
+                      "parameters": {
+                        "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                        "table": "HVCG_Approvals",
+                        "id": "@outputs('Create_Approval')?['body/ID']",
+                        "item": {
+                          "Title": "@concat('Deliverable approval - ', outputs('Get_Deliverable')?['body/Title'])",
+                          "ApprovalStatus": {
+                            "Value": "Rejected"
+                          },
+                          "CompletedDate": "@utcNow()",
+                          "Comments": "@first(outputs('Start_an_approval')?['body/responses'])?['comments']"
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Patch_Deliverable_Revisions": [
+                        "Succeeded"
+                      ]
+                    }
+                  },
+                  "Log_Rejected": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "host": {
+                        "connectionName": "shared_sharepointonline",
+                        "operationId": "PostItem",
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                      },
+                      "parameters": {
+                        "dataset": "@parameters('hvcg_CommandCenterSiteUrl')",
+                        "table": "HVCG_AutomationLogs",
+                        "item": {
+                          "Title": "Deliverable rejected",
+                          "FlowName": "@workflow()?['name']",
+                          "Status": {
+                            "Value": "Succeeded"
+                          },
+                          "ClientCode": "@outputs('Get_Deliverable')?['body/ClientCode']",
+                          "RelatedList": "HVCG_Deliverables",
+                          "RelatedItemId": "@triggerBody()?['DeliverableListItemId']",
+                          "Message": "Deliverable moved to Revisions after rejection."
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Patch_Approval_Rejected": [
+                        "Succeeded"
+                      ]
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Start_an_approval": [
+                  "Succeeded"
+                ]
+              }
+            }
+          }
+        },
+        "runAfter": {
+          "Init_ApproverEmail": [
             "Succeeded"
           ]
         }
@@ -97,6 +443,15 @@
       },
       "api": {
         "name": "shared_sharepointonline"
+      }
+    },
+    "shared_approvals": {
+      "runtimeSource": "embedded",
+      "connection": {
+        "connectionReferenceLogicalName": "hvcg_sharedapprovals"
+      },
+      "api": {
+        "name": "shared_approvals"
       }
     },
     "shared_office365": {
@@ -118,8 +473,9 @@
   ],
   "acceptanceCriteria": [
     "Flow appears in solution or My flows",
-    "Connection references resolved",
+    "Connection references resolved (SharePoint + Approvals)",
     "Test run writes HVCG_AutomationLogs Started/Succeeded or SkippedDuplicate",
-    "Idempotent re-run does not duplicate business records"
+    "Approve path sets DeliverableStatus=Approved (never Delivered/released) and completes HVCG_Approvals row",
+    "Reject path sets DeliverableStatus=Revisions and completes HVCG_Approvals row"
   ]
 }

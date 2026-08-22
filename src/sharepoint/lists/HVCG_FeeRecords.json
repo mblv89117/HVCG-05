@@ -1,0 +1,177 @@
+{
+  "title": "HVCG_FeeRecords",
+  "description": "Capital — Engagement fee / tail records (legal-compliance review when regulated). Not GL.",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "ExecutedAgreementRef",
+      "displayName": "ExecutedAgreementRef",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Pointer to the executed agreement. Not the agreement body."
+    },
+    {
+      "internalName": "FeeType",
+      "displayName": "FeeType",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Fee type. Securities/equity/investment/M&A/transaction-based/success/tail require legal review."
+    },
+    {
+      "internalName": "FeeFormula",
+      "displayName": "FeeFormula",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "StartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EarnedEvent",
+      "displayName": "EarnedEvent",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TailStart",
+      "displayName": "TailStart",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TailEnd",
+      "displayName": "TailEnd",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LenderId",
+      "displayName": "LenderId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "ApprovalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NOT_REQUIRED",
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "REVISE"
+      ],
+      "default": "PENDING"
+    },
+    {
+      "internalName": "InvoiceStatus",
+      "displayName": "InvoiceStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "not_invoiced",
+        "invoiced",
+        "paid",
+        "void"
+      ],
+      "default": "not_invoiced"
+    },
+    {
+      "internalName": "PaymentStatus",
+      "displayName": "PaymentStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "unpaid",
+        "partial",
+        "paid"
+      ],
+      "default": "unpaid"
+    },
+    {
+      "internalName": "LegalComplianceReviewRequired",
+      "displayName": "LegalComplianceReviewRequired",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

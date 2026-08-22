@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-07-21T17:18:00.000Z",
+  "environment": "production",
+  "source": "Microsoft Graph live probe via Atlas hub Microsoft connection (Sites.Read.All) after sync refresh",
+  "sites": [
+    {
+      "alias": "HVCG-CommandCenter",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+      "listsTotal": 84,
+      "hasClientsList": true,
+      "clientsImportedCount": 7,
+      "sample": [
+        { "code": "ACCG01", "title": "ACCG Inc." },
+        { "code": "CCB01", "title": "Colorado Craft Beef" },
+        { "code": "CPL01", "title": "Christie's Place LLC" },
+        { "code": "HFD01", "title": "Hart Family Dental" },
+        { "code": "KAVA01", "title": "That's Kava LLC" },
+        { "code": "LIEN01", "title": "Lien Partners" },
+        { "code": "PDG01", "title": "Prodigy Games LLC" }
+      ],
+      "schemaCompliant": true,
+      "listsChecked": 82,
+      "okCount": 1170,
+      "deployReport": "deployment/reports/HVCG-Dev-Deploy-20260721-101112.json",
+      "schemaReport": "deployment/reports/schema/schema-validation-latest.json"
+    }
+  ]
+}

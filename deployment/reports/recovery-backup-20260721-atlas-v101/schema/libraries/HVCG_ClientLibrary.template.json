@@ -1,0 +1,54 @@
+{
+  "libraryTemplateName": "HVCG_ClientLibrary",
+  "versioning": {
+    "majorVersionLimit": 500,
+    "enableVersioning": true,
+    "enableMinorVersions": false
+  },
+  "contentTypes": ["HVCG_ClientDocument"],
+  "folders": [
+    "00 - Engagement Administration",
+    "01 - Corporate Documents",
+    "02 - Ownership and Management",
+    "03 - Historical Financials",
+    "04 - Current Financials",
+    "05 - Tax Returns",
+    "06 - Bank Statements",
+    "07 - Debt Schedule",
+    "08 - Accounts Receivable",
+    "09 - Accounts Payable",
+    "10 - Payroll and Employees",
+    "11 - Contracts",
+    "12 - Real Estate",
+    "13 - Insurance",
+    "14 - Legal and Compliance",
+    "15 - Financial Models",
+    "16 - Lender Package",
+    "17 - Investor Package",
+    "18 - Presentations",
+    "19 - Deliverables",
+    "20 - Meeting Notes",
+    "21 - Communications",
+    "22 - Approvals",
+    "23 - Closed and Archived"
+  ],
+  "permissions": {
+    "breakRoleInheritance": true,
+    "copyRoleAssignments": false,
+    "grant": [
+      {"group": "HVCG-Role-Owner", "role": "Edit"},
+      {"group": "HVCG-Role-Administrator", "role": "Full Control"},
+      {"group": "HVCG-Role-OperationsManager", "role": "Edit"},
+      {"group": "HVCG-Client-{ClientCode}", "role": "Edit"}
+    ],
+    "denyAnonymousLinks": true
+  },
+  "metadataColumns": [
+    {"internalName": "ClientCode", "type": "Text", "indexed": true},
+    {"internalName": "DocumentCategory", "type": "Choice"},
+    {"internalName": "ReceivedDate", "type": "DateTime"},
+    {"internalName": "ExpirationDate", "type": "DateTime"},
+    {"internalName": "SubmittedBy", "type": "Text"},
+    {"internalName": "ReviewStatus", "type": "Choice", "choices": ["Pending", "Accepted", "Rejected"]}
+  ]
+}

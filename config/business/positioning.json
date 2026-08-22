@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-POS-001", "HVCG-V2-POS-002", "HVCG-V2-POS-003", "HVCG-V2-POS-004"],
+  "positioningStatement": "High Value Capital Group is a premium capital, strategic finance, risk-reduction, growth, and AI operating partner for founder-led businesses.",
+  "notPositionedAs": [
+    "Generic consulting firm",
+    "We do everything shop",
+    "Unscoped task helper"
+  ],
+  "commercialMessage": "We help serious business owners access capital, clean up financial operations, win larger contracts, reduce liabilities, and build AI-powered operating systems.",
+  "websiteHeadlineCandidate": "Capital. Contracts. Risk Reduction. AI Operating Systems for Founder-Led Companies.",
+  "websitePositioningCandidate": "High Value Capital Group helps founder-led companies become capital-ready, contract-ready, risk-aware, and AI-enabled.",
+  "publicCtaPreference": "Paid diagnostic (not undefined free consulting)",
+  "publicServiceLines": [
+    "SL-CAPITAL",
+    "SL-FCFO",
+    "SL-PROCUREMENT",
+    "SL-RISK",
+    "SL-GROWTH",
+    "SL-AI"
+  ],
+  "privateServiceLines": ["SL-OWNER"],
+  "brandRelationship": {
+    "highValueFounder": "Content / authority identity",
+    "podcast": "Voice",
+    "music": "Emotion",
+    "highValueCapitalGroup": "Business",
+    "paidDiagnostic": "Conversion point",
+    "publicLaunch": "DEFERRED_OWNER_GATE"
+  },
+  "publishGate": "BL-PUBLISH-1"
+}

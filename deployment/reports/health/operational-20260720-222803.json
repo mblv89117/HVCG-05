@@ -1,0 +1,20 @@
+{
+  "started": "2026-07-20T22:28:03.3857110-07:00",
+  "environment": "development",
+  "overallStatus": "Healthy",
+  "criticalFailures": [],
+  "warnings": [],
+  "siteAvailability": null,
+  "listAvailability": null,
+  "schemaDrift": [],
+  "permissionDrift": [],
+  "automationHealth": null,
+  "backupStatus": null,
+  "powerPlatformStatus": null,
+  "aiQueueHealth": null,
+  "dataQualityIssues": [],
+  "recommendedActions": [
+    "Re-run without -WhatIf against tenant"
+  ],
+  "finished": "2026-07-20T22:28:03.3882560-07:00"
+}

@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-07-22T02:25:48.945386+00:00",
+  "solutionUniqueName": "HVCGAtlasProduction",
+  "version": "1.0.1.0",
+  "managed": false,
+  "artifacts": [
+    {
+      "path": "releases/v1.0.1/artifacts/HVCGAtlasProduction_1.0.1.0_managed.zip",
+      "bytes": 20256,
+      "sha256": "1313097ab9c171ee"
+    },
+    {
+      "path": "releases/v1.0.1/artifacts/HVCGAtlasProduction_1.0.1.0.zip",
+      "bytes": 20674,
+      "sha256": "156f614e2a2abd54"
+    }
+  ],
+  "note": "Exported after AtlasClientRef flow fixes + Button restore. Reminder/Eva flows remain in solution but Stopped in env."
+}

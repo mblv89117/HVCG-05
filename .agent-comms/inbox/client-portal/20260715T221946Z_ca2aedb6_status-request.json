@@ -1,0 +1,27 @@
+{
+  "messageId": "ca2aedb6-20e9-4354-83e2-d58748b14f52",
+  "threadId": "ca2aedb6-20e9-4354-83e2-d58748b14f52",
+  "timestamp": "2026-07-15T22:19:46Z",
+  "from": "master-pm",
+  "to": [
+    "crm",
+    "executive",
+    "operations",
+    "finance",
+    "client-portal",
+    "ai-governance",
+    "integration"
+  ],
+  "cc": [],
+  "type": "REQUEST",
+  "priority": "NORMAL",
+  "subject": "Status request",
+  "body": "Please reply with current status, blockers, and next milestone.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

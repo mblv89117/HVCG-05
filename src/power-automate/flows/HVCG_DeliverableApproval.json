@@ -1,20 +1,22 @@
 {
   "flowName": "HVCG_DeliverableApproval",
   "displayName": "HVCG_DeliverableApproval",
-  "description": "Creates approval records and notifies approvers.",
+  "description": "Routes a deliverable through a Basic (internal) approval. On approve: DeliverableStatus=Approved (never auto-released/Delivered). On reject: DeliverableStatus=Revisions. Writes an HVCG_Approvals record and audit logs.",
   "trigger": {
-    "type": "SharePointItemModified",
-    "list": "HVCG_Deliverables",
-    "condition": "Status Internal/Client Review or RequiresExecutiveApproval"
+    "type": "Manual",
+    "inputs": [
+      "DeliverableListItemId",
+      "ApproverEmail"
+    ]
   },
   "connections": [
     "SharePoint",
-    "Outlook",
     "Approvals"
   ],
   "idempotency": {
-    "column": "HVCG_IdempotencyKey",
-    "onDuplicate": "SkippedDuplicate"
+    "strategy": "DeliverableStatusGuard",
+    "onDuplicate": "SkippedDuplicate",
+    "notes": "If DeliverableStatus already Approved or Delivered, log SkippedDuplicate and terminate."
   },
   "logging": {
     "list": "HVCG_AutomationLogs",
@@ -23,29 +25,85 @@
     "onFailure": true
   },
   "humanApproval": [
-    "Approver decision required"
+    {
+      "connector": "Approvals",
+      "operation": "StartAndWaitForAnApproval",
+      "approvalType": "Basic",
+      "assignedTo": "ApproverEmail | hvcg_ExecutiveEmail"
+    }
   ],
   "steps": [
     {
       "id": 1,
-      "action": "CreateApprovalItem"
+      "action": "LogStarted"
     },
     {
       "id": 2,
-      "action": "NotifyApprover"
+      "action": "GetDeliverable",
+      "params": {
+        "list": "HVCG_Deliverables",
+        "byId": "DeliverableListItemId"
+      }
     },
     {
       "id": 3,
-      "action": "WaitForDecision"
+      "action": "GuardAlreadyApproved",
+      "params": {
+        "skipWhenStatusIn": [
+          "Approved",
+          "Delivered"
+        ]
+      }
     },
     {
       "id": 4,
-      "action": "UpdateDeliverableStatus"
+      "action": "CreateApprovalRecord",
+      "params": {
+        "list": "HVCG_Approvals",
+        "ApprovalType": "Deliverable",
+        "ApprovalStatus": "Pending"
+      }
     },
     {
       "id": 5,
-      "action": "LogSuccess"
+      "action": "StartAndWaitForApproval",
+      "params": {
+        "approvalType": "Basic",
+        "assignedTo": "ApproverEmail | hvcg_ExecutiveEmail"
+      }
+    },
+    {
+      "id": 6,
+      "action": "OnApprove",
+      "params": {
+        "patch": {
+          "list": "HVCG_Deliverables",
+          "DeliverableStatus": "Approved",
+          "ApproverEmail": "{approver}",
+          "note": "Never sets Delivered/released"
+        },
+        "completeApproval": "Approved"
+      }
+    },
+    {
+      "id": 7,
+      "action": "OnReject",
+      "params": {
+        "patch": {
+          "list": "HVCG_Deliverables",
+          "DeliverableStatus": "Revisions"
+        },
+        "completeApproval": "Rejected"
+      }
+    },
+    {
+      "id": 8,
+      "action": "LogResult"
     }
+  ],
+  "notes": [
+    "HVCG_Deliverables has no 'Released'/'In Revision'/'Rejected' choices; 'Approved' and 'Delivered' are treated as terminal for the guard, and 'Revisions' is used for rejection.",
+    "Uses connection reference hvcg_sharedapprovals."
   ],
   "errorHandling": {
     "notifyGroup": "HVCG-Role-Administrator",
@@ -53,10 +111,10 @@
     "retryDelaySeconds": 60
   },
   "environmentVariables": [
-    "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
+    "hvcg_EnableClientEmails"
   ]
 }

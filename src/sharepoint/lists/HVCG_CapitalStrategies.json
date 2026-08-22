@@ -1,0 +1,153 @@
+{
+  "title": "HVCG_CapitalStrategies",
+  "description": "Capital — Financing strategy drafts (Manny-gated; not an HVCG recommendation until approved)",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "NeedSummary",
+      "displayName": "NeedSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Paths",
+      "displayName": "Paths",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Ranked path narrative / JSON."
+    },
+    {
+      "internalName": "Strengths",
+      "displayName": "Strengths",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Risks",
+      "displayName": "Risks",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MissingInformation",
+      "displayName": "MissingInformation",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LenderCandidates",
+      "displayName": "LenderCandidates",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Serialized match summary. Not a live lookup graph."
+    },
+    {
+      "internalName": "Rationale",
+      "displayName": "Rationale",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MannyApproval",
+      "displayName": "MannyApproval",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "NOT_REQUIRED",
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "REVISE"
+      ],
+      "default": "PENDING"
+    },
+    {
+      "internalName": "ApprovedBy",
+      "displayName": "ApprovedBy",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovedAt",
+      "displayName": "ApprovedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Disclaimer",
+      "displayName": "Disclaimer",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Must retain financing disclaimer. AI output is advisory."
+    },
+    {
+      "internalName": "CreatedAt",
+      "displayName": "CreatedAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}
