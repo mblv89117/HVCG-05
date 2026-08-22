@@ -415,9 +415,147 @@ describe('Graph checkMemberGroups uses directoryObjects (user + SP oid)', () => 
       if (url === checkMemberGroupsUrl(USER_OID_GRAPH)) {
         return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
       }
+      if (url.includes('/members/microsoft.graph.')) {
+        return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
+      }
       return jsonResponse(500, {});
     }, async () => {
       assert.equal(await checkMemberGroups(graphCfg(), USER_OID_GRAPH, [GROUP_ACCG]), 'failed');
+    });
+  });
+
+  it('403 checkMemberGroups for SP oid falls back to typed group members (SYN01)', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl, groupMembersByTypeUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    const GROUP_SYN01 = GROUP_ACCG;
+    const seen: string[] = [];
+    await withMockedFetch(async (input, init) => {
+      const url = String(input);
+      seen.push(`${init?.method || 'GET'} ${url}`);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(SP_OID_GRAPH) && init?.method === 'POST') {
+        return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
+      }
+      if (url === groupMembersByTypeUrl(GROUP_SYN01, 'user')) {
+        return jsonResponse(200, { value: [{ id: USER_OID_GRAPH }] });
+      }
+      if (url === groupMembersByTypeUrl(GROUP_SYN01, 'servicePrincipal')) {
+        return jsonResponse(200, { value: [{ id: SP_OID_GRAPH }] });
+      }
+      if (url === groupMembersByTypeUrl(GROUP_LIEN, 'user') || url === groupMembersByTypeUrl(GROUP_LIEN, 'servicePrincipal')) {
+        return jsonResponse(200, { value: [] });
+      }
+      return jsonResponse(500, { error: 'unexpected' });
+    }, async () => {
+      const result = await checkMemberGroups(graphCfg(), SP_OID_GRAPH, [GROUP_SYN01, GROUP_LIEN]);
+      assert.deepEqual(result, [GROUP_SYN01]);
+    });
+    assert.equal(
+      seen.some((s) => s.includes('/directoryObjects/') && s.startsWith('POST')),
+      true,
+    );
+    assert.equal(seen.some((s) => s.includes('/members/microsoft.graph.servicePrincipal')), true);
+    assert.equal(seen.some((s) => s.includes('/v1.0/users/')), false);
+  });
+
+  it('403 checkMemberGroups + empty typed members returns no groups (not failed)', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl, groupMembersByTypeUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url.includes('/checkMemberGroups')) {
+        return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
+      }
+      if (url === groupMembersByTypeUrl(GROUP_ACCG, 'user') || url === groupMembersByTypeUrl(GROUP_ACCG, 'servicePrincipal')) {
+        return jsonResponse(200, { value: [] });
+      }
+      return jsonResponse(500, {});
+    }, async () => {
+      assert.deepEqual(await checkMemberGroups(graphCfg(), SP_OID_GRAPH, [GROUP_ACCG]), []);
+    });
+  });
+
+  it('200 empty checkMemberGroups does not call group members', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    const seen: string[] = [];
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      seen.push(url);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(USER_OID_GRAPH)) {
+        return jsonResponse(200, { value: [] });
+      }
+      return jsonResponse(500, { error: 'members-should-not-run' });
+    }, async () => {
+      assert.deepEqual(await checkMemberGroups(graphCfg(), USER_OID_GRAPH, [GROUP_ACCG]), []);
+    });
+    assert.equal(seen.some((u) => u.includes('/members/')), false);
+  });
+
+  it('typed members pagination follows an allowed nextLink', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl, groupMembersByTypeUrl } = await import(
+      '../src/entitlements/graphMembership.ts'
+    );
+    const first = groupMembersByTypeUrl(GROUP_ACCG, 'servicePrincipal');
+    const next = `${first}&$skiptoken=page2`;
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(SP_OID_GRAPH)) {
+        return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
+      }
+      if (url === groupMembersByTypeUrl(GROUP_ACCG, 'user')) {
+        return jsonResponse(200, { value: [] });
+      }
+      if (url === first) {
+        return jsonResponse(200, { value: [{ id: 'cccccccc-cccc-cccc-cccc-cccccccccccc' }], '@odata.nextLink': next });
+      }
+      if (url === next) {
+        return jsonResponse(200, { value: [{ id: SP_OID_GRAPH }] });
+      }
+      return jsonResponse(500, {});
+    }, async () => {
+      assert.deepEqual(await checkMemberGroups(graphCfg(), SP_OID_GRAPH, [GROUP_ACCG]), [GROUP_ACCG]);
+    });
+  });
+
+  it('unsafe members nextLink fail-closed', async () => {
+    const { checkMemberGroups, checkMemberGroupsUrl, isAllowedGroupMembersNextLink } =
+      await import('../src/entitlements/graphMembership.ts');
+    assert.equal(
+      isAllowedGroupMembersNextLink('https://evil.example/v1.0/groups/x/members', GROUP_ACCG),
+      false,
+    );
+    await withMockedFetch(async (input) => {
+      const url = String(input);
+      if (url.includes('/oauth2/v2.0/token')) {
+        return jsonResponse(200, { access_token: 'graph-test-token', expires_in: 3600 });
+      }
+      if (url === checkMemberGroupsUrl(SP_OID_GRAPH)) {
+        return jsonResponse(403, { error: { code: 'Authorization_RequestDenied' } });
+      }
+      if (url.includes('/members/microsoft.graph.')) {
+        return jsonResponse(200, {
+          value: [],
+          '@odata.nextLink': 'https://evil.example/v1.0/groups/x/members',
+        });
+      }
+      return jsonResponse(500, {});
+    }, async () => {
+      assert.equal(await checkMemberGroups(graphCfg(), SP_OID_GRAPH, [GROUP_ACCG]), 'failed');
     });
   });
 
