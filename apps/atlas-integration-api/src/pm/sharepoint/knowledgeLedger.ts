@@ -5,6 +5,7 @@
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isFileIndexRow } from './fabric/fileIndex.ts';
+import { classifyHubClientRow, type KnowledgeProvenance } from './knowledgeClassification.ts';
 import type { SharePointPmService } from './repository.ts';
 
 export type KnowledgeLedgerItem = {
@@ -14,6 +15,9 @@ export type KnowledgeLedgerItem = {
   webUrl?: string;
   kind: string;
   source: string;
+  classification: 'SYNTHETIC_QA' | 'CLIENT' | 'READ_ONLY_CLIENT';
+  entityKind: 'client' | 'synthetic_qa' | 'vendor_referral' | 'reference_tenant' | 'unknown_code';
+  provenanceLabel: KnowledgeProvenance;
   provenance: {
     list: string;
     queriedVia: 'hub_sharepoint_mi';
@@ -42,6 +46,7 @@ export async function buildKnowledgeLedger(
   const clientsQueried: string[] = [];
   for (const client of clients) {
     clientsQueried.push(client.clientCode);
+    const classified = classifyHubClientRow(client);
     if (client.sharePointLibraryUrl) {
       items.push({
         id: `library-${client.clientCode}`,
@@ -50,6 +55,9 @@ export async function buildKnowledgeLedger(
         webUrl: client.sharePointLibraryUrl,
         kind: 'library',
         source: 'HVCG_Clients.SharePointLibraryUrl',
+        classification: classified.classification,
+        entityKind: classified.entityKind,
+        provenanceLabel: 'CONFIRMED',
         provenance: {
           list: 'HVCG_Clients',
           queriedVia: 'hub_sharepoint_mi',
@@ -68,6 +76,9 @@ export async function buildKnowledgeLedger(
         webUrl: typeof row.webUrl === 'string' ? row.webUrl : undefined,
         kind: String(row.summary || '').includes('RESTRICTED') ? 'restricted-file' : 'file',
         source: 'HVCG_Communications/file-index',
+        classification: classified.classification,
+        entityKind: classified.entityKind,
+        provenanceLabel: 'CONFIRMED',
         provenance: {
           list: 'HVCG_Communications',
           queriedVia: 'hub_sharepoint_mi',
