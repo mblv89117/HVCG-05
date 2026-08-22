@@ -1,0 +1,50 @@
+{
+  "id": "20260714_001_baseline_v1_0_0",
+  "fromVersion": "0.0.0",
+  "toVersion": "1.0.0",
+  "type": "baseline",
+  "destructive": false,
+  "preservesCustomerData": true,
+  "description": "Initial HVCG OS install: all lists, templates, folders, system info.",
+  "steps": [
+    {
+      "action": "EnsureSystemInfoList"
+    },
+    {
+      "action": "ProvisionAllListsFromIndex"
+    },
+    {
+      "action": "ProvisionViews"
+    },
+    {
+      "action": "UploadProjectTemplates"
+    },
+    {
+      "action": "SetInstalledVersion",
+      "version": "1.0.0"
+    },
+    {
+      "action": "WriteAuditEvent",
+      "eventType": "Install",
+      "details": "Baseline 1.0.0"
+    }
+  ],
+  "rollback": {
+    "supported": "partial",
+    "notes": "SharePoint list deletion is not automatic. Rollback marks version and can disable flows; data retained.",
+    "steps": [
+      {
+        "action": "SetInstalledVersion",
+        "version": "0.0.0"
+      },
+      {
+        "action": "DisableAutomations"
+      },
+      {
+        "action": "WriteAuditEvent",
+        "eventType": "Rollback",
+        "details": "Marked uninstalled; lists retained"
+      }
+    ]
+  }
+}

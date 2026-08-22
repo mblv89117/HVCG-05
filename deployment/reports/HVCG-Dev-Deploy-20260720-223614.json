@@ -1,0 +1,40 @@
+{
+  "DeploymentDateTime": "2026-07-20T22:34:55.3052530-07:00",
+  "Environment": "development-client-import",
+  "Tenant": null,
+  "RepoRoot": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release",
+  "ResourcesCreated": [
+    "Client:ACCG01",
+    "Client:PDG01",
+    "Client:CCB01",
+    "Client:KAVA01",
+    "Client:CPL01",
+    "Client:HFD01",
+    "Client:LIEN01"
+  ],
+  "ResourcesUpdated": [],
+  "ResourcesSkipped": [
+    "PSModule:PnP.PowerShell",
+    "PSModule:Microsoft.Graph"
+  ],
+  "Errors": [],
+  "Warnings": [],
+  "TestResults": null,
+  "OwnerActionsRemaining": [],
+  "NextStep": "Created=7 Skipped=0. Open https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev lists/HVCG_Clients",
+  "Log": [
+    "[2026-07-20T22:34:55][SUCCESS] Configuration validation passed.",
+    "[2026-07-20T22:34:55][INFO] Module present: PnP.PowerShell 3.3.0",
+    "[2026-07-20T22:34:55][INFO] Module present: Microsoft.Graph 2.38.1",
+    "[2026-07-20T22:35:14][SUCCESS] PnP auth ClientId resolved (836fb743…).",
+    "[2026-07-20T22:35:14][STEP] Connecting to https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev (DeviceLogin=True)",
+    "[2026-07-20T22:36:09][SUCCESS] Created ACCG01 ACCG Inc.",
+    "[2026-07-20T22:36:10][SUCCESS] Created PDG01 Prodigy Games LLC",
+    "[2026-07-20T22:36:11][SUCCESS] Created CCB01 Colorado Craft Beef",
+    "[2026-07-20T22:36:12][SUCCESS] Created KAVA01 That's Kava LLC",
+    "[2026-07-20T22:36:13][SUCCESS] Created CPL01 Christie's Place LLC",
+    "[2026-07-20T22:36:14][SUCCESS] Created HFD01 Hart Family Dental",
+    "[2026-07-20T22:36:14][SUCCESS] Created LIEN01 Lien Partners"
+  ],
+  "Success": true
+}
