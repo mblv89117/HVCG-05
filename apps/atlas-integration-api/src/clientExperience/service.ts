@@ -526,6 +526,13 @@ export function buildClientWorkspaceView(opts: {
       hubSha: resolveHubCommit(),
     }),
     commercial,
+    documentExchange: buildClientDocumentExchange({
+      clientCode: requested,
+      documents,
+      documentRequests,
+    }),
+    decisions: buildClientDecisionContext({ clientCode: requested, requests }),
+    priorities: buildClientPriorityContext({ clientCode: requested, projects }),
     operatingPicture: buildClientVisibleOperatingPicture({
       clientCode: requested,
       displayName: workspace.displayName,
@@ -535,6 +542,7 @@ export function buildClientWorkspaceView(opts: {
     isolation: {
       failClosed: true,
       sharePointPrimaryUx: false,
+      sharePointNavigation: false,
       operatorDesk: false,
     },
   };
@@ -550,7 +558,8 @@ export function bindClientVisibleCommercial(opts: {
     principal: opts.principal,
     clientCode: opts.clientCode,
   });
-  const gccCount = ctx.gcc.signals.filter((row) => row.clientCode === opts.clientCode).length;
+  const gccSignals = ctx.gcc.signals.filter((row) => row.clientCode === opts.clientCode);
+  const gccCount = gccSignals.length;
   const copilotCount =
     ctx.copilot.assessments.filter((row) => row.clientCode === opts.clientCode).length +
     ctx.copilot.preCall.filter((row) => row.atlasClientCode === opts.clientCode).length +
@@ -568,6 +577,15 @@ export function bindClientVisibleCommercial(opts: {
       available: gccCount > 0,
       recordedOnly: true as const,
       signalCount: gccCount,
+      recordedSignals: gccSignals.map((row) => ({
+        signalId: row.signalId,
+        clientCode: row.clientCode,
+        signalType: row.signalType,
+        severity: row.severity,
+        summary: row.summary,
+        emittedAt: row.emittedAt,
+        invented: false as const,
+      })),
       emptyReason: gccCount > 0 ? undefined : ctx.gcc.honesty.emptyReason || EMPTY_REASON.gcc,
     },
     copilot: {
@@ -602,16 +620,21 @@ export function bindIsolatedGccWorkspace(opts: {
     invented: false as const,
     available: opts.commercial.gcc.available,
     signalCount: opts.commercial.gcc.signalCount,
+    recordedSignals: opts.commercial.gcc.recordedSignals || [],
     emptyReason: opts.commercial.gcc.emptyReason,
     classification: isExperienceSyntheticClient(opts.clientCode)
       ? 'SYNTHETIC_QA'
       : classifyHubClientRow({ clientCode: opts.clientCode }).classification,
     hubSha: opts.hubSha || undefined,
+    crossClientFallback: false as const,
+    sharePointNavigation: false as const,
     binding: {
       kind: 'hub_gcc_session_v1' as const,
       liveDispatch: false as const,
       invented: false as const,
       recordedOnly: true as const,
+      isolated: true as const,
+      crossClientFallback: false as const,
     },
     gccHref: origin || undefined,
   };
@@ -627,6 +650,140 @@ export function assertRequestedGccWorkspaceKey(
   if (key !== boundKey) {
     fail(403, 'forbidden', 'GCC workspace is isolated to the signed client.');
   }
+}
+
+type DocumentExchangeUpload = {
+  id: string;
+  clientCode: string;
+  title: string;
+  fileName: string;
+  uploadedAt: string;
+  requestedId?: string;
+};
+
+export function buildClientDocumentExchange(opts: {
+  clientCode: string;
+  documents: DocumentExchangeUpload[];
+  documentRequests: DocumentRequestRecord[];
+}) {
+  const requested = opts.documentRequests
+    .filter((row) => row.clientCode === opts.clientCode)
+    .map((row) => ({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      status: row.status,
+      createdAt: row.createdAt,
+      binariesInAtlas: false as const,
+      sharePointNavigation: false as const,
+    }));
+  const received = requested.filter((row) => row.status === 'received');
+  const cancelled = requested.filter((row) => row.status === 'cancelled');
+  const missing = requested
+    .filter((row) => row.status === 'requested')
+    .map((row) => ({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      status: 'missing' as const,
+      binariesInAtlas: false as const,
+    }));
+  const uploads = opts.documents
+    .filter((row) => row.clientCode === opts.clientCode)
+    .map((row) => ({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      fileName: row.fileName,
+      uploadedAt: row.uploadedAt,
+      requestedId: row.requestedId,
+      binariesInAtlas: false as const,
+    }));
+  const nothingRecorded = requested.length === 0 && uploads.length === 0;
+  return {
+    kind: 'client_document_exchange_v1' as const,
+    clientCode: opts.clientCode,
+    invented: false as const,
+    sharePointNavigation: false as const,
+    binariesInAtlas: false as const,
+    requested,
+    received,
+    cancelled,
+    missing,
+    uploads,
+    outstandingCount: missing.length,
+    receivedCount: received.length,
+    honestEmpty: nothingRecorded,
+    emptyReason: nothingRecorded
+      ? 'No documents have been requested or exchanged for this ClientCode. Atlas does not invent a checklist or files.'
+      : undefined,
+    missingHonesty:
+      requested.length === 0
+        ? 'No documents have been requested for this ClientCode. Atlas does not invent a document checklist.'
+        : missing.length === 0
+          ? 'No outstanding requested documents. Received items stay isolated to this ClientCode.'
+          : `${missing.length} requested document(s) still outstanding. Atlas does not invent files.`,
+  };
+}
+
+export function buildClientDecisionContext(opts: {
+  clientCode: string;
+  requests: Array<{
+    id: string;
+    clientCode: string;
+    kind: string;
+    title: string;
+    detail: string;
+    status: string;
+    decision: string;
+    updatedAt: string;
+  }>;
+}) {
+  const decisions = opts.requests
+    .filter((row) => row.clientCode === opts.clientCode && row.kind === 'decision')
+    .map((row) => ({
+      id: row.id,
+      clientCode: row.clientCode,
+      title: row.title,
+      detail: row.detail,
+      status: row.status,
+      decision: row.decision,
+      updatedAt: row.updatedAt,
+      invented: false as const,
+    }));
+  return {
+    kind: 'client_decisions_v1' as const,
+    clientCode: opts.clientCode,
+    invented: false as const,
+    decisions,
+    openCount: decisions.filter((row) => row.decision === 'pending').length,
+    honestEmpty: decisions.length === 0,
+    emptyReason:
+      decisions.length === 0 ? 'No client decisions are recorded for this ClientCode. Atlas does not invent approvals.' : undefined,
+  };
+}
+
+export function buildClientPriorityContext(opts: {
+  clientCode: string;
+  projects: Array<{
+    id: string;
+    clientCode: string;
+    name: string;
+    priority: string;
+    health: string;
+    nextAction: string;
+  }>;
+}) {
+  const projects = opts.projects.filter((row) => row.clientCode === opts.clientCode);
+  return {
+    kind: 'client_priorities_v1' as const,
+    clientCode: opts.clientCode,
+    invented: false as const,
+    projects,
+    honestEmpty: projects.length === 0,
+    emptyReason:
+      projects.length === 0 ? 'No entitled project or priority context is recorded for this ClientCode.' : undefined,
+  };
 }
 
 export function uploadClientDocument(opts: {
@@ -680,6 +837,7 @@ export function uploadClientDocument(opts: {
           clientCode,
           id: req.documentRequestId,
           status: 'received',
+          updatedBy: opts.principal.userId,
         });
       }
     } else {
@@ -687,6 +845,7 @@ export function uploadClientDocument(opts: {
         clientCode,
         id: opts.requestedId,
         status: 'received',
+        updatedBy: opts.principal.userId,
       });
     }
   }
@@ -728,6 +887,7 @@ export function decideClientRequest(opts: {
       clientCode: code,
       id: opts.requestId,
       status: opts.decision === 'accepted' ? 'received' : 'cancelled',
+      updatedBy: opts.principal.userId,
     });
     if (overlay) {
       return {
@@ -840,6 +1000,15 @@ export function buildOperatorClientDeskPreview(opts: {
       workspaceKey: workspace.gccWorkspaceKey,
       isolated: true,
       clientCode,
+      recordedOnly: true as const,
+      liveDispatch: false as const,
+      invented: false as const,
+      available: false,
+      signalCount: 0,
+      recordedSignals: [] as Array<{ signalId: string; clientCode: string; invented: false }>,
+      crossClientFallback: false as const,
+      sharePointNavigation: false as const,
+      emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.',
     },
     commercial: {
       clientCode,
@@ -847,14 +1016,22 @@ export function buildOperatorClientDeskPreview(opts: {
       liveGtmOutbound: false as const,
       paidAds: false as const,
       invented: false as const,
-      gcc: { available: false, recordedOnly: true as const, signalCount: 0, emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.' },
+      gcc: { available: false, recordedOnly: true as const, signalCount: 0, recordedSignals: [], emptyReason: 'No GCC value signal on record. Live GCC dispatch is OFF. Atlas does not invent LTV, renewal, or expansion numbers.' },
       copilot: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: 'No Copilot assessment or pre-call brief on record. Atlas does not invent MRI findings.' },
       gtm: { available: false, recordedOnly: true as const, recordedCount: 0, emptyReason: 'No GTM attribution on record. Live GTM outbound is OFF. Atlas does not invent campaigns.' },
     },
+    documentExchange: buildClientDocumentExchange({
+      clientCode,
+      documents,
+      documentRequests,
+    }),
+    decisions: buildClientDecisionContext({ clientCode, requests }),
+    priorities: buildClientPriorityContext({ clientCode, projects }),
     operatingPicture: emptyClientOperatingPicture(clientCode, workspace.displayName),
     isolation: {
       failClosed: true,
       sharePointPrimaryUx: false,
+      sharePointNavigation: false,
       operatorDesk: false,
       signedClientSession: false,
     },
@@ -984,7 +1161,8 @@ export function attachOperatorDeskOperatingPicture<
   const customerRecord = synthetic ? false : classified.customerRecord;
   let commercial = view.commercial;
   if (opts?.commercial) {
-    const gccCount = opts.commercial.gcc.signals.filter((s) => s.clientCode === clientCode).length;
+    const gccSignals = opts.commercial.gcc.signals.filter((s) => s.clientCode === clientCode);
+    const gccCount = gccSignals.length;
     const copilotCount =
       opts.commercial.copilot.assessments.filter((a) => a.clientCode === clientCode).length +
       opts.commercial.copilot.preCall.filter((b) => b.atlasClientCode === clientCode).length +
@@ -1002,6 +1180,15 @@ export function attachOperatorDeskOperatingPicture<
         available: gccCount > 0,
         recordedOnly: true,
         signalCount: gccCount,
+        recordedSignals: gccSignals.map((row) => ({
+          signalId: row.signalId,
+          clientCode: row.clientCode,
+          signalType: row.signalType,
+          severity: row.severity,
+          summary: row.summary,
+          emittedAt: row.emittedAt,
+          invented: false as const,
+        })),
         emptyReason: gccCount > 0 ? undefined : opts.commercial.gcc.honesty.emptyReason,
       },
       copilot: {

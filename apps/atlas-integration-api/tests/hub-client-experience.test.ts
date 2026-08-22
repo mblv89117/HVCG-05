@@ -414,13 +414,46 @@ describe('synthetic client journey isolation', () => {
         attention: Array<{ id: string; kind: string }>;
         clientCode: string;
         binariesInAtlas: boolean;
+        invented: boolean;
+        decisions: { kind: string; openCount: number; invented: boolean };
+        documentExchange: { outstandingCount: number; missingHonesty: string; invented: boolean };
       };
       assert.equal(requestsBody.clientCode, SYN_A);
       assert.equal(requestsBody.binariesInAtlas, false);
+      assert.equal(requestsBody.invented, false);
+      assert.equal(requestsBody.decisions.kind, 'client_decisions_v1');
+      assert.ok(requestsBody.decisions.openCount >= 1);
+      assert.equal(requestsBody.documentExchange.invented, false);
+      assert.ok(requestsBody.documentExchange.outstandingCount >= 1);
       const docRequest = requestsBody.attention.find((row) => row.kind === 'document');
       const decisionRequest = requestsBody.attention.find((row) => row.kind === 'decision');
       assert.ok(docRequest);
       assert.ok(decisionRequest);
+
+      const exchangeBefore = await fetch(`${base}/api/client/document-exchange`, { headers: auth('client-a') });
+      assert.equal(exchangeBefore.status, 200);
+      const exchangeBeforeBody = (await exchangeBefore.json()) as {
+        clientCode: string;
+        invented: boolean;
+        sharePointNavigation: boolean;
+        binariesInAtlas: boolean;
+        documentExchange: {
+          outstandingCount: number;
+          missing: Array<{ title: string; status: string; clientCode: string }>;
+          missingHonesty: string;
+        };
+      };
+      assert.equal(exchangeBeforeBody.clientCode, SYN_A);
+      assert.equal(exchangeBeforeBody.invented, false);
+      assert.equal(exchangeBeforeBody.sharePointNavigation, false);
+      assert.equal(exchangeBeforeBody.binariesInAtlas, false);
+      assert.ok(exchangeBeforeBody.documentExchange.outstandingCount >= 1);
+      assert.ok(exchangeBeforeBody.documentExchange.missing.every((row) => row.clientCode === SYN_A));
+      assert.match(exchangeBeforeBody.documentExchange.missingHonesty, /outstanding/);
+      const stolenExchange = await fetch(`${base}/api/client/document-exchange`, { headers: auth('client-b') });
+      assert.equal(stolenExchange.status, 200);
+      const stolenExchangeBody = (await stolenExchange.json()) as { clientCode: string };
+      assert.equal(stolenExchangeBody.clientCode, SYN_B);
 
       const uploaded = await fetch(`${base}/api/client/documents`, {
         method: 'POST',
@@ -451,9 +484,27 @@ describe('synthetic client journey isolation', () => {
       assert.equal(stolen.status, 403);
 
       const listed = await fetch(`${base}/api/client/documents`, { headers: auth('client-a') });
-      const listedBody = (await listed.json()) as { documents: Array<{ title: string; clientCode?: string }>; clientCode: string };
+      const listedBody = (await listed.json()) as {
+        documents: Array<{ title: string; clientCode?: string }>;
+        clientCode: string;
+        documentExchange: { outstandingCount: number; receivedCount: number; missingHonesty: string };
+      };
       assert.equal(listedBody.clientCode, SYN_A);
       assert.ok(listedBody.documents.some((doc) => doc.title === 'Operating agreement'));
+      assert.equal(listedBody.documentExchange.outstandingCount, 0);
+      assert.ok(listedBody.documentExchange.receivedCount >= 1);
+      assert.match(listedBody.documentExchange.missingHonesty, /No outstanding requested documents/);
+
+      const decisions = await fetch(`${base}/api/client/decisions`, { headers: auth('client-a') });
+      assert.equal(decisions.status, 200);
+      const decisionsBody = (await decisions.json()) as {
+        clientCode: string;
+        invented: boolean;
+        decisions: { openCount: number; decisions: Array<{ title: string }> };
+      };
+      assert.equal(decisionsBody.clientCode, SYN_A);
+      assert.equal(decisionsBody.invented, false);
+      assert.ok(decisionsBody.decisions.decisions.some((row) => row.title.includes('kickoff')));
 
       const decided = await fetch(`${base}/api/client/requests/${decisionRequest?.id}/decide`, {
         method: 'POST',
@@ -464,6 +515,16 @@ describe('synthetic client journey isolation', () => {
 
       const projects = await fetch(`${base}/api/client/projects`, { headers: auth('client-a') });
       assert.equal(projects.status, 200);
+      const projectsBody = (await projects.json()) as {
+        clientCode: string;
+        invented: boolean;
+        priorities: { kind: string; honestEmpty: boolean; projects: Array<{ name: string; priority: string }> };
+      };
+      assert.equal(projectsBody.clientCode, SYN_A);
+      assert.equal(projectsBody.invented, false);
+      assert.equal(projectsBody.priorities.kind, 'client_priorities_v1');
+      assert.equal(projectsBody.priorities.honestEmpty, false);
+      assert.ok(projectsBody.priorities.projects.some((row) => row.name.includes('kickoff')));
       const gcc = await fetch(`${base}/api/client/gcc`, { headers: auth('client-a') });
       const gccBody = (await gcc.json()) as {
         gcc: {
@@ -476,7 +537,10 @@ describe('synthetic client journey isolation', () => {
           available: boolean;
           classification: string;
           gccHref?: string;
-          binding: { kind: string; liveDispatch: boolean; invented: boolean };
+          crossClientFallback: boolean;
+          sharePointNavigation: boolean;
+          recordedSignals: Array<{ clientCode: string }>;
+          binding: { kind: string; liveDispatch: boolean; invented: boolean; crossClientFallback: boolean };
         };
       };
       assert.equal(gccBody.gcc.clientCode, SYN_A);
@@ -486,9 +550,13 @@ describe('synthetic client journey isolation', () => {
       assert.equal(gccBody.gcc.invented, false);
       assert.equal(gccBody.gcc.available, false);
       assert.equal(gccBody.gcc.classification, 'SYNTHETIC_QA');
+      assert.equal(gccBody.gcc.crossClientFallback, false);
+      assert.equal(gccBody.gcc.sharePointNavigation, false);
+      assert.deepEqual(gccBody.gcc.recordedSignals, []);
       assert.equal(gccBody.gcc.binding.kind, 'hub_gcc_session_v1');
       assert.equal(gccBody.gcc.binding.liveDispatch, false);
       assert.equal(gccBody.gcc.binding.invented, false);
+      assert.equal(gccBody.gcc.binding.crossClientFallback, false);
       assert.equal(gccBody.gcc.gccHref, undefined);
       assert.equal(gccBody.gcc.workspaceKey.includes(SYN_B), false);
 
@@ -528,6 +596,8 @@ describe('synthetic client journey isolation', () => {
       assert.match(deskHtml, /SYNQA01/);
       assert.equal(deskHtml.includes(SYN_B), false);
       assert.match(deskHtml, /Needs your attention/);
+      assert.match(deskHtml, /Requested documents/);
+      assert.match(deskHtml, /Decisions/);
       assert.match(deskHtml, /Growth Command Center/);
       assert.match(deskHtml, /Commercial context/);
       assert.match(deskHtml, /does not invent LTV/);
@@ -632,8 +702,11 @@ describe('synthetic client journey isolation', () => {
         const deskBody = (await desk.json()) as {
           clientDesk: {
             clientCode: string;
-            gcc: { isolated: boolean; invented: boolean; liveDispatch: boolean; clientCode: string };
+            gcc: { isolated: boolean; invented: boolean; liveDispatch: boolean; clientCode: string; crossClientFallback: boolean };
             commercial: { invented: boolean; gcc: { recordedOnly: boolean } };
+            documentExchange: { invented: boolean; sharePointNavigation: boolean; outstandingCount: number };
+            decisions: { kind: string; invented: boolean };
+            priorities: { kind: string; invented: boolean };
             operatingPicture: {
               classification: string;
               invented: boolean;
@@ -649,6 +722,14 @@ describe('synthetic client journey isolation', () => {
         assert.equal(deskBody.clientDesk.gcc.invented, false);
         assert.equal(deskBody.clientDesk.gcc.liveDispatch, false);
         assert.equal(deskBody.clientDesk.gcc.clientCode, SYN_A);
+        assert.equal(deskBody.clientDesk.gcc.crossClientFallback, false);
+        assert.equal(deskBody.clientDesk.documentExchange.invented, false);
+        assert.equal(deskBody.clientDesk.documentExchange.sharePointNavigation, false);
+        assert.ok(deskBody.clientDesk.documentExchange.outstandingCount >= 1);
+        assert.equal(deskBody.clientDesk.decisions.kind, 'client_decisions_v1');
+        assert.equal(deskBody.clientDesk.decisions.invented, false);
+        assert.equal(deskBody.clientDesk.priorities.kind, 'client_priorities_v1');
+        assert.equal(deskBody.clientDesk.priorities.invented, false);
         assert.equal(deskBody.clientDesk.commercial.invented, false);
         assert.equal(deskBody.clientDesk.commercial.gcc.recordedOnly, true);
         assert.equal(deskBody.clientDesk.operatingPicture.classification, 'SYNTHETIC_QA');
@@ -678,19 +759,93 @@ describe('synthetic client journey isolation', () => {
           headers: auth('entitled-staff'),
         });
         assert.equal(staffPicture.status, 403);
+        const staffDocs = await fetch(`${base}/api/client/document-exchange`, {
+          headers: auth('entitled-staff'),
+        });
+        assert.equal(staffDocs.status, 403);
+        const staffDecisions = await fetch(`${base}/api/client/decisions`, {
+          headers: auth('entitled-staff'),
+        });
+        assert.equal(staffDecisions.status, 403);
+
+        const exchange = await fetch(`${base}/api/client/document-exchange`, { headers: session });
+        assert.equal(exchange.status, 200);
+        const exchangeBody = (await exchange.json()) as {
+          clientCode: string;
+          invented: boolean;
+          documentExchange: {
+            outstandingCount: number;
+            missing: Array<{ id: string; title: string; clientCode: string }>;
+          };
+        };
+        assert.equal(exchangeBody.clientCode, SYN_A);
+        assert.equal(exchangeBody.invented, false);
+        assert.ok(exchangeBody.documentExchange.outstandingCount >= 1);
+        const outstanding = exchangeBody.documentExchange.missing[0];
+        assert.equal(outstanding?.clientCode, SYN_A);
+
+        const uploaded = await fetch(`${base}/api/client/documents`, {
+          method: 'POST',
+          headers: { ...session, 'content-type': 'application/json' },
+          body: JSON.stringify({
+            title: 'Signed operating agreement',
+            fileName: 'oa-signed.txt',
+            contentType: 'text/plain',
+            contentB64: Buffer.from('signed-session-oa', 'utf8').toString('base64'),
+            requestedId: outstanding?.id,
+          }),
+        });
+        assert.equal(uploaded.status, 201);
+        const uploadedBody = (await uploaded.json()) as { document: { id: string; clientCode: string; contentB64?: string } };
+        assert.equal(uploadedBody.document.clientCode, SYN_A);
+        assert.equal(uploadedBody.document.contentB64, undefined);
+
+        const retrieved = await fetch(`${base}/api/client/documents/${uploadedBody.document.id}`, {
+          headers: session,
+        });
+        assert.equal(retrieved.status, 200);
+        const retrievedBody = (await retrieved.json()) as { document: { contentB64: string } };
+        assert.equal(Buffer.from(retrievedBody.document.contentB64, 'base64').toString('utf8'), 'signed-session-oa');
+
+        const afterUpload = await fetch(`${base}/api/client/document-exchange`, { headers: session });
+        const afterUploadBody = (await afterUpload.json()) as {
+          documentExchange: { outstandingCount: number; receivedCount: number; missingHonesty: string };
+        };
+        assert.equal(afterUploadBody.documentExchange.outstandingCount, 0);
+        assert.ok(afterUploadBody.documentExchange.receivedCount >= 1);
+        assert.match(afterUploadBody.documentExchange.missingHonesty, /No outstanding requested documents/);
+
         const signedHtml = await fetch(`${base}/client`, { headers: session });
         assert.equal(signedHtml.status, 200);
         const signedHtmlBody = await signedHtml.text();
         assert.match(signedHtmlBody, /What we are working on/);
         assert.match(signedHtmlBody, /Confirm kickoff week/);
+        assert.match(signedHtmlBody, /Requested documents/);
+        assert.match(signedHtmlBody, /Decisions/);
+        assert.match(signedHtmlBody, /Projects and priorities/);
 
         const gcc = await fetch(`${base}/api/client/gcc`, { headers: session });
         assert.equal(gcc.status, 200);
         const gccBody = (await gcc.json()) as {
-          gcc: { clientCode: string; isolated: boolean; binding: { kind: string }; gccHref?: string };
+          gcc: {
+            clientCode: string;
+            isolated: boolean;
+            recordedOnly: boolean;
+            liveDispatch: boolean;
+            invented: boolean;
+            crossClientFallback: boolean;
+            recordedSignals: unknown[];
+            binding: { kind: string };
+            gccHref?: string;
+          };
         };
         assert.equal(gccBody.gcc.clientCode, SYN_A);
         assert.equal(gccBody.gcc.isolated, true);
+        assert.equal(gccBody.gcc.recordedOnly, true);
+        assert.equal(gccBody.gcc.liveDispatch, false);
+        assert.equal(gccBody.gcc.invented, false);
+        assert.equal(gccBody.gcc.crossClientFallback, false);
+        assert.deepEqual(gccBody.gcc.recordedSignals, []);
         assert.equal(gccBody.gcc.binding.kind, 'hub_gcc_session_v1');
         assert.equal(gccBody.gcc.gccHref, undefined);
         const foreignWorkspace = await fetch(`${base}/api/client/workspace/${SYN_B}`, { headers: session });
@@ -789,6 +944,7 @@ describe('GCC session binding contract', () => {
         available: false,
         recordedOnly: true as const,
         signalCount: 0,
+        recordedSignals: [],
         emptyReason: 'No GCC value signal on record.',
       },
       copilot: { available: false, recordedOnly: true as const, recordedCount: 0 },
@@ -803,7 +959,10 @@ describe('GCC session binding contract', () => {
     assert.equal(bound.gccHref, 'https://gcc.example.test');
     assert.equal(bound.liveDispatch, false);
     assert.equal(bound.invented, false);
+    assert.equal(bound.crossClientFallback, false);
+    assert.deepEqual(bound.recordedSignals, []);
     assert.equal(bound.binding.kind, 'hub_gcc_session_v1');
+    assert.equal(bound.binding.crossClientFallback, false);
     assert.equal(resolveGccAppOrigin({}), null);
   });
 });

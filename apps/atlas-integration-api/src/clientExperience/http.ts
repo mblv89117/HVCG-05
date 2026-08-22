@@ -393,7 +393,36 @@ export async function handleClientExperience(opts: {
 
     if (opts.method === 'GET' && opts.path === '/api/client/documents') {
       const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
-      send(opts.res, 200, { documents: view.documents, clientCode: view.clientCode }, opts.origin);
+      send(
+        opts.res,
+        200,
+        {
+          documents: view.documents,
+          documentExchange: view.documentExchange,
+          clientCode: view.clientCode,
+          invented: false,
+          sharePointNavigation: false,
+          binariesInAtlas: false,
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (opts.method === 'GET' && opts.path === '/api/client/document-exchange') {
+      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      send(
+        opts.res,
+        200,
+        {
+          documentExchange: view.documentExchange,
+          clientCode: view.clientCode,
+          invented: false,
+          sharePointNavigation: false,
+          binariesInAtlas: false,
+        },
+        opts.origin,
+      );
       return true;
     }
 
@@ -455,10 +484,29 @@ export async function handleClientExperience(opts: {
         {
           requests: view.requests,
           documentRequests: view.documentRequests,
+          documentExchange: view.documentExchange,
+          decisions: view.decisions,
           attention: view.attention,
           clientCode: view.clientCode,
           source: 'hub_governed_overlay',
           binariesInAtlas: false,
+          invented: false,
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (opts.method === 'GET' && opts.path === '/api/client/decisions') {
+      const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
+      send(
+        opts.res,
+        200,
+        {
+          decisions: view.decisions,
+          clientCode: view.clientCode,
+          invented: false,
+          source: 'hub_governed_overlay',
         },
         opts.origin,
       );
@@ -485,7 +533,17 @@ export async function handleClientExperience(opts: {
 
     if (opts.method === 'GET' && opts.path === '/api/client/projects') {
       const view = buildClientWorkspaceView({ dataDir: opts.cfg.dataDir, principal });
-      send(opts.res, 200, { projects: view.projects, clientCode: view.clientCode }, opts.origin);
+      send(
+        opts.res,
+        200,
+        {
+          projects: view.projects,
+          priorities: view.priorities,
+          clientCode: view.clientCode,
+          invented: false,
+        },
+        opts.origin,
+      );
       return true;
     }
 

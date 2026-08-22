@@ -94,6 +94,21 @@ export function renderClientDeskHtml(
   const projects = view.projects
     .map((row) => `<li>${esc(row.name)} · ${esc(row.priority)} · ${esc(row.nextAction)}</li>`)
     .join('');
+  const exchange = 'documentExchange' in view ? view.documentExchange : undefined;
+  const requestedDocs =
+    exchange?.requested
+      .map((row) => `<li><strong>${esc(row.title)}</strong> — ${esc(row.status)}</li>`)
+      .join('') || '';
+  const missingDocs =
+    exchange?.missing.map((row) => `<li>${esc(row.title)} — outstanding</li>`).join('') || '';
+  const decisions =
+    'decisions' in view
+      ? view.decisions.decisions
+          .map((row) => `<li><strong>${esc(row.title)}</strong> — ${esc(row.decision)}</li>`)
+          .join('')
+      : '';
+  const decisionHonesty =
+    'decisions' in view && view.decisions.honestEmpty ? view.decisions.emptyReason : undefined;
   const previewBanner = opts?.operatorPreview
     ? `<p class="muted">Operator preview of the isolated client workspace. This is not a signed Client Executive session. <code>/client</code> stays fail-closed for staff.</p>`
     : '';
@@ -159,9 +174,18 @@ export function renderClientDeskHtml(
   </section>
   ${operatingSection}
   <section>
+    <h2>Requested documents</h2>
+    ${requestedDocs ? `<ul>${requestedDocs}</ul>` : `<p class="empty">${esc(exchange?.missingHonesty || 'No documents have been requested for this ClientCode.')}</p>`}
+    ${missingDocs ? `<p class="muted">${esc(exchange?.missingHonesty || '')}</p><ul>${missingDocs}</ul>` : `<p class="muted">${esc(exchange?.missingHonesty || '')}</p>`}
+  </section>
+  <section>
     <h2>Documents</h2>
     ${documents ? `<ul>${documents}</ul>` : '<p class="empty">No documents exchanged yet.</p>'}
-    <p class="muted">Binaries stay in Microsoft 365. This desk never opens another client's files.</p>
+    <p class="muted">Binaries stay in Microsoft 365. SharePoint navigation is not required. This desk never opens another client's files.</p>
+  </section>
+  <section>
+    <h2>Decisions</h2>
+    ${decisions ? `<ul>${decisions}</ul>` : `<p class="empty">${esc(decisionHonesty || 'No client decisions are recorded for this ClientCode.')}</p>`}
   </section>
   <section>
     <h2>Projects and priorities</h2>
