@@ -40,7 +40,7 @@ function readTtlMs(): number {
   const raw = (process.env.INTEGRATION_PM_LIST_CACHE_TTL_MS || '').trim();
   if (raw === '0') return 0;
   if (raw && /^\d+$/.test(raw)) return Math.min(120_000, Math.max(0, Number(raw)));
-  return 20_000;
+  return 60_000;
 }
 
 export function createListItemCache(opts?: { ttlMs?: number; maxEntries?: number }): ListItemCache {

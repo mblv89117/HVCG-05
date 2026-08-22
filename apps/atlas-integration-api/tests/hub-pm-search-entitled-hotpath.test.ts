@@ -349,6 +349,33 @@ describe('entitled Search hot-path', () => {
     assert.ok(afterWrite.some((c) => c.clientCode === 'SYN01'));
   });
 
+  it('default extras budget cannot pin an authorized SYN01 client hit behind a 2s catalog', async () => {
+    const service = operatingIndexService({
+      async listWorkspaceCollections() {
+        await sleep(2000);
+        return emptyCollection;
+      },
+      async listOpportunities() {
+        await sleep(2000);
+        return [{ id: 'o1', title: 'SYN01 discovery', clientCode: 'SYN01' }];
+      },
+      async listLeads() {
+        await sleep(2000);
+        return [];
+      },
+      async listCapitalOpportunities() {
+        await sleep(2000);
+        return [];
+      },
+    });
+    const started = Date.now();
+    const found = await searchSharePointPm(service, synMember, 'SYN01');
+    const elapsed = Date.now() - started;
+    assert.ok(elapsed < 800, `entitled client hit must not wait 2s extras; elapsed ${elapsed}ms`);
+    assert.ok(found.results.some((r) => r.kind === 'client' && r.clientCode === 'SYN01'));
+    assert.equal(found.results.some((r) => r.clientCode === 'SYN02'), false);
+  });
+
   it('tasks re-list of projects is a cache hit / in-flight dedupe, not a second Graph read', async () => {
     const graph = new CountingGraph();
     graph.seed(CLIENTS, { Title: 'SYNTHETIC Alpha Co', ClientCode: 'SYN01' }, '1');

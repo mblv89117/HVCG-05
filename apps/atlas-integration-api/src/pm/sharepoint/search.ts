@@ -84,8 +84,11 @@ export type SearchPmService = Pick<
 const SEARCH_CAP = 40;
 /** Projects/tasks must not block an already-matched authorized client. */
 const CORE_BUDGET_MS = 2500;
-/** Workspace extras must not block or fail the operating-index (clients/projects/tasks). */
-const EXTRAS_BUDGET_MS = 1200;
+/**
+ * Workspace extras / optional catalogs must not pin entitled Command-K.
+ * Live 4b9631a extras fan-out was ~1200–1500 ms; keep them best-effort.
+ */
+const EXTRAS_BUDGET_MS = 400;
 
 async function bestEffort<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
