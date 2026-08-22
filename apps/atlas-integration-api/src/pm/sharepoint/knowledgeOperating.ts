@@ -23,11 +23,13 @@ import {
 import { buildKnowledgeLedger, type KnowledgeLedgerItem } from './knowledgeLedger.ts';
 import {
   buildHvsAccessPicture,
+  hvsConfirmedClientFolders,
   hvsInventoryCoversBoundary,
   hvsInventoryLedgerRows,
   resolveHvsDataAccess,
   type HvsAccessPicture,
   type HvsAccessStatus,
+  type HvsInventoryRow,
 } from './hvsRecoveryInventory.ts';
 import type {
   SharePointClient,
@@ -43,12 +45,22 @@ export type KnowledgeOperatingItem = {
   clientCode: string;
   title: string;
   queue: OperatingState;
-  kind: 'task' | 'project' | 'document_request' | 'knowledge_item' | 'opportunity';
+  kind: 'task' | 'project' | 'document_request' | 'knowledge_item' | 'opportunity' | 'hvs_recovered_reference';
   provenance: KnowledgeProvenance;
   source: string;
   webUrl?: string;
   dueDate?: string;
   invented: false;
+};
+
+export type HvsRecoveredClient = {
+  client: string;
+  clientCode: string;
+  path?: string;
+  provenance: 'CONFIRMED';
+  operationalized: false;
+  hubMiAccessible: false;
+  nextAction: string;
 };
 
 export type KnowledgeOperatingPicture = {
@@ -68,6 +80,7 @@ export type KnowledgeOperatingPicture = {
   syntheticQueues: Record<OperatingState, KnowledgeOperatingItem[]>;
   syntheticAttention: ClientAttentionItem[];
   recoveryLedger: RecoveryLedgerRow[];
+  hvsRecoveredClients: HvsRecoveredClient[];
   honestEmpty: boolean;
 };
 
@@ -75,6 +88,33 @@ function item(
   partial: Omit<KnowledgeOperatingItem, 'invented'>,
 ): KnowledgeOperatingItem {
   return { ...partial, invented: false };
+}
+
+function recoveredClientFromFolder(row: HvsInventoryRow): HvsRecoveredClient {
+  return {
+    client: row.client,
+    clientCode: row.clientCode,
+    path: row.path,
+    provenance: 'CONFIRMED',
+    operationalized: false,
+    hubMiAccessible: false,
+    nextAction: row.nextAction,
+  };
+}
+
+function hvsRecoveredWaitingItems(status: HvsAccessStatus): KnowledgeOperatingItem[] {
+  if (status === 'BLOCKED') return [];
+  return hvsConfirmedClientFolders().map((row) =>
+    item({
+      id: `hvs-recovered:${row.client}:${row.clientCode || 'uncoded'}`,
+      clientCode: row.clientCode,
+      title: `${row.client} — HVS folder recovered (reference-only)`,
+      queue: 'Waiting',
+      kind: 'hvs_recovered_reference',
+      provenance: 'CONFIRMED',
+      source: row.source,
+    }),
+  );
 }
 
 function queuesFromEntitledWork(input: {
@@ -326,8 +366,18 @@ export async function buildKnowledgeOperatingPicture(
       )
     : [];
   const realClientsOperationalized = [
-    ...new Set(Object.values(queues).flat().map((row) => row.clientCode)),
+    ...new Set(
+      Object.values(queues)
+        .flat()
+        .filter((row) => row.kind !== 'hvs_recovered_reference')
+        .map((row) => row.clientCode)
+        .filter(Boolean),
+    ),
   ].sort();
+  const hvsDataAccess = resolveHvsDataAccess(opts?.hvsDataAccess);
+  const hvsRecoveredClients =
+    hvsDataAccess === 'BLOCKED' ? [] : hvsConfirmedClientFolders().map(recoveredClientFromFolder);
+  queues.Waiting.push(...hvsRecoveredWaitingItems(hvsDataAccess));
   const recoveryLedger = recoveryFromEntitled({ clients, ledger, queues });
   return {
     kind: 'knowledge_operating_picture_v1',
@@ -340,14 +390,15 @@ export async function buildKnowledgeOperatingPicture(
     syntheticClientsVisible: classifiedClients
       .filter((c) => c.entityKind === 'synthetic_qa')
       .map((c) => c.clientCode),
-    hvsDataAccess: resolveHvsDataAccess(opts?.hvsDataAccess),
-    hvsAccess: buildHvsAccessPicture(resolveHvsDataAccess(opts?.hvsDataAccess)),
+    hvsDataAccess,
+    hvsAccess: buildHvsAccessPicture(hvsDataAccess),
     documents: ledger,
     classifiedClients,
     queues,
     syntheticQueues,
     syntheticAttention,
     recoveryLedger,
+    hvsRecoveredClients,
     honestEmpty: realClientsOperationalized.length === 0,
   };
 }

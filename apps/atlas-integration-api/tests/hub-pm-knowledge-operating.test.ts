@@ -151,6 +151,8 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.honestEmpty, true);
     assert.deepEqual(picture.syntheticAttention, []);
     assert.equal(picture.queues['Needs Action'].length, 0);
+    assert.equal(picture.queues.Waiting.length, 0);
+    assert.deepEqual(picture.hvsRecoveredClients, []);
     assert.equal(picture.queues.Projects.length, 0);
     assert.equal(picture.queues.Tasks.length, 0);
     const syn = picture.recoveryLedger.find((row) => row.clientCode === 'SYN01');
@@ -190,6 +192,26 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.hvsAccess.confirmedClientFolderCount, 11);
     assert.deepEqual(picture.realClientsOperationalized, []);
     assert.equal(picture.honestEmpty, true);
+    assert.equal(picture.hvsRecoveredClients.length, 11);
+    assert.equal(picture.hvsRecoveredClients.every((row) => row.operationalized === false), true);
+    assert.equal(picture.hvsRecoveredClients.every((row) => row.hubMiAccessible === false), true);
+    assert.equal(picture.hvsRecoveredClients.every((row) => row.provenance === 'CONFIRMED'), true);
+    assert.equal(
+      picture.hvsRecoveredClients.some((row) => row.client === 'ACCG Inc' && row.clientCode === 'ACCG01'),
+      true,
+    );
+    assert.equal(
+      picture.hvsRecoveredClients.some((row) => row.client === "Christie's Place" && row.clientCode === 'CPL01'),
+      true,
+    );
+    assert.equal(
+      picture.queues.Waiting.filter((row) => row.kind === 'hvs_recovered_reference').length,
+      11,
+    );
+    assert.equal(
+      picture.queues.Waiting.every((row) => row.title.includes('reference-only')),
+      true,
+    );
     assert.equal(picture.binariesInAtlas, false);
     const pierlo = picture.recoveryLedger.find((row) => row.client.startsWith('Pierlo Inc') && row.dataType === 'HVS_CLIENT_FOLDER');
     assert.equal(pierlo?.provenance, 'CONFIRMED');

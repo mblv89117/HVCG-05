@@ -1,7 +1,11 @@
 import type { DeskCommercialContext } from '../commercialContext/types.ts';
 import { EMPTY_REASON } from '../commercialContext/types.ts';
 import type { KnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
-import { hvsAccessMissingData, resolveHvsDataAccess } from '../sharepoint/hvsRecoveryInventory.ts';
+import {
+  hvsAccessMissingData,
+  hvsConfirmedClientFolders,
+  resolveHvsDataAccess,
+} from '../sharepoint/hvsRecoveryInventory.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -72,21 +76,44 @@ function mapQueue(
     queue: row.queue,
     kind: row.kind,
     provenance: row.provenance,
-    href: row.clientCode ? `/api/pm/clients/${row.clientCode}/desk` : undefined,
+    href:
+      row.kind === 'hvs_recovered_reference' || !row.clientCode
+        ? undefined
+        : `/api/pm/clients/${row.clientCode}/desk`,
   }));
 }
 
 export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
+  const hvsDataAccess = resolveHvsDataAccess();
+  const recovered =
+    hvsDataAccess === 'BLOCKED'
+      ? []
+      : hvsConfirmedClientFolders().map((row) => ({
+          client: row.client,
+          clientCode: row.clientCode,
+          provenance: 'CONFIRMED' as const,
+          operationalized: false as const,
+          hubMiAccessible: false as const,
+          nextAction: row.nextAction,
+        }));
+  const waiting = recovered.map((row) => ({
+    id: `hvs-recovered:${row.client}:${row.clientCode || 'uncoded'}`,
+    clientCode: row.clientCode,
+    title: `${row.client} — HVS folder recovered (reference-only)`,
+    queue: 'Waiting',
+    kind: 'hvs_recovered_reference',
+    provenance: 'CONFIRMED' as const,
+  }));
   return {
     kind: 'operator_operating_picture_v1',
     invented: false,
-    hvsDataAccess: resolveHvsDataAccess(),
+    hvsDataAccess,
     realClientsOperationalized: [],
     syntheticClientsVisible: [],
     honestEmpty: true,
     queues: {
       needsAction: [],
-      waiting: [],
+      waiting,
       overdue: [],
       blocked: [],
       decisionRequired: [],
@@ -105,11 +132,12 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
       outcomes: [],
     },
     missingData: [
-      hvsAccessMissingData(resolveHvsDataAccess()),
+      hvsAccessMissingData(hvsDataAccess),
       'Hub MI HVCG_Clients remain fail-closed. Atlas does not invent unseen SharePoint rows.',
       'No entitled Hub-visible customer work has been operationalized for this principal.',
     ],
     recoveryLedger: [],
+    hvsRecoveredClients: recovered,
   };
 }
 
@@ -164,6 +192,14 @@ export function operatorOperatingPictureFromKnowledge(
       operationalized: row.operationalized,
       provenance: row.provenance,
       blocker: row.blocker,
+    })),
+    hvsRecoveredClients: (knowledge.hvsRecoveredClients || []).slice(0, 40).map((row) => ({
+      client: row.client,
+      clientCode: row.clientCode,
+      provenance: 'CONFIRMED' as const,
+      operationalized: false as const,
+      hubMiAccessible: false as const,
+      nextAction: row.nextAction,
     })),
   };
 }

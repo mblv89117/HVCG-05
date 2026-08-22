@@ -30,6 +30,15 @@ export interface OperatorRecoveryRow {
   blocker: string;
 }
 
+export interface OperatorRecoveredHvsClient {
+  client: string;
+  clientCode: string;
+  provenance: 'CONFIRMED';
+  operationalized: false;
+  hubMiAccessible: false;
+  nextAction: string;
+}
+
 export interface OperatorOperatingPicture {
   kind: 'operator_operating_picture_v1';
   invented: false;
@@ -59,6 +68,7 @@ export interface OperatorOperatingPicture {
   };
   missingData: string[];
   recoveryLedger: OperatorRecoveryRow[];
+  hvsRecoveredClients: OperatorRecoveredHvsClient[];
 }
 
 export interface OperatorClientJourney {

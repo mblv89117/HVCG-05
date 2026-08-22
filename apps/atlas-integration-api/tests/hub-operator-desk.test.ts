@@ -147,6 +147,9 @@ describe('operator desk copy', () => {
     assert.match(html, /What we are working on/);
     assert.match(html, /Synthetic QA work/);
     assert.match(html, /Waiting/);
+    assert.match(html, /Recovered HVS clients/);
+    assert.match(html, /ACCG Inc/);
+    assert.match(html, /reference-only/);
     assert.match(html, /Blocked/);
     assert.match(html, /At Risk/);
     assert.match(html, /Decision Required/);
@@ -158,6 +161,12 @@ describe('operator desk copy', () => {
     assert.equal(model.operatingPicture.hvsDataAccess, 'PARTIAL');
     assert.equal(model.operatingPicture.honestEmpty, true);
     assert.deepEqual(model.operatingPicture.realClientsOperationalized, []);
+    assert.equal(model.operatingPicture.hvsRecoveredClients.length, 11);
+    assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.operationalized, false);
+    assert.equal(
+      model.operatingPicture.queues.waiting.some((row) => row.kind === 'hvs_recovered_reference' && !row.href),
+      true,
+    );
     assert.equal(model.businessHealth.clientsNeedingAttention, 0);
     assert.equal(model.queues.needsAction[0]?.title.includes('SYNQA W-9'), true);
     assert.match(html, /does not invent LTV/);
@@ -201,6 +210,8 @@ describe('operator desk HTTP fail-closed', () => {
       assert.match(html, /does not invent LTV/);
       assert.match(html, /liveGtmOutbound=false/);
       assert.match(html, /Client journey/);
+      assert.match(html, /Recovered HVS clients/);
+      assert.match(html, /ACCG Inc/);
       assert.match(html, /signedClientSession=false/);
       assert.match(html, /Workspace not staged/);
       assert.equal(html.includes(ACME01), false);
@@ -236,6 +247,12 @@ describe('operator desk HTTP fail-closed', () => {
             hvsDataAccess: string;
             honestEmpty: boolean;
             realClientsOperationalized: string[];
+            hvsRecoveredClients: Array<{
+              client: string;
+              clientCode: string;
+              operationalized: boolean;
+            }>;
+            queues: { waiting: Array<{ kind: string; href?: string }> };
             syntheticQueues: { needsAction: unknown[] };
           };
         };
@@ -371,6 +388,19 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.operatingPicture.hvsDataAccess, 'PARTIAL');
       assert.equal(body.operatorDesk.operatingPicture.honestEmpty, true);
       assert.deepEqual(body.operatorDesk.operatingPicture.realClientsOperationalized, []);
+      assert.equal(body.operatorDesk.operatingPicture.hvsRecoveredClients.length, 11);
+      assert.equal(
+        body.operatorDesk.operatingPicture.hvsRecoveredClients.some(
+          (row) => row.client === 'ACCG Inc' && row.operationalized === false,
+        ),
+        true,
+      );
+      assert.equal(
+        body.operatorDesk.operatingPicture.queues.waiting.some(
+          (row) => row.kind === 'hvs_recovered_reference' && !row.href,
+        ),
+        true,
+      );
       assert.deepEqual(body.operatorDesk.operatingPicture.syntheticQueues.needsAction, []);
 
       const root = await fetch(base);

@@ -46,7 +46,7 @@ function flatQueues(
     ...queues.atRisk,
     ...queues.ready,
     ...queues.outcomes,
-  ];
+  ].filter((row) => row.kind !== 'hvs_recovered_reference');
 }
 
 const SHELL = `<!doctype html>
@@ -180,6 +180,20 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
   <section>
     <h2>Needs Action</h2>
     ${operatingList(op.queues.needsAction, 'No customer Needs Action items in entitled scope.')}
+  </section>
+  <section>
+    <h2>Recovered HVS clients</h2>
+    <p class="muted">Reference-only HVS-admin folders. Not Hub MI operationalizations. Atlas does not invent balances, obligations, or entitled HVCG_Clients rows.</p>
+    ${
+      op.hvsRecoveredClients.length
+        ? `<ul>${op.hvsRecoveredClients
+            .map((row) => {
+              const code = row.clientCode || 'no Hub client code';
+              return `<li><span class="kind">reference</span> ${esc(row.client)} · ${esc(code)} <span class="muted">(CONFIRMED · not operationalized)</span></li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No CONFIRMED HVS client folders in this picture.</p>'
+    }
   </section>
   <section>
     <h2>Waiting</h2>

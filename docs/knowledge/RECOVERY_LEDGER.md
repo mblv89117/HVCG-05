@@ -1,9 +1,9 @@
 # Client knowledge recovery ledger
 
-Cycle: 2026-08-22T13:45Z
+Cycle: 2026-08-22T14:05Z
 Durable specialist: `bc-cb506396-3ccc-5ac1-b2e3-58b3cd1b8438` (do not persist Task IDs as this specialist)
-Live Hub: `https://app-atlas-integration-hub.azurewebsites.net` commit `21f2c54` still reports Hub-MI `hvsDataAccess=BLOCKED` until this increment is consumed
-HVS admin identity: `HVCG-V3-HVS-Admin` (Sites.Read.All / Files.Read.All this cycle)
+Live Hub at start of increment: `ebee641` (document-exchange live). This increment stacks on `7fc2f5b`.
+HVS admin identity: `HVCG-V3-HVS-Admin` (Sites.Read.All / Files.Read.All)
 
 Two principals, two honesty rules:
 
