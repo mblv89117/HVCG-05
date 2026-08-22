@@ -17,8 +17,12 @@ import { listOperatorClientJourneys } from '../../clientExperience/service.ts';
 import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
 import {
   AGENT_ACTIVITY_CONTRACT,
+  ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_QUESTION,
+  ASK_ATLAS_RUNTIME_AGENT,
+  GET_CLIENT_CONTEXT_TOOL,
   isOperatorActivityLedgerPath,
+  isOperatorClientContextPath,
   isOperatorDeskPath,
   isOperatorEngineeringMissionsPath,
   isOperatorEventsPath,
@@ -28,7 +32,8 @@ import {
   type OperatorDeskModel,
 } from './types.ts';
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
-import { runAtlasHubRuntime } from './agentRuntime.ts';
+import { extractClientContextQuery, isOwnerGatedQuestion, runAtlasHubRuntime } from './agentRuntime.ts';
+import { getClientContext } from './toolGateway.ts';
 import { processAtlasEvent, resolveEventClass } from './eventProcessing.ts';
 import {
   inspectEngineeringMissions,
@@ -207,10 +212,11 @@ export async function handleOperatorDesk(opts: {
   const eventsOnly = isOperatorEventsPath(opts.path);
   const improvementsOnly = isOperatorImprovementsPath(opts.path);
   const missionsOnly = isOperatorEngineeringMissionsPath(opts.path);
+  const clientContextOnly = isOperatorClientContextPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly || missionsOnly) && opts.method === 'POST')
+    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly) && opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
     return true;
@@ -220,9 +226,16 @@ export async function handleOperatorDesk(opts: {
   const ledgerOnly = isOperatorActivityLedgerPath(opts.path);
   const runtimeOnly = isOperatorRuntimePath(opts.path);
   const asJson =
-    ledgerOnly || runtimeOnly || eventsOnly || improvementsOnly || missionsOnly || wantsOperatorJson(opts.path, accept);
+    ledgerOnly ||
+    runtimeOnly ||
+    eventsOnly ||
+    improvementsOnly ||
+    missionsOnly ||
+    clientContextOnly ||
+    wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
-  const searchQuery = runtimeOnly || eventsOnly || improvementsOnly || missionsOnly ? '' : url.searchParams.get('q') || '';
+  const searchQuery =
+    runtimeOnly || eventsOnly || improvementsOnly || missionsOnly || clientContextOnly ? '' : url.searchParams.get('q') || '';
 
   let principal;
   try {
@@ -353,6 +366,99 @@ export async function handleOperatorDesk(opts: {
       {
         operatorDesk: { askAtlas: result.askAtlas },
         runtime: result.runtime,
+        ...(result.clientContext ? { clientContext: result.clientContext } : {}),
+      },
+      opts.origin,
+    );
+    return true;
+  }
+
+  if (clientContextOnly) {
+    let postedClient = '';
+    let postedQuestion = '';
+    if (opts.method === 'POST') {
+      try {
+        const body = await readEventJson(opts.req);
+        postedClient =
+          typeof body.clientCode === 'string'
+            ? body.clientCode
+            : typeof body.client === 'string'
+              ? body.client
+              : '';
+        postedQuestion = typeof body.question === 'string' ? body.question : '';
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(
+          opts.res,
+          status,
+          { error: 'malformed_json', code: 'malformed_json' },
+          opts.origin,
+        );
+        return true;
+      }
+    }
+    const queryClient = url.searchParams.get('client') || url.searchParams.get('clientCode') || '';
+    const queryQuestion = url.searchParams.get('question') || '';
+    const requestedClient = (postedClient || queryClient).trim();
+    const requestedQuestion = (postedQuestion || queryQuestion).trim();
+    const ownerGated = requestedQuestion ? isOwnerGatedQuestion(requestedQuestion) : false;
+    const fromQuestion = !ownerGated && requestedQuestion ? extractClientContextQuery(requestedQuestion) : null;
+    const invoked = ownerGated
+      ? {
+          askAtlas: runAtlasHubRuntime({
+            principal,
+            picture: model.operatingPicture,
+            question: requestedQuestion,
+          }).askAtlas,
+          clientContext: undefined,
+        }
+      : getClientContext({
+          principal,
+          picture: model.operatingPicture,
+          clientCode: requestedClient,
+          clientQuery: requestedClient || fromQuestion || '',
+        });
+    const tools = ownerGated
+      ? []
+      : invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
+        ? [...invoked.askAtlas.activity.tools]
+        : [...invoked.askAtlas.activity.tools, GET_CLIENT_CONTEXT_TOOL];
+    const askAtlas = ownerGated
+      ? invoked.askAtlas
+      : {
+          ...invoked.askAtlas,
+          invented: false as const,
+          activity: {
+            ...invoked.askAtlas.activity,
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            missionKey: ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+            trigger: 'signed_operator_question' as const,
+            tools,
+          },
+        };
+    if (opts.method === 'GET' || opts.method === 'POST') {
+      try {
+        await appendAskAtlasActivity({
+          dataDir: opts.cfg.dataDir,
+          answer: askAtlas,
+          principal,
+        });
+      } catch {
+        /* Client-context answer stays request-scoped if overlay write fails. Do not leak. */
+      }
+    }
+    sendJson(
+      opts.res,
+      200,
+      {
+        ...(invoked.clientContext ? { clientContext: invoked.clientContext } : {}),
+        operatorDesk: { askAtlas },
+        runtime: {
+          agent: ASK_ATLAS_RUNTIME_AGENT,
+          toolsInvoked: ownerGated ? [] : [GET_CLIENT_CONTEXT_TOOL],
+          policyClass: 'READ_AUTO',
+          missionKey: ownerGated ? askAtlas.activity.missionKey : ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+        },
       },
       opts.origin,
     );
