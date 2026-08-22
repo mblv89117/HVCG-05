@@ -111,6 +111,7 @@ async function loadSharePointDesk(opts: {
     clientJourneys: listOperatorClientJourneys({
       dataDir: cfg.dataDir,
       entitledClientCodes: entitled,
+      principal,
     }),
   });
 }
@@ -140,6 +141,7 @@ function loadDevelopmentDesk(opts: {
     clientJourneys: listOperatorClientJourneys({
       dataDir: opts.cfg.dataDir,
       entitledClientCodes: entitledClientCodes(opts.principal),
+      principal: opts.principal,
     }),
   });
 }

@@ -42,6 +42,7 @@ import { isClientOnlyPrincipal, isOperatorPrincipal } from './roles.ts';
 import {
   classifyHubClientRow,
   emptyOperatingQueues,
+  isSyntheticQaClient,
   type OperatingState,
   type RecoveryLedgerRow,
 } from '../pm/sharepoint/knowledgeClassification.ts';
@@ -62,6 +63,26 @@ export class ClientExperienceError extends Error {
 
 function fail(status: number, code: string, message: string): never {
   throw new ClientExperienceError(status, code, message);
+}
+
+const SYNTHETIC_EXPERIENCE_CODE = /^SYN[A-Z]{0,3}[0-9]{2}$/;
+
+/** Labeled SYNQA / isolation-test codes. Never a real HVCG customer record. */
+export function isExperienceSyntheticClient(clientCode: string): boolean {
+  return (
+    isSyntheticQaClient(clientCode) ||
+    classifyHubClientRow({ clientCode }).classification === 'SYNTHETIC_QA' ||
+    SYNTHETIC_EXPERIENCE_CODE.test(clientCode)
+  );
+}
+
+/** Manny may stage any ready client. Entitled operators may stage SYNQA only. */
+export function canStageClientExperience(principal: AtlasPrincipal, clientCode: string): boolean {
+  if (isClientOnlyPrincipal(principal)) return false;
+  if (isMannyPrincipal(principal)) return true;
+  if (!canAccessOperatorDesk(principal)) return false;
+  if (!entitledClientCodes(principal).includes(clientCode)) return false;
+  return isExperienceSyntheticClient(clientCode);
 }
 
 function persist(dataDir: string, snapshot: ClientExperienceSnapshot): ClientExperienceSnapshot {
@@ -115,10 +136,13 @@ export function stageClientExperience(opts: {
   inviteToken: string;
   replay: boolean;
 } {
-  if (!isMannyPrincipal(opts.principal)) {
+  const clientCode = assertIsolatedClientCode(opts.clientCode);
+  if (!canStageClientExperience(opts.principal, clientCode)) {
+    if (isExperienceSyntheticClient(clientCode)) {
+      fail(403, 'forbidden', 'SYNQA workspace staging requires an entitled operator principal.');
+    }
     fail(403, 'PM_MANNY_ONLY', 'Client experience staging is restricted to the authenticated HVCG owner principal.');
   }
-  const clientCode = assertIsolatedClientCode(opts.clientCode);
   const gate = activationGateFromRecord(
     opts.activationStatus ? { status: opts.activationStatus as ActivationGate } : undefined,
     opts.activationGate,
@@ -725,10 +749,16 @@ export function attachOperatorDeskOperatingPicture<
 }
 
 export function operatorExperienceStatus(opts: { dataDir: string; principal: AtlasPrincipal; clientCode: string }) {
-  if (!isMannyPrincipal(opts.principal) && !isOperatorPrincipal(opts.principal)) {
-    fail(403, 'forbidden', 'Operator role required.');
+  if (!isMannyPrincipal(opts.principal) && !canAccessOperatorDesk(opts.principal)) {
+    fail(403, 'forbidden', 'Operator desk access required.');
   }
   const clientCode = assertIsolatedClientCode(opts.clientCode);
+  if (
+    !isMannyPrincipal(opts.principal) &&
+    !entitledClientCodes(opts.principal).includes(clientCode)
+  ) {
+    fail(404, 'not_found', 'Client workspace is not staged.');
+  }
   const snapshot = loadExperienceStore(opts.dataDir);
   const workspace = snapshot.workspaces[clientCode];
   if (!workspace) fail(404, 'not_found', 'Client workspace is not staged.');
@@ -756,6 +786,8 @@ export type OperatorClientJourney = {
   documentCount: number;
   gccWorkspaceKey: string;
   previewHref: string;
+  stageHref: string;
+  canStageFromDesk: boolean;
   nextAction: string;
 };
 
@@ -773,9 +805,12 @@ function journeyNextAction(input: {
   workspaceStaged: boolean;
   invitationStatus: OperatorClientJourney['invitationStatus'];
   bindingCount: number;
+  canStageFromDesk: boolean;
 }): string {
   if (!input.workspaceStaged) {
-    return 'Workspace not staged. Governed activation must complete before invitation.';
+    return input.canStageFromDesk
+      ? 'Workspace not staged. Entitled operator may POST a record-only SYNQA invitation to stageHref.'
+      : 'Workspace not staged. Governed activation must complete before invitation.';
   }
   if (input.invitationStatus === 'none') {
     return 'Workspace staged. No invitation recorded.';
@@ -796,6 +831,7 @@ function journeyNextAction(input: {
 export function listOperatorClientJourneys(opts: {
   dataDir: string;
   entitledClientCodes: string[];
+  principal?: AtlasPrincipal;
 }): OperatorClientJourney[] {
   const snapshot = loadExperienceStore(opts.dataDir);
   const codes = [...new Set(opts.entitledClientCodes.filter((code) => isCanonicalClientCode(code)))];
@@ -806,6 +842,9 @@ export function listOperatorClientJourneys(opts: {
     const bindingCount = snapshot.bindings.filter((row) => row.clientCode === clientCode).length;
     const invitationStatus = invite?.status || 'none';
     const workspaceStaged = Boolean(workspace);
+    const canStageFromDesk = Boolean(
+      opts.principal && canStageClientExperience(opts.principal, clientCode) && !workspaceStaged,
+    );
     return {
       clientCode,
       classification: classified.classification,
@@ -821,10 +860,13 @@ export function listOperatorClientJourneys(opts: {
       documentCount: snapshot.documents.filter((row) => row.clientCode === clientCode).length,
       gccWorkspaceKey: gccWorkspaceKey(clientCode),
       previewHref: `/api/pm/clients/${clientCode}/desk`,
+      stageHref: `/api/pm/clients/${clientCode}/experience`,
+      canStageFromDesk,
       nextAction: journeyNextAction({
         workspaceStaged,
         invitationStatus,
         bindingCount,
+        canStageFromDesk,
       }),
     };
   });

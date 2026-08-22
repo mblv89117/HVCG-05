@@ -16,13 +16,14 @@ import {
   buildOperatorClientDeskPreview,
   decideClientRequest,
   getClientDocument,
+  isExperienceSyntheticClient,
   operatorExperienceStatus,
   redeemInvitation,
   stageClientExperience,
   uploadClientDocument,
 } from './service.ts';
 import { handleClientDesk, renderClientDeskHtml } from './desk.ts';
-import { canAccessOperatorDesk } from '../pm/sharepoint/authz.ts';
+import { canAccessOperatorDesk, isInternalStaff } from '../pm/sharepoint/authz.ts';
 import { resolveHubCommit } from '../http/hubCommit.ts';
 import { readCommercialContext } from '../pm/commercialContext/handle.ts';
 import { buildKnowledgeOperatingPicture } from '../pm/sharepoint/knowledgeOperating.ts';
@@ -231,13 +232,25 @@ export async function handleClientExperience(opts: {
       }
       const body = await readJson(opts.req);
       let activationStatus = typeof body.activationGate === 'string' ? body.activationGate : '';
-      if (opts.sharepoint) {
+      const syntheticOverlay = isExperienceSyntheticClient(stagedCode);
+      if (opts.sharepoint && !syntheticOverlay) {
         const live = await opts.sharepoint.getClientActivation(
           principal,
           stagedCode,
           typeof body.opportunityId === 'string' ? body.opportunityId : undefined,
         );
         activationStatus = live.status || live.activation?.status || activationStatus;
+      } else if (opts.sharepoint && syntheticOverlay && isInternalStaff(principal)) {
+        try {
+          const live = await opts.sharepoint.getClientActivation(
+            principal,
+            stagedCode,
+            typeof body.opportunityId === 'string' ? body.opportunityId : undefined,
+          );
+          activationStatus = live.status || live.activation?.status || activationStatus;
+        } catch {
+          /* SYNQA overlay staging uses the request gate when SharePoint activation is staff-gated. */
+        }
       }
       const result = stageClientExperience({
         dataDir: opts.cfg.dataDir,
