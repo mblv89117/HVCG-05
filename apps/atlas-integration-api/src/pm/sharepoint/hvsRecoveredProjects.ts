@@ -101,5 +101,48 @@ export function hvsRecoveredProjects(): HvsRecoveredProject[] {
         'CONFIRMED Prodigy_ThatsKava_Bookkeeping_Services_Agreement_FL.docx inside Prodigy Games / 05_Contracts. Not a standalone HVS client folder.',
       nextAction: 'Keep as related Prodigy material. Do not invent a Hub client row for That\'s Kava.',
     },
+    {
+      client: 'Colorado Beef',
+      clientCode: 'CCB01',
+      title: 'HVCG engagement + SBA Express packet',
+      provenance: 'LIKELY',
+      operationalized: false,
+      hubMiAccessible: false,
+      evidence:
+        'CONFIRMED files: HVCG Engagement 7.20.26.pdf; SBA Express Loan Engagement Agreement; SBA Express Funding Checklist; Next Steps Instructions Letter',
+      nextAction: 'Review recovered SBA Express / HVCG engagement filenames. Do not invent funding status.',
+    },
+    {
+      client: "Christie's Place",
+      clientCode: 'CPL01',
+      title: 'Invoice / annuity materials',
+      provenance: 'LIKELY',
+      operationalized: false,
+      hubMiAccessible: false,
+      evidence:
+        "CONFIRMED Invoice for Christie's Place 6.19.26.pdf and part 2.pdf plus Annuity folder. Amounts are not extracted.",
+      nextAction: 'Review recovered invoice filenames. Do not invent balances or a second Falk client.',
+    },
+    {
+      client: 'Frocovery',
+      clientCode: '',
+      title: 'Formation + business-development packet',
+      provenance: 'CONFIRMED',
+      operationalized: false,
+      hubMiAccessible: false,
+      evidence:
+        'CONFIRMED Articles of Organization; EIN; Operating Agreement; Business Development Agreement; Business Plan',
+      nextAction: 'Review recovered formation filenames. Do not invent obligations.',
+    },
+    {
+      client: 'Comic Books',
+      clientCode: '',
+      title: 'Physical comic-book collection system',
+      provenance: 'LIKELY',
+      operationalized: false,
+      hubMiAccessible: false,
+      evidence: 'CONFIRMED Comic Book System.docx; Physical Comic Book Collection System.docx; Confirmation.pdf',
+      nextAction: 'Review recovered collection-system filenames. Do not invent delivery status.',
+    },
   ];
 }

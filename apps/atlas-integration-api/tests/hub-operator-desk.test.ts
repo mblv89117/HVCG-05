@@ -148,10 +148,13 @@ describe('operator desk copy', () => {
     assert.match(html, /Synthetic QA work/);
     assert.match(html, /Waiting/);
     assert.match(html, /Recovered HVS clients/);
+    assert.match(html, /Recovered client operating records/);
+    assert.match(html, /Recovered capital packets/);
     assert.match(html, /Recovered documents/);
     assert.match(html, /Recovered projects/);
     assert.match(html, /ACCG Inc/);
     assert.match(html, /Final Installment/);
+    assert.match(html, /knowledge operationalized/);
     assert.match(html, /SBA Express/);
     assert.match(html, /amountsExtracted=false/);
     assert.match(html, /reference-only/);
@@ -167,9 +170,14 @@ describe('operator desk copy', () => {
     assert.equal(model.operatingPicture.honestEmpty, true);
     assert.deepEqual(model.operatingPicture.realClientsOperationalized, []);
     assert.equal(model.operatingPicture.hvsRecoveredClients.length, 12);
-    assert.ok((model.operatingPicture.hvsRecoveredProjects?.length || 0) >= 6);
+    assert.ok((model.operatingPicture.hvsRecoveredProjects?.length || 0) >= 10);
     assert.ok(model.operatingPicture.hvsRecoveredProjects.some((row) => row.client === 'Final Installment'));
+    assert.ok(model.operatingPicture.hvsRecoveredProjects.some((row) => row.client === 'Colorado Beef'));
     assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.operationalized, false);
+    assert.equal(model.operatingPicture.hvsRecoveredClientRecords.length, 12);
+    assert.ok(model.operatingPicture.hvsRecoveredClientRecords.some((row) => row.client === 'ACCG Inc' && row.knowledgeOperationalized));
+    assert.ok(model.operatingPicture.hvsRecoveredCapitalPackets.some((row) => row.client === 'Colorado Beef'));
+    assert.ok(model.operatingPicture.recoveredClientsKnowledgeOperationalized.includes('ACCG01'));
     assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.knowledgeIndexed, true);
     assert.ok((model.operatingPicture.hvsRecoveredDocuments?.length || 0) >= 20);
     assert.ok(model.operatingPicture.queues.needsAction.some((row) => row.kind === 'hvs_recovered_action'));
@@ -221,6 +229,8 @@ describe('operator desk HTTP fail-closed', () => {
       assert.match(html, /liveGtmOutbound=false/);
       assert.match(html, /Client journey/);
       assert.match(html, /Recovered HVS clients/);
+      assert.match(html, /Recovered client operating records/);
+      assert.match(html, /Recovered capital packets/);
       assert.match(html, /Recovered documents/);
       assert.match(html, /ACCG Inc/);
       assert.match(html, /SBA Express/);

@@ -13,6 +13,11 @@ import {
   isHvsRecoveredKind,
 } from '../sharepoint/hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects } from '../sharepoint/hvsRecoveredProjects.ts';
+import {
+  hvsRecoveredCapitalPackets,
+  hvsRecoveredClientRecords,
+  recoveredClientsKnowledgeOperationalized,
+} from '../sharepoint/hvsRecoveredClientRecords.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -190,6 +195,39 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
             evidence: row.evidence,
             nextAction: row.nextAction,
           })),
+    hvsRecoveredClientRecords:
+      hvsDataAccess === 'BLOCKED'
+        ? []
+        : hvsRecoveredClientRecords().map((row) => ({
+            client: row.client,
+            clientCode: row.clientCode,
+            provenance: 'CONFIRMED' as const,
+            hubMiOperationalized: false as const,
+            knowledgeOperationalized: row.knowledgeOperationalized,
+            documentCount: row.documentCount,
+            fileCount: row.fileCount,
+            documentClasses: row.documentClasses,
+            projectTitles: row.projectTitles,
+            capitalPacketNames: row.capitalPacketNames,
+            invoiceFilenames: row.invoiceFilenames,
+            nextActions: row.nextActions,
+            decisionsRequired: row.decisionsRequired,
+            nextAction: row.nextAction,
+          })),
+    hvsRecoveredCapitalPackets:
+      hvsDataAccess === 'BLOCKED'
+        ? []
+        : hvsRecoveredCapitalPackets().map((row) => ({
+            client: row.client,
+            clientCode: row.clientCode,
+            name: row.name,
+            provenance: 'CONFIRMED' as const,
+            queue: 'Needs Action' as const,
+            amountsExtracted: false as const,
+            nextAction: row.nextAction,
+          })),
+    recoveredClientsKnowledgeOperationalized:
+      hvsDataAccess === 'BLOCKED' ? [] : recoveredClientsKnowledgeOperationalized(),
   };
 }
 
@@ -274,6 +312,32 @@ export function operatorOperatingPictureFromKnowledge(
       evidence: row.evidence,
       nextAction: row.nextAction,
     })),
+    hvsRecoveredClientRecords: (knowledge.hvsRecoveredClientRecords || []).slice(0, 20).map((row) => ({
+      client: row.client,
+      clientCode: row.clientCode,
+      provenance: 'CONFIRMED' as const,
+      hubMiOperationalized: false as const,
+      knowledgeOperationalized: row.knowledgeOperationalized,
+      documentCount: row.documentCount,
+      fileCount: row.fileCount,
+      documentClasses: row.documentClasses,
+      projectTitles: row.projectTitles,
+      capitalPacketNames: row.capitalPacketNames,
+      invoiceFilenames: row.invoiceFilenames,
+      nextActions: row.nextActions,
+      decisionsRequired: row.decisionsRequired,
+      nextAction: row.nextAction,
+    })),
+    hvsRecoveredCapitalPackets: (knowledge.hvsRecoveredCapitalPackets || []).slice(0, 20).map((row) => ({
+      client: row.client,
+      clientCode: row.clientCode,
+      name: row.name,
+      provenance: 'CONFIRMED' as const,
+      queue: 'Needs Action' as const,
+      amountsExtracted: false as const,
+      nextAction: row.nextAction,
+    })),
+    recoveredClientsKnowledgeOperationalized: knowledge.recoveredClientsKnowledgeOperationalized || [],
   };
 }
 

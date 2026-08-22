@@ -198,6 +198,43 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     }
   </section>
   <section>
+    <h2>Recovered client operating records</h2>
+    <p class="muted">Per-client stitch of recovered folders, filenames, projects, and proposed actions. Knowledge operationalized is not Hub MI. Atlas does not invent amounts or completion.</p>
+    ${
+      op.hvsRecoveredClientRecords.length
+        ? `<ul>${op.hvsRecoveredClientRecords
+            .map((row) => {
+              const code = row.clientCode || 'no Hub client code';
+              const state = row.knowledgeOperationalized
+                ? 'knowledge operationalized'
+                : 'folder only';
+              const projects = row.projectTitles.length
+                ? row.projectTitles.join('; ')
+                : 'no recovered project filenames';
+              const capital = row.capitalPacketNames.length
+                ? `${row.capitalPacketNames.length} capital packet filename(s)`
+                : 'no capital packet filenames';
+              return `<li><span class="kind">${esc(state)}</span> ${esc(row.client)} · ${esc(code)} · ${esc(String(row.fileCount))} file(s)<br/><span class="muted">${esc(row.nextAction)}</span><br/><span class="muted">${esc(projects)} · ${esc(capital)}</span></li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No recovered client operating records in this picture.</p>'
+    }
+  </section>
+  <section>
+    <h2>Recovered capital packets</h2>
+    <p class="muted">Filename-only Capital queue. amountsExtracted=false. No invented lender criteria or funding status.</p>
+    ${
+      op.hvsRecoveredCapitalPackets.length
+        ? `<ul>${op.hvsRecoveredCapitalPackets
+            .map((row) => {
+              const code = row.clientCode || row.client;
+              return `<li><span class="kind">capital</span> ${esc(row.client)} · ${esc(row.name)} · ${esc(code)} <span class="muted">(CONFIRMED · amountsExtracted=false)</span></li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No recovered capital-packet filenames in this picture.</p>'
+    }
+  </section>
+  <section>
     <h2>Recovered projects</h2>
     <p class="muted">Filename-derived recovered work. Not Hub MI projects. No invented completion, balances, or obligations.</p>
     ${

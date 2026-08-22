@@ -62,6 +62,33 @@ export interface OperatorRecoveredHvsProject {
   nextAction: string;
 }
 
+export interface OperatorRecoveredClientRecord {
+  client: string;
+  clientCode: string;
+  provenance: 'CONFIRMED';
+  hubMiOperationalized: false;
+  knowledgeOperationalized: boolean;
+  documentCount: number;
+  fileCount: number;
+  documentClasses: string[];
+  projectTitles: string[];
+  capitalPacketNames: string[];
+  invoiceFilenames: string[];
+  nextActions: string[];
+  decisionsRequired: string[];
+  nextAction: string;
+}
+
+export interface OperatorRecoveredCapitalPacket {
+  client: string;
+  clientCode: string;
+  name: string;
+  provenance: 'CONFIRMED';
+  queue: 'Needs Action';
+  amountsExtracted: false;
+  nextAction: string;
+}
+
 export interface OperatorOperatingPicture {
   kind: 'operator_operating_picture_v1';
   invented: false;
@@ -94,6 +121,9 @@ export interface OperatorOperatingPicture {
   hvsRecoveredClients: OperatorRecoveredHvsClient[];
   hvsRecoveredDocuments: OperatorRecoveredHvsDocument[];
   hvsRecoveredProjects: OperatorRecoveredHvsProject[];
+  hvsRecoveredClientRecords: OperatorRecoveredClientRecord[];
+  hvsRecoveredCapitalPackets: OperatorRecoveredCapitalPacket[];
+  recoveredClientsKnowledgeOperationalized: string[];
 }
 
 export interface OperatorClientJourney {

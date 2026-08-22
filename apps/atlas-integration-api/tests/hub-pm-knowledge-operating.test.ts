@@ -154,6 +154,9 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.queues.Waiting.length, 0);
     assert.deepEqual(picture.hvsRecoveredClients, []);
     assert.deepEqual(picture.hvsRecoveredDocuments, []);
+    assert.deepEqual(picture.hvsRecoveredClientRecords, []);
+    assert.deepEqual(picture.hvsRecoveredCapitalPackets, []);
+    assert.deepEqual(picture.recoveredClientsKnowledgeOperationalized, []);
     assert.equal(picture.queues.Projects.length, 0);
     assert.equal(picture.queues.Tasks.length, 0);
     const syn = picture.recoveryLedger.find((row) => row.clientCode === 'SYN01');
@@ -214,8 +217,19 @@ describe('knowledge operating picture', () => {
       picture.hvsRecoveredClients.some((row) => row.client === "Christie's Place" && row.clientCode === 'CPL01'),
       true,
     );
-    assert.ok((picture.hvsRecoveredProjects?.length || 0) >= 6);
+    assert.ok((picture.hvsRecoveredProjects?.length || 0) >= 10);
     assert.ok(picture.hvsRecoveredProjects.some((row) => row.client === 'Final Installment'));
+    assert.ok(picture.hvsRecoveredProjects.some((row) => row.client === 'Colorado Beef'));
+    assert.equal(picture.hvsRecoveredClientRecords.length, 12);
+    assert.equal(picture.hvsRecoveredClientRecords.every((row) => row.hubMiOperationalized === false), true);
+    assert.ok(picture.hvsRecoveredClientRecords.some((row) => row.client === 'ACCG Inc' && row.knowledgeOperationalized === true));
+    assert.ok(picture.hvsRecoveredClientRecords.some((row) => row.client.startsWith('Pierlo Inc') && row.knowledgeOperationalized === false));
+    assert.ok(picture.recoveredClientsKnowledgeOperationalized.includes('ACCG01'));
+    assert.ok(picture.recoveredClientsKnowledgeOperationalized.includes('CCB01'));
+    assert.ok(picture.hvsRecoveredCapitalPackets.some((row) => row.client === 'Colorado Beef' && row.amountsExtracted === false));
+    assert.ok(picture.hvsRecoveredCapitalPackets.some((row) => row.client === 'Prodigy Games'));
+    assert.equal(JSON.stringify(picture.hvsRecoveredClientRecords).includes('$'), false);
+    assert.equal(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/.test(JSON.stringify(picture.hvsRecoveredCapitalPackets)), false);
     assert.ok(picture.queues['Needs Action'].some((row) => row.title.includes('ACCG SOW')));
     assert.equal(
       picture.queues.Waiting.filter((row) => row.kind === 'hvs_recovered_reference').length,

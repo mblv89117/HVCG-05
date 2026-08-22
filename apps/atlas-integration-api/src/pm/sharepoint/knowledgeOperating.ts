@@ -41,6 +41,13 @@ import {
   type HvsRecoveredDocument,
 } from './hvsRecoveredDocuments.ts';
 import { hvsRecoveredProjects, type HvsRecoveredProject } from './hvsRecoveredProjects.ts';
+import {
+  hvsRecoveredCapitalPackets,
+  hvsRecoveredClientRecords,
+  recoveredClientsKnowledgeOperationalized,
+  type HvsRecoveredCapitalPacket,
+  type HvsRecoveredClientRecord,
+} from './hvsRecoveredClientRecords.ts';
 import type {
   SharePointClient,
   SharePointOpportunity,
@@ -104,6 +111,9 @@ export type KnowledgeOperatingPicture = {
   hvsRecoveredClients: HvsRecoveredClient[];
   hvsRecoveredDocuments: HvsRecoveredDocument[];
   hvsRecoveredProjects: HvsRecoveredProject[];
+  hvsRecoveredClientRecords: HvsRecoveredClientRecord[];
+  hvsRecoveredCapitalPackets: HvsRecoveredCapitalPacket[];
+  recoveredClientsKnowledgeOperationalized: string[];
   honestEmpty: boolean;
 };
 
@@ -450,6 +460,10 @@ export async function buildKnowledgeOperatingPicture(
     hvsRecoveredClients,
     hvsRecoveredDocuments: recoveredDocuments,
     hvsRecoveredProjects: hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredProjects(),
+    hvsRecoveredClientRecords: hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredClientRecords(),
+    hvsRecoveredCapitalPackets: hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredCapitalPackets(),
+    recoveredClientsKnowledgeOperationalized:
+      hvsDataAccess === 'BLOCKED' ? [] : recoveredClientsKnowledgeOperationalized(),
     honestEmpty: realClientsOperationalized.length === 0,
   };
 }
