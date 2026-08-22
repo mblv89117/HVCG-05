@@ -84,8 +84,11 @@ export type SearchPmService = Pick<
 const SEARCH_CAP = 40;
 /** Projects/tasks must not block an already-matched authorized client. */
 const CORE_BUDGET_MS = 2500;
-/** Workspace extras must not block or fail the operating-index (clients/projects/tasks). */
-const EXTRAS_BUDGET_MS = 1200;
+/**
+ * Workspace extras / optional catalogs must not pin entitled Command-K.
+ * Live 4b9631a extras fan-out was ~1200–1500 ms; keep them best-effort.
+ */
+const EXTRAS_BUDGET_MS = 400;
 
 async function bestEffort<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   try {
@@ -172,8 +175,47 @@ export async function searchSharePointPm(
   }
   const extrasBudgetMs = opts?.extrasBudgetMs ?? EXTRAS_BUDGET_MS;
   const coreBudgetMs = opts?.coreBudgetMs ?? CORE_BUDGET_MS;
-  const clients = await service.listAuthorizedClients(principal);
-  const entitled = new Set(clients.map((c) => c.clientCode));
+  // Authz from the principal, not from the clients listAll. Entitled catalogs
+  // kick off in parallel — do not wait for HVCG_Clients before opportunities.
+  const entitled = new Set(entitledClientCodes(principal));
+  const clientsP = service.listAuthorizedClients(principal);
+  const extrasStarted = Date.now();
+  const extrasPromise = (async () => {
+    const extraCodes = manny ? (await clientsP).map((c) => c.clientCode) : entitledClientCodes(principal);
+    if (service.listWorkspaceCollectionsForSearch) {
+      const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
+      const batched = await withBudget(
+        () => service.listWorkspaceCollectionsForSearch!(principal, extraCodes),
+        Math.max(0, remaining),
+      );
+      const clients = await clientsP;
+      return clients.map((client) => ({ client, extras: batched?.get(client.clientCode) }));
+    }
+    return Promise.all(
+      extraCodes.map(async (code) => {
+        const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
+        const extras = await withBudget(
+          () => service.listWorkspaceCollections(principal, code),
+          Math.max(0, remaining),
+        );
+        return { code, extras };
+      }),
+    );
+  })();
+  const [clients, projects, tasks, extrasRows, opportunities, leads, capitalOpps] = await Promise.all([
+    clientsP,
+    withBudget(() => service.listAuthorizedProjects(principal), coreBudgetMs).then((rows) => rows || []),
+    withBudget(() => service.listAuthorizedTasks(principal), coreBudgetMs).then((rows) => rows || []),
+    extrasPromise,
+    withBudget(() => bestEffort(() => service.listOpportunities(), []), extrasBudgetMs).then((rows) => rows || []),
+    withBudget(() => bestEffort(async () => (await service.listLeads?.()) || [], []), extrasBudgetMs).then(
+      (rows) => rows || [],
+    ),
+    withBudget(
+      () => bestEffort(async () => (await service.listCapitalOpportunities?.()) || [], []),
+      extrasBudgetMs,
+    ).then((rows) => rows || []),
+  ]);
   const push = (hit: PmSearchHit) => {
     if (hit.clientCode && !canSeeClientBound(manny, entitled, hit.clientCode)) return;
     results.push(hit);
@@ -192,10 +234,6 @@ export async function searchSharePointPm(
       });
     }
   }
-  const [projects, tasks] = await Promise.all([
-    withBudget(() => service.listAuthorizedProjects(principal), coreBudgetMs).then((rows) => rows || []),
-    withBudget(() => service.listAuthorizedTasks(principal), coreBudgetMs).then((rows) => rows || []),
-  ]);
   for (const p of projects) {
     const hay = [p.name, p.nextAction, p.clientCode, p.objective].filter(Boolean).join(' ').toLowerCase();
     if (hay.includes(q)) {
@@ -242,37 +280,22 @@ export async function searchSharePointPm(
       });
     }
   };
-  const extrasStarted = Date.now();
-  const extrasPromise = (async () => {
-    if (service.listWorkspaceCollectionsForSearch) {
-      const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
-      const batched = await withBudget(
-        () => service.listWorkspaceCollectionsForSearch!(principal, clients.map((c) => c.clientCode)),
-        Math.max(0, remaining),
-      );
-      return clients.map((client) => ({ client, extras: batched?.get(client.clientCode) }));
-    }
-    return Promise.all(
-      clients.map(async (c) => {
-        const remaining = extrasBudgetMs - (Date.now() - extrasStarted);
-        const extras = await withBudget(
-          () => service.listWorkspaceCollections(principal, c.clientCode),
-          Math.max(0, remaining),
-        );
-        return { client: c, extras };
-      }),
-    );
-  })();
-  const [extrasRows, opportunities, leads, capitalOpps] = await Promise.all([
-    extrasPromise,
-    bestEffort(() => service.listOpportunities(), []),
-    bestEffort(async () => (await service.listLeads?.()) || [], []),
-    bestEffort(async () => (await service.listCapitalOpportunities?.()) || [], []),
-  ]);
-  for (const row of extrasRows) {
+  const extrasByCode = new Map<
+    string,
+    NonNullable<Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>>
+  >();
+  for (const row of extrasRows as Array<{
+    client?: { clientCode: string };
+    code?: string;
+    extras?: Awaited<ReturnType<SharePointPmService['listWorkspaceCollections']>>;
+  }>) {
     if (!row.extras) continue;
-    const c = row.client;
-    const extras = row.extras;
+    const code = row.client?.clientCode || row.code;
+    if (code) extrasByCode.set(code, row.extras);
+  }
+  for (const c of clients) {
+    const extras = extrasByCode.get(c.clientCode);
+    if (!extras) continue;
     for (const item of extras.communications.items) {
       const title = String(item.title || '');
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
