@@ -5,46 +5,31 @@
 | project | Platform Red Team (Train F) / independent-validation |
 | primary repo | `hvcg-05` |
 | branch | `cursor/platform-red-team-866c` |
-| current SHA | `d4e22d1e9adc6130c0665fdc09ab073b7b60c62a` |
-| baseline | D42 LIVE_CLIENT_CX_CK_ISOLATION @ Hub `976bea59` |
-| owned domains | Independent adversarial testing and findings |
-| files/domains touched | `docs/red-team/**`, `docs/agent-status.md` |
-| contracts required | none this cycle |
-| tests | D42: SHA_GATE PASS; scope2 PASS; scopes3-6 NOT_EXECUTED |
-| build | N/A |
-| synthetic certification | N/A |
-| security status | **LIVE_CERT=NO**. Client unsigned P0=0; entitled isolation INCONCLUSIVE. |
-| Premium status | **N/A** |
-| integration dependencies | SoT meaning unchanged |
-| P0 | LIVE_P0_CONFIRMED_OPEN=0; entitled client isolation unverified |
-| P1 | none |
-| P2 | none |
-| owner decisions | No deploy. Do not replace worker. |
-| deployment state | Live Hub markers = `976bea59` |
+| current SHA | (post-D44 commit) |
+| baseline | D44 LIVE_SYNQA_CLIENT_SESSION @ Hub `101b1a7` (PR #35) |
+| tests | D44: SHA_GATE PASS; steps 1–11 FAIL (AUTH absent) |
+| security status | **LIVE_CERT=NO**. SYNQA entitled isolation unverified. |
+| deployment state | Live Hub markers = `101b1a7` |
 
 ## Orchestrator control
 
 | Field | Value |
 |-------|-------|
-| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **42** |
-| PRIOR | D41 CONSUMED=41 — not redone |
-| COMPLETED ACTIONS | D42 SHA_GATE PASS; unsigned /client isolation PASS; entitled probes blocked |
-| REMAINING ACTIONS | Inject AZURE_* → self-mint SYN01 session → re-run scopes 3–6 |
+| LAST ORCHESTRATOR DIRECTIVE VERSION CONSUMED | **44** |
+| PRIOR | D42 CONSUMED=42 — not redone |
 | SHA_GATE | **PASS** |
-| CLIENT_ISOLATION | **INCONCLUSIVE** |
+| D44_OVERALL | **FAIL** (0/11 entitled steps executed) |
+| CLIENT_A_VS_CLIENT_B | **INCONCLUSIVE** |
 | LIVE_P0_CONFIRMED_OPEN | **0** |
-| LIVE_CERT | **NO** |
-| AUTH_SESSION | **ABSENT** |
-| MISSION | `LIVE_CLIENT_CX_CK_ISOLATION` |
-| OWNER DECISIONS | No RT deploy; worker not recreated |
+| AUTH_STAFF | **ABSENT** |
+| MISSION | `LIVE_SYNQA_CLIENT_SESSION_ISOLATION` |
 
 ## THIS-POD (names only)
 
 | Field | Value |
 |-------|-------|
-| THIS_POD_ENV_VERSION | `a86e2323-9c2a-11f1-ba66-0e7d0216e441` |
-| THIS_POD_BUILD_ID | `bld-20260820-859ee60c-1350-4ede-89ab-db0836afc9d5` |
+| envVersion | `a86e2323-9c2a-11f1-ba66-0e7d0216e441` |
+| buildId | `bld-20260820-859ee60c-1350-4ede-89ab-db0836afc9d5` |
 | AZURE_* | all **ABSENT** |
-| AUTH_SESSION | **ABSENT** |
 
-**Updated:** 2026-08-22T07:22:00Z
+**Updated:** 2026-08-22T10:30:00Z

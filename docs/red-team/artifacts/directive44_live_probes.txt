@@ -1,0 +1,24 @@
+D44_LIVE_PROBES UTC=2026-08-22T10:34:14Z
+TARGET_SHA=101b1a7d2409d13e3b96b96e7fe29ffc9d8dce5b
+SHA_GATE=PASS
+AUTH_STAFF=ABSENT
+AZURE_ALL=ABSENT
+
+STEP1_reissue=NOT_EXECUTED
+STEP2_staff_redeem=NOT_EXECUTED
+STEP3_unsigned_redeem=NOT_EXECUTED
+STEP4_client_json=NOT_EXECUTED
+STEP5_workspace=NOT_EXECUTED
+STEP6_post_document=NOT_EXECUTED
+STEP7_get_document=NOT_EXECUTED
+STEP8_foreign=NOT_EXECUTED
+STEP9_operator_json=NOT_EXECUTED
+STEP10_staff_client=NOT_EXECUTED
+STEP11_replay=NOT_EXECUTED
+
+UNSIGNED_CORROBORATION:
+POST /api/client/invitations/redeem {} -> 400
+GET /client.json -> 401
+GET /api/client/workspace -> 401
+GET /api/client/workspace/HFD01 -> 401
+GET /api/pm/clients/HFD01/desk.json -> 401
