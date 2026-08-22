@@ -1,0 +1,184 @@
+{
+  "started": "2026-07-21T10:44:46.2599170-07:00",
+  "mode": "Offline",
+  "checks": [
+    {
+      "name": "python_available",
+      "passed": true,
+      "detail": "/opt/homebrew/bin/python3"
+    },
+    {
+      "name": "artifact:src/sharepoint/lists/HVCG_Opportunities.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/sharepoint/lists/HVCG_Opportunities.json"
+    },
+    {
+      "name": "artifact:src/sharepoint/lists/HVCG_OpportunityActivities.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/sharepoint/lists/HVCG_OpportunityActivities.json"
+    },
+    {
+      "name": "artifact:src/sharepoint/lists/HVCG_CapitalOpportunities.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/sharepoint/lists/HVCG_CapitalOpportunities.json"
+    },
+    {
+      "name": "artifact:src/sharepoint/lists/HVCG_Leads.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/sharepoint/lists/HVCG_Leads.json"
+    },
+    {
+      "name": "artifact:src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-automate/flows/HVCG_LeadQualifiedCreateOpportunity.json"
+    },
+    {
+      "name": "artifact:src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-automate/flows/HVCG_OpportunityStageChangedNotify.json"
+    },
+    {
+      "name": "artifact:src/power-automate/flows/HVCG_OpportunityWonCloseout.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-automate/flows/HVCG_OpportunityWonCloseout.json"
+    },
+    {
+      "name": "artifact:src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-automate/flows/HVCG_CapitalFundingStatusNotify.json"
+    },
+    {
+      "name": "artifact:src/power-apps/formulas/NamedFormulas.fx",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-apps/formulas/NamedFormulas.fx"
+    },
+    {
+      "name": "artifact:src/power-apps/screens/scrCRM.md",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-apps/screens/scrCRM.md"
+    },
+    {
+      "name": "artifact:src/power-apps/screens/scrOpportunityDetail.md",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/src/power-apps/screens/scrOpportunityDetail.md"
+    },
+    {
+      "name": "artifact:docs/crm/OPPORTUNITY_MANAGEMENT.md",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/docs/crm/OPPORTUNITY_MANAGEMENT.md"
+    },
+    {
+      "name": "artifact:docs/crm/SMOKE_TEST_CHECKLIST.md",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/docs/crm/SMOKE_TEST_CHECKLIST.md"
+    },
+    {
+      "name": "artifact:PERMISSIONS_MATRIX.md",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/PERMISSIONS_MATRIX.md"
+    },
+    {
+      "name": "artifact:releases/migrations/20260715_001_opportunity_crm_module.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/migrations/20260715_001_opportunity_crm_module.json"
+    },
+    {
+      "name": "artifact:releases/migrations/diffs/opportunity_crm_v1.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/releases/migrations/diffs/opportunity_crm_v1.json"
+    },
+    {
+      "name": "artifact:tests/unit/test_opportunity_lifecycle.py",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/tests/unit/test_opportunity_lifecycle.py"
+    },
+    {
+      "name": "artifact:tests/unit/test_opportunity_crm.py",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/tests/unit/test_opportunity_crm.py"
+    },
+    {
+      "name": "artifact:tests/crm/smoke_helpers.py",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/tests/crm/smoke_helpers.py"
+    },
+    {
+      "name": "artifact:sample-data/demo-pack.json",
+      "passed": true,
+      "detail": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release/sample-data/demo-pack.json"
+    },
+    {
+      "name": "ps_parse:acceptance",
+      "passed": true,
+      "detail": "parsed OK"
+    },
+    {
+      "name": "crm_smoke_helpers",
+      "passed": true,
+      "detail": "tests/crm/smoke_helpers.py"
+    },
+    {
+      "name": "opportunity_lifecycle",
+      "passed": true,
+      "detail": "test_opportunity_lifecycle.py"
+    },
+    {
+      "name": "opportunity_crm_module",
+      "passed": true,
+      "detail": "test_opportunity_crm.py"
+    },
+    {
+      "name": "teams_policy:HVCG_LeadQualifiedCreateOpportunity",
+      "passed": true,
+      "detail": "Teams=True teamsIntegration=True"
+    },
+    {
+      "name": "teams_policy:HVCG_OpportunityStageChangedNotify",
+      "passed": true,
+      "detail": "Teams=True teamsIntegration=True"
+    },
+    {
+      "name": "teams_policy:HVCG_OpportunityWonCloseout",
+      "passed": true,
+      "detail": "Teams=True teamsIntegration=True"
+    },
+    {
+      "name": "teams_policy:HVCG_CapitalFundingStatusNotify",
+      "passed": true,
+      "detail": "Teams=True teamsIntegration=True"
+    },
+    {
+      "name": "formula:nfOpenPipeline",
+      "passed": true,
+      "detail": "nfOpenPipeline"
+    },
+    {
+      "name": "formula:nfQualifiedLeads",
+      "passed": true,
+      "detail": "nfQualifiedLeads"
+    },
+    {
+      "name": "formula:nfCapitalHandoffsReady",
+      "passed": true,
+      "detail": "nfCapitalHandoffsReady"
+    },
+    {
+      "name": "formula:nfMyOpportunities",
+      "passed": true,
+      "detail": "nfMyOpportunities"
+    },
+    {
+      "name": "permissions_leads_opportunities",
+      "passed": true,
+      "detail": "PERMISSIONS_MATRIX row present"
+    },
+    {
+      "name": "permissions_crm_domain",
+      "passed": true,
+      "detail": "CRM domain row present"
+    }
+  ],
+  "finished": "2026-07-21T10:44:46.4688510-07:00",
+  "passed": true,
+  "failureCount": 0
+}

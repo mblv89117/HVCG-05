@@ -1,0 +1,166 @@
+{
+  "generatedAt": "2026-07-22T01:08:19.4235250Z",
+  "method": "pnp-devicelogin-atlasclientref",
+  "clientsListId": "f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+  "fieldInternal": "AtlasClientRef",
+  "fieldDisplay": "Client",
+  "lists": {
+    "HVCG_Projects": {
+      "list": "HVCG_Projects",
+      "action": "created",
+      "fieldId": "8481cb7d-940b-46a9-84b0-8fb77bdeb430",
+      "schemaXml": "<Field Type=\"Lookup\" DisplayName=\"Client\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"AtlasClientRef\" Name=\"AtlasClientRef\" Group=\"HVCG\" Indexed=\"TRUE\" ID=\"{8481cb7d-940b-46a9-84b0-8fb77bdeb430}\" SourceID=\"{05e972c6-d724-4221-a61b-251c4fc8122d}\" ColName=\"int3\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+      "writeReadOk": true,
+      "atlasClientRefId": 1,
+      "restSelectOk": true,
+      "getItemsOk": true,
+      "getItemOk": true
+    },
+    "HVCG_Tasks": {
+      "list": "HVCG_Tasks",
+      "action": "created",
+      "fieldId": "47aa8cda-f6c1-4b87-8c1c-6328942090a2",
+      "schemaXml": "<Field Type=\"Lookup\" DisplayName=\"Client\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"AtlasClientRef\" Name=\"AtlasClientRef\" Group=\"HVCG\" Indexed=\"TRUE\" ID=\"{47aa8cda-f6c1-4b87-8c1c-6328942090a2}\" SourceID=\"{6cfc50e6-3ea2-43fd-a053-09091a4f4e4c}\" ColName=\"int8\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+      "writeReadOk": true,
+      "atlasClientRefId": 1,
+      "restSelectOk": true,
+      "getItemsOk": true,
+      "getItemOk": true
+    },
+    "HVCG_Deliverables": {
+      "list": "HVCG_Deliverables",
+      "action": "created",
+      "fieldId": "b0e86f91-5f57-4567-ba3b-1d1df1e9d871",
+      "schemaXml": "<Field Type=\"Lookup\" DisplayName=\"Client\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"AtlasClientRef\" Name=\"AtlasClientRef\" Group=\"HVCG\" Indexed=\"TRUE\" ID=\"{b0e86f91-5f57-4567-ba3b-1d1df1e9d871}\" SourceID=\"{9b9555d4-589b-4fea-b7e5-f1da24b224d9}\" ColName=\"int4\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+      "writeReadOk": true,
+      "atlasClientRefId": 1,
+      "restSelectOk": true,
+      "getItemsOk": true,
+      "getItemOk": true
+    },
+    "HVCG_Decisions": {
+      "list": "HVCG_Decisions",
+      "action": "created",
+      "fieldId": "916b2c36-9b58-4e85-9152-6ef9475533d9",
+      "schemaXml": "<Field Type=\"Lookup\" DisplayName=\"Client\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"AtlasClientRef\" Name=\"AtlasClientRef\" Group=\"HVCG\" Indexed=\"TRUE\" ID=\"{916b2c36-9b58-4e85-9152-6ef9475533d9}\" SourceID=\"{94bf4c6d-339c-4578-9094-7247d346e993}\" ColName=\"int4\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+      "writeReadOk": true,
+      "atlasClientRefId": 1,
+      "restSelectOk": true,
+      "getItemsOk": true,
+      "getItemOk": true
+    },
+    "HVCG_DocumentRequests": {
+      "list": "HVCG_DocumentRequests",
+      "action": "created",
+      "fieldId": "2e5760ec-e520-45ce-8c7a-266fccf5f8d4",
+      "schemaXml": "<Field Type=\"Lookup\" DisplayName=\"Client\" Required=\"FALSE\" EnforceUniqueValues=\"FALSE\" List=\"{f60a7d4e-74d9-4b57-8c98-1a7b75d76104}\" ShowField=\"Title\" UnlimitedLengthInDocumentLibrary=\"FALSE\" RelationshipDeleteBehavior=\"None\" StaticName=\"AtlasClientRef\" Name=\"AtlasClientRef\" Group=\"HVCG\" Indexed=\"TRUE\" ID=\"{2e5760ec-e520-45ce-8c7a-266fccf5f8d4}\" SourceID=\"{89a421e9-3086-47ef-80c3-214500d3d92c}\" ColName=\"int5\" RowOrdinal=\"0\" Hidden=\"FALSE\" CanToggleHidden=\"TRUE\" Version=\"1\" />",
+      "writeReadOk": true,
+      "atlasClientRefId": 1,
+      "restSelectOk": true,
+      "getItemsOk": true,
+      "getItemOk": true
+    }
+  },
+  "migration": {
+    "HVCG_Projects": {
+      "migrated": 4,
+      "skippedAlreadySet": 0,
+      "exceptions": 0
+    },
+    "HVCG_Tasks": {
+      "migrated": 0,
+      "skippedAlreadySet": 0,
+      "exceptions": 0
+    },
+    "HVCG_Deliverables": {
+      "migrated": 2,
+      "skippedAlreadySet": 0,
+      "exceptions": 0
+    },
+    "HVCG_Decisions": {
+      "migrated": 1,
+      "skippedAlreadySet": 0,
+      "exceptions": 0
+    },
+    "HVCG_DocumentRequests": {
+      "migrated": 0,
+      "skippedAlreadySet": 0,
+      "exceptions": 0
+    }
+  },
+  "writeRead": {
+    "HVCG_Projects": {
+      "ok": true,
+      "atlasClientRefId": 1,
+      "expectedClientId": 1,
+      "restProperty": "AtlasClientRefId"
+    },
+    "HVCG_Tasks": {
+      "ok": true,
+      "atlasClientRefId": 1,
+      "expectedClientId": 1,
+      "restProperty": "AtlasClientRefId"
+    },
+    "HVCG_Deliverables": {
+      "ok": true,
+      "atlasClientRefId": 1,
+      "expectedClientId": 1,
+      "restProperty": "AtlasClientRefId"
+    },
+    "HVCG_Decisions": {
+      "ok": true,
+      "atlasClientRefId": 1,
+      "expectedClientId": 1,
+      "restProperty": "AtlasClientRefId"
+    },
+    "HVCG_DocumentRequests": {
+      "ok": true,
+      "atlasClientRefId": 1,
+      "expectedClientId": 1,
+      "restProperty": "AtlasClientRefId"
+    }
+  },
+  "exceptions": [],
+  "actions": [
+    "HVCG_Projects created AtlasClientRef -> f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+    "HVCG_Tasks created AtlasClientRef -> f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+    "HVCG_Deliverables created AtlasClientRef -> f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+    "HVCG_Decisions created AtlasClientRef -> f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+    "HVCG_DocumentRequests created AtlasClientRef -> f60a7d4e-74d9-4b57-8c98-1a7b75d76104",
+    "HVCG_Projects migration migrated=4 skipped=0 exceptions=0",
+    "HVCG_Tasks migration migrated=0 skipped=0 exceptions=0",
+    "HVCG_Deliverables migration migrated=2 skipped=0 exceptions=0",
+    "HVCG_Decisions migration migrated=1 skipped=0 exceptions=0",
+    "HVCG_DocumentRequests migration migrated=0 skipped=0 exceptions=0"
+  ],
+  "provenProperties": {
+    "restConnector": "AtlasClientRefId",
+    "graph": "AtlasClientRefLookupId",
+    "pnpValuesKey": "AtlasClientRef",
+    "legacyPreserved": "ClientId (not deleted)",
+    "graphItemEvidence": {
+      "HVCG_Projects": {
+        "itemId": 16,
+        "AtlasClientRefLookupId": "1",
+        "ClientCode": "ACCG01"
+      },
+      "HVCG_Deliverables": {
+        "itemId": 1,
+        "AtlasClientRefLookupId": "1",
+        "ClientCode": "ACCG01"
+      }
+    }
+  },
+  "legacyClientIdHide": {
+    "status": "done",
+    "method": "pnp-Hidden-true",
+    "lists": [
+      "HVCG_Projects",
+      "HVCG_Tasks",
+      "HVCG_Deliverables",
+      "HVCG_Decisions",
+      "HVCG_DocumentRequests"
+    ]
+  },
+  "updatedAt": "2026-07-22T02:00:21.082137+00:00"
+}

@@ -1,0 +1,322 @@
+{
+  "title": "HVCG_DocumentRequests",
+  "description": "Client document request register",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Requested document name"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DocumentCategory",
+      "displayName": "DocumentCategory",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Engagement Administration",
+        "Corporate",
+        "Ownership",
+        "Historical Financials",
+        "Current Financials",
+        "Tax Returns",
+        "Bank Statements",
+        "Debt Schedule",
+        "AR",
+        "AP",
+        "Payroll",
+        "Contracts",
+        "Real Estate",
+        "Insurance",
+        "Legal",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequestDate",
+      "displayName": "RequestDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ResponsibleClientContactEmail",
+      "displayName": "ResponsibleClientContactEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InternalOwnerEmail",
+      "displayName": "InternalOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RequestStatus",
+      "displayName": "RequestStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Requested",
+        "Reminded",
+        "Received",
+        "In Review",
+        "Accepted",
+        "Rejected",
+        "Waived",
+        "Cancelled"
+      ],
+      "default": "Requested"
+    },
+    {
+      "internalName": "DateReceived",
+      "displayName": "DateReceived",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DateReviewed",
+      "displayName": "DateReviewed",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ReviewerEmail",
+      "displayName": "ReviewerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "ApprovalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Not Required",
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      "default": "Not Required"
+    },
+    {
+      "internalName": "RejectionReason",
+      "displayName": "RejectionReason",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ResubmissionRequired",
+      "displayName": "ResubmissionRequired",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "FileLink",
+      "displayName": "FileLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ReminderCount",
+      "displayName": "ReminderCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "LastReminderDate",
+      "displayName": "LastReminderDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EscalationStatus",
+      "displayName": "EscalationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "None",
+        "PM",
+        "Ops",
+        "Executive"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "IsCritical",
+      "displayName": "IsCritical",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "ExpirationDate",
+      "displayName": "ExpirationDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsStale",
+      "displayName": "IsStale",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "FolderTarget",
+      "displayName": "FolderTarget",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "e.g. 05 - Tax Returns"
+    },
+    {
+      "internalName": "TemplateItemKey",
+      "displayName": "TemplateItemKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PortalVisible",
+      "displayName": "PortalVisible",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "Audience",
+      "displayName": "Audience",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Client",
+        "Lender",
+        "Investor",
+        "Internal"
+      ],
+      "default": "Client"
+    }
+  ]
+}

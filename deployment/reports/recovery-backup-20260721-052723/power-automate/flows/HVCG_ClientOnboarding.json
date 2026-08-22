@@ -1,0 +1,143 @@
+{
+  "flowName": "HVCG_ClientOnboarding",
+  "displayName": "HVCG_ClientOnboarding",
+  "description": "Full onboarding orchestration when a client becomes active.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Clients",
+    "condition": "ClientStage changes to 'Active Client'"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook",
+    "Teams"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Welcome email send if feature flag true"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "ValidateRequiredFields",
+      "params": {
+        "fields": [
+          "Title",
+          "ClientCode",
+          "RelationshipOwnerEmail",
+          "ProjectManagerEmail"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "action": "EnsureEngagement",
+      "params": {
+        "list": "HVCG_Engagements",
+        "status": "Active"
+      }
+    },
+    {
+      "id": 4,
+      "action": "CallChildFlow",
+      "params": {
+        "flow": "HVCG_CreateClientWorkspace"
+      }
+    },
+    {
+      "id": 5,
+      "action": "CallChildFlow",
+      "params": {
+        "flow": "HVCG_CreateProjectFromTemplate",
+        "templateKey": "general-client-onboarding"
+      }
+    },
+    {
+      "id": 6,
+      "action": "CallChildFlow",
+      "params": {
+        "flow": "HVCG_CreateDocumentRequests"
+      }
+    },
+    {
+      "id": 7,
+      "action": "CreateTask",
+      "params": {
+        "title": "First internal document review",
+        "role": "FinancialAnalyst",
+        "dueDays": 7
+      }
+    },
+    {
+      "id": 8,
+      "action": "CreateTask",
+      "params": {
+        "title": "Schedule kickoff meeting",
+        "role": "ProjectManager",
+        "dueDays": 2
+      }
+    },
+    {
+      "id": 9,
+      "action": "CreateFinancialMilestones",
+      "params": {
+        "fromClientFields": [
+          "SetupFee",
+          "MonthlyRetainer"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "action": "DraftWelcomeEmail",
+      "params": {
+        "template": "templates/communications/welcome-client.md",
+        "sendOnlyIf": "HVCG_ENABLE_CLIENT_EMAILS and SendApproved"
+      }
+    },
+    {
+      "id": 11,
+      "action": "UpdateClient",
+      "params": {
+        "OverallHealth": "Green",
+        "IsActive": true
+      }
+    },
+    {
+      "id": 12,
+      "action": "CreateAuditEvent",
+      "params": {
+        "eventType": "ClientOnboarded"
+      }
+    },
+    {
+      "id": 13,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

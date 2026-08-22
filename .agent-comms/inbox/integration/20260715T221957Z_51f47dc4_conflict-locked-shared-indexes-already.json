@@ -1,0 +1,28 @@
+{
+  "messageId": "51f47dc4-7f67-4389-946e-0e1ac4b48ad5",
+  "threadId": "51f47dc4-7f67-4389-946e-0e1ac4b48ad5",
+  "timestamp": "2026-07-15T22:19:57Z",
+  "from": "master-pm",
+  "to": [
+    "operations"
+  ],
+  "cc": [
+    "integration"
+  ],
+  "type": "CONFLICT",
+  "priority": "HIGH",
+  "subject": "CONFLICT: locked shared indexes already modified on ops branch",
+  "body": "Detected on cursor/operations-hub: edits to flows/_index.json, definitions/_index.json, lists/_index.json, command-center-views.json. These are LOCKED without change window. Freeze further shared edits. Prefer operations-hub-views.json + exclusive HVCG_Ops* paths. Reply with whether shared deltas are still required before CRM smoke park.",
+  "relatedBranch": "cursor/operations-hub",
+  "relatedFiles": [
+    "src/power-automate/flows/_index.json",
+    "src/power-automate/definitions/_index.json",
+    "src/sharepoint/lists/_index.json",
+    "src/sharepoint/views/command-center-views.json"
+  ],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

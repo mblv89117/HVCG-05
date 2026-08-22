@@ -1,0 +1,113 @@
+{
+  "title": "HVCG_AIJobSteps",
+  "description": "AI \u2014 Steps within an AI job",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "JobId",
+      "displayName": "JobId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_AIJobs"
+    },
+    {
+      "internalName": "StepOrder",
+      "displayName": "StepOrder",
+      "type": "Number",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "StepType",
+      "displayName": "StepType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "GatherContext",
+        "Prompt",
+        "ToolCall",
+        "Generate",
+        "Validate",
+        "Review",
+        "Finalize"
+      ]
+    },
+    {
+      "internalName": "StepStatus",
+      "displayName": "StepStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pending",
+        "Running",
+        "Succeeded",
+        "Failed",
+        "Skipped"
+      ],
+      "default": "Pending"
+    },
+    {
+      "internalName": "ToolKey",
+      "displayName": "ToolKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InputSummary",
+      "displayName": "InputSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OutputSummary",
+      "displayName": "OutputSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ErrorMessage",
+      "displayName": "ErrorMessage",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "StartedDate",
+      "displayName": "StartedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CompletedDate",
+      "displayName": "CompletedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

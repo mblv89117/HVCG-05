@@ -1,0 +1,173 @@
+{
+  "templateKey": "lender-package",
+  "title": "Lender Package",
+  "templateType": "Project",
+  "defaultDurationDays": 28,
+  "workstreams": [
+    "Lender packaging",
+    "Financial document collection",
+    "Data-room preparation"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Checklist",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Assembly",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "QC",
+      "seq": 3
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Docs complete",
+      "offsetDays": 14,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Package ready",
+      "offsetDays": 28,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Apply lender checklist",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "OperationsAssistant",
+      "description": "Map docs to requests.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Assemble binder/index",
+      "phase": "p2",
+      "offsetDays": 18,
+      "defaultRole": "FinancialAnalyst",
+      "description": "PDF package + index.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t3",
+      "title": "QC against checklist",
+      "phase": "p3",
+      "offsetDays": 24,
+      "defaultRole": "ProjectManager",
+      "description": "No missing criticals.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t4",
+      "title": "Secure share to lender",
+      "phase": "p3",
+      "offsetDays": 28,
+      "defaultRole": "OperationsManager",
+      "description": "Approved sharing process only.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Core financial package",
+      "documentCategory": "Historical Financials",
+      "folderTarget": "03 - Historical Financials",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Core financial package"
+    },
+    {
+      "key": "d2",
+      "title": "Bank statements",
+      "documentCategory": "Bank Statements",
+      "folderTarget": "06 - Bank Statements",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Bank statements"
+    },
+    {
+      "key": "d3",
+      "title": "Debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Debt schedule"
+    },
+    {
+      "key": "d4",
+      "title": "Corporate docs",
+      "documentCategory": "Corporate",
+      "folderTarget": "01 - Corporate Documents",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Corporate docs"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Lender package",
+      "deliverableType": "Lender Package",
+      "draftOffsetDays": 20,
+      "finalOffsetDays": 28,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Unauthorized sharing",
+      "likelihood": "Low",
+      "impact": "Critical",
+      "mitigation": "Only approved external share workflow"
+    }
+  ],
+  "qualityControlChecks": [
+    "Sharing logged in Approvals"
+  ],
+  "automationTriggers": [
+    "External share approval"
+  ],
+  "clientResponsibilities": [
+    "Authorize named recipients"
+  ],
+  "internalResponsibilities": [
+    "Least privilege links with expiry"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

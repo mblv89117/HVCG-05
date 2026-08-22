@@ -1,0 +1,40 @@
+{
+  "name": "HVCG_DeliverableApproval",
+  "top": [
+    "Log_Start",
+    "Get_Deliverable",
+    "Init_ApproverEmail",
+    "Condition_AlreadyApproved"
+  ],
+  "full_actions_tree_keys": [
+    "Log_Start",
+    "Get_Deliverable",
+    "Init_ApproverEmail",
+    "Condition_AlreadyApproved"
+  ],
+  "already_expr": {
+    "or": [
+      {
+        "equals": [
+          "@outputs('Get_Deliverable')?['body/DeliverableStatus/Value']",
+          "Approved"
+        ]
+      },
+      {
+        "equals": [
+          "@outputs('Get_Deliverable')?['body/DeliverableStatus/Value']",
+          "Delivered"
+        ]
+      }
+    ]
+  },
+  "then": [
+    "Log_Skipped",
+    "Terminate_Skipped"
+  ],
+  "else": [
+    "Create_Approval",
+    "Start_an_approval",
+    "Condition_Approved"
+  ]
+}
