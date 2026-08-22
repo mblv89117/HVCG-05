@@ -151,6 +151,14 @@ describe('operator desk copy', () => {
     assert.match(html, /Recovered client operating records/);
     assert.match(html, /HVCG vs client responsibilities/);
     assert.match(html, /Missing documents/);
+    assert.match(html, /HVCG —/);
+    assert.match(html, /Client —/);
+    assert.match(html, /1 waiting/);
+    assert.match(html, /4 missing-document notes/);
+    assert.match(html, /No inventoried files yet in/);
+    assert.equal(html.includes('class="kind">CONFIRMED'), false);
+    assert.equal(html.includes('class="kind">knowledge operationalized'), false);
+    assert.equal(html.includes('Use recovered filenames as reference-only knowledge'), false);
     assert.match(html, /Recovered capital packets/);
     assert.match(html, /Recovered documents/);
     assert.match(html, /Recovered projects/);
