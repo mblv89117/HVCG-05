@@ -156,6 +156,8 @@ export function buildAskAtlasAnswer(
       tools: ['operator_operating_picture', 'hvs_actionable_queues'],
       classification: honestEmpty ? 'HONEST_EMPTY' : items[0]!.classification,
       result,
+      readWriteStatus: 'READ_AUTO',
+      policyDecision: result,
     },
   };
 }
