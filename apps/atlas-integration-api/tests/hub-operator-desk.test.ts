@@ -156,6 +156,11 @@ describe('operator desk copy', () => {
     assert.match(html, /1 waiting/);
     assert.match(html, /4 missing-document notes/);
     assert.match(html, /No inventoried files yet in/);
+    assert.ok(html.indexOf('<h2>Needs Action</h2>') < html.indexOf('<h2>Waiting</h2>'));
+    assert.ok(html.indexOf('<h2>Waiting</h2>') < html.indexOf('<h2>Decision Required</h2>'));
+    assert.ok(html.indexOf('<h2>Decision Required</h2>') < html.indexOf('<h2>Recovered HVS clients</h2>'));
+    assert.equal((html.match(/<h2>Waiting<\/h2>/g) || []).length, 1);
+    assert.equal((html.match(/<h2>Decision Required<\/h2>/g) || []).length, 1);
     const recoveredRecordsHtml = html.slice(
       html.indexOf('<h2>Recovered client operating records</h2>'),
       html.indexOf('<h2>HVCG vs client responsibilities</h2>'),

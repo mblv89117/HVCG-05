@@ -54,5 +54,11 @@ test('actionable HVS knowledge stays honest and useful', () => {
   assert.equal(serialized.includes('$'), false);
   assert.equal(AMOUNT.test(serialized), false);
   assert.equal(/\bltv\s*[:=]\s*\d/i.test(serialized), false);
-  assert.match(serialized, /Do not invent Hub MI rows, amounts, LTV, or completion/);
+  assert.equal(serialized.includes('Use recovered filenames as reference-only knowledge'), false);
+  assert.equal(
+    rows.every((row) =>
+      row.hvcgResponsibilities.every((item) => !/reference-only knowledge/i.test(item.title)),
+    ),
+    true,
+  );
 });

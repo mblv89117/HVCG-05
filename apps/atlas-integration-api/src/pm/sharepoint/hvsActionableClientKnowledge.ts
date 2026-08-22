@@ -189,15 +189,6 @@ export function hvsActionableClientKnowledge(): ActionableClientKnowledge[] {
         evidence: projects.map((row) => row.title).join('; '),
       });
     }
-    if (files.length) {
-      hvcgResponsibilities.push({
-        party: 'HVCG',
-        title: 'Use recovered filenames as reference-only knowledge',
-        classification: 'CONFIRMED',
-        evidence: 'Do not invent Hub MI rows, amounts, LTV, or completion from filenames.',
-      });
-    }
-
     const clientResponsibilities: ActionableResponsibility[] = [];
     for (const row of checklistFiles) {
       clientResponsibilities.push({

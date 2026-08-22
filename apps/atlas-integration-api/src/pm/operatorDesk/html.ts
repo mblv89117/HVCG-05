@@ -400,20 +400,12 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     }
   </section>
   <section>
-    <h2>Waiting</h2>
-    ${operatingList(op.queues.waiting, 'No customer Waiting items in entitled scope.')}
-  </section>
-  <section>
     <h2>Overdue</h2>
     ${operatingList(op.queues.overdue, 'No customer Overdue items in entitled scope.')}
   </section>
   <section>
     <h2>Blocked</h2>
     ${operatingList(op.queues.blocked, 'No customer Blocked items in entitled scope.')}
-  </section>
-  <section>
-    <h2>Decision Required</h2>
-    ${operatingList(op.queues.decisionRequired, 'No customer Decision Required items in entitled scope.')}
   </section>
   <section>
     <h2>At Risk</h2>
