@@ -62,6 +62,19 @@ export function listDocumentRequests(dataDir: string, clientCode: string): Docum
   return loadStore(dataDir).requests.filter((row) => row.clientCode === clientCode);
 }
 
+export function updateDocumentRequest(
+  dataDir: string,
+  input: { clientCode: string; id: string; status: DocumentRequestRecord['status'] },
+): DocumentRequestRecord | undefined {
+  if (!isCanonicalClientCode(input.clientCode)) return undefined;
+  const store = loadStore(dataDir);
+  const row = store.requests.find((item) => item.id === input.id && item.clientCode === input.clientCode);
+  if (!row) return undefined;
+  row.status = input.status;
+  saveStore(dataDir, store);
+  return row;
+}
+
 export function createDocumentRequest(
   dataDir: string,
   input: { clientCode: string; title: string; createdBy: string },
