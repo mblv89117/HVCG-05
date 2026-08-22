@@ -11,7 +11,12 @@ import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { isValidProjectId } from '../projectId.ts';
 import { clientPortalHrefs } from './clientActivation.ts';
 import { attentionClassification, listClientAttention } from './attention.ts';
-import { createDocumentRequest, listDocumentRequests } from './documentRequests.ts';
+import {
+  createDocumentRequest,
+  isDocumentRequestStatus,
+  listDocumentRequests,
+  updateDocumentRequest,
+} from './documentRequests.ts';
 import { assertWritableClientCode } from './knowledgeClassification.ts';
 import { buildKnowledgeLedger } from './knowledgeLedger.ts';
 import { buildKnowledgeOperatingPicture } from './knowledgeOperating.ts';
@@ -653,6 +658,77 @@ export async function handleSharePointPmRoutes(opts: {
           return true;
         }
       }
+    }
+
+    const clientDocRequestOne = path.match(/^\/api\/pm\/clients\/([^/]+)\/document-requests\/([^/]+)$/);
+    if (clientDocRequestOne) {
+      const rawCode = decodeURIComponent(clientDocRequestOne[1]);
+      const requestId = decodeURIComponent(clientDocRequestOne[2]);
+      if (!isCanonicalClientCode(rawCode) || !requestId) {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      const client = await service.authorizeClient(principal, rawCode);
+      if (client === 'not_found') {
+        send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+        return true;
+      }
+      if (method === 'GET') {
+        const found = listDocumentRequests(dataDir, rawCode).find((row) => row.id === requestId);
+        if (!found) {
+          send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+          return true;
+        }
+        send(
+          res,
+          200,
+          { documentRequest: found, source: 'hub_governed_overlay', binariesInAtlas: false },
+          origin,
+        );
+        return true;
+      }
+      if (method === 'PATCH') {
+        if (!isDocumentRequestStatus(body.status)) {
+          send(
+            res,
+            400,
+            { error: 'invalid_status', code: 'invalid_status', message: 'status must be requested, received, or cancelled.' },
+            origin,
+          );
+          return true;
+        }
+        const updated = updateDocumentRequest(dataDir, {
+          clientCode: rawCode,
+          id: requestId,
+          status: body.status,
+          updatedBy: principal.userId,
+        });
+        if (!updated) {
+          send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
+          return true;
+        }
+        audit({
+          repo,
+          actorUserId: principal.userId,
+          action: 'pm_document_request_update',
+          outcome: 'success',
+          detail: `client=${rawCode} request=${updated.id} status=${updated.status}`,
+        });
+        send(
+          res,
+          200,
+          {
+            documentRequest: updated,
+            attention: listClientAttention(dataDir, rawCode),
+            source: 'hub_governed_overlay',
+            binariesInAtlas: false,
+          },
+          origin,
+        );
+        return true;
+      }
+      send(res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, origin);
+      return true;
     }
 
     const clientWorkspace = path.match(/^\/api\/pm\/clients\/([^/]+)\/(workspace|brief)$/);

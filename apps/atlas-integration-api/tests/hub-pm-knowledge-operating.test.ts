@@ -13,7 +13,7 @@ import {
   taskOperatingStates,
 } from '../src/pm/sharepoint/knowledgeClassification.ts';
 import { buildKnowledgeOperatingPicture } from '../src/pm/sharepoint/knowledgeOperating.ts';
-import { createDocumentRequest } from '../src/pm/sharepoint/documentRequests.ts';
+import { createDocumentRequest, updateDocumentRequest } from '../src/pm/sharepoint/documentRequests.ts';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { SharePointClient, SharePointPmService, SharePointProject, SharePointTask } from '../src/pm/sharepoint/repository.ts';
@@ -269,5 +269,26 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.syntheticAttention[0]?.classification, 'SYNTHETIC_QA');
     assert.equal(picture.syntheticAttention[0]?.title, 'SYNQA W-9 request');
     assert.equal(picture.syntheticAttention[0]?.invented, false);
+    updateDocumentRequest(dir, {
+      clientCode: 'SYN01',
+      id: picture.syntheticAttention[0]!.id,
+      status: 'received',
+      updatedBy: staff.userId,
+    });
+    const after = await buildKnowledgeOperatingPicture(
+      stubService({
+        clients: [
+          client({
+            clientCode: 'SYN01',
+            displayName: 'SYNTHETIC QA — Atlas Capital Operations',
+          }),
+        ],
+      }),
+      staff,
+      { dataDir: dir, hvsDataAccess: 'BLOCKED' },
+    );
+    assert.equal(after.syntheticAttention.length, 0);
+    assert.equal(after.queues['Needs Action'].length, 0);
+    assert.deepEqual(after.realClientsOperationalized, []);
   });
 });

@@ -1732,6 +1732,9 @@ describe('SharePoint HVCG_Leads operator queue', () => {
         body: JSON.stringify({ title: 'W-9' }),
       });
       assert.equal(reqs.status, 200);
+      const createdBody = (await reqs.json()) as { documentRequest: { id: string; title: string; binariesInAtlas: boolean } };
+      assert.equal(createdBody.documentRequest.title, 'W-9');
+      assert.equal(createdBody.documentRequest.binariesInAtlas, false);
       const listed = await fetch(`${base}/api/pm/clients/SYNTH01/document-requests`, { headers: auth('staff') });
       const listedBody = (await listed.json()) as { documentRequests: Array<{ title: string; binariesInAtlas: boolean }> };
       assert.equal(listedBody.documentRequests[0]?.title, 'W-9');
@@ -1745,6 +1748,39 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(attentionBody.attention.classification, 'SYNTHETIC_QA');
       assert.equal(attentionBody.attention.items[0]?.title, 'W-9');
       assert.equal(attentionBody.attention.items[0]?.invented, false);
+      const unsignedPatch = await fetch(
+        `${base}/api/pm/clients/SYNTH01/document-requests/${createdBody.documentRequest.id}`,
+        { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status: 'received' }) },
+      );
+      assert.equal(unsignedPatch.status, 401);
+      const badStatus = await fetch(`${base}/api/pm/clients/SYNTH01/document-requests/${createdBody.documentRequest.id}`, {
+        method: 'PATCH',
+        headers: auth('staff'),
+        body: JSON.stringify({ status: 'funded' }),
+      });
+      assert.equal(badStatus.status, 400);
+      const foreignPatch = await fetch(`${base}/api/pm/clients/HFD01/document-requests/${createdBody.documentRequest.id}`, {
+        method: 'PATCH',
+        headers: auth('staff'),
+        body: JSON.stringify({ status: 'received' }),
+      });
+      assert.equal(foreignPatch.status, 404);
+      const received = await fetch(`${base}/api/pm/clients/SYNTH01/document-requests/${createdBody.documentRequest.id}`, {
+        method: 'PATCH',
+        headers: auth('staff'),
+        body: JSON.stringify({ status: 'received' }),
+      });
+      assert.equal(received.status, 200);
+      const receivedBody = (await received.json()) as {
+        documentRequest: { status: string; binariesInAtlas: boolean };
+        attention: Array<{ id: string }>;
+      };
+      assert.equal(receivedBody.documentRequest.status, 'received');
+      assert.equal(receivedBody.documentRequest.binariesInAtlas, false);
+      assert.equal(receivedBody.attention.length, 0);
+      const after = await fetch(`${base}/api/pm/clients/SYNTH01/attention`, { headers: auth('staff') });
+      const afterBody = (await after.json()) as { attention: { items: unknown[] } };
+      assert.equal(afterBody.attention.items.length, 0);
       const foreignAttention = await fetch(`${base}/api/pm/clients/HFD01/attention`, { headers: auth('staff') });
       assert.equal(foreignAttention.status, 404);
       assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
