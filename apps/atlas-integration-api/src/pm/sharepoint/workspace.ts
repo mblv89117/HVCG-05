@@ -6,6 +6,7 @@
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
+import { clientPortalHrefs, isReadyClientActivation } from './clientActivation.ts';
 import { PmHttpError } from './errors.ts';
 import { isFileIndexRow } from './fabric/fileIndex.ts';
 import type { SharePointClient, SharePointPmService, SharePointProject, SharePointTask } from './repository.ts';
@@ -82,6 +83,12 @@ export interface ClientWorkspacePayload {
   };
   nextActions: Array<{ text: string; evidence: EvidenceRef[] }>;
   source: 'sharepoint';
+  gccWorkspaceKey: string;
+  clientPortalHrefs: ReturnType<typeof clientPortalHrefs>;
+  portalAccessProvisioned: boolean;
+  documentRequestPathProvisioned: boolean;
+  workspaceProvisioning: 'not_started' | 'staged' | 'ready' | 'blocked_pending_owner';
+  entraGroupProvisioned: false;
 }
 
 function cell(
@@ -215,10 +222,13 @@ export async function buildSharePointClientWorkspace(
   if (!isCanonicalClientCode(clientCode) || clientCode === '*') {
     throw new PmHttpError(404, 'not_found', 'not_found');
   }
-  const client = await service.authorizeClient(principal, clientCode);
-  if (client === 'not_found') {
+  const authorized = await service.authorizeClient(principal, clientCode);
+  if (authorized === 'not_found') {
     throw new PmHttpError(404, 'not_found', 'not_found');
   }
+  const client = await service.persistVerifyReplayForClient(authorized);
+  const hrefs = clientPortalHrefs(client.clientCode);
+  const ready = isReadyClientActivation(client.activationStatus) || isReadyClientActivation(client.activation?.status);
   const projects = (await service.listAuthorizedProjects(principal)).filter((p) => p.clientCode === clientCode);
   const allTasks = await service.listAuthorizedTasks(principal);
   const tasks = allTasks.filter((t) => t.clientCode === clientCode || projects.some((p) => p.id === t.projectId));
@@ -330,5 +340,14 @@ export async function buildSharePointClientWorkspace(
     },
     nextActions,
     source: 'sharepoint',
+    gccWorkspaceKey: `gcc-${client.clientCode}`,
+    clientPortalHrefs: hrefs,
+    portalAccessProvisioned: ready || client.activation?.portalAccessProvisioned === true,
+    documentRequestPathProvisioned: ready || client.activation?.documentRequestPathProvisioned === true,
+    workspaceProvisioning:
+      ready || client.activation?.workspaceProvisioning === 'ready'
+        ? 'ready'
+        : client.activation?.workspaceProvisioning || 'not_started',
+    entraGroupProvisioned: false,
   };
 }

@@ -534,11 +534,12 @@ export async function handleSharePointPmRoutes(opts: {
         send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
         return true;
       }
-      const client = await service.authorizeClient(principal, rawCode);
-      if (client === 'not_found') {
+      const authorized = await service.authorizeClient(principal, rawCode);
+      if (authorized === 'not_found') {
         send(res, 404, { error: 'not_found', code: 'not_found' }, origin);
         return true;
       }
+      const client = await service.persistVerifyReplayForClient(authorized);
       const hrefs = clientPortalHrefs(rawCode);
       send(
         res,
@@ -551,6 +552,7 @@ export async function handleSharePointPmRoutes(opts: {
             clientCode: rawCode,
             displayName: client.displayName,
             ...hrefs,
+            clientPortalHrefs: hrefs,
             portalAccessProvisioned: true,
             workspaceProvisioning: 'ready',
             documentRequestPathProvisioned: true,
@@ -641,7 +643,18 @@ export async function handleSharePointPmRoutes(opts: {
         rawCode,
         url.searchParams.get('opportunityId') || undefined,
       );
-      send(res, 200, activation, origin);
+      const client = await service.persistVerifyReplayForClient(activation.client);
+      send(
+        res,
+        200,
+        {
+          ...activation,
+          client,
+          activation: client.activation,
+          status: client.activationStatus || activation.status,
+        },
+        origin,
+      );
       return true;
     }
 

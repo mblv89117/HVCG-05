@@ -206,6 +206,11 @@ describe('synthetic client journey isolation', () => {
           clientDeskHref: string;
           portalAccessProvisioned: boolean;
           documentRequestPathProvisioned: boolean;
+          clientPortalHrefs: {
+            portalHref: string;
+            documentRequestHref: string;
+            clientDeskHref: string;
+          };
         };
         invitation: { email: string; outboundSent: boolean };
         inviteToken: string;
@@ -219,6 +224,9 @@ describe('synthetic client journey isolation', () => {
       assert.equal(stagedABody.workspace.portalHref, `/api/pm/clients/${SYN_A}/portal`);
       assert.equal(stagedABody.workspace.documentRequestHref, `/api/pm/clients/${SYN_A}/document-requests`);
       assert.equal(stagedABody.workspace.clientDeskHref, '/client');
+      assert.equal(stagedABody.workspace.clientPortalHrefs.portalHref, `/api/pm/clients/${SYN_A}/portal`);
+      assert.equal(stagedABody.workspace.clientPortalHrefs.documentRequestHref, `/api/pm/clients/${SYN_A}/document-requests`);
+      assert.equal(stagedABody.workspace.clientPortalHrefs.clientDeskHref, '/client');
       assert.equal(stagedABody.workspace.portalAccessProvisioned, true);
       assert.equal(stagedABody.workspace.documentRequestPathProvisioned, true);
       assert.ok(stagedABody.inviteToken.length >= 32);

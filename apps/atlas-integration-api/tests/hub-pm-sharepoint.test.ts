@@ -24,6 +24,11 @@ import { IntegrationRepository } from '../src/store/repository.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { UserBasicLookup } from '../src/entitlements/userLookup.ts';
 import { MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
+import {
+  activationIdempotencyKey,
+  parseActivationNotes,
+  writeActivationNotes,
+} from '../src/pm/sharepoint/clientActivation.ts';
 
 const SITE =
   'contoso.sharepoint.com,11111111-1111-4111-8111-111111111011,22222222-2222-4222-8222-222222222022';
@@ -1739,6 +1744,126 @@ describe('SharePoint HVCG_Leads operator queue', () => {
       assert.equal(store.auditEvents.some((e) => e.action === 'pm_client_activation_authorize' && e.detail.includes('entitlement=false')), true);
     }, () => ['SYNTH01']);
     assert.equal(process.env.INTEGRATION_CLIENT_ENTITLEMENT_GROUPS, entitlementBefore);
+  });
+
+  it('persist verify-replay binds workspace hrefs and stores Hub path flags without Entra', async () => {
+    await withCrmLeads(async ({ base, graph }) => {
+      const stale = {
+        version: 1 as const,
+        clientCode: 'SYNTH01',
+        opportunityId: '140',
+        status: 'verified' as const,
+        idempotencyKey: activationIdempotencyKey('SYNTH01', '140'),
+        verifiedAt: '2026-08-22T06:00:00.000Z',
+        verifiedBy: 'staff',
+        entitlementProvisioned: false as const,
+        entraGroupProvisioned: false as const,
+        sharePointLibraryProvisioned: false as const,
+        portalAccessProvisioned: false,
+        documentRequestPathProvisioned: false,
+        workspaceProvisioning: 'staged' as const,
+      };
+      graph.seed(
+        CLIENTS,
+        {
+          Title: 'SYNTHETIC QA Verify Replay',
+          ClientCode: 'SYNTH01',
+          ClientStage: 'Active Client',
+          InternalNotes: writeActivationNotes('operator note', stale),
+        },
+        '96',
+      );
+      graph.seed(
+        CLIENTS,
+        { Title: 'SYNTHETIC QA Isolated B', ClientCode: 'SYNQB02', ClientStage: 'Active Client' },
+        '97',
+      );
+      graph.seed(
+        OPPORTUNITIES,
+        {
+          Title: 'SYNTHETIC QA Verified Replay',
+          Stage: 'Won',
+          WinLossStatus: 'Won',
+          ClientIdLookupId: 96,
+        },
+        '140',
+      );
+
+      const workspace = await fetch(`${base}/api/pm/clients/SYNTH01/workspace`, { headers: auth('client') });
+      assert.equal(workspace.status, 200);
+      const wsBody = (await workspace.json()) as {
+        workspace: {
+          kind: string;
+          gccWorkspaceKey: string;
+          entraGroupProvisioned: boolean;
+          portalAccessProvisioned: boolean;
+          documentRequestPathProvisioned: boolean;
+          workspaceProvisioning: string;
+          clientPortalHrefs: {
+            portalHref: string;
+            documentRequestHref: string;
+            clientDeskHref: string;
+            workspaceHref: string;
+          };
+          client: {
+            clientCode: string;
+            activation?: {
+              portalAccessProvisioned: boolean;
+              documentRequestPathProvisioned: boolean;
+              workspaceProvisioning: string;
+              entraGroupProvisioned: boolean;
+              status: string;
+            };
+          };
+        };
+      };
+      assert.equal(wsBody.workspace.kind, 'client_workspace_v1');
+      assert.equal(wsBody.workspace.gccWorkspaceKey, 'gcc-SYNTH01');
+      assert.equal(wsBody.workspace.entraGroupProvisioned, false);
+      assert.equal(wsBody.workspace.portalAccessProvisioned, true);
+      assert.equal(wsBody.workspace.documentRequestPathProvisioned, true);
+      assert.equal(wsBody.workspace.workspaceProvisioning, 'ready');
+      assert.equal(wsBody.workspace.clientPortalHrefs.portalHref, '/api/pm/clients/SYNTH01/portal');
+      assert.equal(wsBody.workspace.clientPortalHrefs.documentRequestHref, '/api/pm/clients/SYNTH01/document-requests');
+      assert.equal(wsBody.workspace.clientPortalHrefs.clientDeskHref, '/client');
+      assert.equal(wsBody.workspace.clientPortalHrefs.workspaceHref, '/api/pm/clients/SYNTH01/workspace');
+      assert.equal(wsBody.workspace.client.activation?.status, 'verified');
+      assert.equal(wsBody.workspace.client.activation?.portalAccessProvisioned, true);
+      assert.equal(wsBody.workspace.client.activation?.documentRequestPathProvisioned, true);
+      assert.equal(wsBody.workspace.client.activation?.workspaceProvisioning, 'ready');
+      assert.equal(wsBody.workspace.client.activation?.entraGroupProvisioned, false);
+
+      const notes = (await graph.getItem(CLIENTS, '96'))?.fields.InternalNotes;
+      const stored = parseActivationNotes(typeof notes === 'string' ? notes : undefined);
+      assert.equal(stored?.status, 'verified');
+      assert.equal(stored?.portalAccessProvisioned, true);
+      assert.equal(stored?.documentRequestPathProvisioned, true);
+      assert.equal(stored?.workspaceProvisioning, 'ready');
+      assert.equal(stored?.entraGroupProvisioned, false);
+      assert.match(String((await graph.getItem(CLIENTS, '96'))?.fields.InternalNotes), /operator note/);
+
+      const foreign = await fetch(`${base}/api/pm/clients/SYNQB02/workspace`, { headers: auth('client') });
+      assert.equal(foreign.status, 404);
+      assert.equal(JSON.stringify(wsBody).includes('SYNQB02'), false);
+
+      const activationGet = await fetch(`${base}/api/pm/clients/SYNTH01/activation?opportunityId=140`, {
+        headers: auth('staff'),
+      });
+      assert.equal(activationGet.status, 200);
+      const activationBody = (await activationGet.json()) as {
+        activation?: { portalAccessProvisioned: boolean; entraGroupProvisioned: boolean; workspaceProvisioning: string };
+        status: string;
+      };
+      assert.equal(activationBody.status, 'verified');
+      assert.equal(activationBody.activation?.portalAccessProvisioned, true);
+      assert.equal(activationBody.activation?.workspaceProvisioning, 'ready');
+      assert.equal(activationBody.activation?.entraGroupProvisioned, false);
+
+      const unsignedDesk = await fetch(`${base}/client`);
+      assert.equal(unsignedDesk.status, 401);
+      const staffDesk = await fetch(`${base}/client`, { headers: auth('staff') });
+      assert.equal(staffDesk.status, 403);
+    }, (oid) => (oid === USER_CLIENT ? ['SYNTH01'] : ['SYNTH01', 'SYNQB02']));
   });
 
   it('does not convert Disqualified leads and returns 503 when Opportunities are unconfigured', async () => {

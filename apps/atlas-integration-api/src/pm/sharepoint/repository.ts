@@ -25,7 +25,9 @@ import {
   classifyClientActivation,
   emptyProvisioning,
   governedHubProvisioning,
+  needsGovernedHubReplay,
   parseActivationNotes,
+  replayGovernedHubProvisioning,
   writeActivationNotes,
   type ClientActivationAction,
   type ClientActivationRecord,
@@ -2113,6 +2115,35 @@ export class SharePointPmService {
     return matches[0] || 'not_found';
   }
 
+  /**
+   * After authorized/active/verified, persist Hub portal/workspace/document-request
+   * flags. Leaves entraGroupProvisioned / entitlement / SharePoint library false.
+   * Best-effort: GET surfaces still return computed hrefs if the write fails.
+   */
+  async persistVerifyReplayForClient(client: SharePointClient): Promise<SharePointClient> {
+    const status = classifyClientActivation({
+      clientStage: client.clientStage,
+      record: client.activation,
+    });
+    if (!needsGovernedHubReplay(client.activation, status) || !client.activation) return client;
+    const next = replayGovernedHubProvisioning(client.activation);
+    try {
+      const item = await this.graph.getItem(this.settings.clientsListId, client.itemId);
+      if (!item?.etag) {
+        return { ...client, activation: next, activationStatus: status };
+      }
+      const patched = await this.patchListItemFields(
+        this.settings.clientsListId,
+        client.itemId,
+        { InternalNotes: writeActivationNotes(asString(item.fields.InternalNotes), next) },
+        item.etag,
+      );
+      return this.mapClient(patched) || { ...client, activation: next, activationStatus: status };
+    } catch {
+      return { ...client, activation: next, activationStatus: status };
+    }
+  }
+
   async getClientActivation(
     principal: AtlasPrincipal,
     clientCode: string,
@@ -2196,20 +2227,18 @@ export class SharePointPmService {
       current.client.clientStage === 'Active Client' &&
       (action === 'authorize' || action === 'verify') &&
       record?.opportunityId === opportunityId;
+    let verifyReplay = false;
     if (replayActive && record) {
       const needsGovernedPath =
-        action === 'verify' &&
-        (record.status !== 'verified' ||
-          record.portalAccessProvisioned !== true ||
-          record.documentRequestPathProvisioned !== true ||
-          record.workspaceProvisioning !== 'ready');
+        needsGovernedHubReplay(record, record.status) ||
+        (action === 'verify' && record.status !== 'verified');
       if (needsGovernedPath) {
+        verifyReplay = true;
         record = {
-          ...record,
-          ...governedHubProvisioning(),
-          status: 'verified',
-          verifiedAt: record.verifiedAt || now,
-          verifiedBy: record.verifiedBy || actor,
+          ...replayGovernedHubProvisioning(record),
+          status: action === 'verify' ? 'verified' : record.status,
+          verifiedAt: action === 'verify' ? record.verifiedAt || now : record.verifiedAt,
+          verifiedBy: action === 'verify' ? record.verifiedBy || actor : record.verifiedBy,
         };
       } else {
         return {
@@ -2313,7 +2342,7 @@ export class SharePointPmService {
       activation: record,
       created: action === 'authorize' && current.client.clientStage !== 'Active Client',
       entitlementProvisioned: false,
-      replay: false,
+      replay: verifyReplay,
     };
   }
 

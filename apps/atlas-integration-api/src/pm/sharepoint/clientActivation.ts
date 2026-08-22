@@ -153,6 +153,27 @@ export function isReadyClientActivation(status: string | undefined): boolean {
   return status === 'authorized' || status === 'active' || status === 'verified';
 }
 
+export function needsGovernedHubReplay(
+  record: ClientActivationRecord | undefined,
+  status?: string,
+): boolean {
+  const ready = isReadyClientActivation(record?.status) || isReadyClientActivation(status);
+  if (!ready || !record) return false;
+  return (
+    record.portalAccessProvisioned !== true ||
+    record.documentRequestPathProvisioned !== true ||
+    record.workspaceProvisioning !== 'ready'
+  );
+}
+
+/** Persist Hub-local path flags only. Never flips Entra / library / entitlement. */
+export function replayGovernedHubProvisioning(record: ClientActivationRecord): ClientActivationRecord {
+  return {
+    ...record,
+    ...governedHubProvisioning(),
+  };
+}
+
 export function clientPortalHrefs(clientCode: string) {
   return {
     portalHref: `/api/pm/clients/${clientCode}/portal`,
