@@ -45,6 +45,7 @@ import {
   type MilestoneHubStatus,
 } from './mapping.ts';
 import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
+import { assertWritableClientCode } from './knowledgeClassification.ts';
 import {
   CONVERTIBLE_LEAD_STATUSES,
   clientFromLeadIdempotencyKey,
@@ -1178,6 +1179,7 @@ export class SharePointPmService {
         if (mapped) return mapped;
       }
     }
+    assertWritableClientCode(clientCode, 'HVCG_Clients create');
     const fields: Record<string, unknown> = {
       Title: title,
       ClientCode: clientCode,
@@ -1209,6 +1211,7 @@ export class SharePointPmService {
     etag: string | undefined,
   ): Promise<SharePointClient> {
     assertMannyOnly(principal, 'HVCG_Clients update');
+    assertWritableClientCode(clientCode, 'HVCG_Clients update');
     if (!etag) throw new PmHttpError(400, 'PM_ETAG_REQUIRED', 'If-Match is required for SharePoint PM updates.');
     if (body.ownerId || body.allowedClientIds || body.ClientCode || body.clientCode) {
       throw new PmHttpError(400, 'immutable_field', 'ClientCode and owner override cannot be changed via PATCH.');
@@ -2161,6 +2164,7 @@ export class SharePointPmService {
     entitlementProvisioned: false;
     replay: boolean;
   }> {
+    assertWritableClientCode(clientCode, 'client activation');
     const action = (asString(body.action) || '') as ClientActivationAction;
     if (!['request', 'review', 'authorize', 'verify'].includes(action)) {
       throw new PmHttpError(400, 'invalid_input', 'action must be request, review, authorize, or verify.');

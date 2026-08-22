@@ -1822,9 +1822,30 @@ describe('SharePoint HVCG_Leads operator queue', () => {
 
         const staff = await fetch(`${base}/api/pm/documents`, { headers: auth('staff') });
         const staffBody = (await staff.json()) as {
-          documents: { empty: boolean; items: Array<{ clientCode: string }> };
+          documents: { empty: boolean; items: Array<{ clientCode: string; classification?: string; provenanceLabel?: string }> };
         };
         assert.equal(staffBody.documents.items.some((i) => i.clientCode === 'HART01'), false);
+        assert.ok(staffBody.documents.items.some((i) => i.clientCode === 'SYNTH01' && i.provenanceLabel === 'CONFIRMED'));
+
+        const knowledge = await fetch(`${base}/api/pm/knowledge`, { headers: auth('staff') });
+        assert.equal(knowledge.status, 200);
+        const knowledgeBody = (await knowledge.json()) as {
+          knowledge: {
+            kind: string;
+            graphSitesSearch: boolean;
+            realClientsOperationalized: string[];
+            honestEmpty: boolean;
+            recoveryLedger: Array<{ clientCode: string; operationalized: boolean }>;
+          };
+        };
+        assert.equal(knowledgeBody.knowledge.kind, 'knowledge_operating_picture_v1');
+        assert.equal(knowledgeBody.knowledge.graphSitesSearch, false);
+        assert.deepEqual(knowledgeBody.knowledge.realClientsOperationalized, []);
+        assert.equal(knowledgeBody.knowledge.honestEmpty, true);
+        assert.equal(
+          knowledgeBody.knowledge.recoveryLedger.some((row) => row.clientCode === 'HFD01' && row.operationalized === false),
+          true,
+        );
       }, (oid) => (oid === USER_CLIENT || oid === USER_STAFF ? ['SYNTH01'] : ['SYNTH01']));
     } finally {
       if (prevComms === undefined) delete process.env.INTEGRATION_PM_COMMUNICATIONS_LIST_ID;
