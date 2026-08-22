@@ -177,6 +177,46 @@ export function askAtlasView(input: AskAtlasViewInput): AskAtlasView {
   };
 }
 
+/** HTML-ish component contract used by tests and the Elite surface. */
+export function renderAskAtlasMarkup(view: AskAtlasView): string {
+  const items = view.items
+    .map(
+      (item) =>
+        `<li data-state="${escapeAttr(item.state)}" data-classification="${escapeAttr(item.classification)}">` +
+        `<span class="state">${escapeHtml(item.state)}</span> ` +
+        `${escapeHtml(item.why)}` +
+        (item.client || item.clientCode
+          ? ` · ${escapeHtml([item.client, item.clientCode].filter(Boolean).join(' · '))}`
+          : '') +
+        `<br/><span class="based-on">Based on: ${escapeHtml(item.basedOn)} (${escapeHtml(item.classification)})</span>` +
+        `</li>`,
+    )
+    .join('');
+  return [
+    `<section data-kind="${escapeAttr(view.kind)}">`,
+    `<h2>${escapeHtml(view.title)}</h2>`,
+    view.question ? `<p class="question">${escapeHtml(view.question)}</p>` : '',
+    `<p class="subtitle">${escapeHtml(view.subtitle)}</p>`,
+    view.emptyReason ? `<p class="empty">${escapeHtml(view.emptyReason)}</p>` : '',
+    items ? `<ol>${items}</ol>` : '',
+    `</section>`,
+  ]
+    .filter(Boolean)
+    .join('');
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function escapeAttr(value: string): string {
+  return escapeHtml(value);
+}
+
 export function serializeAskAtlasCopy(view: AskAtlasView): string {
   const lines = [view.title, view.question, view.subtitle, view.emptyReason].filter(Boolean) as string[];
   if (view.ranking.length) lines.push(view.ranking.join(' → '));

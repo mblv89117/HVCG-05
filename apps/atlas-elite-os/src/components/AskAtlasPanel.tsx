@@ -64,7 +64,9 @@ export function AskAtlasPanel() {
     return () => {
       cancelled = true;
     };
-  }, [tokenReady, hasBearer, accessToken, auth.userId, auth.organizationId, auth.clientIds, auth.email, auth.roles]);
+    // Hub Bearer identity is the fail-closed gate. Scope headers are not a second fetch key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clientIds/roles are new arrays each render
+  }, [tokenReady, hasBearer, accessToken, auth.userId, auth.organizationId, auth.email]);
 
   const view = askAtlasView({
     signed: auth.hasBearer,
