@@ -1,0 +1,233 @@
+{
+  "title": "HVCG_AgentEvents",
+  "description": "Atlas AI - normalized event queue for agentic operating signals",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Short event label"
+    },
+    {
+      "internalName": "EventId",
+      "displayName": "EventId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable event key"
+    },
+    {
+      "internalName": "EventType",
+      "displayName": "EventType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Signal that may route to an Atlas agent",
+      "choices": [
+        "UserQuestion",
+        "DocumentUploaded",
+        "DocumentRequested",
+        "TaskOverdue",
+        "ProjectBlocked",
+        "DecisionRequired",
+        "ClientEvidenceFound",
+        "CapitalPacketDetected",
+        "OpportunityAging",
+        "CollectionEvidenceFound",
+        "GCCRiskSignal",
+        "SearchFailure",
+        "WorkflowFailure",
+        "ProductionHealthSignal",
+        "DataQualityConflict",
+        "EngineeringMissionCreated",
+        "ScheduledSweep"
+      ]
+    },
+    {
+      "internalName": "SourceSystem",
+      "displayName": "SourceSystem",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Originating system",
+      "choices": [
+        "Atlas",
+        "SharePoint",
+        "OneDrive",
+        "PowerApps",
+        "PowerAutomate",
+        "IntegrationHub",
+        "GrowthCommandCenter",
+        "AgentCopilot",
+        "360GrowthSolution",
+        "Azure",
+        "CursorV4",
+        "System"
+      ],
+      "default": "Atlas"
+    },
+    {
+      "internalName": "SourceRecordType",
+      "displayName": "SourceRecordType",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "List/entity/file type that generated the event"
+    },
+    {
+      "internalName": "SourceRecordId",
+      "displayName": "SourceRecordId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Source item ID or business key"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Client isolation key if event is client-scoped"
+    },
+    {
+      "internalName": "RelatedEntityType",
+      "displayName": "RelatedEntityType",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Affected entity type"
+    },
+    {
+      "internalName": "RelatedEntityKey",
+      "displayName": "RelatedEntityKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Affected entity key"
+    },
+    {
+      "internalName": "PayloadSummary",
+      "displayName": "PayloadSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Minimal event payload; no secrets"
+    },
+    {
+      "internalName": "EvidenceReferences",
+      "displayName": "EvidenceReferences",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON references to source evidence"
+    },
+    {
+      "internalName": "DataClassification",
+      "displayName": "DataClassification",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Highest data classification in payload/references",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ],
+      "default": "Confidential"
+    },
+    {
+      "internalName": "RequiredPermissionClass",
+      "displayName": "RequiredPermissionClass",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Maximum permission class required to act on this event",
+      "choices": [
+        "READ_AUTO",
+        "PROPOSE_AUTO",
+        "SAFE_INTERNAL_WRITE",
+        "GOVERNED_TECHNICAL_WRITE",
+        "OWNER_GATED"
+      ],
+      "default": "READ_AUTO"
+    },
+    {
+      "internalName": "EventStatus",
+      "displayName": "EventStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Event processing lifecycle",
+      "choices": [
+        "New",
+        "Routed",
+        "InProgress",
+        "Resolved",
+        "Suppressed",
+        "Failed",
+        "Archived"
+      ],
+      "default": "New"
+    },
+    {
+      "internalName": "DetectedDate",
+      "displayName": "DetectedDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": "When Atlas detected the event"
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Relevant deadline when evidenced"
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Routing priority",
+      "choices": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "default": "Medium"
+    },
+    {
+      "internalName": "RoutedWorkerKey",
+      "displayName": "RoutedWorkerKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "AI worker or agent capability selected by policy"
+    },
+    {
+      "internalName": "RelatedJobId",
+      "displayName": "RelatedJobId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Optional HVCG_AIJobs.JobId"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Duplicate-prevention key"
+    }
+  ]
+}

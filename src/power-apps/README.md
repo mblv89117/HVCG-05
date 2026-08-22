@@ -18,6 +18,8 @@
 |--------|------|---------|
 | scrHomeOps | Operations Home | Delivery command center |
 | scrHomeExec | Executive / CEO Home | Firm OS dashboard |
+| scrAskAtlas | Ask Atlas | Conversational operating intelligence with provenance |
+| scrAgentCenter | Agent Center | AI operations, activity, approvals, and engineering missions |
 | scrCRM | CRM Pipeline | Dashboard KPIs, leads, stage board/list, next-action, timeline preview |
 | scrOpportunityDetail | Opportunity Detail | Deal workspace: timeline, proposals, capital bridge, Copilot, next-action |
 | scrCapital | Capital Desk | Raises, lenders, investors |
@@ -61,6 +63,26 @@ If(
 Gallery filtered `RequiresExecutiveAttention = true` across Decisions, Clients, Projects, Issues, ChangeRequests (union collection on start).
 
 Columns: Client, Item, Reason, Deadline, Link.
+
+## Ask Atlas / Agent Center
+
+Ask Atlas is the persistent operator conversation surface for grounded HVCG
+operating intelligence. Agent Center is the native control surface for agent
+activity, approvals, recommendations, and Atlas-originated engineering missions.
+
+Screen specs:
+
+- `screens/scrAskAtlas.md`
+- `screens/scrAgentCenter.md`
+
+Core stores:
+
+- `HVCG_AskAtlasSessions`
+- `HVCG_AgentEvents`
+- `HVCG_AgentActivity`
+- `HVCG_EngineeringMissions`
+- existing `HVCG_AIWorkers`, `HVCG_AIJobs`, `HVCG_AIToolRegistry`,
+  `HVCG_AIApprovals`, and `HVCG_AIOutputs`
 
 ## Client Detail sections
 

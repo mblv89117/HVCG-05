@@ -1,0 +1,282 @@
+{
+  "title": "HVCG_AgentActivity",
+  "description": "Atlas AI - permanent activity ledger for autonomous and assisted agent operations",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Short activity label"
+    },
+    {
+      "internalName": "ActivityId",
+      "displayName": "ActivityId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable activity key"
+    },
+    {
+      "internalName": "AgentKey",
+      "displayName": "AgentKey",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "WorkerKey or native Atlas agent capability"
+    },
+    {
+      "internalName": "AgentVersion",
+      "displayName": "AgentVersion",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Versioned agent/prompt policy"
+    },
+    {
+      "internalName": "MissionKey",
+      "displayName": "MissionKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Related mission or scheduled sweep key"
+    },
+    {
+      "internalName": "EventOrQuestion",
+      "displayName": "EventOrQuestion",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Triggering event, operator question, or system signal"
+    },
+    {
+      "internalName": "ActivityType",
+      "displayName": "ActivityType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Material operation type",
+      "choices": [
+        "QuestionAnswered",
+        "EventRouted",
+        "ToolInvoked",
+        "ContextBuilt",
+        "RecommendationCreated",
+        "ApprovalRequested",
+        "EngineeringMissionCreated",
+        "SafeInternalWrite",
+        "GovernedTechnicalWrite",
+        "OwnerGatedBlocked",
+        "Error",
+        "Retry",
+        "LiveVerification"
+      ]
+    },
+    {
+      "internalName": "ActorEmail",
+      "displayName": "ActorEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Operator, system identity, or agent actor"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Client isolation key if applicable"
+    },
+    {
+      "internalName": "AffectedEntityType",
+      "displayName": "AffectedEntityType",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Client, project, task, document, opportunity, capital matter, etc."
+    },
+    {
+      "internalName": "AffectedEntityKey",
+      "displayName": "AffectedEntityKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Business key or source record ID"
+    },
+    {
+      "internalName": "ToolsCalled",
+      "displayName": "ToolsCalled",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "JSON list of governed tools invoked"
+    },
+    {
+      "internalName": "DataSources",
+      "displayName": "DataSources",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Source systems/lists/files used"
+    },
+    {
+      "internalName": "EvidenceReferences",
+      "displayName": "EvidenceReferences",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Human-traceable source references"
+    },
+    {
+      "internalName": "OutputClassification",
+      "displayName": "OutputClassification",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Evidence class for the output",
+      "choices": [
+        "CONFIRMED",
+        "LIKELY",
+        "PROPOSED",
+        "STALE_OR_UNCERTAIN",
+        "COMPLETE"
+      ],
+      "default": "PROPOSED"
+    },
+    {
+      "internalName": "PermissionClass",
+      "displayName": "PermissionClass",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Authorization class used for this activity",
+      "choices": [
+        "READ_AUTO",
+        "PROPOSE_AUTO",
+        "SAFE_INTERNAL_WRITE",
+        "GOVERNED_TECHNICAL_WRITE",
+        "OWNER_GATED"
+      ],
+      "default": "READ_AUTO"
+    },
+    {
+      "internalName": "PolicyDecision",
+      "displayName": "PolicyDecision",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Policy decision before execution",
+      "choices": [
+        "Allowed",
+        "AllowedWithRedaction",
+        "ProposedOnly",
+        "ApprovalRequired",
+        "Denied"
+      ],
+      "default": "Allowed"
+    },
+    {
+      "internalName": "WriteScope",
+      "displayName": "WriteScope",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "What changed, if anything",
+      "choices": [
+        "NoWrite",
+        "DerivedContext",
+        "ProposedAction",
+        "AuditOnly",
+        "InternalState",
+        "EngineeringRepo",
+        "ProductionConfig",
+        "ExternalAction"
+      ],
+      "default": "NoWrite"
+    },
+    {
+      "internalName": "ApprovalState",
+      "displayName": "ApprovalState",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Approval posture",
+      "choices": [
+        "NotRequired",
+        "Pending",
+        "Approved",
+        "Rejected",
+        "OwnerRequired"
+      ],
+      "default": "NotRequired"
+    },
+    {
+      "internalName": "Outcome",
+      "displayName": "Outcome",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Execution outcome",
+      "choices": [
+        "Succeeded",
+        "PartiallySucceeded",
+        "Failed",
+        "Blocked",
+        "Suppressed",
+        "RolledBack"
+      ],
+      "default": "Succeeded"
+    },
+    {
+      "internalName": "OutcomeSummary",
+      "displayName": "OutcomeSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Human-readable result"
+    },
+    {
+      "internalName": "ErrorOrRetry",
+      "displayName": "ErrorOrRetry",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Error, retry, or escalation detail"
+    },
+    {
+      "internalName": "RelatedEngineeringMission",
+      "displayName": "RelatedEngineeringMission",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Optional HVCG_EngineeringMissions.MissionKey"
+    },
+    {
+      "internalName": "RelatedJobId",
+      "displayName": "RelatedJobId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Optional HVCG_AIJobs.JobId"
+    },
+    {
+      "internalName": "ActivityDate",
+      "displayName": "ActivityDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": "When the material operation occurred"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Duplicate-prevention key"
+    }
+  ]
+}

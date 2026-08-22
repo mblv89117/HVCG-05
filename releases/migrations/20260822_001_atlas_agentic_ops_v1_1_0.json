@@ -1,0 +1,26 @@
+{
+  "id": "20260822_001_atlas_agentic_ops_v1_1_0",
+  "fromVersion": "1.1.0",
+  "toVersion": "1.1.0",
+  "status": "Active",
+  "type": "additive",
+  "additiveOnly": true,
+  "destructive": false,
+  "preservesCustomerData": true,
+  "notes": "Adds Atlas-native agentic operations schemas without changing product semver. Apply with Repair-HVCGOSSharePointSchema / ApplyListDiff from the integration commit; no production data mutation.",
+  "steps": [
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/atlas_agentic_ops_v1.json"
+    },
+    {
+      "action": "WriteAuditEvent",
+      "eventType": "SchemaRepair",
+      "details": "Added Ask Atlas, Agent Events, Agent Activity, Engineering Missions, and tool permission classes"
+    }
+  ],
+  "rollback": {
+    "supported": "soft",
+    "notes": "New lists/columns are additive and may remain unused. Disable Ask Atlas/agent screens and ignore unused schema if rollback is needed."
+  }
+}

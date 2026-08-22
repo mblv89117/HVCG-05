@@ -1,0 +1,227 @@
+{
+  "title": "HVCG_EngineeringMissions",
+  "description": "Atlas AI - governed engineering missions created from Atlas operating evidence",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Mission title"
+    },
+    {
+      "internalName": "MissionKey",
+      "displayName": "MissionKey",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable mission key, e.g. ATLAS-ASK-ATTENTION-001"
+    },
+    {
+      "internalName": "OriginSignal",
+      "displayName": "OriginSignal",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Atlas event, operator question, error, or product signal that created the mission"
+    },
+    {
+      "internalName": "Problem",
+      "displayName": "Problem",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Problem statement in business language"
+    },
+    {
+      "internalName": "BusinessImpact",
+      "displayName": "BusinessImpact",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Why this matters for HVCG operations"
+    },
+    {
+      "internalName": "AffectedSurface",
+      "displayName": "AffectedSurface",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Atlas screen, workflow, API, list, or connected system"
+    },
+    {
+      "internalName": "EvidenceReferences",
+      "displayName": "EvidenceReferences",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Source evidence that justifies the mission"
+    },
+    {
+      "internalName": "AcceptanceCriteria",
+      "displayName": "AcceptanceCriteria",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Objectively testable conditions"
+    },
+    {
+      "internalName": "RiskLevel",
+      "displayName": "RiskLevel",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Engineering risk level",
+      "choices": [
+        "Low",
+        "Moderate",
+        "High",
+        "Critical"
+      ],
+      "default": "Moderate"
+    },
+    {
+      "internalName": "AffectedRepo",
+      "displayName": "AffectedRepo",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Approved repository for implementation",
+      "choices": [
+        "mblv89117/HVCG-05",
+        "mblv89117/growth-command-center",
+        "mblv89117/hvcg-agent-copilot",
+        "mblv89117/360-growth-solution"
+      ],
+      "default": "mblv89117/HVCG-05"
+    },
+    {
+      "internalName": "AffectedSystem",
+      "displayName": "AffectedSystem",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "One of the existing HVCG systems",
+      "choices": [
+        "Atlas",
+        "EVA",
+        "AgentCopilot",
+        "GrowthCommandCenter",
+        "360GrowthSolution",
+        "ElevatedSyndicate",
+        "BestDayOfMyLife"
+      ],
+      "default": "Atlas"
+    },
+    {
+      "internalName": "PermissionClass",
+      "displayName": "PermissionClass",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Maximum permission class needed to execute",
+      "choices": [
+        "READ_AUTO",
+        "PROPOSE_AUTO",
+        "SAFE_INTERNAL_WRITE",
+        "GOVERNED_TECHNICAL_WRITE",
+        "OWNER_GATED"
+      ],
+      "default": "GOVERNED_TECHNICAL_WRITE"
+    },
+    {
+      "internalName": "OwnerGatedStatus",
+      "displayName": "OwnerGatedStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Owner gate state, if any",
+      "choices": [
+        "NotOwnerGated",
+        "OwnerApprovalRequired",
+        "OwnerApproved",
+        "OwnerRejected"
+      ],
+      "default": "NotOwnerGated"
+    },
+    {
+      "internalName": "MissionStatus",
+      "displayName": "MissionStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "Mission lifecycle",
+      "choices": [
+        "Proposed",
+        "ReadyForV4",
+        "InProgress",
+        "Implemented",
+        "Validated",
+        "Deployed",
+        "LiveVerified",
+        "Rejected",
+        "Blocked",
+        "RolledBack"
+      ],
+      "default": "Proposed"
+    },
+    {
+      "internalName": "CreatedByAgent",
+      "displayName": "CreatedByAgent",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Agent capability that created the mission"
+    },
+    {
+      "internalName": "CreatedDate",
+      "displayName": "CreatedDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": "When the mission was created"
+    },
+    {
+      "internalName": "RoutedToV4Date",
+      "displayName": "RoutedToV4Date",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "When Atlas routed the mission to V4"
+    },
+    {
+      "internalName": "ResultSummary",
+      "displayName": "ResultSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "V4/QA/deployment result"
+    },
+    {
+      "internalName": "RollbackExpectation",
+      "displayName": "RollbackExpectation",
+      "type": "Note",
+      "required": true,
+      "indexed": false,
+      "description": "Expected rollback path for material technical change"
+    },
+    {
+      "internalName": "RelatedActivityId",
+      "displayName": "RelatedActivityId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Originating AgentActivity.ActivityId"
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Duplicate-prevention key"
+    }
+  ]
+}
