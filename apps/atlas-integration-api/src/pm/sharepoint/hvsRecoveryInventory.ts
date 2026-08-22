@@ -126,6 +126,12 @@ export const HVS_ADMIN_INVENTORY: readonly HvsInventoryRow[] = [
   }),
   confirmedFolder({ client: 'LV Appraisals', clientCode: '', folderName: 'LV Appraisals' }),
   confirmedFolder({ client: 'Victory Contracting', clientCode: '', folderName: 'Victory Contracting' }),
+  confirmedFolder({
+    client: 'Final Installment',
+    clientCode: '',
+    folderName: 'Final Installment',
+    extra: 'Second-level engagement letter 8.27.25 CONFIRMED. No Hub client code. No invented deal terms.',
+  }),
   hvsRow({
     source: 'hvs_admin / HIGH VALUE SOLUTION Documents',
     site: 'HIGH VALUE SOLUTION',

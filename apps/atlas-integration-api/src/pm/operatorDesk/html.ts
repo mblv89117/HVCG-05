@@ -198,6 +198,20 @@ export function renderOperatorDeskHtml(model: OperatorDeskModel): string {
     }
   </section>
   <section>
+    <h2>Recovered projects</h2>
+    <p class="muted">Filename-derived recovered work. Not Hub MI projects. No invented completion, balances, or obligations.</p>
+    ${
+      op.hvsRecoveredProjects.length
+        ? `<ul>${op.hvsRecoveredProjects
+            .map((row) => {
+              const code = row.clientCode || 'no Hub client code';
+              return `<li><span class="kind">${esc(row.provenance)}</span> ${esc(row.client)} · ${esc(row.title)} · ${esc(code)}<br/><span class="muted">${esc(row.nextAction)}</span></li>`;
+            })
+            .join('')}</ul>`
+        : '<p class="empty">No recovered project filenames in this picture.</p>'
+    }
+  </section>
+  <section>
     <h2>Recovered documents</h2>
     <p class="muted">Filename + class only. amountsExtracted=false. Binaries stay in SharePoint.</p>
     ${

@@ -149,7 +149,9 @@ describe('operator desk copy', () => {
     assert.match(html, /Waiting/);
     assert.match(html, /Recovered HVS clients/);
     assert.match(html, /Recovered documents/);
+    assert.match(html, /Recovered projects/);
     assert.match(html, /ACCG Inc/);
+    assert.match(html, /Final Installment/);
     assert.match(html, /SBA Express/);
     assert.match(html, /amountsExtracted=false/);
     assert.match(html, /reference-only/);
@@ -164,7 +166,9 @@ describe('operator desk copy', () => {
     assert.equal(model.operatingPicture.hvsDataAccess, 'PARTIAL');
     assert.equal(model.operatingPicture.honestEmpty, true);
     assert.deepEqual(model.operatingPicture.realClientsOperationalized, []);
-    assert.equal(model.operatingPicture.hvsRecoveredClients.length, 11);
+    assert.equal(model.operatingPicture.hvsRecoveredClients.length, 12);
+    assert.ok((model.operatingPicture.hvsRecoveredProjects?.length || 0) >= 6);
+    assert.ok(model.operatingPicture.hvsRecoveredProjects.some((row) => row.client === 'Final Installment'));
     assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.operationalized, false);
     assert.equal(model.operatingPicture.hvsRecoveredClients[0]?.knowledgeIndexed, true);
     assert.ok((model.operatingPicture.hvsRecoveredDocuments?.length || 0) >= 20);
@@ -396,7 +400,7 @@ describe('operator desk HTTP fail-closed', () => {
       assert.equal(body.operatorDesk.operatingPicture.hvsDataAccess, 'PARTIAL');
       assert.equal(body.operatorDesk.operatingPicture.honestEmpty, true);
       assert.deepEqual(body.operatorDesk.operatingPicture.realClientsOperationalized, []);
-      assert.equal(body.operatorDesk.operatingPicture.hvsRecoveredClients.length, 11);
+      assert.equal(body.operatorDesk.operatingPicture.hvsRecoveredClients.length, 12);
       assert.equal(
         body.operatorDesk.operatingPicture.hvsRecoveredClients.some(
           (row) => row.client === 'ACCG Inc' && row.operationalized === false,

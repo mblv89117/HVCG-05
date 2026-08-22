@@ -12,6 +12,7 @@ import {
   hvsRecoveredDocuments,
   isHvsRecoveredKind,
 } from '../sharepoint/hvsRecoveredDocuments.ts';
+import { hvsRecoveredProjects } from '../sharepoint/hvsRecoveredProjects.ts';
 import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
@@ -177,6 +178,18 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     recoveryLedger: [],
     hvsRecoveredClients: recovered,
     hvsRecoveredDocuments: documents,
+    hvsRecoveredProjects:
+      hvsDataAccess === 'BLOCKED'
+        ? []
+        : hvsRecoveredProjects().map((row) => ({
+            client: row.client,
+            clientCode: row.clientCode,
+            title: row.title,
+            provenance: row.provenance,
+            operationalized: false as const,
+            evidence: row.evidence,
+            nextAction: row.nextAction,
+          })),
   };
 }
 
@@ -251,6 +264,15 @@ export function operatorOperatingPictureFromKnowledge(
       documentClass: row.documentClass,
       provenance: 'CONFIRMED' as const,
       amountsExtracted: false as const,
+    })),
+    hvsRecoveredProjects: (knowledge.hvsRecoveredProjects || []).slice(0, 20).map((row) => ({
+      client: row.client,
+      clientCode: row.clientCode,
+      title: row.title,
+      provenance: row.provenance,
+      operationalized: false as const,
+      evidence: row.evidence,
+      nextAction: row.nextAction,
     })),
   };
 }

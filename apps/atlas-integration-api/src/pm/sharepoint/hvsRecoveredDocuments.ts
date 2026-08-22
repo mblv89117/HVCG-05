@@ -1,10 +1,12 @@
 /**
- * First-level HVS-admin document inventory for recovered client folders.
+ * HVS-admin document inventory for recovered client folders.
  *
  * Evidence: 2026-08-22 HVS-admin Graph Sites.Read.All / Files.Read.All.
+ * First-level folders plus second-level operational filenames.
  * Metadata only — names, kinds, last-modified, and filename class.
  * Atlas does not copy binaries, extract balances, invent obligations,
- * or mint Hub MI HVCG_Clients rows.
+ * or mint Hub MI HVCG_Clients rows. Tax-return and photo filenames are
+ * classified, not listed as current operating evidence.
  */
 
 import type { KnowledgeProvenance } from './knowledgeClassification.ts';
@@ -223,17 +225,25 @@ export function classifyRecoveredName(name: string, kind: 'file' | 'folder'): Hv
     n.includes('funding checklist') ||
     n.includes('capital_acquisition') ||
     n.includes('capital acquisition') ||
-    n.includes('pre approval')
+    n.includes('pre approval') ||
+    n.includes('capital offer') ||
+    n.includes('capital + acquisition') ||
+    n.includes('strategic_capital') ||
+    n.includes('financing_readiness')
   ) {
     return 'capital_package';
   }
-  if (n.includes('hvcg engagement')) return 'engagement';
+  if (n.includes('hvcg engagement') || n.includes('engagement letter')) return 'engagement';
   if (
     n.includes('engagement agreement') ||
     n.includes('engagement_plan') ||
     n.includes('business development agreement') ||
     n.includes('operating_agreement') ||
-    n.includes('operating agreement')
+    n.includes('operating agreement') ||
+    n.includes('consulting agreement') ||
+    n.includes('scope of work') ||
+    n.includes('fractional_cfo_agreement') ||
+    n.includes('bookkeeping_services_agreement')
   ) {
     return 'agreement';
   }
@@ -256,24 +266,118 @@ export function classifyRecoveredName(name: string, kind: 'file' | 'folder'): Hv
   ) {
     return 'onboarding';
   }
-  if (n.includes('business plan') || n.includes('business_plan')) return 'plan';
+  if (n.includes('business plan') || n.includes('business_plan') || n.includes('proposal') || n.includes('growth plan')) {
+    return 'plan';
+  }
   return 'unclassified';
 }
 
+/** Second-level operational filenames. Tax returns and photos omitted. */
+const L2_OPERATIONAL: Array<{ client: string; clientCode: string; children: RawChild[] }> = [
+  {
+    client: 'ACCG Inc',
+    clientCode: 'ACCG01',
+    children: [
+      { name: '05_Contracts & Invoice Docs/ACCG INC SCOPE OF WORK.xlsx', kind: 'file', lastModified: '2026-02-03T20:40:00Z' },
+      { name: '05_Contracts & Invoice Docs/High value Solution LLC Access Plus Consulting Agreement.pdf', kind: 'file', lastModified: '2026-02-03T20:40:00Z' },
+      { name: '07_Projects/ACCG_ROS_Proposal.pdf', kind: 'file', lastModified: '2026-02-03T20:40:35Z' },
+      { name: '07_Projects/ACCG Buildout.pdf', kind: 'file', lastModified: '2026-02-03T20:40:35Z' },
+      { name: '07_Projects/9497.00_Sanford Warehouse_6-18-2025_REV.pdf', kind: 'file', lastModified: '2026-02-03T20:40:35Z' },
+      { name: '07_Projects/Consultant services for MEP\'s for 2705 Richmond ave.pdf', kind: 'file', lastModified: '2026-02-03T20:40:35Z' },
+      { name: '07_Projects/Richmond Purchase.pdf', kind: 'file', lastModified: '2026-02-03T20:40:35Z' },
+    ],
+  },
+  {
+    client: 'Final Installment',
+    clientCode: '',
+    children: [
+      { name: '01_Intake Docs', kind: 'folder', lastModified: '2026-02-03T21:08:31Z' },
+      { name: '05_Contracts & Invoice Docs', kind: 'folder', lastModified: '2026-02-03T21:08:31Z' },
+      { name: '01_Intake Docs/FinalInstallment_Intake_Checklist.pdf', kind: 'file', lastModified: '2026-02-03T21:08:31Z' },
+      { name: '05_Contracts & Invoice Docs/Engagement Letter Final Install HVS 8.27.25.pdf', kind: 'file', lastModified: '2026-02-03T21:08:31Z' },
+      { name: '05_Contracts & Invoice Docs/Engagement Letter Final Install HVS 8.27.25 esign.pdf', kind: 'file', lastModified: '2026-02-03T21:08:31Z' },
+      { name: '05_Contracts & Invoice Docs/Final Install Capital Market Notes.docx', kind: 'file', lastModified: '2026-02-03T21:08:31Z' },
+      { name: '05_Contracts & Invoice Docs/12.9.2025_Use of Proceeds.pdf', kind: 'file', lastModified: '2026-02-03T21:08:31Z' },
+    ],
+  },
+  {
+    client: 'Integrity Lift Solutions LLC',
+    clientCode: '',
+    children: [
+      { name: '01_Intake Docs/Integrity Lift Solutions LLC Consulting Agreement 11.26.24 - signed.pdf', kind: 'file', lastModified: '2026-02-03T21:40:37Z' },
+      { name: '01_Intake Docs/Task Checklist HVS Integrity Lift Solutions LLC 11.26.24.pdf', kind: 'file', lastModified: '2026-02-03T21:40:37Z' },
+      { name: '02_Financial Docs/121 Capital offer for Integrity Lift Solutions LLC.pdf', kind: 'file', lastModified: '2026-02-03T21:48:00Z' },
+      { name: '05_Contracts & Invoice Docs/HVS Invoice 11.27.24 Integrity Lift Solutions.pdf', kind: 'file', lastModified: '2026-02-03T21:47:23Z' },
+    ],
+  },
+  {
+    client: 'Lien Partners LLC',
+    clientCode: 'LIEN01',
+    children: [
+      { name: '01_Intake Docs/CONSULTING AGREEMENT 6.12.25 HVS ENCS.docx', kind: 'file', lastModified: '2026-02-03T20:52:23Z' },
+      { name: '01_Intake Docs/Re_ Lien Partners – Next Steps_ NDA, Referral Agreement, Draft Term Sheet & Intros.pdf', kind: 'file', lastModified: '2026-02-03T20:52:23Z' },
+      { name: '01_Intake Docs/Ben Alleon Capital Partners.pdf', kind: 'file', lastModified: '2026-02-03T20:52:23Z' },
+    ],
+  },
+  {
+    client: 'LV Appraisals',
+    clientCode: '',
+    children: [
+      { name: '03_Corporate Docs/Website updates.docx', kind: 'file', lastModified: '2026-01-27T15:38:55Z' },
+      { name: '03_Corporate Docs/Home Page content.docx', kind: 'file', lastModified: '2026-01-27T15:38:55Z' },
+      { name: '03_Corporate Docs/Las Vegas Appraisal Co Revised.docx', kind: 'file', lastModified: '2026-01-27T15:38:55Z' },
+    ],
+  },
+  {
+    client: 'Prodigy Games',
+    clientCode: 'PDG01',
+    children: [
+      { name: '05_Contracts & Invoice Docs/HVS_Prodigy_Games_Fractional_CFO_Agreement - signed.pdf', kind: 'file', lastModified: '2026-01-27T19:51:21Z' },
+      { name: '05_Contracts & Invoice Docs/Prodigy Games LLC April 2026 Past Due Invoice.pdf', kind: 'file', lastModified: '2026-01-27T19:51:21Z' },
+      { name: '05_Contracts & Invoice Docs/Prodigy Games LLC May 2026 Past Due Invoice.pdf', kind: 'file', lastModified: '2026-01-27T19:51:21Z' },
+      { name: '05_Contracts & Invoice Docs/Strategic_Capital_Agreement May 6 2026.pdf', kind: 'file', lastModified: '2026-01-27T19:51:21Z' },
+      { name: '05_Contracts & Invoice Docs/Prodigy_ThatsKava_Bookkeeping_Services_Agreement_FL.docx', kind: 'file', lastModified: '2026-01-27T19:51:21Z' },
+      { name: '07_Projects & Services/Prodigy Games KPI Strategy.pdf', kind: 'file', lastModified: '2026-01-27T19:51:21Z' },
+    ],
+  },
+  {
+    client: 'Victory Contracting',
+    clientCode: '',
+    children: [
+      { name: '05_Contracts & Invoice Docs/Business Consulting Agreement High Value Solution LLC and Victory Contracting LLC - signed.pdf', kind: 'file', lastModified: '2026-02-03T21:51:50Z' },
+      { name: '05_Contracts & Invoice Docs/HVS Application Victory Contracting LLC.pdf', kind: 'file', lastModified: '2026-02-03T21:51:50Z' },
+      { name: '05_Contracts & Invoice Docs/Victory Contracting Business Plan 08.21.23.docx', kind: 'file', lastModified: '2026-02-03T21:51:50Z' },
+      { name: '01_Intake Docs/Task Checklist 9.10.24.pdf', kind: 'file', lastModified: '2026-02-03T21:51:57Z' },
+    ],
+  },
+];
+
+function allRaw(): Array<{ client: string; clientCode: string; children: RawChild[] }> {
+  return [...RAW, ...L2_OPERATIONAL];
+}
+
 export function hvsRecoveredDocuments(): HvsRecoveredDocument[] {
-  return RAW.flatMap((row) =>
-    row.children.map((child) => ({
-      client: row.client,
-      clientCode: row.clientCode,
-      name: child.name,
-      kind: child.kind,
-      documentClass: classifyRecoveredName(child.name, child.kind),
-      lastModified: child.lastModified,
-      provenance: 'CONFIRMED' as const,
-      amountsExtracted: false as const,
-      binariesInAtlas: false as const,
-    })),
-  );
+  const seen = new Set<string>();
+  const out: HvsRecoveredDocument[] = [];
+  for (const row of allRaw()) {
+    for (const child of row.children) {
+      const key = `${row.client}\0${child.name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({
+        client: row.client,
+        clientCode: row.clientCode,
+        name: child.name,
+        kind: child.kind,
+        documentClass: classifyRecoveredName(child.name, child.kind),
+        lastModified: child.lastModified,
+        provenance: 'CONFIRMED' as const,
+        amountsExtracted: false as const,
+        binariesInAtlas: false as const,
+      });
+    }
+  }
+  return out;
 }
 
 export function hvsRecoveredDocumentsFor(client: string): HvsRecoveredDocument[] {
@@ -358,15 +462,119 @@ export function hvsRecoveredActions(): HvsRecoveredAction[] {
         'CONFIRMED files: Prodigy_Games_Engagement_Plan.docx; Onboarding Checklist; Capital_Acquisition_Plan; P&L filenames remain in SharePoint',
     },
     {
-      id: 'hvs-action:structured:ready-index',
+      id: 'hvs-action:ACCG01:review-sow-projects',
+      client: 'ACCG Inc',
+      clientCode: 'ACCG01',
+      title:
+        'Review recovered ACCG SOW, Access Plus consulting agreement, and project filenames (ROS, Sanford Warehouse, Richmond, Buildout)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence:
+        'CONFIRMED L2 files: ACCG INC SCOPE OF WORK.xlsx; High value Solution LLC Access Plus Consulting Agreement.pdf; ACCG_ROS_Proposal.pdf; Sanford Warehouse; Richmond Purchase; ACCG Buildout.pdf',
+    },
+    {
+      id: 'hvs-action:ACCG01:decide-live-projects',
+      client: 'ACCG Inc',
+      clientCode: 'ACCG01',
+      title:
+        'Decide which recovered ACCG project filenames are still live work (no invented completion or obligations)',
+      queue: 'Decision Required',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence: 'CONFIRMED 07_Projects filenames. Archive SBA packet is historical and not treated as current funding status.',
+    },
+    {
+      id: 'hvs-action:FinalInstallment:review-engagement',
+      client: 'Final Installment',
+      clientCode: '',
+      title:
+        'Review recovered Final Installment HVS engagement 8.27.25 and capital-market notes (no invented deal terms)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence:
+        'CONFIRMED L2 files: Engagement Letter Final Install HVS 8.27.25.pdf; esign copy; Final Install Capital Market Notes.docx; Use of Proceeds.pdf',
+    },
+    {
+      id: 'hvs-action:ILS:review-consulting',
+      client: 'Integrity Lift Solutions LLC',
+      clientCode: '',
+      title:
+        'Review recovered Integrity Lift signed consulting agreement 11.26.24 and invoice filenames (amounts not extracted)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence:
+        'CONFIRMED L2 files: Integrity Lift Solutions LLC Consulting Agreement 11.26.24 - signed.pdf; HVS Invoice 11.27.24; 121 Capital offer filename present — terms not extracted',
+    },
+    {
+      id: 'hvs-action:Victory:review-consulting',
+      client: 'Victory Contracting',
+      clientCode: '',
+      title: 'Review recovered Victory Contracting signed HVS consulting agreement (no invented obligations)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence:
+        'CONFIRMED L2 files: Business Consulting Agreement High Value Solution LLC and Victory Contracting LLC - signed.pdf; HVS Application; Business Plan 08.21.23.docx',
+    },
+    {
+      id: 'hvs-action:LIEN01:review-next-steps',
+      client: 'Lien Partners LLC',
+      clientCode: 'LIEN01',
+      title:
+        'Review recovered Lien Partners consulting agreement 6.12.25 and next-steps NDA / draft term-sheet email (terms not extracted)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence:
+        'CONFIRMED L2 files: CONSULTING AGREEMENT 6.12.25 HVS ENCS.docx; Next Steps NDA, Referral Agreement, Draft Term Sheet & Intros.pdf',
+    },
+    {
+      id: 'hvs-action:PDG01:review-cfo-invoices',
+      client: 'Prodigy Games',
+      clientCode: 'PDG01',
+      title:
+        'Review recovered Prodigy fractional-CFO agreement and past-due invoice filenames (amounts not extracted)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence:
+        'CONFIRMED L2 files: HVS_Prodigy_Games_Fractional_CFO_Agreement - signed.pdf; April 2026 Past Due Invoice.pdf; May 2026 Past Due Invoice.pdf; Strategic_Capital_Agreement May 6 2026.pdf',
+    },
+    {
+      id: 'hvs-action:PDG01:review-second-location',
+      client: 'Prodigy Games',
+      clientCode: 'PDG01',
+      title:
+        'Review recovered Prodigy second-location packet (sibling folder 2nd Location; not a second client)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence: 'CONFIRMED file: 4_Engagements / 00_Client Files / 2nd Location / Opening a Second Location for Prodigy.pdf',
+    },
+    {
+      id: 'hvs-action:LVAppraisals:review-website',
+      client: 'LV Appraisals',
+      clientCode: '',
+      title: 'Review recovered LV Appraisals website/content packet (no invented delivery status)',
+      queue: 'Needs Action',
+      kind: 'hvs_recovered_action',
+      provenance: 'PROPOSED',
+      evidence: 'CONFIRMED L2 files: Website updates.docx; Home Page content.docx; Las Vegas Appraisal Co Revised.docx',
+    },
+    {
+      id: 'hvs-action:l2:ready-index',
       client: 'Recovered HVS structured folders',
       clientCode: '',
       title:
-        'Structured first-level folders indexed for ACCG, Integrity Lift, Lien Partners, LV Appraisals, Victory, and Pierlo (child files not yet inventoried)',
+        'Second-level operational filenames inventoried for ACCG, Final Installment, Integrity Lift, Lien Partners, LV Appraisals, Victory, and Prodigy',
       queue: 'Ready',
       kind: 'hvs_recovered_action',
       provenance: 'CONFIRMED',
-      evidence: 'CONFIRMED first-level folder names only. No invented project completion.',
+      evidence:
+        'CONFIRMED L2 filenames only. Tax-return and photo filenames classified, not extracted. No invented project completion.',
     },
   ];
 }

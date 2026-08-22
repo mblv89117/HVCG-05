@@ -40,6 +40,7 @@ import {
   type HvsRecoveredAction,
   type HvsRecoveredDocument,
 } from './hvsRecoveredDocuments.ts';
+import { hvsRecoveredProjects, type HvsRecoveredProject } from './hvsRecoveredProjects.ts';
 import type {
   SharePointClient,
   SharePointOpportunity,
@@ -102,6 +103,7 @@ export type KnowledgeOperatingPicture = {
   recoveryLedger: RecoveryLedgerRow[];
   hvsRecoveredClients: HvsRecoveredClient[];
   hvsRecoveredDocuments: HvsRecoveredDocument[];
+  hvsRecoveredProjects: HvsRecoveredProject[];
   honestEmpty: boolean;
 };
 
@@ -447,6 +449,7 @@ export async function buildKnowledgeOperatingPicture(
     recoveryLedger,
     hvsRecoveredClients,
     hvsRecoveredDocuments: recoveredDocuments,
+    hvsRecoveredProjects: hvsDataAccess === 'BLOCKED' ? [] : hvsRecoveredProjects(),
     honestEmpty: realClientsOperationalized.length === 0,
   };
 }

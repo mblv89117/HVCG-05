@@ -190,10 +190,10 @@ describe('knowledge operating picture', () => {
     assert.equal(picture.hvsAccess.hvsAdminIdentity, 'HVCG-V3-HVS-Admin');
     assert.equal(picture.hvsAccess.binariesInAtlas, false);
     assert.equal(picture.hvsAccess.referenceOnly, true);
-    assert.equal(picture.hvsAccess.confirmedClientFolderCount, 11);
+    assert.equal(picture.hvsAccess.confirmedClientFolderCount, 12);
     assert.deepEqual(picture.realClientsOperationalized, []);
     assert.equal(picture.honestEmpty, true);
-    assert.equal(picture.hvsRecoveredClients.length, 11);
+    assert.equal(picture.hvsRecoveredClients.length, 12);
     assert.equal(picture.hvsRecoveredClients.every((row) => row.operationalized === false), true);
     assert.equal(picture.hvsRecoveredClients.every((row) => row.hubMiAccessible === false), true);
     assert.equal(picture.hvsRecoveredClients.every((row) => row.knowledgeIndexed === true), true);
@@ -214,9 +214,12 @@ describe('knowledge operating picture', () => {
       picture.hvsRecoveredClients.some((row) => row.client === "Christie's Place" && row.clientCode === 'CPL01'),
       true,
     );
+    assert.ok((picture.hvsRecoveredProjects?.length || 0) >= 6);
+    assert.ok(picture.hvsRecoveredProjects.some((row) => row.client === 'Final Installment'));
+    assert.ok(picture.queues['Needs Action'].some((row) => row.title.includes('ACCG SOW')));
     assert.equal(
       picture.queues.Waiting.filter((row) => row.kind === 'hvs_recovered_reference').length,
-      11,
+      12,
     );
     assert.equal(
       picture.queues.Waiting.every((row) => row.title.includes('reference-only')),

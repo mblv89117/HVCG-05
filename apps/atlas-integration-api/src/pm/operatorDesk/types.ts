@@ -52,6 +52,16 @@ export interface OperatorRecoveredHvsDocument {
   amountsExtracted: false;
 }
 
+export interface OperatorRecoveredHvsProject {
+  client: string;
+  clientCode: string;
+  title: string;
+  provenance: KnowledgeProvenance;
+  operationalized: false;
+  evidence: string;
+  nextAction: string;
+}
+
 export interface OperatorOperatingPicture {
   kind: 'operator_operating_picture_v1';
   invented: false;
@@ -83,6 +93,7 @@ export interface OperatorOperatingPicture {
   recoveryLedger: OperatorRecoveryRow[];
   hvsRecoveredClients: OperatorRecoveredHvsClient[];
   hvsRecoveredDocuments: OperatorRecoveredHvsDocument[];
+  hvsRecoveredProjects: OperatorRecoveredHvsProject[];
 }
 
 export interface OperatorClientJourney {
