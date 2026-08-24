@@ -1,12 +1,13 @@
 /**
  * Related operating context on already-authorized DocumentOperatingRecord
- * items. Copies entitled search / project / thread / capital / already-indexed
- * outlook-mail-attachment / HVCG_Meetings payloads only.
+ * items, and the inverse on MeetingOperatingRecord items.
+ * Copies entitled search / project / thread / capital / already-indexed
+ * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / fabric mail-attachment index
- * rows / entitled search extras.meetings (kind=meeting).
+ * rows / entitled search extras.meetings (kind=meeting) / hits kind=document.
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
- * or a second calendar/meeting product.
+ * or a second calendar/meeting/document/search product.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
@@ -19,13 +20,23 @@ import {
   CAPITAL_SUBMISSION_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type DocumentOperatingRecord,
+  type MeetingOperatingPayload,
+  type MeetingOperatingRecord,
   type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
   type RelatedDocumentContractRef,
   type RelatedDocumentEmailRef,
   type RelatedDocumentMeetingRef,
   type RelatedDocumentProjectRef,
+  type RelatedMeetingDocumentRef,
 } from './types.ts';
+
+/** Shared isolation key for document and meeting related-context attach. */
+type RelatedScopeItem = {
+  id: string;
+  clientCode?: string;
+  parentMessageId?: string;
+};
 
 /** Keep related lists bounded so search stays small. */
 export const DOCUMENT_RELATED_CONTEXT_PAGE_SIZE = 5;
@@ -64,7 +75,7 @@ function takeBound<T>(rows: T[]): T[] {
 }
 
 function relatedEmails(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentEmailRef[] {
   const out: RelatedDocumentEmailRef[] = [];
@@ -113,7 +124,7 @@ function relatedEmails(
 }
 
 function relatedAttachments(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentAttachmentRef[] {
   const out: RelatedDocumentAttachmentRef[] = [];
@@ -176,7 +187,7 @@ function relatedAttachments(
 }
 
 function relatedProjects(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentProjectRef[] {
   const out: RelatedDocumentProjectRef[] = [];
@@ -314,7 +325,7 @@ function relatedMeetings(
 }
 
 function relatedCapital(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentCapitalRef[] {
   const out: RelatedDocumentCapitalRef[] = [];
@@ -368,4 +379,112 @@ export function attachRelatedContextToDocuments(
   search: AtlasAuthorizedSearch,
 ): DocumentOperatingRecord[] {
   return items.map((item) => attachRelatedContextToDocument(principal, item, search));
+}
+
+function relatedDocumentClassification(
+  row: {
+    classification?: RelatedMeetingDocumentRef['classification'];
+    provenance?: RelatedMeetingDocumentRef['classification'];
+  },
+): RelatedMeetingDocumentRef['classification'] {
+  if (
+    row.classification === 'CONFIRMED' ||
+    row.classification === 'LIKELY' ||
+    row.classification === 'PROPOSED' ||
+    row.classification === 'HONEST_EMPTY'
+  ) {
+    return row.classification;
+  }
+  if (
+    row.provenance === 'CONFIRMED' ||
+    row.provenance === 'LIKELY' ||
+    row.provenance === 'PROPOSED' ||
+    row.provenance === 'HONEST_EMPTY'
+  ) {
+    return row.provenance;
+  }
+  return 'PROPOSED';
+}
+
+/**
+ * Inverse of relatedMeetings: entitled same-scope documents already on
+ * authorizedSearch.documents.items or hits kind=document.
+ * Isolation: sameRelatedScope. SAS / anonymous webUrl dropped.
+ */
+function relatedDocumentsForMeeting(
+  item: RelatedScopeItem,
+  search: AtlasAuthorizedSearch,
+): RelatedMeetingDocumentRef[] {
+  const out: RelatedMeetingDocumentRef[] = [];
+  const seen = new Set<string>([item.id]);
+  const consider = (row: {
+    id: string;
+    title: string;
+    clientCode?: string;
+    classification?: RelatedMeetingDocumentRef['classification'];
+    provenance?: RelatedMeetingDocumentRef['classification'];
+    source?: string;
+    webUrl?: string;
+  }) => {
+    if (seen.has(row.id)) return;
+    if (!sameRelatedScope(item.clientCode, row.clientCode)) return;
+    seen.add(row.id);
+    const webUrl = authoritativeSourceUrl(row.webUrl);
+    out.push({
+      id: row.id,
+      title: row.title,
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      classification: relatedDocumentClassification(row),
+      source: row.source || 'HVCG_Communications/file-index',
+      ...(webUrl ? { webUrl } : {}),
+    });
+  };
+  for (const doc of search.documents.items) {
+    if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
+    consider(doc);
+  }
+  for (const hit of search.hits) {
+    if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
+    if (hit.kind !== 'document') continue;
+    consider(hit);
+  }
+  return takeBound(out);
+}
+
+/**
+ * Attach already-authorized same-scope document / email / project /
+ * attachment / capital refs onto an entitled meeting. Unscoped never
+ * receives scoped relations. Client A never receives Client B.
+ * No downloadUrl. No transcript text. binariesInAtlas stays false.
+ */
+export function attachRelatedContextToMeeting(
+  principal: AtlasPrincipal,
+  item: MeetingOperatingRecord,
+  search: AtlasAuthorizedSearch,
+): MeetingOperatingRecord {
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedDocuments = relatedDocumentsForMeeting(item, search);
+  const relatedEmail = relatedEmails(item, search);
+  const relatedProject = relatedProjects(item, search);
+  const capitalRelationship = relatedCapital(item, search);
+  const relatedAttachmentsList = relatedAttachments(item, search);
+  return {
+    ...item,
+    ...(relatedDocuments.length ? { relatedDocuments } : {}),
+    ...(relatedEmail.length ? { relatedEmail } : {}),
+    ...(relatedProject.length ? { relatedProject } : {}),
+    ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
+    ...(capitalRelationship.length ? { capitalRelationship } : {}),
+  };
+}
+
+export function attachRelatedContextToMeetings(
+  principal: AtlasPrincipal,
+  payload: MeetingOperatingPayload,
+  search: AtlasAuthorizedSearch,
+): MeetingOperatingPayload {
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToMeeting(principal, item, search)),
+  };
 }

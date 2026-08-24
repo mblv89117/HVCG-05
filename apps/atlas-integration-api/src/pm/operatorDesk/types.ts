@@ -457,9 +457,26 @@ export interface RelatedDocumentMeetingRef {
 }
 
 /**
+ * Inverse of document relatedMeetings: an entitled document already on
+ * authorizedSearch.documents / hits kind=document. Never binaries, SAS,
+ * anonymous share, downloadUrl, or transcript text.
+ */
+export interface RelatedMeetingDocumentRef {
+  id: string;
+  title: string;
+  clientCode?: string;
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  source: string;
+  webUrl?: string;
+}
+
+/**
  * First-class entitled meeting operating record. Copied from already-authorized
  * extras.meetings / HVCG_Meetings / search hits kind=meeting. Never invents
  * transcript text, binaries, SAS, or anonymous share URLs.
+ * Optional related* fields are the inverse of document relatedMeetings:
+ * already-authorized same-scope documents / email / projects / attachments /
+ * capital only.
  */
 export interface MeetingOperatingRecord {
   id: string;
@@ -473,6 +490,11 @@ export interface MeetingOperatingRecord {
   webUrl?: string;
   /** Copied from already-indexed outlook-calendar sourceEventId. */
   sourceEventId?: string;
+  relatedDocuments?: RelatedMeetingDocumentRef[];
+  relatedEmail?: RelatedDocumentEmailRef[];
+  relatedProject?: RelatedDocumentProjectRef[];
+  relatedAttachments?: RelatedDocumentAttachmentRef[];
+  capitalRelationship?: RelatedDocumentCapitalRef[];
 }
 
 export interface MeetingOperatingPayload {
