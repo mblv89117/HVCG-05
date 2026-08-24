@@ -234,6 +234,7 @@ describe('ATLAS-ONBOARDING-AGENT-001 governed onboarding agent', () => {
   });
 
   it('attaches the same onboarding records on search and client-context from entitled evidence', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(onboardingService(), staff, 'SYN01');
     const clientHit = found.results.find((row) => row.kind === 'client' && row.clientCode === 'SYN01');
     assert.ok(clientHit);
@@ -245,12 +246,14 @@ describe('ATLAS-ONBOARDING-AGENT-001 governed onboarding agent', () => {
       principal: staff,
       picture: picture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const viaIndex = getClientContext({
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.deepEqual(viaIndex.clientContext.onboarding, search.authorizedSearch.onboarding);
@@ -288,6 +291,7 @@ describe('ATLAS-ONBOARDING-AGENT-001 governed onboarding agent', () => {
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     assert.deepEqual(viaLoad.clientContext.onboarding, search.authorizedSearch.onboarding);

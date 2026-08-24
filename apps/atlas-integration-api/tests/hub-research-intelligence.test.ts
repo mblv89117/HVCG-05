@@ -939,6 +939,8 @@ function searchWithResearch(items: ResearchIntelligenceRecord[]): AtlasAuthorize
       retrievedAt: '2026-08-24T18:00:00.000Z',
       items,
     },
+    meetings: { kind: 'meeting_operating_record_v1', policyClass: 'READ_AUTO', invented: false, items: [] },
+    onboarding: emptyOnboardingPayload(),
     hits: [],
   } as unknown as AtlasAuthorizedSearch;
 }
@@ -1339,7 +1341,17 @@ describe('ATLAS-ONBOARDING-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse
     );
     assert.deepEqual(project.researchRelationship, meeting.researchRelationship);
     assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
-    assertMeetingResearchHonesty(meeting);
+    assert.equal(JSON.stringify(meeting.researchRelationship).includes('PDG01'), false);
+    for (const row of meeting.researchRelationship || []) {
+      assert.equal(row.invented, false);
+      assert.equal(row.lenderCriteriaInvented, false);
+      assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+      assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+      assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+      assert.equal('downloadUrl' in row, false);
+      assert.equal('transcript' in row, false);
+      assert.equal('TargetAmount' in row, false);
+    }
     const blob = JSON.stringify(result.authorizedSearch.onboarding);
     assert.equal(/TargetAmount/i.test(blob), false);
     assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
