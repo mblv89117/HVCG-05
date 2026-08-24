@@ -1,9 +1,10 @@
 /**
  * Related operating context on already-authorized DocumentOperatingRecord
- * items. Copies entitled search / project / thread / capital payloads only.
+ * items. Copies entitled search / project / thread / capital / already-indexed
+ * outlook-mail-attachment payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
- * .threads / .capitalSubmissions. REJECT a knowledge graph, document
- * product, SDK, queue, or Graph write path.
+ * .threads / .capitalSubmissions / fabric mail-attachment index rows.
+ * REJECT a knowledge graph, document product, SDK, queue, or Graph write path.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
@@ -16,6 +17,7 @@ import {
   CAPITAL_SUBMISSION_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type DocumentOperatingRecord,
+  type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
   type RelatedDocumentContractRef,
   type RelatedDocumentEmailRef,
@@ -64,11 +66,22 @@ function relatedEmails(
 ): RelatedDocumentEmailRef[] {
   const out: RelatedDocumentEmailRef[] = [];
   const seen = new Set<string>();
-  for (const thread of search.threads.items) {
-    if (thread.id === item.id) continue;
-    if (!sameRelatedScope(item.clientCode, thread.clientCode)) continue;
+  const parentId = (item.parentMessageId || '').trim();
+  const consider = (thread: {
+    id: string;
+    title: string;
+    clientCode?: string;
+    conversationId?: string;
+    classification: RelatedDocumentEmailRef['classification'];
+    webUrl?: string;
+  }, preferParent: boolean) => {
+    if (thread.id === item.id) return;
+    if (!sameRelatedScope(item.clientCode, thread.clientCode)) return;
+    const isParent =
+      Boolean(parentId) && (thread.conversationId === parentId || thread.id === parentId);
+    if (preferParent && !isParent) return;
     const key = thread.conversationId || thread.id;
-    if (seen.has(key) || seen.has(thread.id)) continue;
+    if (seen.has(key) || seen.has(thread.id)) return;
     seen.add(key);
     seen.add(thread.id);
     const webUrl = authoritativeSourceUrl(thread.webUrl);
@@ -76,12 +89,87 @@ function relatedEmails(
       id: thread.id,
       title: thread.title,
       ...(thread.conversationId ? { conversationId: thread.conversationId } : {}),
+      ...(isParent || parentId === thread.conversationId || parentId === thread.id
+        ? { parentMessageId: parentId || thread.conversationId || thread.id }
+        : {}),
       classification: thread.classification,
       ...(webUrl ? { webUrl } : {}),
     });
+  };
+  if (parentId) {
+    for (const thread of search.threads.items) {
+      consider(thread, true);
+      if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) return out;
+    }
+  }
+  for (const thread of search.threads.items) {
+    consider(thread, false);
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
   }
   return out;
+}
+
+function relatedAttachments(
+  item: DocumentOperatingRecord,
+  search: AtlasAuthorizedSearch,
+): RelatedDocumentAttachmentRef[] {
+  const out: RelatedDocumentAttachmentRef[] = [];
+  const seen = new Set<string>();
+  const consider = (row: {
+    id: string;
+    title: string;
+    clientCode?: string;
+    parentMessageId?: string;
+    attachmentId?: string;
+    contentType?: string;
+    size?: number;
+    classification?: RelatedDocumentAttachmentRef['classification'];
+    provenance?: RelatedDocumentAttachmentRef['classification'];
+    webUrl?: string;
+  }) => {
+    const attachmentId = (row.attachmentId || '').trim();
+    const parentMessageId = (row.parentMessageId || '').trim();
+    if (!attachmentId && !parentMessageId) return;
+    if (!sameRelatedScope(item.clientCode, row.clientCode)) return;
+    const key = attachmentId ? `${parentMessageId}:${attachmentId}` : row.id;
+    if (seen.has(key) || seen.has(row.id)) return;
+    seen.add(key);
+    seen.add(row.id);
+    const webUrl = authoritativeSourceUrl(row.webUrl);
+    const classification =
+      row.classification === 'CONFIRMED' ||
+      row.classification === 'LIKELY' ||
+      row.classification === 'PROPOSED' ||
+      row.classification === 'HONEST_EMPTY'
+        ? row.classification
+        : row.provenance === 'CONFIRMED' ||
+            row.provenance === 'LIKELY' ||
+            row.provenance === 'PROPOSED' ||
+            row.provenance === 'HONEST_EMPTY'
+          ? row.provenance
+          : 'PROPOSED';
+    out.push({
+      id: row.id,
+      title: row.title,
+      ...(parentMessageId ? { parentMessageId } : {}),
+      ...(attachmentId ? { attachmentId } : {}),
+      ...(row.contentType ? { contentType: row.contentType } : {}),
+      ...(typeof row.size === 'number' && Number.isFinite(row.size) ? { size: row.size } : {}),
+      classification,
+      binariesInAtlas: false,
+      ...(webUrl ? { webUrl } : {}),
+    });
+  };
+  for (const doc of search.documents.items) {
+    if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
+    consider(doc);
+  }
+  for (const hit of search.hits) {
+    if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
+    if (hit.kind !== 'document') continue;
+    consider(hit);
+  }
+  return takeBound(out);
 }
 
 function relatedProjects(
@@ -184,12 +272,14 @@ export function attachRelatedContextToDocument(
   const relatedProject = relatedProjects(item, search);
   const relatedContract = relatedContracts(item, search);
   const capitalRelationship = relatedCapital(item, search);
+  const relatedAttachmentsList = relatedAttachments(item, search);
   return {
     ...item,
     ...(relatedEmail.length ? { relatedEmail } : {}),
     ...(relatedProject.length ? { relatedProject } : {}),
     ...(relatedContract.length ? { relatedContract } : {}),
     ...(capitalRelationship.length ? { capitalRelationship } : {}),
+    ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
   };
 }
 

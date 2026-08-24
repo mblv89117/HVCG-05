@@ -12,9 +12,11 @@ import type { SharePointPmService } from './repository.ts';
 
 import {
   authoritativeSourceUrl,
+  extractMailAttachmentRef,
   extractProvenDriveItemRef,
   extractSourceUrl,
   isFileIndexRow,
+  isMailAttachmentIndexRow,
 } from './fabric/fileIndex.ts';
 import { extractMailConversationId, indexedPreviewOnly } from './fabric/mailPreview.ts';
 
@@ -62,6 +64,11 @@ export interface PmSearchHit {
   /** Proven Graph drive/item ids from the file index. Never invented. */
   driveId?: string;
   itemId?: string;
+  /** Copied from already-indexed outlook-mail-attachment metadata. */
+  parentMessageId?: string;
+  attachmentId?: string;
+  contentType?: string;
+  size?: number;
 }
 
 type LeadRow = {
@@ -344,6 +351,14 @@ export async function searchSharePointPm(
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
       const file = isFileIndexRow(item);
+      const attachment = file
+        ? extractMailAttachmentRef(String(item.summary || ''), {
+            sourceItemId: item.sourceItemId,
+            conversationId: item.conversationId,
+            sourceMessageId: 'sourceMessageId' in item ? item.sourceMessageId : undefined,
+          })
+        : undefined;
+      const mailAttachment = Boolean(attachment || isMailAttachmentIndexRow(item));
       const sourceUrl = authoritativeSourceUrl(
         typeof item.webUrl === 'string'
           ? item.webUrl
@@ -353,7 +368,7 @@ export async function searchSharePointPm(
       const summary = String(item.summary || '');
       const preview = file ? undefined : indexedPreviewOnly(summary);
       const conversationId = file
-        ? undefined
+        ? attachment?.parentMessageId
         : extractMailConversationId(summary, {
             conversationId: item.conversationId,
             sourceItemId: item.sourceItemId,
@@ -363,13 +378,14 @@ export async function searchSharePointPm(
         item.direction === 'Inbound' || item.direction === 'Outbound' || item.direction === 'Internal'
           ? item.direction
           : undefined;
-      const proven = file
-        ? extractProvenDriveItemRef(summary, {
-            sourceItemId: item.sourceItemId,
-            driveId: 'driveId' in item ? (item as { driveId?: unknown }).driveId : undefined,
-            itemId: 'itemId' in item ? (item as { itemId?: unknown }).itemId : undefined,
-          })
-        : undefined;
+      const proven =
+        file && !mailAttachment
+          ? extractProvenDriveItemRef(summary, {
+              sourceItemId: item.sourceItemId,
+              driveId: 'driveId' in item ? (item as { driveId?: unknown }).driveId : undefined,
+              itemId: 'itemId' in item ? (item as { itemId?: unknown }).itemId : undefined,
+            })
+          : undefined;
       push({
         kind: file ? 'document' : 'communication',
         id: String(item.id),
@@ -381,9 +397,13 @@ export async function searchSharePointPm(
         ...(modifiedAt ? { modifiedAt } : {}),
         ...(file ? { provenance: 'CONFIRMED' as const } : { provenance: 'PROPOSED' as const }),
         ...(!file && preview ? { preview } : {}),
-        ...(!file && conversationId ? { conversationId } : {}),
+        ...(conversationId ? { conversationId } : {}),
         ...(!file && direction ? { direction } : {}),
         ...(proven ? { driveId: proven.driveId, itemId: proven.itemId } : {}),
+        ...(attachment?.parentMessageId ? { parentMessageId: attachment.parentMessageId } : {}),
+        ...(attachment?.attachmentId ? { attachmentId: attachment.attachmentId } : {}),
+        ...(attachment?.contentType ? { contentType: attachment.contentType } : {}),
+        ...(typeof attachment?.size === 'number' ? { size: attachment.size } : {}),
       });
     }
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);

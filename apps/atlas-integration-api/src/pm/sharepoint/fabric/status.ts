@@ -44,6 +44,15 @@ export interface FabricSyncHealth {
     files: ChangeNotificationStatus;
     calendar: ChangeNotificationStatus;
   };
+  /**
+   * Entitled document ↔ indexed attachment metadata link path.
+   * skipped when no indexed attachments exist. ready only when the fabric
+   * count is already > 0. Never claims LIVE. Never invents counts.
+   */
+  attachmentLinks: {
+    status: 'skipped' | 'ready';
+    reason: string;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -99,6 +108,26 @@ const SKIPPED_NOTIFICATIONS: FabricSyncHealth['changeNotifications'] = {
   files: 'skipped',
   calendar: 'skipped',
 };
+
+const SKIPPED_ATTACHMENT_LINKS: FabricSyncHealth['attachmentLinks'] = {
+  status: 'skipped',
+  reason: 'No indexed outlook-mail-attachment metadata to link; attachment links remain unproven.',
+};
+
+function inspectAttachmentLinkHealth(opts: {
+  honesty: FabricSyncHealth['honesty'];
+  lastIndexed: FabricIndexedCounts;
+  cumulative: FabricSyncHealth['cumulative'];
+}): FabricSyncHealth['attachmentLinks'] {
+  const indexed = Math.max(opts.lastIndexed.attachmentsIndexed, opts.cumulative.attachmentsIndexed);
+  if (opts.honesty === 'never_run' || indexed === 0) {
+    return { ...SKIPPED_ATTACHMENT_LINKS };
+  }
+  return {
+    status: 'ready',
+    reason: 'Indexed outlook-mail-attachment metadata is available for entitled document linking.',
+  };
+}
 
 function inspectChangeNotificationHealth(raw: {
   changeNotifications?: {
@@ -205,6 +234,7 @@ export function inspectFabricSyncHealth(
         : ['Fabric scheduled sweep disabled; mailbox sync is not continuous.'],
       honesty: 'never_run',
       changeNotifications: { ...SKIPPED_NOTIFICATIONS },
+      attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
     };
   }
   try {
@@ -241,6 +271,15 @@ export function inspectFabricSyncHealth(
     else if (mailMode === 'page') honesty = 'page_fallback';
     else if (mailMode === 'delta' && raw.mailDeltaReady === true && !hardFail) honesty = 'delta';
     else honesty = 'degraded';
+    const lastIndexed = asCounts(raw.lastIndexed);
+    const cumulative: FabricSyncHealth['cumulative'] = {
+      mailThreads: typeof raw.counts?.mailThreads === 'number' ? raw.counts.mailThreads : 0,
+      meetings: typeof raw.counts?.meetings === 'number' ? raw.counts.meetings : 0,
+      contacts: typeof raw.counts?.contacts === 'number' ? raw.counts.contacts : 0,
+      files: typeof raw.counts?.files === 'number' ? raw.counts.files : 0,
+      attachmentsIndexed:
+        typeof raw.counts?.attachmentsIndexed === 'number' ? raw.counts.attachmentsIndexed : 0,
+    };
     return {
       lastRunAt,
       lastAttemptAt,
@@ -248,18 +287,12 @@ export function inspectFabricSyncHealth(
       mailDeltaReady: raw.mailDeltaReady === true,
       mailSkipPresent: typeof raw.mailSkip === 'string' && raw.mailSkip.length > 0,
       scheduledSweepEnabled,
-      lastIndexed: asCounts(raw.lastIndexed),
-      cumulative: {
-        mailThreads: typeof raw.counts?.mailThreads === 'number' ? raw.counts.mailThreads : 0,
-        meetings: typeof raw.counts?.meetings === 'number' ? raw.counts.meetings : 0,
-        contacts: typeof raw.counts?.contacts === 'number' ? raw.counts.contacts : 0,
-        files: typeof raw.counts?.files === 'number' ? raw.counts.files : 0,
-        attachmentsIndexed:
-          typeof raw.counts?.attachmentsIndexed === 'number' ? raw.counts.attachmentsIndexed : 0,
-      },
+      lastIndexed,
+      cumulative,
       notes,
       honesty,
       changeNotifications: inspectChangeNotificationHealth(raw),
+      attachmentLinks: inspectAttachmentLinkHealth({ honesty, lastIndexed, cumulative }),
     };
   } catch {
     return {
@@ -274,6 +307,7 @@ export function inspectFabricSyncHealth(
       notes: ['Fabric checkpoint unreadable — treating mailbox sync as unproven.'],
       honesty: 'degraded',
       changeNotifications: { ...SKIPPED_NOTIFICATIONS, status: 'error', reason: 'fabric checkpoint unreadable' },
+      attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
     };
   }
 }

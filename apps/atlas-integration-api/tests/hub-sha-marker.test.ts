@@ -150,6 +150,7 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
             mailMode?: string;
             mailSkip?: unknown;
             changeNotifications?: { status?: string; mail?: string; files?: string; calendar?: string };
+            attachmentLinks?: { status?: string };
           };
         };
         assert.equal(body.ok, true);
@@ -162,6 +163,7 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
         assert.equal(body.fabricSync?.changeNotifications?.mail, 'skipped');
         assert.equal(body.fabricSync?.changeNotifications?.files, 'skipped');
         assert.equal(body.fabricSync?.changeNotifications?.calendar, 'skipped');
+        assert.equal(body.fabricSync?.attachmentLinks?.status, 'skipped');
 
         const build = await fetch(`${base}/hub-build.json`);
         assert.equal(build.status, 200);

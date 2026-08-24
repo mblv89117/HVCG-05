@@ -315,6 +315,11 @@ export interface AtlasAuthorizedSearchHit {
   /** Proven Graph drive/item ids from the file index. Never invented. */
   driveId?: string;
   itemId?: string;
+  /** Copied from already-indexed outlook-mail-attachment metadata. */
+  parentMessageId?: string;
+  attachmentId?: string;
+  contentType?: string;
+  size?: number;
 }
 
 export type DocumentPreviewStatus = 'ready' | 'skipped' | 'error';
@@ -347,14 +352,39 @@ export interface DocumentOperatingRecord {
   relatedProject?: RelatedDocumentProjectRef[];
   relatedContract?: RelatedDocumentContractRef[];
   capitalRelationship?: RelatedDocumentCapitalRef[];
+  /**
+   * Already-indexed outlook-mail-attachment metadata refs. Copied after
+   * authorization. Never binaries, SAS, or anonymous share URLs.
+   */
+  relatedAttachments?: RelatedDocumentAttachmentRef[];
+  /** Parent Outlook message id from the existing attachment index. */
+  parentMessageId?: string;
+  attachmentId?: string;
+  contentType?: string;
+  size?: number;
 }
 
 export interface RelatedDocumentEmailRef {
   id: string;
   title: string;
   conversationId?: string;
+  /** Parent Outlook message id when this email is the attachment's parent. */
+  parentMessageId?: string;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   /** Authoritative SharePoint/Outlook webUrl only. Never SAS or anonymous share. */
+  webUrl?: string;
+}
+
+export interface RelatedDocumentAttachmentRef {
+  id: string;
+  title: string;
+  parentMessageId?: string;
+  attachmentId?: string;
+  contentType?: string;
+  size?: number;
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  binariesInAtlas: false;
+  /** Authoritative parent-message webUrl only. Never SAS or anonymous share. */
   webUrl?: string;
 }
 
