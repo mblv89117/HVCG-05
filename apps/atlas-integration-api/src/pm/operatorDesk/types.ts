@@ -138,6 +138,12 @@ export interface AskAtlasAttentionItem {
   client?: string;
   clientCode?: string;
   kind: string;
+  /** Meeting copies set this false. Never invent a rank, amount, or transcript. */
+  invented?: false;
+  /** Authoritative Outlook/SharePoint webUrl only. Never SAS or anonymous share. */
+  webUrl?: string;
+  /** Copied from already-indexed outlook-calendar sourceEventId. */
+  sourceEventId?: string;
 }
 
 export type AskAtlasPolicyDecision = 'answered' | 'honest_empty' | 'hvs_blocked' | 'fail_closed';
