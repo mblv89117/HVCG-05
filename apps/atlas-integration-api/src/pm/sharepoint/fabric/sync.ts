@@ -12,7 +12,7 @@ import { assertMannyOnly } from '../manny.ts';
 import { MANNY_ENTRA_OID } from '../manny.ts';
 import type { SharePointPmService } from '../repository.ts';
 import { classifyFabricRecord, stripSecrets, type ClientHint } from './classify.ts';
-import { fileIndexSummary } from './fileIndex.ts';
+import { attachmentIndexSummary, authoritativeSourceUrl } from './fileIndex.ts';
 import {
   emptySharePointCheckpoint,
   indexBusinessFiles,
@@ -24,8 +24,10 @@ import type { FabricChangeNotificationState } from './subscriptions.ts';
 
 const MAX_PAGES = 8;
 const PAGE_SIZE = 50;
-const MAX_ATTACHMENT_MESSAGES = 25;
+const MAX_ATTACHMENT_MESSAGES_PAGE = 25;
+const MAX_ATTACHMENT_LOOKUPS_DELTA = MAX_PAGES * PAGE_SIZE;
 const MAX_ATTACHMENTS_PER_MESSAGE = 20;
+const GRAPH_ATTACHMENT_UNSUPPORTED = new Set([400, 403, 404, 405]);
 const MAIL_SELECT =
   'id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview,hasAttachments';
 
@@ -52,6 +54,7 @@ export interface FabricSyncResult {
     meetings: number;
     contacts: number;
     files: number;
+    attachmentsIndexed: number;
     skipped: number;
     restricted: number;
   };
@@ -136,8 +139,15 @@ function persistFabricProgress(dir: string, cp: FabricCheckpoint, notes: string[
 function pinHonestyNotes(notes: string[]): string[] {
   const mail = notes.filter((note) => /^Mail (delta|page) reached HTTP /.test(note));
   const skips = notes.filter((note) => /index write skipped|transport failed \(HTTP 0\)/.test(note));
-  const rest = notes.filter((note) => !mail.includes(note) && !skips.includes(note));
-  return [...rest, ...skips.slice(0, 2), ...mail.slice(-1)];
+  const attachments = notes.filter((note) => /Mail attachment metadata/.test(note));
+  const rest = notes.filter(
+    (note) => !mail.includes(note) && !skips.includes(note) && !attachments.includes(note),
+  );
+  return [...rest, ...skips.slice(0, 2), ...attachments.slice(-2), ...mail.slice(-1)];
+}
+
+function attachmentLookupBudget(mailMode: 'delta' | 'page'): number {
+  return mailMode === 'delta' ? MAX_ATTACHMENT_LOOKUPS_DELTA : MAX_ATTACHMENT_MESSAGES_PAGE;
 }
 
 async function readFabricJson(
@@ -217,7 +227,15 @@ export async function runFabricSync(opts: {
     notes.push(isolatedFailureNote('Client hints unavailable; fabric sync continued with empty client resolver', err));
   }
   const cp = loadCheckpoint(opts.dataDir);
-  const indexed = { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 };
+  const indexed = {
+    mailThreads: 0,
+    meetings: 0,
+    contacts: 0,
+    files: 0,
+    attachmentsIndexed: 0,
+    skipped: 0,
+    restricted: 0,
+  };
 
   const seenConversations = new Set<string>();
   let attachmentLookups = 0;
@@ -315,7 +333,7 @@ export async function runFabricSync(opts: {
       if (
         msg.hasAttachments === true &&
         classified.clientCode &&
-        attachmentLookups < MAX_ATTACHMENT_MESSAGES
+        attachmentLookups < attachmentLookupBudget(mailMode)
       ) {
         attachmentLookups += 1;
         const att = await readFabricJson(
@@ -324,26 +342,37 @@ export async function runFabricSync(opts: {
           notes,
           'Mail attachment metadata',
         );
-        if (att.status !== 200) {
+        if (GRAPH_ATTACHMENT_UNSUPPORTED.has(att.status)) {
+          notes.push(
+            `Mail attachment metadata skipped: Graph HTTP ${att.status} unsupported; attachment index remains unproven.`,
+          );
+        } else if (att.status !== 200) {
           notes.push(`Mail attachment metadata stopped at HTTP ${att.status}.`);
         } else {
+          const parentWebUrl = authoritativeSourceUrl(webUrl);
           for (const item of asArray(att.json).slice(0, MAX_ATTACHMENTS_PER_MESSAGE)) {
             const attId = typeof item.id === 'string' ? item.id : '';
             const name = typeof item.name === 'string' ? item.name : '';
             if (!attId) continue;
             const key = `mail-att:${messageId}:${attId}`;
+            const contentType = typeof item.contentType === 'string' ? item.contentType : undefined;
+            const size = typeof item.size === 'number' && Number.isFinite(item.size) ? item.size : undefined;
             const wroteAtt = await tryPmIndex(notes, 'SharePoint mail attachment index write', () =>
               opts.service.upsertCommunicationIndex({
                 title: name || attId,
-                summary: fileIndexSummary({
-                  restricted: true,
-                  webUrl,
+                summary: attachmentIndexSummary({
+                  webUrl: parentWebUrl,
+                  parentMessageId: messageId,
+                  attachmentId: attId,
+                  contentType,
+                  size,
                   idempotencyKey: key,
                 }),
                 clientCode: classified.clientCode,
                 channel: 'Other',
-                webUrl,
+                webUrl: parentWebUrl,
                 sourceMessageId: attId,
+                conversationId: messageId,
                 classification: 'RESTRICTED',
                 provenanceSource: 'outlook-mail-attachment',
                 sourceOrg: 'HVCG',
@@ -351,6 +380,7 @@ export async function runFabricSync(opts: {
               }),
             );
             if (!wroteAtt) continue;
+            indexed.attachmentsIndexed += 1;
             indexed.files += 1;
             indexed.restricted += 1;
           }
@@ -504,6 +534,7 @@ export async function runFabricSync(opts: {
     meetings: (cp.counts.meetings || 0) + indexed.meetings,
     contacts: (cp.counts.contacts || 0) + indexed.contacts,
     files: (cp.counts.files || 0) + indexed.files,
+    attachmentsIndexed: (cp.counts.attachmentsIndexed || 0) + indexed.attachmentsIndexed,
   };
   saveCheckpoint(opts.dataDir, cp);
   return { checkpoint: cp, indexed, notes };

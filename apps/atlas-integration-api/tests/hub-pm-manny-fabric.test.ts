@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { classifyDriveItem, classifyFabricRecord, stripSecrets } from '../src/pm/sharepoint/fabric/classify.ts';
 import { extractSearchDriveItems } from '../src/pm/sharepoint/fabric/files.ts';
-import { extractSourceUrl, isFileIndexRow, fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
+import { attachmentIndexSummary, extractSourceUrl, isFileIndexRow, fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import { createFabricGraphClient, isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { inspectFabricSyncHealth, isFabricSweepEnabled, recordFabricSweepAttempt, sanitizeFabricNotes } from '../src/pm/sharepoint/fabric/status.ts';
 import { startFabricRecoverySweep } from '../src/pm/sharepoint/fabric/sweep.ts';
@@ -634,6 +634,7 @@ describe('Fabric mail delta checkpointing', () => {
         bootstrap: true,
       });
       assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.indexed.attachmentsIndexed, 1);
       assert.equal(result.indexed.files, 1);
       assert.equal(result.indexed.restricted, 1);
       assert.equal(
@@ -645,9 +646,20 @@ describe('Fabric mail delta checkpointing', () => {
         false,
       );
       assert.equal(
-        svc.communications.some((row) => row.idempotencyKey === 'mail-att:m1:att-1' && row.clientCode === 'CCB01'),
-        true,
+        paths.some((path) => /\$value|contentBytes/i.test(path)),
+        false,
       );
+      const attRow = svc.communications.find((row) => row.idempotencyKey === 'mail-att:m1:att-1');
+      assert.ok(attRow);
+      assert.equal(attRow.clientCode, 'CCB01');
+      assert.equal(attRow.title, 'term-sheet.pdf');
+      assert.equal(attRow.sourceMessageId, 'att-1');
+      assert.equal(attRow.conversationId, 'm1');
+      assert.equal(attRow.webUrl, 'https://outlook.office.com/mail/m1');
+      assert.match(String(attRow.summary), /Parent:m1/);
+      assert.match(String(attRow.summary), /Att:att-1/);
+      assert.match(String(attRow.summary), /Type:application\/pdf/);
+      assert.match(String(attRow.summary), /Size:1200/);
       assert.equal(
         svc.communications.every((row) => !row.clientCode || row.clientCode === 'CCB01'),
         true,
@@ -656,6 +668,129 @@ describe('Fabric mail delta checkpointing', () => {
         svc.communications.some((row) => row.provenanceSource === 'outlook-mail-attachment' && row.classification === 'RESTRICTED'),
         true,
       );
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.lastIndexed.attachmentsIndexed, 1);
+      assert.equal(health.cumulative.attachmentsIndexed, 1);
+      assert.equal(/LIVE attachments|deltatoken|Bearer |guestaccess/i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not download attachment binaries and drops anonymous share URLs', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-nobytes-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, {
+          hasAttachments: true,
+          extraMessages: [
+            {
+              id: 'm-anon',
+              conversationId: 'conv-anon',
+              subject: 'Colorado Craft Beef anonymous link',
+              bodyPreview: 'Please review the packet.',
+              from: { emailAddress: { address: 'client@example.com' } },
+              webLink: 'https://highvaluecapitalgroup.sharepoint.com/_layouts/15/guestaccess.aspx?share=abc',
+              hasAttachments: true,
+            },
+          ],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.attachmentsIndexed, 2);
+      assert.equal(paths.some((path) => /\$value|contentBytes/i.test(path)), false);
+      const anon = svc.communications.find((row) => row.idempotencyKey === 'mail-att:m-anon:att-1');
+      assert.ok(anon);
+      assert.equal(anon.webUrl, undefined);
+      assert.equal(/guestaccess|share=abc/i.test(String(anon.summary || '')), false);
+      assert.equal(
+        attachmentIndexSummary({
+          parentMessageId: 'm1',
+          attachmentId: 'att-1',
+          contentType: 'application/pdf',
+          size: 1200,
+          idempotencyKey: 'mail-att:m1:att-1',
+        }).includes('Binary not stored'),
+        true,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('indexes every hasAttachments message on a single incremental delta page past the old 25-message cap', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-delta-cap-'));
+    const svc = service();
+    const paths: string[] = [];
+    const extraMessages = Array.from({ length: 25 }, (_, i) => ({
+      id: `m-att-${i + 2}`,
+      conversationId: `conv-att-${i + 2}`,
+      subject: 'Colorado Craft Beef capital update',
+      bodyPreview: 'Please review the packet.',
+      receivedDateTime: '2026-08-24T00:00:00Z',
+      from: { emailAddress: { address: 'client@example.com' } },
+      toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
+      webLink: `https://outlook.office.com/mail/m-att-${i + 2}`,
+      hasAttachments: true,
+    }));
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, { hasAttachments: true, extraMessages }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 26);
+      assert.equal(result.indexed.attachmentsIndexed, 26);
+      assert.equal(paths.filter((path) => path.includes('/attachments')).length, 26);
+      assert.equal(
+        svc.communications.filter((row) => row.provenanceSource === 'outlook-mail-attachment').length,
+        26,
+      );
+      assert.ok(svc.communications.some((row) => row.idempotencyKey === 'mail-att:m-att-26:att-1'));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.lastIndexed.attachmentsIndexed, 26);
+      assert.equal(health.cumulative.attachmentsIndexed, 26);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('skips Graph-unsupported attachment metadata and does not claim LIVE attachments', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-skip-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, { hasAttachments: true, attachmentStatus: 405 }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.indexed.attachmentsIndexed, 0);
+      assert.ok(
+        result.notes.some(
+          (note) =>
+            /Mail attachment metadata skipped/.test(note) &&
+            /HTTP 405/.test(note) &&
+            /attachment index remains unproven/.test(note),
+        ),
+      );
+      assert.equal(
+        svc.communications.some((row) => row.provenanceSource === 'outlook-mail-attachment'),
+        false,
+      );
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.lastIndexed.attachmentsIndexed, 0);
+      assert.equal(health.cumulative.attachmentsIndexed, 0);
+      assert.equal(health.honesty, 'delta');
+      assert.ok(health.notes.some((note) => /attachment metadata skipped/.test(note) && /HTTP 405/.test(note)));
+      assert.equal(/LIVE attachments|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -696,6 +831,8 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.honesty, 'never_run');
       assert.equal(health.mailMode, 'none');
       assert.equal(health.mailDeltaReady, false);
+      assert.equal(health.lastIndexed.attachmentsIndexed, 0);
+      assert.equal(health.cumulative.attachmentsIndexed, 0);
       assert.equal(health.scheduledSweepEnabled, false);
       assert.equal(health.changeNotifications.status, 'skipped');
       assert.equal(health.changeNotifications.mail, 'skipped');
