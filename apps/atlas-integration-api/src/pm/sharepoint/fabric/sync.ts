@@ -120,14 +120,19 @@ export async function runFabricSync(opts: {
     assertMannyOnly(opts.principal, 'Information fabric sync');
   }
   const notes: string[] = [];
-  const clients = (await opts.service.listClientHints()).map(
-    (c): ClientHint => ({
-      clientCode: c.clientCode,
-      displayName: c.displayName,
-      dba: c.dba,
-      domains: [],
-    }),
-  );
+  let clients: ClientHint[] = [];
+  try {
+    clients = (await opts.service.listClientHints()).map(
+      (c): ClientHint => ({
+        clientCode: c.clientCode,
+        displayName: c.displayName,
+        dba: c.dba,
+        domains: [],
+      }),
+    );
+  } catch {
+    notes.push('Client hints unavailable; fabric sync continued with empty client resolver.');
+  }
   const cp = loadCheckpoint(opts.dataDir);
   const indexed = { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 };
 
