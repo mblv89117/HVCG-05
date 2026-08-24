@@ -13,8 +13,8 @@
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
- * Documents reuse the same researchRelationship inverse already live on
- * meetings / onboarding / client support / capital.
+ * Documents and projects reuse the same researchRelationship inverse
+ * already live on meetings / onboarding / client support / capital.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / .clientSupport / .onboarding
  * / .researchIntelligence / fabric mail-attachment index rows / entitled
@@ -488,13 +488,13 @@ function relatedDocumentsForMeeting(
  * Inverse of researchIntelligence.relatedMeetings: entitled same-scope
  * research already on authorizedSearch.researchIntelligence.items
  * (hits already composed into that payload — no new research query).
- * Shared by meetings, onboarding, client support, capital, and
- * documents. Isolation: sameRelatedScope + entitledClientCodes +
- * mayReceiveRelatedContext. Fail-closed: missing / non-canonical
- * ClientCode on the scoped item omits researchRelationship (never
- * guess). Unscoped lender catalog titles never attach to a scoped
- * item. Unscoped never receives scoped research. Client A never
- * receives Client B.
+ * Shared by meetings, onboarding, client support, capital,
+ * documents, and projects. Isolation: sameRelatedScope +
+ * entitledClientCodes + mayReceiveRelatedContext. Fail-closed:
+ * missing / non-canonical ClientCode on the scoped item omits
+ * researchRelationship (never guess). Unscoped lender catalog
+ * titles never attach to a scoped item. Unscoped never receives
+ * scoped research. Client A never receives Client B.
  */
 function relatedResearchForScopeItem(
   item: RelatedScopeItem,
@@ -571,12 +571,18 @@ export function attachRelatedContextToMeetings(
 }
 
 /**
- * Inverse of meeting relatedProject: entitled same-scope meetings already
- * on authorizedSearch.meetings.items or hits kind=meeting.
- * Isolation: sameRelatedScope + entitledClientCodes. Unscoped never
- * receives scoped relations. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
- * historicalHvs / hubMiRow on the project stay as composed.
+ * Inverse of meeting relatedProject + researchIntelligence.relatedMeetings:
+ * entitled same-scope meetings already on authorizedSearch.meetings.items
+ * or hits kind=meeting, and entitled same-scope research already on
+ * authorizedSearch.researchIntelligence.items (no new research query).
+ * Isolation: sameRelatedScope + entitledClientCodes +
+ * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
+ * non-canonical — omit researchRelationship rather than guess.
+ * Unscoped never receives scoped relations. Unscoped lender catalog
+ * titles never attach to a scoped project. Client A never receives
+ * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
+ * transcript text. Classification / invented / hubMiRow stay as
+ * composed on the source project row.
  */
 export function attachRelatedContextToProject(
   principal: AtlasPrincipal,
@@ -585,9 +591,11 @@ export function attachRelatedContextToProject(
 ): ProjectOperatingRecord {
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 
@@ -596,6 +604,7 @@ export function attachRelatedContextToProjects(
   payload: AtlasAuthorizedSearch['projects'],
   search: AtlasAuthorizedSearch,
 ): AtlasAuthorizedSearch['projects'] {
+  if (!payload.items.length) return payload;
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToProject(principal, item, search)),
