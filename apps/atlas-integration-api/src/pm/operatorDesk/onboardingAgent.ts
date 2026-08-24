@@ -5,9 +5,12 @@
  * Inspects existing HVCG_Clients / HVCG_Leads / titled onboarding
  * projects and tasks only. Does not invent ClientCodes or Hub-MI.
  * Activation, completion, welcome send, and live GTM stay OWNER-GATED.
- * Optional relatedMeetings / researchRelationship are attached later
- * from authorizedSearch.meetings / .researchIntelligence / sameRelatedScope
- * (fail-closed when ClientCode is missing).
+ * Optional relatedMeetings / researchRelationship / relatedDocuments
+ * are attached later from authorizedSearch.meetings /
+ * .researchIntelligence / .documents / hits kind=document /
+ * sameRelatedScope (fail-closed when ClientCode is missing /
+ * non-canonical). relatedDocuments reuses relatedDocumentsForMeeting
+ * — no document.onboardingRelationship field.
  */
 
 import {
