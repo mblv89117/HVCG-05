@@ -380,8 +380,10 @@ function normalizeDocument(row: unknown, sourceKind?: string): OperatingDocument
   if (!id && !title) return null;
   const kind = asString(rec.kind) || asString(rec.documentType) || 'document';
   const classification = asString(rec.classification) || asString(rec.provenanceLabel);
+  const explicitConfidentiality = asString(rec.confidentiality);
   const restricted =
     Boolean(rec.sensitivityRestricted) ||
+    explicitConfidentiality === 'restricted' ||
     /restricted/i.test(kind) ||
     /restricted/i.test(String(classification || ''));
   const clientCode = asString(rec.clientCode);
@@ -398,11 +400,16 @@ function normalizeDocument(row: unknown, sourceKind?: string): OperatingDocument
     webUrl: asString(rec.webUrl) || asString(rec.sourceUrl),
     path: asString(rec.path),
     classification,
-    confidentiality: restricted
-      ? 'restricted'
-      : /confidential|legal|pii/i.test(String(classification || kind))
-        ? 'internal'
-        : 'general',
+    confidentiality:
+      explicitConfidentiality === 'restricted' ||
+      explicitConfidentiality === 'internal' ||
+      explicitConfidentiality === 'general'
+        ? explicitConfidentiality
+        : restricted
+          ? 'restricted'
+          : /confidential|legal|pii/i.test(String(classification || kind))
+            ? 'internal'
+            : 'general',
     clientId,
     clientName: asString(rec.clientName) || asString(rec.client) || clientCode,
     projectId: asString(rec.projectId),
