@@ -320,6 +320,8 @@ export interface AtlasAuthorizedSearchHit {
   attachmentId?: string;
   contentType?: string;
   size?: number;
+  /** Copied from already-indexed HVCG_Meetings / outlook-calendar rows. */
+  sourceEventId?: string;
 }
 
 export type DocumentPreviewStatus = 'ready' | 'skipped' | 'error';
@@ -353,6 +355,11 @@ export interface DocumentOperatingRecord {
   relatedProject?: RelatedDocumentProjectRef[];
   relatedContract?: RelatedDocumentContractRef[];
   capitalRelationship?: RelatedDocumentCapitalRef[];
+  /**
+   * Already-authorized entitled HVCG_Meetings / search kind=meeting refs.
+   * Copied after authorization. Never a new Graph calendar query.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
   /**
    * Already-indexed outlook-mail-attachment metadata refs. Copied after
    * authorization. Never binaries, SAS, or anonymous share URLs.
@@ -428,6 +435,18 @@ export interface RelatedDocumentCapitalRef {
   financingStatusClassification: 'HONEST_EMPTY';
   lenderCriteriaInvented: false;
   invented: false;
+}
+
+export interface RelatedDocumentMeetingRef {
+  id: string;
+  title: string;
+  clientCode?: string;
+  date?: string;
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  /** Authoritative Outlook/SharePoint webUrl only. Never SAS or anonymous share. */
+  webUrl?: string;
+  /** Copied from already-indexed outlook-calendar sourceEventId. */
+  sourceEventId?: string;
 }
 
 export type ProjectOperatingClassification =
