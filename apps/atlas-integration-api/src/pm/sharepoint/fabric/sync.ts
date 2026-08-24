@@ -48,6 +48,12 @@ export interface FabricCheckpoint {
   filesSkip: string | null;
   /** Last Graph HTTP status for POST /search/query. Distinct from filesSkip nextLink. */
   fileSearchLastStatus?: number | null;
+  /**
+   * Durable skip after app-only Graph /search/query rejection
+   * (HTTP 400 invalid_request / BadRequest, or HTTP 0 graph_request_failed).
+   * Later sweeps must not POST /search/query again. Never means LIVE files.
+   */
+  fileSearchRejectedAppOnly?: boolean;
   /** Last Graph HTTP status for mail attachment metadata list. Distinct from mailSkip. */
   attachmentsLastStatus?: number | null;
   /** Attachment objects seen on the last completed attachment Graph page (not indexed counts). */
@@ -747,12 +753,18 @@ export async function runFabricSync(opts: {
       clients,
       checkpoint: cp.sharePoint || emptySharePointCheckpoint(),
       notes,
+      priorFileSearch: {
+        fileSearchRejectedAppOnly: cp.fileSearchRejectedAppOnly,
+        fileSearchLastStatus: cp.fileSearchLastStatus,
+        lastNotes: cp.lastNotes,
+      },
     });
     indexed.files += sharePoint.files;
     indexed.skipped += sharePoint.skipped;
     indexed.restricted += sharePoint.restricted;
     cp.sharePoint = sharePoint.checkpoint;
     cp.fileSearchLastStatus = sharePoint.fileSearchLastStatus;
+    cp.fileSearchRejectedAppOnly = sharePoint.fileSearchRejectedAppOnly;
   } catch (err) {
     notes.push(isolatedFailureNote('SharePoint file index skipped', err));
   }
