@@ -15,7 +15,8 @@
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings, onboarding → documents,
  * onboarding → projects,
- * onboarding → threads, and
+ * onboarding → threads,
+ * onboarding → capital, and
  * onboarding → research links on OnboardingAgentRecord items, and the inverse
  * research-intelligence → meetings,
  * research-intelligence → documents,
@@ -818,24 +819,30 @@ export function attachRelatedContextToClientSupport(
  * RelatedDocumentProjectRef — no new project query), entitled
  * same-scope threads already on authorizedSearch.threads.items
  * (reuses relatedEmails / RelatedDocumentEmailRef — no new query),
- * and entitled same-scope research already on
- * authorizedSearch.researchIntelligence.items (no new research query).
+ * entitled same-scope capital-prepare rows already on
+ * authorizedSearch.capitalSubmissions.items (reuses relatedCapital /
+ * RelatedDocumentCapitalRef — no new query), and entitled same-scope
+ * research already on authorizedSearch.researchIntelligence.items
+ * (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit relatedMeetings / researchRelationship /
- * relatedDocuments / relatedProjects / relatedThreads rather than
- * guess. Unscoped never receives scoped relations. Unscoped lender
- * catalog titles never attach scoped documents, projects, or threads.
- * Client A never receives Client B. SAS / anonymous webUrl dropped.
- * No downloadUrl. No transcript text. No preview body /
- * suggestedDraft / send on the thread refs. No TargetAmount. No
- * Hub-MI invention. hubMiRow is copied as composed on the source
- * project (never invented). OWNER_ESCALATE / execute=false /
+ * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
+ * rather than guess. Unscoped never receives scoped relations.
+ * Unscoped lender catalog titles never attach scoped documents,
+ * projects, threads, or capital. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * No preview body / suggestedDraft / send on the thread refs. No
+ * TargetAmount. No invented lender criteria, fit, or financing
+ * status. No Hub-MI invention. hubMiRow is copied as composed on the
+ * source project (never invented). OWNER_ESCALATE / execute=false /
  * activate=false / send=false / liveGtmOutbound=false /
  * ownerGated=true / hubMi=false stay as composed. DRAFT_ONLY /
  * send=false / autoRespond=false / indexedPreviewOnly stay as
- * composed on the source thread payload. There is no
- * document.onboardingRelationship field.
+ * composed on the source thread payload. PREPARE_ONLY / send=false /
+ * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN /
+ * HONEST_EMPTY stay as composed on the source capital payload. There
+ * is no document.onboardingRelationship field.
  */
 export function attachRelatedContextToOnboardingRecord(
   principal: AtlasPrincipal,
@@ -849,6 +856,7 @@ export function attachRelatedContextToOnboardingRecord(
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
   const relatedProjectsList = relatedProjects(item, search);
   const relatedThreads = relatedEmails(item, search);
+  const relatedCapitalList = relatedCapital(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
@@ -856,6 +864,7 @@ export function attachRelatedContextToOnboardingRecord(
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
     ...(relatedThreads.length ? { relatedThreads } : {}),
+    ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
   };
 }
 
