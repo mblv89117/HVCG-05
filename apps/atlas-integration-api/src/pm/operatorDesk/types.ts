@@ -50,6 +50,7 @@ export const ASK_ATLAS_CAPITAL_SUBMISSION_PREPARE_MISSION_KEY =
 export const ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY =
   'ATLAS-RESEARCH-INTELLIGENCE-001' as const;
 export const ASK_ATLAS_ONBOARDING_AGENT_MISSION_KEY = 'ATLAS-ONBOARDING-AGENT-001' as const;
+export const ASK_ATLAS_CLIENT_SUPPORT_AGENT_MISSION_KEY = 'ATLAS-CLIENT-SUPPORT-AGENT-001' as const;
 /** Onboarding agent copies entitled intake evidence only. Owner decisions stay escalated. */
 export const ONBOARDING_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
 export const ONBOARDING_AGENT_EXECUTE = false as const;
@@ -58,6 +59,14 @@ export const ONBOARDING_AGENT_SEND = false as const;
 export const ONBOARDING_AGENT_LIVE_GTM_OUTBOUND = false as const;
 export const ONBOARDING_AGENT_OWNER_GATED = true as const;
 export const ONBOARDING_AGENT_HUB_MI = false as const;
+/** Client support / routing copies entitled support evidence only. Owner decisions stay escalated. */
+export const CLIENT_SUPPORT_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
+export const CLIENT_SUPPORT_AGENT_EXECUTE = false as const;
+export const CLIENT_SUPPORT_AGENT_SEND = false as const;
+export const CLIENT_SUPPORT_AGENT_AUTO_RESPOND = false as const;
+export const CLIENT_SUPPORT_AGENT_OWNER_GATED = true as const;
+export const CLIENT_SUPPORT_AGENT_HUB_MI = false as const;
+export const CLIENT_SUPPORT_AGENT_DRAFT_ONLY = true as const;
 /** Suggested replies stay draft. AUTO_RESPOND is never enabled. */
 export const COMMUNICATIONS_POLICY_CLASS = 'DRAFT_ONLY' as const;
 export const COMMUNICATIONS_AUTO_RESPOND = false as const;
@@ -235,6 +244,12 @@ export interface AtlasClientContext {
    * intake evidence. Activation, completion, Hub-MI, and GTM stay OWNER-GATED.
    */
   onboarding: OnboardingAgentPayload;
+  /**
+   * Native governed client support / routing agent from already-entitled
+   * Atlas/index communications, titled support work, and copied queues.
+   * Reply / reassign / close stay OWNER-GATED. Send stays draft-only.
+   */
+  clientSupport: ClientSupportAgentPayload;
 }
 
 export function clientContextMissionKey(
@@ -510,6 +525,64 @@ export interface OnboardingAgentPayload {
   items: OnboardingAgentRecord[];
 }
 
+export type ClientSupportEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+export type ClientSupportEvidenceKind =
+  | 'communication'
+  | 'task'
+  | 'meeting'
+  | 'decision'
+  | 'deliverable'
+  | 'queue_item'
+  | 'recovered_client';
+
+export interface ClientSupportEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  classification: AskAtlasClassification;
+}
+
+export interface ClientSupportOwnerDecision {
+  decision: string;
+  status: 'escalated';
+  execute: false;
+}
+
+export interface ClientSupportAgentRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  evidenceKind: ClientSupportEvidenceKind;
+  /** Copied existing operator queue, or Owner review. Never invented. */
+  suggestedRoute: string;
+  classification: ClientSupportEvidenceClass;
+  provenance: ClientSupportEvidenceClass;
+  invented: false;
+  hubMiRow: false;
+  execute: false;
+  send: false;
+  autoRespond: false;
+  draftOnly: true;
+  evidence: ClientSupportEvidenceRef[];
+  missingRequirements: string[];
+  ownerDecisions: ClientSupportOwnerDecision[];
+  nextAction: string;
+}
+
+export interface ClientSupportAgentPayload {
+  kind: 'client_support_agent_v1';
+  policyClass: typeof CLIENT_SUPPORT_AGENT_POLICY_CLASS;
+  invented: false;
+  execute: typeof CLIENT_SUPPORT_AGENT_EXECUTE;
+  send: typeof CLIENT_SUPPORT_AGENT_SEND;
+  autoRespond: typeof CLIENT_SUPPORT_AGENT_AUTO_RESPOND;
+  draftOnly: typeof CLIENT_SUPPORT_AGENT_DRAFT_ONLY;
+  ownerGated: typeof CLIENT_SUPPORT_AGENT_OWNER_GATED;
+  hubMi: typeof CLIENT_SUPPORT_AGENT_HUB_MI;
+  items: ClientSupportAgentRecord[];
+}
+
 export interface AtlasAuthorizedSearch {
   kind: 'atlas_authorized_search_v1';
   invented: false;
@@ -534,6 +607,7 @@ export interface AtlasAuthorizedSearch {
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
   onboarding: OnboardingAgentPayload;
+  clientSupport: ClientSupportAgentPayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;

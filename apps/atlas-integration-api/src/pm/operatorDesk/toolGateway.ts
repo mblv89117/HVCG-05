@@ -56,6 +56,7 @@ import {
   emptyResearchIntelligencePayload,
 } from './researchIntelligence.ts';
 import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgent.ts';
+import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -283,6 +284,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(opts?.now),
     onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
   };
 }
 
@@ -476,6 +478,7 @@ function composeClientContext(
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(),
     onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
   };
 }
 
@@ -528,6 +531,7 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     capitalSubmissions: composeBoundClientCapitalSubmissions(ctx, binding),
     researchIntelligence: composeBoundClientResearchIntelligence(ctx, binding),
     onboarding: composeBoundClientOnboarding(ctx, binding),
+    clientSupport: composeBoundClientSupport(ctx, binding),
   };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
@@ -990,6 +994,30 @@ function composeBoundClientOnboarding(
 }
 
 /**
+ * Same client_support_agent_v1 composer as authorizedSearch.clientSupport.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * OWNER_ESCALATE. Reply / reassign / send stay owner-gated and draft-only.
+ */
+function composeBoundClientSupport(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['clientSupport'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyClientSupportPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.clientSupport;
+}
+
+/**
  * After a current entitled binding is resolved, load the same entitled
  * index rows search_authorized_knowledge already uses. Does not invent a
  * second CRM or copy HVS folders.
@@ -1402,6 +1430,7 @@ function emptyAuthorizedSearch(opts?: {
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(),
     onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
   };
 }
 
@@ -1493,6 +1522,7 @@ function composeAuthorizedSearch(
     capitalSubmissions: composeCapitalSubmissionPrepare(hits),
     researchIntelligence: composeResearchIntelligence(hits, ctx.now),
     onboarding: composeOnboardingAgent(hits),
+    clientSupport: composeClientSupportAgent(hits),
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),
