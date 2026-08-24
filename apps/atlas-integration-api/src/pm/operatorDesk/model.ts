@@ -28,6 +28,7 @@ import {
 import { authoritativeSourceUrl } from '../sharepoint/fabric/fileIndex.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
+import { completedEntitledClientHints } from './productResearchAgent.ts';
 import {
   ASK_ATLAS_RANKING,
   OPERATOR_DESK_CONTRACT,
@@ -302,6 +303,19 @@ export function emptyHonestOperatingPicture(): OperatorOperatingPicture {
     hvsActionableClientKnowledge:
       hvsDataAccess === 'BLOCKED' ? [] : hvsActionableClientKnowledge(),
   };
+}
+
+/**
+ * Attach count-only fabric.clientHints extras from already-loaded fabric status.
+ * Omitted when skipped / never_run. Does not call listClientHints.
+ */
+export function withCompletedClientHints(
+  picture: OperatorOperatingPicture,
+  raw: { status?: unknown; reason?: unknown; count?: unknown } | null | undefined,
+): OperatorOperatingPicture {
+  const hints = completedEntitledClientHints(raw);
+  if (!hints) return picture;
+  return { ...picture, clientHints: hints };
 }
 
 export function operatorOperatingPictureFromKnowledge(
