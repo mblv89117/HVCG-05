@@ -89,7 +89,14 @@ export async function indexBusinessFiles(opts: {
   clients: ClientHint[];
   checkpoint: SharePointFileCheckpoint;
   notes: string[];
-}): Promise<{ files: number; skipped: number; restricted: number; checkpoint: SharePointFileCheckpoint }> {
+}): Promise<{
+  files: number;
+  skipped: number;
+  restricted: number;
+  checkpoint: SharePointFileCheckpoint;
+  /** Last Graph HTTP status for POST /search/query. Distinct from filesSkip nextLink. */
+  fileSearchLastStatus: number | null;
+}> {
   const indexed = { files: 0, skipped: 0, restricted: 0 };
   const cp: SharePointFileCheckpoint = {
     drives: { ...opts.checkpoint.drives },
@@ -247,12 +254,14 @@ export async function indexBusinessFiles(opts: {
     }
   }
 
+  let fileSearchLastStatus: number | null = null;
   for (let i = 0; i < SEARCH_PATHS.length && i < MAX_SEARCH_QUERIES; i += 1) {
     const path = SEARCH_PATHS[i];
     const { status, json } = await opts.fabric.postJson(
       '/v1.0/search/query',
       businessFileSearchRequest(path, cp.searchFrom),
     );
+    fileSearchLastStatus = status;
     if (status !== 200) {
       const info = describeGraphListWriteError(status, json);
       opts.notes.push(
@@ -273,7 +282,7 @@ export async function indexBusinessFiles(opts: {
   }
   cp.searchFrom = 0;
 
-  return { ...indexed, checkpoint: cp };
+  return { ...indexed, checkpoint: cp, fileSearchLastStatus };
 }
 
 export function extractSearchDriveItems(json: Record<string, unknown>): Array<{

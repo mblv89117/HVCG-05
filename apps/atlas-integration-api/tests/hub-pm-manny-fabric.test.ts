@@ -324,6 +324,8 @@ describe('Fabric mail delta checkpointing', () => {
       attachmentStatus?: number;
       contactsStatus?: number;
       contacts?: Record<string, unknown>[];
+      searchStatus?: number;
+      searchJson?: Record<string, unknown>;
     } = {},
   ) {
     let deltaCalls = 0;
@@ -400,6 +402,19 @@ describe('Fabric mail delta checkpointing', () => {
       },
       async postJson(path: string) {
         paths.push(`POST ${path}`);
+        if (path.includes('/search/query')) {
+          const status = extras.searchStatus ?? 403;
+          if (status !== 200) {
+            return {
+              status,
+              json:
+                status === 400
+                  ? { error: { code: 'BadRequest', message: 'invalid_request' } }
+                  : {},
+            };
+          }
+          return { status: 200, json: extras.searchJson ?? { value: [] } };
+        }
         return { status: 403, json: {} };
       },
     };
@@ -991,6 +1006,90 @@ describe('Fabric mail delta checkpointing', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('reports fileSearch skipped when Graph search/query returns HTTP 400 and never claims LIVE', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-400-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, { searchStatus: 400 }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.checkpoint.fileSearchLastStatus, 400);
+      assert.ok(result.notes.some((note) => /File search skipped/.test(note) && /HTTP 400/.test(note)));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.match(health.fileSearch.reason, /HTTP 400/);
+      assert.equal(health.fileSearch.status === 'LIVE', false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(
+        JSON.stringify(health)
+          .replace(/Not claimed as LIVE files/gi, '')
+          .search(/LIVE/i) >= 0,
+        false,
+      );
+      assert.equal(typeof health.lastIndexed.files, 'number');
+      assert.equal(typeof health.cumulative.files, 'number');
+      assert.equal(/CCB99|PDG01|invented|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports fileSearch ready on Graph search/query HTTP 200 without inventing file counts or LIVE', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-200-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, {
+          searchStatus: 200,
+          searchJson: {
+            value: [
+              {
+                hitsContainers: [
+                  {
+                    hits: [
+                      {
+                        resource: {
+                          id: 'hit-unindexed',
+                          name: 'not-a-claimed-search-hit.docx',
+                          webUrl: 'https://example.com/not-indexed',
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.checkpoint.fileSearchLastStatus, 200);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'ready');
+      assert.match(health.fileSearch.reason, /HTTP 200/);
+      assert.equal(health.fileSearch.status === 'LIVE', false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(
+        JSON.stringify(health)
+          .replace(/Not claimed as LIVE files/gi, '')
+          .search(/LIVE/i) >= 0,
+        false,
+      );
+      assert.equal(health.lastIndexed.files, result.indexed.files);
+      assert.equal(health.cumulative.files, result.checkpoint.counts.files || 0);
+      assert.equal(health.lastIndexed.files, health.cumulative.files);
+      assert.equal(/3178|invented search|search hits/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(/CCB99|PDG01|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('Fabric sync honesty status', () => {
@@ -1008,6 +1107,9 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.contacts.status, 'skipped');
       assert.match(health.contacts.reason, /have not completed|remain unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.match(health.fileSearch.reason, /File search has not completed; file search remains unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
       assert.equal(health.scheduledSweepEnabled, false);
       assert.equal(health.changeNotifications.status, 'skipped');
       assert.equal(health.changeNotifications.mail, 'skipped');
@@ -1015,6 +1117,20 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.changeNotifications.calendar, 'skipped');
       const dumped = JSON.stringify(health);
       assert.equal(/deltatoken|mailSkip=|Bearer /i.test(dumped), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports fileSearch error when the fabric checkpoint is unreadable', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-unreadable-'));
+    try {
+      writeFileSync(join(dir, 'fabric-checkpoint.json'), '{not-json', 'utf8');
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'error');
+      assert.match(health.fileSearch.reason, /unreadable|unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.honesty, 'degraded');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -1028,6 +1144,9 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.contacts.status, 'error');
       assert.match(health.contacts.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(health.fileSearch.status, 'error');
+      assert.match(health.fileSearch.reason, /unreadable|unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
       assert.equal(health.honesty, 'degraded');
     } finally {
       rmSync(dir, { recursive: true, force: true });

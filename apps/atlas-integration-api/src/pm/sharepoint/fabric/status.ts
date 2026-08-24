@@ -63,6 +63,17 @@ export interface FabricSyncHealth {
     status: 'skipped' | 'ready' | 'error';
     reason: string;
   };
+  /**
+   * Graph POST /search/query honesty for business file search.
+   * skipped when the sweep has not completed or Graph returned non-200.
+   * ready when Graph 200 completed. Never LIVE. Never invents file counts —
+   * cumulative.files / lastIndexed.files stay the existing business-file index.
+   * error when the checkpoint is unreadable.
+   */
+  fileSearch: {
+    status: 'skipped' | 'ready' | 'error';
+    reason: string;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -134,6 +145,16 @@ const ERROR_CONTACTS: FabricSyncHealth['contacts'] = {
   reason: 'Fabric checkpoint unreadable; contacts remain unproven.',
 };
 
+const SKIPPED_FILE_SEARCH: FabricSyncHealth['fileSearch'] = {
+  status: 'skipped',
+  reason: 'File search has not completed; file search remains unproven.',
+};
+
+const ERROR_FILE_SEARCH: FabricSyncHealth['fileSearch'] = {
+  status: 'error',
+  reason: 'Fabric checkpoint unreadable; file search remains unproven.',
+};
+
 function parseContactsStopStatus(notes: string[]): number | null {
   for (const note of notes) {
     const match = /Contacts index stopped at HTTP (\d+)/i.exec(note);
@@ -189,6 +210,45 @@ function inspectContactsHealth(opts: {
   return {
     status: 'ready',
     reason: 'Contacts Graph returned HTTP 200 with an empty page; indexed contacts remain 0.',
+  };
+}
+
+function parseFileSearchStopStatus(notes: string[]): number | null {
+  for (const note of notes) {
+    const match = /File search skipped:.*HTTP (\d+)/i.exec(note);
+    if (match) {
+      const status = Number(match[1]);
+      if (Number.isFinite(status)) return status;
+    }
+  }
+  return null;
+}
+
+function inspectFileSearchHealth(opts: {
+  honesty: FabricSyncHealth['honesty'];
+  lastRunAt: string | null;
+  fileSearchLastStatus?: number | null;
+  notes: string[];
+}): FabricSyncHealth['fileSearch'] {
+  if (opts.honesty === 'never_run' || !opts.lastRunAt) {
+    return { ...SKIPPED_FILE_SEARCH };
+  }
+  const lastStatus =
+    typeof opts.fileSearchLastStatus === 'number' && Number.isFinite(opts.fileSearchLastStatus)
+      ? Math.floor(opts.fileSearchLastStatus)
+      : parseFileSearchStopStatus(opts.notes);
+  if (lastStatus != null && lastStatus !== 200) {
+    return {
+      status: 'skipped',
+      reason: `File search Graph search/query returned HTTP ${lastStatus}; file search remains unproven.`,
+    };
+  }
+  if (lastStatus !== 200) {
+    return { ...SKIPPED_FILE_SEARCH };
+  }
+  return {
+    status: 'ready',
+    reason: 'File search Graph search/query returned HTTP 200; file counts remain the existing business-file index.',
   };
 }
 
@@ -314,6 +374,7 @@ export function inspectFabricSyncHealth(
       changeNotifications: { ...SKIPPED_NOTIFICATIONS },
       attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
       contacts: { ...SKIPPED_CONTACTS },
+      fileSearch: { ...SKIPPED_FILE_SEARCH },
     };
   }
   try {
@@ -325,6 +386,7 @@ export function inspectFabricSyncHealth(
       mailSkip?: string | null;
       contactsLastStatus?: number | null;
       contactsGraphItems?: number;
+      fileSearchLastStatus?: number | null;
       counts?: Record<string, number>;
       lastIndexed?: FabricIndexedCounts;
       lastNotes?: string[];
@@ -390,6 +452,15 @@ export function inspectFabricSyncHealth(
             : undefined,
         notes,
       }),
+      fileSearch: inspectFileSearchHealth({
+        honesty,
+        lastRunAt,
+        fileSearchLastStatus:
+          typeof raw.fileSearchLastStatus === 'number' && Number.isFinite(raw.fileSearchLastStatus)
+            ? raw.fileSearchLastStatus
+            : null,
+        notes,
+      }),
     };
   } catch {
     return {
@@ -406,6 +477,7 @@ export function inspectFabricSyncHealth(
       changeNotifications: { ...SKIPPED_NOTIFICATIONS, status: 'error', reason: 'fabric checkpoint unreadable' },
       attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
       contacts: { ...ERROR_CONTACTS },
+      fileSearch: { ...ERROR_FILE_SEARCH },
     };
   }
 }
