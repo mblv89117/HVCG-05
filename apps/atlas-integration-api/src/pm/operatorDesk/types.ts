@@ -338,6 +338,55 @@ export interface DocumentOperatingRecord {
   previewSkipReason?: string;
   /** Set when a Graph preview was attempted. Points at Graph preview, not a share link. */
   basedOn?: string;
+  /**
+   * Optional related operating context copied from already-authorized search
+   * hits / composed projects / threads / capital. Never invented. Client
+   * isolation is applied before attach.
+   */
+  relatedEmail?: RelatedDocumentEmailRef[];
+  relatedProject?: RelatedDocumentProjectRef[];
+  relatedContract?: RelatedDocumentContractRef[];
+  capitalRelationship?: RelatedDocumentCapitalRef[];
+}
+
+export interface RelatedDocumentEmailRef {
+  id: string;
+  title: string;
+  conversationId?: string;
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  /** Authoritative SharePoint/Outlook webUrl only. Never SAS or anonymous share. */
+  webUrl?: string;
+}
+
+export interface RelatedDocumentProjectRef {
+  id: string;
+  title: string;
+  clientCode?: string;
+  classification: ProjectOperatingClassification;
+  source: string;
+  historicalHvs: boolean;
+  hubMiRow: boolean;
+  invented: false;
+}
+
+export interface RelatedDocumentContractRef {
+  id: string;
+  title: string;
+  source: string;
+  /** CONFIRMED only when title/source already names contract / SOW / proposal / capital packet. */
+  classification: 'CONFIRMED' | 'LIKELY';
+  webUrl?: string;
+}
+
+export interface RelatedDocumentCapitalRef {
+  id: string;
+  title: string;
+  clientCode?: string;
+  policyClass: typeof CAPITAL_SUBMISSION_POLICY_CLASS;
+  financingStatus: typeof CAPITAL_SUBMISSION_FINANCING_STATUS;
+  financingStatusClassification: 'HONEST_EMPTY';
+  lenderCriteriaInvented: false;
+  invented: false;
 }
 
 export type ProjectOperatingClassification =
