@@ -53,6 +53,16 @@ export interface FabricSyncHealth {
     status: 'skipped' | 'ready';
     reason: string;
   };
+  /**
+   * Outlook contacts fabric index honesty.
+   * skipped when the sweep has not completed or Graph returned non-200.
+   * ready when Graph 200 completed (including honest empty). Never LIVE.
+   * error when the checkpoint is unreadable.
+   */
+  contacts: {
+    status: 'skipped' | 'ready' | 'error';
+    reason: string;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -113,6 +123,74 @@ const SKIPPED_ATTACHMENT_LINKS: FabricSyncHealth['attachmentLinks'] = {
   status: 'skipped',
   reason: 'No indexed outlook-mail-attachment metadata to link; attachment links remain unproven.',
 };
+
+const SKIPPED_CONTACTS: FabricSyncHealth['contacts'] = {
+  status: 'skipped',
+  reason: 'Contacts sweep has not completed; contacts remain unproven.',
+};
+
+const ERROR_CONTACTS: FabricSyncHealth['contacts'] = {
+  status: 'error',
+  reason: 'Fabric checkpoint unreadable; contacts remain unproven.',
+};
+
+function parseContactsStopStatus(notes: string[]): number | null {
+  for (const note of notes) {
+    const match = /Contacts index stopped at HTTP (\d+)/i.exec(note);
+    if (match) {
+      const status = Number(match[1]);
+      if (Number.isFinite(status)) return status;
+    }
+  }
+  return null;
+}
+
+function inspectContactsHealth(opts: {
+  honesty: FabricSyncHealth['honesty'];
+  lastRunAt: string | null;
+  lastIndexed: FabricIndexedCounts;
+  contactsLastStatus?: number | null;
+  contactsGraphItems?: number;
+  notes: string[];
+}): FabricSyncHealth['contacts'] {
+  if (opts.honesty === 'never_run' || !opts.lastRunAt) {
+    return { ...SKIPPED_CONTACTS };
+  }
+  const lastStatus =
+    typeof opts.contactsLastStatus === 'number' && Number.isFinite(opts.contactsLastStatus)
+      ? Math.floor(opts.contactsLastStatus)
+      : parseContactsStopStatus(opts.notes);
+  if (lastStatus != null && lastStatus !== 200) {
+    return {
+      status: 'skipped',
+      reason: `Contacts Graph returned HTTP ${lastStatus}; contacts remain unproven.`,
+    };
+  }
+  if (lastStatus !== 200) {
+    return { ...SKIPPED_CONTACTS };
+  }
+  const indexed = opts.lastIndexed.contacts;
+  const graphItems =
+    typeof opts.contactsGraphItems === 'number' && Number.isFinite(opts.contactsGraphItems)
+      ? Math.max(0, Math.floor(opts.contactsGraphItems))
+      : 0;
+  if (indexed > 0) {
+    return {
+      status: 'ready',
+      reason: 'Contacts Graph returned HTTP 200; entitled contacts were indexed.',
+    };
+  }
+  if (graphItems > 0) {
+    return {
+      status: 'ready',
+      reason: 'Contacts Graph returned HTTP 200; items classify-skipped for missing entitled ClientCode.',
+    };
+  }
+  return {
+    status: 'ready',
+    reason: 'Contacts Graph returned HTTP 200 with an empty page; indexed contacts remain 0.',
+  };
+}
 
 function inspectAttachmentLinkHealth(opts: {
   honesty: FabricSyncHealth['honesty'];
@@ -235,6 +313,7 @@ export function inspectFabricSyncHealth(
       honesty: 'never_run',
       changeNotifications: { ...SKIPPED_NOTIFICATIONS },
       attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
+      contacts: { ...SKIPPED_CONTACTS },
     };
   }
   try {
@@ -244,6 +323,8 @@ export function inspectFabricSyncHealth(
       mailMode?: 'delta' | 'page';
       mailDeltaReady?: boolean;
       mailSkip?: string | null;
+      contactsLastStatus?: number | null;
+      contactsGraphItems?: number;
       counts?: Record<string, number>;
       lastIndexed?: FabricIndexedCounts;
       lastNotes?: string[];
@@ -293,6 +374,20 @@ export function inspectFabricSyncHealth(
       honesty,
       changeNotifications: inspectChangeNotificationHealth(raw),
       attachmentLinks: inspectAttachmentLinkHealth({ honesty, lastIndexed, cumulative }),
+      contacts: inspectContactsHealth({
+        honesty,
+        lastRunAt,
+        lastIndexed,
+        contactsLastStatus:
+          typeof raw.contactsLastStatus === 'number' && Number.isFinite(raw.contactsLastStatus)
+            ? raw.contactsLastStatus
+            : null,
+        contactsGraphItems:
+          typeof raw.contactsGraphItems === 'number' && Number.isFinite(raw.contactsGraphItems)
+            ? raw.contactsGraphItems
+            : undefined,
+        notes,
+      }),
     };
   } catch {
     return {
@@ -308,6 +403,7 @@ export function inspectFabricSyncHealth(
       honesty: 'degraded',
       changeNotifications: { ...SKIPPED_NOTIFICATIONS, status: 'error', reason: 'fabric checkpoint unreadable' },
       attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
+      contacts: { ...ERROR_CONTACTS },
     };
   }
 }

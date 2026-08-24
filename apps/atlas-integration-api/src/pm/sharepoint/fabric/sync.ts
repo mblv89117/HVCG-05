@@ -37,6 +37,12 @@ export interface FabricCheckpoint {
   mailDeltaReady?: boolean;
   calendarSkip: string | null;
   contactsSkip: string | null;
+  /** Last Graph HTTP status for /contacts. Distinct from contactsSkip nextLink. */
+  contactsLastStatus?: number | null;
+  /** Graph contact items seen on the last completed contacts sweep (not indexed counts). */
+  contactsGraphItems?: number;
+  /** Items classify-skipped for missing entitled ClientCode on the last sweep. */
+  contactsClassifySkipped?: number;
   filesSkip: string | null;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
@@ -140,10 +146,21 @@ function pinHonestyNotes(notes: string[]): string[] {
   const mail = notes.filter((note) => /^Mail (delta|page) reached HTTP /.test(note));
   const skips = notes.filter((note) => /index write skipped|transport failed \(HTTP 0\)/.test(note));
   const attachments = notes.filter((note) => /Mail attachment metadata/.test(note));
+  const contacts = notes.filter((note) => /^Contacts /.test(note));
   const rest = notes.filter(
-    (note) => !mail.includes(note) && !skips.includes(note) && !attachments.includes(note),
+    (note) =>
+      !mail.includes(note) &&
+      !skips.includes(note) &&
+      !attachments.includes(note) &&
+      !contacts.includes(note),
   );
-  return [...rest, ...skips.slice(0, 2), ...attachments.slice(-2), ...mail.slice(-1)];
+  return [
+    ...rest,
+    ...skips.slice(0, 2),
+    ...attachments.slice(-2),
+    ...contacts.slice(-3),
+    ...mail.slice(-1),
+  ];
 }
 
 function attachmentLookupBudget(mailMode: 'delta' | 'page'): number {
@@ -460,13 +477,20 @@ export async function runFabricSync(opts: {
   let contactUrl: string | null =
     cp.contactsSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/contacts?$select=id,displayName,emailAddresses,companyName,jobTitle,businessPhones&$top=${PAGE_SIZE}`;
+  let contactsGraphItems = 0;
+  let contactsClassifySkipped = 0;
   for (let page = 0; page < MAX_PAGES && contactUrl; page += 1) {
     const { status, json } = await readFabricJson(opts.fabric, contactUrl, notes, 'Contacts');
+    cp.contactsLastStatus = status;
+    persistFabricProgress(opts.dataDir, cp, notes);
     if (status !== 200) {
       notes.push(`Contacts index stopped at HTTP ${status}.`);
+      persistFabricProgress(opts.dataDir, cp, notes);
       break;
     }
-    for (const ct of asArray(json)) {
+    const pageItems = asArray(json);
+    contactsGraphItems += pageItems.length;
+    for (const ct of pageItems) {
       const contactId = typeof ct.id === 'string' ? ct.id : '';
       const email =
         Array.isArray(ct.emailAddresses) && ct.emailAddresses[0]
@@ -482,6 +506,7 @@ export async function runFabricSync(opts: {
       );
       if (classified.ingest === 'skip' || !classified.clientCode) {
         indexed.skipped += 1;
+        contactsClassifySkipped += 1;
         continue;
       }
       const wroteContact = await tryPmIndex(notes, 'SharePoint contact index write', () =>
@@ -499,6 +524,16 @@ export async function runFabricSync(opts: {
     }
     contactUrl = nextLink(json);
     cp.contactsSkip = contactUrl;
+    cp.contactsGraphItems = contactsGraphItems;
+    cp.contactsClassifySkipped = contactsClassifySkipped;
+    persistFabricProgress(opts.dataDir, cp, notes);
+  }
+  cp.contactsGraphItems = contactsGraphItems;
+  cp.contactsClassifySkipped = contactsClassifySkipped;
+  if (cp.contactsLastStatus === 200 && contactsGraphItems === 0) {
+    notes.push('Contacts Graph returned HTTP 200 with an empty page.');
+  } else if (cp.contactsLastStatus === 200 && indexed.contacts === 0 && contactsClassifySkipped > 0) {
+    notes.push('Contacts items classify-skipped for missing entitled ClientCode.');
   }
 
   if (cp.filesSkip && /\/drive\/recent/i.test(cp.filesSkip)) {
