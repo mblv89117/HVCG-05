@@ -4087,7 +4087,7 @@ describe('ATLAS-ONBOARDING-RELATED-ATTACHMENTS-001 entitled same-scope inverse',
     const absent = attachRelatedContextToOnboardingRecord(
       staff,
       syn01OnboardingRecord(),
-      searchWithCapital(),
+      searchWithCapital([syn01CapitalRecord()]),
     );
     assert.equal(absent.relatedAttachments, undefined);
     assert.equal('relatedAttachments' in absent, false);
