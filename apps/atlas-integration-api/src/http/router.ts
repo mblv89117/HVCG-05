@@ -38,6 +38,17 @@ import { handleOperatorDesk } from '../pm/operatorDesk/handle.ts';
 import { handleClientExperience } from '../clientExperience/http.ts';
 import { resolveHubBuild, resolveHubCommit } from './hubCommit.ts';
 import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../pm/sharepoint/fabric/status.ts';
+import {
+  acceptGraphChangeNotifications,
+  decodeGraphValidationToken,
+  GRAPH_NOTIFICATION_PATH,
+  graphValidationResponse,
+  resolveGraphNotificationClientState,
+} from '../pm/sharepoint/fabric/notifications.ts';
+import {
+  loadChangeNotificationState,
+  persistChangeNotificationState,
+} from '../pm/sharepoint/fabric/subscriptions.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
@@ -47,6 +58,7 @@ export interface RouterDeps {
   sharepoint?: SharePointPmService | null;
   localAi: LocalAiAdapter;
   capital?: CapitalPersistence | null;
+  requestFabricSync?: (trigger: string) => Promise<{ accepted: boolean; queued: boolean }>;
 }
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
@@ -288,6 +300,58 @@ export async function handleRequest(
       path,
       origin,
     })) {
+      return;
+    }
+
+    // POST /api/graph/change-notifications — Graph validation + clientState. Not Entra user auth.
+    if (path === GRAPH_NOTIFICATION_PATH) {
+      if (method !== 'POST') {
+        send(res, 405, { error: 'method_not_allowed' }, origin);
+        return;
+      }
+      const validationToken = decodeGraphValidationToken(url.searchParams.get('validationToken'));
+      if (validationToken) {
+        const handshake = graphValidationResponse(validationToken);
+        res.writeHead(handshake.status, {
+          'content-type': handshake.contentType,
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff',
+        });
+        res.end(handshake.body);
+        return;
+      }
+      const body = await readJson(req);
+      const prior = loadChangeNotificationState(cfg.dataDir);
+      const accepted = await acceptGraphChangeNotifications({
+        body,
+        expectedClientState: resolveGraphNotificationClientState(),
+        priorSeenIds: prior?.seenIds,
+        trigger: deps.requestFabricSync
+          ? () => deps.requestFabricSync!('graph-notification')
+          : undefined,
+      });
+      if (!accepted.ok) {
+        send(res, accepted.status, { error: 'unauthorized', reason: accepted.reason }, origin);
+        return;
+      }
+      if (prior || accepted.seen.length) {
+        persistChangeNotificationState(cfg.dataDir, {
+          status: prior?.status || 'skipped',
+          reason: prior?.reason || 'subscription create not proven against Graph',
+          mailStatus: prior?.mailStatus || 'skipped',
+          filesStatus: prior?.filesStatus || 'skipped',
+          mail: prior?.mail,
+          files: prior?.files,
+          lastEnsuredAt: prior?.lastEnsuredAt,
+          seenIds: accepted.seen,
+        });
+      }
+      send(
+        res,
+        202,
+        { accepted: true, replay: accepted.replay, queued: accepted.triggered },
+        origin,
+      );
       return;
     }
 

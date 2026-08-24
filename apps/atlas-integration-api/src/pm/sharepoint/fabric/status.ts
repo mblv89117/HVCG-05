@@ -6,6 +6,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { ChangeNotificationStatus } from './notifications.ts';
 
 export const FABRIC_CHECKPOINT_FILE = 'fabric-checkpoint.json';
 
@@ -34,6 +35,12 @@ export interface FabricSyncHealth {
   };
   notes: string[];
   honesty: 'never_run' | 'delta' | 'page_fallback' | 'degraded';
+  changeNotifications: {
+    status: ChangeNotificationStatus;
+    reason: string;
+    mail: ChangeNotificationStatus;
+    files: ChangeNotificationStatus;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -73,6 +80,61 @@ export function fabricSweepIntervalMs(env: NodeJS.Dict<string | undefined> = pro
   return 15 * 60 * 1000;
 }
 
+const SKIPPED_NOTIFICATIONS: FabricSyncHealth['changeNotifications'] = {
+  status: 'skipped',
+  reason: 'subscription create not proven against Graph',
+  mail: 'skipped',
+  files: 'skipped',
+};
+
+function inspectChangeNotificationHealth(raw: {
+  changeNotifications?: {
+    status?: ChangeNotificationStatus;
+    reason?: string;
+    mailStatus?: ChangeNotificationStatus;
+    filesStatus?: ChangeNotificationStatus;
+    mail?: { id?: string; expirationDateTime?: string };
+    files?: Array<{ id?: string; expirationDateTime?: string }>;
+  };
+}): FabricSyncHealth['changeNotifications'] {
+  const state = raw.changeNotifications;
+  if (!state || typeof state !== 'object') return { ...SKIPPED_NOTIFICATIONS };
+  const mailReady = Boolean(
+    state.mailStatus === 'ready' &&
+      state.mail?.id &&
+      typeof state.mail.expirationDateTime === 'string' &&
+      Date.parse(state.mail.expirationDateTime) > Date.now(),
+  );
+  const filesReady = Boolean(
+    state.filesStatus === 'ready' &&
+      Array.isArray(state.files) &&
+      state.files.some(
+        (row) =>
+          Boolean(row?.id) &&
+          typeof row.expirationDateTime === 'string' &&
+          Date.parse(row.expirationDateTime) > Date.now(),
+      ),
+  );
+  const reason = sanitizeFabricNotes([state.reason || SKIPPED_NOTIFICATIONS.reason])[0] || SKIPPED_NOTIFICATIONS.reason;
+  if (state.mailStatus === 'error' || state.status === 'error') {
+    return { status: 'error', reason, mail: 'error', files: state.filesStatus || 'skipped' };
+  }
+  if (mailReady) {
+    return {
+      status: 'ready',
+      reason,
+      mail: 'ready',
+      files: filesReady ? 'ready' : state.filesStatus === 'error' ? 'error' : 'skipped',
+    };
+  }
+  return {
+    status: 'skipped',
+    reason,
+    mail: 'skipped',
+    files: filesReady ? 'ready' : state.filesStatus === 'error' ? 'error' : 'skipped',
+  };
+}
+
 function asCounts(value: unknown): FabricIndexedCounts {
   if (!value || typeof value !== 'object') return { ...EMPTY_INDEXED };
   const rec = value as Record<string, unknown>;
@@ -108,6 +170,7 @@ export function inspectFabricSyncHealth(
         ? ['Fabric checkpoint absent — continuous mailbox sync has not completed a run.']
         : ['Fabric scheduled sweep disabled; mailbox sync is not continuous.'],
       honesty: 'never_run',
+      changeNotifications: { ...SKIPPED_NOTIFICATIONS },
     };
   }
   try {
@@ -120,6 +183,14 @@ export function inspectFabricSyncHealth(
       counts?: Record<string, number>;
       lastIndexed?: FabricIndexedCounts;
       lastNotes?: string[];
+      changeNotifications?: {
+        status?: ChangeNotificationStatus;
+        reason?: string;
+        mailStatus?: ChangeNotificationStatus;
+        filesStatus?: ChangeNotificationStatus;
+        mail?: { id?: string; expirationDateTime?: string };
+        files?: Array<{ id?: string; expirationDateTime?: string }>;
+      };
     };
     const lastRunAt = typeof raw.lastRunAt === 'string' && raw.lastRunAt ? raw.lastRunAt : null;
     const lastAttemptAt =
@@ -150,6 +221,7 @@ export function inspectFabricSyncHealth(
       },
       notes,
       honesty,
+      changeNotifications: inspectChangeNotificationHealth(raw),
     };
   } catch {
     return {
@@ -163,6 +235,7 @@ export function inspectFabricSyncHealth(
       cumulative: { mailThreads: 0, meetings: 0, contacts: 0, files: 0 },
       notes: ['Fabric checkpoint unreadable — treating mailbox sync as unproven.'],
       honesty: 'degraded',
+      changeNotifications: { ...SKIPPED_NOTIFICATIONS, status: 'error', reason: 'fabric checkpoint unreadable' },
     };
   }
 }

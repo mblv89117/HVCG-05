@@ -36,9 +36,23 @@ export function startServer() {
   const localAi = createLocalAiAdapter();
   const app = buildRegistry(cfg, repo);
   const capital = createAuthorizedCapitalStore(cfg) ?? createSharePointCapitalService(cfg);
+  const fabricSweep = startConfiguredFabricSweep({ cfg, sharepoint });
 
   const server = createServer((req, res) => {
-    handleRequest({ cfg, repo, app, pm, sharepoint, localAi, capital }, req, res).catch((err) => {
+    handleRequest(
+      {
+        cfg,
+        repo,
+        app,
+        pm,
+        sharepoint,
+        localAi,
+        capital,
+        requestFabricSync: fabricSweep?.requestSync,
+      },
+      req,
+      res,
+    ).catch((err) => {
       console.error(JSON.stringify({ level: 'error', msg: 'unhandled', detail: String(err) }));
       res.writeHead(500, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: 'server_error' }));
@@ -62,7 +76,6 @@ export function startServer() {
         microsoftConfigured: Boolean(cfg.microsoft.clientId && cfg.microsoft.clientSecret),
       }),
     );
-    startConfiguredFabricSweep({ cfg, sharepoint });
   });
 
   return server;
