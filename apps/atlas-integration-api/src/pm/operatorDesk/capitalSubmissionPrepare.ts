@@ -32,7 +32,7 @@ const CAPITAL_EVIDENCE_KINDS = new Set([
 ]);
 
 const INVENTED_CRITERIA =
-  /\b(?:ltv|dscr|credit box|min(?:imum)? credit|max(?:imum)? ltv|funding status|best[_ ]?fit|term sheet approved|committed funded)\b/i;
+  /\b(?:ltv\s*[:=]?\s*\d|dscr\s*[:=]?\s*\d|credit box|min(?:imum)? credit|max(?:imum)? ltv|best[_ ]?fit|term sheet approved|committed funded)\b/i;
 
 const OWNER_NEXT_ACTION =
   'Owner review of this PREPARE-only package. External lender/investor submission remains owner-gated.';
