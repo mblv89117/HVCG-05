@@ -35,11 +35,46 @@ import {
   type AtlasAuthorizedSearchHit,
   type AtlasClientContext,
   type ClientContextEvidenceClass,
+  type OperatorOperatingItem,
   type OperatorOperatingPicture,
   type OperatorSearchHit,
   type ProductImprovementEvidenceClass,
   type ProposedEngineeringMission,
 } from './types.ts';
+
+export const SEARCH_QUEUE_URGENCY = [
+  'Overdue',
+  'Blocked',
+  'Decision Required',
+  'Needs Action',
+  'At Risk',
+  'Waiting',
+  'Capital',
+  'Ready',
+] as const;
+export type SearchQueueUrgency = (typeof SEARCH_QUEUE_URGENCY)[number];
+
+const SEARCH_QUEUE_RANK: Record<SearchQueueUrgency | 'none', number> = {
+  Overdue: 0,
+  Blocked: 1,
+  'Decision Required': 2,
+  'Needs Action': 3,
+  'At Risk': 4,
+  Waiting: 5,
+  Capital: 6,
+  Ready: 7,
+  none: 8,
+};
+
+const SEARCH_CLASS_RANK = {
+  CONFIRMED: 0,
+  LIKELY: 1,
+  PROPOSED: 2,
+  HONEST_EMPTY: 3,
+} as const;
+
+const GENERIC_SEARCH_HIT_WHY = 'Entitled desk search returned this hit for the requested query.';
+const GENERIC_QUEUE_HIT_WHY = 'Entitled operator picture queue item already on the desk.';
 
 export const READ_AUTO_TOOL_NAMES = [
   GET_ATTENTION_ITEMS_TOOL,
@@ -521,11 +556,104 @@ function toAuthorizedSearchHit(
     ...(row.href ? { href: row.href } : {}),
     ...('source' in row && row.source ? { source: String(row.source) } : { source: 'pm_search' }),
     ...(row.clientCode ? { clientCode: row.clientCode } : {}),
-    why: 'Entitled desk search returned this hit for the requested query.',
+    why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
     provenance: 'LIKELY',
     classification: 'LIKELY',
   };
+}
+
+function resolveQueueUrgency(row: OperatorOperatingItem): SearchQueueUrgency | null {
+  if (row.kind === 'hvs_actionable_capital') return 'Capital';
+  if (row.queue === 'Overdue') return 'Overdue';
+  if (row.queue === 'Blocked') return 'Blocked';
+  if (row.queue === 'Decision Required') return 'Decision Required';
+  if (row.queue === 'Needs Action') return 'Needs Action';
+  if (row.queue === 'At Risk') return 'At Risk';
+  if (row.queue === 'Waiting') return 'Waiting';
+  if (row.queue === 'Ready') return 'Ready';
+  if (row.queue === 'Capital') return 'Capital';
+  return null;
+}
+
+function existingClientNextAction(
+  picture: OperatorOperatingPicture,
+  clientCode?: string,
+): string | undefined {
+  if (!clientCode) return undefined;
+  const record = picture.hvsRecoveredClientRecords.find((row) => row.clientCode === clientCode);
+  if (record?.nextAction?.trim()) return record.nextAction.trim();
+  const recovered = picture.hvsRecoveredClients.find((row) => row.clientCode === clientCode);
+  if (recovered?.nextAction?.trim()) return recovered.nextAction.trim();
+  return undefined;
+}
+
+function strongestQueueMembership(
+  picture: OperatorOperatingPicture,
+  clientCode?: string,
+): { row: OperatorOperatingItem; queue: SearchQueueUrgency } | null {
+  if (!clientCode) return null;
+  let best: { row: OperatorOperatingItem; queue: SearchQueueUrgency } | null = null;
+  for (const rows of Object.values(picture.queues)) {
+    for (const row of rows) {
+      if (row.clientCode !== clientCode) continue;
+      const queue = resolveQueueUrgency(row);
+      if (!queue) continue;
+      if (!best || SEARCH_QUEUE_RANK[queue] < SEARCH_QUEUE_RANK[best.queue]) {
+        best = { row, queue };
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * Copy already-known queue kind/state / why / evidence / nextAction onto an
+ * entitled hit. Does not invent urgency, amounts, lenders, or Hub-MI rows,
+ * and never promotes classification.
+ */
+function attachExistingQueueActionability(
+  hit: AtlasAuthorizedSearchHit,
+  picture: OperatorOperatingPicture,
+): AtlasAuthorizedSearchHit {
+  if (hit.queue) return hit;
+  const found = strongestQueueMembership(picture, hit.clientCode);
+  if (!found) return hit;
+  const nextAction = existingClientNextAction(picture, hit.clientCode);
+  const evidence = found.row.evidence?.trim() || undefined;
+  const why = evidence || nextAction || hit.why || GENERIC_SEARCH_HIT_WHY;
+  return {
+    ...hit,
+    why,
+    ...(evidence
+      ? {
+          basedOn: evidence,
+          evidence,
+        }
+      : {}),
+    ...(nextAction ? { nextAction } : {}),
+    queue: found.queue,
+  };
+}
+
+function searchHitQueueRank(hit: AtlasAuthorizedSearchHit): number {
+  const queue = hit.queue;
+  if (queue && Object.prototype.hasOwnProperty.call(SEARCH_QUEUE_RANK, queue)) {
+    return SEARCH_QUEUE_RANK[queue as SearchQueueUrgency | 'none'];
+  }
+  return SEARCH_QUEUE_RANK.none;
+}
+
+function rankAuthorizedHits(hits: AtlasAuthorizedSearchHit[]): AtlasAuthorizedSearchHit[] {
+  return [...hits].sort((a, b) => {
+    const queue = searchHitQueueRank(a) - searchHitQueueRank(b);
+    if (queue !== 0) return queue;
+    const classRank =
+      SEARCH_CLASS_RANK[neverPromoteClassification(a.classification)] -
+      SEARCH_CLASS_RANK[neverPromoteClassification(b.classification)];
+    if (classRank !== 0) return classRank;
+    return a.id.localeCompare(b.id);
+  });
 }
 
 function rowMatchesAuthorizedBinding(
@@ -684,6 +812,9 @@ function composeEntitledPictureHits(
       if (queued >= PICTURE_QUEUE_LIMIT) break;
       queued += 1;
       const classification = neverPromoteClassification(row.provenance);
+      const queue = resolveQueueUrgency(row);
+      const evidence = row.evidence?.trim() || undefined;
+      const nextAction = existingClientNextAction(picture, row.clientCode);
       push({
         kind: row.kind || 'attention_item',
         id: row.id || `picture:queue:${row.clientCode}:${row.title}`,
@@ -691,10 +822,13 @@ function composeEntitledPictureHits(
         source: 'operator_operating_picture',
         ...(row.href ? { href: row.href } : {}),
         ...(row.clientCode ? { clientCode: row.clientCode } : {}),
-        why: row.title,
-        basedOn: row.evidence || 'Entitled operator picture queue item. Classification is not promoted.',
+        why: evidence || nextAction || GENERIC_QUEUE_HIT_WHY,
+        basedOn: evidence || 'Entitled operator picture queue item. Classification is not promoted.',
         provenance: classification,
         classification,
+        ...(queue ? { queue } : {}),
+        ...(evidence ? { evidence } : {}),
+        ...(nextAction ? { nextAction } : {}),
       });
     }
     if (queued >= PICTURE_QUEUE_LIMIT) break;
@@ -785,6 +919,7 @@ function emptyAuthorizedSearch(opts?: {
     entitled: opts?.entitled === true,
     ran: opts?.ran === true,
     pictureComposed: false,
+    actionabilityApplied: false,
   };
 }
 
@@ -810,6 +945,7 @@ function searchActivityAnswer(
       result,
       readWriteStatus: 'READ_AUTO',
       policyDecision: result,
+      ran: search.ran,
     },
   };
 }
@@ -821,8 +957,12 @@ function composeAuthorizedSearch(
   pictureHits: AtlasAuthorizedSearchHit[],
   opts: { entitled: boolean; ran: boolean },
 ): AuthorizedSearchToolResult {
-  const hits = mergeAuthorizedHits(pmHits, pictureHits);
+  const merged = mergeAuthorizedHits(pmHits, pictureHits).map((hit) =>
+    attachExistingQueueActionability(hit, ctx.picture),
+  );
+  const hits = rankAuthorizedHits(merged);
   const pictureComposed = pictureHits.length > 0;
+  const actionabilityApplied = hits.some((hit) => Boolean(hit.queue));
   const classification = hits.length ? strongestHitClassification(hits) : ('HONEST_EMPTY' as const);
   let why = 'No entitled search hits are available for this query.';
   let basedOn =
@@ -853,6 +993,7 @@ function composeAuthorizedSearch(
     entitled: opts.entitled,
     ran: opts.ran || pictureComposed,
     pictureComposed,
+    actionabilityApplied,
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),
@@ -898,7 +1039,7 @@ export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): Authoriz
   if (!canAccessOperatorDesk(ctx.principal)) {
     const authorizedSearch = emptyAuthorizedSearch({ entitled: false, ran: false });
     return {
-      askAtlas: honestEmptyAnswer({ now: ctx.now, tools: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL] }),
+      askAtlas: searchActivityAnswer(ctx, authorizedSearch),
       authorizedSearch,
     };
   }

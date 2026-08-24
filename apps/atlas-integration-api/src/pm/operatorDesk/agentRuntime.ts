@@ -4,7 +4,8 @@
  * Maps a signed operator question (default ASK_ATLAS_QUESTION) onto the
  * READ_AUTO get_attention_items gateway, client-specific questions onto
  * get_client_context, and search questions onto search_authorized_knowledge
- * (SEARCH-001 PM reuse plus SEARCH-002 entitled picture composition).
+ * (SEARCH-001 PM reuse plus SEARCH-002 entitled picture composition
+ * plus SEARCH-ACTIONABILITY-001 existing-queue attach and rank).
  * Owner-facing operating-state questions (overdue / waiting / blocked /
  * decisions / Capital / at risk / next / changed today) alias the same
  * get_attention_items engine (ATTENTION-NL-001). Reserved operating-state
@@ -31,6 +32,7 @@ import {
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
   ASK_ATLAS_SEARCH_002_MISSION_KEY,
+  ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY,
   ASK_ATLAS_SEARCH_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
@@ -53,6 +55,7 @@ export const ATLAS_HUB_CLIENTCTX_MISSION_KEY = ASK_ATLAS_CLIENTCTX_MISSION_KEY;
 export const ATLAS_HUB_RECOVERED_MISSION_KEY = ASK_ATLAS_RECOVERED_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_MISSION_KEY = ASK_ATLAS_SEARCH_MISSION_KEY;
 export const ATLAS_HUB_SEARCH_002_MISSION_KEY = ASK_ATLAS_SEARCH_002_MISSION_KEY;
+export const ATLAS_HUB_SEARCH_ACTIONABILITY_MISSION_KEY = ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY;
 export const ATLAS_HUB_ATTENTION_NL_MISSION_KEY = ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
 export const ATLAS_HUB_RUNTIME_POLICY_CLASS = 'READ_AUTO' as const;
 
@@ -66,6 +69,7 @@ export interface AtlasHubRuntime {
     | typeof ASK_ATLAS_RECOVERED_MISSION_KEY
     | typeof ASK_ATLAS_SEARCH_MISSION_KEY
     | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY
+    | typeof ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY
     | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
 }
 
@@ -261,6 +265,8 @@ export function extractSearchAuthorizedQuery(question: string): string | null {
     /^search authorized knowledge(?:\s+for)?\s+(.+)$/i,
     /^what documents do we have(?:\s+for)?\s+(.+)$/i,
     /^find documents(?:\s+for)?\s+(.+)$/i,
+    /^search overdue\s+(.+)$/i,
+    /^find overdue\s+(.+)$/i,
     /^search\s+(.+)$/i,
   ];
   for (const pattern of patterns) {
@@ -386,9 +392,11 @@ function finishSearchRuntime(invoked: {
   const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL)
     ? [...invoked.askAtlas.activity.tools]
     : [...invoked.askAtlas.activity.tools, GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL];
-  const missionKey = invoked.authorizedSearch.pictureComposed
-    ? ASK_ATLAS_SEARCH_002_MISSION_KEY
-    : ASK_ATLAS_SEARCH_MISSION_KEY;
+  const missionKey = invoked.authorizedSearch.actionabilityApplied
+    ? ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY
+    : invoked.authorizedSearch.pictureComposed
+      ? ASK_ATLAS_SEARCH_002_MISSION_KEY
+      : ASK_ATLAS_SEARCH_MISSION_KEY;
   return {
     askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, missionKey),
     runtime: runtimeEnvelope([GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL], missionKey),

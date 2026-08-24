@@ -16,6 +16,7 @@ import {
   readAgentActivityOverlay,
 } from '../src/pm/operatorDesk/activityLedger.ts';
 import {
+  extractSearchAuthorizedQuery,
   isOwnerGatedQuestion,
   mapsToGetAttentionItems,
   mapsToGetClientContext,
@@ -26,15 +27,19 @@ import {
 import {
   invokeReadAutoTool,
   READ_AUTO_TOOL_NAMES,
+  SEARCH_QUEUE_URGENCY,
   searchAuthorizedKnowledge,
 } from '../src/pm/operatorDesk/toolGateway.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+  ASK_ATLAS_MISSION_KEY,
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
   ASK_ATLAS_RUNTIME_MISSION_KEY,
+  ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY,
   ASK_ATLAS_SEARCH_002_MISSION_KEY,
+  ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY,
   ASK_ATLAS_SEARCH_MISSION_KEY,
   GET_ATTENTION_ITEMS_TOOL,
   GET_CLIENT_CONTEXT_TOOL,
@@ -45,6 +50,7 @@ import {
   type AskAtlasAnswer,
   type AtlasAuthorizedSearch,
   type AtlasAuthorizedSearchHit,
+  type OperatorOperatingPicture,
 } from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { PmSearchHit } from '../src/pm/sharepoint/search.ts';
@@ -141,6 +147,83 @@ function foreignHit(): PmSearchHit {
     source: 'HVCG_Communications',
     clientCode: 'CCB01',
   };
+}
+
+function emptyQueues(picture: OperatorOperatingPicture): OperatorOperatingPicture {
+  return {
+    ...picture,
+    queues: {
+      needsAction: [],
+      waiting: [],
+      overdue: [],
+      blocked: [],
+      decisionRequired: [],
+      atRisk: [],
+      ready: [],
+      outcomes: [],
+    },
+  };
+}
+
+function pictureWithRankedQueues(): OperatorOperatingPicture {
+  const picture = emptyQueues(emptyHonestOperatingPicture());
+  return {
+    ...picture,
+    queues: {
+      ...picture.queues,
+      overdue: [
+        {
+          id: 'q-pdg-overdue',
+          clientCode: 'PDG01',
+          title: 'Prodigy recovered past-due invoice filename',
+          queue: 'Overdue',
+          kind: 'hvs_actionable_overdue',
+          provenance: 'LIKELY',
+          evidence: 'CONFIRMED filename April 2026 Past Due Invoice.pdf. Amounts were not extracted.',
+        },
+      ],
+      ready: [
+        {
+          id: 'q-pdg-ready',
+          clientCode: 'PDG01',
+          title: 'Prodigy recovered engagement review',
+          queue: 'Ready',
+          kind: 'hvs_recovered_action',
+          provenance: 'CONFIRMED',
+          evidence: 'CONFIRMED filename Prodigy_Games_Engagement_Plan.docx.',
+        },
+      ],
+      blocked: [
+        {
+          id: 'q-ccb-blocked',
+          clientCode: 'CCB01',
+          title: 'Colorado Beef blocked item',
+          queue: 'Blocked',
+          kind: 'hvs_actionable_blocked',
+          provenance: 'PROPOSED',
+          evidence: 'Foreign client queue row must never leak into PDG01 search.',
+        },
+      ],
+    },
+  };
+}
+
+function assertSearchQueueOrder(hits: AtlasAuthorizedSearchHit[]): void {
+  const rank = Object.fromEntries(SEARCH_QUEUE_URGENCY.map((queue, index) => [queue, index]));
+  const classRank = { CONFIRMED: 0, LIKELY: 1, PROPOSED: 2, HONEST_EMPTY: 3 } as const;
+  for (let i = 1; i < hits.length; i += 1) {
+    const prev = hits[i - 1]!;
+    const next = hits[i]!;
+    const prevQ = prev.queue && prev.queue in rank ? rank[prev.queue] : SEARCH_QUEUE_URGENCY.length;
+    const nextQ = next.queue && next.queue in rank ? rank[next.queue] : SEARCH_QUEUE_URGENCY.length;
+    assert.ok(prevQ <= nextQ, `queue rank inverted: ${prev.queue || 'none'} before ${next.queue || 'none'}`);
+    if (prevQ === nextQ) {
+      assert.ok(
+        classRank[prev.classification] <= classRank[next.classification],
+        `classification rank inverted under ${prev.queue || 'none'}`,
+      );
+    }
+  }
 }
 
 async function withHub(
@@ -242,8 +325,15 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
     assert.equal(mapsToSearchAuthorizedKnowledge('Find documents for Hart'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('Search authorized knowledge for PDG01'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('What documents do we have for Prodigy'), true);
+    assert.equal(mapsToSearchAuthorizedKnowledge('search overdue Prodigy'), true);
+    assert.equal(mapsToSearchAuthorizedKnowledge('find overdue documents'), true);
+    assert.equal(extractSearchAuthorizedQuery('search overdue Prodigy'), 'Prodigy');
+    assert.equal(extractSearchAuthorizedQuery('find overdue documents'), 'documents');
 
     assert.equal(mapsToSearchAuthorizedKnowledge(ASK_ATLAS_QUESTION), false);
+    assert.equal(mapsToSearchAuthorizedKnowledge('What is overdue'), false);
+    assert.equal(mapsToGetAttentionItems('What is overdue'), true);
+    assert.equal(mapsToGetAttentionItems('search overdue Prodigy'), false);
     assert.equal(mapsToSearchAuthorizedKnowledge('What needs my attention'), false);
     assert.equal(mapsToGetAttentionItems('What needs my attention'), true);
     assert.equal(mapsToSearchAuthorizedKnowledge('Summarize Prodigy'), false);
@@ -405,6 +495,7 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
     assert.equal(result.authorizedSearch.entitled, true);
     assert.equal(result.authorizedSearch.ran, true);
     assert.equal(result.authorizedSearch.pictureComposed, true);
+    assert.equal(result.authorizedSearch.actionabilityApplied, true);
     assert.ok(result.authorizedSearch.hitCount >= 2);
     assert.ok(result.authorizedSearch.hits.some((hit) => hit.id === 'doc-pdg-1'));
     const pmHit = result.authorizedSearch.hits.find((hit) => hit.id === 'doc-pdg-1');
@@ -429,14 +520,14 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       entitledSearch: async (query) => ({ query, results: [prodigyHit()] }),
     });
     assert.equal(viaRuntime.askAtlas.activity.agent, ASK_ATLAS_RUNTIME_AGENT);
-    assert.equal(viaRuntime.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+    assert.equal(viaRuntime.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
     assert.equal(viaRuntime.askAtlas.activity.readWriteStatus, 'READ_AUTO');
     assert.ok(viaRuntime.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
     assert.deepEqual(viaRuntime.runtime, {
       agent: ASK_ATLAS_RUNTIME_AGENT,
       toolsInvoked: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL],
       policyClass: 'READ_AUTO',
-      missionKey: ASK_ATLAS_SEARCH_002_MISSION_KEY,
+      missionKey: ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY,
     });
     assert.ok((viaRuntime.authorizedSearch?.hitCount || 0) >= 2);
     assert.equal(viaRuntime.authorizedSearch?.invented, false);
@@ -490,7 +581,7 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       searchQuery: 'Prodigy',
       entitledSearch: async (query) => ({ query, results: [] }),
     });
-    assert.equal(viaQ.runtime.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+    assert.equal(viaQ.runtime.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
     assert.deepEqual(viaQ.runtime.toolsInvoked, [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL]);
     assert.equal(viaQ.authorizedSearch?.pictureComposed, true);
     assert.ok((viaQ.authorizedSearch?.hitCount || 0) > 0);
@@ -549,11 +640,14 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       });
       const overlay = readAgentActivityOverlay(join(dir, 'agent-activity'));
       assert.equal(overlay.entries[0]?.agent, ASK_ATLAS_RUNTIME_AGENT);
-      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
       assert.ok(overlay.entries[0]?.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.equal(overlay.entries[0]?.readWriteStatus, 'READ_AUTO');
       assert.equal(overlay.entries[0]?.classification, answered.askAtlas.activity.classification);
       assert.equal(answered.authorizedSearch?.pictureComposed, true);
+      assert.equal(answered.authorizedSearch?.actionabilityApplied, true);
+      assert.equal(answered.askAtlas.activity.ran, true);
+      assert.equal(overlay.entries[0]?.ran, true);
 
       const empty = runAtlasHubRuntime({
         principal: staffPrincipal('empty-writer'),
@@ -571,11 +665,148 @@ describe('Ask Atlas READ_AUTO search_authorized_knowledge', () => {
       assert.equal(emptyEntry?.missionKey, ASK_ATLAS_SEARCH_MISSION_KEY);
       assert.ok(emptyEntry?.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.equal(emptyEntry?.classification, 'HONEST_EMPTY');
+      assert.equal(emptyEntry?.ran, false);
       assert.equal(emptyEntry?.affected, undefined);
       assert.equal(JSON.stringify(emptyEntry).includes('Prodigy'), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('attaches existing queue state, ranks by urgency then classification, and does not invent facts', async () => {
+    const picture = pictureWithRankedQueues();
+    const result = await searchAuthorizedKnowledge({
+      principal: staffPrincipal(),
+      picture,
+      searchQuery: 'Prodigy',
+      entitledSearch: async (query) => ({ query, results: [prodigyHit(), foreignHit()] }),
+    });
+    assert.equal(result.authorizedSearch.invented, false);
+    assert.equal(result.authorizedSearch.actionabilityApplied, true);
+    assert.equal(result.authorizedSearch.ran, true);
+    assert.equal(result.askAtlas.activity.ran, true);
+    assert.equal(result.askAtlas.activity.readWriteStatus, 'READ_AUTO');
+    assert.ok(result.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
+    assertSearchQueueOrder(result.authorizedSearch.hits);
+
+    const overdue = result.authorizedSearch.hits.find((hit) => hit.id === 'q-pdg-overdue');
+    const ready = result.authorizedSearch.hits.find((hit) => hit.id === 'q-pdg-ready');
+    const pmHit = result.authorizedSearch.hits.find((hit) => hit.id === 'doc-pdg-1');
+    assert.ok(overdue);
+    assert.ok(ready);
+    assert.ok(pmHit);
+    assert.equal(overdue?.queue, 'Overdue');
+    assert.equal(overdue?.classification, 'LIKELY');
+    assert.equal(overdue?.why, 'CONFIRMED filename April 2026 Past Due Invoice.pdf. Amounts were not extracted.');
+    assert.notEqual(overdue?.why, overdue?.title);
+    assert.equal(ready?.queue, 'Ready');
+    assert.equal(ready?.classification, 'CONFIRMED');
+    assert.ok(
+      result.authorizedSearch.hits.findIndex((hit) => hit.id === 'q-pdg-overdue') <
+        result.authorizedSearch.hits.findIndex((hit) => hit.id === 'q-pdg-ready'),
+      'Overdue must rank ahead of Ready even when Ready is CONFIRMED',
+    );
+    assert.equal(pmHit?.queue, 'Overdue');
+    assert.equal(pmHit?.classification, 'LIKELY');
+    assert.notEqual(pmHit?.classification, 'CONFIRMED');
+    assert.ok(pmHit?.nextAction);
+    assert.equal(JSON.stringify(result).includes('CCB01'), false);
+    assert.equal(JSON.stringify(result).includes('Colorado Beef'), false);
+    assert.equal(JSON.stringify(result).includes('q-ccb-blocked'), false);
+    noInventedFacts(result);
+    for (const hit of result.authorizedSearch.hits) {
+      assertGroundedHit(hit);
+      assert.equal(hit.clientCode, 'PDG01');
+    }
+
+    const overdueNl = await runAtlasSearchRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'search overdue Prodigy',
+      entitledSearch: async (query) => ({ query, results: [prodigyHit()] }),
+    });
+    assert.equal(overdueNl.runtime.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
+    assert.deepEqual(overdueNl.runtime.toolsInvoked, [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL]);
+    assert.equal(overdueNl.authorizedSearch?.hits[0]?.queue, 'Overdue');
+    assert.equal(overdueNl.askAtlas.activity.readWriteStatus, 'READ_AUTO');
+    noInventedFacts(overdueNl);
+
+    const attention = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'What is overdue',
+    });
+    assert.deepEqual(attention.runtime.toolsInvoked, [GET_ATTENTION_ITEMS_TOOL]);
+    assert.equal(attention.authorizedSearch, undefined);
+
+    const clientCtx = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'Summarize Prodigy',
+    });
+    assert.deepEqual(clientCtx.runtime.toolsInvoked, [GET_CLIENT_CONTEXT_TOOL]);
+    assert.equal(clientCtx.authorizedSearch, undefined);
+
+    const noQueue = await searchAuthorizedKnowledge({
+      principal: staffPrincipal(),
+      picture: emptyQueues(emptyHonestOperatingPicture()),
+      searchQuery: 'Prodigy',
+      entitledSearch: async (query) => ({ query, results: [prodigyHit()] }),
+    });
+    const genericPm = noQueue.authorizedSearch.hits.find((hit) => hit.id === 'doc-pdg-1');
+    assert.equal(genericPm?.why, 'Entitled desk search returned this hit for the requested query.');
+    assert.equal(genericPm?.queue, undefined);
+    assert.equal(noQueue.authorizedSearch.actionabilityApplied, false);
+    assert.equal(noQueue.askAtlas.activity.missionKey, ASK_ATLAS_MISSION_KEY);
+    noInventedFacts(noQueue);
+
+    const viaRuntimeNoQueue = await runAtlasSearchRuntime({
+      principal: staffPrincipal(),
+      picture: emptyQueues(emptyHonestOperatingPicture()),
+      question: 'Search Prodigy',
+      entitledSearch: async (query) => ({ query, results: [prodigyHit()] }),
+    });
+    assert.equal(viaRuntimeNoQueue.runtime.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+    assert.equal(viaRuntimeNoQueue.authorizedSearch?.actionabilityApplied, false);
+  });
+
+  it('does not promote queue classification and keeps owner-gated closed', async () => {
+    const picture = emptyQueues(emptyHonestOperatingPicture());
+    picture.queues.decisionRequired = [
+      {
+        id: 'q-pdg-proposed',
+        clientCode: 'PDG01',
+        title: 'Prodigy proposed decision filename',
+        queue: 'Decision Required',
+        kind: 'hvs_actionable_decision',
+        provenance: 'PROPOSED',
+        evidence: 'Recovered filename listed as a decision. Classification is not promoted.',
+      },
+    ];
+    const result = await searchAuthorizedKnowledge({
+      principal: staffPrincipal(),
+      picture,
+      searchQuery: 'Prodigy',
+      entitledSearch: async (query) => ({ query, results: [prodigyHit()] }),
+    });
+    const proposed = result.authorizedSearch.hits.find((hit) => hit.id === 'q-pdg-proposed');
+    assert.equal(proposed?.classification, 'PROPOSED');
+    assert.equal(proposed?.provenance, 'PROPOSED');
+    assert.notEqual(proposed?.classification, 'CONFIRMED');
+    assert.notEqual(proposed?.classification, 'LIKELY');
+    const pmHit = result.authorizedSearch.hits.find((hit) => hit.id === 'doc-pdg-1');
+    assert.equal(pmHit?.classification, 'LIKELY');
+    assert.equal(pmHit?.queue, 'Decision Required');
+    noInventedFacts(result);
+
+    const ownerGated = runAtlasHubRuntime({
+      principal: staffPrincipal(),
+      picture,
+      question: 'search Prodigy and move money',
+    });
+    assert.equal(ownerGated.askAtlas.honestEmpty, true);
+    assert.deepEqual(ownerGated.runtime.toolsInvoked, []);
+    assert.equal(ownerGated.authorizedSearch, undefined);
   });
 });
 
@@ -593,18 +824,21 @@ describe('Ask Atlas authorized-search HTTP', () => {
       };
       assert.equal(body.operatorDesk.askAtlas.invented, false);
       assert.equal(body.operatorDesk.askAtlas.activity.agent, ASK_ATLAS_RUNTIME_AGENT);
-      assert.equal(body.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+      assert.equal(body.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
       assert.ok(body.operatorDesk.askAtlas.activity.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.deepEqual(body.runtime, {
         agent: ASK_ATLAS_RUNTIME_AGENT,
         toolsInvoked: [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL],
         policyClass: 'READ_AUTO',
-        missionKey: ASK_ATLAS_SEARCH_002_MISSION_KEY,
+        missionKey: ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY,
       });
       assert.equal(body.authorizedSearch.kind, 'atlas_authorized_search_v1');
       assert.equal(body.authorizedSearch.invented, false);
       assert.equal(body.authorizedSearch.pictureComposed, true);
+      assert.equal(body.authorizedSearch.actionabilityApplied, true);
       assert.equal(body.authorizedSearch.entitled, true);
+      assert.equal(body.operatorDesk.askAtlas.activity.ran, true);
+      assert.equal(body.authorizedSearch.hits.some((hit) => Boolean(hit.queue)), true);
       assert.ok(body.authorizedSearch.hitCount > 0);
       assert.ok(body.authorizedSearch.hits.some((hit) => hit.clientCode === 'PDG01'));
       for (const hit of body.authorizedSearch.hits) assertGroundedHit(hit);
@@ -614,9 +848,10 @@ describe('Ask Atlas authorized-search HTTP', () => {
 
       const overlay = readAgentActivityOverlay(join(dir, 'agent-activity'));
       assert.equal(overlay.entries[0]?.agent, ASK_ATLAS_RUNTIME_AGENT);
-      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+      assert.equal(overlay.entries[0]?.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
       assert.ok(overlay.entries[0]?.tools.includes(GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL));
       assert.equal(overlay.entries[0]?.readWriteStatus, 'READ_AUTO');
+      assert.equal(overlay.entries[0]?.ran, true);
 
       const dedicated = await fetch(`${base}/operator/search.json?q=Prodigy`, {
         headers: { authorization: 'Bearer valid-member' },
@@ -630,7 +865,7 @@ describe('Ask Atlas authorized-search HTTP', () => {
       assert.equal(dedicatedBody.authorizedSearch.invented, false);
       assert.equal(dedicatedBody.authorizedSearch.pictureComposed, true);
       assert.ok(dedicatedBody.authorizedSearch.hits.some((hit) => hit.clientCode === 'PDG01'));
-      assert.equal(dedicatedBody.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_002_MISSION_KEY);
+      assert.equal(dedicatedBody.operatorDesk.askAtlas.activity.missionKey, ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY);
       assert.deepEqual(dedicatedBody.runtime.toolsInvoked, [GET_SEARCH_AUTHORIZED_KNOWLEDGE_TOOL]);
       noInventedFacts(dedicatedBody);
 

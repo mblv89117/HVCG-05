@@ -221,6 +221,7 @@ export function ledgerEntryFromAskAtlas(opts: {
     policyDecision: activity.policyDecision,
     ...(affected.length ? { affected } : {}),
     writerUserId: opts.principal.userId,
+    ...(typeof activity.ran === 'boolean' ? { ran: activity.ran } : {}),
   };
 }
 

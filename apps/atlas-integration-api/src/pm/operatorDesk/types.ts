@@ -40,6 +40,7 @@ export const ASK_ATLAS_CLIENTCTX_MISSION_KEY = 'ATLAS-AGENTIC-OPS-CLIENTCTX-001'
 export const ASK_ATLAS_RECOVERED_MISSION_KEY = 'ATLAS-AGENTIC-OPS-RECOVERED-001' as const;
 export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as const;
 export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' as const;
+export const ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY = 'ATLAS-SEARCH-ACTIONABILITY-001' as const;
 export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-NL-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
@@ -89,6 +90,7 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_RECOVERED_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY
+  | typeof ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY
   | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
 
 /**
@@ -183,6 +185,10 @@ export interface AtlasAuthorizedSearchHit {
   basedOn: string;
   provenance: AskAtlasClassification | 'HONEST_EMPTY';
   classification: AskAtlasClassification | 'HONEST_EMPTY';
+  /** Existing operator-picture queue membership. Copied, never invented. */
+  queue?: string;
+  evidence?: string;
+  nextAction?: string;
 }
 
 export interface AtlasAuthorizedSearch {
@@ -198,6 +204,7 @@ export interface AtlasAuthorizedSearch {
   entitled: boolean;
   ran: boolean;
   pictureComposed: boolean;
+  actionabilityApplied: boolean;
 }
 
 export interface ProposedEngineeringMission {
@@ -254,6 +261,7 @@ export interface AskAtlasActivity {
   result: 'answered' | 'honest_empty' | 'hvs_blocked';
   readWriteStatus: AskAtlasReadWriteStatus;
   policyDecision: Exclude<AskAtlasPolicyDecision, 'fail_closed'>;
+  ran?: boolean;
 }
 
 export interface AgentActivityAffectedEntity {
@@ -275,6 +283,7 @@ export interface AgentActivityLedgerEntry {
   policyDecision: AskAtlasPolicyDecision;
   affected?: AgentActivityAffectedEntity[];
   writerUserId: string;
+  ran?: boolean;
 }
 
 export const AGENT_ACTIVITY_CONTRACT = 'atlas-hub-agent-activity.v1' as const;
