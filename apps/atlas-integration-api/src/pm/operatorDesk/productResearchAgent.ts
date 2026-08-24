@@ -30,6 +30,15 @@ const SUCCESS_NOTE = /\b(?:reached HTTP 200|mail delta reached)\b/i;
 const INVENTED_METRICS =
   /\b(?:ltv\s*[:=]?\s*\d|dscr\s*[:=]?\s*\d|nps\s*[:=]?\s*\d|mrr\s*[:=]?\s*\d|conversion rate|best[_ ]?fit|credit box)\b/i;
 
+export type ProductResearchClientHintsStatus = 'ready' | 'empty' | 'error' | 'skipped';
+
+/** Count-only fabric hint honesty. Never includes ClientCodes or identifiers. */
+export interface ProductResearchClientHints {
+  status: ProductResearchClientHintsStatus;
+  reason: string;
+  count: number;
+}
+
 export interface ProductResearchInspectHealth {
   authRequired: boolean;
   insecureDevAuth: boolean;
@@ -40,6 +49,43 @@ export interface ProductResearchInspectHealth {
   };
   fabricNotes?: string[];
   fabricHonesty?: 'never_run' | 'delta' | 'page_fallback' | 'degraded';
+  /** fabric.clientHints — status, reason, and count only. */
+  clientHints?: ProductResearchClientHints;
+}
+
+const CLIENT_HINT_STATUSES = new Set<ProductResearchClientHintsStatus>([
+  'ready',
+  'empty',
+  'error',
+  'skipped',
+]);
+
+const HINT_IDENTIFIER =
+  /PDG01|ACCG01|CCB01|HFD01|LIEN01|ClientCode|displayName|\bDBA\b|@highvalue|Bearer\s|token=/i;
+
+/**
+ * Copy entitled fabric.clientHints without identifiers or extra fields.
+ * Rejects unknown statuses. Never invents a ClientCode list.
+ */
+export function copyEntitledClientHints(
+  raw: { status?: unknown; reason?: unknown; count?: unknown } | null | undefined,
+): ProductResearchClientHints | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  if (typeof raw.status !== 'string' || !CLIENT_HINT_STATUSES.has(raw.status as ProductResearchClientHintsStatus)) {
+    return undefined;
+  }
+  const count =
+    typeof raw.count === 'number' && Number.isFinite(raw.count) ? Math.max(0, Math.floor(raw.count)) : 0;
+  const reason = typeof raw.reason === 'string' ? raw.reason.trim() : '';
+  return {
+    status: raw.status as ProductResearchClientHintsStatus,
+    reason: HINT_IDENTIFIER.test(reason) ? '' : reason,
+    count,
+  };
+}
+
+function clientHintsBasedOn(hints: ProductResearchClientHints): string {
+  return `Entitled Hub fabric clientHints status=${hints.status} count=${hints.count}`;
 }
 
 export interface ProductResearchEvidence {
@@ -112,7 +158,45 @@ export function detectRecordedProductGaps(
       basedOn: `Entitled Hub fabric honesty=${health.fabricHonesty}`,
     });
   }
+  const hints = copyEntitledClientHints(health.clientHints);
+  if (hints && (hints.status === 'skipped' || hints.status === 'error')) {
+    const basedOn = clientHintsBasedOn(hints);
+    if (!out.some((row) => row.basedOn === basedOn)) {
+      out.push({
+        surface: 'atlas',
+        classification: neverPromote('CONFIRMED'),
+        why: 'Entitled Hub fabric clientHints already recorded a skipped or error population. This proposed mission does not invent a repair count or execute a repair.',
+        basedOn,
+      });
+    }
+  }
   return out;
+}
+
+function applyClientHintsSurface(
+  surfaces: ProductResearchSurfaceRecord[],
+  health?: ProductResearchInspectHealth,
+): void {
+  const hints = copyEntitledClientHints(health?.clientHints);
+  if (!hints) return;
+  const row = surfaces.find((item) => item.surface === 'atlas');
+  if (!row) return;
+  const basedOn = clientHintsBasedOn(hints);
+  if (hints.status === 'ready' && hints.count > 0) {
+    if (row.status === 'honest_empty') {
+      markSurface(surfaces, 'atlas', basedOn);
+    }
+    return;
+  }
+  if (hints.status === 'empty' && hints.count === 0) {
+    if (row.status === 'honest_empty') {
+      row.basedOn = basedOn;
+    }
+    return;
+  }
+  if ((hints.status === 'skipped' || hints.status === 'error') && row.status === 'honest_empty') {
+    markSurface(surfaces, 'atlas', basedOn);
+  }
 }
 
 export function composeProductResearch(opts: {
@@ -124,6 +208,7 @@ export function composeProductResearch(opts: {
   for (const row of evidence) {
     markSurface(surfaces, row.surface, row.basedOn);
   }
+  applyClientHintsSurface(surfaces, opts.health);
   return {
     kind: 'product_research_agent_v1',
     missionKey: ASK_ATLAS_PRODUCT_RESEARCH_AGENT_MISSION_KEY,
