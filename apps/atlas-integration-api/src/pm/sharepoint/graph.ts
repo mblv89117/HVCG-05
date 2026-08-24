@@ -11,6 +11,7 @@
  */
 
 import { pmInfrastructureError, PmHttpError } from './errors.ts';
+import { formatGraphWriteFailure } from './indexWrite.ts';
 import type { SharePointPmSettings } from './settings.ts';
 import type { PmGraphTokenProvider } from './token.ts';
 
@@ -246,7 +247,7 @@ export function createGraphTransport(
     }
   }
 
-  function mapStatus(status: number): never {
+  function mapStatus(status: number, json?: unknown): never {
     if (status === 412) {
       throw new PmHttpError(412, 'PM_ETAG_CONFLICT', 'The SharePoint item was updated by another request.');
     }
@@ -259,16 +260,7 @@ export function createGraphTransport(
         `SharePoint PM permission or token was rejected (HTTP ${status}).`,
       );
     }
-    if (status >= 500) {
-      throw pmInfrastructureError(
-        'PM_BACKEND_UNAVAILABLE',
-        `SharePoint PM Graph request failed (HTTP ${status}).`,
-      );
-    }
-    throw pmInfrastructureError(
-      'PM_BACKEND_UNAVAILABLE',
-      `SharePoint PM Graph request failed (HTTP ${status}).`,
-    );
+    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', formatGraphWriteFailure(status, json));
   }
 
   function itemsCollectionUrl(listId: string, search: string): string {
@@ -290,7 +282,7 @@ export function createGraphTransport(
         url = itemsCollectionUrl(listId, `?${params.toString()}`);
       }
       const { status, json } = await graphFetch(url, { method: 'GET' });
-      if (status !== 200) mapStatus(status);
+      if (status !== 200) mapStatus(status, json);
       const body = json as { value?: unknown[]; '@odata.nextLink'?: unknown };
       const values = Array.isArray(body.value) ? body.value : [];
       const items = values
@@ -308,7 +300,7 @@ export function createGraphTransport(
       const url = itemsCollectionUrl(listId, `/${encodeURIComponent(itemId)}?$expand=fields`);
       const { status, json } = await graphFetch(url, { method: 'GET' });
       if (status === 404) return null;
-      if (status !== 200) mapStatus(status);
+      if (status !== 200) mapStatus(status, json);
       const item = parseItem(json as Record<string, unknown>);
       return item.id ? item : null;
     },
@@ -320,7 +312,7 @@ export function createGraphTransport(
         method: 'POST',
         body: JSON.stringify({ fields }),
       });
-      if (status !== 201 && status !== 200) mapStatus(status);
+      if (status !== 201 && status !== 200) mapStatus(status, json);
       const item = parseItem(json as Record<string, unknown>);
       if (!item.id) {
         throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM create returned no item id.');
@@ -339,7 +331,7 @@ export function createGraphTransport(
         headers: { 'if-match': etag },
         body: JSON.stringify(fields),
       });
-      if (status !== 200) mapStatus(status);
+      if (status !== 200) mapStatus(status, json);
       const refreshed = await this.getItem(listId, itemId);
       if (refreshed) return refreshed;
       const item = parseItem({ id: itemId, fields: json as Record<string, unknown> });

@@ -418,6 +418,32 @@ describe('PM Graph Selected-permission collection reads', () => {
     }
   });
 
+  it('maps Graph HTTP 400 field mismatch without leaking tokens or mailbox text', async () => {
+    const COMMS = 'ffffffff-ffff-4fff-8fff-fffffffffff3';
+    const transport = createGraphTransport(
+      { ...ALLOWLIST, communicationsListId: COMMS },
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async () =>
+          jsonResponse(400, {
+            error: {
+              code: 'invalidRequest',
+              message: `Field 'HVCG_IdempotencyKey' is not recognized. ${ACCESS_TOKEN} CCB01`,
+            },
+          }),
+      },
+    );
+    await assert.rejects(() => transport.createItem(COMMS, { Title: 'thread' }), (err: unknown) => {
+      assertSanitized(err);
+      assert.match((err as PmHttpError).message, /SharePoint PM Graph request failed \(HTTP 400/);
+      assert.match((err as PmHttpError).message, /graphCode=invalidRequest/);
+      assert.match((err as PmHttpError).message, /field=HVCG_IdempotencyKey/);
+      assert.match((err as PmHttpError).message, /mismatch=unknown_field/);
+      assert.equal(/CCB01/.test((err as PmHttpError).message), false);
+      return true;
+    });
+  });
+
   it('records Graph HTTP status or transport HTTP 0 without leaking tokens', async () => {
     const failed = createGraphTransport(
       ALLOWLIST,
@@ -426,7 +452,7 @@ describe('PM Graph Selected-permission collection reads', () => {
     );
     await assert.rejects(() => failed.listItems(PROJECTS), (err: unknown) => {
       assertSanitized(err);
-      assert.match((err as PmHttpError).message, /SharePoint PM Graph request failed \(HTTP 500\)/);
+      assert.match((err as PmHttpError).message, /SharePoint PM Graph request failed \(HTTP 500/);
       return true;
     });
     const transport = createGraphTransport(
