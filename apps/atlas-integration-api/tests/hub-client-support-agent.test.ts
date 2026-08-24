@@ -273,6 +273,7 @@ describe('ATLAS-CLIENT-SUPPORT-AGENT-001 governed client support / routing agent
   });
 
   it('attaches the same support records on search and client-context from entitled evidence', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(supportService(), staff, 'SYN01');
     assert.equal(found.results.some((row) => row.id === 'mail-syn-1'), true);
     assert.equal(found.results.some((row) => row.id === 'lead-pdg-leak'), false);
@@ -281,12 +282,14 @@ describe('ATLAS-CLIENT-SUPPORT-AGENT-001 governed client support / routing agent
       principal: staff,
       picture: picture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const viaIndex = getClientContext({
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.deepEqual(viaIndex.clientContext.clientSupport, search.authorizedSearch.clientSupport);
@@ -329,6 +332,7 @@ describe('ATLAS-CLIENT-SUPPORT-AGENT-001 governed client support / routing agent
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     assert.deepEqual(viaLoad.clientContext.clientSupport, search.authorizedSearch.clientSupport);
