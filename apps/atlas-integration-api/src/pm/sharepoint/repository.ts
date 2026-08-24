@@ -51,6 +51,7 @@ import {
   asGraphUrlField,
   communicationChannel,
   communicationDirection,
+  existingClientLookupId,
   meetingTypeForClient,
   retryIndexWrite,
   toSharePointDateTime,
@@ -1333,7 +1334,8 @@ export class SharePointPmService {
     };
     if (existing) {
       fields.ClientCode = existing.clientCode;
-      fields.ClientIdLookupId = Number(existing.itemId);
+      const lookupId = existingClientLookupId(existing.itemId);
+      if (lookupId !== undefined) fields.ClientIdLookupId = lookupId;
     }
     await this.createListItemMapped(this.settings.communicationsListId, fields, 'communication');
   }
@@ -1361,7 +1363,8 @@ export class SharePointPmService {
     };
     if (existing) {
       fields.ClientCode = existing.clientCode;
-      fields.ClientIdLookupId = Number(existing.itemId);
+      const lookupId = existingClientLookupId(existing.itemId);
+      if (lookupId !== undefined) fields.ClientIdLookupId = lookupId;
     }
     const eventLink = asGraphUrlField(row.webUrl);
     if (eventLink) fields.OutlookEventLink = eventLink;

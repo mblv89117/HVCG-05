@@ -125,7 +125,11 @@ export function describeGraphListWriteError(status: number, json: unknown): Grap
     mismatch = 'unknown_field';
   } else if (/required|must be specified|missing value|cannot be empty/.test(lower)) {
     mismatch = 'required_field';
-  } else if (/not valid|invalid type|incorrect type|cannot be converted|invalid value/.test(lower)) {
+  } else if (
+    /not valid|invalid type|incorrect type|cannot be converted|invalid value|too long|cannot be longer|invalid url/.test(
+      lower,
+    )
+  ) {
     mismatch = 'invalid_type';
   } else if (status >= 500) {
     mismatch = 'server_error';
@@ -143,7 +147,8 @@ export function describeGraphListWriteError(status: number, json: unknown): Grap
 export function formatGraphWriteFailure(status: number, json?: unknown): string {
   const info = describeGraphListWriteError(status, json);
   const fieldPart = info.fields.length ? `; field=${info.fields.join(',')}` : '';
-  return `SharePoint PM Graph request failed (HTTP ${status}; graphCode=${info.graphCode}${fieldPart}; mismatch=${info.mismatch}).`;
+  const messagePart = info.sanitizedMessage ? `; graphMessage=${info.sanitizedMessage}` : '';
+  return `SharePoint PM Graph request failed (HTTP ${status}; graphCode=${info.graphCode}${fieldPart}; mismatch=${info.mismatch}${messagePart}).`;
 }
 
 export function fieldsFromWriteError(err: unknown): string[] {
@@ -163,9 +168,33 @@ export function toSharePointDateTime(raw?: string): string | undefined {
   return parsed.toISOString();
 }
 
+/** SharePoint Hyperlink columns reject URLs longer than 255 characters. */
+export const SHAREPOINT_HYPERLINK_MAX = 255;
+
+const MEETING_OPTIONAL_FIELDS = [
+  'OutlookEventLink',
+  'TeamsMeetingLink',
+  'NotesFileLink',
+  'Summary',
+  'Attendees',
+  'Objective',
+  'ClientCode',
+  'ClientId',
+  'ClientIdLookupId',
+] as const;
+
 export function asGraphUrlField(url?: string): { Url: string; Description: string } | undefined {
   if (!url || !/^https:\/\//i.test(url.trim())) return undefined;
-  return { Url: url.trim(), Description: 'Source' };
+  const href = url.trim();
+  if (href.length > SHAREPOINT_HYPERLINK_MAX) return undefined;
+  return { Url: href, Description: 'Source' };
+}
+
+export function existingClientLookupId(itemId?: string): number | undefined {
+  if (!itemId) return undefined;
+  const n = Number(itemId);
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  return n;
 }
 
 export function withIndexMeta(summary: string, opts: { webUrl?: string; idempotencyKey: string }): string {
@@ -212,6 +241,15 @@ export function dropUnknownIndexFields(
   return next;
 }
 
+function dropMeetingOptionalFields(fields: Record<string, unknown>): Record<string, unknown> {
+  const next: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if ((MEETING_OPTIONAL_FIELDS as readonly string[]).includes(key)) continue;
+    next[key] = value;
+  }
+  return next;
+}
+
 export function correctIndexWriteFields(
   fields: Record<string, unknown>,
   err: unknown,
@@ -220,7 +258,7 @@ export function correctIndexWriteFields(
   const message = err instanceof Error ? err.message : String(err || '');
   if (/mismatch=required_field/.test(message)) return null;
   const mentioned = fieldsFromWriteError(err);
-  const next = dropUnknownIndexFields(fields, kind, mentioned);
+  let next = dropUnknownIndexFields(fields, kind, mentioned);
   for (const name of mentioned) {
     const value = next[name];
     if (
@@ -232,6 +270,13 @@ export function correctIndexWriteFields(
       else delete next[name];
     }
   }
+  if (
+    kind === 'meeting' &&
+    /mismatch=invalid_request|mismatch=invalid_type/.test(message) &&
+    JSON.stringify(next) === JSON.stringify(fields)
+  ) {
+    next = dropMeetingOptionalFields(fields);
+  }
   if (JSON.stringify(next) === JSON.stringify(fields)) return null;
   return next;
 }
@@ -241,11 +286,17 @@ export async function retryIndexWrite<T>(
   fields: Record<string, unknown>,
   kind: 'communication' | 'meeting',
 ): Promise<T> {
-  try {
-    return await write(fields);
-  } catch (err) {
-    const next = correctIndexWriteFields(fields, err, kind);
-    if (!next) throw err;
-    return write(next);
+  let current = fields;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await write(current);
+    } catch (err) {
+      lastErr = err;
+      const next = correctIndexWriteFields(current, err, kind);
+      if (!next) throw err;
+      current = next;
+    }
   }
+  throw lastErr;
 }

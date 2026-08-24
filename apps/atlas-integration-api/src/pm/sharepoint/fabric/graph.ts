@@ -104,6 +104,9 @@ export function createFabricGraphClient(
         accept: 'application/json',
       };
       if (method === 'POST') headers['content-type'] = 'application/json';
+      if (method === 'POST' && /\/search\/query$/i.test(url.pathname)) {
+        headers.Region = (process.env.INTEGRATION_GRAPH_SEARCH_REGION || 'US').trim() || 'US';
+      }
       const resp = await doFetch(url.toString(), {
         method,
         headers,

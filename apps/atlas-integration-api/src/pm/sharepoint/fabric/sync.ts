@@ -469,44 +469,12 @@ export async function runFabricSync(opts: {
     cp.contactsSkip = contactUrl;
   }
 
-  let fileUrl: string | null = cp.filesSkip || `/v1.0/users/${MANNY_ENTRA_OID}/drive/recent?$top=${PAGE_SIZE}`;
-  for (let page = 0; page < 4 && fileUrl; page += 1) {
-    const { status, json } = await readFabricJson(opts.fabric, fileUrl, notes, 'Manny OneDrive recent');
-    if (status !== 200) {
-      notes.push(`Manny OneDrive recent stopped at HTTP ${status}.`);
-      break;
-    }
-    for (const file of asArray(json)) {
-      const itemId = typeof file.id === 'string' ? file.id : '';
-      const name = typeof file.name === 'string' ? file.name : '';
-      const webUrl = typeof file.webUrl === 'string' ? file.webUrl : undefined;
-      const classified = classifyFabricRecord({ subject: name, preview: name, source: 'onedrive' }, clients);
-      if (classified.ingest === 'skip') {
-        indexed.skipped += 1;
-        continue;
-      }
-      const restricted = classified.ingest === 'metadata_link';
-      if (restricted) indexed.restricted += 1;
-      const key = `file:${itemId}`;
-      const wroteFile = await tryPmIndex(notes, 'SharePoint OneDrive index write', () =>
-        opts.service.upsertCommunicationIndex({
-          title: name || itemId,
-          summary: fileIndexSummary({ restricted, webUrl, idempotencyKey: key }),
-          clientCode: classified.clientCode,
-          channel: 'Other',
-          webUrl,
-          sourceMessageId: itemId,
-          classification: classified.classification,
-          provenanceSource: 'onedrive',
-          sourceOrg: 'HVCG',
-          idempotencyKey: key,
-        }),
-      );
-      if (wroteFile) indexed.files += 1;
-    }
-    fileUrl = nextLink(json);
-    cp.filesSkip = fileUrl;
+  if (cp.filesSkip && /\/drive\/recent/i.test(cp.filesSkip)) {
+    cp.filesSkip = null;
   }
+  notes.push(
+    'Manny OneDrive recent skipped: Microsoft Graph documents application permissions as not supported for /drive/recent (deprecated). Not claimed as LIVE files.',
+  );
 
   try {
     const sharePoint = await indexBusinessFiles({
