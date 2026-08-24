@@ -473,11 +473,11 @@ function relatedDocumentsForMeeting(
       ...(webUrl ? { webUrl } : {}),
     });
   };
-  for (const doc of search.documents.items) {
+  for (const doc of search.documents?.items || []) {
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
     consider(doc);
   }
-  for (const hit of search.hits) {
+  for (const hit of search.hits || []) {
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
     if (hit.kind !== 'document') continue;
     consider(hit);
