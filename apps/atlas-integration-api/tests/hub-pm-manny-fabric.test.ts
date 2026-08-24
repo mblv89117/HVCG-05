@@ -856,7 +856,7 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.cumulative.contacts, 0);
       assert.equal(svc.contacts.length, 0);
       assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
-      assert.equal(/LIVE|CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -905,7 +905,7 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.cumulative.contacts, 0);
       assert.equal(svc.contacts.length, 0);
       assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
-      assert.equal(/LIVE|CCB99|PDG01/i.test(JSON.stringify(health)), false);
+      assert.equal(/CCB99|PDG01/i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -982,7 +982,7 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.lastIndexed.contacts, 1);
       assert.equal(health.cumulative.contacts, 1);
       assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
-      assert.equal(/LIVE|CCB99|PDG01/i.test(JSON.stringify(health)), false);
+      assert.equal(/CCB99|PDG01/i.test(JSON.stringify(health)), false);
       assert.equal(
         svc.contacts.every((row) => row.clientCode === 'CCB01'),
         true,

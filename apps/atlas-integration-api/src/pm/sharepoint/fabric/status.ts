@@ -345,7 +345,9 @@ export function inspectFabricSyncHealth(
     const mailMode = raw.mailMode === 'delta' || raw.mailMode === 'page' ? raw.mailMode : 'none';
     const notes = sanitizeFabricNotes(Array.isArray(raw.lastNotes) ? raw.lastNotes.map(String) : []);
     const hardFail = notes.some((note) =>
-      /stopped at HTTP|did not complete|index write skipped|transport failed \(HTTP 0\)/i.test(note),
+      /Mail index stopped at HTTP|Mail (delta|page) did not complete|index write skipped|transport failed \(HTTP 0\)/i.test(
+        note,
+      ),
     );
     let honesty: FabricSyncHealth['honesty'] = 'never_run';
     if (!lastRunAt) honesty = 'never_run';
