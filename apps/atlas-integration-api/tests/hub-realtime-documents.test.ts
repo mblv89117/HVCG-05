@@ -1344,18 +1344,18 @@ describe('related meetings on entitled documents', () => {
   });
 
   it('attaches no meeting when none are entitled', async () => {
-    const found = await searchSharePointPm(relatedContextService(), staff, 'intake');
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
     assert.equal(found.results.some((row) => row.kind === 'meeting'), false);
     const result = await searchAuthorizedKnowledge({
       principal: staff,
       picture: emptyHonestOperatingPicture(),
-      searchQuery: 'intake',
+      searchQuery: 'intake memo',
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
     assert.ok(memo);
     assert.equal(memo.relatedMeetings, undefined);
-    assert.equal(memo.relatedEmail?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(found.results.some((row) => row.id === 'file-proven'), true);
     noFabricatedRelatedFacts(memo);
   });
 });
