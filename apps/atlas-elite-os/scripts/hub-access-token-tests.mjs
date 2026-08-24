@@ -134,5 +134,16 @@ assert.match(askAtlasPanel, /ask-atlas-question-input/);
 assert.doesNotMatch(askAtlasPanel, /from ['"]\.\/QuickCaptureBar['"]/);
 assert.doesNotMatch(askAtlasPage, /from ['"].*QuickCaptureBar['"]/);
 assert.doesNotMatch(askAtlasPage, /subtitle=\{ASK_ATLAS_QUESTION\}/);
+assert.match(pmApiSrc, /normalizePmDocumentsResponse/);
+assert.match(pmApiSrc, /knowledge_ledger_v1/);
+assert.doesNotMatch(pmApiSrc, /\/operator\.json/);
+assert.match(appShell, /fetchOperatorRuntime/);
+assert.match(appShell, /\/operator\/runtime\.json\?question=/);
+assert.doesNotMatch(appShell, /\/operator\.json['"]/);
+assert.doesNotMatch(app, /from ['"].*QuickCaptureBar['"]/);
+assert.match(app, /AgentActivityPage/);
+assert.match(readFileSync(join(root, 'src/pages/AgentActivityPage.tsx'), 'utf8'), /fetchOperatorRuntime/);
+assert.doesNotMatch(readFileSync(join(root, 'src/pages/AgentActivityPage.tsx'), 'utf8'), /\/operator\.json/);
+assert.match(readFileSync(join(root, 'src/pages/DocumentsOperatingPage.tsx'), 'utf8'), /Array\.isArray\(docRes\.documents\)/);
 
 console.log('PASS hub access-token + blank-page regression source tests');
