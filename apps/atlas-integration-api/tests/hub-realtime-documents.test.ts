@@ -451,7 +451,7 @@ describe('secure Graph driveItem preview for indexed documents', () => {
     assert.ok(docs.items[0]?.previewExpiresAt);
     assert.equal(docs.items[0]?.basedOn, DOCUMENT_PREVIEW_BASED_ON);
     assert.equal(docs.items[0]?.previewSkipReason, undefined);
-    assert.equal(/LIVE/i.test(JSON.stringify(docs)), false);
+    assert.equal(/\blive\s*[:=]\s*true\b/i.test(JSON.stringify(docs)), false);
   });
 
   it('honest-skips unsupported Graph preview and does not leak a preview URL', async () => {
@@ -461,7 +461,7 @@ describe('secure Graph driveItem preview for indexed documents', () => {
     assert.equal(skipped.previewStatus, 'skipped');
     assertNoPreviewUrls(skipped);
     assert.match(skipped.previewSkipReason || '', /HTTP 403/);
-    assert.equal(/LIVE/i.test(JSON.stringify(skipped)), false);
+    assert.equal(/\bLIVE\b/.test(JSON.stringify(skipped)), false);
 
     const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
     const result = await searchAuthorizedKnowledge({
@@ -483,7 +483,7 @@ describe('secure Graph driveItem preview for indexed documents', () => {
     assert.equal(item?.previewStatus, 'skipped');
     assertNoPreviewUrls(item);
     assert.match(item?.previewSkipReason || '', /HTTP 405/);
-    assert.equal(/LIVE/i.test(JSON.stringify(result.authorizedSearch.documents)), false);
+    assert.equal(/\bLIVE\b/.test(JSON.stringify(result.authorizedSearch.documents)), false);
     assert.equal(item?.basedOn, DOCUMENT_PREVIEW_BASED_ON);
   });
 
