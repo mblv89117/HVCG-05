@@ -1344,12 +1344,12 @@ describe('related meetings on entitled documents', () => {
   });
 
   it('attaches no meeting when none are entitled', async () => {
-    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake');
     assert.equal(found.results.some((row) => row.kind === 'meeting'), false);
     const result = await searchAuthorizedKnowledge({
       principal: staff,
       picture: emptyHonestOperatingPicture(),
-      searchQuery: 'intake memo',
+      searchQuery: 'intake',
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
