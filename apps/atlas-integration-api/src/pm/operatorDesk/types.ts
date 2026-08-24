@@ -43,6 +43,7 @@ export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' a
 export const ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY = 'ATLAS-SEARCH-ACTIONABILITY-001' as const;
 export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-NL-001' as const;
 export const ASK_ATLAS_PROJECT_RECONSTRUCTION_MISSION_KEY = 'ATLAS-PROJECT-RECONSTRUCTION-001' as const;
+export const ASK_ATLAS_PROJECT_CLIENTCTX_MISSION_KEY = 'ATLAS-PROJECT-CLIENTCTX-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -161,6 +162,18 @@ export interface AtlasClientContext {
   decisions?: ActionableDecision[];
   nextActions?: string[];
   nextAction?: string;
+  /**
+   * Same copied project_operating_record_v1 payload as authorizedSearch.projects.
+   * Attached only for a bound current entitled client from already-loaded
+   * entitled index rows. Historical HVS recovered projects stay read-only.
+   */
+  projects: {
+    kind: 'project_operating_record_v1';
+    policyClass: 'READ_AUTO';
+    invented: false;
+    currentClientsFirst: true;
+    items: ProjectOperatingRecord[];
+  };
 }
 
 export function clientContextMissionKey(

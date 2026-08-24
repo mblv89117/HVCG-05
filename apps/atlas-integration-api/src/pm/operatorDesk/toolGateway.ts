@@ -110,6 +110,12 @@ export interface ToolGatewayContext {
    * double of that function). Do not pass a second index or raw Graph.
    */
   entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  /**
+   * Already-loaded entitled index rows (searchSharePointPm / desk search).
+   * get_client_context copies project_operating_record_v1 from these only.
+   * Do not pass HVS folder copies or invented ClientCodes.
+   */
+  entitledIndexHits?: PmSearchHit[];
 }
 
 export interface ClientContextToolResult {
@@ -262,6 +268,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     evidenceClass: 'honest_empty',
     realClientsOperationalized: [],
     recoveredKnowledgeOperationalized: false,
+    projects: emptyProjectOperatingPayload(),
   };
 }
 
@@ -450,6 +457,7 @@ function composeClientContext(
     ...(decisions ? { decisions } : {}),
     ...(nextActions ? { nextActions } : {}),
     ...(nextAction ? { nextAction } : {}),
+    projects: emptyProjectOperatingPayload(),
   };
 }
 
@@ -495,7 +503,10 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     if (binding.client && item.client === binding.client) return true;
     return false;
   });
-  const clientContext = composeClientContext(ctx.picture, binding, items);
+  const clientContext = {
+    ...composeClientContext(ctx.picture, binding, items),
+    projects: composeBoundClientProjects(ctx, binding),
+  };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
   return {
@@ -813,6 +824,62 @@ function projectOperatingRecords(
     return a.id.localeCompare(b.id);
   });
   return items;
+}
+
+function isCurrentEntitledBinding(
+  principal: AtlasPrincipal,
+  binding: PictureClientBinding,
+): boolean {
+  return Boolean(binding.clientCode && entitledClientCodes(principal).includes(binding.clientCode));
+}
+
+/**
+ * Same project_operating_record_v1 composer as authorizedSearch.projects.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * Historical HVS recovered projects stay read-only. No invented ClientCodes.
+ */
+function composeBoundClientProjects(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['projects'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyProjectOperatingPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const hits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return {
+    kind: 'project_operating_record_v1',
+    policyClass: 'READ_AUTO',
+    invented: false,
+    currentClientsFirst: true,
+    items: projectOperatingRecords(hits, ctx.picture, binding),
+  };
+}
+
+/**
+ * After a current entitled binding is resolved, load the same entitled
+ * index rows search_authorized_knowledge already uses. Does not invent a
+ * second CRM or copy HVS folders.
+ */
+export async function loadClientContext(ctx: ToolGatewayContext): Promise<ClientContextToolResult> {
+  if (!canAccessOperatorDesk(ctx.principal)) {
+    return getClientContext(ctx);
+  }
+  if (ctx.entitledIndexHits || !ctx.entitledSearch) {
+    return getClientContext(ctx);
+  }
+  const requested = (ctx.clientCode || ctx.clientQuery || '').trim();
+  if (!requested || ctx.picture.hvsDataAccess === 'BLOCKED') {
+    return getClientContext(ctx);
+  }
+  entitledClientCodes(ctx.principal);
+  const binding = resolveAuthorizedClient(ctx.principal, ctx.picture, requested);
+  if (!binding || !isCurrentEntitledBinding(ctx.principal, binding)) {
+    return getClientContext(ctx);
+  }
+  const found = await ctx.entitledSearch(binding.clientCode);
+  return getClientContext({ ...ctx, entitledIndexHits: found.results });
 }
 
 function documentOperatingRecords(hits: AtlasAuthorizedSearchHit[]): DocumentOperatingRecord[] {

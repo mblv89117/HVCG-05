@@ -18,6 +18,7 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import type { PmSearchHit } from '../sharepoint/search.ts';
 import {
   getClientContext,
+  loadClientContext,
   invokeReadAutoTool,
   searchAuthorizedKnowledge,
   searchAuthorizedKnowledgeSync,
@@ -436,6 +437,7 @@ export function runAtlasHubRuntime(opts: {
     hits: Array<OperatorSearchHit & { source?: string }>;
     ran: boolean;
   };
+  entitledIndexHits?: ToolGatewayContext['entitledIndexHits'];
 }): AtlasHubRuntimeResult {
   const question = (opts.question || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
   if (
@@ -471,6 +473,8 @@ export function runAtlasHubRuntime(opts: {
       picture: opts.picture,
       now: opts.now,
       clientQuery: extractClientContextQuery(question) || '',
+      deskSearch: opts.deskSearch,
+      entitledIndexHits: opts.entitledIndexHits,
     });
     const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
       ? [...invoked.askAtlas.activity.tools]
@@ -498,6 +502,51 @@ export function runAtlasHubRuntime(opts: {
   return {
     askAtlas: composeAttentionAnswer(answer, intent.filterState, toolsInvoked, missionKey),
     runtime: runtimeEnvelope([GET_ATTENTION_ITEMS_TOOL], missionKey),
+  };
+}
+
+/**
+ * Same get_client_context mapping as runAtlasHubRuntime, then attach the
+ * already-loaded entitled project operating records for a bound current
+ * entitled client. Used by signed /operator/runtime.json and
+ * /operator/client-context.json.
+ */
+export async function runAtlasClientContextRuntime(opts: {
+  principal: AtlasPrincipal;
+  picture: OperatorOperatingPicture;
+  question?: string;
+  now?: string;
+  clientCode?: string;
+  clientQuery?: string;
+  deskSearch?: ToolGatewayContext['deskSearch'];
+  entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  entitledIndexHits?: ToolGatewayContext['entitledIndexHits'];
+}): Promise<AtlasHubRuntimeResult> {
+  const question = (opts.question || '').trim();
+  if (question && isOwnerGatedQuestion(question)) {
+    return {
+      askAtlas: unknownQuestionAnswer(opts.now),
+      runtime: runtimeEnvelope([]),
+    };
+  }
+  const invoked = await loadClientContext({
+    principal: opts.principal,
+    picture: opts.picture,
+    now: opts.now,
+    clientCode: opts.clientCode,
+    clientQuery: opts.clientQuery || (question ? extractClientContextQuery(question) || '' : ''),
+    deskSearch: opts.deskSearch,
+    entitledSearch: opts.entitledSearch,
+    entitledIndexHits: opts.entitledIndexHits,
+  });
+  const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
+    ? [...invoked.askAtlas.activity.tools]
+    : [...invoked.askAtlas.activity.tools, GET_CLIENT_CONTEXT_TOOL];
+  const missionKey = clientContextMissionKey(invoked.clientContext);
+  return {
+    askAtlas: stampRuntimeAnswer(invoked.askAtlas, toolsInvoked, missionKey),
+    runtime: runtimeEnvelope([GET_CLIENT_CONTEXT_TOOL], missionKey),
+    clientContext: invoked.clientContext,
   };
 }
 

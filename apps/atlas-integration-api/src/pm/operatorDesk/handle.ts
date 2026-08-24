@@ -37,11 +37,12 @@ import {
   extractClientContextQuery,
   extractSearchAuthorizedQuery,
   isOwnerGatedQuestion,
+  mapsToGetClientContext,
   mapsToSearchAuthorizedKnowledge,
+  runAtlasClientContextRuntime,
   runAtlasHubRuntime,
   runAtlasSearchRuntime,
 } from './agentRuntime.ts';
-import { getClientContext } from './toolGateway.ts';
 import { processAtlasEvent, resolveEventClass } from './eventProcessing.ts';
 import {
   inspectEngineeringMissions,
@@ -373,12 +374,20 @@ export async function handleOperatorDesk(opts: {
           deskSearch: model.search,
           entitledSearch,
         })
-      : runAtlasHubRuntime({
-          principal,
-          picture: model.operatingPicture,
-          question,
-          deskSearch: model.search,
-        });
+      : mapsToGetClientContext(question)
+        ? await runAtlasClientContextRuntime({
+            principal,
+            picture: model.operatingPicture,
+            question,
+            deskSearch: model.search,
+            entitledSearch,
+          })
+        : runAtlasHubRuntime({
+            principal,
+            picture: model.operatingPicture,
+            question,
+            deskSearch: model.search,
+          });
     if (opts.method === 'GET') {
       try {
         await appendAskAtlasActivity({
@@ -479,11 +488,14 @@ export async function handleOperatorDesk(opts: {
           }).askAtlas,
           clientContext: undefined,
         }
-      : getClientContext({
+      : await runAtlasClientContextRuntime({
           principal,
           picture: model.operatingPicture,
+          question: requestedQuestion,
           clientCode: requestedClient,
           clientQuery: requestedClient || fromQuestion || '',
+          deskSearch: model.search,
+          entitledSearch,
         });
     const tools = ownerGated
       ? []
