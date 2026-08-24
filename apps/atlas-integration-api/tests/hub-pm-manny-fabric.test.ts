@@ -691,6 +691,9 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.mailMode, 'none');
       assert.equal(health.mailDeltaReady, false);
       assert.equal(health.scheduledSweepEnabled, false);
+      assert.equal(health.changeNotifications.status, 'skipped');
+      assert.equal(health.changeNotifications.mail, 'skipped');
+      assert.equal(health.changeNotifications.files, 'skipped');
       const dumped = JSON.stringify(health);
       assert.equal(/deltatoken|mailSkip=|Bearer /i.test(dumped), false);
     } finally {

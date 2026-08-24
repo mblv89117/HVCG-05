@@ -20,6 +20,7 @@ import {
 } from './files.ts';
 import { isAllowedFabricGraphPath, type FabricGraphClient } from './graph.ts';
 import { sanitizeFabricNotes } from './status.ts';
+import type { FabricChangeNotificationState } from './subscriptions.ts';
 
 const MAX_PAGES = 8;
 const PAGE_SIZE = 50;
@@ -41,6 +42,7 @@ export interface FabricCheckpoint {
   lastIndexed?: FabricSyncResult['indexed'];
   lastNotes?: string[];
   counts: Record<string, number>;
+  changeNotifications?: FabricChangeNotificationState;
 }
 
 export interface FabricSyncResult {

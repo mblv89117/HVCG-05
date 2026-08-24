@@ -11,6 +11,7 @@
 import { createFabricGraphClient } from './graph.ts';
 import { runFabricSync, type FabricSyncResult } from './sync.ts';
 import { fabricSweepIntervalMs, isFabricSweepEnabled, recordFabricSweepAttempt } from './status.ts';
+import { ensureFabricChangeSubscriptions } from './subscriptions.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../token.ts';
 import type { SharePointPmService } from '../repository.ts';
 import type { AppConfig } from '../../../config.ts';
@@ -18,6 +19,7 @@ import type { PmGraphTokenProvider } from '../token.ts';
 
 export interface FabricSweepHandle {
   stop: () => void;
+  requestSync: (trigger: string) => Promise<{ accepted: boolean; queued: boolean }>;
 }
 
 export function startFabricRecoverySweep(opts: {
@@ -36,19 +38,29 @@ export function startFabricRecoverySweep(opts: {
   let stopped = false;
   let inFlight = false;
 
-  const tick = async (trigger: 'startup' | 'scheduled') => {
-    if (stopped || inFlight) {
-      if (inFlight && !stopped) {
-        log({ level: 'info', msg: 'fabric_sweep_skipped_overlap', trigger });
-      }
-      return;
+  let queued = false;
+
+  const requestSync = async (trigger: string): Promise<{ accepted: boolean; queued: boolean }> => {
+    if (stopped) return { accepted: false, queued: false };
+    if (inFlight) {
+      queued = true;
+      log({ level: 'info', msg: 'fabric_sweep_skipped_overlap', trigger });
+      return { accepted: true, queued: true };
     }
     inFlight = true;
     try {
-      await opts.run();
+      do {
+        queued = false;
+        await opts.run();
+      } while (queued && !stopped);
+      return { accepted: true, queued: false };
     } finally {
       inFlight = false;
     }
+  };
+
+  const tick = async (trigger: 'startup' | 'scheduled') => {
+    await requestSync(trigger);
   };
 
   if (!opts.enabled) {
@@ -57,6 +69,7 @@ export function startFabricRecoverySweep(opts: {
       stop() {
         stopped = true;
       },
+      requestSync,
     };
   }
 
@@ -86,6 +99,7 @@ export function startFabricRecoverySweep(opts: {
       stopped = true;
       for (const t of timers) clearTimer(t);
     },
+    requestSync,
   };
 }
 
@@ -118,9 +132,15 @@ export function startConfiguredFabricSweep(opts: {
       let lastErr: unknown;
       for (let attempt = 1; attempt <= 4; attempt += 1) {
         try {
+          const fabric = createFabricGraphClient(tokenProvider, { timeoutMs: 25_000 });
+          await ensureFabricChangeSubscriptions({
+            fabric,
+            dataDir: opts.cfg.dataDir,
+            env,
+          });
           const result: FabricSyncResult = await runFabricSync({
             service: opts.sharepoint as SharePointPmService,
-            fabric: createFabricGraphClient(tokenProvider, { timeoutMs: 25_000 }),
+            fabric,
             dataDir: opts.cfg.dataDir,
             bootstrap: true,
           });

@@ -1,6 +1,10 @@
 /**
- * Narrow Graph READ client for the information fabric.
- * Not an arbitrary Graph proxy. GET plus Search POST only.
+ * Narrow Graph client for the information fabric.
+ * GET plus Search POST, plus subscription create/renew/delete.
+ * OPEN_SOURCE: microsoft-graph-client (MIT) evaluated 2026-08-24.
+ * DECISION: ADAPT this allowlisted helper. REJECT a second Graph SDK
+ * or subscription framework — it would duplicate path allowlisting
+ * and owner-mailbox guards.
  * Manny mailbox/drive only. Known HVCG/HVS site/drive reads only.
  * Does not send mail, write files, or browse other employees' mailboxes.
  * Does not allow tenant-wide /sites?search=.
@@ -14,9 +18,13 @@ export const GRAPH_ORIGIN = 'https://graph.microsoft.com';
 const GRAPH_HOST = 'graph.microsoft.com';
 const TIMEOUT_MS = 20_000;
 
+export type FabricGraphMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+
 export interface FabricGraphClient {
   getJson(pathAndQuery: string): Promise<{ status: number; json: Record<string, unknown> }>;
   postJson(pathAndQuery: string, body: unknown): Promise<{ status: number; json: Record<string, unknown> }>;
+  patchJson(pathAndQuery: string, body: unknown): Promise<{ status: number; json: Record<string, unknown> }>;
+  deleteJson(pathAndQuery: string): Promise<{ status: number; json: Record<string, unknown> }>;
 }
 
 const ALLOWED_GET: RegExp[] = [
@@ -42,15 +50,18 @@ const ALLOWED_GET: RegExp[] = [
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/todo\/lists(\?|$)/i,
 ];
 
-const ALLOWED_POST: RegExp[] = [/^\/v1\.0\/search\/query$/i];
+const ALLOWED_POST: RegExp[] = [/^\/v1\.0\/search\/query$/i, /^\/v1\.0\/subscriptions$/i];
+const ALLOWED_SUBSCRIPTION_ITEM = /^\/v1\.0\/subscriptions\/[0-9a-f-]{36}$/i;
 
-export function isAllowedFabricGraphPath(path: string, method: 'GET' | 'POST' = 'GET'): boolean {
+export function isAllowedFabricGraphPath(path: string, method: FabricGraphMethod = 'GET'): boolean {
   if (method === 'POST') return ALLOWED_POST.some((re) => re.test(path));
+  if (method === 'PATCH' || method === 'DELETE') return ALLOWED_SUBSCRIPTION_ITEM.test(path);
+  if (method === 'GET' && ALLOWED_SUBSCRIPTION_ITEM.test(path)) return true;
   if (/\/sites\b/i.test(path) && /[?&]search=/i.test(path)) return false;
   return ALLOWED_GET.some((re) => re.test(path));
 }
 
-function assertSafeFabricUrl(raw: string, method: 'GET' | 'POST' = 'GET'): URL {
+function assertSafeFabricUrl(raw: string, method: FabricGraphMethod = 'GET'): URL {
   let url: URL;
   try {
     url = new URL(raw, GRAPH_ORIGIN);
@@ -87,7 +98,7 @@ export function createFabricGraphClient(
   const doFetch = deps.fetch ?? fetch;
   const timeoutMs = deps.timeoutMs ?? TIMEOUT_MS;
   async function request(
-    method: 'GET' | 'POST',
+    method: FabricGraphMethod,
     pathAndQuery: string,
     body?: unknown,
   ): Promise<{ status: number; json: Record<string, unknown> }> {
@@ -103,14 +114,14 @@ export function createFabricGraphClient(
         authorization: `Bearer ${token}`,
         accept: 'application/json',
       };
-      if (method === 'POST') headers['content-type'] = 'application/json';
+      if (method === 'POST' || method === 'PATCH') headers['content-type'] = 'application/json';
       if (method === 'POST' && /\/search\/query$/i.test(url.pathname)) {
         headers.Region = (process.env.INTEGRATION_GRAPH_SEARCH_REGION || 'US').trim() || 'US';
       }
       const resp = await doFetch(url.toString(), {
         method,
         headers,
-        body: method === 'POST' ? JSON.stringify(body ?? {}) : undefined,
+        body: method === 'POST' || method === 'PATCH' ? JSON.stringify(body ?? {}) : undefined,
         signal: controller.signal,
         redirect: 'manual',
       });
@@ -152,6 +163,12 @@ export function createFabricGraphClient(
     },
     postJson(pathAndQuery: string, body: unknown) {
       return request('POST', pathAndQuery, body);
+    },
+    patchJson(pathAndQuery: string, body: unknown) {
+      return request('PATCH', pathAndQuery, body);
+    },
+    deleteJson(pathAndQuery: string) {
+      return request('DELETE', pathAndQuery);
     },
   };
 }

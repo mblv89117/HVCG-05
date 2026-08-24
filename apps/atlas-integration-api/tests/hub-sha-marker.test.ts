@@ -145,7 +145,12 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
           ok: boolean;
           commit: string | null;
           authRequired: boolean;
-          fabricSync?: { honesty?: string; mailMode?: string; mailSkip?: unknown };
+          fabricSync?: {
+            honesty?: string;
+            mailMode?: string;
+            mailSkip?: unknown;
+            changeNotifications?: { status?: string; mail?: string; files?: string };
+          };
         };
         assert.equal(body.ok, true);
         assert.equal(body.commit, KNOWN_SHA);
@@ -153,6 +158,9 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
         assert.equal(body.fabricSync?.honesty, 'never_run');
         assert.equal(body.fabricSync?.mailMode, 'none');
         assert.equal(body.fabricSync?.mailSkip, undefined);
+        assert.equal(body.fabricSync?.changeNotifications?.status, 'skipped');
+        assert.equal(body.fabricSync?.changeNotifications?.mail, 'skipped');
+        assert.equal(body.fabricSync?.changeNotifications?.files, 'skipped');
 
         const build = await fetch(`${base}/hub-build.json`);
         assert.equal(build.status, 200);
