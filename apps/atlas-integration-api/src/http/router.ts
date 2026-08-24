@@ -37,6 +37,7 @@ import { handleWebsiteLeadRoutes } from '../website/http.ts';
 import { handleOperatorDesk } from '../pm/operatorDesk/handle.ts';
 import { handleClientExperience } from '../clientExperience/http.ts';
 import { resolveHubBuild, resolveHubCommit } from './hubCommit.ts';
+import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../pm/sharepoint/fabric/status.ts';
 
 export interface RouterDeps {
   cfg: AppConfig;
@@ -348,6 +349,10 @@ export async function handleRequest(
               : 'hub_governed_overlay',
             configured: Boolean(cfg.clientDocumentStore),
           },
+          fabricSync: inspectFabricSyncHealth(cfg.dataDir, {
+            sweepEnabled:
+              Boolean(deps.sharepoint && cfg.pmBackend.sharepoint) && isFabricSweepEnabled(),
+          }),
         },
         origin,
       );

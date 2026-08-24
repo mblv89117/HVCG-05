@@ -141,10 +141,18 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
 
         const health = await fetch(`${base}/health`);
         assert.equal(health.status, 200);
-        const body = (await health.json()) as { ok: boolean; commit: string | null; authRequired: boolean };
+        const body = (await health.json()) as {
+          ok: boolean;
+          commit: string | null;
+          authRequired: boolean;
+          fabricSync?: { honesty?: string; mailMode?: string; mailSkip?: unknown };
+        };
         assert.equal(body.ok, true);
         assert.equal(body.commit, KNOWN_SHA);
         assert.equal(body.authRequired, true);
+        assert.equal(body.fabricSync?.honesty, 'never_run');
+        assert.equal(body.fabricSync?.mailMode, 'none');
+        assert.equal(body.fabricSync?.mailSkip, undefined);
 
         const build = await fetch(`${base}/hub-build.json`);
         assert.equal(build.status, 200);
