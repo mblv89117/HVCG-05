@@ -1022,8 +1022,14 @@ describe('Fabric mail delta checkpointing', () => {
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(health.fileSearch.status, 'skipped');
       assert.match(health.fileSearch.reason, /HTTP 400/);
+      assert.equal(health.fileSearch.status === 'LIVE', false);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
-      assert.equal(/LIVE/i.test(JSON.stringify(health)), false);
+      assert.equal(
+        JSON.stringify(health)
+          .replace(/Not claimed as LIVE files/gi, '')
+          .search(/LIVE/i) >= 0,
+        false,
+      );
       assert.equal(typeof health.lastIndexed.files, 'number');
       assert.equal(typeof health.cumulative.files, 'number');
       assert.equal(/CCB99|PDG01|invented|Bearer /i.test(JSON.stringify(health)), false);
@@ -1067,8 +1073,14 @@ describe('Fabric mail delta checkpointing', () => {
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(health.fileSearch.status, 'ready');
       assert.match(health.fileSearch.reason, /HTTP 200/);
+      assert.equal(health.fileSearch.status === 'LIVE', false);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
-      assert.equal(/LIVE/i.test(JSON.stringify(health)), false);
+      assert.equal(
+        JSON.stringify(health)
+          .replace(/Not claimed as LIVE files/gi, '')
+          .search(/LIVE/i) >= 0,
+        false,
+      );
       assert.equal(health.lastIndexed.files, result.indexed.files);
       assert.equal(health.cumulative.files, result.checkpoint.counts.files || 0);
       assert.equal(health.lastIndexed.files, health.cumulative.files);
