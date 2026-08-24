@@ -249,8 +249,10 @@ export interface AtlasClientContext {
    * entitled index rows. Historical HVS recovered projects stay read-only.
    * Optional researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as meetings /
-   * documents / capital). Missing / non-canonical ClientCode omits
-   * researchRelationship (fail-closed; never guess).
+   * documents / capital). Optional relatedDocuments is the inverse of
+   * document.relatedProject (same RelatedMeetingDocumentRef /
+   * relatedDocumentsForMeeting path). Missing / non-canonical ClientCode
+   * omits researchRelationship / relatedDocuments (fail-closed; never guess).
    */
   projects: {
     kind: 'project_operating_record_v1';
@@ -660,6 +662,17 @@ export interface ProjectOperatingRecord {
    * on the source row (never invented).
    */
   researchRelationship?: RelatedMeetingResearchRef[];
+  /**
+   * Inverse of document.relatedProject: already-authorized same-scope
+   * documents / hits kind=document refs. Reuses RelatedMeetingDocumentRef
+   * / relatedDocumentsForMeeting(). Copied after authorization. Omitted
+   * when none are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped documents.
+   * Client A never receives Client B. Never downloadUrl, transcript,
+   * attendees, TargetAmount, invented titles, ClientCodes, or Hub-MI.
+   * SAS / anonymous webUrl dropped. No invented facts.
+   */
+  relatedDocuments?: RelatedMeetingDocumentRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
@@ -1082,8 +1095,11 @@ export interface AtlasAuthorizedSearch {
    * researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as
    * meetings / onboarding / client support / capital / documents).
-   * Missing / non-canonical ClientCode omits researchRelationship
-   * (fail-closed; never guess). relatedMeetings stays as composed.
+   * Optional relatedDocuments is the inverse of document.relatedProject
+   * (same RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
+   * Missing / non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments (fail-closed; never guess). relatedMeetings stays
+   * as composed. No downloadUrl. No invented facts.
    */
   projects: {
     kind: 'project_operating_record_v1';
