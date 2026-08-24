@@ -11,8 +11,9 @@
  * on OnboardingAgentRecord items, and the inverse
  * research-intelligence → meetings,
  * research-intelligence → documents,
- * research-intelligence → projects, and
- * research-intelligence → threads links on
+ * research-intelligence → projects,
+ * research-intelligence → threads, and
+ * research-intelligence → capital links on
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
@@ -365,7 +366,7 @@ function relatedCapital(
 ): RelatedDocumentCapitalRef[] {
   const out: RelatedDocumentCapitalRef[] = [];
   const seen = new Set<string>();
-  for (const row of search.capitalSubmissions.items) {
+  for (const row of search.capitalSubmissions?.items || []) {
     if (row.id === item.id) continue;
     if (!sameRelatedScope(item.clientCode, row.clientCode)) continue;
     if (seen.has(row.id)) continue;
@@ -792,23 +793,31 @@ export function attachRelatedContextToOnboarding(
  * projects already on authorizedSearch.projects.items (reuses
  * relatedProjects / RelatedDocumentProjectRef — no new query), and
  * entitled same-scope threads already on authorizedSearch.threads.items
- * (reuses relatedEmails / RelatedDocumentEmailRef — no new query).
+ * (reuses relatedEmails / RelatedDocumentEmailRef — no new query), and
+ * entitled same-scope capital-prepare rows already on
+ * authorizedSearch.capitalSubmissions.items (reuses relatedCapital /
+ * RelatedDocumentCapitalRef — no new query).
  * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
  * ClientCode is missing / non-canonical — omit relatedMeetings /
- * relatedDocuments / relatedProjects / relatedThreads rather than guess.
- * Unscoped never receives scoped relations. Unscoped lender catalog
- * rows never receive scoped documents, projects, or threads. Client A
- * never receives Client B. SAS / anonymous webUrl dropped. No
- * downloadUrl. No transcript text. No preview body / suggestedDraft /
- * send on thread refs. SOURCE_BACKED_ONLY / outboundRefresh=false /
+ * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
+ * rather than guess. Unscoped never receives scoped relations.
+ * Unscoped lender catalog rows never receive scoped documents,
+ * projects, threads, or capital. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * No preview body / suggestedDraft / send on thread refs. No
+ * TargetAmount / invented lender criteria / fit / financing status on
+ * capital refs. SOURCE_BACKED_ONLY / outboundRefresh=false /
  * financingStatus UNKNOWN / fit NOT_EVALUATED /
  * lenderCriteriaInvented=false stay as composed. Project
  * classification stays CONFIRMED / LIKELY / PROPOSED /
  * STALE_OR_UNCERTAIN / COMPLETE. hubMiRow stays as composed on the
  * source project (never invented). DRAFT_ONLY / send=false /
  * autoRespond=false / indexedPreviewOnly stay as composed on the
- * source thread payload. Preview stays off this slice (refs only).
- * No new Graph calendar / document / project / communications query.
+ * source thread payload. PREPARE_ONLY / send=false /
+ * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN /
+ * HONEST_EMPTY stay as composed on the source capital payload.
+ * Preview stays off this slice (refs only). No new Graph calendar /
+ * document / project / communications / capital query.
  */
 export function attachRelatedContextToResearchIntelligenceRecord(
   principal: AtlasPrincipal,
@@ -821,12 +830,14 @@ export function attachRelatedContextToResearchIntelligenceRecord(
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
   const relatedProjectsList = relatedProjects(item, search);
   const relatedThreads = relatedEmails(item, search);
+  const relatedCapitalList = relatedCapital(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
     ...(relatedThreads.length ? { relatedThreads } : {}),
+    ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
   };
 }
 

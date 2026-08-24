@@ -293,11 +293,16 @@ export interface AtlasClientContext {
    * inverse of project.researchRelationship (same RelatedDocumentProjectRef
    * / relatedProjects path). Optional relatedThreads is the inverse of
    * thread.researchRelationship (same RelatedDocumentEmailRef /
-   * relatedEmails path). Omitted when ClientCode is missing /
+   * relatedEmails path). Optional relatedCapital is the inverse of
+   * capital.researchRelationship (same RelatedDocumentCapitalRef /
+   * relatedCapital path). Omitted when ClientCode is missing /
    * non-canonical (fail-closed; never guess). Unscoped lender catalog
-   * rows never receive scoped documents, projects, or threads. Preview
-   * stays off this slice (refs only). Comms stay DRAFT_ONLY — no preview
-   * body, suggestedDraft, or send on the thread refs.
+   * rows never receive scoped documents, projects, threads, or capital.
+   * Preview stays off this slice (refs only). Comms stay DRAFT_ONLY — no
+   * preview body, suggestedDraft, or send on the thread refs. Capital
+   * stays PREPARE_ONLY — send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN / HONEST_EMPTY. Never
+   * invent TargetAmount, lender criteria, fit, or financing status.
    */
   researchIntelligence: ResearchIntelligencePayload;
   /**
@@ -857,6 +862,22 @@ export interface ResearchIntelligenceRecord {
    * Hub-MI. SAS / anonymous webUrl dropped.
    */
   relatedThreads?: RelatedDocumentEmailRef[];
+  /**
+   * Inverse of capital.researchRelationship: already-authorized
+   * same-scope capital-prepare records. Reuses RelatedDocumentCapitalRef
+   * / relatedCapital(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped lender catalog rows never
+   * receive scoped capital. Unscoped never receives scoped capital.
+   * Client A never receives Client B. PREPARE_ONLY flags stay as
+   * composed — send=false / externalSubmit=false / ownerGated=true /
+   * financingStatus UNKNOWN / financingStatusClassification
+   * HONEST_EMPTY / lenderCriteriaInvented=false / invented=false.
+   * Never downloadUrl, transcript, attendees, TargetAmount, invented
+   * titles, ClientCodes, lender criteria, fit, financing status, or
+   * Hub-MI.
+   */
+  relatedCapital?: RelatedDocumentCapitalRef[];
 }
 
 export interface ResearchIntelligencePayload {
@@ -1106,12 +1127,18 @@ export interface AtlasAuthorizedSearch {
    * Optional relatedProjects is the inverse of project.researchRelationship
    * (same RelatedDocumentProjectRef / relatedProjects path). Optional
    * relatedThreads is the inverse of thread.researchRelationship (same
-   * RelatedDocumentEmailRef / relatedEmails path). Empty payload stays
+   * RelatedDocumentEmailRef / relatedEmails path). Optional relatedCapital
+   * is the inverse of capital.researchRelationship (same
+   * RelatedDocumentCapitalRef / relatedCapital path). Empty payload stays
    * empty. Missing / non-canonical ClientCode omits relatedMeetings /
-   * relatedDocuments / relatedProjects / relatedThreads. Unscoped lender
-   * catalog rows never receive scoped documents, projects, or threads.
-   * Preview stays off this slice (refs only). Comms stay DRAFT_ONLY —
-   * no preview body, suggestedDraft, or send on the thread refs.
+   * relatedDocuments / relatedProjects / relatedThreads / relatedCapital.
+   * Unscoped lender catalog rows never receive scoped documents,
+   * projects, threads, or capital. Preview stays off this slice (refs
+   * only). Comms stay DRAFT_ONLY — no preview body, suggestedDraft, or
+   * send on the thread refs. Capital stays PREPARE_ONLY — send=false /
+   * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN /
+   * HONEST_EMPTY. Never invent TargetAmount, lender criteria, fit, or
+   * financing status.
    */
   researchIntelligence: ResearchIntelligencePayload;
   /**
