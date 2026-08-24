@@ -22,6 +22,8 @@
  * Entitled capital PREPARE rows carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Entitled meetings carry the inverse researchRelationship from already-composed
  * researchIntelligence items (ATLAS-MEETING-RESEARCH-RELATIONSHIP-001).
+ * Entitled documents carry the same inverse researchRelationship
+ * (ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001).
  * Graph driveItem versions are metadata-only and never include downloadUrl.
  * No second search, preview, versioning, calendar query, or knowledge-graph product.
  */
@@ -64,7 +66,11 @@ import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { GRAPH_NOTIFICATION_PATH } from '../src/pm/sharepoint/fabric/notifications.ts';
 import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
 import { getClientContext, searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
-import { DOCUMENT_RELATED_CONTEXT_PAGE_SIZE } from '../src/pm/operatorDesk/documentRelatedContext.ts';
+import {
+  attachRelatedContextToDocument,
+  attachRelatedContextToDocuments,
+  DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
+} from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { MEETING_OPERATING_RECORD_PAGE_SIZE } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
@@ -879,10 +885,12 @@ describe('related operating context on entitled documents', () => {
   it('copies same-ClientCode entitled email, project, contract, and PREPARE capital', async () => {
     const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
     assert.equal(found.results.some((row) => row.clientCode === 'PDG01'), false);
+    const now = '2026-08-24T18:00:00.000Z';
     const result = await searchAuthorizedKnowledge({
       principal: staff,
       picture: emptyHonestOperatingPicture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const docs = result.authorizedSearch.documents;
@@ -942,7 +950,30 @@ describe('related operating context on entitled documents', () => {
     assert.ok((memo.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
     assert.equal(/downloadUrl/i.test(JSON.stringify(memo.relatedMeetings)), false);
 
+    const research = memo.researchRelationship?.find((row) => row.clientCode === 'SYN01');
+    assert.ok(research);
+    assert.equal(research.invented, false);
+    assert.equal(research.lenderCriteriaInvented, false);
+    assert.equal(research.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(research.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(research.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.ok((memo.researchRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/TargetAmount/i.test(JSON.stringify(memo.researchRelationship)), false);
+    assert.equal(/downloadUrl|transcript|attendee/i.test(JSON.stringify(memo.researchRelationship)), false);
+
     assert.equal(memo.relatedAttachments, undefined);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      now,
+      entitledIndexHits: found.results,
+    });
+    const ctxMeeting = viaIndex.clientContext.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(ctxMeeting);
+    assert.deepEqual(ctxMeeting.researchRelationship, memo.researchRelationship);
+    assert.equal('documents' in viaIndex.clientContext, false);
 
     noFabricatedRelatedFacts(docs);
     assert.equal(JSON.stringify(docs).includes('PDG01'), false);
@@ -1019,6 +1050,7 @@ describe('related operating context on entitled documents', () => {
     assert.equal((memo.capitalRelationship || []).some((row) => /pdg/i.test(row.id)), false);
     assert.equal((memo.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal((memo.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal((memo.researchRelationship || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01'), false);
     assert.equal(JSON.stringify(memo).includes('PDG01'), false);
     noFabricatedRelatedFacts(memo);
     assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
@@ -1372,6 +1404,8 @@ describe('related meetings on entitled documents', () => {
     const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
     assert.ok(memo);
     assert.equal(memo.relatedMeetings, undefined);
+    assert.equal(memo.researchRelationship, undefined);
+    assert.equal('researchRelationship' in memo, false);
     assert.equal(found.results.some((row) => row.id === 'file-proven'), true);
     noFabricatedRelatedFacts(memo);
   });
@@ -2859,5 +2893,152 @@ describe('Graph driveItem version context for indexed documents', () => {
     assert.equal(own?.versionStatus, 'ready');
     assert.equal(own?.currentVersionId, '9.0');
     assertNoVersionDownloads(own);
+  });
+});
+
+describe('ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  const otherStaff: AtlasPrincipal = {
+    userId: '11111111-1111-4111-8111-aaaaaaaaaa02',
+    organizationId: 'org-hvcg',
+    allowedClientIds: ['ACCG01'],
+    roles: ['HVCG Team Member'],
+  };
+
+  function syn01DocumentRecord(): DocumentOperatingRecord {
+    return {
+      id: 'file-proven',
+      title: 'SYN01 intake memo',
+      webUrl: SOURCE,
+      clientCode: 'SYN01',
+      provenance: 'CONFIRMED',
+      source: 'HVCG_Communications/file-index',
+    };
+  }
+
+  function searchWithResearchItems(items: AtlasAuthorizedSearch['researchIntelligence']['items']): AtlasAuthorizedSearch {
+    return {
+      kind: 'atlas_authorized_search_v1',
+      invented: false,
+      honestEmpty: false,
+      query: 'SYN01',
+      hitCount: 0,
+      hits: [],
+      documents: { kind: 'document_operating_record_v1', policyClass: 'READ_AUTO', binariesInAtlas: false, items: [] },
+      projects: { kind: 'project_operating_record_v1', policyClass: 'READ_AUTO', invented: false, currentClientsFirst: true, items: [] },
+      threads: { kind: 'mail_thread_operating_record_v1', policyClass: 'DRAFT_ONLY', invented: false, autoRespond: false, send: false, indexedPreviewOnly: true, items: [] },
+      meetings: { kind: 'meeting_operating_record_v1', policyClass: 'READ_AUTO', invented: false, items: [] },
+      capitalSubmissions: {
+        kind: 'capital_submission_request_v1',
+        policyClass: 'PREPARE_ONLY',
+        invented: false,
+        send: false,
+        externalSubmit: false,
+        ownerGated: true,
+        catalogCopies: [],
+        items: [],
+      },
+      researchIntelligence: {
+        kind: 'research_intelligence_v1',
+        policyClass: RESEARCH_INTELLIGENCE_POLICY_CLASS,
+        invented: false,
+        outboundRefresh: false,
+        financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+        lenderCriteriaInvented: false,
+        retrievedAt: '2026-08-24T18:00:00.000Z',
+        items,
+      },
+      onboarding: { kind: 'onboarding_agent_v1', policyClass: 'OWNER_ESCALATE', invented: false, execute: false, activate: false, send: false, liveGtmOutbound: false, ownerGated: true, hubMi: false, items: [] },
+      clientSupport: { kind: 'client_support_agent_v1', policyClass: 'OWNER_ESCALATE', invented: false, execute: false, send: false, autoRespond: false, draftOnly: true, ownerGated: true, hubMi: false, items: [] },
+      classification: 'CONFIRMED',
+      why: 'test',
+      basedOn: 'test',
+      entitled: true,
+      ran: true,
+      pictureComposed: false,
+      actionabilityApplied: false,
+    } as AtlasAuthorizedSearch;
+  }
+
+  it('omits researchRelationship for unauthorized principals and leaves empty documents unchanged', () => {
+    const denied = attachRelatedContextToDocument(
+      otherStaff,
+      syn01DocumentRecord(),
+      searchWithResearchItems([
+        {
+          id: 'client:SYN01:synthetic alpha co',
+          subjectKind: 'client',
+          title: 'SYN01 · SYNTHETIC Alpha Co',
+          source: 'HVCG_Clients',
+          retrievalDate: '2026-08-24T18:00:00.000Z',
+          confidence: 'CONFIRMED',
+          superseded: false,
+          clientCode: 'SYN01',
+          classification: 'CONFIRMED',
+          invented: false,
+          lenderCriteriaInvented: false,
+          financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+          fit: RESEARCH_INTELLIGENCE_FIT,
+          evidence: 'Copied entitled HVCG_Clients title.',
+        },
+      ]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+    assert.equal(denied.relatedMeetings, undefined);
+
+    const empty = attachRelatedContextToDocuments(
+      staff,
+      [],
+      searchWithResearchItems([
+        {
+          id: 'client:SYN01:synthetic alpha co',
+          subjectKind: 'client',
+          title: 'SYN01 · SYNTHETIC Alpha Co',
+          source: 'HVCG_Clients',
+          retrievalDate: '2026-08-24T18:00:00.000Z',
+          confidence: 'CONFIRMED',
+          superseded: false,
+          clientCode: 'SYN01',
+          classification: 'CONFIRMED',
+          invented: false,
+          lenderCriteriaInvented: false,
+          financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+          fit: RESEARCH_INTELLIGENCE_FIT,
+          evidence: 'Copied entitled HVCG_Clients title.',
+        },
+      ]),
+    );
+    assert.deepEqual(empty, []);
+  });
+
+  it('never invents TargetAmount, downloadUrl, or transcript on document researchRelationship', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: found.results.map((row) => ({
+          ...row,
+          downloadUrl: 'https://evil.example/download',
+          transcript: 'Invented transcript text',
+          attendees: ['invented@example.com'],
+          TargetAmount: 5000000,
+        })),
+      }),
+    });
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    const blob = JSON.stringify(result.authorizedSearch.documents);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.ok(memo.researchRelationship?.some((row) => row.clientCode === 'SYN01'));
+    assert.ok(memo.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
+    assert.ok(memo.relatedEmail?.some((row) => row.id === 'mail-syn-1'));
+    assert.ok(memo.relatedProject?.some((row) => row.id === 'proj-syn-1'));
+    assert.ok(memo.capitalRelationship?.some((row) => row.id === 'cap-syn-1'));
+    noFabricatedRelatedFacts(memo);
   });
 });
