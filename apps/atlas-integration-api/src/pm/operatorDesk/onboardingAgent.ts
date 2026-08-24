@@ -6,15 +6,20 @@
  * projects and tasks only. Does not invent ClientCodes or Hub-MI.
  * Activation, completion, welcome send, and live GTM stay OWNER-GATED.
  * Optional relatedMeetings / researchRelationship / relatedDocuments /
- * relatedProjects / relatedThreads are attached later from
- * authorizedSearch.meetings / .researchIntelligence / .documents /
- * hits kind=document / .projects / .threads / sameRelatedScope
- * (fail-closed when ClientCode is missing / non-canonical).
- * relatedDocuments reuses relatedDocumentsForMeeting — no
- * document.onboardingRelationship field. relatedProjects reuses
- * relatedProjects() / RelatedDocumentProjectRef — inverse of
- * document.relatedProject. relatedThreads reuses relatedEmails() /
- * RelatedDocumentEmailRef — inverse of document.relatedEmail. No
+ * relatedProjects / relatedThreads / relatedCapital / relatedAttachments
+ * are attached later from authorizedSearch.meetings /
+ * .researchIntelligence / .documents / hits kind=document / .projects /
+ * .threads / .capitalSubmissions / sameRelatedScope (fail-closed when
+ * ClientCode is missing / non-canonical). relatedDocuments reuses
+ * relatedDocumentsForMeeting — no document.onboardingRelationship field.
+ * relatedProjects reuses relatedProjects() / RelatedDocumentProjectRef —
+ * inverse of document.relatedProject. relatedThreads reuses
+ * relatedEmails() / RelatedDocumentEmailRef — inverse of
+ * document.relatedEmail. relatedCapital reuses relatedCapital() /
+ * RelatedDocumentCapitalRef — inverse of document.capitalRelationship.
+ * relatedAttachments reuses relatedAttachments() /
+ * RelatedDocumentAttachmentRef — already-indexed mail-attachment
+ * metadata only. binariesInAtlas stays false. No contentBytes. No
  * preview body / suggestedDraft / send / downloadUrl on the thread
  * refs. hubMiRow is copied as composed, never invented.
  */

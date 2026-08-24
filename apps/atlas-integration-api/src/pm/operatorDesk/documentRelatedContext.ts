@@ -17,7 +17,8 @@
  * the inverse onboarding → meetings, onboarding → documents,
  * onboarding → projects,
  * onboarding → threads,
- * onboarding → capital, and
+ * onboarding → capital,
+ * onboarding → attachments, and
  * onboarding → research links on OnboardingAgentRecord items, and the inverse
  * research-intelligence → meetings,
  * research-intelligence → documents,
@@ -36,7 +37,8 @@
  * kind=meeting / sameRelatedScope / entitledClientCodes /
  * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
  * relatedMeetings() / relatedDocumentsForMeeting() / relatedProjects() /
- * relatedEmails() / relatedCapital() / relatedResearchForScopeItem().
+ * relatedEmails() / relatedCapital() / relatedAttachments() /
+ * relatedResearchForScopeItem().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search/capital/research product.
  */
@@ -831,20 +833,26 @@ export function attachRelatedContextToClientSupport(
  * (reuses relatedEmails / RelatedDocumentEmailRef — no new query),
  * entitled same-scope capital-prepare rows already on
  * authorizedSearch.capitalSubmissions.items (reuses relatedCapital /
- * RelatedDocumentCapitalRef — no new query), and entitled same-scope
- * research already on authorizedSearch.researchIntelligence.items
+ * RelatedDocumentCapitalRef — no new query), entitled same-scope
+ * already-indexed outlook-mail-attachment metadata already on
+ * authorizedSearch.documents.items / hits kind=document (reuses
+ * relatedAttachments / RelatedDocumentAttachmentRef — no new
+ * Graph / search / attachment query, no contentBytes), and entitled
+ * same-scope research already on authorizedSearch.researchIntelligence.items
  * (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit relatedMeetings / researchRelationship /
  * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
- * rather than guess. Unscoped never receives scoped relations.
- * Unscoped lender catalog titles never attach scoped documents,
- * projects, threads, or capital. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
- * No preview body / suggestedDraft / send on the thread refs. No
- * TargetAmount. No invented lender criteria, fit, or financing
- * status. No Hub-MI invention. hubMiRow is copied as composed on the
+ * / relatedAttachments rather than guess. Unscoped never receives
+ * scoped relations. Unscoped lender catalog titles never attach
+ * scoped documents, projects, threads, capital, or attachments.
+ * Client A never receives Client B. SAS / anonymous webUrl dropped.
+ * No downloadUrl. No contentBytes. binariesInAtlas stays false.
+ * No transcript text. No preview body / suggestedDraft / send on
+ * the thread refs. No TargetAmount. No invented lender criteria,
+ * fit, or financing status. No invented attachment names / ids.
+ * No Hub-MI invention. hubMiRow is copied as composed on the
  * source project (never invented). OWNER_ESCALATE / execute=false /
  * activate=false / send=false / liveGtmOutbound=false /
  * ownerGated=true / hubMi=false stay as composed. DRAFT_ONLY /
@@ -867,6 +875,7 @@ export function attachRelatedContextToOnboardingRecord(
   const relatedProjectsList = relatedProjects(item, search);
   const relatedThreads = relatedEmails(item, search);
   const relatedCapitalList = relatedCapital(item, search);
+  const relatedAttachmentsList = relatedAttachments(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
@@ -875,6 +884,7 @@ export function attachRelatedContextToOnboardingRecord(
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
     ...(relatedThreads.length ? { relatedThreads } : {}),
     ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
+    ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
   };
 }
 

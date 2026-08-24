@@ -52,6 +52,18 @@
  * relatedThreads stay as composed. OWNER_ESCALATE unchanged. Capital
  * stays PREPARE_ONLY. No new Graph / search / KG / capital /
  * onboarding product.
+ * + ATLAS-ONBOARDING-RELATED-ATTACHMENTS-001 entitled same-scope
+ * already-indexed outlook-mail-attachment metadata refs (same
+ * RelatedDocumentAttachmentRef / relatedAttachments path as
+ * documents / meetings). Fail-closed when ClientCode is missing /
+ * non-canonical. Unscoped never receives scoped attachments.
+ * Client A never receives Client B. SAS / anonymous webUrl dropped.
+ * No downloadUrl. No contentBytes. binariesInAtlas stays false.
+ * No invented attachment names / ids. relatedMeetings /
+ * researchRelationship / relatedDocuments / relatedProjects /
+ * relatedThreads / relatedCapital stay as composed. OWNER_ESCALATE
+ * unchanged. No new Graph / search / KG / attachment / onboarding
+ * product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -326,6 +338,21 @@ function assertOwnerEscalate(
         assert.equal('transcript' in capital, false);
         assert.equal('send' in capital, false);
         assert.equal('externalSubmit' in capital, false);
+      }
+    }
+    if (row.relatedAttachments) {
+      assert.ok(row.relatedAttachments.length > 0);
+      assert.ok(row.relatedAttachments.length <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+      assert.equal(
+        /downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(JSON.stringify(row.relatedAttachments)),
+        false,
+      );
+      for (const attachment of row.relatedAttachments) {
+        assert.equal(attachment.binariesInAtlas, false);
+        assert.equal('downloadUrl' in attachment, false);
+        assert.equal('contentBytes' in attachment, false);
+        assert.equal('transcript' in attachment, false);
+        assert.ok(Boolean(attachment.attachmentId || attachment.parentMessageId));
       }
     }
   }
@@ -3634,6 +3661,531 @@ describe('ATLAS-ONBOARDING-RELATED-CAPITAL-001 entitled same-scope inverse', () 
     assert.equal(result.authorizedSearch.threads.policyClass, 'DRAFT_ONLY');
     assertOwnerEscalate(result.authorizedSearch.onboarding);
     assertOnboardingRelatedCapitalHonesty(project);
+    noInventedFacts(result.authorizedSearch.onboarding);
+  });
+});
+
+const ATT_PARENT_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-att-parent';
+
+function syn01AttachmentHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'document' as const,
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications/file-index',
+    clientCode: 'SYN01',
+    webUrl: ATT_PARENT_SOURCE,
+    provenance: 'CONFIRMED' as const,
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
+function syn01AttachmentRecord(overrides: Partial<DocumentOperatingRecord> = {}): DocumentOperatingRecord {
+  return {
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    webUrl: ATT_PARENT_SOURCE,
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED',
+    source: 'HVCG_Communications/file-index',
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
+function searchWithAttachments(
+  documents: DocumentOperatingRecord[] = [syn01DocumentRecord(), syn01AttachmentRecord()],
+  hits: AtlasAuthorizedSearchHit[] = [syn01DocumentHit(), syn01AttachmentHit()],
+): AtlasAuthorizedSearch {
+  return searchWithCapital([syn01CapitalRecord()], [syn01ThreadRecord()], documents, hits);
+}
+
+function assertOnboardingRelatedAttachmentsHonesty(item: OnboardingAgentRecord): void {
+  assert.equal(item.invented, false);
+  assert.equal(item.hubMiRow, false);
+  assert.equal(item.execute, false);
+  assert.equal(item.activate, false);
+  assert.equal(item.send, false);
+  assert.equal(item.liveGtmOutbound, false);
+  const blob = JSON.stringify(item.relatedAttachments || []);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+  for (const row of item.relatedAttachments || []) {
+    assert.equal(row.binariesInAtlas, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.ok(Boolean(row.attachmentId || row.parentMessageId));
+    assert.ok(
+      row.classification === 'CONFIRMED' ||
+        row.classification === 'LIKELY' ||
+        row.classification === 'PROPOSED' ||
+        row.classification === 'HONEST_EMPTY',
+    );
+  }
+}
+
+describe('ATLAS-ONBOARDING-RELATED-ATTACHMENTS-001 entitled same-scope inverse', () => {
+  it('attaches same-scope relatedAttachments on entitled onboarding and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01OnboardingHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01OperatingProjectHit(),
+          syn01ThreadHit(),
+          syn01CapitalHit(),
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    const attachment = project.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(attachment);
+    assert.equal(attachment.title, 'SYN01 term-sheet.pdf');
+    assert.equal(attachment.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(attachment.attachmentId, 'att-syn-1');
+    assert.equal(attachment.contentType, 'application/pdf');
+    assert.equal(attachment.size, 1200);
+    assert.equal(attachment.binariesInAtlas, false);
+    assert.equal(attachment.webUrl, ATT_PARENT_SOURCE);
+    assert.equal('downloadUrl' in attachment, false);
+    assert.equal('contentBytes' in attachment, false);
+    assert.ok((project.relatedAttachments?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal((project.relatedAttachments || []).some((row) => row.id === 'file-syn-1'), false);
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(project.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(project.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(project.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(project.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(
+      project.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|attendee/i.test(JSON.stringify(project.relatedAttachments)),
+      false,
+    );
+    assert.equal(JSON.stringify(project.relatedAttachments).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    assertOnboardingRelatedAttachmentsHonesty(project);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [
+        syn01ClientHit(),
+        syn01MeetingHit(),
+        syn01OnboardingHit(),
+        syn01DocumentHit(),
+        syn01AttachmentHit(),
+        syn01OperatingProjectHit(),
+        syn01ThreadHit(),
+        syn01CapitalHit(),
+      ],
+    });
+    const ctxProject = viaIndex.clientContext.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(ctxProject);
+    assert.equal(ctxProject.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.deepEqual(ctxProject.relatedAttachments, project.relatedAttachments);
+    assert.deepEqual(ctxProject.relatedCapital, project.relatedCapital);
+    assert.deepEqual(ctxProject.relatedThreads, project.relatedThreads);
+    assert.deepEqual(ctxProject.relatedDocuments, project.relatedDocuments);
+    assert.deepEqual(ctxProject.relatedProjects, project.relatedProjects);
+    assert.deepEqual(ctxProject.relatedMeetings, project.relatedMeetings);
+    assert.deepEqual(ctxProject.researchRelationship, project.researchRelationship);
+    assertOwnerEscalate(viaIndex.clientContext.onboarding);
+    noInventedFacts(result.authorizedSearch.onboarding);
+  });
+
+  it('honestly omits relatedAttachments when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01OnboardingHit(),
+          syn01DocumentHit(),
+          syn01OperatingProjectHit(),
+          syn01ThreadHit(),
+          syn01CapitalHit(),
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    assert.equal(project.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in project, false);
+    assert.equal(project.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(project.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    assertOnboardingRelatedAttachmentsHonesty(project);
+  });
+
+  it('never attaches Client B attachments to a Client A onboarding item', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01OnboardingHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01OperatingProjectHit(),
+          syn01ThreadHit(),
+          syn01CapitalHit(),
+          {
+            kind: 'document' as const,
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak.pdf',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/mail/pdg-leak',
+            provenance: 'CONFIRMED' as const,
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+            contentType: 'application/pdf',
+            size: 88,
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    assert.equal(project.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      (project.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.onboarding);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('att-pdg-1'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    assertOnboardingRelatedAttachmentsHonesty(project);
+
+    const mixed = attachRelatedContextToOnboardingRecord(
+      staff,
+      syn01OnboardingRecord(),
+      searchWithAttachments(
+        [
+          syn01DocumentRecord(),
+          syn01AttachmentRecord(),
+          syn01AttachmentRecord({
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak.pdf',
+            clientCode: 'PDG01',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+          }),
+        ],
+        [
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01AttachmentHit({
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak.pdf',
+            clientCode: 'PDG01',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+          }),
+        ],
+      ),
+    );
+    assert.equal(mixed.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      (mixed.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.relatedAttachments).includes('PDG01'), false);
+    assert.equal(JSON.stringify(mixed.relatedAttachments).includes('att-pdg-1'), false);
+    assert.equal(mixed.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(mixed.invented, false);
+    assert.equal(mixed.execute, false);
+    assert.equal(mixed.activate, false);
+  });
+
+  it('omits relatedAttachments when ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToOnboardingRecord(
+      manny,
+      {
+        ...syn01OnboardingRecord(),
+        id: 'proj-unscoped',
+        clientCode: undefined,
+      },
+      searchWithAttachments(),
+    );
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in omitted, false);
+    assert.equal(omitted.relatedCapital, undefined);
+    assert.equal(omitted.relatedDocuments, undefined);
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.hubMiRow, false);
+    assert.equal(omitted.execute, false);
+    assert.equal(omitted.activate, false);
+  });
+
+  it('omits relatedAttachments when ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToOnboardingRecord(
+      manny,
+      {
+        ...syn01OnboardingRecord(),
+        id: 'proj-noncanonical',
+        clientCode: 'syn01',
+      },
+      searchWithAttachments(),
+    );
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in omitted, false);
+    assert.equal(omitted.relatedCapital, undefined);
+    assert.equal(omitted.relatedDocuments, undefined);
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.hubMiRow, false);
+    assert.equal(omitted.execute, false);
+    assert.equal(omitted.activate, false);
+  });
+
+  it('unscoped never receives scoped attachment refs', () => {
+    const unscoped = attachRelatedContextToOnboardingRecord(
+      manny,
+      {
+        ...syn01OnboardingRecord(),
+        id: 'proj-unscoped',
+        clientCode: undefined,
+      },
+      searchWithAttachments(),
+    );
+    assert.equal(unscoped.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in unscoped, false);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.invented, false);
+    assert.equal(unscoped.execute, false);
+    assert.equal(unscoped.activate, false);
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01OnboardingHit(), syn01AttachmentHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.onboarding.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.onboarding.items.some((row) => row.relatedAttachments),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.onboarding);
+    assert.equal(unknownBlob.includes('mail-att-syn'), false);
+    assert.equal(unknownBlob.includes('att-syn-1'), false);
+    assert.equal(unknownBlob.includes('proj-onboard-1'), false);
+    assert.equal(unknown.authorizedSearch.onboarding.execute, false);
+    assert.equal(unknown.authorizedSearch.onboarding.activate, false);
+
+    const denied = attachRelatedContextToOnboardingRecord(
+      otherStaff,
+      syn01OnboardingRecord(),
+      searchWithAttachments(),
+    );
+    assert.equal(denied.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in denied, false);
+    assert.equal(denied.relatedCapital, undefined);
+    assert.equal(denied.relatedDocuments, undefined);
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal(denied.invented, false);
+    assert.equal(denied.execute, false);
+    assert.equal(denied.activate, false);
+  });
+
+  it('drops SAS and anonymous webUrl and never emits downloadUrl or contentBytes', () => {
+    const sas = attachRelatedContextToOnboardingRecord(
+      staff,
+      syn01OnboardingRecord(),
+      searchWithAttachments(
+        [syn01DocumentRecord(), syn01AttachmentRecord({ webUrl: SAS })],
+        [syn01DocumentHit(), syn01AttachmentHit({ webUrl: SAS })],
+      ),
+    );
+    const sasAtt = sas.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(sasAtt);
+    assert.equal(sasAtt.webUrl, undefined);
+    assert.equal(sasAtt.binariesInAtlas, false);
+    assert.equal(sasAtt.attachmentId, 'att-syn-1');
+    assert.equal(sasAtt.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(JSON.stringify(sas)), false);
+    assert.equal(/downloadUrl|contentBytes/i.test(JSON.stringify(sas)), false);
+
+    const anon = attachRelatedContextToOnboardingRecord(
+      staff,
+      syn01OnboardingRecord(),
+      searchWithAttachments(
+        [syn01DocumentRecord(), syn01AttachmentRecord({ webUrl: ANON })],
+        [syn01DocumentHit(), syn01AttachmentHit({ webUrl: ANON })],
+      ),
+    );
+    const anonAtt = anon.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(anonAtt);
+    assert.equal(anonAtt.webUrl, undefined);
+    assert.equal(anonAtt.binariesInAtlas, false);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(JSON.stringify(anon)), false);
+    assert.equal(/downloadUrl|contentBytes/i.test(JSON.stringify(anon)), false);
+    assertOnboardingRelatedAttachmentsHonesty(sas);
+    assertOnboardingRelatedAttachmentsHonesty(anon);
+  });
+
+  it('leaves the empty onboarding payload unchanged and omits relatedAttachments when attachment metadata is absent', () => {
+    const empty = emptyOnboardingPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('relatedAttachments' in empty, false);
+    assert.equal(empty.execute, false);
+    assert.equal(empty.activate, false);
+    assert.equal(empty.send, false);
+    assert.equal(empty.policyClass, 'OWNER_ESCALATE');
+    const attachedEmpty = attachRelatedContextToOnboarding(
+      staff,
+      empty,
+      searchWithAttachments(),
+    );
+    assert.equal(attachedEmpty, empty);
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty.items.length, 0);
+
+    const absent = attachRelatedContextToOnboardingRecord(
+      staff,
+      syn01OnboardingRecord(),
+      searchWithCapital([syn01CapitalRecord()]),
+    );
+    assert.equal(absent.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in absent, false);
+    assert.equal(absent.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(absent.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(absent.execute, false);
+    assert.equal(absent.activate, false);
+    assert.equal(absent.hubMiRow, false);
+  });
+
+  it('never invents attachment names, ids, downloadUrl, contentBytes, or Hub-MI', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01OnboardingHit(),
+          {
+            ...syn01AttachmentHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'Invented binary',
+            transcript: 'Invented transcript text',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    const blob = JSON.stringify(result.authorizedSearch.onboarding);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/contentBytes/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/Hub-MI/i.test(blob), false);
+    const attached = project.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(attached);
+    assert.equal(attached.title, 'SYN01 term-sheet.pdf');
+    assert.equal(attached.attachmentId, 'att-syn-1');
+    assert.equal(attached.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(attached.binariesInAtlas, false);
+    assert.equal('downloadUrl' in attached, false);
+    assert.equal('contentBytes' in attached, false);
+    assert.equal(project.relatedAttachments?.length, 1);
+    assert.equal(project.invented, false);
+    assert.equal(project.hubMiRow, false);
+    assert.equal(project.execute, false);
+    assert.equal(project.activate, false);
+    assert.equal(result.authorizedSearch.onboarding.policyClass, 'OWNER_ESCALATE');
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assertOnboardingRelatedAttachmentsHonesty(project);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    noInventedFacts(result.authorizedSearch.onboarding);
+  });
+
+  it('still attaches relatedMeetings, researchRelationship, relatedDocuments, relatedProjects, relatedThreads, and relatedCapital next to relatedAttachments', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01OnboardingHit(),
+          syn01MeetingHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01OperatingProjectHit(),
+          syn01ThreadHit(),
+          syn01CapitalHit(),
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    assert.equal(project.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(project.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(project.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(project.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(project.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      project.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(JSON.stringify(project.relatedAttachments).includes('PDG01'), false);
+    assert.equal(/downloadUrl|contentBytes|transcript/i.test(JSON.stringify(project.relatedAttachments)), false);
+    assert.equal(project.relatedAttachments?.every((row) => row.binariesInAtlas === false), true);
+    assert.equal(project.invented, false);
+    assert.equal(project.hubMiRow, false);
+    assert.equal(project.execute, false);
+    assert.equal(project.activate, false);
+    assert.equal(result.authorizedSearch.onboarding.policyClass, 'OWNER_ESCALATE');
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    assertOnboardingRelatedAttachmentsHonesty(project);
     noInventedFacts(result.authorizedSearch.onboarding);
   });
 });
