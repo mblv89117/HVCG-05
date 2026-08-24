@@ -98,6 +98,7 @@ export function sanitizeGraphWriteText(raw: string): string {
     .replace(EMAIL_RE, '[email-redacted]')
     .replace(CLIENT_CODE_RE, '[client-redacted]')
     .replace(/['"][^'"]{16,}['"]/g, '[text-redacted]')
+    .replace(/[A-Za-z0-9._-]{20,}/g, '[token-redacted]')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 240);
