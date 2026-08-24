@@ -283,8 +283,10 @@ export interface AtlasClientContext {
    * Native governed onboarding agent from already-entitled Atlas/index
    * intake evidence. Activation, completion, Hub-MI, and GTM stay OWNER-GATED.
    * Optional relatedMeetings is the same entitled same-scope inverse used
-   * by documents / projects / threads / capital / client support. Omitted
-   * when ClientCode is missing.
+   * by documents / projects / threads / capital / client support. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as meetings).
+   * Both omitted when ClientCode is missing.
    */
   onboarding: OnboardingAgentPayload;
   /**
@@ -501,7 +503,8 @@ export interface RelatedMeetingDocumentRef {
 }
 
 /**
- * Inverse of researchIntelligence.relatedMeetings. Honesty mirrors
+ * Inverse of researchIntelligence.relatedMeetings. Reused on
+ * MeetingOperatingRecord and OnboardingAgentRecord. Honesty mirrors
  * RelatedDocumentCapitalRef: source-backed titles only. Never downloadUrl,
  * transcript, attendees, TargetAmount, or invented lender criteria.
  */
@@ -804,6 +807,15 @@ export interface OnboardingAgentRecord {
    * transcript, attendees, or invented titles / ClientCodes.
    */
   relatedMeetings?: RelatedDocumentMeetingRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items (same RelatedMeetingResearchRef
+   * as meetings). Omitted when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped lender catalog titles never
+   * attach to a scoped onboarding item. No downloadUrl, transcript,
+   * attendees, TargetAmount, or invented criteria.
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
 }
 
 export interface OnboardingAgentPayload {
