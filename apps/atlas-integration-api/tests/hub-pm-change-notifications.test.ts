@@ -33,6 +33,7 @@ import {
   MAIL_SUBSCRIPTION_MAX_MINUTES,
   needsRenewal,
   persistChangeNotificationState,
+  RENEW_IF_REMAINING_MS,
   subscriptionExpiration,
 } from '../src/pm/sharepoint/fabric/subscriptions.ts';
 import { MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
@@ -284,6 +285,8 @@ describe('Graph change-notification subscriptions', () => {
   it('renews a stored mail subscription before the 4230-minute cap', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'atlas-graph-renew-'));
     try {
+      const now = new Date('2026-08-24T11:00:00.000Z');
+      const expiringSoon = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
       persistChangeNotificationState(dir, {
         status: 'ready',
         reason: 'prior',
@@ -294,14 +297,18 @@ describe('Graph change-notification subscriptions', () => {
           id: MAIL_SUB_ID,
           resource: `users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages`,
           kind: 'mail',
-          expirationDateTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          expirationDateTime: expiringSoon,
           notificationUrl: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
         },
       });
       const patches: Array<{ path: string; body: Record<string, unknown> }> = [];
-      const now = new Date('2026-08-24T11:00:00.000Z');
-      assert.equal(needsRenewal(new Date(now.getTime() + 60 * 60 * 1000).toISOString(), now), true);
+      assert.equal(needsRenewal(expiringSoon, now), true);
+      assert.equal(
+        needsRenewal(new Date(now.getTime() + RENEW_IF_REMAINING_MS + 60_000).toISOString(), now),
+        false,
+      );
       assert.equal(MAIL_SUBSCRIPTION_MAX_MINUTES, 4230);
+      assert.equal(RENEW_IF_REMAINING_MS, 12 * 60 * 60 * 1000);
       const exp = subscriptionExpiration(now, 5000);
       assert.ok(Date.parse(exp) - now.getTime() <= 4230 * 60_000);
       const state = await ensureFabricChangeSubscriptions({
