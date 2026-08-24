@@ -1,9 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { classifyDriveItem, classifyFabricRecord, stripSecrets } from '../src/pm/sharepoint/fabric/classify.ts';
 import { extractSearchDriveItems } from '../src/pm/sharepoint/fabric/files.ts';
 import { extractSourceUrl, isFileIndexRow, fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
+import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
 import { assertMannyOnly, isMannyPrincipal, MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
@@ -132,6 +136,133 @@ describe('Fabric Graph allowlist', () => {
     assert.equal(isAllowedFabricGraphPath('/v1.0/search/query', 'POST'), true);
     assert.equal(isAllowedFabricGraphPath('/v1.0/sites'), false);
     assert.equal(isAllowedFabricGraphPath('/v1.0/search/query'), false);
+  });
+
+  it('allows owner mailbox inbox messages delta but keeps other mailbox delta blocked', () => {
+    assert.equal(
+      isAllowedFabricGraphPath(`/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$top=50`),
+      true,
+    );
+    assert.equal(
+      isAllowedFabricGraphPath('/v1.0/users/11111111-1111-4111-8111-111111111001/mailFolders/inbox/messages/delta'),
+      true,
+      'shape allowlist accepts user GUID; runtime owner guard rejects non-Manny paths',
+    );
+  });
+});
+
+describe('Fabric mail delta checkpointing', () => {
+  function service() {
+    const communications: Array<Record<string, unknown>> = [];
+    return {
+      communications,
+      async listClientHints() {
+        return [{ clientCode: 'CCB01', displayName: 'Colorado Craft Beef', dba: 'Colorado Craft Beef' }];
+      },
+      async upsertCommunicationIndex(row: Record<string, unknown>) {
+        communications.push(row);
+      },
+      async upsertMeetingIndex() {
+        /* not exercised */
+      },
+      async upsertContactIndex() {
+        /* not exercised */
+      },
+    };
+  }
+
+  function graph(paths: string[], firstMailStatus = 200) {
+    return {
+      paths,
+      async getJson(path: string) {
+        paths.push(path);
+        if (path.includes('/mailFolders/inbox/messages/delta') && paths.filter((p) => p.includes('/mailFolders/inbox/messages/delta')).length === 1) {
+          if (firstMailStatus !== 200) return { status: firstMailStatus, json: {} };
+          return {
+            status: 200,
+            json: {
+              value: [
+                {
+                  id: 'm1',
+                  conversationId: 'conv-1',
+                  subject: 'Colorado Craft Beef capital update',
+                  bodyPreview: 'Please review the packet.',
+                  receivedDateTime: '2026-08-24T00:00:00Z',
+                  from: { emailAddress: { address: 'client@example.com' } },
+                  toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
+                  webLink: 'https://outlook.office.com/mail/m1',
+                },
+              ],
+              '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+            },
+          };
+        }
+        if (path.includes('/messages?')) {
+          return {
+            status: 200,
+            json: {
+              value: [
+                {
+                  id: 'legacy-1',
+                  conversationId: 'legacy-conv',
+                  subject: 'Colorado Craft Beef fallback',
+                  bodyPreview: 'Fallback recent message.',
+                  receivedDateTime: '2026-08-24T00:00:00Z',
+                },
+              ],
+            },
+          };
+        }
+        return { status: 404, json: {} };
+      },
+      async postJson(path: string) {
+        paths.push(`POST ${path}`);
+        return { status: 403, json: {} };
+      },
+    };
+  }
+
+  it('stores a durable inbox delta link instead of rescanning recent mail', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-delta-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.checkpoint.mailMode, 'delta');
+      assert.equal(result.checkpoint.mailDeltaReady, true);
+      assert.match(result.checkpoint.mailSkip || '', /deltatoken=abc/);
+      assert.equal(paths[0]?.includes('/mailFolders/inbox/messages/delta'), true);
+      assert.equal(svc.communications[0]?.idempotencyKey, 'mail:conv-1');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to recent messages for the run when inbox delta is unavailable', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-fallback-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 404) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.checkpoint.mailMode, 'page');
+      assert.equal(result.checkpoint.mailDeltaReady, undefined);
+      assert.ok(result.notes.some((note) => /Mail delta unavailable/.test(note)));
+      assert.equal(paths.some((path) => path.includes('/messages?')), true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

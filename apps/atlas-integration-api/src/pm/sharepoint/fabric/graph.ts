@@ -21,6 +21,7 @@ export interface FabricGraphClient {
 
 const ALLOWED_GET: RegExp[] = [
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/messages(\?|$|\/)/i,
+  /^\/v1\.0\/users\/[0-9a-f-]{36}\/mailFolders\/inbox\/messages\/delta(\?|$)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/calendar\/events(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/contacts(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/drive(\/root(\/children)?|\/recent)(\?|$)/i,
