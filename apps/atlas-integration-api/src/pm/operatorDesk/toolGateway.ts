@@ -51,6 +51,10 @@ import {
   emptyCapitalSubmissionPayload,
 } from './capitalSubmissionPrepare.ts';
 import { composeMailThreadRecords, emptyMailThreadPayload } from './mailThreadContext.ts';
+import {
+  composeResearchIntelligence,
+  emptyResearchIntelligencePayload,
+} from './researchIntelligence.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -276,6 +280,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
+    researchIntelligence: emptyResearchIntelligencePayload(opts?.now),
   };
 }
 
@@ -467,6 +472,7 @@ function composeClientContext(
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
+    researchIntelligence: emptyResearchIntelligencePayload(),
   };
 }
 
@@ -517,6 +523,7 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     projects: composeBoundClientProjects(ctx, binding),
     threads: composeBoundClientThreads(ctx, binding),
     capitalSubmissions: composeBoundClientCapitalSubmissions(ctx, binding),
+    researchIntelligence: composeBoundClientResearchIntelligence(ctx, binding),
   };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
@@ -605,6 +612,7 @@ function toAuthorizedSearchHit(
   const targetCompletionDate = copiedOptional(row, 'targetCompletionDate');
   const status = copiedOptional(row, 'status');
   const preview = copiedOptional(row, 'preview');
+  const industry = copiedOptional(row, 'industry');
   const conversationId = copiedOptional(row, 'conversationId');
   const directionRaw = copiedOptional(row, 'direction');
   const direction =
@@ -627,6 +635,7 @@ function toAuthorizedSearchHit(
     ...(targetCompletionDate ? { targetCompletionDate } : {}),
     ...(status ? { status } : {}),
     ...(preview ? { preview } : {}),
+    ...(industry ? { industry } : {}),
     ...(conversationId ? { conversationId } : {}),
     ...(direction ? { direction } : {}),
     why: GENERIC_SEARCH_HIT_WHY,
@@ -924,6 +933,30 @@ function composeBoundClientCapitalSubmissions(
     pmHits,
     pmHits.length > 0,
   ).authorizedSearch.capitalSubmissions;
+}
+
+/**
+ * Same research_intelligence_v1 composer as authorizedSearch.researchIntelligence.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * SOURCE_BACKED_ONLY. No live scrape. Lender criteria stay uninvented.
+ */
+function composeBoundClientResearchIntelligence(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['researchIntelligence'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyResearchIntelligencePayload(ctx.now);
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.researchIntelligence;
 }
 
 /**
@@ -1337,6 +1370,7 @@ function emptyAuthorizedSearch(opts?: {
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
+    researchIntelligence: emptyResearchIntelligencePayload(),
   };
 }
 
@@ -1426,6 +1460,7 @@ function composeAuthorizedSearch(
     },
     threads: composeMailThreadRecords(hits),
     capitalSubmissions: composeCapitalSubmissionPrepare(hits),
+    researchIntelligence: composeResearchIntelligence(hits, ctx.now),
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),

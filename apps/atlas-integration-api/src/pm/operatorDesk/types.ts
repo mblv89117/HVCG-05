@@ -47,6 +47,8 @@ export const ASK_ATLAS_PROJECT_CLIENTCTX_MISSION_KEY = 'ATLAS-PROJECT-CLIENTCTX-
 export const ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY = 'ATLAS-AI-COMMUNICATIONS-001' as const;
 export const ASK_ATLAS_CAPITAL_SUBMISSION_PREPARE_MISSION_KEY =
   'ATLAS-CAPITAL-SUBMISSION-PREPARE-001' as const;
+export const ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY =
+  'ATLAS-RESEARCH-INTELLIGENCE-001' as const;
 /** Suggested replies stay draft. AUTO_RESPOND is never enabled. */
 export const COMMUNICATIONS_POLICY_CLASS = 'DRAFT_ONLY' as const;
 export const COMMUNICATIONS_AUTO_RESPOND = false as const;
@@ -58,6 +60,19 @@ export const CAPITAL_SUBMISSION_EXTERNAL_SUBMIT = false as const;
 export const CAPITAL_SUBMISSION_OWNER_GATED = true as const;
 export const CAPITAL_SUBMISSION_FIT = 'NOT_EVALUATED' as const;
 export const CAPITAL_SUBMISSION_FINANCING_STATUS = 'UNKNOWN' as const;
+/** Research intelligence copies entitled titles only. No live scrape / GTM outbound. */
+export const RESEARCH_INTELLIGENCE_POLICY_CLASS = 'SOURCE_BACKED_ONLY' as const;
+export const RESEARCH_INTELLIGENCE_OUTBOUND_REFRESH = false as const;
+export const RESEARCH_INTELLIGENCE_FINANCING_STATUS = 'UNKNOWN' as const;
+export const RESEARCH_INTELLIGENCE_FIT = 'NOT_EVALUATED' as const;
+export const RESEARCH_SUBJECT_KINDS = [
+  'lender',
+  'investor',
+  'vendor',
+  'client',
+  'industry',
+] as const;
+export type ResearchSubjectKind = (typeof RESEARCH_SUBJECT_KINDS)[number];
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -199,6 +214,13 @@ export interface AtlasClientContext {
    * evidence. External lender/investor submit stays OWNER-GATED.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
+  /**
+   * Source-backed research intelligence from already-entitled Atlas/index
+   * evidence and the existing sourced lender catalog titles. Stores source,
+   * retrieval date, confidence, and superseded state. Lender criteria and
+   * financing status are never invented.
+   */
+  researchIntelligence: ResearchIntelligencePayload;
 }
 
 export function clientContextMissionKey(
@@ -241,6 +263,8 @@ export interface AtlasAuthorizedSearchHit {
   preview?: string;
   conversationId?: string;
   direction?: 'Inbound' | 'Outbound' | 'Internal';
+  /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
+  industry?: string;
 }
 
 export interface DocumentOperatingRecord {
@@ -383,6 +407,37 @@ export interface CapitalSubmissionPreparePayload {
   items: CapitalSubmissionPrepareRecord[];
 }
 
+export type ResearchIntelligenceEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+
+export interface ResearchIntelligenceRecord {
+  id: string;
+  subjectKind: ResearchSubjectKind;
+  title: string;
+  source: string;
+  retrievalDate: string;
+  confidence: ResearchIntelligenceEvidenceClass;
+  superseded: boolean;
+  supersededBy?: string;
+  clientCode?: string;
+  classification: ResearchIntelligenceEvidenceClass;
+  invented: false;
+  lenderCriteriaInvented: false;
+  financingStatus: typeof RESEARCH_INTELLIGENCE_FINANCING_STATUS;
+  fit: typeof RESEARCH_INTELLIGENCE_FIT;
+  evidence: string;
+}
+
+export interface ResearchIntelligencePayload {
+  kind: 'research_intelligence_v1';
+  policyClass: typeof RESEARCH_INTELLIGENCE_POLICY_CLASS;
+  invented: false;
+  outboundRefresh: typeof RESEARCH_INTELLIGENCE_OUTBOUND_REFRESH;
+  financingStatus: typeof RESEARCH_INTELLIGENCE_FINANCING_STATUS;
+  lenderCriteriaInvented: false;
+  retrievedAt: string;
+  items: ResearchIntelligenceRecord[];
+}
+
 export interface AtlasAuthorizedSearch {
   kind: 'atlas_authorized_search_v1';
   invented: false;
@@ -405,6 +460,7 @@ export interface AtlasAuthorizedSearch {
   };
   threads: MailThreadOperatingPayload;
   capitalSubmissions: CapitalSubmissionPreparePayload;
+  researchIntelligence: ResearchIntelligencePayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;
@@ -652,6 +708,7 @@ export interface OperatorSearchHit {
   preview?: string;
   conversationId?: string;
   direction?: 'Inbound' | 'Outbound' | 'Internal';
+  industry?: string;
 }
 
 export interface OperatorDeskModel {

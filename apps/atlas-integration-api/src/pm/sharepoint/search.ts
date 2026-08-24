@@ -28,7 +28,8 @@ export interface PmSearchHit {
     | 'opportunity'
     | 'lead'
     | 'capital_opportunity'
-    | 'lender';
+    | 'lender'
+    | 'investor';
   id: string;
   clientCode?: string;
   title: string;
@@ -49,6 +50,8 @@ export interface PmSearchHit {
   preview?: string;
   conversationId?: string;
   direction?: 'Inbound' | 'Outbound' | 'Internal';
+  /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
+  industry?: string;
 }
 
 type LeadRow = {
@@ -247,6 +250,7 @@ export async function searchSharePointPm(
         title: `${c.clientCode} · ${c.displayName}`,
         href: clientHref(c.clientCode),
         source: 'HVCG_Clients',
+        ...(c.industry?.trim() ? { industry: c.industry.trim() } : {}),
       });
     }
   }
