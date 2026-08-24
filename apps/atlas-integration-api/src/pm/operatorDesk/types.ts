@@ -332,9 +332,13 @@ export interface AtlasClientContext {
    * / relatedEmails path as research-intel). Optional relatedCapital
    * is the inverse of document.capitalRelationship (same
    * RelatedDocumentCapitalRef / relatedCapital path as research-intel).
-   * Missing / non-canonical ClientCode omits researchRelationship /
+   * Optional relatedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
+   * / relatedAttachments path as documents / meetings). Missing /
+   * non-canonical ClientCode omits researchRelationship /
    * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
-   * (fail-closed; never guess). No downloadUrl. No preview body /
+   * / relatedAttachments (fail-closed; never guess). No downloadUrl.
+   * No contentBytes. binariesInAtlas stays false. No preview body /
    * suggestedDraft / send on the thread refs. No TargetAmount. No
    * invented lender criteria, fit, or financing status. hubMiRow is
    * copied as composed on the source project (never invented).
@@ -1104,6 +1108,23 @@ export interface OnboardingAgentRecord {
    * KG / capital / onboarding product.
    */
   relatedCapital?: RelatedDocumentCapitalRef[];
+  /**
+   * Already-indexed outlook-mail-attachment metadata refs. Reuses
+   * RelatedDocumentAttachmentRef / relatedAttachments() — the same
+   * entitled same-scope inverse already live on documents / meetings.
+   * Copied after authorization. Metadata only: id / title /
+   * parentMessageId / attachmentId / contentType / size /
+   * classification / webUrl. binariesInAtlas stays false. Omitted
+   * when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped attachments. Client A never receives Client B. SAS /
+   * anonymous webUrl dropped. Never downloadUrl, contentBytes,
+   * invented attachment names / ids, ClientCodes, or Hub-MI.
+   * OWNER_ESCALATE / execute=false / activate=false / send=false /
+   * liveGtmOutbound=false / ownerGated=true / hubMi=false stay as
+   * composed. No new Graph / search / attachment / onboarding product.
+   */
+  relatedAttachments?: RelatedDocumentAttachmentRef[];
 }
 
 export interface OnboardingAgentPayload {
@@ -1384,14 +1405,18 @@ export interface AtlasAuthorizedSearch {
    * document.relatedEmail (same RelatedDocumentEmailRef / relatedEmails
    * path as research-intel). Optional relatedCapital is the inverse of
    * document.capitalRelationship (same RelatedDocumentCapitalRef /
-   * relatedCapital path as research-intel). Empty payload stays empty.
-   * Missing / non-canonical ClientCode omits relatedMeetings /
+   * relatedCapital path as research-intel). Optional relatedAttachments
+   * copies already-indexed same-scope outlook-mail-attachment metadata
+   * (same RelatedDocumentAttachmentRef / relatedAttachments path as
+   * documents / meetings). Empty payload stays empty. Missing /
+   * non-canonical ClientCode omits relatedMeetings /
    * researchRelationship / relatedDocuments / relatedProjects /
-   * relatedThreads / relatedCapital. Comms stay DRAFT_ONLY — no preview
-   * body, suggestedDraft, or send on the thread refs. Capital stays
-   * PREPARE_ONLY — send=false / externalSubmit=false / ownerGated=true /
-   * financingStatus UNKNOWN / HONEST_EMPTY. Never invent TargetAmount,
-   * lender criteria, fit, or financing status.
+   * relatedThreads / relatedCapital / relatedAttachments. Comms stay
+   * DRAFT_ONLY — no preview body, suggestedDraft, or send on the thread
+   * refs. Capital stays PREPARE_ONLY — send=false / externalSubmit=false
+   * / ownerGated=true / financingStatus UNKNOWN / HONEST_EMPTY.
+   * binariesInAtlas stays false. Never invent TargetAmount, lender
+   * criteria, fit, financing status, attachment names, or contentBytes.
    */
   onboarding: OnboardingAgentPayload;
   /**
