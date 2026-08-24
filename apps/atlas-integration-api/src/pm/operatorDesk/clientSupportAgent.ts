@@ -6,9 +6,14 @@
  * operator queues, and recovered folder/filename clients only. Does not
  * invent ClientCodes or Hub-MI. Reply, reassign, close, and send stay
  * OWNER-GATED. Send remains draft-only. Optional relatedMeetings /
- * researchRelationship are attached later from authorizedSearch.meetings
- * / .researchIntelligence / sameRelatedScope (fail-closed when
- * ClientCode is missing).
+ * researchRelationship / relatedDocuments / relatedProjects are
+ * attached later from authorizedSearch.meetings / .researchIntelligence
+ * / .documents / hits kind=document / .projects / sameRelatedScope
+ * (fail-closed when ClientCode is missing / non-canonical).
+ * relatedDocuments reuses relatedDocumentsForMeeting — no
+ * document.clientSupportRelationship field. relatedProjects reuses
+ * relatedProjects() / RelatedDocumentProjectRef — inverse of
+ * document.relatedProject. hubMiRow is copied as composed, never invented.
  */
 
 import {
