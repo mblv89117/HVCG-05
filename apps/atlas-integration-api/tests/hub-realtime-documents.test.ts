@@ -6,6 +6,7 @@
  * + ATLAS-REALTIME-DOCUMENTS-RELATED-MEETINGS-001
  * + ATLAS-M365-MEETING-OPERATING-RECORD-001
  * + ATLAS-M365-MEETING-RELATED-CONTEXT-001
+ * + ATLAS-M365-PROJECT-RELATED-MEETINGS-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
  * preview is attached after authorization. Related email / project / contract
@@ -14,6 +15,7 @@
  * also become a first-class authorizedSearch.meetings operating record and
  * carry the inverse relatedDocuments / relatedEmail / relatedProject /
  * relatedAttachments / capitalRelationship from the same authorized search.
+ * Entitled projects carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Graph driveItem versions are metadata-only and never include downloadUrl.
  * No second search, preview, versioning, calendar query, or knowledge-graph product.
  */
@@ -55,7 +57,7 @@ import {
 import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { GRAPH_NOTIFICATION_PATH } from '../src/pm/sharepoint/fabric/notifications.ts';
 import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
-import { searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
+import { getClientContext, searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
 import { DOCUMENT_RELATED_CONTEXT_PAGE_SIZE } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { MEETING_OPERATING_RECORD_PAGE_SIZE } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
@@ -1791,6 +1793,270 @@ describe('entitled meeting related context on authorizedSearch', () => {
     assert.equal(meetings.invented, false);
     assert.equal(meeting.invented, false);
     noFabricatedRelatedFacts(meetings);
+  });
+});
+
+describe('entitled project related meetings on authorizedSearch', () => {
+  it('attaches same-client relatedMeetings on entitled projects and get_client_context', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const projects = result.authorizedSearch.projects;
+    assert.equal(projects.kind, 'project_operating_record_v1');
+    assert.equal(projects.invented, false);
+    const project = projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.equal(project.clientCode, 'SYN01');
+    assert.equal(project.invented, false);
+    assert.equal(project.historicalHvs, false);
+    assert.equal(project.hubMiRow, true);
+
+    const meeting = project.relatedMeetings?.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.title, 'SYN01 weekly standup');
+    assert.equal(meeting.date, '2026-08-21T15:00:00Z');
+    assert.equal(meeting.webUrl, MEETING_SOURCE);
+    assert.equal(meeting.sourceEventId, 'AAMk-syn-cal-1');
+    assert.ok(
+      meeting.classification === 'CONFIRMED' ||
+        meeting.classification === 'LIKELY' ||
+        meeting.classification === 'PROPOSED' ||
+        meeting.classification === 'HONEST_EMPTY',
+    );
+    assert.ok((project.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(project.relatedMeetings)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(project.relatedMeetings)), false);
+
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    const meetingRecord = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meetingRecord);
+    assert.equal(meetingRecord.relatedProject?.some((row) => row.id === 'proj-syn-1'), true);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: found.results,
+    });
+    assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
+    assert.equal(viaIndex.clientContext.client.entitled, true);
+    const ctxProject = viaIndex.clientContext.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(ctxProject);
+    assert.equal(ctxProject.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.deepEqual(ctxProject.relatedMeetings, project.relatedMeetings);
+    assert.equal(ctxProject.historicalHvs, false);
+    assert.equal(ctxProject.hubMiRow, true);
+
+    noFabricatedRelatedFacts(projects);
+    assert.equal(JSON.stringify(projects).includes('PDG01'), false);
+  });
+
+  it('never returns Client B meetings on a Client A project', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'project',
+            id: 'proj-syn-1',
+            title: 'SYN01 entitled intake project',
+            href: '/clients/SYN01',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-pdg',
+            title: 'PDG01 leak standup',
+            href: '/clients/PDG01',
+            source: 'HVCG_Meetings',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/calendar/item/pdg01-leak',
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-pdg-cal-1',
+          },
+          {
+            kind: 'project',
+            id: 'proj-pdg',
+            title: 'PDG01 leak project',
+            href: '/clients/PDG01',
+            source: 'HVCG_Projects',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.equal(project.clientCode, 'SYN01');
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal((project.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(project).includes('PDG01'), false);
+    const foreign = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-pdg');
+    if (foreign) {
+      assert.equal((foreign.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+      assert.equal(foreign.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), undefined);
+    }
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal((memo.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    noFabricatedRelatedFacts(project);
+  });
+
+  it('drops SAS and anonymous meeting webUrl on entitled project relatedMeetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'project',
+            id: 'proj-syn-1',
+            title: 'SYN01 entitled intake project',
+            href: '/clients/SYN01',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-sas',
+            title: 'SYN01 SAS standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: SAS,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-sas-cal',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-anon',
+            title: 'SYN01 anonymous standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: ANON,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-anon-cal',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-ok',
+            title: 'SYN01 entitled standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-ok-cal',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    const sasMeeting = project.relatedMeetings?.find((row) => row.id === 'meet-sas');
+    const anonMeeting = project.relatedMeetings?.find((row) => row.id === 'meet-anon');
+    const okMeeting = project.relatedMeetings?.find((row) => row.id === 'meet-ok');
+    if (sasMeeting) assert.equal(sasMeeting.webUrl, undefined);
+    if (anonMeeting) assert.equal(anonMeeting.webUrl, undefined);
+    assert.ok(okMeeting);
+    assert.equal(okMeeting.webUrl, MEETING_SOURCE);
+    const blob = JSON.stringify(project.relatedMeetings);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    noFabricatedRelatedFacts(project);
+  });
+
+  it('honestly omits relatedMeetings when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'capital raise',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'project',
+            id: 'proj-only',
+            title: 'SYN01 project only',
+            href: '/clients/SYN01',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-only');
+    assert.ok(project);
+    assert.equal(project.relatedMeetings, undefined);
+    assert.equal(project.historicalHvs, false);
+    assert.equal(project.hubMiRow, true);
+    assert.equal(project.invented, false);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(project)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(project)), false);
+    noFabricatedRelatedFacts(project);
+  });
+
+  it('never invents downloadUrl or transcript text on project relatedMeetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: found.results.map((row) => ({
+          ...row,
+          downloadUrl: 'https://evil.example/download',
+          transcript: 'Invented transcript text',
+        })),
+      }),
+    });
+    const projects = result.authorizedSearch.projects;
+    const project = projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.ok(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
+    const blob = JSON.stringify(projects);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal((project as { downloadUrl?: string }).downloadUrl, undefined);
+    assert.equal((project as { transcript?: string }).transcript, undefined);
+    assert.equal(projects.invented, false);
+    assert.equal(project.invented, false);
+    noFabricatedRelatedFacts(projects);
   });
 });
 

@@ -75,6 +75,7 @@ import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSu
 import {
   attachRelatedContextToDocuments,
   attachRelatedContextToMeetings,
+  attachRelatedContextToProjects,
 } from './documentRelatedContext.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
@@ -1844,6 +1845,11 @@ function composeAuthorizedSearch(
   authorizedSearch.meetings = attachRelatedContextToMeetings(
     ctx.principal,
     authorizedSearch.meetings,
+    authorizedSearch,
+  );
+  authorizedSearch.projects = attachRelatedContextToProjects(
+    ctx.principal,
+    authorizedSearch.projects,
     authorizedSearch,
   );
   return {
