@@ -1,8 +1,11 @@
 /**
  * ATLAS-REALTIME-DOCUMENTS-001 + ATLAS-REALTIME-DOCUMENTS-SECURE-PREVIEW-001
+ * + ATLAS-REALTIME-DOCUMENTS-RELATED-CONTEXT-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
- * preview is attached after authorization. No second search or preview product.
+ * preview is attached after authorization. Related email / project / contract
+ * / capital is copied from already-authorized search payloads only.
+ * No second search, preview, or knowledge-graph product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -34,8 +37,14 @@ import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { GRAPH_NOTIFICATION_PATH } from '../src/pm/sharepoint/fabric/notifications.ts';
 import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
 import { searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
+import { DOCUMENT_RELATED_CONTEXT_PAGE_SIZE } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
-import type { AtlasAuthorizedSearch, DocumentOperatingRecord } from '../src/pm/operatorDesk/types.ts';
+import {
+  CAPITAL_SUBMISSION_FINANCING_STATUS,
+  CAPITAL_SUBMISSION_POLICY_CLASS,
+  type AtlasAuthorizedSearch,
+  type DocumentOperatingRecord,
+} from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import { buildKnowledgeLedger } from '../src/pm/sharepoint/knowledgeLedger.ts';
 import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
@@ -52,6 +61,9 @@ const PROVEN_ITEM = '01SYN01INTAKEMEMOITEMID0001';
 const PREVIEW_GET = 'https://highvaluecapitalgroup.sharepoint.com/_layouts/15/embed.aspx?uniqueId=abc&auth_key=short';
 const PREVIEW_POST = 'https://onedrive.live.com/embed';
 const CLIENT_STATE = 'atlas-graph-client-state-ok';
+const MAIL_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-thread';
+const SOW_SOURCE =
+  'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_SYN01/engagement-sow.pdf';
 
 const staff: AtlasPrincipal = {
   userId: '11111111-1111-4111-8111-aaaaaaaaaa01',
@@ -535,6 +547,44 @@ describe('secure Graph driveItem preview for indexed documents', () => {
             driveId: 'b!pdgdriveid000000000000000000001',
             itemId: '01PDG01HIDDENITEMID00000001',
           },
+          {
+            kind: 'document',
+            id: 'file-pdg-sow',
+            title: 'PDG01 Secret SOW.pdf',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: pdgSource,
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'communication',
+            id: 'mail-pdg',
+            title: 'PDG01 leak thread',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            conversationId: 'conv-pdg-1',
+            provenance: 'PROPOSED',
+          },
+          {
+            kind: 'project',
+            id: 'proj-pdg',
+            title: 'PDG01 leak project',
+            href: '/clients/PDG01',
+            source: 'HVCG_Projects',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'capital_opportunity',
+            id: 'cap-pdg',
+            title: 'PDG01 leak capital',
+            href: '/clients/PDG01',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED',
+          },
         ],
       }),
       requestDocumentPreview: async (ref) => {
@@ -552,6 +602,17 @@ describe('secure Graph driveItem preview for indexed documents', () => {
     assert.equal(own?.previewStatus, 'ready');
     assert.equal(own?.previewGetUrl, PREVIEW_GET);
     assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assert.equal(own?.relatedEmail?.some((row) => row.id === 'mail-pdg'), false);
+    assert.equal(own?.relatedProject?.some((row) => row.id === 'proj-pdg'), false);
+    assert.equal(own?.relatedContract?.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(own?.capitalRelationship?.some((row) => row.id === 'cap-pdg'), false);
+    assert.equal(JSON.stringify(own).includes('PDG01'), false);
+    if (foreign) {
+      assert.equal(foreign.relatedEmail, undefined);
+      assert.equal(foreign.relatedProject, undefined);
+      assert.equal(foreign.relatedContract, undefined);
+      assert.equal(foreign.capitalRelationship, undefined);
+    }
   });
 
   it('forged POST /api/graph/change-notifications remains 401 clientState mismatch', async () => {
@@ -643,5 +704,240 @@ describe('secure Graph driveItem preview for indexed documents', () => {
       if (prev.STATE === undefined) delete process.env.INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE;
       else process.env.INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE = prev.STATE;
     }
+  });
+});
+
+function relatedContextService(): SearchPmService {
+  const summary = fileIndexSummary({
+    restricted: false,
+    webUrl: SOURCE,
+    idempotencyKey: `file:${PROVEN_ITEM}`,
+    driveId: PROVEN_DRIVE,
+    itemId: PROVEN_ITEM,
+  });
+  return {
+    async listAuthorizedClients() {
+      return [
+        {
+          id: 'SYN01',
+          itemId: '1',
+          clientCode: 'SYN01',
+          displayName: 'SYNTHETIC Alpha Co',
+          source: 'sharepoint',
+        },
+      ];
+    },
+    async listAuthorizedProjects() {
+      return [
+        {
+          id: 'proj-syn-1',
+          name: 'SYN01 entitled intake project',
+          clientCode: 'SYN01',
+          objective: 'Copy existing entitled SYN01 intake work.',
+          nextAction: 'Review entitled SYN01 evidence already on the desk.',
+          status: 'active',
+          updatedAt: '2026-08-20T18:04:00Z',
+        },
+      ] as never;
+    },
+    async listAuthorizedTasks() {
+      return [];
+    },
+    async listWorkspaceCollections() {
+      return {
+        ...emptyCollection,
+        communications: {
+          queried: true,
+          status: 'COMPLETE',
+          items: [
+            {
+              id: 'file-proven',
+              title: 'SYN01 intake memo',
+              summary,
+              webUrl: SOURCE,
+              date: '2026-08-20T18:04:00Z',
+              sourceItemId: `file:${PROVEN_ITEM}`,
+            },
+            {
+              id: 'file-sow',
+              title: 'SYN01 Engagement SOW.pdf',
+              summary: `File metadata index. Binary remains in OneDrive/SharePoint. Source: ${SOW_SOURCE}`,
+              webUrl: SOW_SOURCE,
+              date: '2026-08-18T16:00:00Z',
+              sourceItemId: 'file:sow-1',
+            },
+            {
+              id: 'mail-syn-1',
+              title: 'SYN01 intake follow-up',
+              summary:
+                'Can you confirm the next entitled document? I will send the existing package after review. Source: ' +
+                `${MAIL_SOURCE} Key:mail:conv-syn-1`,
+              webUrl: MAIL_SOURCE,
+              date: '2026-08-19T12:00:00Z',
+              channel: 'Email',
+              direction: 'Inbound',
+              sourceItemId: 'AAMk-syn-1',
+            },
+          ],
+        },
+      };
+    },
+    async listVendors() {
+      return [];
+    },
+    async listOpportunities() {
+      return [];
+    },
+    async listCapitalOpportunities() {
+      return [
+        {
+          id: 'cap-syn-1',
+          title: 'SYN01 entitled capital opportunity',
+          clientCode: 'SYN01',
+          notes: 'Existing entitled row. Do not invent criteria.',
+          projectId: 'proj-syn-1',
+        },
+        {
+          id: 'cap-pdg-leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          notes: 'Invented Live Oak credit box',
+        },
+      ];
+    },
+    async listIndexedFiles() {
+      return [];
+    },
+  };
+}
+
+function noFabricatedRelatedFacts(value: unknown): void {
+  const serialized = JSON.stringify(value);
+  assert.equal(serialized.includes('HFD01'), false);
+  assert.equal(serialized.includes('Hub-MI'), false);
+  assert.equal(/\bltv\s*[:=]?\s*\d/i.test(serialized), false);
+  assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(serialized), false);
+  assert.equal(/credit box/i.test(serialized), false);
+  assert.equal(/best[_ ]?fit/i.test(serialized), false);
+  assert.equal(/FundingStatus["']?\s*:\s*["'](?:Committed|Closed|Funded)/i.test(serialized), false);
+  assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(serialized), false);
+}
+
+describe('related operating context on entitled documents', () => {
+  it('copies same-ClientCode entitled email, project, contract, and PREPARE capital', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    assert.equal(found.results.some((row) => row.clientCode === 'PDG01'), false);
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const docs = result.authorizedSearch.documents;
+    assert.equal(docs.binariesInAtlas, false);
+    const memo = docs.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.clientCode, 'SYN01');
+    assert.equal(memo.modifiedAt, '2026-08-20T18:04:00Z');
+    assert.equal(memo.webUrl, SOURCE);
+
+    const email = memo.relatedEmail?.find((row) => row.id === 'mail-syn-1');
+    assert.ok(email);
+    assert.equal(email.title, 'SYN01 intake follow-up');
+    assert.equal(email.conversationId, 'conv-syn-1');
+    assert.equal(email.webUrl, MAIL_SOURCE);
+    assert.ok(email.classification === 'CONFIRMED' || email.classification === 'LIKELY' || email.classification === 'PROPOSED' || email.classification === 'HONEST_EMPTY');
+    assert.ok((memo.relatedEmail?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+
+    const project = memo.relatedProject?.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.equal(project.clientCode, 'SYN01');
+    assert.equal(project.invented, false);
+    assert.equal(project.historicalHvs, false);
+    assert.ok((memo.relatedProject?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+
+    const contract = memo.relatedContract?.find((row) => row.id === 'file-sow');
+    assert.ok(contract);
+    assert.equal(contract.classification, 'CONFIRMED');
+    assert.equal(contract.webUrl, SOW_SOURCE);
+    assert.match(contract.title, /SOW/i);
+    assert.ok((memo.relatedContract?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+
+    const capital = memo.capitalRelationship?.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.clientCode, 'SYN01');
+    assert.equal(capital.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(capital.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(capital.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.invented, false);
+    assert.ok((memo.capitalRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+
+    noFabricatedRelatedFacts(docs);
+    assert.equal(JSON.stringify(docs).includes('PDG01'), false);
+    assert.equal(JSON.stringify(docs).includes('HFD01'), false);
+  });
+
+  it('never attaches Client B relations to a Client A document', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'communication',
+            id: 'mail-pdg',
+            title: 'PDG01 leak thread',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            conversationId: 'conv-pdg-1',
+            provenance: 'PROPOSED',
+          },
+          {
+            kind: 'project',
+            id: 'proj-pdg',
+            title: 'PDG01 leak project',
+            href: '/clients/PDG01',
+            source: 'HVCG_Projects',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'capital_opportunity',
+            id: 'cap-pdg',
+            title: 'PDG01 leak capital LTV 80 credit box',
+            href: '/clients/PDG01',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'document',
+            id: 'file-pdg-sow',
+            title: 'PDG01 Secret SOW.pdf',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: 'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_PDG01/sow.pdf',
+            provenance: 'CONFIRMED',
+          },
+        ],
+      }),
+    });
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.relatedEmail?.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(memo.relatedProject?.some((row) => /pdg/i.test(row.id)), false);
+    assert.equal(memo.relatedContract?.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(memo.capitalRelationship?.some((row) => /pdg/i.test(row.id)), false);
+    assert.equal(JSON.stringify(memo).includes('PDG01'), false);
+    noFabricatedRelatedFacts(memo);
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
   });
 });

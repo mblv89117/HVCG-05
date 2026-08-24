@@ -63,6 +63,7 @@ import {
 } from './researchIntelligence.ts';
 import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgent.ts';
 import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
+import { attachRelatedContextToDocuments } from './documentRelatedContext.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -1185,6 +1186,40 @@ async function withDocumentPreviews(
   };
 }
 
+/**
+ * Copy already-authorized email / project / contract / capital onto entitled
+ * documents. Runs after authorization and after secure preview attach.
+ * Does not invent ClientCodes, Hub-MI, lender criteria, or financing status.
+ */
+function withDocumentRelatedContext(
+  ctx: ToolGatewayContext,
+  result: AuthorizedSearchToolResult,
+): AuthorizedSearchToolResult {
+  const items = attachRelatedContextToDocuments(
+    ctx.principal,
+    result.authorizedSearch.documents.items,
+    result.authorizedSearch,
+  );
+  return {
+    ...result,
+    authorizedSearch: {
+      ...result.authorizedSearch,
+      documents: {
+        ...result.authorizedSearch.documents,
+        binariesInAtlas: false,
+        items,
+      },
+    },
+  };
+}
+
+async function finalizeAuthorizedDocuments(
+  ctx: ToolGatewayContext,
+  result: AuthorizedSearchToolResult,
+): Promise<AuthorizedSearchToolResult> {
+  return withDocumentRelatedContext(ctx, await withDocumentPreviews(ctx, result));
+}
+
 function resolveQueueUrgency(row: OperatorOperatingItem): SearchQueueUrgency | null {
   if (row.kind === 'hvs_actionable_capital') return 'Capital';
   if (row.queue === 'Overdue') return 'Overdue';
@@ -1719,7 +1754,10 @@ export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): Authoriz
 
   const reused = reuseDeskSearchHits(ctx, query);
   const pmHits = filterHitsToBinding(reused?.hits || [], scoped.binding);
-  return composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, reused?.ran === true);
+  return withDocumentRelatedContext(
+    ctx,
+    composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, reused?.ran === true),
+  );
 }
 
 export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promise<AuthorizedSearchToolResult> {
@@ -1737,16 +1775,25 @@ export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promis
   const reused = reuseDeskSearchHits(ctx, query);
   if (reused) {
     const pmHits = filterHitsToBinding(reused.hits, scoped.binding);
-    return withDocumentPreviews(ctx, composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true));
+    return finalizeAuthorizedDocuments(
+      ctx,
+      composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true),
+    );
   }
 
   if (!ctx.entitledSearch) {
-    return withDocumentPreviews(ctx, composeBoundAuthorizedSearch(ctx, query, scoped.binding, [], false));
+    return finalizeAuthorizedDocuments(
+      ctx,
+      composeBoundAuthorizedSearch(ctx, query, scoped.binding, [], false),
+    );
   }
 
   const found = await ctx.entitledSearch(query);
   const pmHits = filterHitsToBinding(found.results.map(toAuthorizedSearchHit), scoped.binding);
-  return withDocumentPreviews(ctx, composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true));
+  return finalizeAuthorizedDocuments(
+    ctx,
+    composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true),
+  );
 }
 
 export function invokeReadAutoTool(tool: string, ctx: ToolGatewayContext): AskAtlasAnswer {
