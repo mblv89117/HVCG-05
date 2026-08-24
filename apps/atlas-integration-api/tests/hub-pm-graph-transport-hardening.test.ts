@@ -412,8 +412,62 @@ describe('PM Graph Selected-permission collection reads', () => {
         assertSanitized(err);
         assert.equal((err as PmHttpError).status, 503);
         assert.match((err as PmHttpError).message, /permission or token was rejected/);
+        assert.match((err as PmHttpError).message, new RegExp(`HTTP ${status}`));
         return true;
       });
     }
+  });
+
+  it('maps Graph HTTP 400 field mismatch without leaking tokens or mailbox text', async () => {
+    const COMMS = 'ffffffff-ffff-4fff-8fff-fffffffffff3';
+    const transport = createGraphTransport(
+      { ...ALLOWLIST, communicationsListId: COMMS },
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async () =>
+          jsonResponse(400, {
+            error: {
+              code: 'invalidRequest',
+              message: `Field 'HVCG_IdempotencyKey' is not recognized. ${ACCESS_TOKEN} CCB01`,
+            },
+          }),
+      },
+    );
+    await assert.rejects(() => transport.createItem(COMMS, { Title: 'thread' }), (err: unknown) => {
+      assertSanitized(err);
+      assert.match((err as PmHttpError).message, /SharePoint PM Graph request failed \(HTTP 400/);
+      assert.match((err as PmHttpError).message, /graphCode=invalidRequest/);
+      assert.match((err as PmHttpError).message, /field=HVCG_IdempotencyKey/);
+      assert.match((err as PmHttpError).message, /mismatch=unknown_field/);
+      assert.equal(/CCB01/.test((err as PmHttpError).message), false);
+      return true;
+    });
+  });
+
+  it('records Graph HTTP status or transport HTTP 0 without leaking tokens', async () => {
+    const failed = createGraphTransport(
+      ALLOWLIST,
+      { getToken: async () => ACCESS_TOKEN },
+      { fetch: async () => jsonResponse(500, { error: { code: 'serviceNotAvailable', message: ACCESS_TOKEN } }) },
+    );
+    await assert.rejects(() => failed.listItems(PROJECTS), (err: unknown) => {
+      assertSanitized(err);
+      assert.match((err as PmHttpError).message, /SharePoint PM Graph request failed \(HTTP 500/);
+      return true;
+    });
+    const transport = createGraphTransport(
+      ALLOWLIST,
+      { getToken: async () => ACCESS_TOKEN },
+      {
+        fetch: async () => {
+          throw new Error('socket hang up');
+        },
+      },
+    );
+    await assert.rejects(() => transport.listItems(PROJECTS), (err: unknown) => {
+      assertSanitized(err);
+      assert.match((err as PmHttpError).message, /SharePoint PM Graph transport failed \(HTTP 0\)/);
+      return true;
+    });
   });
 });

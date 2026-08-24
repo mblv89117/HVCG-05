@@ -22,6 +22,7 @@ export interface FabricGraphClient {
 const ALLOWED_GET: RegExp[] = [
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/messages(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/mailFolders\/inbox\/messages\/delta(\?|$)/i,
+  /^\/v1\.0\/users\/[0-9a-f-]{36}\/mailFolders\('inbox'\)\/messages\/delta(\?|$)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/calendar\/events(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/contacts(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/drive(\/root(\/children)?|\/recent)(\?|$)/i,
@@ -103,6 +104,9 @@ export function createFabricGraphClient(
         accept: 'application/json',
       };
       if (method === 'POST') headers['content-type'] = 'application/json';
+      if (method === 'POST' && /\/search\/query$/i.test(url.pathname)) {
+        headers.Region = (process.env.INTEGRATION_GRAPH_SEARCH_REGION || 'US').trim() || 'US';
+      }
       const resp = await doFetch(url.toString(), {
         method,
         headers,

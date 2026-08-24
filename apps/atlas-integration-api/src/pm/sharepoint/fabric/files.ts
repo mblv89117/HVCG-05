@@ -5,6 +5,7 @@
  */
 
 import { isCanonicalClientCode } from '../../../entitlements/clientCode.ts';
+import { describeGraphListWriteError } from '../indexWrite.ts';
 import { classifyDriveItem, type ClientHint } from './classify.ts';
 import { fileIndexSummary } from './fileIndex.ts';
 import type { FabricGraphClient } from './graph.ts';
@@ -46,6 +47,20 @@ export interface SharePointFileCheckpoint {
 
 export function emptySharePointCheckpoint(): SharePointFileCheckpoint {
   return { drives: {}, searchFrom: 0 };
+}
+
+export function businessFileSearchRequest(siteUrl: string, from = 0): Record<string, unknown> {
+  return {
+    requests: [
+      {
+        entityTypes: ['driveItem'],
+        query: { queryString: `site:${siteUrl} isDocument:true` },
+        region: (process.env.INTEGRATION_GRAPH_SEARCH_REGION || 'US').trim() || 'US',
+        from,
+        size: 25,
+      },
+    ],
+  };
 }
 
 function asArray(json: Record<string, unknown>): Record<string, unknown>[] {
@@ -115,18 +130,24 @@ export async function indexBusinessFiles(opts: {
     const restricted = classified.ingest === 'metadata_link';
     if (restricted) indexed.restricted += 1;
     const key = `file:${itemId}`;
-    await opts.service.upsertCommunicationIndex({
-      title: name.slice(0, 255),
-      summary: fileIndexSummary({ restricted, webUrl: item.webUrl, idempotencyKey: key }),
-      clientCode,
-      channel: 'Other',
-      webUrl: item.webUrl,
-      sourceMessageId: itemId,
-      classification: internalUnclassified ? 'INTERNAL' : classified.classification,
-      provenanceSource: 'sharepoint-file',
-      sourceOrg: 'HVCG',
-      idempotencyKey: key,
-    });
+    try {
+      await opts.service.upsertCommunicationIndex({
+        title: name.slice(0, 255),
+        summary: fileIndexSummary({ restricted, webUrl: item.webUrl, idempotencyKey: key }),
+        clientCode,
+        channel: 'Other',
+        webUrl: item.webUrl,
+        sourceMessageId: itemId,
+        classification: internalUnclassified ? 'INTERNAL' : classified.classification,
+        provenanceSource: 'sharepoint-file',
+        sourceOrg: 'HVCG',
+        idempotencyKey: key,
+      });
+    } catch (err) {
+      const detail = err instanceof Error && err.message.trim() ? err.message : 'isolated failure without HTTP status';
+      opts.notes.push(`SharePoint file index write skipped: ${detail}`);
+      return;
+    }
     indexed.files += 1;
   };
 
@@ -216,19 +237,16 @@ export async function indexBusinessFiles(opts: {
 
   for (let i = 0; i < SEARCH_PATHS.length && i < MAX_SEARCH_QUERIES; i += 1) {
     const path = SEARCH_PATHS[i];
-    const { status, json } = await opts.fabric.postJson('/v1.0/search/query', {
-      requests: [
-        {
-          entityTypes: ['driveItem'],
-          query: { queryString: `path:"${path}" AND isDocument=true` },
-          from: cp.searchFrom,
-          size: 25,
-        },
-      ],
-    });
+    const { status, json } = await opts.fabric.postJson(
+      '/v1.0/search/query',
+      businessFileSearchRequest(path, cp.searchFrom),
+    );
     if (status !== 200) {
-      opts.notes.push(`File search ${path} HTTP ${status}.`);
-      continue;
+      const info = describeGraphListWriteError(status, json);
+      opts.notes.push(
+        `File search skipped: Graph search/query rejected app-only driveItem query (HTTP ${status}; graphCode=${info.graphCode}; mismatch=${info.mismatch}). Not claimed as LIVE files.`,
+      );
+      break;
     }
     for (const resource of extractSearchDriveItems(json)) {
       await writeItem({

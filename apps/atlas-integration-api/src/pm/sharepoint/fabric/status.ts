@@ -58,7 +58,7 @@ export function sanitizeFabricNotes(notes: string[]): string[] {
         .replace(URLISH, '[url-redacted]'),
     )
     .filter((note) => note.trim().length > 0)
-    .slice(0, 12);
+    .slice(-12);
 }
 
 export function isFabricSweepEnabled(env: NodeJS.Dict<string | undefined> = process.env): boolean {
@@ -126,7 +126,9 @@ export function inspectFabricSyncHealth(
       typeof raw.lastAttemptAt === 'string' && raw.lastAttemptAt ? raw.lastAttemptAt : lastRunAt;
     const mailMode = raw.mailMode === 'delta' || raw.mailMode === 'page' ? raw.mailMode : 'none';
     const notes = sanitizeFabricNotes(Array.isArray(raw.lastNotes) ? raw.lastNotes.map(String) : []);
-    const hardFail = notes.some((note) => /stopped at HTTP|did not complete/i.test(note));
+    const hardFail = notes.some((note) =>
+      /stopped at HTTP|did not complete|index write skipped|transport failed \(HTTP 0\)/i.test(note),
+    );
     let honesty: FabricSyncHealth['honesty'] = 'never_run';
     if (!lastRunAt) honesty = 'never_run';
     else if (mailMode === 'page') honesty = 'page_fallback';
@@ -195,10 +197,14 @@ export function recordFabricSweepAttempt(
     }
   }
   const now = new Date().toISOString();
+  const prior = Array.isArray(current.lastNotes) ? current.lastNotes.map(String) : [];
+  const keep = prior.filter((note) =>
+    /Mail |mail delta|HTTP |token acquisition|transport failed|mailbox/i.test(note),
+  );
   const next = {
     ...current,
     lastAttemptAt: now,
-    lastNotes: sanitizeFabricNotes(notes),
+    lastNotes: sanitizeFabricNotes([...keep, ...notes]),
   };
   if (opts.complete) next.lastRunAt = now;
   writeFileSync(path, JSON.stringify(next, null, 2));

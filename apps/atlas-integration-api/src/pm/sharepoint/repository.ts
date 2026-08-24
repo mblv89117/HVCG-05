@@ -47,6 +47,16 @@ import {
   type MilestoneHubStatus,
 } from './mapping.ts';
 import { extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
+import {
+  asGraphUrlField,
+  communicationChannel,
+  communicationDirection,
+  existingClientLookupId,
+  meetingTypeForClient,
+  retryIndexWrite,
+  toSharePointDateTime,
+  withIndexMeta,
+} from './indexWrite.ts';
 import { assertWritableClientCode } from './knowledgeClassification.ts';
 import {
   CONVERTIBLE_LEAD_STATUSES,
@@ -566,6 +576,7 @@ export class SharePointPmService {
           extractSourceUrl(asString(item.fields.Summary) || ''),
         sourceItemId: asString(item.fields.SourceMessageId) || asString(item.fields.SourceItemId),
         channel: asString(item.fields.Channel),
+        direction: asString(item.fields.Direction),
       });
     }
     return out;
@@ -1272,6 +1283,30 @@ export class SharePointPmService {
     }
   }
 
+  private async tryResolveExistingClientLookup(
+    clientCode: string | undefined,
+  ): Promise<{ clientCode: string; itemId: string } | null> {
+    if (!clientCode || !isCanonicalClientCode(clientCode) || clientCode === '*') return null;
+    try {
+      const items = await this.listAll(this.settings.clientsListId);
+      const matches = items
+        .map((item) => this.mapClient(item))
+        .filter((row): row is SharePointClient => Boolean(row && row.clientCode === clientCode));
+      if (matches.length !== 1) return null;
+      return { clientCode: matches[0].clientCode, itemId: matches[0].itemId };
+    } catch {
+      return null;
+    }
+  }
+
+  private async createListItemMapped(
+    listId: string,
+    fields: Record<string, unknown>,
+    kind: 'communication' | 'meeting',
+  ): Promise<GraphListItem> {
+    return retryIndexWrite((next) => this.createListItem(listId, next), fields, kind);
+  }
+
   async upsertCommunicationIndex(row: {
     title: string;
     summary?: string;
@@ -1290,35 +1325,20 @@ export class SharePointPmService {
     if (!this.settings.communicationsListId) return;
     const prior = await this.findByIdempotency(this.settings.communicationsListId, row.idempotencyKey);
     if (prior) return;
-    const summary = (row.summary || '').includes(`Key:${row.idempotencyKey}`)
-      ? row.summary || ''
-      : `${row.summary || ''} Key:${row.idempotencyKey}`.trim();
+    const existing = await this.tryResolveExistingClientLookup(row.clientCode);
     const fields: Record<string, unknown> = {
       Title: row.title.slice(0, 255),
-      Summary: summary.slice(0, 2000),
-      Channel: row.channel || 'Email',
-      Direction: row.direction || 'Inbound',
-      HVCG_IdempotencyKey: row.idempotencyKey,
+      Summary: withIndexMeta(row.summary || '', { webUrl: row.webUrl, idempotencyKey: row.idempotencyKey }),
+      Channel: communicationChannel(row.channel),
+      Direction: communicationDirection(row.direction),
+      CommunicationDate: toSharePointDateTime(row.date) || new Date().toISOString(),
     };
-    if (row.clientCode && isCanonicalClientCode(row.clientCode)) fields.ClientCode = row.clientCode;
-    if (row.date) fields.CommunicationDate = row.date;
-    if (row.sourceMessageId) fields.SourceMessageId = row.sourceMessageId;
-    if (row.conversationId) fields.ConversationId = row.conversationId;
-    if (row.webUrl) fields.OutlookWebLink = row.webUrl;
-    if (row.classification) fields.Classification = row.classification;
-    if (row.provenanceSource) fields.ProvenanceSource = row.provenanceSource;
-    if (row.sourceOrg) fields.SourceOrg = row.sourceOrg;
-    try {
-      await this.createListItem(this.settings.communicationsListId, fields);
-    } catch {
-      delete fields.SourceMessageId;
-      delete fields.ConversationId;
-      delete fields.OutlookWebLink;
-      delete fields.Classification;
-      delete fields.ProvenanceSource;
-      delete fields.SourceOrg;
-      await this.createListItem(this.settings.communicationsListId, fields);
+    if (existing) {
+      fields.ClientCode = existing.clientCode;
+      const lookupId = existingClientLookupId(existing.itemId);
+      if (lookupId !== undefined) fields.ClientIdLookupId = lookupId;
     }
+    await this.createListItemMapped(this.settings.communicationsListId, fields, 'communication');
   }
 
   async upsertMeetingIndex(row: {
@@ -1335,20 +1355,21 @@ export class SharePointPmService {
     if (!this.settings.meetingsListId) return;
     const prior = await this.findByIdempotency(this.settings.meetingsListId, row.idempotencyKey);
     if (prior) return;
+    const existing = await this.tryResolveExistingClientLookup(row.clientCode);
     const fields: Record<string, unknown> = {
       Title: row.title.slice(0, 255),
-      Summary: (row.summary || '').slice(0, 2000),
-      HVCG_IdempotencyKey: row.idempotencyKey,
+      Summary: withIndexMeta(row.summary || '', { webUrl: row.webUrl, idempotencyKey: row.idempotencyKey }),
+      MeetingType: meetingTypeForClient(existing?.clientCode),
+      MeetingDate: toSharePointDateTime(row.date) || new Date().toISOString(),
     };
-    if (row.clientCode && isCanonicalClientCode(row.clientCode)) fields.ClientCode = row.clientCode;
-    if (row.date) fields.MeetingDate = row.date;
-    if (row.webUrl) fields.OutlookEventLink = row.webUrl;
-    try {
-      await this.createListItem(this.settings.meetingsListId, fields);
-    } catch {
-      delete fields.HVCG_IdempotencyKey;
-      await this.createListItem(this.settings.meetingsListId, fields);
+    if (existing) {
+      fields.ClientCode = existing.clientCode;
+      const lookupId = existingClientLookupId(existing.itemId);
+      if (lookupId !== undefined) fields.ClientIdLookupId = lookupId;
     }
+    const eventLink = asGraphUrlField(row.webUrl);
+    if (eventLink) fields.OutlookEventLink = eventLink;
+    await this.createListItemMapped(this.settings.meetingsListId, fields, 'meeting');
   }
 
   async upsertContactIndex(row: {
@@ -2023,7 +2044,14 @@ export class SharePointPmService {
   }
 
   async listIndexedFiles(): Promise<
-    Array<{ id: string; title: string; clientCode?: string; webUrl?: string; summary?: string }>
+    Array<{
+      id: string;
+      title: string;
+      clientCode?: string;
+      webUrl?: string;
+      summary?: string;
+      modifiedAt?: string;
+    }>
   > {
     if (!this.settings.communicationsListId) return [];
     const items = await this.listAll(this.settings.communicationsListId);
@@ -2033,6 +2061,7 @@ export class SharePointPmService {
       clientCode?: string;
       webUrl?: string;
       summary?: string;
+      modifiedAt?: string;
     }> = [];
     for (const item of items) {
       const mapped = {
@@ -2042,6 +2071,8 @@ export class SharePointPmService {
         webUrl:
           this.urlField(item.fields.OutlookWebLink) || extractSourceUrl(asString(item.fields.Summary) || ''),
         summary: asString(item.fields.Summary),
+        modifiedAt:
+          isoDate(item.fields.CommunicationDate) || isoDate(item.fields.Modified) || undefined,
         sourceItemId: asString(item.fields.SourceMessageId),
         channel: asString(item.fields.Channel),
       };

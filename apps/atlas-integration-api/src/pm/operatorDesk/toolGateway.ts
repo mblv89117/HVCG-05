@@ -15,6 +15,7 @@
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
+import { authoritativeSourceUrl } from '../sharepoint/fabric/fileIndex.ts';
 import type { PmSearchHit } from '../sharepoint/search.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
 import {
@@ -33,14 +34,29 @@ import {
   type AskAtlasClassification,
   type AtlasAuthorizedSearch,
   type AtlasAuthorizedSearchHit,
+  type DocumentOperatingRecord,
   type AtlasClientContext,
   type ClientContextEvidenceClass,
   type OperatorOperatingItem,
   type OperatorOperatingPicture,
   type OperatorSearchHit,
   type ProductImprovementEvidenceClass,
+  type ProjectOperatingClassification,
+  type ProjectOperatingEvidenceRef,
+  type ProjectOperatingRecord,
   type ProposedEngineeringMission,
 } from './types.ts';
+import {
+  composeCapitalSubmissionPrepare,
+  emptyCapitalSubmissionPayload,
+} from './capitalSubmissionPrepare.ts';
+import { composeMailThreadRecords, emptyMailThreadPayload } from './mailThreadContext.ts';
+import {
+  composeResearchIntelligence,
+  emptyResearchIntelligencePayload,
+} from './researchIntelligence.ts';
+import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgent.ts';
+import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -105,6 +121,12 @@ export interface ToolGatewayContext {
    * double of that function). Do not pass a second index or raw Graph.
    */
   entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  /**
+   * Already-loaded entitled index rows (searchSharePointPm / desk search).
+   * get_client_context copies project_operating_record_v1 from these only.
+   * Do not pass HVS folder copies or invented ClientCodes.
+   */
+  entitledIndexHits?: PmSearchHit[];
 }
 
 export interface ClientContextToolResult {
@@ -257,6 +279,12 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     evidenceClass: 'honest_empty',
     realClientsOperationalized: [],
     recoveredKnowledgeOperationalized: false,
+    projects: emptyProjectOperatingPayload(),
+    threads: emptyMailThreadPayload(),
+    capitalSubmissions: emptyCapitalSubmissionPayload(),
+    researchIntelligence: emptyResearchIntelligencePayload(opts?.now),
+    onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
   };
 }
 
@@ -445,6 +473,12 @@ function composeClientContext(
     ...(decisions ? { decisions } : {}),
     ...(nextActions ? { nextActions } : {}),
     ...(nextAction ? { nextAction } : {}),
+    projects: emptyProjectOperatingPayload(),
+    threads: emptyMailThreadPayload(),
+    capitalSubmissions: emptyCapitalSubmissionPayload(),
+    researchIntelligence: emptyResearchIntelligencePayload(),
+    onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
   };
 }
 
@@ -490,7 +524,15 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     if (binding.client && item.client === binding.client) return true;
     return false;
   });
-  const clientContext = composeClientContext(ctx.picture, binding, items);
+  const clientContext = {
+    ...composeClientContext(ctx.picture, binding, items),
+    projects: composeBoundClientProjects(ctx, binding),
+    threads: composeBoundClientThreads(ctx, binding),
+    capitalSubmissions: composeBoundClientCapitalSubmissions(ctx, binding),
+    researchIntelligence: composeBoundClientResearchIntelligence(ctx, binding),
+    onboarding: composeBoundClientOnboarding(ctx, binding),
+    clientSupport: composeBoundClientSupport(ctx, binding),
+  };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
   return {
@@ -546,9 +588,46 @@ function sameSearchQuery(a: string, b: string): boolean {
   return normalizeAuthorizedSearchQuery(a).toLowerCase() === normalizeAuthorizedSearchQuery(b).toLowerCase();
 }
 
+function preservedSearchProvenance(
+  row: PmSearchHit | (OperatorSearchHit & { source?: string }),
+): AskAtlasClassification {
+  if (row.provenance === 'CONFIRMED' || row.provenance === 'LIKELY' || row.provenance === 'PROPOSED') {
+    return row.provenance;
+  }
+  if ('source' in row && row.source === 'HVCG_Communications/file-index') return 'CONFIRMED';
+  return 'LIKELY';
+}
+
+function copiedOptional(row: object, key: string): string | undefined {
+  if (!(key in row)) return undefined;
+  const value = (row as Record<string, unknown>)[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
 function toAuthorizedSearchHit(
   row: PmSearchHit | (OperatorSearchHit & { source?: string }),
 ): AtlasAuthorizedSearchHit {
+  const sourceUrl = authoritativeSourceUrl('webUrl' in row ? row.webUrl : undefined);
+  const modifiedAt =
+    'modifiedAt' in row && typeof row.modifiedAt === 'string' && row.modifiedAt.trim()
+      ? row.modifiedAt
+      : undefined;
+  const classification = preservedSearchProvenance(row);
+  const nextAction = copiedOptional(row, 'nextAction');
+  const objective = copiedOptional(row, 'objective');
+  const ownerName = copiedOptional(row, 'ownerName');
+  const startDate = copiedOptional(row, 'startDate');
+  const targetCompletionDate = copiedOptional(row, 'targetCompletionDate');
+  const status = copiedOptional(row, 'status');
+  const preview = copiedOptional(row, 'preview');
+  const industry = copiedOptional(row, 'industry');
+  const clientStage = copiedOptional(row, 'clientStage');
+  const conversationId = copiedOptional(row, 'conversationId');
+  const directionRaw = copiedOptional(row, 'direction');
+  const direction =
+    directionRaw === 'Inbound' || directionRaw === 'Outbound' || directionRaw === 'Internal'
+      ? directionRaw
+      : undefined;
   return {
     kind: row.kind || 'document',
     id: row.id,
@@ -556,11 +635,436 @@ function toAuthorizedSearchHit(
     ...(row.href ? { href: row.href } : {}),
     ...('source' in row && row.source ? { source: String(row.source) } : { source: 'pm_search' }),
     ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+    ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+    ...(modifiedAt ? { modifiedAt } : {}),
+    ...(nextAction ? { nextAction } : {}),
+    ...(objective ? { objective } : {}),
+    ...(ownerName ? { ownerName } : {}),
+    ...(startDate ? { startDate } : {}),
+    ...(targetCompletionDate ? { targetCompletionDate } : {}),
+    ...(status ? { status } : {}),
+    ...(preview ? { preview } : {}),
+    ...(industry ? { industry } : {}),
+    ...(clientStage ? { clientStage } : {}),
+    ...(conversationId ? { conversationId } : {}),
+    ...(direction ? { direction } : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
-    provenance: 'LIKELY',
-    classification: 'LIKELY',
+    provenance: classification,
+    classification,
   };
+}
+
+function emptyDocumentOperatingPayload(): AtlasAuthorizedSearch['documents'] {
+  return {
+    kind: 'document_operating_record_v1',
+    policyClass: 'READ_AUTO',
+    binariesInAtlas: false,
+    items: [],
+  };
+}
+
+function emptyProjectOperatingPayload(): AtlasAuthorizedSearch['projects'] {
+  return {
+    kind: 'project_operating_record_v1',
+    policyClass: 'READ_AUTO',
+    invented: false,
+    currentClientsFirst: true,
+    items: [],
+  };
+}
+
+function neverPromoteProjectClassification(
+  value: string | undefined,
+): ProjectOperatingClassification | 'HONEST_EMPTY' {
+  if (
+    value === 'CONFIRMED' ||
+    value === 'LIKELY' ||
+    value === 'PROPOSED' ||
+    value === 'STALE_OR_UNCERTAIN' ||
+    value === 'COMPLETE'
+  ) {
+    return value;
+  }
+  return 'HONEST_EMPTY';
+}
+
+const CONTRACT_SOW_RE = /\b(sow|scope of work|statement of work|contract|agreement|engagement letter)\b/i;
+
+function relatedProjectEvidence(
+  hits: AtlasAuthorizedSearchHit[],
+  clientCode: string | undefined,
+): {
+  timeline: NonNullable<ProjectOperatingRecord['timeline']>;
+  deliverables: string[];
+  evidenceRefs: ProjectOperatingEvidenceRef[];
+  scopeTitle?: string;
+} {
+  const timeline: NonNullable<ProjectOperatingRecord['timeline']> = [];
+  const deliverables: string[] = [];
+  const evidenceRefs: ProjectOperatingEvidenceRef[] = [];
+  let scopeTitle: string | undefined;
+  if (!clientCode) {
+    return { timeline, deliverables, evidenceRefs };
+  }
+  const seen = new Set<string>();
+  for (const hit of hits) {
+    if (hit.clientCode !== clientCode) continue;
+    if (
+      hit.kind !== 'document' &&
+      hit.kind !== 'communication' &&
+      hit.kind !== 'meeting' &&
+      hit.kind !== 'deliverable' &&
+      hit.kind !== 'task'
+    ) {
+      continue;
+    }
+    if (seen.has(hit.id)) continue;
+    seen.add(hit.id);
+    const sourceUrl = authoritativeSourceUrl(hit.webUrl);
+    evidenceRefs.push({
+      kind: hit.kind,
+      id: hit.id,
+      title: hit.title,
+      ...(hit.source ? { source: hit.source } : {}),
+      ...(hit.modifiedAt ? { modifiedAt: hit.modifiedAt } : {}),
+      ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+    });
+    if ((hit.kind === 'meeting' || hit.kind === 'communication') && hit.modifiedAt) {
+      timeline.push({ at: hit.modifiedAt, title: hit.title, source: hit.source || hit.kind });
+    }
+    if (hit.kind === 'deliverable') deliverables.push(hit.title);
+    if (!scopeTitle && hit.kind === 'document' && CONTRACT_SOW_RE.test(hit.title)) {
+      scopeTitle = hit.title;
+    }
+  }
+  timeline.sort((a, b) => a.at.localeCompare(b.at));
+  return { timeline, deliverables, evidenceRefs, ...(scopeTitle ? { scopeTitle } : {}) };
+}
+
+function projectRecordFromCurrentHit(
+  hit: AtlasAuthorizedSearchHit,
+  related: ReturnType<typeof relatedProjectEvidence>,
+): ProjectOperatingRecord | null {
+  const clientCode =
+    hit.clientCode && isCanonicalClientCode(hit.clientCode) ? hit.clientCode : undefined;
+  const fromStatus = hit.status === 'completed' ? 'COMPLETE' : undefined;
+  const copied = neverPromoteProjectClassification(fromStatus || hit.classification);
+  if (copied === 'HONEST_EMPTY') return null;
+  const objective = hit.objective?.trim();
+  const nextAction = hit.nextAction?.trim();
+  const ownerName = hit.ownerName?.trim();
+  const timeline: NonNullable<ProjectOperatingRecord['timeline']> = [];
+  if (hit.startDate) timeline.push({ at: hit.startDate, title: `Start: ${hit.title}`, source: hit.source || 'HVCG_Projects' });
+  if (hit.targetCompletionDate) {
+    timeline.push({
+      at: hit.targetCompletionDate,
+      title: `Target: ${hit.title}`,
+      source: hit.source || 'HVCG_Projects',
+    });
+  }
+  if (hit.modifiedAt) {
+    timeline.push({ at: hit.modifiedAt, title: `Updated: ${hit.title}`, source: hit.source || 'HVCG_Projects' });
+  }
+  timeline.push(...related.timeline);
+  timeline.sort((a, b) => a.at.localeCompare(b.at));
+  return {
+    id: hit.id,
+    title: hit.title,
+    ...(clientCode ? { clientCode } : {}),
+    classification: copied,
+    source: hit.source || 'HVCG_Projects',
+    historicalHvs: false,
+    hubMiRow: true,
+    invented: false,
+    operationalized: Boolean(clientCode),
+    ...(objective ? { objective } : {}),
+    ...(related.scopeTitle ? { scope: related.scopeTitle } : {}),
+    ...(ownerName ? { participants: [ownerName] } : {}),
+    ...(timeline.length ? { timeline } : {}),
+    ...(related.deliverables.length ? { deliverables: related.deliverables } : {}),
+    ...(nextAction ? { nextAction } : {}),
+    ...(related.evidenceRefs.length ? { evidenceRefs: related.evidenceRefs } : {}),
+  };
+}
+
+function projectRecordFromRecoveredHit(
+  hit: AtlasAuthorizedSearchHit,
+): ProjectOperatingRecord | null {
+  const copied = neverPromoteProjectClassification(hit.classification);
+  if (copied === 'HONEST_EMPTY') return null;
+  const clientCode =
+    hit.clientCode && isCanonicalClientCode(hit.clientCode) ? hit.clientCode : undefined;
+  const nextAction = hit.nextAction?.trim() || hit.why.trim();
+  const evidence = hit.evidence?.trim() || hit.basedOn.trim();
+  return {
+    id: hit.id,
+    title: hit.title,
+    ...(clientCode ? { clientCode } : {}),
+    classification: copied,
+    source: hit.source || 'operator_operating_picture',
+    historicalHvs: true,
+    hubMiRow: false,
+    invented: false,
+    operationalized: false,
+    ...(nextAction ? { nextAction } : {}),
+    ...(evidence ? { evidence } : {}),
+  };
+}
+
+function projectOperatingRecords(
+  hits: AtlasAuthorizedSearchHit[],
+  picture: OperatorOperatingPicture,
+  binding: PictureClientBinding | null,
+): ProjectOperatingRecord[] {
+  const items: ProjectOperatingRecord[] = [];
+  const seen = new Set<string>();
+  const push = (row: ProjectOperatingRecord | null) => {
+    if (!row || seen.has(row.id)) return;
+    seen.add(row.id);
+    items.push(row);
+  };
+
+  for (const hit of hits) {
+    if (hit.kind !== 'project') continue;
+    const related = relatedProjectEvidence(hits, hit.clientCode);
+    push(projectRecordFromCurrentHit(hit, related));
+  }
+
+  for (const hit of hits) {
+    if (hit.kind !== 'recovered_project') continue;
+    push(projectRecordFromRecoveredHit(hit));
+  }
+
+  if (binding && picture.hvsDataAccess !== 'BLOCKED') {
+    for (const row of picture.hvsRecoveredProjects) {
+      if (!rowMatchesAuthorizedBinding(row, binding)) continue;
+      const classification = neverPromoteProjectClassification(row.provenance);
+      if (classification === 'HONEST_EMPTY') continue;
+      const clientCode =
+        row.clientCode && isCanonicalClientCode(row.clientCode) ? row.clientCode : undefined;
+      push({
+        id: `picture:project:${row.clientCode || row.client}:${row.title}`,
+        title: row.title,
+        ...(clientCode ? { clientCode } : {}),
+        classification,
+        source: 'operator_operating_picture',
+        historicalHvs: true,
+        hubMiRow: false,
+        invented: false,
+        operationalized: false,
+        nextAction: row.nextAction,
+        evidence: row.evidence,
+      });
+    }
+  }
+
+  items.sort((a, b) => {
+    if (a.historicalHvs !== b.historicalHvs) return a.historicalHvs ? 1 : -1;
+    return a.id.localeCompare(b.id);
+  });
+  return items;
+}
+
+function isCurrentEntitledBinding(
+  principal: AtlasPrincipal,
+  binding: PictureClientBinding,
+): boolean {
+  return Boolean(binding.clientCode && entitledClientCodes(principal).includes(binding.clientCode));
+}
+
+/**
+ * Same project_operating_record_v1 composer as authorizedSearch.projects.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * Historical HVS recovered projects stay read-only. No invented ClientCodes.
+ */
+function composeBoundClientProjects(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['projects'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyProjectOperatingPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.projects;
+}
+
+/**
+ * Same mail_thread_operating_record_v1 composer as authorizedSearch.threads.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * Indexed preview only. Suggested draft stays DRAFT_ONLY.
+ */
+function composeBoundClientThreads(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['threads'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyMailThreadPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.threads;
+}
+
+/**
+ * Same capital_submission_request_v1 composer as authorizedSearch.capitalSubmissions.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * PREPARE_ONLY. External submit stays OWNER-GATED.
+ */
+function composeBoundClientCapitalSubmissions(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['capitalSubmissions'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyCapitalSubmissionPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.capitalSubmissions;
+}
+
+/**
+ * Same research_intelligence_v1 composer as authorizedSearch.researchIntelligence.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * SOURCE_BACKED_ONLY. No live scrape. Lender criteria stay uninvented.
+ */
+function composeBoundClientResearchIntelligence(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['researchIntelligence'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyResearchIntelligencePayload(ctx.now);
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.researchIntelligence;
+}
+
+/**
+ * Same onboarding_agent_v1 composer as authorizedSearch.onboarding.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * OWNER_ESCALATE. Activation / send / Hub-MI stay owner-gated.
+ */
+function composeBoundClientOnboarding(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['onboarding'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyOnboardingPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.onboarding;
+}
+
+/**
+ * Same client_support_agent_v1 composer as authorizedSearch.clientSupport.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * OWNER_ESCALATE. Reply / reassign / send stay owner-gated and draft-only.
+ */
+function composeBoundClientSupport(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['clientSupport'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyClientSupportPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.clientSupport;
+}
+
+/**
+ * After a current entitled binding is resolved, load the same entitled
+ * index rows search_authorized_knowledge already uses. Does not invent a
+ * second CRM or copy HVS folders.
+ */
+export async function loadClientContext(ctx: ToolGatewayContext): Promise<ClientContextToolResult> {
+  if (!canAccessOperatorDesk(ctx.principal)) {
+    return getClientContext(ctx);
+  }
+  if (ctx.entitledIndexHits || !ctx.entitledSearch) {
+    return getClientContext(ctx);
+  }
+  const requested = (ctx.clientCode || ctx.clientQuery || '').trim();
+  if (!requested || ctx.picture.hvsDataAccess === 'BLOCKED') {
+    return getClientContext(ctx);
+  }
+  entitledClientCodes(ctx.principal);
+  const binding = resolveAuthorizedClient(ctx.principal, ctx.picture, requested);
+  if (!binding || !isCurrentEntitledBinding(ctx.principal, binding)) {
+    return getClientContext(ctx);
+  }
+  const found = await ctx.entitledSearch(binding.clientCode);
+  return getClientContext({ ...ctx, entitledIndexHits: found.results });
+}
+
+function documentOperatingRecords(hits: AtlasAuthorizedSearchHit[]): DocumentOperatingRecord[] {
+  const items: DocumentOperatingRecord[] = [];
+  for (const hit of hits) {
+    if (hit.kind !== 'document') continue;
+    const webUrl = authoritativeSourceUrl(hit.webUrl);
+    if (!webUrl) continue;
+    const clientCode =
+      hit.clientCode && isCanonicalClientCode(hit.clientCode) ? hit.clientCode : undefined;
+    const provenance =
+      hit.provenance === 'CONFIRMED' || hit.provenance === 'LIKELY' || hit.provenance === 'PROPOSED'
+        ? hit.provenance
+        : 'PROPOSED';
+    items.push({
+      id: hit.id,
+      title: hit.title,
+      webUrl,
+      ...(hit.modifiedAt ? { modifiedAt: hit.modifiedAt } : {}),
+      ...(clientCode ? { clientCode } : {}),
+      provenance,
+      source: hit.source || 'HVCG_Communications/file-index',
+    });
+  }
+  return items;
 }
 
 function resolveQueueUrgency(row: OperatorOperatingItem): SearchQueueUrgency | null {
@@ -920,6 +1424,13 @@ function emptyAuthorizedSearch(opts?: {
     ran: opts?.ran === true,
     pictureComposed: false,
     actionabilityApplied: false,
+    documents: emptyDocumentOperatingPayload(),
+    projects: emptyProjectOperatingPayload(),
+    threads: emptyMailThreadPayload(),
+    capitalSubmissions: emptyCapitalSubmissionPayload(),
+    researchIntelligence: emptyResearchIntelligencePayload(),
+    onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
   };
 }
 
@@ -955,7 +1466,7 @@ function composeAuthorizedSearch(
   query: string,
   pmHits: AtlasAuthorizedSearchHit[],
   pictureHits: AtlasAuthorizedSearchHit[],
-  opts: { entitled: boolean; ran: boolean },
+  opts: { entitled: boolean; ran: boolean; binding?: PictureClientBinding | null },
 ): AuthorizedSearchToolResult {
   const merged = mergeAuthorizedHits(pmHits, pictureHits).map((hit) =>
     attachExistingQueueActionability(hit, ctx.picture),
@@ -994,6 +1505,24 @@ function composeAuthorizedSearch(
     ran: opts.ran || pictureComposed,
     pictureComposed,
     actionabilityApplied,
+    documents: {
+      kind: 'document_operating_record_v1',
+      policyClass: 'READ_AUTO',
+      binariesInAtlas: false,
+      items: documentOperatingRecords(hits),
+    },
+    projects: {
+      kind: 'project_operating_record_v1',
+      policyClass: 'READ_AUTO',
+      invented: false,
+      currentClientsFirst: true,
+      items: projectOperatingRecords(hits, ctx.picture, opts.binding || null),
+    },
+    threads: composeMailThreadRecords(hits),
+    capitalSubmissions: composeCapitalSubmissionPrepare(hits),
+    researchIntelligence: composeResearchIntelligence(hits, ctx.now),
+    onboarding: composeOnboardingAgent(hits),
+    clientSupport: composeClientSupportAgent(hits),
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),
@@ -1012,6 +1541,7 @@ function composeBoundAuthorizedSearch(
   return composeAuthorizedSearch(ctx, query, pmHits, pictureHits, {
     entitled: true,
     ran: ran || pictureHits.length > 0,
+    binding,
   });
 }
 

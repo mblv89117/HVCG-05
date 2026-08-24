@@ -10,7 +10,8 @@ import { isMannyPrincipal } from './manny.ts';
 import { entitledClientCodes, isInternalStaff } from './authz.ts';
 import type { SharePointPmService } from './repository.ts';
 
-import { isFileIndexRow } from './fabric/fileIndex.ts';
+import { authoritativeSourceUrl, extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
+import { extractMailConversationId, indexedPreviewOnly } from './fabric/mailPreview.ts';
 
 export interface PmSearchHit {
   kind:
@@ -27,12 +28,32 @@ export interface PmSearchHit {
     | 'opportunity'
     | 'lead'
     | 'capital_opportunity'
-    | 'lender';
+    | 'lender'
+    | 'investor';
   id: string;
   clientCode?: string;
   title: string;
   href: string;
   source: string;
+  /** Authoritative SharePoint/OneDrive webUrl. Never SAS or anonymous share. */
+  webUrl?: string;
+  modifiedAt?: string;
+  provenance?: 'CONFIRMED' | 'LIKELY' | 'PROPOSED';
+  /** Copied from an existing entitled HVCG_Projects row. Never invented. */
+  objective?: string;
+  nextAction?: string;
+  ownerName?: string;
+  startDate?: string;
+  targetCompletionDate?: string;
+  status?: string;
+  /** Indexed mail bodyPreview only. Never a live Outlook body fetch. */
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
+  /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
+  industry?: string;
+  /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
+  clientStage?: string;
 }
 
 type LeadRow = {
@@ -231,19 +252,31 @@ export async function searchSharePointPm(
         title: `${c.clientCode} · ${c.displayName}`,
         href: clientHref(c.clientCode),
         source: 'HVCG_Clients',
+        ...(c.industry?.trim() ? { industry: c.industry.trim() } : {}),
+        ...(c.clientStage?.trim() ? { clientStage: c.clientStage.trim() } : {}),
       });
     }
   }
   for (const p of projects) {
     const hay = [p.name, p.nextAction, p.clientCode, p.objective].filter(Boolean).join(' ').toLowerCase();
     if (hay.includes(q)) {
+      const clientCode =
+        p.clientCode && isCanonicalClientCode(p.clientCode) ? p.clientCode : undefined;
       push({
         kind: 'project',
         id: p.id,
-        clientCode: p.clientCode,
+        ...(clientCode ? { clientCode } : {}),
         title: p.name,
         href: projectHref(p.id),
         source: 'HVCG_Projects',
+        provenance: 'CONFIRMED',
+        ...(p.objective ? { objective: p.objective } : {}),
+        ...(p.nextAction ? { nextAction: p.nextAction } : {}),
+        ...(p.ownerName ? { ownerName: p.ownerName } : {}),
+        ...(p.startDate ? { startDate: p.startDate } : {}),
+        ...(p.targetCompletionDate ? { targetCompletionDate: p.targetCompletionDate } : {}),
+        ...(p.status ? { status: p.status } : {}),
+        ...(p.updatedAt ? { modifiedAt: p.updatedAt } : {}),
       });
     }
   }
@@ -270,6 +303,7 @@ export async function searchSharePointPm(
       const title = String(item.title || '');
       const hay = [title, item.summary, item.status].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
+      const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
       push({
         kind,
         id: String(item.id),
@@ -277,6 +311,7 @@ export async function searchSharePointPm(
         title,
         href: clientHref(clientCode),
         source,
+        ...(modifiedAt ? { modifiedAt } : {}),
       });
     }
   };
@@ -301,6 +336,25 @@ export async function searchSharePointPm(
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
       const file = isFileIndexRow(item);
+      const sourceUrl = authoritativeSourceUrl(
+        typeof item.webUrl === 'string'
+          ? item.webUrl
+          : extractSourceUrl(String(item.summary || '')),
+      );
+      const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
+      const summary = String(item.summary || '');
+      const preview = file ? undefined : indexedPreviewOnly(summary);
+      const conversationId = file
+        ? undefined
+        : extractMailConversationId(summary, {
+            conversationId: item.conversationId,
+            sourceItemId: item.sourceItemId,
+            id: item.id,
+          });
+      const direction =
+        item.direction === 'Inbound' || item.direction === 'Outbound' || item.direction === 'Internal'
+          ? item.direction
+          : undefined;
       push({
         kind: file ? 'document' : 'communication',
         id: String(item.id),
@@ -308,6 +362,12 @@ export async function searchSharePointPm(
         title,
         href: clientHref(c.clientCode),
         source: file ? 'HVCG_Communications/file-index' : 'HVCG_Communications',
+        ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+        ...(modifiedAt ? { modifiedAt } : {}),
+        ...(file ? { provenance: 'CONFIRMED' as const } : { provenance: 'PROPOSED' as const }),
+        ...(!file && preview ? { preview } : {}),
+        ...(!file && conversationId ? { conversationId } : {}),
+        ...(!file && direction ? { direction } : {}),
       });
     }
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
@@ -392,12 +452,22 @@ export async function searchSharePointPm(
       if (f.clientCode) continue;
       const hay = [f.title, f.summary].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
+      const sourceUrl = authoritativeSourceUrl(
+        f.webUrl || extractSourceUrl(String(f.summary || '')),
+      );
+      const modifiedAt =
+        'modifiedAt' in f && typeof f.modifiedAt === 'string' && f.modifiedAt.trim()
+          ? f.modifiedAt
+          : undefined;
       push({
         kind: 'document',
         id: f.id,
         title: f.title,
         href: '/documents',
         source: 'HVCG_Communications/file-index',
+        ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+        ...(modifiedAt ? { modifiedAt } : {}),
+        provenance: 'CONFIRMED',
       });
     }
   }

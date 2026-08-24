@@ -25,6 +25,29 @@ export function extractSourceUrl(summary: string): string | undefined {
   return match[1].replace(/[.,;)]+$/, '');
 }
 
+const ANONYMOUS_SHARE_RE =
+  /(?:[?&](?:share|guestaccess|skydriveshare)=)|guestaccess\.aspx|_layouts\/15\/guestaccess/i;
+const SAS_RE = /(?:[?&](?:sv|sig|se|sp|spr|srt|ss|st|sig)=)|blob\.core\.windows\.net/i;
+const AUTHORITATIVE_HOST_RE =
+  /(^|\.)sharepoint\.com$|(^|\.)sharepoint\.us$|(^|\.)office\.com$|(^|\.)office365\.com$|^onedrive\.live\.com$/i;
+
+/**
+ * Graph/SharePoint item webUrl only. Drops anonymous sharing links and SAS.
+ * Never returns a generated or unsigned URL.
+ */
+export function authoritativeSourceUrl(raw?: string): string | undefined {
+  const trimmed = (raw || '').trim().replace(/[.,;)]+$/, '');
+  if (!/^https:\/\//i.test(trimmed)) return undefined;
+  if (ANONYMOUS_SHARE_RE.test(trimmed) || SAS_RE.test(trimmed)) return undefined;
+  try {
+    const host = new URL(trimmed).hostname.toLowerCase();
+    if (!AUTHORITATIVE_HOST_RE.test(host)) return undefined;
+    return trimmed;
+  } catch {
+    return undefined;
+  }
+}
+
 export function fileIndexSummary(opts: {
   restricted: boolean;
   webUrl?: string;

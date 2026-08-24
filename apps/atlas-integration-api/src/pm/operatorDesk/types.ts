@@ -42,6 +42,70 @@ export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as co
 export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' as const;
 export const ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY = 'ATLAS-SEARCH-ACTIONABILITY-001' as const;
 export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-NL-001' as const;
+export const ASK_ATLAS_PROJECT_RECONSTRUCTION_MISSION_KEY = 'ATLAS-PROJECT-RECONSTRUCTION-001' as const;
+export const ASK_ATLAS_PROJECT_CLIENTCTX_MISSION_KEY = 'ATLAS-PROJECT-CLIENTCTX-001' as const;
+export const ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY = 'ATLAS-AI-COMMUNICATIONS-001' as const;
+export const ASK_ATLAS_CAPITAL_SUBMISSION_PREPARE_MISSION_KEY =
+  'ATLAS-CAPITAL-SUBMISSION-PREPARE-001' as const;
+export const ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY =
+  'ATLAS-RESEARCH-INTELLIGENCE-001' as const;
+export const ASK_ATLAS_ONBOARDING_AGENT_MISSION_KEY = 'ATLAS-ONBOARDING-AGENT-001' as const;
+export const ASK_ATLAS_CLIENT_SUPPORT_AGENT_MISSION_KEY = 'ATLAS-CLIENT-SUPPORT-AGENT-001' as const;
+export const ASK_ATLAS_PRODUCT_RESEARCH_AGENT_MISSION_KEY =
+  'ATLAS-PRODUCT-RESEARCH-AGENT-001' as const;
+/** Product research copies entitled Hub health only. Metrics stay uninvented. */
+export const PRODUCT_RESEARCH_AGENT_EXECUTE = false as const;
+export const PRODUCT_RESEARCH_INVENT_METRICS = false as const;
+export const PRODUCT_RESEARCH_SURFACES = [
+  'atlas',
+  'gcc',
+  'copilot',
+  '360',
+  'telemetry',
+  'github',
+  'open_source',
+] as const;
+export type ProductResearchSurface = (typeof PRODUCT_RESEARCH_SURFACES)[number];
+/** Onboarding agent copies entitled intake evidence only. Owner decisions stay escalated. */
+export const ONBOARDING_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
+export const ONBOARDING_AGENT_EXECUTE = false as const;
+export const ONBOARDING_AGENT_ACTIVATE = false as const;
+export const ONBOARDING_AGENT_SEND = false as const;
+export const ONBOARDING_AGENT_LIVE_GTM_OUTBOUND = false as const;
+export const ONBOARDING_AGENT_OWNER_GATED = true as const;
+export const ONBOARDING_AGENT_HUB_MI = false as const;
+/** Client support / routing copies entitled support evidence only. Owner decisions stay escalated. */
+export const CLIENT_SUPPORT_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
+export const CLIENT_SUPPORT_AGENT_EXECUTE = false as const;
+export const CLIENT_SUPPORT_AGENT_SEND = false as const;
+export const CLIENT_SUPPORT_AGENT_AUTO_RESPOND = false as const;
+export const CLIENT_SUPPORT_AGENT_OWNER_GATED = true as const;
+export const CLIENT_SUPPORT_AGENT_HUB_MI = false as const;
+export const CLIENT_SUPPORT_AGENT_DRAFT_ONLY = true as const;
+/** Suggested replies stay draft. AUTO_RESPOND is never enabled. */
+export const COMMUNICATIONS_POLICY_CLASS = 'DRAFT_ONLY' as const;
+export const COMMUNICATIONS_AUTO_RESPOND = false as const;
+export const COMMUNICATIONS_SEND = false as const;
+/** Capital submission requests stay PREPARE_ONLY. External send stays owner-gated. */
+export const CAPITAL_SUBMISSION_POLICY_CLASS = 'PREPARE_ONLY' as const;
+export const CAPITAL_SUBMISSION_SEND = false as const;
+export const CAPITAL_SUBMISSION_EXTERNAL_SUBMIT = false as const;
+export const CAPITAL_SUBMISSION_OWNER_GATED = true as const;
+export const CAPITAL_SUBMISSION_FIT = 'NOT_EVALUATED' as const;
+export const CAPITAL_SUBMISSION_FINANCING_STATUS = 'UNKNOWN' as const;
+/** Research intelligence copies entitled titles only. No live scrape / GTM outbound. */
+export const RESEARCH_INTELLIGENCE_POLICY_CLASS = 'SOURCE_BACKED_ONLY' as const;
+export const RESEARCH_INTELLIGENCE_OUTBOUND_REFRESH = false as const;
+export const RESEARCH_INTELLIGENCE_FINANCING_STATUS = 'UNKNOWN' as const;
+export const RESEARCH_INTELLIGENCE_FIT = 'NOT_EVALUATED' as const;
+export const RESEARCH_SUBJECT_KINDS = [
+  'lender',
+  'investor',
+  'vendor',
+  'client',
+  'industry',
+] as const;
+export type ResearchSubjectKind = (typeof RESEARCH_SUBJECT_KINDS)[number];
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -91,7 +155,8 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_SEARCH_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY
-  | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
+  | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY
+  | typeof ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY;
 
 /**
  * Operating-state words. These are Ask Atlas attention filters, not client
@@ -125,7 +190,8 @@ export type ProductImprovementEvidenceClass =
   | 'event_processing_failure'
   | 'entitled_search_failure'
   | 'production_health_degradation'
-  | 'repeated_failed_workflow';
+  | 'repeated_failed_workflow'
+  | 'recorded_product_surface_gap';
 
 export type ClientContextEvidenceClass =
   | 'recovered_folder_filename'
@@ -160,6 +226,46 @@ export interface AtlasClientContext {
   decisions?: ActionableDecision[];
   nextActions?: string[];
   nextAction?: string;
+  /**
+   * Same copied project_operating_record_v1 payload as authorizedSearch.projects.
+   * Attached only for a bound current entitled client from already-loaded
+   * entitled index rows. Historical HVS recovered projects stay read-only.
+   */
+  projects: {
+    kind: 'project_operating_record_v1';
+    policyClass: 'READ_AUTO';
+    invented: false;
+    currentClientsFirst: true;
+    items: ProjectOperatingRecord[];
+  };
+  /**
+   * Thread context from already-indexed entitled mail previews only.
+   * Suggested reply stays DRAFT_ONLY. Never AUTO_RESPOND / send.
+   */
+  threads: MailThreadOperatingPayload;
+  /**
+   * PREPARE-only capital submission request from already-entitled Atlas/index
+   * evidence. External lender/investor submit stays OWNER-GATED.
+   */
+  capitalSubmissions: CapitalSubmissionPreparePayload;
+  /**
+   * Source-backed research intelligence from already-entitled Atlas/index
+   * evidence and the existing sourced lender catalog titles. Stores source,
+   * retrieval date, confidence, and superseded state. Lender criteria and
+   * financing status are never invented.
+   */
+  researchIntelligence: ResearchIntelligencePayload;
+  /**
+   * Native governed onboarding agent from already-entitled Atlas/index
+   * intake evidence. Activation, completion, Hub-MI, and GTM stay OWNER-GATED.
+   */
+  onboarding: OnboardingAgentPayload;
+  /**
+   * Native governed client support / routing agent from already-entitled
+   * Atlas/index communications, titled support work, and copied queues.
+   * Reply / reassign / close stay OWNER-GATED. Send stays draft-only.
+   */
+  clientSupport: ClientSupportAgentPayload;
 }
 
 export function clientContextMissionKey(
@@ -181,6 +287,9 @@ export interface AtlasAuthorizedSearchHit {
   href?: string;
   source?: string;
   clientCode?: string;
+  /** Authoritative SharePoint/OneDrive webUrl. Never SAS or anonymous share. */
+  webUrl?: string;
+  modifiedAt?: string;
   why: string;
   basedOn: string;
   provenance: AskAtlasClassification | 'HONEST_EMPTY';
@@ -189,6 +298,322 @@ export interface AtlasAuthorizedSearchHit {
   queue?: string;
   evidence?: string;
   nextAction?: string;
+  /** Copied from an existing entitled HVCG_Projects row. Never invented. */
+  objective?: string;
+  ownerName?: string;
+  startDate?: string;
+  targetCompletionDate?: string;
+  status?: string;
+  /** Indexed mail bodyPreview only. Never a live Outlook body fetch. */
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
+  /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
+  industry?: string;
+  /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
+  clientStage?: string;
+}
+
+export interface DocumentOperatingRecord {
+  id: string;
+  title: string;
+  webUrl: string;
+  modifiedAt?: string;
+  clientCode?: string;
+  provenance: AskAtlasClassification;
+  source: string;
+}
+
+export type ProjectOperatingClassification =
+  | 'CONFIRMED'
+  | 'LIKELY'
+  | 'PROPOSED'
+  | 'STALE_OR_UNCERTAIN'
+  | 'COMPLETE';
+
+export interface ProjectOperatingEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  modifiedAt?: string;
+  webUrl?: string;
+}
+
+export interface ProjectOperatingRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  classification: ProjectOperatingClassification;
+  source: string;
+  historicalHvs: boolean;
+  hubMiRow: boolean;
+  invented: false;
+  operationalized: boolean;
+  objective?: string;
+  scope?: string;
+  participants?: string[];
+  timeline?: Array<{ at: string; title: string; source: string }>;
+  deliverables?: string[];
+  nextAction?: string;
+  evidence?: string;
+  evidenceRefs?: ProjectOperatingEvidenceRef[];
+}
+
+export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+
+export interface MailThreadDetectedItem {
+  text: string;
+  classification: AskAtlasClassification;
+  evidence: string;
+}
+
+export interface MailThreadSuggestedDraft {
+  policyClass: typeof COMMUNICATIONS_POLICY_CLASS;
+  send: typeof COMMUNICATIONS_SEND;
+  autoRespond: typeof COMMUNICATIONS_AUTO_RESPOND;
+  subject: string;
+  body: string;
+  status: 'draft';
+}
+
+export interface MailThreadOperatingRecord {
+  id: string;
+  conversationId: string;
+  title: string;
+  clientCode?: string;
+  channel: 'Email';
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
+  preview: string;
+  summary: string;
+  summarySource: 'indexed_preview_only';
+  invented: false;
+  webUrl?: string;
+  modifiedAt?: string;
+  classification: MailThreadEvidenceClass;
+  provenance: MailThreadEvidenceClass;
+  commitments: MailThreadDetectedItem[];
+  unansweredQuestions: MailThreadDetectedItem[];
+  suggestedDraft: MailThreadSuggestedDraft;
+}
+
+export interface MailThreadOperatingPayload {
+  kind: 'mail_thread_operating_record_v1';
+  policyClass: typeof COMMUNICATIONS_POLICY_CLASS;
+  invented: false;
+  autoRespond: typeof COMMUNICATIONS_AUTO_RESPOND;
+  send: typeof COMMUNICATIONS_SEND;
+  indexedPreviewOnly: true;
+  items: MailThreadOperatingRecord[];
+}
+
+export type CapitalSubmissionEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+
+export interface CapitalSubmissionEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  classification: AskAtlasClassification;
+  webUrl?: string;
+}
+
+export interface CapitalSubmissionCatalogCopy {
+  lenderId: string;
+  lenderName: string;
+  classification: AskAtlasClassification;
+  fit: typeof CAPITAL_SUBMISSION_FIT;
+  criteriaInvented: false;
+  invented: false;
+  evidence: string;
+}
+
+export interface CapitalSubmissionPrepareRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  classification: CapitalSubmissionEvidenceClass;
+  provenance: CapitalSubmissionEvidenceClass;
+  invented: false;
+  financingStatus: typeof CAPITAL_SUBMISSION_FINANCING_STATUS;
+  financingStatusClassification: 'HONEST_EMPTY';
+  lenderCriteriaInvented: false;
+  evidence: CapitalSubmissionEvidenceRef[];
+  missingRequirements: string[];
+  nextAction: string;
+}
+
+export interface CapitalSubmissionPreparePayload {
+  kind: 'capital_submission_request_v1';
+  policyClass: typeof CAPITAL_SUBMISSION_POLICY_CLASS;
+  invented: false;
+  send: typeof CAPITAL_SUBMISSION_SEND;
+  externalSubmit: typeof CAPITAL_SUBMISSION_EXTERNAL_SUBMIT;
+  ownerGated: typeof CAPITAL_SUBMISSION_OWNER_GATED;
+  catalogCopies: CapitalSubmissionCatalogCopy[];
+  items: CapitalSubmissionPrepareRecord[];
+}
+
+export type ResearchIntelligenceEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+
+export interface ResearchIntelligenceRecord {
+  id: string;
+  subjectKind: ResearchSubjectKind;
+  title: string;
+  source: string;
+  retrievalDate: string;
+  confidence: ResearchIntelligenceEvidenceClass;
+  superseded: boolean;
+  supersededBy?: string;
+  clientCode?: string;
+  classification: ResearchIntelligenceEvidenceClass;
+  invented: false;
+  lenderCriteriaInvented: false;
+  financingStatus: typeof RESEARCH_INTELLIGENCE_FINANCING_STATUS;
+  fit: typeof RESEARCH_INTELLIGENCE_FIT;
+  evidence: string;
+}
+
+export interface ResearchIntelligencePayload {
+  kind: 'research_intelligence_v1';
+  policyClass: typeof RESEARCH_INTELLIGENCE_POLICY_CLASS;
+  invented: false;
+  outboundRefresh: typeof RESEARCH_INTELLIGENCE_OUTBOUND_REFRESH;
+  financingStatus: typeof RESEARCH_INTELLIGENCE_FINANCING_STATUS;
+  lenderCriteriaInvented: false;
+  retrievedAt: string;
+  items: ResearchIntelligenceRecord[];
+}
+
+export type OnboardingEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+export type OnboardingEvidenceKind =
+  | 'client'
+  | 'lead'
+  | 'project'
+  | 'task'
+  | 'opportunity'
+  | 'recovered_client';
+
+export interface OnboardingEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  classification: AskAtlasClassification;
+}
+
+export interface OnboardingOwnerDecision {
+  decision: string;
+  status: 'escalated';
+  execute: false;
+}
+
+export interface OnboardingAgentRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  clientStage?: string;
+  evidenceKind: OnboardingEvidenceKind;
+  classification: OnboardingEvidenceClass;
+  provenance: OnboardingEvidenceClass;
+  invented: false;
+  hubMiRow: false;
+  execute: false;
+  activate: false;
+  send: false;
+  liveGtmOutbound: false;
+  evidence: OnboardingEvidenceRef[];
+  missingRequirements: string[];
+  ownerDecisions: OnboardingOwnerDecision[];
+  nextAction: string;
+}
+
+export interface OnboardingAgentPayload {
+  kind: 'onboarding_agent_v1';
+  policyClass: typeof ONBOARDING_AGENT_POLICY_CLASS;
+  invented: false;
+  execute: typeof ONBOARDING_AGENT_EXECUTE;
+  activate: typeof ONBOARDING_AGENT_ACTIVATE;
+  send: typeof ONBOARDING_AGENT_SEND;
+  liveGtmOutbound: typeof ONBOARDING_AGENT_LIVE_GTM_OUTBOUND;
+  ownerGated: typeof ONBOARDING_AGENT_OWNER_GATED;
+  hubMi: typeof ONBOARDING_AGENT_HUB_MI;
+  items: OnboardingAgentRecord[];
+}
+
+export type ClientSupportEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+export type ClientSupportEvidenceKind =
+  | 'communication'
+  | 'task'
+  | 'meeting'
+  | 'decision'
+  | 'deliverable'
+  | 'queue_item'
+  | 'recovered_client';
+
+export interface ClientSupportEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  classification: AskAtlasClassification;
+}
+
+export interface ClientSupportOwnerDecision {
+  decision: string;
+  status: 'escalated';
+  execute: false;
+}
+
+export interface ClientSupportAgentRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  evidenceKind: ClientSupportEvidenceKind;
+  /** Copied existing operator queue, or Owner review. Never invented. */
+  suggestedRoute: string;
+  classification: ClientSupportEvidenceClass;
+  provenance: ClientSupportEvidenceClass;
+  invented: false;
+  hubMiRow: false;
+  execute: false;
+  send: false;
+  autoRespond: false;
+  draftOnly: true;
+  evidence: ClientSupportEvidenceRef[];
+  missingRequirements: string[];
+  ownerDecisions: ClientSupportOwnerDecision[];
+  nextAction: string;
+}
+
+export interface ClientSupportAgentPayload {
+  kind: 'client_support_agent_v1';
+  policyClass: typeof CLIENT_SUPPORT_AGENT_POLICY_CLASS;
+  invented: false;
+  execute: typeof CLIENT_SUPPORT_AGENT_EXECUTE;
+  send: typeof CLIENT_SUPPORT_AGENT_SEND;
+  autoRespond: typeof CLIENT_SUPPORT_AGENT_AUTO_RESPOND;
+  draftOnly: typeof CLIENT_SUPPORT_AGENT_DRAFT_ONLY;
+  ownerGated: typeof CLIENT_SUPPORT_AGENT_OWNER_GATED;
+  hubMi: typeof CLIENT_SUPPORT_AGENT_HUB_MI;
+  items: ClientSupportAgentRecord[];
+}
+
+export interface ProductResearchSurfaceRecord {
+  surface: ProductResearchSurface;
+  status: 'evaluated' | 'honest_empty';
+  invented: false;
+  inventMetrics: false;
+  basedOn: string;
+}
+
+export interface ProductResearchAgentPayload {
+  kind: 'product_research_agent_v1';
+  missionKey: typeof ASK_ATLAS_PRODUCT_RESEARCH_AGENT_MISSION_KEY;
+  invented: false;
+  inventMetrics: false;
+  execute: typeof PRODUCT_RESEARCH_AGENT_EXECUTE;
+  surfaces: ProductResearchSurfaceRecord[];
 }
 
 export interface AtlasAuthorizedSearch {
@@ -198,6 +623,24 @@ export interface AtlasAuthorizedSearch {
   query: string;
   hitCount: number;
   hits: AtlasAuthorizedSearchHit[];
+  documents: {
+    kind: 'document_operating_record_v1';
+    policyClass: 'READ_AUTO';
+    binariesInAtlas: false;
+    items: DocumentOperatingRecord[];
+  };
+  projects: {
+    kind: 'project_operating_record_v1';
+    policyClass: 'READ_AUTO';
+    invented: false;
+    currentClientsFirst: true;
+    items: ProjectOperatingRecord[];
+  };
+  threads: MailThreadOperatingPayload;
+  capitalSubmissions: CapitalSubmissionPreparePayload;
+  researchIntelligence: ResearchIntelligencePayload;
+  onboarding: OnboardingAgentPayload;
+  clientSupport: ClientSupportAgentPayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;
@@ -438,6 +881,14 @@ export interface OperatorSearchHit {
   kind?: string;
   href?: string;
   clientCode?: string;
+  source?: string;
+  webUrl?: string;
+  modifiedAt?: string;
+  provenance?: AskAtlasClassification;
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
+  industry?: string;
 }
 
 export interface OperatorDeskModel {
