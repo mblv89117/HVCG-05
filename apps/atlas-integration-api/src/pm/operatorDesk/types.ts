@@ -348,10 +348,15 @@ export interface AtlasClientContext {
    * authorized same-scope documents / hits kind=document (same
    * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path as
    * meetings / research-intel / projects / threads / capital /
-   * onboarding). Missing / non-canonical ClientCode omits
-   * researchRelationship / relatedDocuments (fail-closed; never guess).
-   * No downloadUrl. OWNER_ESCALATE / execute=false / send=false /
-   * autoRespond=false / draftOnly=true / hubMi=false stay as composed.
+   * onboarding). Optional relatedProjects is the inverse of
+   * document.relatedProject (same RelatedDocumentProjectRef /
+   * relatedProjects path as research-intel / onboarding). Missing /
+   * non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments / relatedProjects (fail-closed; never guess).
+   * No downloadUrl. hubMiRow is copied as composed on the source
+   * project (never invented). OWNER_ESCALATE / execute=false /
+   * send=false / autoRespond=false / draftOnly=true / hubMi=false stay
+   * as composed.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
@@ -1141,6 +1146,23 @@ export interface ClientSupportAgentRecord {
    * document.clientSupportRelationship field.
    */
   relatedDocuments?: RelatedMeetingDocumentRef[];
+  /**
+   * Inverse of document.relatedProject: already-authorized same-scope
+   * project operating records. Reuses RelatedDocumentProjectRef /
+   * relatedProjects(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped projects.
+   * Unscoped lender catalog titles never attach scoped projects.
+   * Client A never receives Client B. Classification stays CONFIRMED /
+   * LIKELY / PROPOSED / STALE_OR_UNCERTAIN / COMPLETE. hubMiRow is
+   * copied as composed on the source project (never invented). Never
+   * downloadUrl, transcript, attendees, TargetAmount, invented titles,
+   * ClientCodes, execute, send, or autoRespond. OWNER_ESCALATE /
+   * execute=false / send=false / autoRespond=false / draftOnly=true /
+   * hubMi=false stay as composed. No invented facts. No new project /
+   * support product.
+   */
+  relatedProjects?: RelatedDocumentProjectRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -1286,9 +1308,11 @@ export interface AtlasAuthorizedSearch {
    * researchRelationship copies already-authorized same-scope
    * researchIntelligence items. Optional relatedDocuments copies
    * already-authorized same-scope documents / hits kind=document (same
-   * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path). Empty
-   * payload stays empty. Missing / non-canonical ClientCode omits
-   * relatedMeetings / researchRelationship / relatedDocuments.
+   * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path). Optional
+   * relatedProjects is the inverse of document.relatedProject (same
+   * RelatedDocumentProjectRef / relatedProjects path). Empty payload
+   * stays empty. Missing / non-canonical ClientCode omits relatedMeetings /
+   * researchRelationship / relatedDocuments / relatedProjects.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
