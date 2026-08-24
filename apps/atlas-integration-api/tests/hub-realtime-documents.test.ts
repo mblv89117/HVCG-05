@@ -602,10 +602,10 @@ describe('secure Graph driveItem preview for indexed documents', () => {
     assert.equal(own?.previewStatus, 'ready');
     assert.equal(own?.previewGetUrl, PREVIEW_GET);
     assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
-    assert.equal(own?.relatedEmail?.some((row) => row.id === 'mail-pdg'), false);
-    assert.equal(own?.relatedProject?.some((row) => row.id === 'proj-pdg'), false);
-    assert.equal(own?.relatedContract?.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
-    assert.equal(own?.capitalRelationship?.some((row) => row.id === 'cap-pdg'), false);
+    assert.equal((own?.relatedEmail || []).some((row) => row.id === 'mail-pdg'), false);
+    assert.equal((own?.relatedProject || []).some((row) => row.id === 'proj-pdg'), false);
+    assert.equal((own?.relatedContract || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal((own?.capitalRelationship || []).some((row) => row.id === 'cap-pdg'), false);
     assert.equal(JSON.stringify(own).includes('PDG01'), false);
     if (foreign) {
       assert.equal(foreign.relatedEmail, undefined);
@@ -932,10 +932,10 @@ describe('related operating context on entitled documents', () => {
     });
     const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
     assert.ok(memo);
-    assert.equal(memo.relatedEmail?.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
-    assert.equal(memo.relatedProject?.some((row) => /pdg/i.test(row.id)), false);
-    assert.equal(memo.relatedContract?.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
-    assert.equal(memo.capitalRelationship?.some((row) => /pdg/i.test(row.id)), false);
+    assert.equal((memo.relatedEmail || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal((memo.relatedProject || []).some((row) => /pdg/i.test(row.id)), false);
+    assert.equal((memo.relatedContract || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal((memo.capitalRelationship || []).some((row) => /pdg/i.test(row.id)), false);
     assert.equal(JSON.stringify(memo).includes('PDG01'), false);
     noFabricatedRelatedFacts(memo);
     assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
