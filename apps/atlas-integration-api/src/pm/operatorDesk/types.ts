@@ -410,6 +410,16 @@ export interface DocumentOperatingRecord {
    * authorization. Never binaries, SAS, or anonymous share URLs.
    */
   relatedAttachments?: RelatedDocumentAttachmentRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items (same RelatedMeetingResearchRef
+   * as meetings / onboarding / client support / capital). Omitted when
+   * ClientCode is missing / non-canonical (fail-closed; never guess).
+   * Unscoped lender catalog titles never attach to a scoped document.
+   * No downloadUrl, transcript, attendees, TargetAmount, or invented
+   * criteria.
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
   /** Parent Outlook message id from the existing attachment index. */
   parentMessageId?: string;
   attachmentId?: string;
@@ -511,7 +521,8 @@ export interface RelatedMeetingDocumentRef {
 /**
  * Inverse of researchIntelligence.relatedMeetings. Reused on
  * MeetingOperatingRecord, OnboardingAgentRecord,
- * ClientSupportAgentRecord, and CapitalSubmissionPrepareRecord.
+ * ClientSupportAgentRecord, CapitalSubmissionPrepareRecord, and
+ * DocumentOperatingRecord.
  * Honesty mirrors RelatedDocumentCapitalRef: source-backed titles
  * only. Never downloadUrl, transcript, attendees, TargetAmount, or
  * invented lender criteria.
@@ -949,6 +960,14 @@ export interface AtlasAuthorizedSearch {
   query: string;
   hitCount: number;
   hits: AtlasAuthorizedSearchHit[];
+  /**
+   * First-class entitled document operating records. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / onboarding / client support / capital). Missing /
+   * non-canonical ClientCode omits researchRelationship (fail-closed;
+   * never guess). Preview stays time-limited Graph preview only.
+   */
   documents: {
     kind: 'document_operating_record_v1';
     policyClass: 'READ_AUTO';

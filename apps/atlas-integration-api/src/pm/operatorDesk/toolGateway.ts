@@ -1384,10 +1384,11 @@ async function withDocumentVersions(
 
 /**
  * Copy already-authorized email / project / contract / capital / indexed
- * outlook-mail-attachment / HVCG_Meetings metadata onto entitled documents.
- * Runs after authorization and after secure preview attach. Does not invent
- * ClientCodes, Hub-MI, lender criteria, financing status, binaries, or
- * anonymous URLs. Does not issue a new Graph calendar query.
+ * outlook-mail-attachment / HVCG_Meetings / researchIntelligence metadata
+ * onto entitled documents. Runs after authorization and after secure
+ * preview attach. Does not invent ClientCodes, Hub-MI, lender criteria,
+ * financing status, binaries, or anonymous URLs. Does not issue a new
+ * Graph calendar or research query.
  */
 function withDocumentRelatedContext(
   ctx: ToolGatewayContext,

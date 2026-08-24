@@ -13,6 +13,8 @@
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
+ * Documents reuse the same researchRelationship inverse already live on
+ * meetings / onboarding / client support / capital.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / .clientSupport / .onboarding
  * / .researchIntelligence / fabric mail-attachment index rows / entitled
@@ -391,6 +393,7 @@ export function attachRelatedContextToDocument(
   const capitalRelationship = relatedCapital(item, search);
   const relatedMeetingsList = relatedMeetings(item, search);
   const relatedAttachmentsList = relatedAttachments(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedEmail.length ? { relatedEmail } : {}),
@@ -399,6 +402,7 @@ export function attachRelatedContextToDocument(
     ...(capitalRelationship.length ? { capitalRelationship } : {}),
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 
@@ -484,8 +488,8 @@ function relatedDocumentsForMeeting(
  * Inverse of researchIntelligence.relatedMeetings: entitled same-scope
  * research already on authorizedSearch.researchIntelligence.items
  * (hits already composed into that payload — no new research query).
- * Shared by meetings, onboarding, client support, and capital.
- * Isolation: sameRelatedScope + entitledClientCodes +
+ * Shared by meetings, onboarding, client support, capital, and
+ * documents. Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed: missing / non-canonical
  * ClientCode on the scoped item omits researchRelationship (never
  * guess). Unscoped lender catalog titles never attach to a scoped
