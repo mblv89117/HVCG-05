@@ -9,8 +9,9 @@
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings and onboarding → research links
  * on OnboardingAgentRecord items, and the inverse
- * research-intelligence → meetings and
- * research-intelligence → documents links on
+ * research-intelligence → meetings,
+ * research-intelligence → documents, and
+ * research-intelligence → projects links on
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
@@ -224,7 +225,7 @@ function relatedProjects(
 ): RelatedDocumentProjectRef[] {
   const out: RelatedDocumentProjectRef[] = [];
   const seen = new Set<string>();
-  for (const project of search.projects.items) {
+  for (const project of search.projects?.items || []) {
     if (project.id === item.id) continue;
     if (!sameRelatedScope(item.clientCode, project.clientCode)) continue;
     if (seen.has(project.id)) continue;
@@ -780,20 +781,26 @@ export function attachRelatedContextToOnboarding(
 }
 
 /**
- * Inverse of meeting research evidence + document.researchRelationship:
- * entitled same-scope meetings already on authorizedSearch.meetings.items
- * or hits kind=meeting, and entitled same-scope documents already on
- * authorizedSearch.documents.items or hits kind=document (reuses
- * relatedDocumentsForMeeting / RelatedMeetingDocumentRef — no new query).
+ * Inverse of meeting research evidence + document.researchRelationship +
+ * project.researchRelationship: entitled same-scope meetings already on
+ * authorizedSearch.meetings.items or hits kind=meeting, entitled
+ * same-scope documents already on authorizedSearch.documents.items or
+ * hits kind=document (reuses relatedDocumentsForMeeting /
+ * RelatedMeetingDocumentRef — no new query), and entitled same-scope
+ * projects already on authorizedSearch.projects.items (reuses
+ * relatedProjects / RelatedDocumentProjectRef — no new query).
  * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
  * ClientCode is missing / non-canonical — omit relatedMeetings /
- * relatedDocuments rather than guess. Unscoped never receives scoped
- * relations. Unscoped lender catalog rows never receive scoped documents.
- * Client A never receives Client B. SAS / anonymous webUrl dropped. No
- * downloadUrl. No transcript text. SOURCE_BACKED_ONLY /
- * outboundRefresh=false / financingStatus UNKNOWN / fit NOT_EVALUATED /
- * lenderCriteriaInvented=false stay as composed. Preview stays off this
- * slice (refs only). No new Graph calendar / document query.
+ * relatedDocuments / relatedProjects rather than guess. Unscoped never
+ * receives scoped relations. Unscoped lender catalog rows never receive
+ * scoped documents or projects. Client A never receives Client B. SAS /
+ * anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * SOURCE_BACKED_ONLY / outboundRefresh=false / financingStatus UNKNOWN /
+ * fit NOT_EVALUATED / lenderCriteriaInvented=false stay as composed.
+ * Project classification stays CONFIRMED / LIKELY / PROPOSED /
+ * STALE_OR_UNCERTAIN / COMPLETE. hubMiRow stays as composed on the
+ * source project (never invented). Preview stays off this slice
+ * (refs only). No new Graph calendar / document / project query.
  */
 export function attachRelatedContextToResearchIntelligenceRecord(
   principal: AtlasPrincipal,
@@ -804,10 +811,12 @@ export function attachRelatedContextToResearchIntelligenceRecord(
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
+  const relatedProjectsList = relatedProjects(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
+    ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
   };
 }
 
