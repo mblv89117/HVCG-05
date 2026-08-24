@@ -240,7 +240,7 @@ export function createGraphTransport(
     } catch (err) {
       if (err instanceof PmHttpError) throw err;
       if (err && typeof err === 'object' && 'code' in err && 'status' in err) throw err;
-      rejected('SharePoint PM Graph request failed.');
+      rejected('SharePoint PM Graph transport failed (HTTP 0).');
     } finally {
       clearTimeout(timer);
     }
@@ -254,12 +254,21 @@ export function createGraphTransport(
       throw new PmHttpError(404, 'not_found', 'not_found');
     }
     if (status === 401 || status === 403) {
-      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM permission or token was rejected.');
+      throw pmInfrastructureError(
+        'PM_BACKEND_UNAVAILABLE',
+        `SharePoint PM permission or token was rejected (HTTP ${status}).`,
+      );
     }
     if (status >= 500) {
-      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM Graph request failed.');
+      throw pmInfrastructureError(
+        'PM_BACKEND_UNAVAILABLE',
+        `SharePoint PM Graph request failed (HTTP ${status}).`,
+      );
     }
-    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'SharePoint PM Graph request failed.');
+    throw pmInfrastructureError(
+      'PM_BACKEND_UNAVAILABLE',
+      `SharePoint PM Graph request failed (HTTP ${status}).`,
+    );
   }
 
   function itemsCollectionUrl(listId: string, search: string): string {

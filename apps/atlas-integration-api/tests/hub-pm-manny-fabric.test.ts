@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -13,6 +15,12 @@ import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
 import { assertMannyOnly, isMannyPrincipal, MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
+import { loadConfig, type AppConfig } from '../src/config.ts';
+import { buildRegistry } from '../src/connectors/registry.ts';
+import { handleRequest } from '../src/http/router.ts';
+import { createLocalAiAdapter } from '../src/local-ai/adapter.ts';
+import { PmRepository } from '../src/pm/repository.ts';
+import { IntegrationRepository } from '../src/store/repository.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 
@@ -222,6 +230,59 @@ describe('Fabric mail delta checkpointing', () => {
     };
   }
 
+  function serviceHintsThrowPmGraph() {
+    const communications: Array<Record<string, unknown>> = [];
+    return {
+      communications,
+      async listClientHints() {
+        throw new PmHttpError(
+          503,
+          'PM_BACKEND_UNAVAILABLE',
+          'SharePoint PM Graph request failed (HTTP 500).',
+          'unavailable',
+        );
+      },
+      async upsertCommunicationIndex(row: Record<string, unknown>) {
+        communications.push(row);
+      },
+      async upsertMeetingIndex() {
+        /* not exercised */
+      },
+      async upsertContactIndex() {
+        /* not exercised */
+      },
+    };
+  }
+
+  function serviceUpsertThrowPmGraph() {
+    const communications: Array<Record<string, unknown>> = [];
+    return {
+      communications,
+      async listClientHints() {
+        return [{ clientCode: 'CCB01', displayName: 'Colorado Craft Beef', dba: 'Colorado Craft Beef' }];
+      },
+      async upsertCommunicationIndex() {
+        throw new PmHttpError(
+          503,
+          'PM_BACKEND_UNAVAILABLE',
+          'SharePoint PM Graph transport failed (HTTP 0).',
+          'unavailable',
+        );
+      },
+      async upsertMeetingIndex() {
+        throw new PmHttpError(
+          503,
+          'PM_BACKEND_UNAVAILABLE',
+          'SharePoint PM Graph transport failed (HTTP 0).',
+          'unavailable',
+        );
+      },
+      async upsertContactIndex() {
+        /* not exercised */
+      },
+    };
+  }
+
   function graph(
     paths: string[],
     firstMailStatus = 200,
@@ -368,6 +429,59 @@ describe('Fabric mail delta checkpointing', () => {
     }
   });
 
+  it('records mail delta HTTP when SharePoint PM Graph throws during client hints', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-hints-pm-graph-'));
+    const svc = serviceHintsThrowPmGraph();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.checkpoint.mailMode, 'delta');
+      assert.equal(result.checkpoint.mailDeltaReady, true);
+      assert.ok(result.notes.some((note) => /Mail delta reached HTTP 200/.test(note)));
+      assert.ok(result.notes.some((note) => /Client hints unavailable/.test(note) && /HTTP 500/.test(note)));
+      assert.equal(svc.communications.every((row) => !row.clientCode || row.clientCode === 'CCB01'), true);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.mailMode, 'delta');
+      assert.ok(health.notes.some((note) => /Mail delta reached HTTP 200/.test(note)));
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('records mail delta HTTP when SharePoint PM Graph throws during upsert', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-upsert-pm-graph-'));
+    const svc = serviceUpsertThrowPmGraph();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 0);
+      assert.equal(result.checkpoint.mailMode, 'delta');
+      assert.equal(result.checkpoint.mailDeltaReady, true);
+      assert.ok(result.notes.some((note) => /Mail delta reached HTTP 200/.test(note)));
+      assert.ok(result.notes.some((note) => /mail index write skipped/.test(note) && /HTTP 0/.test(note)));
+      assert.equal(svc.communications.length, 0);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.mailMode, 'delta');
+      assert.equal(health.mailDeltaReady, true);
+      assert.equal(health.honesty, 'degraded');
+      assert.ok(health.notes.some((note) => /Mail delta reached HTTP 200/.test(note)));
+      assert.equal(/CCB99|PDG01|deltatoken|https?:\/\/|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('resumes the stored inbox delta link on the next bounded run', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-resume-'));
     const svc = service();
@@ -507,6 +621,82 @@ describe('Fabric sync honesty status', () => {
       assert.equal(/deltatoken|CCB99|PDG01/.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Unsigned fabric HTTP fail-close', () => {
+  it('unsigned POST /api/pm/fabric/sync stays 401 and does not invent ClientCodes', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-unsigned-'));
+    const prev = {
+      NODE_ENV: process.env.NODE_ENV,
+      REQUIRE: process.env.INTEGRATION_REQUIRE_AUTH,
+      INSECURE: process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH,
+      HOST: process.env.INTEGRATION_HOST,
+      KEY: process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY,
+      TENANT: process.env.MICROSOFT_TENANT_ID,
+      PM: process.env.INTEGRATION_PM_BACKEND,
+    };
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    process.env.INTEGRATION_HOST = '127.0.0.1';
+    process.env.MICROSOFT_TENANT_ID = '11111111-1111-1111-1111-111111111111';
+    process.env.INTEGRATION_PM_BACKEND = 'development-json';
+    delete process.env.INTEGRATION_REQUIRE_AUTH;
+    delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
+    const cfg: AppConfig = {
+      ...loadConfig(),
+      verifyAccessToken: async () => {
+        const err = new Error('Invalid or expired Microsoft token') as Error & { status: number; code: string };
+        err.status = 401;
+        err.code = 'invalid_token';
+        throw err;
+      },
+    };
+    const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
+    const pm = new PmRepository(dir);
+    const app = buildRegistry(cfg, repo);
+    const localAi = createLocalAiAdapter({ env: { LOCAL_AI_ENABLED: undefined }, secretsFileEnv: {} });
+    const server = createServer((req, res) => {
+      handleRequest({ cfg, repo, app, pm, localAi }, req, res).catch((err) => {
+        res.writeHead(500, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'server_error', message: String(err) }));
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const unsigned = await fetch(`http://127.0.0.1:${port}/api/pm/fabric/sync`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+      });
+      assert.equal(unsigned.status, 401);
+      const unsignedText = await unsigned.text();
+      assert.equal(/CCB99|PDG01|deltatoken|mailThreads/i.test(unsignedText), false);
+      const garbage = await fetch(`http://127.0.0.1:${port}/api/pm/fabric/sync`, {
+        method: 'POST',
+        headers: { authorization: 'Bearer garbage-token', 'content-type': 'application/json' },
+        body: '{}',
+      });
+      assert.equal(garbage.status, 401);
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+      rmSync(dir, { recursive: true, force: true });
+      if (prev.NODE_ENV === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = prev.NODE_ENV;
+      if (prev.REQUIRE === undefined) delete process.env.INTEGRATION_REQUIRE_AUTH;
+      else process.env.INTEGRATION_REQUIRE_AUTH = prev.REQUIRE;
+      if (prev.INSECURE === undefined) delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
+      else process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH = prev.INSECURE;
+      if (prev.HOST === undefined) delete process.env.INTEGRATION_HOST;
+      else process.env.INTEGRATION_HOST = prev.HOST;
+      if (prev.KEY === undefined) delete process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY;
+      else process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = prev.KEY;
+      if (prev.TENANT === undefined) delete process.env.MICROSOFT_TENANT_ID;
+      else process.env.MICROSOFT_TENANT_ID = prev.TENANT;
+      if (prev.PM === undefined) delete process.env.INTEGRATION_PM_BACKEND;
+      else process.env.INTEGRATION_PM_BACKEND = prev.PM;
     }
   });
 });

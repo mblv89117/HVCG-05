@@ -115,18 +115,24 @@ export async function indexBusinessFiles(opts: {
     const restricted = classified.ingest === 'metadata_link';
     if (restricted) indexed.restricted += 1;
     const key = `file:${itemId}`;
-    await opts.service.upsertCommunicationIndex({
-      title: name.slice(0, 255),
-      summary: fileIndexSummary({ restricted, webUrl: item.webUrl, idempotencyKey: key }),
-      clientCode,
-      channel: 'Other',
-      webUrl: item.webUrl,
-      sourceMessageId: itemId,
-      classification: internalUnclassified ? 'INTERNAL' : classified.classification,
-      provenanceSource: 'sharepoint-file',
-      sourceOrg: 'HVCG',
-      idempotencyKey: key,
-    });
+    try {
+      await opts.service.upsertCommunicationIndex({
+        title: name.slice(0, 255),
+        summary: fileIndexSummary({ restricted, webUrl: item.webUrl, idempotencyKey: key }),
+        clientCode,
+        channel: 'Other',
+        webUrl: item.webUrl,
+        sourceMessageId: itemId,
+        classification: internalUnclassified ? 'INTERNAL' : classified.classification,
+        provenanceSource: 'sharepoint-file',
+        sourceOrg: 'HVCG',
+        idempotencyKey: key,
+      });
+    } catch (err) {
+      const detail = err instanceof Error && err.message.trim() ? err.message : 'isolated failure without HTTP status';
+      opts.notes.push(`SharePoint file index write skipped: ${detail}`);
+      return;
+    }
     indexed.files += 1;
   };
 

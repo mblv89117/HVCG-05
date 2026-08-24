@@ -7,6 +7,7 @@
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AtlasPrincipal } from '../../../middleware/auth.ts';
+import { PmHttpError } from '../errors.ts';
 import { assertMannyOnly } from '../manny.ts';
 import { MANNY_ENTRA_OID } from '../manny.ts';
 import type { SharePointPmService } from '../repository.ts';
@@ -118,6 +119,54 @@ function attachmentMetadataUrl(messageId: string): string {
   return `/v1.0/users/${MANNY_ENTRA_OID}/messages/${encodeURIComponent(messageId)}/attachments?$select=id,name,contentType,size&$top=${MAX_ATTACHMENTS_PER_MESSAGE}`;
 }
 
+function isolatedFailureNote(label: string, err: unknown): string {
+  if (err instanceof PmHttpError) return `${label}: ${err.message}`;
+  if (err instanceof Error && err.message.trim()) return `${label}: ${err.message}`;
+  return `${label}: isolated failure without HTTP status.`;
+}
+
+function persistFabricProgress(dir: string, cp: FabricCheckpoint, notes: string[]): void {
+  cp.lastAttemptAt = new Date().toISOString();
+  cp.lastNotes = sanitizeFabricNotes(notes);
+  saveCheckpoint(dir, cp);
+}
+
+async function readFabricJson(
+  fabric: FabricGraphClient,
+  url: string,
+  notes: string[],
+  label: string,
+): Promise<{ status: number; json: Record<string, unknown> }> {
+  try {
+    return await fabric.getJson(url);
+  } catch (err) {
+    notes.push(isolatedFailureNote(`${label} did not return HTTP`, err));
+    return { status: 0, json: {} };
+  }
+}
+
+async function tryPmIndex(
+  notes: string[],
+  label: string,
+  write: () => Promise<void>,
+): Promise<boolean> {
+  try {
+    await write();
+    return true;
+  } catch (err) {
+    const note = isolatedFailureNote(`${label} skipped`, err);
+    if (!notes.some((existing) => existing.startsWith(`${label} skipped`))) notes.push(note);
+    return false;
+  }
+}
+
+function recordMailHttpFact(notes: string[], mailMode: 'delta' | 'page', status: number): void {
+  const fact = `Mail ${mailMode} reached HTTP ${status}.`;
+  const prior = notes.findIndex((note) => /^Mail (delta|page) reached HTTP /.test(note));
+  if (prior >= 0) notes.splice(prior, 1);
+  notes.push(fact);
+}
+
 export async function runFabricSync(opts: {
   principal?: AtlasPrincipal;
   service: SharePointPmService;
@@ -142,8 +191,8 @@ export async function runFabricSync(opts: {
         domains: [],
       }),
     );
-  } catch {
-    notes.push('Client hints unavailable; fabric sync continued with empty client resolver.');
+  } catch (err) {
+    notes.push(isolatedFailureNote('Client hints unavailable; fabric sync continued with empty client resolver', err));
   }
   const cp = loadCheckpoint(opts.dataDir);
   const indexed = { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 };
@@ -152,14 +201,19 @@ export async function runFabricSync(opts: {
   let attachmentLookups = 0;
   let mailUrl: string | null = cp.mailSkip || mailDeltaUrl();
   let mailMode: 'delta' | 'page' = mailUrl.includes('/delta') ? 'delta' : (cp.mailMode || 'page');
+  try {
   for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
-    const { status, json } = await opts.fabric.getJson(mailUrl);
+    const { status, json } = await readFabricJson(opts.fabric, mailUrl, notes, `Mail ${mailMode}`);
+    recordMailHttpFact(notes, mailMode, status);
+    cp.mailMode = mailMode;
+    persistFabricProgress(opts.dataDir, cp, notes);
     if (status !== 200) {
       if (page === 0 && mailMode === 'delta' && !cp.mailDeltaReady) {
         notes.push(`Mail delta unavailable at HTTP ${status}; falling back to recent messages page for this run.`);
         mailUrl = legacyMailPageUrl();
         mailMode = 'page';
         cp.mailMode = 'page';
+        persistFabricProgress(opts.dataDir, cp, notes);
         page = -1;
         continue;
       }
@@ -200,21 +254,24 @@ export async function runFabricSync(opts: {
           ? 'RESTRICTED — metadata and source link only. Body not stored.'
           : stripSecrets(typeof msg.bodyPreview === 'string' ? msg.bodyPreview : '');
       const webUrl = typeof msg.webLink === 'string' ? msg.webLink : undefined;
-      await opts.service.upsertCommunicationIndex({
-        title: (typeof msg.subject === 'string' && msg.subject) || '(no subject)',
-        summary,
-        clientCode: classified.clientCode,
-        date: typeof msg.receivedDateTime === 'string' ? msg.receivedDateTime : undefined,
-        channel: 'Email',
-        direction: from.toLowerCase().endsWith('@highvaluecapitalgroup.com') ? 'Outbound' : 'Inbound',
-        webUrl,
-        sourceMessageId: messageId,
-        conversationId: conversationId || messageId,
-        classification: classified.classification,
-        provenanceSource: 'outlook-mail',
-        sourceOrg: 'HVCG',
-        idempotencyKey: `mail:${conversationId || messageId}`,
-      });
+      const wroteMail = await tryPmIndex(notes, 'SharePoint mail index write', () =>
+        opts.service.upsertCommunicationIndex({
+          title: (typeof msg.subject === 'string' && msg.subject) || '(no subject)',
+          summary,
+          clientCode: classified.clientCode,
+          date: typeof msg.receivedDateTime === 'string' ? msg.receivedDateTime : undefined,
+          channel: 'Email',
+          direction: from.toLowerCase().endsWith('@highvaluecapitalgroup.com') ? 'Outbound' : 'Inbound',
+          webUrl,
+          sourceMessageId: messageId,
+          conversationId: conversationId || messageId,
+          classification: classified.classification,
+          provenanceSource: 'outlook-mail',
+          sourceOrg: 'HVCG',
+          idempotencyKey: `mail:${conversationId || messageId}`,
+        }),
+      );
+      if (!wroteMail) continue;
       indexed.mailThreads += 1;
       if (
         msg.hasAttachments === true &&
@@ -222,7 +279,12 @@ export async function runFabricSync(opts: {
         attachmentLookups < MAX_ATTACHMENT_MESSAGES
       ) {
         attachmentLookups += 1;
-        const att = await opts.fabric.getJson(attachmentMetadataUrl(messageId));
+        const att = await readFabricJson(
+          opts.fabric,
+          attachmentMetadataUrl(messageId),
+          notes,
+          'Mail attachment metadata',
+        );
         if (att.status !== 200) {
           notes.push(`Mail attachment metadata stopped at HTTP ${att.status}.`);
         } else {
@@ -231,22 +293,25 @@ export async function runFabricSync(opts: {
             const name = typeof item.name === 'string' ? item.name : '';
             if (!attId) continue;
             const key = `mail-att:${messageId}:${attId}`;
-            await opts.service.upsertCommunicationIndex({
-              title: name || attId,
-              summary: fileIndexSummary({
-                restricted: true,
+            const wroteAtt = await tryPmIndex(notes, 'SharePoint mail attachment index write', () =>
+              opts.service.upsertCommunicationIndex({
+                title: name || attId,
+                summary: fileIndexSummary({
+                  restricted: true,
+                  webUrl,
+                  idempotencyKey: key,
+                }),
+                clientCode: classified.clientCode,
+                channel: 'Other',
                 webUrl,
+                sourceMessageId: attId,
+                classification: 'RESTRICTED',
+                provenanceSource: 'outlook-mail-attachment',
+                sourceOrg: 'HVCG',
                 idempotencyKey: key,
               }),
-              clientCode: classified.clientCode,
-              channel: 'Other',
-              webUrl,
-              sourceMessageId: attId,
-              classification: 'RESTRICTED',
-              provenanceSource: 'outlook-mail-attachment',
-              sourceOrg: 'HVCG',
-              idempotencyKey: key,
-            });
+            );
+            if (!wroteAtt) continue;
             indexed.files += 1;
             indexed.restricted += 1;
           }
@@ -266,15 +331,13 @@ export async function runFabricSync(opts: {
       cp.mailMode = mailMode;
     }
   }
-  cp.lastAttemptAt = new Date().toISOString();
-  cp.lastNotes = sanitizeFabricNotes(notes);
-  saveCheckpoint(opts.dataDir, cp);
+  persistFabricProgress(opts.dataDir, cp, notes);
 
   let calUrl: string | null =
     cp.calendarSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/calendar/events?$select=id,subject,start,end,organizer,attendees,webLink,onlineMeetingUrl,bodyPreview&$top=${PAGE_SIZE}&$orderby=start/dateTime desc`;
   for (let page = 0; page < MAX_PAGES && calUrl; page += 1) {
-    const { status, json } = await opts.fabric.getJson(calUrl);
+    const { status, json } = await readFabricJson(opts.fabric, calUrl, notes, 'Calendar');
     if (status !== 200) {
       notes.push(`Calendar index stopped at HTTP ${status}.`);
       break;
@@ -300,24 +363,26 @@ export async function runFabricSync(opts: {
         indexed.skipped += 1;
         continue;
       }
-      await opts.service.upsertMeetingIndex({
-        title: (typeof ev.subject === 'string' && ev.subject) || '(no title)',
-        summary:
-          classified.ingest === 'metadata_link'
-            ? 'RESTRICTED — metadata and source link only.'
-            : stripSecrets(typeof ev.bodyPreview === 'string' ? ev.bodyPreview : ''),
-        clientCode: classified.clientCode,
-        date:
-          ev.start && typeof ev.start === 'object'
-            ? String((ev.start as { dateTime?: string }).dateTime || '')
-            : undefined,
-        webUrl: typeof ev.webLink === 'string' ? ev.webLink : undefined,
-        sourceEventId: eventId,
-        classification: classified.classification,
-        provenanceSource: 'outlook-calendar',
-        idempotencyKey: `cal:${eventId}`,
-      });
-      indexed.meetings += 1;
+      const wroteMeeting = await tryPmIndex(notes, 'SharePoint meeting index write', () =>
+        opts.service.upsertMeetingIndex({
+          title: (typeof ev.subject === 'string' && ev.subject) || '(no title)',
+          summary:
+            classified.ingest === 'metadata_link'
+              ? 'RESTRICTED — metadata and source link only.'
+              : stripSecrets(typeof ev.bodyPreview === 'string' ? ev.bodyPreview : ''),
+          clientCode: classified.clientCode,
+          date:
+            ev.start && typeof ev.start === 'object'
+              ? String((ev.start as { dateTime?: string }).dateTime || '')
+              : undefined,
+          webUrl: typeof ev.webLink === 'string' ? ev.webLink : undefined,
+          sourceEventId: eventId,
+          classification: classified.classification,
+          provenanceSource: 'outlook-calendar',
+          idempotencyKey: `cal:${eventId}`,
+        }),
+      );
+      if (wroteMeeting) indexed.meetings += 1;
     }
     calUrl = nextLink(json);
     cp.calendarSkip = calUrl;
@@ -327,7 +392,7 @@ export async function runFabricSync(opts: {
     cp.contactsSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/contacts?$select=id,displayName,emailAddresses,companyName,jobTitle,businessPhones&$top=${PAGE_SIZE}`;
   for (let page = 0; page < MAX_PAGES && contactUrl; page += 1) {
-    const { status, json } = await opts.fabric.getJson(contactUrl);
+    const { status, json } = await readFabricJson(opts.fabric, contactUrl, notes, 'Contacts');
     if (status !== 200) {
       notes.push(`Contacts index stopped at HTTP ${status}.`);
       break;
@@ -350,16 +415,18 @@ export async function runFabricSync(opts: {
         indexed.skipped += 1;
         continue;
       }
-      await opts.service.upsertContactIndex({
-        title: (typeof ct.displayName === 'string' && ct.displayName) || email || contactId,
-        email,
-        clientCode: classified.clientCode,
-        jobTitle: typeof ct.jobTitle === 'string' ? ct.jobTitle : undefined,
-        sourceContactId: contactId,
-        provenanceSource: 'outlook-contacts',
-        idempotencyKey: `contact:${contactId || email}`,
-      });
-      indexed.contacts += 1;
+      const wroteContact = await tryPmIndex(notes, 'SharePoint contact index write', () =>
+        opts.service.upsertContactIndex({
+          title: (typeof ct.displayName === 'string' && ct.displayName) || email || contactId,
+          email,
+          clientCode: classified.clientCode,
+          jobTitle: typeof ct.jobTitle === 'string' ? ct.jobTitle : undefined,
+          sourceContactId: contactId,
+          provenanceSource: 'outlook-contacts',
+          idempotencyKey: `contact:${contactId || email}`,
+        }),
+      );
+      if (wroteContact) indexed.contacts += 1;
     }
     contactUrl = nextLink(json);
     cp.contactsSkip = contactUrl;
@@ -367,7 +434,7 @@ export async function runFabricSync(opts: {
 
   let fileUrl: string | null = cp.filesSkip || `/v1.0/users/${MANNY_ENTRA_OID}/drive/recent?$top=${PAGE_SIZE}`;
   for (let page = 0; page < 4 && fileUrl; page += 1) {
-    const { status, json } = await opts.fabric.getJson(fileUrl);
+    const { status, json } = await readFabricJson(opts.fabric, fileUrl, notes, 'Manny OneDrive recent');
     if (status !== 200) {
       notes.push(`Manny OneDrive recent stopped at HTTP ${status}.`);
       break;
@@ -384,38 +451,49 @@ export async function runFabricSync(opts: {
       const restricted = classified.ingest === 'metadata_link';
       if (restricted) indexed.restricted += 1;
       const key = `file:${itemId}`;
-      await opts.service.upsertCommunicationIndex({
-        title: name || itemId,
-        summary: fileIndexSummary({ restricted, webUrl, idempotencyKey: key }),
-        clientCode: classified.clientCode,
-        channel: 'Other',
-        webUrl,
-        sourceMessageId: itemId,
-        classification: classified.classification,
-        provenanceSource: 'onedrive',
-        sourceOrg: 'HVCG',
-        idempotencyKey: key,
-      });
-      indexed.files += 1;
+      const wroteFile = await tryPmIndex(notes, 'SharePoint OneDrive index write', () =>
+        opts.service.upsertCommunicationIndex({
+          title: name || itemId,
+          summary: fileIndexSummary({ restricted, webUrl, idempotencyKey: key }),
+          clientCode: classified.clientCode,
+          channel: 'Other',
+          webUrl,
+          sourceMessageId: itemId,
+          classification: classified.classification,
+          provenanceSource: 'onedrive',
+          sourceOrg: 'HVCG',
+          idempotencyKey: key,
+        }),
+      );
+      if (wroteFile) indexed.files += 1;
     }
     fileUrl = nextLink(json);
     cp.filesSkip = fileUrl;
   }
 
-  const sharePoint = await indexBusinessFiles({
-    service: opts.service,
-    fabric: opts.fabric,
-    clients,
-    checkpoint: cp.sharePoint || emptySharePointCheckpoint(),
-    notes,
-  });
-  indexed.files += sharePoint.files;
-  indexed.skipped += sharePoint.skipped;
-  indexed.restricted += sharePoint.restricted;
-  cp.sharePoint = sharePoint.checkpoint;
+  try {
+    const sharePoint = await indexBusinessFiles({
+      service: opts.service,
+      fabric: opts.fabric,
+      clients,
+      checkpoint: cp.sharePoint || emptySharePointCheckpoint(),
+      notes,
+    });
+    indexed.files += sharePoint.files;
+    indexed.skipped += sharePoint.skipped;
+    indexed.restricted += sharePoint.restricted;
+    cp.sharePoint = sharePoint.checkpoint;
+  } catch (err) {
+    notes.push(isolatedFailureNote('SharePoint file index skipped', err));
+  }
 
   notes.push('Planner application APIs are delegated-only per current Microsoft Graph docs — not indexed via app-only.');
   notes.push('Online meeting transcripts require a Teams application access policy if Graph returns 403.');
+  const mailFact = notes.find((note) => /^Mail (delta|page) reached HTTP /.test(note));
+  if (mailFact) {
+    notes.splice(notes.indexOf(mailFact), 1);
+    notes.push(mailFact);
+  }
   cp.lastRunAt = new Date().toISOString();
   cp.lastIndexed = { ...indexed };
   cp.lastNotes = sanitizeFabricNotes(notes);
@@ -427,4 +505,12 @@ export async function runFabricSync(opts: {
   };
   saveCheckpoint(opts.dataDir, cp);
   return { checkpoint: cp, indexed, notes };
+  } catch (err) {
+    notes.push(isolatedFailureNote('Fabric sync isolated a later source failure', err));
+    persistFabricProgress(opts.dataDir, cp, notes);
+    cp.lastIndexed = { ...indexed };
+    cp.lastNotes = sanitizeFabricNotes(notes);
+    saveCheckpoint(opts.dataDir, cp);
+    return { checkpoint: cp, indexed, notes };
+  }
 }
