@@ -22,6 +22,11 @@ import {
   DOCUMENT_PREVIEW_PAGE_SIZE,
   type DocumentPreviewFields,
 } from '../sharepoint/fabric/documentPreview.ts';
+import {
+  DOCUMENT_VERSION_BASED_ON,
+  DOCUMENT_VERSION_PAGE_SIZE,
+  type DocumentVersionFields,
+} from '../sharepoint/fabric/documentVersion.ts';
 import type { PmSearchHit } from '../sharepoint/search.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
 import {
@@ -139,6 +144,11 @@ export interface ToolGatewayContext {
    * document hits. Authorization happens before this runs. Does not invent ids.
    */
   requestDocumentPreview?: (ref: { driveId: string; itemId: string }) => Promise<DocumentPreviewFields>;
+  /**
+   * Optional Graph driveItem versions for a small page of already-authorized
+   * document hits. Authorization happens before this runs. Metadata only.
+   */
+  requestDocumentVersions?: (ref: { driveId: string; itemId: string }) => Promise<DocumentVersionFields>;
 }
 
 export interface ClientContextToolResult {
@@ -1202,6 +1212,100 @@ async function withDocumentPreviews(
   };
 }
 
+function applyVersionFields(
+  item: DocumentOperatingRecord,
+  version: DocumentVersionFields,
+): DocumentOperatingRecord {
+  return {
+    ...item,
+    versionStatus: version.versionStatus,
+    ...(version.versionSkipReason && version.versionStatus !== 'ready'
+      ? { versionSkipReason: version.versionSkipReason }
+      : {}),
+    ...(version.currentVersionId && version.versionStatus === 'ready'
+      ? { currentVersionId: version.currentVersionId }
+      : {}),
+    ...(typeof version.versionCount === 'number' && version.versionStatus === 'ready'
+      ? { versionCount: version.versionCount }
+      : {}),
+    ...(version.versions && version.versionStatus === 'ready' ? { versions: version.versions } : {}),
+    versionBasedOn: DOCUMENT_VERSION_BASED_ON,
+  };
+}
+
+async function attachDocumentVersions(
+  ctx: ToolGatewayContext,
+  items: DocumentOperatingRecord[],
+  hits: AtlasAuthorizedSearchHit[],
+): Promise<DocumentOperatingRecord[]> {
+  if (!ctx.requestDocumentVersions || items.length === 0) return items;
+  const byId = new Map(hits.map((hit) => [hit.id, hit]));
+  const page = items.slice(0, DOCUMENT_VERSION_PAGE_SIZE);
+  const rest = items.slice(DOCUMENT_VERSION_PAGE_SIZE);
+  const versioned = await Promise.all(
+    page.map(async (item) => {
+      if (!mayPreviewDocumentClient(ctx.principal, item.clientCode)) {
+        return applyVersionFields(item, {
+          versionStatus: 'skipped',
+          versionSkipReason: 'client isolation: document is outside the entitled ClientCode set',
+          versionBasedOn: DOCUMENT_VERSION_BASED_ON,
+        });
+      }
+      if (item.attachmentId && !byId.get(item.id)?.driveId) {
+        return applyVersionFields(item, {
+          versionStatus: 'skipped',
+          versionSkipReason: 'outlook-mail-attachment items have no Graph driveItem versions',
+          versionBasedOn: DOCUMENT_VERSION_BASED_ON,
+        });
+      }
+      const hit = byId.get(item.id);
+      const driveId = hit?.driveId?.trim() || '';
+      const itemId = hit?.itemId?.trim() || '';
+      if (!driveId || !itemId) {
+        return applyVersionFields(item, {
+          versionStatus: 'skipped',
+          versionSkipReason: 'no proven drive/item id from the existing indexer',
+          versionBasedOn: DOCUMENT_VERSION_BASED_ON,
+        });
+      }
+      try {
+        const version = await ctx.requestDocumentVersions!({ driveId, itemId });
+        return applyVersionFields(item, version);
+      } catch {
+        return applyVersionFields(item, {
+          versionStatus: 'error',
+          versionSkipReason: 'Graph versions request failed before an HTTP response',
+          versionBasedOn: DOCUMENT_VERSION_BASED_ON,
+        });
+      }
+    }),
+  );
+  return [...versioned, ...rest];
+}
+
+async function withDocumentVersions(
+  ctx: ToolGatewayContext,
+  result: AuthorizedSearchToolResult,
+): Promise<AuthorizedSearchToolResult> {
+  if (!ctx.requestDocumentVersions) return result;
+  const items = await attachDocumentVersions(
+    ctx,
+    result.authorizedSearch.documents.items,
+    result.authorizedSearch.hits,
+  );
+  return {
+    ...result,
+    authorizedSearch: {
+      ...result.authorizedSearch,
+      documents: {
+        ...result.authorizedSearch.documents,
+        binariesInAtlas: false,
+        items,
+      },
+    },
+  };
+}
+
 /**
  * Copy already-authorized email / project / contract / capital / indexed
  * outlook-mail-attachment metadata onto entitled documents. Runs after
@@ -1234,7 +1338,10 @@ async function finalizeAuthorizedDocuments(
   ctx: ToolGatewayContext,
   result: AuthorizedSearchToolResult,
 ): Promise<AuthorizedSearchToolResult> {
-  return withDocumentRelatedContext(ctx, await withDocumentPreviews(ctx, result));
+  return withDocumentRelatedContext(
+    ctx,
+    await withDocumentVersions(ctx, await withDocumentPreviews(ctx, result)),
+  );
 }
 
 function resolveQueueUrgency(row: OperatorOperatingItem): SearchQueueUrgency | null {

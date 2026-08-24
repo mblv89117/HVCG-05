@@ -1,7 +1,7 @@
 /**
  * Narrow Graph client for the information fabric.
  * GET plus Search POST, plus subscription create/renew/delete,
- * plus driveItem preview POST for already-indexed files.
+ * plus driveItem preview POST and versions GET for already-indexed files.
  * OPEN_SOURCE: microsoft-graph-client (MIT) evaluated 2026-08-24.
  * DECISION: ADAPT this allowlisted helper. REJECT a second Graph SDK,
  * preview service, or subscription framework — it would duplicate path
@@ -10,6 +10,7 @@
  * Does not send mail, write files, or browse other employees' mailboxes.
  * Does not allow tenant-wide /sites?search=.
  * Preview POST is allowlisted only for /drives/{id}/items/{id}/preview.
+ * Versions GET is allowlisted only for /drives/{id}/items/{id}/versions.
  */
 
 import { MANNY_ENTRA_OID } from '../manny.ts';
@@ -43,6 +44,7 @@ const ALLOWED_GET: RegExp[] = [
   /^\/v1\.0\/sites\/[^/]+\/drives(\?|$)/i,
   /^\/v1\.0\/drives\/[^/]+\/root(\/children|\/delta)?(\?|$)/i,
   /^\/v1\.0\/drives\/[^/]+\/items\/[^/]+\/children(\?|$)/i,
+  /^\/v1\.0\/drives\/[^/]+\/items\/[^/]+\/versions(\?|$)/i,
   /^\/v1\.0\/teams(\?|$)/i,
   /^\/v1\.0\/teams\/[0-9a-f-]{36}\/channels(\?|$)/i,
   /^\/v1\.0\/teams\/[0-9a-f-]{36}\/channels\/[^/]+\/messages(\?|$)/i,

@@ -323,6 +323,7 @@ export interface AtlasAuthorizedSearchHit {
 }
 
 export type DocumentPreviewStatus = 'ready' | 'skipped' | 'error';
+export type DocumentVersionStatus = DocumentPreviewStatus;
 
 export interface DocumentOperatingRecord {
   id: string;
@@ -362,6 +363,16 @@ export interface DocumentOperatingRecord {
   attachmentId?: string;
   contentType?: string;
   size?: number;
+  /**
+   * Graph driveItem version metadata. ready only when Graph returned version
+   * ids. skipped/error never claim LIVE. Never includes downloadUrl.
+   */
+  versionStatus?: DocumentVersionStatus;
+  versionSkipReason?: string;
+  currentVersionId?: string;
+  versionCount?: number;
+  versions?: Array<{ id: string; lastModifiedDateTime?: string; size?: number }>;
+  versionBasedOn?: string;
 }
 
 export interface RelatedDocumentEmailRef {

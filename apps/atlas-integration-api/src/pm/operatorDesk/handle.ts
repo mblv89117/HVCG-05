@@ -14,6 +14,7 @@ import { buildCommandCenter } from '../commandCenter.ts';
 import { readDeskCommercialContext } from '../commercialContext/handle.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { requestIndexedDocumentPreview } from '../sharepoint/fabric/documentPreview.ts';
+import { requestIndexedDocumentVersions } from '../sharepoint/fabric/documentVersion.ts';
 import { createFabricGraphClient } from '../sharepoint/fabric/graph.ts';
 import { buildSharePointCommandCenter } from '../sharepoint/http.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
@@ -390,18 +391,21 @@ export async function handleOperatorDesk(opts: {
     opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint
       ? (query: string) => searchSharePointPm(opts.sharepoint!, principal, query)
       : undefined;
-  const requestDocumentPreview =
+  const fabricClient =
     opts.cfg.pmBackend.mode === 'sharepoint' && opts.cfg.pmBackend.sharepoint
-      ? (() => {
-          const tokenProvider =
-            opts.cfg.pmTokenProvider ||
+      ? createFabricGraphClient(
+          opts.cfg.pmTokenProvider ||
             createManagedIdentityTokenProvider(opts.cfg.pmBackend.sharepoint?.managedIdentityClientId || '', {
               resource: GRAPH_TOKEN_RESOURCE,
-            });
-          const fabric = createFabricGraphClient(tokenProvider);
-          return (ref: { driveId: string; itemId: string }) => requestIndexedDocumentPreview(fabric, ref);
-        })()
+            }),
+        )
       : undefined;
+  const requestDocumentPreview = fabricClient
+    ? (ref: { driveId: string; itemId: string }) => requestIndexedDocumentPreview(fabricClient, ref)
+    : undefined;
+  const requestDocumentVersions = fabricClient
+    ? (ref: { driveId: string; itemId: string }) => requestIndexedDocumentVersions(fabricClient, ref)
+    : undefined;
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
@@ -413,6 +417,7 @@ export async function handleOperatorDesk(opts: {
           deskSearch: model.search,
           entitledSearch,
           requestDocumentPreview,
+          requestDocumentVersions,
         })
       : mapsToGetClientContext(question)
         ? await runAtlasClientContextRuntime({
@@ -465,6 +470,7 @@ export async function handleOperatorDesk(opts: {
       deskSearch: model.search,
       entitledSearch,
       requestDocumentPreview,
+      requestDocumentVersions,
     });
     if (opts.method === 'GET') {
       try {
