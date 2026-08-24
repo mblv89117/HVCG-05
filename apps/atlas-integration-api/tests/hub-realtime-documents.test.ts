@@ -8,6 +8,7 @@
  * + ATLAS-M365-MEETING-RELATED-CONTEXT-001
  * + ATLAS-M365-PROJECT-RELATED-MEETINGS-001
  * + ATLAS-M365-THREAD-RELATED-MEETINGS-001
+ * + ATLAS-M365-CAPITAL-RELATED-MEETINGS-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
  * preview is attached after authorization. Related email / project / contract
@@ -18,6 +19,7 @@
  * relatedAttachments / capitalRelationship from the same authorized search.
  * Entitled projects carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Entitled mail threads carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
+ * Entitled capital PREPARE rows carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Graph driveItem versions are metadata-only and never include downloadUrl.
  * No second search, preview, versioning, calendar query, or knowledge-graph product.
  */
@@ -2352,6 +2354,310 @@ describe('entitled mail-thread related meetings on authorizedSearch', () => {
     assert.equal(threads.autoRespond, false);
     assert.equal(threads.send, false);
     noFabricatedRelatedFacts(threads);
+  });
+});
+
+describe('entitled capital related meetings on authorizedSearch', () => {
+  it('attaches same-client relatedMeetings on entitled capital prepare and get_client_context', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions;
+    assert.equal(capital.kind, 'capital_submission_request_v1');
+    assert.equal(capital.invented, false);
+    assert.equal(capital.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(capital.send, false);
+    assert.equal(capital.externalSubmit, false);
+    assert.equal(capital.ownerGated, true);
+    const row = capital.items.find((item) => item.id === 'cap-syn-1');
+    assert.ok(row);
+    assert.equal(row.clientCode, 'SYN01');
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(row.financingStatus, 'UNKNOWN');
+    assert.equal(row.financingStatusClassification, 'HONEST_EMPTY');
+
+    const meeting = row.relatedMeetings?.find((item) => item.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.title, 'SYN01 weekly standup');
+    assert.equal(meeting.date, '2026-08-21T15:00:00Z');
+    assert.equal(meeting.webUrl, MEETING_SOURCE);
+    assert.equal(meeting.sourceEventId, 'AAMk-syn-cal-1');
+    assert.ok(
+      meeting.classification === 'CONFIRMED' ||
+        meeting.classification === 'LIKELY' ||
+        meeting.classification === 'PROPOSED' ||
+        meeting.classification === 'HONEST_EMPTY',
+    );
+    assert.ok((row.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(row.relatedMeetings)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(row.relatedMeetings)), false);
+    assert.equal(/TargetAmount/i.test(JSON.stringify(row)), false);
+    assert.equal(/lenderCriteria(?!Invented)/i.test(JSON.stringify(row)), false);
+
+    const memo = result.authorizedSearch.documents.items.find((item) => item.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+    const meetingRecord = result.authorizedSearch.meetings.items.find((item) => item.id === 'meet-syn-1');
+    assert.ok(meetingRecord);
+    assert.equal(meetingRecord.capitalRelationship?.some((item) => item.id === 'cap-syn-1'), true);
+    const project = result.authorizedSearch.projects.items.find((item) => item.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.equal(project.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+    const thread = result.authorizedSearch.threads.items.find((item) => item.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: found.results,
+    });
+    assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
+    assert.equal(viaIndex.clientContext.client.entitled, true);
+    const ctxCapital = viaIndex.clientContext.capitalSubmissions.items.find((item) => item.id === 'cap-syn-1');
+    assert.ok(ctxCapital);
+    assert.equal(ctxCapital.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+    assert.deepEqual(ctxCapital.relatedMeetings, row.relatedMeetings);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.send, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.externalSubmit, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.ownerGated, true);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    const ctxProject = viaIndex.clientContext.projects.items.find((item) => item.id === 'proj-syn-1');
+    assert.ok(ctxProject);
+    assert.equal(ctxProject.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+    const ctxThread = viaIndex.clientContext.threads.items.find((item) => item.id === 'mail-syn-1');
+    assert.ok(ctxThread);
+    assert.equal(ctxThread.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+
+    noFabricatedRelatedFacts(capital);
+    assert.equal(JSON.stringify(capital).includes('PDG01'), false);
+  });
+
+  it('never returns Client B meetings on a Client A capital prepare row', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'capital_opportunity',
+            id: 'cap-syn-1',
+            title: 'SYN01 entitled capital opportunity',
+            href: '/capital?opportunity=cap-syn-1',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-pdg',
+            title: 'PDG01 leak standup',
+            href: '/clients/PDG01',
+            source: 'HVCG_Meetings',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/calendar/item/pdg01-leak',
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-pdg-cal-1',
+          },
+          {
+            kind: 'capital_opportunity',
+            id: 'cap-pdg',
+            title: 'PDG01 leak capital',
+            href: '/capital?opportunity=cap-pdg',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED',
+          },
+        ],
+      }),
+    });
+    const row = result.authorizedSearch.capitalSubmissions.items.find((item) => item.id === 'cap-syn-1');
+    assert.ok(row);
+    assert.equal(row.clientCode, 'SYN01');
+    assert.equal(row.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), true);
+    assert.equal((row.relatedMeetings || []).some((item) => /pdg/i.test(item.id) || /pdg/i.test(item.title)), false);
+    assert.equal(JSON.stringify(row).includes('PDG01'), false);
+    const foreign = result.authorizedSearch.capitalSubmissions.items.find((item) => item.id === 'cap-pdg');
+    if (foreign) {
+      assert.equal((foreign.relatedMeetings || []).some((item) => /pdg/i.test(item.id) || /pdg/i.test(item.title)), false);
+      assert.equal(foreign.relatedMeetings?.some((item) => item.id === 'meet-syn-1'), undefined);
+      assert.equal(foreign.relatedMeetings, undefined);
+    }
+    const memo = result.authorizedSearch.documents.items.find((item) => item.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal((memo.relatedMeetings || []).some((item) => /pdg/i.test(item.id) || /pdg/i.test(item.title)), false);
+    noFabricatedRelatedFacts(row);
+  });
+
+  it('drops SAS and anonymous meeting webUrl on entitled capital relatedMeetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'capital_opportunity',
+            id: 'cap-syn-1',
+            title: 'SYN01 entitled capital opportunity',
+            href: '/capital?opportunity=cap-syn-1',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-sas',
+            title: 'SYN01 SAS standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: SAS,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-sas-cal',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-anon',
+            title: 'SYN01 anonymous standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: ANON,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-anon-cal',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-ok',
+            title: 'SYN01 entitled standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-ok-cal',
+          },
+        ],
+      }),
+    });
+    const row = result.authorizedSearch.capitalSubmissions.items.find((item) => item.id === 'cap-syn-1');
+    assert.ok(row);
+    const sasMeeting = row.relatedMeetings?.find((item) => item.id === 'meet-sas');
+    const anonMeeting = row.relatedMeetings?.find((item) => item.id === 'meet-anon');
+    const okMeeting = row.relatedMeetings?.find((item) => item.id === 'meet-ok');
+    if (sasMeeting) assert.equal(sasMeeting.webUrl, undefined);
+    if (anonMeeting) assert.equal(anonMeeting.webUrl, undefined);
+    assert.ok(okMeeting);
+    assert.equal(okMeeting.webUrl, MEETING_SOURCE);
+    const blob = JSON.stringify(row.relatedMeetings);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    noFabricatedRelatedFacts(row);
+  });
+
+  it('honestly omits relatedMeetings when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'capital raise',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'capital_opportunity',
+            id: 'cap-only',
+            title: 'SYN01 capital only',
+            href: '/capital?opportunity=cap-only',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED',
+          },
+        ],
+      }),
+    });
+    const row = result.authorizedSearch.capitalSubmissions.items.find((item) => item.id === 'cap-only');
+    assert.ok(row);
+    assert.equal(row.relatedMeetings, undefined);
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, 'UNKNOWN');
+    assert.equal(row.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(row)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(row)), false);
+    assert.equal(/TargetAmount/i.test(JSON.stringify(row)), false);
+    noFabricatedRelatedFacts(row);
+  });
+
+  it('never invents downloadUrl, transcript, TargetAmount, or lender criteria on capital relatedMeetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: found.results.map((item) => ({
+          ...item,
+          downloadUrl: 'https://evil.example/download',
+          transcript: 'Invented transcript text',
+          TargetAmount: 5_000_000,
+          lenderCriteria: { ltv: 80, dscr: 1.25 },
+        })),
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions;
+    const row = capital.items.find((item) => item.id === 'cap-syn-1');
+    assert.ok(row);
+    assert.ok(row.relatedMeetings?.some((item) => item.id === 'meet-syn-1'));
+    const blob = JSON.stringify(capital);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/\bltv\s*[:=]?\s*\d/i.test(blob), false);
+    assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(blob), false);
+    assert.equal((row as { downloadUrl?: string }).downloadUrl, undefined);
+    assert.equal((row as { transcript?: string }).transcript, undefined);
+    assert.equal((row as { TargetAmount?: number }).TargetAmount, undefined);
+    assert.equal(row.financingStatus, 'UNKNOWN');
+    assert.equal(row.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(capital.invented, false);
+    assert.equal(row.invented, false);
+    assert.equal(capital.send, false);
+    assert.equal(capital.externalSubmit, false);
+    assert.equal(capital.ownerGated, true);
+    noFabricatedRelatedFacts(capital);
   });
 });
 
