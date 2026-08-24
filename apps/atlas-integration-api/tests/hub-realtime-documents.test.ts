@@ -2135,11 +2135,13 @@ describe('entitled project related meetings on authorizedSearch', () => {
 
 describe('entitled mail-thread related meetings on authorizedSearch', () => {
   it('attaches same-client relatedMeetings on entitled threads and get_client_context', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
     const result = await searchAuthorizedKnowledge({
       principal: staff,
       picture: emptyHonestOperatingPicture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const threads = result.authorizedSearch.threads;
@@ -2197,6 +2199,7 @@ describe('entitled mail-thread related meetings on authorizedSearch', () => {
       principal: staff,
       picture: emptyHonestOperatingPicture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
