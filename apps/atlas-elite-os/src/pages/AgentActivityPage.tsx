@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AtlasCard, DataTable, EmptyState, StatusChip } from '@hvcg/atlas-design-system';
 import { Button, Caption1, Spinner, Text } from '@fluentui/react-components';
 
-import { fetchOperatorDesk, type OperatorDeskActivity } from '../integrations/hub/pmApi';
+import { fetchOperatorDesk, runFabricSync, type OperatorDeskActivity } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { ModuleScaffold } from './shared/ModuleScaffold';
 
@@ -22,6 +22,12 @@ export function AgentActivityPage() {
   const auth = useHubAuth();
   const [activity, setActivity] = useState<OperatorDeskActivity | null>(null);
   const [askItemCount, setAskItemCount] = useState(0);
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    indexed: { mailThreads: number; meetings: number; contacts: number; files: number; skipped: number; restricted: number };
+    notes: string[];
+    checkpoint: { mailMode?: string; mailDeltaReady?: boolean; lastRunAt?: string; counts?: Record<string, number> };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +55,24 @@ export function AgentActivityPage() {
     }
   }, [auth]);
 
+  const runSync = useCallback(async () => {
+    if (!auth.hasBearer) {
+      setError('Microsoft sign-in required (Bearer token missing)');
+      return;
+    }
+    setSyncBusy(true);
+    setError(null);
+    try {
+      const res = await runFabricSync(auth);
+      setSyncResult(res.fabric);
+    } catch (err) {
+      setError(String(err));
+      setSyncResult(null);
+    } finally {
+      setSyncBusy(false);
+    }
+  }, [auth]);
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -61,9 +85,14 @@ export function AgentActivityPage() {
       subtitle="Signed Atlas activity, tool use, and Ask Atlas outcomes. External owner-gated actions remain blocked."
       showPendingBanner={false}
       actions={
-        <Button appearance="secondary" onClick={() => void refresh()}>
-          Refresh
-        </Button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button appearance="primary" disabled={syncBusy} onClick={() => void runSync()}>
+            {syncBusy ? 'Running M365 sync...' : 'Run M365 sync'}
+          </Button>
+          <Button appearance="secondary" onClick={() => void refresh()}>
+            Refresh
+          </Button>
+        </div>
       }
     >
       {error ? (
@@ -87,6 +116,30 @@ export function AgentActivityPage() {
           </Caption1>
         </AtlasCard>
       </div>
+
+      {syncResult ? (
+        <AtlasCard title="M365 sync checkpoint">
+          <Text>
+            Mail {syncResult.indexed.mailThreads} · meetings {syncResult.indexed.meetings} · contacts{' '}
+            {syncResult.indexed.contacts} · files {syncResult.indexed.files} · skipped{' '}
+            {syncResult.indexed.skipped} · restricted {syncResult.indexed.restricted}
+          </Text>
+          <Caption1 style={{ display: 'block', marginTop: 8 }}>
+            Mail mode {syncResult.checkpoint.mailMode || 'unknown'} · delta ready{' '}
+            {syncResult.checkpoint.mailDeltaReady ? 'yes' : 'no'} · last run{' '}
+            {syncResult.checkpoint.lastRunAt || 'not recorded'}
+          </Caption1>
+          {syncResult.notes.length ? (
+            <ul>
+              {syncResult.notes.slice(0, 5).map((note) => (
+                <li key={note}>
+                  <Caption1>{note}</Caption1>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </AtlasCard>
+      ) : null}
 
       {loading ? (
         <Spinner label="Loading agent activity..." />

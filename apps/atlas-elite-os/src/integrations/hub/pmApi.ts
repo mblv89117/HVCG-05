@@ -320,6 +320,29 @@ export async function fetchOperatorDesk(auth: AtlasHubAuthHeaders) {
   }>(auth, '/operator.json');
 }
 
+export async function runFabricSync(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    fabric: {
+      indexed: {
+        mailThreads: number;
+        meetings: number;
+        contacts: number;
+        files: number;
+        skipped: number;
+        restricted: number;
+      };
+      notes: string[];
+      checkpoint: {
+        mailSkip?: string | null;
+        mailMode?: 'delta' | 'page';
+        mailDeltaReady?: boolean;
+        lastRunAt?: string;
+        counts?: Record<string, number>;
+      };
+    };
+  }>(auth, '/api/pm/fabric/sync', { method: 'POST', body: '{}' });
+}
+
 export async function fetchOwnerReview(auth: AtlasHubAuthHeaders) {
   return hubFetchJson<{ items: OwnerReviewItem[] }>(auth, '/api/pm/owner-review');
 }
