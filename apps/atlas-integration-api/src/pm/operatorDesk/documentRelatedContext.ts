@@ -1,11 +1,15 @@
 /**
  * Related operating context on already-authorized DocumentOperatingRecord
- * items, and the inverse on MeetingOperatingRecord items.
+ * items, the inverse on MeetingOperatingRecord items, and the inverse
+ * project → meetings link on ProjectOperatingRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / fabric mail-attachment index
- * rows / entitled search extras.meetings (kind=meeting) / hits kind=document.
+ * rows / entitled search extras.meetings (kind=meeting) / hits kind=document
+ * / hits kind=meeting / sameRelatedScope / entitledClientCodes /
+ * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
+ * relatedMeetings().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search product.
  */
@@ -22,6 +26,7 @@ import {
   type DocumentOperatingRecord,
   type MeetingOperatingPayload,
   type MeetingOperatingRecord,
+  type ProjectOperatingRecord,
   type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
   type RelatedDocumentContractRef,
@@ -31,7 +36,7 @@ import {
   type RelatedMeetingDocumentRef,
 } from './types.ts';
 
-/** Shared isolation key for document and meeting related-context attach. */
+/** Shared isolation key for document, meeting, and project related-context attach. */
 type RelatedScopeItem = {
   id: string;
   clientCode?: string;
@@ -276,7 +281,7 @@ function meetingClassification(
 }
 
 function relatedMeetings(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentMeetingRef[] {
   const out: RelatedDocumentMeetingRef[] = [];
@@ -486,5 +491,37 @@ export function attachRelatedContextToMeetings(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToMeeting(principal, item, search)),
+  };
+}
+
+/**
+ * Inverse of meeting relatedProject: entitled same-scope meetings already
+ * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Isolation: sameRelatedScope + entitledClientCodes. Unscoped never
+ * receives scoped relations. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * historicalHvs / hubMiRow on the project stay as composed.
+ */
+export function attachRelatedContextToProject(
+  principal: AtlasPrincipal,
+  item: ProjectOperatingRecord,
+  search: AtlasAuthorizedSearch,
+): ProjectOperatingRecord {
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedMeetingsList = relatedMeetings(item, search);
+  return {
+    ...item,
+    ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+  };
+}
+
+export function attachRelatedContextToProjects(
+  principal: AtlasPrincipal,
+  payload: AtlasAuthorizedSearch['projects'],
+  search: AtlasAuthorizedSearch,
+): AtlasAuthorizedSearch['projects'] {
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToProject(principal, item, search)),
   };
 }

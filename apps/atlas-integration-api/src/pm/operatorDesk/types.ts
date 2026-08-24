@@ -538,6 +538,13 @@ export interface ProjectOperatingRecord {
   nextAction?: string;
   evidence?: string;
   evidenceRefs?: ProjectOperatingEvidenceRef[];
+  /**
+   * Inverse of meeting relatedProject: already-authorized entitled
+   * HVCG_Meetings / extras.meetings / search kind=meeting refs.
+   * Reuses RelatedDocumentMeetingRef. Copied after authorization.
+   * Never a new Graph calendar query, downloadUrl, or transcript text.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
