@@ -9,7 +9,8 @@
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings and onboarding → research links
  * on OnboardingAgentRecord items, and the inverse
- * research-intelligence → meetings link on
+ * research-intelligence → meetings and
+ * research-intelligence → documents links on
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
@@ -472,11 +473,11 @@ function relatedDocumentsForMeeting(
       ...(webUrl ? { webUrl } : {}),
     });
   };
-  for (const doc of search.documents.items) {
+  for (const doc of search.documents?.items || []) {
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
     consider(doc);
   }
-  for (const hit of search.hits) {
+  for (const hit of search.hits || []) {
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
     if (hit.kind !== 'document') continue;
     consider(hit);
@@ -779,15 +780,20 @@ export function attachRelatedContextToOnboarding(
 }
 
 /**
- * Inverse of meeting research evidence: entitled same-scope meetings already
- * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Inverse of meeting research evidence + document.researchRelationship:
+ * entitled same-scope meetings already on authorizedSearch.meetings.items
+ * or hits kind=meeting, and entitled same-scope documents already on
+ * authorizedSearch.documents.items or hits kind=document (reuses
+ * relatedDocumentsForMeeting / RelatedMeetingDocumentRef — no new query).
  * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
- * ClientCode is missing / non-canonical — omit relatedMeetings rather than
- * guess. Unscoped never receives scoped relations. Client A never receives
- * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No transcript
- * text. SOURCE_BACKED_ONLY / outboundRefresh=false / financingStatus
- * UNKNOWN / fit NOT_EVALUATED / lenderCriteriaInvented=false stay as
- * composed. No new Graph calendar query.
+ * ClientCode is missing / non-canonical — omit relatedMeetings /
+ * relatedDocuments rather than guess. Unscoped never receives scoped
+ * relations. Unscoped lender catalog rows never receive scoped documents.
+ * Client A never receives Client B. SAS / anonymous webUrl dropped. No
+ * downloadUrl. No transcript text. SOURCE_BACKED_ONLY /
+ * outboundRefresh=false / financingStatus UNKNOWN / fit NOT_EVALUATED /
+ * lenderCriteriaInvented=false stay as composed. Preview stays off this
+ * slice (refs only). No new Graph calendar / document query.
  */
 export function attachRelatedContextToResearchIntelligenceRecord(
   principal: AtlasPrincipal,
@@ -797,9 +803,11 @@ export function attachRelatedContextToResearchIntelligenceRecord(
   if (!canonicalClientCode(item.clientCode)) return item;
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
+  const relatedDocuments = relatedDocumentsForMeeting(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+    ...(relatedDocuments.length ? { relatedDocuments } : {}),
   };
 }
 
