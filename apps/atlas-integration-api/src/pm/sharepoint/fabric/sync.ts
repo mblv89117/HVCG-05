@@ -127,8 +127,15 @@ function isolatedFailureNote(label: string, err: unknown): string {
 
 function persistFabricProgress(dir: string, cp: FabricCheckpoint, notes: string[]): void {
   cp.lastAttemptAt = new Date().toISOString();
-  cp.lastNotes = sanitizeFabricNotes(notes);
+  cp.lastNotes = sanitizeFabricNotes(pinHonestyNotes(notes));
   saveCheckpoint(dir, cp);
+}
+
+function pinHonestyNotes(notes: string[]): string[] {
+  const mail = notes.filter((note) => /^Mail (delta|page) reached HTTP /.test(note));
+  const skips = notes.filter((note) => /index write skipped|transport failed \(HTTP 0\)/.test(note));
+  const rest = notes.filter((note) => !mail.includes(note) && !skips.includes(note));
+  return [...rest, ...skips.slice(0, 2), ...mail.slice(-1)];
 }
 
 async function readFabricJson(
@@ -489,14 +496,9 @@ export async function runFabricSync(opts: {
 
   notes.push('Planner application APIs are delegated-only per current Microsoft Graph docs — not indexed via app-only.');
   notes.push('Online meeting transcripts require a Teams application access policy if Graph returns 403.');
-  const mailFact = notes.find((note) => /^Mail (delta|page) reached HTTP /.test(note));
-  if (mailFact) {
-    notes.splice(notes.indexOf(mailFact), 1);
-    notes.push(mailFact);
-  }
   cp.lastRunAt = new Date().toISOString();
   cp.lastIndexed = { ...indexed };
-  cp.lastNotes = sanitizeFabricNotes(notes);
+  cp.lastNotes = sanitizeFabricNotes(pinHonestyNotes(notes));
   cp.counts = {
     mailThreads: (cp.counts.mailThreads || 0) + indexed.mailThreads,
     meetings: (cp.counts.meetings || 0) + indexed.meetings,
