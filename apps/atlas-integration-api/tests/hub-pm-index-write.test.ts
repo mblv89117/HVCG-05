@@ -5,11 +5,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
 import {
+  asGraphUrlField,
   describeGraphListWriteError,
+  existingClientLookupId,
   formatGraphWriteFailure,
   retryIndexWrite,
   toSharePointDateTime,
 } from '../src/pm/sharepoint/indexWrite.ts';
+import { businessFileSearchRequest } from '../src/pm/sharepoint/fabric/files.ts';
 import { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
@@ -203,6 +206,50 @@ describe('Graph list-write error mapping', () => {
     assert.equal(toSharePointDateTime('2026-08-24T15:00:00.0000000')?.endsWith('Z'), true);
     assert.ok(toSharePointDateTime('2026-08-24T00:00:00Z'));
   });
+
+  it('drops Hyperlink fields that exceed the SharePoint 255-char URL limit', () => {
+    const short = asGraphUrlField('https://outlook.office.com/calendar/e1');
+    assert.deepEqual(short, { Url: 'https://outlook.office.com/calendar/e1', Description: 'Source' });
+    const long = asGraphUrlField(`https://outlook.office.com/owa/?itemid=${'A'.repeat(300)}`);
+    assert.equal(long, undefined);
+    assert.equal(existingClientLookupId('12'), 12);
+    assert.equal(existingClientLookupId('not-a-list-id'), undefined);
+  });
+
+  it('retries a meeting invalidRequest down to required MeetingType/date fields', async () => {
+    const writes: Array<Record<string, unknown>> = [];
+    const result = await retryIndexWrite(
+      async (fields) => {
+        writes.push({ ...fields });
+        if (fields.OutlookEventLink || fields.Summary) {
+          throw new PmHttpError(
+            503,
+            'PM_BACKEND_UNAVAILABLE',
+            formatGraphWriteFailure(400, {
+              error: { code: 'invalidRequest', message: 'The request is malformed or incorrect.' },
+            }),
+          );
+        }
+        return { id: 'm1', fields };
+      },
+      {
+        Title: 'Weekly',
+        MeetingType: 'Other',
+        MeetingDate: '2026-08-24T15:00:00.000Z',
+        Summary: 'Status Key:cal:e1',
+        OutlookEventLink: { Url: 'https://outlook.office.com/calendar/e1', Description: 'Source' },
+      },
+      'meeting',
+    );
+    assert.equal(result.id, 'm1');
+    assert.ok(writes.length >= 2);
+    const last = writes[writes.length - 1] || {};
+    assert.equal(last.Title, 'Weekly');
+    assert.equal(last.MeetingType, 'Other');
+    assert.ok(last.MeetingDate);
+    assert.equal(last.OutlookEventLink, undefined);
+    assert.equal(last.Summary, undefined);
+  });
 });
 
 describe('SharePoint index write schema mapping', () => {
@@ -320,6 +367,25 @@ describe('SharePoint index write schema mapping', () => {
     });
     assert.equal(created?.fields.HVCG_IdempotencyKey, undefined);
   });
+
+  it('omits OutlookEventLink when the Graph webLink exceeds the Hyperlink limit', async () => {
+    const graph = new SchemaGraph();
+    const svc = service(graph);
+    await svc.upsertMeetingIndex({
+      title: 'Internal standup',
+      summary: 'Notes',
+      date: '2026-08-24T15:00:00.0000000',
+      webUrl: `https://outlook.office.com/owa/?itemid=${'A'.repeat(300)}`,
+      sourceEventId: 'e-long',
+      idempotencyKey: 'cal:e-long',
+    });
+    const created = graph.lists.get(MEETINGS)?.[0];
+    assert.equal(created?.fields.MeetingType, 'Other');
+    assert.equal(created?.fields.OutlookEventLink, undefined);
+    assert.match(String(created?.fields.Summary || ''), /Key:cal:e-long/);
+    assert.equal(created?.fields.ClientCode, undefined);
+    assert.equal(created?.fields.ClientIdLookupId, undefined);
+  });
 });
 
 describe('Fabric notes stay sanitized when a mapped 400 skips a write', () => {
@@ -383,5 +449,101 @@ describe('Fabric notes stay sanitized when a mapped 400 skips a write', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('persists mail threads and meeting rows without calling app-only OneDrive recent', async () => {
+    const graph = new SchemaGraph();
+    graph.seed(CLIENTS, { Title: 'Colorado Craft Beef', ClientCode: 'CCB01', ClientStage: 'Active Client' }, '12');
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-meetings-files-'));
+    const paths: string[] = [];
+    const searchBodies: unknown[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc,
+        fabric: {
+          async getJson(path: string) {
+            paths.push(path);
+            if (path.includes('/mailFolders/inbox/messages/delta')) {
+              return {
+                status: 200,
+                json: {
+                  value: [
+                    {
+                      id: 'm-live',
+                      conversationId: 'conv-live',
+                      subject: 'Colorado Craft Beef follow-up',
+                      bodyPreview: 'Packet received.',
+                      receivedDateTime: '2026-08-24T01:00:00Z',
+                      from: { emailAddress: { address: 'client@example.com' } },
+                    },
+                  ],
+                  '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+                },
+              };
+            }
+            if (path.includes('/calendar/events')) {
+              return {
+                status: 200,
+                json: {
+                  value: [
+                    {
+                      id: 'evt-1',
+                      subject: 'Colorado Craft Beef weekly',
+                      bodyPreview: 'Status.',
+                      start: { dateTime: '2026-08-24T15:00:00.0000000', timeZone: 'UTC' },
+                      webLink: `https://outlook.office.com/owa/?itemid=${'A'.repeat(300)}`,
+                      attendees: [{ emailAddress: { address: 'ops@example.com' } }],
+                    },
+                  ],
+                },
+              };
+            }
+            return { status: 404, json: {} };
+          },
+          async postJson(path: string, body: unknown) {
+            paths.push(`POST ${path}`);
+            searchBodies.push(body);
+            return {
+              status: 400,
+              json: { error: { code: 'invalidRequest', message: 'The request is malformed or incorrect.' } },
+            };
+          },
+        } as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.indexed.meetings, 1);
+      assert.equal(paths.some((path) => /\/drive\/recent/i.test(path)), false);
+      assert.ok(result.notes.some((note) => /OneDrive recent skipped/.test(note) && /not supported/.test(note)));
+      assert.equal(result.notes.filter((note) => /File search skipped/.test(note)).length, 1);
+      assert.equal(searchBodies.length, 1);
+      const req = (searchBodies[0] as { requests?: Array<{ query?: { queryString?: string }; region?: string }> })
+        ?.requests?.[0];
+      assert.match(String(req?.queryString || req?.query?.queryString || ''), /site:https:\/\/.+ isDocument:true/);
+      assert.equal(req?.region, 'US');
+      assert.equal(result.notes.some((note) => /mail index write skipped/.test(note)), false);
+      const meeting = graph.lists.get(MEETINGS)?.[0];
+      assert.equal(meeting?.fields.MeetingType, 'Client');
+      assert.equal(meeting?.fields.OutlookEventLink, undefined);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer |Colorado Craft Beef/i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Business file search query shape', () => {
+  it('uses site restriction and region instead of path= AND isDocument=true', () => {
+    const body = businessFileSearchRequest('https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients');
+    const req = (body.requests as Array<Record<string, unknown>>)[0];
+    assert.equal(req.region, 'US');
+    assert.equal(
+      (req.query as { queryString?: string }).queryString,
+      'site:https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients isDocument:true',
+    );
+    assert.equal(/path:"/.test(String((req.query as { queryString?: string }).queryString)), false);
   });
 });

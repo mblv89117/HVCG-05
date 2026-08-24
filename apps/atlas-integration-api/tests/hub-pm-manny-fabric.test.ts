@@ -176,6 +176,26 @@ describe('Fabric Graph allowlist', () => {
     );
   });
 
+  it('sends a Region header on Search POST and still rejects tenant-wide site search', async () => {
+    const headersSeen: Record<string, string>[] = [];
+    const client = createFabricGraphClient(
+      { getToken: async () => 'token' },
+      {
+        fetch: async (_url, init) => {
+          headersSeen.push((init?.headers || {}) as Record<string, string>);
+          return new Response(JSON.stringify({ value: [] }), { status: 200 });
+        },
+      },
+    );
+    const result = await client.postJson('/v1.0/search/query', { requests: [] });
+    assert.equal(result.status, 200);
+    assert.equal(headersSeen[0]?.Region, 'US');
+    await assert.rejects(
+      () => client.getJson('/v1.0/sites?search=*'),
+      (err: unknown) => err instanceof PmHttpError && err.code === 'PM_BACKEND_UNAVAILABLE',
+    );
+  });
+
   it('returns status 0 for transport failures without weakening unsafe-path rejection', async () => {
     const client = createFabricGraphClient(
       { getToken: async () => 'token' },
