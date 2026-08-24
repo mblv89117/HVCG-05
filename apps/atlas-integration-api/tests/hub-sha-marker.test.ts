@@ -155,6 +155,7 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
             fileSearch?: { status?: string };
             attachments?: { status?: string };
             attachmentSearch?: { status?: string };
+            fileIndexSearch?: { status?: string };
             clientHints?: { status?: string; count?: number };
           };
         };
@@ -173,6 +174,7 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
         assert.equal(body.fabricSync?.fileSearch?.status, 'skipped');
         assert.equal(body.fabricSync?.attachments?.status, 'skipped');
         assert.equal(body.fabricSync?.attachmentSearch?.status, 'skipped');
+        assert.equal(body.fabricSync?.fileIndexSearch?.status, 'skipped');
         assert.equal(body.fabricSync?.clientHints?.status, 'skipped');
         assert.equal(body.fabricSync?.clientHints?.count, 0);
 

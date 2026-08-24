@@ -719,9 +719,15 @@ describe('Fabric mail delta checkpointing', () => {
       assert.match(health.attachments.reason, /HTTP 200/);
       assert.equal(health.attachmentSearch.status, 'ready');
       assert.match(health.attachmentSearch.reason, /operating index/);
+      assert.equal(health.fileIndexSearch.status, 'ready');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'Indexed business files are searchable on the entitled Hub operating index.',
+      );
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentSearch)), false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
       assert.equal(/LIVE attachments|deltatoken|Bearer |guestaccess/i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -1248,6 +1254,15 @@ describe('Fabric mail delta checkpointing', () => {
       assert.match(health.fileSearch.reason, /HTTP 400/);
       assert.equal(health.fileSearch.status === 'LIVE', false);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.lastIndexed.files, 0);
+      assert.equal(health.cumulative.files, 0);
+      assert.equal(health.fileIndexSearch.status, 'skipped');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'No indexed business files to search; file-index search remains unproven.',
+      );
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
+      assert.equal(/term-sheet|invented|CCB99|PDG01/i.test(JSON.stringify(health.fileIndexSearch)), false);
       assert.equal(
         JSON.stringify(health)
           .replace(/Not claimed as LIVE files/gi, '')
@@ -1337,6 +1352,12 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.fileSearch.status, 'skipped');
       assert.match(health.fileSearch.reason, /File search has not completed; file search remains unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.fileIndexSearch.status, 'skipped');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'No indexed business files to search; file-index search remains unproven.',
+      );
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
       assert.equal(health.scheduledSweepEnabled, false);
       assert.equal(health.changeNotifications.status, 'skipped');
       assert.equal(health.changeNotifications.mail, 'skipped');
@@ -1351,6 +1372,84 @@ describe('Fabric sync honesty status', () => {
     }
   });
 
+  it('reports fileIndexSearch ready when indexed files > 0 without inventing counts, filenames, or LIVE', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-fileindex-ready-'));
+    try {
+      writeFileSync(
+        join(dir, 'fabric-checkpoint.json'),
+        JSON.stringify({
+          lastRunAt: '2026-08-24T00:00:00.000Z',
+          mailMode: 'delta',
+          mailDeltaReady: true,
+          fileSearchLastStatus: 400,
+          lastNotes: ['File search skipped: Graph search/query HTTP 400'],
+          lastIndexed: {
+            mailThreads: 0,
+            meetings: 0,
+            contacts: 0,
+            files: 2,
+            attachmentsIndexed: 0,
+            skipped: 0,
+            restricted: 0,
+          },
+          counts: { files: 2, attachmentsIndexed: 0 },
+        }),
+      );
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileIndexSearch.status, 'ready');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'Indexed business files are searchable on the entitled Hub operating index.',
+      );
+      assert.equal(health.fileIndexSearch.status === 'LIVE', false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
+      assert.equal(health.lastIndexed.files, 2);
+      assert.equal(health.cumulative.files, 2);
+      assert.equal(/term-sheet|invented|filename|CCB99|PDG01|Bearer /i.test(JSON.stringify(health.fileIndexSearch)), false);
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.match(health.fileSearch.reason, /HTTP 400/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports fileIndexSearch skipped when indexed files remain 0', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-fileindex-zero-'));
+    try {
+      writeFileSync(
+        join(dir, 'fabric-checkpoint.json'),
+        JSON.stringify({
+          lastRunAt: '2026-08-24T00:00:00.000Z',
+          mailMode: 'delta',
+          mailDeltaReady: true,
+          lastIndexed: {
+            mailThreads: 1,
+            meetings: 0,
+            contacts: 0,
+            files: 0,
+            attachmentsIndexed: 0,
+            skipped: 0,
+            restricted: 0,
+          },
+          counts: { mailThreads: 1, files: 0, attachmentsIndexed: 0 },
+        }),
+      );
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileIndexSearch.status, 'skipped');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'No indexed business files to search; file-index search remains unproven.',
+      );
+      assert.equal(health.lastIndexed.files, 0);
+      assert.equal(health.cumulative.files, 0);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
+      assert.equal(/term-sheet|invented|CCB99|PDG01/i.test(JSON.stringify(health.fileIndexSearch)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('reports fileSearch error when the fabric checkpoint is unreadable', () => {
     const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-unreadable-'));
     try {
@@ -1359,6 +1458,12 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.fileSearch.status, 'error');
       assert.match(health.fileSearch.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.fileIndexSearch.status, 'error');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'Fabric checkpoint unreadable; file-index search remains unproven.',
+      );
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
       assert.equal(health.attachments.status, 'error');
       assert.match(health.attachments.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
@@ -1381,6 +1486,12 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.fileSearch.status, 'error');
       assert.match(health.fileSearch.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.fileIndexSearch.status, 'error');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'Fabric checkpoint unreadable; file-index search remains unproven.',
+      );
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
       assert.equal(health.honesty, 'degraded');
       assert.equal(health.clientHints.status, 'error');
       assert.equal(health.clientHints.count, 0);
