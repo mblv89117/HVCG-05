@@ -3,7 +3,8 @@
  * items, the inverse on MeetingOperatingRecord items, the inverse
  * project → meetings and project → documents links on
  * ProjectOperatingRecord items, the inverse
- * mail-thread → meetings link on MailThreadOperatingRecord items, the
+ * mail-thread → meetings and mail-thread → documents links on
+ * MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings and capital-prepare → research
  * links on CapitalSubmissionPrepareRecord items, the inverse
  * client-support → meetings and
@@ -626,17 +627,22 @@ export function attachRelatedContextToProjects(
 }
 
 /**
- * Inverse of meeting relatedEmail + researchIntelligence.relatedMeetings:
- * entitled same-scope meetings already on authorizedSearch.meetings.items
- * or hits kind=meeting, and entitled same-scope research already on
- * authorizedSearch.researchIntelligence.items (no new research query).
+ * Inverse of meeting relatedEmail + document.relatedEmail +
+ * researchIntelligence.relatedMeetings: entitled same-scope meetings
+ * already on authorizedSearch.meetings.items or hits kind=meeting,
+ * entitled same-scope documents already on authorizedSearch.documents.items
+ * or hits kind=document (reuses relatedDocumentsForMeeting /
+ * RelatedMeetingDocumentRef — no new document query), and entitled
+ * same-scope research already on authorizedSearch.researchIntelligence.items
+ * (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
- * non-canonical — omit researchRelationship rather than guess.
- * Unscoped never receives scoped relations. Unscoped lender catalog
- * titles never attach to a scoped thread. Client A never receives
- * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
- * transcript text. DRAFT_ONLY / autoRespond=false / send=false /
+ * non-canonical — omit researchRelationship / relatedDocuments rather
+ * than guess. Unscoped never receives scoped relations. Unscoped lender
+ * catalog titles never attach to a scoped thread. Client A never
+ * receives Client B. SAS / anonymous webUrl dropped. No downloadUrl.
+ * No transcript text. No preview body / suggestedDraft / send on the
+ * document refs. DRAFT_ONLY / autoRespond=false / send=false /
  * indexedPreviewOnly stay as composed on the thread payload.
  */
 export function attachRelatedContextToMailThread(
@@ -647,10 +653,14 @@ export function attachRelatedContextToMailThread(
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
   const researchRelationship = relatedResearchForScopeItem(item, search);
+  const relatedDocuments = canonicalClientCode(item.clientCode)
+    ? relatedDocumentsForMeeting(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
+    ...(relatedDocuments.length ? { relatedDocuments } : {}),
   };
 }
 
