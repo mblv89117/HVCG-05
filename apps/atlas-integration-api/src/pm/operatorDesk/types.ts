@@ -248,6 +248,8 @@ export interface AtlasClientContext {
   /**
    * PREPARE-only capital submission request from already-entitled Atlas/index
    * evidence. External lender/investor submit stays OWNER-GATED.
+   * Optional relatedMeetings is the inverse of meeting capitalRelationship:
+   * already-authorized same-scope meetings only.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   /**
@@ -637,6 +639,14 @@ export interface CapitalSubmissionPrepareRecord {
   evidence: CapitalSubmissionEvidenceRef[];
   missingRequirements: string[];
   nextAction: string;
+  /**
+   * Inverse of meeting capitalRelationship: already-authorized entitled
+   * HVCG_Meetings / extras.meetings / search kind=meeting refs.
+   * Reuses RelatedDocumentMeetingRef. Copied after authorization.
+   * Never a new Graph calendar query, downloadUrl, or transcript text.
+   * PREPARE_ONLY stays as composed. TargetAmount is never invented.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
@@ -839,6 +849,10 @@ export interface AtlasAuthorizedSearch {
    * calendar or transcript query.
    */
   meetings: MeetingOperatingPayload;
+  /**
+   * PREPARE-only capital request. Optional relatedMeetings is the inverse
+   * of meeting capitalRelationship: already-authorized same-scope meetings.
+   */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
   onboarding: OnboardingAgentPayload;

@@ -73,6 +73,7 @@ import {
 import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgent.ts';
 import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
 import {
+  attachRelatedContextToCapitalSubmissions,
   attachRelatedContextToDocuments,
   attachRelatedContextToMailThreads,
   attachRelatedContextToMeetings,
@@ -1856,6 +1857,11 @@ function composeAuthorizedSearch(
   authorizedSearch.threads = attachRelatedContextToMailThreads(
     ctx.principal,
     authorizedSearch.threads,
+    authorizedSearch,
+  );
+  authorizedSearch.capitalSubmissions = attachRelatedContextToCapitalSubmissions(
+    ctx.principal,
+    authorizedSearch.capitalSubmissions,
     authorizedSearch,
   );
   return {

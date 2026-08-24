@@ -1,8 +1,10 @@
 /**
  * Related operating context on already-authorized DocumentOperatingRecord
  * items, the inverse on MeetingOperatingRecord items, the inverse
- * project → meetings link on ProjectOperatingRecord items, and the inverse
- * mail-thread → meetings link on MailThreadOperatingRecord items.
+ * project → meetings link on ProjectOperatingRecord items, the inverse
+ * mail-thread → meetings link on MailThreadOperatingRecord items, and the
+ * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
+ * items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
@@ -12,7 +14,7 @@
  * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
  * relatedMeetings().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
- * or a second calendar/meeting/document/search product.
+ * or a second calendar/meeting/document/search/capital product.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
@@ -24,6 +26,8 @@ import {
   CAPITAL_SUBMISSION_FINANCING_STATUS,
   CAPITAL_SUBMISSION_POLICY_CLASS,
   type AtlasAuthorizedSearch,
+  type CapitalSubmissionPreparePayload,
+  type CapitalSubmissionPrepareRecord,
   type DocumentOperatingRecord,
   type MailThreadOperatingPayload,
   type MailThreadOperatingRecord,
@@ -559,5 +563,39 @@ export function attachRelatedContextToMailThreads(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToMailThread(principal, item, search)),
+  };
+}
+
+/**
+ * Inverse of meeting capitalRelationship: entitled same-scope meetings
+ * already on authorizedSearch.meetings.items or hits kind=meeting.
+ * Isolation: sameRelatedScope + entitledClientCodes. Unscoped never
+ * receives scoped relations. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * PREPARE_ONLY / send=false / externalSubmit=false / ownerGated=true /
+ * financingStatus UNKNOWN / HONEST_EMPTY stay as composed. TargetAmount
+ * is never invented.
+ */
+export function attachRelatedContextToCapitalSubmission(
+  principal: AtlasPrincipal,
+  item: CapitalSubmissionPrepareRecord,
+  search: AtlasAuthorizedSearch,
+): CapitalSubmissionPrepareRecord {
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedMeetingsList = relatedMeetings(item, search);
+  return {
+    ...item,
+    ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+  };
+}
+
+export function attachRelatedContextToCapitalSubmissions(
+  principal: AtlasPrincipal,
+  payload: CapitalSubmissionPreparePayload,
+  search: AtlasAuthorizedSearch,
+): CapitalSubmissionPreparePayload {
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToCapitalSubmission(principal, item, search)),
   };
 }
