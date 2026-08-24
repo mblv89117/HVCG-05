@@ -24,7 +24,8 @@ import {
   loadClientContext,
   searchAuthorizedKnowledge,
 } from '../src/pm/operatorDesk/toolGateway.ts';
-import { onboardingPayloadHasInventedFacts } from '../src/pm/operatorDesk/onboardingAgent.ts';
+import { emptyOnboardingPayload, onboardingPayloadHasInventedFacts } from '../src/pm/operatorDesk/onboardingAgent.ts';
+import { DOCUMENT_RELATED_CONTEXT_PAGE_SIZE } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_ONBOARDING_AGENT_MISSION_KEY,
@@ -180,6 +181,11 @@ function assertOwnerEscalate(
     assert.match(row.nextAction, /owner-gated/i);
     assert.ok(row.ownerDecisions.length > 0);
     assert.ok(row.ownerDecisions.every((decision) => decision.status === 'escalated' && decision.execute === false));
+    if (row.relatedMeetings) {
+      assert.ok(row.relatedMeetings.length > 0);
+      assert.ok(row.relatedMeetings.length <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+      assert.equal(/downloadUrl|transcript|attendee/i.test(JSON.stringify(row.relatedMeetings)), false);
+    }
   }
 }
 
@@ -381,5 +387,313 @@ describe('ATLAS-ONBOARDING-AGENT-001 governed onboarding agent', () => {
       if (prev.DATA === undefined) delete process.env.INTEGRATION_DATA_DIR;
       else process.env.INTEGRATION_DATA_DIR = prev.DATA;
     }
+  });
+});
+
+const MEETING_SOURCE = 'https://outlook.office.com/calendar/item/syn01-standup';
+
+describe('ATLAS-ONBOARDING-RELATED-MEETINGS-001 entitled same-scope inverse', () => {
+  it('attaches same-scope relatedMeetings on entitled onboarding items and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'project',
+            id: 'proj-onboard-1',
+            title: 'New client onboarding',
+            href: '/projects/proj-onboard-1',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+            modifiedAt: '2026-08-21T15:00:00Z',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    assert.equal(project.clientCode, 'SYN01');
+    const meeting = project.relatedMeetings?.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.title, 'SYN01 weekly standup');
+    assert.equal(meeting.date, '2026-08-21T15:00:00Z');
+    assert.equal(meeting.webUrl, MEETING_SOURCE);
+    assert.equal(meeting.sourceEventId, 'AAMk-syn-cal-1');
+    assert.ok((project.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/downloadUrl|transcript|attendee/i.test(JSON.stringify(project.relatedMeetings)), false);
+    assert.equal(JSON.stringify(project.relatedMeetings).includes('PDG01'), false);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [
+        {
+          kind: 'project',
+          id: 'proj-onboard-1',
+          title: 'New client onboarding',
+          href: '/projects/proj-onboard-1',
+          source: 'HVCG_Projects',
+          clientCode: 'SYN01',
+        },
+        {
+          kind: 'meeting',
+          id: 'meet-syn-1',
+          title: 'SYN01 weekly standup',
+          href: '/clients/SYN01',
+          source: 'HVCG_Meetings',
+          clientCode: 'SYN01',
+          webUrl: MEETING_SOURCE,
+          provenance: 'CONFIRMED',
+          sourceEventId: 'AAMk-syn-cal-1',
+          modifiedAt: '2026-08-21T15:00:00Z',
+        },
+      ],
+    });
+    const ctxProject = viaIndex.clientContext.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(ctxProject);
+    assert.equal(ctxProject.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.deepEqual(ctxProject.relatedMeetings, project.relatedMeetings);
+    noInventedFacts(result.authorizedSearch.onboarding);
+  });
+
+  it('honestly omits relatedMeetings when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'project',
+            id: 'proj-onboard-only',
+            title: 'New client onboarding',
+            href: '/projects/proj-onboard-only',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-only');
+    assert.ok(project);
+    assert.equal(project.relatedMeetings, undefined);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    noInventedFacts(result.authorizedSearch.onboarding);
+  });
+
+  it('never attaches Client B meetings to a Client A onboarding item', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'project',
+            id: 'proj-onboard-1',
+            title: 'New client onboarding',
+            href: '/projects/proj-onboard-1',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-pdg',
+            title: 'PDG01 leak standup',
+            href: '/clients/PDG01',
+            source: 'HVCG_Meetings',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/calendar/item/pdg01-leak',
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-pdg-cal-1',
+          },
+          {
+            kind: 'project',
+            id: 'proj-pdg-onboard',
+            title: 'PDG01 client onboarding',
+            href: '/projects/proj-pdg-onboard',
+            source: 'HVCG_Projects',
+            clientCode: 'PDG01',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal((project.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(project).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.onboarding.items.some((row) => row.id === 'proj-pdg-onboard'), false);
+    assert.equal(JSON.stringify(result.authorizedSearch.onboarding).includes('PDG01'), false);
+    assert.equal(JSON.stringify(result.authorizedSearch.onboarding).includes('ACCG01'), false);
+    assert.equal(JSON.stringify(result.authorizedSearch.onboarding).includes('CCB01'), false);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    noInventedFacts(result.authorizedSearch.onboarding);
+  });
+
+  it('omits relatedMeetings when ClientCode is missing rather than guessing', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'client onboarding kickoff',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'project',
+            id: 'proj-unscoped',
+            title: 'New client onboarding',
+            href: '/projects/proj-unscoped',
+            source: 'HVCG_Projects',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-unscoped',
+            title: 'Internal onboarding standup',
+            href: '/meetings',
+            source: 'HVCG_Meetings',
+            webUrl: MEETING_SOURCE,
+            provenance: 'PROPOSED',
+          },
+        ],
+      }),
+    });
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-unscoped');
+    assert.ok(project);
+    assert.equal(project.clientCode, undefined);
+    assert.equal(project.relatedMeetings, undefined);
+    assert.equal(JSON.stringify(project).includes('SYN01'), false);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+  });
+
+  it('leaves the empty onboarding payload unchanged', async () => {
+    const empty = emptyOnboardingPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('relatedMeetings' in empty, false);
+    assert.equal(empty.policyClass, 'OWNER_ESCALATE');
+    assert.equal(empty.execute, false);
+    assert.equal(empty.activate, false);
+    assert.equal(empty.send, false);
+    assert.equal(empty.liveGtmOutbound, false);
+    assert.equal(empty.hubMi, false);
+    assert.equal(empty.ownerGated, true);
+
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'capital raise package',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+        ],
+      }),
+    });
+    assert.deepEqual(result.authorizedSearch.onboarding, empty);
+    assert.equal(result.authorizedSearch.onboarding.items.length, 0);
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+  });
+
+  it('never invents ClientCodes, attendees, downloadUrl, or transcript text', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'project',
+            id: 'proj-onboard-1',
+            title: 'New client onboarding',
+            href: '/projects/proj-onboard-1',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+          },
+        ],
+      }),
+    });
+    const blob = JSON.stringify(result.authorizedSearch.onboarding);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/attendee/i.test(blob), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(project);
+    assert.equal(project.clientCode, 'SYN01');
+    assert.ok(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
+    assertOwnerEscalate(result.authorizedSearch.onboarding);
+    noInventedFacts(result.authorizedSearch.onboarding);
   });
 });
