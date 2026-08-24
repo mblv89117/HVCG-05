@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { classifyDriveItem, classifyFabricRecord, stripSecrets } from '../src/pm/sharepoint/fabric/classify.ts';
@@ -151,6 +151,10 @@ describe('Fabric Graph allowlist', () => {
   it('allows owner mailbox inbox messages delta but keeps other mailbox delta blocked', () => {
     assert.equal(
       isAllowedFabricGraphPath(`/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$top=50`),
+      true,
+    );
+    assert.equal(
+      isAllowedFabricGraphPath(`/v1.0/users/${MANNY_ENTRA_OID}/mailFolders('inbox')/messages/delta`),
       true,
     );
     assert.equal(
@@ -477,6 +481,40 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.honesty, 'degraded');
       assert.ok(health.notes.some((note) => /Mail delta reached HTTP 200/.test(note)));
       assert.equal(/CCB99|PDG01|deltatoken|https?:\/\/|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('restarts inbox delta when a stored skip uses a non-allowlisted Graph path', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-skip-reset-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      writeFileSync(
+        join(dir, 'fabric-checkpoint.json'),
+        JSON.stringify({
+          mailSkip: `https://graph.microsoft.com/v1.0/users/${MANNY_ENTRA_OID}/mailFolders('hidden')/messages/delta?$skiptoken=abc`,
+          mailMode: 'delta',
+          calendarSkip: null,
+          contactsSkip: null,
+          filesSkip: null,
+          counts: {},
+        }),
+      );
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.ok(result.notes.some((note) => /Stored mail skip path was not allowlisted/.test(note)));
+      assert.ok(result.notes.some((note) => /Mail delta reached HTTP 200/.test(note)));
+      assert.equal(result.checkpoint.mailMode, 'delta');
+      assert.equal(
+        paths.some((path) => path.includes('/mailFolders/inbox/messages/delta') && !path.includes("mailFolders('hidden')")),
+        true,
+      );
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

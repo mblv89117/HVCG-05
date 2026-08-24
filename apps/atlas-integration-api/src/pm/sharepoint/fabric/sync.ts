@@ -18,7 +18,7 @@ import {
   indexBusinessFiles,
   type SharePointFileCheckpoint,
 } from './files.ts';
-import type { FabricGraphClient } from './graph.ts';
+import { isAllowedFabricGraphPath, type FabricGraphClient } from './graph.ts';
 import { sanitizeFabricNotes } from './status.ts';
 
 const MAX_PAGES = 8;
@@ -170,8 +170,21 @@ async function tryPmIndex(
 function recordMailHttpFact(notes: string[], mailMode: 'delta' | 'page', status: number): void {
   const fact = `Mail ${mailMode} reached HTTP ${status}.`;
   const prior = notes.findIndex((note) => /^Mail (delta|page) reached HTTP /.test(note));
-  if (prior >= 0) notes.splice(prior, 1);
+  if (prior >= 0) {
+    const existing = notes[prior];
+    if (/reached HTTP 200/.test(existing) && status !== 200) return;
+    notes.splice(prior, 1);
+  }
   notes.push(fact);
+}
+
+function mailboxPathname(url: string): string {
+  try {
+    const parsed = new URL(url.startsWith('https://') ? url : `https://graph.microsoft.com${url}`);
+    return parsed.pathname;
+  } catch {
+    return url.split('?')[0] || url;
+  }
 }
 
 export async function runFabricSync(opts: {
@@ -210,6 +223,15 @@ export async function runFabricSync(opts: {
   let mailMode: 'delta' | 'page' = mailUrl.includes('/delta') ? 'delta' : (cp.mailMode || 'page');
   try {
   for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
+    if (!isAllowedFabricGraphPath(mailboxPathname(mailUrl))) {
+      notes.push('Stored mail skip path was not allowlisted; restarting inbox delta.');
+      mailUrl = mailDeltaUrl();
+      mailMode = 'delta';
+      cp.mailSkip = null;
+      cp.mailMode = 'delta';
+      persistFabricProgress(opts.dataDir, cp, notes);
+      continue;
+    }
     const { status, json } = await readFabricJson(opts.fabric, mailUrl, notes, `Mail ${mailMode}`);
     recordMailHttpFact(notes, mailMode, status);
     cp.mailMode = mailMode;
