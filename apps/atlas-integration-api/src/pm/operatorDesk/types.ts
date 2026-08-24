@@ -273,7 +273,10 @@ export interface AtlasClientContext {
    * Source-backed research intelligence from already-entitled Atlas/index
    * evidence and the existing sourced lender catalog titles. Stores source,
    * retrieval date, confidence, and superseded state. Lender criteria and
-   * financing status are never invented.
+   * financing status are never invented. Optional relatedMeetings is the
+   * same entitled same-scope inverse used by documents / projects / threads
+   * / capital / onboarding / client support. Omitted when ClientCode is
+   * missing.
    */
   researchIntelligence: ResearchIntelligencePayload;
   /**
@@ -701,6 +704,15 @@ export interface ResearchIntelligenceRecord {
   financingStatus: typeof RESEARCH_INTELLIGENCE_FINANCING_STATUS;
   fit: typeof RESEARCH_INTELLIGENCE_FIT;
   evidence: string;
+  /**
+   * Optional inverse of meeting research evidence: already-authorized
+   * same-scope HVCG_Meetings / search kind=meeting refs. Copied after
+   * authorization. Omitted when none are entitled or when ClientCode is
+   * missing / non-canonical (fail-closed; never guess). Never a new Graph
+   * calendar query, transcript, attendees, downloadUrl, invented titles,
+   * ClientCodes, lender criteria, financing status, or fit.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
 }
 
 export interface ResearchIntelligencePayload {
@@ -893,6 +905,11 @@ export interface AtlasAuthorizedSearch {
    * of meeting capitalRelationship: already-authorized same-scope meetings.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
+  /**
+   * Source-backed research copies. Optional relatedMeetings on each item
+   * is the entitled same-scope HVCG_Meetings inverse. Empty payload stays
+   * empty. Missing / non-canonical ClientCode omits relatedMeetings.
+   */
   researchIntelligence: ResearchIntelligencePayload;
   /**
    * Native governed onboarding agent. Optional relatedMeetings on each item

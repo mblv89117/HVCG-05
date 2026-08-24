@@ -80,6 +80,7 @@ import {
   attachRelatedContextToMeetings,
   attachRelatedContextToOnboarding,
   attachRelatedContextToProjects,
+  attachRelatedContextToResearchIntelligence,
 } from './documentRelatedContext.ts';
 import { completedEntitledClientHints } from './productResearchAgent.ts';
 
@@ -1912,6 +1913,11 @@ function composeAuthorizedSearch(
   authorizedSearch.capitalSubmissions = attachRelatedContextToCapitalSubmissions(
     ctx.principal,
     authorizedSearch.capitalSubmissions,
+    authorizedSearch,
+  );
+  authorizedSearch.researchIntelligence = attachRelatedContextToResearchIntelligence(
+    ctx.principal,
+    authorizedSearch.researchIntelligence,
     authorizedSearch,
   );
   authorizedSearch.onboarding = attachRelatedContextToOnboarding(

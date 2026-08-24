@@ -5,18 +5,21 @@
  * mail-thread → meetings link on MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
  * items, the inverse client-support → meetings link on
- * ClientSupportAgentRecord items, and the inverse onboarding → meetings
- * link on OnboardingAgentRecord items.
+ * ClientSupportAgentRecord items, the inverse onboarding → meetings
+ * link on OnboardingAgentRecord items, and the inverse
+ * research-intelligence → meetings link on ResearchIntelligenceRecord
+ * items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / .clientSupport / .onboarding
- * / fabric mail-attachment index rows / entitled search extras.meetings
- * (kind=meeting) / hits kind=document / hits kind=meeting / sameRelatedScope
- * / entitledClientCodes / authoritativeSourceUrl /
- * DOCUMENT_RELATED_CONTEXT_PAGE_SIZE / relatedMeetings().
+ * / .researchIntelligence / fabric mail-attachment index rows / entitled
+ * search extras.meetings (kind=meeting) / hits kind=document / hits
+ * kind=meeting / sameRelatedScope / entitledClientCodes /
+ * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
+ * relatedMeetings().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
- * or a second calendar/meeting/document/search/capital product.
+ * or a second calendar/meeting/document/search/capital/research product.
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
@@ -40,6 +43,8 @@ import {
   type OnboardingAgentPayload,
   type OnboardingAgentRecord,
   type ProjectOperatingRecord,
+  type ResearchIntelligencePayload,
+  type ResearchIntelligenceRecord,
   type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
   type RelatedDocumentContractRef,
@@ -675,5 +680,44 @@ export function attachRelatedContextToOnboarding(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToOnboardingRecord(principal, item, search)),
+  };
+}
+
+/**
+ * Inverse of meeting research evidence: entitled same-scope meetings already
+ * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
+ * ClientCode is missing / non-canonical — omit relatedMeetings rather than
+ * guess. Unscoped never receives scoped relations. Client A never receives
+ * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No transcript
+ * text. SOURCE_BACKED_ONLY / outboundRefresh=false / financingStatus
+ * UNKNOWN / fit NOT_EVALUATED / lenderCriteriaInvented=false stay as
+ * composed. No new Graph calendar query.
+ */
+export function attachRelatedContextToResearchIntelligenceRecord(
+  principal: AtlasPrincipal,
+  item: ResearchIntelligenceRecord,
+  search: AtlasAuthorizedSearch,
+): ResearchIntelligenceRecord {
+  if (!canonicalClientCode(item.clientCode)) return item;
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedMeetingsList = relatedMeetings(item, search);
+  return {
+    ...item,
+    ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+  };
+}
+
+export function attachRelatedContextToResearchIntelligence(
+  principal: AtlasPrincipal,
+  payload: ResearchIntelligencePayload,
+  search: AtlasAuthorizedSearch,
+): ResearchIntelligencePayload {
+  if (!payload.items.length) return payload;
+  return {
+    ...payload,
+    items: payload.items.map((item) =>
+      attachRelatedContextToResearchIntelligenceRecord(principal, item, search),
+    ),
   };
 }
