@@ -416,6 +416,7 @@ function searchToolContext(opts: {
   searchQuery?: string;
   deskSearch?: ToolGatewayContext['deskSearch'];
   entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  requestDocumentPreview?: ToolGatewayContext['requestDocumentPreview'];
 }): ToolGatewayContext {
   return {
     principal: opts.principal,
@@ -425,6 +426,7 @@ function searchToolContext(opts: {
       opts.searchQuery || extractSearchAuthorizedQuery(opts.question) || '',
     deskSearch: opts.deskSearch,
     entitledSearch: opts.entitledSearch,
+    ...(opts.requestDocumentPreview ? { requestDocumentPreview: opts.requestDocumentPreview } : {}),
   };
 }
 
@@ -566,6 +568,7 @@ export async function runAtlasSearchRuntime(opts: {
   searchQuery?: string;
   deskSearch?: ToolGatewayContext['deskSearch'];
   entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  requestDocumentPreview?: ToolGatewayContext['requestDocumentPreview'];
 }): Promise<AtlasHubRuntimeResult> {
   const question = (opts.question || '').trim();
   if (question && isOwnerGatedQuestion(question)) {
@@ -589,6 +592,7 @@ export async function runAtlasSearchRuntime(opts: {
       searchQuery: opts.searchQuery,
       deskSearch: opts.deskSearch,
       entitledSearch: opts.entitledSearch,
+      requestDocumentPreview: opts.requestDocumentPreview,
     }),
   );
   return finishSearchRuntime(invoked);

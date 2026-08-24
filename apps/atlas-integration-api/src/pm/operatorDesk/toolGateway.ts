@@ -15,7 +15,13 @@
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
+import { isMannyPrincipal } from '../sharepoint/manny.ts';
 import { authoritativeSourceUrl } from '../sharepoint/fabric/fileIndex.ts';
+import {
+  DOCUMENT_PREVIEW_BASED_ON,
+  DOCUMENT_PREVIEW_PAGE_SIZE,
+  type DocumentPreviewFields,
+} from '../sharepoint/fabric/documentPreview.ts';
 import type { PmSearchHit } from '../sharepoint/search.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
 import {
@@ -127,6 +133,11 @@ export interface ToolGatewayContext {
    * Do not pass HVS folder copies or invented ClientCodes.
    */
   entitledIndexHits?: PmSearchHit[];
+  /**
+   * Optional Graph driveItem preview for a small page of already-authorized
+   * document hits. Authorization happens before this runs. Does not invent ids.
+   */
+  requestDocumentPreview?: (ref: { driveId: string; itemId: string }) => Promise<DocumentPreviewFields>;
 }
 
 export interface ClientContextToolResult {
@@ -648,6 +659,12 @@ function toAuthorizedSearchHit(
     ...(clientStage ? { clientStage } : {}),
     ...(conversationId ? { conversationId } : {}),
     ...(direction ? { direction } : {}),
+    ...('driveId' in row && typeof row.driveId === 'string' && row.driveId.trim()
+      ? { driveId: row.driveId.trim() }
+      : {}),
+    ...('itemId' in row && typeof row.itemId === 'string' && row.itemId.trim()
+      ? { itemId: row.itemId.trim() }
+      : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
     provenance: classification,
@@ -1065,6 +1082,107 @@ function documentOperatingRecords(hits: AtlasAuthorizedSearchHit[]): DocumentOpe
     });
   }
   return items;
+}
+
+function mayPreviewDocumentClient(principal: AtlasPrincipal, clientCode?: string): boolean {
+  if (!clientCode) return isMannyPrincipal(principal);
+  return entitledClientCodes(principal).includes(clientCode);
+}
+
+function previewFieldsWithoutUrls(preview: DocumentPreviewFields): DocumentPreviewFields {
+  return {
+    previewStatus: preview.previewStatus === 'ready' ? 'skipped' : preview.previewStatus,
+    previewSkipReason:
+      preview.previewStatus === 'ready'
+        ? 'Graph preview URL was dropped because it is not a short-lived embed'
+        : preview.previewSkipReason,
+    basedOn: DOCUMENT_PREVIEW_BASED_ON,
+  };
+}
+
+function applyPreviewFields(
+  item: DocumentOperatingRecord,
+  preview: DocumentPreviewFields,
+): DocumentOperatingRecord {
+  const safe =
+    preview.previewStatus === 'ready' && (preview.previewGetUrl || preview.previewPostUrl)
+      ? preview
+      : previewFieldsWithoutUrls(preview);
+  return {
+    ...item,
+    previewStatus: safe.previewStatus,
+    ...(safe.previewExpiresAt && safe.previewStatus === 'ready' ? { previewExpiresAt: safe.previewExpiresAt } : {}),
+    ...(safe.previewGetUrl && safe.previewStatus === 'ready' ? { previewGetUrl: safe.previewGetUrl } : {}),
+    ...(safe.previewPostUrl && safe.previewStatus === 'ready' ? { previewPostUrl: safe.previewPostUrl } : {}),
+    ...(safe.previewSkipReason && safe.previewStatus !== 'ready' ? { previewSkipReason: safe.previewSkipReason } : {}),
+    basedOn: DOCUMENT_PREVIEW_BASED_ON,
+  };
+}
+
+async function attachDocumentPreviews(
+  ctx: ToolGatewayContext,
+  items: DocumentOperatingRecord[],
+  hits: AtlasAuthorizedSearchHit[],
+): Promise<DocumentOperatingRecord[]> {
+  if (!ctx.requestDocumentPreview || items.length === 0) return items;
+  const byId = new Map(hits.map((hit) => [hit.id, hit]));
+  const page = items.slice(0, DOCUMENT_PREVIEW_PAGE_SIZE);
+  const rest = items.slice(DOCUMENT_PREVIEW_PAGE_SIZE);
+  const previewed = await Promise.all(
+    page.map(async (item) => {
+      if (!mayPreviewDocumentClient(ctx.principal, item.clientCode)) {
+        return applyPreviewFields(item, {
+          previewStatus: 'skipped',
+          previewSkipReason: 'client isolation: document is outside the entitled ClientCode set',
+          basedOn: DOCUMENT_PREVIEW_BASED_ON,
+        });
+      }
+      const hit = byId.get(item.id);
+      const driveId = hit?.driveId?.trim() || '';
+      const itemId = hit?.itemId?.trim() || '';
+      if (!driveId || !itemId) {
+        return applyPreviewFields(item, {
+          previewStatus: 'skipped',
+          previewSkipReason: 'no proven drive/item id from the existing indexer',
+          basedOn: DOCUMENT_PREVIEW_BASED_ON,
+        });
+      }
+      try {
+        const preview = await ctx.requestDocumentPreview!({ driveId, itemId });
+        return applyPreviewFields(item, preview);
+      } catch {
+        return applyPreviewFields(item, {
+          previewStatus: 'error',
+          previewSkipReason: 'Graph preview request failed before an HTTP response',
+          basedOn: DOCUMENT_PREVIEW_BASED_ON,
+        });
+      }
+    }),
+  );
+  return [...previewed, ...rest];
+}
+
+async function withDocumentPreviews(
+  ctx: ToolGatewayContext,
+  result: AuthorizedSearchToolResult,
+): Promise<AuthorizedSearchToolResult> {
+  if (!ctx.requestDocumentPreview) return result;
+  const items = await attachDocumentPreviews(
+    ctx,
+    result.authorizedSearch.documents.items,
+    result.authorizedSearch.hits,
+  );
+  return {
+    ...result,
+    authorizedSearch: {
+      ...result.authorizedSearch,
+      documents: {
+        ...result.authorizedSearch.documents,
+        binariesInAtlas: false,
+        items,
+      },
+    },
+  };
 }
 
 function resolveQueueUrgency(row: OperatorOperatingItem): SearchQueueUrgency | null {
@@ -1619,16 +1737,16 @@ export async function searchAuthorizedKnowledge(ctx: ToolGatewayContext): Promis
   const reused = reuseDeskSearchHits(ctx, query);
   if (reused) {
     const pmHits = filterHitsToBinding(reused.hits, scoped.binding);
-    return composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true);
+    return withDocumentPreviews(ctx, composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true));
   }
 
   if (!ctx.entitledSearch) {
-    return composeBoundAuthorizedSearch(ctx, query, scoped.binding, [], false);
+    return withDocumentPreviews(ctx, composeBoundAuthorizedSearch(ctx, query, scoped.binding, [], false));
   }
 
   const found = await ctx.entitledSearch(query);
   const pmHits = filterHitsToBinding(found.results.map(toAuthorizedSearchHit), scoped.binding);
-  return composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true);
+  return withDocumentPreviews(ctx, composeBoundAuthorizedSearch(ctx, query, scoped.binding, pmHits, true));
 }
 
 export function invokeReadAutoTool(tool: string, ctx: ToolGatewayContext): AskAtlasAnswer {

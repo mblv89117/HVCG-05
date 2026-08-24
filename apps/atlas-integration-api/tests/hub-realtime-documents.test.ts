@@ -1,7 +1,8 @@
 /**
- * ATLAS-REALTIME-DOCUMENTS-001
+ * ATLAS-REALTIME-DOCUMENTS-001 + ATLAS-REALTIME-DOCUMENTS-SECURE-PREVIEW-001
  * Entitled file-index rows become a document operating record on the
- * existing /operator/search.json READ_AUTO path. No second search product.
+ * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
+ * preview is attached after authorization. No second search or preview product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,15 +16,30 @@ import { buildRegistry } from '../src/connectors/registry.ts';
 import { handleRequest } from '../src/http/router.ts';
 import { createLocalAiAdapter } from '../src/local-ai/adapter.ts';
 import { createAuthorizedPmRepository } from '../src/pm/backend.ts';
+import { PmRepository } from '../src/pm/repository.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
-import { authoritativeSourceUrl, extractSourceUrl } from '../src/pm/sharepoint/fabric/fileIndex.ts';
+import {
+  authoritativeSourceUrl,
+  extractProvenDriveItemRef,
+  extractSourceUrl,
+  fileIndexSummary,
+} from '../src/pm/sharepoint/fabric/fileIndex.ts';
+import {
+  DOCUMENT_PREVIEW_BASED_ON,
+  isGraphPreviewEmbedUrl,
+  mapGraphPreviewResponse,
+  requestIndexedDocumentPreview,
+} from '../src/pm/sharepoint/fabric/documentPreview.ts';
+import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
+import { GRAPH_NOTIFICATION_PATH } from '../src/pm/sharepoint/fabric/notifications.ts';
 import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
 import { searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
-import type { AtlasAuthorizedSearch } from '../src/pm/operatorDesk/types.ts';
+import type { AtlasAuthorizedSearch, DocumentOperatingRecord } from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import { buildKnowledgeLedger } from '../src/pm/sharepoint/knowledgeLedger.ts';
 import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
+import type { FabricGraphClient } from '../src/pm/sharepoint/fabric/graph.ts';
 
 const SOURCE =
   'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_SYN01/intake-memo.pdf';
@@ -31,6 +47,11 @@ const SAS =
   'https://hvfiles.blob.core.windows.net/docs/intake.pdf?sv=2024-11-04&sig=abc&se=2026-08-24T00:00:00Z&sp=r';
 const ANON =
   'https://highvaluecapitalgroup.sharepoint.com/:b:/s/HVCG-Clients/abc?guestaccess=1&share=xyz';
+const PROVEN_DRIVE = 'b!YxKEg0R0mkSWM7uE9NymGd3I5nWqakb4';
+const PROVEN_ITEM = '01SYN01INTAKEMEMOITEMID0001';
+const PREVIEW_GET = 'https://highvaluecapitalgroup.sharepoint.com/_layouts/15/embed.aspx?uniqueId=abc&auth_key=short';
+const PREVIEW_POST = 'https://onedrive.live.com/embed';
+const CLIENT_STATE = 'atlas-graph-client-state-ok';
 
 const staff: AtlasPrincipal = {
   userId: '11111111-1111-4111-8111-aaaaaaaaaa01',
@@ -279,6 +300,348 @@ describe('entitled file-index document operating record', () => {
       else process.env.INTEGRATION_PM_BACKEND = prev.PM;
       if (prev.DATA === undefined) delete process.env.INTEGRATION_DATA_DIR;
       else process.env.INTEGRATION_DATA_DIR = prev.DATA;
+    }
+  });
+});
+
+function previewFabric(
+  post: (path: string, body: unknown) => Promise<{ status: number; json: Record<string, unknown> }>,
+): FabricGraphClient {
+  return {
+    async getJson() {
+      return { status: 404, json: {} };
+    },
+    postJson: post,
+    async patchJson() {
+      return { status: 404, json: {} };
+    },
+    async deleteJson() {
+      return { status: 404, json: {} };
+    },
+  };
+}
+
+function provenFileIndexService(): SearchPmService {
+  const summary = fileIndexSummary({
+    restricted: false,
+    webUrl: SOURCE,
+    idempotencyKey: `file:${PROVEN_ITEM}`,
+    driveId: PROVEN_DRIVE,
+    itemId: PROVEN_ITEM,
+  });
+  return {
+    async listAuthorizedClients() {
+      return [
+        {
+          id: 'SYN01',
+          itemId: '1',
+          clientCode: 'SYN01',
+          displayName: 'SYNTHETIC Alpha Co',
+          source: 'sharepoint',
+        },
+      ];
+    },
+    async listAuthorizedProjects() {
+      return [];
+    },
+    async listAuthorizedTasks() {
+      return [];
+    },
+    async listWorkspaceCollections() {
+      return {
+        ...emptyCollection,
+        communications: {
+          queried: true,
+          status: 'COMPLETE',
+          items: [
+            {
+              id: 'file-proven',
+              title: 'SYN01 intake memo',
+              summary,
+              webUrl: SOURCE,
+              date: '2026-08-20T18:04:00Z',
+              sourceItemId: `file:${PROVEN_ITEM}`,
+            },
+          ],
+        },
+      };
+    },
+    async listVendors() {
+      return [];
+    },
+    async listOpportunities() {
+      return [];
+    },
+    async listIndexedFiles() {
+      return [];
+    },
+  };
+}
+
+function assertNoPreviewUrls(item: DocumentOperatingRecord | undefined) {
+  assert.equal(item?.previewGetUrl, undefined);
+  assert.equal(item?.previewPostUrl, undefined);
+  assert.equal(item?.previewExpiresAt, undefined);
+}
+
+describe('secure Graph driveItem preview for indexed documents', () => {
+  it('allowlists preview POST only for proven drive/item shape and rejects share links', () => {
+    assert.equal(
+      isAllowedFabricGraphPath(`/v1.0/drives/${PROVEN_DRIVE}/items/${PROVEN_ITEM}/preview`, 'POST'),
+      true,
+    );
+    assert.equal(
+      isAllowedFabricGraphPath(`/v1.0/drives/${PROVEN_DRIVE}/items/${PROVEN_ITEM}/createLink`, 'POST'),
+      false,
+    );
+    assert.equal(isAllowedFabricGraphPath(`/v1.0/drives/${PROVEN_DRIVE}/items/${PROVEN_ITEM}/preview`), false);
+    assert.equal(isGraphPreviewEmbedUrl(PREVIEW_GET), true);
+    assert.equal(isGraphPreviewEmbedUrl(ANON), false);
+    assert.equal(isGraphPreviewEmbedUrl(SAS), false);
+  });
+
+  it('copies proven drive/item ids from the file index and does not invent them from webUrl', async () => {
+    const summary = fileIndexSummary({
+      restricted: false,
+      webUrl: SOURCE,
+      idempotencyKey: `file:${PROVEN_ITEM}`,
+      driveId: PROVEN_DRIVE,
+      itemId: PROVEN_ITEM,
+    });
+    assert.match(summary, new RegExp(`Drive:${PROVEN_DRIVE}`));
+    assert.match(summary, new RegExp(`Item:${PROVEN_ITEM}`));
+    const proven = extractProvenDriveItemRef(summary);
+    assert.deepEqual(proven, { driveId: PROVEN_DRIVE, itemId: PROVEN_ITEM });
+    assert.equal(extractProvenDriveItemRef(`File metadata index. Source: ${SOURCE} Key:file:item-1`), undefined);
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake');
+    const doc = found.results.find((hit) => hit.id === 'file-proven');
+    assert.equal(doc?.driveId, PROVEN_DRIVE);
+    assert.equal(doc?.itemId, PROVEN_ITEM);
+  });
+
+  it('marks preview ready on Graph 200/201 JSON and never stores binaries', async () => {
+    const ready201 = mapGraphPreviewResponse(201, { getUrl: PREVIEW_GET, postUrl: PREVIEW_POST });
+    assert.equal(ready201.previewStatus, 'ready');
+    assert.equal(ready201.previewGetUrl, PREVIEW_GET);
+    assert.equal(ready201.previewPostUrl, PREVIEW_POST);
+    assert.ok(ready201.previewExpiresAt);
+    assert.equal(ready201.basedOn, DOCUMENT_PREVIEW_BASED_ON);
+
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+      requestDocumentPreview: (ref) =>
+        requestIndexedDocumentPreview(
+          previewFabric(async (path) => {
+            assert.match(path, new RegExp(`/drives/${PROVEN_DRIVE}/items/${PROVEN_ITEM}/preview$`));
+            return { status: 200, json: { getUrl: PREVIEW_GET, postUrl: PREVIEW_POST } };
+          }),
+          ref,
+        ),
+    });
+    const docs = result.authorizedSearch.documents;
+    assert.equal(docs.binariesInAtlas, false);
+    assert.equal(docs.items.length, 1);
+    assert.equal(docs.items[0]?.previewStatus, 'ready');
+    assert.equal(docs.items[0]?.previewGetUrl, PREVIEW_GET);
+    assert.equal(docs.items[0]?.previewPostUrl, PREVIEW_POST);
+    assert.ok(docs.items[0]?.previewExpiresAt);
+    assert.equal(docs.items[0]?.basedOn, DOCUMENT_PREVIEW_BASED_ON);
+    assert.equal(docs.items[0]?.previewSkipReason, undefined);
+    assert.equal(/\blive\s*[:=]\s*true\b/i.test(JSON.stringify(docs)), false);
+  });
+
+  it('honest-skips unsupported Graph preview and does not leak a preview URL', async () => {
+    const skipped = mapGraphPreviewResponse(403, {
+      error: { code: 'accessDenied', message: 'Application preview is not supported for this item.' },
+    });
+    assert.equal(skipped.previewStatus, 'skipped');
+    assertNoPreviewUrls(skipped);
+    assert.match(skipped.previewSkipReason || '', /HTTP 403/);
+    assert.equal(/\bLIVE\b/.test(JSON.stringify(skipped)), false);
+
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+      requestDocumentPreview: (ref) =>
+        requestIndexedDocumentPreview(
+          previewFabric(async () => ({
+            status: 405,
+            json: { error: { code: 'notSupported', message: 'Preview is not supported.' } },
+          })),
+          ref,
+        ),
+    });
+    const item = result.authorizedSearch.documents.items[0];
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assert.equal(item?.previewStatus, 'skipped');
+    assertNoPreviewUrls(item);
+    assert.match(item?.previewSkipReason || '', /HTTP 405/);
+    assert.equal(/\bLIVE\b/.test(JSON.stringify(result.authorizedSearch.documents)), false);
+    assert.equal(item?.basedOn, DOCUMENT_PREVIEW_BASED_ON);
+  });
+
+  it('drops anonymous permanent Graph URLs and skips rows without proven ids', async () => {
+    const leaked = mapGraphPreviewResponse(200, { getUrl: ANON, postUrl: SAS });
+    assert.equal(leaked.previewStatus, 'skipped');
+    assertNoPreviewUrls(leaked);
+
+    const found = await searchSharePointPm(fileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+      requestDocumentPreview: async () => {
+        throw new Error('must not preview without a proven drive/item id');
+      },
+    });
+    const item = result.authorizedSearch.documents.items[0];
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assert.equal(item?.id, 'file-1');
+    assert.equal(item?.previewStatus, 'skipped');
+    assert.match(item?.previewSkipReason || '', /no proven drive\/item id/);
+    assertNoPreviewUrls(item);
+  });
+
+  it('never previews Client B documents for a Client A operator', async () => {
+    const pdgSource =
+      'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_PDG01/hidden.pdf';
+    const called: string[] = [];
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'document',
+            id: 'file-pdg',
+            title: 'PDG01 hidden packet',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: pdgSource,
+            provenance: 'CONFIRMED',
+            driveId: 'b!pdgdriveid000000000000000000001',
+            itemId: '01PDG01HIDDENITEMID00000001',
+          },
+        ],
+      }),
+      requestDocumentPreview: async (ref) => {
+        called.push(`${ref.driveId}/${ref.itemId}`);
+        return mapGraphPreviewResponse(200, { getUrl: PREVIEW_GET });
+      },
+    });
+    assert.equal(called.some((id) => /pdg/i.test(id)), false);
+    const foreign = result.authorizedSearch.documents.items.find((row) => row.id === 'file-pdg');
+    if (foreign) {
+      assert.notEqual(foreign.previewStatus, 'ready');
+      assertNoPreviewUrls(foreign);
+    }
+    const own = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.equal(own?.previewStatus, 'ready');
+    assert.equal(own?.previewGetUrl, PREVIEW_GET);
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+  });
+
+  it('forged POST /api/graph/change-notifications remains 401 clientState mismatch', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-docs-preview-notify-'));
+    const prev = {
+      NODE_ENV: process.env.NODE_ENV,
+      HOST: process.env.INTEGRATION_HOST,
+      KEY: process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY,
+      TENANT: process.env.MICROSOFT_TENANT_ID,
+      PM: process.env.INTEGRATION_PM_BACKEND,
+      STATE: process.env.INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE,
+    };
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    process.env.INTEGRATION_HOST = '127.0.0.1';
+    process.env.MICROSOFT_TENANT_ID = '11111111-1111-1111-1111-111111111111';
+    process.env.INTEGRATION_PM_BACKEND = 'development-json';
+    process.env.INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE = CLIENT_STATE;
+    delete process.env.INTEGRATION_REQUIRE_AUTH;
+    delete process.env.INTEGRATION_ALLOW_INSECURE_DEV_AUTH;
+    const cfg: AppConfig = {
+      ...loadConfig(),
+      dataDir: dir,
+      verifyAccessToken: async () => {
+        const err = new Error('Invalid or expired Microsoft token') as Error & { status: number; code: string };
+        err.status = 401;
+        err.code = 'invalid_token';
+        throw err;
+      },
+    };
+    const repo = new IntegrationRepository(dir, cfg.tokenEncryptionKeyB64);
+    const pm = new PmRepository(dir);
+    const app = buildRegistry(cfg, repo);
+    const localAi = createLocalAiAdapter({ env: { LOCAL_AI_ENABLED: undefined }, secretsFileEnv: {} });
+    const syncs: string[] = [];
+    const server = createServer((req, res) => {
+      handleRequest(
+        {
+          cfg,
+          repo,
+          app,
+          pm,
+          localAi,
+          requestFabricSync: async (trigger) => {
+            syncs.push(trigger);
+            return { accepted: true, queued: false };
+          },
+        },
+        req,
+        res,
+      ).catch((err) => {
+        res.writeHead(500, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'server_error', message: String(err) }));
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const forged = await fetch(`http://127.0.0.1:${port}${GRAPH_NOTIFICATION_PATH}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          value: [
+            {
+              subscriptionId: '11111111-1111-4111-8111-111111111111',
+              changeType: 'created',
+              clientState: 'forged',
+            },
+          ],
+        }),
+      });
+      assert.equal(forged.status, 401);
+      const body = (await forged.json()) as { reason?: string };
+      assert.equal(body.reason, 'clientState mismatch');
+      assert.equal(syncs.length, 0);
+    } finally {
+      await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+      rmSync(dir, { recursive: true, force: true });
+      if (prev.NODE_ENV === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = prev.NODE_ENV;
+      if (prev.HOST === undefined) delete process.env.INTEGRATION_HOST;
+      else process.env.INTEGRATION_HOST = prev.HOST;
+      if (prev.KEY === undefined) delete process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY;
+      else process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = prev.KEY;
+      if (prev.TENANT === undefined) delete process.env.MICROSOFT_TENANT_ID;
+      else process.env.MICROSOFT_TENANT_ID = prev.TENANT;
+      if (prev.PM === undefined) delete process.env.INTEGRATION_PM_BACKEND;
+      else process.env.INTEGRATION_PM_BACKEND = prev.PM;
+      if (prev.STATE === undefined) delete process.env.INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE;
+      else process.env.INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE = prev.STATE;
     }
   });
 });
