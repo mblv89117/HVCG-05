@@ -66,6 +66,17 @@ export const PRODUCT_RESEARCH_SURFACES = [
   'open_source',
 ] as const;
 export type ProductResearchSurface = (typeof PRODUCT_RESEARCH_SURFACES)[number];
+export const ATLAS_CLIENT_HINTS_STATUSES = ['ready', 'empty', 'error', 'skipped'] as const;
+export type AtlasClientHintsStatus = (typeof ATLAS_CLIENT_HINTS_STATUSES)[number];
+/**
+ * Count-only fabric hint honesty. Same shape as /health fabricSync.clientHints.
+ * Never includes ClientCode, displayName, DBA, domains, emails, or tokens.
+ */
+export interface AtlasClientHintsExtra {
+  status: AtlasClientHintsStatus;
+  reason: string;
+  count: number;
+}
 /** Onboarding agent copies entitled intake evidence only. Owner decisions stay escalated. */
 export const ONBOARDING_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
 export const ONBOARDING_AGENT_EXECUTE = false as const;
@@ -895,6 +906,12 @@ export interface AtlasAuthorizedSearch {
    * payload stays empty. Missing ClientCode omits relatedMeetings.
    */
   clientSupport: ClientSupportAgentPayload;
+  /**
+   * Optional count-only fabric.clientHints extras (status/reason/count).
+   * Copied from already-loaded entitled fabric status. Omitted when fabric
+   * has no completed hint status (skipped / never_run). Isolation unchanged.
+   */
+  clientHints?: AtlasClientHintsExtra;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;
@@ -1105,6 +1122,12 @@ export interface OperatorOperatingPicture {
   hvsRecoveredCapitalPackets: OperatorRecoveredCapitalPacket[];
   recoveredClientsKnowledgeOperationalized: string[];
   hvsActionableClientKnowledge: ActionableClientKnowledge[];
+  /**
+   * Optional count-only fabric.clientHints extras (status/reason/count).
+   * Copied from already-loaded entitled fabric status. Omitted when fabric
+   * has no completed hint status (skipped / never_run).
+   */
+  clientHints?: AtlasClientHintsExtra;
 }
 
 export interface OperatorClientJourney {

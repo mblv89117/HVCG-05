@@ -81,6 +81,7 @@ import {
   attachRelatedContextToOnboarding,
   attachRelatedContextToProjects,
 } from './documentRelatedContext.ts';
+import { completedEntitledClientHints } from './productResearchAgent.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -1751,6 +1752,21 @@ function classifyClientSearchToken(
   return { scope: 'generic', binding: null };
 }
 
+/**
+ * Copy already-loaded picture.clientHints onto authorizedSearch extras.
+ * Count-only. Omit when not entitled or fabric has no completed hint status.
+ * Does not call listClientHints.
+ */
+function attachPictureClientHints(
+  search: AtlasAuthorizedSearch,
+  picture: OperatorOperatingPicture,
+): AtlasAuthorizedSearch {
+  if (!search.entitled) return search;
+  const hints = completedEntitledClientHints(picture.clientHints);
+  if (!hints) return search;
+  return { ...search, clientHints: hints };
+}
+
 function emptyAuthorizedSearch(opts?: {
   query?: string;
   entitled?: boolean;
@@ -1908,9 +1924,10 @@ function composeAuthorizedSearch(
     authorizedSearch.clientSupport,
     authorizedSearch,
   );
+  const withHints = attachPictureClientHints(authorizedSearch, ctx.picture);
   return {
-    askAtlas: searchActivityAnswer(ctx, authorizedSearch),
-    authorizedSearch,
+    askAtlas: searchActivityAnswer(ctx, withHints),
+    authorizedSearch: withHints,
   };
 }
 
@@ -1961,11 +1978,14 @@ export function searchAuthorizedKnowledgeSync(ctx: ToolGatewayContext): Authoriz
   entitledClientCodes(ctx.principal);
   const query = normalizeAuthorizedSearchQuery(ctx.searchQuery || ctx.clientQuery || '');
   if (query.length < 2) {
-    const authorizedSearch = emptyAuthorizedSearch({
-      query,
-      entitled: true,
-      ran: false,
-    });
+    const authorizedSearch = attachPictureClientHints(
+      emptyAuthorizedSearch({
+        query,
+        entitled: true,
+        ran: false,
+      }),
+      ctx.picture,
+    );
     authorizedSearch.why = 'Search query is empty or too short.';
     authorizedSearch.basedOn = 'Query must be at least 2 characters after trim. Search was not executed.';
     return {

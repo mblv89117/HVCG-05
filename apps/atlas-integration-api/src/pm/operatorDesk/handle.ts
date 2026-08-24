@@ -24,7 +24,12 @@ import { renderOperatorDeskHtml, renderUnsignedOperatorDesk } from './html.ts';
 import { listEntitledAttention, realClientsNeedingAttention } from '../sharepoint/attention.ts';
 import { buildKnowledgeOperatingPicture } from '../sharepoint/knowledgeOperating.ts';
 import { listOperatorClientJourneys } from '../../clientExperience/service.ts';
-import { buildOperatorDeskModel, emptyHonestOperatingPicture, operatorOperatingPictureFromKnowledge } from './model.ts';
+import {
+  buildOperatorDeskModel,
+  emptyHonestOperatingPicture,
+  operatorOperatingPictureFromKnowledge,
+  withCompletedClientHints,
+} from './model.ts';
 import {
   AGENT_ACTIVITY_CONTRACT,
   ASK_ATLAS_QUESTION,
@@ -69,10 +74,14 @@ import {
 
 export { isOperatorDeskPath };
 
-function entitledProductResearchHealth(cfg: AppConfig): ProductImprovementInspectHealth {
-  const fabric = inspectFabricSyncHealth(cfg.dataDir, {
+function entitledFabricStatus(cfg: AppConfig) {
+  return inspectFabricSyncHealth(cfg.dataDir, {
     sweepEnabled: Boolean(cfg.pmBackend.sharepoint) && isFabricSweepEnabled(),
   });
+}
+
+function entitledProductResearchHealth(cfg: AppConfig): ProductImprovementInspectHealth {
+  const fabric = entitledFabricStatus(cfg);
   const clientHints = copyEntitledClientHints(fabric.clientHints);
   return {
     authRequired: cfg.requireAuth,
@@ -185,7 +194,10 @@ async function loadSharePointDesk(opts: {
       kind: row.kind,
     })),
     realClientsNeedingAttention: realClientsNeedingAttention(attention).length,
-    operatingPicture: operatorOperatingPictureFromKnowledge(knowledge),
+    operatingPicture: withCompletedClientHints(
+      operatorOperatingPictureFromKnowledge(knowledge),
+      entitledFabricStatus(cfg).clientHints,
+    ),
     clientJourneys: listOperatorClientJourneys({
       dataDir: cfg.dataDir,
       entitledClientCodes: entitled,
@@ -215,7 +227,10 @@ function loadDevelopmentDesk(opts: {
     searchQuery: q,
     searchRan: q.length >= 2,
     searchHits: [],
-    operatingPicture: emptyHonestOperatingPicture(),
+    operatingPicture: withCompletedClientHints(
+      emptyHonestOperatingPicture(),
+      entitledFabricStatus(opts.cfg).clientHints,
+    ),
     clientJourneys: listOperatorClientJourneys({
       dataDir: opts.cfg.dataDir,
       entitledClientCodes: entitledClientCodes(opts.principal),

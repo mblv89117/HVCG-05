@@ -8,10 +8,13 @@
 
 import {
   ASK_ATLAS_PRODUCT_RESEARCH_AGENT_MISSION_KEY,
+  ATLAS_CLIENT_HINTS_STATUSES,
   PRODUCT_RESEARCH_AGENT_EXECUTE,
   PRODUCT_RESEARCH_INVENT_METRICS,
   PRODUCT_RESEARCH_SURFACES,
   type AskAtlasClassification,
+  type AtlasClientHintsExtra,
+  type AtlasClientHintsStatus,
   type ProductResearchAgentPayload,
   type ProductResearchSurface,
   type ProductResearchSurfaceRecord,
@@ -30,14 +33,9 @@ const SUCCESS_NOTE = /\b(?:reached HTTP 200|mail delta reached)\b/i;
 const INVENTED_METRICS =
   /\b(?:ltv\s*[:=]?\s*\d|dscr\s*[:=]?\s*\d|nps\s*[:=]?\s*\d|mrr\s*[:=]?\s*\d|conversion rate|best[_ ]?fit|credit box)\b/i;
 
-export type ProductResearchClientHintsStatus = 'ready' | 'empty' | 'error' | 'skipped';
-
+export type ProductResearchClientHintsStatus = AtlasClientHintsStatus;
 /** Count-only fabric hint honesty. Never includes ClientCodes or identifiers. */
-export interface ProductResearchClientHints {
-  status: ProductResearchClientHintsStatus;
-  reason: string;
-  count: number;
-}
+export type ProductResearchClientHints = AtlasClientHintsExtra;
 
 export interface ProductResearchInspectHealth {
   authRequired: boolean;
@@ -53,11 +51,11 @@ export interface ProductResearchInspectHealth {
   clientHints?: ProductResearchClientHints;
 }
 
-const CLIENT_HINT_STATUSES = new Set<ProductResearchClientHintsStatus>([
+const CLIENT_HINT_STATUSES = new Set<ProductResearchClientHintsStatus>(ATLAS_CLIENT_HINTS_STATUSES);
+const COMPLETED_CLIENT_HINT_STATUSES = new Set<ProductResearchClientHintsStatus>([
   'ready',
   'empty',
   'error',
-  'skipped',
 ]);
 
 const HINT_IDENTIFIER =
@@ -82,6 +80,19 @@ export function copyEntitledClientHints(
     reason: HINT_IDENTIFIER.test(reason) ? '' : reason,
     count,
   };
+}
+
+/**
+ * Ask Atlas extras: copy completed fabric.clientHints only.
+ * ready / empty / error attach. skipped / never_run / unknown omit (fail-closed).
+ * Does not call listClientHints. Does not invent ClientCodes.
+ */
+export function completedEntitledClientHints(
+  raw: { status?: unknown; reason?: unknown; count?: unknown } | null | undefined,
+): ProductResearchClientHints | undefined {
+  const copied = copyEntitledClientHints(raw);
+  if (!copied || !COMPLETED_CLIENT_HINT_STATUSES.has(copied.status)) return undefined;
+  return copied;
 }
 
 function clientHintsBasedOn(hints: ProductResearchClientHints): string {
