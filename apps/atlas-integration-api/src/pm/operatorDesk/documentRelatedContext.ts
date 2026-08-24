@@ -3,8 +3,9 @@
  * items, the inverse on MeetingOperatingRecord items, the inverse
  * project → meetings link on ProjectOperatingRecord items, the inverse
  * mail-thread → meetings link on MailThreadOperatingRecord items, the
- * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
- * items, the inverse client-support → meetings and
+ * inverse capital-prepare → meetings and capital-prepare → research
+ * links on CapitalSubmissionPrepareRecord items, the inverse
+ * client-support → meetings and
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings and onboarding → research links
  * on OnboardingAgentRecord items, and the inverse
@@ -483,12 +484,13 @@ function relatedDocumentsForMeeting(
  * Inverse of researchIntelligence.relatedMeetings: entitled same-scope
  * research already on authorizedSearch.researchIntelligence.items
  * (hits already composed into that payload — no new research query).
- * Shared by meetings, onboarding, and client support. Isolation:
- * sameRelatedScope + entitledClientCodes + mayReceiveRelatedContext.
- * Fail-closed: missing / non-canonical ClientCode on the scoped item
- * omits researchRelationship (never guess). Unscoped lender catalog
- * titles never attach to a scoped item. Unscoped never receives scoped
- * research. Client A never receives Client B.
+ * Shared by meetings, onboarding, client support, and capital.
+ * Isolation: sameRelatedScope + entitledClientCodes +
+ * mayReceiveRelatedContext. Fail-closed: missing / non-canonical
+ * ClientCode on the scoped item omits researchRelationship (never
+ * guess). Unscoped lender catalog titles never attach to a scoped
+ * item. Unscoped never receives scoped research. Client A never
+ * receives Client B.
  */
 function relatedResearchForScopeItem(
   item: RelatedScopeItem,
@@ -630,14 +632,19 @@ export function attachRelatedContextToMailThreads(
 }
 
 /**
- * Inverse of meeting capitalRelationship: entitled same-scope meetings
- * already on authorizedSearch.meetings.items or hits kind=meeting.
- * Isolation: sameRelatedScope + entitledClientCodes. Unscoped never
- * receives scoped relations. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
- * PREPARE_ONLY / send=false / externalSubmit=false / ownerGated=true /
- * financingStatus UNKNOWN / HONEST_EMPTY stay as composed. TargetAmount
- * is never invented.
+ * Inverse of meeting capitalRelationship + researchIntelligence.relatedMeetings:
+ * entitled same-scope meetings already on authorizedSearch.meetings.items
+ * or hits kind=meeting, and entitled same-scope research already on
+ * authorizedSearch.researchIntelligence.items (no new research query).
+ * Isolation: sameRelatedScope + entitledClientCodes +
+ * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
+ * non-canonical — omit researchRelationship rather than guess.
+ * Unscoped never receives scoped relations. Unscoped lender catalog
+ * titles never attach to a scoped capital row. Client A never receives
+ * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
+ * transcript text. PREPARE_ONLY / send=false / externalSubmit=false /
+ * ownerGated=true / financingStatus UNKNOWN / HONEST_EMPTY stay as
+ * composed. TargetAmount is never invented.
  */
 export function attachRelatedContextToCapitalSubmission(
   principal: AtlasPrincipal,
@@ -646,9 +653,11 @@ export function attachRelatedContextToCapitalSubmission(
 ): CapitalSubmissionPrepareRecord {
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 
@@ -657,6 +666,7 @@ export function attachRelatedContextToCapitalSubmissions(
   payload: CapitalSubmissionPreparePayload,
   search: AtlasAuthorizedSearch,
 ): CapitalSubmissionPreparePayload {
+  if (!payload.items.length) return payload;
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToCapitalSubmission(principal, item, search)),

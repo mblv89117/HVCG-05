@@ -266,7 +266,11 @@ export interface AtlasClientContext {
    * PREPARE-only capital submission request from already-entitled Atlas/index
    * evidence. External lender/investor submit stays OWNER-GATED.
    * Optional relatedMeetings is the inverse of meeting capitalRelationship:
-   * already-authorized same-scope meetings only.
+   * already-authorized same-scope meetings only. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / onboarding / client support). Missing / non-canonical
+   * ClientCode omits researchRelationship (fail-closed; never guess).
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   /**
@@ -506,10 +510,11 @@ export interface RelatedMeetingDocumentRef {
 
 /**
  * Inverse of researchIntelligence.relatedMeetings. Reused on
- * MeetingOperatingRecord, OnboardingAgentRecord, and
- * ClientSupportAgentRecord. Honesty mirrors RelatedDocumentCapitalRef:
- * source-backed titles only. Never downloadUrl, transcript, attendees,
- * TargetAmount, or invented lender criteria.
+ * MeetingOperatingRecord, OnboardingAgentRecord,
+ * ClientSupportAgentRecord, and CapitalSubmissionPrepareRecord.
+ * Honesty mirrors RelatedDocumentCapitalRef: source-backed titles
+ * only. Never downloadUrl, transcript, attendees, TargetAmount, or
+ * invented lender criteria.
  */
 export interface RelatedMeetingResearchRef {
   id: string;
@@ -708,6 +713,17 @@ export interface CapitalSubmissionPrepareRecord {
    * PREPARE_ONLY stays as composed. TargetAmount is never invented.
    */
   relatedMeetings?: RelatedDocumentMeetingRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items (same RelatedMeetingResearchRef
+   * as meetings / onboarding / client support). Omitted when ClientCode
+   * is missing / non-canonical (fail-closed; never guess). Unscoped
+   * lender catalog titles never attach to a scoped capital row. No
+   * downloadUrl, transcript, attendees, TargetAmount, or invented
+   * criteria. PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
@@ -956,6 +972,10 @@ export interface AtlasAuthorizedSearch {
   /**
    * PREPARE-only capital request. Optional relatedMeetings is the inverse
    * of meeting capitalRelationship: already-authorized same-scope meetings.
+   * Optional researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / onboarding / client support). Missing / non-canonical
+   * ClientCode omits researchRelationship (fail-closed; never guess).
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   /**
