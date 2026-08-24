@@ -103,6 +103,7 @@ export async function indexBusinessFiles(opts: {
     parentPath?: string;
     isFile?: boolean;
     isLibraryRoot?: boolean;
+    driveId?: string;
   }) => {
     if (indexed.files + indexed.restricted >= MAX_ITEMS_PER_RUN) return;
     const itemId = item.id || '';
@@ -133,7 +134,13 @@ export async function indexBusinessFiles(opts: {
     try {
       await opts.service.upsertCommunicationIndex({
         title: name.slice(0, 255),
-        summary: fileIndexSummary({ restricted, webUrl: item.webUrl, idempotencyKey: key }),
+        summary: fileIndexSummary({
+          restricted,
+          webUrl: item.webUrl,
+          idempotencyKey: key,
+          driveId: item.isLibraryRoot ? undefined : item.driveId,
+          itemId: item.isLibraryRoot ? undefined : itemId,
+        }),
         clientCode,
         channel: 'Other',
         webUrl: item.webUrl,
@@ -216,12 +223,17 @@ export async function indexBusinessFiles(opts: {
           const parent = item.parentReference && typeof item.parentReference === 'object'
             ? String((item.parentReference as { path?: string }).path || '')
             : '';
+          const parentDriveId =
+            item.parentReference && typeof item.parentReference === 'object'
+              ? (item.parentReference as { driveId?: unknown }).driveId
+              : undefined;
           await writeItem({
             id: typeof item.id === 'string' ? item.id : undefined,
             name: typeof item.name === 'string' ? item.name : undefined,
             webUrl: typeof item.webUrl === 'string' ? item.webUrl : undefined,
             parentPath: `${driveName} ${parent}`,
             isFile: Boolean(item.file),
+            driveId: typeof parentDriveId === 'string' && parentDriveId.trim() ? parentDriveId : driveId,
           });
         }
         const next = deltaLink(json) || nextLink(json);
@@ -255,6 +267,7 @@ export async function indexBusinessFiles(opts: {
         webUrl: resource.webUrl,
         parentPath: resource.parentPath,
         isFile: true,
+        driveId: resource.driveId,
       });
     }
   }
@@ -268,8 +281,15 @@ export function extractSearchDriveItems(json: Record<string, unknown>): Array<{
   name?: string;
   webUrl?: string;
   parentPath?: string;
+  driveId?: string;
 }> {
-  const out: Array<{ id?: string; name?: string; webUrl?: string; parentPath?: string }> = [];
+  const out: Array<{
+    id?: string;
+    name?: string;
+    webUrl?: string;
+    parentPath?: string;
+    driveId?: string;
+  }> = [];
   const responses = Array.isArray(json.value) ? json.value : [];
   for (const resp of responses) {
     if (!resp || typeof resp !== 'object') continue;
@@ -285,14 +305,18 @@ export function extractSearchDriveItems(json: Record<string, unknown>): Array<{
         if (!hit || typeof hit !== 'object') continue;
         const resource = (hit as { resource?: Record<string, unknown> }).resource;
         if (!resource) continue;
-        const parent = resource.parentReference && typeof resource.parentReference === 'object'
-          ? String((resource.parentReference as { path?: string }).path || '')
-          : '';
+        const parentRef =
+          resource.parentReference && typeof resource.parentReference === 'object'
+            ? (resource.parentReference as { path?: unknown; driveId?: unknown })
+            : undefined;
+        const parent = parentRef && typeof parentRef.path === 'string' ? parentRef.path : '';
+        const driveId = parentRef && typeof parentRef.driveId === 'string' ? parentRef.driveId : undefined;
         out.push({
           id: typeof resource.id === 'string' ? resource.id : undefined,
           name: typeof resource.name === 'string' ? resource.name : undefined,
           webUrl: typeof resource.webUrl === 'string' ? resource.webUrl : undefined,
           parentPath: parent,
+          ...(driveId ? { driveId } : {}),
         });
       }
     }
