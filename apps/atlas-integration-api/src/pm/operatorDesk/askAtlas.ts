@@ -3,8 +3,12 @@
  *
  * Derives only from the entitled operator operating picture already on Hub.
  * Does not invent amounts, lenders, Hub-MI rows, or extra queue items.
+ * Entitled authorizedSearch.meetings are copied only when hit.queue is
+ * already an ASK_ATLAS_RANKING state. Never invents a meeting rank.
  */
 
+import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
+import { authoritativeSourceUrl } from '../sharepoint/fabric/fileIndex.ts';
 import { isHvsRecoveredKind } from '../sharepoint/hvsRecoveredDocuments.ts';
 import {
   ASK_ATLAS_MISSION_KEY,
@@ -14,6 +18,7 @@ import {
   type AskAtlasAttentionItem,
   type AskAtlasAttentionState,
   type AskAtlasClassification,
+  type AtlasAuthorizedSearchHit,
   type OperatorOperatingItem,
   type OperatorOperatingPicture,
 } from './types.ts';
@@ -72,6 +77,81 @@ function lookupClient(picture: OperatorOperatingPicture, clientCode: string): st
   return undefined;
 }
 
+const ASK_ATLAS_QUEUE_STATES = new Set<string>(ASK_ATLAS_RANKING);
+
+function existingAskAtlasQueue(queue: string | undefined): AskAtlasAttentionState | null {
+  if (!queue) return null;
+  return ASK_ATLAS_QUEUE_STATES.has(queue) ? (queue as AskAtlasAttentionState) : null;
+}
+
+function meetingClassification(hit: AtlasAuthorizedSearchHit): AskAtlasClassification | null {
+  if (isClassification(hit.classification)) return hit.classification;
+  if (isClassification(hit.provenance)) return hit.provenance;
+  return null;
+}
+
+function entitledToCopyMeeting(
+  clientCode: string | undefined,
+  entitled: ReadonlySet<string>,
+): clientCode is string {
+  if (!clientCode || !isCanonicalClientCode(clientCode)) return false;
+  if (!entitled.size) return false;
+  return entitled.has(clientCode);
+}
+
+/**
+ * Copy entitled authorizedSearch.meetings into Ask Atlas attention only when
+ * hit.queue is already an ASK_ATLAS_RANKING state. Isolation uses
+ * entitledClientCodes + same ClientCode. Unscoped never becomes a ranked
+ * item. webUrl must pass authoritativeSourceUrl. No downloadUrl / transcript.
+ */
+function copyQueuedMeetingAttention(
+  hits: readonly AtlasAuthorizedSearchHit[] | undefined,
+  entitledClientCodes: readonly string[] | undefined,
+  picture: OperatorOperatingPicture,
+  seen: Set<string>,
+): AskAtlasAttentionItem[] {
+  if (!hits?.length) return [];
+  const entitled = new Set(
+    (entitledClientCodes || []).map((code) => code.trim()).filter((code) => isCanonicalClientCode(code)),
+  );
+  const items: AskAtlasAttentionItem[] = [];
+  for (const hit of hits) {
+    if (hit.kind !== 'meeting') continue;
+    const clientCode =
+      hit.clientCode && isCanonicalClientCode(hit.clientCode) ? hit.clientCode : undefined;
+    if (!entitledToCopyMeeting(clientCode, entitled)) continue;
+    const state = existingAskAtlasQueue(hit.queue);
+    if (!state) continue;
+    const classification = meetingClassification(hit);
+    if (!classification) continue;
+    const sourceId = (hit.sourceEventId || '').trim() || hit.id;
+    const id = hit.id || `meeting:${state}:${clientCode}:${sourceId}`;
+    if (seen.has(id) || seen.has(`meeting:${sourceId}`)) continue;
+    seen.add(id);
+    seen.add(`meeting:${sourceId}`);
+    const webUrl = authoritativeSourceUrl(hit.webUrl);
+    const evidence = `Existing operator-picture queue ${state}. Meeting ${sourceId}.`;
+    const client = lookupClient(picture, clientCode);
+    items.push({
+      id,
+      state,
+      why: hit.title,
+      basedOn: evidence,
+      evidence,
+      provenance: classification,
+      classification,
+      ...(client ? { client } : {}),
+      clientCode,
+      kind: 'meeting',
+      invented: false,
+      ...(webUrl ? { webUrl } : {}),
+      ...(hit.sourceEventId?.trim() ? { sourceEventId: hit.sourceEventId.trim() } : {}),
+    });
+  }
+  return items;
+}
+
 function whyFor(state: AskAtlasAttentionState, title: string): string {
   if (/^\d+\s+documents?\b/i.test(title.trim())) {
     switch (state) {
@@ -94,7 +174,11 @@ function whyFor(state: AskAtlasAttentionState, title: string): string {
 
 export function buildAskAtlasAnswer(
   picture: OperatorOperatingPicture,
-  opts?: { now?: string },
+  opts?: {
+    now?: string;
+    entitledClientCodes?: readonly string[];
+    meetingHits?: readonly AtlasAuthorizedSearchHit[];
+  },
 ): AskAtlasAnswer {
   const blocked = picture.hvsDataAccess === 'BLOCKED';
   const queues = picture.queues;
@@ -133,6 +217,10 @@ export function buildAskAtlasAnswer(
       kind: row.kind,
     });
   }
+
+  items.push(
+    ...copyQueuedMeetingAttention(opts?.meetingHits, opts?.entitledClientCodes, picture, seen),
+  );
 
   items.sort((a, b) => {
     const rank = RANK_INDEX[a.state] - RANK_INDEX[b.state];

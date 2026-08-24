@@ -168,6 +168,12 @@ async function loadSharePointDesk(opts: {
       webUrl: hit.webUrl,
       modifiedAt: hit.modifiedAt,
       provenance: hit.provenance,
+      ...('sourceEventId' in hit && typeof hit.sourceEventId === 'string' && hit.sourceEventId.trim()
+        ? { sourceEventId: hit.sourceEventId.trim() }
+        : {}),
+      ...('queue' in hit && typeof hit.queue === 'string' && hit.queue.trim()
+        ? { queue: hit.queue.trim() }
+        : {}),
     })),
     attentionItems: attention.map((row) => ({
       id: row.id,

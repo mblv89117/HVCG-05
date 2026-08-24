@@ -25,8 +25,21 @@ import {
   hvsRecoveredClientRecords,
   recoveredClientsKnowledgeOperationalized,
 } from '../sharepoint/hvsRecoveredClientRecords.ts';
+import { authoritativeSourceUrl } from '../sharepoint/fabric/fileIndex.ts';
+import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
-import { OPERATOR_DESK_CONTRACT, type OperatorClientJourney, type OperatorDeskModel, type OperatorOperatingItem, type OperatorOperatingPicture, type OperatorQueueItem } from './types.ts';
+import {
+  ASK_ATLAS_RANKING,
+  OPERATOR_DESK_CONTRACT,
+  type AskAtlasAttentionState,
+  type AskAtlasClassification,
+  type AtlasAuthorizedSearchHit,
+  type OperatorClientJourney,
+  type OperatorDeskModel,
+  type OperatorOperatingItem,
+  type OperatorOperatingPicture,
+  type OperatorQueueItem,
+} from './types.ts';
 
 function textOf(value: unknown, ...keys: string[]): string {
   if (!value || typeof value !== 'object') return typeof value === 'string' ? value : '';
@@ -407,13 +420,106 @@ export function operatorOperatingPictureFromKnowledge(
   };
 }
 
+const ASK_ATLAS_QUEUE_STATES = new Set<string>(ASK_ATLAS_RANKING);
+
+function existingPictureQueueForClient(
+  picture: OperatorOperatingPicture,
+  clientCode: string,
+): AskAtlasAttentionState | undefined {
+  const rank = new Map<AskAtlasAttentionState, number>(
+    ASK_ATLAS_RANKING.map((state, index) => [state, index]),
+  );
+  let best: AskAtlasAttentionState | undefined;
+  for (const rows of Object.values(picture.queues)) {
+    for (const row of rows) {
+      if (row.clientCode !== clientCode) continue;
+      const state =
+        row.kind === 'hvs_actionable_capital'
+          ? 'Capital'
+          : ASK_ATLAS_QUEUE_STATES.has(row.queue)
+            ? (row.queue as AskAtlasAttentionState)
+            : undefined;
+      if (!state) continue;
+      if (!best || (rank.get(state) ?? 99) < (rank.get(best) ?? 99)) best = state;
+    }
+  }
+  return best;
+}
+
+function meetingHitsFromDeskSearch(
+  hits:
+    | Array<{
+        id: string;
+        title: string;
+        kind?: string;
+        href?: string;
+        clientCode?: string;
+        source?: string;
+        webUrl?: string;
+        sourceEventId?: string;
+        provenance?: AskAtlasClassification;
+        queue?: string;
+      }>
+    | undefined,
+  picture: OperatorOperatingPicture,
+): AtlasAuthorizedSearchHit[] {
+  if (!hits?.length) return [];
+  const out: AtlasAuthorizedSearchHit[] = [];
+  const seen = new Set<string>();
+  for (const row of hits) {
+    if (row.kind !== 'meeting') continue;
+    const clientCode =
+      row.clientCode && isCanonicalClientCode(row.clientCode) ? row.clientCode : undefined;
+    const key = (row.sourceEventId || '').trim() || row.id;
+    if (seen.has(key) || seen.has(row.id)) continue;
+    seen.add(key);
+    seen.add(row.id);
+    const classification =
+      row.provenance === 'CONFIRMED' || row.provenance === 'LIKELY' || row.provenance === 'PROPOSED'
+        ? row.provenance
+        : 'LIKELY';
+    const queue =
+      (row.queue && ASK_ATLAS_QUEUE_STATES.has(row.queue)
+        ? (row.queue as AskAtlasAttentionState)
+        : undefined) || (clientCode ? existingPictureQueueForClient(picture, clientCode) : undefined);
+    const webUrl = authoritativeSourceUrl(row.webUrl);
+    out.push({
+      kind: 'meeting',
+      id: row.id,
+      title: row.title,
+      ...(row.href ? { href: row.href } : {}),
+      ...(row.source ? { source: row.source } : { source: 'HVCG_Meetings' }),
+      ...(clientCode ? { clientCode } : {}),
+      ...(webUrl ? { webUrl } : {}),
+      ...(row.sourceEventId?.trim() ? { sourceEventId: row.sourceEventId.trim() } : {}),
+      why: row.title,
+      basedOn: 'Entitled desk search meeting already on the operator picture.',
+      provenance: classification,
+      classification,
+      ...(queue ? { queue } : {}),
+    });
+  }
+  return out;
+}
+
 export function buildOperatorDeskModel(input: {
   hubSha: string | null;
   entitledClients: string[];
   commandCenter: Record<string, unknown> | null | undefined;
   commercialContext: DeskCommercialContext;
   searchQuery?: string;
-  searchHits?: Array<{ id: string; title: string; kind?: string; href?: string; clientCode?: string }>;
+  searchHits?: Array<{
+    id: string;
+    title: string;
+    kind?: string;
+    href?: string;
+    clientCode?: string;
+    source?: string;
+    webUrl?: string;
+    sourceEventId?: string;
+    provenance?: AskAtlasClassification;
+    queue?: string;
+  }>;
   searchRan?: boolean;
   attentionItems?: OperatorQueueItem[];
   realClientsNeedingAttention?: number;
@@ -434,6 +540,7 @@ export function buildOperatorDeskModel(input: {
   const attention = (input.attentionItems || []).slice(0, 20);
   const needsAction = [...attention, ...ownerApprovals, ...alerts].slice(0, 20);
   const operatingPicture = input.operatingPicture || emptyHonestOperatingPicture();
+  const meetingHits = meetingHitsFromDeskSearch(input.searchHits, operatingPicture);
 
   return {
     contractVersion: OPERATOR_DESK_CONTRACT,
@@ -468,7 +575,10 @@ export function buildOperatorDeskModel(input: {
     },
     commercialContext: input.commercialContext,
     operatingPicture,
-    askAtlas: buildAskAtlasAnswer(operatingPicture),
+    askAtlas: buildAskAtlasAnswer(operatingPicture, {
+      entitledClientCodes: input.entitledClients,
+      meetingHits,
+    }),
     search: {
       q: (input.searchQuery || '').trim().slice(0, 120),
       hitCount: input.searchHits?.length ?? 0,

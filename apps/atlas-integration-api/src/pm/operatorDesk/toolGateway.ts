@@ -193,17 +193,46 @@ function honestEmptyAnswer(opts?: { now?: string; tools?: string[] }): AskAtlasA
   };
 }
 
+/** Already-authorized extras.meetings / search kind=meeting rows only. */
+function collectEntitledMeetingHits(ctx: ToolGatewayContext): AtlasAuthorizedSearchHit[] {
+  const raw: Array<PmSearchHit | (OperatorSearchHit & { source?: string })> = [];
+  if (ctx.deskSearch?.hits?.length) {
+    raw.push(...ctx.deskSearch.hits);
+  }
+  if (ctx.entitledIndexHits?.length) {
+    raw.push(...ctx.entitledIndexHits);
+  }
+  const seen = new Set<string>();
+  const hits: AtlasAuthorizedSearchHit[] = [];
+  for (const row of raw) {
+    if (row.kind !== 'meeting') continue;
+    const hit = attachExistingQueueActionability(toAuthorizedSearchHit(row), ctx.picture);
+    const key = hit.sourceEventId || hit.id;
+    if (seen.has(key) || seen.has(hit.id)) continue;
+    seen.add(key);
+    seen.add(hit.id);
+    hits.push(hit);
+  }
+  return hits;
+}
+
 /**
  * READ_AUTO tool. Authorization (desk principal + entitledClientCodes) is
  * resolved before buildAskAtlasAnswer runs. The picture must already be the
  * entitled operator operating picture from the existing desk loaders.
+ * Entitled authorizedSearch.meetings are copied only when they already have
+ * an ASK_ATLAS_RANKING queue. Never invents a meeting rank.
  */
 export function getAttentionItems(ctx: ToolGatewayContext): AskAtlasAnswer {
   if (!canAccessOperatorDesk(ctx.principal)) {
     return honestEmptyAnswer({ now: ctx.now, tools: [GET_ATTENTION_ITEMS_TOOL] });
   }
-  entitledClientCodes(ctx.principal);
-  const answer = buildAskAtlasAnswer(ctx.picture, { now: ctx.now });
+  const entitled = entitledClientCodes(ctx.principal);
+  const answer = buildAskAtlasAnswer(ctx.picture, {
+    now: ctx.now,
+    entitledClientCodes: entitled,
+    meetingHits: collectEntitledMeetingHits(ctx),
+  });
   return {
     ...answer,
     activity: {
@@ -703,6 +732,9 @@ function toAuthorizedSearchHit(
       : {}),
     ...('sourceEventId' in row && typeof row.sourceEventId === 'string' && row.sourceEventId.trim()
       ? { sourceEventId: row.sourceEventId.trim() }
+      : {}),
+    ...('queue' in row && typeof row.queue === 'string' && row.queue.trim()
+      ? { queue: row.queue.trim() }
       : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
