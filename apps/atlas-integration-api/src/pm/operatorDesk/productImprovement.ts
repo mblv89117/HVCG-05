@@ -12,6 +12,12 @@
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
+import {
+  composeProductResearch,
+  detectRecordedProductGaps,
+  emptyProductResearchPayload,
+  type ProductResearchInspectHealth,
+} from './productResearchAgent.ts';
 import { createEngineeringMission } from './toolGateway.ts';
 import type { AgentActivityLedgerEntry } from './types.ts';
 import {
@@ -27,6 +33,7 @@ import {
   type AskAtlasTrigger,
   type OperatorOperatingPicture,
   type ProductImprovementEvidenceClass,
+  type ProductResearchAgentPayload,
   type ProposedEngineeringMission,
 } from './types.ts';
 
@@ -42,6 +49,7 @@ export const EVIDENCE_INSPECT_CLASSES = [
   'entitled_search_failure',
   'production_health_degradation',
   'repeated_failed_workflow',
+  'recorded_product_surface_gap',
 ] as const;
 
 export type EvidenceInspectClass = (typeof EVIDENCE_INSPECT_CLASSES)[number];
@@ -72,7 +80,7 @@ export interface ProductImprovementInspectSearch {
   classification?: AskAtlasClassification;
 }
 
-export interface ProductImprovementInspectHealth {
+export interface ProductImprovementInspectHealth extends ProductResearchInspectHealth {
   authRequired: boolean;
   insecureDevAuth: boolean;
 }
@@ -87,6 +95,7 @@ export interface AtlasProductImprovement {
   invented: false;
   honestEmpty: boolean;
   proposedMissions: ProposedEngineeringMission[];
+  productResearch: ProductResearchAgentPayload;
 }
 
 export interface AtlasProductImprovementResult {
@@ -123,6 +132,9 @@ const INSPECT_ALIASES: Record<string, EvidenceInspectClass | OwnerGatedInspectCl
   search_failure: 'entitled_search_failure',
   production_health_degradation: 'production_health_degradation',
   health_degradation: 'production_health_degradation',
+  recorded_product_surface_gap: 'recorded_product_surface_gap',
+  product_research: 'recorded_product_surface_gap',
+  product_research_agent: 'recorded_product_surface_gap',
   repeated_failed_workflow: 'repeated_failed_workflow',
   repeated_failure: 'repeated_failed_workflow',
   money_move: 'money_move',
@@ -238,6 +250,7 @@ function improvementEnvelope(opts: {
   outcome: AtlasProductImprovement['outcome'];
   honestEmpty: boolean;
   proposedMissions: ProposedEngineeringMission[];
+  productResearch?: ProductResearchAgentPayload;
 }): AtlasProductImprovement {
   return {
     agent: ASK_ATLAS_RUNTIME_AGENT,
@@ -251,6 +264,7 @@ function improvementEnvelope(opts: {
     invented: false,
     honestEmpty: opts.honestEmpty,
     proposedMissions: opts.proposedMissions,
+    productResearch: opts.productResearch || emptyProductResearchPayload(),
   };
 }
 
@@ -365,6 +379,15 @@ function detectHealthDegradation(health?: ProductImprovementInspectHealth): Dete
   ];
 }
 
+function detectProductResearchGaps(health?: ProductImprovementInspectHealth): DetectedImprovementEvidence[] {
+  return detectRecordedProductGaps(health).map((row) => ({
+    evidenceClass: 'recorded_product_surface_gap',
+    classification: row.classification,
+    why: row.why,
+    basedOn: row.basedOn,
+  }));
+}
+
 function collectEvidence(opts: {
   inspectClass: string;
   ledger: AgentActivityLedgerEntry[];
@@ -386,6 +409,9 @@ function collectEvidence(opts: {
   }
   if (wantsClass(opts.inspectClass, 'production_health_degradation')) {
     collected.push(...detectHealthDegradation(opts.health));
+  }
+  if (wantsClass(opts.inspectClass, 'recorded_product_surface_gap')) {
+    collected.push(...detectProductResearchGaps(opts.health));
   }
   const seen = new Set<string>();
   const out: DetectedImprovementEvidence[] = [];
@@ -469,6 +495,13 @@ export function inspectProductImprovements(opts: {
   }
 
   entitledClientCodes(opts.principal);
+  const researchEvidence = wantsClass(policy.inspectClass, 'recorded_product_surface_gap')
+    ? detectRecordedProductGaps(opts.health)
+    : [];
+  const productResearch = composeProductResearch({
+    health: opts.health,
+    evidence: researchEvidence,
+  });
   const evidence = collectEvidence({
     inspectClass: policy.inspectClass,
     ledger: opts.ledger || [],
@@ -484,6 +517,7 @@ export function inspectProductImprovements(opts: {
         outcome: 'honest_empty',
         honestEmpty: true,
         proposedMissions: [],
+        productResearch,
       }),
       askAtlas: empty,
       runtime: runtimeEnvelope([]),
@@ -505,6 +539,7 @@ export function inspectProductImprovements(opts: {
       outcome: 'proposed_mission',
       honestEmpty: false,
       proposedMissions,
+      productResearch,
     }),
     askAtlas: stampProposedAnswer({ missions: proposedMissions, trigger, now: opts.now }),
     runtime: runtimeEnvelope([CREATE_ENGINEERING_MISSION_TOOL]),

@@ -1,7 +1,13 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { AppConfig } from '../../config.ts';
+import {
+  isGitHubConfigured,
+  isGoogleConfigured,
+  isMicrosoftConfigured,
+  type AppConfig,
+} from '../../config.ts';
 import { requirePrincipal } from '../../middleware/auth.ts';
 import { resolveHubCommit } from '../../http/hubCommit.ts';
+import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fabric/status.ts';
 import type { IntegrationRepository } from '../../store/repository.ts';
 import type { PmRepository } from '../repository.ts';
 import { buildCommandCenter } from '../commandCenter.ts';
@@ -53,9 +59,27 @@ import {
   classifyImprovementPolicy,
   inspectProductImprovements,
   resolveInspectClass,
+  type ProductImprovementInspectHealth,
 } from './productImprovement.ts';
 
 export { isOperatorDeskPath };
+
+function entitledProductResearchHealth(cfg: AppConfig): ProductImprovementInspectHealth {
+  const fabric = inspectFabricSyncHealth(cfg.dataDir, {
+    sweepEnabled: Boolean(cfg.pmBackend.sharepoint) && isFabricSweepEnabled(),
+  });
+  return {
+    authRequired: cfg.requireAuth,
+    insecureDevAuth: cfg.insecureDevAuth,
+    providers: {
+      microsoft: isMicrosoftConfigured(cfg),
+      google: isGoogleConfigured(cfg),
+      github: isGitHubConfigured(cfg) || Boolean(cfg.github.clientId),
+    },
+    fabricNotes: fabric.notes,
+    fabricHonesty: fabric.honesty,
+  };
+}
 
 function sendHtml(res: ServerResponse, status: number, body: string, origin?: string | null) {
   const headers: Record<string, string> = {
@@ -643,9 +667,7 @@ export async function handleOperatorDesk(opts: {
       picture: model.operatingPicture,
       ledger: policy.allowed ? ledger : [],
       search: policy.allowed ? { ran: model.search.ran } : undefined,
-      health: policy.allowed
-        ? { authRequired: opts.cfg.requireAuth, insecureDevAuth: opts.cfg.insecureDevAuth }
-        : undefined,
+      health: policy.allowed ? entitledProductResearchHealth(opts.cfg) : undefined,
       inspectClass,
     });
     if (opts.method === 'GET' || opts.method === 'POST') {
@@ -729,10 +751,7 @@ export async function handleOperatorDesk(opts: {
       picture: model.operatingPicture,
       ledger: policy.allowed && !hvsBlocked ? ledger : [],
       search: policy.allowed && !hvsBlocked ? { ran: model.search.ran } : undefined,
-      health:
-        policy.allowed && !hvsBlocked
-          ? { authRequired: opts.cfg.requireAuth, insecureDevAuth: opts.cfg.insecureDevAuth }
-          : undefined,
+      health: policy.allowed && !hvsBlocked ? entitledProductResearchHealth(opts.cfg) : undefined,
       inspectClass,
       persisted: policy.allowed && !hvsBlocked ? persisted : [],
     });

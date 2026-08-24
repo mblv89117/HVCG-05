@@ -51,6 +51,21 @@ export const ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY =
   'ATLAS-RESEARCH-INTELLIGENCE-001' as const;
 export const ASK_ATLAS_ONBOARDING_AGENT_MISSION_KEY = 'ATLAS-ONBOARDING-AGENT-001' as const;
 export const ASK_ATLAS_CLIENT_SUPPORT_AGENT_MISSION_KEY = 'ATLAS-CLIENT-SUPPORT-AGENT-001' as const;
+export const ASK_ATLAS_PRODUCT_RESEARCH_AGENT_MISSION_KEY =
+  'ATLAS-PRODUCT-RESEARCH-AGENT-001' as const;
+/** Product research copies entitled Hub health only. Metrics stay uninvented. */
+export const PRODUCT_RESEARCH_AGENT_EXECUTE = false as const;
+export const PRODUCT_RESEARCH_INVENT_METRICS = false as const;
+export const PRODUCT_RESEARCH_SURFACES = [
+  'atlas',
+  'gcc',
+  'copilot',
+  '360',
+  'telemetry',
+  'github',
+  'open_source',
+] as const;
+export type ProductResearchSurface = (typeof PRODUCT_RESEARCH_SURFACES)[number];
 /** Onboarding agent copies entitled intake evidence only. Owner decisions stay escalated. */
 export const ONBOARDING_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
 export const ONBOARDING_AGENT_EXECUTE = false as const;
@@ -175,7 +190,8 @@ export type ProductImprovementEvidenceClass =
   | 'event_processing_failure'
   | 'entitled_search_failure'
   | 'production_health_degradation'
-  | 'repeated_failed_workflow';
+  | 'repeated_failed_workflow'
+  | 'recorded_product_surface_gap';
 
 export type ClientContextEvidenceClass =
   | 'recovered_folder_filename'
@@ -581,6 +597,23 @@ export interface ClientSupportAgentPayload {
   ownerGated: typeof CLIENT_SUPPORT_AGENT_OWNER_GATED;
   hubMi: typeof CLIENT_SUPPORT_AGENT_HUB_MI;
   items: ClientSupportAgentRecord[];
+}
+
+export interface ProductResearchSurfaceRecord {
+  surface: ProductResearchSurface;
+  status: 'evaluated' | 'honest_empty';
+  invented: false;
+  inventMetrics: false;
+  basedOn: string;
+}
+
+export interface ProductResearchAgentPayload {
+  kind: 'product_research_agent_v1';
+  missionKey: typeof ASK_ATLAS_PRODUCT_RESEARCH_AGENT_MISSION_KEY;
+  invented: false;
+  inventMetrics: false;
+  execute: typeof PRODUCT_RESEARCH_AGENT_EXECUTE;
+  surfaces: ProductResearchSurfaceRecord[];
 }
 
 export interface AtlasAuthorizedSearch {
