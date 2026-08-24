@@ -33,7 +33,8 @@ import { useAtlasRole } from '../security/RoleProvider';
 import { microsoftConfig } from '../microsoft/config';
 import { workspaceCatalog } from '../data/workspaces';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
-import { searchPm } from '../integrations/hub/pmApi';
+import { fetchOperatorDesk, searchPm } from '../integrations/hub/pmApi';
+import { summarizeAskAtlasPrompt, type AskAtlasDrawerItem } from './askAtlasDrawer';
 
 const ATLAS_SCHEME_KEY = 'atlas.colorScheme';
 const ATLAS_FAVORITES_KEY = 'atlas.favorites';
@@ -94,6 +95,7 @@ const allSections: NavSection[] = [
     id: 'operations',
     title: 'Operations',
     items: [
+      { id: 'agent-activity', label: 'Agent Activity', to: '/agent-activity', icon: <ApprovalsAppRegular /> },
       { id: 'connections', label: 'Connections', to: '/connections', icon: <PlugConnectedRegular /> },
       { id: 'settings', label: 'Settings', to: '/settings', icon: <SettingsRegular /> },
       { id: 'admin', label: 'Administration', to: '/admin', icon: <ShieldRegular /> },
@@ -112,6 +114,7 @@ const catalog: SearchResult[] = [
   { id: 's8', title: 'Capital', category: 'Capital', subtitle: 'Transactions requiring attention', to: '/capital' },
   { id: 's7', title: 'Search / Knowledge', category: 'Search', to: '/knowledge' },
   { id: 's10', title: 'Documents', category: 'Search', to: '/documents/operating' },
+  { id: 's-agent-activity', title: 'Agent Activity', category: 'Operations', to: '/agent-activity' },
   { id: 's14', title: 'Settings', category: 'Operations', to: '/settings' },
   { id: 's15', title: 'Connections', category: 'Operations', subtitle: 'Integrations', to: '/connections' },
   { id: 's6', title: 'Administration', category: 'Operations', to: '/admin' },
@@ -158,6 +161,7 @@ const routeLabels: Record<string, string> = {
   '/knowledge': 'Search / Knowledge',
   '/documents': 'Documents',
   '/documents/operating': 'Documents',
+  '/agent-activity': 'Agent Activity',
   '/automations': 'Automation',
   '/ai': 'AI Agents',
   '/reports': 'Reports',
@@ -262,6 +266,8 @@ export function AppShell() {
   const [hubHits, setHubHits] = useState<SearchResult[]>([]);
   const [hubSearchBusy, setHubSearchBusy] = useState(false);
   const [hubSearchError, setHubSearchError] = useState<string | null>(null);
+  const [askAtlasItems, setAskAtlasItems] = useState<AskAtlasDrawerItem[]>([]);
+  const [askAtlasError, setAskAtlasError] = useState<string | null>(null);
   const [favorites] = useState<RecentItem[]>(() => readJson(ATLAS_FAVORITES_KEY, defaultFavorites));
   const [recentItems, setRecentItems] = useState<RecentItem[]>(() => readJson(ATLAS_RECENTS_KEY, []));
   const { items, push, dismiss } = useNotifications();
@@ -384,6 +390,29 @@ export function AppShell() {
       window.clearTimeout(timer);
     };
   }, [query, searchOpen, hubAuth.hasBearer, hubAuth.accessToken]);
+
+  useEffect(() => {
+    if (!aiOpen || !hubAuth.hasBearer) {
+      setAskAtlasItems([]);
+      setAskAtlasError(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchOperatorDesk(hubAuth)
+      .then((desk) => {
+        if (cancelled) return;
+        setAskAtlasItems(desk.operatorDesk.askAtlas?.items || []);
+        setAskAtlasError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setAskAtlasItems([]);
+        setAskAtlasError(err instanceof Error ? err.message : 'Ask Atlas signed context failed');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [aiOpen, hubAuth.hasBearer, hubAuth.accessToken]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -599,6 +628,9 @@ export function AppShell() {
         onSubmit={(prompt) =>
           push({ title: 'AI Command Center', body: `Queued: ${prompt}`, tone: 'info' })
         }
+        title="Ask Atlas"
+        subtitle="Grounded on signed operator context; owner-gated actions stay blocked."
+        stubResponder={(prompt) => summarizeAskAtlasPrompt(prompt, askAtlasItems, askAtlasError)}
       />
       <NotificationStack items={items} onDismiss={dismiss} />
       </div>
