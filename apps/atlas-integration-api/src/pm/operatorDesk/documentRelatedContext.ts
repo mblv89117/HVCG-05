@@ -3,8 +3,8 @@
  * items. Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
- * .threads / .capitalSubmissions / fabric mail-attachment index rows /
- * entitled search extras.meetings (kind=meeting).
+ * .threads / .capitalSubmissions / .meetings / fabric mail-attachment index
+ * rows / entitled search extras.meetings (kind=meeting).
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting product.
  */
@@ -301,6 +301,10 @@ function relatedMeetings(
       ...(sourceEventId ? { sourceEventId } : {}),
     });
   };
+  for (const row of search.meetings.items) {
+    if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
+    consider(row);
+  }
   for (const hit of search.hits) {
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
     if (hit.kind !== 'meeting') continue;

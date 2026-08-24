@@ -266,6 +266,13 @@ export interface AtlasClientContext {
    * Reply / reassign / close stay OWNER-GATED. Send stays draft-only.
    */
   clientSupport: ClientSupportAgentPayload;
+  /**
+   * Same copied meeting_operating_record_v1 payload as authorizedSearch.meetings.
+   * Attached only for a bound current entitled client from already-loaded
+   * entitled HVCG_Meetings / extras.meetings / search kind=meeting rows.
+   * Never a new Graph calendar or transcript query.
+   */
+  meetings: MeetingOperatingPayload;
 }
 
 export function clientContextMissionKey(
@@ -447,6 +454,32 @@ export interface RelatedDocumentMeetingRef {
   webUrl?: string;
   /** Copied from already-indexed outlook-calendar sourceEventId. */
   sourceEventId?: string;
+}
+
+/**
+ * First-class entitled meeting operating record. Copied from already-authorized
+ * extras.meetings / HVCG_Meetings / search hits kind=meeting. Never invents
+ * transcript text, binaries, SAS, or anonymous share URLs.
+ */
+export interface MeetingOperatingRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  date?: string;
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  source: string;
+  invented: false;
+  /** Authoritative Outlook/SharePoint webUrl only. Never SAS or anonymous share. */
+  webUrl?: string;
+  /** Copied from already-indexed outlook-calendar sourceEventId. */
+  sourceEventId?: string;
+}
+
+export interface MeetingOperatingPayload {
+  kind: 'meeting_operating_record_v1';
+  policyClass: 'READ_AUTO';
+  invented: false;
+  items: MeetingOperatingRecord[];
 }
 
 export type ProjectOperatingClassification =
@@ -762,6 +795,12 @@ export interface AtlasAuthorizedSearch {
     items: ProjectOperatingRecord[];
   };
   threads: MailThreadOperatingPayload;
+  /**
+   * First-class entitled HVCG_Meetings / extras.meetings / search kind=meeting
+   * operating records. Copied after ClientCode entitlement. Never a new Graph
+   * calendar or transcript query.
+   */
+  meetings: MeetingOperatingPayload;
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
   onboarding: OnboardingAgentPayload;

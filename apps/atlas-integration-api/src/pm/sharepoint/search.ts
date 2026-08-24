@@ -339,6 +339,18 @@ export async function searchSharePointPm(
               ? item.sourceItemId.trim()
               : undefined
           : undefined;
+      const meetingProvenance =
+        kind === 'meeting'
+          ? item.classification === 'CONFIRMED' ||
+            item.classification === 'LIKELY' ||
+            item.classification === 'PROPOSED'
+            ? item.classification
+            : item.provenance === 'CONFIRMED' ||
+                item.provenance === 'LIKELY' ||
+                item.provenance === 'PROPOSED'
+              ? item.provenance
+              : undefined
+          : undefined;
       push({
         kind,
         id: String(item.id),
@@ -349,6 +361,7 @@ export async function searchSharePointPm(
         ...(modifiedAt ? { modifiedAt } : {}),
         ...(meetingUrl ? { webUrl: meetingUrl } : {}),
         ...(sourceEventId ? { sourceEventId } : {}),
+        ...(meetingProvenance ? { provenance: meetingProvenance } : {}),
       });
     }
   };

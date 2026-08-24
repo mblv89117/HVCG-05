@@ -4,12 +4,14 @@
  * + ATLAS-REALTIME-DOCUMENTS-ATTACHMENT-LINK-001
  * + ATLAS-REALTIME-DOCUMENTS-VERSION-001
  * + ATLAS-REALTIME-DOCUMENTS-RELATED-MEETINGS-001
+ * + ATLAS-M365-MEETING-OPERATING-RECORD-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
  * preview is attached after authorization. Related email / project / contract
  * / capital / already-indexed outlook-mail-attachment / HVCG_Meetings metadata
- * is copied from already-authorized search payloads only. Graph driveItem
- * versions are metadata-only and never include downloadUrl.
+ * is copied from already-authorized search payloads only. Entitled meetings
+ * also become a first-class authorizedSearch.meetings operating record.
+ * Graph driveItem versions are metadata-only and never include downloadUrl.
  * No second search, preview, versioning, calendar query, or knowledge-graph product.
  */
 import { describe, it } from 'node:test';
@@ -52,6 +54,7 @@ import { GRAPH_NOTIFICATION_PATH } from '../src/pm/sharepoint/fabric/notificatio
 import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
 import { searchAuthorizedKnowledge } from '../src/pm/operatorDesk/toolGateway.ts';
 import { DOCUMENT_RELATED_CONTEXT_PAGE_SIZE } from '../src/pm/operatorDesk/documentRelatedContext.ts';
+import { MEETING_OPERATING_RECORD_PAGE_SIZE } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   CAPITAL_SUBMISSION_FINANCING_STATUS,
@@ -1356,6 +1359,156 @@ describe('related meetings on entitled documents', () => {
     assert.ok(memo);
     assert.equal(memo.relatedMeetings, undefined);
     assert.equal(found.results.some((row) => row.id === 'file-proven'), true);
+    noFabricatedRelatedFacts(memo);
+  });
+});
+
+describe('entitled meeting operating records on authorizedSearch', () => {
+  it('surfaces entitled meeting rows on authorizedSearch.meetings.items', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const meetings = result.authorizedSearch.meetings;
+    assert.equal(meetings.kind, 'meeting_operating_record_v1');
+    assert.equal(meetings.policyClass, 'READ_AUTO');
+    assert.equal(meetings.invented, false);
+    const meeting = meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.title, 'SYN01 weekly standup');
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.date, '2026-08-21T15:00:00Z');
+    assert.equal(meeting.classification, 'CONFIRMED');
+    assert.equal(meeting.source, 'HVCG_Meetings');
+    assert.equal(meeting.invented, false);
+    assert.equal(meeting.webUrl, MEETING_SOURCE);
+    assert.equal(meeting.sourceEventId, 'AAMk-syn-cal-1');
+    assert.ok(meetings.items.length <= MEETING_OPERATING_RECORD_PAGE_SIZE);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(meetings)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(meetings)), false);
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    noFabricatedRelatedFacts(memo);
+  });
+
+  it('never returns Client B meetings to Client A', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'meeting',
+            id: 'meet-pdg',
+            title: 'PDG01 leak standup',
+            href: '/clients/PDG01',
+            source: 'HVCG_Meetings',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/calendar/item/pdg01-leak',
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-pdg-cal-1',
+          },
+        ],
+      }),
+    });
+    const meetings = result.authorizedSearch.meetings;
+    assert.equal(meetings.items.some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(meetings).includes('PDG01'), false);
+    assert.equal(JSON.stringify(meetings).includes('AAMk-pdg-cal-1'), false);
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal((memo.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(memo).includes('PDG01'), false);
+    noFabricatedRelatedFacts(memo);
+  });
+
+  it('drops SAS and anonymous meeting webUrl on authorizedSearch.meetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'meeting',
+            id: 'meet-sas',
+            title: 'SYN01 SAS meeting',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: SAS,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-sas',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-anon',
+            title: 'SYN01 anonymous meeting',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: ANON,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-anon',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-ok',
+            title: 'SYN01 office meeting',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-ok',
+          },
+        ],
+      }),
+    });
+    const meetings = result.authorizedSearch.meetings;
+    const sasMeeting = meetings.items.find((row) => row.id === 'meet-sas');
+    const anonMeeting = meetings.items.find((row) => row.id === 'meet-anon');
+    const okMeeting = meetings.items.find((row) => row.id === 'meet-ok');
+    assert.ok(sasMeeting);
+    assert.ok(anonMeeting);
+    assert.ok(okMeeting);
+    assert.equal(sasMeeting.webUrl, undefined);
+    assert.equal(anonMeeting.webUrl, undefined);
+    assert.equal(okMeeting.webUrl, MEETING_SOURCE);
+    const blob = JSON.stringify(meetings);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+  });
+
+  it('honest empty meetings when none are entitled', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    assert.equal(found.results.some((row) => row.kind === 'meeting'), false);
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const meetings = result.authorizedSearch.meetings;
+    assert.equal(meetings.kind, 'meeting_operating_record_v1');
+    assert.equal(meetings.policyClass, 'READ_AUTO');
+    assert.equal(meetings.invented, false);
+    assert.deepEqual(meetings.items, []);
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.relatedMeetings, undefined);
     noFabricatedRelatedFacts(memo);
   });
 });
