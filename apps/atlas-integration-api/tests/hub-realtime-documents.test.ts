@@ -2,12 +2,14 @@
  * ATLAS-REALTIME-DOCUMENTS-001 + ATLAS-REALTIME-DOCUMENTS-SECURE-PREVIEW-001
  * + ATLAS-REALTIME-DOCUMENTS-RELATED-CONTEXT-001
  * + ATLAS-REALTIME-DOCUMENTS-ATTACHMENT-LINK-001
+ * + ATLAS-REALTIME-DOCUMENTS-VERSION-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
  * preview is attached after authorization. Related email / project / contract
  * / capital / already-indexed outlook-mail-attachment metadata is copied from
- * already-authorized search payloads only.
- * No second search, preview, or knowledge-graph product.
+ * already-authorized search payloads only. Graph driveItem versions are
+ * metadata-only and never include downloadUrl.
+ * No second search, preview, versioning, or knowledge-graph product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,6 +40,12 @@ import {
   mapGraphPreviewResponse,
   requestIndexedDocumentPreview,
 } from '../src/pm/sharepoint/fabric/documentPreview.ts';
+import {
+  DOCUMENT_VERSION_BASED_ON,
+  indexedDocumentVersionsPath,
+  mapGraphVersionResponse,
+  requestIndexedDocumentVersions,
+} from '../src/pm/sharepoint/fabric/documentVersion.ts';
 import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { GRAPH_NOTIFICATION_PATH } from '../src/pm/sharepoint/fabric/notifications.ts';
 import { searchSharePointPm, type SearchPmService } from '../src/pm/sharepoint/search.ts';
@@ -1157,5 +1165,190 @@ describe('indexed mail-attachment metadata on entitled documents', () => {
     assert.equal(JSON.stringify(memo).includes('att-pdg-1'), false);
     noFabricatedRelatedFacts(memo);
     assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+  });
+});
+
+function versionFabric(
+  get: (path: string) => Promise<{ status: number; json: Record<string, unknown> }>,
+): FabricGraphClient {
+  return {
+    getJson: get,
+    async postJson() {
+      return { status: 404, json: {} };
+    },
+    async patchJson() {
+      return { status: 404, json: {} };
+    },
+    async deleteJson() {
+      return { status: 404, json: {} };
+    },
+  };
+}
+
+function assertNoVersionDownloads(item: DocumentOperatingRecord | undefined) {
+  const blob = JSON.stringify(item || {});
+  assert.equal(/downloadUrl|contentBytes|\$value/i.test(blob), false);
+  assert.equal(item?.versionStatus === 'ready' ? Boolean(item.currentVersionId) : true, true);
+}
+
+describe('Graph driveItem version context for indexed documents', () => {
+  it('allowlists versions GET only for proven drive/item shape and rejects content', () => {
+    const path = `/v1.0/drives/${PROVEN_DRIVE}/items/${PROVEN_ITEM}/versions`;
+    assert.equal(isAllowedFabricGraphPath(path), true);
+    assert.equal(isAllowedFabricGraphPath(`${path}?$select=id,lastModifiedDateTime,size&$top=5`), true);
+    assert.equal(isAllowedFabricGraphPath(`${path}/1.0/content`), false);
+    assert.equal(isAllowedFabricGraphPath(`${path}/$value`), false);
+    const built = indexedDocumentVersionsPath({ driveId: PROVEN_DRIVE, itemId: PROVEN_ITEM });
+    assert.match(built || '', /\/versions\?/);
+    assert.equal(indexedDocumentVersionsPath({ driveId: 'not a id', itemId: PROVEN_ITEM }), undefined);
+  });
+
+  it('marks versions ready on Graph 200 metadata and never stores binaries', async () => {
+    const mapped = mapGraphVersionResponse(200, {
+      value: [
+        {
+          id: '2.0',
+          lastModifiedDateTime: '2026-08-20T18:04:00Z',
+          size: 2048,
+          '@microsoft.graph.downloadUrl': 'https://evil.example/v2',
+        },
+        { id: '1.0', lastModifiedDateTime: '2026-08-01T12:00:00Z', size: 1024 },
+      ],
+    });
+    assert.equal(mapped.versionStatus, 'ready');
+    assert.equal(mapped.currentVersionId, '2.0');
+    assert.equal(mapped.versionCount, 2);
+    assert.equal(mapped.versions?.[0]?.id, '2.0');
+    assert.equal(mapped.versions?.[0]?.size, 2048);
+    assert.equal(mapped.versionBasedOn, DOCUMENT_VERSION_BASED_ON);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(mapped)), false);
+
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+      requestDocumentVersions: (ref) =>
+        requestIndexedDocumentVersions(
+          versionFabric(async (path) => {
+            assert.match(path, new RegExp(`/drives/${PROVEN_DRIVE}/items/${PROVEN_ITEM}/versions`));
+            return {
+              status: 200,
+              json: {
+                value: [
+                  { id: '2.0', lastModifiedDateTime: '2026-08-20T18:04:00Z', size: 2048 },
+                  { id: '1.0', lastModifiedDateTime: '2026-08-01T12:00:00Z', size: 1024 },
+                ],
+              },
+            };
+          }),
+          ref,
+        ),
+    });
+    const item = result.authorizedSearch.documents.items[0];
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assert.equal(item?.versionStatus, 'ready');
+    assert.equal(item?.currentVersionId, '2.0');
+    assert.equal(item?.versionCount, 2);
+    assert.equal(item?.versions?.[0]?.id, '2.0');
+    assert.equal(item?.versionBasedOn, DOCUMENT_VERSION_BASED_ON);
+    assertNoVersionDownloads(item);
+    assert.equal(/\blive\s*[:=]\s*true\b/i.test(JSON.stringify(result.authorizedSearch.documents)), false);
+  });
+
+  it('honest-skips unsupported Graph versions and does not invent a version id', async () => {
+    const skipped = mapGraphVersionResponse(403, {
+      error: { code: 'accessDenied', message: 'Versions are not supported for this item.' },
+    });
+    assert.equal(skipped.versionStatus, 'skipped');
+    assert.equal(skipped.currentVersionId, undefined);
+    assert.match(skipped.versionSkipReason || '', /HTTP 403/);
+    assert.equal(/\bLIVE\b/.test(JSON.stringify(skipped)), false);
+
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+      requestDocumentVersions: (ref) =>
+        requestIndexedDocumentVersions(
+          versionFabric(async () => ({
+            status: 405,
+            json: { error: { code: 'notSupported', message: 'Versions are not supported.' } },
+          })),
+          ref,
+        ),
+    });
+    const item = result.authorizedSearch.documents.items[0];
+    assert.equal(item?.versionStatus, 'skipped');
+    assert.equal(item?.currentVersionId, undefined);
+    assert.equal(item?.versions, undefined);
+    assert.match(item?.versionSkipReason || '', /HTTP 405/);
+    assert.equal(item?.versionBasedOn, DOCUMENT_VERSION_BASED_ON);
+    assertNoVersionDownloads(item);
+  });
+
+  it('skips mail attachments and rows without proven drive/item ids', async () => {
+    const found = await searchSharePointPm(fileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+      requestDocumentVersions: async () => {
+        throw new Error('must not request versions without a proven drive/item id');
+      },
+    });
+    const item = result.authorizedSearch.documents.items[0];
+    assert.equal(item?.versionStatus, 'skipped');
+    assert.match(item?.versionSkipReason || '', /no proven drive\/item id/);
+    assert.equal(item?.currentVersionId, undefined);
+    assertNoVersionDownloads(item);
+  });
+
+  it('never versions Client B documents for a Client A operator', async () => {
+    const called: string[] = [];
+    const found = await searchSharePointPm(provenFileIndexService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'document',
+            id: 'file-pdg-ver',
+            title: 'PDG01 hidden packet',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: SOURCE,
+            provenance: 'CONFIRMED',
+            driveId: 'b!pdgdriveid000000000000000000001',
+            itemId: '01PDG01HIDDENITEMID00000001',
+          },
+        ],
+      }),
+      requestDocumentVersions: async (ref) => {
+        called.push(`${ref.driveId}/${ref.itemId}`);
+        return mapGraphVersionResponse(200, {
+          value: [{ id: '9.0', lastModifiedDateTime: '2026-08-20T18:04:00Z' }],
+        });
+      },
+    });
+    assert.equal(called.some((id) => /pdg/i.test(id)), false);
+    const foreign = result.authorizedSearch.documents.items.find((row) => row.id === 'file-pdg-ver');
+    if (foreign) {
+      assert.notEqual(foreign.versionStatus, 'ready');
+      assert.equal(foreign.currentVersionId, undefined);
+    }
+    const own = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.equal(own?.versionStatus, 'ready');
+    assert.equal(own?.currentVersionId, '9.0');
+    assertNoVersionDownloads(own);
   });
 });
