@@ -518,6 +518,11 @@ describe('Fabric notes stay sanitized when a mapped 400 skips a write', () => {
       assert.equal(paths.some((path) => /\/drive\/recent/i.test(path)), false);
       assert.ok(result.notes.some((note) => /OneDrive recent skipped/.test(note) && /not supported/.test(note)));
       assert.equal(result.notes.filter((note) => /File search skipped/.test(note)).length, 1);
+      assert.equal(result.checkpoint.fileSearchLastStatus, 400);
+      const searchHealth = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(searchHealth.fileSearch.status, 'skipped');
+      assert.match(searchHealth.fileSearch.reason, /HTTP 400/);
+      assert.equal(/LIVE/i.test(JSON.stringify(searchHealth.fileSearch)), false);
       assert.equal(searchBodies.length, 1);
       const req = (searchBodies[0] as { requests?: Array<{ query?: { queryString?: string }; region?: string }> })
         ?.requests?.[0];
