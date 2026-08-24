@@ -291,10 +291,13 @@ export interface AtlasClientContext {
    * the inverse of document.researchRelationship (same RelatedMeetingDocumentRef
    * / relatedDocumentsForMeeting path). Optional relatedProjects is the
    * inverse of project.researchRelationship (same RelatedDocumentProjectRef
-   * / relatedProjects path). Omitted when ClientCode is missing /
+   * / relatedProjects path). Optional relatedThreads is the inverse of
+   * thread.researchRelationship (same RelatedDocumentEmailRef /
+   * relatedEmails path). Omitted when ClientCode is missing /
    * non-canonical (fail-closed; never guess). Unscoped lender catalog
-   * rows never receive scoped documents or projects. Preview stays off this
-   * slice (refs only).
+   * rows never receive scoped documents, projects, or threads. Preview
+   * stays off this slice (refs only). Comms stay DRAFT_ONLY — no preview
+   * body, suggestedDraft, or send on the thread refs.
    */
   researchIntelligence: ResearchIntelligencePayload;
   /**
@@ -839,6 +842,21 @@ export interface ResearchIntelligenceRecord {
    * ClientCodes, lender criteria, financing status, or fit.
    */
   relatedProjects?: RelatedDocumentProjectRef[];
+  /**
+   * Inverse of thread.researchRelationship: already-authorized
+   * same-scope mail-thread operating records. Reuses RelatedDocumentEmailRef
+   * / relatedEmails(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped lender catalog rows never
+   * receive scoped threads. Unscoped never receives scoped threads.
+   * Client A never receives Client B. Refs only — no preview body,
+   * suggestedDraft, or send. DRAFT_ONLY / send=false / autoRespond=false
+   * / indexedPreviewOnly stay as composed on the source thread payload.
+   * Never downloadUrl, transcript, attendees, TargetAmount, invented
+   * titles, ClientCodes, lender criteria, financing status, fit, or
+   * Hub-MI. SAS / anonymous webUrl dropped.
+   */
+  relatedThreads?: RelatedDocumentEmailRef[];
 }
 
 export interface ResearchIntelligencePayload {
@@ -1086,11 +1104,14 @@ export interface AtlasAuthorizedSearch {
    * relatedDocuments is the inverse of document.researchRelationship
    * (same RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
    * Optional relatedProjects is the inverse of project.researchRelationship
-   * (same RelatedDocumentProjectRef / relatedProjects path). Empty payload
-   * stays empty. Missing / non-canonical ClientCode omits relatedMeetings /
-   * relatedDocuments / relatedProjects. Unscoped lender catalog rows never
-   * receive scoped documents or projects. Preview stays off this slice
-   * (refs only).
+   * (same RelatedDocumentProjectRef / relatedProjects path). Optional
+   * relatedThreads is the inverse of thread.researchRelationship (same
+   * RelatedDocumentEmailRef / relatedEmails path). Empty payload stays
+   * empty. Missing / non-canonical ClientCode omits relatedMeetings /
+   * relatedDocuments / relatedProjects / relatedThreads. Unscoped lender
+   * catalog rows never receive scoped documents, projects, or threads.
+   * Preview stays off this slice (refs only). Comms stay DRAFT_ONLY —
+   * no preview body, suggestedDraft, or send on the thread refs.
    */
   researchIntelligence: ResearchIntelligencePayload;
   /**

@@ -10,8 +10,9 @@
  * the inverse onboarding → meetings and onboarding → research links
  * on OnboardingAgentRecord items, and the inverse
  * research-intelligence → meetings,
- * research-intelligence → documents, and
- * research-intelligence → projects links on
+ * research-intelligence → documents,
+ * research-intelligence → projects, and
+ * research-intelligence → threads links on
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
@@ -143,13 +144,14 @@ function relatedEmails(
       ...(webUrl ? { webUrl } : {}),
     });
   };
+  const threads = search.threads?.items || [];
   if (parentId) {
-    for (const thread of search.threads.items) {
+    for (const thread of threads) {
       consider(thread, true);
       if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) return out;
     }
   }
-  for (const thread of search.threads.items) {
+  for (const thread of threads) {
     consider(thread, false);
     if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
   }
@@ -788,19 +790,25 @@ export function attachRelatedContextToOnboarding(
  * hits kind=document (reuses relatedDocumentsForMeeting /
  * RelatedMeetingDocumentRef — no new query), and entitled same-scope
  * projects already on authorizedSearch.projects.items (reuses
- * relatedProjects / RelatedDocumentProjectRef — no new query).
+ * relatedProjects / RelatedDocumentProjectRef — no new query), and
+ * entitled same-scope threads already on authorizedSearch.threads.items
+ * (reuses relatedEmails / RelatedDocumentEmailRef — no new query).
  * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
  * ClientCode is missing / non-canonical — omit relatedMeetings /
- * relatedDocuments / relatedProjects rather than guess. Unscoped never
- * receives scoped relations. Unscoped lender catalog rows never receive
- * scoped documents or projects. Client A never receives Client B. SAS /
- * anonymous webUrl dropped. No downloadUrl. No transcript text.
- * SOURCE_BACKED_ONLY / outboundRefresh=false / financingStatus UNKNOWN /
- * fit NOT_EVALUATED / lenderCriteriaInvented=false stay as composed.
- * Project classification stays CONFIRMED / LIKELY / PROPOSED /
+ * relatedDocuments / relatedProjects / relatedThreads rather than guess.
+ * Unscoped never receives scoped relations. Unscoped lender catalog
+ * rows never receive scoped documents, projects, or threads. Client A
+ * never receives Client B. SAS / anonymous webUrl dropped. No
+ * downloadUrl. No transcript text. No preview body / suggestedDraft /
+ * send on thread refs. SOURCE_BACKED_ONLY / outboundRefresh=false /
+ * financingStatus UNKNOWN / fit NOT_EVALUATED /
+ * lenderCriteriaInvented=false stay as composed. Project
+ * classification stays CONFIRMED / LIKELY / PROPOSED /
  * STALE_OR_UNCERTAIN / COMPLETE. hubMiRow stays as composed on the
- * source project (never invented). Preview stays off this slice
- * (refs only). No new Graph calendar / document / project query.
+ * source project (never invented). DRAFT_ONLY / send=false /
+ * autoRespond=false / indexedPreviewOnly stay as composed on the
+ * source thread payload. Preview stays off this slice (refs only).
+ * No new Graph calendar / document / project / communications query.
  */
 export function attachRelatedContextToResearchIntelligenceRecord(
   principal: AtlasPrincipal,
@@ -812,11 +820,13 @@ export function attachRelatedContextToResearchIntelligenceRecord(
   const relatedMeetingsList = relatedMeetings(item, search);
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
   const relatedProjectsList = relatedProjects(item, search);
+  const relatedThreads = relatedEmails(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
+    ...(relatedThreads.length ? { relatedThreads } : {}),
   };
 }
 
