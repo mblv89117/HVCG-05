@@ -26,6 +26,7 @@ export function DocumentsOperatingPage() {
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([]);
   const [sites, setSites] = useState<{ commandCenter: string; clients: string } | null>(null);
   const [restrictedOmitted, setRestrictedOmitted] = useState(0);
+  const [unavailableReason, setUnavailableReason] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -40,6 +41,7 @@ export function DocumentsOperatingPage() {
       setLoading(false);
       setError('Microsoft sign-in required (Bearer token missing)');
       setDocs([]);
+      setUnavailableReason('unauthorized');
       return;
     }
     setLoading(true);
@@ -55,9 +57,11 @@ export function DocumentsOperatingPage() {
         }),
         fetchClient360(auth).catch(() => ({ clients: [] as Array<{ id: string; displayName: string }> })),
       ]);
-      setDocs(docRes.documents || []);
+      const list = Array.isArray(docRes.documents) ? docRes.documents : [];
+      setDocs(list);
       setRestrictedOmitted(docRes.restrictedOmitted || 0);
       setSites(docRes.sharePointSites || null);
+      setUnavailableReason(docRes.unavailableReason);
       setClients(
         (c360.clients || []).map((c: { id: string; displayName: string }) => ({
           id: c.id,
@@ -67,6 +71,7 @@ export function DocumentsOperatingPage() {
     } catch (err) {
       setError(String(err));
       setDocs([]);
+      setUnavailableReason('unavailable');
     } finally {
       setLoading(false);
     }
@@ -195,8 +200,13 @@ export function DocumentsOperatingPage() {
         <Spinner label="Loading documents…" />
       ) : docs.length === 0 ? (
         <EmptyState
-          title="No documents linked yet"
-          description="Run Client 360 Microsoft ingest to index HVS/HVCG document links, or open the SharePoint client libraries to upload in the approved location."
+          title={error || unavailableReason === 'unauthorized' ? 'Documents unavailable' : 'No documents linked yet'}
+          description={
+            error || unavailableReason === 'unauthorized' || unavailableReason === 'unavailable'
+              ? 'Atlas does not invent documents, clients, amounts, lenders, LTV, or Hub-MI rows when Hub is unauthorized or unavailable.'
+              : unavailableReason ||
+                'Authorized source returned no document items. Atlas does not invent document rows.'
+          }
         />
       ) : (
         <DataTable
