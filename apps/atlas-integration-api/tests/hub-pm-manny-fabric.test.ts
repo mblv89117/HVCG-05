@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { classifyDriveItem, classifyFabricRecord, stripSecrets } from '../src/pm/sharepoint/fabric/classify.ts';
 import { extractSearchDriveItems } from '../src/pm/sharepoint/fabric/files.ts';
 import { extractSourceUrl, isFileIndexRow, fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
-import { isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
+import { createFabricGraphClient, isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
 import { assertMannyOnly, isMannyPrincipal, MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
@@ -147,6 +147,24 @@ describe('Fabric Graph allowlist', () => {
       isAllowedFabricGraphPath('/v1.0/users/11111111-1111-4111-8111-111111111001/mailFolders/inbox/messages/delta'),
       true,
       'shape allowlist accepts user GUID; runtime owner guard rejects non-Manny paths',
+    );
+  });
+
+  it('returns status 0 for transport failures without weakening unsafe-path rejection', async () => {
+    const client = createFabricGraphClient(
+      { getToken: async () => 'token' },
+      {
+        fetch: async () => {
+          throw new Error('network down');
+        },
+      },
+    );
+    const result = await client.getJson(`/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$top=1`);
+    assert.equal(result.status, 0);
+    assert.equal((result.json.error as { code?: string }).code, 'graph_request_failed');
+    await assert.rejects(
+      () => client.getJson('/v1.0/sites?search=*'),
+      (err: unknown) => err instanceof PmHttpError && err.code === 'PM_BACKEND_UNAVAILABLE',
     );
   });
 });

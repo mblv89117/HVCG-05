@@ -125,7 +125,15 @@ export function createFabricGraphClient(
       return { status: resp.status, json };
     } catch (err) {
       if (err instanceof PmHttpError) throw err;
-      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Fabric Graph request failed.');
+      return {
+        status: 0,
+        json: {
+          error: {
+            code: 'graph_request_failed',
+            message: 'Fabric Graph request failed before an HTTP response.',
+          },
+        },
+      };
     } finally {
       clearTimeout(timer);
     }
