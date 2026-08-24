@@ -525,6 +525,7 @@ export function AppShell() {
             searchPopupId="atlas-command-palette"
             notificationCount={notificationCount}
             onNotifications={signedIn ? () => navigate('/notifications') : undefined}
+            onOpenAI={signedIn ? () => setAiOpen(true) : undefined}
             userName={signedIn ? displayName : undefined}
             trailing={
               <>
