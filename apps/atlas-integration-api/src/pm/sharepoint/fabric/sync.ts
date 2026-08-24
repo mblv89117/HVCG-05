@@ -36,6 +36,7 @@ export interface FabricCheckpoint {
   filesSkip: string | null;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
+  lastAttemptAt?: string;
   lastIndexed?: FabricSyncResult['indexed'];
   lastNotes?: string[];
   counts: Record<string, number>;
@@ -265,6 +266,9 @@ export async function runFabricSync(opts: {
       cp.mailMode = mailMode;
     }
   }
+  cp.lastAttemptAt = new Date().toISOString();
+  cp.lastNotes = sanitizeFabricNotes(notes);
+  saveCheckpoint(opts.dataDir, cp);
 
   let calUrl: string | null =
     cp.calendarSkip ||

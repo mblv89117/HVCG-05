@@ -4,7 +4,7 @@
  * subjects, delta tokens, mailSkip URLs, or ClientCodes.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const FABRIC_CHECKPOINT_FILE = 'fabric-checkpoint.json';
@@ -20,6 +20,7 @@ export interface FabricIndexedCounts {
 
 export interface FabricSyncHealth {
   lastRunAt: string | null;
+  lastAttemptAt: string | null;
   mailMode: 'delta' | 'page' | 'none';
   mailDeltaReady: boolean;
   mailSkipPresent: boolean;
@@ -96,6 +97,7 @@ export function inspectFabricSyncHealth(
   if (!existsSync(path)) {
     return {
       lastRunAt: null,
+      lastAttemptAt: null,
       mailMode: 'none',
       mailDeltaReady: false,
       mailSkipPresent: false,
@@ -111,6 +113,7 @@ export function inspectFabricSyncHealth(
   try {
     const raw = JSON.parse(readFileSync(path, 'utf8')) as {
       lastRunAt?: string;
+      lastAttemptAt?: string;
       mailMode?: 'delta' | 'page';
       mailDeltaReady?: boolean;
       mailSkip?: string | null;
@@ -119,6 +122,8 @@ export function inspectFabricSyncHealth(
       lastNotes?: string[];
     };
     const lastRunAt = typeof raw.lastRunAt === 'string' && raw.lastRunAt ? raw.lastRunAt : null;
+    const lastAttemptAt =
+      typeof raw.lastAttemptAt === 'string' && raw.lastAttemptAt ? raw.lastAttemptAt : lastRunAt;
     const mailMode = raw.mailMode === 'delta' || raw.mailMode === 'page' ? raw.mailMode : 'none';
     const notes = sanitizeFabricNotes(Array.isArray(raw.lastNotes) ? raw.lastNotes.map(String) : []);
     const hardFail = notes.some((note) => /stopped at HTTP|did not complete/i.test(note));
@@ -129,6 +134,7 @@ export function inspectFabricSyncHealth(
     else honesty = 'degraded';
     return {
       lastRunAt,
+      lastAttemptAt,
       mailMode,
       mailDeltaReady: raw.mailDeltaReady === true,
       mailSkipPresent: typeof raw.mailSkip === 'string' && raw.mailSkip.length > 0,
@@ -146,6 +152,7 @@ export function inspectFabricSyncHealth(
   } catch {
     return {
       lastRunAt: null,
+      lastAttemptAt: null,
       mailMode: 'none',
       mailDeltaReady: false,
       mailSkipPresent: false,
@@ -167,4 +174,32 @@ export function persistHonestyFields<T extends Record<string, unknown>>(
     lastIndexed: { ...result.indexed },
     lastNotes: sanitizeFabricNotes(result.notes),
   };
+}
+
+export function recordFabricSweepAttempt(
+  dataDir: string,
+  notes: string[],
+  opts: { complete?: boolean } = {},
+): void {
+  const path = join(dataDir, FABRIC_CHECKPOINT_FILE);
+  mkdirSync(dataDir, { recursive: true });
+  let current: Record<string, unknown> = {};
+  if (existsSync(path)) {
+    try {
+      const parsed = JSON.parse(readFileSync(path, 'utf8')) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        current = parsed as Record<string, unknown>;
+      }
+    } catch {
+      current = {};
+    }
+  }
+  const now = new Date().toISOString();
+  const next = {
+    ...current,
+    lastAttemptAt: now,
+    lastNotes: sanitizeFabricNotes(notes),
+  };
+  if (opts.complete) next.lastRunAt = now;
+  writeFileSync(path, JSON.stringify(next, null, 2));
 }

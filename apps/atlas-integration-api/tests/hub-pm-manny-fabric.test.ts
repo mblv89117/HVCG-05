@@ -7,7 +7,7 @@ import { classifyDriveItem, classifyFabricRecord, stripSecrets } from '../src/pm
 import { extractSearchDriveItems } from '../src/pm/sharepoint/fabric/files.ts';
 import { extractSourceUrl, isFileIndexRow, fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import { createFabricGraphClient, isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
-import { inspectFabricSyncHealth, isFabricSweepEnabled, sanitizeFabricNotes } from '../src/pm/sharepoint/fabric/status.ts';
+import { inspectFabricSyncHealth, isFabricSweepEnabled, recordFabricSweepAttempt, sanitizeFabricNotes } from '../src/pm/sharepoint/fabric/status.ts';
 import { startFabricRecoverySweep } from '../src/pm/sharepoint/fabric/sweep.ts';
 import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
@@ -493,6 +493,21 @@ describe('Fabric sync honesty status', () => {
   it('does not treat INTEGRATION_FABRIC_SWEEP=0 as enabled', () => {
     assert.equal(isFabricSweepEnabled({ INTEGRATION_FABRIC_SWEEP: '0' }), false);
     assert.equal(isFabricSweepEnabled({}), true);
+  });
+
+  it('records sweep attempts without inventing ClientCodes or leaking delta tokens', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-attempt-'));
+    try {
+      recordFabricSweepAttempt(dir, ['Fabric sweep attempt 1 failed: Managed identity token acquisition failed.']);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.scheduledSweepEnabled, true);
+      assert.ok(health.lastAttemptAt);
+      assert.equal(health.mailSkipPresent, false);
+      assert.ok(health.notes.some((note) => /token acquisition failed/i.test(note)));
+      assert.equal(/deltatoken|CCB99|PDG01/.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

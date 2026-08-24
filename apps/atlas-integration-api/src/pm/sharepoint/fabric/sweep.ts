@@ -10,7 +10,7 @@
 
 import { createFabricGraphClient } from './graph.ts';
 import { runFabricSync, type FabricSyncResult } from './sync.ts';
-import { fabricSweepIntervalMs, isFabricSweepEnabled } from './status.ts';
+import { fabricSweepIntervalMs, isFabricSweepEnabled, recordFabricSweepAttempt } from './status.ts';
 import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../token.ts';
 import type { SharePointPmService } from '../repository.ts';
 import type { AppConfig } from '../../../config.ts';
@@ -114,6 +114,7 @@ export function startConfiguredFabricSweep(opts: {
     intervalMs: fabricSweepIntervalMs(env),
     initialDelayMs: 20_000,
     run: async () => {
+      recordFabricSweepAttempt(opts.cfg.dataDir, ['Fabric recovery sweep started.']);
       let lastErr: unknown;
       for (let attempt = 1; attempt <= 4; attempt += 1) {
         try {
@@ -137,6 +138,10 @@ export function startConfiguredFabricSweep(opts: {
           return;
         } catch (err) {
           lastErr = err;
+          const detail = err instanceof Error ? err.message : String(err);
+          recordFabricSweepAttempt(opts.cfg.dataDir, [
+            `Fabric sweep attempt ${attempt} failed: ${detail}`,
+          ]);
           console.error(
             JSON.stringify({
               level: 'error',
@@ -148,6 +153,9 @@ export function startConfiguredFabricSweep(opts: {
           await new Promise((resolve) => setTimeout(resolve, 8_000));
         }
       }
+      recordFabricSweepAttempt(opts.cfg.dataDir, [
+        `Fabric sweep did not complete: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+      ]);
       console.error(JSON.stringify({ level: 'error', msg: 'fabric_bootstrap_failed', detail: String(lastErr) }));
     },
   });
