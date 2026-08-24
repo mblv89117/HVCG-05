@@ -7,20 +7,23 @@
  * invent ClientCodes or Hub-MI. Reply, reassign, close, and send stay
  * OWNER-GATED. Send remains draft-only. Optional relatedMeetings /
  * researchRelationship / relatedDocuments / relatedProjects /
- * relatedThreads / relatedCapital are attached later from
- * authorizedSearch.meetings / .researchIntelligence / .documents /
- * hits kind=document / .projects / .threads / .capitalSubmissions /
- * sameRelatedScope (fail-closed when ClientCode is missing /
- * non-canonical). relatedDocuments reuses relatedDocumentsForMeeting —
- * no document.clientSupportRelationship field. relatedProjects reuses
- * relatedProjects() / RelatedDocumentProjectRef — inverse of
- * document.relatedProject. relatedThreads reuses relatedEmails() /
- * RelatedDocumentEmailRef — inverse of document.relatedEmail.
- * relatedCapital reuses relatedCapital() / RelatedDocumentCapitalRef —
- * inverse of document.capitalRelationship. No preview body /
- * suggestedDraft / send / downloadUrl on the thread refs. No
- * TargetAmount. Capital stays PREPARE_ONLY. hubMiRow is copied as
- * composed, never invented.
+ * relatedThreads / relatedCapital / relatedAttachments are attached
+ * later from authorizedSearch.meetings / .researchIntelligence /
+ * .documents / hits kind=document / .projects / .threads /
+ * .capitalSubmissions / sameRelatedScope (fail-closed when ClientCode
+ * is missing / non-canonical). relatedDocuments reuses
+ * relatedDocumentsForMeeting — no document.clientSupportRelationship
+ * field. relatedProjects reuses relatedProjects() /
+ * RelatedDocumentProjectRef — inverse of document.relatedProject.
+ * relatedThreads reuses relatedEmails() / RelatedDocumentEmailRef —
+ * inverse of document.relatedEmail. relatedCapital reuses
+ * relatedCapital() / RelatedDocumentCapitalRef — inverse of
+ * document.capitalRelationship. relatedAttachments reuses
+ * relatedAttachments() / RelatedDocumentAttachmentRef — already-indexed
+ * mail-attachment metadata only. binariesInAtlas stays false. No
+ * contentBytes. No preview body / suggestedDraft / send / downloadUrl
+ * on the thread refs. No TargetAmount. Capital stays PREPARE_ONLY.
+ * hubMiRow is copied as composed, never invented.
  */
 
 import {

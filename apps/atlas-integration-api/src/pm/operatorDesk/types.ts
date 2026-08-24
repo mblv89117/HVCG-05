@@ -368,10 +368,14 @@ export interface AtlasClientContext {
    * RelatedDocumentEmailRef / relatedEmails path as research-intel /
    * onboarding). Optional relatedCapital is the inverse of
    * document.capitalRelationship (same RelatedDocumentCapitalRef /
-   * relatedCapital path as research-intel / onboarding). Missing /
-   * non-canonical ClientCode omits researchRelationship /
+   * relatedCapital path as research-intel / onboarding). Optional
+   * relatedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
+   * / relatedAttachments path as documents / meetings / onboarding).
+   * Missing / non-canonical ClientCode omits researchRelationship /
    * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
-   * (fail-closed; never guess). No downloadUrl. No preview body /
+   * / relatedAttachments (fail-closed; never guess). No downloadUrl.
+   * No contentBytes. binariesInAtlas stays false. No preview body /
    * suggestedDraft / send on the thread refs. No TargetAmount. No
    * invented lender criteria, fit, or financing status. hubMiRow is
    * copied as composed on the source project (never invented).
@@ -1265,6 +1269,23 @@ export interface ClientSupportAgentRecord {
    * No new Graph / search / KG / capital / support product.
    */
   relatedCapital?: RelatedDocumentCapitalRef[];
+  /**
+   * Already-indexed outlook-mail-attachment metadata refs. Reuses
+   * RelatedDocumentAttachmentRef / relatedAttachments() — the same
+   * entitled same-scope inverse already live on documents / meetings /
+   * onboarding. Copied after authorization. Metadata only: id / title /
+   * parentMessageId / attachmentId / contentType / size /
+   * classification / webUrl. binariesInAtlas stays false. Omitted
+   * when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped attachments. Client A never receives Client B. SAS /
+   * anonymous webUrl dropped. Never downloadUrl, contentBytes,
+   * invented attachment names / ids, ClientCodes, or Hub-MI.
+   * OWNER_ESCALATE / execute=false / send=false / autoRespond=false /
+   * draftOnly=true / hubMi=false stay as composed. No new Graph /
+   * search / attachment / support product.
+   */
+  relatedAttachments?: RelatedDocumentAttachmentRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -1432,15 +1453,19 @@ export interface AtlasAuthorizedSearch {
    * RelatedDocumentEmailRef / relatedEmails path as research-intel /
    * onboarding). Optional relatedCapital is the inverse of
    * document.capitalRelationship (same RelatedDocumentCapitalRef /
-   * relatedCapital path as research-intel / onboarding). Empty payload
-   * stays empty. Missing / non-canonical ClientCode omits
+   * relatedCapital path as research-intel / onboarding). Optional
+   * relatedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
+   * / relatedAttachments path as documents / meetings / onboarding).
+   * Empty payload stays empty. Missing / non-canonical ClientCode omits
    * relatedMeetings / researchRelationship / relatedDocuments /
-   * relatedProjects / relatedThreads / relatedCapital. Comms stay
-   * DRAFT_ONLY — no preview body, suggestedDraft, or send on the
-   * thread refs. Capital stays PREPARE_ONLY — send=false /
-   * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN /
-   * HONEST_EMPTY. Never invent TargetAmount, lender criteria, fit, or
-   * financing status.
+   * relatedProjects / relatedThreads / relatedCapital /
+   * relatedAttachments. Comms stay DRAFT_ONLY — no preview body,
+   * suggestedDraft, or send on the thread refs. Capital stays
+   * PREPARE_ONLY — send=false / externalSubmit=false / ownerGated=true /
+   * financingStatus UNKNOWN / HONEST_EMPTY. binariesInAtlas stays false.
+   * Never invent TargetAmount, lender criteria, fit, financing status,
+   * attachment names, or contentBytes.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
