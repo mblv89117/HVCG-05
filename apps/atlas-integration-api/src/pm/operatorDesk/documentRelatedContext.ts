@@ -4,10 +4,11 @@
  * project → meetings link on ProjectOperatingRecord items, the inverse
  * mail-thread → meetings link on MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
- * items, the inverse client-support → meetings link on
- * ClientSupportAgentRecord items, the inverse onboarding → meetings
- * and onboarding → research links on OnboardingAgentRecord items, and
- * the inverse research-intelligence → meetings link on
+ * items, the inverse client-support → meetings and
+ * client-support → research links on ClientSupportAgentRecord items,
+ * the inverse onboarding → meetings and onboarding → research links
+ * on OnboardingAgentRecord items, and the inverse
+ * research-intelligence → meetings link on
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
@@ -482,8 +483,8 @@ function relatedDocumentsForMeeting(
  * Inverse of researchIntelligence.relatedMeetings: entitled same-scope
  * research already on authorizedSearch.researchIntelligence.items
  * (hits already composed into that payload — no new research query).
- * Shared by meetings and onboarding. Isolation: sameRelatedScope +
- * entitledClientCodes + mayReceiveRelatedContext.
+ * Shared by meetings, onboarding, and client support. Isolation:
+ * sameRelatedScope + entitledClientCodes + mayReceiveRelatedContext.
  * Fail-closed: missing / non-canonical ClientCode on the scoped item
  * omits researchRelationship (never guess). Unscoped lender catalog
  * titles never attach to a scoped item. Unscoped never receives scoped
@@ -663,14 +664,18 @@ export function attachRelatedContextToCapitalSubmissions(
 }
 
 /**
- * Inverse of meeting support evidence: entitled same-scope meetings already
- * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Inverse of meeting support evidence + researchIntelligence.relatedMeetings:
+ * entitled same-scope meetings already on authorizedSearch.meetings.items
+ * or hits kind=meeting, and entitled same-scope research already on
+ * authorizedSearch.researchIntelligence.items (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
- * ClientCode is missing — omit relatedMeetings rather than guess.
- * Unscoped never receives scoped relations. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
- * OWNER_ESCALATE / execute=false / send=false / autoRespond=false /
- * draftOnly=true / hubMi=false stay as composed.
+ * ClientCode is missing — omit relatedMeetings / researchRelationship
+ * rather than guess. Unscoped never receives scoped relations. Unscoped
+ * lender catalog titles never attach to a scoped support item.
+ * Client A never receives Client B. SAS / anonymous webUrl dropped.
+ * No downloadUrl. No transcript text. OWNER_ESCALATE / execute=false /
+ * send=false / autoRespond=false / draftOnly=true / hubMi=false stay
+ * as composed.
  */
 export function attachRelatedContextToClientSupportRecord(
   principal: AtlasPrincipal,
@@ -680,9 +685,11 @@ export function attachRelatedContextToClientSupportRecord(
   if (!canonicalClientCode(item.clientCode)) return item;
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 

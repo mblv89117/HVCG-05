@@ -294,8 +294,10 @@ export interface AtlasClientContext {
    * Atlas/index communications, titled support work, and copied queues.
    * Reply / reassign / close stay OWNER-GATED. Send stays draft-only.
    * Optional relatedMeetings is the same entitled same-scope inverse used
-   * by documents / projects / threads / capital. Omitted when ClientCode
-   * is missing.
+   * by documents / projects / threads / capital. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / onboarding). Both omitted when ClientCode is missing.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
@@ -504,9 +506,10 @@ export interface RelatedMeetingDocumentRef {
 
 /**
  * Inverse of researchIntelligence.relatedMeetings. Reused on
- * MeetingOperatingRecord and OnboardingAgentRecord. Honesty mirrors
- * RelatedDocumentCapitalRef: source-backed titles only. Never downloadUrl,
- * transcript, attendees, TargetAmount, or invented lender criteria.
+ * MeetingOperatingRecord, OnboardingAgentRecord, and
+ * ClientSupportAgentRecord. Honesty mirrors RelatedDocumentCapitalRef:
+ * source-backed titles only. Never downloadUrl, transcript, attendees,
+ * TargetAmount, or invented lender criteria.
  */
 export interface RelatedMeetingResearchRef {
   id: string;
@@ -882,6 +885,15 @@ export interface ClientSupportAgentRecord {
    * transcript, attendees, or invented titles / ClientCodes.
    */
   relatedMeetings?: RelatedDocumentMeetingRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items (same RelatedMeetingResearchRef
+   * as meetings / onboarding). Omitted when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped lender catalog
+   * titles never attach to a scoped support item. No downloadUrl,
+   * transcript, attendees, TargetAmount, or invented criteria.
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -960,8 +972,10 @@ export interface AtlasAuthorizedSearch {
   onboarding: OnboardingAgentPayload;
   /**
    * Native governed client support / routing agent. Optional relatedMeetings
-   * on each item is the entitled same-scope HVCG_Meetings inverse. Empty
-   * payload stays empty. Missing ClientCode omits relatedMeetings.
+   * on each item is the entitled same-scope HVCG_Meetings inverse. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items. Empty payload stays empty. Missing
+   * ClientCode omits relatedMeetings / researchRelationship.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
