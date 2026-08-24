@@ -24,8 +24,12 @@ import {
 } from '../src/pm/operatorDesk/productImprovement.ts';
 import { inspectEngineeringMissions } from '../src/pm/operatorDesk/engineeringLoop.ts';
 import {
+  composeProductResearch,
+  copyEntitledClientHints,
+  detectRecordedProductGaps,
   productResearchHasInventedFacts,
 } from '../src/pm/operatorDesk/productResearchAgent.ts';
+import { inspectFabricSyncHealth } from '../src/pm/sharepoint/fabric/status.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_PII_MISSION_KEY,
@@ -313,5 +317,165 @@ describe('ATLAS-PRODUCT-RESEARCH-AGENT-001 product research agent', () => {
       assert.equal(client.status, 403);
       leakFree(await client.text());
     });
+  });
+});
+
+const HINT_IDS = /PDG01|ACCG01|CCB01|HFD01|LIEN01|Colorado Craft|Precision Dental|displayName|@highvalue|\bDBA\b|ClientCode/i;
+const REPAIR_COUNT = /repair count|invented client|backfill \d+/i;
+
+function atlasSurface(result: ReturnType<typeof inspectProductImprovements>) {
+  return result.productImprovement.productResearch.surfaces.find((row) => row.surface === 'atlas');
+}
+
+describe('ATLAS-PRODUCT-RESEARCH-CLIENT-HINTS-001 count-only fabric hints', () => {
+  it('ready + count>0 evaluates atlas from a count-only sentence without identifiers', () => {
+    const result = inspectProductImprovements({
+      principal: staffPrincipal(),
+      picture: emptyHonestOperatingPicture(),
+      health: {
+        authRequired: true,
+        insecureDevAuth: false,
+        providers: { microsoft: true, google: true, github: true },
+        fabricNotes: ['Mail delta reached HTTP 200.'],
+        fabricHonesty: 'delta',
+        clientHints: {
+          status: 'ready',
+          reason: 'Client hints loaded on the last completed sweep.',
+          count: 10,
+        },
+      },
+      inspectClass: 'product_research',
+    });
+    const atlas = atlasSurface(result);
+    assert.ok(atlas);
+    assert.equal(atlas.status, 'evaluated');
+    assert.match(atlas.basedOn, /status=ready count=10/);
+    assert.equal(HINT_IDS.test(atlas.basedOn), false);
+    assert.equal(HINT_IDS.test(JSON.stringify(result.productImprovement.productResearch)), false);
+    assert.equal(result.productImprovement.productResearch.execute, false);
+    assert.equal(result.productImprovement.productResearch.inventMetrics, false);
+    assert.equal(productResearchHasInventedFacts(result.productImprovement.productResearch), false);
+    assert.equal(result.productImprovement.honestEmpty, true);
+    assert.equal(result.productImprovement.proposedMissions.length, 0);
+    assert.deepEqual(result.runtime.toolsInvoked, []);
+    noInventedFacts(result);
+  });
+
+  it('empty + count=0 is honest_empty without inventing ClientCodes', () => {
+    const result = inspectProductImprovements({
+      principal: staffPrincipal(),
+      picture: emptyHonestOperatingPicture(),
+      health: {
+        authRequired: true,
+        insecureDevAuth: false,
+        providers: { microsoft: true, google: true, github: true },
+        fabricNotes: ['Mail delta reached HTTP 200.'],
+        fabricHonesty: 'delta',
+        clientHints: {
+          status: 'empty',
+          reason: 'Last completed sweep loaded an empty hint list.',
+          count: 0,
+        },
+      },
+      inspectClass: 'product_research',
+    });
+    const atlas = atlasSurface(result);
+    assert.ok(atlas);
+    assert.equal(atlas.status, 'honest_empty');
+    assert.match(atlas.basedOn, /status=empty count=0/);
+    assert.equal(HINT_IDS.test(atlas.basedOn), false);
+    assert.equal(HINT_IDS.test(JSON.stringify(result)), false);
+    assert.equal(result.productImprovement.honestEmpty, true);
+    assert.equal(result.productImprovement.proposedMissions.length, 0);
+    assert.equal(result.productImprovement.productResearch.execute, false);
+    assert.equal(detectRecordedProductGaps({
+      authRequired: true,
+      insecureDevAuth: false,
+      clientHints: { status: 'empty', reason: 'Last completed sweep loaded an empty hint list.', count: 0 },
+    }).length, 0);
+    noInventedFacts(result);
+  });
+
+  it('error and skipped are recorded atlas gaps without executing or inventing a repair count', () => {
+    for (const status of ['error', 'skipped'] as const) {
+      const result = inspectProductImprovements({
+        principal: staffPrincipal(),
+        picture: emptyHonestOperatingPicture(),
+        health: {
+          authRequired: true,
+          insecureDevAuth: false,
+          providers: { microsoft: true, google: true, github: true },
+          fabricNotes: ['Mail delta reached HTTP 200.'],
+          fabricHonesty: 'delta',
+          clientHints: {
+            status,
+            reason: status === 'error'
+              ? 'Client hints load failed; fabric continued with an empty resolver.'
+              : 'Client hints have not completed; hint population remains unproven.',
+            count: 0,
+          },
+        },
+        inspectClass: 'product_research',
+      });
+      const atlas = atlasSurface(result);
+      assert.ok(atlas);
+      assert.equal(atlas.status, 'evaluated');
+      assert.match(atlas.basedOn, new RegExp(`status=${status} count=0`));
+      assert.equal(REPAIR_COUNT.test(atlas.basedOn), false);
+      assert.equal(HINT_IDS.test(JSON.stringify(result)), false);
+      assert.equal(result.productImprovement.productResearch.execute, false);
+      assert.equal(result.productImprovement.honestEmpty, false);
+      assert.equal(result.productImprovement.outcome, 'proposed_mission');
+      assert.ok(result.productImprovement.proposedMissions.every((row) => row.evidenceClass === 'recorded_product_surface_gap'));
+      assert.ok(result.productImprovement.proposedMissions.every((row) => /repair count/i.test(row.basedOn) === false));
+      assert.ok(result.productImprovement.proposedMissions.some((row) => row.basedOn.includes(`status=${status}`)));
+      noInventedFacts(result);
+    }
+  });
+
+  it('strips identifiers and extra fields; isolation does not invent ClientCodes from count', () => {
+    const copied = copyEntitledClientHints({
+      status: 'ready',
+      reason: 'loaded PDG01 ACCG01 CCB01 displayName DBA user@highvalue',
+      count: 10,
+      clientCodes: ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01', 'FAKE99'],
+      displayName: 'Colorado Craft Beef',
+    } as { status: unknown; reason: unknown; count: unknown });
+    assert.ok(copied);
+    assert.deepEqual(Object.keys(copied).sort(), ['count', 'reason', 'status']);
+    assert.equal(copied.status, 'ready');
+    assert.equal(copied.count, 10);
+    assert.equal(copied.reason, '');
+    assert.equal(HINT_IDS.test(JSON.stringify(copied)), false);
+
+    const composed = composeProductResearch({
+      health: {
+        authRequired: true,
+        insecureDevAuth: false,
+        providers: { microsoft: true, google: true, github: true },
+        fabricHonesty: 'delta',
+        clientHints: copied,
+      },
+    });
+    const atlas = composed.surfaces.find((row) => row.surface === 'atlas');
+    assert.equal(atlas?.status, 'evaluated');
+    assert.equal(atlas?.basedOn, 'Entitled Hub fabric clientHints status=ready count=10');
+    assert.equal(HINT_IDS.test(JSON.stringify(composed)), false);
+    assert.equal(composed.execute, false);
+    assert.equal(/FAKE99|sixth|backfill/.test(JSON.stringify(composed)), false);
+  });
+
+  it('GET /health clientHints shape stays status/reason/count only', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-pr-hints-health-'));
+    try {
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.deepEqual(Object.keys(health.clientHints).sort(), ['count', 'reason', 'status']);
+      assert.equal(typeof health.clientHints.status, 'string');
+      assert.equal(typeof health.clientHints.reason, 'string');
+      assert.equal(typeof health.clientHints.count, 'number');
+      assert.equal(HINT_IDS.test(JSON.stringify(health.clientHints)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -59,6 +59,7 @@ import {
   listPersistedEngineeringMissions,
   persistEngineeringMissionRecords,
 } from './engineeringLoop.ts';
+import { copyEntitledClientHints } from './productResearchAgent.ts';
 import {
   classifyImprovementPolicy,
   inspectProductImprovements,
@@ -72,6 +73,7 @@ function entitledProductResearchHealth(cfg: AppConfig): ProductImprovementInspec
   const fabric = inspectFabricSyncHealth(cfg.dataDir, {
     sweepEnabled: Boolean(cfg.pmBackend.sharepoint) && isFabricSweepEnabled(),
   });
+  const clientHints = copyEntitledClientHints(fabric.clientHints);
   return {
     authRequired: cfg.requireAuth,
     insecureDevAuth: cfg.insecureDevAuth,
@@ -82,6 +84,7 @@ function entitledProductResearchHealth(cfg: AppConfig): ProductImprovementInspec
     },
     fabricNotes: fabric.notes,
     fabricHonesty: fabric.honesty,
+    ...(clientHints ? { clientHints } : {}),
   };
 }
 
