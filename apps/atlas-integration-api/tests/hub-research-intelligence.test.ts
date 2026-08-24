@@ -21,6 +21,12 @@
  * RelatedMeetingResearchRef). Fail-closed when the onboarding ClientCode
  * is missing. Unscoped lender catalog titles never attach to a scoped
  * onboarding item. No new research / KG / onboarding product.
+ * + ATLAS-CLIENT-SUPPORT-RESEARCH-RELATIONSHIP-001
+ * Inverse researchRelationship on ClientSupportAgentRecord copies the same
+ * already-authorized same-scope researchIntelligence items (same
+ * RelatedMeetingResearchRef). Fail-closed when the support ClientCode
+ * is missing. Unscoped lender catalog titles never attach to a scoped
+ * support item. No new research / KG / support product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -53,12 +59,15 @@ import {
   attachRelatedContextToMeeting,
   attachRelatedContextToOnboarding,
   attachRelatedContextToOnboardingRecord,
+  attachRelatedContextToClientSupport,
+  attachRelatedContextToClientSupportRecord,
   attachRelatedContextToResearchIntelligence,
   attachRelatedContextToResearchIntelligenceRecord,
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
 } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { emptyMeetingOperatingPayload } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
 import { emptyOnboardingPayload } from '../src/pm/operatorDesk/onboardingAgent.ts';
+import { emptyClientSupportPayload } from '../src/pm/operatorDesk/clientSupportAgent.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY,
@@ -69,6 +78,7 @@ import {
   type AtlasAuthorizedSearch,
   type AtlasAuthorizedSearchHit,
   type AtlasClientContext,
+  type ClientSupportAgentRecord,
   type MeetingOperatingRecord,
   type OnboardingAgentRecord,
   type OperatorOperatingPicture,
@@ -941,6 +951,7 @@ function searchWithResearch(items: ResearchIntelligenceRecord[]): AtlasAuthorize
     },
     meetings: { kind: 'meeting_operating_record_v1', policyClass: 'READ_AUTO', invented: false, items: [] },
     onboarding: emptyOnboardingPayload(),
+    clientSupport: emptyClientSupportPayload(),
     hits: [],
   } as unknown as AtlasAuthorizedSearch;
 }
@@ -1402,6 +1413,148 @@ describe('ATLAS-ONBOARDING-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse
 
     const empty = emptyOnboardingPayload();
     const attachedEmpty = attachRelatedContextToOnboarding(
+      staff,
+      empty,
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty, empty);
+  });
+});
+
+function syn01SupportHit() {
+  return {
+    kind: 'communication' as const,
+    id: 'mail-syn-1',
+    title: 'SYN01 — Can you confirm the next step?',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications',
+    clientCode: 'SYN01',
+    preview: 'Indexed preview only.',
+  };
+}
+
+function syn01SupportRecord(): ClientSupportAgentRecord {
+  return {
+    id: 'mail-syn-1',
+    title: 'SYN01 — Can you confirm the next step?',
+    clientCode: 'SYN01',
+    evidenceKind: 'communication',
+    suggestedRoute: 'Owner review',
+    classification: 'PROPOSED',
+    provenance: 'PROPOSED',
+    invented: false,
+    hubMiRow: false,
+    execute: false,
+    send: false,
+    autoRespond: false,
+    draftOnly: true,
+    evidence: [
+      {
+        kind: 'communication',
+        id: 'mail-syn-1',
+        title: 'SYN01 — Can you confirm the next step?',
+        source: 'HVCG_Communications',
+        classification: 'PROPOSED',
+      },
+    ],
+    missingRequirements: [
+      'Owner must review and decide reply, reassign, or close. Agent does not send, auto-respond, or execute routing.',
+    ],
+    ownerDecisions: [{ decision: 'Reply or send to the client', status: 'escalated', execute: false }],
+    nextAction:
+      'Owner review of this entitled support item. Reply, reassign, close, and send remain owner-gated. Suggested replies stay draft-only.',
+  };
+}
+
+describe('ATLAS-CLIENT-SUPPORT-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  it('attaches the same entitled research refs on meetings and client support', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      now,
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01SupportHit()],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    const mail = result.authorizedSearch.clientSupport.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(meeting);
+    assert.ok(mail);
+    assert.equal(
+      meeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      mail.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.deepEqual(mail.researchRelationship, meeting.researchRelationship);
+    assert.equal(mail.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(JSON.stringify(meeting.researchRelationship).includes('PDG01'), false);
+    for (const row of meeting.researchRelationship || []) {
+      assert.equal(row.invented, false);
+      assert.equal(row.lenderCriteriaInvented, false);
+      assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+      assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+      assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+      assert.equal('downloadUrl' in row, false);
+      assert.equal('transcript' in row, false);
+      assert.equal('TargetAmount' in row, false);
+    }
+    const blob = JSON.stringify(result.authorizedSearch.clientSupport);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
+    assert.equal(blob.includes('PDG01'), false);
+  });
+
+  it('never attaches Client B or unscoped lender research to Client A support', () => {
+    const mixed = attachRelatedContextToClientSupportRecord(
+      staff,
+      syn01SupportRecord(),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'client:PDG01:must not leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          evidence: 'must not leak',
+        }),
+        syn01ClientResearchRecord({
+          id: 'lender:ln-liveoak',
+          subjectKind: 'lender',
+          title: 'Live Oak Bank',
+          source: 'HVCG_Lenders',
+          clientCode: undefined,
+          evidence: 'Copied existing sourced lender catalog title.',
+        }),
+      ]),
+    );
+    assert.equal(mixed.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
+    assert.equal(
+      (mixed.researchRelationship || []).some(
+        (row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.researchRelationship).includes('PDG01'), false);
+    assert.equal(/live oak/i.test(JSON.stringify(mixed)), false);
+  });
+
+  it('omits extras for unauthorized principals and empty client-support payloads', () => {
+    const denied = attachRelatedContextToClientSupportRecord(
+      otherStaff,
+      syn01SupportRecord(),
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+
+    const empty = emptyClientSupportPayload();
+    const attachedEmpty = attachRelatedContextToClientSupport(
       staff,
       empty,
       searchWithResearch([syn01ClientResearchRecord()]),
