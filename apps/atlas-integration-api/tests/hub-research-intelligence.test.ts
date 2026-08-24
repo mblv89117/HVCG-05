@@ -1972,10 +1972,23 @@ describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001 entitled same-scope i
   });
 
   it('copies hubMiRow as composed and never invents Hub-MI on recovered projects', () => {
+    const emptyMeetings = {
+      kind: 'meeting_operating_record_v1' as const,
+      policyClass: 'READ_AUTO' as const,
+      invented: false as const,
+      items: [],
+    };
+    const emptyDocuments = {
+      kind: 'document_operating_record_v1' as const,
+      policyClass: 'READ_AUTO' as const,
+      binariesInAtlas: false as const,
+      items: [],
+    };
     const current = attachRelatedContextToResearchIntelligenceRecord(
       staff,
       syn01ClientResearchRecord(),
       {
+        documents: emptyDocuments,
         projects: {
           kind: 'project_operating_record_v1',
           policyClass: 'READ_AUTO',
@@ -1983,6 +1996,7 @@ describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001 entitled same-scope i
           currentClientsFirst: true,
           items: [syn01ProjectRecord({ hubMiRow: true, classification: 'CONFIRMED' })],
         },
+        meetings: emptyMeetings,
         hits: [],
       } as unknown as AtlasAuthorizedSearch,
     );
@@ -1996,6 +2010,7 @@ describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001 entitled same-scope i
       staff,
       syn01ClientResearchRecord(),
       {
+        documents: emptyDocuments,
         projects: {
           kind: 'project_operating_record_v1',
           policyClass: 'READ_AUTO',
@@ -2012,6 +2027,7 @@ describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001 entitled same-scope i
             }),
           ],
         },
+        meetings: emptyMeetings,
         hits: [],
       } as unknown as AtlasAuthorizedSearch,
     );
