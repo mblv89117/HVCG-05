@@ -7,6 +7,8 @@ import { classifyDriveItem, classifyFabricRecord, stripSecrets } from '../src/pm
 import { extractSearchDriveItems } from '../src/pm/sharepoint/fabric/files.ts';
 import { extractSourceUrl, isFileIndexRow, fileIndexSummary } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import { createFabricGraphClient, isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
+import { inspectFabricSyncHealth, isFabricSweepEnabled, sanitizeFabricNotes } from '../src/pm/sharepoint/fabric/status.ts';
+import { startFabricRecoverySweep } from '../src/pm/sharepoint/fabric/sweep.ts';
 import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
 import { assertMannyOnly, isMannyPrincipal, MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
@@ -150,6 +152,18 @@ describe('Fabric Graph allowlist', () => {
     );
   });
 
+  it('allows attachment metadata reads and rejects attachment byte-copy paths', async () => {
+    assert.equal(
+      isAllowedFabricGraphPath(`/v1.0/users/${MANNY_ENTRA_OID}/messages/abc123/attachments?$select=id,name`),
+      true,
+    );
+    const client = createFabricGraphClient({ getToken: async () => 'token' });
+    await assert.rejects(
+      () => client.getJson(`/v1.0/users/${MANNY_ENTRA_OID}/messages/abc123/attachments/att1/$value`),
+      (err: unknown) => err instanceof PmHttpError && err.code === 'PM_BACKEND_UNAVAILABLE',
+    );
+  });
+
   it('returns status 0 for transport failures without weakening unsafe-path rejection', async () => {
     const client = createFabricGraphClient(
       { getToken: async () => 'token' },
@@ -208,29 +222,61 @@ describe('Fabric mail delta checkpointing', () => {
     };
   }
 
-  function graph(paths: string[], firstMailStatus = 200) {
+  function graph(
+    paths: string[],
+    firstMailStatus = 200,
+    extras: {
+      hasAttachments?: boolean;
+      extraMessages?: Record<string, unknown>[];
+      attachmentStatus?: number;
+    } = {},
+  ) {
+    let deltaCalls = 0;
     return {
       paths,
       async getJson(path: string) {
         paths.push(path);
-        if (path.includes('/mailFolders/inbox/messages/delta') && paths.filter((p) => p.includes('/mailFolders/inbox/messages/delta')).length === 1) {
-          if (firstMailStatus !== 200) return { status: firstMailStatus, json: {} };
+        if (path.includes('/attachments')) {
+          if ((extras.attachmentStatus ?? 200) !== 200) {
+            return { status: extras.attachmentStatus, json: {} };
+          }
           return {
             status: 200,
             json: {
-              value: [
-                {
-                  id: 'm1',
-                  conversationId: 'conv-1',
-                  subject: 'Colorado Craft Beef capital update',
-                  bodyPreview: 'Please review the packet.',
-                  receivedDateTime: '2026-08-24T00:00:00Z',
-                  from: { emailAddress: { address: 'client@example.com' } },
-                  toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
-                  webLink: 'https://outlook.office.com/mail/m1',
-                },
-              ],
-              '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+              value: [{ id: 'att-1', name: 'term-sheet.pdf', contentType: 'application/pdf', size: 1200 }],
+            },
+          };
+        }
+        if (path.includes('/mailFolders/inbox/messages/delta')) {
+          deltaCalls += 1;
+          if (deltaCalls === 1) {
+            if (firstMailStatus !== 200) return { status: firstMailStatus, json: {} };
+            return {
+              status: 200,
+              json: {
+                value: [
+                  {
+                    id: 'm1',
+                    conversationId: 'conv-1',
+                    subject: 'Colorado Craft Beef capital update',
+                    bodyPreview: 'Please review the packet.',
+                    receivedDateTime: '2026-08-24T00:00:00Z',
+                    from: { emailAddress: { address: 'client@example.com' } },
+                    toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
+                    webLink: 'https://outlook.office.com/mail/m1',
+                    hasAttachments: extras.hasAttachments === true,
+                  },
+                  ...(extras.extraMessages || []),
+                ],
+                '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+              },
+            };
+          }
+          return {
+            status: 200,
+            json: {
+              value: [],
+              '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=resume`,
             },
           };
         }
@@ -320,6 +366,185 @@ describe('Fabric mail delta checkpointing', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('resumes the stored inbox delta link on the next bounded run', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-resume-'));
+    const svc = service();
+    const paths: string[] = [];
+    const fabric = graph(paths);
+    try {
+      const first = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: fabric as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(first.checkpoint.mailMode, 'delta');
+      assert.match(first.checkpoint.mailSkip || '', /deltatoken=abc/);
+      const second = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: fabric as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(second.indexed.mailThreads, 0);
+      assert.equal(second.checkpoint.mailDeltaReady, true);
+      assert.match(second.checkpoint.mailSkip || '', /deltatoken=resume/);
+      const deltaPaths = paths.filter((path) => path.includes('/mailFolders/inbox/messages/delta'));
+      assert.equal(deltaPaths.some((path) => path.includes('deltatoken=abc')), true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('indexes current-client attachment metadata-links only and does not invent ClientCodes', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, {
+          hasAttachments: true,
+          extraMessages: [
+            {
+              id: 'm-personal',
+              conversationId: 'conv-personal',
+              subject: 'Netflix billing',
+              hasAttachments: true,
+            },
+          ],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.indexed.files, 1);
+      assert.equal(result.indexed.restricted, 1);
+      assert.equal(
+        paths.some((path) => path.includes('/messages/m1/attachments')),
+        true,
+      );
+      assert.equal(
+        paths.some((path) => path.includes('/messages/m-personal/attachments')),
+        false,
+      );
+      assert.equal(
+        svc.communications.some((row) => row.idempotencyKey === 'mail-att:m1:att-1' && row.clientCode === 'CCB01'),
+        true,
+      );
+      assert.equal(
+        svc.communications.every((row) => !row.clientCode || row.clientCode === 'CCB01'),
+        true,
+      );
+      assert.equal(
+        svc.communications.some((row) => row.provenanceSource === 'outlook-mail-attachment' && row.classification === 'RESTRICTED'),
+        true,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports page_fallback honestly and redacts delta tokens from notes', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-health-page-'));
+    const svc = service();
+    try {
+      await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 404) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.honesty, 'page_fallback');
+      assert.equal(health.mailMode, 'page');
+      assert.equal(health.mailDeltaReady, false);
+      assert.equal(health.lastIndexed.mailThreads, 1);
+      const dumped = JSON.stringify(health);
+      assert.equal(/deltatoken=abc|outlook\.office\.com/i.test(dumped), false);
+      assert.deepEqual(
+        sanitizeFabricNotes(['Mail delta https://graph.microsoft.com/v1.0/users/x/delta?$deltatoken=abc']),
+        ['Mail delta [url-redacted]'],
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Fabric sync honesty status', () => {
+  it('reports never_run without a checkpoint and never leaks tokens', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-health-empty-'));
+    try {
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: false });
+      assert.equal(health.honesty, 'never_run');
+      assert.equal(health.mailMode, 'none');
+      assert.equal(health.mailDeltaReady, false);
+      assert.equal(health.scheduledSweepEnabled, false);
+      const dumped = JSON.stringify(health);
+      assert.equal(/deltatoken|mailSkip=|Bearer /i.test(dumped), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not treat INTEGRATION_FABRIC_SWEEP=0 as enabled', () => {
+    assert.equal(isFabricSweepEnabled({ INTEGRATION_FABRIC_SWEEP: '0' }), false);
+    assert.equal(isFabricSweepEnabled({}), true);
+  });
+});
+
+describe('Fabric recovery sweep', () => {
+  it('runs once after the initial delay and skips overlapping ticks', async () => {
+    const runs: string[] = [];
+    let resolveRun: (() => void) | undefined;
+    const running = new Promise<void>((resolve) => {
+      resolveRun = resolve;
+    });
+    const timers: Array<{ fn: () => void }> = [];
+    const handle = startFabricRecoverySweep({
+      enabled: true,
+      initialDelayMs: 1,
+      intervalMs: 1,
+      setTimeoutFn: ((fn: () => void) => {
+        timers.push({ fn });
+        return 1 as unknown as ReturnType<typeof setTimeout>;
+      }) as typeof setTimeout,
+      clearTimeoutFn: (() => undefined) as typeof clearTimeout,
+      log: () => undefined,
+      run: async () => {
+        runs.push('start');
+        await running;
+        runs.push('end');
+      },
+    });
+    assert.equal(timers.length, 1);
+    const first = timers[0]?.fn;
+    const pending = first ? first() : undefined;
+    void pending;
+    assert.equal(timers.length, 1);
+    await Promise.resolve();
+    assert.equal(runs[0], 'start');
+    resolveRun?.();
+    await Promise.resolve();
+    await Promise.resolve();
+    handle.stop();
+    assert.equal(runs.includes('end'), true);
+  });
+
+  it('does not schedule work when disabled', () => {
+    const logs: string[] = [];
+    const handle = startFabricRecoverySweep({
+      enabled: false,
+      run: async () => {
+        throw new Error('should not run');
+      },
+      log: (rec) => logs.push(String(rec.msg || '')),
+    });
+    handle.stop();
+    assert.equal(logs.includes('fabric_sweep_disabled'), true);
   });
 });
 

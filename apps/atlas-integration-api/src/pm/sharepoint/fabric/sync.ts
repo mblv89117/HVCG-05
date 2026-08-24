@@ -18,9 +18,14 @@ import {
   type SharePointFileCheckpoint,
 } from './files.ts';
 import type { FabricGraphClient } from './graph.ts';
+import { sanitizeFabricNotes } from './status.ts';
 
 const MAX_PAGES = 8;
 const PAGE_SIZE = 50;
+const MAX_ATTACHMENT_MESSAGES = 25;
+const MAX_ATTACHMENTS_PER_MESSAGE = 20;
+const MAIL_SELECT =
+  'id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview,hasAttachments';
 
 export interface FabricCheckpoint {
   mailSkip: string | null;
@@ -31,6 +36,8 @@ export interface FabricCheckpoint {
   filesSkip: string | null;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
+  lastIndexed?: FabricSyncResult['indexed'];
+  lastNotes?: string[];
   counts: Record<string, number>;
 }
 
@@ -99,11 +106,15 @@ function deltaLink(json: Record<string, unknown>): string | null {
 }
 
 function mailDeltaUrl(): string {
-  return `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$select=id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview&$top=${PAGE_SIZE}`;
+  return `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$select=${MAIL_SELECT}&$top=${PAGE_SIZE}`;
 }
 
 function legacyMailPageUrl(): string {
-  return `/v1.0/users/${MANNY_ENTRA_OID}/messages?$select=id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview&$top=${PAGE_SIZE}&$orderby=receivedDateTime desc`;
+  return `/v1.0/users/${MANNY_ENTRA_OID}/messages?$select=${MAIL_SELECT}&$top=${PAGE_SIZE}&$orderby=receivedDateTime desc`;
+}
+
+function attachmentMetadataUrl(messageId: string): string {
+  return `/v1.0/users/${MANNY_ENTRA_OID}/messages/${encodeURIComponent(messageId)}/attachments?$select=id,name,contentType,size&$top=${MAX_ATTACHMENTS_PER_MESSAGE}`;
 }
 
 export async function runFabricSync(opts: {
@@ -137,6 +148,7 @@ export async function runFabricSync(opts: {
   const indexed = { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 };
 
   const seenConversations = new Set<string>();
+  let attachmentLookups = 0;
   let mailUrl: string | null = cp.mailSkip || mailDeltaUrl();
   let mailMode: 'delta' | 'page' = mailUrl.includes('/delta') ? 'delta' : (cp.mailMode || 'page');
   for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
@@ -186,6 +198,7 @@ export async function runFabricSync(opts: {
         classified.ingest === 'metadata_link'
           ? 'RESTRICTED — metadata and source link only. Body not stored.'
           : stripSecrets(typeof msg.bodyPreview === 'string' ? msg.bodyPreview : '');
+      const webUrl = typeof msg.webLink === 'string' ? msg.webLink : undefined;
       await opts.service.upsertCommunicationIndex({
         title: (typeof msg.subject === 'string' && msg.subject) || '(no subject)',
         summary,
@@ -193,7 +206,7 @@ export async function runFabricSync(opts: {
         date: typeof msg.receivedDateTime === 'string' ? msg.receivedDateTime : undefined,
         channel: 'Email',
         direction: from.toLowerCase().endsWith('@highvaluecapitalgroup.com') ? 'Outbound' : 'Inbound',
-        webUrl: typeof msg.webLink === 'string' ? msg.webLink : undefined,
+        webUrl,
         sourceMessageId: messageId,
         conversationId: conversationId || messageId,
         classification: classified.classification,
@@ -202,6 +215,42 @@ export async function runFabricSync(opts: {
         idempotencyKey: `mail:${conversationId || messageId}`,
       });
       indexed.mailThreads += 1;
+      if (
+        msg.hasAttachments === true &&
+        classified.clientCode &&
+        attachmentLookups < MAX_ATTACHMENT_MESSAGES
+      ) {
+        attachmentLookups += 1;
+        const att = await opts.fabric.getJson(attachmentMetadataUrl(messageId));
+        if (att.status !== 200) {
+          notes.push(`Mail attachment metadata stopped at HTTP ${att.status}.`);
+        } else {
+          for (const item of asArray(att.json).slice(0, MAX_ATTACHMENTS_PER_MESSAGE)) {
+            const attId = typeof item.id === 'string' ? item.id : '';
+            const name = typeof item.name === 'string' ? item.name : '';
+            if (!attId) continue;
+            const key = `mail-att:${messageId}:${attId}`;
+            await opts.service.upsertCommunicationIndex({
+              title: name || attId,
+              summary: fileIndexSummary({
+                restricted: true,
+                webUrl,
+                idempotencyKey: key,
+              }),
+              clientCode: classified.clientCode,
+              channel: 'Other',
+              webUrl,
+              sourceMessageId: attId,
+              classification: 'RESTRICTED',
+              provenanceSource: 'outlook-mail-attachment',
+              sourceOrg: 'HVCG',
+              idempotencyKey: key,
+            });
+            indexed.files += 1;
+            indexed.restricted += 1;
+          }
+        }
+      }
     }
     const delta = deltaLink(json);
     const next = nextLink(json);
@@ -364,6 +413,8 @@ export async function runFabricSync(opts: {
   notes.push('Planner application APIs are delegated-only per current Microsoft Graph docs — not indexed via app-only.');
   notes.push('Online meeting transcripts require a Teams application access policy if Graph returns 403.');
   cp.lastRunAt = new Date().toISOString();
+  cp.lastIndexed = { ...indexed };
+  cp.lastNotes = sanitizeFabricNotes(notes);
   cp.counts = {
     mailThreads: (cp.counts.mailThreads || 0) + indexed.mailThreads,
     meetings: (cp.counts.meetings || 0) + indexed.meetings,

@@ -66,6 +66,9 @@ function assertSafeFabricUrl(raw: string, method: 'GET' | 'POST' = 'GET'): URL {
     throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Fabric Graph path is not allowlisted.');
   }
   const path = url.pathname;
+  if (/\$value\b/i.test(path) || /contentBytes/i.test(`${path}${url.search}`)) {
+    throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Fabric Graph attachment content is not allowlisted.');
+  }
   if (!isAllowedFabricGraphPath(path, method)) {
     throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Fabric Graph path is not allowlisted.');
   }
