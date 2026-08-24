@@ -1240,15 +1240,27 @@ describe('Fabric mail delta checkpointing', () => {
   it('reports fileSearch skipped when Graph search/query returns HTTP 400 and never claims LIVE', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-400-'));
     const svc = service();
+    const paths: string[] = [];
     try {
       const result = await runFabricSync({
         service: svc as unknown as SharePointPmService,
-        fabric: graph([], 200, { searchStatus: 400 }) as never,
+        fabric: graph(paths, 200, { searchStatus: 400 }) as never,
         dataDir: dir,
         bootstrap: true,
       });
       assert.equal(result.checkpoint.fileSearchLastStatus, 400);
+      assert.equal(result.checkpoint.fileSearchRejectedAppOnly, true);
       assert.ok(result.notes.some((note) => /File search skipped/.test(note) && /HTTP 400/.test(note)));
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      const second = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, { searchStatus: 400 }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      assert.equal(second.checkpoint.fileSearchLastStatus, 400);
+      assert.equal(second.checkpoint.fileSearchRejectedAppOnly, true);
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(health.fileSearch.status, 'skipped');
       assert.match(health.fileSearch.reason, /HTTP 400/);

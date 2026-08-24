@@ -65,7 +65,9 @@ export interface FabricSyncHealth {
   };
   /**
    * Graph POST /search/query honesty for business file search.
-   * skipped when the sweep has not completed or Graph returned non-200.
+   * skipped when the sweep has not completed, Graph returned non-200, or a
+   * prior app-only rejection (HTTP 400 invalid_request / BadRequest, or
+   * HTTP 0 graph_request_failed) was recorded and later sweeps do not POST again.
    * ready when Graph 200 completed. Never LIVE. Never invents file counts —
    * cumulative.files / lastIndexed.files stay the existing business-file index.
    * error when the checkpoint is unreadable.

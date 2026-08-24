@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
@@ -12,7 +12,11 @@ import {
   retryIndexWrite,
   toSharePointDateTime,
 } from '../src/pm/sharepoint/indexWrite.ts';
-import { businessFileSearchRequest } from '../src/pm/sharepoint/fabric/files.ts';
+import {
+  businessFileSearchRequest,
+  isRecordedAppOnlyFileSearchRejection,
+  isRejectedAppOnlyFileSearch,
+} from '../src/pm/sharepoint/fabric/files.ts';
 import { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import type { GraphListItem, GraphListPage, PmGraphTransport } from '../src/pm/sharepoint/graph.ts';
 import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
@@ -680,6 +684,7 @@ describe('Fabric notes stay sanitized when a mapped 400 skips a write', () => {
       assert.ok(result.notes.some((note) => /OneDrive recent skipped/.test(note) && /not supported/.test(note)));
       assert.equal(result.notes.filter((note) => /File search skipped/.test(note)).length, 1);
       assert.equal(result.checkpoint.fileSearchLastStatus, 400);
+      assert.equal(result.checkpoint.fileSearchRejectedAppOnly, true);
       const searchHealth = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(searchHealth.fileSearch.status, 'skipped');
       assert.match(searchHealth.fileSearch.reason, /HTTP 400/);
@@ -809,5 +814,207 @@ describe('Business file search query shape', () => {
       'site:https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients isDocument:true',
     );
     assert.equal(/path:"/.test(String((req.query as { queryString?: string }).queryString)), false);
+  });
+});
+
+describe('Rejected Graph fileSearch short-circuit', () => {
+  function mailAndCalendarFabric(paths: string[], search: { status: number; json: Record<string, unknown> }) {
+    return {
+      async getJson(path: string) {
+        paths.push(path);
+        if (path.includes('/mailFolders/inbox/messages/delta')) {
+          return {
+            status: 200,
+            json: {
+              value: [],
+              '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+            },
+          };
+        }
+        if (path.includes('/calendar/events')) {
+          return { status: 200, json: { value: [] } };
+        }
+        return { status: 404, json: {} };
+      },
+      async postJson(path: string) {
+        paths.push(`POST ${path}`);
+        return search;
+      },
+    } as never;
+  }
+
+  it('classifies HTTP 400 invalid_request / BadRequest and HTTP 0 graph_request_failed as app-only rejection', () => {
+    assert.equal(
+      isRejectedAppOnlyFileSearch(400, { error: { code: 'BadRequest', message: 'invalid_request' } }),
+      true,
+    );
+    assert.equal(
+      isRejectedAppOnlyFileSearch(400, { error: { code: 'invalidRequest', message: 'The request is malformed or incorrect.' } }),
+      true,
+    );
+    assert.equal(
+      isRejectedAppOnlyFileSearch(0, { error: { code: 'graph_request_failed' } }),
+      true,
+    );
+    assert.equal(isRejectedAppOnlyFileSearch(403, { error: { code: 'accessDenied' } }), false);
+    assert.equal(isRecordedAppOnlyFileSearchRejection({ fileSearchLastStatus: 400 }), true);
+    assert.equal(isRecordedAppOnlyFileSearchRejection({ fileSearchLastStatus: 0 }), true);
+    assert.equal(isRecordedAppOnlyFileSearchRejection({ fileSearchRejectedAppOnly: true }), true);
+    assert.equal(isRecordedAppOnlyFileSearchRejection({}), false);
+    assert.equal(isRecordedAppOnlyFileSearchRejection({ fileSearchLastStatus: 403 }), false);
+  });
+
+  it('does not POST /search/query on the next sweep after a recorded HTTP 400 skip', async () => {
+    const graph = new SchemaGraph();
+    graph.seed(CLIENTS, { Title: 'Colorado Craft Beef', ClientCode: 'CCB01', ClientStage: 'Active Client' }, '12');
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-400-shortcircuit-'));
+    const paths: string[] = [];
+    const fabric = mailAndCalendarFabric(paths, {
+      status: 400,
+      json: { error: { code: 'BadRequest', message: 'invalid_request' } },
+    });
+    try {
+      const first = await runFabricSync({ service: svc, fabric, dataDir: dir, bootstrap: true });
+      assert.equal(first.checkpoint.fileSearchLastStatus, 400);
+      assert.equal(first.checkpoint.fileSearchRejectedAppOnly, true);
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      const second = await runFabricSync({ service: svc, fabric, dataDir: dir, bootstrap: true });
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      assert.equal(second.checkpoint.fileSearchLastStatus, 400);
+      assert.equal(second.checkpoint.fileSearchRejectedAppOnly, true);
+      assert.ok(second.notes.some((note) => /File search skipped/.test(note) && /HTTP 400/.test(note)));
+      assert.equal(second.notes.filter((note) => /File search skipped/.test(note)).length, 1);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.match(health.fileSearch.reason, /HTTP 400/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.fileSearch.status === 'LIVE', false);
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer |Colorado Craft Beef/i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not POST /search/query on the next sweep after a recorded HTTP 0 graph_request_failed skip', async () => {
+    const graph = new SchemaGraph();
+    graph.seed(CLIENTS, { Title: 'Colorado Craft Beef', ClientCode: 'CCB01', ClientStage: 'Active Client' }, '12');
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-http0-shortcircuit-'));
+    const paths: string[] = [];
+    const fabric = mailAndCalendarFabric(paths, {
+      status: 0,
+      json: { error: { code: 'graph_request_failed' } },
+    });
+    try {
+      const first = await runFabricSync({ service: svc, fabric, dataDir: dir, bootstrap: true });
+      assert.equal(first.checkpoint.fileSearchLastStatus, 0);
+      assert.equal(first.checkpoint.fileSearchRejectedAppOnly, true);
+      assert.ok(first.notes.some((note) => /File search skipped/.test(note) && /HTTP 0/.test(note)));
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      const second = await runFabricSync({ service: svc, fabric, dataDir: dir, bootstrap: true });
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      assert.equal(second.checkpoint.fileSearchLastStatus, 0);
+      assert.ok(second.notes.some((note) => /recorded app-only rejection/.test(note) && /HTTP 0/.test(note)));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.match(health.fileSearch.reason, /HTTP 0/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('attempts /search/query once on a first-time checkpoint and records skip honestly', async () => {
+    const graph = new SchemaGraph();
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-first-attempt-'));
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc,
+        fabric: mailAndCalendarFabric(paths, {
+          status: 400,
+          json: { error: { code: 'invalidRequest', message: 'The request is malformed or incorrect.' } },
+        }),
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 1);
+      assert.equal(result.checkpoint.fileSearchLastStatus, 400);
+      assert.equal(result.checkpoint.fileSearchRejectedAppOnly, true);
+      assert.ok(result.notes.some((note) => /File search skipped/.test(note) && /HTTP 400/.test(note)));
+      assert.equal(/LIVE files/.test(result.notes.join('\n')), true);
+      assert.equal(result.notes.some((note) => /Bearer |CCB99|PDG01|deltatoken/i.test(note)), false);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.equal(health.fileIndexSearch.status, 'skipped');
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps fileIndexSearch ready from indexed files and never claims LIVE after a recorded skip', async () => {
+    const graph = new SchemaGraph();
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-filesearch-index-ready-'));
+    const paths: string[] = [];
+    try {
+      writeFileSync(
+        join(dir, 'fabric-checkpoint.json'),
+        JSON.stringify({
+          lastRunAt: '2026-08-24T23:30:12.505Z',
+          mailMode: 'delta',
+          mailDeltaReady: true,
+          mailSkip: `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+          fileSearchLastStatus: 0,
+          fileSearchRejectedAppOnly: true,
+          lastNotes: [
+            'File search skipped: Graph search/query rejected app-only driveItem query (HTTP 0; graphCode=graph_request_failed; mismatch=other). Not claimed as LIVE files.',
+          ],
+          lastIndexed: {
+            mailThreads: 1,
+            meetings: 8,
+            contacts: 0,
+            files: 4,
+            attachmentsIndexed: 1,
+            skipped: 0,
+            restricted: 0,
+          },
+          counts: { mailThreads: 1, meetings: 8, files: 4, attachmentsIndexed: 1 },
+        }),
+      );
+      const before = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(before.fileIndexSearch.status, 'ready');
+      assert.equal(before.fileSearch.status, 'skipped');
+      const result = await runFabricSync({
+        service: svc,
+        fabric: mailAndCalendarFabric(paths, {
+          status: 0,
+          json: { error: { code: 'graph_request_failed' } },
+        }),
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(paths.filter((path) => path === 'POST /v1.0/search/query').length, 0);
+      assert.equal(result.checkpoint.fileSearchLastStatus, 0);
+      assert.equal(result.checkpoint.fileSearchRejectedAppOnly, true);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.fileSearch.status, 'skipped');
+      assert.match(health.fileSearch.reason, /HTTP 0/);
+      assert.equal(health.fileIndexSearch.status, 'ready');
+      assert.equal(
+        health.fileIndexSearch.reason,
+        'Indexed business files are searchable on the entitled Hub operating index.',
+      );
+      assert.equal(health.fileSearch.status === 'LIVE', false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileIndexSearch)), false);
+      assert.equal(/term-sheet|invented|CCB99|PDG01|Bearer |deltatoken/i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

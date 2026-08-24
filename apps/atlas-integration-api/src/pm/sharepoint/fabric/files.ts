@@ -63,6 +63,62 @@ export function businessFileSearchRequest(siteUrl: string, from = 0): Record<str
   };
 }
 
+/** App-only Graph POST /search/query was rejected. Do not claim LIVE files. */
+export function isRejectedAppOnlyFileSearch(
+  status: number,
+  json: Record<string, unknown> = {},
+): boolean {
+  if (status === 0) {
+    const info = describeGraphListWriteError(status, json);
+    return info.graphCode === 'graph_request_failed';
+  }
+  if (status === 400) {
+    const info = describeGraphListWriteError(status, json);
+    const code = info.graphCode.toLowerCase();
+    return (
+      info.mismatch === 'invalid_request' ||
+      code === 'badrequest' ||
+      code === 'invalidrequest' ||
+      code === 'invalid_request'
+    );
+  }
+  return false;
+}
+
+/** Later fabric sweeps must not POST /search/query again after a recorded rejection. */
+export function isRecordedAppOnlyFileSearchRejection(opts: {
+  fileSearchRejectedAppOnly?: boolean;
+  fileSearchLastStatus?: number | null;
+  lastNotes?: string[];
+}): boolean {
+  if (opts.fileSearchRejectedAppOnly === true) return true;
+  const status = opts.fileSearchLastStatus;
+  if (status !== 0 && status !== 400) return false;
+  const notes = opts.lastNotes || [];
+  if (
+    notes.some((note) =>
+      /File search skipped:.*(?:rejected app-only driveItem query|Graph search\/query).*HTTP (0|400)/i.test(
+        note,
+      ),
+    )
+  ) {
+    return true;
+  }
+  return status === 0 || status === 400;
+}
+
+export function rejectedAppOnlyFileSearchNote(
+  status: number,
+  json: Record<string, unknown> = {},
+  recorded = false,
+): string {
+  if (recorded) {
+    return `File search skipped: Graph search/query rejected app-only driveItem query (HTTP ${status}; recorded app-only rejection). Not claimed as LIVE files.`;
+  }
+  const info = describeGraphListWriteError(status, json);
+  return `File search skipped: Graph search/query rejected app-only driveItem query (HTTP ${status}; graphCode=${info.graphCode}; mismatch=${info.mismatch}). Not claimed as LIVE files.`;
+}
+
 function asArray(json: Record<string, unknown>): Record<string, unknown>[] {
   const value = json.value;
   return Array.isArray(value)
@@ -89,6 +145,11 @@ export async function indexBusinessFiles(opts: {
   clients: ClientHint[];
   checkpoint: SharePointFileCheckpoint;
   notes: string[];
+  priorFileSearch?: {
+    fileSearchRejectedAppOnly?: boolean;
+    fileSearchLastStatus?: number | null;
+    lastNotes?: string[];
+  };
 }): Promise<{
   files: number;
   skipped: number;
@@ -96,6 +157,8 @@ export async function indexBusinessFiles(opts: {
   checkpoint: SharePointFileCheckpoint;
   /** Last Graph HTTP status for POST /search/query. Distinct from filesSkip nextLink. */
   fileSearchLastStatus: number | null;
+  /** Durable skip after app-only Graph /search/query rejection. Never means LIVE files. */
+  fileSearchRejectedAppOnly: boolean;
 }> {
   const indexed = { files: 0, skipped: 0, restricted: 0 };
   const cp: SharePointFileCheckpoint = {
@@ -254,35 +317,45 @@ export async function indexBusinessFiles(opts: {
     }
   }
 
-  let fileSearchLastStatus: number | null = null;
-  for (let i = 0; i < SEARCH_PATHS.length && i < MAX_SEARCH_QUERIES; i += 1) {
-    const path = SEARCH_PATHS[i];
-    const { status, json } = await opts.fabric.postJson(
-      '/v1.0/search/query',
-      businessFileSearchRequest(path, cp.searchFrom),
-    );
-    fileSearchLastStatus = status;
-    if (status !== 200) {
-      const info = describeGraphListWriteError(status, json);
-      opts.notes.push(
-        `File search skipped: Graph search/query rejected app-only driveItem query (HTTP ${status}; graphCode=${info.graphCode}; mismatch=${info.mismatch}). Not claimed as LIVE files.`,
+  let fileSearchLastStatus: number | null =
+    typeof opts.priorFileSearch?.fileSearchLastStatus === 'number' &&
+    Number.isFinite(opts.priorFileSearch.fileSearchLastStatus)
+      ? opts.priorFileSearch.fileSearchLastStatus
+      : null;
+  let fileSearchRejectedAppOnly = isRecordedAppOnlyFileSearchRejection(opts.priorFileSearch || {});
+  if (fileSearchRejectedAppOnly) {
+    const recordedStatus = fileSearchLastStatus === 0 || fileSearchLastStatus === 400 ? fileSearchLastStatus : 400;
+    fileSearchLastStatus = recordedStatus;
+    opts.notes.push(rejectedAppOnlyFileSearchNote(recordedStatus, {}, true));
+  } else {
+    for (let i = 0; i < SEARCH_PATHS.length && i < MAX_SEARCH_QUERIES; i += 1) {
+      const path = SEARCH_PATHS[i];
+      const { status, json } = await opts.fabric.postJson(
+        '/v1.0/search/query',
+        businessFileSearchRequest(path, cp.searchFrom),
       );
-      break;
-    }
-    for (const resource of extractSearchDriveItems(json)) {
-      await writeItem({
-        id: resource.id,
-        name: resource.name,
-        webUrl: resource.webUrl,
-        parentPath: resource.parentPath,
-        isFile: true,
-        driveId: resource.driveId,
-      });
+      fileSearchLastStatus = status;
+      if (status !== 200) {
+        fileSearchRejectedAppOnly = isRejectedAppOnlyFileSearch(status, json);
+        opts.notes.push(rejectedAppOnlyFileSearchNote(status, json, false));
+        break;
+      }
+      fileSearchRejectedAppOnly = false;
+      for (const resource of extractSearchDriveItems(json)) {
+        await writeItem({
+          id: resource.id,
+          name: resource.name,
+          webUrl: resource.webUrl,
+          parentPath: resource.parentPath,
+          isFile: true,
+          driveId: resource.driveId,
+        });
+      }
     }
   }
   cp.searchFrom = 0;
 
-  return { ...indexed, checkpoint: cp, fileSearchLastStatus };
+  return { ...indexed, checkpoint: cp, fileSearchLastStatus, fileSearchRejectedAppOnly };
 }
 
 export function extractSearchDriveItems(json: Record<string, unknown>): Array<{
