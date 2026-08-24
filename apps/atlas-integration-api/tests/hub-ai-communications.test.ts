@@ -1,9 +1,14 @@
 /**
  * ATLAS-AI-COMMUNICATIONS-001
+ * + ATLAS-AI-COMMS-SUGGESTED-ATTACHMENTS-001
  * Smallest Hub increment: thread context on already-indexed entitled mail
  * so the owner does not need Outlook. Indexed preview only. DRAFT_ONLY.
  * Never AUTO_RESPOND / send. No invented amounts or deadlines.
  * Authorization before retrieval. No cross-client leak.
+ * suggestedDraft.suggestedAttachments copies already-indexed same-scope
+ * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef /
+ * relatedAttachments path). Missing / non-canonical ClientCode omits
+ * them. Client A never receives Client B. No downloadUrl / contentBytes.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -24,15 +29,28 @@ import {
   loadClientContext,
   searchAuthorizedKnowledge,
 } from '../src/pm/operatorDesk/toolGateway.ts';
-import { mailThreadPayloadHasInventedFacts } from '../src/pm/operatorDesk/mailThreadContext.ts';
+import {
+  emptyMailThreadPayload,
+  mailThreadPayloadHasInventedFacts,
+} from '../src/pm/operatorDesk/mailThreadContext.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
+import {
+  attachRelatedContextToMailThread,
+  attachRelatedContextToMailThreads,
+  DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
+} from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import {
   ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY,
   COMMUNICATIONS_AUTO_RESPOND,
   COMMUNICATIONS_POLICY_CLASS,
   COMMUNICATIONS_SEND,
+  RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+  RESEARCH_INTELLIGENCE_FIT,
+  RESEARCH_INTELLIGENCE_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type AtlasClientContext,
+  type DocumentOperatingRecord,
+  type MailThreadOperatingRecord,
   type OperatorOperatingPicture,
 } from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
@@ -354,5 +372,509 @@ describe('ATLAS-AI-COMMUNICATIONS-001 indexed mail thread context', () => {
       if (prev.DATA === undefined) delete process.env.INTEGRATION_DATA_DIR;
       else process.env.INTEGRATION_DATA_DIR = prev.DATA;
     }
+  });
+});
+
+const ATT_PARENT_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-att-parent';
+const SAS =
+  'https://hvfiles.blob.core.windows.net/docs/term-sheet.pdf?sv=2024-11-04&sig=abc&se=2026-08-24T00:00:00Z&sp=r';
+const ANON =
+  'https://highvaluecapitalgroup.sharepoint.com/:b:/s/HVCG-Clients/abc?guestaccess=1&share=xyz';
+
+const otherStaff: AtlasPrincipal = {
+  userId: '11111111-1111-4111-8111-aaaaaaaaaa02',
+  organizationId: 'org-hvcg',
+  allowedClientIds: ['ACCG01'],
+  roles: ['HVCG Team Member'],
+};
+
+function syn01ThreadHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'communication' as const,
+    id: 'mail-syn-1',
+    title: 'SYN01 intake follow-up',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications',
+    clientCode: 'SYN01',
+    webUrl: SOURCE,
+    preview: 'Can you confirm the next entitled document? I will send the existing package after review.',
+    conversationId: 'conv-syn-1',
+    provenance: 'CONFIRMED' as const,
+    ...overrides,
+  };
+}
+
+function syn01AttachmentHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'document' as const,
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications/file-index',
+    clientCode: 'SYN01',
+    webUrl: ATT_PARENT_SOURCE,
+    provenance: 'CONFIRMED' as const,
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
+function syn01AttachmentRecord(overrides: Partial<DocumentOperatingRecord> = {}): DocumentOperatingRecord {
+  return {
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    webUrl: ATT_PARENT_SOURCE,
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED',
+    source: 'HVCG_Communications/file-index',
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
+function syn01ThreadRecord(overrides: Partial<MailThreadOperatingRecord> = {}): MailThreadOperatingRecord {
+  return {
+    id: 'mail-syn-1',
+    conversationId: 'conv-syn-1',
+    title: 'SYN01 intake follow-up',
+    clientCode: 'SYN01',
+    channel: 'Email',
+    preview: 'Can you confirm the next entitled document?',
+    summary: 'Indexed preview only. Can you confirm the next entitled document?',
+    summarySource: 'indexed_preview_only',
+    invented: false,
+    classification: 'PROPOSED',
+    provenance: 'PROPOSED',
+    commitments: [],
+    unansweredQuestions: [],
+    suggestedDraft: {
+      policyClass: 'DRAFT_ONLY',
+      send: false,
+      autoRespond: false,
+      subject: 'Re: SYN01 intake follow-up',
+      body: 'This suggested reply is a draft only. It has not been sent.',
+      status: 'draft',
+    },
+    ...overrides,
+  };
+}
+
+function searchWithAttachments(
+  documents: DocumentOperatingRecord[] = [syn01AttachmentRecord()],
+  hits: ReturnType<typeof syn01AttachmentHit>[] = [syn01AttachmentHit()],
+): AtlasAuthorizedSearch {
+  return {
+    kind: 'atlas_authorized_search_v1',
+    invented: false,
+    honestEmpty: false,
+    query: 'SYN01',
+    hitCount: hits.length,
+    hits,
+    documents: { kind: 'document_operating_record_v1', policyClass: 'READ_AUTO', binariesInAtlas: false, items: documents },
+    projects: { kind: 'project_operating_record_v1', policyClass: 'READ_AUTO', invented: false, currentClientsFirst: true, items: [] },
+    threads: {
+      kind: 'mail_thread_operating_record_v1',
+      policyClass: 'DRAFT_ONLY',
+      invented: false,
+      autoRespond: false,
+      send: false,
+      indexedPreviewOnly: true,
+      items: [],
+    },
+    meetings: { kind: 'meeting_operating_record_v1', policyClass: 'READ_AUTO', invented: false, items: [] },
+    capitalSubmissions: {
+      kind: 'capital_submission_request_v1',
+      policyClass: 'PREPARE_ONLY',
+      invented: false,
+      send: false,
+      externalSubmit: false,
+      ownerGated: true,
+      catalogCopies: [],
+      items: [],
+    },
+    researchIntelligence: {
+      kind: 'research_intelligence_v1',
+      policyClass: RESEARCH_INTELLIGENCE_POLICY_CLASS,
+      invented: false,
+      outboundRefresh: false,
+      financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+      lenderCriteriaInvented: false,
+      retrievedAt: '2026-08-24T18:00:00.000Z',
+      items: [],
+    },
+    onboarding: {
+      kind: 'onboarding_agent_v1',
+      policyClass: 'OWNER_ESCALATE',
+      invented: false,
+      execute: false,
+      activate: false,
+      send: false,
+      liveGtmOutbound: false,
+      ownerGated: true,
+      hubMi: false,
+      items: [],
+    },
+    clientSupport: {
+      kind: 'client_support_agent_v1',
+      policyClass: 'OWNER_ESCALATE',
+      invented: false,
+      execute: false,
+      send: false,
+      autoRespond: false,
+      draftOnly: true,
+      ownerGated: true,
+      hubMi: false,
+      items: [],
+    },
+    classification: 'CONFIRMED',
+    why: 'test',
+    basedOn: 'test',
+    entitled: true,
+    ran: true,
+    pictureComposed: false,
+    actionabilityApplied: false,
+  } as AtlasAuthorizedSearch;
+}
+
+function assertSuggestedAttachmentsHonesty(item: MailThreadOperatingRecord): void {
+  assert.equal(item.invented, false);
+  assert.equal(item.summarySource, 'indexed_preview_only');
+  assert.equal(item.suggestedDraft.send, false);
+  assert.equal(item.suggestedDraft.autoRespond, false);
+  assert.equal(item.suggestedDraft.policyClass, 'DRAFT_ONLY');
+  assert.equal(item.suggestedDraft.status, 'draft');
+  const attachments = item.suggestedDraft.suggestedAttachments || [];
+  const blob = JSON.stringify(attachments);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+  for (const row of attachments) {
+    assert.equal(row.binariesInAtlas, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.ok(Boolean(row.attachmentId || row.parentMessageId));
+  }
+}
+
+describe('ATLAS-AI-COMMS-SUGGESTED-ATTACHMENTS-001 entitled same-scope draft refs', () => {
+  it('attaches same-scope suggestedAttachments on entitled draft replies and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    const attachment = thread.suggestedDraft.suggestedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(attachment);
+    assert.equal(attachment.title, 'SYN01 term-sheet.pdf');
+    assert.equal(attachment.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(attachment.attachmentId, 'att-syn-1');
+    assert.equal(attachment.contentType, 'application/pdf');
+    assert.equal(attachment.size, 1200);
+    assert.equal(attachment.binariesInAtlas, false);
+    assert.equal(attachment.webUrl, ATT_PARENT_SOURCE);
+    assert.equal('downloadUrl' in attachment, false);
+    assert.equal('contentBytes' in attachment, false);
+    assert.ok((thread.suggestedDraft.suggestedAttachments?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal((thread.suggestedDraft.suggestedAttachments || []).some((row) => row.id === 'file-sow'), false);
+    assert.equal('relatedAttachments' in thread, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedAttachmentsHonesty(thread);
+    assert.equal(JSON.stringify(thread.suggestedDraft.suggestedAttachments).includes('PDG01'), false);
+    noInvent(thread.suggestedDraft);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: picture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [syn01ThreadHit(), syn01AttachmentHit()],
+    });
+    const ctxThread = viaIndex.clientContext.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(ctxThread);
+    assert.equal(ctxThread.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.deepEqual(ctxThread.suggestedDraft.suggestedAttachments, thread.suggestedDraft.suggestedAttachments);
+    assertDraftOnly(viaIndex.clientContext.threads);
+  });
+
+  it('honestly omits suggestedAttachments when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.suggestedDraft.suggestedAttachments, undefined);
+    assert.equal('suggestedAttachments' in thread.suggestedDraft, false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedAttachmentsHonesty(thread);
+  });
+
+  it('never attaches Client B attachments to a Client A suggested draft', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ThreadHit(),
+          syn01AttachmentHit(),
+          syn01AttachmentHit({
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak.pdf',
+            href: '/clients/PDG01',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/mail/pdg-leak',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+            size: 88,
+          }),
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      (thread.suggestedDraft.suggestedAttachments || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title),
+      ),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('att-pdg-1'), false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+
+    const mixed = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord(),
+      searchWithAttachments(
+        [
+          syn01AttachmentRecord(),
+          syn01AttachmentRecord({
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak.pdf',
+            webUrl: 'https://outlook.office.com/mail/pdg-leak',
+            clientCode: 'PDG01',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+            size: 88,
+          }),
+        ],
+        [
+          syn01AttachmentHit(),
+          syn01AttachmentHit({
+            id: 'mail-att-pdg-hit',
+            title: 'PDG01 leak hit',
+            href: '/clients/PDG01',
+            clientCode: 'PDG01',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+          }),
+        ],
+      ),
+    );
+    assert.equal(mixed.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      (mixed.suggestedDraft.suggestedAttachments || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title),
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.suggestedDraft.suggestedAttachments).includes('PDG01'), false);
+    assert.equal(mixed.suggestedDraft.send, false);
+    assert.equal(mixed.suggestedDraft.autoRespond, false);
+    assertSuggestedAttachmentsHonesty(mixed);
+  });
+
+  it('omits suggestedAttachments when ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithAttachments(),
+    );
+    assert.equal(omitted.suggestedDraft.suggestedAttachments, undefined);
+    assert.equal('suggestedAttachments' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('omits suggestedAttachments when ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord({
+        id: 'mail-noncanonical',
+        clientCode: 'syn01',
+      }),
+      searchWithAttachments(),
+    );
+    assert.equal(omitted.suggestedDraft.suggestedAttachments, undefined);
+    assert.equal('suggestedAttachments' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('unscoped never receives scoped attachment refs', () => {
+    const unscoped = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithAttachments(),
+    );
+    assert.equal(unscoped.suggestedDraft.suggestedAttachments, undefined);
+    assert.equal('suggestedAttachments' in unscoped.suggestedDraft, false);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.suggestedDraft.send, false);
+    assert.equal(unscoped.suggestedDraft.autoRespond, false);
+  });
+
+  it('omits suggestedAttachments for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.threads.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.threads.items.some((row) => row.suggestedDraft.suggestedAttachments),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.threads);
+    assert.equal(unknownBlob.includes('mail-att-syn'), false);
+    assert.equal(unknownBlob.includes('mail-syn-1'), false);
+    assert.equal(unknown.authorizedSearch.threads.send, false);
+    assert.equal(unknown.authorizedSearch.threads.autoRespond, false);
+
+    const denied = attachRelatedContextToMailThread(
+      otherStaff,
+      syn01ThreadRecord(),
+      searchWithAttachments(),
+    );
+    assert.equal(denied.suggestedDraft.suggestedAttachments, undefined);
+    assert.equal('suggestedAttachments' in denied.suggestedDraft, false);
+    assert.equal(denied.suggestedDraft.send, false);
+    assert.equal(denied.suggestedDraft.autoRespond, false);
+  });
+
+  it('leaves the empty threads payload unchanged and drops SAS or anonymous attachment webUrl', async () => {
+    const empty = emptyMailThreadPayload();
+    assert.deepEqual(empty.items, []);
+    const attachedEmpty = attachRelatedContextToMailThreads(staff, empty, searchWithAttachments());
+    assert.equal(attachedEmpty, empty);
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty.items.length, 0);
+    assert.equal(attachedEmpty.send, false);
+    assert.equal(attachedEmpty.autoRespond, false);
+    assert.equal(attachedEmpty.indexedPreviewOnly, true);
+
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ThreadHit(),
+          syn01AttachmentHit({
+            id: 'mail-att-sas',
+            title: 'SYN01 SAS term-sheet.pdf',
+            webUrl: SAS,
+            attachmentId: 'att-sas-1',
+          }),
+          syn01AttachmentHit({
+            id: 'mail-att-anon',
+            title: 'SYN01 anonymous term-sheet.pdf',
+            webUrl: ANON,
+            attachmentId: 'att-anon-1',
+          }),
+          syn01AttachmentHit(),
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    const sasAtt = thread.suggestedDraft.suggestedAttachments?.find((row) => row.id === 'mail-att-sas');
+    const anonAtt = thread.suggestedDraft.suggestedAttachments?.find((row) => row.id === 'mail-att-anon');
+    const okAtt = thread.suggestedDraft.suggestedAttachments?.find((row) => row.id === 'mail-att-syn');
+    if (sasAtt) assert.equal(sasAtt.webUrl, undefined);
+    if (anonAtt) assert.equal(anonAtt.webUrl, undefined);
+    assert.ok(okAtt);
+    assert.equal(okAtt.webUrl, ATT_PARENT_SOURCE);
+    const blob = JSON.stringify(thread.suggestedDraft.suggestedAttachments || []);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+    assert.equal(/downloadUrl|contentBytes/i.test(blob), false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedAttachmentsHonesty(thread);
+  });
+
+  it('never invents downloadUrl, contentBytes, or send on suggestedAttachments', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ThreadHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'InventedBytes',
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01AttachmentHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'InventedBytes',
+            transcript: 'Invented transcript text',
+            TargetAmount: 5000000,
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/contentBytes/i.test(blob), false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal(thread.suggestedDraft.suggestedAttachments?.every((row) => row.binariesInAtlas === false), true);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedAttachmentsHonesty(thread);
   });
 });
