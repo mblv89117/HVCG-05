@@ -268,8 +268,10 @@ export interface AtlasClientContext {
    * already-authorized same-scope meetings only. Optional
    * researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as
-   * meetings / documents / projects / capital). Missing / non-canonical
-   * ClientCode omits researchRelationship (fail-closed; never guess).
+   * meetings / documents / projects / capital). Optional relatedDocuments
+   * is the inverse of document.relatedEmail (same RelatedMeetingDocumentRef
+   * / relatedDocumentsForMeeting path). Missing / non-canonical ClientCode
+   * omits researchRelationship / relatedDocuments (fail-closed; never guess).
    */
   threads: MailThreadOperatingPayload;
   /**
@@ -728,6 +730,18 @@ export interface MailThreadOperatingRecord {
    * autoRespond=false / indexedPreviewOnly stay as composed.
    */
   researchRelationship?: RelatedMeetingResearchRef[];
+  /**
+   * Inverse of document.relatedEmail: already-authorized same-scope
+   * documents / hits kind=document refs. Reuses RelatedMeetingDocumentRef
+   * / relatedDocumentsForMeeting(). Copied after authorization. Omitted
+   * when none are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped documents.
+   * Client A never receives Client B. Never downloadUrl, transcript,
+   * attendees, TargetAmount, invented titles, ClientCodes, or Hub-MI.
+   * SAS / anonymous webUrl dropped. No preview body / suggestedDraft /
+   * send on the refs. Comms stay DRAFT_ONLY. No invented facts.
+   */
+  relatedDocuments?: RelatedMeetingDocumentRef[];
 }
 
 export interface MailThreadOperatingPayload {
@@ -1115,9 +1129,12 @@ export interface AtlasAuthorizedSearch {
    * Optional researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as
    * meetings / onboarding / client support / capital / documents /
-   * projects). Missing / non-canonical ClientCode omits
-   * researchRelationship (fail-closed; never guess). send=false /
-   * autoRespond=false / indexedPreviewOnly stay as composed.
+   * projects). Optional relatedDocuments is the inverse of
+   * document.relatedEmail (same RelatedMeetingDocumentRef /
+   * relatedDocumentsForMeeting path). Missing / non-canonical ClientCode
+   * omits researchRelationship / relatedDocuments (fail-closed; never
+   * guess). send=false / autoRespond=false / indexedPreviewOnly stay
+   * as composed. No preview body / suggestedDraft / send on the refs.
    */
   threads: MailThreadOperatingPayload;
   /**
