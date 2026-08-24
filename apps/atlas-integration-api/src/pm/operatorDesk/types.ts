@@ -289,9 +289,11 @@ export interface AtlasClientContext {
    * same entitled same-scope inverse used by documents / projects / threads
    * / capital / onboarding / client support. Optional relatedDocuments is
    * the inverse of document.researchRelationship (same RelatedMeetingDocumentRef
-   * / relatedDocumentsForMeeting path). Both omitted when ClientCode is
-   * missing / non-canonical (fail-closed; never guess). Unscoped lender
-   * catalog rows never receive scoped documents. Preview stays off this
+   * / relatedDocumentsForMeeting path). Optional relatedProjects is the
+   * inverse of project.researchRelationship (same RelatedDocumentProjectRef
+   * / relatedProjects path). Omitted when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped lender catalog
+   * rows never receive scoped documents or projects. Preview stays off this
    * slice (refs only).
    */
   researchIntelligence: ResearchIntelligencePayload;
@@ -823,6 +825,20 @@ export interface ResearchIntelligenceRecord {
    * this slice (refs only). SAS / anonymous webUrl dropped.
    */
   relatedDocuments?: RelatedMeetingDocumentRef[];
+  /**
+   * Inverse of project.researchRelationship: already-authorized
+   * same-scope project operating records. Reuses RelatedDocumentProjectRef
+   * / relatedProjects(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped lender catalog rows never
+   * receive scoped projects. Unscoped never receives scoped projects.
+   * Client A never receives Client B. Classification stays CONFIRMED /
+   * LIKELY / PROPOSED / STALE_OR_UNCERTAIN / COMPLETE. hubMiRow stays
+   * as composed on the source project (never invented). Never
+   * downloadUrl, transcript, attendees, TargetAmount, invented titles,
+   * ClientCodes, lender criteria, financing status, or fit.
+   */
+  relatedProjects?: RelatedDocumentProjectRef[];
 }
 
 export interface ResearchIntelligencePayload {
@@ -1069,9 +1085,12 @@ export interface AtlasAuthorizedSearch {
    * is the entitled same-scope HVCG_Meetings inverse. Optional
    * relatedDocuments is the inverse of document.researchRelationship
    * (same RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
-   * Empty payload stays empty. Missing / non-canonical ClientCode omits
-   * relatedMeetings / relatedDocuments. Unscoped lender catalog rows
-   * never receive scoped documents. Preview stays off this slice (refs only).
+   * Optional relatedProjects is the inverse of project.researchRelationship
+   * (same RelatedDocumentProjectRef / relatedProjects path). Empty payload
+   * stays empty. Missing / non-canonical ClientCode omits relatedMeetings /
+   * relatedDocuments / relatedProjects. Unscoped lender catalog rows never
+   * receive scoped documents or projects. Preview stays off this slice
+   * (refs only).
    */
   researchIntelligence: ResearchIntelligencePayload;
   /**
