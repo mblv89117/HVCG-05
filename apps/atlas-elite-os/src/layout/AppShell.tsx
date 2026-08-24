@@ -35,6 +35,8 @@ import { microsoftConfig } from '../microsoft/config';
 import { workspaceCatalog } from '../data/workspaces';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { searchPm } from '../integrations/hub/pmApi';
+import { fetchOperatorRuntime } from '../integrations/hub/askAtlas';
+import { summarizeAskAtlasPrompt, type AskAtlasDrawerItem } from './askAtlasDrawer';
 
 const ATLAS_SCHEME_KEY = 'atlas.colorScheme';
 const ATLAS_FAVORITES_KEY = 'atlas.favorites';
@@ -96,6 +98,7 @@ const allSections: NavSection[] = [
     id: 'operations',
     title: 'Operations',
     items: [
+      { id: 'agent-activity', label: 'Agent Activity', to: '/agent-activity', icon: <ApprovalsAppRegular /> },
       { id: 'connections', label: 'Connections', to: '/connections', icon: <PlugConnectedRegular /> },
       { id: 'settings', label: 'Settings', to: '/settings', icon: <SettingsRegular /> },
       { id: 'admin', label: 'Administration', to: '/admin', icon: <ShieldRegular /> },
@@ -115,6 +118,7 @@ const catalog: SearchResult[] = [
   { id: 's8', title: 'Capital', category: 'Capital', subtitle: 'Transactions requiring attention', to: '/capital' },
   { id: 's7', title: 'Search / Knowledge', category: 'Search', to: '/knowledge' },
   { id: 's10', title: 'Documents', category: 'Search', to: '/documents/operating' },
+  { id: 's-agent-activity', title: 'Agent Activity', category: 'Operations', to: '/agent-activity' },
   { id: 's14', title: 'Settings', category: 'Operations', to: '/settings' },
   { id: 's15', title: 'Connections', category: 'Operations', subtitle: 'Integrations', to: '/connections' },
   { id: 's6', title: 'Administration', category: 'Operations', to: '/admin' },
@@ -162,6 +166,7 @@ const routeLabels: Record<string, string> = {
   '/knowledge': 'Search / Knowledge',
   '/documents': 'Documents',
   '/documents/operating': 'Documents',
+  '/agent-activity': 'Agent Activity',
   '/automations': 'Automation',
   '/ai': 'AI Agents',
   '/reports': 'Reports',
@@ -266,6 +271,8 @@ export function AppShell() {
   const [hubHits, setHubHits] = useState<SearchResult[]>([]);
   const [hubSearchBusy, setHubSearchBusy] = useState(false);
   const [hubSearchError, setHubSearchError] = useState<string | null>(null);
+  const [askAtlasItems, setAskAtlasItems] = useState<AskAtlasDrawerItem[]>([]);
+  const [askAtlasError, setAskAtlasError] = useState<string | null>(null);
   const [favorites] = useState<RecentItem[]>(() => readJson(ATLAS_FAVORITES_KEY, defaultFavorites));
   const [recentItems, setRecentItems] = useState<RecentItem[]>(() => readJson(ATLAS_RECENTS_KEY, []));
   const { items, push, dismiss } = useNotifications();
@@ -388,6 +395,42 @@ export function AppShell() {
       window.clearTimeout(timer);
     };
   }, [query, searchOpen, hubAuth.hasBearer, hubAuth.accessToken]);
+
+  useEffect(() => {
+    if (!aiOpen) {
+      return;
+    }
+    if (!hubAuth.hasBearer) {
+      setAskAtlasItems([]);
+      setAskAtlasError('Microsoft sign-in required (Bearer token missing)');
+      return;
+    }
+    let cancelled = false;
+    void fetchOperatorRuntime(hubAuth)
+      .then((envelope) => {
+        if (cancelled) return;
+        const items = Array.isArray(envelope.askAtlas?.items) ? envelope.askAtlas.items : [];
+        setAskAtlasItems(
+          items.map((item) => ({
+            state: item.state,
+            client: item.client,
+            clientCode: item.clientCode,
+            classification: String(item.classification || item.provenance || ''),
+            why: item.why,
+            basedOn: item.basedOn,
+          })),
+        );
+        setAskAtlasError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setAskAtlasItems([]);
+        setAskAtlasError(err instanceof Error ? err.message : 'Ask Atlas signed context failed');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [aiOpen, hubAuth.hasBearer, hubAuth.accessToken]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -601,8 +644,11 @@ export function AppShell() {
           navigate(path);
         }}
         onSubmit={(prompt) =>
-          push({ title: 'AI Command Center', body: `Queued: ${prompt}`, tone: 'info' })
+          push({ title: 'Ask Atlas', body: `Queued: ${prompt}`, tone: 'info' })
         }
+        title="Ask Atlas"
+        subtitle="Grounded on signed operator runtime; the Ask Atlas page still uses /operator/runtime.json?question=. Owner-gated actions stay blocked."
+        stubResponder={(prompt) => summarizeAskAtlasPrompt(prompt, askAtlasItems, askAtlasError)}
       />
       <NotificationStack items={items} onDismiss={dismiss} />
       </div>
