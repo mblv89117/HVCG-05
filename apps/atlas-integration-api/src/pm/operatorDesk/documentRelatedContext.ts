@@ -1,7 +1,8 @@
 /**
  * Related operating context on already-authorized DocumentOperatingRecord
- * items, the inverse on MeetingOperatingRecord items, and the inverse
- * project → meetings link on ProjectOperatingRecord items.
+ * items, the inverse on MeetingOperatingRecord items, the inverse
+ * project → meetings link on ProjectOperatingRecord items, and the inverse
+ * mail-thread → meetings link on MailThreadOperatingRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
@@ -24,6 +25,8 @@ import {
   CAPITAL_SUBMISSION_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type DocumentOperatingRecord,
+  type MailThreadOperatingPayload,
+  type MailThreadOperatingRecord,
   type MeetingOperatingPayload,
   type MeetingOperatingRecord,
   type ProjectOperatingRecord,
@@ -36,7 +39,7 @@ import {
   type RelatedMeetingDocumentRef,
 } from './types.ts';
 
-/** Shared isolation key for document, meeting, and project related-context attach. */
+/** Shared isolation key for document, meeting, project, and thread related-context attach. */
 type RelatedScopeItem = {
   id: string;
   clientCode?: string;
@@ -523,5 +526,38 @@ export function attachRelatedContextToProjects(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToProject(principal, item, search)),
+  };
+}
+
+/**
+ * Inverse of meeting relatedEmail: entitled same-scope meetings already
+ * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Isolation: sameRelatedScope + entitledClientCodes. Unscoped never
+ * receives scoped relations. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * DRAFT_ONLY / autoRespond=false / send=false / indexedPreviewOnly stay
+ * as composed on the thread payload.
+ */
+export function attachRelatedContextToMailThread(
+  principal: AtlasPrincipal,
+  item: MailThreadOperatingRecord,
+  search: AtlasAuthorizedSearch,
+): MailThreadOperatingRecord {
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedMeetingsList = relatedMeetings(item, search);
+  return {
+    ...item,
+    ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+  };
+}
+
+export function attachRelatedContextToMailThreads(
+  principal: AtlasPrincipal,
+  payload: MailThreadOperatingPayload,
+  search: AtlasAuthorizedSearch,
+): MailThreadOperatingPayload {
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToMailThread(principal, item, search)),
   };
 }

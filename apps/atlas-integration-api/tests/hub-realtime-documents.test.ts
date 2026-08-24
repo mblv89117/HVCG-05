@@ -7,6 +7,7 @@
  * + ATLAS-M365-MEETING-OPERATING-RECORD-001
  * + ATLAS-M365-MEETING-RELATED-CONTEXT-001
  * + ATLAS-M365-PROJECT-RELATED-MEETINGS-001
+ * + ATLAS-M365-THREAD-RELATED-MEETINGS-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
  * preview is attached after authorization. Related email / project / contract
@@ -16,6 +17,7 @@
  * carry the inverse relatedDocuments / relatedEmail / relatedProject /
  * relatedAttachments / capitalRelationship from the same authorized search.
  * Entitled projects carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
+ * Entitled mail threads carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Graph driveItem versions are metadata-only and never include downloadUrl.
  * No second search, preview, versioning, calendar query, or knowledge-graph product.
  */
@@ -2057,6 +2059,287 @@ describe('entitled project related meetings on authorizedSearch', () => {
     assert.equal(projects.invented, false);
     assert.equal(project.invented, false);
     noFabricatedRelatedFacts(projects);
+  });
+});
+
+describe('entitled mail-thread related meetings on authorizedSearch', () => {
+  it('attaches same-client relatedMeetings on entitled threads and get_client_context', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const threads = result.authorizedSearch.threads;
+    assert.equal(threads.kind, 'mail_thread_operating_record_v1');
+    assert.equal(threads.invented, false);
+    assert.equal(threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(threads.autoRespond, false);
+    assert.equal(threads.send, false);
+    assert.equal(threads.indexedPreviewOnly, true);
+    const thread = threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.clientCode, 'SYN01');
+    assert.equal(thread.invented, false);
+    assert.equal(thread.summarySource, 'indexed_preview_only');
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal(thread.suggestedDraft.policyClass, 'DRAFT_ONLY');
+
+    const meeting = thread.relatedMeetings?.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.title, 'SYN01 weekly standup');
+    assert.equal(meeting.date, '2026-08-21T15:00:00Z');
+    assert.equal(meeting.webUrl, MEETING_SOURCE);
+    assert.equal(meeting.sourceEventId, 'AAMk-syn-cal-1');
+    assert.ok(
+      meeting.classification === 'CONFIRMED' ||
+        meeting.classification === 'LIKELY' ||
+        meeting.classification === 'PROPOSED' ||
+        meeting.classification === 'HONEST_EMPTY',
+    );
+    assert.ok((thread.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(thread.relatedMeetings)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(thread.relatedMeetings)), false);
+
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    const meetingRecord = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meetingRecord);
+    assert.equal(meetingRecord.relatedEmail?.some((row) => row.id === 'mail-syn-1'), true);
+    const project = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: found.results,
+    });
+    assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
+    assert.equal(viaIndex.clientContext.client.entitled, true);
+    const ctxThread = viaIndex.clientContext.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(ctxThread);
+    assert.equal(ctxThread.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.deepEqual(ctxThread.relatedMeetings, thread.relatedMeetings);
+    assert.equal(viaIndex.clientContext.threads.autoRespond, false);
+    assert.equal(viaIndex.clientContext.threads.send, false);
+    assert.equal(viaIndex.clientContext.threads.indexedPreviewOnly, true);
+    const ctxProject = viaIndex.clientContext.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(ctxProject);
+    assert.equal(ctxProject.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+
+    noFabricatedRelatedFacts(threads);
+    assert.equal(JSON.stringify(threads).includes('PDG01'), false);
+  });
+
+  it('never returns Client B meetings on a Client A thread', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'communication',
+            id: 'mail-syn-1',
+            title: 'SYN01 intake follow-up',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            conversationId: 'conv-syn-1',
+            provenance: 'PROPOSED',
+            webUrl: MAIL_SOURCE,
+            preview: 'Can you confirm the next entitled document?',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-pdg',
+            title: 'PDG01 leak standup',
+            href: '/clients/PDG01',
+            source: 'HVCG_Meetings',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/calendar/item/pdg01-leak',
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-pdg-cal-1',
+          },
+          {
+            kind: 'communication',
+            id: 'mail-pdg',
+            title: 'PDG01 leak thread',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            conversationId: 'conv-pdg-1',
+            provenance: 'PROPOSED',
+            preview: 'PDG01 must not leak into SYN01 related meetings.',
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.clientCode, 'SYN01');
+    assert.equal(thread.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal((thread.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(thread).includes('PDG01'), false);
+    const foreign = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-pdg');
+    if (foreign) {
+      assert.equal((foreign.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+      assert.equal(foreign.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), undefined);
+      assert.equal(foreign.relatedMeetings, undefined);
+    }
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal((memo.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    noFabricatedRelatedFacts(thread);
+  });
+
+  it('drops SAS and anonymous meeting webUrl on entitled thread relatedMeetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'intake memo');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'intake memo',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'meeting',
+            id: 'meet-sas',
+            title: 'SYN01 SAS standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: SAS,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-sas-cal',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-anon',
+            title: 'SYN01 anonymous standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: ANON,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-anon-cal',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-ok',
+            title: 'SYN01 entitled standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-ok-cal',
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    const sasMeeting = thread.relatedMeetings?.find((row) => row.id === 'meet-sas');
+    const anonMeeting = thread.relatedMeetings?.find((row) => row.id === 'meet-anon');
+    const okMeeting = thread.relatedMeetings?.find((row) => row.id === 'meet-ok');
+    if (sasMeeting) assert.equal(sasMeeting.webUrl, undefined);
+    if (anonMeeting) assert.equal(anonMeeting.webUrl, undefined);
+    assert.ok(okMeeting);
+    assert.equal(okMeeting.webUrl, MEETING_SOURCE);
+    const blob = JSON.stringify(thread.relatedMeetings);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    noFabricatedRelatedFacts(thread);
+  });
+
+  it('honestly omits relatedMeetings when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'capital raise',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'communication',
+            id: 'mail-only',
+            title: 'SYN01 thread only',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            conversationId: 'conv-only-1',
+            provenance: 'PROPOSED',
+            preview: 'Can you confirm the next entitled document?',
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-only');
+    assert.ok(thread);
+    assert.equal(thread.relatedMeetings, undefined);
+    assert.equal(thread.invented, false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assert.equal(result.authorizedSearch.threads.indexedPreviewOnly, true);
+    assert.equal(/downloadUrl/i.test(JSON.stringify(thread)), false);
+    assert.equal(/transcript/i.test(JSON.stringify(thread)), false);
+    noFabricatedRelatedFacts(thread);
+  });
+
+  it('never invents downloadUrl or transcript text on thread relatedMeetings', async () => {
+    const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: found.results.map((row) => ({
+          ...row,
+          downloadUrl: 'https://evil.example/download',
+          transcript: 'Invented transcript text',
+        })),
+      }),
+    });
+    const threads = result.authorizedSearch.threads;
+    const thread = threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.ok(thread.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
+    const blob = JSON.stringify(threads);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal((thread as { downloadUrl?: string }).downloadUrl, undefined);
+    assert.equal((thread as { transcript?: string }).transcript, undefined);
+    assert.equal(threads.invented, false);
+    assert.equal(thread.invented, false);
+    assert.equal(threads.autoRespond, false);
+    assert.equal(threads.send, false);
+    noFabricatedRelatedFacts(threads);
   });
 });
 

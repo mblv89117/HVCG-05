@@ -241,6 +241,8 @@ export interface AtlasClientContext {
   /**
    * Thread context from already-indexed entitled mail previews only.
    * Suggested reply stays DRAFT_ONLY. Never AUTO_RESPOND / send.
+   * Optional relatedMeetings is the inverse of meeting relatedEmail:
+   * already-authorized same-scope meetings only.
    */
   threads: MailThreadOperatingPayload;
   /**
@@ -582,6 +584,13 @@ export interface MailThreadOperatingRecord {
   commitments: MailThreadDetectedItem[];
   unansweredQuestions: MailThreadDetectedItem[];
   suggestedDraft: MailThreadSuggestedDraft;
+  /**
+   * Inverse of meeting relatedEmail: already-authorized entitled
+   * HVCG_Meetings / extras.meetings / search kind=meeting refs.
+   * Reuses RelatedDocumentMeetingRef. Copied after authorization.
+   * Never a new Graph calendar query, downloadUrl, or transcript text.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
 }
 
 export interface MailThreadOperatingPayload {
