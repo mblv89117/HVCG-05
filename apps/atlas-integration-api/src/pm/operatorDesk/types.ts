@@ -49,6 +49,15 @@ export const ASK_ATLAS_CAPITAL_SUBMISSION_PREPARE_MISSION_KEY =
   'ATLAS-CAPITAL-SUBMISSION-PREPARE-001' as const;
 export const ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY =
   'ATLAS-RESEARCH-INTELLIGENCE-001' as const;
+export const ASK_ATLAS_ONBOARDING_AGENT_MISSION_KEY = 'ATLAS-ONBOARDING-AGENT-001' as const;
+/** Onboarding agent copies entitled intake evidence only. Owner decisions stay escalated. */
+export const ONBOARDING_AGENT_POLICY_CLASS = 'OWNER_ESCALATE' as const;
+export const ONBOARDING_AGENT_EXECUTE = false as const;
+export const ONBOARDING_AGENT_ACTIVATE = false as const;
+export const ONBOARDING_AGENT_SEND = false as const;
+export const ONBOARDING_AGENT_LIVE_GTM_OUTBOUND = false as const;
+export const ONBOARDING_AGENT_OWNER_GATED = true as const;
+export const ONBOARDING_AGENT_HUB_MI = false as const;
 /** Suggested replies stay draft. AUTO_RESPOND is never enabled. */
 export const COMMUNICATIONS_POLICY_CLASS = 'DRAFT_ONLY' as const;
 export const COMMUNICATIONS_AUTO_RESPOND = false as const;
@@ -221,6 +230,11 @@ export interface AtlasClientContext {
    * financing status are never invented.
    */
   researchIntelligence: ResearchIntelligencePayload;
+  /**
+   * Native governed onboarding agent from already-entitled Atlas/index
+   * intake evidence. Activation, completion, Hub-MI, and GTM stay OWNER-GATED.
+   */
+  onboarding: OnboardingAgentPayload;
 }
 
 export function clientContextMissionKey(
@@ -265,6 +279,8 @@ export interface AtlasAuthorizedSearchHit {
   direction?: 'Inbound' | 'Outbound' | 'Internal';
   /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
   industry?: string;
+  /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
+  clientStage?: string;
 }
 
 export interface DocumentOperatingRecord {
@@ -438,6 +454,62 @@ export interface ResearchIntelligencePayload {
   items: ResearchIntelligenceRecord[];
 }
 
+export type OnboardingEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+export type OnboardingEvidenceKind =
+  | 'client'
+  | 'lead'
+  | 'project'
+  | 'task'
+  | 'opportunity'
+  | 'recovered_client';
+
+export interface OnboardingEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  classification: AskAtlasClassification;
+}
+
+export interface OnboardingOwnerDecision {
+  decision: string;
+  status: 'escalated';
+  execute: false;
+}
+
+export interface OnboardingAgentRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  clientStage?: string;
+  evidenceKind: OnboardingEvidenceKind;
+  classification: OnboardingEvidenceClass;
+  provenance: OnboardingEvidenceClass;
+  invented: false;
+  hubMiRow: false;
+  execute: false;
+  activate: false;
+  send: false;
+  liveGtmOutbound: false;
+  evidence: OnboardingEvidenceRef[];
+  missingRequirements: string[];
+  ownerDecisions: OnboardingOwnerDecision[];
+  nextAction: string;
+}
+
+export interface OnboardingAgentPayload {
+  kind: 'onboarding_agent_v1';
+  policyClass: typeof ONBOARDING_AGENT_POLICY_CLASS;
+  invented: false;
+  execute: typeof ONBOARDING_AGENT_EXECUTE;
+  activate: typeof ONBOARDING_AGENT_ACTIVATE;
+  send: typeof ONBOARDING_AGENT_SEND;
+  liveGtmOutbound: typeof ONBOARDING_AGENT_LIVE_GTM_OUTBOUND;
+  ownerGated: typeof ONBOARDING_AGENT_OWNER_GATED;
+  hubMi: typeof ONBOARDING_AGENT_HUB_MI;
+  items: OnboardingAgentRecord[];
+}
+
 export interface AtlasAuthorizedSearch {
   kind: 'atlas_authorized_search_v1';
   invented: false;
@@ -461,6 +533,7 @@ export interface AtlasAuthorizedSearch {
   threads: MailThreadOperatingPayload;
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
+  onboarding: OnboardingAgentPayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;

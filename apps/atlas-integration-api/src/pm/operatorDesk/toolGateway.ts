@@ -55,6 +55,7 @@ import {
   composeResearchIntelligence,
   emptyResearchIntelligencePayload,
 } from './researchIntelligence.ts';
+import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgent.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -281,6 +282,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     threads: emptyMailThreadPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(opts?.now),
+    onboarding: emptyOnboardingPayload(),
   };
 }
 
@@ -473,6 +475,7 @@ function composeClientContext(
     threads: emptyMailThreadPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(),
+    onboarding: emptyOnboardingPayload(),
   };
 }
 
@@ -524,6 +527,7 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     threads: composeBoundClientThreads(ctx, binding),
     capitalSubmissions: composeBoundClientCapitalSubmissions(ctx, binding),
     researchIntelligence: composeBoundClientResearchIntelligence(ctx, binding),
+    onboarding: composeBoundClientOnboarding(ctx, binding),
   };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
@@ -613,6 +617,7 @@ function toAuthorizedSearchHit(
   const status = copiedOptional(row, 'status');
   const preview = copiedOptional(row, 'preview');
   const industry = copiedOptional(row, 'industry');
+  const clientStage = copiedOptional(row, 'clientStage');
   const conversationId = copiedOptional(row, 'conversationId');
   const directionRaw = copiedOptional(row, 'direction');
   const direction =
@@ -636,6 +641,7 @@ function toAuthorizedSearchHit(
     ...(status ? { status } : {}),
     ...(preview ? { preview } : {}),
     ...(industry ? { industry } : {}),
+    ...(clientStage ? { clientStage } : {}),
     ...(conversationId ? { conversationId } : {}),
     ...(direction ? { direction } : {}),
     why: GENERIC_SEARCH_HIT_WHY,
@@ -957,6 +963,30 @@ function composeBoundClientResearchIntelligence(
     pmHits,
     pmHits.length > 0,
   ).authorizedSearch.researchIntelligence;
+}
+
+/**
+ * Same onboarding_agent_v1 composer as authorizedSearch.onboarding.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * OWNER_ESCALATE. Activation / send / Hub-MI stay owner-gated.
+ */
+function composeBoundClientOnboarding(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['onboarding'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyOnboardingPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.onboarding;
 }
 
 /**
@@ -1371,6 +1401,7 @@ function emptyAuthorizedSearch(opts?: {
     threads: emptyMailThreadPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(),
+    onboarding: emptyOnboardingPayload(),
   };
 }
 
@@ -1461,6 +1492,7 @@ function composeAuthorizedSearch(
     threads: composeMailThreadRecords(hits),
     capitalSubmissions: composeCapitalSubmissionPrepare(hits),
     researchIntelligence: composeResearchIntelligence(hits, ctx.now),
+    onboarding: composeOnboardingAgent(hits),
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),

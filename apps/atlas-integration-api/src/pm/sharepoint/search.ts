@@ -52,6 +52,8 @@ export interface PmSearchHit {
   direction?: 'Inbound' | 'Outbound' | 'Internal';
   /** Copied from an existing entitled HVCG_Clients.Industry. Never invented. */
   industry?: string;
+  /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
+  clientStage?: string;
 }
 
 type LeadRow = {
@@ -251,6 +253,7 @@ export async function searchSharePointPm(
         href: clientHref(c.clientCode),
         source: 'HVCG_Clients',
         ...(c.industry?.trim() ? { industry: c.industry.trim() } : {}),
+        ...(c.clientStage?.trim() ? { clientStage: c.clientStage.trim() } : {}),
       });
     }
   }
