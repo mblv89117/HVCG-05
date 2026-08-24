@@ -247,6 +247,10 @@ export interface AtlasClientContext {
    * Same copied project_operating_record_v1 payload as authorizedSearch.projects.
    * Attached only for a bound current entitled client from already-loaded
    * entitled index rows. Historical HVS recovered projects stay read-only.
+   * Optional researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as meetings /
+   * documents / capital). Missing / non-canonical ClientCode omits
+   * researchRelationship (fail-closed; never guess).
    */
   projects: {
     kind: 'project_operating_record_v1';
@@ -521,8 +525,8 @@ export interface RelatedMeetingDocumentRef {
 /**
  * Inverse of researchIntelligence.relatedMeetings. Reused on
  * MeetingOperatingRecord, OnboardingAgentRecord,
- * ClientSupportAgentRecord, CapitalSubmissionPrepareRecord, and
- * DocumentOperatingRecord.
+ * ClientSupportAgentRecord, CapitalSubmissionPrepareRecord,
+ * DocumentOperatingRecord, and ProjectOperatingRecord.
  * Honesty mirrors RelatedDocumentCapitalRef: source-backed titles
  * only. Never downloadUrl, transcript, attendees, TargetAmount, or
  * invented lender criteria.
@@ -626,6 +630,18 @@ export interface ProjectOperatingRecord {
    * Never a new Graph calendar query, downloadUrl, or transcript text.
    */
   relatedMeetings?: RelatedDocumentMeetingRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items (same RelatedMeetingResearchRef
+   * as meetings / onboarding / client support / capital / documents).
+   * Omitted when ClientCode is missing / non-canonical (fail-closed;
+   * never guess). Unscoped lender catalog titles never attach to a
+   * scoped project. No downloadUrl, transcript, attendees, TargetAmount,
+   * or invented criteria. Classification stays CONFIRMED / LIKELY /
+   * PROPOSED / STALE_OR_UNCERTAIN / COMPLETE. hubMiRow stays as composed
+   * on the source row (never invented).
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
@@ -974,6 +990,14 @@ export interface AtlasAuthorizedSearch {
     binariesInAtlas: false;
     items: DocumentOperatingRecord[];
   };
+  /**
+   * First-class entitled project operating records. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / onboarding / client support / capital / documents).
+   * Missing / non-canonical ClientCode omits researchRelationship
+   * (fail-closed; never guess). relatedMeetings stays as composed.
+   */
   projects: {
     kind: 'project_operating_record_v1';
     policyClass: 'READ_AUTO';

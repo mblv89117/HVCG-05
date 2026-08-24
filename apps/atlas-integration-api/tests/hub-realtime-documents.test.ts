@@ -1852,11 +1852,13 @@ describe('entitled meeting related context on authorizedSearch', () => {
 
 describe('entitled project related meetings on authorizedSearch', () => {
   it('attaches same-client relatedMeetings on entitled projects and get_client_context', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(relatedContextService(), staff, 'SYN01');
     const result = await searchAuthorizedKnowledge({
       principal: staff,
       picture: emptyHonestOperatingPicture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const projects = result.authorizedSearch.projects;
@@ -1885,6 +1887,16 @@ describe('entitled project related meetings on authorizedSearch', () => {
     assert.ok((project.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
     assert.equal(/downloadUrl/i.test(JSON.stringify(project.relatedMeetings)), false);
     assert.equal(/transcript/i.test(JSON.stringify(project.relatedMeetings)), false);
+    assert.equal(
+      project.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.ok((project.researchRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/TargetAmount/i.test(JSON.stringify(project.researchRelationship)), false);
+    assert.equal(/downloadUrl|transcript/i.test(JSON.stringify(project.researchRelationship)), false);
+    assert.equal(JSON.stringify(project.researchRelationship).includes('PDG01'), false);
+    assert.equal(project.invented, false);
+    assert.equal(project.hubMiRow, true);
 
     const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
     assert.ok(memo);
@@ -1897,6 +1909,7 @@ describe('entitled project related meetings on authorizedSearch', () => {
       principal: staff,
       picture: emptyHonestOperatingPicture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
@@ -1905,6 +1918,7 @@ describe('entitled project related meetings on authorizedSearch', () => {
     assert.ok(ctxProject);
     assert.equal(ctxProject.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
     assert.deepEqual(ctxProject.relatedMeetings, project.relatedMeetings);
+    assert.deepEqual(ctxProject.researchRelationship, project.researchRelationship);
     assert.equal(ctxProject.historicalHvs, false);
     assert.equal(ctxProject.hubMiRow, true);
 

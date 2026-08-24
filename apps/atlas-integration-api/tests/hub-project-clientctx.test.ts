@@ -189,17 +189,20 @@ function noInvent(projects: AtlasClientContext['projects']): void {
 
 describe('get_client_context project operating records', () => {
   it('attaches the same copied records as authorizedSearch.projects for a bound current entitled client', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(projectService(), staff, 'SYN01');
     const search = await searchAuthorizedKnowledge({
       principal: staff,
       picture: reconstructionPicture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const viaIndex = getClientContext({
       principal: staff,
       picture: reconstructionPicture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
@@ -231,6 +234,7 @@ describe('get_client_context project operating records', () => {
       principal: staff,
       picture: reconstructionPicture(),
       clientCode: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     assert.deepEqual(viaLoad.clientContext.projects, search.authorizedSearch.projects);
