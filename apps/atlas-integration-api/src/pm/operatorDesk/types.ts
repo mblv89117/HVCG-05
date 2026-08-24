@@ -44,6 +44,11 @@ export const ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY = 'ATLAS-SEARCH-ACTIONAB
 export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-NL-001' as const;
 export const ASK_ATLAS_PROJECT_RECONSTRUCTION_MISSION_KEY = 'ATLAS-PROJECT-RECONSTRUCTION-001' as const;
 export const ASK_ATLAS_PROJECT_CLIENTCTX_MISSION_KEY = 'ATLAS-PROJECT-CLIENTCTX-001' as const;
+export const ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY = 'ATLAS-AI-COMMUNICATIONS-001' as const;
+/** Suggested replies stay draft. AUTO_RESPOND is never enabled. */
+export const COMMUNICATIONS_POLICY_CLASS = 'DRAFT_ONLY' as const;
+export const COMMUNICATIONS_AUTO_RESPOND = false as const;
+export const COMMUNICATIONS_SEND = false as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -93,7 +98,8 @@ export type AskAtlasMissionKey =
   | typeof ASK_ATLAS_SEARCH_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_002_MISSION_KEY
   | typeof ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY
-  | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY;
+  | typeof ASK_ATLAS_ATTENTION_NL_MISSION_KEY
+  | typeof ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY;
 
 /**
  * Operating-state words. These are Ask Atlas attention filters, not client
@@ -174,6 +180,11 @@ export interface AtlasClientContext {
     currentClientsFirst: true;
     items: ProjectOperatingRecord[];
   };
+  /**
+   * Thread context from already-indexed entitled mail previews only.
+   * Suggested reply stays DRAFT_ONLY. Never AUTO_RESPOND / send.
+   */
+  threads: MailThreadOperatingPayload;
 }
 
 export function clientContextMissionKey(
@@ -212,6 +223,10 @@ export interface AtlasAuthorizedSearchHit {
   startDate?: string;
   targetCompletionDate?: string;
   status?: string;
+  /** Indexed mail bodyPreview only. Never a live Outlook body fetch. */
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
 }
 
 export interface DocumentOperatingRecord {
@@ -260,6 +275,53 @@ export interface ProjectOperatingRecord {
   evidenceRefs?: ProjectOperatingEvidenceRef[];
 }
 
+export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+
+export interface MailThreadDetectedItem {
+  text: string;
+  classification: AskAtlasClassification;
+  evidence: string;
+}
+
+export interface MailThreadSuggestedDraft {
+  policyClass: typeof COMMUNICATIONS_POLICY_CLASS;
+  send: typeof COMMUNICATIONS_SEND;
+  autoRespond: typeof COMMUNICATIONS_AUTO_RESPOND;
+  subject: string;
+  body: string;
+  status: 'draft';
+}
+
+export interface MailThreadOperatingRecord {
+  id: string;
+  conversationId: string;
+  title: string;
+  clientCode?: string;
+  channel: 'Email';
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
+  preview: string;
+  summary: string;
+  summarySource: 'indexed_preview_only';
+  invented: false;
+  webUrl?: string;
+  modifiedAt?: string;
+  classification: MailThreadEvidenceClass;
+  provenance: MailThreadEvidenceClass;
+  commitments: MailThreadDetectedItem[];
+  unansweredQuestions: MailThreadDetectedItem[];
+  suggestedDraft: MailThreadSuggestedDraft;
+}
+
+export interface MailThreadOperatingPayload {
+  kind: 'mail_thread_operating_record_v1';
+  policyClass: typeof COMMUNICATIONS_POLICY_CLASS;
+  invented: false;
+  autoRespond: typeof COMMUNICATIONS_AUTO_RESPOND;
+  send: typeof COMMUNICATIONS_SEND;
+  indexedPreviewOnly: true;
+  items: MailThreadOperatingRecord[];
+}
+
 export interface AtlasAuthorizedSearch {
   kind: 'atlas_authorized_search_v1';
   invented: false;
@@ -280,6 +342,7 @@ export interface AtlasAuthorizedSearch {
     currentClientsFirst: true;
     items: ProjectOperatingRecord[];
   };
+  threads: MailThreadOperatingPayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;
@@ -524,6 +587,9 @@ export interface OperatorSearchHit {
   webUrl?: string;
   modifiedAt?: string;
   provenance?: AskAtlasClassification;
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
 }
 
 export interface OperatorDeskModel {

@@ -46,6 +46,7 @@ import {
   type ProjectOperatingRecord,
   type ProposedEngineeringMission,
 } from './types.ts';
+import { composeMailThreadRecords, emptyMailThreadPayload } from './mailThreadContext.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -269,6 +270,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     realClientsOperationalized: [],
     recoveredKnowledgeOperationalized: false,
     projects: emptyProjectOperatingPayload(),
+    threads: emptyMailThreadPayload(),
   };
 }
 
@@ -458,6 +460,7 @@ function composeClientContext(
     ...(nextActions ? { nextActions } : {}),
     ...(nextAction ? { nextAction } : {}),
     projects: emptyProjectOperatingPayload(),
+    threads: emptyMailThreadPayload(),
   };
 }
 
@@ -506,6 +509,7 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
   const clientContext = {
     ...composeClientContext(ctx.picture, binding, items),
     projects: composeBoundClientProjects(ctx, binding),
+    threads: composeBoundClientThreads(ctx, binding),
   };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
@@ -593,6 +597,13 @@ function toAuthorizedSearchHit(
   const startDate = copiedOptional(row, 'startDate');
   const targetCompletionDate = copiedOptional(row, 'targetCompletionDate');
   const status = copiedOptional(row, 'status');
+  const preview = copiedOptional(row, 'preview');
+  const conversationId = copiedOptional(row, 'conversationId');
+  const directionRaw = copiedOptional(row, 'direction');
+  const direction =
+    directionRaw === 'Inbound' || directionRaw === 'Outbound' || directionRaw === 'Internal'
+      ? directionRaw
+      : undefined;
   return {
     kind: row.kind || 'document',
     id: row.id,
@@ -608,6 +619,9 @@ function toAuthorizedSearchHit(
     ...(startDate ? { startDate } : {}),
     ...(targetCompletionDate ? { targetCompletionDate } : {}),
     ...(status ? { status } : {}),
+    ...(preview ? { preview } : {}),
+    ...(conversationId ? { conversationId } : {}),
+    ...(direction ? { direction } : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
     provenance: classification,
@@ -855,6 +869,30 @@ function composeBoundClientProjects(
     pmHits,
     pmHits.length > 0,
   ).authorizedSearch.projects;
+}
+
+/**
+ * Same mail_thread_operating_record_v1 composer as authorizedSearch.threads.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * Indexed preview only. Suggested draft stays DRAFT_ONLY.
+ */
+function composeBoundClientThreads(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['threads'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyMailThreadPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.threads;
 }
 
 /**
@@ -1266,6 +1304,7 @@ function emptyAuthorizedSearch(opts?: {
     actionabilityApplied: false,
     documents: emptyDocumentOperatingPayload(),
     projects: emptyProjectOperatingPayload(),
+    threads: emptyMailThreadPayload(),
   };
 }
 
@@ -1353,6 +1392,7 @@ function composeAuthorizedSearch(
       currentClientsFirst: true,
       items: projectOperatingRecords(hits, ctx.picture, opts.binding || null),
     },
+    threads: composeMailThreadRecords(hits),
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),

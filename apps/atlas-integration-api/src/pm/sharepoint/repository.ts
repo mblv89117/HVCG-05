@@ -576,6 +576,7 @@ export class SharePointPmService {
           extractSourceUrl(asString(item.fields.Summary) || ''),
         sourceItemId: asString(item.fields.SourceMessageId) || asString(item.fields.SourceItemId),
         channel: asString(item.fields.Channel),
+        direction: asString(item.fields.Direction),
       });
     }
     return out;

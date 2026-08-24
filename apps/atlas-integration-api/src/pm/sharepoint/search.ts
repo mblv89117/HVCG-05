@@ -11,6 +11,7 @@ import { entitledClientCodes, isInternalStaff } from './authz.ts';
 import type { SharePointPmService } from './repository.ts';
 
 import { authoritativeSourceUrl, extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
+import { extractMailConversationId, indexedPreviewOnly } from './fabric/mailPreview.ts';
 
 export interface PmSearchHit {
   kind:
@@ -44,6 +45,10 @@ export interface PmSearchHit {
   startDate?: string;
   targetCompletionDate?: string;
   status?: string;
+  /** Indexed mail bodyPreview only. Never a live Outlook body fetch. */
+  preview?: string;
+  conversationId?: string;
+  direction?: 'Inbound' | 'Outbound' | 'Internal';
 }
 
 type LeadRow = {
@@ -330,6 +335,19 @@ export async function searchSharePointPm(
           : extractSourceUrl(String(item.summary || '')),
       );
       const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
+      const summary = String(item.summary || '');
+      const preview = file ? undefined : indexedPreviewOnly(summary);
+      const conversationId = file
+        ? undefined
+        : extractMailConversationId(summary, {
+            conversationId: item.conversationId,
+            sourceItemId: item.sourceItemId,
+            id: item.id,
+          });
+      const direction =
+        item.direction === 'Inbound' || item.direction === 'Outbound' || item.direction === 'Internal'
+          ? item.direction
+          : undefined;
       push({
         kind: file ? 'document' : 'communication',
         id: String(item.id),
@@ -339,7 +357,10 @@ export async function searchSharePointPm(
         source: file ? 'HVCG_Communications/file-index' : 'HVCG_Communications',
         ...(sourceUrl ? { webUrl: sourceUrl } : {}),
         ...(modifiedAt ? { modifiedAt } : {}),
-        ...(file ? { provenance: 'CONFIRMED' as const } : {}),
+        ...(file ? { provenance: 'CONFIRMED' as const } : { provenance: 'PROPOSED' as const }),
+        ...(!file && preview ? { preview } : {}),
+        ...(!file && conversationId ? { conversationId } : {}),
+        ...(!file && direction ? { direction } : {}),
       });
     }
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
