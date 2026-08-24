@@ -688,6 +688,9 @@ function toAuthorizedSearchHit(
     ...('size' in row && typeof row.size === 'number' && Number.isFinite(row.size)
       ? { size: row.size }
       : {}),
+    ...('sourceEventId' in row && typeof row.sourceEventId === 'string' && row.sourceEventId.trim()
+      ? { sourceEventId: row.sourceEventId.trim() }
+      : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
     provenance: classification,
@@ -1308,9 +1311,10 @@ async function withDocumentVersions(
 
 /**
  * Copy already-authorized email / project / contract / capital / indexed
- * outlook-mail-attachment metadata onto entitled documents. Runs after
- * authorization and after secure preview attach. Does not invent ClientCodes,
- * Hub-MI, lender criteria, financing status, binaries, or anonymous URLs.
+ * outlook-mail-attachment / HVCG_Meetings metadata onto entitled documents.
+ * Runs after authorization and after secure preview attach. Does not invent
+ * ClientCodes, Hub-MI, lender criteria, financing status, binaries, or
+ * anonymous URLs. Does not issue a new Graph calendar query.
  */
 function withDocumentRelatedContext(
   ctx: ToolGatewayContext,

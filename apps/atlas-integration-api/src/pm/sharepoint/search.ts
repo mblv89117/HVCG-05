@@ -69,6 +69,8 @@ export interface PmSearchHit {
   attachmentId?: string;
   contentType?: string;
   size?: number;
+  /** Copied from already-indexed HVCG_Meetings / outlook-calendar rows. */
+  sourceEventId?: string;
 }
 
 type LeadRow = {
@@ -319,6 +321,24 @@ export async function searchSharePointPm(
       const hay = [title, item.summary, item.status].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
       const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
+      const meetingUrl =
+        kind === 'meeting'
+          ? authoritativeSourceUrl(
+              typeof item.webUrl === 'string'
+                ? item.webUrl
+                : typeof item.webLink === 'string'
+                  ? String(item.webLink)
+                  : extractSourceUrl(String(item.summary || '')),
+            )
+          : undefined;
+      const sourceEventId =
+        kind === 'meeting'
+          ? typeof item.sourceEventId === 'string' && item.sourceEventId.trim()
+            ? item.sourceEventId.trim()
+            : typeof item.sourceItemId === 'string' && item.sourceItemId.trim()
+              ? item.sourceItemId.trim()
+              : undefined
+          : undefined;
       push({
         kind,
         id: String(item.id),
@@ -327,6 +347,8 @@ export async function searchSharePointPm(
         href: clientHref(clientCode),
         source,
         ...(modifiedAt ? { modifiedAt } : {}),
+        ...(meetingUrl ? { webUrl: meetingUrl } : {}),
+        ...(sourceEventId ? { sourceEventId } : {}),
       });
     }
   };
