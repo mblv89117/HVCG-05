@@ -85,6 +85,16 @@ export interface FabricSyncHealth {
     status: 'skipped' | 'ready' | 'error';
     reason: string;
   };
+  /**
+   * Entitled Hub operating-index search for already-indexed attachment metadata.
+   * ready only when fabric attachment count is already > 0.
+   * Never claims LIVE. Never invents filenames, ids, or counts.
+   * Does not call Graph /search/query.
+   */
+  attachmentSearch: {
+    status: 'skipped' | 'ready' | 'error';
+    reason: string;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -174,6 +184,16 @@ const SKIPPED_ATTACHMENTS: FabricSyncHealth['attachments'] = {
 const ERROR_ATTACHMENTS: FabricSyncHealth['attachments'] = {
   status: 'error',
   reason: 'Fabric checkpoint unreadable; attachment index remains unproven.',
+};
+
+const SKIPPED_ATTACHMENT_SEARCH: FabricSyncHealth['attachmentSearch'] = {
+  status: 'skipped',
+  reason: 'No indexed outlook-mail-attachment metadata to search; attachment search remains unproven.',
+};
+
+const ERROR_ATTACHMENT_SEARCH: FabricSyncHealth['attachmentSearch'] = {
+  status: 'error',
+  reason: 'Fabric checkpoint unreadable; attachment search remains unproven.',
 };
 
 function parseContactsStopStatus(notes: string[]): number | null {
@@ -384,6 +404,21 @@ function inspectAttachmentLinkHealth(opts: {
   return { ...SKIPPED_ATTACHMENT_LINKS };
 }
 
+function inspectAttachmentSearchHealth(opts: {
+  lastIndexed: FabricIndexedCounts;
+  cumulative: FabricSyncHealth['cumulative'];
+}): FabricSyncHealth['attachmentSearch'] {
+  const indexed = Math.max(opts.lastIndexed.attachmentsIndexed, opts.cumulative.attachmentsIndexed);
+  if (indexed > 0) {
+    return {
+      status: 'ready',
+      reason:
+        'Indexed outlook-mail-attachment metadata is searchable on the entitled Hub operating index.',
+    };
+  }
+  return { ...SKIPPED_ATTACHMENT_SEARCH };
+}
+
 function inspectChangeNotificationHealth(raw: {
   changeNotifications?: {
     status?: ChangeNotificationStatus;
@@ -493,6 +528,7 @@ export function inspectFabricSyncHealth(
       contacts: { ...SKIPPED_CONTACTS },
       fileSearch: { ...SKIPPED_FILE_SEARCH },
       attachments: { ...SKIPPED_ATTACHMENTS },
+      attachmentSearch: { ...SKIPPED_ATTACHMENT_SEARCH },
     };
   }
   try {
@@ -615,6 +651,7 @@ export function inspectFabricSyncHealth(
             : null,
         notes,
       }),
+      attachmentSearch: inspectAttachmentSearchHealth({ lastIndexed, cumulative }),
     };
   } catch {
     return {
@@ -633,6 +670,7 @@ export function inspectFabricSyncHealth(
       contacts: { ...ERROR_CONTACTS },
       fileSearch: { ...ERROR_FILE_SEARCH },
       attachments: { ...ERROR_ATTACHMENTS },
+      attachmentSearch: { ...ERROR_ATTACHMENT_SEARCH },
     };
   }
 }

@@ -11,7 +11,7 @@ import { attachmentIndexSummary, extractSourceUrl, isFileIndexRow, fileIndexSumm
 import { createFabricGraphClient, isAllowedFabricGraphPath } from '../src/pm/sharepoint/fabric/graph.ts';
 import { inspectFabricSyncHealth, isFabricSweepEnabled, recordFabricSweepAttempt, sanitizeFabricNotes } from '../src/pm/sharepoint/fabric/status.ts';
 import { startFabricRecoverySweep } from '../src/pm/sharepoint/fabric/sweep.ts';
-import { runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
+import { ATTACHMENTS_BACKFILL_COMPLETE, runFabricSync } from '../src/pm/sharepoint/fabric/sync.ts';
 import { searchSharePointPm } from '../src/pm/sharepoint/search.ts';
 import { assertMannyOnly, isMannyPrincipal, MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
 import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
@@ -328,6 +328,8 @@ describe('Fabric mail delta checkpointing', () => {
       searchJson?: Record<string, unknown>;
       hasAttachmentsPageStatus?: number;
       hasAttachmentsMessages?: Record<string, unknown>[];
+      hasAttachmentsNextLink?: string;
+      hasAttachmentsPage2?: Record<string, unknown>[];
     } = {},
   ) {
     let deltaCalls = 0;
@@ -379,10 +381,19 @@ describe('Fabric mail delta checkpointing', () => {
             },
           };
         }
+        if (/[?&]\$skiptoken=p2|[?&]skiptoken=p2/i.test(path)) {
+          return { status: 200, json: { value: extras.hasAttachmentsPage2 ?? [] } };
+        }
         if (/[?&]\$filter=hasAttachments/i.test(path) || /[?&]filter=hasAttachments/i.test(path)) {
           const status = extras.hasAttachmentsPageStatus ?? 200;
           if (status !== 200) return { status, json: { error: { code: 'BadRequest', message: 'invalid_request' } } };
-          return { status: 200, json: { value: extras.hasAttachmentsMessages ?? [] } };
+          return {
+            status: 200,
+            json: {
+              value: extras.hasAttachmentsMessages ?? [],
+              ...(extras.hasAttachmentsNextLink ? { '@odata.nextLink': extras.hasAttachmentsNextLink } : {}),
+            },
+          };
         }
         if (path.includes('/messages?')) {
           return {
@@ -706,8 +717,11 @@ describe('Fabric mail delta checkpointing', () => {
       assert.match(health.attachmentLinks.reason, /entitled document linking/);
       assert.equal(health.attachments.status, 'ready');
       assert.match(health.attachments.reason, /HTTP 200/);
+      assert.equal(health.attachmentSearch.status, 'ready');
+      assert.match(health.attachmentSearch.reason, /operating index/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentSearch)), false);
       assert.equal(/LIVE attachments|deltatoken|Bearer |guestaccess/i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -865,6 +879,7 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(result.indexed.mailThreads, 1);
       assert.equal(result.indexed.attachmentsIndexed, 1);
       assert.equal(result.checkpoint.attachmentsLastStatus, 200);
+      assert.equal(result.checkpoint.attachmentsSkip, ATTACHMENTS_BACKFILL_COMPLETE);
       assert.equal(
         paths.some((path) => path.includes('hasAttachments') && path.includes('/messages?')),
         true,
@@ -881,7 +896,89 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.lastIndexed.attachmentsIndexed, 1);
       assert.equal(health.cumulative.attachmentsIndexed, 1);
       assert.equal(health.attachmentLinks.status, 'ready');
+      assert.equal(health.attachmentSearch.status, 'ready');
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentSearch)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('advances hasAttachments backfill across Graph nextLink and does not re-scan page 1', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-skip-'));
+    const svc = service();
+    const paths: string[] = [];
+    const nextLink = `/v1.0/users/${MANNY_ENTRA_OID}/messages?$filter=hasAttachments eq true&$skiptoken=p2`;
+    const page1 = {
+      id: 'm-page-1',
+      conversationId: 'conv-page-1',
+      subject: 'Colorado Craft Beef capital update',
+      bodyPreview: 'Please review the packet.',
+      receivedDateTime: '2026-08-24T00:00:00Z',
+      from: { emailAddress: { address: 'client@example.com' } },
+      toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
+      webLink: 'https://outlook.office.com/mail/m-page-1',
+      hasAttachments: true,
+    };
+    const page2 = {
+      id: 'm-page-2',
+      conversationId: 'conv-page-2',
+      subject: 'Colorado Craft Beef follow-up packet',
+      bodyPreview: 'Please review the packet.',
+      receivedDateTime: '2026-08-23T00:00:00Z',
+      from: { emailAddress: { address: 'client@example.com' } },
+      toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
+      webLink: 'https://outlook.office.com/mail/m-page-2',
+      hasAttachments: true,
+    };
+    try {
+      const first = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, {
+          hasAttachmentsMessages: [page1],
+          hasAttachmentsNextLink: nextLink,
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(first.indexed.attachmentsIndexed, 1);
+      assert.equal(first.checkpoint.attachmentsSkip, nextLink);
+      assert.ok(svc.communications.some((row) => row.idempotencyKey === 'mail-att:m-page-1:att-1'));
+      assert.equal(
+        svc.communications.some((row) => row.idempotencyKey === 'mail-att:m-page-2:att-1'),
+        false,
+      );
+
+      const secondPaths: string[] = [];
+      const second = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(secondPaths, 200, {
+          hasAttachmentsMessages: [page1],
+          hasAttachmentsNextLink: nextLink,
+          hasAttachmentsPage2: [page2],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(second.indexed.attachmentsIndexed, 1);
+      assert.equal(second.checkpoint.attachmentsSkip, ATTACHMENTS_BACKFILL_COMPLETE);
+      assert.equal(
+        secondPaths.some((path) => path.includes('skiptoken=p2')),
+        true,
+      );
+      assert.equal(
+        secondPaths.filter((path) => path.includes('/messages/m-page-1/attachments')).length,
+        0,
+      );
+      assert.equal(
+        secondPaths.filter((path) => path.includes('/messages/m-page-2/attachments')).length,
+        1,
+      );
+      assert.ok(svc.communications.some((row) => row.idempotencyKey === 'mail-att:m-page-2:att-1'));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.attachmentSearch.status, 'ready');
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentSearch)), false);
+      assert.equal(/skiptoken|deltatoken|Bearer /i.test(JSON.stringify(health.attachmentSearch)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -1519,6 +1616,89 @@ describe('Search extracts drive items and includes Atlas records', () => {
       'Loanspark',
     );
     assert.equal(entitledOnly.results.some((r) => r.kind === 'vendor'), false);
+  });
+
+  it('returns entitled mail-attachment search hits from indexed metadata and does not invent ClientCodes', async () => {
+    const summary = attachmentIndexSummary({
+      webUrl: 'https://outlook.office.com/mail/m1',
+      parentMessageId: 'm1',
+      attachmentId: 'att-1',
+      contentType: 'application/pdf',
+      size: 1200,
+      idempotencyKey: 'mail-att:m1:att-1',
+    });
+    const service = {
+      async listAuthorizedClients() {
+        return [{ clientCode: 'CCB01', displayName: 'Colorado Craft Beef', dba: 'Colorado Craft Beef' }];
+      },
+      async listAuthorizedProjects() {
+        return [];
+      },
+      async listAuthorizedTasks() {
+        return [];
+      },
+      async listWorkspaceCollections() {
+        return {
+          communications: {
+            queried: true,
+            status: 'COMPLETE',
+            items: [
+              {
+                id: 'att-row',
+                title: 'term-sheet.pdf',
+                summary,
+                sourceItemId: 'att-1',
+                conversationId: 'm1',
+                sourceMessageId: 'att-1',
+                provenanceSource: 'outlook-mail-attachment',
+                webUrl: 'https://outlook.office.com/mail/m1',
+              },
+            ],
+          },
+          meetings: { queried: true, status: 'COMPLETE', items: [] },
+          engagements: { queried: true, status: 'COMPLETE', items: [] },
+          deliverables: { queried: true, status: 'COMPLETE', items: [] },
+          decisionsRisks: { queried: true, status: 'COMPLETE', items: [] },
+          contacts: { queried: true, status: 'COMPLETE', items: [] },
+        };
+      },
+      async listVendors() {
+        return [];
+      },
+      async listOpportunities() {
+        return [{ id: 'hidden', title: 'term-sheet hidden', clientCode: 'PDG01' }];
+      },
+      async listIndexedFiles() {
+        return [];
+      },
+    } as unknown as SharePointPmService;
+    const entitled = await searchSharePointPm(
+      service,
+      principal('11111111-1111-4111-8111-111111111001'),
+      'term-sheet',
+    );
+    assert.ok(
+      entitled.results.some(
+        (r) =>
+          r.kind === 'document' &&
+          r.source === 'HVCG_Communications/mail-attachment' &&
+          r.clientCode === 'CCB01' &&
+          r.title === 'term-sheet.pdf' &&
+          r.parentMessageId === 'm1' &&
+          r.attachmentId === 'att-1' &&
+          r.contentType === 'application/pdf' &&
+          r.size === 1200,
+      ),
+    );
+    assert.equal(entitled.results.some((r) => r.clientCode === 'PDG01'), false);
+    assert.equal(entitled.results.some((r) => r.webUrl?.includes('guestaccess')), false);
+    assert.equal(/LIVE/i.test(JSON.stringify(entitled)), false);
+    const miss = await searchSharePointPm(
+      service,
+      principal('11111111-1111-4111-8111-111111111001'),
+      'zzznomatch',
+    );
+    assert.equal(miss.results.some((r) => r.source === 'HVCG_Communications/mail-attachment'), false);
   });
 
   it('keeps non-entitled ClientCodes out of opportunity/lead/capital hits and does not use /pipeline', async () => {

@@ -29,6 +29,7 @@ const MAX_ATTACHMENT_MESSAGES_PAGE = 25;
 const MAX_ATTACHMENT_LOOKUPS_DELTA = MAX_PAGES * PAGE_SIZE;
 const MAX_ATTACHMENTS_PER_MESSAGE = 20;
 const GRAPH_ATTACHMENT_UNSUPPORTED = new Set([400, 403, 404, 405]);
+export const ATTACHMENTS_BACKFILL_COMPLETE = 'complete';
 const MAIL_SELECT =
   'id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview,hasAttachments';
 
@@ -55,6 +56,12 @@ export interface FabricCheckpoint {
   attachmentsClassifySkipped?: number;
   /** hasAttachments messages seen on the last attachment probe or incremental lookup. */
   attachmentsHasAttachmentsSeen?: number;
+  /**
+   * Restartable hasAttachments backfill cursor. Graph nextLink, or
+   * ATTACHMENTS_BACKFILL_COMPLETE when the historical page is exhausted.
+   * New attachments continue via mail delta. Never exposed on /health.
+   */
+  attachmentsSkip?: string | null;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
   lastAttemptAt?: string;
@@ -476,73 +483,93 @@ export async function runFabricSync(opts: {
   persistFabricProgress(opts.dataDir, cp, notes);
 
   if (attachmentLookups === 0) {
-    const probe = await readFabricJson(
-      opts.fabric,
-      hasAttachmentsPageUrl(),
-      notes,
-      'Mail attachment metadata',
-    );
-    if (probe.status !== 200) {
-      attachmentsLastStatus = probe.status;
-      noteAttachmentGraphSkip(notes, probe.status, probe.json);
+    if (cp.attachmentsSkip === ATTACHMENTS_BACKFILL_COMPLETE) {
+      if (attachmentsLastStatus == null) attachmentsLastStatus = 200;
+      notes.push(
+        'Mail attachment metadata historical backfill already complete; new attachments continue via mail delta.',
+      );
     } else {
-      const pageItems = asArray(probe.json);
-      if (pageItems.length === 0) {
-        attachmentsLastStatus = 200;
-        notes.push('Mail attachment metadata Graph returned HTTP 200 with no hasAttachments messages.');
+      let attUrl = cp.attachmentsSkip || hasAttachmentsPageUrl();
+      if (!isAllowedFabricGraphPath(mailboxPathname(attUrl))) {
+        notes.push('Stored attachment skip path was not allowlisted; restarting hasAttachments page.');
+        attUrl = hasAttachmentsPageUrl();
+        cp.attachmentsSkip = null;
+      }
+      const probe = await readFabricJson(opts.fabric, attUrl, notes, 'Mail attachment metadata');
+      if (probe.status !== 200) {
+        attachmentsLastStatus = probe.status;
+        noteAttachmentGraphSkip(notes, probe.status, probe.json);
       } else {
-        for (const msg of pageItems) {
-          const messageId = typeof msg.id === 'string' ? msg.id : '';
-          if (!messageId) continue;
-          if (msg.hasAttachments === true) attachmentsHasAttachmentsSeen += 1;
-          const from =
-            msg.from && typeof msg.from === 'object'
-              ? String((msg.from as { emailAddress?: { address?: string } }).emailAddress?.address || '')
-              : '';
-          const to = Array.isArray(msg.toRecipients)
-            ? msg.toRecipients.map((r) =>
-                String((r as { emailAddress?: { address?: string } })?.emailAddress?.address || ''),
-              )
-            : [];
-          const classified = classifyFabricRecord(
-            {
-              subject: typeof msg.subject === 'string' ? msg.subject : '',
-              participants: [from, ...to],
-              preview: typeof msg.bodyPreview === 'string' ? msg.bodyPreview : '',
-              source: 'outlook',
-            },
-            clients,
-          );
-          if (classified.ingest === 'skip' || !classified.clientCode) {
-            attachmentsClassifySkipped += 1;
-            continue;
-          }
-          if (attachmentLookups >= attachmentLookupBudget(mailMode)) break;
-          attachmentLookups += 1;
-          const webUrl = typeof msg.webLink === 'string' ? msg.webLink : undefined;
-          const att = await indexOutlookAttachmentMetadata({
-            fabric: opts.fabric,
-            service: opts.service,
-            messageId,
-            webUrl,
-            clientCode: classified.clientCode,
-            notes,
-          });
-          attachmentsLastStatus = att.status;
-          attachmentsGraphItems += att.graphItems;
-          indexed.attachmentsIndexed += att.wrote;
-          indexed.files += att.wrote;
-          indexed.restricted += att.wrote;
-        }
-        if (attachmentsLastStatus == null) attachmentsLastStatus = 200;
-        if (indexed.attachmentsIndexed === 0 && attachmentsClassifySkipped > 0) {
-          notes.push(
-            'Mail attachment metadata Graph returned HTTP 200; items classify-skipped for missing entitled ClientCode.',
-          );
-        } else if (indexed.attachmentsIndexed === 0) {
-          notes.push('Mail attachment metadata Graph returned HTTP 200; indexed attachments remain 0.');
+        const pageItems = asArray(probe.json);
+        let processedAll = true;
+        if (pageItems.length === 0) {
+          attachmentsLastStatus = 200;
+          notes.push('Mail attachment metadata Graph returned HTTP 200 with no hasAttachments messages.');
         } else {
-          notes.push('Mail attachment metadata Graph returned HTTP 200.');
+          for (const msg of pageItems) {
+            const messageId = typeof msg.id === 'string' ? msg.id : '';
+            if (!messageId) continue;
+            if (msg.hasAttachments === true) attachmentsHasAttachmentsSeen += 1;
+            const from =
+              msg.from && typeof msg.from === 'object'
+                ? String((msg.from as { emailAddress?: { address?: string } }).emailAddress?.address || '')
+                : '';
+            const to = Array.isArray(msg.toRecipients)
+              ? msg.toRecipients.map((r) =>
+                  String((r as { emailAddress?: { address?: string } })?.emailAddress?.address || ''),
+                )
+              : [];
+            const classified = classifyFabricRecord(
+              {
+                subject: typeof msg.subject === 'string' ? msg.subject : '',
+                participants: [from, ...to],
+                preview: typeof msg.bodyPreview === 'string' ? msg.bodyPreview : '',
+                source: 'outlook',
+              },
+              clients,
+            );
+            if (classified.ingest === 'skip' || !classified.clientCode) {
+              attachmentsClassifySkipped += 1;
+              continue;
+            }
+            if (attachmentLookups >= attachmentLookupBudget(mailMode)) {
+              processedAll = false;
+              break;
+            }
+            attachmentLookups += 1;
+            const webUrl = typeof msg.webLink === 'string' ? msg.webLink : undefined;
+            const att = await indexOutlookAttachmentMetadata({
+              fabric: opts.fabric,
+              service: opts.service,
+              messageId,
+              webUrl,
+              clientCode: classified.clientCode,
+              notes,
+            });
+            attachmentsLastStatus = att.status;
+            attachmentsGraphItems += att.graphItems;
+            indexed.attachmentsIndexed += att.wrote;
+            indexed.files += att.wrote;
+            indexed.restricted += att.wrote;
+          }
+          if (attachmentsLastStatus == null) attachmentsLastStatus = 200;
+          if (indexed.attachmentsIndexed === 0 && attachmentsClassifySkipped > 0) {
+            notes.push(
+              'Mail attachment metadata Graph returned HTTP 200; items classify-skipped for missing entitled ClientCode.',
+            );
+          } else if (indexed.attachmentsIndexed === 0) {
+            notes.push('Mail attachment metadata Graph returned HTTP 200; indexed attachments remain 0.');
+          } else {
+            notes.push('Mail attachment metadata Graph returned HTTP 200.');
+          }
+        }
+        if (processedAll) {
+          const next = nextLink(probe.json);
+          if (next && isAllowedFabricGraphPath(mailboxPathname(next))) {
+            cp.attachmentsSkip = next;
+          } else {
+            cp.attachmentsSkip = ATTACHMENTS_BACKFILL_COMPLETE;
+          }
         }
       }
     }
