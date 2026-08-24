@@ -15,6 +15,7 @@ export interface FabricIndexedCounts {
   meetings: number;
   contacts: number;
   files: number;
+  attachmentsIndexed: number;
   skipped: number;
   restricted: number;
 }
@@ -32,6 +33,7 @@ export interface FabricSyncHealth {
     meetings: number;
     contacts: number;
     files: number;
+    attachmentsIndexed: number;
   };
   notes: string[];
   honesty: 'never_run' | 'delta' | 'page_fallback' | 'degraded';
@@ -49,8 +51,17 @@ const EMPTY_INDEXED: FabricIndexedCounts = {
   meetings: 0,
   contacts: 0,
   files: 0,
+  attachmentsIndexed: 0,
   skipped: 0,
   restricted: 0,
+};
+
+const EMPTY_CUMULATIVE: FabricSyncHealth['cumulative'] = {
+  mailThreads: 0,
+  meetings: 0,
+  contacts: 0,
+  files: 0,
+  attachmentsIndexed: 0,
 };
 
 const TOKENISH = /(delta|skip)token=[^&\s]+/gi;
@@ -167,6 +178,7 @@ function asCounts(value: unknown): FabricIndexedCounts {
     meetings: n('meetings'),
     contacts: n('contacts'),
     files: n('files'),
+    attachmentsIndexed: n('attachmentsIndexed'),
     skipped: n('skipped'),
     restricted: n('restricted'),
   };
@@ -187,7 +199,7 @@ export function inspectFabricSyncHealth(
       mailSkipPresent: false,
       scheduledSweepEnabled,
       lastIndexed: { ...EMPTY_INDEXED },
-      cumulative: { mailThreads: 0, meetings: 0, contacts: 0, files: 0 },
+      cumulative: { ...EMPTY_CUMULATIVE },
       notes: scheduledSweepEnabled
         ? ['Fabric checkpoint absent — continuous mailbox sync has not completed a run.']
         : ['Fabric scheduled sweep disabled; mailbox sync is not continuous.'],
@@ -242,6 +254,8 @@ export function inspectFabricSyncHealth(
         meetings: typeof raw.counts?.meetings === 'number' ? raw.counts.meetings : 0,
         contacts: typeof raw.counts?.contacts === 'number' ? raw.counts.contacts : 0,
         files: typeof raw.counts?.files === 'number' ? raw.counts.files : 0,
+        attachmentsIndexed:
+          typeof raw.counts?.attachmentsIndexed === 'number' ? raw.counts.attachmentsIndexed : 0,
       },
       notes,
       honesty,
@@ -256,7 +270,7 @@ export function inspectFabricSyncHealth(
       mailSkipPresent: false,
       scheduledSweepEnabled,
       lastIndexed: { ...EMPTY_INDEXED },
-      cumulative: { mailThreads: 0, meetings: 0, contacts: 0, files: 0 },
+      cumulative: { ...EMPTY_CUMULATIVE },
       notes: ['Fabric checkpoint unreadable — treating mailbox sync as unproven.'],
       honesty: 'degraded',
       changeNotifications: { ...SKIPPED_NOTIFICATIONS, status: 'error', reason: 'fabric checkpoint unreadable' },

@@ -98,3 +98,23 @@ export function fileIndexSummary(opts: {
       : '';
   return `${head}${source}${proven} Key:${opts.idempotencyKey}`.slice(0, 2000);
 }
+
+/** Mail attachment metadata-only index. Never stores bytes or anonymous share URLs. */
+export function attachmentIndexSummary(opts: {
+  webUrl?: string;
+  parentMessageId: string;
+  attachmentId: string;
+  contentType?: string;
+  size?: number;
+  idempotencyKey: string;
+}): string {
+  const source = opts.webUrl ? ` Source: ${opts.webUrl}` : '';
+  const parent = opts.parentMessageId ? ` Parent:${opts.parentMessageId}` : '';
+  const att = opts.attachmentId ? ` Att:${opts.attachmentId}` : '';
+  const type = opts.contentType ? ` Type:${opts.contentType}` : '';
+  const size = typeof opts.size === 'number' && Number.isFinite(opts.size) ? ` Size:${Math.max(0, Math.floor(opts.size))}` : '';
+  return `${FILE_RESTRICTED_MARKER}. Binary not stored.${source}${parent}${att}${type}${size} Key:${opts.idempotencyKey}`.slice(
+    0,
+    2000,
+  );
+}
