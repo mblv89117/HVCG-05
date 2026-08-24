@@ -10,6 +10,11 @@
  * HVCG_Meetings refs (same inverse as capital / onboarding / client
  * support). Fail-closed when ClientCode is missing. No invented
  * ClientCodes. No new Graph calendar query.
+ * + ATLAS-MEETING-RESEARCH-RELATIONSHIP-001
+ * Inverse researchRelationship on MeetingOperatingRecord copies already-
+ * authorized same-scope researchIntelligence items. Fail-closed when the
+ * meeting ClientCode is missing. Unscoped lender catalog titles never
+ * attach to a scoped meeting. No new research / KG product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,10 +43,13 @@ import {
   researchIntelligenceHasInventedFacts,
 } from '../src/pm/operatorDesk/researchIntelligence.ts';
 import {
+  attachRelatedContextToMeetings,
+  attachRelatedContextToMeeting,
   attachRelatedContextToResearchIntelligence,
   attachRelatedContextToResearchIntelligenceRecord,
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
 } from '../src/pm/operatorDesk/documentRelatedContext.ts';
+import { emptyMeetingOperatingPayload } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY,
@@ -52,6 +60,7 @@ import {
   type AtlasAuthorizedSearch,
   type AtlasAuthorizedSearchHit,
   type AtlasClientContext,
+  type MeetingOperatingRecord,
   type OperatorOperatingPicture,
   type ResearchIntelligencePayload,
   type ResearchIntelligenceRecord,
@@ -478,6 +487,7 @@ function syn01ClientHit() {
     source: 'HVCG_Clients',
     clientCode: 'SYN01',
     industry: 'Food Manufacturing',
+    modifiedAt: '2026-08-24T18:00:00.000Z',
   };
 }
 
@@ -891,5 +901,360 @@ describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-MEETINGS-001 entitled same-scope i
     assert.equal(client.lenderCriteriaInvented, false);
     assert.ok(client.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
     assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+  });
+});
+
+function searchWithResearch(items: ResearchIntelligenceRecord[]): AtlasAuthorizedSearch {
+  return {
+    documents: { kind: 'document_operating_record_v1', policyClass: 'READ_AUTO', binariesInAtlas: false, items: [] },
+    projects: { kind: 'project_operating_record_v1', policyClass: 'READ_AUTO', invented: false, currentClientsFirst: true, items: [] },
+    threads: { kind: 'mail_thread_operating_record_v1', policyClass: 'DRAFT_ONLY', invented: false, items: [] },
+    capitalSubmissions: {
+      kind: 'capital_submission_request_v1',
+      policyClass: 'PREPARE_ONLY',
+      invented: false,
+      send: false,
+      externalSubmit: false,
+      ownerGated: true,
+      catalogCopies: [],
+      items: [],
+    },
+    researchIntelligence: {
+      kind: 'research_intelligence_v1',
+      policyClass: RESEARCH_INTELLIGENCE_POLICY_CLASS,
+      invented: false,
+      outboundRefresh: false,
+      financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+      lenderCriteriaInvented: false,
+      retrievedAt: '2026-08-24T18:00:00.000Z',
+      items,
+    },
+    hits: [],
+  } as unknown as AtlasAuthorizedSearch;
+}
+
+function syn01ClientResearchRecord(overrides: Partial<ResearchIntelligenceRecord> = {}): ResearchIntelligenceRecord {
+  return {
+    id: 'client:SYN01:synthetic alpha co',
+    subjectKind: 'client',
+    title: 'SYN01 · SYNTHETIC Alpha Co',
+    source: 'HVCG_Clients',
+    retrievalDate: '2026-08-24T18:00:00.000Z',
+    confidence: 'CONFIRMED',
+    superseded: false,
+    clientCode: 'SYN01',
+    classification: 'CONFIRMED',
+    invented: false,
+    lenderCriteriaInvented: false,
+    financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+    fit: RESEARCH_INTELLIGENCE_FIT,
+    evidence: 'Copied entitled HVCG_Clients title.',
+    ...overrides,
+  };
+}
+
+function syn01MeetingRecord(): MeetingOperatingRecord {
+  return {
+    id: 'meet-syn-1',
+    title: 'SYN01 weekly standup',
+    clientCode: 'SYN01',
+    classification: 'CONFIRMED',
+    source: 'HVCG_Meetings',
+    invented: false,
+    webUrl: MEETING_SOURCE,
+    sourceEventId: 'AAMk-syn-cal-1',
+    date: '2026-08-21T15:00:00Z',
+  };
+}
+
+function assertMeetingResearchHonesty(meeting: MeetingOperatingRecord): void {
+  const blob = JSON.stringify(meeting);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
+  assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
+  assert.equal(/\bltv\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/credit box/i.test(blob), false);
+  for (const row of meeting.researchRelationship || []) {
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+  }
+}
+
+describe('ATLAS-MEETING-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  it('attaches same-scope researchRelationship on entitled meetings and get_client_context', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      now,
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit()],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    const research = meeting.researchRelationship?.find(
+      (row) => row.clientCode === 'SYN01' && /synthetic alpha/i.test(row.title),
+    );
+    assert.ok(research);
+    assert.equal(research.source, 'HVCG_Clients');
+    assert.equal(research.invented, false);
+    assert.equal(research.lenderCriteriaInvented, false);
+    assert.equal(research.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(research.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(research.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal(research.superseded, false);
+    assert.ok(research.retrievalDate);
+    assert.ok((meeting.researchRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assertMeetingResearchHonesty(meeting);
+    assert.equal(JSON.stringify(meeting.researchRelationship).includes('PDG01'), false);
+    assert.equal(meeting.relatedDocuments, undefined);
+    assert.equal(meeting.relatedEmail, undefined);
+    assert.equal(meeting.relatedProject, undefined);
+    assert.equal(meeting.relatedAttachments, undefined);
+    assert.equal(meeting.capitalRelationship, undefined);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      now,
+      entitledIndexHits: [syn01ClientHit(), syn01MeetingHit()],
+    });
+    const ctxMeeting = viaIndex.clientContext.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(ctxMeeting);
+    assert.equal(
+      ctxMeeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.deepEqual(ctxMeeting.researchRelationship, meeting.researchRelationship);
+  });
+
+  it('honestly omits researchRelationship when no entitled research', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01MeetingHit()],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.researchRelationship, undefined);
+    assert.equal('researchRelationship' in meeting, false);
+    assertMeetingResearchHonesty(meeting);
+  });
+
+  it('never attaches Client B research to a Client A meeting', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          {
+            kind: 'client' as const,
+            id: 'PDG01',
+            title: 'PDG01 must not leak',
+            href: '/clients/PDG01',
+            source: 'HVCG_Clients',
+            clientCode: 'PDG01',
+            industry: 'Hidden Industry',
+          },
+        ],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(
+      meeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      (meeting.researchRelationship || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.meetings);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assertMeetingResearchHonesty(meeting);
+
+    const mixed = attachRelatedContextToMeeting(
+      staff,
+      syn01MeetingRecord(),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'client:PDG01:must not leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          evidence: 'must not leak',
+        }),
+      ]),
+    );
+    assert.equal(mixed.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
+    assert.equal(
+      (mixed.researchRelationship || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.researchRelationship).includes('PDG01'), false);
+  });
+
+  it('omits researchRelationship when meeting ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToMeeting(
+      manny,
+      {
+        id: 'meet-unscoped',
+        title: 'Internal research standup',
+        classification: 'PROPOSED',
+        source: 'HVCG_Meetings',
+        invented: false,
+        webUrl: MEETING_SOURCE,
+      },
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'lender:ln-liveoak',
+          subjectKind: 'lender',
+          title: 'Live Oak Bank',
+          source: 'HVCG_Lenders',
+          clientCode: undefined,
+          evidence: 'Copied existing sourced lender catalog title.',
+        }),
+      ]),
+    );
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal('researchRelationship' in omitted, false);
+  });
+
+  it('does not attach unscoped lender research to a scoped meeting', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: manny,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'Live Oak',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'lender' as const,
+            id: 'ln-liveoak',
+            title: 'Live Oak Bank',
+            href: '/capital',
+            source: 'HVCG_Lenders',
+          },
+          syn01MeetingHit(),
+        ],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.researchRelationship, undefined);
+    const blob = JSON.stringify(meeting);
+    assert.equal(/live oak/i.test(blob), false);
+    assert.equal(blob.includes('HVCG_Lenders'), false);
+    assertMeetingResearchHonesty(meeting);
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.meetings.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.meetings.items.some((row) => row.researchRelationship),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.meetings);
+    assert.equal(unknownBlob.includes('meet-syn-1'), false);
+    assert.equal(unknownBlob.includes('PDG01'), false);
+
+    const denied = attachRelatedContextToMeeting(
+      otherStaff,
+      syn01MeetingRecord(),
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+  });
+
+  it('leaves the empty meetings payload unchanged', () => {
+    const empty = emptyMeetingOperatingPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('researchRelationship' in empty, false);
+    const attachedEmpty = attachRelatedContextToMeetings(
+      staff,
+      empty,
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty, empty);
+  });
+
+  it('never invents TargetAmount, downloadUrl, transcript, criteria, or Hub-MI', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ClientHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+          syn01MeetingHit({
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+          }),
+        ],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    const blob = JSON.stringify(result.authorizedSearch.meetings);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/attendee/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assert.ok(meeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'));
+    assertMeetingResearchHonesty(meeting);
   });
 });

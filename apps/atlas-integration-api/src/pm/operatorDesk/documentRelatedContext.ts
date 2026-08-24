@@ -10,14 +10,14 @@
  * research-intelligence → meetings link on ResearchIntelligenceRecord
  * items.
  * Copies entitled search / project / thread / capital / already-indexed
- * outlook-mail-attachment / HVCG_Meetings / document payloads only.
+ * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / .clientSupport / .onboarding
  * / .researchIntelligence / fabric mail-attachment index rows / entitled
  * search extras.meetings (kind=meeting) / hits kind=document / hits
  * kind=meeting / sameRelatedScope / entitledClientCodes /
  * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
- * relatedMeetings().
+ * relatedMeetings() / relatedResearchForMeeting().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search/capital/research product.
  */
@@ -30,6 +30,9 @@ import { isMannyPrincipal } from '../sharepoint/manny.ts';
 import {
   CAPITAL_SUBMISSION_FINANCING_STATUS,
   CAPITAL_SUBMISSION_POLICY_CLASS,
+  RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+  RESEARCH_INTELLIGENCE_FIT,
+  RESEARCH_INTELLIGENCE_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type CapitalSubmissionPreparePayload,
   type CapitalSubmissionPrepareRecord,
@@ -52,6 +55,7 @@ import {
   type RelatedDocumentMeetingRef,
   type RelatedDocumentProjectRef,
   type RelatedMeetingDocumentRef,
+  type RelatedMeetingResearchRef,
 } from './types.ts';
 
 /** Shared isolation key for document, meeting, project, and thread related-context attach. */
@@ -475,9 +479,52 @@ function relatedDocumentsForMeeting(
 }
 
 /**
+ * Inverse of researchIntelligence.relatedMeetings: entitled same-scope
+ * research already on authorizedSearch.researchIntelligence.items
+ * (hits already composed into that payload — no new research query).
+ * Isolation: sameRelatedScope + entitledClientCodes + mayReceiveRelatedContext.
+ * Fail-closed: missing / non-canonical ClientCode on the meeting omits
+ * researchRelationship (never guess). Unscoped lender catalog titles never
+ * attach to a scoped meeting. Unscoped meeting never receives scoped
+ * research. Client A never receives Client B.
+ */
+function relatedResearchForMeeting(
+  item: RelatedScopeItem,
+  search: AtlasAuthorizedSearch,
+): RelatedMeetingResearchRef[] {
+  if (!canonicalClientCode(item.clientCode)) return [];
+  const out: RelatedMeetingResearchRef[] = [];
+  const seen = new Set<string>([item.id]);
+  for (const row of search.researchIntelligence.items) {
+    if (row.id === item.id) continue;
+    if (!canonicalClientCode(row.clientCode)) continue;
+    if (!sameRelatedScope(item.clientCode, row.clientCode)) continue;
+    if (seen.has(row.id)) continue;
+    seen.add(row.id);
+    out.push({
+      id: row.id,
+      title: row.title,
+      ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+      source: row.source,
+      ...(row.retrievalDate ? { retrievalDate: row.retrievalDate } : {}),
+      confidence: row.confidence,
+      classification: row.classification,
+      superseded: row.superseded,
+      invented: false,
+      lenderCriteriaInvented: false,
+      financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+      fit: RESEARCH_INTELLIGENCE_FIT,
+      policyClass: RESEARCH_INTELLIGENCE_POLICY_CLASS,
+    });
+    if (out.length >= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE) break;
+  }
+  return out;
+}
+
+/**
  * Attach already-authorized same-scope document / email / project /
- * attachment / capital refs onto an entitled meeting. Unscoped never
- * receives scoped relations. Client A never receives Client B.
+ * attachment / capital / research refs onto an entitled meeting. Unscoped
+ * never receives scoped relations. Client A never receives Client B.
  * No downloadUrl. No transcript text. binariesInAtlas stays false.
  */
 export function attachRelatedContextToMeeting(
@@ -491,6 +538,7 @@ export function attachRelatedContextToMeeting(
   const relatedProject = relatedProjects(item, search);
   const capitalRelationship = relatedCapital(item, search);
   const relatedAttachmentsList = relatedAttachments(item, search);
+  const researchRelationship = relatedResearchForMeeting(item, search);
   return {
     ...item,
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
@@ -498,6 +546,7 @@ export function attachRelatedContextToMeeting(
     ...(relatedProject.length ? { relatedProject } : {}),
     ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
     ...(capitalRelationship.length ? { capitalRelationship } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 
@@ -506,6 +555,7 @@ export function attachRelatedContextToMeetings(
   payload: MeetingOperatingPayload,
   search: AtlasAuthorizedSearch,
 ): MeetingOperatingPayload {
+  if (!payload.items.length) return payload;
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToMeeting(principal, item, search)),

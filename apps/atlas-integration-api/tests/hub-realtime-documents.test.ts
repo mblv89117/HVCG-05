@@ -20,6 +20,8 @@
  * Entitled projects carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Entitled mail threads carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
  * Entitled capital PREPARE rows carry the inverse relatedMeetings (same RelatedDocumentMeetingRef).
+ * Entitled meetings carry the inverse researchRelationship from already-composed
+ * researchIntelligence items (ATLAS-MEETING-RESEARCH-RELATIONSHIP-001).
  * Graph driveItem versions are metadata-only and never include downloadUrl.
  * No second search, preview, versioning, calendar query, or knowledge-graph product.
  */
@@ -68,6 +70,9 @@ import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   CAPITAL_SUBMISSION_FINANCING_STATUS,
   CAPITAL_SUBMISSION_POLICY_CLASS,
+  RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+  RESEARCH_INTELLIGENCE_FIT,
+  RESEARCH_INTELLIGENCE_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type DocumentOperatingRecord,
 } from '../src/pm/operatorDesk/types.ts';
@@ -1572,6 +1577,15 @@ describe('entitled meeting related context on authorizedSearch', () => {
     assert.equal(capital.lenderCriteriaInvented, false);
     assert.equal(capital.invented, false);
 
+    const research = meeting.researchRelationship?.find((row) => row.clientCode === 'SYN01');
+    assert.ok(research);
+    assert.equal(research.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal(research.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(research.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(research.lenderCriteriaInvented, false);
+    assert.equal(research.invented, false);
+    assert.ok((meeting.researchRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+
     const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
     assert.ok(memo);
     assert.equal(memo.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
@@ -1662,6 +1676,7 @@ describe('entitled meeting related context on authorizedSearch', () => {
     assert.equal((meeting.relatedProject || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal((meeting.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal((meeting.capitalRelationship || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal((meeting.researchRelationship || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal(JSON.stringify(meeting).includes('PDG01'), false);
     assert.equal(JSON.stringify(result.authorizedSearch.meetings).includes('PDG01'), false);
     noFabricatedRelatedFacts(meeting);
@@ -1766,6 +1781,7 @@ describe('entitled meeting related context on authorizedSearch', () => {
     assert.equal(meeting.relatedProject, undefined);
     assert.equal(meeting.relatedAttachments, undefined);
     assert.equal(meeting.capitalRelationship, undefined);
+    assert.equal(meeting.researchRelationship, undefined);
     assert.equal(/downloadUrl/i.test(JSON.stringify(meeting)), false);
     assert.equal(/transcript/i.test(JSON.stringify(meeting)), false);
     noFabricatedRelatedFacts(meeting);
