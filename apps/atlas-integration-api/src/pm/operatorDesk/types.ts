@@ -274,6 +274,9 @@ export interface AtlasClientContext {
    * Native governed client support / routing agent from already-entitled
    * Atlas/index communications, titled support work, and copied queues.
    * Reply / reassign / close stay OWNER-GATED. Send stays draft-only.
+   * Optional relatedMeetings is the same entitled same-scope inverse used
+   * by documents / projects / threads / capital. Omitted when ClientCode
+   * is missing.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
@@ -796,6 +799,14 @@ export interface ClientSupportAgentRecord {
   missingRequirements: string[];
   ownerDecisions: ClientSupportOwnerDecision[];
   nextAction: string;
+  /**
+   * Optional inverse of meeting support evidence: already-authorized
+   * same-scope HVCG_Meetings / search kind=meeting refs. Copied after
+   * authorization. Omitted when none are entitled or when ClientCode is
+   * missing (fail-closed; never guess). Never a new Graph calendar query,
+   * transcript, attendees, or invented titles / ClientCodes.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -862,6 +873,11 @@ export interface AtlasAuthorizedSearch {
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
   onboarding: OnboardingAgentPayload;
+  /**
+   * Native governed client support / routing agent. Optional relatedMeetings
+   * on each item is the entitled same-scope HVCG_Meetings inverse. Empty
+   * payload stays empty. Missing ClientCode omits relatedMeetings.
+   */
   clientSupport: ClientSupportAgentPayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;

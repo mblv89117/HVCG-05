@@ -2,17 +2,18 @@
  * Related operating context on already-authorized DocumentOperatingRecord
  * items, the inverse on MeetingOperatingRecord items, the inverse
  * project → meetings link on ProjectOperatingRecord items, the inverse
- * mail-thread → meetings link on MailThreadOperatingRecord items, and the
+ * mail-thread → meetings link on MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
- * items.
+ * items, and the inverse client-support → meetings link on
+ * ClientSupportAgentRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
- * .threads / .capitalSubmissions / .meetings / fabric mail-attachment index
- * rows / entitled search extras.meetings (kind=meeting) / hits kind=document
- * / hits kind=meeting / sameRelatedScope / entitledClientCodes /
- * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
- * relatedMeetings().
+ * .threads / .capitalSubmissions / .meetings / .clientSupport / fabric
+ * mail-attachment index rows / entitled search extras.meetings
+ * (kind=meeting) / hits kind=document / hits kind=meeting / sameRelatedScope
+ * / entitledClientCodes / authoritativeSourceUrl /
+ * DOCUMENT_RELATED_CONTEXT_PAGE_SIZE / relatedMeetings().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search/capital product.
  */
@@ -28,6 +29,8 @@ import {
   type AtlasAuthorizedSearch,
   type CapitalSubmissionPreparePayload,
   type CapitalSubmissionPrepareRecord,
+  type ClientSupportAgentPayload,
+  type ClientSupportAgentRecord,
   type DocumentOperatingRecord,
   type MailThreadOperatingPayload,
   type MailThreadOperatingRecord,
@@ -597,5 +600,41 @@ export function attachRelatedContextToCapitalSubmissions(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToCapitalSubmission(principal, item, search)),
+  };
+}
+
+/**
+ * Inverse of meeting support evidence: entitled same-scope meetings already
+ * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
+ * ClientCode is missing — omit relatedMeetings rather than guess.
+ * Unscoped never receives scoped relations. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * OWNER_ESCALATE / execute=false / send=false / autoRespond=false /
+ * draftOnly=true / hubMi=false stay as composed.
+ */
+export function attachRelatedContextToClientSupportRecord(
+  principal: AtlasPrincipal,
+  item: ClientSupportAgentRecord,
+  search: AtlasAuthorizedSearch,
+): ClientSupportAgentRecord {
+  if (!canonicalClientCode(item.clientCode)) return item;
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedMeetingsList = relatedMeetings(item, search);
+  return {
+    ...item,
+    ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+  };
+}
+
+export function attachRelatedContextToClientSupport(
+  principal: AtlasPrincipal,
+  payload: ClientSupportAgentPayload,
+  search: AtlasAuthorizedSearch,
+): ClientSupportAgentPayload {
+  if (!payload.items.length) return payload;
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToClientSupportRecord(principal, item, search)),
   };
 }

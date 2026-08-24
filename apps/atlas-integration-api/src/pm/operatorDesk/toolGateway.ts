@@ -74,6 +74,7 @@ import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgen
 import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
 import {
   attachRelatedContextToCapitalSubmissions,
+  attachRelatedContextToClientSupport,
   attachRelatedContextToDocuments,
   attachRelatedContextToMailThreads,
   attachRelatedContextToMeetings,
@@ -1894,6 +1895,11 @@ function composeAuthorizedSearch(
   authorizedSearch.capitalSubmissions = attachRelatedContextToCapitalSubmissions(
     ctx.principal,
     authorizedSearch.capitalSubmissions,
+    authorizedSearch,
+  );
+  authorizedSearch.clientSupport = attachRelatedContextToClientSupport(
+    ctx.principal,
+    authorizedSearch.clientSupport,
     authorizedSearch,
   );
   return {

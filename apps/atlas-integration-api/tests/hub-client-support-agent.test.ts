@@ -1,10 +1,14 @@
 /**
  * ATLAS-CLIENT-SUPPORT-AGENT-001
+ * + ATLAS-CLIENT-SUPPORT-RELATED-MEETINGS-001
  * Smallest Hub increment: native governed client support / routing agent
  * from already-entitled Atlas/index communications, titled support work,
  * and copied operator queues. Reply, reassign, close, Hub-MI, and send
  * stay OWNER-GATED / draft-only. Authorization before retrieval.
- * No invented ClientCodes. No cross-client leak.
+ * Optional relatedMeetings copies already-authorized same-scope
+ * HVCG_Meetings refs (same inverse as documents / projects / threads /
+ * capital). Fail-closed when ClientCode is missing. No invented
+ * ClientCodes. No cross-client leak.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,7 +29,11 @@ import {
   loadClientContext,
   searchAuthorizedKnowledge,
 } from '../src/pm/operatorDesk/toolGateway.ts';
-import { clientSupportPayloadHasInventedFacts } from '../src/pm/operatorDesk/clientSupportAgent.ts';
+import {
+  clientSupportPayloadHasInventedFacts,
+  emptyClientSupportPayload,
+} from '../src/pm/operatorDesk/clientSupportAgent.ts';
+import { DOCUMENT_RELATED_CONTEXT_PAGE_SIZE } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_CLIENT_SUPPORT_AGENT_MISSION_KEY,
@@ -213,6 +221,11 @@ function assertOwnerEscalate(
     assert.match(row.nextAction, /owner-gated/i);
     assert.ok(row.ownerDecisions.length > 0);
     assert.ok(row.ownerDecisions.every((decision) => decision.status === 'escalated' && decision.execute === false));
+    if (row.relatedMeetings) {
+      assert.ok(row.relatedMeetings.length > 0);
+      assert.ok(row.relatedMeetings.length <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+      assert.equal(/downloadUrl|transcript|attendee/i.test(JSON.stringify(row.relatedMeetings)), false);
+    }
   }
 }
 
@@ -417,5 +430,318 @@ describe('ATLAS-CLIENT-SUPPORT-AGENT-001 governed client support / routing agent
       if (prev.DATA === undefined) delete process.env.INTEGRATION_DATA_DIR;
       else process.env.INTEGRATION_DATA_DIR = prev.DATA;
     }
+  });
+});
+
+const MEETING_SOURCE = 'https://outlook.office.com/calendar/item/syn01-standup';
+
+describe('ATLAS-CLIENT-SUPPORT-RELATED-MEETINGS-001 entitled same-scope inverse', () => {
+  it('attaches same-scope relatedMeetings on entitled support items and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'communication',
+            id: 'mail-syn-1',
+            title: 'SYN01 — Can you confirm the next step?',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            preview: 'Indexed preview only.',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+            modifiedAt: '2026-08-21T15:00:00Z',
+          },
+        ],
+      }),
+    });
+    const mail = result.authorizedSearch.clientSupport.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(mail);
+    assert.equal(mail.clientCode, 'SYN01');
+    const meeting = mail.relatedMeetings?.find((row) => row.id === 'meet-syn-1');
+    assert.ok(meeting);
+    assert.equal(meeting.clientCode, 'SYN01');
+    assert.equal(meeting.title, 'SYN01 weekly standup');
+    assert.equal(meeting.date, '2026-08-21T15:00:00Z');
+    assert.equal(meeting.webUrl, MEETING_SOURCE);
+    assert.equal(meeting.sourceEventId, 'AAMk-syn-cal-1');
+    assert.ok((mail.relatedMeetings?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(/downloadUrl|transcript|attendee/i.test(JSON.stringify(mail.relatedMeetings)), false);
+    assert.equal(JSON.stringify(mail.relatedMeetings).includes('PDG01'), false);
+    assertOwnerEscalate(result.authorizedSearch.clientSupport);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [
+        {
+          kind: 'communication',
+          id: 'mail-syn-1',
+          title: 'SYN01 — Can you confirm the next step?',
+          href: '/clients/SYN01',
+          source: 'HVCG_Communications',
+          clientCode: 'SYN01',
+        },
+        {
+          kind: 'meeting',
+          id: 'meet-syn-1',
+          title: 'SYN01 weekly standup',
+          href: '/clients/SYN01',
+          source: 'HVCG_Meetings',
+          clientCode: 'SYN01',
+          webUrl: MEETING_SOURCE,
+          provenance: 'CONFIRMED',
+          sourceEventId: 'AAMk-syn-cal-1',
+          modifiedAt: '2026-08-21T15:00:00Z',
+        },
+      ],
+    });
+    const ctxMail = viaIndex.clientContext.clientSupport.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(ctxMail);
+    assert.equal(ctxMail.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.deepEqual(ctxMail.relatedMeetings, mail.relatedMeetings);
+    noInventedFacts(result.authorizedSearch.clientSupport);
+  });
+
+  it('honestly omits relatedMeetings when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'communication',
+            id: 'mail-only',
+            title: 'SYN01 — Can you confirm the next step?',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            preview: 'Indexed preview only.',
+          },
+        ],
+      }),
+    });
+    const mail = result.authorizedSearch.clientSupport.items.find((row) => row.id === 'mail-only');
+    assert.ok(mail);
+    assert.equal(mail.relatedMeetings, undefined);
+    assertOwnerEscalate(result.authorizedSearch.clientSupport);
+    noInventedFacts(result.authorizedSearch.clientSupport);
+  });
+
+  it('never attaches Client B meetings to a Client A support item', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'communication',
+            id: 'mail-syn-1',
+            title: 'SYN01 — Can you confirm the next step?',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            preview: 'Indexed preview only.',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-pdg',
+            title: 'PDG01 leak standup',
+            href: '/clients/PDG01',
+            source: 'HVCG_Meetings',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/calendar/item/pdg01-leak',
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-pdg-cal-1',
+          },
+          {
+            kind: 'communication',
+            id: 'mail-pdg-support',
+            title: 'PDG01 support ticket',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            preview: 'Please advise on PDG01.',
+          },
+        ],
+      }),
+    });
+    const mail = result.authorizedSearch.clientSupport.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(mail);
+    assert.equal(mail.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal((mail.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(mail).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.clientSupport.items.some((row) => row.id === 'mail-pdg-support'), false);
+    assert.equal(JSON.stringify(result.authorizedSearch.clientSupport).includes('PDG01'), false);
+    assert.equal(JSON.stringify(result.authorizedSearch.clientSupport).includes('ACCG01'), false);
+    assert.equal(JSON.stringify(result.authorizedSearch.clientSupport).includes('CCB01'), false);
+    assertOwnerEscalate(result.authorizedSearch.clientSupport);
+    noInventedFacts(result.authorizedSearch.clientSupport);
+  });
+
+  it('omits relatedMeetings when ClientCode is missing rather than guessing', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'follow up support ticket',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'communication',
+            id: 'mail-unscoped',
+            title: 'Can you confirm the next support step?',
+            href: '/inbox',
+            source: 'HVCG_Communications',
+            preview: 'Indexed preview only.',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-unscoped',
+            title: 'Internal support standup',
+            href: '/meetings',
+            source: 'HVCG_Meetings',
+            webUrl: MEETING_SOURCE,
+            provenance: 'PROPOSED',
+          },
+        ],
+      }),
+    });
+    const mail = result.authorizedSearch.clientSupport.items.find((row) => row.id === 'mail-unscoped');
+    assert.ok(mail);
+    assert.equal(mail.clientCode, undefined);
+    assert.equal(mail.relatedMeetings, undefined);
+    assert.equal(JSON.stringify(mail).includes('SYN01'), false);
+    assertOwnerEscalate(result.authorizedSearch.clientSupport);
+  });
+
+  it('leaves the empty client-support payload unchanged', async () => {
+    const empty = emptyClientSupportPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('relatedMeetings' in empty, false);
+    assert.equal(empty.policyClass, 'OWNER_ESCALATE');
+    assert.equal(empty.execute, false);
+    assert.equal(empty.send, false);
+    assert.equal(empty.autoRespond, false);
+    assert.equal(empty.draftOnly, true);
+    assert.equal(empty.hubMi, false);
+
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'capital raise package',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+          },
+        ],
+      }),
+    });
+    assert.deepEqual(result.authorizedSearch.clientSupport, empty);
+    assert.equal(result.authorizedSearch.clientSupport.items.length, 0);
+    assertOwnerEscalate(result.authorizedSearch.clientSupport);
+  });
+
+  it('never invents ClientCodes, attendees, downloadUrl, or transcript text', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'communication',
+            id: 'mail-syn-1',
+            title: 'SYN01 — Can you confirm the next step?',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            preview: 'Indexed preview only.',
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+          },
+          {
+            kind: 'meeting',
+            id: 'meet-syn-1',
+            title: 'SYN01 weekly standup',
+            href: '/clients/SYN01',
+            source: 'HVCG_Meetings',
+            clientCode: 'SYN01',
+            webUrl: MEETING_SOURCE,
+            provenance: 'CONFIRMED',
+            sourceEventId: 'AAMk-syn-cal-1',
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+          },
+        ],
+      }),
+    });
+    const blob = JSON.stringify(result.authorizedSearch.clientSupport);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/attendee/i.test(blob), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    const mail = result.authorizedSearch.clientSupport.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(mail);
+    assert.equal(mail.clientCode, 'SYN01');
+    assert.ok(mail.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
+    assertOwnerEscalate(result.authorizedSearch.clientSupport);
+    noInventedFacts(result.authorizedSearch.clientSupport);
   });
 });

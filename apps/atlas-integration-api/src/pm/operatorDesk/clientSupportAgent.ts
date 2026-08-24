@@ -5,7 +5,9 @@
  * Inspects existing HVCG_Communications, titled support work, copied
  * operator queues, and recovered folder/filename clients only. Does not
  * invent ClientCodes or Hub-MI. Reply, reassign, close, and send stay
- * OWNER-GATED. Send remains draft-only.
+ * OWNER-GATED. Send remains draft-only. Optional relatedMeetings are
+ * attached later from authorizedSearch.meetings / sameRelatedScope
+ * (fail-closed when ClientCode is missing).
  */
 
 import {
