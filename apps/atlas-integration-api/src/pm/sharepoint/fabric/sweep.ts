@@ -12,7 +12,7 @@ import { createFabricGraphClient } from './graph.ts';
 import { runFabricSync, type FabricSyncResult } from './sync.ts';
 import { fabricSweepIntervalMs, isFabricSweepEnabled, recordFabricSweepAttempt } from './status.ts';
 import { ensureFabricChangeSubscriptions } from './subscriptions.ts';
-import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../token.ts';
+import { createManagedIdentityTokenProvider, fabricMsiTokenProviderOptions } from '../token.ts';
 import type { SharePointPmService } from '../repository.ts';
 import type { AppConfig } from '../../../config.ts';
 import type { PmGraphTokenProvider } from '../token.ts';
@@ -118,10 +118,10 @@ export function startConfiguredFabricSweep(opts: {
   const tokenProvider =
     opts.tokenProvider ||
     opts.cfg.pmTokenProvider ||
-    createManagedIdentityTokenProvider(opts.cfg.pmBackend.sharepoint.managedIdentityClientId, {
-      resource: GRAPH_TOKEN_RESOURCE,
-      timeoutMs: 15_000,
-    });
+    createManagedIdentityTokenProvider(
+      opts.cfg.pmBackend.sharepoint.managedIdentityClientId,
+      fabricMsiTokenProviderOptions(),
+    );
 
   return startFabricRecoverySweep({
     enabled,

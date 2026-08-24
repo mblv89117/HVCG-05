@@ -11,7 +11,7 @@ import { lookupUserBasic } from '../entitlements/userLookup.ts';
 import { PmRepository } from './repository.ts';
 import { createGraphTransport } from './sharepoint/graph.ts';
 import { SharePointPmService } from './sharepoint/repository.ts';
-import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from './sharepoint/token.ts';
+import { createManagedIdentityTokenProvider, fabricMsiTokenProviderOptions } from './sharepoint/token.ts';
 
 export const PM_BACKEND_UNAVAILABLE = 'PM_BACKEND_UNAVAILABLE';
 
@@ -44,9 +44,10 @@ export function createSharePointPmService(cfg: AppConfig): SharePointPmService |
   const settings = cfg.pmBackend.sharepoint;
   const tokenProvider =
     cfg.pmTokenProvider ||
-    createManagedIdentityTokenProvider(settings.managedIdentityClientId, {
-      resource: GRAPH_TOKEN_RESOURCE,
-    });
+    createManagedIdentityTokenProvider(
+      settings.managedIdentityClientId,
+      fabricMsiTokenProviderOptions(),
+    );
   const graph = cfg.pmGraphTransport || createGraphTransport(settings, tokenProvider);
   const lookup = cfg.lookupUserBasic || ((oid: string) => lookupUserBasic(cfg, oid));
   return new SharePointPmService(settings, graph, lookup);
