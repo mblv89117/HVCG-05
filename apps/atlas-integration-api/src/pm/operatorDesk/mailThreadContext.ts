@@ -195,6 +195,15 @@ export function mailThreadPayloadHasInventedFacts(payload: MailThreadOperatingPa
     for (const item of [...row.commitments, ...row.unansweredQuestions]) {
       if (!row.preview.includes(item.evidence)) return true;
     }
+    // suggestedAttachments are copied refs, never invented names/ids/counts.
+    // send / autoRespond stay DRAFT_ONLY even when attachments are present.
+    if (row.suggestedDraft.suggestedAttachments) {
+      if (row.suggestedDraft.send || row.suggestedDraft.autoRespond) return true;
+      for (const attachment of row.suggestedDraft.suggestedAttachments) {
+        if (attachment.binariesInAtlas !== false) return true;
+        if (/downloadUrl|contentBytes/i.test(JSON.stringify(attachment))) return true;
+      }
+    }
   }
   return false;
 }

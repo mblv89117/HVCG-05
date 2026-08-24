@@ -270,8 +270,13 @@ export interface AtlasClientContext {
    * researchIntelligence items (same RelatedMeetingResearchRef as
    * meetings / documents / projects / capital). Optional relatedDocuments
    * is the inverse of document.relatedEmail (same RelatedMeetingDocumentRef
-   * / relatedDocumentsForMeeting path). Missing / non-canonical ClientCode
-   * omits researchRelationship / relatedDocuments (fail-closed; never guess).
+   * / relatedDocumentsForMeeting path). Optional
+   * suggestedDraft.suggestedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef /
+   * relatedAttachments path as documents / meetings). Missing /
+   * non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments / suggestedDraft.suggestedAttachments (fail-closed;
+   * never guess).
    */
   threads: MailThreadOperatingPayload;
   /**
@@ -747,6 +752,20 @@ export interface MailThreadSuggestedDraft {
   subject: string;
   body: string;
   status: 'draft';
+  /**
+   * Already-indexed same-scope outlook-mail-attachment metadata refs.
+   * Reuses RelatedDocumentAttachmentRef / relatedAttachments() — the same
+   * entitled same-scope inverse already live on documents / meetings /
+   * onboarding / client support. Copied after authorization when the
+   * thread has a canonical ClientCode and the principal is entitled.
+   * Omitted when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped attachments. Client A never receives Client B. SAS /
+   * anonymous webUrl dropped. Never downloadUrl, contentBytes,
+   * invented attachment names / ids / counts. binariesInAtlas stays
+   * false. DRAFT_ONLY / send=false / autoRespond=false stay as composed.
+   */
+  suggestedAttachments?: RelatedDocumentAttachmentRef[];
 }
 
 export interface MailThreadOperatingRecord {
@@ -1366,10 +1385,15 @@ export interface AtlasAuthorizedSearch {
    * meetings / onboarding / client support / capital / documents /
    * projects). Optional relatedDocuments is the inverse of
    * document.relatedEmail (same RelatedMeetingDocumentRef /
-   * relatedDocumentsForMeeting path). Missing / non-canonical ClientCode
-   * omits researchRelationship / relatedDocuments (fail-closed; never
-   * guess). send=false / autoRespond=false / indexedPreviewOnly stay
-   * as composed. No preview body / suggestedDraft / send on the refs.
+   * relatedDocumentsForMeeting path). Optional
+   * suggestedDraft.suggestedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef /
+   * relatedAttachments path as documents / meetings). Missing /
+   * non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments / suggestedDraft.suggestedAttachments (fail-closed;
+   * never guess). send=false / autoRespond=false / indexedPreviewOnly
+   * stay as composed. No preview body / send on the refs. No
+   * downloadUrl / contentBytes. binariesInAtlas stays false.
    */
   threads: MailThreadOperatingPayload;
   /**

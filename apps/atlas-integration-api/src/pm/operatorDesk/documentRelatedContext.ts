@@ -3,7 +3,8 @@
  * items, the inverse on MeetingOperatingRecord items, the inverse
  * project → meetings and project → documents links on
  * ProjectOperatingRecord items, the inverse
- * mail-thread → meetings and mail-thread → documents links on
+ * mail-thread → meetings, mail-thread → documents, and
+ * mail-thread suggestedDraft.suggestedAttachments links on
  * MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings, capital-prepare → documents,
  * and capital-prepare → research links on CapitalSubmissionPrepareRecord
@@ -644,17 +645,25 @@ export function attachRelatedContextToProjects(
  * already on authorizedSearch.meetings.items or hits kind=meeting,
  * entitled same-scope documents already on authorizedSearch.documents.items
  * or hits kind=document (reuses relatedDocumentsForMeeting /
- * RelatedMeetingDocumentRef — no new document query), and entitled
+ * RelatedMeetingDocumentRef — no new document query), entitled
  * same-scope research already on authorizedSearch.researchIntelligence.items
- * (no new research query).
+ * (no new research query), and entitled same-scope already-indexed
+ * outlook-mail-attachment metadata already on
+ * authorizedSearch.documents.items / hits kind=document (reuses
+ * relatedAttachments / RelatedDocumentAttachmentRef — no new Graph /
+ * search / attachment query, no contentBytes). Copied onto
+ * suggestedDraft.suggestedAttachments only — not a second
+ * relatedAttachments inverse on the thread record.
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
- * non-canonical — omit researchRelationship / relatedDocuments rather
- * than guess. Unscoped never receives scoped relations. Unscoped lender
- * catalog titles never attach to a scoped thread. Client A never
- * receives Client B. SAS / anonymous webUrl dropped. No downloadUrl.
- * No transcript text. No preview body / suggestedDraft / send on the
- * document refs. DRAFT_ONLY / autoRespond=false / send=false /
+ * non-canonical — omit researchRelationship / relatedDocuments /
+ * suggestedDraft.suggestedAttachments rather than guess. Unscoped
+ * never receives scoped relations. Unscoped lender catalog titles
+ * never attach to a scoped thread. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No contentBytes.
+ * binariesInAtlas stays false. No transcript text. No preview body /
+ * send on the document refs. Never invent attachment names, ids, or
+ * counts. DRAFT_ONLY / autoRespond=false / send=false /
  * indexedPreviewOnly stay as composed on the thread payload.
  */
 export function attachRelatedContextToMailThread(
@@ -668,11 +677,22 @@ export function attachRelatedContextToMailThread(
   const relatedDocuments = canonicalClientCode(item.clientCode)
     ? relatedDocumentsForMeeting(item, search)
     : [];
+  const suggestedAttachments = canonicalClientCode(item.clientCode)
+    ? relatedAttachments(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
+    ...(suggestedAttachments.length
+      ? {
+          suggestedDraft: {
+            ...item.suggestedDraft,
+            suggestedAttachments,
+          },
+        }
+      : {}),
   };
 }
 
