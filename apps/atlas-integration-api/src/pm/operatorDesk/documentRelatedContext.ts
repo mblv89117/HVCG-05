@@ -13,7 +13,8 @@
  * client-support → projects, and
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings, onboarding → documents,
- * onboarding → projects, and
+ * onboarding → projects,
+ * onboarding → threads, and
  * onboarding → research links on OnboardingAgentRecord items, and the inverse
  * research-intelligence → meetings,
  * research-intelligence → documents,
@@ -796,27 +797,35 @@ export function attachRelatedContextToClientSupport(
  * + the same same-scope document inverse already live on meetings /
  * research-intel / projects / threads / capital + the same same-scope
  * project inverse already live on research-intel / documents
- * (document.relatedProject): entitled same-scope meetings already on
- * authorizedSearch.meetings.items or hits kind=meeting, entitled
- * same-scope documents already on authorizedSearch.documents.items or
- * hits kind=document (reuses relatedDocumentsForMeeting /
- * RelatedMeetingDocumentRef — no new document query), entitled
- * same-scope projects already on authorizedSearch.projects.items
- * (reuses relatedProjects / RelatedDocumentProjectRef — no new
- * project query), and entitled same-scope research already on
+ * (document.relatedProject) + the same same-scope thread inverse
+ * already live on research-intel (document.relatedEmail): entitled
+ * same-scope meetings already on authorizedSearch.meetings.items or
+ * hits kind=meeting, entitled same-scope documents already on
+ * authorizedSearch.documents.items or hits kind=document (reuses
+ * relatedDocumentsForMeeting / RelatedMeetingDocumentRef — no new
+ * document query), entitled same-scope projects already on
+ * authorizedSearch.projects.items (reuses relatedProjects /
+ * RelatedDocumentProjectRef — no new project query), entitled
+ * same-scope threads already on authorizedSearch.threads.items
+ * (reuses relatedEmails / RelatedDocumentEmailRef — no new query),
+ * and entitled same-scope research already on
  * authorizedSearch.researchIntelligence.items (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit relatedMeetings / researchRelationship /
- * relatedDocuments / relatedProjects rather than guess. Unscoped
- * never receives scoped relations. Unscoped lender catalog titles
- * never attach scoped documents or projects. Client A never receives
- * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
- * transcript text. No TargetAmount. No Hub-MI invention. hubMiRow is
- * copied as composed on the source project (never invented).
- * OWNER_ESCALATE / execute=false / activate=false / send=false /
- * liveGtmOutbound=false / ownerGated=true / hubMi=false stay as
- * composed. There is no document.onboardingRelationship field.
+ * relatedDocuments / relatedProjects / relatedThreads rather than
+ * guess. Unscoped never receives scoped relations. Unscoped lender
+ * catalog titles never attach scoped documents, projects, or threads.
+ * Client A never receives Client B. SAS / anonymous webUrl dropped.
+ * No downloadUrl. No transcript text. No preview body /
+ * suggestedDraft / send on the thread refs. No TargetAmount. No
+ * Hub-MI invention. hubMiRow is copied as composed on the source
+ * project (never invented). OWNER_ESCALATE / execute=false /
+ * activate=false / send=false / liveGtmOutbound=false /
+ * ownerGated=true / hubMi=false stay as composed. DRAFT_ONLY /
+ * send=false / autoRespond=false / indexedPreviewOnly stay as
+ * composed on the source thread payload. There is no
+ * document.onboardingRelationship field.
  */
 export function attachRelatedContextToOnboardingRecord(
   principal: AtlasPrincipal,
@@ -829,12 +838,14 @@ export function attachRelatedContextToOnboardingRecord(
   const researchRelationship = relatedResearchForScopeItem(item, search);
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
   const relatedProjectsList = relatedProjects(item, search);
+  const relatedThreads = relatedEmails(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
+    ...(relatedThreads.length ? { relatedThreads } : {}),
   };
 }
 
