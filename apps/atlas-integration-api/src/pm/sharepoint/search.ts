@@ -10,7 +10,12 @@ import { isMannyPrincipal } from './manny.ts';
 import { entitledClientCodes, isInternalStaff } from './authz.ts';
 import type { SharePointPmService } from './repository.ts';
 
-import { authoritativeSourceUrl, extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
+import {
+  authoritativeSourceUrl,
+  extractProvenDriveItemRef,
+  extractSourceUrl,
+  isFileIndexRow,
+} from './fabric/fileIndex.ts';
 import { extractMailConversationId, indexedPreviewOnly } from './fabric/mailPreview.ts';
 
 export interface PmSearchHit {
@@ -54,6 +59,9 @@ export interface PmSearchHit {
   industry?: string;
   /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
   clientStage?: string;
+  /** Proven Graph drive/item ids from the file index. Never invented. */
+  driveId?: string;
+  itemId?: string;
 }
 
 type LeadRow = {
@@ -355,6 +363,13 @@ export async function searchSharePointPm(
         item.direction === 'Inbound' || item.direction === 'Outbound' || item.direction === 'Internal'
           ? item.direction
           : undefined;
+      const proven = file
+        ? extractProvenDriveItemRef(summary, {
+            sourceItemId: item.sourceItemId,
+            driveId: 'driveId' in item ? (item as { driveId?: unknown }).driveId : undefined,
+            itemId: 'itemId' in item ? (item as { itemId?: unknown }).itemId : undefined,
+          })
+        : undefined;
       push({
         kind: file ? 'document' : 'communication',
         id: String(item.id),
@@ -368,6 +383,7 @@ export async function searchSharePointPm(
         ...(!file && preview ? { preview } : {}),
         ...(!file && conversationId ? { conversationId } : {}),
         ...(!file && direction ? { direction } : {}),
+        ...(proven ? { driveId: proven.driveId, itemId: proven.itemId } : {}),
       });
     }
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
@@ -459,6 +475,11 @@ export async function searchSharePointPm(
         'modifiedAt' in f && typeof f.modifiedAt === 'string' && f.modifiedAt.trim()
           ? f.modifiedAt
           : undefined;
+      const proven = extractProvenDriveItemRef(String(f.summary || ''), {
+        sourceItemId: 'sourceItemId' in f ? (f as { sourceItemId?: unknown }).sourceItemId : undefined,
+        driveId: 'driveId' in f ? (f as { driveId?: unknown }).driveId : undefined,
+        itemId: 'itemId' in f ? (f as { itemId?: unknown }).itemId : undefined,
+      });
       push({
         kind: 'document',
         id: f.id,
@@ -468,6 +489,7 @@ export async function searchSharePointPm(
         ...(sourceUrl ? { webUrl: sourceUrl } : {}),
         ...(modifiedAt ? { modifiedAt } : {}),
         provenance: 'CONFIRMED',
+        ...(proven ? { driveId: proven.driveId, itemId: proven.itemId } : {}),
       });
     }
   }

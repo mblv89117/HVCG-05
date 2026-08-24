@@ -312,7 +312,12 @@ export interface AtlasAuthorizedSearchHit {
   industry?: string;
   /** Copied from an existing entitled HVCG_Clients.ClientStage. Never invented. */
   clientStage?: string;
+  /** Proven Graph drive/item ids from the file index. Never invented. */
+  driveId?: string;
+  itemId?: string;
 }
+
+export type DocumentPreviewStatus = 'ready' | 'skipped' | 'error';
 
 export interface DocumentOperatingRecord {
   id: string;
@@ -322,6 +327,17 @@ export interface DocumentOperatingRecord {
   clientCode?: string;
   provenance: AskAtlasClassification;
   source: string;
+  /**
+   * Short-lived Graph driveItem preview. Never an anonymous permanent link.
+   * ready only when Graph returned getUrl/postUrl. skipped/error never claim LIVE.
+   */
+  previewStatus?: DocumentPreviewStatus;
+  previewExpiresAt?: string;
+  previewGetUrl?: string;
+  previewPostUrl?: string;
+  previewSkipReason?: string;
+  /** Set when a Graph preview was attempted. Points at Graph preview, not a share link. */
+  basedOn?: string;
 }
 
 export type ProjectOperatingClassification =

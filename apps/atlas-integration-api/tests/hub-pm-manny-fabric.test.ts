@@ -144,6 +144,12 @@ describe('Fabric Graph allowlist', () => {
     );
     assert.equal(isAllowedFabricGraphPath('/v1.0/drives/b!abc/root/delta'), true);
     assert.equal(isAllowedFabricGraphPath('/v1.0/search/query', 'POST'), true);
+    assert.equal(
+      isAllowedFabricGraphPath('/v1.0/drives/b!abc/items/01ITEM/preview', 'POST'),
+      true,
+    );
+    assert.equal(isAllowedFabricGraphPath('/v1.0/drives/b!abc/items/01ITEM/createLink', 'POST'), false);
+    assert.equal(isAllowedFabricGraphPath('/v1.0/drives/b!abc/items/01ITEM/preview'), false);
     assert.equal(isAllowedFabricGraphPath('/v1.0/sites'), false);
     assert.equal(isAllowedFabricGraphPath('/v1.0/search/query'), false);
   });
