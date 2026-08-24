@@ -63,6 +63,10 @@ import {
 } from './capitalSubmissionPrepare.ts';
 import { composeMailThreadRecords, emptyMailThreadPayload } from './mailThreadContext.ts';
 import {
+  composeMeetingOperatingRecords,
+  emptyMeetingOperatingPayload,
+} from './meetingOperatingRecord.ts';
+import {
   composeResearchIntelligence,
   emptyResearchIntelligencePayload,
 } from './researchIntelligence.ts';
@@ -303,6 +307,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     recoveredKnowledgeOperationalized: false,
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
+    meetings: emptyMeetingOperatingPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(opts?.now),
     onboarding: emptyOnboardingPayload(),
@@ -497,6 +502,7 @@ function composeClientContext(
     ...(nextAction ? { nextAction } : {}),
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
+    meetings: emptyMeetingOperatingPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(),
     onboarding: emptyOnboardingPayload(),
@@ -550,6 +556,7 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     ...composeClientContext(ctx.picture, binding, items),
     projects: composeBoundClientProjects(ctx, binding),
     threads: composeBoundClientThreads(ctx, binding),
+    meetings: composeBoundClientMeetings(ctx, binding),
     capitalSubmissions: composeBoundClientCapitalSubmissions(ctx, binding),
     researchIntelligence: composeBoundClientResearchIntelligence(ctx, binding),
     onboarding: composeBoundClientOnboarding(ctx, binding),
@@ -962,6 +969,30 @@ function composeBoundClientThreads(
     pmHits,
     pmHits.length > 0,
   ).authorizedSearch.threads;
+}
+
+/**
+ * Same meeting_operating_record_v1 composer as authorizedSearch.meetings.
+ * Current entitled clients only. Already-loaded entitled HVCG_Meetings /
+ * extras.meetings / search kind=meeting rows only. No Graph calendar query.
+ */
+function composeBoundClientMeetings(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['meetings'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyMeetingOperatingPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.meetings;
 }
 
 /**
@@ -1708,6 +1739,7 @@ function emptyAuthorizedSearch(opts?: {
     documents: emptyDocumentOperatingPayload(),
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
+    meetings: emptyMeetingOperatingPayload(),
     capitalSubmissions: emptyCapitalSubmissionPayload(),
     researchIntelligence: emptyResearchIntelligencePayload(),
     onboarding: emptyOnboardingPayload(),
@@ -1800,6 +1832,7 @@ function composeAuthorizedSearch(
       items: projectOperatingRecords(hits, ctx.picture, opts.binding || null),
     },
     threads: composeMailThreadRecords(hits),
+    meetings: composeMeetingOperatingRecords(hits, entitledClientCodes(ctx.principal)),
     capitalSubmissions: composeCapitalSubmissionPrepare(hits),
     researchIntelligence: composeResearchIntelligence(hits, ctx.now),
     onboarding: composeOnboardingAgent(hits),
