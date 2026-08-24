@@ -78,6 +78,7 @@ import {
   attachRelatedContextToDocuments,
   attachRelatedContextToMailThreads,
   attachRelatedContextToMeetings,
+  attachRelatedContextToOnboarding,
   attachRelatedContextToProjects,
 } from './documentRelatedContext.ts';
 
@@ -1895,6 +1896,11 @@ function composeAuthorizedSearch(
   authorizedSearch.capitalSubmissions = attachRelatedContextToCapitalSubmissions(
     ctx.principal,
     authorizedSearch.capitalSubmissions,
+    authorizedSearch,
+  );
+  authorizedSearch.onboarding = attachRelatedContextToOnboarding(
+    ctx.principal,
+    authorizedSearch.onboarding,
     authorizedSearch,
   );
   authorizedSearch.clientSupport = attachRelatedContextToClientSupport(

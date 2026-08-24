@@ -4,13 +4,14 @@
  * project → meetings link on ProjectOperatingRecord items, the inverse
  * mail-thread → meetings link on MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
- * items, and the inverse client-support → meetings link on
- * ClientSupportAgentRecord items.
+ * items, the inverse client-support → meetings link on
+ * ClientSupportAgentRecord items, and the inverse onboarding → meetings
+ * link on OnboardingAgentRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
- * .threads / .capitalSubmissions / .meetings / .clientSupport / fabric
- * mail-attachment index rows / entitled search extras.meetings
+ * .threads / .capitalSubmissions / .meetings / .clientSupport / .onboarding
+ * / fabric mail-attachment index rows / entitled search extras.meetings
  * (kind=meeting) / hits kind=document / hits kind=meeting / sameRelatedScope
  * / entitledClientCodes / authoritativeSourceUrl /
  * DOCUMENT_RELATED_CONTEXT_PAGE_SIZE / relatedMeetings().
@@ -36,6 +37,8 @@ import {
   type MailThreadOperatingRecord,
   type MeetingOperatingPayload,
   type MeetingOperatingRecord,
+  type OnboardingAgentPayload,
+  type OnboardingAgentRecord,
   type ProjectOperatingRecord,
   type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
@@ -636,5 +639,41 @@ export function attachRelatedContextToClientSupport(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToClientSupportRecord(principal, item, search)),
+  };
+}
+
+/**
+ * Inverse of meeting onboarding evidence: entitled same-scope meetings already
+ * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
+ * ClientCode is missing — omit relatedMeetings rather than guess.
+ * Unscoped never receives scoped relations. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * OWNER_ESCALATE / execute=false / activate=false / send=false /
+ * liveGtmOutbound=false / ownerGated=true / hubMi=false stay as composed.
+ */
+export function attachRelatedContextToOnboardingRecord(
+  principal: AtlasPrincipal,
+  item: OnboardingAgentRecord,
+  search: AtlasAuthorizedSearch,
+): OnboardingAgentRecord {
+  if (!canonicalClientCode(item.clientCode)) return item;
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedMeetingsList = relatedMeetings(item, search);
+  return {
+    ...item,
+    ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+  };
+}
+
+export function attachRelatedContextToOnboarding(
+  principal: AtlasPrincipal,
+  payload: OnboardingAgentPayload,
+  search: AtlasAuthorizedSearch,
+): OnboardingAgentPayload {
+  if (!payload.items.length) return payload;
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToOnboardingRecord(principal, item, search)),
   };
 }

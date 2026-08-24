@@ -268,6 +268,9 @@ export interface AtlasClientContext {
   /**
    * Native governed onboarding agent from already-entitled Atlas/index
    * intake evidence. Activation, completion, Hub-MI, and GTM stay OWNER-GATED.
+   * Optional relatedMeetings is the same entitled same-scope inverse used
+   * by documents / projects / threads / capital / client support. Omitted
+   * when ClientCode is missing.
    */
   onboarding: OnboardingAgentPayload;
   /**
@@ -741,6 +744,14 @@ export interface OnboardingAgentRecord {
   missingRequirements: string[];
   ownerDecisions: OnboardingOwnerDecision[];
   nextAction: string;
+  /**
+   * Optional inverse of meeting onboarding evidence: already-authorized
+   * same-scope HVCG_Meetings / search kind=meeting refs. Copied after
+   * authorization. Omitted when none are entitled or when ClientCode is
+   * missing (fail-closed; never guess). Never a new Graph calendar query,
+   * transcript, attendees, or invented titles / ClientCodes.
+   */
+  relatedMeetings?: RelatedDocumentMeetingRef[];
 }
 
 export interface OnboardingAgentPayload {
@@ -872,6 +883,11 @@ export interface AtlasAuthorizedSearch {
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
+  /**
+   * Native governed onboarding agent. Optional relatedMeetings on each item
+   * is the entitled same-scope HVCG_Meetings inverse. Empty payload stays
+   * empty. Missing ClientCode omits relatedMeetings.
+   */
   onboarding: OnboardingAgentPayload;
   /**
    * Native governed client support / routing agent. Optional relatedMeetings
