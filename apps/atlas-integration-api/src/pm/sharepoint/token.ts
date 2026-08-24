@@ -25,6 +25,26 @@ const VM_IMDS_HOST = '169.254.169.254';
 const TOKEN_TIMEOUT_MS = 5_000;
 const TOKEN_REFRESH_SKEW_MS = 60_000;
 
+/**
+ * OPEN_SOURCE: ADAPT the existing App Service MSI token provider.
+ * Fabric mail/calendar already uses this 15s budget. listClientHints /
+ * HVCG_Clients PM Graph must share it so a slow MSI does not empty the
+ * resolver while mail delta returns 200. REJECT a second Graph client
+ * or new identity product. Fail-closed empty resolver if token still fails.
+ */
+export const FABRIC_MSI_TOKEN_TIMEOUT_MS = 15_000;
+
+/** Same MSI options fabric mail/calendar already passes. */
+export function fabricMsiTokenProviderOptions(
+  overrides: ManagedIdentityTokenProviderDeps = {},
+): ManagedIdentityTokenProviderDeps {
+  return {
+    resource: GRAPH_TOKEN_RESOURCE,
+    ...overrides,
+    timeoutMs: overrides.timeoutMs ?? FABRIC_MSI_TOKEN_TIMEOUT_MS,
+  };
+}
+
 export interface ManagedIdentityTokenProviderDeps {
   env?: NodeJS.Dict<string | undefined>;
   fetch?: typeof fetch;

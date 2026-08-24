@@ -307,12 +307,45 @@ function mailboxPathname(url: string): string {
   }
 }
 
+/** Match fabric sweep attempts so a slow MSI can recover hints on retry. */
+export const FABRIC_CLIENT_HINT_ATTEMPTS = 4;
+
+function mapClientHints(
+  rows: Array<{ clientCode: string; displayName: string; dba?: string }>,
+): ClientHint[] {
+  return rows.map(
+    (c): ClientHint => ({
+      clientCode: c.clientCode,
+      displayName: c.displayName,
+      dba: c.dba,
+      domains: [],
+    }),
+  );
+}
+
+export async function loadClientHintsWithFabricRetry(
+  service: Pick<SharePointPmService, 'listClientHints'>,
+  attempts = FABRIC_CLIENT_HINT_ATTEMPTS,
+): Promise<{ clients: ClientHint[]; error?: unknown }> {
+  let lastErr: unknown;
+  const max = Number.isInteger(attempts) && attempts > 0 ? attempts : FABRIC_CLIENT_HINT_ATTEMPTS;
+  for (let attempt = 1; attempt <= max; attempt += 1) {
+    try {
+      return { clients: mapClientHints(await service.listClientHints()) };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  return { clients: [], error: lastErr };
+}
+
 export async function runFabricSync(opts: {
   principal?: AtlasPrincipal;
   service: SharePointPmService;
   fabric: FabricGraphClient;
   dataDir: string;
   bootstrap?: boolean;
+  clientHintAttempts?: number;
 }): Promise<FabricSyncResult> {
   if (!opts.bootstrap) {
     if (!opts.principal) {
@@ -321,18 +354,15 @@ export async function runFabricSync(opts: {
     assertMannyOnly(opts.principal, 'Information fabric sync');
   }
   const notes: string[] = [];
-  let clients: ClientHint[] = [];
-  try {
-    clients = (await opts.service.listClientHints()).map(
-      (c): ClientHint => ({
-        clientCode: c.clientCode,
-        displayName: c.displayName,
-        dba: c.dba,
-        domains: [],
-      }),
+  const hints = await loadClientHintsWithFabricRetry(opts.service, opts.clientHintAttempts);
+  const clients = hints.clients;
+  if (hints.error) {
+    notes.push(
+      isolatedFailureNote(
+        'Client hints unavailable; fabric sync continued with empty client resolver',
+        hints.error,
+      ),
     );
-  } catch (err) {
-    notes.push(isolatedFailureNote('Client hints unavailable; fabric sync continued with empty client resolver', err));
   }
   const cp = loadCheckpoint(opts.dataDir);
   const indexed = {

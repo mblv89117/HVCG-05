@@ -4,6 +4,8 @@ import { PmHttpError } from '../src/pm/sharepoint/errors.ts';
 import {
   APP_SERVICE_MSI_API_VERSION,
   createManagedIdentityTokenProvider,
+  FABRIC_MSI_TOKEN_TIMEOUT_MS,
+  fabricMsiTokenProviderOptions,
   GRAPH_TOKEN_RESOURCE,
 } from '../src/pm/sharepoint/token.ts';
 import { resolvePmBackend, UnsafeHubConfigurationError } from '../src/config.ts';
@@ -246,6 +248,26 @@ describe('App Service managed-identity token provider', () => {
     await assert.rejects(() => provider.getToken(), assertAcquisitionFailed);
     assert.equal(urls.length, 1);
     assert.equal(new URL(urls[0]).host, '127.0.0.1:8081');
+  });
+
+  it('shares the 15s fabric MSI timeout for listClientHints / PM Graph', () => {
+    const opts = fabricMsiTokenProviderOptions();
+    assert.equal(FABRIC_MSI_TOKEN_TIMEOUT_MS, 15_000);
+    assert.equal(opts.timeoutMs, FABRIC_MSI_TOKEN_TIMEOUT_MS);
+    assert.equal(opts.resource, GRAPH_TOKEN_RESOURCE);
+    assert.equal(fabricMsiTokenProviderOptions({ timeoutMs: 20 }).timeoutMs, 20);
+  });
+
+  it('fabric MSI timeout accepts a token slower than the 5s default', async () => {
+    const provider = createManagedIdentityTokenProvider(CLIENT_ID, {
+      env: platformEnv(),
+      ...fabricMsiTokenProviderOptions({ timeoutMs: 80 }),
+      fetch: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 40));
+        return jsonResponse(200, { access_token: ACCESS_TOKEN, expires_on: expiresOn() });
+      },
+    });
+    assert.equal(await provider.getToken(), ACCESS_TOKEN);
   });
 
   it('fails closed on timeout', async () => {
