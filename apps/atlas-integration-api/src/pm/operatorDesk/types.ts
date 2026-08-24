@@ -45,10 +45,19 @@ export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-N
 export const ASK_ATLAS_PROJECT_RECONSTRUCTION_MISSION_KEY = 'ATLAS-PROJECT-RECONSTRUCTION-001' as const;
 export const ASK_ATLAS_PROJECT_CLIENTCTX_MISSION_KEY = 'ATLAS-PROJECT-CLIENTCTX-001' as const;
 export const ASK_ATLAS_AI_COMMUNICATIONS_MISSION_KEY = 'ATLAS-AI-COMMUNICATIONS-001' as const;
+export const ASK_ATLAS_CAPITAL_SUBMISSION_PREPARE_MISSION_KEY =
+  'ATLAS-CAPITAL-SUBMISSION-PREPARE-001' as const;
 /** Suggested replies stay draft. AUTO_RESPOND is never enabled. */
 export const COMMUNICATIONS_POLICY_CLASS = 'DRAFT_ONLY' as const;
 export const COMMUNICATIONS_AUTO_RESPOND = false as const;
 export const COMMUNICATIONS_SEND = false as const;
+/** Capital submission requests stay PREPARE_ONLY. External send stays owner-gated. */
+export const CAPITAL_SUBMISSION_POLICY_CLASS = 'PREPARE_ONLY' as const;
+export const CAPITAL_SUBMISSION_SEND = false as const;
+export const CAPITAL_SUBMISSION_EXTERNAL_SUBMIT = false as const;
+export const CAPITAL_SUBMISSION_OWNER_GATED = true as const;
+export const CAPITAL_SUBMISSION_FIT = 'NOT_EVALUATED' as const;
+export const CAPITAL_SUBMISSION_FINANCING_STATUS = 'UNKNOWN' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -185,6 +194,11 @@ export interface AtlasClientContext {
    * Suggested reply stays DRAFT_ONLY. Never AUTO_RESPOND / send.
    */
   threads: MailThreadOperatingPayload;
+  /**
+   * PREPARE-only capital submission request from already-entitled Atlas/index
+   * evidence. External lender/investor submit stays OWNER-GATED.
+   */
+  capitalSubmissions: CapitalSubmissionPreparePayload;
 }
 
 export function clientContextMissionKey(
@@ -322,6 +336,53 @@ export interface MailThreadOperatingPayload {
   items: MailThreadOperatingRecord[];
 }
 
+export type CapitalSubmissionEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
+
+export interface CapitalSubmissionEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  classification: AskAtlasClassification;
+  webUrl?: string;
+}
+
+export interface CapitalSubmissionCatalogCopy {
+  lenderId: string;
+  lenderName: string;
+  classification: AskAtlasClassification;
+  fit: typeof CAPITAL_SUBMISSION_FIT;
+  criteriaInvented: false;
+  invented: false;
+  evidence: string;
+}
+
+export interface CapitalSubmissionPrepareRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  classification: CapitalSubmissionEvidenceClass;
+  provenance: CapitalSubmissionEvidenceClass;
+  invented: false;
+  financingStatus: typeof CAPITAL_SUBMISSION_FINANCING_STATUS;
+  financingStatusClassification: 'HONEST_EMPTY';
+  lenderCriteriaInvented: false;
+  evidence: CapitalSubmissionEvidenceRef[];
+  missingRequirements: string[];
+  nextAction: string;
+}
+
+export interface CapitalSubmissionPreparePayload {
+  kind: 'capital_submission_request_v1';
+  policyClass: typeof CAPITAL_SUBMISSION_POLICY_CLASS;
+  invented: false;
+  send: typeof CAPITAL_SUBMISSION_SEND;
+  externalSubmit: typeof CAPITAL_SUBMISSION_EXTERNAL_SUBMIT;
+  ownerGated: typeof CAPITAL_SUBMISSION_OWNER_GATED;
+  catalogCopies: CapitalSubmissionCatalogCopy[];
+  items: CapitalSubmissionPrepareRecord[];
+}
+
 export interface AtlasAuthorizedSearch {
   kind: 'atlas_authorized_search_v1';
   invented: false;
@@ -343,6 +404,7 @@ export interface AtlasAuthorizedSearch {
     items: ProjectOperatingRecord[];
   };
   threads: MailThreadOperatingPayload;
+  capitalSubmissions: CapitalSubmissionPreparePayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;

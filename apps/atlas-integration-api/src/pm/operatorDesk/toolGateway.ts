@@ -46,6 +46,10 @@ import {
   type ProjectOperatingRecord,
   type ProposedEngineeringMission,
 } from './types.ts';
+import {
+  composeCapitalSubmissionPrepare,
+  emptyCapitalSubmissionPayload,
+} from './capitalSubmissionPrepare.ts';
 import { composeMailThreadRecords, emptyMailThreadPayload } from './mailThreadContext.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
@@ -271,6 +275,7 @@ function emptyClientContext(opts?: { now?: string }): AtlasClientContext {
     recoveredKnowledgeOperationalized: false,
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
+    capitalSubmissions: emptyCapitalSubmissionPayload(),
   };
 }
 
@@ -461,6 +466,7 @@ function composeClientContext(
     ...(nextAction ? { nextAction } : {}),
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
+    capitalSubmissions: emptyCapitalSubmissionPayload(),
   };
 }
 
@@ -510,6 +516,7 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     ...composeClientContext(ctx.picture, binding, items),
     projects: composeBoundClientProjects(ctx, binding),
     threads: composeBoundClientThreads(ctx, binding),
+    capitalSubmissions: composeBoundClientCapitalSubmissions(ctx, binding),
   };
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
@@ -893,6 +900,30 @@ function composeBoundClientThreads(
     pmHits,
     pmHits.length > 0,
   ).authorizedSearch.threads;
+}
+
+/**
+ * Same capital_submission_request_v1 composer as authorizedSearch.capitalSubmissions.
+ * Current entitled clients only. Already-loaded entitled index rows only.
+ * PREPARE_ONLY. External submit stays OWNER-GATED.
+ */
+function composeBoundClientCapitalSubmissions(
+  ctx: ToolGatewayContext,
+  binding: PictureClientBinding,
+): AtlasClientContext['capitalSubmissions'] {
+  if (!isCurrentEntitledBinding(ctx.principal, binding)) {
+    return emptyCapitalSubmissionPayload();
+  }
+  const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
+  const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.capitalSubmissions;
 }
 
 /**
@@ -1305,6 +1336,7 @@ function emptyAuthorizedSearch(opts?: {
     documents: emptyDocumentOperatingPayload(),
     projects: emptyProjectOperatingPayload(),
     threads: emptyMailThreadPayload(),
+    capitalSubmissions: emptyCapitalSubmissionPayload(),
   };
 }
 
@@ -1393,6 +1425,7 @@ function composeAuthorizedSearch(
       items: projectOperatingRecords(hits, ctx.picture, opts.binding || null),
     },
     threads: composeMailThreadRecords(hits),
+    capitalSubmissions: composeCapitalSubmissionPrepare(hits),
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),
