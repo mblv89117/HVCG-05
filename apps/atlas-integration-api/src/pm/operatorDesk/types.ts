@@ -181,6 +181,9 @@ export interface AtlasAuthorizedSearchHit {
   href?: string;
   source?: string;
   clientCode?: string;
+  /** Authoritative SharePoint/OneDrive webUrl. Never SAS or anonymous share. */
+  webUrl?: string;
+  modifiedAt?: string;
   why: string;
   basedOn: string;
   provenance: AskAtlasClassification | 'HONEST_EMPTY';
@@ -191,6 +194,16 @@ export interface AtlasAuthorizedSearchHit {
   nextAction?: string;
 }
 
+export interface DocumentOperatingRecord {
+  id: string;
+  title: string;
+  webUrl: string;
+  modifiedAt?: string;
+  clientCode?: string;
+  provenance: AskAtlasClassification;
+  source: string;
+}
+
 export interface AtlasAuthorizedSearch {
   kind: 'atlas_authorized_search_v1';
   invented: false;
@@ -198,6 +211,12 @@ export interface AtlasAuthorizedSearch {
   query: string;
   hitCount: number;
   hits: AtlasAuthorizedSearchHit[];
+  documents: {
+    kind: 'document_operating_record_v1';
+    policyClass: 'READ_AUTO';
+    binariesInAtlas: false;
+    items: DocumentOperatingRecord[];
+  };
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
   basedOn: string;
@@ -438,6 +457,10 @@ export interface OperatorSearchHit {
   kind?: string;
   href?: string;
   clientCode?: string;
+  source?: string;
+  webUrl?: string;
+  modifiedAt?: string;
+  provenance?: AskAtlasClassification;
 }
 
 export interface OperatorDeskModel {

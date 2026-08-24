@@ -2043,7 +2043,14 @@ export class SharePointPmService {
   }
 
   async listIndexedFiles(): Promise<
-    Array<{ id: string; title: string; clientCode?: string; webUrl?: string; summary?: string }>
+    Array<{
+      id: string;
+      title: string;
+      clientCode?: string;
+      webUrl?: string;
+      summary?: string;
+      modifiedAt?: string;
+    }>
   > {
     if (!this.settings.communicationsListId) return [];
     const items = await this.listAll(this.settings.communicationsListId);
@@ -2053,6 +2060,7 @@ export class SharePointPmService {
       clientCode?: string;
       webUrl?: string;
       summary?: string;
+      modifiedAt?: string;
     }> = [];
     for (const item of items) {
       const mapped = {
@@ -2062,6 +2070,8 @@ export class SharePointPmService {
         webUrl:
           this.urlField(item.fields.OutlookWebLink) || extractSourceUrl(asString(item.fields.Summary) || ''),
         summary: asString(item.fields.Summary),
+        modifiedAt:
+          isoDate(item.fields.CommunicationDate) || isoDate(item.fields.Modified) || undefined,
         sourceItemId: asString(item.fields.SourceMessageId),
         channel: asString(item.fields.Channel),
       };

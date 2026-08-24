@@ -15,6 +15,7 @@
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
+import { authoritativeSourceUrl } from '../sharepoint/fabric/fileIndex.ts';
 import type { PmSearchHit } from '../sharepoint/search.ts';
 import { buildAskAtlasAnswer } from './askAtlas.ts';
 import {
@@ -33,6 +34,7 @@ import {
   type AskAtlasClassification,
   type AtlasAuthorizedSearch,
   type AtlasAuthorizedSearchHit,
+  type DocumentOperatingRecord,
   type AtlasClientContext,
   type ClientContextEvidenceClass,
   type OperatorOperatingItem,
@@ -546,9 +548,25 @@ function sameSearchQuery(a: string, b: string): boolean {
   return normalizeAuthorizedSearchQuery(a).toLowerCase() === normalizeAuthorizedSearchQuery(b).toLowerCase();
 }
 
+function preservedSearchProvenance(
+  row: PmSearchHit | (OperatorSearchHit & { source?: string }),
+): AskAtlasClassification {
+  if (row.provenance === 'CONFIRMED' || row.provenance === 'LIKELY' || row.provenance === 'PROPOSED') {
+    return row.provenance;
+  }
+  if ('source' in row && row.source === 'HVCG_Communications/file-index') return 'CONFIRMED';
+  return 'LIKELY';
+}
+
 function toAuthorizedSearchHit(
   row: PmSearchHit | (OperatorSearchHit & { source?: string }),
 ): AtlasAuthorizedSearchHit {
+  const sourceUrl = authoritativeSourceUrl('webUrl' in row ? row.webUrl : undefined);
+  const modifiedAt =
+    'modifiedAt' in row && typeof row.modifiedAt === 'string' && row.modifiedAt.trim()
+      ? row.modifiedAt
+      : undefined;
+  const classification = preservedSearchProvenance(row);
   return {
     kind: row.kind || 'document',
     id: row.id,
@@ -556,11 +574,47 @@ function toAuthorizedSearchHit(
     ...(row.href ? { href: row.href } : {}),
     ...('source' in row && row.source ? { source: String(row.source) } : { source: 'pm_search' }),
     ...(row.clientCode ? { clientCode: row.clientCode } : {}),
+    ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+    ...(modifiedAt ? { modifiedAt } : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
-    provenance: 'LIKELY',
-    classification: 'LIKELY',
+    provenance: classification,
+    classification,
   };
+}
+
+function emptyDocumentOperatingPayload(): AtlasAuthorizedSearch['documents'] {
+  return {
+    kind: 'document_operating_record_v1',
+    policyClass: 'READ_AUTO',
+    binariesInAtlas: false,
+    items: [],
+  };
+}
+
+function documentOperatingRecords(hits: AtlasAuthorizedSearchHit[]): DocumentOperatingRecord[] {
+  const items: DocumentOperatingRecord[] = [];
+  for (const hit of hits) {
+    if (hit.kind !== 'document') continue;
+    const webUrl = authoritativeSourceUrl(hit.webUrl);
+    if (!webUrl) continue;
+    const clientCode =
+      hit.clientCode && isCanonicalClientCode(hit.clientCode) ? hit.clientCode : undefined;
+    const provenance =
+      hit.provenance === 'CONFIRMED' || hit.provenance === 'LIKELY' || hit.provenance === 'PROPOSED'
+        ? hit.provenance
+        : 'PROPOSED';
+    items.push({
+      id: hit.id,
+      title: hit.title,
+      webUrl,
+      ...(hit.modifiedAt ? { modifiedAt: hit.modifiedAt } : {}),
+      ...(clientCode ? { clientCode } : {}),
+      provenance,
+      source: hit.source || 'HVCG_Communications/file-index',
+    });
+  }
+  return items;
 }
 
 function resolveQueueUrgency(row: OperatorOperatingItem): SearchQueueUrgency | null {
@@ -920,6 +974,7 @@ function emptyAuthorizedSearch(opts?: {
     ran: opts?.ran === true,
     pictureComposed: false,
     actionabilityApplied: false,
+    documents: emptyDocumentOperatingPayload(),
   };
 }
 
@@ -994,6 +1049,12 @@ function composeAuthorizedSearch(
     ran: opts.ran || pictureComposed,
     pictureComposed,
     actionabilityApplied,
+    documents: {
+      kind: 'document_operating_record_v1',
+      policyClass: 'READ_AUTO',
+      binariesInAtlas: false,
+      items: documentOperatingRecords(hits),
+    },
   };
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),

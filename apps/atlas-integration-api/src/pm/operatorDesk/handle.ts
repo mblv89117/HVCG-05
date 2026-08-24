@@ -135,6 +135,10 @@ async function loadSharePointDesk(opts: {
       kind: hit.kind,
       href: hit.href,
       clientCode: hit.clientCode,
+      source: hit.source,
+      webUrl: hit.webUrl,
+      modifiedAt: hit.modifiedAt,
+      provenance: hit.provenance,
     })),
     attentionItems: attention.map((row) => ({
       id: row.id,

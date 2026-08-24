@@ -4,7 +4,7 @@
  */
 
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
-import { isFileIndexRow } from './fabric/fileIndex.ts';
+import { authoritativeSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
 import { classifyHubClientRow, type KnowledgeProvenance } from './knowledgeClassification.ts';
 import type { SharePointPmService } from './repository.ts';
 
@@ -13,6 +13,7 @@ export type KnowledgeLedgerItem = {
   clientCode: string;
   title: string;
   webUrl?: string;
+  modifiedAt?: string;
   kind: string;
   source: string;
   classification: 'SYNTHETIC_QA' | 'CLIENT' | 'READ_ONLY_CLIENT';
@@ -52,7 +53,7 @@ export async function buildKnowledgeLedger(
         id: `library-${client.clientCode}`,
         clientCode: client.clientCode,
         title: 'Client SharePoint library',
-        webUrl: client.sharePointLibraryUrl,
+        webUrl: authoritativeSourceUrl(client.sharePointLibraryUrl),
         kind: 'library',
         source: 'HVCG_Clients.SharePointLibraryUrl',
         classification: classified.classification,
@@ -73,7 +74,8 @@ export async function buildKnowledgeLedger(
         id: String(row.id),
         clientCode: client.clientCode,
         title: String(row.title || row.id),
-        webUrl: typeof row.webUrl === 'string' ? row.webUrl : undefined,
+        webUrl: authoritativeSourceUrl(typeof row.webUrl === 'string' ? row.webUrl : undefined),
+        modifiedAt: typeof row.date === 'string' && row.date.trim() ? row.date : undefined,
         kind: String(row.summary || '').includes('RESTRICTED') ? 'restricted-file' : 'file',
         source: 'HVCG_Communications/file-index',
         classification: classified.classification,

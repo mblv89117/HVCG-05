@@ -10,7 +10,7 @@ import { isMannyPrincipal } from './manny.ts';
 import { entitledClientCodes, isInternalStaff } from './authz.ts';
 import type { SharePointPmService } from './repository.ts';
 
-import { isFileIndexRow } from './fabric/fileIndex.ts';
+import { authoritativeSourceUrl, extractSourceUrl, isFileIndexRow } from './fabric/fileIndex.ts';
 
 export interface PmSearchHit {
   kind:
@@ -33,6 +33,10 @@ export interface PmSearchHit {
   title: string;
   href: string;
   source: string;
+  /** Authoritative SharePoint/OneDrive webUrl. Never SAS or anonymous share. */
+  webUrl?: string;
+  modifiedAt?: string;
+  provenance?: 'CONFIRMED' | 'LIKELY' | 'PROPOSED';
 }
 
 type LeadRow = {
@@ -301,6 +305,12 @@ export async function searchSharePointPm(
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
       const file = isFileIndexRow(item);
+      const sourceUrl = authoritativeSourceUrl(
+        typeof item.webUrl === 'string'
+          ? item.webUrl
+          : extractSourceUrl(String(item.summary || '')),
+      );
+      const modifiedAt = typeof item.date === 'string' && item.date.trim() ? item.date : undefined;
       push({
         kind: file ? 'document' : 'communication',
         id: String(item.id),
@@ -308,6 +318,9 @@ export async function searchSharePointPm(
         title,
         href: clientHref(c.clientCode),
         source: file ? 'HVCG_Communications/file-index' : 'HVCG_Communications',
+        ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+        ...(modifiedAt ? { modifiedAt } : {}),
+        ...(file ? { provenance: 'CONFIRMED' as const } : {}),
       });
     }
     pushCollection(extras.meetings.items, 'meeting', 'HVCG_Meetings', c.clientCode);
@@ -392,12 +405,22 @@ export async function searchSharePointPm(
       if (f.clientCode) continue;
       const hay = [f.title, f.summary].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
+      const sourceUrl = authoritativeSourceUrl(
+        f.webUrl || extractSourceUrl(String(f.summary || '')),
+      );
+      const modifiedAt =
+        'modifiedAt' in f && typeof f.modifiedAt === 'string' && f.modifiedAt.trim()
+          ? f.modifiedAt
+          : undefined;
       push({
         kind: 'document',
         id: f.id,
         title: f.title,
         href: '/documents',
         source: 'HVCG_Communications/file-index',
+        ...(sourceUrl ? { webUrl: sourceUrl } : {}),
+        ...(modifiedAt ? { modifiedAt } : {}),
+        provenance: 'CONFIRMED',
       });
     }
   }
