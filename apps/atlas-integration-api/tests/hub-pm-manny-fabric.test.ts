@@ -520,6 +520,42 @@ describe('Fabric mail delta checkpointing', () => {
     }
   });
 
+  it('restarts inbox delta once when a ready checkpoint never persisted mail threads', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-zero-replay-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      writeFileSync(
+        join(dir, 'fabric-checkpoint.json'),
+        JSON.stringify({
+          mailSkip: `https://graph.microsoft.com/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=empty`,
+          mailMode: 'delta',
+          mailDeltaReady: true,
+          calendarSkip: null,
+          contactsSkip: null,
+          filesSkip: null,
+          counts: { mailThreads: 0 },
+        }),
+      );
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.ok(result.notes.some((note) => /zero persisted mail threads/.test(note)));
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.checkpoint.mailDeltaReady, true);
+      assert.equal(
+        paths.some((path) => path.includes('/mailFolders/inbox/messages/delta') && !path.includes('deltatoken=empty')),
+        true,
+      );
+      assert.equal(/CCB99|PDG01|deltatoken/i.test(JSON.stringify(inspectFabricSyncHealth(dir, { sweepEnabled: true }))), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('resumes the stored inbox delta link on the next bounded run', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-resume-'));
     const svc = service();

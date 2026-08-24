@@ -221,6 +221,14 @@ export async function runFabricSync(opts: {
   let attachmentLookups = 0;
   let mailUrl: string | null = cp.mailSkip || mailDeltaUrl();
   let mailMode: 'delta' | 'page' = mailUrl.includes('/delta') ? 'delta' : (cp.mailMode || 'page');
+  if ((cp.counts.mailThreads || 0) === 0 && cp.mailDeltaReady === true && mailUrl) {
+    notes.push('Inbox delta checkpoint had zero persisted mail threads; restarting inbox delta once.');
+    mailUrl = mailDeltaUrl();
+    mailMode = 'delta';
+    cp.mailSkip = null;
+    cp.mailDeltaReady = false;
+    persistFabricProgress(opts.dataDir, cp, notes);
+  }
   try {
   for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
     if (!isAllowedFabricGraphPath(mailboxPathname(mailUrl))) {
