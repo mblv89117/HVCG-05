@@ -27,6 +27,13 @@
  * RelatedMeetingResearchRef). Fail-closed when the support ClientCode
  * is missing. Unscoped lender catalog titles never attach to a scoped
  * support item. No new research / KG / support product.
+ * + ATLAS-CAPITAL-RESEARCH-RELATIONSHIP-001
+ * Inverse researchRelationship on CapitalSubmissionPrepareRecord copies
+ * the same already-authorized same-scope researchIntelligence items
+ * (same RelatedMeetingResearchRef). Fail-closed when the capital
+ * ClientCode is missing. Unscoped lender catalog titles never attach
+ * to a scoped capital row. PREPARE_ONLY stays as composed. No new
+ * research / KG / capital product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -61,6 +68,8 @@ import {
   attachRelatedContextToOnboardingRecord,
   attachRelatedContextToClientSupport,
   attachRelatedContextToClientSupportRecord,
+  attachRelatedContextToCapitalSubmission,
+  attachRelatedContextToCapitalSubmissions,
   attachRelatedContextToResearchIntelligence,
   attachRelatedContextToResearchIntelligenceRecord,
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
@@ -68,9 +77,11 @@ import {
 import { emptyMeetingOperatingPayload } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
 import { emptyOnboardingPayload } from '../src/pm/operatorDesk/onboardingAgent.ts';
 import { emptyClientSupportPayload } from '../src/pm/operatorDesk/clientSupportAgent.ts';
+import { emptyCapitalSubmissionPayload } from '../src/pm/operatorDesk/capitalSubmissionPrepare.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY,
+  CAPITAL_SUBMISSION_FINANCING_STATUS,
   RESEARCH_INTELLIGENCE_FINANCING_STATUS,
   RESEARCH_INTELLIGENCE_FIT,
   RESEARCH_INTELLIGENCE_OUTBOUND_REFRESH,
@@ -78,6 +89,7 @@ import {
   type AtlasAuthorizedSearch,
   type AtlasAuthorizedSearchHit,
   type AtlasClientContext,
+  type CapitalSubmissionPrepareRecord,
   type ClientSupportAgentRecord,
   type MeetingOperatingRecord,
   type OnboardingAgentRecord,
@@ -1555,6 +1567,150 @@ describe('ATLAS-CLIENT-SUPPORT-RESEARCH-RELATIONSHIP-001 entitled same-scope inv
 
     const empty = emptyClientSupportPayload();
     const attachedEmpty = attachRelatedContextToClientSupport(
+      staff,
+      empty,
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty, empty);
+  });
+});
+
+function syn01CapitalHit() {
+  return {
+    kind: 'capital_opportunity' as const,
+    id: 'cap-syn-1',
+    title: 'SYN01 entitled capital opportunity',
+    href: '/capital?opportunity=cap-syn-1',
+    source: 'HVCG_CapitalOpportunities',
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED' as const,
+  };
+}
+
+function syn01CapitalRecord(): CapitalSubmissionPrepareRecord {
+  return {
+    id: 'cap-syn-1',
+    title: 'SYN01 entitled capital opportunity',
+    clientCode: 'SYN01',
+    classification: 'CONFIRMED',
+    provenance: 'CONFIRMED',
+    invented: false,
+    financingStatus: CAPITAL_SUBMISSION_FINANCING_STATUS,
+    financingStatusClassification: 'HONEST_EMPTY',
+    lenderCriteriaInvented: false,
+    evidence: [
+      {
+        kind: 'capital_opportunity',
+        id: 'cap-syn-1',
+        title: 'SYN01 entitled capital opportunity',
+        source: 'HVCG_CapitalOpportunities',
+        classification: 'CONFIRMED',
+      },
+    ],
+    missingRequirements: [
+      'Owner must review and approve before any external lender/investor submission.',
+    ],
+    nextAction:
+      'Owner review of this PREPARE-only package. External lender/investor submission remains owner-gated.',
+  };
+}
+
+describe('ATLAS-CAPITAL-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  it('attaches the same entitled research refs on meetings and capital', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      now,
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01CapitalHit()],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(meeting);
+    assert.ok(capital);
+    assert.equal(
+      meeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.deepEqual(capital.researchRelationship, meeting.researchRelationship);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(JSON.stringify(meeting.researchRelationship).includes('PDG01'), false);
+    for (const row of meeting.researchRelationship || []) {
+      assert.equal(row.invented, false);
+      assert.equal(row.lenderCriteriaInvented, false);
+      assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+      assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+      assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+      assert.equal('downloadUrl' in row, false);
+      assert.equal('transcript' in row, false);
+      assert.equal('TargetAmount' in row, false);
+    }
+    const blob = JSON.stringify(result.authorizedSearch.capitalSubmissions);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(capital.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(capital.lenderCriteriaInvented, false);
+  });
+
+  it('never attaches Client B or unscoped lender research to Client A capital', () => {
+    const mixed = attachRelatedContextToCapitalSubmission(
+      staff,
+      syn01CapitalRecord(),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'client:PDG01:must not leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          evidence: 'must not leak',
+        }),
+        syn01ClientResearchRecord({
+          id: 'lender:ln-liveoak',
+          subjectKind: 'lender',
+          title: 'Live Oak Bank',
+          source: 'HVCG_Lenders',
+          clientCode: undefined,
+          evidence: 'Copied existing sourced lender catalog title.',
+        }),
+      ]),
+    );
+    assert.equal(mixed.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
+    assert.equal(
+      (mixed.researchRelationship || []).some(
+        (row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.researchRelationship).includes('PDG01'), false);
+    assert.equal(/live oak/i.test(JSON.stringify(mixed)), false);
+  });
+
+  it('omits extras for unauthorized principals and empty capital payloads', () => {
+    const denied = attachRelatedContextToCapitalSubmission(
+      otherStaff,
+      syn01CapitalRecord(),
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+
+    const empty = emptyCapitalSubmissionPayload();
+    const attachedEmpty = attachRelatedContextToCapitalSubmissions(
       staff,
       empty,
       searchWithResearch([syn01ClientResearchRecord()]),
