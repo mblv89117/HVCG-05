@@ -15,6 +15,12 @@
  * authorized same-scope researchIntelligence items. Fail-closed when the
  * meeting ClientCode is missing. Unscoped lender catalog titles never
  * attach to a scoped meeting. No new research / KG product.
+ * + ATLAS-ONBOARDING-RESEARCH-RELATIONSHIP-001
+ * Inverse researchRelationship on OnboardingAgentRecord copies the same
+ * already-authorized same-scope researchIntelligence items (same
+ * RelatedMeetingResearchRef). Fail-closed when the onboarding ClientCode
+ * is missing. Unscoped lender catalog titles never attach to a scoped
+ * onboarding item. No new research / KG / onboarding product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -45,11 +51,14 @@ import {
 import {
   attachRelatedContextToMeetings,
   attachRelatedContextToMeeting,
+  attachRelatedContextToOnboarding,
+  attachRelatedContextToOnboardingRecord,
   attachRelatedContextToResearchIntelligence,
   attachRelatedContextToResearchIntelligenceRecord,
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
 } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { emptyMeetingOperatingPayload } from '../src/pm/operatorDesk/meetingOperatingRecord.ts';
+import { emptyOnboardingPayload } from '../src/pm/operatorDesk/onboardingAgent.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY,
@@ -61,6 +70,7 @@ import {
   type AtlasAuthorizedSearchHit,
   type AtlasClientContext,
   type MeetingOperatingRecord,
+  type OnboardingAgentRecord,
   type OperatorOperatingPicture,
   type ResearchIntelligencePayload,
   type ResearchIntelligenceRecord,
@@ -929,6 +939,8 @@ function searchWithResearch(items: ResearchIntelligenceRecord[]): AtlasAuthorize
       retrievedAt: '2026-08-24T18:00:00.000Z',
       items,
     },
+    meetings: { kind: 'meeting_operating_record_v1', policyClass: 'READ_AUTO', invented: false, items: [] },
+    onboarding: emptyOnboardingPayload(),
     hits: [],
   } as unknown as AtlasAuthorizedSearch;
 }
@@ -1256,5 +1268,145 @@ describe('ATLAS-MEETING-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', 
     assert.equal(blob.includes('LIEN01'), false);
     assert.ok(meeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'));
     assertMeetingResearchHonesty(meeting);
+  });
+});
+
+function syn01OnboardingHit() {
+  return {
+    kind: 'project' as const,
+    id: 'proj-onboard-1',
+    title: 'New client onboarding',
+    href: '/projects/proj-onboard-1',
+    source: 'HVCG_Projects',
+    clientCode: 'SYN01',
+  };
+}
+
+function syn01OnboardingRecord(): OnboardingAgentRecord {
+  return {
+    id: 'proj-onboard-1',
+    title: 'New client onboarding',
+    clientCode: 'SYN01',
+    evidenceKind: 'project',
+    classification: 'PROPOSED',
+    provenance: 'PROPOSED',
+    invented: false,
+    hubMiRow: false,
+    execute: false,
+    activate: false,
+    send: false,
+    liveGtmOutbound: false,
+    evidence: [
+      {
+        kind: 'project',
+        id: 'proj-onboard-1',
+        title: 'New client onboarding',
+        source: 'HVCG_Projects',
+        classification: 'PROPOSED',
+      },
+    ],
+    missingRequirements: [
+      'Owner must review and decide activation / onboarding completion. Agent does not activate, complete, or send.',
+    ],
+    ownerDecisions: [{ decision: 'Activate ClientStage to Active Client', status: 'escalated', execute: false }],
+    nextAction:
+      'Owner review of this entitled intake. Activation, onboarding completion, and live GTM outbound remain owner-gated.',
+  };
+}
+
+describe('ATLAS-ONBOARDING-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  it('attaches the same entitled research refs on meetings and onboarding', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      now,
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01OnboardingHit()],
+      }),
+    });
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    const project = result.authorizedSearch.onboarding.items.find((row) => row.id === 'proj-onboard-1');
+    assert.ok(meeting);
+    assert.ok(project);
+    assert.equal(
+      meeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      project.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.deepEqual(project.researchRelationship, meeting.researchRelationship);
+    assert.equal(project.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(JSON.stringify(meeting.researchRelationship).includes('PDG01'), false);
+    for (const row of meeting.researchRelationship || []) {
+      assert.equal(row.invented, false);
+      assert.equal(row.lenderCriteriaInvented, false);
+      assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+      assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+      assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+      assert.equal('downloadUrl' in row, false);
+      assert.equal('transcript' in row, false);
+      assert.equal('TargetAmount' in row, false);
+    }
+    const blob = JSON.stringify(result.authorizedSearch.onboarding);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
+    assert.equal(blob.includes('PDG01'), false);
+  });
+
+  it('never attaches Client B or unscoped lender research to Client A onboarding', () => {
+    const mixed = attachRelatedContextToOnboardingRecord(
+      staff,
+      syn01OnboardingRecord(),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'client:PDG01:must not leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          evidence: 'must not leak',
+        }),
+        syn01ClientResearchRecord({
+          id: 'lender:ln-liveoak',
+          subjectKind: 'lender',
+          title: 'Live Oak Bank',
+          source: 'HVCG_Lenders',
+          clientCode: undefined,
+          evidence: 'Copied existing sourced lender catalog title.',
+        }),
+      ]),
+    );
+    assert.equal(mixed.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
+    assert.equal(
+      (mixed.researchRelationship || []).some(
+        (row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.researchRelationship).includes('PDG01'), false);
+    assert.equal(/live oak/i.test(JSON.stringify(mixed)), false);
+  });
+
+  it('omits extras for unauthorized principals and empty onboarding payloads', () => {
+    const denied = attachRelatedContextToOnboardingRecord(
+      otherStaff,
+      syn01OnboardingRecord(),
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+
+    const empty = emptyOnboardingPayload();
+    const attachedEmpty = attachRelatedContextToOnboarding(
+      staff,
+      empty,
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty, empty);
   });
 });

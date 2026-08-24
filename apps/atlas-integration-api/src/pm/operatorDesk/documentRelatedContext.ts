@@ -6,9 +6,9 @@
  * inverse capital-prepare → meetings link on CapitalSubmissionPrepareRecord
  * items, the inverse client-support → meetings link on
  * ClientSupportAgentRecord items, the inverse onboarding → meetings
- * link on OnboardingAgentRecord items, and the inverse
- * research-intelligence → meetings link on ResearchIntelligenceRecord
- * items.
+ * and onboarding → research links on OnboardingAgentRecord items, and
+ * the inverse research-intelligence → meetings link on
+ * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
@@ -17,7 +17,7 @@
  * search extras.meetings (kind=meeting) / hits kind=document / hits
  * kind=meeting / sameRelatedScope / entitledClientCodes /
  * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
- * relatedMeetings() / relatedResearchForMeeting().
+ * relatedMeetings() / relatedResearchForScopeItem().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search/capital/research product.
  */
@@ -482,13 +482,14 @@ function relatedDocumentsForMeeting(
  * Inverse of researchIntelligence.relatedMeetings: entitled same-scope
  * research already on authorizedSearch.researchIntelligence.items
  * (hits already composed into that payload — no new research query).
- * Isolation: sameRelatedScope + entitledClientCodes + mayReceiveRelatedContext.
- * Fail-closed: missing / non-canonical ClientCode on the meeting omits
- * researchRelationship (never guess). Unscoped lender catalog titles never
- * attach to a scoped meeting. Unscoped meeting never receives scoped
+ * Shared by meetings and onboarding. Isolation: sameRelatedScope +
+ * entitledClientCodes + mayReceiveRelatedContext.
+ * Fail-closed: missing / non-canonical ClientCode on the scoped item
+ * omits researchRelationship (never guess). Unscoped lender catalog
+ * titles never attach to a scoped item. Unscoped never receives scoped
  * research. Client A never receives Client B.
  */
-function relatedResearchForMeeting(
+function relatedResearchForScopeItem(
   item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedMeetingResearchRef[] {
@@ -538,7 +539,7 @@ export function attachRelatedContextToMeeting(
   const relatedProject = relatedProjects(item, search);
   const capitalRelationship = relatedCapital(item, search);
   const relatedAttachmentsList = relatedAttachments(item, search);
-  const researchRelationship = relatedResearchForMeeting(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
@@ -698,14 +699,18 @@ export function attachRelatedContextToClientSupport(
 }
 
 /**
- * Inverse of meeting onboarding evidence: entitled same-scope meetings already
- * on authorizedSearch.meetings.items or hits kind=meeting.
+ * Inverse of meeting onboarding evidence + researchIntelligence.relatedMeetings:
+ * entitled same-scope meetings already on authorizedSearch.meetings.items
+ * or hits kind=meeting, and entitled same-scope research already on
+ * authorizedSearch.researchIntelligence.items (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
- * ClientCode is missing — omit relatedMeetings rather than guess.
- * Unscoped never receives scoped relations. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
- * OWNER_ESCALATE / execute=false / activate=false / send=false /
- * liveGtmOutbound=false / ownerGated=true / hubMi=false stay as composed.
+ * ClientCode is missing — omit relatedMeetings / researchRelationship
+ * rather than guess. Unscoped never receives scoped relations. Unscoped
+ * lender catalog titles never attach to a scoped onboarding item.
+ * Client A never receives Client B. SAS / anonymous webUrl dropped.
+ * No downloadUrl. No transcript text. OWNER_ESCALATE / execute=false /
+ * activate=false / send=false / liveGtmOutbound=false / ownerGated=true /
+ * hubMi=false stay as composed.
  */
 export function attachRelatedContextToOnboardingRecord(
   principal: AtlasPrincipal,
@@ -715,9 +720,11 @@ export function attachRelatedContextToOnboardingRecord(
   if (!canonicalClientCode(item.clientCode)) return item;
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 
