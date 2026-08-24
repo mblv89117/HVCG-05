@@ -847,14 +847,14 @@ function composeBoundClientProjects(
   }
   const fromIndex = (ctx.entitledIndexHits || []).map(toAuthorizedSearchHit);
   const fromDesk = (ctx.deskSearch?.hits || []).map(toAuthorizedSearchHit);
-  const hits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
-  return {
-    kind: 'project_operating_record_v1',
-    policyClass: 'READ_AUTO',
-    invented: false,
-    currentClientsFirst: true,
-    items: projectOperatingRecords(hits, ctx.picture, binding),
-  };
+  const pmHits = filterHitsToBinding(mergeAuthorizedHits(fromIndex, fromDesk), binding);
+  return composeBoundAuthorizedSearch(
+    ctx,
+    binding.clientCode,
+    binding,
+    pmHits,
+    pmHits.length > 0,
+  ).authorizedSearch.projects;
 }
 
 /**

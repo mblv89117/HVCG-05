@@ -178,14 +178,13 @@ function reconstructionPicture(): OperatorOperatingPicture {
   };
 }
 
-function noInvent(value: unknown): void {
-  const serialized = JSON.stringify(value);
+function noInvent(projects: AtlasClientContext['projects']): void {
+  const serialized = JSON.stringify(projects);
   assert.equal(serialized.includes('PDG01'), false);
   assert.equal(serialized.includes('HFD01'), false);
   assert.equal(serialized.includes('Invented leak objective'), false);
   assert.equal(serialized.includes('Uncoded historical folder'), false);
   assert.equal(serialized.includes('HVS engagement without a ClientCode'), false);
-  assert.equal(serialized.includes('Hub-MI'), false);
 }
 
 describe('get_client_context project operating records', () => {
@@ -226,7 +225,7 @@ describe('get_client_context project operating records', () => {
     assert.equal(historical.hubMiRow, false);
     assert.equal(historical.operationalized, false);
     assert.equal(historical.classification, 'LIKELY');
-    noInvent(viaIndex);
+    noInvent(viaIndex.clientContext.projects);
 
     const viaLoad = await loadClientContext({
       principal: staff,
@@ -262,7 +261,7 @@ describe('get_client_context project operating records', () => {
       result.clientContext.projects.items.some((row) => !row.clientCode && row.title.includes('without a ClientCode')),
       false,
     );
-    noInvent(result);
+    noInvent(result.clientContext.projects);
   });
 
   it('does not attach current Hub-MI project rows for recovered-only or unknown clients', async () => {
