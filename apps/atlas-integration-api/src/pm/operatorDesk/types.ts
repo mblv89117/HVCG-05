@@ -281,8 +281,14 @@ export interface AtlasClientContext {
    * already-authorized same-scope meetings only. Optional
    * researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as
-   * meetings / onboarding / client support). Missing / non-canonical
-   * ClientCode omits researchRelationship (fail-closed; never guess).
+   * meetings / onboarding / client support). Optional relatedDocuments
+   * is the inverse of document.capitalRelationship (same
+   * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
+   * Missing / non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments (fail-closed; never guess). Unscoped lender
+   * catalog titles never attach scoped documents. No downloadUrl. No
+   * TargetAmount. PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   /**
@@ -807,6 +813,21 @@ export interface CapitalSubmissionPrepareRecord {
    * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */
   researchRelationship?: RelatedMeetingResearchRef[];
+  /**
+   * Inverse of document.capitalRelationship: already-authorized same-scope
+   * documents / hits kind=document refs. Reuses RelatedMeetingDocumentRef
+   * / relatedDocumentsForMeeting(). Copied after authorization. Omitted
+   * when none are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped documents.
+   * Unscoped lender catalog titles never attach scoped documents.
+   * Client A never receives Client B. Never downloadUrl, transcript,
+   * attendees, TargetAmount, invented titles, ClientCodes, lender
+   * criteria, fit, financing status, or Hub-MI. SAS / anonymous webUrl
+   * dropped. PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   * No invented facts.
+   */
+  relatedDocuments?: RelatedMeetingDocumentRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
@@ -1148,8 +1169,14 @@ export interface AtlasAuthorizedSearch {
    * of meeting capitalRelationship: already-authorized same-scope meetings.
    * Optional researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as
-   * meetings / onboarding / client support). Missing / non-canonical
-   * ClientCode omits researchRelationship (fail-closed; never guess).
+   * meetings / onboarding / client support). Optional relatedDocuments
+   * is the inverse of document.capitalRelationship (same
+   * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
+   * Missing / non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments (fail-closed; never guess). Unscoped lender
+   * catalog titles never attach scoped documents. No downloadUrl. No
+   * TargetAmount. PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   /**

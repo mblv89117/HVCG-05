@@ -5,8 +5,9 @@
  * ProjectOperatingRecord items, the inverse
  * mail-thread → meetings and mail-thread → documents links on
  * MailThreadOperatingRecord items, the
- * inverse capital-prepare → meetings and capital-prepare → research
- * links on CapitalSubmissionPrepareRecord items, the inverse
+ * inverse capital-prepare → meetings, capital-prepare → documents,
+ * and capital-prepare → research links on CapitalSubmissionPrepareRecord
+ * items, the inverse
  * client-support → meetings and
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings and onboarding → research links
@@ -677,19 +678,24 @@ export function attachRelatedContextToMailThreads(
 }
 
 /**
- * Inverse of meeting capitalRelationship + researchIntelligence.relatedMeetings:
- * entitled same-scope meetings already on authorizedSearch.meetings.items
- * or hits kind=meeting, and entitled same-scope research already on
- * authorizedSearch.researchIntelligence.items (no new research query).
+ * Inverse of meeting capitalRelationship + document.capitalRelationship +
+ * researchIntelligence.relatedMeetings: entitled same-scope meetings
+ * already on authorizedSearch.meetings.items or hits kind=meeting,
+ * entitled same-scope documents already on authorizedSearch.documents.items
+ * or hits kind=document (reuses relatedDocumentsForMeeting /
+ * RelatedMeetingDocumentRef — no new document query), and entitled
+ * same-scope research already on authorizedSearch.researchIntelligence.items
+ * (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
- * non-canonical — omit researchRelationship rather than guess.
- * Unscoped never receives scoped relations. Unscoped lender catalog
- * titles never attach to a scoped capital row. Client A never receives
+ * non-canonical — omit researchRelationship / relatedDocuments rather
+ * than guess. Unscoped never receives scoped relations. Unscoped lender
+ * catalog titles never attach scoped documents. Client A never receives
  * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
  * transcript text. PREPARE_ONLY / send=false / externalSubmit=false /
  * ownerGated=true / financingStatus UNKNOWN / HONEST_EMPTY stay as
- * composed. TargetAmount is never invented.
+ * composed. TargetAmount is never invented. No invented lender
+ * criteria, fit, or financing status.
  */
 export function attachRelatedContextToCapitalSubmission(
   principal: AtlasPrincipal,
@@ -699,10 +705,14 @@ export function attachRelatedContextToCapitalSubmission(
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
   const researchRelationship = relatedResearchForScopeItem(item, search);
+  const relatedDocuments = canonicalClientCode(item.clientCode)
+    ? relatedDocumentsForMeeting(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
+    ...(relatedDocuments.length ? { relatedDocuments } : {}),
   };
 }
 
