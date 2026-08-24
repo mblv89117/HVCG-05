@@ -778,7 +778,7 @@ describe('Fabric mail delta checkpointing', () => {
           (note) =>
             /Mail attachment metadata skipped/.test(note) &&
             /HTTP 405/.test(note) &&
-            /not claiming LIVE attachments/.test(note),
+            /attachment index remains unproven/.test(note),
         ),
       );
       assert.equal(

@@ -344,7 +344,7 @@ export async function runFabricSync(opts: {
         );
         if (GRAPH_ATTACHMENT_UNSUPPORTED.has(att.status)) {
           notes.push(
-            `Mail attachment metadata skipped: Graph HTTP ${att.status} unsupported; not claiming LIVE attachments.`,
+            `Mail attachment metadata skipped: Graph HTTP ${att.status} unsupported; attachment index remains unproven.`,
           );
         } else if (att.status !== 200) {
           notes.push(`Mail attachment metadata stopped at HTTP ${att.status}.`);
