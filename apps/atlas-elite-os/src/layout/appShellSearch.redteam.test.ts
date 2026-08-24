@@ -95,5 +95,8 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
   it('signed shell exposes the Ask Atlas drawer trigger', () => {
     const commandBar = slice(appShell, '<CommandBar', 'trailing={');
     assert.match(commandBar, /onOpenAI=\{signedIn \? \(\) => setAiOpen\(true\) : undefined\}/);
+    const trailing = slice(appShell, 'trailing={', '{devOwnerActive');
+    assert.match(trailing, /aria-label="Ask Atlas"/);
+    assert.match(trailing, /setAiOpen\(true\)/);
   });
 });

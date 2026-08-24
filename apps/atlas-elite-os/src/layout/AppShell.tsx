@@ -529,6 +529,17 @@ export function AppShell() {
             userName={signedIn ? displayName : undefined}
             trailing={
               <>
+                {signedIn ? (
+                  <Button
+                    size="small"
+                    appearance="primary"
+                    aria-label="Ask Atlas"
+                    onClick={() => setAiOpen(true)}
+                  >
+                    <span className={chrome.wide}>Ask Atlas</span>
+                    <span className={chrome.narrow}>Ask</span>
+                  </Button>
+                ) : null}
                 {devOwnerActive ? (
                   <Button
                     size="small"
