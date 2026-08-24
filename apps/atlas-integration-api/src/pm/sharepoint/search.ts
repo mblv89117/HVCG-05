@@ -351,14 +351,16 @@ export async function searchSharePointPm(
       const hay = [title, item.summary].filter(Boolean).join(' ').toLowerCase();
       if (!hay.includes(q)) continue;
       const file = isFileIndexRow(item);
-      const attachment = file
-        ? extractMailAttachmentRef(String(item.summary || ''), {
-            sourceItemId: item.sourceItemId,
-            conversationId: item.conversationId,
-            sourceMessageId: 'sourceMessageId' in item ? item.sourceMessageId : undefined,
-          })
-        : undefined;
-      const mailAttachment = Boolean(attachment || isMailAttachmentIndexRow(item));
+      const mailAttachmentRow = isMailAttachmentIndexRow(item);
+      const attachment =
+        file || mailAttachmentRow
+          ? extractMailAttachmentRef(String(item.summary || ''), {
+              sourceItemId: item.sourceItemId,
+              conversationId: item.conversationId,
+              sourceMessageId: 'sourceMessageId' in item ? item.sourceMessageId : undefined,
+            })
+          : undefined;
+      const mailAttachment = Boolean(attachment || mailAttachmentRow);
       const sourceUrl = authoritativeSourceUrl(
         typeof item.webUrl === 'string'
           ? item.webUrl
@@ -387,12 +389,16 @@ export async function searchSharePointPm(
             })
           : undefined;
       push({
-        kind: file ? 'document' : 'communication',
+        kind: file || mailAttachment ? 'document' : 'communication',
         id: String(item.id),
         clientCode: c.clientCode,
         title,
         href: clientHref(c.clientCode),
-        source: file ? 'HVCG_Communications/file-index' : 'HVCG_Communications',
+        source: mailAttachment
+          ? 'HVCG_Communications/mail-attachment'
+          : file
+            ? 'HVCG_Communications/file-index'
+            : 'HVCG_Communications',
         ...(sourceUrl ? { webUrl: sourceUrl } : {}),
         ...(modifiedAt ? { modifiedAt } : {}),
         ...(file ? { provenance: 'CONFIRMED' as const } : { provenance: 'PROPOSED' as const }),

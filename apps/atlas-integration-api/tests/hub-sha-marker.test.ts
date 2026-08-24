@@ -154,6 +154,7 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
             contacts?: { status?: string };
             fileSearch?: { status?: string };
             attachments?: { status?: string };
+            attachmentSearch?: { status?: string };
           };
         };
         assert.equal(body.ok, true);
@@ -170,6 +171,7 @@ describe('public Hub SHA marker', { concurrency: 1 }, () => {
         assert.equal(body.fabricSync?.contacts?.status, 'skipped');
         assert.equal(body.fabricSync?.fileSearch?.status, 'skipped');
         assert.equal(body.fabricSync?.attachments?.status, 'skipped');
+        assert.equal(body.fabricSync?.attachmentSearch?.status, 'skipped');
 
         const build = await fetch(`${base}/hub-build.json`);
         assert.equal(build.status, 200);
