@@ -353,13 +353,16 @@ export interface AtlasClientContext {
    * meetings / research-intel / projects / threads / capital /
    * onboarding). Optional relatedProjects is the inverse of
    * document.relatedProject (same RelatedDocumentProjectRef /
-   * relatedProjects path as research-intel / onboarding). Missing /
-   * non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments / relatedProjects (fail-closed; never guess).
-   * No downloadUrl. hubMiRow is copied as composed on the source
-   * project (never invented). OWNER_ESCALATE / execute=false /
-   * send=false / autoRespond=false / draftOnly=true / hubMi=false stay
-   * as composed.
+   * relatedProjects path as research-intel / onboarding). Optional
+   * relatedThreads is the inverse of document.relatedEmail (same
+   * RelatedDocumentEmailRef / relatedEmails path as research-intel /
+   * onboarding). Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments / relatedProjects /
+   * relatedThreads (fail-closed; never guess). No downloadUrl. No
+   * preview body / suggestedDraft / send on the thread refs. hubMiRow
+   * is copied as composed on the source project (never invented).
+   * OWNER_ESCALATE / execute=false / send=false / autoRespond=false /
+   * draftOnly=true / hubMi=false stay as composed. Comms stay DRAFT_ONLY.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
@@ -1183,6 +1186,22 @@ export interface ClientSupportAgentRecord {
    * support product.
    */
   relatedProjects?: RelatedDocumentProjectRef[];
+  /**
+   * Inverse of document.relatedEmail: already-authorized same-scope
+   * mail-thread operating records. Reuses RelatedDocumentEmailRef /
+   * relatedEmails(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped threads.
+   * Unscoped lender catalog titles never attach scoped threads.
+   * Client A never receives Client B. Refs only — no preview body,
+   * suggestedDraft, send, or downloadUrl. DRAFT_ONLY / send=false /
+   * autoRespond=false / indexedPreviewOnly stay as composed on the
+   * source thread payload. OWNER_ESCALATE / execute=false /
+   * send=false / autoRespond=false / draftOnly=true / hubMi=false
+   * stay as composed. SAS / anonymous webUrl dropped. No invented
+   * facts. No new communications / support product.
+   */
+  relatedThreads?: RelatedDocumentEmailRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -1336,9 +1355,14 @@ export interface AtlasAuthorizedSearch {
    * already-authorized same-scope documents / hits kind=document (same
    * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path). Optional
    * relatedProjects is the inverse of document.relatedProject (same
-   * RelatedDocumentProjectRef / relatedProjects path). Empty payload
-   * stays empty. Missing / non-canonical ClientCode omits relatedMeetings /
-   * researchRelationship / relatedDocuments / relatedProjects.
+   * RelatedDocumentProjectRef / relatedProjects path). Optional
+   * relatedThreads is the inverse of document.relatedEmail (same
+   * RelatedDocumentEmailRef / relatedEmails path as research-intel /
+   * onboarding). Empty payload stays empty. Missing / non-canonical
+   * ClientCode omits relatedMeetings / researchRelationship /
+   * relatedDocuments / relatedProjects / relatedThreads. Comms stay
+   * DRAFT_ONLY — no preview body, suggestedDraft, or send on the
+   * thread refs.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
