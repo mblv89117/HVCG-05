@@ -2224,6 +2224,18 @@ describe('entitled mail-thread related meetings on authorizedSearch', () => {
         results: [
           ...found.results,
           {
+            kind: 'communication',
+            id: 'mail-syn-1',
+            title: 'SYN01 intake follow-up',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            conversationId: 'conv-syn-1',
+            provenance: 'PROPOSED',
+            webUrl: MAIL_SOURCE,
+            preview: 'Can you confirm the next entitled document?',
+          },
+          {
             kind: 'meeting',
             id: 'meet-sas',
             title: 'SYN01 SAS standup',
