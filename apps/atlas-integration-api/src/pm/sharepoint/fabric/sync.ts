@@ -62,6 +62,10 @@ export interface FabricCheckpoint {
    * New attachments continue via mail delta. Never exposed on /health.
    */
   attachmentsSkip?: string | null;
+  /** Entitled HVCG_Clients hint rows loaded on the last completed sweep. Never identifiers. */
+  clientHintsCount?: number;
+  /** True when listClientHints failed; fabric continued fail-closed with an empty resolver. */
+  clientHintsError?: boolean;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
   lastAttemptAt?: string;
@@ -365,6 +369,8 @@ export async function runFabricSync(opts: {
     );
   }
   const cp = loadCheckpoint(opts.dataDir);
+  const clientHintsCount = clients.length;
+  const clientHintsError = Boolean(hints.error);
   const indexed = {
     mailThreads: 0,
     meetings: 0,
@@ -753,6 +759,8 @@ export async function runFabricSync(opts: {
 
   notes.push('Planner application APIs are delegated-only per current Microsoft Graph docs — not indexed via app-only.');
   notes.push('Online meeting transcripts require a Teams application access policy if Graph returns 403.');
+  cp.clientHintsCount = clientHintsCount;
+  cp.clientHintsError = clientHintsError;
   cp.lastRunAt = new Date().toISOString();
   cp.lastIndexed = { ...indexed };
   cp.lastNotes = sanitizeFabricNotes(pinHonestyNotes(notes));

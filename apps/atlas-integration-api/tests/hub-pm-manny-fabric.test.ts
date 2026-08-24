@@ -1342,6 +1342,8 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.changeNotifications.mail, 'skipped');
       assert.equal(health.changeNotifications.files, 'skipped');
       assert.equal(health.changeNotifications.calendar, 'skipped');
+      assert.equal(health.clientHints.status, 'skipped');
+      assert.equal(health.clientHints.count, 0);
       const dumped = JSON.stringify(health);
       assert.equal(/deltatoken|mailSkip=|Bearer /i.test(dumped), false);
     } finally {
@@ -1361,6 +1363,8 @@ describe('Fabric sync honesty status', () => {
       assert.match(health.attachments.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
       assert.equal(health.honesty, 'degraded');
+      assert.equal(health.clientHints.status, 'error');
+      assert.equal(health.clientHints.count, 0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -1378,6 +1382,8 @@ describe('Fabric sync honesty status', () => {
       assert.match(health.fileSearch.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
       assert.equal(health.honesty, 'degraded');
+      assert.equal(health.clientHints.status, 'error');
+      assert.equal(health.clientHints.count, 0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

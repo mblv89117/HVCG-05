@@ -95,6 +95,18 @@ export interface FabricSyncHealth {
     status: 'skipped' | 'ready' | 'error';
     reason: string;
   };
+  /**
+   * Entitled HVCG_Clients hint-list honesty for the last completed sweep.
+   * ready when count > 0. empty when the list completed with 0 hints.
+   * error when the load failed (fail-closed empty resolver) or the
+   * checkpoint is unreadable. skipped when no completed sweep persisted
+   * a count. Never includes ClientCodes, names, domains, or tokens.
+   */
+  clientHints: {
+    status: 'ready' | 'empty' | 'error' | 'skipped';
+    reason: string;
+    count: number;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -195,6 +207,63 @@ const ERROR_ATTACHMENT_SEARCH: FabricSyncHealth['attachmentSearch'] = {
   status: 'error',
   reason: 'Fabric checkpoint unreadable; attachment search remains unproven.',
 };
+
+const SKIPPED_CLIENT_HINTS: FabricSyncHealth['clientHints'] = {
+  status: 'skipped',
+  reason: 'Client hints have not completed; hint population remains unproven.',
+  count: 0,
+};
+
+const ERROR_CLIENT_HINTS: FabricSyncHealth['clientHints'] = {
+  status: 'error',
+  reason: 'Fabric checkpoint unreadable; client hints remain unproven.',
+  count: 0,
+};
+
+function inspectClientHintsHealth(opts: {
+  honesty: FabricSyncHealth['honesty'];
+  lastRunAt: string | null;
+  clientHintsCount?: number;
+  clientHintsError?: boolean;
+  notes: string[];
+}): FabricSyncHealth['clientHints'] {
+  if (opts.honesty === 'never_run' || !opts.lastRunAt) {
+    return { ...SKIPPED_CLIENT_HINTS };
+  }
+  if (typeof opts.clientHintsCount === 'number' && Number.isFinite(opts.clientHintsCount)) {
+    const count = Math.max(0, Math.floor(opts.clientHintsCount));
+    if (opts.clientHintsError === true) {
+      return {
+        status: 'error',
+        reason: 'Client hints load failed; fabric continued with an empty resolver.',
+        count: 0,
+      };
+    }
+    if (count > 0) {
+      return {
+        status: 'ready',
+        reason: 'Client hints loaded on the last completed sweep.',
+        count,
+      };
+    }
+    return {
+      status: 'empty',
+      reason: 'Last completed sweep loaded an empty hint list.',
+      count: 0,
+    };
+  }
+  if (
+    opts.clientHintsError === true ||
+    opts.notes.some((note) => /Client hints unavailable|empty client resolver/i.test(note))
+  ) {
+    return {
+      status: 'error',
+      reason: 'Client hints load failed; fabric continued with an empty resolver.',
+      count: 0,
+    };
+  }
+  return { ...SKIPPED_CLIENT_HINTS };
+}
 
 function parseContactsStopStatus(notes: string[]): number | null {
   for (const note of notes) {
@@ -529,6 +598,7 @@ export function inspectFabricSyncHealth(
       fileSearch: { ...SKIPPED_FILE_SEARCH },
       attachments: { ...SKIPPED_ATTACHMENTS },
       attachmentSearch: { ...SKIPPED_ATTACHMENT_SEARCH },
+      clientHints: { ...SKIPPED_CLIENT_HINTS },
     };
   }
   try {
@@ -545,6 +615,8 @@ export function inspectFabricSyncHealth(
       attachmentsGraphItems?: number;
       attachmentsHasAttachmentsSeen?: number;
       attachmentsClassifySkipped?: number;
+      clientHintsCount?: number;
+      clientHintsError?: boolean;
       counts?: Record<string, number>;
       lastIndexed?: FabricIndexedCounts;
       lastNotes?: string[];
@@ -652,6 +724,16 @@ export function inspectFabricSyncHealth(
         notes,
       }),
       attachmentSearch: inspectAttachmentSearchHealth({ lastIndexed, cumulative }),
+      clientHints: inspectClientHintsHealth({
+        honesty,
+        lastRunAt,
+        clientHintsCount:
+          typeof raw.clientHintsCount === 'number' && Number.isFinite(raw.clientHintsCount)
+            ? raw.clientHintsCount
+            : undefined,
+        clientHintsError: raw.clientHintsError === true,
+        notes,
+      }),
     };
   } catch {
     return {
@@ -671,6 +753,7 @@ export function inspectFabricSyncHealth(
       fileSearch: { ...ERROR_FILE_SEARCH },
       attachments: { ...ERROR_ATTACHMENTS },
       attachmentSearch: { ...ERROR_ATTACHMENT_SEARCH },
+      clientHints: { ...ERROR_CLIENT_HINTS },
     };
   }
 }

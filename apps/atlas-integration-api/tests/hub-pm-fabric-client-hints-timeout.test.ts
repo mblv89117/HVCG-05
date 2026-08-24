@@ -128,6 +128,8 @@ describe('listClientHints fabric MSI timeout and retry', () => {
       assert.ok(result.notes.some((note) => /Client hints unavailable/.test(note)));
       assert.ok(result.notes.some((note) => /empty client resolver/.test(note)));
       assert.equal(result.checkpoint.mailDeltaReady, true);
+      assert.equal(result.checkpoint.clientHintsCount, 0);
+      assert.equal(result.checkpoint.clientHintsError, true);
       assert.equal(svc.communications.length, 1);
       assert.equal(svc.communications[0]?.clientCode, undefined);
       assert.equal(
@@ -177,6 +179,8 @@ describe('listClientHints fabric MSI timeout and retry', () => {
         bootstrap: true,
       });
       assert.equal(calls, 2);
+      assert.equal(result.checkpoint.clientHintsCount, 2);
+      assert.equal(result.checkpoint.clientHintsError, false);
       assert.equal(result.notes.some((note) => /Client hints unavailable/.test(note)), false);
       const byKey = new Map(svc.communications.map((row) => [String(row.idempotencyKey), row]));
       assert.equal(byKey.get('mail:conv-a')?.clientCode, 'CCB01');
