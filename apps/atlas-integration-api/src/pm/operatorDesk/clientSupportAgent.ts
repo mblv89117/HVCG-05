@@ -7,16 +7,20 @@
  * invent ClientCodes or Hub-MI. Reply, reassign, close, and send stay
  * OWNER-GATED. Send remains draft-only. Optional relatedMeetings /
  * researchRelationship / relatedDocuments / relatedProjects /
- * relatedThreads are attached later from authorizedSearch.meetings /
- * .researchIntelligence / .documents / hits kind=document / .projects /
- * .threads / sameRelatedScope (fail-closed when ClientCode is missing /
+ * relatedThreads / relatedCapital are attached later from
+ * authorizedSearch.meetings / .researchIntelligence / .documents /
+ * hits kind=document / .projects / .threads / .capitalSubmissions /
+ * sameRelatedScope (fail-closed when ClientCode is missing /
  * non-canonical). relatedDocuments reuses relatedDocumentsForMeeting —
  * no document.clientSupportRelationship field. relatedProjects reuses
  * relatedProjects() / RelatedDocumentProjectRef — inverse of
  * document.relatedProject. relatedThreads reuses relatedEmails() /
- * RelatedDocumentEmailRef — inverse of document.relatedEmail. No
- * preview body / suggestedDraft / send / downloadUrl on the thread
- * refs. hubMiRow is copied as composed, never invented.
+ * RelatedDocumentEmailRef — inverse of document.relatedEmail.
+ * relatedCapital reuses relatedCapital() / RelatedDocumentCapitalRef —
+ * inverse of document.capitalRelationship. No preview body /
+ * suggestedDraft / send / downloadUrl on the thread refs. No
+ * TargetAmount. Capital stays PREPARE_ONLY. hubMiRow is copied as
+ * composed, never invented.
  */
 
 import {

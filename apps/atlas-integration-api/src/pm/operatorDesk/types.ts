@@ -362,13 +362,19 @@ export interface AtlasClientContext {
    * relatedProjects path as research-intel / onboarding). Optional
    * relatedThreads is the inverse of document.relatedEmail (same
    * RelatedDocumentEmailRef / relatedEmails path as research-intel /
-   * onboarding). Missing / non-canonical ClientCode omits
-   * researchRelationship / relatedDocuments / relatedProjects /
-   * relatedThreads (fail-closed; never guess). No downloadUrl. No
-   * preview body / suggestedDraft / send on the thread refs. hubMiRow
-   * is copied as composed on the source project (never invented).
+   * onboarding). Optional relatedCapital is the inverse of
+   * document.capitalRelationship (same RelatedDocumentCapitalRef /
+   * relatedCapital path as research-intel / onboarding). Missing /
+   * non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
+   * (fail-closed; never guess). No downloadUrl. No preview body /
+   * suggestedDraft / send on the thread refs. No TargetAmount. No
+   * invented lender criteria, fit, or financing status. hubMiRow is
+   * copied as composed on the source project (never invented).
    * OWNER_ESCALATE / execute=false / send=false / autoRespond=false /
    * draftOnly=true / hubMi=false stay as composed. Comms stay DRAFT_ONLY.
+   * Capital stays PREPARE_ONLY — send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN / HONEST_EMPTY.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
@@ -1223,6 +1229,21 @@ export interface ClientSupportAgentRecord {
    * facts. No new communications / support product.
    */
   relatedThreads?: RelatedDocumentEmailRef[];
+  /**
+   * Inverse of document.capitalRelationship: already-authorized
+   * same-scope capital-prepare records. Reuses RelatedDocumentCapitalRef
+   * / relatedCapital(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped capital.
+   * Unscoped lender catalog titles never attach scoped capital.
+   * Client A never receives Client B. No downloadUrl. No TargetAmount.
+   * PREPARE_ONLY / send=false / externalSubmit=false / ownerGated=true /
+   * financingStatus UNKNOWN stay as composed on the source capital row.
+   * OWNER_ESCALATE / DRAFT_ONLY unchanged. Never invent titles,
+   * ClientCodes, lender criteria, fit, financing status, or Hub-MI.
+   * No new Graph / search / KG / capital / support product.
+   */
+  relatedCapital?: RelatedDocumentCapitalRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -1384,11 +1405,17 @@ export interface AtlasAuthorizedSearch {
    * RelatedDocumentProjectRef / relatedProjects path). Optional
    * relatedThreads is the inverse of document.relatedEmail (same
    * RelatedDocumentEmailRef / relatedEmails path as research-intel /
-   * onboarding). Empty payload stays empty. Missing / non-canonical
-   * ClientCode omits relatedMeetings / researchRelationship /
-   * relatedDocuments / relatedProjects / relatedThreads. Comms stay
+   * onboarding). Optional relatedCapital is the inverse of
+   * document.capitalRelationship (same RelatedDocumentCapitalRef /
+   * relatedCapital path as research-intel / onboarding). Empty payload
+   * stays empty. Missing / non-canonical ClientCode omits
+   * relatedMeetings / researchRelationship / relatedDocuments /
+   * relatedProjects / relatedThreads / relatedCapital. Comms stay
    * DRAFT_ONLY — no preview body, suggestedDraft, or send on the
-   * thread refs.
+   * thread refs. Capital stays PREPARE_ONLY — send=false /
+   * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN /
+   * HONEST_EMPTY. Never invent TargetAmount, lender criteria, fit, or
+   * financing status.
    */
   clientSupport: ClientSupportAgentPayload;
   /**

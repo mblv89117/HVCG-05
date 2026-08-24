@@ -11,7 +11,8 @@
  * client-support → meetings,
  * client-support → documents,
  * client-support → projects,
- * client-support → threads, and
+ * client-support → threads,
+ * client-support → capital, and
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings, onboarding → documents,
  * onboarding → projects,
@@ -35,7 +36,7 @@
  * kind=meeting / sameRelatedScope / entitledClientCodes /
  * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
  * relatedMeetings() / relatedDocumentsForMeeting() / relatedProjects() /
- * relatedEmails() / relatedResearchForScopeItem().
+ * relatedEmails() / relatedCapital() / relatedResearchForScopeItem().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search/capital/research product.
  */
@@ -751,23 +752,30 @@ export function attachRelatedContextToCapitalSubmissions(
  * RelatedDocumentProjectRef — no new project query), entitled
  * same-scope threads already on authorizedSearch.threads.items
  * (reuses relatedEmails / RelatedDocumentEmailRef — no new query),
- * and entitled same-scope research already on
- * authorizedSearch.researchIntelligence.items (no new research query).
+ * entitled same-scope capital-prepare rows already on
+ * authorizedSearch.capitalSubmissions.items (reuses relatedCapital /
+ * RelatedDocumentCapitalRef — no new query), and entitled same-scope
+ * research already on authorizedSearch.researchIntelligence.items
+ * (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit relatedMeetings / researchRelationship /
- * relatedDocuments / relatedProjects / relatedThreads rather than
- * guess. Unscoped never receives scoped relations. Unscoped lender
- * catalog titles never attach scoped documents, projects, or threads.
- * Client A never receives Client B. SAS / anonymous webUrl dropped.
- * No downloadUrl. No transcript text. No preview body /
- * suggestedDraft / send on the thread refs. No TargetAmount. No
- * Hub-MI invention. hubMiRow is copied as composed on the source
- * project (never invented). OWNER_ESCALATE / execute=false /
+ * relatedDocuments / relatedProjects / relatedThreads / relatedCapital
+ * rather than guess. Unscoped never receives scoped relations.
+ * Unscoped lender catalog titles never attach scoped documents,
+ * projects, threads, or capital. Client A never receives Client B.
+ * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
+ * No preview body / suggestedDraft / send on the thread refs. No
+ * TargetAmount. No invented lender criteria, fit, or financing
+ * status. No Hub-MI invention. hubMiRow is copied as composed on the
+ * source project (never invented). OWNER_ESCALATE / execute=false /
  * send=false / autoRespond=false / draftOnly=true / hubMi=false stay
  * as composed. DRAFT_ONLY / send=false / autoRespond=false /
  * indexedPreviewOnly stay as composed on the source thread payload.
- * There is no document.clientSupportRelationship field.
+ * PREPARE_ONLY / send=false / externalSubmit=false / ownerGated=true /
+ * financingStatus UNKNOWN / HONEST_EMPTY stay as composed on the
+ * source capital payload. There is no document.clientSupportRelationship
+ * field.
  */
 export function attachRelatedContextToClientSupportRecord(
   principal: AtlasPrincipal,
@@ -781,6 +789,7 @@ export function attachRelatedContextToClientSupportRecord(
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
   const relatedProjectsList = relatedProjects(item, search);
   const relatedThreads = relatedEmails(item, search);
+  const relatedCapitalList = relatedCapital(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
@@ -788,6 +797,7 @@ export function attachRelatedContextToClientSupportRecord(
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
     ...(relatedThreads.length ? { relatedThreads } : {}),
+    ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
   };
 }
 
