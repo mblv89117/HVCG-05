@@ -263,7 +263,11 @@ export interface AtlasClientContext {
    * Thread context from already-indexed entitled mail previews only.
    * Suggested reply stays DRAFT_ONLY. Never AUTO_RESPOND / send.
    * Optional relatedMeetings is the inverse of meeting relatedEmail:
-   * already-authorized same-scope meetings only.
+   * already-authorized same-scope meetings only. Optional
+   * researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / documents / projects / capital). Missing / non-canonical
+   * ClientCode omits researchRelationship (fail-closed; never guess).
    */
   threads: MailThreadOperatingPayload;
   /**
@@ -686,6 +690,17 @@ export interface MailThreadOperatingRecord {
    * Never a new Graph calendar query, downloadUrl, or transcript text.
    */
   relatedMeetings?: RelatedDocumentMeetingRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items (same RelatedMeetingResearchRef
+   * as meetings / onboarding / client support / capital / documents /
+   * projects). Omitted when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped lender catalog titles never
+   * attach to a scoped thread. No downloadUrl, transcript, attendees,
+   * TargetAmount, or invented criteria. DRAFT_ONLY / send=false /
+   * autoRespond=false / indexedPreviewOnly stay as composed.
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
 }
 
 export interface MailThreadOperatingPayload {
@@ -1005,6 +1020,17 @@ export interface AtlasAuthorizedSearch {
     currentClientsFirst: true;
     items: ProjectOperatingRecord[];
   };
+  /**
+   * First-class entitled mail-thread operating records from already-
+   * indexed entitled mail previews. Suggested reply stays DRAFT_ONLY.
+   * Optional relatedMeetings is the inverse of meeting relatedEmail.
+   * Optional researchRelationship copies already-authorized same-scope
+   * researchIntelligence items (same RelatedMeetingResearchRef as
+   * meetings / onboarding / client support / capital / documents /
+   * projects). Missing / non-canonical ClientCode omits
+   * researchRelationship (fail-closed; never guess). send=false /
+   * autoRespond=false / indexedPreviewOnly stay as composed.
+   */
   threads: MailThreadOperatingPayload;
   /**
    * First-class entitled HVCG_Meetings / extras.meetings / search kind=meeting

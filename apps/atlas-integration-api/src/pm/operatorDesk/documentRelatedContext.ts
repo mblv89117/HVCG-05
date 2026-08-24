@@ -13,8 +13,8 @@
  * ResearchIntelligenceRecord items.
  * Copies entitled search / project / thread / capital / already-indexed
  * outlook-mail-attachment / HVCG_Meetings / document / research payloads only.
- * Documents and projects reuse the same researchRelationship inverse
- * already live on meetings / onboarding / client support / capital.
+ * Documents, projects, and threads reuse the same researchRelationship
+ * inverse already live on meetings / onboarding / client support / capital.
  * OPEN_SOURCE: ADAPT existing authorizedSearch.documents / .projects /
  * .threads / .capitalSubmissions / .meetings / .clientSupport / .onboarding
  * / .researchIntelligence / fabric mail-attachment index rows / entitled
@@ -489,7 +489,7 @@ function relatedDocumentsForMeeting(
  * research already on authorizedSearch.researchIntelligence.items
  * (hits already composed into that payload — no new research query).
  * Shared by meetings, onboarding, client support, capital,
- * documents, and projects. Isolation: sameRelatedScope +
+ * documents, projects, and threads. Isolation: sameRelatedScope +
  * entitledClientCodes + mayReceiveRelatedContext. Fail-closed:
  * missing / non-canonical ClientCode on the scoped item omits
  * researchRelationship (never guess). Unscoped lender catalog
@@ -612,13 +612,18 @@ export function attachRelatedContextToProjects(
 }
 
 /**
- * Inverse of meeting relatedEmail: entitled same-scope meetings already
- * on authorizedSearch.meetings.items or hits kind=meeting.
- * Isolation: sameRelatedScope + entitledClientCodes. Unscoped never
- * receives scoped relations. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript text.
- * DRAFT_ONLY / autoRespond=false / send=false / indexedPreviewOnly stay
- * as composed on the thread payload.
+ * Inverse of meeting relatedEmail + researchIntelligence.relatedMeetings:
+ * entitled same-scope meetings already on authorizedSearch.meetings.items
+ * or hits kind=meeting, and entitled same-scope research already on
+ * authorizedSearch.researchIntelligence.items (no new research query).
+ * Isolation: sameRelatedScope + entitledClientCodes +
+ * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
+ * non-canonical — omit researchRelationship rather than guess.
+ * Unscoped never receives scoped relations. Unscoped lender catalog
+ * titles never attach to a scoped thread. Client A never receives
+ * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
+ * transcript text. DRAFT_ONLY / autoRespond=false / send=false /
+ * indexedPreviewOnly stay as composed on the thread payload.
  */
 export function attachRelatedContextToMailThread(
   principal: AtlasPrincipal,
@@ -627,9 +632,11 @@ export function attachRelatedContextToMailThread(
 ): MailThreadOperatingRecord {
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
+  const researchRelationship = relatedResearchForScopeItem(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
+    ...(researchRelationship.length ? { researchRelationship } : {}),
   };
 }
 
@@ -638,6 +645,7 @@ export function attachRelatedContextToMailThreads(
   payload: MailThreadOperatingPayload,
   search: AtlasAuthorizedSearch,
 ): MailThreadOperatingPayload {
+  if (!payload.items.length) return payload;
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToMailThread(principal, item, search)),

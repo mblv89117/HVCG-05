@@ -168,6 +168,7 @@ describe('ATLAS-AI-COMMUNICATIONS-001 indexed mail thread context', () => {
   });
 
   it('attaches the same thread records on search and client-context from indexed preview only', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(mailService(), staff, 'SYN01');
     const mailHit = found.results.find((row) => row.id === 'mail-syn-1');
     assert.ok(mailHit);
@@ -180,12 +181,14 @@ describe('ATLAS-AI-COMMUNICATIONS-001 indexed mail thread context', () => {
       principal: staff,
       picture: picture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const viaIndex = getClientContext({
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.deepEqual(viaIndex.clientContext.threads, search.authorizedSearch.threads);
@@ -216,6 +219,7 @@ describe('ATLAS-AI-COMMUNICATIONS-001 indexed mail thread context', () => {
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     assert.deepEqual(viaLoad.clientContext.threads, search.authorizedSearch.threads);
