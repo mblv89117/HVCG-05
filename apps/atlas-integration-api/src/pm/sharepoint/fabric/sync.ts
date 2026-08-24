@@ -44,6 +44,8 @@ export interface FabricCheckpoint {
   /** Items classify-skipped for missing entitled ClientCode on the last sweep. */
   contactsClassifySkipped?: number;
   filesSkip: string | null;
+  /** Last Graph HTTP status for POST /search/query. Distinct from filesSkip nextLink. */
+  fileSearchLastStatus?: number | null;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
   lastAttemptAt?: string;
@@ -147,18 +149,21 @@ function pinHonestyNotes(notes: string[]): string[] {
   const skips = notes.filter((note) => /index write skipped|transport failed \(HTTP 0\)/.test(note));
   const attachments = notes.filter((note) => /Mail attachment metadata/.test(note));
   const contacts = notes.filter((note) => /^Contacts /.test(note));
+  const fileSearch = notes.filter((note) => /^File search /.test(note));
   const rest = notes.filter(
     (note) =>
       !mail.includes(note) &&
       !skips.includes(note) &&
       !attachments.includes(note) &&
-      !contacts.includes(note),
+      !contacts.includes(note) &&
+      !fileSearch.includes(note),
   );
   return [
     ...rest,
     ...skips.slice(0, 2),
     ...attachments.slice(-2),
     ...contacts.slice(-3),
+    ...fileSearch.slice(-2),
     ...mail.slice(-1),
   ];
 }
@@ -555,6 +560,7 @@ export async function runFabricSync(opts: {
     indexed.skipped += sharePoint.skipped;
     indexed.restricted += sharePoint.restricted;
     cp.sharePoint = sharePoint.checkpoint;
+    cp.fileSearchLastStatus = sharePoint.fileSearchLastStatus;
   } catch (err) {
     notes.push(isolatedFailureNote('SharePoint file index skipped', err));
   }
