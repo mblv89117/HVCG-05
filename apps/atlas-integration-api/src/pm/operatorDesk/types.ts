@@ -501,12 +501,33 @@ export interface RelatedMeetingDocumentRef {
 }
 
 /**
+ * Inverse of researchIntelligence.relatedMeetings. Honesty mirrors
+ * RelatedDocumentCapitalRef: source-backed titles only. Never downloadUrl,
+ * transcript, attendees, TargetAmount, or invented lender criteria.
+ */
+export interface RelatedMeetingResearchRef {
+  id: string;
+  title: string;
+  clientCode?: string;
+  source: string;
+  retrievalDate?: string;
+  confidence: ResearchIntelligenceEvidenceClass;
+  classification: ResearchIntelligenceEvidenceClass;
+  superseded: boolean;
+  invented: false;
+  lenderCriteriaInvented: false;
+  financingStatus: typeof RESEARCH_INTELLIGENCE_FINANCING_STATUS;
+  fit: typeof RESEARCH_INTELLIGENCE_FIT;
+  policyClass: typeof RESEARCH_INTELLIGENCE_POLICY_CLASS;
+}
+
+/**
  * First-class entitled meeting operating record. Copied from already-authorized
  * extras.meetings / HVCG_Meetings / search hits kind=meeting. Never invents
  * transcript text, binaries, SAS, or anonymous share URLs.
  * Optional related* fields are the inverse of document relatedMeetings:
  * already-authorized same-scope documents / email / projects / attachments /
- * capital only.
+ * capital / research only.
  */
 export interface MeetingOperatingRecord {
   id: string;
@@ -525,6 +546,14 @@ export interface MeetingOperatingRecord {
   relatedProject?: RelatedDocumentProjectRef[];
   relatedAttachments?: RelatedDocumentAttachmentRef[];
   capitalRelationship?: RelatedDocumentCapitalRef[];
+  /**
+   * Inverse of researchIntelligence.relatedMeetings: already-authorized
+   * same-scope researchIntelligence items. Omitted when ClientCode is
+   * missing / non-canonical (fail-closed; never guess). Unscoped lender
+   * catalog titles never attach to a scoped meeting. No downloadUrl,
+   * transcript, attendees, TargetAmount, or invented criteria.
+   */
+  researchRelationship?: RelatedMeetingResearchRef[];
 }
 
 export interface MeetingOperatingPayload {
