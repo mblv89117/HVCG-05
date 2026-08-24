@@ -922,26 +922,51 @@ export async function handleSharePointPmRoutes(opts: {
     }
 
     if (method === 'POST' && path === '/api/pm/fabric/sync') {
-      const tokenProvider =
-        opts.cfg.pmTokenProvider ||
-        createManagedIdentityTokenProvider(opts.cfg.pmBackend.sharepoint?.managedIdentityClientId || '', {
-          resource: GRAPH_TOKEN_RESOURCE,
+      try {
+        const tokenProvider =
+          opts.cfg.pmTokenProvider ||
+          createManagedIdentityTokenProvider(opts.cfg.pmBackend.sharepoint?.managedIdentityClientId || '', {
+            resource: GRAPH_TOKEN_RESOURCE,
+          });
+        const fabric = createFabricGraphClient(tokenProvider);
+        const result = await runFabricSync({
+          principal,
+          service,
+          fabric,
+          dataDir: opts.cfg.dataDir,
         });
-      const fabric = createFabricGraphClient(tokenProvider);
-      const result = await runFabricSync({
-        principal,
-        service,
-        fabric,
-        dataDir: opts.cfg.dataDir,
-      });
-      audit({
-        repo,
-        actorUserId: principal.userId,
-        action: 'pm_fabric_sync',
-        outcome: 'success',
-        detail: `mail=${result.indexed.mailThreads} meetings=${result.indexed.meetings} files=${result.indexed.files} skipped=${result.indexed.skipped}`,
-      });
-      send(res, 200, { fabric: result }, origin);
+        audit({
+          repo,
+          actorUserId: principal.userId,
+          action: 'pm_fabric_sync',
+          outcome: 'success',
+          detail: `mail=${result.indexed.mailThreads} meetings=${result.indexed.meetings} files=${result.indexed.files} skipped=${result.indexed.skipped}`,
+        });
+        send(res, 200, { fabric: result }, origin);
+      } catch (err) {
+        if (err instanceof PmHttpError && (err.status === 401 || err.status === 403)) throw err;
+        const message = err instanceof Error ? err.message : 'Fabric sync source unavailable.';
+        audit({
+          repo,
+          actorUserId: principal.userId,
+          action: 'pm_fabric_sync',
+          outcome: 'failure',
+          detail: message,
+        });
+        send(
+          res,
+          200,
+          {
+            fabric: {
+              degraded: true,
+              indexed: { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 },
+              notes: [`Fabric sync did not complete: ${message}`],
+              checkpoint: {},
+            },
+          },
+          origin,
+        );
+      }
       return true;
     }
 
