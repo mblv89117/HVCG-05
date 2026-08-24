@@ -115,8 +115,10 @@ function supportService(): SearchPmService {
             {
               id: 'file-sow',
               title: 'SYN01 SOW.pdf',
-              summary: 'Source: https://highvaluecapitalgroup.sharepoint.com/sites/HVCG/sow.pdf',
+              summary:
+                'File metadata index. Binary remains in OneDrive/SharePoint. Source: https://highvaluecapitalgroup.sharepoint.com/sites/HVCG/sow.pdf',
               webUrl: 'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG/sow.pdf',
+              sourceItemId: 'file:sow-1',
             },
           ],
         },

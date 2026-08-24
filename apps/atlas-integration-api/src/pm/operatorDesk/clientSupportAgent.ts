@@ -81,9 +81,7 @@ function evidenceKind(hit: AtlasAuthorizedSearchHit): ClientSupportEvidenceKind 
   if (isCapitalLane(hit)) return null;
   if (hit.kind === 'communication' && hit.source === 'HVCG_Communications') return 'communication';
   if (hit.kind === 'recovered_client' || hit.kind === 'recovered_client_record') return 'recovered_client';
-  if (hit.kind === 'task' && hit.source === 'HVCG_Tasks' && (titledSupport(hit) || copiedRoute(hit))) {
-    return 'task';
-  }
+  if (hit.kind === 'task' && hit.source === 'HVCG_Tasks' && titledSupport(hit)) return 'task';
   if (hit.kind === 'meeting' && hit.source === 'HVCG_Meetings' && titledSupport(hit)) return 'meeting';
   if (hit.kind === 'decision' && hit.source === 'HVCG_Decisions' && titledSupport(hit)) return 'decision';
   if (hit.kind === 'deliverable' && hit.source === 'HVCG_Deliverables' && titledSupport(hit)) {
