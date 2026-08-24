@@ -1,10 +1,12 @@
 /**
  * ATLAS-REALTIME-DOCUMENTS-001 + ATLAS-REALTIME-DOCUMENTS-SECURE-PREVIEW-001
  * + ATLAS-REALTIME-DOCUMENTS-RELATED-CONTEXT-001
+ * + ATLAS-REALTIME-DOCUMENTS-ATTACHMENT-LINK-001
  * Entitled file-index rows become a document operating record on the
  * existing /operator/search.json READ_AUTO path. Short-lived Graph driveItem
  * preview is attached after authorization. Related email / project / contract
- * / capital is copied from already-authorized search payloads only.
+ * / capital / already-indexed outlook-mail-attachment metadata is copied from
+ * already-authorized search payloads only.
  * No second search, preview, or knowledge-graph product.
  */
 import { describe, it } from 'node:test';
@@ -25,7 +27,10 @@ import {
   authoritativeSourceUrl,
   extractProvenDriveItemRef,
   extractSourceUrl,
+  attachmentIndexSummary,
+  extractMailAttachmentRef,
   fileIndexSummary,
+  isMailAttachmentIndexRow,
 } from '../src/pm/sharepoint/fabric/fileIndex.ts';
 import {
   DOCUMENT_PREVIEW_BASED_ON,
@@ -606,12 +611,14 @@ describe('secure Graph driveItem preview for indexed documents', () => {
     assert.equal((own?.relatedProject || []).some((row) => row.id === 'proj-pdg'), false);
     assert.equal((own?.relatedContract || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal((own?.capitalRelationship || []).some((row) => row.id === 'cap-pdg'), false);
+    assert.equal((own?.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal(JSON.stringify(own).includes('PDG01'), false);
     if (foreign) {
       assert.equal(foreign.relatedEmail, undefined);
       assert.equal(foreign.relatedProject, undefined);
       assert.equal(foreign.relatedContract, undefined);
       assert.equal(foreign.capitalRelationship, undefined);
+      assert.equal(foreign.relatedAttachments, undefined);
     }
   });
 
@@ -874,6 +881,8 @@ describe('related operating context on entitled documents', () => {
     assert.equal(capital.invented, false);
     assert.ok((memo.capitalRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
 
+    assert.equal(memo.relatedAttachments, undefined);
+
     noFabricatedRelatedFacts(docs);
     assert.equal(JSON.stringify(docs).includes('PDG01'), false);
     assert.equal(JSON.stringify(docs).includes('HFD01'), false);
@@ -936,7 +945,216 @@ describe('related operating context on entitled documents', () => {
     assert.equal((memo.relatedProject || []).some((row) => /pdg/i.test(row.id)), false);
     assert.equal((memo.relatedContract || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal((memo.capitalRelationship || []).some((row) => /pdg/i.test(row.id)), false);
+    assert.equal((memo.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
     assert.equal(JSON.stringify(memo).includes('PDG01'), false);
+    noFabricatedRelatedFacts(memo);
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+  });
+});
+
+const ATT_PARENT_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-att-parent';
+const ATT_SUMMARY = attachmentIndexSummary({
+  webUrl: ATT_PARENT_SOURCE,
+  parentMessageId: 'AAMk-syn-parent',
+  attachmentId: 'att-syn-1',
+  contentType: 'application/pdf',
+  size: 1200,
+  idempotencyKey: 'mail-att:AAMk-syn-parent:att-syn-1',
+});
+
+function attachmentLinkService(): SearchPmService {
+  const summary = fileIndexSummary({
+    restricted: false,
+    webUrl: SOURCE,
+    idempotencyKey: `file:${PROVEN_ITEM}`,
+    driveId: PROVEN_DRIVE,
+    itemId: PROVEN_ITEM,
+  });
+  return {
+    async listAuthorizedClients() {
+      return [
+        {
+          id: 'SYN01',
+          itemId: '1',
+          clientCode: 'SYN01',
+          displayName: 'SYNTHETIC Alpha Co',
+          source: 'sharepoint',
+        },
+      ];
+    },
+    async listAuthorizedProjects() {
+      return [];
+    },
+    async listAuthorizedTasks() {
+      return [];
+    },
+    async listWorkspaceCollections() {
+      return {
+        ...emptyCollection,
+        communications: {
+          queried: true,
+          status: 'COMPLETE',
+          items: [
+            {
+              id: 'file-proven',
+              title: 'SYN01 intake memo',
+              summary,
+              webUrl: SOURCE,
+              date: '2026-08-20T18:04:00Z',
+              sourceItemId: `file:${PROVEN_ITEM}`,
+            },
+            {
+              id: 'mail-syn-parent',
+              title: 'SYN01 intake follow-up',
+              summary:
+                'Can you confirm the next entitled document? I will send the existing package after review. Source: ' +
+                `${ATT_PARENT_SOURCE} Key:mail:AAMk-syn-parent`,
+              webUrl: ATT_PARENT_SOURCE,
+              date: '2026-08-19T12:00:00Z',
+              channel: 'Email',
+              direction: 'Inbound',
+              sourceItemId: 'AAMk-syn-parent',
+              conversationId: 'AAMk-syn-parent',
+            },
+            {
+              id: 'mail-att-syn',
+              title: 'SYN01 term-sheet.pdf',
+              summary: ATT_SUMMARY,
+              webUrl: ATT_PARENT_SOURCE,
+              date: '2026-08-19T12:05:00Z',
+              channel: 'Other',
+              sourceItemId: 'att-syn-1',
+            },
+          ],
+        },
+      };
+    },
+    async listVendors() {
+      return [];
+    },
+    async listOpportunities() {
+      return [];
+    },
+    async listCapitalOpportunities() {
+      return [];
+    },
+    async listIndexedFiles() {
+      return [];
+    },
+  };
+}
+
+describe('indexed mail-attachment metadata on entitled documents', () => {
+  it('extracts parent / attachment refs and never stores binaries', () => {
+    assert.equal(isMailAttachmentIndexRow({ summary: ATT_SUMMARY }), true);
+    const ref = extractMailAttachmentRef(ATT_SUMMARY);
+    assert.deepEqual(ref, {
+      parentMessageId: 'AAMk-syn-parent',
+      attachmentId: 'att-syn-1',
+      contentType: 'application/pdf',
+      size: 1200,
+      idempotencyKey: 'mail-att:AAMk-syn-parent:att-syn-1',
+    });
+    assert.match(ATT_SUMMARY, /Binary not stored/);
+    assert.equal(/guestaccess|[?&](?:sv|sig|share)=/i.test(ATT_SUMMARY), false);
+  });
+
+  it('copies same-ClientCode parent email and attachment metadata after authorization', async () => {
+    const found = await searchSharePointPm(attachmentLinkService(), staff, 'SYN01');
+    const attHit = found.results.find((row) => row.id === 'mail-att-syn');
+    assert.ok(attHit);
+    assert.equal(attHit.kind, 'document');
+    assert.equal(attHit.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(attHit.attachmentId, 'att-syn-1');
+    assert.equal(attHit.contentType, 'application/pdf');
+    assert.equal(attHit.size, 1200);
+    assert.equal(attHit.webUrl, ATT_PARENT_SOURCE);
+    assert.equal(attHit.driveId, undefined);
+    assert.equal(attHit.itemId, undefined);
+
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({ query, results: found.results }),
+    });
+    const docs = result.authorizedSearch.documents;
+    assert.equal(docs.binariesInAtlas, false);
+    const memo = docs.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal(memo.clientCode, 'SYN01');
+    const attachment = memo.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(attachment);
+    assert.equal(attachment.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(attachment.attachmentId, 'att-syn-1');
+    assert.equal(attachment.contentType, 'application/pdf');
+    assert.equal(attachment.size, 1200);
+    assert.equal(attachment.binariesInAtlas, false);
+    assert.equal(attachment.webUrl, ATT_PARENT_SOURCE);
+    assert.ok((memo.relatedAttachments?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+
+    const email = memo.relatedEmail?.find((row) => row.id === 'mail-syn-parent' || row.conversationId === 'AAMk-syn-parent');
+    assert.ok(email);
+    assert.equal(email.webUrl, ATT_PARENT_SOURCE);
+
+    const attDoc = docs.items.find((row) => row.id === 'mail-att-syn');
+    assert.ok(attDoc);
+    assert.equal(attDoc.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(attDoc.attachmentId, 'att-syn-1');
+    assert.equal(attDoc.previewGetUrl, undefined);
+    assert.equal(attDoc.previewPostUrl, undefined);
+    const parentEmail = attDoc.relatedEmail?.find(
+      (row) => row.parentMessageId === 'AAMk-syn-parent' || row.conversationId === 'AAMk-syn-parent' || row.id === 'mail-syn-parent',
+    );
+    assert.ok(parentEmail);
+    noFabricatedRelatedFacts(docs);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(JSON.stringify(docs)), false);
+    assert.equal(/LIVE/i.test(JSON.stringify(docs)), false);
+  });
+
+  it('never attaches Client B attachment metadata to a Client A document', async () => {
+    const found = await searchSharePointPm(attachmentLinkService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          {
+            kind: 'document',
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak.pdf',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: 'https://outlook.office.com/mail/pdg-leak',
+            provenance: 'CONFIRMED',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+            contentType: 'application/pdf',
+            size: 88,
+          },
+          {
+            kind: 'communication',
+            id: 'mail-pdg-parent',
+            title: 'PDG01 leak thread',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            conversationId: 'AAMk-pdg-parent',
+            provenance: 'PROPOSED',
+          },
+        ],
+      }),
+    });
+    const memo = result.authorizedSearch.documents.items.find((row) => row.id === 'file-proven');
+    assert.ok(memo);
+    assert.equal((memo.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal((memo.relatedEmail || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(memo).includes('PDG01'), false);
+    assert.equal(JSON.stringify(memo).includes('att-pdg-1'), false);
     noFabricatedRelatedFacts(memo);
     assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
   });

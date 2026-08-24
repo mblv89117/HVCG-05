@@ -671,6 +671,9 @@ describe('Fabric mail delta checkpointing', () => {
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(health.lastIndexed.attachmentsIndexed, 1);
       assert.equal(health.cumulative.attachmentsIndexed, 1);
+      assert.equal(health.attachmentLinks.status, 'ready');
+      assert.match(health.attachmentLinks.reason, /entitled document linking/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
       assert.equal(/LIVE attachments|deltatoken|Bearer |guestaccess/i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -788,6 +791,8 @@ describe('Fabric mail delta checkpointing', () => {
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(health.lastIndexed.attachmentsIndexed, 0);
       assert.equal(health.cumulative.attachmentsIndexed, 0);
+      assert.equal(health.attachmentLinks.status, 'skipped');
+      assert.match(health.attachmentLinks.reason, /remain unproven/);
       assert.equal(health.honesty, 'delta');
       assert.ok(health.notes.some((note) => /attachment metadata skipped/.test(note) && /HTTP 405/.test(note)));
       assert.equal(/LIVE attachments|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
@@ -833,6 +838,8 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.mailDeltaReady, false);
       assert.equal(health.lastIndexed.attachmentsIndexed, 0);
       assert.equal(health.cumulative.attachmentsIndexed, 0);
+      assert.equal(health.attachmentLinks.status, 'skipped');
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
       assert.equal(health.scheduledSweepEnabled, false);
       assert.equal(health.changeNotifications.status, 'skipped');
       assert.equal(health.changeNotifications.mail, 'skipped');
