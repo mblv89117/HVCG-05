@@ -190,12 +190,14 @@ describe('Fabric mail delta checkpointing', () => {
   }
 
   function serviceWithoutHints() {
+    const communications: Array<Record<string, unknown>> = [];
     return {
+      communications,
       async listClientHints() {
         throw new Error('clients unavailable');
       },
-      async upsertCommunicationIndex() {
-        throw new Error('should not write without classified hints in this fixture');
+      async upsertCommunicationIndex(row: Record<string, unknown>) {
+        communications.push(row);
       },
       async upsertMeetingIndex() {
         /* not exercised */
@@ -302,10 +304,11 @@ describe('Fabric mail delta checkpointing', () => {
 
   it('records client-hint failures as notes instead of hard-failing the sync route', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fabric-no-client-hints-'));
+    const svc = serviceWithoutHints();
     const paths: string[] = [];
     try {
       const result = await runFabricSync({
-        service: serviceWithoutHints() as unknown as SharePointPmService,
+        service: svc as unknown as SharePointPmService,
         fabric: graph(paths) as never,
         dataDir: dir,
         bootstrap: true,
@@ -313,6 +316,7 @@ describe('Fabric mail delta checkpointing', () => {
       assert.ok(result.notes.some((note) => /Client hints unavailable/.test(note)));
       assert.equal(result.checkpoint.mailMode, 'delta');
       assert.equal(result.checkpoint.mailDeltaReady, true);
+      assert.equal(svc.communications.every((row) => row.clientCode === undefined), true);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
