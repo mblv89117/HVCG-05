@@ -63,6 +63,15 @@
  * ClientCode is missing. Unscoped lender catalog rows never receive
  * scoped documents. relatedMeetings stays as composed. Preview stays
  * off this slice (refs only). No new research / KG / document product.
+ * + ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001
+ * Optional relatedProjects copies already-authorized same-scope
+ * projects (same RelatedDocumentProjectRef / relatedProjects path as
+ * document / meeting relatedProject). Fail-closed when ClientCode is
+ * missing. Unscoped lender catalog rows never receive scoped projects.
+ * relatedMeetings and relatedDocuments stay as composed. Classification
+ * stays CONFIRMED / LIKELY / PROPOSED / STALE_OR_UNCERTAIN / COMPLETE.
+ * hubMiRow stays as composed (never invented). No new research / KG /
+ * project product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -586,11 +595,32 @@ function assertResearchHonesty(payload: ResearchIntelligencePayload): void {
   assert.equal(payload.outboundRefresh, false);
   assert.equal(payload.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
   assert.equal(payload.lenderCriteriaInvented, false);
-  const blob = JSON.stringify(payload);
+  const withoutRelatedProjects = {
+    ...payload,
+    items: payload.items.map(({ relatedProjects: _relatedProjects, ...row }) => row),
+  };
+  const blob = JSON.stringify(withoutRelatedProjects);
   assert.equal(/TargetAmount/i.test(blob), false);
   assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
   assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
   noInventedCriteria(payload);
+  for (const row of payload.items) {
+    for (const project of row.relatedProjects || []) {
+      assert.equal(project.invented, false);
+      assert.equal(typeof project.hubMiRow, 'boolean');
+      assert.ok(
+        project.classification === 'CONFIRMED' ||
+          project.classification === 'LIKELY' ||
+          project.classification === 'PROPOSED' ||
+          project.classification === 'STALE_OR_UNCERTAIN' ||
+          project.classification === 'COMPLETE',
+      );
+      assert.equal('downloadUrl' in project, false);
+      assert.equal('transcript' in project, false);
+      assert.equal('TargetAmount' in project, false);
+      assert.equal('attendees' in project, false);
+    }
+  }
 }
 
 describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-MEETINGS-001 entitled same-scope inverse', () => {
@@ -1439,6 +1469,559 @@ describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-DOCUMENTS-001 entitled same-scope 
     assert.equal('relatedThreads' in client, false);
     assert.equal('relatedCapital' in client, false);
     assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+  });
+});
+
+describe('ATLAS-RESEARCH-INTELLIGENCE-RELATED-PROJECTS-001 entitled same-scope inverse', () => {
+  it('attaches same-scope relatedProjects on entitled research items and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01DocumentHit(), syn01ProjectHit()],
+      }),
+    });
+    const client = result.authorizedSearch.researchIntelligence.items.find(
+      (row) => row.subjectKind === 'client' && row.clientCode === 'SYN01',
+    );
+    assert.ok(client);
+    const project = client.relatedProjects?.find((row) => row.id === 'proj-syn-1');
+    assert.ok(project);
+    assert.equal(project.clientCode, 'SYN01');
+    assert.equal(project.title, 'SYN01 entitled intake project');
+    assert.equal(project.source, 'HVCG_Projects');
+    assert.equal(project.invented, false);
+    assert.equal(project.historicalHvs, false);
+    assert.equal(typeof project.hubMiRow, 'boolean');
+    assert.ok(
+      project.classification === 'CONFIRMED' ||
+        project.classification === 'LIKELY' ||
+        project.classification === 'PROPOSED' ||
+        project.classification === 'STALE_OR_UNCERTAIN' ||
+        project.classification === 'COMPLETE',
+    );
+    assert.ok((client.relatedProjects?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(client.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(client.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(/downloadUrl|transcript|attendee|TargetAmount/i.test(JSON.stringify(client.relatedProjects)), false);
+    assert.equal(JSON.stringify(client.relatedProjects).includes('PDG01'), false);
+    assert.equal(client.financingStatus, 'UNKNOWN');
+    assert.equal(client.fit, 'NOT_EVALUATED');
+    assert.equal(client.lenderCriteriaInvented, false);
+    assert.equal(client.invented, false);
+    assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+    assert.equal(result.authorizedSearch.researchIntelligence.outboundRefresh, false);
+    assert.equal(result.authorizedSearch.researchIntelligence.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [syn01ClientHit(), syn01MeetingHit(), syn01DocumentHit(), syn01ProjectHit()],
+    });
+    const ctxClient = viaIndex.clientContext.researchIntelligence.items.find(
+      (row) => row.subjectKind === 'client' && row.clientCode === 'SYN01',
+    );
+    assert.ok(ctxClient);
+    assert.equal(ctxClient.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(ctxClient.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(ctxClient.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.deepEqual(ctxClient.relatedProjects, client.relatedProjects);
+    assert.deepEqual(ctxClient.relatedMeetings, client.relatedMeetings);
+    assert.deepEqual(ctxClient.relatedDocuments, client.relatedDocuments);
+  });
+
+  it('honestly omits relatedProjects when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01DocumentHit()],
+      }),
+    });
+    const client = result.authorizedSearch.researchIntelligence.items.find(
+      (row) => row.subjectKind === 'client' && row.clientCode === 'SYN01',
+    );
+    assert.ok(client);
+    assert.equal(client.relatedProjects, undefined);
+    assert.equal('relatedProjects' in client, false);
+    assert.equal(client.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(client.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+  });
+
+  it('never attaches Client B projects to a Client A research item', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01DocumentHit(),
+          syn01ProjectHit(),
+          {
+            kind: 'project' as const,
+            id: 'proj-pdg',
+            title: 'PDG01 leak project',
+            href: '/clients/PDG01',
+            source: 'HVCG_Projects',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED' as const,
+          },
+          {
+            kind: 'client' as const,
+            id: 'PDG01',
+            title: 'PDG01 must not leak',
+            href: '/clients/PDG01',
+            source: 'HVCG_Clients',
+            clientCode: 'PDG01',
+            industry: 'Hidden Industry',
+          },
+        ],
+      }),
+    });
+    const client = result.authorizedSearch.researchIntelligence.items.find(
+      (row) => row.subjectKind === 'client' && row.clientCode === 'SYN01',
+    );
+    assert.ok(client);
+    assert.equal(client.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal((client.relatedProjects || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(client.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(client.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    const blob = JSON.stringify(result.authorizedSearch.researchIntelligence);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assert.equal(result.authorizedSearch.researchIntelligence.items.some((row) => row.clientCode === 'PDG01'), false);
+    assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+
+    const mixed = attachRelatedContextToResearchIntelligenceRecord(
+      staff,
+      syn01ClientResearchRecord(),
+      {
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord()],
+        },
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [
+            syn01ProjectRecord(),
+            syn01ProjectRecord({
+              id: 'proj-pdg',
+              title: 'PDG01 leak project',
+              clientCode: 'PDG01',
+            }),
+          ],
+        },
+        meetings: {
+          kind: 'meeting_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          items: [
+            {
+              id: 'meet-syn-1',
+              title: 'SYN01 weekly standup',
+              clientCode: 'SYN01',
+              classification: 'CONFIRMED',
+              source: 'HVCG_Meetings',
+              invented: false,
+              webUrl: MEETING_SOURCE,
+              sourceEventId: 'AAMk-syn-cal-1',
+              date: '2026-08-21T15:00:00Z',
+            },
+            {
+              id: 'meet-pdg',
+              title: 'PDG01 leak standup',
+              clientCode: 'PDG01',
+              classification: 'CONFIRMED',
+              source: 'HVCG_Meetings',
+              invented: false,
+            },
+          ],
+        },
+        hits: [],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal((mixed.relatedProjects || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(JSON.stringify(mixed.relatedProjects).includes('PDG01'), false);
+    assert.equal(mixed.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal((mixed.relatedMeetings || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+    assert.equal(mixed.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal((mixed.relatedDocuments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)), false);
+  });
+
+  it('omits relatedProjects when ClientCode is missing rather than guessing', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: manny,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'Live Oak',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'lender' as const,
+            id: 'ln-liveoak',
+            title: 'Live Oak Bank',
+            href: '/capital',
+            source: 'HVCG_Lenders',
+          },
+          syn01ProjectHit(),
+          syn01DocumentHit(),
+          syn01MeetingHit(),
+        ],
+      }),
+    });
+    const lenders = result.authorizedSearch.researchIntelligence.items.filter((row) => row.subjectKind === 'lender');
+    assert.ok(lenders.length);
+    for (const row of lenders) {
+      assert.equal(row.clientCode, undefined);
+      assert.equal(row.relatedProjects, undefined);
+      assert.equal(row.relatedDocuments, undefined);
+      assert.equal(row.relatedMeetings, undefined);
+    }
+    assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+  });
+
+  it('unscoped lender catalog rows never receive scoped projects', () => {
+    const unscoped = attachRelatedContextToResearchIntelligenceRecord(
+      manny,
+      {
+        id: 'lender:ln-liveoak',
+        subjectKind: 'lender',
+        title: 'Live Oak Bank',
+        source: 'HVCG_Lenders',
+        retrievalDate: '2026-08-24T18:00:00.000Z',
+        confidence: 'CONFIRMED',
+        superseded: false,
+        classification: 'CONFIRMED',
+        invented: false,
+        lenderCriteriaInvented: false,
+        financingStatus: RESEARCH_INTELLIGENCE_FINANCING_STATUS,
+        fit: RESEARCH_INTELLIGENCE_FIT,
+        evidence: 'Copied entitled HVCG_Lenders title. Lender criteria and financing status were not invented.',
+      },
+      {
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord()],
+        },
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [syn01ProjectRecord()],
+        },
+        meetings: {
+          kind: 'meeting_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          items: [],
+        },
+        hits: [syn01DocumentHit()],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.equal(unscoped.relatedProjects, undefined);
+    assert.equal('relatedProjects' in unscoped, false);
+    assert.equal(unscoped.relatedDocuments, undefined);
+    assert.equal(unscoped.relatedMeetings, undefined);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.financingStatus, 'UNKNOWN');
+    assert.equal(unscoped.fit, 'NOT_EVALUATED');
+    assert.equal(unscoped.lenderCriteriaInvented, false);
+    assert.equal(unscoped.invented, false);
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01DocumentHit(), syn01ProjectHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.researchIntelligence.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.researchIntelligence.items.some((row) => row.relatedProjects),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.researchIntelligence);
+    assert.equal(unknownBlob.includes('proj-syn-1'), false);
+    assert.equal(unknownBlob.includes('file-syn-1'), false);
+    assert.equal(unknownBlob.includes('meet-syn-1'), false);
+    assert.equal(unknownBlob.includes('PDG01'), false);
+
+    const denied = attachRelatedContextToResearchIntelligenceRecord(
+      otherStaff,
+      syn01ClientResearchRecord(),
+      {
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord()],
+        },
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [syn01ProjectRecord()],
+        },
+        meetings: {
+          kind: 'meeting_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          items: [
+            {
+              id: 'meet-syn-1',
+              title: 'SYN01 weekly standup',
+              clientCode: 'SYN01',
+              classification: 'CONFIRMED',
+              source: 'HVCG_Meetings',
+              invented: false,
+              webUrl: MEETING_SOURCE,
+            },
+          ],
+        },
+        hits: [],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.equal(denied.relatedProjects, undefined);
+    assert.equal('relatedProjects' in denied, false);
+    assert.equal(denied.relatedDocuments, undefined);
+    assert.equal('relatedDocuments' in denied, false);
+    assert.equal(denied.relatedMeetings, undefined);
+    assert.equal('relatedMeetings' in denied, false);
+  });
+
+  it('leaves the empty research payload unchanged and omits relatedProjects when search.projects is absent', async () => {
+    const empty = emptyResearchIntelligencePayload('2026-08-24T18:00:00.000Z');
+    assert.deepEqual(empty.items, []);
+    assert.equal('relatedProjects' in empty, false);
+    assert.equal('relatedDocuments' in empty, false);
+    assert.equal('relatedMeetings' in empty, false);
+    assert.equal(empty.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal(empty.outboundRefresh, false);
+    const attachedEmpty = attachRelatedContextToResearchIntelligence(
+      staff,
+      empty,
+      {
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord()],
+        },
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [syn01ProjectRecord()],
+        },
+        meetings: {
+          kind: 'meeting_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          items: [
+            {
+              id: 'meet-syn-1',
+              title: 'SYN01 weekly standup',
+              clientCode: 'SYN01',
+              classification: 'CONFIRMED',
+              source: 'HVCG_Meetings',
+              invented: false,
+              webUrl: MEETING_SOURCE,
+            },
+          ],
+        },
+        hits: [],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.deepEqual(attachedEmpty, empty);
+
+    const absent = attachRelatedContextToResearchIntelligenceRecord(
+      staff,
+      syn01ClientResearchRecord(),
+      {
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord()],
+        },
+        meetings: {
+          kind: 'meeting_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          items: [
+            {
+              id: 'meet-syn-1',
+              title: 'SYN01 weekly standup',
+              clientCode: 'SYN01',
+              classification: 'CONFIRMED',
+              source: 'HVCG_Meetings',
+              invented: false,
+              webUrl: MEETING_SOURCE,
+            },
+          ],
+        },
+        hits: [],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.equal(absent.relatedProjects, undefined);
+    assert.equal('relatedProjects' in absent, false);
+    assert.equal(absent.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(absent.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+  });
+
+  it('never invents ClientCodes, lender criteria, financing status, fit, TargetAmount, downloadUrl, or Hub-MI', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ClientHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+          syn01MeetingHit({
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+          }),
+          syn01DocumentHit({
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+            previewGetUrl: 'https://evil.example/preview',
+          }),
+          {
+            ...syn01ProjectHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+        ],
+      }),
+    });
+    const blob = JSON.stringify(result.authorizedSearch.researchIntelligence);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/attendee/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    const client = result.authorizedSearch.researchIntelligence.items.find(
+      (row) => row.subjectKind === 'client' && row.clientCode === 'SYN01',
+    );
+    assert.ok(client);
+    assert.equal(client.financingStatus, 'UNKNOWN');
+    assert.equal(client.fit, 'NOT_EVALUATED');
+    assert.equal(client.lenderCriteriaInvented, false);
+    assert.equal(client.invented, false);
+    assert.ok(client.relatedProjects?.some((row) => row.id === 'proj-syn-1'));
+    assert.ok(client.relatedDocuments?.some((row) => row.id === 'file-syn-1'));
+    assert.ok(client.relatedMeetings?.some((row) => row.id === 'meet-syn-1'));
+    const attached = client.relatedProjects?.find((row) => row.id === 'proj-syn-1');
+    assert.ok(attached);
+    assert.equal(attached.invented, false);
+    assert.equal(typeof attached.hubMiRow, 'boolean');
+    assert.ok(
+      attached.classification === 'CONFIRMED' ||
+        attached.classification === 'LIKELY' ||
+        attached.classification === 'PROPOSED' ||
+        attached.classification === 'STALE_OR_UNCERTAIN' ||
+        attached.classification === 'COMPLETE',
+    );
+    assert.equal('relatedThreads' in client, false);
+    assert.equal('relatedCapital' in client, false);
+    assertResearchHonesty(result.authorizedSearch.researchIntelligence);
+  });
+
+  it('copies hubMiRow as composed and never invents Hub-MI on recovered projects', () => {
+    const current = attachRelatedContextToResearchIntelligenceRecord(
+      staff,
+      syn01ClientResearchRecord(),
+      {
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [syn01ProjectRecord({ hubMiRow: true, classification: 'CONFIRMED' })],
+        },
+        hits: [],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    const currentRef = current.relatedProjects?.find((row) => row.id === 'proj-syn-1');
+    assert.ok(currentRef);
+    assert.equal(currentRef.hubMiRow, true);
+    assert.equal(currentRef.classification, 'CONFIRMED');
+    assert.equal(currentRef.invented, false);
+
+    const recovered = attachRelatedContextToResearchIntelligenceRecord(
+      staff,
+      syn01ClientResearchRecord(),
+      {
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [
+            syn01ProjectRecord({
+              id: 'proj-recovered-1',
+              title: 'SYN01 recovered HVS project',
+              historicalHvs: true,
+              hubMiRow: false,
+              classification: 'STALE_OR_UNCERTAIN',
+              operationalized: false,
+            }),
+          ],
+        },
+        hits: [],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    const recoveredRef = recovered.relatedProjects?.find((row) => row.id === 'proj-recovered-1');
+    assert.ok(recoveredRef);
+    assert.equal(recoveredRef.hubMiRow, false);
+    assert.equal(recoveredRef.historicalHvs, true);
+    assert.equal(recoveredRef.classification, 'STALE_OR_UNCERTAIN');
+    assert.equal(recoveredRef.invented, false);
+    assert.equal(JSON.stringify(recovered.relatedProjects).includes('TargetAmount'), false);
   });
 });
 
