@@ -42,6 +42,7 @@ export const ASK_ATLAS_SEARCH_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-001' as co
 export const ASK_ATLAS_SEARCH_002_MISSION_KEY = 'ATLAS-AGENTIC-OPS-SEARCH-002' as const;
 export const ASK_ATLAS_SEARCH_ACTIONABILITY_MISSION_KEY = 'ATLAS-SEARCH-ACTIONABILITY-001' as const;
 export const ASK_ATLAS_ATTENTION_NL_MISSION_KEY = 'ATLAS-AGENTIC-OPS-ATTENTION-NL-001' as const;
+export const ASK_ATLAS_PROJECT_RECONSTRUCTION_MISSION_KEY = 'ATLAS-PROJECT-RECONSTRUCTION-001' as const;
 export const ASK_ATLAS_OPERATOR_AGENT = 'atlas-hub-operator' as const;
 export const ASK_ATLAS_RUNTIME_AGENT = 'atlas-hub-runtime' as const;
 export const GET_ATTENTION_ITEMS_TOOL = 'get_attention_items' as const;
@@ -192,6 +193,12 @@ export interface AtlasAuthorizedSearchHit {
   queue?: string;
   evidence?: string;
   nextAction?: string;
+  /** Copied from an existing entitled HVCG_Projects row. Never invented. */
+  objective?: string;
+  ownerName?: string;
+  startDate?: string;
+  targetCompletionDate?: string;
+  status?: string;
 }
 
 export interface DocumentOperatingRecord {
@@ -202,6 +209,42 @@ export interface DocumentOperatingRecord {
   clientCode?: string;
   provenance: AskAtlasClassification;
   source: string;
+}
+
+export type ProjectOperatingClassification =
+  | 'CONFIRMED'
+  | 'LIKELY'
+  | 'PROPOSED'
+  | 'STALE_OR_UNCERTAIN'
+  | 'COMPLETE';
+
+export interface ProjectOperatingEvidenceRef {
+  kind: string;
+  id: string;
+  title: string;
+  source?: string;
+  modifiedAt?: string;
+  webUrl?: string;
+}
+
+export interface ProjectOperatingRecord {
+  id: string;
+  title: string;
+  clientCode?: string;
+  classification: ProjectOperatingClassification;
+  source: string;
+  historicalHvs: boolean;
+  hubMiRow: boolean;
+  invented: false;
+  operationalized: boolean;
+  objective?: string;
+  scope?: string;
+  participants?: string[];
+  timeline?: Array<{ at: string; title: string; source: string }>;
+  deliverables?: string[];
+  nextAction?: string;
+  evidence?: string;
+  evidenceRefs?: ProjectOperatingEvidenceRef[];
 }
 
 export interface AtlasAuthorizedSearch {
@@ -216,6 +259,13 @@ export interface AtlasAuthorizedSearch {
     policyClass: 'READ_AUTO';
     binariesInAtlas: false;
     items: DocumentOperatingRecord[];
+  };
+  projects: {
+    kind: 'project_operating_record_v1';
+    policyClass: 'READ_AUTO';
+    invented: false;
+    currentClientsFirst: true;
+    items: ProjectOperatingRecord[];
   };
   classification: AskAtlasClassification | 'HONEST_EMPTY';
   why: string;
