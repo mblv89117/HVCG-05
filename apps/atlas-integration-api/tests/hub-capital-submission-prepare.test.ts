@@ -222,6 +222,7 @@ describe('ATLAS-CAPITAL-SUBMISSION-PREPARE-001 prepare-only capital request', ()
   });
 
   it('attaches the same PREPARE records on search and client-context from entitled evidence', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(capitalService(), staff, 'SYN01');
     const capHit = found.results.find((row) => row.id === 'cap-syn-1');
     assert.ok(capHit);
@@ -234,12 +235,14 @@ describe('ATLAS-CAPITAL-SUBMISSION-PREPARE-001 prepare-only capital request', ()
       principal: staff,
       picture: picture(),
       searchQuery: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     const viaIndex = getClientContext({
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledIndexHits: found.results,
     });
     assert.deepEqual(viaIndex.clientContext.capitalSubmissions, search.authorizedSearch.capitalSubmissions);
@@ -266,6 +269,7 @@ describe('ATLAS-CAPITAL-SUBMISSION-PREPARE-001 prepare-only capital request', ()
       principal: staff,
       picture: picture(),
       clientCode: 'SYN01',
+      now,
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
     assert.deepEqual(viaLoad.clientContext.capitalSubmissions, search.authorizedSearch.capitalSubmissions);
