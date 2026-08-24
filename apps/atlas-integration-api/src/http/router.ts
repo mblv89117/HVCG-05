@@ -340,8 +340,10 @@ export async function handleRequest(
           reason: prior?.reason || 'subscription create not proven against Graph',
           mailStatus: prior?.mailStatus || 'skipped',
           filesStatus: prior?.filesStatus || 'skipped',
+          calendarStatus: prior?.calendarStatus || 'skipped',
           mail: prior?.mail,
           files: prior?.files,
+          calendar: prior?.calendar,
           lastEnsuredAt: prior?.lastEnsuredAt,
           seenIds: accepted.seen,
         });

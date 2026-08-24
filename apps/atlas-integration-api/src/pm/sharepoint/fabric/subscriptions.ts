@@ -3,6 +3,10 @@
  * Mail: users/{owner}/mailFolders/inbox/messages (app-only Mail.Read documented).
  * Files: attempt /drives/{id}/root only when the existing indexer already
  * proved a drive id. Graph 400/403/405 → honest-skip; scheduled file delta stays.
+ * Calendar: users/{owner}/events (app-only Calendars.Read documented), then
+ * users/{owner}/calendar/events. Graph 400/403/404/405 → honest-skip;
+ * scheduled calendar sweep stays. Calendar skip/error does not flip overall
+ * status to error when mail remains ready.
  *
  * Max mail lifetime is 4230 minutes. Renew before expiry. Persist ids in
  * fabric-checkpoint.json (same recycle-survivable overlay as mail delta).
@@ -22,12 +26,13 @@ import { FABRIC_CHECKPOINT_FILE, sanitizeFabricNotes } from './status.ts';
 export const MAIL_SUBSCRIPTION_MAX_MINUTES = 4230;
 export const MAIL_SUBSCRIPTION_REQUEST_MINUTES = 4000;
 export const FILE_SUBSCRIPTION_REQUEST_MINUTES = 4000;
+export const CALENDAR_SUBSCRIPTION_REQUEST_MINUTES = 4000;
 export const RENEW_IF_REMAINING_MS = 12 * 60 * 60 * 1000;
 
 export interface FabricSubscriptionRecord {
   id: string;
   resource: string;
-  kind: 'mail' | 'files';
+  kind: 'mail' | 'files' | 'calendar';
   expirationDateTime: string;
   notificationUrl: string;
 }
@@ -37,8 +42,10 @@ export interface FabricChangeNotificationState {
   reason: string;
   mailStatus: ChangeNotificationStatus;
   filesStatus: ChangeNotificationStatus;
+  calendarStatus: ChangeNotificationStatus;
   mail?: FabricSubscriptionRecord;
   files?: FabricSubscriptionRecord[];
+  calendar?: FabricSubscriptionRecord;
   lastEnsuredAt?: string;
   seenIds?: string[];
 }
@@ -49,6 +56,22 @@ export function mailNotificationResource(oid = MANNY_ENTRA_OID): string {
 
 export function fileNotificationResource(driveId: string): string {
   return `drives/${driveId}/root`;
+}
+
+export function calendarNotificationResource(oid = MANNY_ENTRA_OID): string {
+  return `users/${oid}/events`;
+}
+
+export function calendarNotificationResourceFallback(oid = MANNY_ENTRA_OID): string {
+  return `users/${oid}/calendar/events`;
+}
+
+export function isCalendarSubscriptionResource(resource: string, oid = MANNY_ENTRA_OID): boolean {
+  return resource === calendarNotificationResource(oid) || resource === calendarNotificationResourceFallback(oid);
+}
+
+function isUnsupportedStatus(status: number): boolean {
+  return status === 400 || status === 403 || status === 404 || status === 405;
 }
 
 export function decideFileChangeNotifications(opts: {
@@ -74,6 +97,23 @@ export function decideFileChangeNotifications(opts: {
   };
 }
 
+export function decideCalendarChangeNotifications(opts: {
+  graphStatus?: number;
+  graphMessage?: string;
+}): { action: 'attempt' | 'skip'; reason: string } {
+  if (typeof opts.graphStatus === 'number' && isUnsupportedStatus(opts.graphStatus)) {
+    const detail = opts.graphMessage ? `: ${opts.graphMessage}` : '';
+    return {
+      action: 'skip',
+      reason: `Graph rejected calendar subscription HTTP ${opts.graphStatus}${detail}; scheduled calendar sweep remains`,
+    };
+  }
+  return {
+    action: 'attempt',
+    reason: 'users/{oid}/events is documented for application Calendars.Read',
+  };
+}
+
 export function subscriptionExpiration(now: Date, minutes: number): string {
   const capped = Math.min(Math.max(45, minutes), MAIL_SUBSCRIPTION_MAX_MINUTES);
   return new Date(now.getTime() + capped * 60_000).toISOString();
@@ -96,10 +136,6 @@ function graphErrorMessage(json: Record<string, unknown>, fallback: string): str
     if (text) return text.slice(0, 200);
   }
   return fallback;
-}
-
-function isUnsupportedStatus(status: number): boolean {
-  return status === 400 || status === 403 || status === 404 || status === 405;
 }
 
 function readCheckpointDriveIds(dataDir: string): string[] {
@@ -177,7 +213,11 @@ export async function deleteFabricSubscription(
   return fabric.deleteJson(`/v1.0/subscriptions/${id}`);
 }
 
-function asRecord(json: Record<string, unknown>, kind: 'mail' | 'files', notificationUrl: string): FabricSubscriptionRecord | null {
+function asRecord(
+  json: Record<string, unknown>,
+  kind: 'mail' | 'files' | 'calendar',
+  notificationUrl: string,
+): FabricSubscriptionRecord | null {
   const id = typeof json.id === 'string' ? json.id : '';
   const resource = typeof json.resource === 'string' ? json.resource : '';
   const expirationDateTime = typeof json.expirationDateTime === 'string' ? json.expirationDateTime : '';
@@ -205,6 +245,7 @@ export async function ensureFabricChangeSubscriptions(opts: {
       reason: 'notification URL not configured (HTTPS required); subscription create not proven against Graph',
       mailStatus: 'skipped',
       filesStatus: 'skipped',
+      calendarStatus: 'skipped',
       lastEnsuredAt: now.toISOString(),
       seenIds: prior?.seenIds,
     };
@@ -216,6 +257,7 @@ export async function ensureFabricChangeSubscriptions(opts: {
       reason: 'clientState not configured; subscription create not proven against Graph',
       mailStatus: 'skipped',
       filesStatus: 'skipped',
+      calendarStatus: 'skipped',
       lastEnsuredAt: now.toISOString(),
       seenIds: prior?.seenIds,
     };
@@ -338,22 +380,109 @@ export async function ensureFabricChangeSubscriptions(opts: {
     }
   }
 
+  const calendarResources = [calendarNotificationResource(), calendarNotificationResourceFallback()];
+  let calendar =
+    prior?.calendar && isCalendarSubscriptionResource(prior.calendar.resource) ? prior.calendar : undefined;
+  let calendarStatus: ChangeNotificationStatus = 'skipped';
+  let calendarReason = 'scheduled calendar sweep remains';
+
+  try {
+    if (calendar?.id && !needsRenewal(calendar.expirationDateTime, now)) {
+      calendarStatus = 'ready';
+      calendarReason = 'Calendar subscription id stored after Graph create.';
+    } else if (calendar?.id && needsRenewal(calendar.expirationDateTime, now)) {
+      const expirationDateTime = subscriptionExpiration(now, CALENDAR_SUBSCRIPTION_REQUEST_MINUTES);
+      const renewed = await renewSubscription(opts.fabric, calendar.id, expirationDateTime);
+      if (renewed.status === 200) {
+        const rec = asRecord(renewed.json, 'calendar', notificationUrl);
+        calendar = rec || { ...calendar, expirationDateTime };
+        calendarStatus = 'ready';
+        calendarReason = 'Calendar subscription renewed.';
+      } else if (renewed.status === 404) {
+        calendar = undefined;
+      } else if (isUnsupportedStatus(renewed.status)) {
+        const decided = decideCalendarChangeNotifications({
+          graphStatus: renewed.status,
+          graphMessage: graphErrorMessage(renewed.json, 'renew rejected'),
+        });
+        calendar = undefined;
+        calendarStatus = 'skipped';
+        calendarReason = decided.reason;
+      } else {
+        calendarStatus = 'error';
+        calendarReason = `Calendar subscription renew HTTP ${renewed.status}: ${graphErrorMessage(renewed.json, 'renew failed')}`;
+      }
+    }
+
+    if (calendarStatus !== 'ready' && calendarStatus !== 'error') {
+      let lastUnsupported: { status: number; json: Record<string, unknown> } | null = null;
+      for (const resource of calendarResources) {
+        const created = await createSubscription(opts.fabric, {
+          changeType: 'created,updated',
+          notificationUrl,
+          resource,
+          expirationDateTime: subscriptionExpiration(now, CALENDAR_SUBSCRIPTION_REQUEST_MINUTES),
+          clientState,
+          latestSupportedTlsVersion: 'v1_2',
+        });
+        if (created.status === 201 || created.status === 200) {
+          const rec = asRecord(created.json, 'calendar', notificationUrl);
+          if (rec) {
+            calendar = rec;
+            calendarStatus = 'ready';
+            calendarReason = 'Calendar subscription created.';
+            lastUnsupported = null;
+            break;
+          }
+          calendarStatus = 'error';
+          calendarReason = 'Calendar subscription create returned no id; not claiming ready.';
+          break;
+        }
+        if (isUnsupportedStatus(created.status)) {
+          lastUnsupported = created;
+          continue;
+        }
+        calendarStatus = 'error';
+        calendarReason = `Calendar subscription create HTTP ${created.status}: ${graphErrorMessage(created.json, 'create failed')}`;
+        break;
+      }
+      if (calendarStatus !== 'ready' && calendarStatus !== 'error' && lastUnsupported) {
+        const decided = decideCalendarChangeNotifications({
+          graphStatus: lastUnsupported.status,
+          graphMessage: graphErrorMessage(lastUnsupported.json, 'create rejected'),
+        });
+        calendar = undefined;
+        calendarStatus = 'skipped';
+        calendarReason = decided.reason;
+      }
+    }
+  } catch (err) {
+    calendarStatus = 'error';
+    calendarReason = `Calendar subscription ensure failed: ${err instanceof Error ? err.message : 'unknown error'}`;
+  }
+
   const status: ChangeNotificationStatus =
     mailStatus === 'ready' ? 'ready' : mailStatus === 'error' ? 'error' : 'skipped';
   const reason =
     mailStatus === 'ready'
-      ? filesStatus === 'skipped'
-        ? `${mailReason || 'Mail subscription id stored after Graph create.'} Files: ${filesReason}`
-        : mailReason || 'Mail subscription id stored after Graph create.'
-      : mailReason || filesReason || 'subscription create not proven against Graph';
+      ? [
+          mailReason || 'Mail subscription id stored after Graph create.',
+          filesStatus === 'skipped' ? `Files: ${filesReason}` : '',
+          calendarStatus === 'skipped' ? `Calendar: ${calendarReason}` : calendarReason,
+        ]
+          .filter(Boolean)
+          .join(' ')
+      : mailReason || filesReason || calendarReason || 'subscription create not proven against Graph';
 
   return persistChangeNotificationState(opts.dataDir, {
     status,
     reason,
     mailStatus,
     filesStatus,
+    calendarStatus,
     mail: mailStatus === 'ready' ? mail : undefined,
     files: filesStatus === 'ready' ? files : [],
+    calendar: calendarStatus === 'ready' ? calendar : undefined,
     lastEnsuredAt: now.toISOString(),
     seenIds: prior?.seenIds,
   });

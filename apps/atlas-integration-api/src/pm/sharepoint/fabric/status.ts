@@ -40,6 +40,7 @@ export interface FabricSyncHealth {
     reason: string;
     mail: ChangeNotificationStatus;
     files: ChangeNotificationStatus;
+    calendar: ChangeNotificationStatus;
   };
 }
 
@@ -85,6 +86,7 @@ const SKIPPED_NOTIFICATIONS: FabricSyncHealth['changeNotifications'] = {
   reason: 'subscription create not proven against Graph',
   mail: 'skipped',
   files: 'skipped',
+  calendar: 'skipped',
 };
 
 function inspectChangeNotificationHealth(raw: {
@@ -93,8 +95,10 @@ function inspectChangeNotificationHealth(raw: {
     reason?: string;
     mailStatus?: ChangeNotificationStatus;
     filesStatus?: ChangeNotificationStatus;
+    calendarStatus?: ChangeNotificationStatus;
     mail?: { id?: string; expirationDateTime?: string };
     files?: Array<{ id?: string; expirationDateTime?: string }>;
+    calendar?: { id?: string; expirationDateTime?: string };
   };
 }): FabricSyncHealth['changeNotifications'] {
   const state = raw.changeNotifications;
@@ -115,23 +119,41 @@ function inspectChangeNotificationHealth(raw: {
           Date.parse(row.expirationDateTime) > Date.now(),
       ),
   );
+  const calendarReady = Boolean(
+    state.calendarStatus === 'ready' &&
+      state.calendar?.id &&
+      typeof state.calendar.expirationDateTime === 'string' &&
+      Date.parse(state.calendar.expirationDateTime) > Date.now(),
+  );
+  const filesLane: ChangeNotificationStatus = filesReady
+    ? 'ready'
+    : state.filesStatus === 'error'
+      ? 'error'
+      : 'skipped';
+  const calendarLane: ChangeNotificationStatus = calendarReady
+    ? 'ready'
+    : state.calendarStatus === 'error'
+      ? 'error'
+      : 'skipped';
   const reason = sanitizeFabricNotes([state.reason || SKIPPED_NOTIFICATIONS.reason])[0] || SKIPPED_NOTIFICATIONS.reason;
-  if (state.mailStatus === 'error' || state.status === 'error') {
-    return { status: 'error', reason, mail: 'error', files: state.filesStatus || 'skipped' };
+  if (state.mailStatus === 'error' || (state.status === 'error' && !mailReady)) {
+    return { status: 'error', reason, mail: 'error', files: filesLane, calendar: calendarLane };
   }
   if (mailReady) {
     return {
       status: 'ready',
       reason,
       mail: 'ready',
-      files: filesReady ? 'ready' : state.filesStatus === 'error' ? 'error' : 'skipped',
+      files: filesLane,
+      calendar: calendarLane,
     };
   }
   return {
     status: 'skipped',
     reason,
     mail: 'skipped',
-    files: filesReady ? 'ready' : state.filesStatus === 'error' ? 'error' : 'skipped',
+    files: filesLane,
+    calendar: calendarLane,
   };
 }
 
@@ -188,8 +210,10 @@ export function inspectFabricSyncHealth(
         reason?: string;
         mailStatus?: ChangeNotificationStatus;
         filesStatus?: ChangeNotificationStatus;
+        calendarStatus?: ChangeNotificationStatus;
         mail?: { id?: string; expirationDateTime?: string };
         files?: Array<{ id?: string; expirationDateTime?: string }>;
+        calendar?: { id?: string; expirationDateTime?: string };
       };
     };
     const lastRunAt = typeof raw.lastRunAt === 'string' && raw.lastRunAt ? raw.lastRunAt : null;
