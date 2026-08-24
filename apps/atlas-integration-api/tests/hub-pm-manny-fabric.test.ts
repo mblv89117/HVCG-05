@@ -224,8 +224,10 @@ describe('Fabric Graph allowlist', () => {
 describe('Fabric mail delta checkpointing', () => {
   function service() {
     const communications: Array<Record<string, unknown>> = [];
+    const contacts: Array<Record<string, unknown>> = [];
     return {
       communications,
+      contacts,
       async listClientHints() {
         return [{ clientCode: 'CCB01', displayName: 'Colorado Craft Beef', dba: 'Colorado Craft Beef' }];
       },
@@ -235,8 +237,8 @@ describe('Fabric mail delta checkpointing', () => {
       async upsertMeetingIndex() {
         /* not exercised */
       },
-      async upsertContactIndex() {
-        /* not exercised */
+      async upsertContactIndex(row: Record<string, unknown>) {
+        contacts.push(row);
       },
     };
   }
@@ -320,6 +322,8 @@ describe('Fabric mail delta checkpointing', () => {
       hasAttachments?: boolean;
       extraMessages?: Record<string, unknown>[];
       attachmentStatus?: number;
+      contactsStatus?: number;
+      contacts?: Record<string, unknown>[];
     } = {},
   ) {
     let deltaCalls = 0;
@@ -386,6 +390,11 @@ describe('Fabric mail delta checkpointing', () => {
               ],
             },
           };
+        }
+        if (path.includes('/contacts')) {
+          const status = extras.contactsStatus ?? 404;
+          if (status !== 200) return { status, json: {} };
+          return { status: 200, json: { value: extras.contacts ?? [] } };
         }
         return { status: 404, json: {} };
       },
@@ -826,6 +835,162 @@ describe('Fabric mail delta checkpointing', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('reports contacts skipped when Graph returns HTTP 403 and never claims LIVE', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-contacts-403-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, { contactsStatus: 403 }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.contacts, 0);
+      assert.equal(result.checkpoint.contactsLastStatus, 403);
+      assert.ok(result.notes.some((note) => /Contacts index stopped at HTTP 403/.test(note)));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.contacts.status, 'skipped');
+      assert.match(health.contacts.reason, /HTTP 403/);
+      assert.equal(health.lastIndexed.contacts, 0);
+      assert.equal(health.cumulative.contacts, 0);
+      assert.equal(svc.contacts.length, 0);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports contacts skipped when Graph returns HTTP 405 and never claims LIVE', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-contacts-405-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, { contactsStatus: 405 }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.contacts, 0);
+      assert.equal(result.checkpoint.contactsLastStatus, 405);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.contacts.status, 'skipped');
+      assert.match(health.contacts.reason, /HTTP 405/);
+      assert.equal(health.lastIndexed.contacts, 0);
+      assert.equal(health.cumulative.contacts, 0);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports contacts ready with honest empty when Graph 200 returns no items', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-contacts-empty-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, { contactsStatus: 200, contacts: [] }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.contacts, 0);
+      assert.equal(result.checkpoint.contactsLastStatus, 200);
+      assert.equal(result.checkpoint.contactsGraphItems, 0);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.contacts.status, 'ready');
+      assert.match(health.contacts.reason, /empty page/);
+      assert.equal(health.lastIndexed.contacts, 0);
+      assert.equal(health.cumulative.contacts, 0);
+      assert.equal(svc.contacts.length, 0);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(/CCB99|PDG01/i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports contacts ready with classify-skip when Graph 200 items have no entitled ClientCode', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-contacts-classify-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, {
+          contactsStatus: 200,
+          contacts: [
+            {
+              id: 'ct-unmatched',
+              displayName: 'Unknown Vendor Desk',
+              companyName: 'Example Logistics LLC',
+              emailAddresses: [{ address: 'desk@example.com' }],
+            },
+          ],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.contacts, 0);
+      assert.equal(result.checkpoint.contactsLastStatus, 200);
+      assert.equal(result.checkpoint.contactsGraphItems, 1);
+      assert.equal(result.checkpoint.contactsClassifySkipped, 1);
+      assert.equal(svc.contacts.length, 0);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.contacts.status, 'ready');
+      assert.match(health.contacts.reason, /classify-skipped|missing entitled ClientCode/);
+      assert.equal(health.lastIndexed.contacts, 0);
+      assert.equal(health.cumulative.contacts, 0);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(/CCB99|PDG01|invent/i.test(JSON.stringify(health)), false);
+      assert.equal(
+        svc.contacts.every((row) => !row.clientCode || row.clientCode === 'CCB01'),
+        true,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports contacts ready with count 1 for one entitled ClientCode match', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-contacts-entitled-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, {
+          contactsStatus: 200,
+          contacts: [
+            {
+              id: 'ct-ccb',
+              displayName: 'Colorado Craft Beef AP',
+              companyName: 'Colorado Craft Beef',
+              jobTitle: 'Accounts',
+              emailAddresses: [{ address: 'ap@example.com' }],
+            },
+          ],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.contacts, 1);
+      assert.equal(result.checkpoint.contactsLastStatus, 200);
+      assert.equal(svc.contacts.length, 1);
+      assert.equal(svc.contacts[0]?.clientCode, 'CCB01');
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.contacts.status, 'ready');
+      assert.equal(health.lastIndexed.contacts, 1);
+      assert.equal(health.cumulative.contacts, 1);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(/CCB99|PDG01/i.test(JSON.stringify(health)), false);
+      assert.equal(
+        svc.contacts.every((row) => row.clientCode === 'CCB01'),
+        true,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('Fabric sync honesty status', () => {
@@ -840,6 +1005,9 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.cumulative.attachmentsIndexed, 0);
       assert.equal(health.attachmentLinks.status, 'skipped');
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
+      assert.equal(health.contacts.status, 'skipped');
+      assert.match(health.contacts.reason, /have not completed|remain unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
       assert.equal(health.scheduledSweepEnabled, false);
       assert.equal(health.changeNotifications.status, 'skipped');
       assert.equal(health.changeNotifications.mail, 'skipped');
@@ -847,6 +1015,20 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.changeNotifications.calendar, 'skipped');
       const dumped = JSON.stringify(health);
       assert.equal(/deltatoken|mailSkip=|Bearer /i.test(dumped), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports contacts error when the fabric checkpoint is unreadable', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-contacts-unreadable-'));
+    try {
+      writeFileSync(join(dir, 'fabric-checkpoint.json'), '{not-json', 'utf8');
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.contacts.status, 'error');
+      assert.match(health.contacts.reason, /unreadable|unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
+      assert.equal(health.honesty, 'degraded');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
