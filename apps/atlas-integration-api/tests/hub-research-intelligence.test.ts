@@ -34,6 +34,13 @@
  * ClientCode is missing. Unscoped lender catalog titles never attach
  * to a scoped capital row. PREPARE_ONLY stays as composed. No new
  * research / KG / capital product.
+ * + ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001
+ * Inverse researchRelationship on DocumentOperatingRecord copies the
+ * same already-authorized same-scope researchIntelligence items
+ * (same RelatedMeetingResearchRef). Fail-closed when the document
+ * ClientCode is missing. Unscoped lender catalog titles never attach
+ * to a scoped document. Preview stays time-limited Graph preview only.
+ * No new research / KG / document product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -70,6 +77,8 @@ import {
   attachRelatedContextToClientSupportRecord,
   attachRelatedContextToCapitalSubmission,
   attachRelatedContextToCapitalSubmissions,
+  attachRelatedContextToDocument,
+  attachRelatedContextToDocuments,
   attachRelatedContextToResearchIntelligence,
   attachRelatedContextToResearchIntelligenceRecord,
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
@@ -91,6 +100,7 @@ import {
   type AtlasClientContext,
   type CapitalSubmissionPrepareRecord,
   type ClientSupportAgentRecord,
+  type DocumentOperatingRecord,
   type MeetingOperatingRecord,
   type OnboardingAgentRecord,
   type OperatorOperatingPicture,
@@ -1717,5 +1727,392 @@ describe('ATLAS-CAPITAL-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', 
     );
     assert.deepEqual(attachedEmpty, empty);
     assert.equal(attachedEmpty, empty);
+  });
+});
+
+const DOC_SOURCE =
+  'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_SYN01/intake-memo.pdf';
+
+function syn01DocumentHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'document' as const,
+    id: 'file-syn-1',
+    title: 'SYN01 intake memo',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications/file-index',
+    clientCode: 'SYN01',
+    webUrl: DOC_SOURCE,
+    provenance: 'CONFIRMED' as const,
+    modifiedAt: '2026-08-20T18:04:00Z',
+    ...overrides,
+  };
+}
+
+function syn01DocumentRecord(): DocumentOperatingRecord {
+  return {
+    id: 'file-syn-1',
+    title: 'SYN01 intake memo',
+    webUrl: DOC_SOURCE,
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED',
+    source: 'HVCG_Communications/file-index',
+  };
+}
+
+function assertDocumentResearchHonesty(item: DocumentOperatingRecord): void {
+  const blob = JSON.stringify(item);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
+  assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
+  assert.equal(/\bltv\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/credit box/i.test(blob), false);
+  for (const row of item.researchRelationship || []) {
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+  }
+}
+
+describe('ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  it('attaches same-scope researchRelationship on entitled documents and get_client_context', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      now,
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01DocumentHit()],
+      }),
+    });
+    const document = result.authorizedSearch.documents.items.find((row) => row.id === 'file-syn-1');
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(document);
+    assert.ok(meeting);
+    const research = document.researchRelationship?.find(
+      (row) => row.clientCode === 'SYN01' && /synthetic alpha/i.test(row.title),
+    );
+    assert.ok(research);
+    assert.equal(research.source, 'HVCG_Clients');
+    assert.equal(research.invented, false);
+    assert.equal(research.lenderCriteriaInvented, false);
+    assert.equal(research.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(research.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(research.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal(research.superseded, false);
+    assert.ok(research.retrievalDate);
+    assert.ok((document.researchRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.deepEqual(document.researchRelationship, meeting.researchRelationship);
+    assert.equal(document.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assertDocumentResearchHonesty(document);
+    assert.equal(JSON.stringify(document.researchRelationship).includes('PDG01'), false);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      now,
+      entitledIndexHits: [syn01ClientHit(), syn01MeetingHit(), syn01DocumentHit()],
+    });
+    const ctxMeeting = viaIndex.clientContext.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(ctxMeeting);
+    assert.equal(
+      ctxMeeting.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.deepEqual(ctxMeeting.researchRelationship, document.researchRelationship);
+    assert.equal('documents' in viaIndex.clientContext, false);
+  });
+
+  it('honestly omits researchRelationship when no entitled research', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01DocumentHit()],
+      }),
+    });
+    const document = result.authorizedSearch.documents.items.find((row) => row.id === 'file-syn-1');
+    assert.ok(document);
+    assert.equal(document.researchRelationship, undefined);
+    assert.equal('researchRelationship' in document, false);
+    assertDocumentResearchHonesty(document);
+  });
+
+  it('never attaches Client B research to a Client A document', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01DocumentHit(),
+          {
+            kind: 'client' as const,
+            id: 'PDG01',
+            title: 'PDG01 must not leak',
+            href: '/clients/PDG01',
+            source: 'HVCG_Clients',
+            clientCode: 'PDG01',
+            industry: 'Hidden Industry',
+          },
+          {
+            kind: 'document' as const,
+            id: 'file-pdg-leak',
+            title: 'PDG01 leak memo',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: 'https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients/HVCG_PDG01/leak.pdf',
+            provenance: 'CONFIRMED' as const,
+          },
+        ],
+      }),
+    });
+    const document = result.authorizedSearch.documents.items.find((row) => row.id === 'file-syn-1');
+    assert.ok(document);
+    assert.equal(
+      document.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      (document.researchRelationship || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.documents);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assertDocumentResearchHonesty(document);
+
+    const mixed = attachRelatedContextToDocument(
+      staff,
+      syn01DocumentRecord(),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'client:PDG01:must not leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          evidence: 'must not leak',
+        }),
+      ]),
+    );
+    assert.equal(mixed.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
+    assert.equal(
+      (mixed.researchRelationship || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.researchRelationship).includes('PDG01'), false);
+  });
+
+  it('omits researchRelationship when document ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToDocument(
+      manny,
+      {
+        ...syn01DocumentRecord(),
+        id: 'file-unscoped',
+        clientCode: undefined,
+      },
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'lender:ln-liveoak',
+          subjectKind: 'lender',
+          title: 'Live Oak Bank',
+          source: 'HVCG_Lenders',
+          clientCode: undefined,
+          evidence: 'Copied existing sourced lender catalog title.',
+        }),
+      ]),
+    );
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal('researchRelationship' in omitted, false);
+  });
+
+  it('does not attach unscoped lender research to a scoped document', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: manny,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'Live Oak',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'lender' as const,
+            id: 'ln-liveoak',
+            title: 'Live Oak Bank',
+            href: '/capital',
+            source: 'HVCG_Lenders',
+          },
+          syn01DocumentHit(),
+        ],
+      }),
+    });
+    const document = result.authorizedSearch.documents.items.find((row) => row.id === 'file-syn-1');
+    assert.ok(document);
+    assert.equal(document.clientCode, 'SYN01');
+    assert.equal(document.researchRelationship, undefined);
+    const blob = JSON.stringify(document);
+    assert.equal(/live oak/i.test(blob), false);
+    assert.equal(blob.includes('HVCG_Lenders'), false);
+    assertDocumentResearchHonesty(document);
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01DocumentHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.documents.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.documents.items.some((row) => row.researchRelationship),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.documents);
+    assert.equal(unknownBlob.includes('file-syn-1'), false);
+    assert.equal(unknownBlob.includes('PDG01'), false);
+
+    const denied = attachRelatedContextToDocument(
+      otherStaff,
+      syn01DocumentRecord(),
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+  });
+
+  it('leaves the empty documents payload unchanged', () => {
+    const empty = {
+      kind: 'document_operating_record_v1' as const,
+      policyClass: 'READ_AUTO' as const,
+      binariesInAtlas: false as const,
+      items: [] as DocumentOperatingRecord[],
+    };
+    assert.deepEqual(empty.items, []);
+    assert.equal('researchRelationship' in empty, false);
+    const attachedEmpty = attachRelatedContextToDocuments(
+      staff,
+      empty.items,
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.deepEqual(attachedEmpty, []);
+    assert.equal(empty.items.length, 0);
+  });
+
+  it('never invents TargetAmount, downloadUrl, transcript, criteria, or Hub-MI', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ClientHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01DocumentHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+        ],
+      }),
+    });
+    const document = result.authorizedSearch.documents.items.find((row) => row.id === 'file-syn-1');
+    assert.ok(document);
+    const blob = JSON.stringify(result.authorizedSearch.documents);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/attendee/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assert.ok(document.researchRelationship?.some((row) => row.clientCode === 'SYN01'));
+    assertDocumentResearchHonesty(document);
+  });
+
+  it('still attaches existing relatedMeetings and other related* next to researchRelationship', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01DocumentHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          {
+            kind: 'project' as const,
+            id: 'proj-syn-1',
+            title: 'SYN01 entitled intake project',
+            href: '/clients/SYN01',
+            source: 'HVCG_Projects',
+            clientCode: 'SYN01',
+            provenance: 'CONFIRMED' as const,
+          },
+          {
+            kind: 'communication' as const,
+            id: 'mail-syn-1',
+            title: 'SYN01 intake follow-up',
+            href: '/clients/SYN01',
+            source: 'HVCG_Communications',
+            clientCode: 'SYN01',
+            conversationId: 'conv-syn-1',
+            webUrl: 'https://outlook.office.com/mail/deeplink/read/syn01-thread',
+            provenance: 'CONFIRMED' as const,
+          },
+        ],
+      }),
+    });
+    const document = result.authorizedSearch.documents.items.find((row) => row.id === 'file-syn-1');
+    assert.ok(document);
+    assert.equal(document.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(document.relatedEmail?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(document.relatedProject?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(document.capitalRelationship?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(
+      document.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(JSON.stringify(document.relatedMeetings).includes('PDG01'), false);
+    assert.equal(JSON.stringify(document.researchRelationship).includes('PDG01'), false);
+    assert.equal(/TargetAmount/i.test(JSON.stringify(document.researchRelationship)), false);
+    assert.equal(/downloadUrl|transcript/i.test(JSON.stringify(document.researchRelationship)), false);
+    noInventedCriteria(document.researchRelationship);
   });
 });
