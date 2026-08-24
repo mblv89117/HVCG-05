@@ -11,7 +11,8 @@
  * client-support → meetings,
  * client-support → documents, and
  * client-support → research links on ClientSupportAgentRecord items,
- * the inverse onboarding → meetings, onboarding → documents, and
+ * the inverse onboarding → meetings, onboarding → documents,
+ * onboarding → projects, and
  * onboarding → research links on OnboardingAgentRecord items, and the inverse
  * research-intelligence → meetings,
  * research-intelligence → documents,
@@ -783,23 +784,29 @@ export function attachRelatedContextToClientSupport(
 /**
  * Inverse of meeting onboarding evidence + researchIntelligence.relatedMeetings
  * + the same same-scope document inverse already live on meetings /
- * research-intel / projects / threads / capital: entitled same-scope
- * meetings already on authorizedSearch.meetings.items or hits
- * kind=meeting, entitled same-scope documents already on
- * authorizedSearch.documents.items or hits kind=document (reuses
- * relatedDocumentsForMeeting / RelatedMeetingDocumentRef — no new
- * document query), and entitled same-scope research already on
+ * research-intel / projects / threads / capital + the same same-scope
+ * project inverse already live on research-intel / documents
+ * (document.relatedProject): entitled same-scope meetings already on
+ * authorizedSearch.meetings.items or hits kind=meeting, entitled
+ * same-scope documents already on authorizedSearch.documents.items or
+ * hits kind=document (reuses relatedDocumentsForMeeting /
+ * RelatedMeetingDocumentRef — no new document query), entitled
+ * same-scope projects already on authorizedSearch.projects.items
+ * (reuses relatedProjects / RelatedDocumentProjectRef — no new
+ * project query), and entitled same-scope research already on
  * authorizedSearch.researchIntelligence.items (no new research query).
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit relatedMeetings / researchRelationship /
- * relatedDocuments rather than guess. Unscoped never receives scoped
- * relations. Unscoped lender catalog titles never attach scoped
- * documents. Client A never receives Client B. SAS / anonymous webUrl
- * dropped. No downloadUrl. No transcript text. No TargetAmount. No
- * Hub-MI invention. OWNER_ESCALATE / execute=false / activate=false /
- * send=false / liveGtmOutbound=false / ownerGated=true / hubMi=false
- * stay as composed. There is no document.onboardingRelationship field.
+ * relatedDocuments / relatedProjects rather than guess. Unscoped
+ * never receives scoped relations. Unscoped lender catalog titles
+ * never attach scoped documents or projects. Client A never receives
+ * Client B. SAS / anonymous webUrl dropped. No downloadUrl. No
+ * transcript text. No TargetAmount. No Hub-MI invention. hubMiRow is
+ * copied as composed on the source project (never invented).
+ * OWNER_ESCALATE / execute=false / activate=false / send=false /
+ * liveGtmOutbound=false / ownerGated=true / hubMi=false stay as
+ * composed. There is no document.onboardingRelationship field.
  */
 export function attachRelatedContextToOnboardingRecord(
   principal: AtlasPrincipal,
@@ -811,11 +818,13 @@ export function attachRelatedContextToOnboardingRecord(
   const relatedMeetingsList = relatedMeetings(item, search);
   const researchRelationship = relatedResearchForScopeItem(item, search);
   const relatedDocuments = relatedDocumentsForMeeting(item, search);
+  const relatedProjectsList = relatedProjects(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
+    ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
   };
 }
 
