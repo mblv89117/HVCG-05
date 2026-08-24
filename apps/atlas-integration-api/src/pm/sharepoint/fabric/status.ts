@@ -96,6 +96,17 @@ export interface FabricSyncHealth {
     reason: string;
   };
   /**
+   * Entitled Hub operating-index search for already-indexed business files.
+   * ready only when fabric file count is already > 0.
+   * Never claims LIVE. Never invents filenames, ids, ClientCodes, or counts.
+   * Does not call Graph /search/query.
+   * Distinct from fileSearch (Graph POST /search/query honesty).
+   */
+  fileIndexSearch: {
+    status: 'skipped' | 'ready' | 'error';
+    reason: string;
+  };
+  /**
    * Entitled HVCG_Clients hint-list honesty for the last completed sweep.
    * ready when count > 0. empty when the list completed with 0 hints.
    * error when the load failed (fail-closed empty resolver) or the
@@ -206,6 +217,16 @@ const SKIPPED_ATTACHMENT_SEARCH: FabricSyncHealth['attachmentSearch'] = {
 const ERROR_ATTACHMENT_SEARCH: FabricSyncHealth['attachmentSearch'] = {
   status: 'error',
   reason: 'Fabric checkpoint unreadable; attachment search remains unproven.',
+};
+
+const SKIPPED_FILE_INDEX_SEARCH: FabricSyncHealth['fileIndexSearch'] = {
+  status: 'skipped',
+  reason: 'No indexed business files to search; file-index search remains unproven.',
+};
+
+const ERROR_FILE_INDEX_SEARCH: FabricSyncHealth['fileIndexSearch'] = {
+  status: 'error',
+  reason: 'Fabric checkpoint unreadable; file-index search remains unproven.',
 };
 
 const SKIPPED_CLIENT_HINTS: FabricSyncHealth['clientHints'] = {
@@ -488,6 +509,20 @@ function inspectAttachmentSearchHealth(opts: {
   return { ...SKIPPED_ATTACHMENT_SEARCH };
 }
 
+function inspectFileIndexSearchHealth(opts: {
+  lastIndexed: FabricIndexedCounts;
+  cumulative: FabricSyncHealth['cumulative'];
+}): FabricSyncHealth['fileIndexSearch'] {
+  const indexed = Math.max(opts.lastIndexed.files, opts.cumulative.files);
+  if (indexed > 0) {
+    return {
+      status: 'ready',
+      reason: 'Indexed business files are searchable on the entitled Hub operating index.',
+    };
+  }
+  return { ...SKIPPED_FILE_INDEX_SEARCH };
+}
+
 function inspectChangeNotificationHealth(raw: {
   changeNotifications?: {
     status?: ChangeNotificationStatus;
@@ -598,6 +633,7 @@ export function inspectFabricSyncHealth(
       fileSearch: { ...SKIPPED_FILE_SEARCH },
       attachments: { ...SKIPPED_ATTACHMENTS },
       attachmentSearch: { ...SKIPPED_ATTACHMENT_SEARCH },
+      fileIndexSearch: { ...SKIPPED_FILE_INDEX_SEARCH },
       clientHints: { ...SKIPPED_CLIENT_HINTS },
     };
   }
@@ -724,6 +760,7 @@ export function inspectFabricSyncHealth(
         notes,
       }),
       attachmentSearch: inspectAttachmentSearchHealth({ lastIndexed, cumulative }),
+      fileIndexSearch: inspectFileIndexSearchHealth({ lastIndexed, cumulative }),
       clientHints: inspectClientHintsHealth({
         honesty,
         lastRunAt,
@@ -753,6 +790,7 @@ export function inspectFabricSyncHealth(
       fileSearch: { ...ERROR_FILE_SEARCH },
       attachments: { ...ERROR_ATTACHMENTS },
       attachmentSearch: { ...ERROR_ATTACHMENT_SEARCH },
+      fileIndexSearch: { ...ERROR_FILE_INDEX_SEARCH },
       clientHints: { ...ERROR_CLIENT_HINTS },
     };
   }
