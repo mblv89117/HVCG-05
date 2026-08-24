@@ -18,6 +18,7 @@ import {
   indexBusinessFiles,
   type SharePointFileCheckpoint,
 } from './files.ts';
+import { describeGraphListWriteError } from '../indexWrite.ts';
 import { isAllowedFabricGraphPath, type FabricGraphClient } from './graph.ts';
 import { sanitizeFabricNotes } from './status.ts';
 import type { FabricChangeNotificationState } from './subscriptions.ts';
@@ -46,6 +47,14 @@ export interface FabricCheckpoint {
   filesSkip: string | null;
   /** Last Graph HTTP status for POST /search/query. Distinct from filesSkip nextLink. */
   fileSearchLastStatus?: number | null;
+  /** Last Graph HTTP status for mail attachment metadata list. Distinct from mailSkip. */
+  attachmentsLastStatus?: number | null;
+  /** Attachment objects seen on the last completed attachment Graph page (not indexed counts). */
+  attachmentsGraphItems?: number;
+  /** hasAttachments messages classify-skipped for missing entitled ClientCode on the last sweep. */
+  attachmentsClassifySkipped?: number;
+  /** hasAttachments messages seen on the last attachment probe or incremental lookup. */
+  attachmentsHasAttachmentsSeen?: number;
   sharePoint?: SharePointFileCheckpoint;
   lastRunAt?: string;
   lastAttemptAt?: string;
@@ -132,6 +141,10 @@ function attachmentMetadataUrl(messageId: string): string {
   return `/v1.0/users/${MANNY_ENTRA_OID}/messages/${encodeURIComponent(messageId)}/attachments?$select=id,name,contentType,size&$top=${MAX_ATTACHMENTS_PER_MESSAGE}`;
 }
 
+function hasAttachmentsPageUrl(): string {
+  return `/v1.0/users/${MANNY_ENTRA_OID}/messages?$filter=hasAttachments eq true&$select=${MAIL_SELECT}&$top=${PAGE_SIZE}`;
+}
+
 function isolatedFailureNote(label: string, err: unknown): string {
   if (err instanceof PmHttpError) return `${label}: ${err.message}`;
   if (err instanceof Error && err.message.trim()) return `${label}: ${err.message}`;
@@ -184,6 +197,72 @@ async function readFabricJson(
     notes.push(isolatedFailureNote(`${label} did not return HTTP`, err));
     return { status: 0, json: {} };
   }
+}
+
+function noteAttachmentGraphSkip(notes: string[], status: number, json: Record<string, unknown>): void {
+  if (GRAPH_ATTACHMENT_UNSUPPORTED.has(status)) {
+    const info = describeGraphListWriteError(status, json);
+    notes.push(
+      `Mail attachment metadata skipped: Graph HTTP ${status} unsupported; graphCode=${info.graphCode}; mismatch=${info.mismatch}; attachment index remains unproven.`,
+    );
+    return;
+  }
+  notes.push(`Mail attachment metadata stopped at HTTP ${status}.`);
+}
+
+async function indexOutlookAttachmentMetadata(opts: {
+  fabric: FabricGraphClient;
+  service: SharePointPmService;
+  messageId: string;
+  webUrl: string | undefined;
+  clientCode: string;
+  notes: string[];
+}): Promise<{ status: number; graphItems: number; wrote: number }> {
+  const att = await readFabricJson(
+    opts.fabric,
+    attachmentMetadataUrl(opts.messageId),
+    opts.notes,
+    'Mail attachment metadata',
+  );
+  if (att.status !== 200) {
+    noteAttachmentGraphSkip(opts.notes, att.status, att.json);
+    return { status: att.status, graphItems: 0, wrote: 0 };
+  }
+  const parentWebUrl = authoritativeSourceUrl(opts.webUrl);
+  const items = asArray(att.json).slice(0, MAX_ATTACHMENTS_PER_MESSAGE);
+  let wrote = 0;
+  for (const item of items) {
+    const attId = typeof item.id === 'string' ? item.id : '';
+    const name = typeof item.name === 'string' ? item.name : '';
+    if (!attId) continue;
+    const key = `mail-att:${opts.messageId}:${attId}`;
+    const contentType = typeof item.contentType === 'string' ? item.contentType : undefined;
+    const size = typeof item.size === 'number' && Number.isFinite(item.size) ? item.size : undefined;
+    const wroteAtt = await tryPmIndex(opts.notes, 'SharePoint mail attachment index write', () =>
+      opts.service.upsertCommunicationIndex({
+        title: name || attId,
+        summary: attachmentIndexSummary({
+          webUrl: parentWebUrl,
+          parentMessageId: opts.messageId,
+          attachmentId: attId,
+          contentType,
+          size,
+          idempotencyKey: key,
+        }),
+        clientCode: opts.clientCode,
+        channel: 'Other',
+        webUrl: parentWebUrl,
+        sourceMessageId: attId,
+        conversationId: opts.messageId,
+        classification: 'RESTRICTED',
+        provenanceSource: 'outlook-mail-attachment',
+        sourceOrg: 'HVCG',
+        idempotencyKey: key,
+      }),
+    );
+    if (wroteAtt) wrote += 1;
+  }
+  return { status: 200, graphItems: items.length, wrote };
 }
 
 async function tryPmIndex(
@@ -261,6 +340,13 @@ export async function runFabricSync(opts: {
 
   const seenConversations = new Set<string>();
   let attachmentLookups = 0;
+  let attachmentsLastStatus: number | null =
+    typeof cp.attachmentsLastStatus === 'number' && Number.isFinite(cp.attachmentsLastStatus)
+      ? cp.attachmentsLastStatus
+      : null;
+  let attachmentsGraphItems = 0;
+  let attachmentsClassifySkipped = 0;
+  let attachmentsHasAttachmentsSeen = 0;
   let mailUrl: string | null = cp.mailSkip || mailDeltaUrl();
   let mailMode: 'delta' | 'page' = mailUrl.includes('/delta') ? 'delta' : (cp.mailMode || 'page');
   if ((cp.counts.mailThreads || 0) === 0 && cp.mailDeltaReady === true && mailUrl) {
@@ -352,60 +438,25 @@ export async function runFabricSync(opts: {
       );
       if (!wroteMail) continue;
       indexed.mailThreads += 1;
-      if (
-        msg.hasAttachments === true &&
-        classified.clientCode &&
-        attachmentLookups < attachmentLookupBudget(mailMode)
-      ) {
-        attachmentLookups += 1;
-        const att = await readFabricJson(
-          opts.fabric,
-          attachmentMetadataUrl(messageId),
-          notes,
-          'Mail attachment metadata',
-        );
-        if (GRAPH_ATTACHMENT_UNSUPPORTED.has(att.status)) {
-          notes.push(
-            `Mail attachment metadata skipped: Graph HTTP ${att.status} unsupported; attachment index remains unproven.`,
-          );
-        } else if (att.status !== 200) {
-          notes.push(`Mail attachment metadata stopped at HTTP ${att.status}.`);
-        } else {
-          const parentWebUrl = authoritativeSourceUrl(webUrl);
-          for (const item of asArray(att.json).slice(0, MAX_ATTACHMENTS_PER_MESSAGE)) {
-            const attId = typeof item.id === 'string' ? item.id : '';
-            const name = typeof item.name === 'string' ? item.name : '';
-            if (!attId) continue;
-            const key = `mail-att:${messageId}:${attId}`;
-            const contentType = typeof item.contentType === 'string' ? item.contentType : undefined;
-            const size = typeof item.size === 'number' && Number.isFinite(item.size) ? item.size : undefined;
-            const wroteAtt = await tryPmIndex(notes, 'SharePoint mail attachment index write', () =>
-              opts.service.upsertCommunicationIndex({
-                title: name || attId,
-                summary: attachmentIndexSummary({
-                  webUrl: parentWebUrl,
-                  parentMessageId: messageId,
-                  attachmentId: attId,
-                  contentType,
-                  size,
-                  idempotencyKey: key,
-                }),
-                clientCode: classified.clientCode,
-                channel: 'Other',
-                webUrl: parentWebUrl,
-                sourceMessageId: attId,
-                conversationId: messageId,
-                classification: 'RESTRICTED',
-                provenanceSource: 'outlook-mail-attachment',
-                sourceOrg: 'HVCG',
-                idempotencyKey: key,
-              }),
-            );
-            if (!wroteAtt) continue;
-            indexed.attachmentsIndexed += 1;
-            indexed.files += 1;
-            indexed.restricted += 1;
-          }
+      if (msg.hasAttachments === true) {
+        attachmentsHasAttachmentsSeen += 1;
+        if (!classified.clientCode) {
+          attachmentsClassifySkipped += 1;
+        } else if (attachmentLookups < attachmentLookupBudget(mailMode)) {
+          attachmentLookups += 1;
+          const att = await indexOutlookAttachmentMetadata({
+            fabric: opts.fabric,
+            service: opts.service,
+            messageId,
+            webUrl,
+            clientCode: classified.clientCode,
+            notes,
+          });
+          attachmentsLastStatus = att.status;
+          attachmentsGraphItems += att.graphItems;
+          indexed.attachmentsIndexed += att.wrote;
+          indexed.files += att.wrote;
+          indexed.restricted += att.wrote;
         }
       }
     }
@@ -423,6 +474,84 @@ export async function runFabricSync(opts: {
     }
   }
   persistFabricProgress(opts.dataDir, cp, notes);
+
+  if (attachmentLookups === 0) {
+    const probe = await readFabricJson(
+      opts.fabric,
+      hasAttachmentsPageUrl(),
+      notes,
+      'Mail attachment metadata',
+    );
+    if (probe.status !== 200) {
+      attachmentsLastStatus = probe.status;
+      noteAttachmentGraphSkip(notes, probe.status, probe.json);
+    } else {
+      const pageItems = asArray(probe.json);
+      if (pageItems.length === 0) {
+        attachmentsLastStatus = 200;
+        notes.push('Mail attachment metadata Graph returned HTTP 200 with no hasAttachments messages.');
+      } else {
+        for (const msg of pageItems) {
+          const messageId = typeof msg.id === 'string' ? msg.id : '';
+          if (!messageId) continue;
+          if (msg.hasAttachments === true) attachmentsHasAttachmentsSeen += 1;
+          const from =
+            msg.from && typeof msg.from === 'object'
+              ? String((msg.from as { emailAddress?: { address?: string } }).emailAddress?.address || '')
+              : '';
+          const to = Array.isArray(msg.toRecipients)
+            ? msg.toRecipients.map((r) =>
+                String((r as { emailAddress?: { address?: string } })?.emailAddress?.address || ''),
+              )
+            : [];
+          const classified = classifyFabricRecord(
+            {
+              subject: typeof msg.subject === 'string' ? msg.subject : '',
+              participants: [from, ...to],
+              preview: typeof msg.bodyPreview === 'string' ? msg.bodyPreview : '',
+              source: 'outlook',
+            },
+            clients,
+          );
+          if (classified.ingest === 'skip' || !classified.clientCode) {
+            attachmentsClassifySkipped += 1;
+            continue;
+          }
+          if (attachmentLookups >= attachmentLookupBudget(mailMode)) break;
+          attachmentLookups += 1;
+          const webUrl = typeof msg.webLink === 'string' ? msg.webLink : undefined;
+          const att = await indexOutlookAttachmentMetadata({
+            fabric: opts.fabric,
+            service: opts.service,
+            messageId,
+            webUrl,
+            clientCode: classified.clientCode,
+            notes,
+          });
+          attachmentsLastStatus = att.status;
+          attachmentsGraphItems += att.graphItems;
+          indexed.attachmentsIndexed += att.wrote;
+          indexed.files += att.wrote;
+          indexed.restricted += att.wrote;
+        }
+        if (attachmentsLastStatus == null) attachmentsLastStatus = 200;
+        if (indexed.attachmentsIndexed === 0 && attachmentsClassifySkipped > 0) {
+          notes.push(
+            'Mail attachment metadata Graph returned HTTP 200; items classify-skipped for missing entitled ClientCode.',
+          );
+        } else if (indexed.attachmentsIndexed === 0) {
+          notes.push('Mail attachment metadata Graph returned HTTP 200; indexed attachments remain 0.');
+        } else {
+          notes.push('Mail attachment metadata Graph returned HTTP 200.');
+        }
+      }
+    }
+    persistFabricProgress(opts.dataDir, cp, notes);
+  }
+  cp.attachmentsLastStatus = attachmentsLastStatus;
+  cp.attachmentsGraphItems = attachmentsGraphItems;
+  cp.attachmentsClassifySkipped = attachmentsClassifySkipped;
+  cp.attachmentsHasAttachmentsSeen = attachmentsHasAttachmentsSeen;
 
   let calUrl: string | null =
     cp.calendarSkip ||

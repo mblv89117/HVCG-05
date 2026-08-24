@@ -74,6 +74,17 @@ export interface FabricSyncHealth {
     status: 'skipped' | 'ready' | 'error';
     reason: string;
   };
+  /**
+   * Outlook mail attachment metadata index honesty.
+   * skipped when the sweep has not completed or Graph returned non-200.
+   * ready when Graph 200 completed (including honest empty / classify-skip).
+   * Never LIVE. Never invents attachment counts.
+   * error when the checkpoint is unreadable.
+   */
+  attachments: {
+    status: 'skipped' | 'ready' | 'error';
+    reason: string;
+  };
 }
 
 const EMPTY_INDEXED: FabricIndexedCounts = {
@@ -153,6 +164,16 @@ const SKIPPED_FILE_SEARCH: FabricSyncHealth['fileSearch'] = {
 const ERROR_FILE_SEARCH: FabricSyncHealth['fileSearch'] = {
   status: 'error',
   reason: 'Fabric checkpoint unreadable; file search remains unproven.',
+};
+
+const SKIPPED_ATTACHMENTS: FabricSyncHealth['attachments'] = {
+  status: 'skipped',
+  reason: 'Mail attachment metadata has not completed; attachment index remains unproven.',
+};
+
+const ERROR_ATTACHMENTS: FabricSyncHealth['attachments'] = {
+  status: 'error',
+  reason: 'Fabric checkpoint unreadable; attachment index remains unproven.',
 };
 
 function parseContactsStopStatus(notes: string[]): number | null {
@@ -252,19 +273,115 @@ function inspectFileSearchHealth(opts: {
   };
 }
 
+function parseAttachmentStopStatus(notes: string[]): number | null {
+  for (const note of notes) {
+    const match = /Mail attachment metadata (?:skipped: Graph HTTP|stopped at HTTP) (\d+)/i.exec(note);
+    if (match) {
+      const status = Number(match[1]);
+      if (Number.isFinite(status)) return status;
+    }
+  }
+  return null;
+}
+
+function inspectAttachmentsHealth(opts: {
+  honesty: FabricSyncHealth['honesty'];
+  lastRunAt: string | null;
+  lastIndexed: FabricIndexedCounts;
+  attachmentsLastStatus?: number | null;
+  attachmentsGraphItems?: number;
+  attachmentsHasAttachmentsSeen?: number;
+  attachmentsClassifySkipped?: number;
+  notes: string[];
+}): FabricSyncHealth['attachments'] {
+  if (opts.honesty === 'never_run' || !opts.lastRunAt) {
+    return { ...SKIPPED_ATTACHMENTS };
+  }
+  const lastStatus =
+    typeof opts.attachmentsLastStatus === 'number' && Number.isFinite(opts.attachmentsLastStatus)
+      ? Math.floor(opts.attachmentsLastStatus)
+      : parseAttachmentStopStatus(opts.notes);
+  if (lastStatus != null && lastStatus !== 200) {
+    return {
+      status: 'skipped',
+      reason: `Mail attachment metadata Graph returned HTTP ${lastStatus}; attachment index remains unproven.`,
+    };
+  }
+  if (lastStatus !== 200) {
+    return { ...SKIPPED_ATTACHMENTS };
+  }
+  const indexed = opts.lastIndexed.attachmentsIndexed;
+  const graphItems =
+    typeof opts.attachmentsGraphItems === 'number' && Number.isFinite(opts.attachmentsGraphItems)
+      ? Math.max(0, Math.floor(opts.attachmentsGraphItems))
+      : 0;
+  const seen =
+    typeof opts.attachmentsHasAttachmentsSeen === 'number' && Number.isFinite(opts.attachmentsHasAttachmentsSeen)
+      ? Math.max(0, Math.floor(opts.attachmentsHasAttachmentsSeen))
+      : 0;
+  const classifySkipped =
+    typeof opts.attachmentsClassifySkipped === 'number' && Number.isFinite(opts.attachmentsClassifySkipped)
+      ? Math.max(0, Math.floor(opts.attachmentsClassifySkipped))
+      : 0;
+  if (indexed > 0) {
+    return {
+      status: 'ready',
+      reason: 'Mail attachment metadata Graph returned HTTP 200; entitled attachment metadata was indexed.',
+    };
+  }
+  if (classifySkipped > 0) {
+    return {
+      status: 'ready',
+      reason: 'Mail attachment metadata Graph returned HTTP 200; items classify-skipped for missing entitled ClientCode.',
+    };
+  }
+  if (seen === 0 && graphItems === 0) {
+    return {
+      status: 'ready',
+      reason: 'Mail attachment metadata Graph returned HTTP 200 with no hasAttachments messages; indexed attachments remain 0.',
+    };
+  }
+  return {
+    status: 'ready',
+    reason: 'Mail attachment metadata Graph returned HTTP 200; indexed attachments remain 0.',
+  };
+}
+
 function inspectAttachmentLinkHealth(opts: {
   honesty: FabricSyncHealth['honesty'];
   lastIndexed: FabricIndexedCounts;
   cumulative: FabricSyncHealth['cumulative'];
+  attachmentsLastStatus?: number | null;
+  notes: string[];
 }): FabricSyncHealth['attachmentLinks'] {
   const indexed = Math.max(opts.lastIndexed.attachmentsIndexed, opts.cumulative.attachmentsIndexed);
-  if (opts.honesty === 'never_run' || indexed === 0) {
+  if (indexed > 0) {
+    return {
+      status: 'ready',
+      reason: 'Indexed outlook-mail-attachment metadata is available for entitled document linking.',
+    };
+  }
+  if (opts.honesty === 'never_run') {
     return { ...SKIPPED_ATTACHMENT_LINKS };
   }
-  return {
-    status: 'ready',
-    reason: 'Indexed outlook-mail-attachment metadata is available for entitled document linking.',
-  };
+  const lastStatus =
+    typeof opts.attachmentsLastStatus === 'number' && Number.isFinite(opts.attachmentsLastStatus)
+      ? Math.floor(opts.attachmentsLastStatus)
+      : parseAttachmentStopStatus(opts.notes);
+  if (lastStatus != null && lastStatus !== 200) {
+    return {
+      status: 'skipped',
+      reason: `Mail attachment metadata Graph returned HTTP ${lastStatus}; attachment links remain unproven.`,
+    };
+  }
+  if (lastStatus === 200) {
+    return {
+      status: 'skipped',
+      reason:
+        'Mail attachment metadata Graph returned HTTP 200; no entitled outlook-mail-attachment metadata to link; attachment links remain unproven.',
+    };
+  }
+  return { ...SKIPPED_ATTACHMENT_LINKS };
 }
 
 function inspectChangeNotificationHealth(raw: {
@@ -375,6 +492,7 @@ export function inspectFabricSyncHealth(
       attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
       contacts: { ...SKIPPED_CONTACTS },
       fileSearch: { ...SKIPPED_FILE_SEARCH },
+      attachments: { ...SKIPPED_ATTACHMENTS },
     };
   }
   try {
@@ -387,6 +505,10 @@ export function inspectFabricSyncHealth(
       contactsLastStatus?: number | null;
       contactsGraphItems?: number;
       fileSearchLastStatus?: number | null;
+      attachmentsLastStatus?: number | null;
+      attachmentsGraphItems?: number;
+      attachmentsHasAttachmentsSeen?: number;
+      attachmentsClassifySkipped?: number;
       counts?: Record<string, number>;
       lastIndexed?: FabricIndexedCounts;
       lastNotes?: string[];
@@ -437,7 +559,39 @@ export function inspectFabricSyncHealth(
       notes,
       honesty,
       changeNotifications: inspectChangeNotificationHealth(raw),
-      attachmentLinks: inspectAttachmentLinkHealth({ honesty, lastIndexed, cumulative }),
+      attachmentLinks: inspectAttachmentLinkHealth({
+        honesty,
+        lastIndexed,
+        cumulative,
+        attachmentsLastStatus:
+          typeof raw.attachmentsLastStatus === 'number' && Number.isFinite(raw.attachmentsLastStatus)
+            ? raw.attachmentsLastStatus
+            : null,
+        notes,
+      }),
+      attachments: inspectAttachmentsHealth({
+        honesty,
+        lastRunAt,
+        lastIndexed,
+        attachmentsLastStatus:
+          typeof raw.attachmentsLastStatus === 'number' && Number.isFinite(raw.attachmentsLastStatus)
+            ? raw.attachmentsLastStatus
+            : null,
+        attachmentsGraphItems:
+          typeof raw.attachmentsGraphItems === 'number' && Number.isFinite(raw.attachmentsGraphItems)
+            ? raw.attachmentsGraphItems
+            : undefined,
+        attachmentsHasAttachmentsSeen:
+          typeof raw.attachmentsHasAttachmentsSeen === 'number' &&
+          Number.isFinite(raw.attachmentsHasAttachmentsSeen)
+            ? raw.attachmentsHasAttachmentsSeen
+            : undefined,
+        attachmentsClassifySkipped:
+          typeof raw.attachmentsClassifySkipped === 'number' && Number.isFinite(raw.attachmentsClassifySkipped)
+            ? raw.attachmentsClassifySkipped
+            : undefined,
+        notes,
+      }),
       contacts: inspectContactsHealth({
         honesty,
         lastRunAt,
@@ -478,6 +632,7 @@ export function inspectFabricSyncHealth(
       attachmentLinks: { ...SKIPPED_ATTACHMENT_LINKS },
       contacts: { ...ERROR_CONTACTS },
       fileSearch: { ...ERROR_FILE_SEARCH },
+      attachments: { ...ERROR_ATTACHMENTS },
     };
   }
 }

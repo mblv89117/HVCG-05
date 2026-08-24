@@ -326,6 +326,8 @@ describe('Fabric mail delta checkpointing', () => {
       contacts?: Record<string, unknown>[];
       searchStatus?: number;
       searchJson?: Record<string, unknown>;
+      hasAttachmentsPageStatus?: number;
+      hasAttachmentsMessages?: Record<string, unknown>[];
     } = {},
   ) {
     let deltaCalls = 0;
@@ -376,6 +378,11 @@ describe('Fabric mail delta checkpointing', () => {
               '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=resume`,
             },
           };
+        }
+        if (/[?&]\$filter=hasAttachments/i.test(path) || /[?&]filter=hasAttachments/i.test(path)) {
+          const status = extras.hasAttachmentsPageStatus ?? 200;
+          if (status !== 200) return { status, json: { error: { code: 'BadRequest', message: 'invalid_request' } } };
+          return { status: 200, json: { value: extras.hasAttachmentsMessages ?? [] } };
         }
         if (path.includes('/messages?')) {
           return {
@@ -697,7 +704,10 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.cumulative.attachmentsIndexed, 1);
       assert.equal(health.attachmentLinks.status, 'ready');
       assert.match(health.attachmentLinks.reason, /entitled document linking/);
+      assert.equal(health.attachments.status, 'ready');
+      assert.match(health.attachments.reason, /HTTP 200/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
       assert.equal(/LIVE attachments|deltatoken|Bearer |guestaccess/i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -816,10 +826,127 @@ describe('Fabric mail delta checkpointing', () => {
       assert.equal(health.lastIndexed.attachmentsIndexed, 0);
       assert.equal(health.cumulative.attachmentsIndexed, 0);
       assert.equal(health.attachmentLinks.status, 'skipped');
-      assert.match(health.attachmentLinks.reason, /remain unproven/);
+      assert.match(health.attachmentLinks.reason, /HTTP 405|remain unproven/);
+      assert.equal(health.attachments.status, 'skipped');
+      assert.match(health.attachments.reason, /HTTP 405/);
       assert.equal(health.honesty, 'delta');
       assert.ok(health.notes.some((note) => /attachment metadata skipped/.test(note) && /HTTP 405/.test(note)));
       assert.equal(/LIVE attachments|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('indexes entitled attachment metadata from the hasAttachments catch-up page when incremental delta has no new mail', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-catchup-'));
+    const svc = service();
+    const paths: string[] = [];
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph(paths, 200, {
+          hasAttachmentsMessages: [
+            {
+              id: 'm-catchup',
+              conversationId: 'conv-catchup',
+              subject: 'Colorado Craft Beef capital update',
+              bodyPreview: 'Please review the packet.',
+              receivedDateTime: '2026-08-24T00:00:00Z',
+              from: { emailAddress: { address: 'client@example.com' } },
+              toRecipients: [{ emailAddress: { address: 'manny@highvaluecapitalgroup.com' } }],
+              webLink: 'https://outlook.office.com/mail/m-catchup',
+              hasAttachments: true,
+            },
+          ],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.mailThreads, 1);
+      assert.equal(result.indexed.attachmentsIndexed, 1);
+      assert.equal(result.checkpoint.attachmentsLastStatus, 200);
+      assert.equal(
+        paths.some((path) => path.includes('hasAttachments') && path.includes('/messages?')),
+        true,
+      );
+      assert.equal(
+        paths.some((path) => path.includes('/messages/m-catchup/attachments')),
+        true,
+      );
+      assert.equal(paths.some((path) => /\$value|contentBytes/i.test(path)), false);
+      assert.ok(svc.communications.some((row) => row.idempotencyKey === 'mail-att:m-catchup:att-1'));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.attachments.status, 'ready');
+      assert.match(health.attachments.reason, /HTTP 200/);
+      assert.equal(health.lastIndexed.attachmentsIndexed, 1);
+      assert.equal(health.cumulative.attachmentsIndexed, 1);
+      assert.equal(health.attachmentLinks.status, 'ready');
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports attachments ready with classify-skip when hasAttachments Graph 200 items have no entitled ClientCode', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-classify-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, {
+          hasAttachmentsMessages: [
+            {
+              id: 'm-personal-catchup',
+              conversationId: 'conv-personal-catchup',
+              subject: 'Netflix billing',
+              hasAttachments: true,
+            },
+          ],
+        }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.attachmentsIndexed, 0);
+      assert.equal(result.checkpoint.attachmentsLastStatus, 200);
+      assert.equal(result.checkpoint.attachmentsClassifySkipped, 1);
+      assert.equal(
+        svc.communications.some((row) => row.provenanceSource === 'outlook-mail-attachment'),
+        false,
+      );
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.attachments.status, 'ready');
+      assert.match(health.attachments.reason, /classify-skipped|missing entitled ClientCode/);
+      assert.equal(health.lastIndexed.attachmentsIndexed, 0);
+      assert.equal(health.cumulative.attachmentsIndexed, 0);
+      assert.equal(health.attachmentLinks.status, 'skipped');
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
+      assert.equal(/CCB99|PDG01|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports attachments skipped when hasAttachments Graph returns HTTP 400 and never claims LIVE', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-mail-att-400-'));
+    const svc = service();
+    try {
+      const result = await runFabricSync({
+        service: svc as unknown as SharePointPmService,
+        fabric: graph([], 200, { hasAttachmentsPageStatus: 400 }) as never,
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.attachmentsIndexed, 0);
+      assert.equal(result.checkpoint.attachmentsLastStatus, 400);
+      assert.ok(result.notes.some((note) => /attachment metadata skipped/.test(note) && /HTTP 400/.test(note)));
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.attachments.status, 'skipped');
+      assert.match(health.attachments.reason, /HTTP 400/);
+      assert.equal(health.attachmentLinks.status, 'skipped');
+      assert.match(health.attachmentLinks.reason, /HTTP 400|remain unproven/);
+      assert.equal(health.lastIndexed.attachmentsIndexed, 0);
+      assert.equal(health.cumulative.attachmentsIndexed, 0);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -1104,6 +1231,9 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.cumulative.attachmentsIndexed, 0);
       assert.equal(health.attachmentLinks.status, 'skipped');
       assert.equal(/LIVE/i.test(JSON.stringify(health.attachmentLinks)), false);
+      assert.equal(health.attachments.status, 'skipped');
+      assert.match(health.attachments.reason, /has not completed|remains unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
       assert.equal(health.contacts.status, 'skipped');
       assert.match(health.contacts.reason, /have not completed|remain unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.contacts)), false);
@@ -1130,6 +1260,9 @@ describe('Fabric sync honesty status', () => {
       assert.equal(health.fileSearch.status, 'error');
       assert.match(health.fileSearch.reason, /unreadable|unproven/);
       assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(health.attachments.status, 'error');
+      assert.match(health.attachments.reason, /unreadable|unproven/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.attachments)), false);
       assert.equal(health.honesty, 'degraded');
     } finally {
       rmSync(dir, { recursive: true, force: true });
