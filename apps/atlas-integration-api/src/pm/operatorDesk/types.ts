@@ -325,11 +325,15 @@ export interface AtlasClientContext {
    * Optional relatedDocuments copies already-authorized same-scope
    * documents / hits kind=document (same RelatedMeetingDocumentRef /
    * relatedDocumentsForMeeting path as meetings / research-intel /
-   * projects / threads / capital). Missing / non-canonical ClientCode
-   * omits researchRelationship / relatedDocuments (fail-closed; never
-   * guess). No downloadUrl. OWNER_ESCALATE / execute=false /
-   * activate=false / send=false / liveGtmOutbound=false /
-   * ownerGated=true / hubMi=false stay as composed.
+   * projects / threads / capital). Optional relatedProjects is the
+   * inverse of document.relatedProject (same RelatedDocumentProjectRef
+   * / relatedProjects path as research-intel). Missing / non-canonical
+   * ClientCode omits researchRelationship / relatedDocuments /
+   * relatedProjects (fail-closed; never guess). No downloadUrl.
+   * hubMiRow is copied as composed on the source project (never
+   * invented). OWNER_ESCALATE / execute=false / activate=false /
+   * send=false / liveGtmOutbound=false / ownerGated=true / hubMi=false
+   * stay as composed.
    */
   onboarding: OnboardingAgentPayload;
   /**
@@ -1028,6 +1032,23 @@ export interface OnboardingAgentRecord {
    * field.
    */
   relatedDocuments?: RelatedMeetingDocumentRef[];
+  /**
+   * Inverse of document.relatedProject: already-authorized same-scope
+   * project operating records. Reuses RelatedDocumentProjectRef /
+   * relatedProjects(). Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped projects.
+   * Unscoped lender catalog titles never attach scoped projects.
+   * Client A never receives Client B. Classification stays CONFIRMED /
+   * LIKELY / PROPOSED / STALE_OR_UNCERTAIN / COMPLETE. hubMiRow is
+   * copied as composed on the source project (never invented). Never
+   * downloadUrl, transcript, attendees, TargetAmount, invented titles,
+   * ClientCodes, execute, activate, or send. OWNER_ESCALATE /
+   * execute=false / activate=false / send=false /
+   * liveGtmOutbound=false / ownerGated=true / hubMi=false stay as
+   * composed. No invented facts. No new project / onboarding product.
+   */
+  relatedProjects?: RelatedDocumentProjectRef[];
 }
 
 export interface OnboardingAgentPayload {

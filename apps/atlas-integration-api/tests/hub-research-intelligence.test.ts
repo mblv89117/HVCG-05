@@ -3876,7 +3876,8 @@ describe('ATLAS-ONBOARDING-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse
 });
 
 function assertOnboardingRelatedDocumentsHonesty(item: OnboardingAgentRecord): void {
-  const blob = JSON.stringify(item);
+  const { relatedProjects: _relatedProjects, ...withoutProjects } = item;
+  const blob = JSON.stringify(withoutProjects);
   assert.equal(/TargetAmount/i.test(blob), false);
   assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
   assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
