@@ -24,6 +24,8 @@ const PAGE_SIZE = 50;
 
 export interface FabricCheckpoint {
   mailSkip: string | null;
+  mailMode?: 'delta' | 'page';
+  mailDeltaReady?: boolean;
   calendarSkip: string | null;
   contactsSkip: string | null;
   filesSkip: string | null;
@@ -92,6 +94,18 @@ function nextLink(json: Record<string, unknown>): string | null {
   return typeof json['@odata.nextLink'] === 'string' ? json['@odata.nextLink'] : null;
 }
 
+function deltaLink(json: Record<string, unknown>): string | null {
+  return typeof json['@odata.deltaLink'] === 'string' ? json['@odata.deltaLink'] : null;
+}
+
+function mailDeltaUrl(): string {
+  return `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$select=id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview&$top=${PAGE_SIZE}`;
+}
+
+function legacyMailPageUrl(): string {
+  return `/v1.0/users/${MANNY_ENTRA_OID}/messages?$select=id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview&$top=${PAGE_SIZE}&$orderby=receivedDateTime desc`;
+}
+
 export async function runFabricSync(opts: {
   principal?: AtlasPrincipal;
   service: SharePointPmService;
@@ -106,24 +120,36 @@ export async function runFabricSync(opts: {
     assertMannyOnly(opts.principal, 'Information fabric sync');
   }
   const notes: string[] = [];
-  const clients = (await opts.service.listClientHints()).map(
-    (c): ClientHint => ({
-      clientCode: c.clientCode,
-      displayName: c.displayName,
-      dba: c.dba,
-      domains: [],
-    }),
-  );
+  let clients: ClientHint[] = [];
+  try {
+    clients = (await opts.service.listClientHints()).map(
+      (c): ClientHint => ({
+        clientCode: c.clientCode,
+        displayName: c.displayName,
+        dba: c.dba,
+        domains: [],
+      }),
+    );
+  } catch {
+    notes.push('Client hints unavailable; fabric sync continued with empty client resolver.');
+  }
   const cp = loadCheckpoint(opts.dataDir);
   const indexed = { mailThreads: 0, meetings: 0, contacts: 0, files: 0, skipped: 0, restricted: 0 };
 
   const seenConversations = new Set<string>();
-  let mailUrl: string | null =
-    cp.mailSkip ||
-    `/v1.0/users/${MANNY_ENTRA_OID}/messages?$select=id,conversationId,internetMessageId,subject,from,toRecipients,ccRecipients,receivedDateTime,webLink,bodyPreview&$top=${PAGE_SIZE}&$orderby=receivedDateTime desc`;
+  let mailUrl: string | null = cp.mailSkip || mailDeltaUrl();
+  let mailMode: 'delta' | 'page' = mailUrl.includes('/delta') ? 'delta' : (cp.mailMode || 'page');
   for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
     const { status, json } = await opts.fabric.getJson(mailUrl);
     if (status !== 200) {
+      if (page === 0 && mailMode === 'delta' && !cp.mailDeltaReady) {
+        notes.push(`Mail delta unavailable at HTTP ${status}; falling back to recent messages page for this run.`);
+        mailUrl = legacyMailPageUrl();
+        mailMode = 'page';
+        cp.mailMode = 'page';
+        page = -1;
+        continue;
+      }
       notes.push(`Mail index stopped at HTTP ${status}.`);
       break;
     }
@@ -177,8 +203,18 @@ export async function runFabricSync(opts: {
       });
       indexed.mailThreads += 1;
     }
-    mailUrl = nextLink(json);
-    cp.mailSkip = mailUrl;
+    const delta = deltaLink(json);
+    const next = nextLink(json);
+    if (delta) {
+      cp.mailSkip = delta;
+      cp.mailMode = mailMode;
+      cp.mailDeltaReady = mailMode === 'delta';
+      mailUrl = null;
+    } else {
+      mailUrl = next;
+      cp.mailSkip = mailUrl;
+      cp.mailMode = mailMode;
+    }
   }
 
   let calUrl: string | null =

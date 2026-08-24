@@ -21,6 +21,7 @@ export interface FabricGraphClient {
 
 const ALLOWED_GET: RegExp[] = [
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/messages(\?|$|\/)/i,
+  /^\/v1\.0\/users\/[0-9a-f-]{36}\/mailFolders\/inbox\/messages\/delta(\?|$)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/calendar\/events(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/contacts(\?|$|\/)/i,
   /^\/v1\.0\/users\/[0-9a-f-]{36}\/drive(\/root(\/children)?|\/recent)(\?|$)/i,
@@ -124,7 +125,15 @@ export function createFabricGraphClient(
       return { status: resp.status, json };
     } catch (err) {
       if (err instanceof PmHttpError) throw err;
-      throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Fabric Graph request failed.');
+      return {
+        status: 0,
+        json: {
+          error: {
+            code: 'graph_request_failed',
+            message: 'Fabric Graph request failed before an HTTP response.',
+          },
+        },
+      };
     } finally {
       clearTimeout(timer);
     }

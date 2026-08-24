@@ -293,12 +293,54 @@ export async function fetchPmDocuments(
   if (params?.type) q.set('type', params.type);
   if (params?.confidentiality) q.set('confidentiality', params.confidentiality);
   const qs = q.toString();
+  const body = await hubFetchJson<unknown>(auth, `/api/pm/documents${qs ? `?${qs}` : ''}`);
+  return normalizePmDocumentsResponse(body);
+}
+
+export async function fetchOperatorDesk(auth: AtlasHubAuthHeaders) {
   return hubFetchJson<{
-    count: number;
-    restrictedOmitted: number;
-    sharePointSites: { commandCenter: string; clients: string };
-    documents: OperatingDocument[];
-  }>(auth, `/api/pm/documents${qs ? `?${qs}` : ''}`);
+    operatorDesk: {
+      entitled: boolean;
+      hubSha?: string | null;
+      askAtlas?: {
+        kind: string;
+        invented: boolean;
+        honestEmpty: boolean;
+        activity?: OperatorDeskActivity;
+        items?: Array<{
+          state: string;
+          client?: string;
+          clientCode?: string;
+          classification: string;
+          why: string;
+          basedOn: string;
+        }>;
+      };
+    };
+  }>(auth, '/operator.json');
+}
+
+export async function runFabricSync(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    fabric: {
+      indexed: {
+        mailThreads: number;
+        meetings: number;
+        contacts: number;
+        files: number;
+        skipped: number;
+        restricted: number;
+      };
+      notes: string[];
+      checkpoint: {
+        mailSkip?: string | null;
+        mailMode?: 'delta' | 'page';
+        mailDeltaReady?: boolean;
+        lastRunAt?: string;
+        counts?: Record<string, number>;
+      };
+    };
+  }>(auth, '/api/pm/fabric/sync', { method: 'POST', body: '{}' });
 }
 
 export async function fetchOwnerReview(auth: AtlasHubAuthHeaders) {
@@ -322,6 +364,133 @@ export interface OperatingDocument {
   version?: string;
   sourceSystem: string;
   sensitivityRestricted: boolean;
+}
+
+export interface PmDocumentsResponse {
+  count: number;
+  restrictedOmitted: number;
+  sharePointSites: { commandCenter: string; clients: string } | null;
+  documents: OperatingDocument[];
+  sourceKind?: string;
+  unavailableReason?: string;
+}
+
+export interface OperatorDeskActivity {
+  agent: string;
+  missionKey: string;
+  trigger: string;
+  timestamp: string;
+  tools: string[];
+  classification: string;
+  result: string;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function asString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function normalizeDocument(row: unknown, sourceKind?: string): OperatingDocument | null {
+  const rec = asRecord(row);
+  if (!rec) return null;
+  const id = asString(rec.id) || asString(rec.sourceItemId) || asString(rec.sourceRecordId);
+  const title = asString(rec.title) || asString(rec.filename) || asString(rec.name);
+  if (!id && !title) return null;
+  const kind = asString(rec.kind) || asString(rec.documentType) || 'document';
+  const classification = asString(rec.classification) || asString(rec.provenanceLabel);
+  const explicitConfidentiality = asString(rec.confidentiality);
+  const restricted =
+    Boolean(rec.sensitivityRestricted) ||
+    explicitConfidentiality === 'restricted' ||
+    /restricted/i.test(kind) ||
+    /restricted/i.test(String(classification || ''));
+  const clientCode = asString(rec.clientCode);
+  const clientId = asString(rec.clientId) || clientCode;
+  const sourceSystem =
+    asString(rec.sourceSystem) ||
+    asString(rec.source) ||
+    (sourceKind === 'knowledge_ledger_v1' ? 'sharepoint_hub_mi' : 'microsoft');
+
+  return {
+    id: id || title || 'document',
+    title: title || id || 'Untitled document',
+    kind,
+    webUrl: asString(rec.webUrl) || asString(rec.sourceUrl),
+    path: asString(rec.path),
+    classification,
+    confidentiality:
+      explicitConfidentiality === 'restricted' ||
+      explicitConfidentiality === 'internal' ||
+      explicitConfidentiality === 'general'
+        ? explicitConfidentiality
+        : restricted
+          ? 'restricted'
+          : /confidential|legal|pii/i.test(String(classification || kind))
+            ? 'internal'
+            : 'general',
+    clientId,
+    clientName: asString(rec.clientName) || asString(rec.client) || clientCode,
+    projectId: asString(rec.projectId),
+    projectName: asString(rec.projectName),
+    owner: asString(rec.owner) || asString(rec.sourceAccount),
+    modifiedAt: asString(rec.modifiedAt) || asString(rec.lastIndexedAt),
+    version: asString(rec.version),
+    sourceSystem,
+    sensitivityRestricted: restricted,
+  };
+}
+
+function normalizeDocumentsValue(value: unknown): {
+  documents: OperatingDocument[];
+  sourceKind?: string;
+  unavailableReason?: string;
+} {
+  if (Array.isArray(value)) {
+    return {
+      documents: value.map((row) => normalizeDocument(row)).filter((row): row is OperatingDocument => Boolean(row)),
+    };
+  }
+  const rec = asRecord(value);
+  if (!rec) return { documents: [], unavailableReason: 'documents payload unavailable' };
+  const sourceKind = asString(rec.kind);
+  const items = Array.isArray(rec.items) ? rec.items : [];
+  return {
+    documents: items
+      .map((row) => normalizeDocument(row, sourceKind))
+      .filter((row): row is OperatingDocument => Boolean(row)),
+    sourceKind,
+    unavailableReason:
+      items.length === 0 && rec.empty === true
+        ? 'authorized source returned no document items'
+        : undefined,
+  };
+}
+
+export function normalizePmDocumentsResponse(body: unknown): PmDocumentsResponse {
+  const rec = asRecord(body) || {};
+  const normalized = normalizeDocumentsValue(rec.documents);
+  const sharePointSites = asRecord(rec.sharePointSites) as PmDocumentsResponse['sharePointSites'];
+  const restricted =
+    typeof rec.restrictedOmitted === 'number' && Number.isFinite(rec.restrictedOmitted)
+      ? rec.restrictedOmitted
+      : normalized.documents.filter((doc) => doc.sensitivityRestricted).length;
+  const count =
+    typeof rec.count === 'number' && Number.isFinite(rec.count)
+      ? rec.count
+      : normalized.documents.length;
+  return {
+    count,
+    restrictedOmitted: restricted,
+    sharePointSites: sharePointSites || null,
+    documents: normalized.documents,
+    sourceKind: normalized.sourceKind,
+    unavailableReason: normalized.unavailableReason,
+  };
 }
 
 export interface OwnerReviewItem {
