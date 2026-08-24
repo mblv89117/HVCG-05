@@ -118,3 +118,78 @@ export function attachmentIndexSummary(opts: {
     2000,
   );
 }
+
+const MAIL_ATT_KEY_RE = /\bKey:(mail-att:[^\s]+)/;
+const PARENT_ID_RE = /\bParent:([A-Za-z0-9!._~+=-]{1,512})/;
+const ATT_ID_RE = /\bAtt:([A-Za-z0-9!._~+=-]{1,512})/;
+const ATT_TYPE_RE = /\bType:([^\s]+)/;
+const ATT_SIZE_RE = /\bSize:(\d+)/;
+const GRAPH_ID_SAFE_RE = /^[A-Za-z0-9!._~+=-]{1,512}$/;
+
+export interface MailAttachmentIndexRef {
+  parentMessageId: string;
+  attachmentId: string;
+  contentType?: string;
+  size?: number;
+  idempotencyKey?: string;
+}
+
+/** Already-indexed outlook-mail-attachment metadata. Never invents ids. */
+export function isMailAttachmentIndexRow(item: {
+  summary?: unknown;
+  sourceItemId?: unknown;
+  provenanceSource?: unknown;
+}): boolean {
+  const summary = String(item.summary || '');
+  const src = String(item.sourceItemId || '');
+  const provenance = String(item.provenanceSource || '');
+  if (provenance === 'outlook-mail-attachment') return true;
+  if (src.startsWith('mail-att:')) return true;
+  if (MAIL_ATT_KEY_RE.test(summary)) return true;
+  return summary.includes(FILE_RESTRICTED_MARKER) && PARENT_ID_RE.test(summary) && ATT_ID_RE.test(summary);
+}
+
+function safeGraphishId(raw?: string): string {
+  const id = (raw || '').trim();
+  return GRAPH_ID_SAFE_RE.test(id) ? id : '';
+}
+
+/**
+ * Parent message id / attachment id / contentType / size copied from the
+ * existing fabric index summary. No binary, no anonymous URL, no invented ids.
+ */
+export function extractMailAttachmentRef(
+  summary: string,
+  extras?: { sourceItemId?: unknown; conversationId?: unknown; sourceMessageId?: unknown },
+): MailAttachmentIndexRef | undefined {
+  const keyMatch = MAIL_ATT_KEY_RE.exec(summary || '');
+  const key = keyMatch?.[1] || '';
+  const keyTail = key.startsWith('mail-att:') ? key.slice('mail-att:'.length) : '';
+  const colon = keyTail.lastIndexOf(':');
+  const parentFromKey = colon > 0 ? keyTail.slice(0, colon) : '';
+  const attFromKey = colon > 0 ? keyTail.slice(colon + 1) : '';
+  const parent = safeGraphishId(
+    (typeof extras?.conversationId === 'string' ? extras.conversationId : '') ||
+      PARENT_ID_RE.exec(summary || '')?.[1] ||
+      parentFromKey,
+  );
+  const attachment = safeGraphishId(
+    (typeof extras?.sourceMessageId === 'string' ? extras.sourceMessageId : '') ||
+      ATT_ID_RE.exec(summary || '')?.[1] ||
+      attFromKey ||
+      (typeof extras?.sourceItemId === 'string' && !String(extras.sourceItemId).startsWith('file:')
+        ? extras.sourceItemId
+        : ''),
+  );
+  if (!parent || !attachment) return undefined;
+  const contentType = ATT_TYPE_RE.exec(summary || '')?.[1];
+  const sizeRaw = ATT_SIZE_RE.exec(summary || '')?.[1];
+  const size = sizeRaw ? Number(sizeRaw) : undefined;
+  return {
+    parentMessageId: parent,
+    attachmentId: attachment,
+    ...(contentType ? { contentType } : {}),
+    ...(typeof size === 'number' && Number.isFinite(size) ? { size } : {}),
+    ...(key ? { idempotencyKey: key } : {}),
+  };
+}

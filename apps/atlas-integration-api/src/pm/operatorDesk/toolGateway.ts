@@ -666,6 +666,18 @@ function toAuthorizedSearchHit(
     ...('itemId' in row && typeof row.itemId === 'string' && row.itemId.trim()
       ? { itemId: row.itemId.trim() }
       : {}),
+    ...('parentMessageId' in row && typeof row.parentMessageId === 'string' && row.parentMessageId.trim()
+      ? { parentMessageId: row.parentMessageId.trim() }
+      : {}),
+    ...('attachmentId' in row && typeof row.attachmentId === 'string' && row.attachmentId.trim()
+      ? { attachmentId: row.attachmentId.trim() }
+      : {}),
+    ...('contentType' in row && typeof row.contentType === 'string' && row.contentType.trim()
+      ? { contentType: row.contentType.trim() }
+      : {}),
+    ...('size' in row && typeof row.size === 'number' && Number.isFinite(row.size)
+      ? { size: row.size }
+      : {}),
     why: GENERIC_SEARCH_HIT_WHY,
     basedOn: 'searchSharePointPm / GET /api/pm/search / operatorDesk.search entitled retrieval. Classification is not promoted.',
     provenance: classification,
@@ -1080,6 +1092,10 @@ function documentOperatingRecords(hits: AtlasAuthorizedSearchHit[]): DocumentOpe
       ...(clientCode ? { clientCode } : {}),
       provenance,
       source: hit.source || 'HVCG_Communications/file-index',
+      ...(hit.parentMessageId ? { parentMessageId: hit.parentMessageId } : {}),
+      ...(hit.attachmentId ? { attachmentId: hit.attachmentId } : {}),
+      ...(hit.contentType ? { contentType: hit.contentType } : {}),
+      ...(typeof hit.size === 'number' && Number.isFinite(hit.size) ? { size: hit.size } : {}),
     });
   }
   return items;
@@ -1187,9 +1203,10 @@ async function withDocumentPreviews(
 }
 
 /**
- * Copy already-authorized email / project / contract / capital onto entitled
- * documents. Runs after authorization and after secure preview attach.
- * Does not invent ClientCodes, Hub-MI, lender criteria, or financing status.
+ * Copy already-authorized email / project / contract / capital / indexed
+ * outlook-mail-attachment metadata onto entitled documents. Runs after
+ * authorization and after secure preview attach. Does not invent ClientCodes,
+ * Hub-MI, lender criteria, financing status, binaries, or anonymous URLs.
  */
 function withDocumentRelatedContext(
   ctx: ToolGatewayContext,
