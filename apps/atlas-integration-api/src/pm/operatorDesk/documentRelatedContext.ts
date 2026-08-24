@@ -8,7 +8,8 @@
  * inverse capital-prepare → meetings, capital-prepare → documents,
  * and capital-prepare → research links on CapitalSubmissionPrepareRecord
  * items, the inverse
- * client-support → meetings and
+ * client-support → meetings,
+ * client-support → documents, and
  * client-support → research links on ClientSupportAgentRecord items,
  * the inverse onboarding → meetings, onboarding → documents, and
  * onboarding → research links on OnboardingAgentRecord items, and the inverse
@@ -28,7 +29,7 @@
  * search extras.meetings (kind=meeting) / hits kind=document / hits
  * kind=meeting / sameRelatedScope / entitledClientCodes /
  * authoritativeSourceUrl / DOCUMENT_RELATED_CONTEXT_PAGE_SIZE /
- * relatedMeetings() / relatedResearchForScopeItem().
+ * relatedMeetings() / relatedDocumentsForMeeting() / relatedResearchForScopeItem().
  * REJECT a knowledge graph, document product, SDK, queue, Graph /search/query,
  * or a second calendar/meeting/document/search/capital/research product.
  */
@@ -729,18 +730,25 @@ export function attachRelatedContextToCapitalSubmissions(
 }
 
 /**
- * Inverse of meeting support evidence + researchIntelligence.relatedMeetings:
- * entitled same-scope meetings already on authorizedSearch.meetings.items
- * or hits kind=meeting, and entitled same-scope research already on
+ * Inverse of meeting support evidence + researchIntelligence.relatedMeetings
+ * + the same same-scope document inverse already live on meetings /
+ * research-intel / projects / threads / capital / onboarding: entitled
+ * same-scope meetings already on authorizedSearch.meetings.items or
+ * hits kind=meeting, entitled same-scope documents already on
+ * authorizedSearch.documents.items or hits kind=document (reuses
+ * relatedDocumentsForMeeting / RelatedMeetingDocumentRef — no new
+ * document query), and entitled same-scope research already on
  * authorizedSearch.researchIntelligence.items (no new research query).
- * Isolation: sameRelatedScope + entitledClientCodes. Fail-closed when
- * ClientCode is missing — omit relatedMeetings / researchRelationship
- * rather than guess. Unscoped never receives scoped relations. Unscoped
- * lender catalog titles never attach to a scoped support item.
- * Client A never receives Client B. SAS / anonymous webUrl dropped.
- * No downloadUrl. No transcript text. OWNER_ESCALATE / execute=false /
- * send=false / autoRespond=false / draftOnly=true / hubMi=false stay
- * as composed.
+ * Isolation: sameRelatedScope + entitledClientCodes +
+ * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
+ * non-canonical — omit relatedMeetings / researchRelationship /
+ * relatedDocuments rather than guess. Unscoped never receives scoped
+ * relations. Unscoped lender catalog titles never attach scoped
+ * documents. Client A never receives Client B. SAS / anonymous webUrl
+ * dropped. No downloadUrl. No transcript text. No TargetAmount. No
+ * Hub-MI invention. OWNER_ESCALATE / execute=false / send=false /
+ * autoRespond=false / draftOnly=true / hubMi=false stay as composed.
+ * There is no document.clientSupportRelationship field.
  */
 export function attachRelatedContextToClientSupportRecord(
   principal: AtlasPrincipal,
@@ -751,10 +759,12 @@ export function attachRelatedContextToClientSupportRecord(
   if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
   const relatedMeetingsList = relatedMeetings(item, search);
   const researchRelationship = relatedResearchForScopeItem(item, search);
+  const relatedDocuments = relatedDocumentsForMeeting(item, search);
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
+    ...(relatedDocuments.length ? { relatedDocuments } : {}),
   };
 }
 

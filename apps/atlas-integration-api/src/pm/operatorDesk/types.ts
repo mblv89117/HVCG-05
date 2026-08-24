@@ -340,7 +340,14 @@ export interface AtlasClientContext {
    * by documents / projects / threads / capital. Optional
    * researchRelationship copies already-authorized same-scope
    * researchIntelligence items (same RelatedMeetingResearchRef as
-   * meetings / onboarding). Both omitted when ClientCode is missing.
+   * meetings / onboarding). Optional relatedDocuments copies already-
+   * authorized same-scope documents / hits kind=document (same
+   * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path as
+   * meetings / research-intel / projects / threads / capital /
+   * onboarding). Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments (fail-closed; never guess).
+   * No downloadUrl. OWNER_ESCALATE / execute=false / send=false /
+   * autoRespond=false / draftOnly=true / hubMi=false stay as composed.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
@@ -1096,6 +1103,23 @@ export interface ClientSupportAgentRecord {
    * transcript, attendees, TargetAmount, or invented criteria.
    */
   researchRelationship?: RelatedMeetingResearchRef[];
+  /**
+   * Same-scope entitled document refs already on authorizedSearch.documents
+   * / hits kind=document. Reuses RelatedMeetingDocumentRef /
+   * relatedDocumentsForMeeting() — the same inverse already live on
+   * meetings / research-intel / projects / threads / capital /
+   * onboarding. Copied after authorization. Omitted when none are
+   * entitled or when ClientCode is missing / non-canonical (fail-closed;
+   * never guess). Unscoped never receives scoped documents. Unscoped
+   * lender catalog titles never attach scoped documents. Client A never
+   * receives Client B. Never downloadUrl, transcript, attendees,
+   * TargetAmount, invented titles, ClientCodes, or Hub-MI. SAS /
+   * anonymous webUrl dropped. OWNER_ESCALATE / execute=false /
+   * send=false / autoRespond=false / draftOnly=true / hubMi=false stay
+   * as composed. No invented facts. There is no
+   * document.clientSupportRelationship field.
+   */
+  relatedDocuments?: RelatedMeetingDocumentRef[];
 }
 
 export interface ClientSupportAgentPayload {
@@ -1239,8 +1263,11 @@ export interface AtlasAuthorizedSearch {
    * Native governed client support / routing agent. Optional relatedMeetings
    * on each item is the entitled same-scope HVCG_Meetings inverse. Optional
    * researchRelationship copies already-authorized same-scope
-   * researchIntelligence items. Empty payload stays empty. Missing
-   * ClientCode omits relatedMeetings / researchRelationship.
+   * researchIntelligence items. Optional relatedDocuments copies
+   * already-authorized same-scope documents / hits kind=document (same
+   * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path). Empty
+   * payload stays empty. Missing / non-canonical ClientCode omits
+   * relatedMeetings / researchRelationship / relatedDocuments.
    */
   clientSupport: ClientSupportAgentPayload;
   /**
