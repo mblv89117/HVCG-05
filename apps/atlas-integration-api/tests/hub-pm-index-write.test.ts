@@ -48,9 +48,21 @@ const MEETING_SCHEMA = new Set([
   'OutlookEventLink',
 ]);
 
+function transportHttp0(): PmHttpError {
+  return new PmHttpError(
+    503,
+    'PM_BACKEND_UNAVAILABLE',
+    'SharePoint PM Graph transport failed (HTTP 0).',
+    'unavailable',
+  );
+}
+
+const instantRetry = { sleep: async () => undefined };
+
 class SchemaGraph implements PmGraphTransport {
   readonly lists = new Map<string, GraphListItem[]>();
   readonly creates: Array<Record<string, unknown>> = [];
+  meetingHttp0Remaining = 0;
   nextId = 1;
 
   constructor() {
@@ -81,6 +93,10 @@ class SchemaGraph implements PmGraphTransport {
 
   async createItem(listId: string, fields: Record<string, unknown>): Promise<GraphListItem> {
     this.creates.push({ listId, ...fields });
+    if (listId === MEETINGS && this.meetingHttp0Remaining > 0) {
+      this.meetingHttp0Remaining -= 1;
+      throw transportHttp0();
+    }
     const schema = listId === MEETINGS ? MEETING_SCHEMA : COMM_SCHEMA;
     const unknown = Object.keys(fields).filter((key) => !schema.has(key));
     if (unknown.length) {
@@ -249,6 +265,151 @@ describe('Graph list-write error mapping', () => {
     assert.ok(last.MeetingDate);
     assert.equal(last.OutlookEventLink, undefined);
     assert.equal(last.Summary, undefined);
+  });
+
+  it('retries meeting createItem once after Graph transport HTTP 0 and writes MeetingType/date', async () => {
+    const writes: Array<Record<string, unknown>> = [];
+    const result = await retryIndexWrite(
+      async (fields) => {
+        writes.push({ ...fields });
+        if (writes.length === 1) throw transportHttp0();
+        return { id: 'm-http0', fields };
+      },
+      {
+        Title: 'Weekly',
+        MeetingType: 'Other',
+        MeetingDate: '2026-08-24T15:00:00.000Z',
+      },
+      'meeting',
+      instantRetry,
+    );
+    assert.equal(result.id, 'm-http0');
+    assert.equal(writes.length, 2);
+    assert.equal(writes[1]?.MeetingType, 'Other');
+    assert.equal(writes[1]?.MeetingDate, '2026-08-24T15:00:00.000Z');
+    assert.equal(writes[1]?.Title, 'Weekly');
+  });
+
+  it('retries socket hang up twice then succeeds without changing the meeting payload', async () => {
+    const writes: Array<Record<string, unknown>> = [];
+    const result = await retryIndexWrite(
+      async (fields) => {
+        writes.push({ ...fields });
+        if (writes.length < 3) throw new Error('socket hang up');
+        return { id: 'm-hang', fields };
+      },
+      {
+        Title: 'Weekly',
+        MeetingType: 'Other',
+        MeetingDate: '2026-08-24T15:00:00.000Z',
+      },
+      'meeting',
+      instantRetry,
+    );
+    assert.equal(result.id, 'm-hang');
+    assert.equal(writes.length, 3);
+    assert.deepEqual(writes[0], writes[2]);
+  });
+
+  it('exhausts HTTP 0 retries and rethrows the sanitized transport message', async () => {
+    const writes: Array<Record<string, unknown>> = [];
+    await assert.rejects(
+      () =>
+        retryIndexWrite(
+          async (fields) => {
+            writes.push({ ...fields });
+            throw transportHttp0();
+          },
+          {
+            Title: 'Weekly',
+            MeetingType: 'Other',
+            MeetingDate: '2026-08-24T15:00:00.000Z',
+          },
+          'meeting',
+          instantRetry,
+        ),
+      (err: unknown) => {
+        assert.ok(err instanceof PmHttpError);
+        assert.match(err.message, /SharePoint PM Graph transport failed \(HTTP 0\)/);
+        assert.equal(/Bearer |CCB01|PDG01/i.test(err.message), false);
+        return true;
+      },
+    );
+    assert.equal(writes.length, 3);
+  });
+
+  it('keeps HTTP 400 unknown-field on the payload-shrink path without transport retries', async () => {
+    const writes: Array<Record<string, unknown>> = [];
+    let slept = 0;
+    const result = await retryIndexWrite(
+      async (fields) => {
+        writes.push({ ...fields });
+        if (fields.HVCG_IdempotencyKey) {
+          throw new PmHttpError(
+            503,
+            'PM_BACKEND_UNAVAILABLE',
+            formatGraphWriteFailure(400, {
+              error: { code: 'invalidRequest', message: "Field 'HVCG_IdempotencyKey' is not recognized as a valid field" },
+            }),
+          );
+        }
+        return { id: '1', fields };
+      },
+      {
+        Title: 'Indexed thread',
+        Summary: 'Key:mail:conv-1',
+        Channel: 'Email',
+        CommunicationDate: '2026-08-24T00:00:00.000Z',
+        HVCG_IdempotencyKey: 'mail:conv-1',
+      },
+      'communication',
+      { sleep: async () => {
+          slept += 1;
+        } },
+    );
+    assert.equal(result.id, '1');
+    assert.equal(writes.length, 2);
+    assert.equal(slept, 0);
+    assert.equal(writes[1]?.HVCG_IdempotencyKey, undefined);
+  });
+
+  it('does not retry HTTP 401 or 403 as transport HTTP 0', async () => {
+    for (const status of [401, 403]) {
+      const writes: Array<Record<string, unknown>> = [];
+      let slept = 0;
+      await assert.rejects(
+        () =>
+          retryIndexWrite(
+            async (fields) => {
+              writes.push({ ...fields });
+              throw new PmHttpError(
+                status,
+                'PM_BACKEND_UNAVAILABLE',
+                `SharePoint PM permission or token was rejected (HTTP ${status}).`,
+                'unavailable',
+              );
+            },
+            {
+              Title: 'Weekly',
+              MeetingType: 'Other',
+              MeetingDate: '2026-08-24T15:00:00.000Z',
+            },
+            'meeting',
+            { sleep: async () => {
+                slept += 1;
+              } },
+          ),
+        (err: unknown) => {
+          assert.ok(err instanceof PmHttpError);
+          assert.equal((err as PmHttpError).status, status);
+          assert.match((err as PmHttpError).message, /permission or token was rejected/);
+          assert.equal(/HTTP 0/.test((err as PmHttpError).message), false);
+          return true;
+        },
+      );
+      assert.equal(writes.length, 1, `HTTP ${status} must not be retried`);
+      assert.equal(slept, 0, `HTTP ${status} must not use transport backoff`);
+    }
   });
 });
 
@@ -534,6 +695,104 @@ describe('Fabric notes stay sanitized when a mapped 400 skips a write', () => {
       assert.equal(meeting?.fields.OutlookEventLink, undefined);
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(/CCB99|PDG01|deltatoken|Bearer |Colorado Craft Beef/i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Meeting index write retries transient Graph HTTP 0', () => {
+  function calendarFabric() {
+    return {
+      async getJson(path: string) {
+        if (path.includes('/mailFolders/inbox/messages/delta')) {
+          return {
+            status: 200,
+            json: {
+              value: [],
+              '@odata.deltaLink': `/v1.0/users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages/delta?$deltatoken=abc`,
+            },
+          };
+        }
+        if (path.includes('/calendar/events')) {
+          return {
+            status: 200,
+            json: {
+              value: [
+                {
+                  id: 'evt-http0',
+                  subject: 'Colorado Craft Beef weekly',
+                  bodyPreview: 'Status.',
+                  start: { dateTime: '2026-08-24T15:00:00.0000000', timeZone: 'UTC' },
+                  webLink: 'https://outlook.office.com/calendar/e-http0',
+                },
+              ],
+            },
+          };
+        }
+        return { status: 404, json: {} };
+      },
+      async postJson() {
+        return { status: 403, json: {} };
+      },
+    } as never;
+  }
+
+  it('writes the meeting row after the first createItem HTTP 0 and does not fabricate LIVE honesty', async () => {
+    const graph = new SchemaGraph();
+    graph.seed(CLIENTS, { Title: 'Colorado Craft Beef', ClientCode: 'CCB01', ClientStage: 'Active Client' }, '12');
+    graph.meetingHttp0Remaining = 1;
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-meeting-http0-retry-'));
+    try {
+      const result = await runFabricSync({
+        service: svc,
+        fabric: calendarFabric(),
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.meetings, 1);
+      assert.equal(result.notes.some((note) => /meeting index write skipped/.test(note)), false);
+      const created = graph.lists.get(MEETINGS)?.[0];
+      assert.equal(created?.fields.MeetingType, 'Client');
+      assert.ok(created?.fields.MeetingDate);
+      assert.equal(graph.creates.filter((row) => row.listId === MEETINGS).length, 2);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.ok(health.honesty === 'delta' || health.honesty === 'degraded');
+      assert.equal(health.notes.some((note) => /meeting index write skipped|transport failed \(HTTP 0\)/.test(note)), false);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps honesty degraded and the HTTP 0 skip note when transport retries exhaust', async () => {
+    const graph = new SchemaGraph();
+    graph.seed(CLIENTS, { Title: 'Colorado Craft Beef', ClientCode: 'CCB01', ClientStage: 'Active Client' }, '12');
+    graph.meetingHttp0Remaining = 3;
+    const svc = service(graph);
+    const dir = mkdtempSync(join(tmpdir(), 'fabric-meeting-http0-exhaust-'));
+    try {
+      const result = await runFabricSync({
+        service: svc,
+        fabric: calendarFabric(),
+        dataDir: dir,
+        bootstrap: true,
+      });
+      assert.equal(result.indexed.meetings, 0);
+      assert.ok(
+        result.notes.some(
+          (note) => /SharePoint meeting index write skipped/.test(note) && /HTTP 0/.test(note),
+        ),
+      );
+      assert.equal(result.notes.some((note) => /Bearer |CCB01|PDG01|Colorado Craft Beef/i.test(note)), false);
+      assert.equal(graph.lists.get(MEETINGS)?.length || 0, 0);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.honesty, 'degraded');
+      assert.ok(health.notes.some((note) => /meeting index write skipped/.test(note) && /HTTP 0/.test(note)));
+      assert.equal(/LIVE/i.test(JSON.stringify(health.fileSearch)), false);
+      assert.equal(/CCB99|PDG01|deltatoken|Bearer /i.test(JSON.stringify(health)), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

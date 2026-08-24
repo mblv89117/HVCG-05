@@ -3,6 +3,8 @@
  * Graph list schema. Do not invent columns, ClientCodes, or Hub-MI lists.
  */
 
+import { PmHttpError } from './errors.ts';
+
 export const COMMUNICATION_CHANNELS = ['Email', 'Teams', 'Phone', 'In Person', 'Portal', 'Other'] as const;
 export const COMMUNICATION_DIRECTIONS = ['Inbound', 'Outbound', 'Internal'] as const;
 export const MEETING_TYPES = ['Client', 'Internal', 'Lender', 'Investor', 'Advisor', 'Other'] as const;
@@ -282,18 +284,83 @@ export function correctIndexWriteFields(
   return next;
 }
 
+export type RetryIndexWriteOptions = {
+  sleep?: (ms: number) => Promise<void>;
+  transportBackoffMs?: number;
+  transportRetries?: number;
+};
+
+/** Initial write plus 1–2 short retries for transient Graph socket/fetch HTTP 0. */
+const DEFAULT_TRANSPORT_RETRIES = 2;
+const DEFAULT_TRANSPORT_BACKOFF_MS = 50;
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export function isPmGraphTransportHttp0(err: unknown): boolean {
+  const name = err instanceof Error ? err.name : '';
+  if (name === 'AbortError') return true;
+  const message = err instanceof Error ? err.message : String(err || '');
+  return (
+    /transport failed \(HTTP 0\)/i.test(message) ||
+    /socket hang up/i.test(message) ||
+    /fetch abort/i.test(message) ||
+    /The operation was aborted/i.test(message)
+  );
+}
+
+export function isIndexWriteAuthOrPolicyReject(err: unknown): boolean {
+  if (err instanceof PmHttpError && (err.status === 401 || err.status === 403)) return true;
+  const message = err instanceof Error ? err.message : String(err || '');
+  return (
+    /permission or token was rejected/i.test(message) ||
+    /\(HTTP 401\)|\(HTTP 403\)/.test(message) ||
+    /redirect was rejected/i.test(message) ||
+    /approved resource allowlist/i.test(message) ||
+    /Graph request was rejected/i.test(message) ||
+    /pagination link was rejected/i.test(message) ||
+    /does not allow this operation/i.test(message)
+  );
+}
+
+async function writeWithTransportRetry<T>(
+  write: (fields: Record<string, unknown>) => Promise<T>,
+  fields: Record<string, unknown>,
+  opts: RetryIndexWriteOptions = {},
+): Promise<T> {
+  const retries = opts.transportRetries ?? DEFAULT_TRANSPORT_RETRIES;
+  const backoffMs = opts.transportBackoffMs ?? DEFAULT_TRANSPORT_BACKOFF_MS;
+  const sleep = opts.sleep ?? defaultSleep;
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await write(fields);
+    } catch (err) {
+      lastErr = err;
+      if (isIndexWriteAuthOrPolicyReject(err) || !isPmGraphTransportHttp0(err) || attempt >= retries) {
+        throw err;
+      }
+      await sleep(backoffMs);
+    }
+  }
+  throw lastErr;
+}
+
 export async function retryIndexWrite<T>(
   write: (fields: Record<string, unknown>) => Promise<T>,
   fields: Record<string, unknown>,
   kind: 'communication' | 'meeting',
+  opts: RetryIndexWriteOptions = {},
 ): Promise<T> {
   let current = fields;
   let lastErr: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await write(current);
+      return await writeWithTransportRetry(write, current, opts);
     } catch (err) {
       lastErr = err;
+      if (isPmGraphTransportHttp0(err) || isIndexWriteAuthOrPolicyReject(err)) throw err;
       const next = correctIndexWriteFields(current, err, kind);
       if (!next) throw err;
       current = next;
