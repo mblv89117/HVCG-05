@@ -48,6 +48,14 @@
  * ClientCode is missing. Unscoped lender catalog titles never attach
  * to a scoped project. relatedMeetings stays as composed. No new
  * research / KG / project product.
+ * + ATLAS-THREAD-RESEARCH-RELATIONSHIP-001
+ * Inverse researchRelationship on MailThreadOperatingRecord copies the
+ * same already-authorized same-scope researchIntelligence items
+ * (same RelatedMeetingResearchRef). Fail-closed when the thread
+ * ClientCode is missing. Unscoped lender catalog titles never attach
+ * to a scoped thread. relatedMeetings stays as composed. DRAFT_ONLY /
+ * send=false / autoRespond=false / indexedPreviewOnly stay as
+ * composed. No new research / KG / communications product.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -88,6 +96,8 @@ import {
   attachRelatedContextToDocuments,
   attachRelatedContextToProject,
   attachRelatedContextToProjects,
+  attachRelatedContextToMailThread,
+  attachRelatedContextToMailThreads,
   attachRelatedContextToResearchIntelligence,
   attachRelatedContextToResearchIntelligenceRecord,
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
@@ -96,6 +106,7 @@ import { emptyMeetingOperatingPayload } from '../src/pm/operatorDesk/meetingOper
 import { emptyOnboardingPayload } from '../src/pm/operatorDesk/onboardingAgent.ts';
 import { emptyClientSupportPayload } from '../src/pm/operatorDesk/clientSupportAgent.ts';
 import { emptyCapitalSubmissionPayload } from '../src/pm/operatorDesk/capitalSubmissionPrepare.ts';
+import { emptyMailThreadPayload } from '../src/pm/operatorDesk/mailThreadContext.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import {
   ASK_ATLAS_RESEARCH_INTELLIGENCE_MISSION_KEY,
@@ -110,6 +121,7 @@ import {
   type CapitalSubmissionPrepareRecord,
   type ClientSupportAgentRecord,
   type DocumentOperatingRecord,
+  type MailThreadOperatingRecord,
   type MeetingOperatingRecord,
   type OnboardingAgentRecord,
   type ProjectOperatingRecord,
@@ -2526,5 +2538,427 @@ describe('ATLAS-PROJECT-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', 
     assert.equal(recovered.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
     assert.equal(/Hub-MI/i.test(JSON.stringify(recovered.researchRelationship)), false);
     assertProjectResearchHonesty(recovered);
+  });
+});
+
+const THREAD_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-thread';
+
+function syn01ThreadHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'communication' as const,
+    id: 'mail-syn-1',
+    title: 'SYN01 intake follow-up',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications',
+    clientCode: 'SYN01',
+    conversationId: 'conv-syn-1',
+    provenance: 'PROPOSED' as const,
+    webUrl: THREAD_SOURCE,
+    preview: 'Can you confirm the next entitled document?',
+    ...overrides,
+  };
+}
+
+function syn01ThreadRecord(overrides: Partial<MailThreadOperatingRecord> = {}): MailThreadOperatingRecord {
+  return {
+    id: 'mail-syn-1',
+    conversationId: 'conv-syn-1',
+    title: 'SYN01 intake follow-up',
+    clientCode: 'SYN01',
+    channel: 'Email',
+    preview: 'Can you confirm the next entitled document?',
+    summary: 'Indexed preview only. Can you confirm the next entitled document?',
+    summarySource: 'indexed_preview_only',
+    invented: false,
+    classification: 'PROPOSED',
+    provenance: 'PROPOSED',
+    commitments: [],
+    unansweredQuestions: [],
+    suggestedDraft: {
+      policyClass: 'DRAFT_ONLY',
+      send: false,
+      autoRespond: false,
+      subject: 'Re: SYN01 intake follow-up',
+      body: 'This suggested reply is a draft only. It has not been sent.',
+      status: 'draft',
+    },
+    ...overrides,
+  };
+}
+
+function assertThreadResearchHonesty(item: MailThreadOperatingRecord): void {
+  const blob = JSON.stringify(item);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|transcript|attendee/i.test(blob), false);
+  assert.equal(/hubMi[^"]*["']?\s*:\s*true/i.test(blob), false);
+  assert.equal(/\bltv\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/credit box/i.test(blob), false);
+  assert.equal(item.invented, false);
+  assert.equal(item.summarySource, 'indexed_preview_only');
+  assert.equal(item.suggestedDraft.send, false);
+  assert.equal(item.suggestedDraft.autoRespond, false);
+  assert.equal(item.suggestedDraft.policyClass, 'DRAFT_ONLY');
+  assert.equal(item.suggestedDraft.status, 'draft');
+  for (const row of item.researchRelationship || []) {
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('hubMiRow' in row, false);
+  }
+}
+
+describe('ATLAS-THREAD-RESEARCH-RELATIONSHIP-001 entitled same-scope inverse', () => {
+  it('attaches same-scope researchRelationship on entitled threads and get_client_context', async () => {
+    const now = '2026-08-24T18:00:00.000Z';
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      now,
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01MeetingHit(), syn01ThreadHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    const meeting = result.authorizedSearch.meetings.items.find((row) => row.id === 'meet-syn-1');
+    assert.ok(thread);
+    assert.ok(meeting);
+    assert.equal(thread.invented, false);
+    assert.equal(thread.summarySource, 'indexed_preview_only');
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal(thread.suggestedDraft.policyClass, 'DRAFT_ONLY');
+    assert.equal(result.authorizedSearch.threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(result.authorizedSearch.threads.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assert.equal(result.authorizedSearch.threads.indexedPreviewOnly, true);
+    const research = thread.researchRelationship?.find(
+      (row) => row.clientCode === 'SYN01' && /synthetic alpha/i.test(row.title),
+    );
+    assert.ok(research);
+    assert.equal(research.source, 'HVCG_Clients');
+    assert.equal(research.invented, false);
+    assert.equal(research.lenderCriteriaInvented, false);
+    assert.equal(research.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(research.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(research.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal(research.superseded, false);
+    assert.ok(research.retrievalDate);
+    assert.ok((thread.researchRelationship?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.deepEqual(thread.researchRelationship, meeting.researchRelationship);
+    assert.equal(thread.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assertThreadResearchHonesty(thread);
+    assert.equal(JSON.stringify(thread.researchRelationship).includes('PDG01'), false);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      now,
+      entitledIndexHits: [syn01ClientHit(), syn01MeetingHit(), syn01ThreadHit()],
+    });
+    const ctxThread = viaIndex.clientContext.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(ctxThread);
+    assert.equal(
+      ctxThread.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.deepEqual(ctxThread.researchRelationship, thread.researchRelationship);
+    assert.equal(ctxThread.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(viaIndex.clientContext.threads.autoRespond, false);
+    assert.equal(viaIndex.clientContext.threads.send, false);
+    assert.equal(viaIndex.clientContext.threads.indexedPreviewOnly, true);
+    assert.equal(ctxThread.invented, false);
+  });
+
+  it('honestly omits researchRelationship when no entitled research', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.researchRelationship, undefined);
+    assert.equal('researchRelationship' in thread, false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertThreadResearchHonesty(thread);
+  });
+
+  it('never attaches Client B research to a Client A thread', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01ThreadHit(),
+          {
+            kind: 'client' as const,
+            id: 'PDG01',
+            title: 'PDG01 must not leak',
+            href: '/clients/PDG01',
+            source: 'HVCG_Clients',
+            clientCode: 'PDG01',
+            industry: 'Hidden Industry',
+          },
+          {
+            kind: 'communication' as const,
+            id: 'mail-pdg-leak',
+            title: 'PDG01 leak thread',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            conversationId: 'conv-pdg-1',
+            provenance: 'PROPOSED' as const,
+            preview: 'PDG01 must not leak into SYN01 research.',
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(
+      thread.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      (thread.researchRelationship || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assertThreadResearchHonesty(thread);
+
+    const mixed = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord(),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'client:PDG01:must not leak',
+          title: 'PDG01 must not leak',
+          clientCode: 'PDG01',
+          evidence: 'must not leak',
+        }),
+      ]),
+    );
+    assert.equal(mixed.researchRelationship?.some((row) => row.clientCode === 'SYN01'), true);
+    assert.equal(
+      (mixed.researchRelationship || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.researchRelationship).includes('PDG01'), false);
+    assert.equal(mixed.suggestedDraft.send, false);
+    assert.equal(mixed.suggestedDraft.autoRespond, false);
+    assert.equal(mixed.invented, false);
+  });
+
+  it('omits researchRelationship when thread ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      manny,
+      syn01ThreadRecord({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithResearch([
+        syn01ClientResearchRecord(),
+        syn01ClientResearchRecord({
+          id: 'lender:ln-liveoak',
+          subjectKind: 'lender',
+          title: 'Live Oak Bank',
+          source: 'HVCG_Lenders',
+          clientCode: undefined,
+          evidence: 'Copied existing sourced lender catalog title.',
+        }),
+      ]),
+    );
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal('researchRelationship' in omitted, false);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+  });
+
+  it('does not attach unscoped lender research to a scoped thread', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: manny,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'Live Oak',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'lender' as const,
+            id: 'ln-liveoak',
+            title: 'Live Oak Bank',
+            href: '/capital',
+            source: 'HVCG_Lenders',
+          },
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.clientCode, 'SYN01');
+    assert.equal(thread.researchRelationship, undefined);
+    const blob = JSON.stringify(thread);
+    assert.equal(/live oak/i.test(blob), false);
+    assert.equal(blob.includes('HVCG_Lenders'), false);
+    assertThreadResearchHonesty(thread);
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01ThreadHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.threads.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.threads.items.some((row) => row.researchRelationship),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.threads);
+    assert.equal(unknownBlob.includes('mail-syn-1'), false);
+    assert.equal(unknownBlob.includes('PDG01'), false);
+    assert.equal(unknown.authorizedSearch.threads.autoRespond, false);
+    assert.equal(unknown.authorizedSearch.threads.send, false);
+
+    const denied = attachRelatedContextToMailThread(
+      otherStaff,
+      syn01ThreadRecord(),
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal('researchRelationship' in denied, false);
+    assert.equal(denied.suggestedDraft.send, false);
+    assert.equal(denied.suggestedDraft.autoRespond, false);
+  });
+
+  it('leaves the empty threads payload unchanged', () => {
+    const empty = emptyMailThreadPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('researchRelationship' in empty, false);
+    assert.equal(empty.autoRespond, false);
+    assert.equal(empty.send, false);
+    assert.equal(empty.indexedPreviewOnly, true);
+    const attachedEmpty = attachRelatedContextToMailThreads(
+      staff,
+      empty,
+      searchWithResearch([syn01ClientResearchRecord()]),
+    );
+    assert.equal(attachedEmpty, empty);
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty.items.length, 0);
+    assert.equal(attachedEmpty.autoRespond, false);
+    assert.equal(attachedEmpty.send, false);
+    assert.equal(attachedEmpty.indexedPreviewOnly, true);
+  });
+
+  it('never invents TargetAmount, downloadUrl, transcript, criteria, or Hub-MI', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ClientHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01ThreadHit(),
+            downloadUrl: 'https://evil.example/download',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/attendee/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/Hub-MI/i.test(blob), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assert.ok(thread.researchRelationship?.some((row) => row.clientCode === 'SYN01'));
+    assert.equal(thread.invented, false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assertThreadResearchHonesty(thread);
+  });
+
+  it('still attaches existing relatedMeetings next to researchRelationship', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01ThreadHit(), syn01MeetingHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      thread.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(JSON.stringify(thread.relatedMeetings).includes('PDG01'), false);
+    assert.equal(JSON.stringify(thread.researchRelationship).includes('PDG01'), false);
+    assert.equal(/TargetAmount/i.test(JSON.stringify(thread.researchRelationship)), false);
+    assert.equal(/downloadUrl|transcript/i.test(JSON.stringify(thread.researchRelationship)), false);
+    noInventedCriteria(thread.researchRelationship);
+    assert.equal(thread.invented, false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal(thread.suggestedDraft.policyClass, 'DRAFT_ONLY');
+    assert.equal(result.authorizedSearch.threads.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assert.equal(result.authorizedSearch.threads.indexedPreviewOnly, true);
+    assertThreadResearchHonesty(thread);
   });
 });
