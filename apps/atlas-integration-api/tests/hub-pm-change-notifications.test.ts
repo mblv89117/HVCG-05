@@ -24,8 +24,12 @@ import {
 } from '../src/pm/sharepoint/fabric/notifications.ts';
 import { inspectFabricSyncHealth } from '../src/pm/sharepoint/fabric/status.ts';
 import {
+  calendarNotificationResource,
+  calendarNotificationResourceFallback,
+  decideCalendarChangeNotifications,
   decideFileChangeNotifications,
   ensureFabricChangeSubscriptions,
+  isCalendarSubscriptionResource,
   MAIL_SUBSCRIPTION_MAX_MINUTES,
   needsRenewal,
   persistChangeNotificationState,
@@ -37,6 +41,7 @@ import type { FabricGraphClient } from '../src/pm/sharepoint/fabric/graph.ts';
 const CLIENT_STATE = 'atlas-graph-client-state-ok';
 const MAIL_SUB_ID = '11111111-1111-4111-8111-111111111111';
 const FILE_SUB_ID = '22222222-2222-4222-8222-222222222222';
+const CALENDAR_SUB_ID = '33333333-3333-4333-8333-333333333333';
 
 function graphClient(handlers: {
   post?: (path: string, body: unknown) => Promise<{ status: number; json: Record<string, unknown> }>;
@@ -284,6 +289,7 @@ describe('Graph change-notification subscriptions', () => {
         reason: 'prior',
         mailStatus: 'ready',
         filesStatus: 'skipped',
+        calendarStatus: 'skipped',
         mail: {
           id: MAIL_SUB_ID,
           resource: `users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages`,
@@ -384,6 +390,7 @@ describe('Graph change-notification subscriptions', () => {
       const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
       assert.equal(health.changeNotifications.status, 'skipped');
       assert.equal(health.changeNotifications.mail, 'skipped');
+      assert.equal(health.changeNotifications.calendar, 'skipped');
       assert.equal(resolveGraphNotificationUrl({ INTEGRATION_GRAPH_NOTIFICATION_URL: 'http://localhost/x' }), null);
       assert.equal(resolveGraphNotificationClientState({ INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE: 'short' }), null);
     } finally {
@@ -400,6 +407,7 @@ describe('Graph change-notification HTTP + health honesty', { concurrency: 1 }, 
         reason: 'Mail subscription created.',
         mailStatus: 'ready',
         filesStatus: 'skipped',
+        calendarStatus: 'skipped',
         mail: {
           id: MAIL_SUB_ID,
           resource: `users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages`,
@@ -494,5 +502,252 @@ describe('Graph change-notification HTTP + health honesty', { concurrency: 1 }, 
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('Graph calendar change-notification subscriptions', () => {
+  it('uses the documented events resource and the allowlisted calendar/events fallback', () => {
+    assert.equal(calendarNotificationResource(), `users/${MANNY_ENTRA_OID}/events`);
+    assert.equal(calendarNotificationResourceFallback(), `users/${MANNY_ENTRA_OID}/calendar/events`);
+    assert.equal(isCalendarSubscriptionResource(`users/${MANNY_ENTRA_OID}/events`), true);
+    assert.equal(isCalendarSubscriptionResource(`users/${MANNY_ENTRA_OID}/calendar/events`), true);
+    assert.equal(isCalendarSubscriptionResource(`users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages`), false);
+    assert.equal(decideCalendarChangeNotifications({}).action, 'attempt');
+    assert.equal(decideCalendarChangeNotifications({ graphStatus: 400 }).action, 'skip');
+    assert.equal(decideCalendarChangeNotifications({ graphStatus: 403 }).action, 'skip');
+    assert.equal(decideCalendarChangeNotifications({ graphStatus: 404 }).action, 'skip');
+    assert.equal(decideCalendarChangeNotifications({ graphStatus: 405 }).action, 'skip');
+    assert.equal(decideCalendarChangeNotifications({ graphStatus: 500 }).action, 'attempt');
+    assert.match(
+      decideCalendarChangeNotifications({ graphStatus: 400, graphMessage: 'Resource not supported' }).reason,
+      /HTTP 400.*scheduled calendar sweep remains/,
+    );
+  });
+
+  it('honest-skips calendar on unsupported Graph status and leaves mail/files ready unchanged', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-graph-cal-skip-'));
+    try {
+      const posts: Array<{ resource: string; changeType: string }> = [];
+      const state = await ensureFabricChangeSubscriptions({
+        fabric: graphClient({
+          post: async (_path, body) => {
+            const rec = body as { resource?: string; changeType?: string };
+            const resource = String(rec.resource || '');
+            posts.push({ resource, changeType: String(rec.changeType || '') });
+            if (resource.includes('/events')) {
+              return {
+                status: 403,
+                json: { error: { code: 'Forbidden', message: 'Application Calendars.Read not granted' } },
+              };
+            }
+            if (resource.startsWith('drives/')) {
+              return {
+                status: 201,
+                json: { id: FILE_SUB_ID, resource, expirationDateTime: '2099-01-01T00:00:00.000Z' },
+              };
+            }
+            return {
+              status: 201,
+              json: { id: MAIL_SUB_ID, resource, expirationDateTime: '2099-01-01T00:00:00.000Z' },
+            };
+          },
+        }),
+        dataDir: dir,
+        env: {
+          INTEGRATION_GRAPH_NOTIFICATION_URL: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
+          INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE: CLIENT_STATE,
+        },
+        driveIds: ['b!abc'],
+      });
+      assert.equal(state.status, 'ready');
+      assert.equal(state.mailStatus, 'ready');
+      assert.equal(state.filesStatus, 'ready');
+      assert.equal(state.calendarStatus, 'skipped');
+      assert.equal(state.calendar, undefined);
+      assert.equal(state.mail?.id, MAIL_SUB_ID);
+      assert.equal(state.files?.[0]?.id, FILE_SUB_ID);
+      assert.deepEqual(
+        posts.filter((row) => row.resource.includes('/events')).map((row) => row.resource),
+        [calendarNotificationResource(), calendarNotificationResourceFallback()],
+      );
+      assert.equal(
+        posts.find((row) => row.resource === calendarNotificationResource())?.changeType,
+        'created,updated',
+      );
+      assert.match(state.reason, /Graph rejected calendar subscription HTTP 403/);
+      assert.match(state.reason, /scheduled calendar sweep remains/);
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.changeNotifications.status, 'ready');
+      assert.equal(health.changeNotifications.mail, 'ready');
+      assert.equal(health.changeNotifications.files, 'ready');
+      assert.equal(health.changeNotifications.calendar, 'skipped');
+      assert.match(health.changeNotifications.reason, /scheduled calendar sweep remains/);
+      assert.equal(/LIVE/i.test(JSON.stringify(health.changeNotifications)), false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports calendar ready after Graph 201 and leaves mail/files status unchanged', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-graph-cal-ready-'));
+    try {
+      const posts: Array<Record<string, unknown>> = [];
+      const state = await ensureFabricChangeSubscriptions({
+        fabric: graphClient({
+          post: async (_path, body) => {
+            const rec = body as Record<string, unknown>;
+            posts.push(rec);
+            const resource = String(rec.resource || '');
+            const id = resource.includes('/events')
+              ? CALENDAR_SUB_ID
+              : resource.startsWith('drives/')
+                ? FILE_SUB_ID
+                : MAIL_SUB_ID;
+            return {
+              status: 201,
+              json: { id, resource, expirationDateTime: '2099-01-01T00:00:00.000Z' },
+            };
+          },
+        }),
+        dataDir: dir,
+        env: {
+          INTEGRATION_GRAPH_NOTIFICATION_URL: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
+          INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE: CLIENT_STATE,
+        },
+        driveIds: ['b!abc'],
+      });
+      assert.equal(state.status, 'ready');
+      assert.equal(state.mailStatus, 'ready');
+      assert.equal(state.filesStatus, 'ready');
+      assert.equal(state.calendarStatus, 'ready');
+      assert.equal(state.calendar?.id, CALENDAR_SUB_ID);
+      assert.equal(state.calendar?.kind, 'calendar');
+      assert.equal(state.calendar?.resource, calendarNotificationResource());
+      const calendarPost = posts.find((row) => String(row.resource || '') === calendarNotificationResource());
+      assert.equal(calendarPost?.changeType, 'created,updated');
+      assert.equal(calendarPost?.latestSupportedTlsVersion, 'v1_2');
+      assert.equal(calendarPost?.clientState, CLIENT_STATE);
+      const stored = JSON.parse(readFileSync(join(dir, 'fabric-checkpoint.json'), 'utf8')) as {
+        changeNotifications?: { calendarStatus?: string; calendar?: { id?: string }; mailStatus?: string; filesStatus?: string };
+      };
+      assert.equal(stored.changeNotifications?.calendarStatus, 'ready');
+      assert.equal(stored.changeNotifications?.calendar?.id, CALENDAR_SUB_ID);
+      assert.equal(stored.changeNotifications?.mailStatus, 'ready');
+      assert.equal(stored.changeNotifications?.filesStatus, 'ready');
+      const health = inspectFabricSyncHealth(dir, { sweepEnabled: true });
+      assert.equal(health.changeNotifications.calendar, 'ready');
+      assert.equal(health.changeNotifications.mail, 'ready');
+      assert.equal(health.changeNotifications.files, 'ready');
+      assert.equal(health.changeNotifications.status, 'ready');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to users/{oid}/calendar/events when the preferred events resource is rejected', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'atlas-graph-cal-fallback-'));
+    try {
+      const state = await ensureFabricChangeSubscriptions({
+        fabric: graphClient({
+          post: async (_path, body) => {
+            const resource = String((body as { resource?: string }).resource || '');
+            if (resource === calendarNotificationResource()) {
+              return { status: 400, json: { error: { code: 'InvalidRequest', message: 'Resource not supported' } } };
+            }
+            if (resource === calendarNotificationResourceFallback()) {
+              return {
+                status: 201,
+                json: { id: CALENDAR_SUB_ID, resource, expirationDateTime: '2099-01-01T00:00:00.000Z' },
+              };
+            }
+            return {
+              status: 201,
+              json: { id: MAIL_SUB_ID, resource, expirationDateTime: '2099-01-01T00:00:00.000Z' },
+            };
+          },
+        }),
+        dataDir: dir,
+        env: {
+          INTEGRATION_GRAPH_NOTIFICATION_URL: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
+          INTEGRATION_GRAPH_NOTIFICATION_CLIENT_STATE: CLIENT_STATE,
+        },
+        driveIds: [],
+      });
+      assert.equal(state.mailStatus, 'ready');
+      assert.equal(state.filesStatus, 'skipped');
+      assert.equal(state.calendarStatus, 'ready');
+      assert.equal(state.calendar?.resource, calendarNotificationResourceFallback());
+      assert.equal(state.status, 'ready');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('still fail-closes a forged calendar notification without triggering fabric delta', async () => {
+    await withNotificationHub(async (base, dir, syncs) => {
+      persistChangeNotificationState(dir, {
+        status: 'ready',
+        reason: 'Mail and calendar subscriptions created.',
+        mailStatus: 'ready',
+        filesStatus: 'ready',
+        calendarStatus: 'ready',
+        mail: {
+          id: MAIL_SUB_ID,
+          resource: `users/${MANNY_ENTRA_OID}/mailFolders/inbox/messages`,
+          kind: 'mail',
+          expirationDateTime: '2099-01-01T00:00:00.000Z',
+          notificationUrl: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
+        },
+        calendar: {
+          id: CALENDAR_SUB_ID,
+          resource: calendarNotificationResource(),
+          kind: 'calendar',
+          expirationDateTime: '2099-01-01T00:00:00.000Z',
+          notificationUrl: 'https://app-atlas-integration-hub.azurewebsites.net/api/graph/change-notifications',
+        },
+      });
+      const forged = await fetch(`${base}${GRAPH_NOTIFICATION_PATH}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          value: [
+            {
+              subscriptionId: CALENDAR_SUB_ID,
+              changeType: 'updated',
+              clientState: 'forged-calendar-state',
+              resource: calendarNotificationResource(),
+            },
+          ],
+        }),
+      });
+      assert.equal(forged.status, 401);
+      const body = (await forged.json()) as { reason?: string };
+      assert.equal(body.reason, 'clientState mismatch');
+      assert.equal(syncs.length, 0);
+
+      const signed = await fetch(`${base}${GRAPH_NOTIFICATION_PATH}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          value: [
+            {
+              subscriptionId: CALENDAR_SUB_ID,
+              changeType: 'updated',
+              clientState: CLIENT_STATE,
+              resource: calendarNotificationResource(),
+              resourceData: { id: 'evt-1' },
+            },
+          ],
+        }),
+      });
+      assert.equal(signed.status, 202);
+      assert.deepEqual(syncs, ['graph-notification']);
+      const stored = JSON.parse(readFileSync(join(dir, 'fabric-checkpoint.json'), 'utf8')) as {
+        changeNotifications?: { calendarStatus?: string; calendar?: { id?: string }; mailStatus?: string };
+      };
+      assert.equal(stored.changeNotifications?.calendarStatus, 'ready');
+      assert.equal(stored.changeNotifications?.calendar?.id, CALENDAR_SUB_ID);
+      assert.equal(stored.changeNotifications?.mailStatus, 'ready');
+    }, { clientState: CLIENT_STATE });
   });
 });
