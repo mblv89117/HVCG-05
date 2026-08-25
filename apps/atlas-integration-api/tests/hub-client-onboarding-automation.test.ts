@@ -178,6 +178,10 @@ describe('client onboarding automation', () => {
     if (!result.ok) return;
     assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(result.record.dryRun, true);
+    assert.equal(result.record.status, 'IDENTITY_RECONCILIATION');
+    assert.equal(result.record.identityResolutionRequired, true);
+    assert.equal(result.record.workspaceReconciled, false);
+    assert.equal(result.record.projectId, undefined);
     const overlay = readOnboardingOverlay(resolveOnboardingStateDir(dir));
     const run = getOnboardingRun(overlay, 'client-onboarding-accg01');
     assert.ok(run);
