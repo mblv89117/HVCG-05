@@ -64,17 +64,18 @@ type MilestoneRow = { id: string; title: string; projectId?: string };
 function mockSharePoint(opts: {
   clients?: Array<{ clientCode: string; displayName: string }>;
   projects?: ProjectRow[];
+  tasks?: TaskRow[];
 }): {
   sharepoint: SharePointPmService;
   projects: ProjectRow[];
   tasks: TaskRow[];
   milestones: MilestoneRow[];
-  counts: { createProject: number; createTask: number; createMilestone: number };
+  counts: { createProject: number; createTask: number; createMilestone: number; listTasks: number };
 } {
   const projects = opts.projects ?? [];
-  const tasks: TaskRow[] = [];
+  const tasks: TaskRow[] = [...(opts.tasks ?? [])];
   const milestones: MilestoneRow[] = [];
-  const counts = { createProject: 0, createTask: 0, createMilestone: 0 };
+  const counts = { createProject: 0, createTask: 0, createMilestone: 0, listTasks: 0 };
   const sharepoint = {
     listAuthorizedClients: async () => opts.clients ?? [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
     listAuthorizedProjects: async () => projects,
@@ -93,7 +94,10 @@ function mockSharePoint(opts: {
       projects.push(created);
       return created;
     },
-    listAuthorizedTasks: async () => tasks,
+    listAuthorizedTasks: async (_principal: AtlasPrincipal, projectId?: string) => {
+      counts.listTasks += 1;
+      return projectId ? tasks.filter((t) => !t.projectId || t.projectId === projectId) : tasks;
+    },
     createTask: async (_principal: AtlasPrincipal, body: { title?: string; projectId?: string }) => {
       counts.createTask += 1;
       const created = { id: `task-${counts.createTask}`, title: String(body.title), projectId: body.projectId };
@@ -155,7 +159,10 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(counts.createProject, 0);
     assert.equal(counts.createTask, 0);
     assert.equal(counts.createMilestone, 0);
+    assert.equal(counts.listTasks, 0);
     assert.equal(result.events.includes('PROJECT_CREATED'), false);
+    assert.equal(result.events.includes('TASKS_CREATED'), false);
+    assert.equal(result.record.taskReview?.taskReconciled, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -234,7 +241,10 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(created.record.projectId, 'proj-1');
     assert.equal(live.counts.createProject, 1);
     assert.ok(live.counts.createTask > 0);
+    assert.ok(created.record.taskIds.every((id) => Boolean(id)));
+    assert.equal(created.record.taskReview?.taskReconciled, true);
     assert.ok(created.events.includes('PROJECT_CREATED'));
+    assert.ok(created.events.includes('TASKS_CREATED'));
 
     const dry = mockSharePoint({ clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }] });
     const proposed = await runClientOnboardingAutomation({
@@ -253,10 +263,18 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.record.documentsReconciled, false);
     assert.equal(proposed.events.includes('DOCUMENT_RECONCILED'), false);
     assert.equal(proposed.record.projectId, undefined);
+    assert.deepEqual(proposed.record.taskIds, []);
+    assert.deepEqual(proposed.record.milestoneIds, []);
+    assert.equal(proposed.record.taskReview?.status, 'OPEN');
+    assert.equal(proposed.record.taskReview?.taskReconciled, false);
+    assert.equal(proposed.record.taskReview?.send, false);
     assert.equal(dry.counts.createProject, 0);
     assert.equal(dry.counts.createTask, 0);
     assert.equal(dry.counts.createMilestone, 0);
+    assert.equal(dry.counts.listTasks, 0);
     assert.equal(proposed.events.includes('PROJECT_CREATED'), false);
+    assert.equal(proposed.events.includes('TASKS_CREATED'), false);
+    assert.equal(proposed.events.includes('MILESTONE_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -284,10 +302,14 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(failed.record.projectId, undefined);
     assert.deepEqual(failed.record.taskIds, []);
     assert.deepEqual(failed.record.milestoneIds, []);
+    assert.equal(failed.record.taskReview?.status, 'OPEN');
+    assert.equal(failed.record.taskReview?.taskReconciled, false);
     assert.equal(thrown.counts.createProject, 1);
     assert.equal(thrown.counts.createTask, 0);
     assert.equal(thrown.counts.createMilestone, 0);
+    assert.equal(thrown.counts.listTasks, 0);
     assert.equal(failed.events.includes('PROJECT_CREATED'), false);
+    assert.equal(failed.events.includes('TASKS_CREATED'), false);
 
     const noId = mockSharePoint({ clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }] });
     noId.sharepoint.createProject = (async () => {
@@ -309,9 +331,12 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(absent.record.projectId, undefined);
     assert.deepEqual(absent.record.taskIds, []);
     assert.deepEqual(absent.record.milestoneIds, []);
+    assert.equal(absent.record.taskReview?.taskReconciled, false);
     assert.equal(noId.counts.createProject, 1);
     assert.equal(noId.counts.createTask, 0);
     assert.equal(noId.counts.createMilestone, 0);
+    assert.equal(noId.counts.listTasks, 0);
+    assert.equal(absent.events.includes('TASKS_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -507,6 +532,192 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(absent.record.documentsReconciled, false);
     assert.equal(absent.events.includes('DOCUMENT_RECONCILED'), false);
     assert.ok(absentCreates > 0);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reuses existing entitled onboarding tasks and does not invent task ids', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const { sharepoint, counts } = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+      tasks: [{
+        id: 'existing-accg-task-1',
+        title: 'Confirm primary client contact',
+        projectId: 'existing-accg-onboarding',
+      }],
+    });
+    const result = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.record.identityResolutionRequired, false);
+    assert.equal(result.record.workspaceReconciled, true);
+    assert.equal(result.record.documentsReconciled, false);
+    assert.equal(result.record.projectId, 'existing-accg-onboarding');
+    assert.ok(result.record.taskIds.includes('existing-accg-task-1'));
+    assert.ok(result.record.taskIds.every((id) => Boolean(id)));
+    assert.equal(result.record.taskReview?.taskReconciled, true);
+    assert.equal(result.record.taskReview?.reusedExisting, true);
+    assert.equal(result.record.taskReview?.send, false);
+    assert.equal(result.record.taskReview?.outbound, false);
+    assert.equal(counts.createProject, 0);
+    assert.ok(counts.listTasks > 0);
+    assert.ok(counts.createTask > 0);
+    assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
+
+    const dry = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+      tasks: [{
+        id: 'existing-accg-task-1',
+        title: 'Confirm primary client contact',
+        projectId: 'existing-accg-onboarding',
+      }],
+    });
+    const proposed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: dry.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+    });
+    assert.equal(proposed.ok, true);
+    if (!proposed.ok) return;
+    assert.equal(proposed.record.workspaceReconciled, true);
+    assert.equal(proposed.record.documentsReconciled, false);
+    assert.deepEqual(proposed.record.taskIds, ['existing-accg-task-1']);
+    assert.deepEqual(proposed.record.milestoneIds, []);
+    assert.equal(proposed.record.taskReview?.reusedExisting, true);
+    assert.equal(proposed.record.taskReview?.send, false);
+    assert.equal(dry.counts.createTask, 0);
+    assert.equal(dry.counts.createMilestone, 0);
+    assert.equal(proposed.events.includes('TASKS_CREATED'), false);
+    assert.equal(proposed.events.includes('MILESTONE_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('creates tasks only when entitled projectId exists and create returns an id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const live = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.identityResolutionRequired, false);
+    assert.equal(created.record.workspaceReconciled, true);
+    assert.equal(created.record.documentsReconciled, false);
+    assert.equal(created.record.projectId, 'existing-accg-onboarding');
+    assert.ok(created.record.taskIds.length > 0);
+    assert.ok(created.record.taskIds.every((id) => Boolean(id)));
+    assert.equal(created.record.taskReview?.taskReconciled, true);
+    assert.equal(created.record.taskReview?.reusedExisting, false);
+    assert.ok(created.events.includes('TASKS_CREATED'));
+    assert.ok(created.events.includes('MILESTONE_CREATED'));
+    assert.ok(live.counts.createTask > 0);
+    assert.ok(live.counts.createMilestone > 0);
+    assert.equal(live.counts.createProject, 0);
+
+    const dry = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+    });
+    const proposed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: dry.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+    });
+    assert.equal(proposed.ok, true);
+    if (!proposed.ok) return;
+    assert.equal(proposed.record.identityResolutionRequired, false);
+    assert.equal(proposed.record.workspaceReconciled, false);
+    assert.equal(proposed.record.documentsReconciled, false);
+    assert.equal(proposed.record.projectId, undefined);
+    assert.deepEqual(proposed.record.taskIds, []);
+    assert.deepEqual(proposed.record.milestoneIds, []);
+    assert.equal(proposed.record.taskReview?.status, 'OPEN');
+    assert.equal(proposed.record.taskReview?.taskReconciled, false);
+    assert.equal(proposed.record.taskReview?.send, false);
+    assert.equal(dry.counts.createTask, 0);
+    assert.equal(dry.counts.createMilestone, 0);
+    assert.equal(dry.counts.listTasks, 0);
+    assert.equal(proposed.events.includes('TASKS_CREATED'), false);
+    assert.equal(proposed.events.includes('MILESTONE_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not invent task ids when entitled create fails or returns no id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const thrown = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    thrown.sharepoint.createTask = async () => {
+      thrown.counts.createTask += 1;
+      throw new Error('sharepoint task create failed');
+    };
+    const failed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: thrown.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(failed.ok, true);
+    if (!failed.ok) return;
+    assert.equal(failed.record.identityResolutionRequired, false);
+    assert.equal(failed.record.workspaceReconciled, true);
+    assert.equal(failed.record.documentsReconciled, false);
+    assert.equal(failed.record.projectId, 'existing-accg-onboarding');
+    assert.deepEqual(failed.record.taskIds, []);
+    assert.equal(failed.record.taskReview?.status, 'OPEN');
+    assert.equal(failed.record.taskReview?.taskReconciled, false);
+    assert.equal(failed.record.taskReview?.send, false);
+    assert.equal(thrown.counts.createTask, 1);
+    assert.equal(failed.events.includes('TASKS_CREATED'), false);
+
+    const noId = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    noId.sharepoint.createTask = (async () => {
+      noId.counts.createTask += 1;
+      return { title: 'Confirm primary client contact', projectId: 'existing-accg-onboarding' };
+    }) as SharePointPmService['createTask'];
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: noId.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.identityResolutionRequired, false);
+    assert.equal(absent.record.workspaceReconciled, true);
+    assert.equal(absent.record.documentsReconciled, false);
+    assert.deepEqual(absent.record.taskIds, []);
+    assert.equal(absent.record.taskReview?.taskReconciled, false);
+    assert.ok(noId.counts.createTask > 0);
+    assert.equal(absent.events.includes('TASKS_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
