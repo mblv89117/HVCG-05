@@ -307,15 +307,21 @@ export interface AtlasClientContext {
    * client-support). Optional relatedProjects copies already-entitled
    * same-scope project operating-record refs (same
    * RelatedDocumentProjectRef / relatedProjects path as research-intel
-   * / onboarding / client-support). Missing / non-canonical ClientCode
+   * / onboarding / client-support). Optional relatedThreads copies
+   * already-entitled same-scope mail-thread operating-record refs (same
+   * RelatedDocumentEmailRef / relatedEmails path as research-intel /
+   * onboarding / client-support). Missing / non-canonical ClientCode
    * omits researchRelationship / relatedDocuments / relatedAttachments
-   * / relatedProjects (fail-closed; never guess). Unscoped lender
-   * catalog titles never attach scoped documents, attachments, or
-   * projects. No downloadUrl. No contentBytes. binariesInAtlas stays
-   * false. No TargetAmount. historicalHvs / hubMiRow copy from the
-   * entitled source project only — never invent hubMiRow=true.
-   * PREPARE_ONLY / send=false / externalSubmit=false /
+   * / relatedProjects / relatedThreads (fail-closed; never guess).
+   * Unscoped lender catalog titles never attach scoped documents,
+   * attachments, projects, or threads. No downloadUrl. No contentBytes.
+   * binariesInAtlas stays false. No preview body / suggestedDraft /
+   * send on the thread refs. No TargetAmount. historicalHvs / hubMiRow
+   * copy from the entitled source project only — never invent
+   * hubMiRow=true. PREPARE_ONLY / send=false / externalSubmit=false /
    * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   * DRAFT_ONLY / send=false / autoRespond=false / indexedPreviewOnly
+   * stay as composed on the source thread payload.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
   /**
@@ -1024,6 +1030,27 @@ export interface CapitalSubmissionPrepareRecord {
    * Not send.
    */
   relatedProjects?: RelatedDocumentProjectRef[];
+  /**
+   * Already-entitled same-scope mail-thread operating-record refs. Reuses
+   * RelatedDocumentEmailRef / relatedEmails() — the same
+   * entitled same-scope inverse already live on research-intel /
+   * onboarding / client support. Copied after authorization.
+   * Omitted when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped threads. Unscoped lender catalog titles never attach
+   * scoped threads. Client A never receives Client B.
+   * Refs only — no preview body, suggestedDraft, or send.
+   * DRAFT_ONLY / send=false / autoRespond=false / indexedPreviewOnly
+   * stay as composed on the source thread payload. Never downloadUrl,
+   * contentBytes, transcript, attendees, full mail body, invented
+   * titles / ids / counts, ClientCodes, Hub-MI, TargetAmount, lender
+   * criteria, fit, or financing status. SAS / anonymous webUrl dropped.
+   * PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   * Not a second communications or capital product. Not external
+   * submit. Not send.
+   */
+  relatedThreads?: RelatedDocumentEmailRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
