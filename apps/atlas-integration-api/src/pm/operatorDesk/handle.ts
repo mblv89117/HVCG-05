@@ -41,6 +41,7 @@ import {
   isOperatorWorkflowsPath,
   isOperatorWorkflowTemplatesPath,
   isOperatorApprovalsPath,
+  isOperatorCommunicationPoliciesPath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
@@ -124,6 +125,13 @@ import {
   mapsToApprovalContextIntent,
 } from './approvalCenter.ts';
 import { APPROVAL_CENTER_MISSION_KEY } from './approvalState.ts';
+import {
+  answerCommunicationPolicy,
+  COMMUNICATION_POLICY_CENTER_MISSION_KEY,
+  listCommunicationPolicies,
+  mapsToCommunicationPolicyIntent,
+  recordCommunicationPolicy,
+} from './communicationPolicyCenter.ts';
 import type { TaskRecord } from '../types.ts';
 
 async function loadOwnerApprovalTasks(opts: {
@@ -338,10 +346,11 @@ export async function handleOperatorDesk(opts: {
   const workflowsOnly = isOperatorWorkflowsPath(opts.path);
   const workflowTemplatesOnly = isOperatorWorkflowTemplatesPath(opts.path);
   const approvalsOnly = isOperatorApprovalsPath(opts.path);
+  const communicationPoliciesOnly = isOperatorCommunicationPoliciesPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly || approvalsOnly) &&
+    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly || approvalsOnly || communicationPoliciesOnly) &&
       opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
@@ -362,6 +371,7 @@ export async function handleOperatorDesk(opts: {
     workflowsOnly ||
     workflowTemplatesOnly ||
     approvalsOnly ||
+    communicationPoliciesOnly ||
     wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery =
@@ -604,6 +614,54 @@ export async function handleOperatorDesk(opts: {
       sendJson(opts.res, 200, { approvalCenter: center }, opts.origin);
     } catch {
       sendJson(opts.res, 503, { error: 'approval_center_unavailable', code: 'approval_center_unavailable' }, opts.origin);
+    }
+    return true;
+  }
+
+  if (communicationPoliciesOnly) {
+    if (opts.method === 'POST') {
+      let body: Record<string, unknown> = {};
+      try {
+        body = await readEventJson(opts.req);
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(opts.res, status, { error: (err as Error).message, code: (err as { code?: string }).code || 'invalid_json' }, opts.origin);
+        return true;
+      }
+      const result = recordCommunicationPolicy({
+        principal,
+        dataDir: opts.cfg.dataDir,
+        input: body,
+      });
+      if (!result.ok) {
+        const status =
+          result.error === 'client_not_entitled' ? 403
+          : result.error === 'unknown_client_code' ? 400
+          : 400;
+        sendJson(opts.res, status, { error: result.error, code: result.error }, opts.origin);
+        return true;
+      }
+      sendJson(
+        opts.res,
+        200,
+        { communicationPolicies: result.model, recorded: result.record },
+        opts.origin,
+      );
+      return true;
+    }
+    try {
+      const center = listCommunicationPolicies({
+        principal,
+        dataDir: opts.cfg.dataDir,
+      });
+      sendJson(opts.res, 200, { communicationPolicies: center }, opts.origin);
+    } catch {
+      sendJson(
+        opts.res,
+        503,
+        { error: 'communication_policy_center_unavailable', code: 'communication_policy_center_unavailable' },
+        opts.origin,
+      );
     }
     return true;
   }
@@ -872,6 +930,43 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+
+    if (mapsToCommunicationPolicyIntent(question)) {
+      const policyModel = listCommunicationPolicies({
+        principal,
+        dataDir: opts.cfg.dataDir,
+      });
+      const policyAnswer = answerCommunicationPolicy(
+        question,
+        policyModel,
+        entitledClientCodes(principal),
+      );
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: policyAnswer.text,
+        workflowId: 'communication-policy-center',
+        workflowName: 'Communication Policy Center',
+        clientCode: policyAnswer.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          communicationPolicyAnswer: policyAnswer.text,
+          communicationPolicies: policyModel,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['communication_policy_center'],
+            policyClass: 'READ_AUTO',
+            missionKey: COMMUNICATION_POLICY_CENTER_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
 
     if (mapsToApprovalContextIntent(question)) {
       const ownerTasks = await loadOwnerApprovalTasks({

@@ -118,6 +118,8 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
       'Workflow Center',
       'Onboarding',
       'WorkflowTemplates',
+      'Approvals',
+      'CommunicationPolicies',
     ]) {
       assert.match(manifest, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
