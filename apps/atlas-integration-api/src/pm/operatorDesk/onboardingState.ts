@@ -247,6 +247,35 @@ export type OnboardingCommunicationContextReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Already-known entitled capital packet / project / related-capital refs. Id required. Never invented. */
+export type OnboardingRelatedCapitalRef = {
+  id: string;
+  title?: string;
+};
+
+/** Canonical CAPITAL CONTEXT REVIEW. Reuses entitled same-scope capital rows. No invented ids or amounts. */
+export type OnboardingCapitalContextReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  relatedCapitalCount: number;
+  relatedCapital: OnboardingRelatedCapitalRef[];
+  /** True only after entitled reuse/list of same-scope capital rows that have real ids. */
+  capitalContextReconciled: boolean;
+  reusedExisting: boolean;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  autoRespond: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 /** Canonical AGENT ASSIGNMENT REVIEW. Surfaces already-known entitled agents. No invented agents. */
 export type OnboardingAgentAssignmentReview = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -409,6 +438,8 @@ export type OnboardingRunRecord = {
   milestoneReconciled?: boolean;
   /** True only after entitled reuse of same-scope threads/emails that have real ids. */
   communicationContextReconciled?: boolean;
+  /** True only after entitled reuse of same-scope capital packets/projects/related-capital rows that have real ids. */
+  capitalContextReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
@@ -427,6 +458,7 @@ export type OnboardingRunRecord = {
   taskReview?: OnboardingTaskReview;
   agentAssignmentReview?: OnboardingAgentAssignmentReview;
   communicationContextReview?: OnboardingCommunicationContextReview;
+  capitalContextReview?: OnboardingCapitalContextReview;
   realtimeDocumentsHonesty?: OnboardingRealtimeDocumentsHonesty;
   provenance: string;
 };
