@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { summarizeAskAtlasPrompt, type AskAtlasDrawerItem } from './askAtlasDrawer';
+import {
+  mapsToOnboardingStatusIntent,
+  routeAskAtlasPrompt,
+  summarizeAskAtlasPrompt,
+  type AskAtlasDrawerItem,
+} from './askAtlasDrawer';
 
 const items: AskAtlasDrawerItem[] = [
   {
@@ -42,5 +47,13 @@ describe('Ask Atlas drawer prompt summary', () => {
     const answer = summarizeAskAtlasPrompt('What needs attention?', [], 'missing bearer');
     assert.match(answer, /could not load signed operator context/);
     assert.match(answer, /missing bearer/);
+  });
+
+  it('routes onboarding-status Ask Atlas NL to Hub runtime, not SharePoint search', () => {
+    assert.equal(mapsToOnboardingStatusIntent('Where are we on onboarding ACCG?'), true);
+    assert.equal(routeAskAtlasPrompt('Where are we on onboarding ACCG?', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Where are we on onboarding ACCG?', { hasBearer: false }), 'unsigned_fail_closed');
+    assert.equal(routeAskAtlasPrompt('Search ACCG onboarding files', { hasBearer: true }), 'hub_runtime');
+    assert.equal(mapsToOnboardingStatusIntent('Search ACCG onboarding files'), false);
   });
 });
