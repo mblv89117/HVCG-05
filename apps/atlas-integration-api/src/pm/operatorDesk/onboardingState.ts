@@ -55,6 +55,13 @@ export type OnboardingOperationsHandoff = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Already-known entitled kickoff record / task / milestone refs. Id required. Never invented. */
+export type OnboardingRelatedKickoffRef = {
+  id: string;
+  title?: string;
+  kind?: 'record' | 'task' | 'milestone';
+};
+
 /** Canonical KICKOFF package. Composed from already-known run facts. No outbound. */
 export type OnboardingKickoff = {
   status: 'NOT_READY' | 'PREPARED' | 'BLOCKED';
@@ -64,11 +71,16 @@ export type OnboardingKickoff = {
   milestoneStatus: 'pending' | 'in_progress' | 'complete' | 'blocked' | 'unknown';
   relatedThreadCount: number;
   missingDocumentCount: number;
+  /** True only after entitled reuse of a same-scope kickoff record/task/milestone with a real id, or a create that returned an id. */
+  kickoffReconciled: boolean;
+  reusedExisting: boolean;
+  relatedKickoff: OnboardingRelatedKickoffRef[];
   blockers: string[];
   ownerAttention: string[];
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
   nextOwnerAction: string;
   send: false;
+  autoRespond: false;
   liveGtmOutbound: false;
   capitalSubmit: false;
   outbound: false;
@@ -440,6 +452,8 @@ export type OnboardingRunRecord = {
   communicationContextReconciled?: boolean;
   /** True only after entitled reuse of same-scope capital packets/projects/related-capital rows that have real ids. */
   capitalContextReconciled?: boolean;
+  /** True only after entitled reuse of a same-scope kickoff record/task/milestone with a real id, or a create that returned an id. */
+  kickoffReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
