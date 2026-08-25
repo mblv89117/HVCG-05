@@ -61,7 +61,7 @@ export type OnboardingAutomationResult = {
   record?: OnboardingRunRecord;
 };
 
-function isOnboardingWorkflow(workflow: WorkflowDefinitionRecord): boolean {
+export function isOnboardingWorkflow(workflow: WorkflowDefinitionRecord): boolean {
   return (
     workflow.sourceTemplateId === 'client_onboarding' ||
     workflow.templateKey === 'client_onboarding' ||
@@ -445,6 +445,50 @@ export function findEntitledOnboardingWorkflow<T extends OnboardingExistingWorkf
   );
 }
 
+const TERMINAL_WORKFLOW_STATUSES = new Set(['REJECTED', 'DISABLED']);
+
+export function findEntitledOnboardingWorkflowDefinition(
+  definitions: WorkflowDefinitionRecord[],
+  clientCode: string,
+): WorkflowDefinitionRecord | undefined {
+  const eligible = definitions.filter(
+    (d) =>
+      d.scope.clientCode === clientCode &&
+      isOnboardingWorkflow(d) &&
+      !TERMINAL_WORKFLOW_STATUSES.has(d.status),
+  );
+  return eligible.find((d) => d.status === 'ACTIVE') ?? eligible[0];
+}
+
+const ONBOARDING_CONTEXT_PHRASES = [
+  'where are we',
+  'missing',
+  'blocked',
+  'waiting on',
+  'kickoff',
+  'kick off',
+  'approve',
+  'document',
+  'start',
+  'run',
+  'execute',
+  'activate',
+  'begin',
+  'status',
+] as const;
+
+const ONBOARDING_EXECUTE_VERB = /\b(start|run|execute|activate|begin)\b/;
+
+export function mapsToOnboardingExecuteIntent(question: string): boolean {
+  const q = question.toLowerCase();
+  return q.includes('onboarding') && ONBOARDING_EXECUTE_VERB.test(q);
+}
+
+export function classifyOnboardingAskAtlasIntent(question: string): 'execute' | 'status' | null {
+  if (!mapsToOnboardingContextIntent(question)) return null;
+  return mapsToOnboardingExecuteIntent(question) ? 'execute' : 'status';
+}
+
 function formatExistingProjectStatus(project: OnboardingExistingProject): string {
   const parts: string[] = [];
   const status = (project.status || '').toLowerCase();
@@ -535,16 +579,7 @@ export function answerOnboardingContext(
 
 export function mapsToOnboardingContextIntent(question: string): boolean {
   const q = question.toLowerCase();
-  return (
-    q.includes('onboarding') &&
-    (q.includes('where are we') ||
-      q.includes('missing') ||
-      q.includes('blocked') ||
-      q.includes('waiting on') ||
-      q.includes('kickoff') ||
-      q.includes('approve') ||
-      q.includes('document'))
-  );
+  return q.includes('onboarding') && ONBOARDING_CONTEXT_PHRASES.some((phrase) => q.includes(phrase));
 }
 
 export function findOnboardingRunForQuestion(

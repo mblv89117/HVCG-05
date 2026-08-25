@@ -110,9 +110,11 @@ import {
   findEntitledOnboardingWorkflow,
   findOnboardingRunForQuestion,
   mapsToOnboardingContextIntent,
+  mapsToOnboardingExecuteIntent,
   resolveEntitledClientCodeFromQuestion,
   runClientOnboardingAutomation,
 } from './clientOnboardingAutomation.ts';
+import { executeEntitledOnboardingFromQuestion } from './askAtlasOnboardingExecute.ts';
 import { readOnboardingOverlay, resolveOnboardingStateDir, ONBOARDING_AUTOMATION_MISSION_KEY } from './onboardingState.ts';
 import {
   applyApprovalAction,
@@ -913,6 +915,48 @@ export async function handleOperatorDesk(opts: {
 
     if (mapsToOnboardingContextIntent(question)) {
       const entitled = entitledClientCodes(principal);
+      if (mapsToOnboardingExecuteIntent(question)) {
+        const execution = await executeEntitledOnboardingFromQuestion({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          sharepoint: opts.sharepoint ?? null,
+          question,
+          entitledCodes: entitled,
+        });
+        const askAtlas = buildConversationalAskAtlasAnswer({
+          question,
+          previewText: execution.answer,
+          workflowId: execution.record?.workflowId ?? execution.workflow?.workflowId ?? 'onboarding-context',
+          workflowName: execution.record
+            ? `Onboarding — ${execution.record.clientName ?? execution.record.clientCode ?? 'client'}`
+            : `Onboarding context${execution.match.clientCode ? ` — ${execution.match.clientCode}` : ''}`,
+          clientCode: execution.record?.clientCode ?? execution.match.clientCode,
+        });
+        sendJson(
+          opts.res,
+          200,
+          {
+            operatorDesk: { askAtlas },
+            workflowAnswer: execution.answer,
+            onboarding: execution.record,
+            onboardingExecution: {
+              executed: execution.executed,
+              instantiated: execution.instantiated,
+              reusedWorkflow: execution.reusedWorkflow,
+              ...(execution.error ? { error: execution.error } : {}),
+            },
+            runtime: {
+              agent: ASK_ATLAS_RUNTIME_AGENT,
+              toolsInvoked: ['client_onboarding_automation'],
+              policyClass: execution.executed ? 'INTERNAL_WRITE_AUTO' : 'READ_AUTO',
+              missionKey: ONBOARDING_AUTOMATION_MISSION_KEY,
+            },
+          },
+          opts.origin,
+        );
+        return true;
+      }
       const onboardingOverlay = readOnboardingOverlay(resolveOnboardingStateDir(opts.cfg.dataDir));
       const match = resolveEntitledClientCodeFromQuestion(question, entitled);
       const run = findOnboardingRunForQuestion(question, onboardingOverlay.records, entitled);
