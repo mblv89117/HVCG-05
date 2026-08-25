@@ -1,0 +1,20 @@
+{
+  "DeploymentDateTime": "2026-07-20T22:51:32.3279160-07:00",
+  "Environment": "production",
+  "Tenant": null,
+  "RepoRoot": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release",
+  "ResourcesCreated": [],
+  "ResourcesUpdated": [],
+  "ResourcesSkipped": [],
+  "Errors": [
+    "Configuration incomplete. Set these values in development.json: identities.serviceAccountUpn"
+  ],
+  "Warnings": [],
+  "TestResults": null,
+  "OwnerActionsRemaining": [],
+  "NextStep": "Re-run: pwsh -File ./deployment/Deploy-HVCGProduction.ps1 -DeviceLogin",
+  "Log": [
+    "[2026-07-20T22:51:32][ERROR] Configuration incomplete. Set these values in development.json: identities.serviceAccountUpn"
+  ],
+  "Success": false
+}

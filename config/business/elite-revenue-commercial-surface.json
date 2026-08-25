@@ -1,0 +1,40 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001 Sprint 3",
+  "shell": "Atlas Elite only — extend Revenue/Opportunity surfaces; no new sales SPA",
+  "eliteWorktreeNote": "UI implementation target: apps/atlas-elite-os — this package provides the field contract + conversion services",
+  "progressiveDisclosure": [
+    {
+      "tier": 1,
+      "label": "Commercial identity",
+      "fields": ["CommercialClass", "ServiceLineCode", "OfferCode"]
+    },
+    {
+      "tier": 2,
+      "label": "Qualification",
+      "fields": ["FreeFitResult", "DiagnosticStatus", "DiagnosticBypassReason"]
+    },
+    {
+      "tier": 3,
+      "label": "Economics",
+      "fields": [
+        "PricingRecommendation",
+        "ProposedPricing",
+        "LegacyPricingWarning",
+        "PricingVersionId",
+        "ManualPricingOverride"
+      ]
+    },
+    {
+      "tier": 4,
+      "label": "Proposal / approval",
+      "fields": ["ProposalStatus", "ApprovalStatus", "BlC1SendBlocked", "ReferralSource"]
+    }
+  ],
+  "services": {
+    "conversion": "config/business/revenue_conversion.py",
+    "pricingPolicy": "config/business/pricing_policy.py",
+    "commercialRules": "config/business/commercial_rules.py"
+  }
+}

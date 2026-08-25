@@ -1,0 +1,183 @@
+{
+  "templateKey": "working-capital",
+  "title": "Working Capital Facility",
+  "templateType": "Project",
+  "defaultDurationDays": 28,
+  "domain": "Capital",
+  "workstreams": [
+    "Working Capital",
+    "Lender packaging",
+    "Cash-flow forecasting"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Diagnostics",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Facility Design",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Outreach",
+      "seq": 3
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Cash cycle baseline",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Facility memo",
+      "offsetDays": 20,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Market ready",
+      "offsetDays": 28,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "AR/AP and inventory diagnostic",
+      "phase": "p1",
+      "offsetDays": 5,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Working capital levers.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 6,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "13-week cash overlay",
+      "phase": "p1",
+      "offsetDays": 8,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Link cash-flow template.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 4,
+      "isCritical": false
+    },
+    {
+      "key": "t3",
+      "title": "Facility structure recommendation",
+      "phase": "p2",
+      "offsetDays": 15,
+      "defaultRole": "CapitalAdvisor",
+      "description": "LOC / factoring / ABL options.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 4,
+      "isCritical": true
+    },
+    {
+      "key": "t4",
+      "title": "Package and lender list",
+      "phase": "p3",
+      "offsetDays": 22,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Update capital opportunity.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 4,
+      "isCritical": false
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "AR aging",
+      "documentCategory": "AR",
+      "folderTarget": "08 - Accounts Receivable",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: AR aging"
+    },
+    {
+      "key": "d2",
+      "title": "AP aging",
+      "documentCategory": "AP",
+      "folderTarget": "09 - Accounts Payable",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: AP aging"
+    },
+    {
+      "key": "d3",
+      "title": "Debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Debt schedule"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Working capital recommendation",
+      "deliverableType": "Credit Memorandum",
+      "draftOffsetDays": 14,
+      "finalOffsetDays": 24,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    },
+    {
+      "key": "del2",
+      "title": "Lender package",
+      "deliverableType": "Lender Package",
+      "draftOffsetDays": 18,
+      "finalOffsetDays": 28,
+      "requiresExecutiveApproval": true,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "Owner"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Stale AR",
+      "likelihood": "High",
+      "impact": "High",
+      "mitigation": "Refresh before submission"
+    }
+  ],
+  "qualityControlChecks": [
+    "Funding probability set",
+    "Expected close dated"
+  ],
+  "automationTriggers": [
+    "HVCG_CreateProjectFromTemplate"
+  ],
+  "clientResponsibilities": [
+    "Timely AR/AP"
+  ],
+  "internalResponsibilities": [
+    "Maintain HVCG_CapitalOpportunities"
+  ],
+  "approvalPoints": [
+    "Lender package",
+    "Final delivery acceptance"
+  ]
+}

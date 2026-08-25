@@ -1,0 +1,91 @@
+{
+  "title": "HVCG_SystemInfo",
+  "description": "Platform \u2014 installed version and health markers (single-item list)",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Always 'HVCG OS'"
+    },
+    {
+      "internalName": "InstalledVersion",
+      "displayName": "Installed Version",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "SchemaVersion",
+      "displayName": "Schema Version",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ConfigSchemaVersion",
+      "displayName": "Config Schema Version",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastUpgradeUtc",
+      "displayName": "Last Upgrade Utc",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "LastHealthCheckUtc",
+      "displayName": "Last Health Check Utc",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LastHealthStatus",
+      "displayName": "Last Health Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Healthy",
+        "Degraded",
+        "Unhealthy",
+        "Unknown"
+      ],
+      "default": "Unknown"
+    },
+    {
+      "internalName": "EnvironmentName",
+      "displayName": "Environment Name",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "development",
+        "test",
+        "production"
+      ]
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

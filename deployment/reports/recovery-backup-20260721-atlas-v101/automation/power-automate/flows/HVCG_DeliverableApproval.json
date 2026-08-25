@@ -1,0 +1,62 @@
+{
+  "flowName": "HVCG_DeliverableApproval",
+  "displayName": "HVCG_DeliverableApproval",
+  "description": "Creates approval records and notifies approvers.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Deliverables",
+    "condition": "Status Internal/Client Review or RequiresExecutiveApproval"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook",
+    "Approvals"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [
+    "Approver decision required"
+  ],
+  "steps": [
+    {
+      "id": 1,
+      "action": "CreateApprovalItem"
+    },
+    {
+      "id": 2,
+      "action": "NotifyApprover"
+    },
+    {
+      "id": 3,
+      "action": "WaitForDecision"
+    },
+    {
+      "id": 4,
+      "action": "UpdateDeliverableStatus"
+    },
+    {
+      "id": 5,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

@@ -13,12 +13,22 @@
     },
     {
       "internalName": "ClientId",
-      "displayName": "ClientId",
+      "displayName": "ClientId (legacy)",
       "type": "Lookup",
-      "required": true,
+      "required": false,
       "indexed": true,
-      "description": "",
+      "description": "LEGACY — do not write. Preserved in place; use AtlasClientRef.",
       "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "AtlasClientRef",
+      "displayName": "Client",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Primary client lookup (Case B). Write via AtlasClientRefId (REST/connector) or AtlasClientRefLookupId (Graph).",
+      "lookupList": "HVCG_Clients",
+      "lookupField": "Title"
     },
     {
       "internalName": "EngagementId",
@@ -317,6 +327,113 @@
         "Internal"
       ],
       "default": "Client"
+    },
+    {
+      "internalName": "ChecklistItemKey",
+      "displayName": "ChecklistItemKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Stable checklist rule key (e.g. fin-tax-3yr)."
+    },
+    {
+      "internalName": "Requiredness",
+      "displayName": "Requiredness",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "REQUIRED|OPTIONAL|CONDITIONAL.",
+      "choices": [
+        "REQUIRED",
+        "OPTIONAL",
+        "CONDITIONAL"
+      ],
+      "default": "REQUIRED"
+    },
+    {
+      "internalName": "Condition",
+      "displayName": "Condition",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Human-readable condition when Requiredness is CONDITIONAL."
+    },
+    {
+      "internalName": "ChecklistStatus",
+      "displayName": "ChecklistStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Operational checklist status. RequestStatus remains the legacy field.",
+      "choices": [
+        "MISSING",
+        "REQUESTED",
+        "RECEIVED",
+        "NEEDS_REVIEW",
+        "INCOMPLETE",
+        "OUTDATED",
+        "ACCEPTED",
+        "NOT_APPLICABLE"
+      ],
+      "default": "MISSING"
+    },
+    {
+      "internalName": "VerificationStatus",
+      "displayName": "VerificationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Fact verification for this item.",
+      "choices": [
+        "VERIFIED",
+        "DERIVED",
+        "UNVERIFIED",
+        "CONFLICTING",
+        "MISSING"
+      ],
+      "default": "MISSING"
+    },
+    {
+      "internalName": "OverrideReason",
+      "displayName": "OverrideReason",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Required when a human overrides checklist status."
+    },
+    {
+      "internalName": "OverrideBy",
+      "displayName": "OverrideBy",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Who overrode checklist status (email)."
+    },
+    {
+      "internalName": "RelatedLenderId",
+      "displayName": "RelatedLenderId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Lender-specific checklist item, if any.",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "SHA256",
+      "displayName": "SHA256",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "SHA-256 of the associated original file, when known."
+    },
+    {
+      "internalName": "VersionNumber",
+      "displayName": "VersionNumber",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Document version number. Originals are preserved; this is metadata only.",
+      "default": 1
     }
   ]
 }

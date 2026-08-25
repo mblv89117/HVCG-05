@@ -1,0 +1,84 @@
+{
+  "title": "HVCG_Notifications",
+  "description": "Notification queue / history",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RecipientEmail",
+      "displayName": "RecipientEmail",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "NotificationType",
+      "displayName": "NotificationType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Reminder",
+        "Escalation",
+        "Digest",
+        "Approval",
+        "System"
+      ]
+    },
+    {
+      "internalName": "Channel",
+      "displayName": "Channel",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Email",
+        "Teams",
+        "None"
+      ]
+    },
+    {
+      "internalName": "Body",
+      "displayName": "Body",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SentDate",
+      "displayName": "SentDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedClientCode",
+      "displayName": "RelatedClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsExecutive",
+      "displayName": "IsExecutive",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    }
+  ]
+}

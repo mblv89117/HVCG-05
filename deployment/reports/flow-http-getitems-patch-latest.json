@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-07-21T23:43:33Z",
+  "flows": [
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "ok": true,
+      "error": null,
+      "converted": [
+        {
+          "name": "Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "uri": "_api/web/lists/getbytitle('HVCG_Clients')/items?$select=Id,Title,ClientCode,SharePointLibraryUrl&$filter=ClientCode eq '@{triggerBody()?['ClientCode']}'&$top=1"
+        },
+        {
+          "name": "Get_Existing_Project",
+          "op": "GetItems",
+          "table": "HVCG_Projects",
+          "uri": "_api/web/lists/getbytitle('HVCG_Projects')/items?$select=Id,Title,ClientCode,HVCG_IdempotencyKey,ProjectStatus,ProjectTemplateKey&$filter=HVCG_IdempotencyKey eq '@{outputs('Compose"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "ok": true,
+      "error": null,
+      "converted": [
+        {
+          "name": "Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "uri": "_api/web/lists/getbytitle('HVCG_Clients')/items?$select=Id,Title,ClientCode,SharePointLibraryUrl&$filter=ClientCode eq '@{triggerBody()?['ClientCode']}'&$top=1"
+        },
+        {
+          "name": "Get_Open_Duplicates",
+          "op": "GetItems",
+          "table": "HVCG_DocumentRequests",
+          "uri": "_api/web/lists/getbytitle('HVCG_DocumentRequests')/items?$select=Id,Title,ClientCode,Status,DocumentType&$filter=ClientCode eq '@{triggerBody()?['ClientCode']}' and Title eq '@{ite"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "ok": true,
+      "error": null,
+      "converted": [
+        {
+          "name": "Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "uri": "_api/web/lists/getbytitle('HVCG_Clients')/items?$select=Id,Title,ClientCode,SharePointLibraryUrl&$filter=ClientCode eq '@{triggerBody()?['ClientCode']}'&$top=1"
+        },
+        {
+          "name": "Get_Existing_Decision",
+          "op": "GetItems",
+          "table": "HVCG_Decisions",
+          "uri": "_api/web/lists/getbytitle('HVCG_Decisions')/items?$select=Id,Title,ClientCode,HVCG_IdempotencyKey,DecisionStatus&$filter=Title eq '@{triggerBody()?['Title']}' and ClientCode eq '@{"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "ok": true,
+      "error": null,
+      "converted": [
+        {
+          "name": "Get_Deliverable",
+          "op": "GetItem",
+          "table": "HVCG_Deliverables",
+          "uri": "_api/web/lists/getbytitle('HVCG_Deliverables')/items(@{triggerBody()?['DeliverableListItemId']})?$select=Id,Title,ClientCode,DeliverableStatus,ApproverEmail,InternalReviewStatus,Co"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "ok": true,
+      "error": null,
+      "converted": [
+        {
+          "name": "Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "uri": "_api/web/lists/getbytitle('HVCG_Clients')/items?$select=Id,Title,ClientCode,SharePointLibraryUrl&$filter=ClientCode eq '@{triggerBody()?['ClientCode']}'&$top=1"
+        }
+      ]
+    }
+  ]
+}

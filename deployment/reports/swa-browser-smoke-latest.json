@@ -1,0 +1,78 @@
+{
+  "desktop_home": {
+    "file": "/tmp/swa-home-desktop.html",
+    "bytes": 40889,
+    "has_production_banner": true,
+    "has_sign_in": true,
+    "canonical_hits": [
+      "Colorado Craft",
+      "Lien"
+    ],
+    "hit_count": 2,
+    "mentions_error": false,
+    "snippet": "Clients Approvals Analytics Capital Advisory Intelligence Financial Intelligence Banking Accounting Reports Workspace Knowledge Documents Automation AI Agents System Connections Settings Favorites Colorado Craft Beef Client Banking Module Daily Command Center What needs Manny\u2019s attention \u2014 priorities, clients, team, agents, and next actions. Initialize / refresh from Microsoft Refresh My Work Port"
+  },
+  "desktop_clients": {
+    "file": "/tmp/swa-clients-desktop.html",
+    "bytes": 38433,
+    "has_production_banner": true,
+    "has_sign_in": true,
+    "canonical_hits": [
+      "Colorado Craft",
+      "Lien"
+    ],
+    "hit_count": 2,
+    "mentions_error": false,
+    "snippet": "Clients Approvals Analytics Capital Advisory Intelligence Financial Intelligence Banking Accounting Reports Workspace Knowledge Documents Automation AI Agents System Connections Settings Favorites Colorado Craft Beef Client Banking Module Clients Live Client 360 portfolio from Microsoft 365 \u2014 not demonstration data. Refresh Re-ingest Microsoft 0 / 0 clients Open a row for Client 360 detail No Clie"
+  },
+  "mobile_home": {
+    "file": "/tmp/swa-home-mobile.html",
+    "bytes": 40889,
+    "has_production_banner": true,
+    "has_sign_in": true,
+    "canonical_hits": [
+      "Colorado Craft",
+      "Lien"
+    ],
+    "hit_count": 2,
+    "mentions_error": false,
+    "snippet": "Clients Approvals Analytics Capital Advisory Intelligence Financial Intelligence Banking Accounting Reports Workspace Knowledge Documents Automation AI Agents System Connections Settings Favorites Colorado Craft Beef Client Banking Module Daily Command Center What needs Manny\u2019s attention \u2014 priorities, clients, team, agents, and next actions. Initialize / refresh from Microsoft Refresh My Work Port"
+  },
+  "mobile_clients": {
+    "file": "/tmp/swa-clients-mobile.html",
+    "bytes": 38433,
+    "has_production_banner": true,
+    "has_sign_in": true,
+    "canonical_hits": [
+      "Colorado Craft",
+      "Lien"
+    ],
+    "hit_count": 2,
+    "mentions_error": false,
+    "snippet": "Clients Approvals Analytics Capital Advisory Intelligence Financial Intelligence Banking Accounting Reports Workspace Knowledge Documents Automation AI Agents System Connections Settings Favorites Colorado Craft Beef Client Banking Module Clients Live Client 360 portfolio from Microsoft 365 \u2014 not demonstration data. Refresh Re-ingest Microsoft 0 / 0 clients Open a row for Client 360 detail No Clie"
+  },
+  "hub_from_swa_origin": {
+    "ok": true,
+    "cors": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+    "candidates": 319,
+    "canonical_client_ids": 9,
+    "names": [
+      "ACCG Inc.",
+      "Prodigy Games LLC",
+      "That's Kava LLC",
+      "Christie's Place LLC",
+      "Christie Falk",
+      "Irwin Falk",
+      "Hart Family Dental",
+      "Colorado Craft Beef",
+      "Lien Partners"
+    ]
+  },
+  "pass_shell_render": true,
+  "pass_clients_names": true,
+  "updatedAt": "2026-07-21T17:53:47.115012Z",
+  "clients_list_7": true,
+  "accg_detail_hvs_links": true,
+  "owner_signin": "NOT_AUTOMATED \u2014 requires MFA popup; Sign in with Microsoft control present on SWA",
+  "cursor_ide_browser": "unavailable (no tab); used Chrome headless instead"
+}

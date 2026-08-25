@@ -1,0 +1,173 @@
+{
+  "count": 21,
+  "templates": [
+    {
+      "templateKey": "general-client-onboarding",
+      "title": "General Client Onboarding",
+      "tasks": 12,
+      "docs": 8,
+      "deliverables": 1,
+      "path": "templates/projects/general-client-onboarding.json"
+    },
+    {
+      "templateKey": "enterprise-value-assessment",
+      "title": "Enterprise Value Assessment",
+      "tasks": 8,
+      "docs": 4,
+      "deliverables": 2,
+      "path": "templates/projects/enterprise-value-assessment.json"
+    },
+    {
+      "templateKey": "capital-readiness-assessment",
+      "title": "Capital Readiness Assessment",
+      "tasks": 6,
+      "docs": 4,
+      "deliverables": 1,
+      "path": "templates/projects/capital-readiness-assessment.json"
+    },
+    {
+      "templateKey": "debt-capital-raise",
+      "title": "Debt Capital Raise",
+      "tasks": 8,
+      "docs": 7,
+      "deliverables": 2,
+      "path": "templates/projects/debt-capital-raise.json"
+    },
+    {
+      "templateKey": "equity-capital-raise",
+      "title": "Equity Capital Raise",
+      "tasks": 8,
+      "docs": 7,
+      "deliverables": 3,
+      "path": "templates/projects/equity-capital-raise.json"
+    },
+    {
+      "templateKey": "sba-loan-package",
+      "title": "SBA Loan Package",
+      "tasks": 8,
+      "docs": 7,
+      "deliverables": 1,
+      "path": "templates/projects/sba-loan-package.json"
+    },
+    {
+      "templateKey": "commercial-real-estate-financing",
+      "title": "Commercial Real Estate Financing",
+      "tasks": 8,
+      "docs": 8,
+      "deliverables": 2,
+      "path": "templates/projects/commercial-real-estate-financing.json"
+    },
+    {
+      "templateKey": "private-credit-package",
+      "title": "Private Credit Package",
+      "tasks": 8,
+      "docs": 6,
+      "deliverables": 2,
+      "path": "templates/projects/private-credit-package.json"
+    },
+    {
+      "templateKey": "fractional-cfo-engagement",
+      "title": "Fractional CFO Engagement",
+      "tasks": 6,
+      "docs": 3,
+      "deliverables": 2,
+      "path": "templates/projects/fractional-cfo-engagement.json"
+    },
+    {
+      "templateKey": "cash-flow-forecasting",
+      "title": "Cash-Flow Forecasting",
+      "tasks": 5,
+      "docs": 4,
+      "deliverables": 1,
+      "path": "templates/projects/cash-flow-forecasting.json"
+    },
+    {
+      "templateKey": "financial-model-development",
+      "title": "Financial Model Development",
+      "tasks": 5,
+      "docs": 2,
+      "deliverables": 1,
+      "path": "templates/projects/financial-model-development.json"
+    },
+    {
+      "templateKey": "investor-presentation",
+      "title": "Investor Presentation",
+      "tasks": 5,
+      "docs": 2,
+      "deliverables": 1,
+      "path": "templates/projects/investor-presentation.json"
+    },
+    {
+      "templateKey": "lender-package",
+      "title": "Lender Package",
+      "tasks": 4,
+      "docs": 4,
+      "deliverables": 1,
+      "path": "templates/projects/lender-package.json"
+    },
+    {
+      "templateKey": "business-launch",
+      "title": "Business Launch",
+      "tasks": 6,
+      "docs": 2,
+      "deliverables": 2,
+      "path": "templates/projects/business-launch.json"
+    },
+    {
+      "templateKey": "operational-improvement",
+      "title": "Operational Improvement",
+      "tasks": 5,
+      "docs": 1,
+      "deliverables": 2,
+      "path": "templates/projects/operational-improvement.json"
+    },
+    {
+      "templateKey": "data-room-preparation",
+      "title": "Data-Room Preparation",
+      "tasks": 5,
+      "docs": 1,
+      "deliverables": 1,
+      "path": "templates/projects/data-room-preparation.json"
+    },
+    {
+      "templateKey": "retainer-renewal",
+      "title": "Retainer Renewal",
+      "tasks": 5,
+      "docs": 1,
+      "deliverables": 1,
+      "path": "templates/projects/retainer-renewal.json"
+    },
+    {
+      "templateKey": "engagement-closeout",
+      "title": "Engagement Closeout",
+      "tasks": 6,
+      "docs": 1,
+      "deliverables": 1,
+      "path": "templates/projects/engagement-closeout.json"
+    },
+    {
+      "templateKey": "equipment-financing",
+      "title": "Equipment Financing",
+      "tasks": 5,
+      "docs": 3,
+      "deliverables": 1,
+      "path": "templates/projects/equipment-financing.json"
+    },
+    {
+      "templateKey": "working-capital",
+      "title": "Working Capital Facility",
+      "tasks": 4,
+      "docs": 3,
+      "deliverables": 2,
+      "path": "templates/projects/working-capital.json"
+    },
+    {
+      "templateKey": "investor-outreach",
+      "title": "Investor Outreach Campaign",
+      "tasks": 5,
+      "docs": 2,
+      "deliverables": 1,
+      "path": "templates/projects/investor-outreach.json"
+    }
+  ]
+}

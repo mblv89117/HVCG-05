@@ -85,3 +85,9 @@ Dev sites must not contain real SSNs/Tax IDs/full bank statements. Use synthetic
 4. Document in `HVCG_Issues` with type Security  
 
 Full runbook: `docs/sops/SOP_Security_Incident_Response.md`
+
+## Atlas Hub PM application access
+
+Hub production PM uses managed identity `id-atlas-prod` with Microsoft Graph `Lists.SelectedOperations.Selected` and four Command Center list grants (Projects/Tasks/Milestones write, Clients read). Live testing proved ungranted **item** denial and also proved **catalog/schema metadata** visibility for ungranted lists. That metadata exposure is an accepted **moderate residual risk** with Hub transport compensating controls. It is not platform-enforced metadata isolation.
+
+Decision record: `docs/security/PM_SHAREPOINT_SELECTED_PERMISSIONS.md`

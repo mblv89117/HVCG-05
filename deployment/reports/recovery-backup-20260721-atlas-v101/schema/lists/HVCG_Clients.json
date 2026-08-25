@@ -1,0 +1,511 @@
+{
+  "title": "HVCG_Clients",
+  "description": "Client master records",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Legal company name"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Short unique code e.g. ACME01"
+    },
+    {
+      "internalName": "DBA",
+      "displayName": "DBA",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PrimaryContactId",
+      "displayName": "PrimaryContactId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Contacts"
+    },
+    {
+      "internalName": "Industry",
+      "displayName": "Industry",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "BusinessDescription",
+      "displayName": "BusinessDescription",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "EntityType",
+      "displayName": "EntityType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "LLC",
+        "Corp",
+        "S-Corp",
+        "Partnership",
+        "Sole Prop",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "StateOfFormation",
+      "displayName": "StateOfFormation",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TaxIdStatus",
+      "displayName": "TaxIdStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Collected",
+        "Pending",
+        "Not Required",
+        "N/A"
+      ]
+    },
+    {
+      "internalName": "Website",
+      "displayName": "Website",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ReferralSource",
+      "displayName": "ReferralSource",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientStage",
+      "displayName": "ClientStage",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Lead",
+        "Prospect",
+        "Assessment",
+        "Proposal",
+        "Active Client",
+        "On Hold",
+        "Alumni",
+        "Do Not Engage"
+      ],
+      "default": "Lead"
+    },
+    {
+      "internalName": "EngagementTypePrimary",
+      "displayName": "EngagementTypePrimary",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Assessment",
+        "Capital Advisory",
+        "Fractional CFO",
+        "Operational Consulting",
+        "Growth",
+        "Retainer",
+        "Success Fee",
+        "Hybrid",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "RelationshipOwnerEmail",
+      "displayName": "RelationshipOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ProjectManagerEmail",
+      "displayName": "ProjectManagerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "TeamMemberEmails",
+      "displayName": "TeamMemberEmails",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Semicolon-separated UPNs"
+    },
+    {
+      "internalName": "ServicePackage",
+      "displayName": "ServicePackage",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MonthlyRetainer",
+      "displayName": "MonthlyRetainer",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SetupFee",
+      "displayName": "SetupFee",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SuccessFeeTerms",
+      "displayName": "SuccessFeeTerms",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SuccessFeePercent",
+      "displayName": "SuccessFeePercent",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementStartDate",
+      "displayName": "EngagementStartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EngagementEndDate",
+      "displayName": "EngagementEndDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RenewalDate",
+      "displayName": "RenewalDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PaymentStatus",
+      "displayName": "PaymentStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Not Invoiced",
+        "Invoiced",
+        "Partial",
+        "Paid",
+        "Past Due",
+        "Written Off"
+      ]
+    },
+    {
+      "internalName": "RiskLevel",
+      "displayName": "RiskLevel",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "internalName": "OverallHealth",
+      "displayName": "OverallHealth",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Green",
+        "Yellow",
+        "Red"
+      ],
+      "default": "Green"
+    },
+    {
+      "internalName": "KeyGoals",
+      "displayName": "KeyGoals",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "KeyConstraints",
+      "displayName": "KeyConstraints",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "CapitalNeed",
+      "displayName": "CapitalNeed",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalType",
+      "displayName": "CapitalType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "None",
+        "Debt",
+        "Equity",
+        "Hybrid",
+        "SBA",
+        "CRE",
+        "Private Credit",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "TargetAmount",
+      "displayName": "TargetAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CurrentRevenue",
+      "displayName": "CurrentRevenue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CurrentProfitability",
+      "displayName": "CurrentProfitability",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EnterpriseValueRange",
+      "displayName": "EnterpriseValueRange",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SharePointLibraryUrl",
+      "displayName": "SharePointLibraryUrl",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TeamsLink",
+      "displayName": "TeamsLink",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InternalNotes",
+      "displayName": "InternalNotes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "LastMeaningfulContact",
+      "displayName": "LastMeaningfulContact",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DaysSinceLastContact",
+      "displayName": "DaysSinceLastContact",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "IsActive",
+      "displayName": "IsActive",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientLifetimeValue",
+      "displayName": "ClientLifetimeValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Rolling or modeled CLV"
+    },
+    {
+      "internalName": "LifetimeValueMethod",
+      "displayName": "LifetimeValueMethod",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Manual",
+        "Trailing12",
+        "Projected",
+        "Unknown"
+      ],
+      "default": "Unknown"
+    },
+    {
+      "internalName": "FirstEngagementDate",
+      "displayName": "FirstEngagementDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TotalRevenueCollected",
+      "displayName": "TotalRevenueCollected",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TotalRevenueBooked",
+      "displayName": "TotalRevenueBooked",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NPS",
+      "displayName": "NPS",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PortalEnabled",
+      "displayName": "PortalEnabled",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "PortalAccessGroup",
+      "displayName": "PortalAccessGroup",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CopilotSummary",
+      "displayName": "CopilotSummary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Curated summary for Copilot grounding"
+    }
+  ],
+  "views": [
+    "All Items",
+    "Active Clients",
+    "Needs Executive Attention",
+    "Renewals Next 60 Days",
+    "Past Due Payment"
+  ]
+}
