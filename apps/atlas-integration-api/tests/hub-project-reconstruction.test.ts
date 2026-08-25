@@ -26,6 +26,7 @@ import {
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import type {
   AtlasAuthorizedSearch,
+  DocumentOperatingRecord,
   MailThreadOperatingRecord,
   OperatorOperatingPicture,
   ProjectOperatingRecord,
@@ -334,13 +335,14 @@ describe('entitled project operating record', () => {
       const text = await unsigned.text();
       const tap =
         unsigned.status === 401 &&
-        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|proj-syn/i.test(text);
+        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|proj-syn|mail-att-syn/i.test(text);
       assert.equal(unsigned.status, 401, 'not ok 1 - unsigned /operator/search.json 401');
       const body = JSON.parse(text) as { error?: string; authorizedSearch?: AtlasAuthorizedSearch };
       assert.equal(body.error, 'unauthorized');
       assert.equal(body.authorizedSearch, undefined);
       assert.equal('relatedProjects' in body, false);
       assert.equal('relatedThreads' in body, false);
+      assert.equal('relatedAttachments' in body, false);
       assert.equal(tap, true, 'not ok 2 - unsigned search leaks project payload');
     } finally {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
@@ -386,6 +388,11 @@ function syn01PeerProjectRecord(overrides: Partial<ProjectOperatingRecord> = {})
 }
 
 const THREAD_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-thread';
+const ATT_PARENT_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-att-parent';
+const SAS =
+  'https://hvfiles.blob.core.windows.net/docs/intake.pdf?sv=2024-11-04&sig=abc&se=2026-08-24T00:00:00Z&sp=r';
+const ANON =
+  'https://highvaluecapitalgroup.sharepoint.com/:b:/s/HVCG-Clients/abc?guestaccess=1&share=xyz';
 
 function syn01ThreadRecord(overrides: Partial<MailThreadOperatingRecord> = {}): MailThreadOperatingRecord {
   return {
@@ -431,9 +438,44 @@ function syn01ThreadHit(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function syn01AttachmentHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'document' as const,
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications/file-index',
+    clientCode: 'SYN01',
+    webUrl: ATT_PARENT_SOURCE,
+    provenance: 'CONFIRMED' as const,
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
+function syn01AttachmentRecord(overrides: Partial<DocumentOperatingRecord> = {}): DocumentOperatingRecord {
+  return {
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    webUrl: ATT_PARENT_SOURCE,
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED',
+    source: 'HVCG_Communications/file-index',
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
 function emptyRelatedSearch(
   projects: ProjectOperatingRecord[],
   threads: MailThreadOperatingRecord[] = [],
+  documents: DocumentOperatingRecord[] = [],
 ): AtlasAuthorizedSearch {
   return {
     kind: 'atlas_authorized_search_v1',
@@ -442,7 +484,7 @@ function emptyRelatedSearch(
     query: 'SYN01',
     hitCount: 0,
     hits: [],
-    documents: { kind: 'document_operating_record_v1', policyClass: 'READ_AUTO', binariesInAtlas: false, items: [] },
+    documents: { kind: 'document_operating_record_v1', policyClass: 'READ_AUTO', binariesInAtlas: false, items: documents },
     projects: {
       kind: 'project_operating_record_v1',
       policyClass: 'READ_AUTO',
@@ -512,6 +554,31 @@ function emptyRelatedSearch(
     pictureComposed: true,
     actionabilityApplied: true,
   };
+}
+
+function assertProjectRelatedAttachmentsHonesty(item: ProjectOperatingRecord): void {
+  const blob = JSON.stringify(item.relatedAttachments || []);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee/i.test(blob), false);
+  assert.equal(/Hub-MI/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(blob), false);
+  assert.equal(item.invented, false);
+  for (const row of item.relatedAttachments || []) {
+    assert.equal(row.binariesInAtlas, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('hubMiRow' in row, false);
+    assert.ok(Boolean(row.attachmentId || row.parentMessageId));
+    assert.ok(
+      row.classification === 'CONFIRMED' ||
+        row.classification === 'LIKELY' ||
+        row.classification === 'PROPOSED' ||
+        row.classification === 'HONEST_EMPTY',
+    );
+  }
 }
 
 function assertProjectRelatedThreadsHonesty(item: ProjectOperatingRecord): void {
@@ -1075,6 +1142,354 @@ describe('ATLAS-PROJECT-RELATED-THREADS-001 entitled same-scope inverse', () => 
     assert.equal(alone.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
     assert.equal(alone.hubMiRow, true);
     assert.equal(alone.invented, false);
+    assertProjectPeerHonesty(alone);
+  });
+});
+
+describe('ATLAS-PROJECT-RELATED-ATTACHMENTS-001 entitled same-scope inverse', () => {
+  it('attaches same-scope relatedAttachments on entitled project A and keeps relatedProjects / relatedThreads', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: reconstructionPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [...found.results, syn01ThreadHit(), syn01AttachmentHit()],
+      }),
+    });
+    const current = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    const peer = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-done');
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(current);
+    assert.ok(peer);
+    assert.ok(thread);
+    const related = current.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(related);
+    assert.equal(related.title, 'SYN01 term-sheet.pdf');
+    assert.equal(related.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(related.attachmentId, 'att-syn-1');
+    assert.equal(related.contentType, 'application/pdf');
+    assert.equal(related.size, 1200);
+    assert.equal(related.binariesInAtlas, false);
+    assert.equal(related.webUrl, ATT_PARENT_SOURCE);
+    assert.equal('downloadUrl' in related, false);
+    assert.equal('contentBytes' in related, false);
+    assert.ok((current.relatedAttachments?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal((current.relatedAttachments || []).some((row) => row.id === 'file-sow'), false);
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(peer.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(current.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(peer.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(
+        JSON.stringify(current.relatedAttachments),
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(current.relatedAttachments).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.documents.binariesInAtlas, false);
+    assert.equal(result.authorizedSearch.threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assertProjectRelatedAttachmentsHonesty(current);
+    assertProjectRelatedThreadsHonesty(current);
+    assertProjectPeerHonesty(current);
+  });
+
+  it('never attaches Client B attachment to a Client A project', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: reconstructionPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          syn01ThreadHit(),
+          syn01AttachmentHit(),
+          {
+            kind: 'document' as const,
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak attachment.pdf',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications/file-index',
+            clientCode: 'PDG01',
+            webUrl: ATT_PARENT_SOURCE,
+            provenance: 'CONFIRMED' as const,
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+            contentType: 'application/pdf',
+            size: 800,
+          },
+        ],
+      }),
+    });
+    const current = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(current);
+    assert.equal(current.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      (current.relatedAttachments || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)),
+      false,
+    );
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(current.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    const blob = JSON.stringify(result.authorizedSearch.projects);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('mail-att-pdg'), false);
+    assert.equal(blob.includes('att-pdg-1'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assertProjectRelatedAttachmentsHonesty(current);
+
+    const mixed = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [
+          syn01AttachmentRecord(),
+          syn01AttachmentRecord({
+            id: 'mail-att-pdg',
+            title: 'PDG01 leak attachment.pdf',
+            clientCode: 'PDG01',
+            parentMessageId: 'AAMk-pdg-parent',
+            attachmentId: 'att-pdg-1',
+          }),
+          syn01AttachmentRecord({
+            id: 'mail-att-lender',
+            title: 'Live Oak Bank catalog.pdf',
+            clientCode: undefined,
+            parentMessageId: 'AAMk-lender-parent',
+            attachmentId: 'att-lender-1',
+          }),
+        ],
+      ),
+    );
+    assert.equal(mixed.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      (mixed.relatedAttachments || []).some(
+        (row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title),
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.relatedAttachments).includes('PDG01'), false);
+    assert.equal(JSON.stringify(mixed.relatedAttachments).includes('mail-att-pdg'), false);
+    assert.equal(JSON.stringify(mixed.relatedAttachments).includes('att-pdg-1'), false);
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(mixed.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(mixed.hubMiRow, true);
+    assert.equal(mixed.invented, false);
+    assertProjectRelatedAttachmentsHonesty(mixed);
+    assertProjectRelatedThreadsHonesty(mixed);
+    assertProjectPeerHonesty(mixed);
+  });
+
+  it('omits relatedAttachments when project ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToProject(
+      manny,
+      syn01ProjectRecord({
+        id: 'proj-unscoped',
+        clientCode: undefined,
+        hubMiRow: false,
+        operationalized: false,
+      }),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+      ),
+    );
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in omitted, false);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal(omitted.hubMiRow, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('omits relatedAttachments when project ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToProject(
+      manny,
+      syn01ProjectRecord({
+        id: 'proj-noncanonical',
+        clientCode: 'syn01',
+        hubMiRow: false,
+        operationalized: false,
+      }),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+      ),
+    );
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in omitted, false);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('unscoped never receives scoped relatedAttachments', () => {
+    const unscoped = attachRelatedContextToProject(
+      manny,
+      syn01ProjectRecord({
+        id: 'proj-unscoped',
+        clientCode: undefined,
+        hubMiRow: false,
+        operationalized: false,
+      }),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+      ),
+    );
+    assert.equal(unscoped.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in unscoped, false);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.hubMiRow, false);
+    assert.equal(unscoped.invented, false);
+  });
+
+  it('omits relatedAttachments for unauthorized or other-client principals', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [...found.results, syn01ThreadHit(), syn01AttachmentHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.projects.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.projects.items.some((row) => row.relatedAttachments),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.projects);
+    assert.equal(unknownBlob.includes('proj-syn-1'), false);
+    assert.equal(unknownBlob.includes('mail-att-syn'), false);
+    assert.equal(unknownBlob.includes('relatedAttachments'), false);
+    assert.equal(unknownBlob.includes('PDG01'), false);
+
+    const denied = attachRelatedContextToProject(
+      otherStaff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+      ),
+    );
+    assert.equal(denied.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in denied, false);
+    assert.equal(denied.relatedProjects, undefined);
+    assert.equal(denied.relatedThreads, undefined);
+    assert.equal(denied.hubMiRow, true);
+  });
+
+  it('never invents contentBytes, downloadUrl, TargetAmount, Hub-MI, or filenames on relatedAttachments', () => {
+    const attached = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [
+          syn01AttachmentRecord({
+            title: 'SYN01 term-sheet.pdf',
+          }),
+        ],
+      ),
+    );
+    const related = attached.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(related);
+    assert.equal(related.title, 'SYN01 term-sheet.pdf');
+    assert.equal(related.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(related.attachmentId, 'att-syn-1');
+    assert.equal(related.contentType, 'application/pdf');
+    assert.equal(related.size, 1200);
+    assert.equal(related.binariesInAtlas, false);
+    assert.equal(related.webUrl, ATT_PARENT_SOURCE);
+    assert.equal('downloadUrl' in related, false);
+    assert.equal('contentBytes' in related, false);
+    assert.equal('TargetAmount' in related, false);
+    assert.equal('hubMiRow' in related, false);
+    assert.equal(attached.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(attached.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(attached.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(
+      /TargetAmount|downloadUrl|Hub-MI|contentBytes|invented/i.test(JSON.stringify(attached.relatedAttachments)),
+      false,
+    );
+    assertProjectRelatedAttachmentsHonesty(attached);
+    assertProjectRelatedThreadsHonesty(attached);
+    assertProjectPeerHonesty(attached);
+  });
+
+  it('drops SAS and anonymous webUrl and never emits downloadUrl or contentBytes', () => {
+    const sas = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord({ webUrl: SAS })],
+      ),
+    );
+    const sasAtt = sas.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(sasAtt);
+    assert.equal(sasAtt.webUrl, undefined);
+    assert.equal(sasAtt.binariesInAtlas, false);
+    assert.equal(sasAtt.attachmentId, 'att-syn-1');
+    assert.equal(sasAtt.parentMessageId, 'AAMk-syn-parent');
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(JSON.stringify(sas)), false);
+    assert.equal(/downloadUrl|contentBytes|TargetAmount/i.test(JSON.stringify(sas.relatedAttachments)), false);
+    assert.equal(sas.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(sas.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+
+    const anon = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord({ webUrl: ANON })],
+      ),
+    );
+    const anonAtt = anon.relatedAttachments?.find((row) => row.id === 'mail-att-syn');
+    assert.ok(anonAtt);
+    assert.equal(anonAtt.webUrl, undefined);
+    assert.equal(anonAtt.binariesInAtlas, false);
+    assert.equal(/blob\.core\.windows\.net|[?&](?:sv|sig|share|guestaccess)=/i.test(JSON.stringify(anon)), false);
+    assert.equal(/downloadUrl|contentBytes|TargetAmount/i.test(JSON.stringify(anon.relatedAttachments)), false);
+    assertProjectRelatedAttachmentsHonesty(sas);
+    assertProjectRelatedAttachmentsHonesty(anon);
+    assertProjectPeerHonesty(sas);
+    assertProjectRelatedThreadsHonesty(sas);
+  });
+
+  it('honestly omits relatedAttachments when no entitled attachment exists and keeps relatedProjects / relatedThreads', () => {
+    const alone = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch([syn01ProjectRecord(), syn01PeerProjectRecord()], [syn01ThreadRecord()]),
+    );
+    assert.equal(alone.relatedAttachments, undefined);
+    assert.equal('relatedAttachments' in alone, false);
+    assert.equal(alone.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(alone.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(alone.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(alone.hubMiRow, true);
+    assert.equal(alone.invented, false);
+    assertProjectRelatedThreadsHonesty(alone);
     assertProjectPeerHonesty(alone);
   });
 });
