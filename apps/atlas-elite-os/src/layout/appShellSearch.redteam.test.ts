@@ -107,4 +107,21 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
     assert.match(runPrompt, /hub_runtime_onboarding/);
     assert.doesNotMatch(runPrompt, /searchPm/);
   });
+
+  it('keeps capability literals that production Vite must not tree-shake', () => {
+    const manifest = readFileSync(join(root, 'eliteCapabilityManifest.ts'), 'utf8');
+    const main = readFileSync(join(root, '..', 'main.tsx'), 'utf8');
+    for (const label of [
+      'Ask Atlas',
+      'Documents',
+      'Agent Activity',
+      'Workflow Center',
+      'Onboarding',
+      'WorkflowTemplates',
+    ]) {
+      assert.match(manifest, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
+    assert.match(main, /eliteCapabilityManifestJoined/);
+    assert.match(main, /dataset\.atlasCapabilities/);
+  });
 });
