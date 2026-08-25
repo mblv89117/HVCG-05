@@ -32,7 +32,7 @@ export const RESEARCH_INTELLIGENCE_HONESTY_MISSION_KEY =
 const FOREIGN_CODE = /(?:^|[^A-Z0-9])(PDG01|ACCG01|CCB01|HFD01|LIEN01)(?:[^A-Z0-9]|$)/g;
 const ACCG_TOKEN = /(?:^|[^A-Z0-9])ACCG(?:[^A-Z0-9]|$)/;
 const INVENTED_CRITERIA =
-  /\b(?:ltv\s*[:=]?\s*\d|dscr\s*[:=]?\s*\d|credit box|min(?:imum)? credit|max(?:imum)? ltv|best[_ ]?fit|term sheet approved|committed funded)\b/i;
+  /(?:\bltv\s*[:=]?\s*\d|\bdscr\s*[:=]?\s*\d|\bcredit box\b|\bmin(?:imum)? credit\b|\bmax(?:imum)? ltv\b|\bbest[_ ]?fit\b|\bterm sheet approved\b|\bcommitted funded\b)/i;
 const INVENTED_AMOUNT = /\$[\d,]+|\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b/;
 
 export type ResearchIntelligenceHonesty = {
