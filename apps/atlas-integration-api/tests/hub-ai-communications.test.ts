@@ -2,6 +2,7 @@
  * ATLAS-AI-COMMUNICATIONS-001
  * + ATLAS-AI-COMMS-SUGGESTED-ATTACHMENTS-001
  * + ATLAS-AI-COMMS-SUGGESTED-PROJECTS-001
+ * + ATLAS-AI-COMMS-DRAFT-ROUTING-001
  * Smallest Hub increment: thread context on already-indexed entitled mail
  * so the owner does not need Outlook. Indexed preview only. DRAFT_ONLY.
  * Never AUTO_RESPOND / send. No invented amounts or deadlines.
@@ -10,9 +11,11 @@
  * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef /
  * relatedAttachments path). suggestedDraft.suggestedProjects copies
  * already-entitled same-scope project operating-record refs (same
- * RelatedDocumentProjectRef / relatedProjects path). Missing /
- * non-canonical ClientCode omits them. Client A never receives Client B.
- * No downloadUrl / contentBytes / TargetAmount / Hub-MI invention.
+ * RelatedDocumentProjectRef / relatedProjects path). suggestedDraft.routing
+ * copies the entitled canonical ClientCode plus the first entitled
+ * suggestedProjects id/title. Missing / non-canonical ClientCode omits
+ * them. Client A never receives Client B. No downloadUrl / contentBytes /
+ * TargetAmount / Hub-MI invention. Routing a draft is NOT send.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -1270,6 +1273,331 @@ describe('ATLAS-AI-COMMS-SUGGESTED-PROJECTS-001 entitled same-scope draft refs',
     assert.equal(thread.suggestedDraft.autoRespond, false);
     assert.equal('relatedProjects' in thread, false);
     assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedProjectsHonesty(thread);
+    assertSuggestedAttachmentsHonesty(thread);
+    noInvent(thread.suggestedDraft);
+  });
+});
+
+function assertSuggestedDraftRoutingHonesty(item: MailThreadOperatingRecord): void {
+  assert.equal(item.invented, false);
+  assert.equal(item.summarySource, 'indexed_preview_only');
+  assert.equal(item.suggestedDraft.send, false);
+  assert.equal(item.suggestedDraft.autoRespond, false);
+  assert.equal(item.suggestedDraft.policyClass, 'DRAFT_ONLY');
+  assert.equal(item.suggestedDraft.status, 'draft');
+  assert.equal('relatedProjects' in item, false);
+  const routing = item.suggestedDraft.routing;
+  if (!routing) return;
+  assert.equal(routing.invented, false);
+  assert.ok(routing.clientCode);
+  assert.ok(
+    routing.classification === 'CONFIRMED' ||
+      routing.classification === 'LIKELY' ||
+      routing.classification === 'PROPOSED',
+  );
+  const blob = JSON.stringify(routing);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(blob.includes('Hub-MI'), false);
+  assert.equal('mailbox' in routing, false);
+  assert.equal('TargetAmount' in routing, false);
+  if (routing.projectId || routing.projectTitle) {
+    const first = item.suggestedDraft.suggestedProjects?.[0];
+    assert.ok(first);
+    assert.equal(routing.projectId, first.id);
+    assert.equal(routing.projectTitle, first.title);
+  }
+}
+
+describe('ATLAS-AI-COMMS-DRAFT-ROUTING-001 entitled draft routing target', () => {
+  it('produces routing.clientCode for an entitled canonical ClientCode', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit(), syn01ProjectHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.ok(thread.suggestedDraft.routing);
+    assert.equal(thread.suggestedDraft.routing.clientCode, 'SYN01');
+    assert.equal(thread.suggestedDraft.routing.invented, false);
+    assert.ok(
+      thread.suggestedDraft.routing.classification === 'CONFIRMED' ||
+        thread.suggestedDraft.routing.classification === 'LIKELY' ||
+        thread.suggestedDraft.routing.classification === 'PROPOSED',
+    );
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedDraftRoutingHonesty(thread);
+    noInvent(thread.suggestedDraft);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: picture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [syn01ThreadHit(), syn01AttachmentHit(), syn01ProjectHit()],
+    });
+    const ctxThread = viaIndex.clientContext.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(ctxThread);
+    assert.equal(ctxThread.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.deepEqual(ctxThread.suggestedDraft.routing, thread.suggestedDraft.routing);
+    assertDraftOnly(viaIndex.clientContext.threads);
+  });
+
+  it('copies entitled suggestedProjects id/title onto routing', () => {
+    const attached = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord(),
+      searchWithProjects(),
+    );
+    assert.ok(attached.suggestedDraft.routing);
+    assert.equal(attached.suggestedDraft.routing.clientCode, 'SYN01');
+    assert.equal(attached.suggestedDraft.routing.projectId, 'proj-syn-1');
+    assert.equal(attached.suggestedDraft.routing.projectTitle, 'SYN01 entitled operating project');
+    assert.equal(attached.suggestedDraft.routing.classification, 'PROPOSED');
+    assert.equal(attached.suggestedDraft.routing.invented, false);
+    assert.equal(attached.suggestedDraft.suggestedProjects?.[0]?.id, 'proj-syn-1');
+    assert.equal(attached.suggestedDraft.suggestedProjects?.[0]?.title, 'SYN01 entitled operating project');
+    assert.equal(attached.suggestedDraft.send, false);
+    assert.equal(attached.suggestedDraft.autoRespond, false);
+    assertSuggestedDraftRoutingHonesty(attached);
+    assertSuggestedProjectsHonesty(attached);
+  });
+
+  it('still attaches entitled suggestedAttachments and suggestedProjects beside routing', () => {
+    const attached = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord(),
+      searchWithProjects(),
+    );
+    assert.equal(attached.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(attached.suggestedDraft.suggestedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(attached.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal('relatedProjects' in attached, false);
+    assert.equal(attached.suggestedDraft.send, false);
+    assert.equal(attached.suggestedDraft.autoRespond, false);
+    assertSuggestedDraftRoutingHonesty(attached);
+    assertSuggestedProjectsHonesty(attached);
+    assertSuggestedAttachmentsHonesty(attached);
+  });
+
+  it('omits routing project fields when no suggestedProjects are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(thread.suggestedDraft.routing?.projectId, undefined);
+    assert.equal(thread.suggestedDraft.routing?.projectTitle, undefined);
+    assert.equal('projectId' in (thread.suggestedDraft.routing || {}), false);
+    assert.equal('projectTitle' in (thread.suggestedDraft.routing || {}), false);
+    assert.equal(thread.suggestedDraft.suggestedProjects, undefined);
+    assert.equal(thread.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedDraftRoutingHonesty(thread);
+  });
+
+  it('omits routing when ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(omitted.suggestedDraft.routing, undefined);
+    assert.equal('routing' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.suggestedProjects, undefined);
+    assert.equal(omitted.suggestedDraft.suggestedAttachments, undefined);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('omits routing when ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord({
+        id: 'mail-noncanonical',
+        clientCode: 'syn01',
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(omitted.suggestedDraft.routing, undefined);
+    assert.equal('routing' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.suggestedProjects, undefined);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('never attaches Client B routing to a Client A suggested draft', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ThreadHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ProjectHit({
+            id: 'proj-pdg-1',
+            title: 'PDG01 leak project',
+            href: '/clients/PDG01',
+            clientCode: 'PDG01',
+          }),
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(thread.suggestedDraft.routing?.projectId, 'proj-syn-1');
+    assert.equal(thread.suggestedDraft.routing?.projectTitle, 'SYN01 entitled operating project');
+    assert.notEqual(thread.suggestedDraft.routing?.clientCode, 'PDG01');
+    assert.notEqual(thread.suggestedDraft.routing?.projectId, 'proj-pdg-1');
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('proj-pdg-1'), false);
+    assert.equal(thread.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(thread.suggestedDraft.suggestedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+
+    const mixed = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord(),
+      searchWithProjects([
+        syn01ProjectRecord(),
+        syn01ProjectRecord({
+          id: 'proj-pdg-1',
+          title: 'PDG01 leak project',
+          clientCode: 'PDG01',
+          source: 'HVCG_Projects',
+        }),
+      ]),
+    );
+    assert.equal(mixed.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(mixed.suggestedDraft.routing?.projectId, 'proj-syn-1');
+    assert.equal(mixed.suggestedDraft.routing?.projectTitle, 'SYN01 entitled operating project');
+    assert.equal(JSON.stringify(mixed.suggestedDraft.routing).includes('PDG01'), false);
+    assert.equal(mixed.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(mixed.suggestedDraft.send, false);
+    assert.equal(mixed.suggestedDraft.autoRespond, false);
+    assertSuggestedDraftRoutingHonesty(mixed);
+  });
+
+  it('unscoped never receives scoped routing', () => {
+    const unscoped = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecord({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(unscoped.suggestedDraft.routing, undefined);
+    assert.equal('routing' in unscoped.suggestedDraft, false);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.suggestedDraft.send, false);
+    assert.equal(unscoped.suggestedDraft.autoRespond, false);
+  });
+
+  it('omits routing for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit(), syn01ProjectHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.threads.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.threads.items.some((row) => row.suggestedDraft.routing),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.threads);
+    assert.equal(unknownBlob.includes('proj-syn-1'), false);
+    assert.equal(unknownBlob.includes('mail-syn-1'), false);
+    assert.equal(unknown.authorizedSearch.threads.send, false);
+    assert.equal(unknown.authorizedSearch.threads.autoRespond, false);
+
+    const denied = attachRelatedContextToMailThread(
+      otherStaff,
+      syn01ThreadRecord(),
+      searchWithProjects(),
+    );
+    assert.equal(denied.suggestedDraft.routing, undefined);
+    assert.equal('routing' in denied.suggestedDraft, false);
+    assert.equal(denied.suggestedDraft.suggestedProjects, undefined);
+    assert.equal(denied.suggestedDraft.send, false);
+    assert.equal(denied.suggestedDraft.autoRespond, false);
+  });
+
+  it('never invents TargetAmount, downloadUrl, Hub-MI, or send on routing', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ThreadHit(),
+            downloadUrl: 'https://evil.example/download',
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01AttachmentHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'InventedBytes',
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01ProjectHit(),
+            downloadUrl: 'https://evil.example/download',
+            TargetAmount: 5000000,
+            'Hub-MI': true,
+            transcript: 'Invented transcript text',
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.equal(thread.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(thread.suggestedDraft.routing?.projectId, 'proj-syn-1');
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(blob.includes('Hub-MI'), false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal('relatedProjects' in thread, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedDraftRoutingHonesty(thread);
     assertSuggestedProjectsHonesty(thread);
     assertSuggestedAttachmentsHonesty(thread);
     noInvent(thread.suggestedDraft);

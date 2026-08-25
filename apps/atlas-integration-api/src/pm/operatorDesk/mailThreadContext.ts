@@ -195,8 +195,8 @@ export function mailThreadPayloadHasInventedFacts(payload: MailThreadOperatingPa
     for (const item of [...row.commitments, ...row.unansweredQuestions]) {
       if (!row.preview.includes(item.evidence)) return true;
     }
-    // suggestedAttachments / suggestedProjects are copied refs, never
-    // invented names/ids/counts/ClientCodes/Hub-MI/TargetAmount.
+    // suggestedAttachments / suggestedProjects / routing are copied
+    // refs, never invented names/ids/counts/ClientCodes/Hub-MI/TargetAmount.
     // send / autoRespond stay DRAFT_ONLY even when refs are present.
     if (row.suggestedDraft.suggestedAttachments) {
       if (row.suggestedDraft.send || row.suggestedDraft.autoRespond) return true;
@@ -210,6 +210,19 @@ export function mailThreadPayloadHasInventedFacts(payload: MailThreadOperatingPa
       for (const project of row.suggestedDraft.suggestedProjects) {
         if (project.invented) return true;
         if (/TargetAmount|downloadUrl|Hub-MI/i.test(JSON.stringify(project))) return true;
+      }
+    }
+    if (row.suggestedDraft.routing) {
+      if (row.suggestedDraft.send || row.suggestedDraft.autoRespond) return true;
+      const routing = row.suggestedDraft.routing;
+      if (routing.invented) return true;
+      if (!routing.clientCode) return true;
+      if (/TargetAmount|downloadUrl|Hub-MI/i.test(JSON.stringify(routing))) return true;
+      if (routing.projectId || routing.projectTitle) {
+        const first = row.suggestedDraft.suggestedProjects?.[0];
+        if (!first || first.id !== routing.projectId || first.title !== routing.projectTitle) {
+          return true;
+        }
       }
     }
   }
