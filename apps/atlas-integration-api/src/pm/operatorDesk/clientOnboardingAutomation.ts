@@ -1459,44 +1459,57 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
-  const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);
-  for (const taskDef of DEFAULT_ONBOARDING_TASKS) {
-    const exists = existingTasks.some((t) => t.title === taskDef.title);
-    if (exists) {
+  if (projectId) {
+    const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);
+    const missingTasks: typeof DEFAULT_ONBOARDING_TASKS[number][] = [];
+    for (const taskDef of DEFAULT_ONBOARDING_TASKS) {
       const found = existingTasks.find((t) => t.title === taskDef.title);
       if (found?.id) {
         taskIds.push(found.id);
         reusedExistingTasks = true;
+      } else {
+        missingTasks.push(taskDef);
       }
-      continue;
     }
-    if (!opts.dryRun && projectId) {
-      const task = await sp.createTask(opts.principal, {
-        title: taskDef.title,
-        description: taskDef.purpose,
-        projectId,
-        status: 'ready',
-      }, `atlas-onboarding-task-${clientCode}-${taskDef.key}`);
-      taskIds.push(task.id);
+    if (!opts.dryRun && missingTasks.length) {
+      try {
+        let createdWithId = false;
+        for (const taskDef of missingTasks) {
+          const task = await sp.createTask(opts.principal, {
+            title: taskDef.title,
+            description: taskDef.purpose,
+            projectId,
+            status: 'ready',
+          }, `atlas-onboarding-task-${clientCode}-${taskDef.key}`);
+          if (task?.id) {
+            taskIds.push(task.id);
+            createdWithId = true;
+          }
+        }
+        if (createdWithId) events.push('TASKS_CREATED');
+      } catch {
+        /* create failed — do not invent a task id */
+      }
     }
   }
-  if (taskIds.length || opts.dryRun) events.push('TASKS_CREATED');
 
-  for (const label of DEFAULT_MILESTONES) {
-    if (!opts.dryRun && projectId) {
+  if (projectId && !opts.dryRun) {
+    for (const label of DEFAULT_MILESTONES) {
       try {
         const milestone = await sp.createMilestone(opts.principal, {
           title: label.label,
           projectId,
           status: 'pending',
         });
-        milestoneIds.push(milestone.id);
+        if (milestone?.id) {
+          milestoneIds.push(milestone.id);
+        }
       } catch {
-        /* milestone optional */
+        /* milestone optional — do not invent a milestone id */
       }
     }
   }
-  if (milestoneIds.length || opts.dryRun) events.push('MILESTONE_CREATED');
+  if (milestoneIds.length) events.push('MILESTONE_CREATED');
 
   const listDocumentRequestsFn = opts.documentRequestList ?? listDocumentRequests;
   const createDocumentRequestFn = opts.documentRequestCreate ?? createDocumentRequest;
