@@ -52,6 +52,7 @@ import {
   type OnboardingRelatedCapitalRef,
   type OnboardingRelatedKickoffRef,
   type OnboardingRelatedBlockerRef,
+  type OnboardingRelatedOwnerAttentionRef,
   type OnboardingRealtimeDocumentsHonesty,
   type RealtimeDocumentsFabricSnapshot,
   type OnboardingRunRecord,
@@ -115,11 +116,19 @@ export type OnboardingBlockerSearchRow = {
   kind?: OnboardingRelatedBlockerRef['kind'];
 };
 
+export type OnboardingOwnerAttentionSearchRow = {
+  id?: string;
+  title?: string;
+  clientCode?: string;
+  kind?: OnboardingRelatedOwnerAttentionRef['kind'];
+};
+
 export type OnboardingCommsSearchRow = OnboardingCommsThreadInput;
 export type { OnboardingCapitalSearchRow };
 
 const KICKOFF_ITEM_TITLE = /^(prepare kickoff materials|kickoff ready|kickoff complete)$/i;
 const BLOCKER_ITEM_TITLE = /^(review onboarding blockers|clear onboarding blockers|onboarding blocker|owner attention)$/i;
+const OWNER_ATTENTION_ITEM_TITLE = /^(review owner attention|owner attention|owner action|owner-action|attention required)$/i;
 
 function kickoffRefsWithIds(rows?: OnboardingRelatedKickoffRef[]): OnboardingRelatedKickoffRef[] {
   const seen = new Set<string>();
@@ -278,6 +287,89 @@ export async function defaultOnboardingBlockerCreate(
     status: 'ready',
   }, `atlas-onboarding-blocker-${body.clientCode}`);
   return created?.id ? { id: created.id, title: created.title ?? body.title, kind: 'task' } : {};
+}
+
+function ownerAttentionRefsWithIds(
+  rows?: OnboardingRelatedOwnerAttentionRef[],
+): OnboardingRelatedOwnerAttentionRef[] {
+  const seen = new Set<string>();
+  const out: OnboardingRelatedOwnerAttentionRef[] = [];
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** Entitled same-scope owner-attention/attention/owner-action refs. Drops rows without an id. Client A never receives Client B. */
+export function listRelatedOwnerAttentionForClient(
+  principal: AtlasPrincipal,
+  clientCode: string | undefined,
+  rows: OnboardingOwnerAttentionSearchRow[],
+): OnboardingRelatedOwnerAttentionRef[] {
+  const code = clientCode?.trim().toUpperCase();
+  if (!code || !isCanonicalClientCode(code)) return [];
+  if (!entitledClientCodes(principal).includes(code)) return [];
+  const out: OnboardingRelatedOwnerAttentionRef[] = [];
+  const seen = new Set<string>();
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    const scoped = row.clientCode?.trim().toUpperCase();
+    if (scoped && scoped !== code) continue;
+    if (scoped && !isCanonicalClientCode(scoped)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** List entitled same-scope owner-attention/attention/owner-action rows. Never invent ids. */
+export async function defaultOnboardingOwnerAttentionList(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  clientCode: string,
+  projectId: string,
+): Promise<OnboardingOwnerAttentionSearchRow[]> {
+  if (!sharepoint || !projectId.trim() || !clientCode.trim()) return [];
+  const out: OnboardingOwnerAttentionSearchRow[] = [];
+  try {
+    const tasks = await sharepoint.listAuthorizedTasks(principal, projectId);
+    for (const task of tasks ?? []) {
+      const id = task?.id?.trim();
+      if (!id || !OWNER_ATTENTION_ITEM_TITLE.test(task.title || '')) continue;
+      out.push({ id, title: task.title, clientCode, kind: 'attention' });
+    }
+  } catch {
+    /* list failed — do not invent an owner-attention task id */
+  }
+  return out;
+}
+
+/** Create an owner-attention row only when entitled project context exists. Never invent an id. */
+export async function defaultOnboardingOwnerAttentionCreate(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  body: { title: string; projectId: string; clientCode: string },
+): Promise<{ id?: string; title?: string; kind?: OnboardingRelatedOwnerAttentionRef['kind'] }> {
+  if (!sharepoint || !body.projectId.trim() || !body.title.trim() || !body.clientCode.trim()) return {};
+  const created = await sharepoint.createTask(principal, {
+    title: body.title,
+    description: 'Onboarding owner attention',
+    projectId: body.projectId,
+    status: 'ready',
+  }, `atlas-onboarding-owner-attention-${body.clientCode}`);
+  return created?.id ? { id: created.id, title: created.title ?? body.title, kind: 'owner-attention' } : {};
 }
 
 /** Create a kickoff record only when entitled project context exists. Never invent an id. */
@@ -647,33 +739,57 @@ export function composeBlockerReview(record: {
 export function composeOwnerAttention(record: {
   identityResolutionRequired?: boolean;
   workspaceReconciled?: boolean;
+  clientCode?: string;
   projectId?: string;
   projectName?: string;
   ownerAttention?: string[];
   communicationPolicy?: OnboardingOwnerAttention['communicationPolicy'];
+  relatedOwnerAttention?: OnboardingRelatedOwnerAttentionRef[];
+  reusedExisting?: boolean;
 }): OnboardingOwnerAttention {
   const items = record.ownerAttention ?? [];
   const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const relatedOwnerAttention = identityResolutionRequired || !clientCode || !isCanonicalClientCode(clientCode)
+    ? []
+    : ownerAttentionRefsWithIds(record.relatedOwnerAttention);
+  const ownerAttentionReconciled = relatedOwnerAttention.length > 0;
+  const reusedExisting = Boolean(record.reusedExisting && ownerAttentionReconciled);
   const nextOwnerAction =
     items[0]
-    ?? (record.identityResolutionRequired
+    ?? (identityResolutionRequired
       ? 'Assign client scope before owner attention can clear'
-      : 'No owner attention items');
-  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+      : !ownerAttentionReconciled
+        ? 'Confirm existing entitled same-scope owner-attention/attention/owner-action rows; do not invent ids or send'
+        : reusedExisting
+          ? 'Existing entitled owner attention reused — no fabricated owner actions'
+          : 'No owner attention items');
+  const flags = {
+    itemCount: items.length,
+    items,
+    ownerAttentionReconciled,
+    reusedExisting,
+    relatedOwnerAttention,
+    communicationPolicy,
+    nextOwnerAction,
+    send: COMMUNICATIONS_SEND,
+    autoRespond: COMMUNICATIONS_AUTO_RESPOND,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
     return {
       status: 'NOT_READY',
       ready: false,
       ...(record.projectId ? { projectId: record.projectId } : {}),
       ...(record.projectName ? { projectName: record.projectName } : {}),
-      itemCount: items.length,
-      items,
-      communicationPolicy,
-      nextOwnerAction,
-      send: false,
-      liveGtmOutbound: false,
-      capitalSubmit: false,
-      outbound: false,
-      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+      ...flags,
+      ownerAttentionReconciled: false,
+      reusedExisting: false,
+      relatedOwnerAttention: [],
+      provenance: identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
     };
   }
   const status = items.length ? 'OPEN' : 'CLEAR';
@@ -682,15 +798,8 @@ export function composeOwnerAttention(record: {
     ready: status === 'CLEAR',
     projectId: record.projectId,
     ...(record.projectName ? { projectName: record.projectName } : {}),
-    itemCount: items.length,
-    items,
-    communicationPolicy,
-    nextOwnerAction,
-    send: false,
-    liveGtmOutbound: false,
-    capitalSubmit: false,
-    outbound: false,
-    provenance: 'CONFIRMED',
+    ...flags,
+    provenance: ownerAttentionReconciled ? 'CONFIRMED' : 'PROPOSED',
   };
 }
 
@@ -1740,6 +1849,7 @@ function buildIdentityReconciliationRecord(opts: {
   const ownerAttentionPackage = composeOwnerAttention({
     identityResolutionRequired,
     workspaceReconciled,
+    ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
     ownerAttention: opts.ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
   });
@@ -1774,6 +1884,7 @@ function buildIdentityReconciliationRecord(opts: {
     capitalContextReconciled: false,
     kickoffReconciled: false,
     blockerReconciled: false,
+    ownerAttentionReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -1929,6 +2040,16 @@ export async function runClientOnboardingAutomation(opts: {
     body: { title: string; projectId: string; clientCode: string },
   ) => { id?: string; title?: string; kind?: OnboardingRelatedBlockerRef['kind'] }
     | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedBlockerRef['kind'] }>;
+  ownerAttentionList?: (
+    principal: AtlasPrincipal,
+    clientCode: string,
+    projectId: string,
+  ) => OnboardingOwnerAttentionSearchRow[] | Promise<OnboardingOwnerAttentionSearchRow[]>;
+  ownerAttentionCreate?: (
+    principal: AtlasPrincipal,
+    body: { title: string; projectId: string; clientCode: string },
+  ) => { id?: string; title?: string; kind?: OnboardingRelatedOwnerAttentionRef['kind'] }
+    | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedOwnerAttentionRef['kind'] }>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1995,6 +2116,8 @@ export async function runClientOnboardingAutomation(opts: {
   let discoveredKickoffFromReuse = false;
   const discoveredBlockers: OnboardingBlockerSearchRow[] = [];
   let discoveredBlockersFromReuse = false;
+  const discoveredOwnerAttention: OnboardingOwnerAttentionSearchRow[] = [];
+  let discoveredOwnerAttentionFromReuse = false;
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
@@ -2050,6 +2173,10 @@ export async function runClientOnboardingAutomation(opts: {
           discoveredBlockers.push({ id: found.id, title: taskDef.title, clientCode, kind: 'task' });
           discoveredBlockersFromReuse = true;
         }
+        if (OWNER_ATTENTION_ITEM_TITLE.test(taskDef.title)) {
+          discoveredOwnerAttention.push({ id: found.id, title: taskDef.title, clientCode, kind: 'attention' });
+          discoveredOwnerAttentionFromReuse = true;
+        }
       } else {
         missingTasks.push(taskDef);
       }
@@ -2072,6 +2199,9 @@ export async function runClientOnboardingAutomation(opts: {
             }
             if (BLOCKER_ITEM_TITLE.test(taskDef.title)) {
               discoveredBlockers.push({ id: task.id, title: taskDef.title, clientCode, kind: 'task' });
+            }
+            if (OWNER_ATTENTION_ITEM_TITLE.test(taskDef.title)) {
+              discoveredOwnerAttention.push({ id: task.id, title: taskDef.title, clientCode, kind: 'attention' });
             }
           }
         }
@@ -2344,6 +2474,51 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
+  const relatedOwnerAttention: OnboardingRelatedOwnerAttentionRef[] = [];
+  let reusedExistingOwnerAttention = false;
+  let ownerAttentionReconciled = false;
+  if (projectId) {
+    try {
+      const rows = opts.ownerAttentionList
+        ? await opts.ownerAttentionList(opts.principal, clientCode, projectId)
+        : discoveredOwnerAttention.length
+          ? discoveredOwnerAttention
+          : await defaultOnboardingOwnerAttentionList(sp, opts.principal, clientCode, projectId);
+      const attached = listRelatedOwnerAttentionForClient(opts.principal, clientCode, rows ?? []);
+      relatedOwnerAttention.push(...attached);
+      if (relatedOwnerAttention.length > 0) {
+        ownerAttentionReconciled = true;
+        reusedExistingOwnerAttention = opts.ownerAttentionList
+          ? true
+          : discoveredOwnerAttentionFromReuse;
+        events.push('OWNER_ATTENTION_RECONCILED');
+      }
+    } catch {
+      /* list failed — do not invent owner-attention ids, ClientCodes, deadlines, or amounts */
+    }
+    if (!ownerAttentionReconciled && !opts.dryRun && opts.ownerAttentionCreate) {
+      try {
+        const created = await opts.ownerAttentionCreate(opts.principal, {
+          title: 'Review owner attention',
+          projectId,
+          clientCode,
+        });
+        const id = created?.id?.trim();
+        if (id) {
+          relatedOwnerAttention.push({
+            id,
+            ...(created.title?.trim() ? { title: created.title.trim() } : { title: 'Review owner attention' }),
+            ...(created.kind ? { kind: created.kind } : { kind: 'owner-attention' }),
+          });
+          ownerAttentionReconciled = true;
+          events.push('OWNER_ATTENTION_CREATED', 'OWNER_ATTENTION_RECONCILED');
+        }
+      } catch {
+        /* create failed — do not invent an owner-attention id or send outbound mail */
+      }
+    }
+  }
+
   const capitalScope = Boolean(opts.workflow.scope.capitalMatter);
   if (capitalScope) {
     ownerAttention.push('Capital scope detected — external lender submission remains owner-gated');
@@ -2360,6 +2535,7 @@ export async function runClientOnboardingAutomation(opts: {
     capitalContextReconciled,
     kickoffReconciled,
     blockerReconciled,
+    ownerAttentionReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -2412,10 +2588,13 @@ export async function runClientOnboardingAutomation(opts: {
   const ownerAttentionPackage = composeOwnerAttention({
     identityResolutionRequired: false,
     workspaceReconciled,
+    clientCode,
     projectId,
     projectName,
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
+    relatedOwnerAttention,
+    reusedExisting: reusedExistingOwnerAttention,
   });
   const milestoneReview = composeMilestoneReview({
     identityResolutionRequired: false,
@@ -2575,6 +2754,7 @@ export async function runClientOnboardingAutomation(opts: {
     capitalContextReconciled,
     kickoffReconciled,
     blockerReconciled,
+    ownerAttentionReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
@@ -3128,10 +3308,27 @@ export function answerOnboardingContext(
       .join('\n');
   }
   if (q.includes('owner attention') || (q.includes('attention') && !q.includes('kickoff'))) {
-    const pack = record.ownerAttentionPackage;
+    const pack = composeOwnerAttention({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      clientCode: record.clientCode,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      ownerAttention: record.ownerAttention,
+      communicationPolicy: record.communicationPolicy,
+      relatedOwnerAttention: record.ownerAttentionPackage?.relatedOwnerAttention,
+      reusedExisting: Boolean(record.ownerAttentionPackage?.reusedExisting),
+    });
     return [
       `Owner attention for ${record.clientCode ?? 'client'}: ${pack.status}`,
       pack.projectName ? `Project: ${pack.projectName}` : '',
+      `Related entitled owner attention: ${pack.relatedOwnerAttention.length} (from entitled ids)`,
+      pack.ownerAttentionReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled owner attention: reused'
+          : 'Governed onboarding owner attention: reconciled'
+        : 'Existing entitled owner attention: not confirmed',
+      pack.reusedExisting ? 'No fabricated owner actions.' : 'Atlas did not invent owner-attention ids, ClientCodes, deadlines, or amounts.',
       pack.itemCount ? `Items: ${pack.items.join('; ')}` : 'No owner attention items.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
@@ -3286,6 +3483,11 @@ export function answerOnboardingContext(
         ? 'Existing entitled blockers: reused'
         : 'Governed onboarding blockers: reconciled'
       : 'Existing entitled blockers: not confirmed',
+    record.ownerAttentionReconciled
+      ? record.ownerAttentionPackage.reusedExisting
+        ? 'Existing entitled owner attention: reused'
+        : 'Governed onboarding owner attention: reconciled'
+      : 'Existing entitled owner attention: not confirmed',
   ]
     .filter(Boolean)
     .join('\n');
