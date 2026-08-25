@@ -7,15 +7,25 @@ HUB_BASE="${HUB_BASE:-https://app-atlas-integration-hub.azurewebsites.net}"
 CANDIDATE_SHA="$(git rev-parse HEAD)"
 LIVE_SHA="$(curl -sf "${HUB_BASE}/health" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).commit||'')}catch{console.log('')}})")"
 
-echo "Deploy lineage check: candidate=${CANDIDATE_SHA} live=${LIVE_SHA}"
+CANONICAL_SHA="37bf7ba0c7b8cc2bc3a2cbe7ed8d4b7e1f836818"
+
+echo "Deploy lineage check: candidate=${CANDIDATE_SHA} live=${LIVE_SHA} canonical=${CANONICAL_SHA}"
 
 if [[ -n "$LIVE_SHA" && "$CANDIDATE_SHA" != "$LIVE_SHA" ]]; then
   if git merge-base --is-ancestor "$LIVE_SHA" "$CANDIDATE_SHA" 2>/dev/null; then
     echo "OK: candidate includes live ancestry"
+  elif git merge-base --is-ancestor "$CANONICAL_SHA" "$CANDIDATE_SHA" 2>/dev/null \
+    && ! git merge-base --is-ancestor "$CANONICAL_SHA" "$LIVE_SHA" 2>/dev/null; then
+    echo "OK: live appears stale relative to canonical ${CANONICAL_SHA}; candidate restores canonical lineage"
   else
     echo "BLOCKED: candidate ${CANDIDATE_SHA} does not include live ${LIVE_SHA} — refusing deploy"
     exit 1
   fi
+fi
+
+if ! git merge-base --is-ancestor "$CANONICAL_SHA" "$CANDIDATE_SHA" 2>/dev/null; then
+  echo "BLOCKED: candidate omits canonical production ${CANONICAL_SHA}"
+  exit 1
 fi
 
 BUILD_DIR="deployment/artifacts/hub-build"
