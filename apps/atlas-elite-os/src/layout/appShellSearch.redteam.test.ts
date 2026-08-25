@@ -99,4 +99,29 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
     assert.match(trailing, /aria-label="Ask Atlas"/);
     assert.match(trailing, /setAiOpen\(true\)/);
   });
+
+  it('Ask Atlas onboarding-status NL uses Hub runtime, not SharePoint searchPm', () => {
+    assert.match(appShell, /routeAskAtlasPrompt/);
+    const runPrompt = slice(appShell, 'onRunPrompt={async (prompt)', 'onAction={async');
+    assert.match(runPrompt, /fetchOperatorRuntime\(hubAuth, prompt\)/);
+    assert.match(runPrompt, /hub_runtime_onboarding/);
+    assert.doesNotMatch(runPrompt, /searchPm/);
+  });
+
+  it('keeps capability literals that production Vite must not tree-shake', () => {
+    const manifest = readFileSync(join(root, 'eliteCapabilityManifest.ts'), 'utf8');
+    const main = readFileSync(join(root, '..', 'main.tsx'), 'utf8');
+    for (const label of [
+      'Ask Atlas',
+      'Documents',
+      'Agent Activity',
+      'Workflow Center',
+      'Onboarding',
+      'WorkflowTemplates',
+    ]) {
+      assert.match(manifest, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
+    assert.match(main, /eliteCapabilityManifestJoined/);
+    assert.match(main, /dataset\.atlasCapabilities/);
+  });
 });
