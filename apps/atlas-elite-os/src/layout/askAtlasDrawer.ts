@@ -23,8 +23,15 @@ export function mapsToOnboardingStatusIntent(prompt: string): boolean {
       q.includes('blocked') ||
       q.includes('waiting on') ||
       q.includes('kickoff') ||
+      q.includes('kick off') ||
       q.includes('approve') ||
-      q.includes('document'))
+      q.includes('document') ||
+      q.includes('start') ||
+      q.includes('run') ||
+      q.includes('execute') ||
+      q.includes('activate') ||
+      q.includes('begin') ||
+      q.includes('status'))
   );
 }
 

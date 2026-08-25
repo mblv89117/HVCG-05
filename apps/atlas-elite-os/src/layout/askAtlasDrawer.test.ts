@@ -56,4 +56,16 @@ describe('Ask Atlas drawer prompt summary', () => {
     assert.equal(routeAskAtlasPrompt('Search ACCG onboarding files', { hasBearer: true }), 'hub_runtime');
     assert.equal(mapsToOnboardingStatusIntent('Search ACCG onboarding files'), false);
   });
+
+  it('routes onboarding execute and status phrases to Hub, not generic questions', () => {
+    assert.equal(routeAskAtlasPrompt('Start onboarding ACCG', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Run onboarding for ACCG01', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Execute onboarding ACCG', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Activate onboarding ACCG', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Begin onboarding ACCG', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Kick off onboarding ACCG', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('What is the onboarding status for ACCG?', { hasBearer: true }), 'hub_runtime_onboarding');
+    assert.equal(routeAskAtlasPrompt('Start the weekly marketing review', { hasBearer: true }), 'hub_runtime');
+    assert.equal(mapsToOnboardingStatusIntent('What Capital matters need my attention?'), false);
+  });
 });

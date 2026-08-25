@@ -7,12 +7,22 @@ import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { WorkflowDefinitionRecord } from '../src/pm/operatorDesk/workflowDefinitions.ts';
 import {
   answerOnboardingContext,
+  classifyOnboardingAskAtlasIntent,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
+  isOnboardingProjectTitle,
   mapsToOnboardingContextIntent,
+  mapsToOnboardingExecuteIntent,
   resolveEntitledClientCodeFromQuestion,
   runClientOnboardingAutomation,
 } from '../src/pm/operatorDesk/clientOnboardingAutomation.ts';
+import { executeEntitledOnboardingFromQuestion } from '../src/pm/operatorDesk/askAtlasOnboardingExecute.ts';
+import {
+  listVisibleDefinitions,
+  readWorkflowDefinitionOverlay,
+  resolveWorkflowDefinitionOverlayDir,
+} from '../src/pm/operatorDesk/workflowDefinitions.ts';
+import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import { getOnboardingRun, readOnboardingOverlay, resolveOnboardingStateDir } from '../src/pm/operatorDesk/onboardingState.ts';
 import { loadConfig } from '../src/config.ts';
 
@@ -125,6 +135,15 @@ describe('client onboarding automation', () => {
 
   it('maps Ask Atlas onboarding intents', () => {
     assert.equal(mapsToOnboardingContextIntent('Where are we on onboarding ACCG?'), true);
+    assert.equal(mapsToOnboardingContextIntent('Start onboarding ACCG'), true);
+    assert.equal(mapsToOnboardingContextIntent('Run onboarding for ACCG01'), true);
+    assert.equal(mapsToOnboardingContextIntent('Execute onboarding ACCG'), true);
+    assert.equal(mapsToOnboardingContextIntent('Activate onboarding ACCG'), true);
+    assert.equal(mapsToOnboardingContextIntent('Begin onboarding ACCG'), true);
+    assert.equal(mapsToOnboardingContextIntent('Kick off onboarding ACCG'), true);
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding status for ACCG?'), true);
+    assert.equal(mapsToOnboardingContextIntent('Search ACCG files'), false);
+    assert.equal(mapsToOnboardingContextIntent('Start the weekly marketing review'), false);
     const record = {
       workflowId: 'wf-1',
       workflowDefinitionId: 'def',
@@ -227,6 +246,170 @@ describe('client onboarding automation', () => {
       match: { kind: 'ambiguous', candidates: ['ACCG01', 'PDG01'] },
     });
     assert.match(ambiguous, /Which entitled code/);
+  });
+
+  it('classifies execute vs status and does not treat status as execute', () => {
+    assert.equal(classifyOnboardingAskAtlasIntent('Start onboarding ACCG'), 'execute');
+    assert.equal(classifyOnboardingAskAtlasIntent('Run onboarding for ACCG01'), 'execute');
+    assert.equal(classifyOnboardingAskAtlasIntent('Execute onboarding ACCG'), 'execute');
+    assert.equal(classifyOnboardingAskAtlasIntent('Activate onboarding ACCG'), 'execute');
+    assert.equal(classifyOnboardingAskAtlasIntent('Begin onboarding ACCG'), 'execute');
+    assert.equal(mapsToOnboardingExecuteIntent('Where are we on onboarding ACCG?'), false);
+    assert.equal(classifyOnboardingAskAtlasIntent('Where are we on onboarding ACCG?'), 'status');
+    assert.equal(classifyOnboardingAskAtlasIntent('What documents are missing for ACCG onboarding?'), 'status');
+    assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding status for ACCG?'), 'status');
+    assert.equal(classifyOnboardingAskAtlasIntent('Kick off onboarding ACCG'), 'status');
+    assert.equal(classifyOnboardingAskAtlasIntent('Start the weekly marketing review'), null);
+    assert.equal(isOnboardingProjectTitle('Client Onboarding — ACCG'), true);
+    assert.equal(isOnboardingProjectTitle('ACCG01 - Onboarding'), true);
+    assert.equal(isOnboardingProjectTitle('Weekly marketing review'), false);
+  });
+
+  it('does not invent ClientCodes or execute on ambiguous/none match', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-exec-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_WORKFLOW_DEFINITION_DIR = join(dir, 'workflow-definitions');
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const invented = await executeEntitledOnboardingFromQuestion({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      question: 'Start onboarding ACCG99',
+      entitledCodes: [...ENTITLED_CANONICAL_CLIENT_CODES],
+    });
+    assert.equal(invented.executed, false);
+    assert.equal(invented.instantiated, false);
+    assert.equal(invented.match.kind, 'none');
+    assert.match(invented.answer, /does not invent/);
+    const none = await executeEntitledOnboardingFromQuestion({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      question: 'Start onboarding',
+      entitledCodes: [...ENTITLED_CANONICAL_CLIENT_CODES],
+    });
+    assert.equal(none.executed, false);
+    assert.equal(none.match.kind, 'none');
+    const ambiguous = await executeEntitledOnboardingFromQuestion({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      question: 'Start onboarding for ACCG01 and PDG01',
+      entitledCodes: [...ENTITLED_CANONICAL_CLIENT_CODES],
+    });
+    assert.equal(ambiguous.executed, false);
+    assert.equal(ambiguous.match.kind, 'ambiguous');
+    assert.match(ambiguous.answer, /Which entitled code/);
+    const overlay = readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir));
+    assert.equal(overlay.definitions.length, 0);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('executes entitled onboarding once and reuses workflow/project on the second run', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-exec-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_WORKFLOW_DEFINITION_DIR = join(dir, 'workflow-definitions');
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const projects: Array<{ id: string; name: string; clientCode: string; idempotencyKey?: string }> = [];
+    let createProjectCalls = 0;
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => projects,
+      createProject: async (
+        _principal: AtlasPrincipal,
+        body: { name?: string; clientCode?: string },
+        idempotencyKey?: string,
+      ) => {
+        const reused = idempotencyKey
+          ? projects.find((p) => p.idempotencyKey === idempotencyKey)
+          : projects.find((p) => p.clientCode === body.clientCode && /onboard/i.test(p.name));
+        if (reused) return reused;
+        createProjectCalls += 1;
+        const created = {
+          id: `proj-${createProjectCalls}`,
+          name: String(body.name),
+          clientCode: String(body.clientCode),
+          idempotencyKey,
+        };
+        projects.push(created);
+        return created;
+      },
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+      createMilestone: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `ms-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const first = await executeEntitledOnboardingFromQuestion({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      question: 'Start onboarding ACCG',
+      entitledCodes: ['ACCG01'],
+    });
+    assert.equal(first.executed, true);
+    assert.equal(first.instantiated, true);
+    assert.equal(first.reusedWorkflow, false);
+    assert.equal(first.record?.clientCode, 'ACCG01');
+    assert.equal(first.record?.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(first.record?.dryRun, false);
+    assert.equal(createProjectCalls, 1);
+    const firstWorkflowId = first.workflow?.workflowId;
+    assert.ok(firstWorkflowId);
+
+    const second = await executeEntitledOnboardingFromQuestion({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      question: 'Run onboarding ACCG01',
+      entitledCodes: ['ACCG01'],
+    });
+    assert.equal(second.executed, true);
+    assert.equal(second.instantiated, false);
+    assert.equal(second.reusedWorkflow, true);
+    assert.equal(second.workflow?.workflowId, firstWorkflowId);
+    assert.equal(createProjectCalls, 1);
+    assert.equal(projects.length, 1);
+    const visible = listVisibleDefinitions(readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir)), principal);
+    const onboardingDefs = visible.filter((d) => d.scope.clientCode === 'ACCG01' && d.sourceTemplateId === 'client_onboarding');
+    assert.equal(onboardingDefs.length, 1);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('status questions do not instantiate or execute when no run exists', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-status-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_WORKFLOW_DEFINITION_DIR = join(dir, 'workflow-definitions');
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    assert.equal(mapsToOnboardingExecuteIntent('Where are we on onboarding ACCG?'), false);
+    const match = resolveEntitledClientCodeFromQuestion(
+      'Where are we on onboarding ACCG?',
+      [...ENTITLED_CANONICAL_CLIENT_CODES],
+    );
+    const answer = answerOnboardingContext('Where are we on onboarding ACCG?', null, { match });
+    assert.match(answer, /No onboarding run found/);
+    assert.equal(/Executed governed/i.test(answer), false);
+    const overlay = readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir));
+    assert.equal(overlay.definitions.length, 0);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it('restore env', () => {
