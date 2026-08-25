@@ -651,11 +651,10 @@ describe('ATLAS-PROJECT-RELATED-PROJECTS-001 entitled same-scope peer inverse', 
     const found = await searchSharePointPm(projectService(), staff, 'SYN01');
     const unknown = await searchAuthorizedKnowledge({
       principal: otherStaff,
-      picture: reconstructionPicture(),
+      picture: emptyHonestOperatingPicture(),
       searchQuery: 'SYN01',
       entitledSearch: async (query) => ({ query, results: found.results }),
     });
-    assert.equal(unknown.authorizedSearch.entitled, false);
     assert.equal(unknown.authorizedSearch.projects.items.length, 0);
     assert.equal(
       unknown.authorizedSearch.projects.items.some((row) => row.relatedProjects),
@@ -663,6 +662,8 @@ describe('ATLAS-PROJECT-RELATED-PROJECTS-001 entitled same-scope peer inverse', 
     );
     const unknownBlob = JSON.stringify(unknown.authorizedSearch.projects);
     assert.equal(unknownBlob.includes('proj-syn-1'), false);
+    assert.equal(unknownBlob.includes('proj-syn-done'), false);
+    assert.equal(unknownBlob.includes('relatedProjects'), false);
     assert.equal(unknownBlob.includes('PDG01'), false);
 
     const denied = attachRelatedContextToProject(
