@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-label="High Value Capital Group">
+  <rect width="320" height="72" rx="8" fill="#0B1F33"/>
+  <path d="M28 20 L40 44 L22 44 Z" fill="#C9A227"/>
+  <path d="M44 20 L56 44 L38 44 Z" fill="#1a5c42"/>
+  <text x="68" y="30" fill="#F1F5F9" font-family="Segoe UI, sans-serif" font-size="11" font-weight="600" letter-spacing="0.12em">HIGH VALUE</text>
+  <text x="68" y="50" fill="#C9A227" font-family="Segoe UI, sans-serif" font-size="13" font-weight="700" letter-spacing="0.08em">CAPITAL GROUP</text>
+</svg>

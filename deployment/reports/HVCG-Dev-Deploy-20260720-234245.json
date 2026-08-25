@@ -1,0 +1,28 @@
+{
+  "DeploymentDateTime": "2026-07-20T23:27:21.4078490-07:00",
+  "Environment": "production",
+  "Tenant": null,
+  "RepoRoot": "/Volumes/MacMiniPro2TB/HVCG Project Management System/.worktrees/atlas-integration-release",
+  "ResourcesCreated": [],
+  "ResourcesUpdated": [],
+  "ResourcesSkipped": [
+    "PSModule:PnP.PowerShell",
+    "PSModule:Microsoft.Graph"
+  ],
+  "Errors": [
+    "Verification code expired before contacting the server"
+  ],
+  "Warnings": [],
+  "TestResults": null,
+  "OwnerActionsRemaining": [],
+  "NextStep": "Re-run: pwsh -File ./deployment/Deploy-HVCGProduction.ps1 -DeviceLogin",
+  "Log": [
+    "[2026-07-20T23:27:21][SUCCESS] Configuration validation passed.",
+    "[2026-07-20T23:27:21][INFO] Module present: PnP.PowerShell 3.3.0",
+    "[2026-07-20T23:27:21][INFO] Module present: Microsoft.Graph 2.38.1",
+    "[2026-07-20T23:27:40][SUCCESS] PnP auth ClientId resolved (836fb743…).",
+    "[2026-07-20T23:27:40][STEP] Connecting to PRODUCTION https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter (DeviceLogin=True)",
+    "[2026-07-20T23:42:45][ERROR] Verification code expired before contacting the server"
+  ],
+  "Success": false
+}

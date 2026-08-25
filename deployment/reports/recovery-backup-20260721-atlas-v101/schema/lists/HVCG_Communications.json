@@ -1,0 +1,130 @@
+{
+  "title": "HVCG_Communications",
+  "description": "Significant communications log",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Channel",
+      "displayName": "Channel",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Email",
+        "Teams",
+        "Phone",
+        "In Person",
+        "Portal",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Direction",
+      "displayName": "Direction",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Inbound",
+        "Outbound",
+        "Internal"
+      ]
+    },
+    {
+      "internalName": "CommunicationDate",
+      "displayName": "CommunicationDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Summary",
+      "displayName": "Summary",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresFollowUp",
+      "displayName": "RequiresFollowUp",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "FollowUpTaskId",
+      "displayName": "FollowUpTaskId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Tasks"
+    },
+    {
+      "internalName": "IsMeaningfulContact",
+      "displayName": "IsMeaningfulContact",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "ApprovalRequiredBeforeSend",
+      "displayName": "ApprovalRequiredBeforeSend",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "SendApproved",
+      "displayName": "SendApproved",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    }
+  ]
+}

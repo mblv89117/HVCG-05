@@ -1,0 +1,91 @@
+{
+  "flowName": "HVCG_CreateProjectFromTemplate",
+  "displayName": "HVCG_CreateProjectFromTemplate",
+  "description": "Expands project template into project, milestones, tasks, docs, deliverables.",
+  "trigger": {
+    "type": "ManualOrChild",
+    "inputs": [
+      "ClientListItemId",
+      "ClientCode",
+      "TemplateKey",
+      "EngagementId",
+      "StartDate"
+    ]
+  },
+  "connections": [
+    "SharePoint"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "GetTemplateJson",
+      "params": {
+        "source": "HVCG_Templates.ConfigJsonPath"
+      }
+    },
+    {
+      "id": 2,
+      "action": "CreateProjectIfNotExists"
+    },
+    {
+      "id": 3,
+      "action": "ForeachMilestone",
+      "params": {
+        "list": "HVCG_Milestones"
+      }
+    },
+    {
+      "id": 4,
+      "action": "ForeachTask",
+      "params": {
+        "list": "HVCG_Tasks",
+        "resolveOwnerFromRole": true
+      }
+    },
+    {
+      "id": 5,
+      "action": "ForeachDocumentRequest",
+      "params": {
+        "list": "HVCG_DocumentRequests"
+      }
+    },
+    {
+      "id": 6,
+      "action": "ForeachDeliverable",
+      "params": {
+        "list": "HVCG_Deliverables"
+      }
+    },
+    {
+      "id": 7,
+      "action": "SeedDefaultRisks"
+    },
+    {
+      "id": 8,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

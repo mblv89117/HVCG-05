@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-07-22T00:13:51Z",
+  "flows": [
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "workflowId": "ce87af47-06a6-5a7b-acc9-601429b31018",
+      "wasActive": true,
+      "deactivate": 204,
+      "patch": 204,
+      "reactivate": 204,
+      "verify": {
+        "statecode": 1,
+        "hasFormatDateTime": true,
+        "hasRequestStatusFilter": false,
+        "hasStatusFilter": false,
+        "composeUsesLastId": true
+      }
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "workflowId": "b2d8b14a-5948-5db7-949d-9bf12a0610bf",
+      "wasActive": true,
+      "deactivate": 204,
+      "patch": 204,
+      "reactivate": 204,
+      "verify": {
+        "statecode": 1,
+        "hasFormatDateTime": true,
+        "hasRequestStatusFilter": true,
+        "hasStatusFilter": true,
+        "composeUsesLastId": false
+      }
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "workflowId": "36794755-15ff-5be5-a454-46c5e414e295",
+      "wasActive": true,
+      "deactivate": 204,
+      "patch": 204,
+      "reactivate": 204,
+      "verify": {
+        "statecode": 1,
+        "hasFormatDateTime": true,
+        "hasRequestStatusFilter": false,
+        "hasStatusFilter": false,
+        "composeUsesLastId": false
+      }
+    }
+  ]
+}

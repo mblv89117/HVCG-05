@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://highvaluecapitalgroup.com/contracts/idempotency-keys.v1.json",
+  "title": "High Value Idempotency Keys v1",
+  "description": "Source-controlled registry of current cross-system idempotency key patterns. These patterns prevent duplicate leads, clients, opportunities, and capital records on replay.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "edge": { "type": "string" },
+          "pattern": { "type": "string" },
+          "owner": { "type": "string" },
+          "collisionBehavior": {
+            "type": "string",
+            "enum": ["return-existing", "update-existing", "reject-conflict"]
+          },
+          "notes": { "type": "string" }
+        },
+        "required": ["edge", "pattern", "owner", "collisionBehavior"]
+      },
+      "default": [
+        {
+          "edge": "EVA -> Atlas lead",
+          "pattern": "eva|{sessionId}",
+          "owner": "Atlas Hub website lead intake",
+          "collisionBehavior": "update-existing",
+          "notes": "Terminal lead statuses are not reset to New on replay."
+        },
+        {
+          "edge": "Website -> Atlas lead",
+          "pattern": "website|{leadId}",
+          "owner": "Atlas Hub website lead intake",
+          "collisionBehavior": "update-existing"
+        },
+        {
+          "edge": "Lead -> Atlas client",
+          "pattern": "client-from-lead|{LeadId}",
+          "owner": "Atlas PM lead conversion",
+          "collisionBehavior": "return-existing"
+        },
+        {
+          "edge": "Lead -> Atlas contact",
+          "pattern": "contact-from-lead|{LeadId}",
+          "owner": "Atlas PM lead conversion",
+          "collisionBehavior": "return-existing"
+        },
+        {
+          "edge": "Lead -> Atlas opportunity",
+          "pattern": "opp-from-lead|{LeadId}",
+          "owner": "Atlas PM lead conversion",
+          "collisionBehavior": "return-existing"
+        },
+        {
+          "edge": "Opportunity -> Atlas capital opportunity",
+          "pattern": "cap-from-opp|{OpportunityId}",
+          "owner": "Atlas Capital",
+          "collisionBehavior": "return-existing"
+        }
+      ]
+    }
+  },
+  "required": ["patterns"]
+}

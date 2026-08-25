@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-07-22T04:41:34Z",
+  "verdict": "GREEN",
+  "ownerConfirmed": true,
+  "ownerConfirmedAt": "2026-07-22T04:41:34Z",
+  "swa": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+  "hub": "https://app-atlas-integration-hub.azurewebsites.net",
+  "account": "manny@highvaluecapitalgroup.com",
+  "buildSha": "8d3c7d58102543e80ca2ef9fa364d59c980abed2",
+  "builtAt": "2026-07-22T03:31:05Z",
+  "asset": "index-CxXf2tXp.js",
+  "signedOutGate": "PASS",
+  "authenticatedClient360": "PASS",
+  "httpStatus": 200,
+  "liveClients": 7,
+  "signOutRemovesAccess": true,
+  "notes": "Owner UAT confirmed: fresh signed-out /clients locked; Microsoft sign-in succeeds; authenticated /api/client360 HTTP 200 with 7 live clients; sign-out removes protected access."
+}

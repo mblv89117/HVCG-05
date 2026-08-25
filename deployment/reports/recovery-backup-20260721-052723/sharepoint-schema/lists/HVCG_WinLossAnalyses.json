@@ -1,0 +1,112 @@
+{
+  "title": "HVCG_WinLossAnalyses",
+  "description": "CRM \u2014 Win/loss analysis",
+  "template": "genericList",
+  "domain": "CRM",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OpportunityId",
+      "displayName": "OpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Opportunities"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "Result",
+      "displayName": "Result",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Won",
+        "Lost"
+      ]
+    },
+    {
+      "internalName": "PrimaryReason",
+      "displayName": "PrimaryReason",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Price",
+        "Timing",
+        "Competitor",
+        "Fit",
+        "Relationship",
+        "Capacity",
+        "Scope",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "CompetitorName",
+      "displayName": "CompetitorName",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LessonsLearned",
+      "displayName": "LessonsLearned",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ProcessImprovements",
+      "displayName": "ProcessImprovements",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AnalyzedByEmail",
+      "displayName": "AnalyzedByEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AnalysisDate",
+      "displayName": "AnalysisDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RevenueImpact",
+      "displayName": "RevenueImpact",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

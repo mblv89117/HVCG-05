@@ -1,0 +1,62 @@
+{
+  "flowName": "HVCG_CreateDocumentRequests",
+  "displayName": "HVCG_CreateDocumentRequests",
+  "description": "Creates document request items from template requiredDocuments.",
+  "trigger": {
+    "type": "ManualOrChild",
+    "inputs": [
+      "ClientListItemId",
+      "ClientCode",
+      "TemplateKey",
+      "ProjectId"
+    ]
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "LoadTemplateDocs"
+    },
+    {
+      "id": 2,
+      "action": "ForeachCreateDocumentRequest"
+    },
+    {
+      "id": 3,
+      "action": "OptionalSendChecklistEmail",
+      "params": {
+        "featureFlag": "HVCG_ENABLE_CLIENT_EMAILS"
+      }
+    },
+    {
+      "id": 4,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

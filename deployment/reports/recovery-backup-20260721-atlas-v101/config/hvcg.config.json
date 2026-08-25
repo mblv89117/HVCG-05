@@ -1,0 +1,99 @@
+{
+  "productName": "HVCG OS",
+  "companyLegalName": "High Value Capital Group LLC",
+  "companyShortName": "HVCG",
+  "namingPrefix": "HVCG_",
+  "currency": "USD",
+  "timeZone": "America/Los_Angeles",
+  "locale": "en-US",
+  "environments": {
+    "dev": {
+      "commandCenterSite": "HVCG-CommandCenter-Dev",
+      "clientsSite": "HVCG-Clients-Dev",
+      "knowledgeSite": "HVCG-Knowledge-Dev"
+    },
+    "prod": {
+      "commandCenterSite": "HVCG-CommandCenter",
+      "clientsSite": "HVCG-Clients",
+      "knowledgeSite": "HVCG-Knowledge"
+    }
+  },
+  "documentFolderStructure": [
+    "00 - Engagement Administration",
+    "01 - Corporate Documents",
+    "02 - Ownership and Management",
+    "03 - Historical Financials",
+    "04 - Current Financials",
+    "05 - Tax Returns",
+    "06 - Bank Statements",
+    "07 - Debt Schedule",
+    "08 - Accounts Receivable",
+    "09 - Accounts Payable",
+    "10 - Payroll and Employees",
+    "11 - Contracts",
+    "12 - Real Estate",
+    "13 - Insurance",
+    "14 - Legal and Compliance",
+    "15 - Financial Models",
+    "16 - Lender Package",
+    "17 - Investor Package",
+    "18 - Presentations",
+    "19 - Deliverables",
+    "20 - Meeting Notes",
+    "21 - Communications",
+    "22 - Approvals",
+    "23 - Closed and Archived"
+  ],
+  "documentReminderCadenceBusinessDays": [
+    0,
+    3,
+    7,
+    14
+  ],
+  "renewalReminderDays": [
+    60,
+    30,
+    14
+  ],
+  "executiveEscalationRules": [
+    "ClientRelationshipAtRisk",
+    "MateriallyBehindSchedule",
+    "CriticalDeadlineAtRisk",
+    "MajorDeliverableNeedsExecutiveApproval",
+    "PricingOrScopeException",
+    "ClientDisputesPricingOrScope",
+    "OutOfScopeWorkRequested",
+    "CapitalStrategyDecisionNeeded",
+    "LenderOrInvestorNeedsExecutive",
+    "PaymentMateriallyOverdue",
+    "SuccessFeeEarnedOrDisputed",
+    "LegalRegulatoryEthicalReputational",
+    "TeamCannotResolveBlocker",
+    "MaterialFinancialConsequence",
+    "ClientProvidedInaccurateMaterialInfo"
+  ],
+  "clientStages": [
+    "Lead",
+    "Prospect",
+    "Assessment",
+    "Proposal",
+    "Active Client",
+    "On Hold",
+    "Alumni",
+    "Do Not Engage"
+  ],
+  "projectHealthRules": {
+    "green": "No critical overdue; <20% tasks overdue; no open High risks",
+    "yellow": "Any high-priority task overdue OR open High risk OR missing critical docs >7 days",
+    "red": "Critical deadline at risk OR executive escalation open OR payment materially overdue with work continuing"
+  },
+  "featureFlags": {
+    "enableClientEmails": false,
+    "enablePremiumConnectors": false,
+    "enablePowerPages": false,
+    "enableCopilotStudio": false,
+    "enableAIQueues": true,
+    "enablePortalPrepEntities": true,
+    "enableCapitalDesk": true
+  }
+}
