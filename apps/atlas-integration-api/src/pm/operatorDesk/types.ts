@@ -230,6 +230,10 @@ export interface AtlasClientContext {
    * Same copied project_operating_record_v1 payload as authorizedSearch.projects.
    * Attached only for a bound current entitled client from already-loaded
    * entitled index rows. Historical HVS recovered projects stay read-only.
+   * Optional relatedCapital copies already-entitled same-scope PREPARE_ONLY
+   * capital refs (same RelatedDocumentCapitalRef path as documents).
+   * Missing / non-canonical ClientCode omits relatedCapital (fail-closed).
+   * Client A never receives Client B. No TargetAmount. Not external submit.
    */
   projects: {
     kind: 'project_operating_record_v1';
@@ -453,6 +457,16 @@ export interface ProjectOperatingRecord {
   nextAction?: string;
   evidence?: string;
   evidenceRefs?: ProjectOperatingEvidenceRef[];
+  /**
+   * Inverse of document.capitalRelationship: already-authorized same-scope
+   * capital-prepare records. Reuses RelatedDocumentCapitalRef / relatedCapital().
+   * Omitted when none are entitled or when ClientCode is missing / non-canonical.
+   * Client A never receives Client B. Never TargetAmount, downloadUrl,
+   * contentBytes, lender criteria, or invented financing status. PREPARE_ONLY /
+   * send=false / externalSubmit=false / ownerGated=true stay on the refs.
+   * Not a second capital product. Not external submit. Not send.
+   */
+  relatedCapital?: RelatedDocumentCapitalRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
@@ -724,6 +738,11 @@ export interface AtlasAuthorizedSearch {
     binariesInAtlas: false;
     items: DocumentOperatingRecord[];
   };
+  /**
+   * Current-first project operating records. Optional relatedCapital copies
+   * already-entitled same-scope PREPARE_ONLY capital refs. Fail-closed when
+   * ClientCode is missing / non-canonical. Client A never receives Client B.
+   */
   projects: {
     kind: 'project_operating_record_v1';
     policyClass: 'READ_AUTO';

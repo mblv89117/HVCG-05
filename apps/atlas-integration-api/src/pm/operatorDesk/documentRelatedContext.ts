@@ -17,12 +17,16 @@ import {
   CAPITAL_SUBMISSION_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type DocumentOperatingRecord,
+  type ProjectOperatingRecord,
   type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
   type RelatedDocumentContractRef,
   type RelatedDocumentEmailRef,
   type RelatedDocumentProjectRef,
 } from './types.ts';
+
+/** Shared id + ClientCode scope used by document and project inverses. */
+type RelatedScopeItem = { id: string; clientCode?: string };
 
 /** Keep related lists bounded so search stays small. */
 export const DOCUMENT_RELATED_CONTEXT_PAGE_SIZE = 5;
@@ -237,7 +241,7 @@ function relatedContracts(
 }
 
 function relatedCapital(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem,
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentCapitalRef[] {
   const out: RelatedDocumentCapitalRef[] = [];
@@ -289,4 +293,39 @@ export function attachRelatedContextToDocuments(
   search: AtlasAuthorizedSearch,
 ): DocumentOperatingRecord[] {
   return items.map((item) => attachRelatedContextToDocument(principal, item, search));
+}
+
+/**
+ * Inverse of document.capitalRelationship: entitled same-scope PREPARE_ONLY
+ * capital refs on a project operating record. Reuses relatedCapital() —
+ * no new capital query. Fail-closed when ClientCode is missing /
+ * non-canonical. Client A never receives Client B. No TargetAmount,
+ * downloadUrl, contentBytes, lender criteria, or financing status.
+ * Not a second capital product. Not external submit. Not send.
+ */
+export function attachRelatedContextToProject(
+  principal: AtlasPrincipal,
+  item: ProjectOperatingRecord,
+  search: AtlasAuthorizedSearch,
+): ProjectOperatingRecord {
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedCapitalList = canonicalClientCode(item.clientCode)
+    ? relatedCapital(item, search)
+    : [];
+  return {
+    ...item,
+    ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
+  };
+}
+
+export function attachRelatedContextToProjects(
+  principal: AtlasPrincipal,
+  payload: AtlasAuthorizedSearch['projects'],
+  search: AtlasAuthorizedSearch,
+): AtlasAuthorizedSearch['projects'] {
+  if (!payload.items.length) return payload;
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToProject(principal, item, search)),
+  };
 }

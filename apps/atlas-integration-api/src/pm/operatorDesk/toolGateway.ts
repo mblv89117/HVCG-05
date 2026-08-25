@@ -63,7 +63,10 @@ import {
 } from './researchIntelligence.ts';
 import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgent.ts';
 import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
-import { attachRelatedContextToDocuments } from './documentRelatedContext.ts';
+import {
+  attachRelatedContextToDocuments,
+  attachRelatedContextToProjects,
+} from './documentRelatedContext.ts';
 
 export const SEARCH_QUEUE_URGENCY = [
   'Overdue',
@@ -1694,6 +1697,11 @@ function composeAuthorizedSearch(
     onboarding: composeOnboardingAgent(hits),
     clientSupport: composeClientSupportAgent(hits),
   };
+  authorizedSearch.projects = attachRelatedContextToProjects(
+    ctx.principal,
+    authorizedSearch.projects,
+    authorizedSearch,
+  );
   return {
     askAtlas: searchActivityAnswer(ctx, authorizedSearch),
     authorizedSearch,
