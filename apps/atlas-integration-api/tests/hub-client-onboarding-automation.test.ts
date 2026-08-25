@@ -8,6 +8,7 @@ import type { WorkflowDefinitionRecord } from '../src/pm/operatorDesk/workflowDe
 import {
   answerOnboardingContext,
   classifyOnboardingAskAtlasIntent,
+  composeKickoff,
   composeOperationsHandoff,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
@@ -89,6 +90,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.operationsHandoff.status, 'NOT_READY');
     assert.equal(result.record.operationsHandoff.ready, false);
     assert.equal(result.record.operationsHandoff.send, false);
+    assert.equal(result.record.kickoff.status, 'NOT_READY');
+    assert.equal(result.record.kickoff.ready, false);
+    assert.equal(result.record.kickoff.send, false);
+    assert.equal(result.record.kickoff.outbound, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -175,6 +180,11 @@ describe('client onboarding automation', () => {
         documentGaps: [{ label: 'W-9', status: 'MISSING' }],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     const answer = answerOnboardingContext('What documents are missing for ACCG?', record);
@@ -224,6 +234,10 @@ describe('client onboarding automation', () => {
       updatedAt: now,
       milestones: [],
       operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
         workspaceReconciled: true,
         communicationPolicy: 'DRAFT_ONLY',
       }),
@@ -384,6 +398,10 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.operationsHandoff.ready, true);
     assert.equal(first.record?.operationsHandoff.send, false);
     assert.equal(first.record?.operationsHandoff.capitalSubmit, false);
+    assert.equal(first.record?.kickoff.status, 'PREPARED');
+    assert.equal(first.record?.kickoff.send, false);
+    assert.equal(first.record?.kickoff.outbound, false);
+    assert.equal(first.record?.kickoff.capitalSubmit, false);
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -494,6 +512,13 @@ describe('client onboarding automation', () => {
       updatedAt: now,
       milestones: [],
       operationsHandoff: prepared,
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        projectName: 'Client Onboarding — ACCG',
+        documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     assert.equal(mapsToOnboardingContextIntent('What is the onboarding handoff for ACCG?'), true);
@@ -518,6 +543,111 @@ describe('client onboarding automation', () => {
     const threadAnswer = answerOnboardingContext('What is the onboarding handoff for ACCG?', {
       ...record,
       operationsHandoff: withThreads,
+    });
+    assert.match(threadAnswer, /Related entitled threads: 2/);
+    assert.match(threadAnswer, /DRAFT_ONLY, no send/);
+  });
+
+  it('prepares kickoff from entitled run facts and answers Ask Atlas kickoff', () => {
+    const prepared = composeKickoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      milestones: [{ id: 'kickoff_ready', label: 'Kickoff ready', status: 'pending', provenance: 'PROPOSED' }],
+      ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.status, 'PREPARED');
+    assert.equal(prepared.ready, true);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.milestoneStatus, 'pending');
+    assert.equal(prepared.relatedThreadCount, 0);
+    assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
+
+    const blocked = composeKickoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(blocked.status, 'BLOCKED');
+    assert.equal(blocked.ready, false);
+
+    const identity = composeKickoff({
+      identityResolutionRequired: true,
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+
+    const missingDocs = composeKickoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(missingDocs.status, 'PREPARED');
+    assert.equal(missingDocs.ready, false);
+    assert.equal(missingDocs.missingDocumentCount, 1);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'KICKOFF_PREPARATION' as const,
+      currentStep: 'Establish onboarding operating structure',
+      nextStep: 'Prepare kickoff and operating baseline',
+      blockers: [],
+      ownerAttention: prepared.ownerAttention,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1'],
+      milestoneIds: ['m1'],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [{ id: 'kickoff_ready', label: 'Kickoff ready', status: 'pending' as const, provenance: 'PROPOSED' as const }],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: prepared,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding kickoff for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding kickoff for ACCG?'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What is the onboarding kickoff for ACCG?'), false);
+    const answer = answerOnboardingContext('What is the onboarding kickoff for ACCG?', record);
+    assert.match(answer, /Kickoff for ACCG01: PREPARED/);
+    assert.match(answer, /Client Onboarding — ACCG/);
+    assert.match(answer, /Related entitled threads: 0/);
+    assert.match(answer, /did not send mail/);
+    assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+
+    const withThreads = composeKickoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      communicationPolicy: 'DRAFT_ONLY',
+      relatedThreadCount: 2,
+    });
+    assert.equal(withThreads.relatedThreadCount, 2);
+    assert.equal(withThreads.send, false);
+    const threadAnswer = answerOnboardingContext('What is the onboarding kickoff for ACCG?', {
+      ...record,
+      kickoff: withThreads,
     });
     assert.match(threadAnswer, /Related entitled threads: 2/);
     assert.match(threadAnswer, /DRAFT_ONLY, no send/);
