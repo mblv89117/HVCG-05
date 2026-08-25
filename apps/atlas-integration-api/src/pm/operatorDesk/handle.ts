@@ -38,6 +38,7 @@ import {
   isOperatorImprovementsPath,
   isOperatorRuntimePath,
   isOperatorSearchPath,
+  isOperatorWorkflowsPath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
@@ -64,6 +65,14 @@ import {
   resolveInspectClass,
   type ProductImprovementInspectHealth,
 } from './productImprovement.ts';
+import {
+  buildWorkflowAskAtlasAnswer,
+  getWorkflowDetail,
+  handleWorkflowControl,
+  listWorkflowCenter,
+  mapsToWorkflowQuestion,
+  answerWorkflowQuestion,
+} from './workflows.ts';
 
 export { isOperatorDeskPath };
 
@@ -254,10 +263,12 @@ export async function handleOperatorDesk(opts: {
   const missionsOnly = isOperatorEngineeringMissionsPath(opts.path);
   const clientContextOnly = isOperatorClientContextPath(opts.path);
   const searchOnly = isOperatorSearchPath(opts.path);
+  const workflowsOnly = isOperatorWorkflowsPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly) && opts.method === 'POST')
+    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly) &&
+      opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
     return true;
@@ -274,6 +285,7 @@ export async function handleOperatorDesk(opts: {
     missionsOnly ||
     clientContextOnly ||
     searchOnly ||
+    workflowsOnly ||
     wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery =
@@ -358,6 +370,73 @@ export async function handleOperatorDesk(opts: {
     return true;
   }
 
+  if (workflowsOnly) {
+    const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
+    if (opts.method === 'POST') {
+      let body: { action?: string; workflowId?: string; reason?: string } = {};
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of opts.req) chunks.push(chunk as Buffer);
+        const text = Buffer.concat(chunks).toString('utf8').trim();
+        if (text) body = JSON.parse(text) as typeof body;
+      } catch {
+        sendJson(opts.res, 400, { error: 'invalid_json', code: 'invalid_json' }, opts.origin);
+        return true;
+      }
+      const action = body.action;
+      const workflowId = body.workflowId?.trim();
+      if (!workflowId || !action || !['pause', 'resume', 'disable', 'retry'].includes(action)) {
+        sendJson(opts.res, 400, { error: 'invalid_workflow_control', code: 'invalid_workflow_control' }, opts.origin);
+        return true;
+      }
+      const result = await handleWorkflowControl({
+        cfg: opts.cfg,
+        principal,
+        workflowId,
+        action: action as 'pause' | 'resume' | 'disable' | 'retry',
+        reason: body.reason,
+      });
+      if (!result.ok) {
+        sendJson(opts.res, 403, { error: result.error, code: result.error }, opts.origin);
+        return true;
+      }
+      sendJson(
+        opts.res,
+        200,
+        { workflowCenter: { control: result.control, workflow: result.workflow } },
+        opts.origin,
+      );
+      return true;
+    }
+
+    const workflowId = url.searchParams.get('workflowId')?.trim();
+    try {
+      if (workflowId) {
+        const detail = getWorkflowDetail({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          workflowId,
+        });
+        if (!detail) {
+          sendJson(opts.res, 404, { error: 'workflow_not_found', code: 'workflow_not_found' }, opts.origin);
+          return true;
+        }
+        sendJson(opts.res, 200, { workflowCenter: { detail } }, opts.origin);
+        return true;
+      }
+      const center = listWorkflowCenter({
+        cfg: opts.cfg,
+        principal,
+        dataDir: opts.cfg.dataDir,
+      });
+      sendJson(opts.res, 200, { workflowCenter: center }, opts.origin);
+    } catch {
+      sendJson(opts.res, 503, { error: 'workflow_center_unavailable', code: 'workflow_center_unavailable' }, opts.origin);
+    }
+    return true;
+  }
+
   const model =
     opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint
       ? await loadSharePointDesk({
@@ -405,6 +484,43 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+    if (mapsToWorkflowQuestion(question)) {
+      const center = listWorkflowCenter({
+        cfg: opts.cfg,
+        principal,
+        dataDir: opts.cfg.dataDir,
+      });
+      const askAtlas = buildWorkflowAskAtlasAnswer({ question, center });
+      const workflowAnswer = answerWorkflowQuestion(question, center);
+      if (opts.method === 'GET') {
+        try {
+          await appendAskAtlasActivity({
+            dataDir: opts.cfg.dataDir,
+            answer: askAtlas,
+            principal,
+          });
+        } catch {
+          /* overlay write optional */
+        }
+      }
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['workflow_center'],
+            policyClass: 'READ_AUTO',
+            missionKey: 'ATLAS-WORKFLOW-CENTER-001',
+          },
+          workflowAnswer,
+          workflowCenter: { counts: center.counts },
+        },
+        opts.origin,
+      );
+      return true;
+    }
     const result = mapsToSearchAuthorizedKnowledge(question)
       ? await runAtlasSearchRuntime({
           principal,

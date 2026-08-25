@@ -987,6 +987,156 @@ export interface PmSearchHit {
   source: string;
 }
 
+export async function fetchOperatorActivity(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    agentActivity: {
+      contractVersion: string;
+      entitled: boolean;
+      entries: OperatorDeskActivityLedgerEntry[];
+    };
+  }>(auth, '/operator/activity.json');
+}
+
+export type WorkflowStatus =
+  | 'ACTIVE'
+  | 'RUNNING'
+  | 'WAITING'
+  | 'PAUSED'
+  | 'REQUIRES_APPROVAL'
+  | 'FAILED'
+  | 'RETRYING'
+  | 'COMPLETE'
+  | 'DISABLED';
+
+export type WorkflowSummary = {
+  workflowId: string;
+  name: string;
+  description: string;
+  workflowType: string;
+  trigger: string;
+  status: WorkflowStatus;
+  currentStep?: string;
+  nextStep?: string;
+  clientCode?: string;
+  clientName?: string;
+  projectScope?: string;
+  responsibleAgent?: string;
+  autonomyLevel: string;
+  approvalRequired: boolean;
+  lastRunAt?: string;
+  nextRunAt?: string;
+  successState: 'success' | 'failure' | 'unknown' | 'never_run';
+  retryState?: string;
+  retryCount?: number;
+  updatedAt: string;
+  provenance: 'LIVE' | 'RECOVERED' | 'HISTORICAL' | 'SIMULATED' | 'TEST';
+  failureSummary?: string;
+  ownerActionRequired?: boolean;
+  policyClass?: string;
+  href?: string;
+};
+
+export type WorkflowDetail = WorkflowSummary & {
+  overview: {
+    whyExists: string;
+    source: string;
+    relatedMission?: string;
+    sourceEvent?: string;
+  };
+  scope: {
+    clientCode?: string;
+    clientName?: string;
+    projectScope?: string;
+    relatedSystem?: string;
+  };
+  triggerDetail: {
+    triggerType: string;
+    event?: string;
+    schedule?: string;
+    manual?: boolean;
+    policy?: string;
+    source?: string;
+  };
+  currentExecution?: {
+    currentStep?: string;
+    nextStep?: string;
+    runId?: string;
+    startedAt?: string;
+    waitingReason?: string;
+  };
+  actionsAllowed: string[];
+  actionsBlocked: string[];
+  ownerGatedActions: string[];
+  history: Array<{
+    runId: string;
+    startedAt: string;
+    status: WorkflowStatus;
+    result?: string;
+    provenance: string;
+  }>;
+  activity: Array<{
+    id: string;
+    timestamp: string;
+    kind: string;
+    agent?: string;
+    result: string;
+    summary: string;
+    provenance: string;
+  }>;
+  diagnostics?: Record<string, string | number | boolean | null>;
+};
+
+export interface OperatorDeskActivityLedgerEntry {
+  agent: string;
+  missionKey: string;
+  trigger: string;
+  timestamp: string;
+  tools: string[];
+  classification: string;
+  result: string;
+  readWriteStatus: string;
+  policyDecision: string;
+  writerUserId: string;
+}
+
+export async function fetchWorkflowCenter(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    workflowCenter: {
+      contractVersion: string;
+      missionKey: string;
+      entitled: boolean;
+      workflows: WorkflowSummary[];
+      counts: {
+        total: number;
+        requiresApproval: number;
+        failed: number;
+        paused: number;
+        running: number;
+      };
+      policy: Record<string, unknown>;
+    };
+  }>(auth, '/operator/workflows.json');
+}
+
+export async function fetchWorkflowDetail(auth: AtlasHubAuthHeaders, workflowId: string) {
+  return hubFetchJson<{ workflowCenter: { detail: WorkflowDetail } }>(
+    auth,
+    `/operator/workflows.json?workflowId=${encodeURIComponent(workflowId)}`,
+  );
+}
+
+export async function postWorkflowControl(
+  auth: AtlasHubAuthHeaders,
+  body: { workflowId: string; action: 'pause' | 'resume' | 'disable' | 'retry'; reason?: string },
+) {
+  return hubFetchJson<{
+    workflowCenter: { control: Record<string, unknown>; workflow: WorkflowSummary };
+  }>(auth, '/operator/workflows.json', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
   const q = query.trim().slice(0, 120);
   if (q.length < 2) return { query: q, results: [] as PmSearchHit[], scope: 'entitled' as const };

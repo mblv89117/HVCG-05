@@ -95,6 +95,7 @@ const allSections: NavSection[] = [
     id: 'operations',
     title: 'Operations',
     items: [
+      { id: 'workflows', label: 'Workflows', to: '/workflows', icon: <ClipboardTaskRegular /> },
       { id: 'agent-activity', label: 'Agent Activity', to: '/agent-activity', icon: <ApprovalsAppRegular /> },
       { id: 'connections', label: 'Connections', to: '/connections', icon: <PlugConnectedRegular /> },
       { id: 'settings', label: 'Settings', to: '/settings', icon: <SettingsRegular /> },
@@ -114,6 +115,7 @@ const catalog: SearchResult[] = [
   { id: 's8', title: 'Capital', category: 'Capital', subtitle: 'Transactions requiring attention', to: '/capital' },
   { id: 's7', title: 'Search / Knowledge', category: 'Search', to: '/knowledge' },
   { id: 's10', title: 'Documents', category: 'Search', to: '/documents/operating' },
+  { id: 's-workflows', title: 'Workflows', category: 'Operations', subtitle: 'Automations and approvals', to: '/workflows' },
   { id: 's-agent-activity', title: 'Agent Activity', category: 'Operations', to: '/agent-activity' },
   { id: 's14', title: 'Settings', category: 'Operations', to: '/settings' },
   { id: 's15', title: 'Connections', category: 'Operations', subtitle: 'Integrations', to: '/connections' },
