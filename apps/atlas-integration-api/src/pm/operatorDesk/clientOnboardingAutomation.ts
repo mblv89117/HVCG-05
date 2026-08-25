@@ -26,7 +26,7 @@ import {
   upsertOnboardingRun,
 } from './onboardingState.ts';
 
-const ONBOARDING_PROJECT_TITLE = /\b(onboard|kickoff|engagement setup|client activation)\b/i;
+const ONBOARDING_PROJECT_TITLE = /\b(onboard(?:ing)?|kickoff|engagement setup|client activation)\b/i;
 const DEFAULT_MILESTONES: Array<{ id: string; label: string }> = [
   { id: 'identity_verified', label: 'Client identity verified' },
   { id: 'agreement_scope_verified', label: 'Agreement / scope verified' },

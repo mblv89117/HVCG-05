@@ -10,6 +10,7 @@ import {
   classifyOnboardingAskAtlasIntent,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
+  isOnboardingProjectTitle,
   mapsToOnboardingContextIntent,
   mapsToOnboardingExecuteIntent,
   resolveEntitledClientCodeFromQuestion,
@@ -259,6 +260,9 @@ describe('client onboarding automation', () => {
     assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding status for ACCG?'), 'status');
     assert.equal(classifyOnboardingAskAtlasIntent('Kick off onboarding ACCG'), 'status');
     assert.equal(classifyOnboardingAskAtlasIntent('Start the weekly marketing review'), null);
+    assert.equal(isOnboardingProjectTitle('Client Onboarding — ACCG'), true);
+    assert.equal(isOnboardingProjectTitle('ACCG01 - Onboarding'), true);
+    assert.equal(isOnboardingProjectTitle('Weekly marketing review'), false);
   });
 
   it('does not invent ClientCodes or execute on ambiguous/none match', async () => {
@@ -315,17 +319,26 @@ describe('client onboarding automation', () => {
     process.env.INTEGRATION_WORKFLOW_DEFINITION_DIR = join(dir, 'workflow-definitions');
     process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
     const cfg = loadConfig();
-    const projects: Array<{ id: string; name: string; clientCode: string }> = [];
+    const projects: Array<{ id: string; name: string; clientCode: string; idempotencyKey?: string }> = [];
     let createProjectCalls = 0;
     const sharepoint = {
       listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
       listAuthorizedProjects: async () => projects,
-      createProject: async (_principal: AtlasPrincipal, body: { name?: string; clientCode?: string }) => {
+      createProject: async (
+        _principal: AtlasPrincipal,
+        body: { name?: string; clientCode?: string },
+        idempotencyKey?: string,
+      ) => {
+        const reused = idempotencyKey
+          ? projects.find((p) => p.idempotencyKey === idempotencyKey)
+          : projects.find((p) => p.clientCode === body.clientCode && /onboard/i.test(p.name));
+        if (reused) return reused;
         createProjectCalls += 1;
         const created = {
           id: `proj-${createProjectCalls}`,
           name: String(body.name),
           clientCode: String(body.clientCode),
+          idempotencyKey,
         };
         projects.push(created);
         return created;
