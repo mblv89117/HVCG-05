@@ -190,6 +190,10 @@ export function onboardingPayloadHasInventedFacts(payload: OnboardingAgentPayloa
     for (const decision of row.ownerDecisions) {
       if (decision.execute || decision.status !== 'escalated') return true;
     }
+    for (const cap of row.relatedCapital || []) {
+      if (cap.invented || cap.lenderCriteriaInvented) return true;
+      if (INVENTED_FACTS.test(cap.title)) return true;
+    }
   }
   return false;
 }
