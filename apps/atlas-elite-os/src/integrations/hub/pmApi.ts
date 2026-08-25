@@ -1189,6 +1189,73 @@ export async function postWorkflowDraftAction(
   });
 }
 
+export async function postInstantiateWorkflowTemplate(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    templateId: string;
+    inputs?: Record<string, unknown>;
+    sourceConversation?: string;
+  },
+) {
+  return hubFetchJson<{ workflowDraft?: WorkflowDraftPayload }>(auth, '/operator/workflow-templates.json', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export type WorkflowTemplateCatalogItem = {
+  templateId: string;
+  templateVersion: number;
+  name: string;
+  description: string;
+  category: string;
+  businessPurpose: string;
+  status: string;
+  commonTrigger: string;
+  typicalActions: string[];
+  approvalCharacteristics: string[];
+  recommendedAutonomy: string;
+  relatedSystems: string[];
+};
+
+export type WorkflowTemplateDetail = {
+  templateId: string;
+  templateVersion: number;
+  name: string;
+  description: string;
+  category: string;
+  businessPurpose: string;
+  ownerReadableSummary: {
+    purpose: string;
+    whenItRuns: string;
+    whatItDoes: string[];
+    customizable: string[];
+    automatic: string[];
+    requiresApproval: string[];
+    systems: string[];
+    onFailure: string;
+    dataScope: string;
+  };
+  requiredInputs: Array<{ id: string; label: string; inputType: string; required: boolean }>;
+  optionalInputs: Array<{ id: string; label: string; inputType: string; required: boolean }>;
+  approvalRequirements: string[];
+  relatedSystems: string[];
+  configurableFields: string[];
+};
+
+export async function fetchWorkflowTemplateCatalog(auth: AtlasHubAuthHeaders) {
+  return hubFetchJson<{
+    workflowTemplates: { templates: WorkflowTemplateCatalogItem[]; contractVersion: string; missionKey: string };
+  }>(auth, '/operator/workflow-templates.json');
+}
+
+export async function fetchWorkflowTemplateDetail(auth: AtlasHubAuthHeaders, templateId: string) {
+  return hubFetchJson<{ workflowTemplates: { detail: WorkflowTemplateDetail } }>(
+    auth,
+    `/operator/workflow-templates.json?templateId=${encodeURIComponent(templateId)}`,
+  );
+}
+
 export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
   const q = query.trim().slice(0, 120);
   if (q.length < 2) return { query: q, results: [] as PmSearchHit[], scope: 'entitled' as const };

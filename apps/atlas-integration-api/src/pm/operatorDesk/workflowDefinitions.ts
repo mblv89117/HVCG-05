@@ -94,6 +94,9 @@ export type WorkflowDefinitionRecord = {
   sourceConversation: string;
   provenance: 'conversational' | 'template';
   templateKey?: string;
+  sourceTemplateId?: string;
+  sourceTemplateVersion?: number;
+  templateCustomizations?: Record<string, string | number | boolean>;
   versionHistory: WorkflowVersionMeta[];
   authorityExpansionRequired: boolean;
 };

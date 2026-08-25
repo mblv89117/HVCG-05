@@ -39,6 +39,7 @@ import {
   isOperatorRuntimePath,
   isOperatorSearchPath,
   isOperatorWorkflowsPath,
+  isOperatorWorkflowTemplatesPath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
@@ -87,6 +88,20 @@ import {
   mapsToWorkflowEditIntent,
   mapsToWorkflowDiscoveryIntent,
 } from './workflowParser.ts';
+import {
+  mapsToConversationalTemplateUse,
+  mapsToTemplateDiscoveryIntent,
+  resolveClientFromInput,
+  resolveTemplateIdFromText,
+} from './workflowTemplates.ts';
+import {
+  answerTemplateContext,
+  answerTemplateDiscovery,
+  appendTemplateLifecycle,
+  buildTemplateCatalog,
+  buildTemplateDetail,
+  instantiateWorkflowFromTemplate,
+} from './workflowTemplateService.ts';
 import { readWorkflowDefinitionOverlay, resolveWorkflowDefinitionOverlayDir } from './workflowDefinitions.ts';
 
 export { isOperatorDeskPath };
@@ -279,10 +294,11 @@ export async function handleOperatorDesk(opts: {
   const clientContextOnly = isOperatorClientContextPath(opts.path);
   const searchOnly = isOperatorSearchPath(opts.path);
   const workflowsOnly = isOperatorWorkflowsPath(opts.path);
+  const workflowTemplatesOnly = isOperatorWorkflowTemplatesPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly) &&
+    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly) &&
       opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
@@ -301,6 +317,7 @@ export async function handleOperatorDesk(opts: {
     clientContextOnly ||
     searchOnly ||
     workflowsOnly ||
+    workflowTemplatesOnly ||
     wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery =
@@ -385,6 +402,85 @@ export async function handleOperatorDesk(opts: {
     return true;
   }
 
+  if (workflowTemplatesOnly) {
+    const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
+    if (opts.method === 'POST') {
+      let body: { templateId?: string; inputs?: Record<string, unknown>; sourceConversation?: string } = {};
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of opts.req) chunks.push(chunk as Buffer);
+        const text = Buffer.concat(chunks).toString('utf8').trim();
+        if (text) body = JSON.parse(text) as typeof body;
+      } catch {
+        sendJson(opts.res, 400, { error: 'invalid_json', code: 'invalid_json' }, opts.origin);
+        return true;
+      }
+      const templateId = body.templateId?.trim();
+      if (!templateId) {
+        sendJson(opts.res, 400, { error: 'template_id_required', code: 'template_id_required' }, opts.origin);
+        return true;
+      }
+      const result = await instantiateWorkflowFromTemplate({
+        principal,
+        dataDir: opts.cfg.dataDir,
+        templateId,
+        inputs: body.inputs,
+        sourceConversation: body.sourceConversation,
+      });
+      if (!result.ok) {
+        const status = result.error === 'forbidden' || result.error === 'client_not_entitled' ? 403 : 400;
+        sendJson(opts.res, status, { error: result.error, code: result.error }, opts.origin);
+        return true;
+      }
+      await appendTemplateLifecycle({
+        dataDir: opts.cfg.dataDir,
+        principal,
+        event: 'WORKFLOW_CREATED_FROM_TEMPLATE',
+        templateId,
+        templateName: result.payload.record.name,
+        clientCode: result.payload.record.scope.clientCode,
+      });
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question: body.sourceConversation ?? `Use template ${templateId}`,
+        previewText: result.payload.preview,
+        workflowId: result.payload.record.workflowId,
+        workflowName: result.payload.record.name,
+        clientCode: result.payload.record.scope.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        { workflowDraft: result.payload, workflowTemplates: { instantiated: templateId }, operatorDesk: { askAtlas } },
+        opts.origin,
+      );
+      return true;
+    }
+    const templateId = url.searchParams.get('templateId')?.trim();
+    try {
+      if (templateId) {
+        const detail = buildTemplateDetail(templateId);
+        if (!detail) {
+          sendJson(opts.res, 404, { error: 'template_not_found', code: 'template_not_found' }, opts.origin);
+          return true;
+        }
+        await appendTemplateLifecycle({
+          dataDir: opts.cfg.dataDir,
+          principal,
+          event: 'TEMPLATE_VIEWED',
+          templateId,
+          templateName: detail.name,
+        });
+        sendJson(opts.res, 200, { workflowTemplates: { detail } }, opts.origin);
+        return true;
+      }
+      const catalog = buildTemplateCatalog();
+      sendJson(opts.res, 200, { workflowTemplates: catalog }, opts.origin);
+    } catch {
+      sendJson(opts.res, 503, { error: 'workflow_templates_unavailable', code: 'workflow_templates_unavailable' }, opts.origin);
+    }
+    return true;
+  }
+
   if (workflowsOnly) {
     const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
     if (opts.method === 'POST') {
@@ -394,6 +490,8 @@ export async function handleOperatorDesk(opts: {
         reason?: string;
         instruction?: string;
         approveAuthority?: boolean;
+        templateId?: string;
+        inputs?: Record<string, unknown>;
       } = {};
       try {
         const chunks: Buffer[] = [];
@@ -405,6 +503,31 @@ export async function handleOperatorDesk(opts: {
         return true;
       }
       const action = body.action?.trim();
+
+      if (action === 'instantiate_template' && body.templateId?.trim()) {
+        const result = await instantiateWorkflowFromTemplate({
+          principal,
+          dataDir: opts.cfg.dataDir,
+          templateId: body.templateId.trim(),
+          inputs: body.inputs,
+          sourceConversation: body.instruction?.trim(),
+        });
+        if (!result.ok) {
+          const status = result.error === 'forbidden' || result.error === 'client_not_entitled' ? 403 : 400;
+          sendJson(opts.res, status, { error: result.error, code: result.error }, opts.origin);
+          return true;
+        }
+        await appendTemplateLifecycle({
+          dataDir: opts.cfg.dataDir,
+          principal,
+          event: 'WORKFLOW_CREATED_FROM_TEMPLATE',
+          templateId: body.templateId.trim(),
+          templateName: result.payload.record.name,
+          clientCode: result.payload.record.scope.clientCode,
+        });
+        sendJson(opts.res, 200, { workflowDraft: result.payload }, opts.origin);
+        return true;
+      }
 
       if (action === 'create_draft' && body.instruction?.trim()) {
         const result = await createWorkflowDraft({
@@ -596,6 +719,115 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+
+    if (mapsToTemplateDiscoveryIntent(question)) {
+      const discoveryAnswer = answerTemplateDiscovery(question);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: discoveryAnswer,
+        workflowId: 'template-discovery',
+        workflowName: 'Workflow template discovery',
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: discoveryAnswer,
+          workflowTemplates: buildTemplateCatalog(),
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['workflow_template_discovery'],
+            policyClass: 'READ_AUTO',
+            missionKey: 'ATLAS-WORKFLOW-TEMPLATES-001',
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToConversationalTemplateUse(question)) {
+      const templateId = resolveTemplateIdFromText(question);
+      if (!templateId) {
+        sendJson(
+          opts.res,
+          400,
+          { error: 'template_not_resolved', code: 'template_not_resolved' },
+          opts.origin,
+        );
+        return true;
+      }
+      const clientResolved = resolveClientFromInput(
+        undefined,
+        question,
+      );
+      const result = await instantiateWorkflowFromTemplate({
+        principal,
+        dataDir: opts.cfg.dataDir,
+        templateId,
+        inputs: {
+          clientCode: clientResolved.clientCode,
+          clientHint: question,
+        },
+        sourceConversation: question,
+      });
+      if (!result.ok) {
+        sendJson(opts.res, 400, { error: result.error, code: result.error }, opts.origin);
+        return true;
+      }
+      await appendTemplateLifecycle({
+        dataDir: opts.cfg.dataDir,
+        principal,
+        event: 'WORKFLOW_CREATED_FROM_TEMPLATE',
+        templateId,
+        templateName: result.payload.record.name,
+        clientCode: result.payload.record.scope.clientCode,
+      });
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: result.payload.preview,
+        workflowId: result.payload.record.workflowId,
+        workflowName: result.payload.record.name,
+        clientCode: result.payload.record.scope.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowDraft: result.payload,
+          workflowAnswer: `Workflow created from template.\n\n${result.payload.preview}`,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['workflow_template', 'workflow_definition'],
+            policyClass: 'READ_AUTO',
+            missionKey: 'ATLAS-WORKFLOW-TEMPLATES-001',
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (question.toLowerCase().includes('template') && question.toLowerCase().includes('workflow')) {
+      const templateAnswer = answerTemplateContext(question);
+      sendJson(
+        opts.res,
+        200,
+        {
+          workflowAnswer: templateAnswer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['workflow_template_context'],
+            policyClass: 'READ_AUTO',
+            missionKey: 'ATLAS-WORKFLOW-TEMPLATES-001',
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
 
     if (mapsToConversationalWorkflowRuntime(question)) {
       const defOverlayDir = resolveWorkflowDefinitionOverlayDir(opts.cfg.dataDir);

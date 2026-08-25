@@ -1052,6 +1052,10 @@ export function isOperatorWorkflowsPath(path: string): boolean {
   return path === '/operator/workflows.json';
 }
 
+export function isOperatorWorkflowTemplatesPath(path: string): boolean {
+  return path === '/operator/workflow-templates.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
@@ -1064,7 +1068,8 @@ export function isOperatorDeskPath(path: string): boolean {
     isOperatorEngineeringMissionsPath(path) ||
     isOperatorClientContextPath(path) ||
     isOperatorSearchPath(path) ||
-    isOperatorWorkflowsPath(path)
+    isOperatorWorkflowsPath(path) ||
+    isOperatorWorkflowTemplatesPath(path)
   );
 }
 
@@ -1078,7 +1083,8 @@ export function wantsOperatorJson(path: string, acceptHeader: string | undefined
     isOperatorEngineeringMissionsPath(path) ||
     isOperatorClientContextPath(path) ||
     isOperatorSearchPath(path) ||
-    isOperatorWorkflowsPath(path)
+    isOperatorWorkflowsPath(path) ||
+    isOperatorWorkflowTemplatesPath(path)
   ) {
     return true;
   }

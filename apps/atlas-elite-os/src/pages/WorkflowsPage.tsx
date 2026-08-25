@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AtlasCard, DataTable, EmptyState, StatusChip } from '@hvcg/atlas-design-system';
-import { Button, Caption1, Spinner, Text, Title3 } from '@fluentui/react-components';
+import { Button, Caption1, Spinner, Tab, TabList, Text, Title3 } from '@fluentui/react-components';
 import {
   fetchWorkflowCenter,
   fetchWorkflowDetail,
@@ -11,6 +11,7 @@ import {
 } from '../integrations/hub/pmApi';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { ModuleScaffold } from './shared/ModuleScaffold';
+import { WorkflowTemplatesPanel } from './WorkflowTemplatesPanel';
 
 function statusTone(status: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
   if (status === 'FAILED') return 'danger';
@@ -31,6 +32,7 @@ function formatWhen(value?: string) {
 
 export function WorkflowsPage() {
   const auth = useHubAuth();
+  const [view, setView] = useState<'workflows' | 'templates'>('workflows');
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
   const [counts, setCounts] = useState({ total: 0, requiresApproval: 0, failed: 0, paused: 0, running: 0 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -121,6 +123,19 @@ export function WorkflowsPage() {
         </Button>
       }
     >
+      <TabList
+        selectedValue={view}
+        onTabSelect={(_, data) => setView(data.value as 'workflows' | 'templates')}
+        style={{ marginBottom: 16 }}
+      >
+        <Tab value="workflows">All workflows</Tab>
+        <Tab value="templates">Templates</Tab>
+      </TabList>
+
+      {view === 'templates' ? <WorkflowTemplatesPanel /> : null}
+
+      {view === 'workflows' ? (
+        <>
       {error ? (
         <AtlasCard title="Connection or access error">
           <Text>{error}</Text>
@@ -274,6 +289,8 @@ export function WorkflowsPage() {
             <Caption1>Select a workflow to view detail.</Caption1>
           )}
         </AtlasCard>
+      ) : null}
+        </>
       ) : null}
     </ModuleScaffold>
   );

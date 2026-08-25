@@ -122,6 +122,9 @@ export type WorkflowDetail = WorkflowSummary & {
     sourceEvent?: string;
     createdFromAskAtlas?: boolean;
     conversationalProvenance?: string;
+    sourceTemplateId?: string;
+    sourceTemplateVersion?: number;
+    templateCustomizations?: Record<string, string | number | boolean>;
   };
   scope: {
     clientCode?: string;
@@ -673,11 +676,21 @@ function detailFromCustomDefinition(
   return {
     ...summary,
     overview: {
-      whyExists: `Created from Ask Atlas conversational workflow creation (${def.provenance}).`,
-      source: 'ask_atlas_conversational',
-      relatedMission: 'ATLAS-CONVERSATIONAL-WORKFLOW-CREATION-001',
+      whyExists: `Created from Ask Atlas ${def.provenance === 'template' ? 'workflow template' : 'conversational workflow creation'} (${def.provenance}).`,
+      source: def.provenance === 'template' ? 'workflow_template' : 'ask_atlas_conversational',
+      relatedMission:
+        def.provenance === 'template'
+          ? 'ATLAS-WORKFLOW-TEMPLATES-001'
+          : 'ATLAS-CONVERSATIONAL-WORKFLOW-CREATION-001',
       createdFromAskAtlas: true,
       conversationalProvenance: def.sourceConversation.slice(0, 500),
+      ...(def.sourceTemplateId
+        ? {
+            sourceTemplateId: def.sourceTemplateId,
+            sourceTemplateVersion: def.sourceTemplateVersion,
+            templateCustomizations: def.templateCustomizations,
+          }
+        : {}),
     },
     scope: {
       clientCode: def.scope.clientCode,
