@@ -67,7 +67,7 @@ function takeBound<T>(rows: T[]): T[] {
 }
 
 function relatedEmails(
-  item: DocumentOperatingRecord,
+  item: RelatedScopeItem & { parentMessageId?: string },
   search: AtlasAuthorizedSearch,
 ): RelatedDocumentEmailRef[] {
   const out: RelatedDocumentEmailRef[] = [];
@@ -333,12 +333,12 @@ export function attachRelatedContextToProjects(
 }
 
 /**
- * Canonical onboarding CAPITAL CONTEXT: entitled same-scope PREPARE_ONLY
- * capital refs on an onboarding agent record. Reuses relatedCapital() —
- * no new capital query. Fail-closed when ClientCode is missing /
- * non-canonical. Client A never receives Client B. No TargetAmount,
- * downloadUrl, contentBytes, lender criteria, or financing status.
- * Not a second capital product. Not external submit. Not send.
+ * Canonical onboarding CAPITAL + COMMUNICATION CONTEXT: entitled same-scope
+ * PREPARE_ONLY capital refs and DRAFT_ONLY mail-thread refs on an onboarding
+ * agent record. Reuses relatedCapital() + relatedEmails() — no new query.
+ * Fail-closed when ClientCode is missing / non-canonical. Client A never
+ * receives Client B. No TargetAmount, downloadUrl, contentBytes, lender
+ * criteria, send, or AUTO_RESPOND. Not a second product.
  */
 export function attachRelatedContextToOnboarding(
   principal: AtlasPrincipal,
@@ -349,9 +349,13 @@ export function attachRelatedContextToOnboarding(
   const relatedCapitalList = canonicalClientCode(item.clientCode)
     ? relatedCapital(item, search)
     : [];
+  const relatedEmailList = canonicalClientCode(item.clientCode)
+    ? relatedEmails(item, search)
+    : [];
   return {
     ...item,
     ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
+    ...(relatedEmailList.length ? { relatedEmail: relatedEmailList } : {}),
   };
 }
 

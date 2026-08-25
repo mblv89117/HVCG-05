@@ -136,12 +136,14 @@ export function composeOperationsHandoff(record: {
   blockers?: string[];
   ownerAttention?: string[];
   communicationPolicy?: OnboardingOperationsHandoff['communicationPolicy'];
+  relatedThreadCount?: number;
   capitalScope?: boolean;
 }): OnboardingOperationsHandoff {
   const blockers = record.blockers ?? [];
   const ownerAttention = record.ownerAttention ?? [];
   const missingDocumentCount = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
   const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const relatedThreadCount = Math.max(0, record.relatedThreadCount ?? 0);
   const capitalScope = Boolean(record.capitalScope);
   const nextOwnerAction =
     ownerAttention[0]
@@ -169,6 +171,7 @@ export function composeOperationsHandoff(record: {
       blockers,
       ownerAttention,
       communicationPolicy,
+      relatedThreadCount,
       capitalScope,
       nextOwnerAction,
       send: false,
@@ -188,6 +191,7 @@ export function composeOperationsHandoff(record: {
     blockers,
     ownerAttention,
     communicationPolicy,
+    relatedThreadCount,
     capitalScope,
     nextOwnerAction,
     send: false,
@@ -668,6 +672,7 @@ export function answerOnboardingContext(
       `Milestones: ${handoff.milestoneCount}`,
       `Documents missing: ${handoff.missingDocumentCount}`,
       `Communication policy: ${handoff.communicationPolicy}`,
+      `Related entitled threads: ${handoff.relatedThreadCount} (DRAFT_ONLY, no send)`,
       handoff.capitalScope ? 'Capital: PREPARE_ONLY (external submit owner-gated)' : 'Capital: none in scope',
       handoff.ownerAttention.length ? `Owner attention: ${handoff.ownerAttention.join('; ')}` : '',
       `Next owner action: ${handoff.nextOwnerAction}`,

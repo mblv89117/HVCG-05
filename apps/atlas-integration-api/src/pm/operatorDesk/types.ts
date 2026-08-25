@@ -648,6 +648,14 @@ export interface OnboardingAgentRecord {
    * Not a second capital product. Not external submit. Not send.
    */
   relatedCapital?: RelatedDocumentCapitalRef[];
+  /**
+   * Canonical onboarding COMMUNICATION CONTEXT: already-authorized same-scope
+   * mail-thread refs. Reuses RelatedDocumentEmailRef / relatedEmails().
+   * Omitted when none are entitled or when ClientCode is missing / non-canonical.
+   * Client A never receives Client B. DRAFT_ONLY. Never send / AUTO_RESPOND /
+   * live GTM. Not a second communications product.
+   */
+  relatedEmail?: RelatedDocumentEmailRef[];
 }
 
 export interface OnboardingAgentPayload {
