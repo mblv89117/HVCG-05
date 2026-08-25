@@ -28,6 +28,7 @@ import {
   AGENT_ACTIVITY_CONTRACT,
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
+  CAPITAL_SUBMISSION_POLICY_CLASS,
   GET_CLIENT_CONTEXT_TOOL,
   clientContextMissionKey,
   isOperatorActivityLedgerPath,
@@ -142,6 +143,11 @@ import {
   mapsToResearchIntelligenceHonestyIntent,
   RESEARCH_INTELLIGENCE_HONESTY_MISSION_KEY,
 } from './researchIntelligenceHonesty.ts';
+import {
+  answerCapitalSubmissionHonesty,
+  CAPITAL_SUBMISSION_HONESTY_MISSION_KEY,
+  mapsToCapitalSubmissionHonestyIntent,
+} from './capitalSubmissionHonesty.ts';
 import type { TaskRecord } from '../types.ts';
 
 async function loadOwnerApprovalTasks(opts: {
@@ -1009,6 +1015,40 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['research_intelligence_honesty'],
             policyClass: 'READ_AUTO',
             missionKey: RESEARCH_INTELLIGENCE_HONESTY_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToCapitalSubmissionHonestyIntent(question)) {
+      const entitled = entitledClientCodes(principal);
+      const capitalAnswer = answerCapitalSubmissionHonesty(question, {
+        entitledCodes: entitled,
+      });
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: capitalAnswer,
+        workflowId: 'capital-submission-honesty',
+        workflowName: match.clientCode
+          ? `Capital submission — ${match.clientCode}`
+          : 'Capital submission',
+        clientCode: match.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: capitalAnswer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['capital_submission_honesty'],
+            policyClass: CAPITAL_SUBMISSION_POLICY_CLASS,
+            missionKey: CAPITAL_SUBMISSION_HONESTY_MISSION_KEY,
             autoSend: false,
           },
         },
