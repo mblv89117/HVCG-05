@@ -75,6 +75,25 @@ export type OnboardingKickoff = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical BLOCKER REVIEW package. Surfaces already-known blockers. No send. */
+export type OnboardingBlockerReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  itemCount: number;
+  items: string[];
+  missingDocumentCount: number;
+  ownerAttention: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 export type OnboardingRunRecord = {
   workflowId: string;
   workflowDefinitionId: string;
@@ -102,6 +121,7 @@ export type OnboardingRunRecord = {
   milestones: OnboardingMilestoneState[];
   operationsHandoff: OnboardingOperationsHandoff;
   kickoff: OnboardingKickoff;
+  blockerReview: OnboardingBlockerReview;
   provenance: string;
 };
 
