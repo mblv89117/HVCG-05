@@ -40,6 +40,7 @@ import {
   isOperatorSearchPath,
   isOperatorWorkflowsPath,
   isOperatorWorkflowTemplatesPath,
+  isOperatorApprovalsPath,
   wantsOperatorJson,
   type OperatorDeskModel,
 } from './types.ts';
@@ -110,6 +111,35 @@ import {
   runClientOnboardingAutomation,
 } from './clientOnboardingAutomation.ts';
 import { readOnboardingOverlay, resolveOnboardingStateDir, ONBOARDING_AUTOMATION_MISSION_KEY } from './onboardingState.ts';
+import {
+  applyApprovalAction,
+  answerApprovalContext,
+  buildApprovalCenter,
+  getApprovalDetail,
+  mapsToApprovalContextIntent,
+} from './approvalCenter.ts';
+import { APPROVAL_CENTER_MISSION_KEY } from './approvalState.ts';
+import type { TaskRecord } from '../types.ts';
+
+async function loadOwnerApprovalTasks(opts: {
+  cfg: AppConfig;
+  repo: IntegrationRepository;
+  pm: PmRepository | null;
+  sharepoint?: SharePointPmService | null;
+  principal: Awaited<ReturnType<typeof requirePrincipal>>;
+}): Promise<TaskRecord[]> {
+  if (opts.cfg.pmBackend.mode === 'sharepoint' && opts.sharepoint) {
+    const tasks = await opts.sharepoint.listAuthorizedTasks(opts.principal);
+    return tasks.filter(
+      (t) => t.status === 'needs_owner_approval' || t.status === 'needs_review' || t.requiresApproval,
+    );
+  }
+  if (opts.pm) {
+    const cc = buildCommandCenter(opts.pm, opts.repo);
+    return cc.ownerApprovals ?? [];
+  }
+  return [];
+}
 
 export { isOperatorDeskPath };
 
@@ -302,10 +332,11 @@ export async function handleOperatorDesk(opts: {
   const searchOnly = isOperatorSearchPath(opts.path);
   const workflowsOnly = isOperatorWorkflowsPath(opts.path);
   const workflowTemplatesOnly = isOperatorWorkflowTemplatesPath(opts.path);
+  const approvalsOnly = isOperatorApprovalsPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly) &&
+    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly || approvalsOnly) &&
       opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
@@ -325,6 +356,7 @@ export async function handleOperatorDesk(opts: {
     searchOnly ||
     workflowsOnly ||
     workflowTemplatesOnly ||
+    approvalsOnly ||
     wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery =
@@ -484,6 +516,89 @@ export async function handleOperatorDesk(opts: {
       sendJson(opts.res, 200, { workflowTemplates: catalog }, opts.origin);
     } catch {
       sendJson(opts.res, 503, { error: 'workflow_templates_unavailable', code: 'workflow_templates_unavailable' }, opts.origin);
+    }
+    return true;
+  }
+
+  if (approvalsOnly) {
+    const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
+    const ownerTasks = await loadOwnerApprovalTasks({
+      cfg: opts.cfg,
+      repo: opts.repo,
+      pm: opts.pm,
+      sharepoint: opts.sharepoint,
+      principal,
+    });
+
+    if (opts.method === 'POST') {
+      let body: {
+        action?: string;
+        approvalId?: string;
+        reason?: string;
+        deferredUntil?: string;
+      } = {};
+      try {
+        body = (await readEventJson(opts.req)) as typeof body;
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(opts.res, status, { error: (err as Error).message, code: (err as { code?: string }).code || 'invalid_json' }, opts.origin);
+        return true;
+      }
+      const action = body.action?.trim();
+      const approvalId = body.approvalId?.trim();
+      if (!approvalId || !action || !['approve', 'reject', 'defer', 'cancel'].includes(action)) {
+        sendJson(opts.res, 400, { error: 'invalid_approval_action', code: 'invalid_approval_action' }, opts.origin);
+        return true;
+      }
+      const result = await applyApprovalAction({
+        cfg: opts.cfg,
+        principal,
+        dataDir: opts.cfg.dataDir,
+        approvalId,
+        action: action as 'approve' | 'reject' | 'defer' | 'cancel',
+        reason: body.reason,
+        deferredUntil: body.deferredUntil,
+        ownerApprovalTasks: ownerTasks,
+        sharepoint: opts.sharepoint ?? null,
+      });
+      if (!result.ok) {
+        const status =
+          result.error === 'forbidden' ? 403
+          : result.error === 'approval_not_found' ? 404
+          : 400;
+        sendJson(opts.res, status, { error: result.error, code: result.error }, opts.origin);
+        return true;
+      }
+      sendJson(opts.res, 200, { approvalCenter: { detail: result.detail } }, opts.origin);
+      return true;
+    }
+
+    const approvalId = url.searchParams.get('approvalId')?.trim();
+    try {
+      if (approvalId) {
+        const detail = getApprovalDetail({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          approvalId,
+          ownerApprovalTasks: ownerTasks,
+        });
+        if (!detail) {
+          sendJson(opts.res, 404, { error: 'approval_not_found', code: 'approval_not_found' }, opts.origin);
+          return true;
+        }
+        sendJson(opts.res, 200, { approvalCenter: { detail } }, opts.origin);
+        return true;
+      }
+      const center = buildApprovalCenter({
+        cfg: opts.cfg,
+        principal,
+        dataDir: opts.cfg.dataDir,
+        ownerApprovalTasks: ownerTasks,
+      });
+      sendJson(opts.res, 200, { approvalCenter: center }, opts.origin);
+    } catch {
+      sendJson(opts.res, 503, { error: 'approval_center_unavailable', code: 'approval_center_unavailable' }, opts.origin);
     }
     return true;
   }
@@ -752,6 +867,46 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+
+    if (mapsToApprovalContextIntent(question)) {
+      const ownerTasks = await loadOwnerApprovalTasks({
+        cfg: opts.cfg,
+        repo: opts.repo,
+        pm: opts.pm,
+        sharepoint: opts.sharepoint,
+        principal,
+      });
+      const approvalModel = buildApprovalCenter({
+        cfg: opts.cfg,
+        principal,
+        dataDir: opts.cfg.dataDir,
+        ownerApprovalTasks: ownerTasks,
+      });
+      const approvalAnswer = answerApprovalContext(question, approvalModel);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: approvalAnswer,
+        workflowId: 'approval-center',
+        workflowName: 'Approval Center',
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          approvalAnswer,
+          approvalCenter: approvalModel,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['approval_center'],
+            policyClass: 'READ_AUTO',
+            missionKey: APPROVAL_CENTER_MISSION_KEY,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
 
     if (mapsToOnboardingContextIntent(question)) {
       const onboardingOverlay = readOnboardingOverlay(resolveOnboardingStateDir(opts.cfg.dataDir));
