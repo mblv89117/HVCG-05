@@ -19,6 +19,7 @@ import {
   composeOnboardingWorkspaceReview,
   composeOnboardingProjectReview,
   composeOnboardingTaskReview,
+  composeOnboardingAgentAssignmentReview,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -1697,6 +1698,97 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Task review for ACCG01: OPEN/);
     assert.match(answer, /did not invent or duplicate tasks|did not invent a ClientCode/);
     assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate tasks created/i.test(answer), false);
+  });
+
+  it('prepares onboarding agent assignment review from entitled agents and answers Ask Atlas', () => {
+    const clear = composeOnboardingAgentAssignmentReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      assignedAgents: ['atlas-onboarding-agent', 'atlas-hub-runtime'],
+      reusedExisting: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(clear.status, 'CLEAR');
+    assert.equal(clear.ready, true);
+    assert.equal(clear.send, false);
+    assert.equal(clear.outbound, false);
+    assert.equal(clear.liveGtmOutbound, false);
+    assert.equal(clear.capitalSubmit, false);
+    assert.equal(clear.agentReconciled, true);
+    assert.equal(clear.reusedExisting, true);
+    assert.equal(clear.agentCount, 2);
+    assert.equal(clear.clientCode, 'ACCG01');
+
+    const open = composeOnboardingAgentAssignmentReview({
+      identityResolutionRequired: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(open.status, 'OPEN');
+    assert.equal(open.ready, false);
+    assert.equal(open.reusedExisting, false);
+    assert.match(open.nextOwnerAction, /Assign entitled client scope before agent/);
+
+    const missingAgents = composeOnboardingAgentAssignmentReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(missingAgents.status, 'OPEN');
+    assert.equal(missingAgents.ready, false);
+    assert.match(missingAgents.nextOwnerAction, /do not create duplicates/i);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'IDENTITY_RECONCILIATION' as const,
+      currentStep: 'Resolve authoritative ClientCode',
+      nextStep: 'Provide client scope before onboarding execution',
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      ownerAttention: ['Assign client scope to onboarding workflow'],
+      taskIds: [],
+      milestoneIds: [],
+      assignedAgents: [],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: true,
+      workspaceReconciled: false,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        identityResolutionRequired: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      agentAssignmentReview: open,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding agent assignment for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('Review onboarding agent assignment for ACCG'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What is the onboarding agent assignment for ACCG?'), false);
+    const answer = answerOnboardingContext('What is the onboarding agent assignment for ACCG?', record);
+    assert.match(answer, /Agent assignment review for ACCG01: OPEN/);
+    assert.match(answer, /did not invent or duplicate agents|did not invent a ClientCode/);
+    assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate agents created/i.test(answer), false);
   });
 
   it('restore env', () => {

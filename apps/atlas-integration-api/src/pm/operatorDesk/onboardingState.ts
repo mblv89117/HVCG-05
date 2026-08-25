@@ -213,6 +213,28 @@ export type OnboardingTaskReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical AGENT ASSIGNMENT REVIEW. Surfaces already-known entitled agents. No invented agents. */
+export type OnboardingAgentAssignmentReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  agentCount: number;
+  agentReconciled: boolean;
+  reusedExisting: boolean;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 /** Canonical DOCUMENT REVIEW package. Surfaces already-known documentGaps. No invented receipt. */
 export type OnboardingDocumentReview = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -289,6 +311,7 @@ export type OnboardingRunRecord = {
   workspaceReview?: OnboardingWorkspaceReview;
   projectReview?: OnboardingProjectReview;
   taskReview?: OnboardingTaskReview;
+  agentAssignmentReview?: OnboardingAgentAssignmentReview;
   provenance: string;
 };
 

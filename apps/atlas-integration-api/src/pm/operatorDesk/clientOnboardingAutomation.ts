@@ -32,6 +32,7 @@ import {
   type OnboardingWorkspaceReview,
   type OnboardingProjectReview,
   type OnboardingTaskReview,
+  type OnboardingAgentAssignmentReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -828,6 +829,89 @@ export function composeOnboardingTaskReview(record: {
   };
 }
 
+export function composeOnboardingAgentAssignmentReview(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  assignedAgents?: string[];
+  reusedExisting?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingAgentAssignmentReview['communicationPolicy'];
+}): OnboardingAgentAssignmentReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const assignedAgents = (record.assignedAgents ?? []).map((id) => id.trim()).filter(Boolean);
+  const agentCount = assignedAgents.length;
+  const agentReconciled = agentCount > 0;
+  const reusedExisting = Boolean(record.reusedExisting && agentReconciled);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before agent assignment');
+  } else if (!agentReconciled) {
+    items.push('Existing entitled onboarding agents are not confirmed — Atlas will not invent or duplicate agents');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope before agent assignment'
+      : !agentReconciled
+        ? 'Confirm the existing entitled onboarding agents; do not create duplicates'
+        : reusedExisting
+          ? 'Existing entitled onboarding agents reused — no duplicate agents created'
+          : 'Governed onboarding agents are reconciled — no duplicate agents created';
+  const flags = {
+    agentCount,
+    agentReconciled,
+    reusedExisting,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!agentReconciled) {
+    const status = blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'PROPOSED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...(record.projectId ? { projectId: record.projectId } : {}),
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -1016,6 +1100,11 @@ export async function runClientOnboardingAutomation(opts: {
         communicationPolicy: 'DRAFT_ONLY',
       }),
       taskReview: composeOnboardingTaskReview({
+        identityResolutionRequired: true,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      agentAssignmentReview: composeOnboardingAgentAssignmentReview({
         identityResolutionRequired: true,
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
@@ -1284,6 +1373,18 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const assignedAgents = ['atlas-onboarding-agent', 'atlas-hub-runtime'];
+  const agentAssignmentReview = composeOnboardingAgentAssignmentReview({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    projectId,
+    projectName,
+    assignedAgents,
+    reusedExisting: true,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
@@ -1295,6 +1396,7 @@ export async function runClientOnboardingAutomation(opts: {
   if (workspaceReview.status !== 'NOT_READY') events.push('WORKSPACE_REVIEW');
   if (projectReview.status !== 'NOT_READY') events.push('PROJECT_REVIEW');
   if (taskReview.status !== 'NOT_READY') events.push('TASK_REVIEW');
+  if (agentAssignmentReview.status !== 'NOT_READY') events.push('AGENT_ASSIGNMENT_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -1315,7 +1417,7 @@ export async function runClientOnboardingAutomation(opts: {
     projectName,
     taskIds,
     milestoneIds,
-    assignedAgents: ['atlas-onboarding-agent', 'atlas-hub-runtime'],
+    assignedAgents,
     documentGaps,
     communicationPolicy: 'DRAFT_ONLY',
     capitalScope,
@@ -1337,6 +1439,7 @@ export async function runClientOnboardingAutomation(opts: {
     workspaceReview,
     projectReview,
     taskReview,
+    agentAssignmentReview,
     provenance: 'onboarding_automation',
   };
 
@@ -1465,6 +1568,9 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'task review',
   'onboarding tasks',
   'onboarding task',
+  'agent assignment',
+  'assigned agent',
+  'agent review',
   'reconcile',
   'start',
   'run',
@@ -1647,6 +1753,37 @@ export function answerOnboardingContext(
         : 'Existing entitled tasks: not confirmed',
       pack.reusedExisting ? 'No duplicate tasks created.' : 'Atlas did not invent or duplicate tasks.',
       pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled onboarding tasks are reconciled.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (q.includes('agent assignment') || q.includes('assigned agent') || q.includes('agent review')) {
+    const pack = record.agentAssignmentReview ?? composeOnboardingAgentAssignmentReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      assignedAgents: record.assignedAgents,
+      reusedExisting: Boolean(record.agentAssignmentReview?.reusedExisting),
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Agent assignment review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      `Agents: ${pack.agentCount}`,
+      pack.agentReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled agents: reused'
+          : 'Governed onboarding agents: reconciled'
+        : 'Existing entitled agents: not confirmed',
+      pack.reusedExisting ? 'No duplicate agents created.' : 'Atlas did not invent or duplicate agents.',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled onboarding agents are reconciled.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
       'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
