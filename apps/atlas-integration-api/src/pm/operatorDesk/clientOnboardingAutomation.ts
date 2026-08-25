@@ -31,6 +31,7 @@ import {
   type OnboardingIdentityReview,
   type OnboardingWorkspaceReview,
   type OnboardingProjectReview,
+  type OnboardingTaskReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -744,6 +745,89 @@ export function composeOnboardingProjectReview(record: {
   };
 }
 
+export function composeOnboardingTaskReview(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  taskIds?: string[];
+  reusedExisting?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingTaskReview['communicationPolicy'];
+}): OnboardingTaskReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const taskIds = (record.taskIds ?? []).map((id) => id.trim()).filter(Boolean);
+  const taskCount = taskIds.length;
+  const taskReconciled = taskCount > 0;
+  const reusedExisting = Boolean(record.reusedExisting && taskReconciled);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before task reconciliation');
+  } else if (!taskReconciled) {
+    items.push('Existing entitled onboarding tasks are not confirmed — Atlas will not invent or duplicate tasks');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope before task reconciliation'
+      : !taskReconciled
+        ? 'Confirm the existing entitled onboarding tasks; do not create duplicates'
+        : reusedExisting
+          ? 'Existing entitled onboarding tasks reused — no duplicate tasks created'
+          : 'Governed onboarding tasks are reconciled — no duplicate tasks created';
+  const flags = {
+    taskCount,
+    taskReconciled,
+    reusedExisting,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!taskReconciled) {
+    const status = blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'PROPOSED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...(record.projectId ? { projectId: record.projectId } : {}),
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -931,6 +1015,11 @@ export async function runClientOnboardingAutomation(opts: {
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      taskReview: composeOnboardingTaskReview({
+        identityResolutionRequired: true,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'onboarding_automation',
     };
     upsertOnboardingRun(dir, record);
@@ -957,6 +1046,7 @@ export async function runClientOnboardingAutomation(opts: {
   let projectName: string | undefined;
   let reusedExistingProject = false;
   const taskIds: string[] = [];
+  let reusedExistingTasks = false;
   const milestoneIds: string[] = [];
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
@@ -1008,7 +1098,10 @@ export async function runClientOnboardingAutomation(opts: {
       const exists = existingTasks.some((t) => t.title === taskDef.title);
       if (exists) {
         const found = existingTasks.find((t) => t.title === taskDef.title);
-        if (found?.id) taskIds.push(found.id);
+        if (found?.id) {
+          taskIds.push(found.id);
+          reusedExistingTasks = true;
+        }
         continue;
       }
       if (!opts.dryRun && projectId) {
@@ -1180,6 +1273,17 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const taskReview = composeOnboardingTaskReview({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    projectId,
+    projectName,
+    taskIds,
+    reusedExisting: reusedExistingTasks,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
@@ -1190,6 +1294,7 @@ export async function runClientOnboardingAutomation(opts: {
   if (identityReview.status !== 'NOT_READY') events.push('IDENTITY_REVIEW');
   if (workspaceReview.status !== 'NOT_READY') events.push('WORKSPACE_REVIEW');
   if (projectReview.status !== 'NOT_READY') events.push('PROJECT_REVIEW');
+  if (taskReview.status !== 'NOT_READY') events.push('TASK_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -1231,6 +1336,7 @@ export async function runClientOnboardingAutomation(opts: {
     identityReview,
     workspaceReview,
     projectReview,
+    taskReview,
     provenance: 'onboarding_automation',
   };
 
@@ -1356,6 +1462,9 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'workspace review',
   'project review',
   'project setup',
+  'task review',
+  'onboarding tasks',
+  'onboarding task',
   'reconcile',
   'start',
   'run',
@@ -1507,6 +1616,37 @@ export function answerOnboardingContext(
         : 'Existing entitled project: not confirmed',
       pack.reusedExisting ? 'No duplicate project created.' : 'Atlas did not invent or duplicate a project.',
       pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled onboarding project is reconciled.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (q.includes('task review') || q.includes('onboarding task')) {
+    const pack = record.taskReview ?? composeOnboardingTaskReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      taskIds: record.taskIds,
+      reusedExisting: Boolean(record.taskReview?.reusedExisting),
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Task review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      `Tasks: ${pack.taskCount}`,
+      pack.taskReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled tasks: reused'
+          : 'Governed onboarding tasks: reconciled'
+        : 'Existing entitled tasks: not confirmed',
+      pack.reusedExisting ? 'No duplicate tasks created.' : 'Atlas did not invent or duplicate tasks.',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled onboarding tasks are reconciled.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
       'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',

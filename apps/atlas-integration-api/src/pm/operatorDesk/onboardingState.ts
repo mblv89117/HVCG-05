@@ -191,6 +191,28 @@ export type OnboardingProjectReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical TASK REVIEW package. Surfaces already-known entitled tasks. No duplicate tasks. */
+export type OnboardingTaskReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  taskCount: number;
+  taskReconciled: boolean;
+  reusedExisting: boolean;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 /** Canonical DOCUMENT REVIEW package. Surfaces already-known documentGaps. No invented receipt. */
 export type OnboardingDocumentReview = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -266,6 +288,7 @@ export type OnboardingRunRecord = {
   identityReview?: OnboardingIdentityReview;
   workspaceReview?: OnboardingWorkspaceReview;
   projectReview?: OnboardingProjectReview;
+  taskReview?: OnboardingTaskReview;
   provenance: string;
 };
 
