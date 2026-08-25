@@ -792,10 +792,30 @@ export interface ProjectOperatingRecord {
    * contentBytes, transcript, attendees, invented titles / ids /
    * counts, ClientCodes, Hub-MI, TargetAmount, lender criteria, fit,
    * financing status, or invented milestone rows. relatedMeetings /
-   * researchRelationship / relatedDocuments stay as composed.
-   * Not a second project or search product.
+   * researchRelationship / relatedDocuments / relatedThreads stay as
+   * composed. Not a second project or search product.
    */
   relatedProjects?: RelatedDocumentProjectRef[];
+  /**
+   * Already-entitled same-scope mail-thread operating-record refs. Reuses
+   * RelatedDocumentEmailRef / relatedEmails() — the same
+   * entitled same-scope inverse already live on research-intel /
+   * onboarding / client support / capital prepare. Copied after
+   * authorization. Omitted when none are entitled or when ClientCode
+   * is missing / non-canonical (fail-closed; never guess). Unscoped
+   * never receives scoped threads. Unscoped lender catalog titles
+   * never attach scoped threads. Client A never receives Client B.
+   * Refs only — no preview body, suggestedDraft, or send.
+   * DRAFT_ONLY / send=false / autoRespond=false / indexedPreviewOnly
+   * stay as composed on the source thread payload. Never downloadUrl,
+   * contentBytes, transcript, attendees, full mail body, invented
+   * titles / ids / counts, ClientCodes, Hub-MI, TargetAmount, lender
+   * criteria, fit, or financing status. SAS / anonymous webUrl dropped.
+   * relatedMeetings / researchRelationship / relatedDocuments /
+   * relatedProjects stay as composed. Not a second communications or
+   * capital product. Not send.
+   */
+  relatedThreads?: RelatedDocumentEmailRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
