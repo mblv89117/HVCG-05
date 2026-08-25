@@ -179,6 +179,7 @@ function reconstructionPicture(): OperatorOperatingPicture {
 }
 
 const THREAD_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-thread';
+const ATT_PARENT_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-att-parent';
 
 function syn01ThreadHit(overrides: Record<string, unknown> = {}) {
   return {
@@ -196,6 +197,24 @@ function syn01ThreadHit(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function syn01AttachmentHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'document' as const,
+    id: 'mail-att-syn',
+    title: 'SYN01 term-sheet.pdf',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications/file-index',
+    clientCode: 'SYN01',
+    webUrl: ATT_PARENT_SOURCE,
+    provenance: 'CONFIRMED' as const,
+    parentMessageId: 'AAMk-syn-parent',
+    attachmentId: 'att-syn-1',
+    contentType: 'application/pdf',
+    size: 1200,
+    ...overrides,
+  };
+}
+
 function noInvent(projects: AtlasClientContext['projects']): void {
   const serialized = JSON.stringify(projects);
   assert.equal(serialized.includes('PDG01'), false);
@@ -209,7 +228,7 @@ describe('get_client_context project operating records', () => {
   it('attaches the same copied records as authorizedSearch.projects for a bound current entitled client', async () => {
     const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(projectService(), staff, 'SYN01');
-    const entitledHits = [...found.results, syn01ThreadHit()];
+    const entitledHits = [...found.results, syn01ThreadHit(), syn01AttachmentHit()];
     const search = await searchAuthorizedKnowledge({
       principal: staff,
       picture: reconstructionPicture(),
@@ -273,6 +292,24 @@ describe('get_client_context project operating records', () => {
       false,
     );
     assert.equal(JSON.stringify(current.relatedThreads).includes('Can you confirm the next entitled document?'), false);
+    assert.equal(current.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.deepEqual(current.relatedAttachments, searchCurrent.relatedAttachments);
+    assert.equal(
+      (current.relatedAttachments || []).some(
+        (row) =>
+          /pdg/i.test(row.id) ||
+          /pdg/i.test(row.title) ||
+          'contentBytes' in row ||
+          'downloadUrl' in row ||
+          row.binariesInAtlas !== false,
+      ),
+      false,
+    );
+    assert.equal(
+      /TargetAmount|downloadUrl|Hub-MI|contentBytes/i.test(JSON.stringify(current.relatedAttachments)),
+      false,
+    );
+    assert.equal(current.relatedAttachments?.every((row) => row.binariesInAtlas === false), true);
 
     const viaLoad = await loadClientContext({
       principal: staff,
@@ -403,13 +440,14 @@ describe('get_client_context project operating records', () => {
       const ctxText = await unsignedCtx.text();
       const ctxTap =
         unsignedCtx.status === 401 &&
-        !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|proj-syn/i.test(ctxText);
+        !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|proj-syn|mail-att-syn/i.test(ctxText);
       assert.equal(unsignedCtx.status, 401, 'not ok 1 - unsigned /operator/client-context.json 401');
       const ctxBody = JSON.parse(ctxText) as { error?: string; clientContext?: AtlasClientContext };
       assert.equal(ctxBody.error, 'unauthorized');
       assert.equal(ctxBody.clientContext, undefined);
       assert.equal('relatedProjects' in ctxBody, false);
       assert.equal('relatedThreads' in ctxBody, false);
+      assert.equal('relatedAttachments' in ctxBody, false);
       assert.equal(ctxTap, true, 'not ok 2 - unsigned client-context leaks project payload');
 
       const unsignedRuntime = await fetch(
@@ -429,13 +467,14 @@ describe('get_client_context project operating records', () => {
       const searchText = await unsignedSearch.text();
       const searchTap =
         unsignedSearch.status === 401 &&
-        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|proj-syn/i.test(searchText);
+        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|proj-syn|mail-att-syn/i.test(searchText);
       assert.equal(unsignedSearch.status, 401, 'not ok 5 - unsigned /operator/search.json 401');
       const searchBody = JSON.parse(searchText) as { error?: string; authorizedSearch?: AtlasAuthorizedSearch };
       assert.equal(searchBody.error, 'unauthorized');
       assert.equal(searchBody.authorizedSearch, undefined);
       assert.equal('relatedProjects' in searchBody, false);
       assert.equal('relatedThreads' in searchBody, false);
+      assert.equal('relatedAttachments' in searchBody, false);
       assert.equal(searchTap, true, 'not ok 6 - unsigned search leaks project payload');
     } finally {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));

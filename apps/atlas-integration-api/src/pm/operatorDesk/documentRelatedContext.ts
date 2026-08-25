@@ -2,8 +2,8 @@
  * Related operating context on already-authorized DocumentOperatingRecord
  * items, the inverse on MeetingOperatingRecord items, the inverse
  * project → meetings, project → documents, project → peer
- * projects, and project → threads links on ProjectOperatingRecord
- * items, the inverse
+ * projects, project → threads, and project → attachments links on
+ * ProjectOperatingRecord items, the inverse
  * mail-thread → meetings, mail-thread → documents,
  * mail-thread suggestedDraft.suggestedAttachments,
  * mail-thread suggestedDraft.suggestedProjects,
@@ -615,24 +615,29 @@ export function attachRelatedContextToMeetings(
  * RelatedDocumentProjectRef — no new project query; self skipped),
  * and entitled same-scope mail-thread operating records already on
  * authorizedSearch.threads.items (reuses relatedEmails /
- * RelatedDocumentEmailRef — no new query). Isolation:
+ * RelatedDocumentEmailRef — no new query), and entitled same-scope
+ * already-indexed outlook-mail-attachment metadata already on
+ * authorizedSearch.documents.items / hits kind=document (reuses
+ * relatedAttachments / RelatedDocumentAttachmentRef — no new Graph /
+ * search / attachment query, no contentBytes). Isolation:
  * sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit researchRelationship / relatedDocuments /
- * relatedProjects / relatedThreads rather than guess. Unscoped
- * never receives scoped relations. Unscoped lender catalog titles
- * never attach to a scoped project. Client A never receives Client B.
- * Self never appears on relatedProjects (relatedProjects skips
- * project.id === item.id). SAS / anonymous webUrl dropped. No
- * downloadUrl. No transcript text. No TargetAmount. No preview
+ * relatedProjects / relatedThreads / relatedAttachments rather than
+ * guess. Unscoped never receives scoped relations. Unscoped lender
+ * catalog titles never attach to a scoped project. Client A never
+ * receives Client B. Self never appears on relatedProjects
+ * (relatedProjects skips project.id === item.id). SAS / anonymous
+ * webUrl dropped. No downloadUrl. No contentBytes. binariesInAtlas
+ * stays false. No transcript text. No TargetAmount. No preview
  * body / suggestedDraft / send on the thread refs. No invented
- * titles / ids / ClientCodes / Hub-MI / milestone rows.
- * historicalHvs / hubMiRow copy from the entitled source project
- * only — never invent hubMiRow=true. Classification / invented /
- * hubMiRow stay as composed on the source project row. DRAFT_ONLY /
- * send=false / autoRespond=false / indexedPreviewOnly stay as
- * composed on the source thread payload. Not a second
- * communications or search product.
+ * titles / ids / ClientCodes / Hub-MI / milestone rows / attachment
+ * names / counts. historicalHvs / hubMiRow copy from the entitled
+ * source project only — never invent hubMiRow=true. Classification /
+ * invented / hubMiRow stay as composed on the source project row.
+ * DRAFT_ONLY / send=false / autoRespond=false / indexedPreviewOnly
+ * stay as composed on the source thread payload. Not a second
+ * attachment, communications, or search product.
  */
 export function attachRelatedContextToProject(
   principal: AtlasPrincipal,
@@ -651,6 +656,9 @@ export function attachRelatedContextToProject(
   const relatedThreads = canonicalClientCode(item.clientCode)
     ? relatedEmails(item, search)
     : [];
+  const relatedAttachmentsList = canonicalClientCode(item.clientCode)
+    ? relatedAttachments(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
@@ -658,6 +666,7 @@ export function attachRelatedContextToProject(
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
     ...(relatedThreads.length ? { relatedThreads } : {}),
+    ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
   };
 }
 

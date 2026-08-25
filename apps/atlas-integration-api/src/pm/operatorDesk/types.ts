@@ -255,13 +255,21 @@ export interface AtlasClientContext {
    * already-entitled same-scope *other* project operating-record refs
    * (peer rows, never self; same RelatedDocumentProjectRef /
    * relatedProjects path as research-intel / onboarding / client-support /
-   * capital prepare). Missing / non-canonical ClientCode omits
-   * researchRelationship / relatedDocuments / relatedProjects
-   * (fail-closed; never guess). Unscoped never receives scoped peers.
-   * Client A never receives Client B. historicalHvs / hubMiRow copy
-   * from the entitled source project only — never invent hubMiRow=true.
-   * No TargetAmount. No invented titles / ids / ClientCodes / Hub-MI /
-   * milestone rows.
+   * capital prepare). Optional relatedThreads copies already-entitled
+   * same-scope mail-thread operating-record refs (same
+   * RelatedDocumentEmailRef / relatedEmails path). Optional
+   * relatedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
+   * / relatedAttachments path as documents / meetings / onboarding /
+   * client-support / capital prepare). Missing / non-canonical
+   * ClientCode omits researchRelationship / relatedDocuments /
+   * relatedProjects / relatedThreads / relatedAttachments
+   * (fail-closed; never guess). Unscoped never receives scoped peers
+   * or scoped attachments. Client A never receives Client B.
+   * binariesInAtlas stays false. No downloadUrl. No contentBytes.
+   * historicalHvs / hubMiRow copy from the entitled source project
+   * only — never invent hubMiRow=true. No TargetAmount. No invented
+   * titles / ids / ClientCodes / Hub-MI / milestone rows.
    */
   projects: {
     kind: 'project_operating_record_v1';
@@ -792,8 +800,9 @@ export interface ProjectOperatingRecord {
    * contentBytes, transcript, attendees, invented titles / ids /
    * counts, ClientCodes, Hub-MI, TargetAmount, lender criteria, fit,
    * financing status, or invented milestone rows. relatedMeetings /
-   * researchRelationship / relatedDocuments / relatedThreads stay as
-   * composed. Not a second project or search product.
+   * researchRelationship / relatedDocuments / relatedThreads /
+   * relatedAttachments stay as composed. Not a second project or
+   * search product.
    */
   relatedProjects?: RelatedDocumentProjectRef[];
   /**
@@ -812,10 +821,30 @@ export interface ProjectOperatingRecord {
    * titles / ids / counts, ClientCodes, Hub-MI, TargetAmount, lender
    * criteria, fit, or financing status. SAS / anonymous webUrl dropped.
    * relatedMeetings / researchRelationship / relatedDocuments /
-   * relatedProjects stay as composed. Not a second communications or
-   * capital product. Not send.
+   * relatedProjects / relatedAttachments stay as composed. Not a
+   * second communications or capital product. Not send.
    */
   relatedThreads?: RelatedDocumentEmailRef[];
+  /**
+   * Already-indexed outlook-mail-attachment metadata refs. Reuses
+   * RelatedDocumentAttachmentRef / relatedAttachments() — the same
+   * entitled same-scope inverse already live on documents / meetings /
+   * onboarding / client support / capital prepare /
+   * suggestedDraft.suggestedAttachments. Copied after authorization.
+   * Metadata only: id / title / parentMessageId / attachmentId /
+   * contentType / size / classification / webUrl. binariesInAtlas stays
+   * false. Omitted when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped attachments. Unscoped lender catalog titles never attach
+   * scoped attachments. Client A never receives Client B. SAS /
+   * anonymous webUrl dropped. Never downloadUrl, contentBytes,
+   * invented attachment names / ids / counts, ClientCodes, Hub-MI,
+   * TargetAmount, lender criteria, fit, or financing status.
+   * relatedMeetings / researchRelationship / relatedDocuments /
+   * relatedProjects / relatedThreads stay as composed. Not a second
+   * attachment or search product. Not send.
+   */
+  relatedAttachments?: RelatedDocumentAttachmentRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
@@ -1594,15 +1623,23 @@ export interface AtlasAuthorizedSearch {
    * Optional relatedProjects copies already-entitled same-scope *other*
    * project operating-record refs (peer rows, never self; same
    * RelatedDocumentProjectRef / relatedProjects path as research-intel /
-   * onboarding / client-support / capital prepare). Missing /
-   * non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments / relatedProjects (fail-closed; never guess).
-   * Unscoped never receives scoped peers. Client A never receives
-   * Client B. Self never appears. relatedMeetings stays as composed.
+   * onboarding / client-support / capital prepare). Optional
+   * relatedThreads copies already-entitled same-scope mail-thread
+   * operating-record refs (same RelatedDocumentEmailRef / relatedEmails
+   * path). Optional relatedAttachments copies already-indexed
+   * same-scope outlook-mail-attachment metadata (same
+   * RelatedDocumentAttachmentRef / relatedAttachments path as
+   * documents / meetings / onboarding / client-support / capital
+   * prepare). Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments / relatedProjects /
+   * relatedThreads / relatedAttachments (fail-closed; never guess).
+   * Unscoped never receives scoped peers or scoped attachments.
+   * Client A never receives Client B. Self never appears.
+   * relatedMeetings stays as composed. binariesInAtlas stays false.
    * historicalHvs / hubMiRow copy from the entitled source project
    * only — never invent hubMiRow=true. No TargetAmount. No invented
    * titles / ids / ClientCodes / Hub-MI / milestone rows. No
-   * downloadUrl. No invented facts.
+   * downloadUrl. No contentBytes. No invented facts.
    */
   projects: {
     kind: 'project_operating_record_v1';
