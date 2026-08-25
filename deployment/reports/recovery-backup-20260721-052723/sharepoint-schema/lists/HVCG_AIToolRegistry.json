@@ -1,0 +1,97 @@
+{
+  "title": "HVCG_AIToolRegistry",
+  "description": "AI \u2014 Tool permissions registry",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ToolKey",
+      "displayName": "ToolKey",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ToolCategory",
+      "displayName": "ToolCategory",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "ReadSharePoint",
+        "Search",
+        "Summarize",
+        "Draft",
+        "Analyze",
+        "Export",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "IsEnabled",
+      "displayName": "IsEnabled",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "RequiresApproval",
+      "displayName": "RequiresApproval",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "MaxDataClassification",
+      "displayName": "MaxDataClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ],
+      "default": "Confidential"
+    },
+    {
+      "internalName": "AllowedWorkerKeys",
+      "displayName": "AllowedWorkerKeys",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ProhibitedActions",
+      "displayName": "ProhibitedActions",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "e.g. SendEmail, CreateExternalShare"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

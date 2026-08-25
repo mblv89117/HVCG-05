@@ -1,0 +1,401 @@
+{
+  "generated_at": "2026-07-21T19:25:03.149346Z",
+  "account": "manny@highvaluecapitalgroup.com (pac/az)",
+  "production_sharepoint": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+  "production_dataverse": "https://orgee2f7545.crm.dynamics.com",
+  "solutions": [
+    {
+      "@odata.etag": "W/\"1978871\"",
+      "solutionid": "b0d89768-bd80-f111-ab0e-6045bd0196b3",
+      "uniquename": "HVCGProductionConfig",
+      "ismanaged": false,
+      "version": "1.0.0.0",
+      "friendlyname": "HVCG Production Config"
+    },
+    {
+      "@odata.etag": "W/\"2661585\"",
+      "solutionid": "f3284fd3-fd4a-44a8-bc3a-b6963b8595d5",
+      "uniquename": "HVCGCommandCenterDev",
+      "ismanaged": true,
+      "version": "1.1.5.0",
+      "friendlyname": "HVCG Command Center DEV"
+    }
+  ],
+  "counts": {
+    "dataverse_hvcg_workflows": 16,
+    "power_automate_cloud_flows": 16,
+    "HVCGProductionConfig_workflow_components": 16,
+    "HVCGCommandCenterDev_workflow_components": 16,
+    "required_minimum_present": 12,
+    "required_minimum_total": 12
+  },
+  "connection_references": [
+    {
+      "connectionreferencelogicalname": "hvcg_sharedsharepointonline",
+      "connectionreferencedisplayname": "HVCG SharePoint",
+      "connectionid": "f2e0400083e44915828d5bf9f6069a2e"
+    },
+    {
+      "connectionreferencelogicalname": "hvcg_sharedoffice365",
+      "connectionreferencedisplayname": "HVCG Outlook",
+      "connectionid": "ac42d3339d4f4841a21f86dade898123"
+    },
+    {
+      "connectionreferencelogicalname": "hvcg_sharedteams",
+      "connectionreferencedisplayname": "HVCG Teams",
+      "connectionid": "305c5c5e2c80407fac9d5993d54cdae9"
+    },
+    {
+      "connectionreferencelogicalname": "hvcg_sharedapprovals",
+      "connectionreferencedisplayname": "HVCG Approvals",
+      "connectionid": "620037803eda4c06b748ac66e9196c9b"
+    }
+  ],
+  "environment_variables": {
+    "hvcg_EnableClientEmails": "false",
+    "hvcg_CommandCenterSiteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+    "hvcg_ClientsSiteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients",
+    "hvcg_CrmEnableTeamsNotify": "false",
+    "hvcg_ExecutiveEmail": "manuel@highvaluecapitalgroup.com",
+    "hvcg_CrmTestRecipient": "manuel@highvaluecapitalgroup.com",
+    "hvcg_OpsEmail": "manuel@highvaluecapitalgroup.com",
+    "hvcg_KnowledgeSiteUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge"
+  },
+  "solution_checker": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "informational": 0,
+    "package": "HVCGCommandCenterDev_1.1.2.0_managed.zip (pre-fix package); subsequent 1.1.5 shipped after activation repairs"
+  },
+  "managed_package": "releases/v1.1.5/artifacts/HVCGCommandCenterDev_1.1.5.0_managed.zip",
+  "activation_policy": {
+    "on": [
+      "HVCG_ClientOnboarding",
+      "HVCG_CreateClientWorkspace",
+      "HVCG_CreateDocumentRequests",
+      "HVCG_CreateProjectFromTemplate",
+      "HVCG_DeliverableApproval",
+      "HVCG_ExecutiveDecisionEscalation",
+      "HVCG_LeadQualifiedCreateOpportunity",
+      "HVCG_OverdueTaskEscalation",
+      "HVCG_UpdateProjectHealth",
+      "HVCG_WeeklyStatusSummary"
+    ],
+    "off": [
+      "HVCG_CapitalFundingStatusNotify",
+      "HVCG_EvaFormCreateLead",
+      "HVCG_MissingDocumentReminders",
+      "HVCG_OpportunityStageChangedNotify",
+      "HVCG_OpportunityWonCloseout",
+      "HVCG_RenewalReminders"
+    ],
+    "enable_client_emails": "false",
+    "crm_teams_notify": "false"
+  },
+  "test_evidence": {
+    "HVCG_UpdateProjectHealth": {
+      "state": "Started",
+      "trigger_http": 200,
+      "run_status": "Succeeded",
+      "error": null,
+      "start": "2026-07-21T19:23:36.7098865Z",
+      "actions": [
+        {
+          "name": "Compose_Count",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Get_Active_Projects",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Log_Start",
+          "status": "Succeeded",
+          "code": "Created"
+        },
+        {
+          "name": "Log_Success",
+          "status": "Succeeded",
+          "code": "Created"
+        }
+      ]
+    },
+    "HVCG_OverdueTaskEscalation": {
+      "state": "Started",
+      "trigger_http": 200,
+      "run_status": "Succeeded",
+      "error": null,
+      "start": "2026-07-21T19:23:47.5842892Z",
+      "actions": [
+        {
+          "name": "Compose_Count",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Get_Overdue_Tasks",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Log_Start",
+          "status": "Succeeded",
+          "code": "Created"
+        },
+        {
+          "name": "Log_Success",
+          "status": "Succeeded",
+          "code": "Created"
+        }
+      ]
+    },
+    "HVCG_WeeklyStatusSummary": {
+      "state": "Started",
+      "trigger_http": 200,
+      "run_status": "Succeeded",
+      "error": null,
+      "start": "2026-07-21T19:23:58.4608948Z",
+      "actions": [
+        {
+          "name": "Compose_Summary",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Get_Projects",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Log_Start",
+          "status": "Succeeded",
+          "code": "Created"
+        },
+        {
+          "name": "Log_Success",
+          "status": "Succeeded",
+          "code": "Created"
+        }
+      ]
+    },
+    "HVCG_ClientOnboarding": {
+      "state": "Started",
+      "trigger_http": 200,
+      "run_status": "Succeeded",
+      "error": null,
+      "start": "2026-07-21T19:24:10.1910798Z",
+      "actions": [
+        {
+          "name": "Compose_Count",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Get_Active_Clients",
+          "status": "Succeeded",
+          "code": "OK"
+        },
+        {
+          "name": "Log_Start",
+          "status": "Succeeded",
+          "code": "Created"
+        },
+        {
+          "name": "Log_Success",
+          "status": "Succeeded",
+          "code": "Created"
+        }
+      ]
+    }
+  },
+  "known_limitations": [
+    "Orphaned SharePoint lookup columns named ClientId on HVCG_Projects/HVCG_Tasks break default GetItems; fixed flows use SharePoint HttpRequest with $select.",
+    "Several child/manual flows (CreateClientWorkspace, CreateProjectFromTemplate, CreateDocumentRequests, DeliverableApproval, ExecutiveDecisionEscalation) remain scaffold-level (log/compose) but are solution-aware, connection-ref bound, and Activated.",
+    "HVCG_EvaFormCreateLead is deployed Off (HTTP intake; no client email).",
+    "Owner originally inspected HVCG Production Config when it had 0 flows; flows lived in managed HVCGCommandCenterDev. They are now layered into Production Config as well (16 workflow components)."
+  ],
+  "atlas_production_ready_claim": false,
+  "atlas_production_ready_reason": "Automation layer is deployed and visible; safe internals tested Succeeded. Not claiming full Production-ready: scaffold child flows still need full business implementations; orphaned ClientId lookups remain in SharePoint schema; Eva/client-email flows intentionally Off.",
+  "matrix": [
+    {
+      "flow": "HVCG_CapitalFundingStatusNotify",
+      "required_minimum": false,
+      "trigger": "Recurrence",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "Off",
+      "flow_api_state": "Stopped",
+      "test_result": "Not run (intentionally Off)",
+      "external_communication_risk": "Medium (Teams notify when flag true)",
+      "safe_for_activation": false
+    },
+    {
+      "flow": "HVCG_ClientOnboarding",
+      "required_minimum": true,
+      "trigger": "Recurrence (15 min poll)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Succeeded",
+      "external_communication_risk": "Low (reads Active Clients + logs; no client email)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_CreateClientWorkspace",
+      "required_minimum": true,
+      "trigger": "Manual button",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Activated only (manual trigger; not force-run this pass)",
+      "external_communication_risk": "Low (scaffold; no outbound email)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_CreateDocumentRequests",
+      "required_minimum": true,
+      "trigger": "Manual button",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Activated only (manual trigger; not force-run this pass)",
+      "external_communication_risk": "Low (scaffold)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_CreateProjectFromTemplate",
+      "required_minimum": true,
+      "trigger": "Manual button",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Activated only (manual trigger; not force-run this pass)",
+      "external_communication_risk": "Low (scaffold)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_DeliverableApproval",
+      "required_minimum": true,
+      "trigger": "Manual button",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Activated only (manual trigger; not force-run this pass)",
+      "external_communication_risk": "Low (Approvals connector; no client email)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_EvaFormCreateLead",
+      "required_minimum": true,
+      "trigger": "HTTP Request (manual)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "Off",
+      "flow_api_state": "Stopped",
+      "test_result": "Not run (intentionally Off)",
+      "external_communication_risk": "Low (no prospect email; HTTP endpoint exposure if On)",
+      "safe_for_activation": false
+    },
+    {
+      "flow": "HVCG_ExecutiveDecisionEscalation",
+      "required_minimum": true,
+      "trigger": "Manual button",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Activated only (manual trigger; not force-run this pass)",
+      "external_communication_risk": "Low (scaffold; internal)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_LeadQualifiedCreateOpportunity",
+      "required_minimum": false,
+      "trigger": "Recurrence (1 min)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Already Activated pre-release; left On",
+      "external_communication_risk": "Low (Teams gated by hvcg_CrmEnableTeamsNotify=false)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_MissingDocumentReminders",
+      "required_minimum": true,
+      "trigger": "Recurrence (daily)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "Off",
+      "flow_api_state": "Stopped",
+      "test_result": "Not run (intentionally Off)",
+      "external_communication_risk": "HIGH if enabled (client-email capable by design)",
+      "safe_for_activation": false
+    },
+    {
+      "flow": "HVCG_OpportunityStageChangedNotify",
+      "required_minimum": false,
+      "trigger": "Recurrence",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "Off",
+      "flow_api_state": "Stopped",
+      "test_result": "Not run (intentionally Off)",
+      "external_communication_risk": "Medium (Teams notify when flag true)",
+      "safe_for_activation": false
+    },
+    {
+      "flow": "HVCG_OpportunityWonCloseout",
+      "required_minimum": false,
+      "trigger": "Recurrence",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "Off",
+      "flow_api_state": "Stopped",
+      "test_result": "Not run (intentionally Off)",
+      "external_communication_risk": "Medium (Teams notify when flag true)",
+      "safe_for_activation": false
+    },
+    {
+      "flow": "HVCG_OverdueTaskEscalation",
+      "required_minimum": true,
+      "trigger": "Recurrence (daily)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Succeeded",
+      "external_communication_risk": "None (internal AutomationLogs only)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_RenewalReminders",
+      "required_minimum": true,
+      "trigger": "Recurrence (daily)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "Off",
+      "flow_api_state": "Stopped",
+      "test_result": "Not run (intentionally Off)",
+      "external_communication_risk": "HIGH if enabled (client-email capable by design)",
+      "safe_for_activation": false
+    },
+    {
+      "flow": "HVCG_UpdateProjectHealth",
+      "required_minimum": true,
+      "trigger": "Recurrence (daily)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Succeeded",
+      "external_communication_risk": "None (SharePoint read + AutomationLogs)",
+      "safe_for_activation": true
+    },
+    {
+      "flow": "HVCG_WeeklyStatusSummary",
+      "required_minimum": true,
+      "trigger": "Recurrence (weekly)",
+      "prod_connection_status": "SharePoint/Outlook/Teams/Approvals bound",
+      "on_off": "On",
+      "flow_api_state": "Started",
+      "test_result": "Succeeded",
+      "external_communication_risk": "None (internal AutomationLogs only; EnableClientEmails=false)",
+      "safe_for_activation": true
+    }
+  ]
+}

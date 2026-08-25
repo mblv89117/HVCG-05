@@ -1,0 +1,21 @@
+{
+  "messageId": "26ab75f6-26bd-42ce-a2e7-aa5e27f3b53b",
+  "threadId": "26ab75f6-26bd-42ce-a2e7-aa5e27f3b53b",
+  "timestamp": "2026-07-15T22:19:45Z",
+  "from": "master-pm",
+  "to": [
+    "client-portal"
+  ],
+  "cc": [],
+  "type": "REQUEST",
+  "priority": "HIGH",
+  "subject": "Activate agent communications",
+  "body": "Agent communications infrastructure is live on branch cursor/agent-communications.\n\nAction required:\n1. Read AGENT_BOOTSTRAP_PROMPT.md\n2. Register (if needed), heartbeat, read inbox\n3. ACK this message\n4. Send INFO Bootstrap complete to master-pm\n\nDo not interrupt CRM Maker OA / auth / smoke.",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "Register, heartbeat, ACK, send bootstrap complete",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

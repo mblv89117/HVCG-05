@@ -1,0 +1,118 @@
+{
+  "title": "HVCG_SoftwareInventory",
+  "description": "Ops \u2014 Software inventory",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VendorId",
+      "displayName": "VendorId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Vendors"
+    },
+    {
+      "internalName": "Category",
+      "displayName": "Category",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Productivity",
+        "Security",
+        "Finance",
+        "Marketing",
+        "Dev",
+        "AI",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "LicenseType",
+      "displayName": "LicenseType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Per User",
+        "Capacity",
+        "Site",
+        "Free",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "AdminOwnerEmail",
+      "displayName": "AdminOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RenewalDate",
+      "displayName": "RenewalDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "SeatCount",
+      "displayName": "SeatCount",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MonthlyCost",
+      "displayName": "MonthlyCost",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DataClassification",
+      "displayName": "DataClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ],
+      "default": "Internal"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Deprecated",
+        "Evaluating"
+      ],
+      "default": "Active"
+    }
+  ]
+}

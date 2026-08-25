@@ -1,0 +1,104 @@
+{
+  "$schemaComment": "Copy to production.json ONLY after Dev UAT. Fill REQUIRED values. Never commit secrets or production client data.",
+  "environment": "production",
+  "label": "HVCG Production",
+  "region": "NAM",
+  "timeZone": "America/Los_Angeles",
+  "locale": "en-US",
+  "currency": "USD",
+  "tenant": {
+    "domain": "highvaluecapitalgroup.onmicrosoft.com",
+    "tenantId": "3df46563-86f3-4414-87fd-84ba967741ef",
+    "sharePointAdminUrl": "https://highvaluecapitalgroup-admin.sharepoint.com",
+    "sharePointRoot": "https://highvaluecapitalgroup.sharepoint.com"
+  },
+  "sites": {
+    "commandCenter": {
+      "title": "HVCG Project Command Center",
+      "alias": "HVCG-CommandCenter",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter",
+      "template": "STS#3",
+      "isHub": true
+    },
+    "knowledgeCenter": {
+      "title": "HVCG Knowledge Center",
+      "alias": "HVCG-Knowledge",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "clientsHub": {
+      "title": "HVCG Clients Hub",
+      "alias": "HVCG-Clients",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients",
+      "template": "STS#3",
+      "isHub": false
+    },
+    "secureDataRooms": {
+      "enabled": false,
+      "title": "HVCG Secure Data Rooms",
+      "alias": "HVCG-DataRooms",
+      "url": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-DataRooms"
+    }
+  },
+  "powerPlatform": {
+    "environmentDisplayName": "HVCG Production",
+    "environmentId": "REQUIRED_SET_ME_AFTER_ENV_CREATED",
+    "solutionUniqueName": "HVCGCommandCenter",
+    "solutionDisplayName": "HVCG Command Center"
+  },
+  "authentication": {
+    "pnpEntraAppClientId": "836fb743-6439-4836-b1f2-4a144ce2f762",
+    "pnpEntraAppDisplayName": "HVCG-PnP-PowerShell",
+    "notes": "Same PnP app as Dev. Certificate auth preferred for unattended."
+  },
+  "identities": {
+    "executiveUpn": "manuel@highvaluecapitalgroup.com",
+    "operationsManagerUpn": "manuel@highvaluecapitalgroup.com",
+    "serviceAccountUpn": "manuel@highvaluecapitalgroup.com",
+    "serviceAccountOwner": "manuel@highvaluecapitalgroup.com",
+    "notificationMailbox": "manuel@highvaluecapitalgroup.com",
+    "siteOwnerUpn": "manuel@highvaluecapitalgroup.com"
+  },
+  "groups": {
+    "prefix": "HVCG-",
+    "roleGroups": [
+      "HVCG-Role-Owner",
+      "HVCG-Role-Administrator",
+      "HVCG-Role-OperationsManager",
+      "HVCG-Role-ProjectManager",
+      "HVCG-Role-CapitalAdvisor",
+      "HVCG-Role-FinancialAnalyst",
+      "HVCG-Role-OperationsAssistant",
+      "HVCG-Role-Contractor",
+      "HVCG-Role-ExternalProfessional",
+      "HVCG-Role-ReadOnlyReviewer"
+    ],
+    "addDeployingUserToRoles": []
+  },
+  "security": {
+    "externalSharingOnDevSites": "ExistingGuestsOnly",
+    "allowAnonymousLinks": false,
+    "grantClientOrExternalAccessInDev": false,
+    "breakInheritanceOnClientLibraries": true,
+    "clientsSiteSharingCapability": "ExistingExternalUserSharingOnly"
+  },
+  "deployment": {
+    "seedSampleData": false,
+    "uploadProjectTemplates": true,
+    "createSampleClientWorkspace": false,
+    "provisionPowerPlatformSolution": true,
+    "failOnNonCriticalErrors": true,
+    "requiresExplicitGoLiveApproval": true
+  },
+  "requiredFields": [
+    "tenant.domain",
+    "tenant.sharePointRoot",
+    "identities.executiveUpn",
+    "identities.siteOwnerUpn",
+    "identities.serviceAccountUpn",
+    "identities.notificationMailbox"
+  ],
+  "configSchemaVersion": "1.0.0",
+  "productVersion": "1.1.0"
+}

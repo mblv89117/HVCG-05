@@ -1,0 +1,276 @@
+{
+  "templateKey": "private-credit-package",
+  "title": "Private Credit Package",
+  "templateType": "Project",
+  "defaultDurationDays": 35,
+  "workstreams": [
+    "Private credit",
+    "Lender packaging",
+    "Financial analysis"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Strategy",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Financial Prep",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Packaging",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "Market",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Diligence complete",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Package QC passed",
+      "offsetDays": 20,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Market ready",
+      "offsetDays": 35,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Confirm raise thesis and amount",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Use of proceeds, structure.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Assemble diligence requests",
+      "phase": "p1",
+      "offsetDays": 2,
+      "defaultRole": "OperationsAssistant",
+      "description": "Create document requests.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Build financial package",
+      "phase": "p2",
+      "offsetDays": 12,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Normalize statements; QOE notes.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 10,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Prepare lender/investor narrative",
+      "phase": "p3",
+      "offsetDays": 16,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Memo/deck outline.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Internal QC package",
+      "phase": "p3",
+      "offsetDays": 20,
+      "defaultRole": "ProjectManager",
+      "description": "Checklist against lender reqs.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 3,
+      "isCritical": true
+    },
+    {
+      "key": "t6",
+      "title": "Package delivery / outreach plan",
+      "phase": "p4",
+      "offsetDays": 32,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Target list approval.",
+      "dependsOn": [
+        "t5"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 4,
+      "isCritical": true
+    },
+    {
+      "key": "t7",
+      "title": "Executive strategy checkpoint",
+      "phase": "p4",
+      "offsetDays": 33,
+      "defaultRole": "Owner",
+      "description": "Capital strategy decision if needed.",
+      "dependsOn": [
+        "t5"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 1,
+      "isCritical": false
+    },
+    {
+      "key": "t8",
+      "title": "Structure term sheet comparison",
+      "phase": "p4",
+      "offsetDays": 25,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Compare covenants/cost.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 4,
+      "isCritical": false
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "3yr financials",
+      "documentCategory": "Historical Financials",
+      "folderTarget": "03 - Historical Financials",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: 3yr financials"
+    },
+    {
+      "key": "d2",
+      "title": "YTD financials",
+      "documentCategory": "Current Financials",
+      "folderTarget": "04 - Current Financials",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: YTD financials"
+    },
+    {
+      "key": "d3",
+      "title": "Tax returns",
+      "documentCategory": "Tax Returns",
+      "folderTarget": "05 - Tax Returns",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: Tax returns"
+    },
+    {
+      "key": "d4",
+      "title": "Bank statements",
+      "documentCategory": "Bank Statements",
+      "folderTarget": "06 - Bank Statements",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Bank statements"
+    },
+    {
+      "key": "d5",
+      "title": "Debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Debt schedule"
+    },
+    {
+      "key": "d6",
+      "title": "Collateral description",
+      "documentCategory": "Other",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: Collateral description"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Private credit package",
+      "deliverableType": "Lender Package",
+      "draftOffsetDays": 22,
+      "finalOffsetDays": 32,
+      "requiresExecutiveApproval": true,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "Owner"
+    },
+    {
+      "key": "del2",
+      "title": "Credit memorandum",
+      "deliverableType": "Credit Memorandum",
+      "draftOffsetDays": 20,
+      "finalOffsetDays": 30,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Incomplete diligence",
+      "likelihood": "High",
+      "impact": "High",
+      "mitigation": "Block outreach until critical docs accepted"
+    },
+    {
+      "title": "Market timing mismatch",
+      "likelihood": "Medium",
+      "impact": "High",
+      "mitigation": "Executive checkpoint before outreach"
+    }
+  ],
+  "qualityControlChecks": [
+    "No outreach before QC pass",
+    "Success fee terms confirmed in engagement"
+  ],
+  "automationTriggers": [
+    "Missing doc reminders",
+    "Executive escalation on material blockers"
+  ],
+  "clientResponsibilities": [
+    "Accurate disclosures",
+    "Responsive to diligence"
+  ],
+  "internalResponsibilities": [
+    "Protect confidentiality",
+    "Track lender/investor interactions"
+  ],
+  "approvalPoints": [
+    "Private credit package",
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

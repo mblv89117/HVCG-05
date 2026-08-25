@@ -42,8 +42,8 @@ $projValues = @{
   HVCG_IdempotencyKey = $idem
 }
 
-# ClientId lookup uses list item id
-$projValues["ClientId"] = $ClientListItemId
+# AtlasClientRef lookup uses HVCG_Clients list item id (proven REST AtlasClientRefId)
+$projValues["AtlasClientRef"] = $ClientListItemId
 if ($EngagementListItemId) { $projValues["EngagementId"] = $EngagementListItemId }
 
 $existing = Get-PnPListItem -List "HVCG_Projects" -Query "<View><Query><Where><Eq><FieldRef Name='HVCG_IdempotencyKey'/><Value Type='Text'>$idem</Value></Eq></Where></Query></View>" -ErrorAction SilentlyContinue

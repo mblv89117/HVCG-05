@@ -1,0 +1,102 @@
+{
+  "title": "HVCG_Approvals",
+  "description": "Approval workflow records",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedList",
+      "displayName": "RelatedList",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedItemId",
+      "displayName": "RelatedItemId",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalType",
+      "displayName": "ApprovalType",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Deliverable",
+        "ChangeRequest",
+        "ExternalShare",
+        "ClientCommunication",
+        "ExecutiveDecision",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "ApprovalStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Cancelled"
+      ],
+      "default": "Pending"
+    },
+    {
+      "internalName": "RequestedDate",
+      "displayName": "RequestedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CompletedDate",
+      "displayName": "CompletedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Comments",
+      "displayName": "Comments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

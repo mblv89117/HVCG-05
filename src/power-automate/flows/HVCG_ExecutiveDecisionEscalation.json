@@ -1,19 +1,26 @@
 {
   "flowName": "HVCG_ExecutiveDecisionEscalation",
   "displayName": "HVCG_ExecutiveDecisionEscalation",
-  "description": "Notifies executive only for qualifying items.",
+  "description": "Creates an HVCG_Decisions record requiring executive attention plus an internal-only escalation notification. No external client email. Idempotent per client/title/day.",
   "trigger": {
-    "type": "SharePointItemModified",
-    "condition": "RequiresExecutiveAttention eq true"
+    "type": "Manual",
+    "inputs": [
+      "Title",
+      "Background",
+      "ClientCode",
+      "ClientListItemId",
+      "DecisionType",
+      "Reason"
+    ]
   },
   "connections": [
-    "SharePoint",
-    "Outlook",
-    "Teams"
+    "SharePoint"
   ],
   "idempotency": {
-    "column": "HVCG_IdempotencyKey",
-    "onDuplicate": "SkippedDuplicate"
+    "keyPattern": "decision|{ClientCode}|{Title}|{yyyyMMdd}",
+    "openDuplicateCheck": "Title + ClientCode where DecisionStatus not in (Decided, Cancelled)",
+    "onDuplicate": "SkippedDuplicate",
+    "notes": "HVCG_Decisions has no HVCG_IdempotencyKey column; dedupe uses Title+ClientCode+open status. Key is recorded in the audit log."
   },
   "logging": {
     "list": "HVCG_AutomationLogs",
@@ -22,26 +29,71 @@
     "onFailure": true
   },
   "humanApproval": [],
+  "emailPolicy": "NONE - internal HVCG_Notifications record only (Channel=None)",
   "steps": [
     {
       "id": 1,
-      "action": "DeduplicateNotification24h"
+      "action": "LogStarted"
     },
     {
       "id": 2,
-      "action": "ComposeExecutiveBrief"
+      "action": "ResolveClientId",
+      "params": {
+        "list": "HVCG_Clients",
+        "byId": "ClientListItemId",
+        "elseFilter": "ClientCode eq '{ClientCode}'"
+      }
     },
     {
       "id": 3,
-      "action": "EmailExecutive"
+      "action": "ComputeIdempotencyKey",
+      "params": {
+        "pattern": "decision|{ClientCode}|{Title}|{yyyyMMdd}"
+      }
     },
     {
       "id": 4,
-      "action": "CreateNotificationRow"
+      "action": "GetOpenDecision",
+      "params": {
+        "list": "HVCG_Decisions",
+        "onFoundLog": "SkippedDuplicate",
+        "onFoundTerminate": "Succeeded"
+      }
     },
     {
       "id": 5,
-      "action": "LogSuccess"
+      "action": "CreateDecision",
+      "params": {
+        "list": "HVCG_Decisions",
+        "fields": {
+          "Title": "{Title}",
+          "Background": "{Background}",
+          "AtlasClientRefId": "{ClientId?}",
+          "ClientCode": "{ClientCode}",
+          "DecisionStatus": "Pending Decision",
+          "DecisionMakerEmail": "hvcg_ExecutiveEmail",
+          "Deadline": "now+2d",
+          "RequiresExecutiveAttention": true
+        }
+      }
+    },
+    {
+      "id": 6,
+      "action": "CreateInternalNotification",
+      "params": {
+        "list": "HVCG_Notifications",
+        "RecipientEmail": "hvcg_ExecutiveEmail",
+        "NotificationType": "Escalation",
+        "Channel": "None",
+        "IsExecutive": true
+      }
+    },
+    {
+      "id": 7,
+      "action": "LogSuccess",
+      "params": {
+        "message": "decision id"
+      }
     }
   ],
   "errorHandling": {
@@ -50,10 +102,10 @@
     "retryDelaySeconds": 60
   },
   "environmentVariables": [
-    "HVCG_SITE_URL",
-    "HVCG_CLIENTS_HUB_URL",
-    "HVCG_OPS_EMAIL",
-    "HVCG_EXECUTIVE_EMAIL",
-    "HVCG_ENABLE_CLIENT_EMAILS"
+    "hvcg_CommandCenterSiteUrl",
+    "hvcg_ClientsSiteUrl",
+    "hvcg_OpsEmail",
+    "hvcg_ExecutiveEmail",
+    "hvcg_EnableClientEmails"
   ]
 }

@@ -1,0 +1,139 @@
+{
+  "title": "HVCG_CapitalSources",
+  "description": "Capital \u2014 Lenders, funds, investors (master capital sources)",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "SourceType",
+      "displayName": "SourceType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Bank",
+        "Credit Union",
+        "SBA Lender",
+        "Private Credit",
+        "Family Office",
+        "PE/VC",
+        "Broker",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "CapitalFocus",
+      "displayName": "CapitalFocus",
+      "type": "MultiChoice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Debt",
+        "Equity",
+        "SBA",
+        "Commercial Real Estate",
+        "Private Credit",
+        "Equipment Financing",
+        "Working Capital",
+        "Hybrid",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "MinDealSize",
+      "displayName": "MinDealSize",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "MaxDealSize",
+      "displayName": "MaxDealSize",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Geography",
+      "displayName": "Geography",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ContactEmail",
+      "displayName": "ContactEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ContactPhone",
+      "displayName": "ContactPhone",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Website",
+      "displayName": "Website",
+      "type": "URL",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelationshipOwnerEmail",
+      "displayName": "RelationshipOwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SourceStatus",
+      "displayName": "SourceStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Inactive",
+        "Do Not Contact"
+      ],
+      "default": "Active"
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CopilotKeywords",
+      "displayName": "CopilotKeywords",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "templateKey": "cash-flow-forecasting",
+  "title": "Cash-Flow Forecasting",
+  "templateType": "Project",
+  "defaultDurationDays": 20,
+  "workstreams": [
+    "Cash-flow forecasting",
+    "Financial analysis"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Inputs",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Model",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Scenarios",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "Delivery",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Inputs locked",
+      "offsetDays": 7,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Forecast delivered",
+      "offsetDays": 20,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Collect cash inputs",
+      "phase": "p1",
+      "offsetDays": 2,
+      "defaultRole": "OperationsAssistant",
+      "description": "AR/AP, debt service, payroll calendar.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Build 13-week forecast",
+      "phase": "p2",
+      "offsetDays": 10,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Weekly cash model.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 8,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Stress scenarios",
+      "phase": "p3",
+      "offsetDays": 14,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Base/downside.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Client workshop",
+      "phase": "p4",
+      "offsetDays": 18,
+      "defaultRole": "ProjectManager",
+      "description": "Validate assumptions.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Finalize forecast pack",
+      "phase": "p4",
+      "offsetDays": 20,
+      "defaultRole": "FinancialAnalyst",
+      "description": "File in 15/19.",
+      "dependsOn": [
+        "t4"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "AR aging",
+      "documentCategory": "AR",
+      "folderTarget": "08 - Accounts Receivable",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: AR aging"
+    },
+    {
+      "key": "d2",
+      "title": "AP aging",
+      "documentCategory": "AP",
+      "folderTarget": "09 - Accounts Payable",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: AP aging"
+    },
+    {
+      "key": "d3",
+      "title": "Payroll calendar",
+      "documentCategory": "Payroll",
+      "folderTarget": "10 - Payroll and Employees",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Payroll calendar"
+    },
+    {
+      "key": "d4",
+      "title": "Debt service schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 5,
+      "isCritical": true,
+      "description": "Please provide: Debt service schedule"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Cash-flow forecast",
+      "deliverableType": "Cash-Flow Forecast",
+      "draftOffsetDays": 12,
+      "finalOffsetDays": 20,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Stale AR/AP",
+      "likelihood": "High",
+      "impact": "High",
+      "mitigation": "Mark IsStale; refresh before finalize"
+    }
+  ],
+  "qualityControlChecks": [
+    "Assumption log",
+    "Version labeled"
+  ],
+  "automationTriggers": [
+    "Stale document flags"
+  ],
+  "clientResponsibilities": [
+    "Provide weekly updates during build"
+  ],
+  "internalResponsibilities": [
+    "Document drivers clearly"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

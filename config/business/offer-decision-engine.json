@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-OFF-015", "HVCG-V2-OFF-016"],
+  "principle": "Deterministic commercial rules before AI recommendations.",
+  "rules": [
+    { "need": "Funding but disorganized", "diagnostic": "DIAG-FULL-CAPITAL", "offerCode": "OFF-CAP-DIAG", "priceModel": "Diagnostic Fee", "nextStep": "Begin Intake" },
+    { "need": "Ready for financing", "diagnostic": null, "offerCode": "OFF-CAP-PKG", "priceModel": "Setup + possible success fee", "nextStep": "Capital Intake" },
+    { "need": "Monthly finance leadership", "diagnostic": "DIAG-CFO", "offerCode": "OFF-FCFO-OP", "priceModel": "Setup + retainer", "nextStep": "CFO Readiness" },
+    { "need": "Government/private contract pursuit", "diagnostic": "DIAG-PROCUREMENT", "offerCode": "OFF-PROC-READY", "priceModel": "Setup + possible retainer/success fee", "nextStep": "Procurement Intake" },
+    { "need": "Agency/payroll/tax problem", "diagnostic": "DIAG-RISK", "offerCode": "OFF-TAX-UE", "priceModel": "Premium project", "nextStep": "Risk Intake" },
+    { "need": "Loss/insurance/recovery matter", "diagnostic": "DIAG-RISK", "offerCode": "OFF-CLAIMS", "priceModel": "Setup + retainer/success component", "nextStep": "Claims Intake" },
+    { "need": "Scaling without systems", "diagnostic": "DIAG-GROWTH", "offerCode": "OFF-GROWTH-OS", "priceModel": "Setup + retainer", "nextStep": "Growth Diagnostic" },
+    { "need": "Knowledge/workflow disorder", "diagnostic": "DIAG-AI", "offerCode": "OFF-AI-BRAIN", "priceModel": "Setup + retainer", "nextStep": "AI Diagnostic" },
+    { "need": "Large automation requirement", "diagnostic": "DIAG-AI", "offerCode": "OFF-AI-OPS", "priceModel": "Setup + retainer", "nextStep": "AI Diagnostic" },
+    { "need": "Owner private/high-trust matter", "diagnostic": null, "offerCode": "OFF-OWNER-SUPPORT", "priceModel": "Premium project/retainer", "nextStep": "Restricted Intake", "restricted": true },
+    { "need": "Risk / liability review (general)", "diagnostic": "DIAG-RISK", "offerCode": "OFF-RISK-REVIEW", "priceModel": "Premium project", "nextStep": "Risk Intake" },
+    { "need": "Government contractor setup", "diagnostic": "DIAG-PROCUREMENT", "offerCode": "OFF-GOV-SETUP", "priceModel": "Setup fee", "nextStep": "Procurement Intake" },
+    { "need": "Referral partner channel formalization", "diagnostic": null, "offerCode": "OFF-REF-ENGINE", "priceModel": "Structured / negotiated", "nextStep": "Partner Intake" }
+  ]
+}
