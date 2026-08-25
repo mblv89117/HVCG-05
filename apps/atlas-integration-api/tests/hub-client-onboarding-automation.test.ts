@@ -117,6 +117,14 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.kickoff.autoRespond, false);
     assert.equal(result.record.kickoff.outbound, false);
     assert.equal(result.record.kickoff.capitalSubmit, false);
+    assert.equal(result.record.blockerReconciled, false);
+    assert.equal(result.record.blockerReview.blockerReconciled, false);
+    assert.equal(result.record.blockerReview.reusedExisting, false);
+    assert.deepEqual(result.record.blockerReview.relatedBlockers, []);
+    assert.equal(result.record.blockerReview.send, false);
+    assert.equal(result.record.blockerReview.autoRespond, false);
+    assert.equal(result.record.blockerReview.outbound, false);
+    assert.equal(result.record.blockerReview.capitalSubmit, false);
     assert.equal(result.record.ownerAttentionPackage.status, 'NOT_READY');
     assert.equal(result.record.ownerAttentionPackage.ready, false);
     assert.equal(result.record.ownerAttentionPackage.send, false);
@@ -229,6 +237,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.kickoff.kickoffReconciled, false);
     assert.deepEqual(result.record.kickoff.relatedKickoff, []);
     assert.equal(result.events.includes('KICKOFF_CREATED'), false);
+    assert.equal(result.record.blockerReconciled, false);
+    assert.equal(result.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(result.record.blockerReview.relatedBlockers, []);
+    assert.equal(result.events.includes('BLOCKER_CREATED'), false);
     assert.equal(result.record.communicationContextReconciled, false);
     assert.equal(result.record.communicationContextReview.relatedThreadCount, 0);
     assert.deepEqual(result.record.communicationContextReview.relatedEmails, []);
@@ -537,8 +549,12 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.kickoff.outbound, false);
     assert.equal(first.record?.kickoff.capitalSubmit, false);
     assert.equal(first.record?.blockerReview.send, false);
+    assert.equal(first.record?.blockerReview.autoRespond, false);
     assert.equal(first.record?.blockerReview.outbound, false);
     assert.equal(first.record?.blockerReview.capitalSubmit, false);
+    assert.equal(first.record?.blockerReview.blockerReconciled, false);
+    assert.equal(first.record?.blockerReconciled, false);
+    assert.deepEqual(first.record?.blockerReview.relatedBlockers, []);
     assert.equal(first.record?.ownerAttentionPackage.send, false);
     assert.equal(first.record?.ownerAttentionPackage.outbound, false);
     assert.equal(first.record?.ownerAttentionPackage.capitalSubmit, false);
@@ -884,20 +900,41 @@ describe('client onboarding automation', () => {
   it('prepares blocker review from entitled run facts and answers Ask Atlas blockers', () => {
     const prepared = composeBlockerReview({
       workspaceReconciled: true,
+      clientCode: 'ACCG01',
       projectId: 'proj-1',
       projectName: 'Client Onboarding — ACCG',
+      relatedBlockers: [{ id: 'blocker-accg-1', title: 'Review onboarding blockers', kind: 'task' }],
+      reusedExisting: true,
       communicationPolicy: 'DRAFT_ONLY',
     });
     assert.equal(prepared.status, 'CLEAR');
     assert.equal(prepared.ready, true);
+    assert.equal(prepared.blockerReconciled, true);
+    assert.equal(prepared.reusedExisting, true);
+    assert.deepEqual(prepared.relatedBlockers.map((row) => row.id), ['blocker-accg-1']);
     assert.equal(prepared.send, false);
+    assert.equal(prepared.autoRespond, false);
     assert.equal(prepared.outbound, false);
     assert.equal(prepared.liveGtmOutbound, false);
     assert.equal(prepared.capitalSubmit, false);
     assert.equal(prepared.itemCount, 0);
 
+    const notConfirmed = composeBlockerReview({
+      workspaceReconciled: true,
+      clientCode: 'ACCG01',
+      projectId: 'proj-1',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(notConfirmed.status, 'CLEAR');
+    assert.equal(notConfirmed.ready, true);
+    assert.equal(notConfirmed.blockerReconciled, false);
+    assert.equal(notConfirmed.reusedExisting, false);
+    assert.deepEqual(notConfirmed.relatedBlockers, []);
+    assert.match(notConfirmed.nextOwnerAction, /do not invent ids or send/);
+
     const blocked = composeBlockerReview({
       workspaceReconciled: true,
+      clientCode: 'ACCG01',
       projectId: 'proj-1',
       blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
       communicationPolicy: 'DRAFT_ONLY',
@@ -905,14 +942,19 @@ describe('client onboarding automation', () => {
     assert.equal(blocked.status, 'BLOCKED');
     assert.equal(blocked.ready, false);
     assert.equal(blocked.itemCount, 1);
+    assert.equal(blocked.blockerReconciled, false);
 
     const identity = composeBlockerReview({
       identityResolutionRequired: true,
+      clientCode: 'ACCG01',
+      relatedBlockers: [{ id: 'blocker-should-not-attach', title: 'foreign' }],
       blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
       communicationPolicy: 'DRAFT_ONLY',
     });
     assert.equal(identity.status, 'NOT_READY');
     assert.equal(identity.ready, false);
+    assert.equal(identity.blockerReconciled, false);
+    assert.deepEqual(identity.relatedBlockers, []);
 
     const openDocs = composeBlockerReview({
       workspaceReconciled: true,
@@ -977,8 +1019,21 @@ describe('client onboarding automation', () => {
     const answer = answerOnboardingContext('What are the onboarding blockers for ACCG?', record);
     assert.match(answer, /Blocker review for ACCG01: BLOCKED/);
     assert.match(answer, /SharePoint PM backend unavailable/);
+    assert.match(answer, /Existing entitled blockers: not confirmed/);
+    assert.match(answer, /Related entitled blockers: 0/);
     assert.match(answer, /did not send mail/);
     assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+
+    const reusedAnswer = answerOnboardingContext('What are the onboarding blockers for ACCG?', {
+      ...record,
+      blockerReconciled: true,
+      blockerReview: prepared,
+      blockers: [],
+      status: 'KICKOFF_PREPARATION',
+    });
+    assert.match(reusedAnswer, /Existing entitled blockers: reused/);
+    assert.match(reusedAnswer, /Related entitled blockers: 1/);
+    assert.equal(/blocker-pdg|PDG01|AUTO_RESPOND|invented/i.test(reusedAnswer), false);
   });
 
   it('prepares owner attention from entitled run facts and answers Ask Atlas attention', () => {
@@ -2847,6 +2902,7 @@ describe('client onboarding automation', () => {
     assert.equal(missingIdentity.events.includes('KICKOFF_CREATED'), false);
     assert.equal(missingIdentity.record.capitalContextReconciled, false);
     assert.equal(missingIdentity.record.communicationContextReconciled, false);
+    assert.equal(missingIdentity.record.blockerReconciled, false);
 
     const reusedAnswer = answerOnboardingContext(
       'What is the onboarding kickoff for ACCG?',
@@ -2868,6 +2924,240 @@ describe('client onboarding automation', () => {
       created.record,
     );
     assert.match(createdAnswer, /Governed onboarding kickoff: reconciled/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(createdAnswer), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reconciles entitled same-scope blockers by id and does not invent blockers', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-blocker-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [
+        { id: 'blocker-accg-1', title: 'Review onboarding blockers', clientCode: 'ACCG01', kind: 'task' },
+        { id: 'blocker-pdg', title: 'PDG01 blocker', clientCode: 'PDG01', kind: 'blocker' },
+        { title: 'missing-id-must-drop', clientCode: 'ACCG01', kind: 'attention' },
+      ],
+      blockerCreate: async () => {
+        throw new Error('reuse-only must not create blocker');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.blockerReconciled, true);
+    assert.equal(reused.record.blockerReview.blockerReconciled, true);
+    assert.equal(reused.record.blockerReview.reusedExisting, true);
+    assert.deepEqual(reused.record.blockerReview.relatedBlockers.map((row) => row.id), ['blocker-accg-1']);
+    assert.equal(reused.record.blockerReview.send, false);
+    assert.equal(reused.record.blockerReview.autoRespond, false);
+    assert.equal(reused.record.blockerReview.outbound, false);
+    assert.equal(reused.record.blockerReview.capitalSubmit, false);
+    assert.equal(reused.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(reused.record.kickoffReconciled, false);
+    assert.equal(reused.record.capitalContextReconciled, false);
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.equal(reused.record.milestoneReconciled, false);
+    assert.ok(reused.events.includes('BLOCKER_RECONCILED'));
+    assert.equal(reused.events.includes('BLOCKER_CREATED'), false);
+    assert.equal(JSON.stringify(reused.record.blockerReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(reused.record.blockerReview).includes('blocker-pdg'), false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    let createdCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+      blockerCreate: async (_principal, body) => {
+        createdCalls += 1;
+        return { id: 'blocker-created-1', title: body.title, kind: 'blocker' };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.blockerReconciled, true);
+    assert.equal(created.record.blockerReview.blockerReconciled, true);
+    assert.equal(created.record.blockerReview.reusedExisting, false);
+    assert.deepEqual(created.record.blockerReview.relatedBlockers.map((row) => row.id), ['blocker-created-1']);
+    assert.ok(created.events.includes('BLOCKER_CREATED'));
+    assert.ok(created.events.includes('BLOCKER_RECONCILED'));
+    assert.equal(createdCalls, 1);
+    assert.equal(created.record.blockerReview.send, false);
+    assert.equal(created.record.blockerReview.outbound, false);
+    assert.equal(created.record.blockerReview.capitalSubmit, false);
+
+    let dryCreates = 0;
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      blockerList: async () => [],
+      blockerCreate: async () => {
+        dryCreates += 1;
+        throw new Error('dry-run must not create blocker');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.blockerReconciled, false);
+    assert.equal(dry.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(dry.record.blockerReview.relatedBlockers, []);
+    assert.equal(dryCreates, 0);
+    assert.equal(dry.events.includes('BLOCKER_CREATED'), false);
+    assert.equal(dry.events.includes('BLOCKER_RECONCILED'), false);
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.blockerReconciled, false);
+    assert.equal(empty.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(empty.record.blockerReview.relatedBlockers, []);
+    assert.equal(empty.events.includes('BLOCKER_CREATED'), false);
+    assert.equal(empty.events.includes('BLOCKER_RECONCILED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+      blockerCreate: async () => {
+        throw new Error('sharepoint blocker create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.blockerReconciled, false);
+    assert.equal(thrown.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(thrown.record.blockerReview.relatedBlockers, []);
+    assert.equal(thrown.events.includes('BLOCKER_CREATED'), false);
+    assert.equal(thrown.events.includes('BLOCKER_RECONCILED'), false);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [],
+      blockerCreate: async (_principal, body) => ({ title: body.title }),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.blockerReconciled, false);
+    assert.equal(absent.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(absent.record.blockerReview.relatedBlockers, []);
+    assert.equal(absent.events.includes('BLOCKER_CREATED'), false);
+
+    const wrongClient = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      blockerList: async () => [
+        { id: 'blocker-pdg', title: 'PDG01 blocker', clientCode: 'PDG01', kind: 'blocker' },
+        { id: 'blocker-hfd', title: 'HFD01 blocker', clientCode: 'HFD01', kind: 'task' },
+      ],
+      blockerCreate: async () => {
+        throw new Error('wrong-client must not create blocker');
+      },
+    });
+    assert.equal(wrongClient.ok, true);
+    if (!wrongClient.ok) return;
+    assert.equal(wrongClient.record.blockerReconciled, false);
+    assert.deepEqual(wrongClient.record.blockerReview.relatedBlockers, []);
+    assert.equal(JSON.stringify(wrongClient.record.blockerReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(wrongClient.record.blockerReview).includes('HFD01'), false);
+    assert.equal(wrongClient.record.blockerReview.send, false);
+    assert.equal(wrongClient.record.blockerReview.autoRespond, false);
+    assert.equal(wrongClient.record.blockerReview.outbound, false);
+    assert.equal(wrongClient.record.blockerReview.capitalSubmit, false);
+
+    const missingIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      workflow: (() => {
+        const workflow = onboardingWorkflow('ACCG01');
+        workflow.scope = { organizationId: 'org-hvcg' };
+        return workflow;
+      })(),
+      blockerList: async () => [
+        { id: 'blocker-should-not-attach', title: 'ACCG blocker', clientCode: 'ACCG01' },
+      ],
+      blockerCreate: async () => {
+        throw new Error('identity must not create blocker');
+      },
+    });
+    assert.equal(missingIdentity.ok, true);
+    if (!missingIdentity.ok) return;
+    assert.equal(missingIdentity.record.identityResolutionRequired, true);
+    assert.equal(missingIdentity.record.blockerReconciled, false);
+    assert.equal(missingIdentity.record.blockerReview.blockerReconciled, false);
+    assert.deepEqual(missingIdentity.record.blockerReview.relatedBlockers, []);
+    assert.equal(missingIdentity.events.includes('BLOCKER_RECONCILED'), false);
+    assert.equal(missingIdentity.events.includes('BLOCKER_CREATED'), false);
+    assert.equal(missingIdentity.record.kickoffReconciled, false);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.equal(missingIdentity.record.communicationContextReconciled, false);
+
+    const reusedAnswer = answerOnboardingContext(
+      'What are the onboarding blockers for ACCG?',
+      reused.record,
+    );
+    assert.match(reusedAnswer, /Blocker review for ACCG01: OPEN/);
+    assert.match(reusedAnswer, /Existing entitled blockers: reused/);
+    assert.match(reusedAnswer, /Related entitled blockers: 1/);
+    assert.equal(/blocker-pdg|PDG01|AUTO_RESPOND|invented/i.test(reusedAnswer), false);
+    const emptyAnswer = answerOnboardingContext(
+      'What are the onboarding blockers for ACCG?',
+      empty.record,
+    );
+    assert.match(emptyAnswer, /Existing entitled blockers: not confirmed/);
+    assert.match(emptyAnswer, /Related entitled blockers: 0/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(emptyAnswer), false);
+    const createdAnswer = answerOnboardingContext(
+      'What are the onboarding blockers for ACCG?',
+      created.record,
+    );
+    assert.match(createdAnswer, /Governed onboarding blockers: reconciled/);
     assert.equal(/AUTO_RESPOND|submitted/i.test(createdAnswer), false);
     rmSync(dir, { recursive: true, force: true });
   });
