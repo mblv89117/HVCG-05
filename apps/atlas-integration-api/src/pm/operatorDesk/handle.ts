@@ -31,6 +31,7 @@ import {
   CAPITAL_SUBMISSION_POLICY_CLASS,
   CLIENT_SUPPORT_AGENT_POLICY_CLASS,
   COMMUNICATIONS_POLICY_CLASS,
+  ONBOARDING_AGENT_POLICY_CLASS,
   GET_CLIENT_CONTEXT_TOOL,
   clientContextMissionKey,
   isOperatorActivityLedgerPath,
@@ -153,6 +154,13 @@ import {
   CLIENT_SUPPORT_HONESTY_MISSION_KEY,
   mapsToClientSupportHonestyIntent,
 } from './clientSupportHonesty.ts';
+import {
+  answerOnboardingExecuteHonesty,
+  composeOnboardingExecuteHonesty,
+  ONBOARDING_EXECUTE_HONESTY_MISSION_KEY,
+  mapsToOnboardingExecuteHonestyIntent,
+  onboardingHonestyShouldCallExecute,
+} from './onboardingExecuteHonesty.ts';
 import {
   answerHistoricalReconstructionHonesty,
   HISTORICAL_RECONSTRUCTION_MISSION_KEY,
@@ -1277,6 +1285,71 @@ export async function handleOperatorDesk(opts: {
         opts.origin,
       );
       return true;
+    }
+
+    if (mapsToOnboardingExecuteHonestyIntent(question)) {
+      const entitled = entitledClientCodes(principal);
+      const onboardingOverlay = readOnboardingOverlay(resolveOnboardingStateDir(opts.cfg.dataDir));
+      const entitledItems = onboardingOverlay.records.map((row) => ({
+        runId: row.workflowId,
+        title: row.projectName || row.clientName || `Onboarding ${row.clientCode ?? 'unscoped'}`,
+        clientCode: row.clientCode,
+        projectName: row.projectName,
+        status: row.status,
+        fromExistingOverlay: true,
+      }));
+      const pack = composeOnboardingExecuteHonesty({
+        question,
+        entitledCodes: entitled,
+        entitledItems,
+        overlayRunIds: onboardingOverlay.records.map((row) => row.workflowId),
+      });
+      if (!onboardingHonestyShouldCallExecute(pack)) {
+        const honestyAnswer = answerOnboardingExecuteHonesty(question, {
+          entitledCodes: entitled,
+          entitledItems,
+          overlayRunIds: onboardingOverlay.records.map((row) => row.workflowId),
+        });
+        const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+        const run = findOnboardingRunForQuestion(question, onboardingOverlay.records, entitled);
+        const askAtlas = buildConversationalAskAtlasAnswer({
+          question,
+          previewText: honestyAnswer,
+          workflowId: run?.workflowId ?? 'onboarding-execute-honesty',
+          workflowName: match.clientCode
+            ? `Onboarding ${pack.intent} — ${match.clientCode}`
+            : 'Onboarding execute honesty',
+          clientCode: match.clientCode,
+        });
+        sendJson(
+          opts.res,
+          200,
+          {
+            operatorDesk: { askAtlas },
+            workflowAnswer: honestyAnswer,
+            onboarding: run ?? null,
+            onboardingHonesty: pack,
+            ...(pack.intent === 'execute'
+              ? {
+                  onboardingExecution: {
+                    executed: false,
+                    instantiated: false,
+                    reusedWorkflow: false,
+                  },
+                }
+              : {}),
+            runtime: {
+              agent: ASK_ATLAS_RUNTIME_AGENT,
+              toolsInvoked: ['onboarding_execute_honesty'],
+              policyClass: ONBOARDING_AGENT_POLICY_CLASS,
+              missionKey: ONBOARDING_EXECUTE_HONESTY_MISSION_KEY,
+              autoSend: false,
+            },
+          },
+          opts.origin,
+        );
+        return true;
+      }
     }
 
     if (mapsToOnboardingContextIntent(question)) {
