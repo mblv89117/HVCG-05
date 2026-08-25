@@ -261,15 +261,21 @@ export interface AtlasClientContext {
    * relatedAttachments copies already-indexed same-scope
    * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
    * / relatedAttachments path as documents / meetings / onboarding /
-   * client-support / capital prepare). Missing / non-canonical
-   * ClientCode omits researchRelationship / relatedDocuments /
-   * relatedProjects / relatedThreads / relatedAttachments
-   * (fail-closed; never guess). Unscoped never receives scoped peers
-   * or scoped attachments. Client A never receives Client B.
-   * binariesInAtlas stays false. No downloadUrl. No contentBytes.
-   * historicalHvs / hubMiRow copy from the entitled source project
-   * only — never invent hubMiRow=true. No TargetAmount. No invented
-   * titles / ids / ClientCodes / Hub-MI / milestone rows.
+   * client-support / capital prepare). Optional relatedCapital copies
+   * already-entitled same-scope capital-prepare refs (same
+   * RelatedDocumentCapitalRef / relatedCapital path as research-intel /
+   * onboarding / client-support / capital prepare / meetings). Missing /
+   * non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments / relatedProjects / relatedThreads /
+   * relatedAttachments / relatedCapital (fail-closed; never guess).
+   * Unscoped never receives scoped peers, attachments, or capital.
+   * Client A never receives Client B. binariesInAtlas stays false.
+   * No downloadUrl. No contentBytes. historicalHvs / hubMiRow copy
+   * from the entitled source project only — never invent hubMiRow=true.
+   * No TargetAmount. No invented titles / ids / ClientCodes / Hub-MI /
+   * milestone rows / lender criteria / financing status. Capital stays
+   * PREPARE_ONLY — send=false / externalSubmit=false / ownerGated=true /
+   * financingStatus UNKNOWN / HONEST_EMPTY.
    */
   projects: {
     kind: 'project_operating_record_v1';
@@ -845,6 +851,27 @@ export interface ProjectOperatingRecord {
    * attachment or search product. Not send.
    */
   relatedAttachments?: RelatedDocumentAttachmentRef[];
+  /**
+   * Inverse of capital.relatedProjects / meeting.capitalRelationship /
+   * document.capitalRelationship: already-authorized same-scope
+   * capital-prepare records. Reuses RelatedDocumentCapitalRef /
+   * relatedCapital() — the same entitled same-scope inverse already
+   * live on research-intel / onboarding / client-support / capital
+   * prepare / meetings. Copied after authorization. Omitted when none
+   * are entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped capital.
+   * Unscoped lender catalog titles never attach scoped capital.
+   * Client A never receives Client B. Never downloadUrl, contentBytes,
+   * TargetAmount, invented titles / ids / counts, ClientCodes, Hub-MI,
+   * lender criteria, fit, or financing status. PREPARE_ONLY /
+   * send=false / externalSubmit=false / ownerGated=true /
+   * financingStatus UNKNOWN stay as composed on the relatedCapital refs.
+   * relatedMeetings / researchRelationship / relatedDocuments /
+   * relatedProjects / relatedThreads / relatedAttachments stay as
+   * composed. Not a second capital product. Not external submit.
+   * Not send.
+   */
+  relatedCapital?: RelatedDocumentCapitalRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
@@ -1630,16 +1657,22 @@ export interface AtlasAuthorizedSearch {
    * same-scope outlook-mail-attachment metadata (same
    * RelatedDocumentAttachmentRef / relatedAttachments path as
    * documents / meetings / onboarding / client-support / capital
-   * prepare). Missing / non-canonical ClientCode omits
-   * researchRelationship / relatedDocuments / relatedProjects /
-   * relatedThreads / relatedAttachments (fail-closed; never guess).
-   * Unscoped never receives scoped peers or scoped attachments.
-   * Client A never receives Client B. Self never appears.
+   * prepare). Optional relatedCapital copies already-entitled
+   * same-scope capital-prepare refs (same RelatedDocumentCapitalRef /
+   * relatedCapital path as research-intel / onboarding / client-support /
+   * capital prepare / meetings). Missing / non-canonical ClientCode
+   * omits researchRelationship / relatedDocuments / relatedProjects /
+   * relatedThreads / relatedAttachments / relatedCapital (fail-closed;
+   * never guess). Unscoped never receives scoped peers, attachments,
+   * or capital. Client A never receives Client B. Self never appears.
    * relatedMeetings stays as composed. binariesInAtlas stays false.
    * historicalHvs / hubMiRow copy from the entitled source project
    * only — never invent hubMiRow=true. No TargetAmount. No invented
-   * titles / ids / ClientCodes / Hub-MI / milestone rows. No
-   * downloadUrl. No contentBytes. No invented facts.
+   * titles / ids / ClientCodes / Hub-MI / milestone rows / lender
+   * criteria / financing status. No downloadUrl. No contentBytes.
+   * Capital stays PREPARE_ONLY — send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN / HONEST_EMPTY. No
+   * invented facts.
    */
   projects: {
     kind: 'project_operating_record_v1';
