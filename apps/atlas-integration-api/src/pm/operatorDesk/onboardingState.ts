@@ -121,6 +121,9 @@ export type OnboardingMilestoneReview = {
   completeCount: number;
   blockedCount: number;
   pendingCount: number;
+  /** True only after reuse-with-id or a create that returned an id. */
+  milestoneReconciled: boolean;
+  reusedExisting: boolean;
   items: string[];
   nextMilestone?: string;
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
@@ -371,6 +374,8 @@ export type OnboardingRunRecord = {
   workspaceReconciled: boolean;
   /** True only after entitled reuse of an existing document request set, or a create that returned an id. */
   documentsReconciled?: boolean;
+  /** True only after reuse of an entitled project milestone id, or a create that returned an id. */
+  milestoneReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
