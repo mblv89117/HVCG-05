@@ -301,10 +301,15 @@ export interface AtlasClientContext {
    * meetings / onboarding / client support). Optional relatedDocuments
    * is the inverse of document.capitalRelationship (same
    * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
-   * Missing / non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments (fail-closed; never guess). Unscoped lender
-   * catalog titles never attach scoped documents. No downloadUrl. No
-   * TargetAmount. PREPARE_ONLY / send=false / externalSubmit=false /
+   * Optional relatedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
+   * / relatedAttachments path as documents / meetings / onboarding /
+   * client-support). Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments / relatedAttachments
+   * (fail-closed; never guess). Unscoped lender catalog titles never
+   * attach scoped documents or attachments. No downloadUrl. No
+   * contentBytes. binariesInAtlas stays false. No TargetAmount.
+   * PREPARE_ONLY / send=false / externalSubmit=false /
    * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
@@ -975,6 +980,26 @@ export interface CapitalSubmissionPrepareRecord {
    * No invented facts.
    */
   relatedDocuments?: RelatedMeetingDocumentRef[];
+  /**
+   * Already-indexed outlook-mail-attachment metadata refs. Reuses
+   * RelatedDocumentAttachmentRef / relatedAttachments() — the same
+   * entitled same-scope inverse already live on documents / meetings /
+   * onboarding / client support. Copied after authorization. Metadata
+   * only: id / title / parentMessageId / attachmentId / contentType /
+   * size / classification / webUrl. binariesInAtlas stays false.
+   * Omitted when none are entitled or when ClientCode is missing /
+   * non-canonical (fail-closed; never guess). Unscoped never receives
+   * scoped attachments. Unscoped lender catalog titles never attach
+   * scoped attachments. Client A never receives Client B. SAS /
+   * anonymous webUrl dropped. Never downloadUrl, contentBytes,
+   * invented attachment names / ids / counts, ClientCodes, Hub-MI,
+   * TargetAmount, lender criteria, fit, or financing status.
+   * PREPARE_ONLY / send=false / externalSubmit=false /
+   * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   * Not a second attachment or capital product. Not external submit.
+   * Not send.
+   */
+  relatedAttachments?: RelatedDocumentAttachmentRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
@@ -1500,10 +1525,15 @@ export interface AtlasAuthorizedSearch {
    * meetings / onboarding / client support). Optional relatedDocuments
    * is the inverse of document.capitalRelationship (same
    * RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
-   * Missing / non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments (fail-closed; never guess). Unscoped lender
-   * catalog titles never attach scoped documents. No downloadUrl. No
-   * TargetAmount. PREPARE_ONLY / send=false / externalSubmit=false /
+   * Optional relatedAttachments copies already-indexed same-scope
+   * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef
+   * / relatedAttachments path as documents / meetings / onboarding /
+   * client-support). Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments / relatedAttachments
+   * (fail-closed; never guess). Unscoped lender catalog titles never
+   * attach scoped documents or attachments. No downloadUrl. No
+   * contentBytes. binariesInAtlas stays false. No TargetAmount.
+   * PREPARE_ONLY / send=false / externalSubmit=false /
    * ownerGated=true / financingStatus UNKNOWN stay as composed.
    */
   capitalSubmissions: CapitalSubmissionPreparePayload;
