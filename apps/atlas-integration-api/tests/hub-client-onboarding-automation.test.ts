@@ -113,6 +113,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.ownerAttentionPackage.outbound, false);
     assert.equal(result.record.milestoneReview.status, 'NOT_READY');
     assert.equal(result.record.milestoneReview.ready, false);
+    assert.equal(result.record.milestoneReview.milestoneReconciled, false);
+    assert.deepEqual(result.record.milestoneIds, []);
+    assert.equal(result.record.milestoneReconciled, false);
+    assert.equal(result.events.includes('MILESTONE_CREATED'), false);
     assert.equal(result.record.milestoneReview.send, false);
     assert.equal(result.record.milestoneReview.outbound, false);
     assert.equal(result.record.completion.status, 'NOT_READY');
@@ -188,6 +192,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.identityResolutionRequired, true);
     assert.equal(result.record.workspaceReconciled, false);
     assert.equal(result.record.documentsReconciled, false);
+    assert.equal(result.record.milestoneReconciled, false);
+    assert.deepEqual(result.record.milestoneIds, []);
+    assert.equal(result.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(result.events.includes('MILESTONE_CREATED'), false);
     assert.deepEqual(result.record.assignedAgents, []);
     assert.equal(result.record.agentAssignmentReview.agentReconciled, false);
     assert.equal(result.record.projectId, undefined);
@@ -420,7 +428,9 @@ describe('client onboarding automation', () => {
     process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
     const cfg = loadConfig();
     const projects: Array<{ id: string; name: string; clientCode: string; idempotencyKey?: string }> = [];
+    const milestones: Array<{ id: string; title: string; projectId?: string }> = [];
     let createProjectCalls = 0;
+    let createMilestoneCalls = 0;
     const sharepoint = {
       listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
       listAuthorizedProjects: async () => projects,
@@ -448,10 +458,18 @@ describe('client onboarding automation', () => {
         id: `task-${body.title}`,
         title: String(body.title),
       }),
-      createMilestone: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
-        id: `ms-${body.title}`,
-        title: String(body.title),
-      }),
+      listAuthorizedMilestones: async (_principal: AtlasPrincipal, projectId?: string) =>
+        projectId ? milestones.filter((row) => !row.projectId || row.projectId === projectId) : milestones,
+      createMilestone: async (_principal: AtlasPrincipal, body: { title?: string; projectId?: string }) => {
+        createMilestoneCalls += 1;
+        const created = {
+          id: `ms-${body.title}`,
+          title: String(body.title),
+          projectId: body.projectId,
+        };
+        milestones.push(created);
+        return created;
+      },
     } as unknown as SharePointPmService;
 
     const first = await executeEntitledOnboardingFromQuestion({
@@ -486,6 +504,10 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.milestoneReview.outbound, false);
     assert.equal(first.record?.milestoneReview.capitalSubmit, false);
     assert.equal(first.record?.milestoneReview.status, 'OPEN');
+    assert.equal(first.record?.milestoneReview.milestoneReconciled, true);
+    assert.equal(first.record?.milestoneReconciled, true);
+    assert.ok((first.record?.milestoneIds.length ?? 0) > 0);
+    assert.ok(createMilestoneCalls > 0);
     assert.equal(first.record?.completion.send, false);
     assert.equal(first.record?.completion.outbound, false);
     assert.equal(first.record?.completion.capitalSubmit, false);
@@ -530,6 +552,9 @@ describe('client onboarding automation', () => {
     assert.equal(second.workflow?.workflowId, firstWorkflowId);
     assert.equal(createProjectCalls, 1);
     assert.equal(projects.length, 1);
+    assert.equal(createMilestoneCalls, first.record?.milestoneIds.length);
+    assert.equal(second.record?.milestoneReview.milestoneReconciled, true);
+    assert.equal(second.record?.milestoneReview.reusedExisting, true);
     const visible = listVisibleDefinitions(readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir)), principal);
     const onboardingDefs = visible.filter((d) => d.scope.clientCode === 'ACCG01' && d.sourceTemplateId === 'client_onboarding');
     assert.equal(onboardingDefs.length, 1);
@@ -989,6 +1014,7 @@ describe('client onboarding automation', () => {
     });
     assert.equal(prepared.status, 'OPEN');
     assert.equal(prepared.ready, false);
+    assert.equal(prepared.milestoneReconciled, false);
     assert.equal(prepared.send, false);
     assert.equal(prepared.outbound, false);
     assert.equal(prepared.liveGtmOutbound, false);
@@ -1000,6 +1026,7 @@ describe('client onboarding automation', () => {
     const clear = composeMilestoneReview({
       workspaceReconciled: true,
       projectId: 'proj-1',
+      milestoneIds: ['m1'],
       milestones: [
         { id: 'identity_verified', label: 'Client identity verified', status: 'complete', provenance: 'CONFIRMED' },
       ],
@@ -1007,6 +1034,7 @@ describe('client onboarding automation', () => {
     });
     assert.equal(clear.status, 'CLEAR');
     assert.equal(clear.ready, true);
+    assert.equal(clear.milestoneReconciled, true);
 
     const blocked = composeMilestoneReview({
       workspaceReconciled: true,
@@ -1025,6 +1053,7 @@ describe('client onboarding automation', () => {
     });
     assert.equal(identity.status, 'NOT_READY');
     assert.equal(identity.ready, false);
+    assert.equal(identity.milestoneReconciled, false);
 
     const now = new Date().toISOString();
     const record = {
@@ -1111,6 +1140,7 @@ describe('client onboarding automation', () => {
     const milestoneReview = composeMilestoneReview({
       workspaceReconciled: true,
       projectId: 'proj-1',
+      milestoneIds: ['m1'],
       milestones: [
         { id: 'identity_verified', label: 'Client identity verified', status: 'complete', provenance: 'CONFIRMED' },
       ],
@@ -1806,6 +1836,142 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Agent assignment review for ACCG01: OPEN/);
     assert.match(answer, /did not invent or duplicate agents|did not invent a ClientCode/);
     assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate agents created/i.test(answer), false);
+  });
+
+  it('reconciles entitled project milestones by title and does not invent ids', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-ms-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [
+        { id: 'existing-ms-identity', title: 'Client identity verified' },
+        { id: 'existing-ms-scope', title: 'Agreement / scope verified' },
+        { id: 'existing-ms-docs', title: 'Documents complete' },
+        { id: 'existing-ms-access', title: 'System access complete' },
+        { id: 'existing-ms-kickoff-ready', title: 'Kickoff ready' },
+        { id: 'existing-ms-kickoff-complete', title: 'Kickoff complete' },
+        { id: 'existing-ms-baseline', title: 'Initial operating baseline complete' },
+      ],
+      milestoneCreate: async () => {
+        throw new Error('reuse-only must not create milestones');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.deepEqual(reused.record.milestoneIds, [
+      'existing-ms-identity',
+      'existing-ms-scope',
+      'existing-ms-docs',
+      'existing-ms-access',
+      'existing-ms-kickoff-ready',
+      'existing-ms-kickoff-complete',
+      'existing-ms-baseline',
+    ]);
+    assert.equal(reused.record.milestoneReconciled, true);
+    assert.equal(reused.record.milestoneReview.milestoneReconciled, true);
+    assert.equal(reused.record.milestoneReview.reusedExisting, true);
+    assert.equal(reused.record.milestoneReview.send, false);
+    assert.equal(reused.events.includes('MILESTONE_CREATED'), false);
+
+    let createdCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [],
+      milestoneCreate: async (_principal, body) => {
+        createdCalls += 1;
+        return { id: `ms-${createdCalls}`, title: body.title };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.ok(created.record.milestoneIds.length > 0);
+    assert.ok(created.record.milestoneIds.every((id) => Boolean(id)));
+    assert.equal(created.record.milestoneReconciled, true);
+    assert.equal(created.record.milestoneReview.milestoneReconciled, true);
+    assert.ok(created.events.includes('MILESTONE_CREATED'));
+    assert.ok(createdCalls > 0);
+
+    let dryCreates = 0;
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      milestoneList: async () => [],
+      milestoneCreate: async () => {
+        dryCreates += 1;
+        throw new Error('dry-run must not create milestones');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.deepEqual(dry.record.milestoneIds, []);
+    assert.equal(dry.record.milestoneReconciled, false);
+    assert.equal(dry.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(dry.record.milestoneReview.status, 'OPEN');
+    assert.equal(dryCreates, 0);
+    assert.equal(dry.events.includes('MILESTONE_CREATED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [],
+      milestoneCreate: async () => {
+        throw new Error('sharepoint milestone create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.deepEqual(thrown.record.milestoneIds, []);
+    assert.equal(thrown.record.milestoneReconciled, false);
+    assert.equal(thrown.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(thrown.events.includes('MILESTONE_CREATED'), false);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [],
+      milestoneCreate: async (_principal, body) => ({ title: body.title }),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.deepEqual(absent.record.milestoneIds, []);
+    assert.equal(absent.record.milestoneReconciled, false);
+    assert.equal(absent.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(absent.events.includes('MILESTONE_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it('prepares realtime documents honesty from already-known fabric and documentGaps', () => {

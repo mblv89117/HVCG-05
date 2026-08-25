@@ -82,6 +82,36 @@ export type OnboardingAgentAssignResult = {
   agentId?: string;
 };
 
+export type OnboardingMilestoneRow = {
+  id?: string;
+  title?: string;
+};
+
+/** Record a SharePoint milestone only when list or create returns an id. Never invent ids. */
+export async function defaultOnboardingMilestoneList(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  projectId: string,
+): Promise<OnboardingMilestoneRow[]> {
+  const list = sharepoint?.listAuthorizedMilestones;
+  if (typeof list !== 'function' || !projectId.trim()) return [];
+  try {
+    const rows = await list.call(sharepoint, principal, projectId);
+    return (rows ?? []).map((row) => ({ id: row?.id, title: row?.title }));
+  } catch {
+    return [];
+  }
+}
+
+export async function defaultOnboardingMilestoneCreate(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  body: { title: string; projectId: string; status?: string },
+): Promise<{ id?: string }> {
+  if (!sharepoint || !body.projectId.trim() || !body.title.trim()) return {};
+  return sharepoint.createMilestone(principal, body);
+}
+
 export type OnboardingAutomationResult = {
   ok: true;
   record: OnboardingRunRecord;
@@ -432,10 +462,15 @@ export function composeMilestoneReview(record: {
   projectId?: string;
   projectName?: string;
   milestones?: OnboardingMilestoneState[];
+  milestoneIds?: string[];
+  reusedExisting?: boolean;
   blockers?: string[];
   communicationPolicy?: OnboardingMilestoneReview['communicationPolicy'];
 }): OnboardingMilestoneReview {
   const milestones = record.milestones ?? [];
+  const milestoneIds = (record.milestoneIds ?? []).map((id) => id.trim()).filter(Boolean);
+  const milestoneReconciled = milestoneIds.length > 0;
+  const reusedExisting = Boolean(record.reusedExisting && milestoneReconciled);
   const completeCount = milestones.filter((m) => m.status === 'complete').length;
   const blockedCount = milestones.filter((m) => m.status === 'blocked').length;
   const pendingCount = milestones.filter((m) => m.status === 'pending' || m.status === 'in_progress').length;
@@ -449,16 +484,22 @@ export function composeMilestoneReview(record: {
   const nextOwnerAction =
     record.identityResolutionRequired
       ? 'Assign client scope before milestone review'
-      : blockedCount
-        ? `Clear blocked milestone: ${milestones.find((m) => m.status === 'blocked')?.label ?? 'blocked'}`
-        : nextMilestone
-          ? `Advance milestone: ${nextMilestone}`
-          : 'No open onboarding milestones';
+      : !milestoneReconciled
+        ? 'Confirm the existing entitled onboarding milestones; do not create duplicates'
+        : blockedCount
+          ? `Clear blocked milestone: ${milestones.find((m) => m.status === 'blocked')?.label ?? 'blocked'}`
+          : nextMilestone
+            ? `Advance milestone: ${nextMilestone}`
+            : reusedExisting
+              ? 'Existing entitled onboarding milestones reused — no duplicate milestones created'
+              : 'Governed onboarding milestones are reconciled — no duplicate milestones created';
   const counts = {
     milestoneCount: milestones.length,
     completeCount,
     blockedCount,
     pendingCount,
+    milestoneReconciled,
+    reusedExisting,
     items,
     ...(nextMilestone ? { nextMilestone } : {}),
     communicationPolicy,
@@ -475,7 +516,20 @@ export function composeMilestoneReview(record: {
       ...(record.projectId ? { projectId: record.projectId } : {}),
       ...(record.projectName ? { projectName: record.projectName } : {}),
       ...counts,
+      milestoneReconciled: false,
+      reusedExisting: false,
       provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  if (!milestoneReconciled) {
+    const status = blockedCount || blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      projectId: record.projectId,
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...counts,
+      provenance: 'PROPOSED',
     };
   }
   const status = blockedCount || blockers.length ? 'BLOCKED' : items.length ? 'OPEN' : 'CLEAR';
@@ -1278,6 +1332,7 @@ function buildIdentityReconciliationRecord(opts: {
     identityResolutionRequired,
     workspaceReconciled,
     documentsReconciled: false,
+    milestoneReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -1385,6 +1440,14 @@ export async function runClientOnboardingAutomation(opts: {
   agentAssign?: (
     input: OnboardingAgentAssignInput,
   ) => OnboardingAgentAssignResult | Promise<OnboardingAgentAssignResult>;
+  milestoneList?: (
+    principal: AtlasPrincipal,
+    projectId: string,
+  ) => OnboardingMilestoneRow[] | Promise<OnboardingMilestoneRow[]>;
+  milestoneCreate?: (
+    principal: AtlasPrincipal,
+    body: { title: string; projectId: string; status?: string },
+  ) => { id?: string } | Promise<{ id?: string }>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1446,6 +1509,7 @@ export async function runClientOnboardingAutomation(opts: {
   let reusedExistingTasks = false;
   const assignedAgents: string[] = [];
   const milestoneIds: string[] = [];
+  let reusedExistingMilestones = false;
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
@@ -1519,23 +1583,44 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
-  if (projectId && !opts.dryRun) {
-    for (const label of DEFAULT_MILESTONES) {
+  if (projectId) {
+    const listMilestonesFn = opts.milestoneList
+      ?? ((principal: AtlasPrincipal, id: string) => defaultOnboardingMilestoneList(sp, principal, id));
+    const createMilestoneFn = opts.milestoneCreate
+      ?? ((principal: AtlasPrincipal, body: { title: string; projectId: string; status?: string }) =>
+        defaultOnboardingMilestoneCreate(sp, principal, body));
+    const existingMilestones = await listMilestonesFn(opts.principal, projectId);
+    const missingMilestones: typeof DEFAULT_MILESTONES[number][] = [];
+    for (const milestoneDef of DEFAULT_MILESTONES) {
+      const found = existingMilestones.find((row) => row.title === milestoneDef.label);
+      if (found?.id) {
+        milestoneIds.push(found.id);
+        reusedExistingMilestones = true;
+      } else {
+        missingMilestones.push(milestoneDef);
+      }
+    }
+    if (!opts.dryRun && missingMilestones.length) {
       try {
-        const milestone = await sp.createMilestone(opts.principal, {
-          title: label.label,
-          projectId,
-          status: 'pending',
-        });
-        if (milestone?.id) {
-          milestoneIds.push(milestone.id);
+        let createdWithId = false;
+        for (const milestoneDef of missingMilestones) {
+          const milestone = await createMilestoneFn(opts.principal, {
+            title: milestoneDef.label,
+            projectId,
+            status: 'pending',
+          });
+          if (milestone?.id) {
+            milestoneIds.push(milestone.id);
+            createdWithId = true;
+          }
         }
+        if (createdWithId) events.push('MILESTONE_CREATED');
       } catch {
-        /* milestone optional — do not invent a milestone id */
+        /* create failed — do not invent a milestone id */
       }
     }
   }
-  if (milestoneIds.length) events.push('MILESTONE_CREATED');
+  const milestoneReconciled = milestoneIds.length > 0;
 
   const assignResponsibleAgent = opts.agentAssign ?? defaultOnboardingAgentAssign;
   if (projectId && taskIds.length && !opts.dryRun) {
@@ -1619,6 +1704,7 @@ export async function runClientOnboardingAutomation(opts: {
     identityResolutionRequired: false,
     workspaceReconciled,
     documentsReconciled,
+    milestoneReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -1674,6 +1760,8 @@ export async function runClientOnboardingAutomation(opts: {
     projectId,
     projectName,
     milestones,
+    milestoneIds,
+    reusedExisting: reusedExistingMilestones,
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
@@ -1798,6 +1886,7 @@ export async function runClientOnboardingAutomation(opts: {
     identityResolutionRequired: false,
     workspaceReconciled,
     documentsReconciled,
+    milestoneReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
@@ -2252,6 +2341,8 @@ export function answerOnboardingContext(
       projectId: record.projectId,
       projectName: record.projectName,
       milestones: record.milestones,
+      milestoneIds: record.milestoneIds,
+      reusedExisting: Boolean(record.milestoneReview?.reusedExisting),
       blockers: record.blockers,
       communicationPolicy: record.communicationPolicy,
     });
@@ -2260,6 +2351,12 @@ export function answerOnboardingContext(
       pack.projectName ? `Project: ${pack.projectName}` : '',
       `Milestones: ${pack.completeCount}/${pack.milestoneCount} complete`,
       pack.nextMilestone ? `Next: ${pack.nextMilestone}` : '',
+      pack.milestoneReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled milestones: reused'
+          : 'Governed onboarding milestones: reconciled'
+        : 'Existing entitled milestones: not confirmed',
+      pack.reusedExisting ? 'No duplicate milestones created.' : 'Atlas did not invent or duplicate milestones.',
       pack.items.length ? `Open: ${pack.items.join('; ')}` : 'No open onboarding milestones.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
