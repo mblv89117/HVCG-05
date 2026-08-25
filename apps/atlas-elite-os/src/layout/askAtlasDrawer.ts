@@ -7,6 +7,36 @@ export interface AskAtlasDrawerItem {
   basedOn: string;
 }
 
+export type AskAtlasRoute =
+  | 'hub_runtime_onboarding'
+  | 'hub_runtime'
+  | 'signed_attention'
+  | 'unsigned_fail_closed';
+
+/** Mirrors Hub mapsToOnboardingContextIntent — Elite must not send these to SharePoint search. */
+export function mapsToOnboardingStatusIntent(prompt: string): boolean {
+  const q = prompt.toLowerCase();
+  return (
+    q.includes('onboarding') &&
+    (q.includes('where are we') ||
+      q.includes('missing') ||
+      q.includes('blocked') ||
+      q.includes('waiting on') ||
+      q.includes('kickoff') ||
+      q.includes('approve') ||
+      q.includes('document'))
+  );
+}
+
+export function routeAskAtlasPrompt(
+  prompt: string,
+  opts: { hasBearer: boolean },
+): AskAtlasRoute {
+  if (!opts.hasBearer) return 'unsigned_fail_closed';
+  if (mapsToOnboardingStatusIntent(prompt)) return 'hub_runtime_onboarding';
+  return 'hub_runtime';
+}
+
 function relevantItems(prompt: string, items: AskAtlasDrawerItem[]): AskAtlasDrawerItem[] {
   const lower = prompt.toLowerCase();
   if (lower.includes('capital')) {

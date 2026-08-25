@@ -34,7 +34,11 @@ import { microsoftConfig } from '../microsoft/config';
 import { workspaceCatalog } from '../data/workspaces';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
 import { fetchOperatorDesk, fetchOperatorRuntime, postWorkflowDraftAction, searchPm } from '../integrations/hub/pmApi';
-import { summarizeAskAtlasPrompt, type AskAtlasDrawerItem } from './askAtlasDrawer';
+import {
+  routeAskAtlasPrompt,
+  summarizeAskAtlasPrompt,
+  type AskAtlasDrawerItem,
+} from './askAtlasDrawer';
 import type { AICommandRunResult } from '@hvcg/atlas-design-system';
 
 const ATLAS_SCHEME_KEY = 'atlas.colorScheme';
@@ -646,7 +650,8 @@ export function AppShell() {
         title="Ask Atlas"
         subtitle="Grounded on signed operator context; owner-gated actions stay blocked."
         onRunPrompt={async (prompt): Promise<string | AICommandRunResult> => {
-          if (!hubAuth.hasBearer) {
+          const route = routeAskAtlasPrompt(prompt, { hasBearer: hubAuth.hasBearer });
+          if (route === 'unsigned_fail_closed') {
             return summarizeAskAtlasPrompt(prompt, askAtlasItems, askAtlasError || 'Microsoft sign-in required');
           }
           try {
@@ -668,6 +673,9 @@ export function AppShell() {
               };
             }
             if (res.workflowAnswer) return res.workflowAnswer;
+            if (route === 'hub_runtime_onboarding') {
+              return 'No entitled onboarding context was returned for that question. Atlas does not invent onboarding status or search SharePoint for it.';
+            }
             return summarizeAskAtlasPrompt(prompt, askAtlasItems, null);
           } catch (err) {
             return summarizeAskAtlasPrompt(
