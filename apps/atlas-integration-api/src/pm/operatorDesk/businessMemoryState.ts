@@ -136,6 +136,8 @@ export type BusinessMemoryOverlay = {
   operatingRecords: ClientOperatingRecordOverlay[];
   progress: BusinessMemoryProgress;
   readProofs: M365ReadProofs;
+  backfillInProgress?: boolean;
+  backfillStartedAt?: string;
 };
 
 export function resolveBusinessMemoryDir(dataDir: string, env: NodeJS.ProcessEnv = process.env): string {
@@ -204,6 +206,8 @@ export function readBusinessMemoryOverlay(dir: string): BusinessMemoryOverlay {
       operatingRecords: Array.isArray(parsed.operatingRecords) ? parsed.operatingRecords : [],
       progress: { ...emptyBusinessMemoryProgress(), ...(parsed.progress || {}) },
       readProofs: { ...emptyM365ReadProofs(), ...(parsed.readProofs || {}) },
+      ...(parsed.backfillInProgress ? { backfillInProgress: true } : {}),
+      ...(parsed.backfillStartedAt ? { backfillStartedAt: parsed.backfillStartedAt } : {}),
     };
   } catch {
     return emptyBusinessMemoryOverlay();
@@ -223,6 +227,8 @@ export function writeBusinessMemoryOverlay(dir: string, overlay: BusinessMemoryO
         operatingRecords: overlay.operatingRecords,
         progress: overlay.progress,
         readProofs: overlay.readProofs,
+        ...(overlay.backfillInProgress ? { backfillInProgress: true } : {}),
+        ...(overlay.backfillStartedAt ? { backfillStartedAt: overlay.backfillStartedAt } : {}),
       },
       null,
       2,

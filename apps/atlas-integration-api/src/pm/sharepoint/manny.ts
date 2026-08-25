@@ -24,3 +24,14 @@ export function assertMannyOnly(principal: AtlasPrincipal, action: string): void
     `${action} is restricted to the authenticated HVCG owner principal.`,
   );
 }
+
+/** Service-runtime identity for scheduled fabric + business-memory sweeps (Hub MI path). */
+export function bootstrapMannyPrincipal(allowedClientIds: string[] = []): AtlasPrincipal {
+  const codes = allowedClientIds.filter((code) => typeof code === 'string' && code.trim() && code !== '*');
+  return {
+    userId: MANNY_ENTRA_OID,
+    organizationId: 'hvcg',
+    allowedClientIds: codes,
+    roles: ['HVCG Owner'],
+  };
+}

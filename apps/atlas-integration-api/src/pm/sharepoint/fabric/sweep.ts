@@ -16,6 +16,7 @@ import { createManagedIdentityTokenProvider, GRAPH_TOKEN_RESOURCE } from '../tok
 import type { SharePointPmService } from '../repository.ts';
 import type { AppConfig } from '../../../config.ts';
 import type { PmGraphTokenProvider } from '../token.ts';
+import { runScheduledBusinessMemoryBackfill } from '../../operatorDesk/businessMemorySweep.ts';
 
 export interface FabricSweepHandle {
   stop: () => void;
@@ -155,6 +156,31 @@ export function startConfiguredFabricSweep(opts: {
               attempt,
             }),
           );
+          try {
+            const backfill = await runScheduledBusinessMemoryBackfill({
+              cfg: opts.cfg,
+              sharepoint: opts.sharepoint as SharePointPmService,
+              fabric,
+              trigger: 'scheduled_sweep',
+            });
+            if (backfill.ran) {
+              console.info(
+                JSON.stringify({
+                  level: 'info',
+                  msg: 'business_memory_scheduled_backfill',
+                  enumerated: backfill.enumerated,
+                }),
+              );
+            }
+          } catch (backfillErr) {
+            console.error(
+              JSON.stringify({
+                level: 'error',
+                msg: 'business_memory_scheduled_backfill_failed',
+                detail: String(backfillErr),
+              }),
+            );
+          }
           return;
         } catch (err) {
           lastErr = err;

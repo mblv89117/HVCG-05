@@ -16,6 +16,10 @@ import {
 } from './workflowDefinitions.ts';
 import { readOnboardingOverlay, resolveOnboardingStateDir } from './onboardingState.ts';
 import {
+  readBusinessMemoryOverlay,
+  resolveBusinessMemoryDir,
+} from './businessMemoryState.ts';
+import {
   APPROVAL_CENTER_MISSION_KEY,
   type ApprovalOverlayRecord,
   type ApprovalOverlayStatus,
@@ -53,6 +57,7 @@ export type ApprovalCategory =
   | 'FINANCIAL'
   | 'EXTERNAL_SUBMISSION'
   | 'WORKFLOW_AUTHORITY'
+  | 'BUSINESS_MEMORY'
   | 'SYSTEM';
 
 export type ApprovalStatus =
@@ -337,6 +342,45 @@ function onboardingAttentionItem(
   };
 }
 
+function businessMemoryAttentionItem(
+  record: {
+    clientCode: string;
+    clientName?: string;
+    lastBackfillAt?: string;
+  },
+  attention: string,
+  index: number,
+  overlay: ApprovalOverlayRecord | null,
+): ApprovalListItem {
+  const approvalId = `business-memory-attention:${record.clientCode}:${index}`;
+  const status = mergeStatus(overlay, true);
+  return {
+    approvalId,
+    title: attention.slice(0, 120),
+    approvalType: 'Business memory owner attention',
+    category: 'BUSINESS_MEMORY',
+    status,
+    clientCode: record.clientCode,
+    clientName: record.clientName,
+    workflowId: 'atlas.business_memory.backfill',
+    workflowName: 'Current client business memory',
+    requestedAction: attention,
+    requestedBy: 'atlas_business_memory',
+    originatingSystem: 'business_memory_reconciliation',
+    policyClass: 'OWNER_ESCALATE',
+    policyReason: 'Reconstructed business memory surfaced genuine owner attention from entitled evidence.',
+    evidenceStatus: 'CONFIRMED',
+    requestedAt: record.lastBackfillAt || new Date().toISOString(),
+    executionState: overlay?.executionState ?? 'NOT_STARTED',
+    actions:
+      status === 'PENDING' || status === 'DEFERRED'
+        ? ['approve', 'reject', 'defer', 'open_context']
+        : ['open_context'],
+    href: `/clients/${encodeURIComponent(record.clientCode)}`,
+    source: 'business_memory',
+  };
+}
+
 export function buildApprovalCenter(opts: {
   cfg: AppConfig;
   principal: AtlasPrincipal;
@@ -404,6 +448,24 @@ export function buildApprovalCenter(opts: {
     run.ownerAttention.forEach((attention, idx) => {
       const overlayRec = getApprovalOverlayRecord(overlay, `onboarding-attention:${run.workflowId}:${idx}`);
       const item = onboardingAttentionItem(run, attention, idx, overlayRec);
+      if (!seen.has(item.approvalId)) {
+        seen.add(item.approvalId);
+        items.push(item);
+      }
+    });
+  }
+
+  const businessMemory = readBusinessMemoryOverlay(resolveBusinessMemoryDir(opts.dataDir));
+  for (const record of businessMemory.operatingRecords) {
+    if (!callerMaySeeClient(opts.principal, record.clientCode)) continue;
+    if (!record.needsOwnerAttention?.length) continue;
+    if (record.classification === 'HONEST_EMPTY') continue;
+    record.needsOwnerAttention.forEach((attention, idx) => {
+      const overlayRec = getApprovalOverlayRecord(
+        overlay,
+        `business-memory-attention:${record.clientCode}:${idx}`,
+      );
+      const item = businessMemoryAttentionItem(record, attention, idx, overlayRec);
       if (!seen.has(item.approvalId)) {
         seen.add(item.approvalId);
         items.push(item);

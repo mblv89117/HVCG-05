@@ -792,6 +792,15 @@ export async function handleOperatorDesk(opts: {
         sendJson(opts.res, 400, { error: 'invalid_action', code: 'invalid_action' }, opts.origin);
         return true;
       }
+      if (overlay.backfillInProgress) {
+        sendJson(
+          opts.res,
+          409,
+          { error: 'backfill_in_progress', code: 'backfill_in_progress' },
+          opts.origin,
+        );
+        return true;
+      }
       const knowledge = await buildKnowledgeOperatingPicture(opts.sharepoint, principal, {
         dataDir: opts.cfg.dataDir,
       });

@@ -30,6 +30,7 @@ import {
 } from '../src/pm/operatorDesk/businessMemoryState.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
 import { isOperatorBusinessMemoryPath } from '../src/pm/operatorDesk/types.ts';
+import { MANNY_ENTRA_OID, bootstrapMannyPrincipal } from '../src/pm/sharepoint/manny.ts';
 import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 
 const staff: AtlasPrincipal = {
@@ -276,6 +277,13 @@ describe('business memory backfill', () => {
   it('maps business-memory Ask Atlas intents', () => {
     assert.equal(mapsToBusinessMemoryIntent('What are we working on for Prodigy?'), true);
     assert.equal(mapsToBusinessMemoryIntent('random unrelated question'), false);
+  });
+
+  it('bootstrap Manny principal carries operational client codes for MI sweep', () => {
+    const principal = bootstrapMannyPrincipal(['HFD01', 'PDG01']);
+    assert.equal(principal.userId, MANNY_ENTRA_OID);
+    assert.deepEqual(principal.allowedClientIds, ['HFD01', 'PDG01']);
+    assert.equal(principal.roles.includes('HVCG Owner'), true);
   });
 
   it('unsigned business-memory endpoint is 401', async () => {

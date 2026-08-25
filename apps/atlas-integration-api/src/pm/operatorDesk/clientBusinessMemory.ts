@@ -3,12 +3,15 @@
  * and backfill orchestration over existing M365 fabric + entitled Hub MI.
  */
 
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { canAccessOperatorDesk, entitledClientCodes } from '../sharepoint/authz.ts';
 import { inspectFabricSyncHealth } from '../sharepoint/fabric/status.ts';
 import { runFabricSync } from '../sharepoint/fabric/sync.ts';
 import type { FabricGraphClient } from '../sharepoint/fabric/graph.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
+import type { SharePointClient } from '../sharepoint/repository.ts';
 import { searchSharePointPm } from '../sharepoint/search.ts';
 import {
   entityBoundaryFor,
@@ -37,6 +40,74 @@ import {
   upsertOperatingRecord,
   writeBusinessMemoryOverlay,
 } from './businessMemoryState.ts';
+import { allowedFabricMailboxOids } from '../sharepoint/fabric/graph.ts';
+import { isAllowedFabricGraphPath } from '../sharepoint/fabric/graph.ts';
+
+const HVS_MAIL_PROOF_FILE = 'hvs-mail-read-proof.json';
+
+export type HvsMailReadProof = {
+  mailboxOid: string;
+  messagesRead: number;
+  readOnly: true;
+  verifiedAt: string;
+  sampleSubject?: string;
+};
+
+function hvsMailProofPath(dataDir: string): string {
+  return join(resolveBusinessMemoryDir(dataDir), HVS_MAIL_PROOF_FILE);
+}
+
+export function readHvsMailReadProof(dataDir: string): HvsMailReadProof | null {
+  const path = hvsMailProofPath(dataDir);
+  if (!existsSync(path)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8')) as HvsMailReadProof;
+    if (parsed.readOnly !== true || !parsed.mailboxOid) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function writeHvsMailReadProof(dataDir: string, proof: HvsMailReadProof): void {
+  const dir = resolveBusinessMemoryDir(dataDir);
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const path = join(dir, HVS_MAIL_PROOF_FILE);
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tmp, JSON.stringify(proof, null, 2), { mode: 0o600 });
+  renameSync(tmp, path);
+}
+
+export async function probeHvsHistoricalMailboxRead(opts: {
+  fabric: FabricGraphClient;
+  dataDir: string;
+  env?: NodeJS.Dict<string | undefined>;
+}): Promise<HvsMailReadProof | null> {
+  const env = opts.env ?? process.env;
+  const hvsOid = (env.INTEGRATION_HVS_HISTORICAL_MAILBOX_OID || '').trim().toLowerCase();
+  const allowed = allowedFabricMailboxOids(env);
+  if (!hvsOid || !allowed.has(hvsOid) || hvsOid === 'e4835ea2-3c45-493a-95f5-472f6339661d') {
+    return readHvsMailReadProof(opts.dataDir);
+  }
+  const path = `/v1.0/users/${hvsOid}/mailFolders/inbox/messages?$top=5&$select=id,subject,receivedDateTime`;
+  if (!isAllowedFabricGraphPath(path.split('?')[0])) return null;
+  try {
+    const { status, json } = await opts.fabric.getJson(path);
+    if (status !== 200) return null;
+    const messages = Array.isArray(json.value) ? json.value : [];
+    const proof: HvsMailReadProof = {
+      mailboxOid: hvsOid,
+      messagesRead: messages.length,
+      readOnly: true,
+      verifiedAt: new Date().toISOString(),
+      ...(typeof messages[0]?.subject === 'string' ? { sampleSubject: messages[0].subject.slice(0, 120) } : {}),
+    };
+    if (proof.messagesRead > 0) writeHvsMailReadProof(opts.dataDir, proof);
+    return proof;
+  } catch {
+    return readHvsMailReadProof(opts.dataDir);
+  }
+}
 
 const CONTRACT_SOW_RE = /\b(sow|scope of work|statement of work|contract|agreement|engagement letter|addendum)\b/i;
 
@@ -54,6 +125,7 @@ export function buildM365ReadProofs(
     scheduledSweepEnabled: opts?.sweepEnabled ?? false,
   });
   const notes: string[] = [...health.notes].slice(0, 12);
+  const hvsMailProof = readHvsMailReadProof(dataDir);
   const cumulativeMail = health.cumulative.mailThreads;
   const cumulativeFiles = health.cumulative.files;
   const cumulativeAttachments = health.cumulative.attachmentsIndexed;
@@ -74,13 +146,15 @@ export function buildM365ReadProofs(
           ? 'PARTIAL'
           : 'NOT_PROVED';
   const hvsMail: M365ReadProofs['hvsMail'] =
-    hvsDataAccess === 'BLOCKED'
-      ? 'BLOCKED'
-      : cumulativeMail > 0
-        ? 'LIVE'
-        : hvsDataAccess === 'AVAILABLE'
-          ? 'PARTIAL'
-          : 'NOT_PROVED';
+    hvsMailProof && hvsMailProof.messagesRead > 0
+      ? 'LIVE'
+      : hvsDataAccess === 'BLOCKED'
+        ? 'BLOCKED'
+        : cumulativeMail > 0
+          ? 'LIVE'
+          : hvsDataAccess === 'AVAILABLE'
+            ? 'PARTIAL'
+            : 'NOT_PROVED';
   const deltaCheckpoints: M365ReadProofs['deltaCheckpoints'] =
     health.mailDeltaReady || health.mailSkipPresent || health.lastRunAt ? 'LIVE' : 'NOT_PROVED';
   const syncRecovery: M365ReadProofs['syncRecovery'] =
@@ -91,6 +165,11 @@ export function buildM365ReadProofs(
         : 'NOT_PROVED';
   if (cumulativeAttachments > 0) {
     notes.push(`Indexed attachment metadata count: ${cumulativeAttachments}`);
+  }
+  if (hvsMailProof?.messagesRead) {
+    notes.push(
+      `HVS historical mailbox read proof: ${hvsMailProof.messagesRead} message(s) from allowlisted mailbox.`,
+    );
   }
   return {
     hvcgMail,
@@ -109,6 +188,7 @@ export function buildM365ReadProofs(
 export async function enumerateAuthoritativeCurrentClients(
   principal: AtlasPrincipal,
   service: SharePointPmService,
+  opts?: { bootstrapEnumeration?: boolean; operationalClients?: SharePointClient[] },
 ): Promise<
   Array<{
     clientCode: string;
@@ -117,7 +197,31 @@ export async function enumerateAuthoritativeCurrentClients(
     sharePointLibraryUrl?: string;
   }>
 > {
-  if (!canAccessOperatorDesk(principal)) return [];
+  if (!opts?.bootstrapEnumeration && !canAccessOperatorDesk(principal)) return [];
+
+  if (opts?.bootstrapEnumeration && opts.operationalClients?.length) {
+    return opts.operationalClients
+      .filter((c) => c.clientCode && !isSyntheticQaClient(c.clientCode))
+      .map((c) => ({
+        clientCode: c.clientCode,
+        displayName: c.displayName || c.clientCode,
+        ...(c.dba ? { dba: c.dba } : {}),
+        ...(c.sharePointLibraryUrl ? { sharePointLibraryUrl: c.sharePointLibraryUrl } : {}),
+      }));
+  }
+
+  if (opts?.bootstrapEnumeration && typeof service.listCurrentOperationalClients === 'function') {
+    const operational = await service.listCurrentOperationalClients();
+    return operational
+      .filter((c) => c.clientCode && !isSyntheticQaClient(c.clientCode))
+      .map((c) => ({
+        clientCode: c.clientCode,
+        displayName: c.displayName || c.clientCode,
+        ...(c.dba ? { dba: c.dba } : {}),
+        ...(c.sharePointLibraryUrl ? { sharePointLibraryUrl: c.sharePointLibraryUrl } : {}),
+      }));
+  }
+
   const clients = await service.listAuthorizedClients(principal);
   return clients
     .filter((c) => c.clientCode && !isSyntheticQaClient(c.clientCode))
@@ -444,11 +548,14 @@ export async function runCurrentClientBackfill(opts: {
   clientCode?: string;
   maxPages?: number;
   sweepEnabled?: boolean;
+  skipFabricSync?: boolean;
+  bootstrapEnumeration?: boolean;
+  operationalClients?: SharePointClient[];
 }): Promise<BusinessMemoryOverlay> {
   const memDir = resolveBusinessMemoryDir(opts.dataDir);
   let overlay = readBusinessMemoryOverlay(memDir);
 
-  if (opts.fabric) {
+  if (opts.fabric && !opts.skipFabricSync) {
     await runFabricSync({
       principal: opts.principal,
       service: opts.service,
@@ -462,7 +569,10 @@ export async function runCurrentClientBackfill(opts: {
     sweepEnabled: opts.sweepEnabled,
   });
 
-  const clients = await enumerateAuthoritativeCurrentClients(opts.principal, opts.service);
+  const clients = await enumerateAuthoritativeCurrentClients(opts.principal, opts.service, {
+    bootstrapEnumeration: opts.bootstrapEnumeration,
+    operationalClients: opts.operationalClients,
+  });
   overlay.identityMap = buildIdentityMapFromClients(clients, opts.picture);
 
   const targetCodes = opts.clientCode
@@ -500,6 +610,112 @@ export async function runCurrentClientBackfill(opts: {
   }
 
   return overlay;
+}
+
+const GOVERNED_TRIGGER_DEDUP_FILE = 'business-memory-governed-triggers.json';
+
+function governedTriggerDedupPath(dataDir: string): string {
+  return join(resolveBusinessMemoryDir(dataDir), GOVERNED_TRIGGER_DEDUP_FILE);
+}
+
+function readGovernedTriggerDedup(dataDir: string): Set<string> {
+  const path = governedTriggerDedupPath(dataDir);
+  if (!existsSync(path)) return new Set();
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8')) as { keys?: string[] };
+    return new Set(Array.isArray(parsed.keys) ? parsed.keys : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeGovernedTriggerDedup(dataDir: string, keys: Set<string>): void {
+  const dir = resolveBusinessMemoryDir(dataDir);
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const path = governedTriggerDedupPath(dataDir);
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tmp, JSON.stringify({ keys: [...keys].slice(-500) }, null, 2), { mode: 0o600 });
+  renameSync(tmp, path);
+}
+
+/** Deduped governed workflow / approval signals from reconciled operating records. */
+export async function emitBusinessMemoryGovernedTriggers(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  overlay: BusinessMemoryOverlay;
+}): Promise<void> {
+  const dedup = readGovernedTriggerDedup(opts.dataDir);
+  const clientCodes: string[] = [];
+  const dir = resolveAgentActivityOverlayDir(opts.dataDir);
+
+  for (const record of opts.overlay.operatingRecords) {
+    if (record.phase === 'NOT_STARTED' || record.phase === 'BLOCKED') continue;
+
+    const triggers: Array<{ key: string; summary: string; templateHint: string }> = [];
+
+    if (record.waitingOnThem?.length && record.classification !== 'HONEST_EMPTY') {
+      triggers.push({
+        key: `follow_up:${record.clientCode}`,
+        summary: `Client follow-up: ${record.waitingOnThem[0]?.slice(0, 160) || record.clientCode}`,
+        templateHint: 'client_follow_up',
+      });
+    }
+
+    const missingDocSignal = record.whatIsOpen?.find((line) =>
+      /\bmissing\b.*\b(document|file|nda|contract|sow)\b/i.test(line),
+    );
+    if (missingDocSignal && record.classification === 'CONFIRMED') {
+      triggers.push({
+        key: `document_collection:${record.clientCode}:${missingDocSignal.slice(0, 40)}`,
+        summary: `Document collection: ${missingDocSignal.slice(0, 160)}`,
+        templateHint: 'document_collection',
+      });
+    }
+
+    if (record.capitalHistoryPresent && record.needsOwnerAttention?.length) {
+      triggers.push({
+        key: `capital_prep:${record.clientCode}`,
+        summary: `Capital preparation attention: ${record.needsOwnerAttention[0]?.slice(0, 160) || record.clientCode}`,
+        templateHint: 'capital_submission_preparation',
+      });
+    }
+
+    for (const trigger of triggers) {
+      if (dedup.has(trigger.key)) continue;
+      dedup.add(trigger.key);
+      const entry: AgentActivityLedgerEntry = {
+        agent: 'atlas_business_memory',
+        missionKey: BUSINESS_MEMORY_MISSION_KEY,
+        trigger: 'authorized_internal_event',
+        timestamp: new Date().toISOString(),
+        tools: ['business_memory_governed_trigger', trigger.templateHint],
+        classification: record.classification === 'HONEST_EMPTY' ? 'LIKELY' : record.classification,
+        confidence: record.classification === 'HONEST_EMPTY' ? 'LIKELY' : record.classification,
+        result: 'answered',
+        readWriteStatus: 'READ_AUTO',
+        policyDecision: 'answered',
+        writerUserId: opts.principal.userId,
+        affected: [{ clientCode: record.clientCode, classification: record.classification }],
+      };
+      await withAgentActivityWriteLock(dir, () => {
+        const activityOverlay = readAgentActivityOverlay(dir);
+        activityOverlay.entries.push(entry);
+        writeAgentActivityOverlay(dir, activityOverlay);
+      });
+      clientCodes.push(record.clientCode);
+    }
+  }
+
+  writeGovernedTriggerDedup(opts.dataDir, dedup);
+
+  if (clientCodes.length) {
+    await appendBusinessMemoryBatchActivity({
+      dataDir: opts.dataDir,
+      principal: opts.principal,
+      summary: `GOVERNED_TRIGGERS emitted for ${clientCodes.length} client signal(s)`,
+      clientCodes,
+    });
+  }
 }
 
 export function getOperatingRecordForClient(
