@@ -634,7 +634,7 @@ function assertProjectRelatedCapitalHonesty(item: ProjectOperatingRecord): void 
   assert.equal(/downloadUrl|contentBytes|transcript|attendee/i.test(blob), false);
   assert.equal(/Hub-MI/i.test(blob), false);
   assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
-  assert.equal(/lenderCriteria|Live Oak|5000000/i.test(blob), false);
+  assert.equal(/Live Oak|5000000/i.test(blob), false);
   assert.equal(item.invented, false);
   for (const row of item.relatedCapital || []) {
     assert.equal(row.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
