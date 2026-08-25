@@ -262,6 +262,10 @@ export interface AtlasClientContext {
   /**
    * Native governed onboarding agent from already-entitled Atlas/index
    * intake evidence. Activation, completion, Hub-MI, and GTM stay OWNER-GATED.
+   * Optional relatedCapital copies already-entitled same-scope PREPARE_ONLY
+   * capital refs (same RelatedDocumentCapitalRef path as projects).
+   * Missing / non-canonical ClientCode omits relatedCapital (fail-closed).
+   * Client A never receives Client B. No TargetAmount. Not external submit.
    */
   onboarding: OnboardingAgentPayload;
   /**
@@ -635,6 +639,15 @@ export interface OnboardingAgentRecord {
   missingRequirements: string[];
   ownerDecisions: OnboardingOwnerDecision[];
   nextAction: string;
+  /**
+   * Canonical onboarding CAPITAL CONTEXT: already-authorized same-scope
+   * PREPARE_ONLY capital refs. Reuses RelatedDocumentCapitalRef / relatedCapital().
+   * Omitted when none are entitled or when ClientCode is missing / non-canonical.
+   * Client A never receives Client B. Never TargetAmount, downloadUrl,
+   * contentBytes, lender criteria, or invented financing status.
+   * Not a second capital product. Not external submit. Not send.
+   */
+  relatedCapital?: RelatedDocumentCapitalRef[];
 }
 
 export interface OnboardingAgentPayload {
@@ -753,6 +766,11 @@ export interface AtlasAuthorizedSearch {
   threads: MailThreadOperatingPayload;
   capitalSubmissions: CapitalSubmissionPreparePayload;
   researchIntelligence: ResearchIntelligencePayload;
+  /**
+   * Optional relatedCapital on items copies already-entitled same-scope
+   * PREPARE_ONLY capital refs. Fail-closed when ClientCode is missing /
+   * non-canonical. Client A never receives Client B.
+   */
   onboarding: OnboardingAgentPayload;
   clientSupport: ClientSupportAgentPayload;
   classification: AskAtlasClassification | 'HONEST_EMPTY';

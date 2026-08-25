@@ -17,6 +17,8 @@ import {
   CAPITAL_SUBMISSION_POLICY_CLASS,
   type AtlasAuthorizedSearch,
   type DocumentOperatingRecord,
+  type OnboardingAgentPayload,
+  type OnboardingAgentRecord,
   type ProjectOperatingRecord,
   type RelatedDocumentAttachmentRef,
   type RelatedDocumentCapitalRef,
@@ -327,5 +329,40 @@ export function attachRelatedContextToProjects(
   return {
     ...payload,
     items: payload.items.map((item) => attachRelatedContextToProject(principal, item, search)),
+  };
+}
+
+/**
+ * Canonical onboarding CAPITAL CONTEXT: entitled same-scope PREPARE_ONLY
+ * capital refs on an onboarding agent record. Reuses relatedCapital() —
+ * no new capital query. Fail-closed when ClientCode is missing /
+ * non-canonical. Client A never receives Client B. No TargetAmount,
+ * downloadUrl, contentBytes, lender criteria, or financing status.
+ * Not a second capital product. Not external submit. Not send.
+ */
+export function attachRelatedContextToOnboarding(
+  principal: AtlasPrincipal,
+  item: OnboardingAgentRecord,
+  search: AtlasAuthorizedSearch,
+): OnboardingAgentRecord {
+  if (!mayReceiveRelatedContext(principal, item.clientCode)) return item;
+  const relatedCapitalList = canonicalClientCode(item.clientCode)
+    ? relatedCapital(item, search)
+    : [];
+  return {
+    ...item,
+    ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
+  };
+}
+
+export function attachRelatedContextToOnboardingPayload(
+  principal: AtlasPrincipal,
+  payload: OnboardingAgentPayload,
+  search: AtlasAuthorizedSearch,
+): OnboardingAgentPayload {
+  if (!payload.items.length) return payload;
+  return {
+    ...payload,
+    items: payload.items.map((item) => attachRelatedContextToOnboarding(principal, item, search)),
   };
 }

@@ -65,6 +65,7 @@ import { composeOnboardingAgent, emptyOnboardingPayload } from './onboardingAgen
 import { composeClientSupportAgent, emptyClientSupportPayload } from './clientSupportAgent.ts';
 import {
   attachRelatedContextToDocuments,
+  attachRelatedContextToOnboardingPayload,
   attachRelatedContextToProjects,
 } from './documentRelatedContext.ts';
 
@@ -1700,6 +1701,11 @@ function composeAuthorizedSearch(
   authorizedSearch.projects = attachRelatedContextToProjects(
     ctx.principal,
     authorizedSearch.projects,
+    authorizedSearch,
+  );
+  authorizedSearch.onboarding = attachRelatedContextToOnboardingPayload(
+    ctx.principal,
+    authorizedSearch.onboarding,
     authorizedSearch,
   );
   return {
