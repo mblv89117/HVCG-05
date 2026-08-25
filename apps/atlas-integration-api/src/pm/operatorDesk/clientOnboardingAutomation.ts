@@ -21,6 +21,7 @@ import {
   type OnboardingDocumentGap,
   type OnboardingLifecycleStatus,
   type OnboardingMilestoneState,
+  type OnboardingOperationsHandoff,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -124,6 +125,78 @@ async function appendOnboardingActivity(opts: {
   }
 }
 
+export function composeOperationsHandoff(record: {
+  identityResolutionRequired?: boolean;
+  workspaceReconciled?: boolean;
+  projectId?: string;
+  projectName?: string;
+  taskIds?: string[];
+  milestoneIds?: string[];
+  documentGaps?: OnboardingDocumentGap[];
+  blockers?: string[];
+  ownerAttention?: string[];
+  communicationPolicy?: OnboardingOperationsHandoff['communicationPolicy'];
+  capitalScope?: boolean;
+}): OnboardingOperationsHandoff {
+  const blockers = record.blockers ?? [];
+  const ownerAttention = record.ownerAttention ?? [];
+  const missingDocumentCount = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const capitalScope = Boolean(record.capitalScope);
+  const nextOwnerAction =
+    ownerAttention[0]
+    ?? (record.identityResolutionRequired
+      ? 'Assign client scope to onboarding workflow'
+      : blockers[0]
+        ? blockers[0]
+        : missingDocumentCount
+          ? 'Reconcile or request missing documents (draft only)'
+          : 'Review operations handoff and continue the entitled onboarding checklist');
+  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    const status = record.identityResolutionRequired
+      ? 'NOT_READY'
+      : blockers.length
+        ? 'BLOCKED'
+        : 'NOT_READY';
+    return {
+      status,
+      ready: false,
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      taskCount: record.taskIds?.length ?? 0,
+      milestoneCount: record.milestoneIds?.length ?? 0,
+      missingDocumentCount,
+      blockers,
+      ownerAttention,
+      communicationPolicy,
+      capitalScope,
+      nextOwnerAction,
+      send: false,
+      liveGtmOutbound: false,
+      capitalSubmit: false,
+      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  return {
+    status: blockers.length ? 'BLOCKED' : 'PREPARED',
+    ready: blockers.length === 0,
+    projectId: record.projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    taskCount: record.taskIds?.length ?? 0,
+    milestoneCount: record.milestoneIds?.length ?? 0,
+    missingDocumentCount,
+    blockers,
+    ownerAttention,
+    communicationPolicy,
+    capitalScope,
+    nextOwnerAction,
+    send: false,
+    liveGtmOutbound: false,
+    capitalSubmit: false,
+    provenance: 'CONFIRMED',
+  };
+}
+
 function computeStatus(record: Partial<OnboardingRunRecord>): OnboardingLifecycleStatus {
   if (record.identityResolutionRequired) return 'IDENTITY_RECONCILIATION';
   const missingDocs = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
@@ -177,6 +250,14 @@ export async function runClientOnboardingAutomation(opts: {
       updatedAt: now,
       lastExecutedAt: now,
       milestones: milestoneTemplate(),
+      operationsHandoff: composeOperationsHandoff({
+        identityResolutionRequired: true,
+        workspaceReconciled: false,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        ownerAttention: ['Assign client scope to onboarding workflow'],
+        communicationPolicy: 'DRAFT_ONLY',
+        capitalScope: Boolean(opts.workflow.scope.capitalMatter),
+      }),
       provenance: 'onboarding_automation',
     };
     upsertOnboardingRun(dir, record);
@@ -325,6 +406,20 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
   };
   const status = computeStatus(partial);
+  const operationsHandoff = composeOperationsHandoff({
+    identityResolutionRequired: false,
+    workspaceReconciled,
+    projectId,
+    projectName,
+    taskIds,
+    milestoneIds,
+    documentGaps,
+    blockers,
+    ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+    capitalScope,
+  });
+  if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -336,7 +431,9 @@ export async function runClientOnboardingAutomation(opts: {
     nextStep:
       documentGaps.some((d) => d.status === 'MISSING')
         ? 'Reconcile or request missing documents (draft only)'
-        : 'Prepare kickoff and operating baseline',
+        : operationsHandoff.ready
+          ? 'Owner review of operations handoff (no send / no capital submit)'
+          : 'Prepare kickoff and operating baseline',
     blockers,
     ownerAttention,
     projectId,
@@ -354,6 +451,7 @@ export async function runClientOnboardingAutomation(opts: {
     updatedAt: now,
     lastExecutedAt: now,
     milestones,
+    operationsHandoff,
     provenance: 'onboarding_automation',
   };
 
@@ -475,6 +573,7 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'activate',
   'begin',
   'status',
+  'handoff',
 ] as const;
 
 const ONBOARDING_EXECUTE_VERB = /\b(start|run|execute|activate|begin)\b/;
@@ -556,6 +655,23 @@ export function answerOnboardingContext(
       `Status: ${record.status}`,
       record.blockers.length ? `Blockers: ${record.blockers.join('; ')}` : 'No blockers recorded.',
       record.ownerAttention.length ? `Owner attention: ${record.ownerAttention.join('; ')}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (q.includes('handoff')) {
+    const handoff = record.operationsHandoff;
+    return [
+      `Operations handoff for ${record.clientCode ?? 'client'}: ${handoff.status}`,
+      handoff.projectName ? `Project: ${handoff.projectName}` : '',
+      `Tasks: ${handoff.taskCount}`,
+      `Milestones: ${handoff.milestoneCount}`,
+      `Documents missing: ${handoff.missingDocumentCount}`,
+      `Communication policy: ${handoff.communicationPolicy}`,
+      handoff.capitalScope ? 'Capital: PREPARE_ONLY (external submit owner-gated)' : 'Capital: none in scope',
+      handoff.ownerAttention.length ? `Owner attention: ${handoff.ownerAttention.join('; ')}` : '',
+      `Next owner action: ${handoff.nextOwnerAction}`,
+      'Atlas did not send mail, launch GTM, or submit capital.',
     ]
       .filter(Boolean)
       .join('\n');
