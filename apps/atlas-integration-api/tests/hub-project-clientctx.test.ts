@@ -178,6 +178,24 @@ function reconstructionPicture(): OperatorOperatingPicture {
   };
 }
 
+const THREAD_SOURCE = 'https://outlook.office.com/mail/deeplink/read/syn01-thread';
+
+function syn01ThreadHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'communication' as const,
+    id: 'mail-syn-1',
+    title: 'SYN01 intake follow-up',
+    href: '/clients/SYN01',
+    source: 'HVCG_Communications',
+    clientCode: 'SYN01',
+    conversationId: 'conv-syn-1',
+    provenance: 'PROPOSED' as const,
+    webUrl: THREAD_SOURCE,
+    preview: 'Can you confirm the next entitled document?',
+    ...overrides,
+  };
+}
+
 function noInvent(projects: AtlasClientContext['projects']): void {
   const serialized = JSON.stringify(projects);
   assert.equal(serialized.includes('PDG01'), false);
@@ -191,19 +209,20 @@ describe('get_client_context project operating records', () => {
   it('attaches the same copied records as authorizedSearch.projects for a bound current entitled client', async () => {
     const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const entitledHits = [...found.results, syn01ThreadHit()];
     const search = await searchAuthorizedKnowledge({
       principal: staff,
       picture: reconstructionPicture(),
       searchQuery: 'SYN01',
       now,
-      entitledSearch: async (query) => ({ query, results: found.results }),
+      entitledSearch: async (query) => ({ query, results: entitledHits }),
     });
     const viaIndex = getClientContext({
       principal: staff,
       picture: reconstructionPicture(),
       clientCode: 'SYN01',
       now,
-      entitledIndexHits: found.results,
+      entitledIndexHits: entitledHits,
     });
     assert.equal(viaIndex.clientContext.client.clientCode, 'SYN01');
     assert.equal(viaIndex.clientContext.client.entitled, true);
@@ -241,7 +260,7 @@ describe('get_client_context project operating records', () => {
     assert.ok(searchCurrent);
     assert.deepEqual(current.relatedProjects, searchCurrent.relatedProjects);
     assert.equal(/TargetAmount|downloadUrl|Hub-MI/i.test(JSON.stringify(current.relatedProjects)), false);
-    assert.equal(current.relatedThreads?.some((row) => row.id === 'mail-1'), true);
+    assert.equal(current.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
     assert.deepEqual(current.relatedThreads, searchCurrent.relatedThreads);
     assert.equal(
       (current.relatedThreads || []).some(
@@ -253,13 +272,14 @@ describe('get_client_context project operating records', () => {
       /TargetAmount|downloadUrl|Hub-MI|suggestedDraft|preview/i.test(JSON.stringify(current.relatedThreads)),
       false,
     );
+    assert.equal(JSON.stringify(current.relatedThreads).includes('Can you confirm the next entitled document?'), false);
 
     const viaLoad = await loadClientContext({
       principal: staff,
       picture: reconstructionPicture(),
       clientCode: 'SYN01',
       now,
-      entitledSearch: async (query) => ({ query, results: found.results }),
+      entitledSearch: async (query) => ({ query, results: entitledHits }),
     });
     assert.deepEqual(viaLoad.clientContext.projects, search.authorizedSearch.projects);
   });
