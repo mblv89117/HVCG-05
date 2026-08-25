@@ -151,6 +151,25 @@ export type OnboardingIdentityReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical WORKSPACE REVIEW package. Surfaces already-known workspace reconciliation. No duplicate workspace. */
+export type OnboardingWorkspaceReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  workspaceReconciled: boolean;
+  reusedExisting: boolean;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 /** Canonical DOCUMENT REVIEW package. Surfaces already-known documentGaps. No invented receipt. */
 export type OnboardingDocumentReview = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -224,6 +243,7 @@ export type OnboardingRunRecord = {
   completion?: OnboardingCompletion;
   documentReview?: OnboardingDocumentReview;
   identityReview?: OnboardingIdentityReview;
+  workspaceReview?: OnboardingWorkspaceReview;
   provenance: string;
 };
 

@@ -29,6 +29,7 @@ import {
   type OnboardingCompletion,
   type OnboardingDocumentReview,
   type OnboardingIdentityReview,
+  type OnboardingWorkspaceReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -594,6 +595,76 @@ export function composeOnboardingIdentityReview(record: {
   };
 }
 
+export function composeOnboardingWorkspaceReview(record: {
+  identityResolutionRequired?: boolean;
+  workspaceReconciled?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  reusedExisting?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingWorkspaceReview['communicationPolicy'];
+}): OnboardingWorkspaceReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const workspaceReconciled = Boolean(record.workspaceReconciled);
+  const reusedExisting = Boolean(record.reusedExisting && workspaceReconciled);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before workspace reconciliation');
+  } else if (!workspaceReconciled) {
+    items.push('Existing entitled workspace is not confirmed — Atlas will not invent or duplicate a workspace');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope before workspace reconciliation'
+      : !workspaceReconciled
+        ? 'Confirm the existing entitled client workspace; do not create a duplicate'
+        : 'Existing entitled workspace reused — no duplicate workspace created';
+  const flags = {
+    workspaceReconciled,
+    reusedExisting,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!workspaceReconciled) {
+    const status = blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'PROPOSED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -767,6 +838,12 @@ export async function runClientOnboardingAutomation(opts: {
       }),
       identityReview: composeOnboardingIdentityReview({
         identityResolutionRequired: true,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      workspaceReview: composeOnboardingWorkspaceReview({
+        identityResolutionRequired: true,
+        workspaceReconciled: false,
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
@@ -998,6 +1075,15 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const workspaceReview = composeOnboardingWorkspaceReview({
+    identityResolutionRequired: false,
+    workspaceReconciled,
+    clientCode,
+    clientName,
+    reusedExisting: workspaceReconciled,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
@@ -1006,6 +1092,7 @@ export async function runClientOnboardingAutomation(opts: {
   if (completion.status !== 'NOT_READY') events.push('COMPLETION');
   if (documentReview.status !== 'NOT_READY') events.push('DOCUMENT_REVIEW');
   if (identityReview.status !== 'NOT_READY') events.push('IDENTITY_REVIEW');
+  if (workspaceReview.status !== 'NOT_READY') events.push('WORKSPACE_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -1045,6 +1132,7 @@ export async function runClientOnboardingAutomation(opts: {
     completion,
     documentReview,
     identityReview,
+    workspaceReview,
     provenance: 'onboarding_automation',
   };
 
@@ -1166,6 +1254,8 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'identity review',
   'client scope',
   'client code',
+  'workspace',
+  'workspace review',
   'reconcile',
   'start',
   'run',
@@ -1265,6 +1355,29 @@ export function answerOnboardingContext(
       pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
       pack.entitled ? 'Entitled roster: yes' : 'Entitled roster: no',
       pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Client identity is reconciled against the entitled roster.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (q.includes('workspace')) {
+    const pack = record.workspaceReview ?? composeOnboardingWorkspaceReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      reusedExisting: record.workspaceReconciled,
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Workspace review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      pack.workspaceReconciled ? 'Existing entitled workspace: reused' : 'Existing entitled workspace: not confirmed',
+      pack.reusedExisting ? 'No duplicate workspace created.' : 'Atlas did not invent or duplicate a workspace.',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled workspace is reconciled.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
       'Atlas did not invent a ClientCode, send mail, launch GTM, or submit capital.',
