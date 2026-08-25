@@ -53,8 +53,31 @@ fi
 
 BUILD_DIR="deployment/artifacts/hub-build"
 mkdir -p "$BUILD_DIR"
-./node_modules/esbuild/bin/esbuild apps/atlas-integration-api/src/index.ts \
-  --bundle --platform=node --format=esm --outfile="$BUILD_DIR/server.js" --legal-comments=none
+# Node 22 ESM App Service crashes if jose resolves to dist/node/cjs
+# ("Dynamic require of node:buffer"). Alias jose to ESM only.
+JOSE_ESM="${JOSE_ESM:-}"
+if [[ -z "$JOSE_ESM" ]]; then
+  if [[ -f "$ROOT/node_modules/jose/dist/node/esm/index.js" ]]; then
+    JOSE_ESM="$ROOT/node_modules/jose/dist/node/esm/index.js"
+  else
+    echo "BLOCKED: jose ESM entry not found; set JOSE_ESM to dist/node/esm/index.js"
+    exit 1
+  fi
+fi
+INTEGRATION_CORE="${INTEGRATION_CORE:-$ROOT/packages/atlas-integration-core/src/index.ts}"
+CAPITAL_CORE="${CAPITAL_CORE:-$ROOT/packages/atlas-capital-core/src/index.ts}"
+ESBUILD_BIN="${ESBUILD_BIN:-$ROOT/node_modules/esbuild/bin/esbuild}"
+
+"$ESBUILD_BIN" apps/atlas-integration-api/src/index.ts \
+  --bundle --platform=node --format=esm --outfile="$BUILD_DIR/server.js" --legal-comments=none \
+  --alias:@hvcg/atlas-integration-core="$INTEGRATION_CORE" \
+  --alias:@hvcg/atlas-capital-core="$CAPITAL_CORE" \
+  --alias:jose="$JOSE_ESM"
+
+if grep -q 'dist/node/cjs' "$BUILD_DIR/server.js" || grep -q 'Dynamic require of "node:buffer"' "$BUILD_DIR/server.js"; then
+  echo "BLOCKED: bundle contains CJS jose / dynamic node:buffer require"
+  exit 1
+fi
 
 echo "{\"gitSha\":\"$CANDIDATE_SHA\",\"branch\":\"$BRANCH\",\"builtAt\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > "$BUILD_DIR/hub-build.json"
 echo "$CANDIDATE_SHA" > "$BUILD_DIR/ATLAS_HUB_COMMIT.txt"
