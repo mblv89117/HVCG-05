@@ -50,6 +50,7 @@ import {
   type OnboardingCapitalContextReview,
   type OnboardingRelatedCommsRef,
   type OnboardingRelatedCapitalRef,
+  type OnboardingRelatedKickoffRef,
   type OnboardingRealtimeDocumentsHonesty,
   type RealtimeDocumentsFabricSnapshot,
   type OnboardingRunRecord,
@@ -99,8 +100,111 @@ export type OnboardingMilestoneRow = {
   title?: string;
 };
 
+export type OnboardingKickoffSearchRow = {
+  id?: string;
+  title?: string;
+  clientCode?: string;
+  kind?: OnboardingRelatedKickoffRef['kind'];
+};
+
 export type OnboardingCommsSearchRow = OnboardingCommsThreadInput;
 export type { OnboardingCapitalSearchRow };
+
+const KICKOFF_ITEM_TITLE = /^(prepare kickoff materials|kickoff ready|kickoff complete)$/i;
+
+function kickoffRefsWithIds(rows?: OnboardingRelatedKickoffRef[]): OnboardingRelatedKickoffRef[] {
+  const seen = new Set<string>();
+  const out: OnboardingRelatedKickoffRef[] = [];
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** Entitled same-scope kickoff refs. Drops rows without an id. Client A never receives Client B. */
+export function listRelatedKickoffForClient(
+  principal: AtlasPrincipal,
+  clientCode: string | undefined,
+  rows: OnboardingKickoffSearchRow[],
+): OnboardingRelatedKickoffRef[] {
+  const code = clientCode?.trim().toUpperCase();
+  if (!code || !isCanonicalClientCode(code)) return [];
+  if (!entitledClientCodes(principal).includes(code)) return [];
+  const out: OnboardingRelatedKickoffRef[] = [];
+  const seen = new Set<string>();
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    const scoped = row.clientCode?.trim().toUpperCase();
+    if (scoped && scoped !== code) continue;
+    if (scoped && !isCanonicalClientCode(scoped)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.kind ? { kind: row.kind } : {}),
+    });
+  }
+  return out;
+}
+
+/** List entitled same-scope kickoff tasks/milestones. Never invent ids. */
+export async function defaultOnboardingKickoffList(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  clientCode: string,
+  projectId: string,
+): Promise<OnboardingKickoffSearchRow[]> {
+  if (!sharepoint || !projectId.trim() || !clientCode.trim()) return [];
+  const out: OnboardingKickoffSearchRow[] = [];
+  try {
+    const tasks = await sharepoint.listAuthorizedTasks(principal, projectId);
+    for (const task of tasks ?? []) {
+      const id = task?.id?.trim();
+      if (!id || !KICKOFF_ITEM_TITLE.test(task.title || '')) continue;
+      out.push({ id, title: task.title, clientCode, kind: 'task' });
+    }
+  } catch {
+    /* list failed — do not invent a kickoff task id */
+  }
+  try {
+    const list = sharepoint.listAuthorizedMilestones;
+    if (typeof list === 'function') {
+      const rows = await list.call(sharepoint, principal, projectId);
+      for (const row of rows ?? []) {
+        const id = row?.id?.trim();
+        if (!id || !KICKOFF_ITEM_TITLE.test(row.title || '')) continue;
+        out.push({ id, title: row.title, clientCode, kind: 'milestone' });
+      }
+    }
+  } catch {
+    /* list failed — do not invent a kickoff milestone id */
+  }
+  return out;
+}
+
+/** Create a kickoff record only when entitled project context exists. Never invent an id. */
+export async function defaultOnboardingKickoffCreate(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  body: { title: string; projectId: string; clientCode: string },
+): Promise<{ id?: string; title?: string; kind?: OnboardingRelatedKickoffRef['kind'] }> {
+  if (!sharepoint || !body.projectId.trim() || !body.title.trim() || !body.clientCode.trim()) return {};
+  const created = await sharepoint.createTask(principal, {
+    title: body.title,
+    description: 'Kickoff preparation',
+    projectId: body.projectId,
+    status: 'ready',
+  }, `atlas-onboarding-kickoff-${body.clientCode}`);
+  return created?.id ? { id: created.id, title: created.title ?? body.title, kind: 'task' } : {};
+}
 
 /** Record a SharePoint milestone only when list or create returns an id. Never invent ids. */
 export async function defaultOnboardingMilestoneList(
@@ -289,6 +393,7 @@ export function composeOperationsHandoff(record: {
 export function composeKickoff(record: {
   identityResolutionRequired?: boolean;
   workspaceReconciled?: boolean;
+  clientCode?: string;
   projectId?: string;
   projectName?: string;
   milestones?: OnboardingMilestoneState[];
@@ -297,60 +402,73 @@ export function composeKickoff(record: {
   ownerAttention?: string[];
   communicationPolicy?: OnboardingKickoff['communicationPolicy'];
   relatedThreadCount?: number;
+  relatedKickoff?: OnboardingRelatedKickoffRef[];
+  reusedExisting?: boolean;
 }): OnboardingKickoff {
   const blockers = record.blockers ?? [];
   const ownerAttention = record.ownerAttention ?? [];
   const missingDocumentCount = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
   const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
   const relatedThreadCount = Math.max(0, record.relatedThreadCount ?? 0);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const relatedKickoff = identityResolutionRequired || !clientCode || !isCanonicalClientCode(clientCode)
+    ? []
+    : kickoffRefsWithIds(record.relatedKickoff);
+  const kickoffReconciled = relatedKickoff.length > 0;
+  const reusedExisting = Boolean(record.reusedExisting && kickoffReconciled);
   const milestone = record.milestones?.find((m) => m.id === 'kickoff_ready');
   const milestoneStatus = milestone?.status ?? 'unknown';
   const nextOwnerAction =
     ownerAttention[0]
-    ?? (record.identityResolutionRequired
+    ?? (identityResolutionRequired
       ? 'Assign client scope before kickoff'
-      : blockers[0]
-        ? blockers[0]
-        : missingDocumentCount
-          ? 'Reconcile missing documents before kickoff (draft only)'
-          : 'Review kickoff package (DRAFT_ONLY, no outbound)');
-  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
-    return {
-      status: record.identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
-      ready: false,
-      ...(record.projectId ? { projectId: record.projectId } : {}),
-      ...(record.projectName ? { projectName: record.projectName } : {}),
-      milestoneStatus,
-      relatedThreadCount,
-      missingDocumentCount,
-      blockers,
-      ownerAttention,
-      communicationPolicy,
-      nextOwnerAction,
-      send: false,
-      liveGtmOutbound: false,
-      capitalSubmit: false,
-      outbound: false,
-      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
-    };
-  }
-  return {
-    status: blockers.length ? 'BLOCKED' : 'PREPARED',
-    ready: blockers.length === 0 && missingDocumentCount === 0,
-    projectId: record.projectId,
-    ...(record.projectName ? { projectName: record.projectName } : {}),
+      : !kickoffReconciled
+        ? 'Confirm existing entitled same-scope kickoff record/task/milestone; do not invent ids or send'
+        : blockers[0]
+          ? blockers[0]
+          : missingDocumentCount
+            ? 'Reconcile missing documents before kickoff (draft only)'
+            : reusedExisting
+              ? 'Existing entitled kickoff reused — no duplicate kickoff created'
+              : 'Review kickoff package (DRAFT_ONLY, no outbound)');
+  const flags = {
     milestoneStatus,
     relatedThreadCount,
     missingDocumentCount,
+    kickoffReconciled,
+    reusedExisting,
+    relatedKickoff,
     blockers,
     ownerAttention,
     communicationPolicy,
     nextOwnerAction,
-    send: false,
-    liveGtmOutbound: false,
-    capitalSubmit: false,
-    outbound: false,
-    provenance: 'CONFIRMED',
+    send: COMMUNICATIONS_SEND,
+    autoRespond: COMMUNICATIONS_AUTO_RESPOND,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    return {
+      status: identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
+      ready: false,
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      kickoffReconciled: false,
+      reusedExisting: false,
+      relatedKickoff: [],
+      provenance: identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  return {
+    status: blockers.length ? 'BLOCKED' : 'PREPARED',
+    ready: blockers.length === 0 && missingDocumentCount === 0 && kickoffReconciled,
+    projectId: record.projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...flags,
+    provenance: kickoffReconciled ? 'CONFIRMED' : 'PROPOSED',
   };
 }
 
@@ -1501,6 +1619,7 @@ function buildIdentityReconciliationRecord(opts: {
   const kickoff = composeKickoff({
     identityResolutionRequired,
     workspaceReconciled,
+    ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
     blockers: opts.blockers,
     ownerAttention: opts.ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
@@ -1547,6 +1666,7 @@ function buildIdentityReconciliationRecord(opts: {
     milestoneReconciled: false,
     communicationContextReconciled: false,
     capitalContextReconciled: false,
+    kickoffReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -1682,6 +1802,16 @@ export async function runClientOnboardingAutomation(opts: {
     principal: AtlasPrincipal,
     clientCode: string,
   ) => OnboardingCapitalSearchRow[] | Promise<OnboardingCapitalSearchRow[]>;
+  kickoffList?: (
+    principal: AtlasPrincipal,
+    clientCode: string,
+    projectId: string,
+  ) => OnboardingKickoffSearchRow[] | Promise<OnboardingKickoffSearchRow[]>;
+  kickoffCreate?: (
+    principal: AtlasPrincipal,
+    body: { title: string; projectId: string; clientCode: string },
+  ) => { id?: string; title?: string; kind?: OnboardingRelatedKickoffRef['kind'] }
+    | Promise<{ id?: string; title?: string; kind?: OnboardingRelatedKickoffRef['kind'] }>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1744,6 +1874,8 @@ export async function runClientOnboardingAutomation(opts: {
   const assignedAgents: string[] = [];
   const milestoneIds: string[] = [];
   let reusedExistingMilestones = false;
+  const discoveredKickoff: OnboardingKickoffSearchRow[] = [];
+  let discoveredKickoffFromReuse = false;
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
@@ -1791,6 +1923,10 @@ export async function runClientOnboardingAutomation(opts: {
       if (found?.id) {
         taskIds.push(found.id);
         reusedExistingTasks = true;
+        if (KICKOFF_ITEM_TITLE.test(taskDef.title)) {
+          discoveredKickoff.push({ id: found.id, title: taskDef.title, clientCode, kind: 'task' });
+          discoveredKickoffFromReuse = true;
+        }
       } else {
         missingTasks.push(taskDef);
       }
@@ -1808,6 +1944,9 @@ export async function runClientOnboardingAutomation(opts: {
           if (task?.id) {
             taskIds.push(task.id);
             createdWithId = true;
+            if (KICKOFF_ITEM_TITLE.test(taskDef.title)) {
+              discoveredKickoff.push({ id: task.id, title: taskDef.title, clientCode, kind: 'task' });
+            }
           }
         }
         if (createdWithId) events.push('TASKS_CREATED');
@@ -1830,6 +1969,10 @@ export async function runClientOnboardingAutomation(opts: {
       if (found?.id) {
         milestoneIds.push(found.id);
         reusedExistingMilestones = true;
+        if (KICKOFF_ITEM_TITLE.test(milestoneDef.label)) {
+          discoveredKickoff.push({ id: found.id, title: milestoneDef.label, clientCode, kind: 'milestone' });
+          discoveredKickoffFromReuse = true;
+        }
       } else {
         missingMilestones.push(milestoneDef);
       }
@@ -1846,6 +1989,9 @@ export async function runClientOnboardingAutomation(opts: {
           if (milestone?.id) {
             milestoneIds.push(milestone.id);
             createdWithId = true;
+            if (KICKOFF_ITEM_TITLE.test(milestoneDef.label)) {
+              discoveredKickoff.push({ id: milestone.id, title: milestoneDef.label, clientCode, kind: 'milestone' });
+            }
           }
         }
         if (createdWithId) events.push('MILESTONE_CREATED');
@@ -1982,6 +2128,51 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
+  const relatedKickoff: OnboardingRelatedKickoffRef[] = [];
+  let reusedExistingKickoff = false;
+  let kickoffReconciled = false;
+  if (projectId) {
+    try {
+      const rows = opts.kickoffList
+        ? await opts.kickoffList(opts.principal, clientCode, projectId)
+        : discoveredKickoff.length
+          ? discoveredKickoff
+          : await defaultOnboardingKickoffList(sp, opts.principal, clientCode, projectId);
+      const attached = listRelatedKickoffForClient(opts.principal, clientCode, rows ?? []);
+      relatedKickoff.push(...attached);
+      if (relatedKickoff.length > 0) {
+        kickoffReconciled = true;
+        reusedExistingKickoff = opts.kickoffList
+          ? true
+          : discoveredKickoffFromReuse;
+        events.push('KICKOFF_RECONCILED');
+      }
+    } catch {
+      /* list failed — do not invent kickoff ids, meeting ids, or ClientCodes */
+    }
+    if (!kickoffReconciled && !opts.dryRun && opts.kickoffCreate) {
+      try {
+        const created = await opts.kickoffCreate(opts.principal, {
+          title: 'Prepare kickoff materials',
+          projectId,
+          clientCode,
+        });
+        const id = created?.id?.trim();
+        if (id) {
+          relatedKickoff.push({
+            id,
+            ...(created.title?.trim() ? { title: created.title.trim() } : { title: 'Prepare kickoff materials' }),
+            ...(created.kind ? { kind: created.kind } : { kind: 'record' }),
+          });
+          kickoffReconciled = true;
+          events.push('KICKOFF_CREATED', 'KICKOFF_RECONCILED');
+        }
+      } catch {
+        /* create failed — do not invent a kickoff id or send outbound kickoff mail */
+      }
+    }
+  }
+
   const capitalScope = Boolean(opts.workflow.scope.capitalMatter);
   if (capitalScope) {
     ownerAttention.push('Capital scope detected — external lender submission remains owner-gated');
@@ -1996,6 +2187,7 @@ export async function runClientOnboardingAutomation(opts: {
     milestoneReconciled,
     communicationContextReconciled,
     capitalContextReconciled,
+    kickoffReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -2020,6 +2212,7 @@ export async function runClientOnboardingAutomation(opts: {
   const kickoff = composeKickoff({
     identityResolutionRequired: false,
     workspaceReconciled,
+    clientCode,
     projectId,
     projectName,
     milestones,
@@ -2028,6 +2221,8 @@ export async function runClientOnboardingAutomation(opts: {
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
     relatedThreadCount,
+    relatedKickoff,
+    reusedExisting: reusedExistingKickoff,
   });
   const blockerReview = composeBlockerReview({
     identityResolutionRequired: false,
@@ -2203,6 +2398,7 @@ export async function runClientOnboardingAutomation(opts: {
     milestoneReconciled,
     communicationContextReconciled,
     capitalContextReconciled,
+    kickoffReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
@@ -2832,18 +3028,40 @@ export function answerOnboardingContext(
   }
   if (q.includes('kickoff') || q.includes('ready')) {
     const kickoff = record.kickoff;
+    const pack = composeKickoff({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      clientCode: record.clientCode,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      milestones: record.milestones,
+      documentGaps: record.documentGaps,
+      blockers: record.blockers,
+      ownerAttention: record.ownerAttention,
+      communicationPolicy: record.communicationPolicy,
+      relatedThreadCount: kickoff.relatedThreadCount,
+      relatedKickoff: kickoff.relatedKickoff,
+      reusedExisting: Boolean(kickoff.reusedExisting),
+    });
     return [
-      `Kickoff for ${record.clientCode ?? 'client'}: ${kickoff.status}`,
-      kickoff.projectName ? `Project: ${kickoff.projectName}` : '',
-      `Milestone: ${kickoff.milestoneStatus}`,
-      `Documents missing: ${kickoff.missingDocumentCount}`,
-      `Related entitled threads: ${kickoff.relatedThreadCount} (DRAFT_ONLY, no send)`,
-      kickoff.relatedThreadCount > 0
+      `Kickoff for ${record.clientCode ?? 'client'}: ${pack.status}`,
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      `Milestone: ${pack.milestoneStatus}`,
+      `Documents missing: ${pack.missingDocumentCount}`,
+      `Related entitled kickoff: ${pack.relatedKickoff.length} (from entitled ids)`,
+      pack.kickoffReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled kickoff: reused'
+          : 'Governed onboarding kickoff: reconciled'
+        : 'Existing entitled kickoff: not confirmed',
+      pack.reusedExisting ? 'No duplicate kickoff created.' : 'Atlas did not invent kickoff ids, meeting ids, or ClientCodes.',
+      `Related entitled threads: ${pack.relatedThreadCount} (DRAFT_ONLY, no send)`,
+      pack.relatedThreadCount > 0
         ? 'Existing entitled communications: reused'
         : 'Existing entitled communications: not confirmed',
-      `Communication policy: ${kickoff.communicationPolicy}`,
-      kickoff.ownerAttention.length ? `Owner attention: ${kickoff.ownerAttention.join('; ')}` : '',
-      `Next owner action: ${kickoff.nextOwnerAction}`,
+      `Communication policy: ${pack.communicationPolicy}`,
+      pack.ownerAttention.length ? `Owner attention: ${pack.ownerAttention.join('; ')}` : '',
+      `Next owner action: ${pack.nextOwnerAction}`,
       'Atlas did not send mail, launch GTM, or submit capital.',
     ]
       .filter(Boolean)
@@ -2863,6 +3081,11 @@ export function answerOnboardingContext(
     record.capitalContextReconciled
       ? 'Existing entitled capital context: reused'
       : 'Existing entitled capital context: not confirmed',
+    record.kickoffReconciled
+      ? record.kickoff.reusedExisting
+        ? 'Existing entitled kickoff: reused'
+        : 'Governed onboarding kickoff: reconciled'
+      : 'Existing entitled kickoff: not confirmed',
   ]
     .filter(Boolean)
     .join('\n');
