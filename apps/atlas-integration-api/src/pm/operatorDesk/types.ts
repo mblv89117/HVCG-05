@@ -286,7 +286,38 @@ export interface AtlasClientContext {
    * Reply / reassign / close stay OWNER-GATED. Send stays draft-only.
    */
   clientSupport: ClientSupportAgentPayload;
+  /**
+   * Reconciled current-client business memory from entitled Hub MI + indexed M365
+   * evidence. Historical HVS remains read-only reference. No fabricated deadlines.
+   */
+  businessMemory?: ClientBusinessMemoryPayload;
 }
+
+export type ClientBusinessMemoryPayload = {
+  kind: 'client_business_memory_v1';
+  missionKey: 'ATLAS-M365-CURRENT-CLIENT-BACKFILL-001';
+  invented: false;
+  phase: 'NOT_STARTED' | 'IN_PROGRESS' | 'BACKFILLED' | 'PARTIAL' | 'BLOCKED';
+  whoIsTheClient?: string;
+  whatWeAreWorkingOn?: string[];
+  whatWeDelivered?: string[];
+  whatIsOpen?: string[];
+  waitingOnUs?: string[];
+  waitingOnThem?: string[];
+  decisionsMade?: string[];
+  documentsThatMatter?: string[];
+  needsOwnerAttention?: string[];
+  nextAction?: string;
+  mailMessagesReconciled: number;
+  threadsReconstructed: number;
+  attachmentsReconciled: number;
+  filesReconciled: number;
+  projectsReconstructed: number;
+  contractsSowReconciled: number;
+  capitalHistoryPresent: boolean;
+  classification: AskAtlasClassification | 'HONEST_EMPTY';
+  provenance: string;
+};
 
 export function clientContextMissionKey(
   ctx?: AtlasClientContext,
@@ -1121,6 +1152,10 @@ export function isOperatorCommunicationPoliciesPath(path: string): boolean {
   return path === '/operator/communication-policies.json';
 }
 
+export function isOperatorBusinessMemoryPath(path: string): boolean {
+  return path === '/operator/business-memory.json';
+}
+
 export function isOperatorDeskPath(path: string): boolean {
   return (
     path === '/operator' ||
@@ -1136,7 +1171,8 @@ export function isOperatorDeskPath(path: string): boolean {
     isOperatorWorkflowsPath(path) ||
     isOperatorWorkflowTemplatesPath(path) ||
     isOperatorApprovalsPath(path) ||
-    isOperatorCommunicationPoliciesPath(path)
+    isOperatorCommunicationPoliciesPath(path) ||
+    isOperatorBusinessMemoryPath(path)
   );
 }
 

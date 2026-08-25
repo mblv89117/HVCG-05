@@ -121,6 +121,9 @@ export type OnboardingMilestoneReview = {
   completeCount: number;
   blockedCount: number;
   pendingCount: number;
+  /** True only after reuse-with-id or a create that returned an id. */
+  milestoneReconciled: boolean;
+  reusedExisting: boolean;
   items: string[];
   nextMilestone?: string;
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
@@ -207,6 +210,66 @@ export type OnboardingTaskReview = {
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
   nextOwnerAction: string;
   send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
+/** Already-known entitled mail-thread / email refs. Id required. Never invented. */
+export type OnboardingRelatedCommsRef = {
+  id: string;
+  title?: string;
+  conversationId?: string;
+};
+
+/** Canonical COMMUNICATION CONTEXT REVIEW. Reuses entitled same-scope threads/emails. No invented ids. */
+export type OnboardingCommunicationContextReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  relatedThreadCount: number;
+  relatedEmails: OnboardingRelatedCommsRef[];
+  relatedThreads: OnboardingRelatedCommsRef[];
+  /** True only after entitled reuse/attach of same-scope threads or emails that have real ids. */
+  communicationContextReconciled: boolean;
+  reusedExisting: boolean;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  autoRespond: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
+/** Already-known entitled capital packet / project / related-capital refs. Id required. Never invented. */
+export type OnboardingRelatedCapitalRef = {
+  id: string;
+  title?: string;
+};
+
+/** Canonical CAPITAL CONTEXT REVIEW. Reuses entitled same-scope capital rows. No invented ids or amounts. */
+export type OnboardingCapitalContextReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  relatedCapitalCount: number;
+  relatedCapital: OnboardingRelatedCapitalRef[];
+  /** True only after entitled reuse/list of same-scope capital rows that have real ids. */
+  capitalContextReconciled: boolean;
+  reusedExisting: boolean;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  autoRespond: false;
   liveGtmOutbound: false;
   capitalSubmit: false;
   outbound: false;
@@ -362,12 +425,21 @@ export type OnboardingRunRecord = {
   projectName?: string;
   taskIds: string[];
   milestoneIds: string[];
+  /** Agent ids recorded only after entitled project/task context exists and assign returns an id. */
   assignedAgents: string[];
   documentGaps: OnboardingDocumentGap[];
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
   capitalScope: boolean;
   identityResolutionRequired: boolean;
   workspaceReconciled: boolean;
+  /** True only after entitled reuse of an existing document request set, or a create that returned an id. */
+  documentsReconciled?: boolean;
+  /** True only after reuse of an entitled project milestone id, or a create that returned an id. */
+  milestoneReconciled?: boolean;
+  /** True only after entitled reuse of same-scope threads/emails that have real ids. */
+  communicationContextReconciled?: boolean;
+  /** True only after entitled reuse of same-scope capital packets/projects/related-capital rows that have real ids. */
+  capitalContextReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
@@ -385,6 +457,8 @@ export type OnboardingRunRecord = {
   projectReview?: OnboardingProjectReview;
   taskReview?: OnboardingTaskReview;
   agentAssignmentReview?: OnboardingAgentAssignmentReview;
+  communicationContextReview?: OnboardingCommunicationContextReview;
+  capitalContextReview?: OnboardingCapitalContextReview;
   realtimeDocumentsHonesty?: OnboardingRealtimeDocumentsHonesty;
   provenance: string;
 };

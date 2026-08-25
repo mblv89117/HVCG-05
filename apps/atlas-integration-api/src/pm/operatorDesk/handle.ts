@@ -46,6 +46,7 @@ import {
   isOperatorWorkflowTemplatesPath,
   isOperatorApprovalsPath,
   isOperatorCommunicationPoliciesPath,
+  isOperatorBusinessMemoryPath,
   wantsOperatorJson,
   type AtlasAuthorizedSearchHit,
   type OperatorDeskModel,
@@ -176,6 +177,13 @@ import {
   CAPITAL_SUBMISSION_HONESTY_MISSION_KEY,
   mapsToCapitalSubmissionHonestyIntent,
 } from './capitalSubmissionHonesty.ts';
+import {
+  answerBusinessMemoryQuestion,
+  buildBusinessMemoryStatusPayload,
+  mapsToBusinessMemoryIntent,
+  runCurrentClientBackfill,
+} from './clientBusinessMemory.ts';
+import { readBusinessMemoryOverlay, resolveBusinessMemoryDir, BUSINESS_MEMORY_MISSION_KEY } from './businessMemoryState.ts';
 import type { TaskRecord } from '../types.ts';
 
 async function loadOwnerApprovalTasks(opts: {
@@ -440,10 +448,11 @@ export async function handleOperatorDesk(opts: {
   const workflowTemplatesOnly = isOperatorWorkflowTemplatesPath(opts.path);
   const approvalsOnly = isOperatorApprovalsPath(opts.path);
   const communicationPoliciesOnly = isOperatorCommunicationPoliciesPath(opts.path);
+  const businessMemoryOnly = isOperatorBusinessMemoryPath(opts.path);
   if (
     opts.method !== 'GET' &&
     opts.method !== 'HEAD' &&
-    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly || approvalsOnly || communicationPoliciesOnly) &&
+    !((eventsOnly || improvementsOnly || missionsOnly || clientContextOnly || workflowsOnly || workflowTemplatesOnly || approvalsOnly || communicationPoliciesOnly || businessMemoryOnly) &&
       opts.method === 'POST')
   ) {
     sendJson(opts.res, 405, { error: 'method_not_allowed', code: 'method_not_allowed' }, opts.origin);
@@ -465,6 +474,7 @@ export async function handleOperatorDesk(opts: {
     workflowTemplatesOnly ||
     approvalsOnly ||
     communicationPoliciesOnly ||
+    businessMemoryOnly ||
     wantsOperatorJson(opts.path, accept);
   const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
   const searchQuery =
@@ -756,6 +766,71 @@ export async function handleOperatorDesk(opts: {
         opts.origin,
       );
     }
+    return true;
+  }
+
+  if (businessMemoryOnly) {
+    const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
+    const clientCode = url.searchParams.get('client')?.trim();
+    const memDir = resolveBusinessMemoryDir(opts.cfg.dataDir);
+    let overlay = readBusinessMemoryOverlay(memDir);
+
+    if (opts.method === 'POST') {
+      if (!opts.sharepoint) {
+        sendJson(opts.res, 503, { error: 'sharepoint_required', code: 'sharepoint_required' }, opts.origin);
+        return true;
+      }
+      let body: { action?: string; client?: string; maxPages?: number } = {};
+      try {
+        body = (await readEventJson(opts.req)) as typeof body;
+      } catch (err) {
+        const status = (err as { status?: number }).status || 400;
+        sendJson(opts.res, status, { error: (err as Error).message, code: (err as { code?: string }).code || 'invalid_json' }, opts.origin);
+        return true;
+      }
+      if (body.action !== 'backfill') {
+        sendJson(opts.res, 400, { error: 'invalid_action', code: 'invalid_action' }, opts.origin);
+        return true;
+      }
+      if (overlay.backfillInProgress) {
+        sendJson(
+          opts.res,
+          409,
+          { error: 'backfill_in_progress', code: 'backfill_in_progress' },
+          opts.origin,
+        );
+        return true;
+      }
+      const knowledge = await buildKnowledgeOperatingPicture(opts.sharepoint, principal, {
+        dataDir: opts.cfg.dataDir,
+      });
+      const picture = operatorOperatingPictureFromKnowledge(knowledge);
+      const tokenProvider =
+        opts.cfg.pmTokenProvider ||
+        createManagedIdentityTokenProvider(opts.cfg.pmBackend.sharepoint?.managedIdentityClientId || '', {
+          resource: GRAPH_TOKEN_RESOURCE,
+        });
+      const fabric = createFabricGraphClient(tokenProvider);
+      overlay = await runCurrentClientBackfill({
+        dataDir: opts.cfg.dataDir,
+        principal,
+        picture,
+        service: opts.sharepoint,
+        fabric,
+        clientCode: body.client?.trim() || clientCode,
+        maxPages: typeof body.maxPages === 'number' ? body.maxPages : 16,
+        sweepEnabled: isFabricSweepEnabled(),
+      });
+    }
+
+    const picture = emptyHonestOperatingPicture();
+    const status = buildBusinessMemoryStatusPayload(opts.cfg.dataDir, picture, overlay);
+    if (clientCode) {
+      const record = overlay.operatingRecords.find((r) => r.clientCode === clientCode);
+      sendJson(opts.res, 200, { businessMemory: { status, clientRecord: record ?? null } }, opts.origin);
+      return true;
+    }
+    sendJson(opts.res, 200, { businessMemory: { status } }, opts.origin);
     return true;
   }
 
@@ -1236,6 +1311,40 @@ export async function handleOperatorDesk(opts: {
             policyClass: COMMUNICATIONS_POLICY_CLASS,
             missionKey: COMMUNICATION_POLICY_HONESTY_MISSION_KEY,
             autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToBusinessMemoryIntent(question)) {
+      const overlay = readBusinessMemoryOverlay(resolveBusinessMemoryDir(opts.cfg.dataDir));
+      const clientFromQuestion = extractClientContextQuery(question);
+      const clientCode = url.searchParams.get('client')?.trim() || clientFromQuestion || undefined;
+      const memoryAnswer = answerBusinessMemoryQuestion({
+        question,
+        overlay,
+        clientCode,
+      });
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: memoryAnswer.answer,
+        workflowId: 'business-memory',
+        workflowName: 'Current client business memory',
+        clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          businessMemoryAnswer: memoryAnswer.answer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['business_memory'],
+            policyClass: 'READ_AUTO',
+            missionKey: BUSINESS_MEMORY_MISSION_KEY,
           },
         },
         opts.origin,
@@ -1742,6 +1851,7 @@ export async function handleOperatorDesk(opts: {
             question,
             deskSearch: model.search,
             entitledSearch,
+            dataDir: opts.cfg.dataDir,
           })
         : runAtlasHubRuntime({
             principal,
@@ -1858,6 +1968,7 @@ export async function handleOperatorDesk(opts: {
           clientQuery: requestedClient || fromQuestion || '',
           deskSearch: model.search,
           entitledSearch,
+          dataDir: opts.cfg.dataDir,
         });
     const tools = ownerGated
       ? []

@@ -20,10 +20,14 @@ import {
   composeOnboardingProjectReview,
   composeOnboardingTaskReview,
   composeOnboardingAgentAssignmentReview,
+  composeOnboardingCommunicationContextReview,
+  composeOnboardingCapitalContextReview,
   composeRealtimeDocumentsHonesty,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
+  mapsToCommunicationContextIntent,
+  mapsToCapitalContextIntent,
   mapsToOnboardingContextIntent,
   mapsToOnboardingExecuteIntent,
   mapsToRealtimeDocumentsHonestyIntent,
@@ -38,7 +42,7 @@ import {
 } from '../src/pm/operatorDesk/workflowDefinitions.ts';
 import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import { getOnboardingRun, readOnboardingOverlay, resolveOnboardingStateDir } from '../src/pm/operatorDesk/onboardingState.ts';
-import { COMMUNICATIONS_AUTO_RESPOND } from '../src/pm/operatorDesk/types.ts';
+import { COMMUNICATIONS_AUTO_RESPOND, COMMUNICATIONS_SEND } from '../src/pm/operatorDesk/types.ts';
 import { loadConfig } from '../src/config.ts';
 
 const principal: AtlasPrincipal = {
@@ -113,6 +117,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.ownerAttentionPackage.outbound, false);
     assert.equal(result.record.milestoneReview.status, 'NOT_READY');
     assert.equal(result.record.milestoneReview.ready, false);
+    assert.equal(result.record.milestoneReview.milestoneReconciled, false);
+    assert.deepEqual(result.record.milestoneIds, []);
+    assert.equal(result.record.milestoneReconciled, false);
+    assert.equal(result.events.includes('MILESTONE_CREATED'), false);
     assert.equal(result.record.milestoneReview.send, false);
     assert.equal(result.record.milestoneReview.outbound, false);
     assert.equal(result.record.completion.status, 'NOT_READY');
@@ -136,6 +144,31 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.workspaceReview.capitalSubmit, false);
     assert.equal(result.record.workspaceReview.workspaceReconciled, false);
     assert.equal(result.record.workspaceReview.reusedExisting, false);
+    assert.deepEqual(result.record.assignedAgents, []);
+    assert.equal(result.record.agentAssignmentReview.status, 'OPEN');
+    assert.equal(result.record.agentAssignmentReview.ready, false);
+    assert.equal(result.record.agentAssignmentReview.agentReconciled, false);
+    assert.equal(result.record.agentAssignmentReview.send, false);
+    assert.equal(result.record.agentAssignmentReview.outbound, false);
+    assert.equal(result.record.communicationContextReconciled, false);
+    assert.equal(result.record.communicationContextReview.communicationContextReconciled, false);
+    assert.equal(result.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(result.record.communicationContextReview.relatedEmails, []);
+    assert.deepEqual(result.record.communicationContextReview.relatedThreads, []);
+    assert.equal(result.record.communicationContextReview.send, false);
+    assert.equal(result.record.communicationContextReview.autoRespond, false);
+    assert.equal(result.record.communicationContextReview.outbound, false);
+    assert.equal(result.record.operationsHandoff.relatedThreadCount, 0);
+    assert.equal(result.record.capitalContextReconciled, false);
+    assert.equal(result.record.capitalContextReview.capitalContextReconciled, false);
+    assert.equal(result.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(result.record.capitalContextReview.relatedCapital, []);
+    assert.equal(result.record.capitalContextReview.send, false);
+    assert.equal(result.record.capitalContextReview.autoRespond, false);
+    assert.equal(result.record.capitalContextReview.outbound, false);
+    assert.equal(result.record.capitalContextReview.capitalSubmit, false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -181,6 +214,19 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.status, 'IDENTITY_RECONCILIATION');
     assert.equal(result.record.identityResolutionRequired, true);
     assert.equal(result.record.workspaceReconciled, false);
+    assert.equal(result.record.documentsReconciled, false);
+    assert.equal(result.record.milestoneReconciled, false);
+    assert.deepEqual(result.record.milestoneIds, []);
+    assert.equal(result.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(result.events.includes('MILESTONE_CREATED'), false);
+    assert.equal(result.record.communicationContextReconciled, false);
+    assert.equal(result.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(result.record.communicationContextReview.relatedEmails, []);
+    assert.equal(result.record.capitalContextReconciled, false);
+    assert.equal(result.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(result.record.capitalContextReview.relatedCapital, []);
+    assert.deepEqual(result.record.assignedAgents, []);
+    assert.equal(result.record.agentAssignmentReview.agentReconciled, false);
     assert.equal(result.record.projectId, undefined);
     const overlay = readOnboardingOverlay(resolveOnboardingStateDir(dir));
     const run = getOnboardingRun(overlay, 'client-onboarding-accg01');
@@ -411,7 +457,9 @@ describe('client onboarding automation', () => {
     process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
     const cfg = loadConfig();
     const projects: Array<{ id: string; name: string; clientCode: string; idempotencyKey?: string }> = [];
+    const milestones: Array<{ id: string; title: string; projectId?: string }> = [];
     let createProjectCalls = 0;
+    let createMilestoneCalls = 0;
     const sharepoint = {
       listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
       listAuthorizedProjects: async () => projects,
@@ -439,10 +487,18 @@ describe('client onboarding automation', () => {
         id: `task-${body.title}`,
         title: String(body.title),
       }),
-      createMilestone: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
-        id: `ms-${body.title}`,
-        title: String(body.title),
-      }),
+      listAuthorizedMilestones: async (_principal: AtlasPrincipal, projectId?: string) =>
+        projectId ? milestones.filter((row) => !row.projectId || row.projectId === projectId) : milestones,
+      createMilestone: async (_principal: AtlasPrincipal, body: { title?: string; projectId?: string }) => {
+        createMilestoneCalls += 1;
+        const created = {
+          id: `ms-${body.title}`,
+          title: String(body.title),
+          projectId: body.projectId,
+        };
+        milestones.push(created);
+        return created;
+      },
     } as unknown as SharePointPmService;
 
     const first = await executeEntitledOnboardingFromQuestion({
@@ -477,6 +533,10 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.milestoneReview.outbound, false);
     assert.equal(first.record?.milestoneReview.capitalSubmit, false);
     assert.equal(first.record?.milestoneReview.status, 'OPEN');
+    assert.equal(first.record?.milestoneReview.milestoneReconciled, true);
+    assert.equal(first.record?.milestoneReconciled, true);
+    assert.ok((first.record?.milestoneIds.length ?? 0) > 0);
+    assert.ok(createMilestoneCalls > 0);
     assert.equal(first.record?.completion.send, false);
     assert.equal(first.record?.completion.outbound, false);
     assert.equal(first.record?.completion.capitalSubmit, false);
@@ -501,6 +561,7 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.workspaceReview.workspaceReconciled, true);
     assert.equal(first.record?.workspaceReview.reusedExisting, true);
     assert.equal(first.record?.workspaceReview.clientCode, 'ACCG01');
+    assert.equal(first.record?.documentsReconciled, false);
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -520,6 +581,9 @@ describe('client onboarding automation', () => {
     assert.equal(second.workflow?.workflowId, firstWorkflowId);
     assert.equal(createProjectCalls, 1);
     assert.equal(projects.length, 1);
+    assert.equal(createMilestoneCalls, first.record?.milestoneIds.length);
+    assert.equal(second.record?.milestoneReview.milestoneReconciled, true);
+    assert.equal(second.record?.milestoneReview.reusedExisting, true);
     const visible = listVisibleDefinitions(readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir)), principal);
     const onboardingDefs = visible.filter((d) => d.scope.clientCode === 'ACCG01' && d.sourceTemplateId === 'client_onboarding');
     assert.equal(onboardingDefs.length, 1);
@@ -979,6 +1043,7 @@ describe('client onboarding automation', () => {
     });
     assert.equal(prepared.status, 'OPEN');
     assert.equal(prepared.ready, false);
+    assert.equal(prepared.milestoneReconciled, false);
     assert.equal(prepared.send, false);
     assert.equal(prepared.outbound, false);
     assert.equal(prepared.liveGtmOutbound, false);
@@ -990,6 +1055,7 @@ describe('client onboarding automation', () => {
     const clear = composeMilestoneReview({
       workspaceReconciled: true,
       projectId: 'proj-1',
+      milestoneIds: ['m1'],
       milestones: [
         { id: 'identity_verified', label: 'Client identity verified', status: 'complete', provenance: 'CONFIRMED' },
       ],
@@ -997,6 +1063,7 @@ describe('client onboarding automation', () => {
     });
     assert.equal(clear.status, 'CLEAR');
     assert.equal(clear.ready, true);
+    assert.equal(clear.milestoneReconciled, true);
 
     const blocked = composeMilestoneReview({
       workspaceReconciled: true,
@@ -1015,6 +1082,7 @@ describe('client onboarding automation', () => {
     });
     assert.equal(identity.status, 'NOT_READY');
     assert.equal(identity.ready, false);
+    assert.equal(identity.milestoneReconciled, false);
 
     const now = new Date().toISOString();
     const record = {
@@ -1101,6 +1169,7 @@ describe('client onboarding automation', () => {
     const milestoneReview = composeMilestoneReview({
       workspaceReconciled: true,
       projectId: 'proj-1',
+      milestoneIds: ['m1'],
       milestones: [
         { id: 'identity_verified', label: 'Client identity verified', status: 'complete', provenance: 'CONFIRMED' },
       ],
@@ -1798,6 +1867,142 @@ describe('client onboarding automation', () => {
     assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate agents created/i.test(answer), false);
   });
 
+  it('reconciles entitled project milestones by title and does not invent ids', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-ms-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [
+        { id: 'existing-ms-identity', title: 'Client identity verified' },
+        { id: 'existing-ms-scope', title: 'Agreement / scope verified' },
+        { id: 'existing-ms-docs', title: 'Documents complete' },
+        { id: 'existing-ms-access', title: 'System access complete' },
+        { id: 'existing-ms-kickoff-ready', title: 'Kickoff ready' },
+        { id: 'existing-ms-kickoff-complete', title: 'Kickoff complete' },
+        { id: 'existing-ms-baseline', title: 'Initial operating baseline complete' },
+      ],
+      milestoneCreate: async () => {
+        throw new Error('reuse-only must not create milestones');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.deepEqual(reused.record.milestoneIds, [
+      'existing-ms-identity',
+      'existing-ms-scope',
+      'existing-ms-docs',
+      'existing-ms-access',
+      'existing-ms-kickoff-ready',
+      'existing-ms-kickoff-complete',
+      'existing-ms-baseline',
+    ]);
+    assert.equal(reused.record.milestoneReconciled, true);
+    assert.equal(reused.record.milestoneReview.milestoneReconciled, true);
+    assert.equal(reused.record.milestoneReview.reusedExisting, true);
+    assert.equal(reused.record.milestoneReview.send, false);
+    assert.equal(reused.events.includes('MILESTONE_CREATED'), false);
+
+    let createdCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [],
+      milestoneCreate: async (_principal, body) => {
+        createdCalls += 1;
+        return { id: `ms-${createdCalls}`, title: body.title };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.ok(created.record.milestoneIds.length > 0);
+    assert.ok(created.record.milestoneIds.every((id) => Boolean(id)));
+    assert.equal(created.record.milestoneReconciled, true);
+    assert.equal(created.record.milestoneReview.milestoneReconciled, true);
+    assert.ok(created.events.includes('MILESTONE_CREATED'));
+    assert.ok(createdCalls > 0);
+
+    let dryCreates = 0;
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      milestoneList: async () => [],
+      milestoneCreate: async () => {
+        dryCreates += 1;
+        throw new Error('dry-run must not create milestones');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.deepEqual(dry.record.milestoneIds, []);
+    assert.equal(dry.record.milestoneReconciled, false);
+    assert.equal(dry.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(dry.record.milestoneReview.status, 'OPEN');
+    assert.equal(dryCreates, 0);
+    assert.equal(dry.events.includes('MILESTONE_CREATED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [],
+      milestoneCreate: async () => {
+        throw new Error('sharepoint milestone create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.deepEqual(thrown.record.milestoneIds, []);
+    assert.equal(thrown.record.milestoneReconciled, false);
+    assert.equal(thrown.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(thrown.events.includes('MILESTONE_CREATED'), false);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      milestoneList: async () => [],
+      milestoneCreate: async (_principal, body) => ({ title: body.title }),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.deepEqual(absent.record.milestoneIds, []);
+    assert.equal(absent.record.milestoneReconciled, false);
+    assert.equal(absent.record.milestoneReview.milestoneReconciled, false);
+    assert.equal(absent.events.includes('MILESTONE_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
   it('prepares realtime documents honesty from already-known fabric and documentGaps', () => {
     assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
@@ -1980,6 +2185,432 @@ describe('client onboarding automation', () => {
     assert.match(hubAnswer, /Document freshness for Hub: OPEN/);
     assert.match(hubAnswer, /does not claim LIVE files/i);
     assert.equal(/LIVE files are current|LIVE SharePoint/i.test(hubAnswer), false);
+  });
+
+  it('reconciles entitled same-scope threads by id and does not invent comms', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-comms-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const prepared = composeOnboardingCommunicationContextReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      relatedEmails: [{ id: 'thread-accg-1', title: 'ACCG onboarding kickoff', conversationId: 'conv-accg-1' }],
+      relatedThreads: [{ id: 'thread-accg-1', title: 'ACCG onboarding kickoff', conversationId: 'conv-accg-1' }],
+      reusedExisting: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.communicationContextReconciled, true);
+    assert.equal(prepared.reusedExisting, true);
+    assert.equal(prepared.relatedThreadCount, 1);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.autoRespond, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
+
+    const identityPack = composeOnboardingCommunicationContextReview({
+      identityResolutionRequired: true,
+      relatedEmails: [{ id: 'thread-should-not-attach', title: 'foreign' }],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identityPack.communicationContextReconciled, false);
+    assert.equal(identityPack.relatedThreadCount, 0);
+    assert.deepEqual(identityPack.relatedEmails, []);
+    assert.deepEqual(identityPack.relatedThreads, []);
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [
+        {
+          id: 'thread-accg-1',
+          title: 'ACCG onboarding kickoff',
+          clientCode: 'ACCG01',
+          conversationId: 'conv-accg-1',
+        },
+        {
+          id: 'thread-pdg',
+          title: 'PDG01 foreign thread',
+          clientCode: 'PDG01',
+          conversationId: 'conv-pdg',
+        },
+        { title: 'missing-id-must-drop', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.communicationContextReconciled, true);
+    assert.equal(reused.record.communicationContextReview.communicationContextReconciled, true);
+    assert.equal(reused.record.communicationContextReview.reusedExisting, true);
+    assert.equal(reused.record.communicationContextReview.relatedThreadCount, 1);
+    assert.deepEqual(reused.record.communicationContextReview.relatedEmails.map((row) => row.id), ['thread-accg-1']);
+    assert.deepEqual(reused.record.communicationContextReview.relatedThreads.map((row) => row.id), ['thread-accg-1']);
+    assert.equal(reused.record.operationsHandoff.relatedThreadCount, 1);
+    assert.equal(reused.record.kickoff.relatedThreadCount, 1);
+    assert.equal(reused.record.communicationContextReview.send, false);
+    assert.equal(reused.record.communicationContextReview.outbound, false);
+    assert.equal(reused.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.ok(reused.events.includes('COMMUNICATION_CONTEXT_RECONCILED'));
+    assert.equal(JSON.stringify(reused.record.communicationContextReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(reused.record.communicationContextReview).includes('thread-pdg'), false);
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.communicationContextReconciled, false);
+    assert.equal(empty.record.communicationContextReview.communicationContextReconciled, false);
+    assert.equal(empty.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(empty.record.communicationContextReview.relatedEmails, []);
+    assert.deepEqual(empty.record.communicationContextReview.relatedThreads, []);
+    assert.equal(empty.record.operationsHandoff.relatedThreadCount, 0);
+    assert.equal(empty.events.includes('COMMUNICATION_CONTEXT_RECONCILED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => {
+        throw new Error('entitled thread search failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.communicationContextReconciled, false);
+    assert.equal(thrown.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(thrown.record.communicationContextReview.relatedEmails, []);
+    assert.deepEqual(thrown.record.communicationContextReview.relatedThreads, []);
+    assert.equal(thrown.record.operationsHandoff.relatedThreadCount, 0);
+    assert.equal(thrown.events.includes('COMMUNICATION_CONTEXT_RECONCILED'), false);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      commsSearch: async () => [],
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.communicationContextReconciled, false);
+    assert.equal(dry.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(dry.record.communicationContextReview.relatedEmails, []);
+    assert.equal(dry.record.operationsHandoff.relatedThreadCount, 0);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.communicationContextReconciled, false);
+    assert.equal(absent.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(absent.record.communicationContextReview.relatedEmails, []);
+
+    const wrongClient = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [
+        { id: 'thread-pdg', title: 'PDG01 foreign thread', clientCode: 'PDG01' },
+        { id: 'thread-hfd', title: 'HFD01 foreign thread', clientCode: 'HFD01' },
+      ],
+    });
+    assert.equal(wrongClient.ok, true);
+    if (!wrongClient.ok) return;
+    assert.equal(wrongClient.record.communicationContextReconciled, false);
+    assert.equal(wrongClient.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(wrongClient.record.communicationContextReview.relatedEmails, []);
+    assert.deepEqual(wrongClient.record.communicationContextReview.relatedThreads, []);
+    assert.equal(JSON.stringify(wrongClient.record.communicationContextReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(wrongClient.record.communicationContextReview).includes('HFD01'), false);
+    assert.equal(wrongClient.record.communicationContextReview.send, false);
+    assert.equal(wrongClient.record.communicationContextReview.outbound, false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    const missingIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      workflow: (() => {
+        const workflow = onboardingWorkflow('ACCG01');
+        workflow.scope = { organizationId: 'org-hvcg' };
+        return workflow;
+      })(),
+      commsSearch: async () => [
+        { id: 'thread-should-not-attach', title: 'ACCG thread', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(missingIdentity.ok, true);
+    if (!missingIdentity.ok) return;
+    assert.equal(missingIdentity.record.identityResolutionRequired, true);
+    assert.equal(missingIdentity.record.communicationContextReconciled, false);
+    assert.equal(missingIdentity.record.communicationContextReview.relatedThreadCount, 0);
+    assert.deepEqual(missingIdentity.record.communicationContextReview.relatedEmails, []);
+    assert.equal(missingIdentity.events.includes('COMMUNICATION_CONTEXT_RECONCILED'), false);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.deepEqual(missingIdentity.record.capitalContextReview.relatedCapital, []);
+
+    assert.equal(mapsToCommunicationContextIntent('What is the onboarding communication context for ACCG?'), true);
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding communication context for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding communication context for ACCG?'), 'status');
+    const reusedAnswer = answerOnboardingContext(
+      'What is the onboarding communication context for ACCG?',
+      reused.record,
+    );
+    assert.match(reusedAnswer, /Communication context review for ACCG01: CLEAR/);
+    assert.match(reusedAnswer, /Existing entitled communications: reused/);
+    assert.match(reusedAnswer, /Related entitled threads: 1/);
+    assert.equal(/thread-pdg|PDG01|AUTO_RESPOND|invented/i.test(reusedAnswer), false);
+    const emptyAnswer = answerOnboardingContext(
+      'What is the onboarding communication context for ACCG?',
+      empty.record,
+    );
+    assert.match(emptyAnswer, /Existing entitled communications: not confirmed/);
+    assert.match(emptyAnswer, /Related entitled threads: 0/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(emptyAnswer), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reconciles entitled same-scope capital by id and does not invent capital', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-capital-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const prepared = composeOnboardingCapitalContextReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      relatedCapital: [{ id: 'cap-accg-1', title: 'ACCG entitled capital packet' }],
+      reusedExisting: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.capitalContextReconciled, true);
+    assert.equal(prepared.reusedExisting, true);
+    assert.equal(prepared.relatedCapitalCount, 1);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.autoRespond, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
+
+    const identityPack = composeOnboardingCapitalContextReview({
+      identityResolutionRequired: true,
+      relatedCapital: [{ id: 'cap-should-not-attach', title: 'foreign' }],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identityPack.capitalContextReconciled, false);
+    assert.equal(identityPack.relatedCapitalCount, 0);
+    assert.deepEqual(identityPack.relatedCapital, []);
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => [
+        { id: 'cap-accg-1', title: 'ACCG entitled capital packet', clientCode: 'ACCG01' },
+        { id: 'cap-pdg', title: 'PDG01 foreign packet', clientCode: 'PDG01' },
+        { title: 'missing-id-must-drop', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.capitalContextReconciled, true);
+    assert.equal(reused.record.capitalContextReview.capitalContextReconciled, true);
+    assert.equal(reused.record.capitalContextReview.reusedExisting, true);
+    assert.equal(reused.record.capitalContextReview.relatedCapitalCount, 1);
+    assert.deepEqual(reused.record.capitalContextReview.relatedCapital.map((row) => row.id), ['cap-accg-1']);
+    assert.equal(reused.record.capitalContextReview.send, false);
+    assert.equal(reused.record.capitalContextReview.outbound, false);
+    assert.equal(reused.record.capitalContextReview.capitalSubmit, false);
+    assert.equal(reused.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.ok(reused.events.includes('CAPITAL_CONTEXT_RECONCILED'));
+    assert.equal(JSON.stringify(reused.record.capitalContextReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(reused.record.capitalContextReview).includes('cap-pdg'), false);
+    assert.equal(/TargetAmount|5000000|Live Oak|approved|funded/i.test(JSON.stringify(reused.record.capitalContextReview)), false);
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.capitalContextReconciled, false);
+    assert.equal(empty.record.capitalContextReview.capitalContextReconciled, false);
+    assert.equal(empty.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(empty.record.capitalContextReview.relatedCapital, []);
+    assert.equal(empty.events.includes('CAPITAL_CONTEXT_RECONCILED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => {
+        throw new Error('entitled capital search failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.capitalContextReconciled, false);
+    assert.equal(thrown.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(thrown.record.capitalContextReview.relatedCapital, []);
+    assert.equal(thrown.events.includes('CAPITAL_CONTEXT_RECONCILED'), false);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      capitalSearch: async () => [],
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.capitalContextReconciled, false);
+    assert.equal(dry.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(dry.record.capitalContextReview.relatedCapital, []);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.capitalContextReconciled, false);
+    assert.equal(absent.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(absent.record.capitalContextReview.relatedCapital, []);
+
+    const wrongClient = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => [
+        { id: 'cap-pdg', title: 'PDG01 foreign packet', clientCode: 'PDG01' },
+        { id: 'cap-hfd', title: 'HFD01 foreign packet', clientCode: 'HFD01' },
+      ],
+    });
+    assert.equal(wrongClient.ok, true);
+    if (!wrongClient.ok) return;
+    assert.equal(wrongClient.record.capitalContextReconciled, false);
+    assert.equal(wrongClient.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(wrongClient.record.capitalContextReview.relatedCapital, []);
+    assert.equal(JSON.stringify(wrongClient.record.capitalContextReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(wrongClient.record.capitalContextReview).includes('HFD01'), false);
+    assert.equal(wrongClient.record.capitalContextReview.send, false);
+    assert.equal(wrongClient.record.capitalContextReview.outbound, false);
+    assert.equal(wrongClient.record.capitalContextReview.capitalSubmit, false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    const missingIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      workflow: (() => {
+        const workflow = onboardingWorkflow('ACCG01');
+        workflow.scope = { organizationId: 'org-hvcg' };
+        return workflow;
+      })(),
+      capitalSearch: async () => [
+        { id: 'cap-should-not-attach', title: 'ACCG packet', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(missingIdentity.ok, true);
+    if (!missingIdentity.ok) return;
+    assert.equal(missingIdentity.record.identityResolutionRequired, true);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.equal(missingIdentity.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(missingIdentity.record.capitalContextReview.relatedCapital, []);
+    assert.equal(missingIdentity.events.includes('CAPITAL_CONTEXT_RECONCILED'), false);
+    assert.equal(missingIdentity.record.communicationContextReconciled, false);
+
+    assert.equal(mapsToCapitalContextIntent('What is the onboarding capital context for ACCG?'), true);
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding capital context for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding capital context for ACCG?'), 'status');
+    const reusedAnswer = answerOnboardingContext(
+      'What is the onboarding capital context for ACCG?',
+      reused.record,
+    );
+    assert.match(reusedAnswer, /Capital context review for ACCG01: CLEAR/);
+    assert.match(reusedAnswer, /Existing entitled capital context: reused/);
+    assert.match(reusedAnswer, /Related entitled capital: 1/);
+    assert.equal(/cap-pdg|PDG01|AUTO_RESPOND|TargetAmount|5000000|Live Oak/i.test(reusedAnswer), false);
+    const emptyAnswer = answerOnboardingContext(
+      'What is the onboarding capital context for ACCG?',
+      empty.record,
+    );
+    assert.match(emptyAnswer, /Existing entitled capital context: not confirmed/);
+    assert.match(emptyAnswer, /Related entitled capital: 0/);
+    assert.equal(/AUTO_RESPOND|submitted|TargetAmount/i.test(emptyAnswer), false);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it('restore env', () => {

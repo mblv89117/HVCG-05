@@ -13,6 +13,15 @@
  */
 
 import { MANNY_ENTRA_OID } from '../manny.ts';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function allowedFabricMailboxOids(env: NodeJS.Dict<string | undefined> = process.env): Set<string> {
+  const oids = new Set<string>([MANNY_ENTRA_OID.toLowerCase()]);
+  const hvs = (env.INTEGRATION_HVS_HISTORICAL_MAILBOX_OID || '').trim().toLowerCase();
+  if (hvs && UUID_RE.test(hvs)) oids.add(hvs);
+  return oids;
+}
 import { pmInfrastructureError, PmHttpError } from '../errors.ts';
 import type { PmGraphTokenProvider } from '../token.ts';
 
@@ -91,8 +100,8 @@ function assertSafeFabricUrl(raw: string, method: FabricGraphMethod = 'GET'): UR
     throw pmInfrastructureError('PM_BACKEND_UNAVAILABLE', 'Fabric Graph path is not allowlisted.');
   }
   const userMatch = /\/users\/([0-9a-f-]{36})\//i.exec(path);
-  if (userMatch && userMatch[1].toLowerCase() !== MANNY_ENTRA_OID) {
-    throw new PmHttpError(403, 'PM_MANNY_ONLY', 'Fabric Graph user paths are restricted to the owner mailbox.');
+  if (userMatch && !allowedFabricMailboxOids().has(userMatch[1].toLowerCase())) {
+    throw new PmHttpError(403, 'PM_MANNY_ONLY', 'Fabric Graph user paths are restricted to allowlisted mailboxes.');
   }
   return url;
 }

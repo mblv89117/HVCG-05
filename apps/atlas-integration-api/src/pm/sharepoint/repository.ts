@@ -717,6 +717,21 @@ export class SharePointPmService {
     return out;
   }
 
+  /** Hub MI sweep: authoritative current clients from HVCG_Clients (Active Client stage). */
+  async listCurrentOperationalClients(): Promise<SharePointClient[]> {
+    const items = await this.listAll(this.settings.clientsListId);
+    const seen = new Set<string>();
+    const out: SharePointClient[] = [];
+    for (const item of items) {
+      const mapped = this.mapClient(item);
+      if (!mapped || seen.has(mapped.clientCode)) continue;
+      if ((mapped.clientStage || '').trim() !== 'Active Client') continue;
+      seen.add(mapped.clientCode);
+      out.push(mapped);
+    }
+    return out.sort((a, b) => a.clientCode.localeCompare(b.clientCode));
+  }
+
   async listAuthorizedClients(principal: AtlasPrincipal): Promise<SharePointClient[]> {
     const codes = new Set(entitledClientCodes(principal));
     const items = await this.listAll(this.settings.clientsListId);

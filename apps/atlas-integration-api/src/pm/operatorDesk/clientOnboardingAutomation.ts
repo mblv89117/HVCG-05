@@ -8,15 +8,27 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { entitledClientCodes } from '../sharepoint/authz.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
-import { listDocumentRequests } from '../sharepoint/documentRequests.ts';
+import {
+  createDocumentRequest,
+  listDocumentRequests,
+  type DocumentRequestRecord,
+} from '../sharepoint/documentRequests.ts';
 import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fabric/status.ts';
 import { appendAskAtlasActivity } from './activityLedger.ts';
 import {
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
+  COMMUNICATIONS_AUTO_RESPOND,
+  COMMUNICATIONS_SEND,
   type AskAtlasAnswer,
 } from './types.ts';
 import type { WorkflowDefinitionRecord } from './workflowDefinitions.ts';
+import {
+  listRelatedCapitalForClient,
+  listRelatedEmailsForClient,
+  type OnboardingCapitalSearchRow,
+  type OnboardingCommsThreadInput,
+} from './documentRelatedContext.ts';
 import {
   ONBOARDING_AUTOMATION_MISSION_KEY,
   type OnboardingDocumentGap,
@@ -34,6 +46,10 @@ import {
   type OnboardingProjectReview,
   type OnboardingTaskReview,
   type OnboardingAgentAssignmentReview,
+  type OnboardingCommunicationContextReview,
+  type OnboardingCapitalContextReview,
+  type OnboardingRelatedCommsRef,
+  type OnboardingRelatedCapitalRef,
   type OnboardingRealtimeDocumentsHonesty,
   type RealtimeDocumentsFabricSnapshot,
   type OnboardingRunRecord,
@@ -66,6 +82,51 @@ const DEFAULT_ONBOARDING_TASKS = [
   { key: 'prepare_kickoff', title: 'Prepare kickoff materials', purpose: 'Kickoff preparation' },
 ];
 
+export type OnboardingAgentAssignInput = {
+  clientCode: string;
+  projectId: string;
+  taskIds: string[];
+  agentId?: string;
+};
+
+export type OnboardingAgentAssignResult = {
+  id?: string;
+  agentId?: string;
+};
+
+export type OnboardingMilestoneRow = {
+  id?: string;
+  title?: string;
+};
+
+export type OnboardingCommsSearchRow = OnboardingCommsThreadInput;
+export type { OnboardingCapitalSearchRow };
+
+/** Record a SharePoint milestone only when list or create returns an id. Never invent ids. */
+export async function defaultOnboardingMilestoneList(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  projectId: string,
+): Promise<OnboardingMilestoneRow[]> {
+  const list = sharepoint?.listAuthorizedMilestones;
+  if (typeof list !== 'function' || !projectId.trim()) return [];
+  try {
+    const rows = await list.call(sharepoint, principal, projectId);
+    return (rows ?? []).map((row) => ({ id: row?.id, title: row?.title }));
+  } catch {
+    return [];
+  }
+}
+
+export async function defaultOnboardingMilestoneCreate(
+  sharepoint: SharePointPmService | null,
+  principal: AtlasPrincipal,
+  body: { title: string; projectId: string; status?: string },
+): Promise<{ id?: string }> {
+  if (!sharepoint || !body.projectId.trim() || !body.title.trim()) return {};
+  return sharepoint.createMilestone(principal, body);
+}
+
 export type OnboardingAutomationResult = {
   ok: true;
   record: OnboardingRunRecord;
@@ -75,6 +136,16 @@ export type OnboardingAutomationResult = {
   error: string;
   record?: OnboardingRunRecord;
 };
+
+/** Record an assignee only when an entitled project/task context exists and assign returns an id. */
+export function defaultOnboardingAgentAssign(
+  input: OnboardingAgentAssignInput,
+): OnboardingAgentAssignResult {
+  const projectId = input.projectId?.trim();
+  const agentId = input.agentId?.trim();
+  if (!projectId || !agentId) return {};
+  return { id: randomUUID(), agentId };
+}
 
 export function isOnboardingWorkflow(workflow: WorkflowDefinitionRecord): boolean {
   return (
@@ -406,10 +477,15 @@ export function composeMilestoneReview(record: {
   projectId?: string;
   projectName?: string;
   milestones?: OnboardingMilestoneState[];
+  milestoneIds?: string[];
+  reusedExisting?: boolean;
   blockers?: string[];
   communicationPolicy?: OnboardingMilestoneReview['communicationPolicy'];
 }): OnboardingMilestoneReview {
   const milestones = record.milestones ?? [];
+  const milestoneIds = (record.milestoneIds ?? []).map((id) => id.trim()).filter(Boolean);
+  const milestoneReconciled = milestoneIds.length > 0;
+  const reusedExisting = Boolean(record.reusedExisting && milestoneReconciled);
   const completeCount = milestones.filter((m) => m.status === 'complete').length;
   const blockedCount = milestones.filter((m) => m.status === 'blocked').length;
   const pendingCount = milestones.filter((m) => m.status === 'pending' || m.status === 'in_progress').length;
@@ -423,16 +499,22 @@ export function composeMilestoneReview(record: {
   const nextOwnerAction =
     record.identityResolutionRequired
       ? 'Assign client scope before milestone review'
-      : blockedCount
-        ? `Clear blocked milestone: ${milestones.find((m) => m.status === 'blocked')?.label ?? 'blocked'}`
-        : nextMilestone
-          ? `Advance milestone: ${nextMilestone}`
-          : 'No open onboarding milestones';
+      : !milestoneReconciled
+        ? 'Confirm the existing entitled onboarding milestones; do not create duplicates'
+        : blockedCount
+          ? `Clear blocked milestone: ${milestones.find((m) => m.status === 'blocked')?.label ?? 'blocked'}`
+          : nextMilestone
+            ? `Advance milestone: ${nextMilestone}`
+            : reusedExisting
+              ? 'Existing entitled onboarding milestones reused — no duplicate milestones created'
+              : 'Governed onboarding milestones are reconciled — no duplicate milestones created';
   const counts = {
     milestoneCount: milestones.length,
     completeCount,
     blockedCount,
     pendingCount,
+    milestoneReconciled,
+    reusedExisting,
     items,
     ...(nextMilestone ? { nextMilestone } : {}),
     communicationPolicy,
@@ -449,7 +531,20 @@ export function composeMilestoneReview(record: {
       ...(record.projectId ? { projectId: record.projectId } : {}),
       ...(record.projectName ? { projectName: record.projectName } : {}),
       ...counts,
+      milestoneReconciled: false,
+      reusedExisting: false,
       provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  if (!milestoneReconciled) {
+    const status = blockedCount || blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      projectId: record.projectId,
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...counts,
+      provenance: 'PROPOSED',
     };
   }
   const status = blockedCount || blockers.length ? 'BLOCKED' : items.length ? 'OPEN' : 'CLEAR';
@@ -915,6 +1010,203 @@ export function composeOnboardingAgentAssignmentReview(record: {
   };
 }
 
+function commsRefsWithIds(rows?: OnboardingRelatedCommsRef[]): OnboardingRelatedCommsRef[] {
+  const seen = new Set<string>();
+  const out: OnboardingRelatedCommsRef[] = [];
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+      ...(row.conversationId?.trim() ? { conversationId: row.conversationId.trim() } : {}),
+    });
+  }
+  return out;
+}
+
+export function composeOnboardingCommunicationContextReview(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  relatedEmails?: OnboardingRelatedCommsRef[];
+  relatedThreads?: OnboardingRelatedCommsRef[];
+  reusedExisting?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingCommunicationContextReview['communicationPolicy'];
+}): OnboardingCommunicationContextReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const entitledRefs = identityResolutionRequired || !clientCode || !isCanonicalClientCode(clientCode)
+    ? []
+    : commsRefsWithIds([...(record.relatedEmails ?? []), ...(record.relatedThreads ?? [])]);
+  const relatedEmails = commsRefsWithIds(record.relatedEmails).filter((row) =>
+    entitledRefs.some((ref) => ref.id === row.id),
+  );
+  const relatedThreads = commsRefsWithIds(record.relatedThreads).length
+    ? commsRefsWithIds(record.relatedThreads).filter((row) => entitledRefs.some((ref) => ref.id === row.id))
+    : relatedEmails;
+  const relatedThreadCount = entitledRefs.length;
+  const communicationContextReconciled = relatedThreadCount > 0;
+  const reusedExisting = Boolean(record.reusedExisting && communicationContextReconciled);
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before communication-context reconciliation');
+  } else if (!communicationContextReconciled) {
+    items.push('Existing entitled communications are not confirmed — Atlas will not invent thread ids or attach another client\'s threads');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope before communication-context reconciliation'
+      : !communicationContextReconciled
+        ? 'Confirm existing entitled same-scope threads/emails; do not invent ids or send'
+        : reusedExisting
+          ? 'Existing entitled communications reused — no duplicate threads created'
+          : 'Governed onboarding communications are reconciled — no duplicate threads created';
+  const flags = {
+    relatedThreadCount,
+    relatedEmails,
+    relatedThreads,
+    communicationContextReconciled,
+    reusedExisting,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: COMMUNICATIONS_SEND,
+    autoRespond: COMMUNICATIONS_AUTO_RESPOND,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!communicationContextReconciled) {
+    const status = blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'PROPOSED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
+function capitalRefsWithIds(rows?: OnboardingRelatedCapitalRef[]): OnboardingRelatedCapitalRef[] {
+  const seen = new Set<string>();
+  const out: OnboardingRelatedCapitalRef[] = [];
+  for (const row of rows ?? []) {
+    const id = row.id?.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({
+      id,
+      ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+    });
+  }
+  return out;
+}
+
+export function composeOnboardingCapitalContextReview(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  relatedCapital?: OnboardingRelatedCapitalRef[];
+  reusedExisting?: boolean;
+  blockers?: string[];
+  communicationPolicy?: OnboardingCapitalContextReview['communicationPolicy'];
+}): OnboardingCapitalContextReview {
+  const identityResolutionRequired = Boolean(record.identityResolutionRequired);
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const relatedCapital = identityResolutionRequired || !clientCode || !isCanonicalClientCode(clientCode)
+    ? []
+    : capitalRefsWithIds(record.relatedCapital);
+  const relatedCapitalCount = relatedCapital.length;
+  const capitalContextReconciled = relatedCapitalCount > 0;
+  const reusedExisting = Boolean(record.reusedExisting && capitalContextReconciled);
+  const items: string[] = [];
+  if (identityResolutionRequired || !clientCode) {
+    items.push('Client scope missing — assign an entitled ClientCode before capital-context reconciliation');
+  } else if (!capitalContextReconciled) {
+    items.push('Existing entitled capital context is not confirmed — Atlas will not invent capital ids or attach another client\'s capital');
+  }
+  const nextOwnerAction =
+    identityResolutionRequired || !clientCode
+      ? 'Assign entitled client scope before capital-context reconciliation'
+      : !capitalContextReconciled
+        ? 'Confirm existing entitled same-scope capital packets/projects; do not invent ids or submit'
+        : reusedExisting
+          ? 'Existing entitled capital context reused — no duplicate capital created'
+          : 'Governed onboarding capital context is reconciled — no duplicate capital created';
+  const flags = {
+    relatedCapitalCount,
+    relatedCapital,
+    capitalContextReconciled,
+    reusedExisting,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: COMMUNICATIONS_SEND,
+    autoRespond: COMMUNICATIONS_AUTO_RESPOND,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (identityResolutionRequired || !clientCode) {
+    return {
+      status: 'OPEN',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (!capitalContextReconciled) {
+    const status = blockers.length ? 'BLOCKED' : 'OPEN';
+    return {
+      status,
+      ready: false,
+      clientCode,
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...flags,
+      provenance: 'PROPOSED',
+    };
+  }
+  return {
+    status: 'CLEAR',
+    ready: true,
+    clientCode,
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...flags,
+    provenance: 'CONFIRMED',
+  };
+}
+
 const EMPTY_LAST_INDEXED = {
   mailThreads: 0,
   meetings: 0,
@@ -1245,12 +1537,16 @@ function buildIdentityReconciliationRecord(opts: {
     ownerAttention: opts.ownerAttention,
     taskIds: [],
     milestoneIds: [],
-    assignedAgents: ['atlas-onboarding-agent'],
+    assignedAgents: [],
     documentGaps: [],
     communicationPolicy: 'DRAFT_ONLY',
     capitalScope,
     identityResolutionRequired,
     workspaceReconciled,
+    documentsReconciled: false,
+    milestoneReconciled: false,
+    communicationContextReconciled: false,
+    capitalContextReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -1305,6 +1601,18 @@ function buildIdentityReconciliationRecord(opts: {
       blockers: opts.blockers,
       communicationPolicy: 'DRAFT_ONLY',
     }),
+    communicationContextReview: composeOnboardingCommunicationContextReview({
+      identityResolutionRequired,
+      ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
+      ...(opts.clientName ? { clientName: opts.clientName } : {}),
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    capitalContextReview: composeOnboardingCapitalContextReview({
+      identityResolutionRequired,
+      ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
+      ...(opts.clientName ? { clientName: opts.clientName } : {}),
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
     realtimeDocumentsHonesty: composeRealtimeDocumentsHonesty({
       identityResolutionRequired,
       blockers: opts.blockers,
@@ -1347,6 +1655,33 @@ export async function runClientOnboardingAutomation(opts: {
   sharepoint: SharePointPmService | null;
   workflow: WorkflowDefinitionRecord;
   dryRun?: boolean;
+  documentRequestList?: (
+    dataDir: string,
+    clientCode: string,
+  ) => DocumentRequestRecord[] | Promise<DocumentRequestRecord[]>;
+  documentRequestCreate?: (
+    dataDir: string,
+    input: { clientCode: string; title: string; createdBy: string },
+  ) => { id?: string } | Promise<{ id?: string }>;
+  agentAssign?: (
+    input: OnboardingAgentAssignInput,
+  ) => OnboardingAgentAssignResult | Promise<OnboardingAgentAssignResult>;
+  milestoneList?: (
+    principal: AtlasPrincipal,
+    projectId: string,
+  ) => OnboardingMilestoneRow[] | Promise<OnboardingMilestoneRow[]>;
+  milestoneCreate?: (
+    principal: AtlasPrincipal,
+    body: { title: string; projectId: string; status?: string },
+  ) => { id?: string } | Promise<{ id?: string }>;
+  commsSearch?: (
+    principal: AtlasPrincipal,
+    clientCode: string,
+  ) => OnboardingCommsSearchRow[] | Promise<OnboardingCommsSearchRow[]>;
+  capitalSearch?: (
+    principal: AtlasPrincipal,
+    clientCode: string,
+  ) => OnboardingCapitalSearchRow[] | Promise<OnboardingCapitalSearchRow[]>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1400,12 +1735,15 @@ export async function runClientOnboardingAutomation(opts: {
   const client = entitledMatches[0];
   clientName = client.displayName || clientName;
   let workspaceReconciled = false;
+  let documentsReconciled = false;
   let projectId: string | undefined;
   let projectName: string | undefined;
   let reusedExistingProject = false;
   const taskIds: string[] = [];
   let reusedExistingTasks = false;
+  const assignedAgents: string[] = [];
   const milestoneIds: string[] = [];
+  let reusedExistingMilestones = false;
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
@@ -1445,47 +1783,105 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
 
-  const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);
-  for (const taskDef of DEFAULT_ONBOARDING_TASKS) {
-    const exists = existingTasks.some((t) => t.title === taskDef.title);
-    if (exists) {
+  if (projectId) {
+    const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);
+    const missingTasks: typeof DEFAULT_ONBOARDING_TASKS[number][] = [];
+    for (const taskDef of DEFAULT_ONBOARDING_TASKS) {
       const found = existingTasks.find((t) => t.title === taskDef.title);
       if (found?.id) {
         taskIds.push(found.id);
         reusedExistingTasks = true;
+      } else {
+        missingTasks.push(taskDef);
       }
-      continue;
     }
-    if (!opts.dryRun && projectId) {
-      const task = await sp.createTask(opts.principal, {
-        title: taskDef.title,
-        description: taskDef.purpose,
-        projectId,
-        status: 'ready',
-      }, `atlas-onboarding-task-${clientCode}-${taskDef.key}`);
-      taskIds.push(task.id);
-    }
-  }
-  if (taskIds.length || opts.dryRun) events.push('TASKS_CREATED');
-
-  for (const label of DEFAULT_MILESTONES) {
-    if (!opts.dryRun && projectId) {
+    if (!opts.dryRun && missingTasks.length) {
       try {
-        const milestone = await sp.createMilestone(opts.principal, {
-          title: label.label,
-          projectId,
-          status: 'pending',
-        });
-        milestoneIds.push(milestone.id);
+        let createdWithId = false;
+        for (const taskDef of missingTasks) {
+          const task = await sp.createTask(opts.principal, {
+            title: taskDef.title,
+            description: taskDef.purpose,
+            projectId,
+            status: 'ready',
+          }, `atlas-onboarding-task-${clientCode}-${taskDef.key}`);
+          if (task?.id) {
+            taskIds.push(task.id);
+            createdWithId = true;
+          }
+        }
+        if (createdWithId) events.push('TASKS_CREATED');
       } catch {
-        /* milestone optional */
+        /* create failed — do not invent a task id */
       }
     }
   }
-  if (milestoneIds.length || opts.dryRun) events.push('MILESTONE_CREATED');
 
+  if (projectId) {
+    const listMilestonesFn = opts.milestoneList
+      ?? ((principal: AtlasPrincipal, id: string) => defaultOnboardingMilestoneList(sp, principal, id));
+    const createMilestoneFn = opts.milestoneCreate
+      ?? ((principal: AtlasPrincipal, body: { title: string; projectId: string; status?: string }) =>
+        defaultOnboardingMilestoneCreate(sp, principal, body));
+    const existingMilestones = await listMilestonesFn(opts.principal, projectId);
+    const missingMilestones: typeof DEFAULT_MILESTONES[number][] = [];
+    for (const milestoneDef of DEFAULT_MILESTONES) {
+      const found = existingMilestones.find((row) => row.title === milestoneDef.label);
+      if (found?.id) {
+        milestoneIds.push(found.id);
+        reusedExistingMilestones = true;
+      } else {
+        missingMilestones.push(milestoneDef);
+      }
+    }
+    if (!opts.dryRun && missingMilestones.length) {
+      try {
+        let createdWithId = false;
+        for (const milestoneDef of missingMilestones) {
+          const milestone = await createMilestoneFn(opts.principal, {
+            title: milestoneDef.label,
+            projectId,
+            status: 'pending',
+          });
+          if (milestone?.id) {
+            milestoneIds.push(milestone.id);
+            createdWithId = true;
+          }
+        }
+        if (createdWithId) events.push('MILESTONE_CREATED');
+      } catch {
+        /* create failed — do not invent a milestone id */
+      }
+    }
+  }
+  const milestoneReconciled = milestoneIds.length > 0;
+
+  const assignResponsibleAgent = opts.agentAssign ?? defaultOnboardingAgentAssign;
+  if (projectId && taskIds.length && !opts.dryRun) {
+    try {
+      const assigned = await assignResponsibleAgent({
+        clientCode,
+        projectId,
+        taskIds: [...taskIds],
+        ...(opts.workflow.responsibleAgent?.trim()
+          ? { agentId: opts.workflow.responsibleAgent.trim() }
+          : {}),
+      });
+      const agentId = assigned?.agentId?.trim();
+      if (assigned?.id && agentId) {
+        assignedAgents.push(agentId);
+        events.push('AGENTS_ASSIGNED');
+      }
+    } catch {
+      /* assign failed — do not invent an assignee or claim assignment complete */
+    }
+  }
+
+  const listDocumentRequestsFn = opts.documentRequestList ?? listDocumentRequests;
+  const createDocumentRequestFn = opts.documentRequestCreate ?? createDocumentRequest;
   try {
-    const docRequests = await listDocumentRequests(opts.dataDir, clientCode);
+    const docRequests = await listDocumentRequestsFn(opts.dataDir, clientCode);
+    const reusable = docRequests.filter((row) => Boolean(row.id));
     for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
       const matched = docRequests.find((r) =>
         (r.title || '').toLowerCase().includes(reqLabel.split(' ')[0].toLowerCase()),
@@ -1496,10 +1892,93 @@ export async function runClientOnboardingAutomation(opts: {
         source: matched ? 'HVCG_DocumentRequests' : undefined,
       });
     }
-    events.push('DOCUMENT_REQUIREMENTS_CREATED', 'DOCUMENT_RECONCILED');
+    if (reusable.length > 0) {
+      documentsReconciled = true;
+      events.push('DOCUMENT_RECONCILED');
+    } else if (!opts.dryRun) {
+      try {
+        let createdWithId = false;
+        for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
+          const created = await createDocumentRequestFn(opts.dataDir, {
+            clientCode,
+            title: reqLabel,
+            createdBy: opts.principal.userId,
+          });
+          if (created?.id) {
+            createdWithId = true;
+            const gap = documentGaps.find((row) => row.label === reqLabel);
+            if (gap) {
+              gap.status = 'CONFIRMED';
+              gap.source = 'HVCG_DocumentRequests';
+            }
+          }
+        }
+        if (createdWithId) {
+          documentsReconciled = true;
+          events.push('DOCUMENT_REQUIREMENTS_CREATED', 'DOCUMENT_RECONCILED');
+        }
+      } catch {
+        /* create failed — do not invent documents or claim reconciliation */
+      }
+    }
   } catch {
     for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
       documentGaps.push({ label: reqLabel, status: 'STALE_OR_UNCERTAIN' });
+    }
+  }
+
+  const relatedEmails: OnboardingRelatedCommsRef[] = [];
+  const relatedThreads: OnboardingRelatedCommsRef[] = [];
+  let reusedExistingComms = false;
+  let communicationContextReconciled = false;
+  if (opts.commsSearch) {
+    try {
+      const rows = await opts.commsSearch(opts.principal, clientCode);
+      const attached = listRelatedEmailsForClient(opts.principal, clientCode, rows ?? []);
+      for (const row of attached) {
+        const id = row.id?.trim();
+        if (!id) continue;
+        const ref: OnboardingRelatedCommsRef = {
+          id,
+          ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+          ...(row.conversationId?.trim() ? { conversationId: row.conversationId.trim() } : {}),
+        };
+        relatedEmails.push(ref);
+        relatedThreads.push(ref);
+      }
+      if (relatedEmails.length > 0) {
+        communicationContextReconciled = true;
+        reusedExistingComms = true;
+        events.push('COMMUNICATION_CONTEXT_RECONCILED');
+      }
+    } catch {
+      /* search failed — do not invent thread ids, email ids, or counts */
+    }
+  }
+  const relatedThreadCount = relatedEmails.length;
+
+  const relatedCapital: OnboardingRelatedCapitalRef[] = [];
+  let reusedExistingCapital = false;
+  let capitalContextReconciled = false;
+  if (opts.capitalSearch) {
+    try {
+      const rows = await opts.capitalSearch(opts.principal, clientCode);
+      const attached = listRelatedCapitalForClient(opts.principal, clientCode, rows ?? []);
+      for (const row of attached) {
+        const id = row.id?.trim();
+        if (!id) continue;
+        relatedCapital.push({
+          id,
+          ...(row.title?.trim() ? { title: row.title.trim() } : {}),
+        });
+      }
+      if (relatedCapital.length > 0) {
+        capitalContextReconciled = true;
+        reusedExistingCapital = true;
+        events.push('CAPITAL_CONTEXT_RECONCILED');
+      }
+    } catch {
+      /* search failed — do not invent capital ids, lender names, amounts, or funding state */
     }
   }
 
@@ -1513,6 +1992,10 @@ export async function runClientOnboardingAutomation(opts: {
   const partial: Partial<OnboardingRunRecord> = {
     identityResolutionRequired: false,
     workspaceReconciled,
+    documentsReconciled,
+    milestoneReconciled,
+    communicationContextReconciled,
+    capitalContextReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -1531,6 +2014,7 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
+    relatedThreadCount,
     capitalScope,
   });
   const kickoff = composeKickoff({
@@ -1543,6 +2027,7 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
+    relatedThreadCount,
   });
   const blockerReview = composeBlockerReview({
     identityResolutionRequired: false,
@@ -1568,6 +2053,8 @@ export async function runClientOnboardingAutomation(opts: {
     projectId,
     projectName,
     milestones,
+    milestoneIds,
+    reusedExisting: reusedExistingMilestones,
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
@@ -1630,7 +2117,6 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
-  const assignedAgents = ['atlas-onboarding-agent', 'atlas-hub-runtime'];
   const agentAssignmentReview = composeOnboardingAgentAssignmentReview({
     identityResolutionRequired: false,
     clientCode,
@@ -1638,7 +2124,26 @@ export async function runClientOnboardingAutomation(opts: {
     projectId,
     projectName,
     assignedAgents,
-    reusedExisting: true,
+    reusedExisting: false,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
+  const communicationContextReview = composeOnboardingCommunicationContextReview({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    relatedEmails,
+    relatedThreads,
+    reusedExisting: reusedExistingComms,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
+  const capitalContextReview = composeOnboardingCapitalContextReview({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    relatedCapital,
+    reusedExisting: reusedExistingCapital,
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
@@ -1665,6 +2170,8 @@ export async function runClientOnboardingAutomation(opts: {
   if (projectReview.status !== 'NOT_READY') events.push('PROJECT_REVIEW');
   if (taskReview.status !== 'NOT_READY') events.push('TASK_REVIEW');
   if (agentAssignmentReview.status !== 'NOT_READY') events.push('AGENT_ASSIGNMENT_REVIEW');
+  if (communicationContextReview.status !== 'NOT_READY') events.push('COMMUNICATION_CONTEXT_REVIEW');
+  if (capitalContextReview.status !== 'NOT_READY') events.push('CAPITAL_CONTEXT_REVIEW');
   if (realtimeDocumentsHonesty.status !== 'NOT_READY') events.push('REALTIME_DOCUMENTS_HONESTY');
 
   const record: OnboardingRunRecord = {
@@ -1692,6 +2199,10 @@ export async function runClientOnboardingAutomation(opts: {
     capitalScope,
     identityResolutionRequired: false,
     workspaceReconciled,
+    documentsReconciled,
+    milestoneReconciled,
+    communicationContextReconciled,
+    capitalContextReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
@@ -1709,6 +2220,8 @@ export async function runClientOnboardingAutomation(opts: {
     projectReview,
     taskReview,
     agentAssignmentReview,
+    communicationContextReview,
+    capitalContextReview,
     realtimeDocumentsHonesty,
     provenance: 'onboarding_automation',
   };
@@ -1841,6 +2354,21 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'agent assignment',
   'assigned agent',
   'agent review',
+  'communication context',
+  'related thread',
+  'related email',
+  'related comm',
+  'onboarding comm',
+  'onboarding communication',
+  'onboarding thread',
+  'onboarding email',
+  'entitled thread',
+  'entitled email',
+  'capital context',
+  'related capital',
+  'entitled capital',
+  'onboarding capital',
+  'capital packet',
   'realtime',
   'real-time',
   'freshness',
@@ -2083,6 +2611,63 @@ export function answerOnboardingContext(
       .filter(Boolean)
       .join('\n');
   }
+  if (mapsToCommunicationContextIntent(question)) {
+    const pack = record.communicationContextReview ?? composeOnboardingCommunicationContextReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      relatedEmails: record.communicationContextReview?.relatedEmails,
+      relatedThreads: record.communicationContextReview?.relatedThreads,
+      reusedExisting: Boolean(record.communicationContextReview?.reusedExisting),
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Communication context review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      `Related entitled threads: ${pack.relatedThreadCount} (from entitled ids)`,
+      pack.communicationContextReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled communications: reused'
+          : 'Governed onboarding communications: reconciled'
+        : 'Existing entitled communications: not confirmed',
+      pack.reusedExisting ? 'No duplicate threads created.' : 'Atlas did not invent thread ids, email ids, or ClientCodes.',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled same-scope communications are reconciled.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent thread counts, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (mapsToCapitalContextIntent(question)) {
+    const pack = record.capitalContextReview ?? composeOnboardingCapitalContextReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      clientCode: record.clientCode,
+      clientName: record.clientName,
+      relatedCapital: record.capitalContextReview?.relatedCapital,
+      reusedExisting: Boolean(record.capitalContextReview?.reusedExisting),
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Capital context review for ${record.clientCode ?? 'unscoped client'}: ${pack.status}`,
+      pack.clientCode ? `ClientCode: ${pack.clientCode}` : 'ClientCode: not assigned',
+      `Related entitled capital: ${pack.relatedCapitalCount} (from entitled ids)`,
+      pack.capitalContextReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled capital context: reused'
+          : 'Governed onboarding capital context: reconciled'
+        : 'Existing entitled capital context: not confirmed',
+      pack.reusedExisting ? 'No duplicate capital created.' : 'Atlas did not invent capital ids, lender criteria, amounts, or ClientCodes.',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'Existing entitled same-scope capital context is reconciled.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent lender names, amounts, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
   if (q.includes('agent assignment') || q.includes('assigned agent') || q.includes('agent review')) {
     const pack = record.agentAssignmentReview ?? composeOnboardingAgentAssignmentReview({
       identityResolutionRequired: record.identityResolutionRequired,
@@ -2146,6 +2731,8 @@ export function answerOnboardingContext(
       projectId: record.projectId,
       projectName: record.projectName,
       milestones: record.milestones,
+      milestoneIds: record.milestoneIds,
+      reusedExisting: Boolean(record.milestoneReview?.reusedExisting),
       blockers: record.blockers,
       communicationPolicy: record.communicationPolicy,
     });
@@ -2154,6 +2741,12 @@ export function answerOnboardingContext(
       pack.projectName ? `Project: ${pack.projectName}` : '',
       `Milestones: ${pack.completeCount}/${pack.milestoneCount} complete`,
       pack.nextMilestone ? `Next: ${pack.nextMilestone}` : '',
+      pack.milestoneReconciled
+        ? pack.reusedExisting
+          ? 'Existing entitled milestones: reused'
+          : 'Governed onboarding milestones: reconciled'
+        : 'Existing entitled milestones: not confirmed',
+      pack.reusedExisting ? 'No duplicate milestones created.' : 'Atlas did not invent or duplicate milestones.',
       pack.items.length ? `Open: ${pack.items.join('; ')}` : 'No open onboarding milestones.',
       `Communication policy: ${pack.communicationPolicy}`,
       `Next owner action: ${pack.nextOwnerAction}`,
@@ -2223,7 +2816,13 @@ export function answerOnboardingContext(
       `Documents missing: ${handoff.missingDocumentCount}`,
       `Communication policy: ${handoff.communicationPolicy}`,
       `Related entitled threads: ${handoff.relatedThreadCount} (DRAFT_ONLY, no send)`,
+      handoff.relatedThreadCount > 0
+        ? 'Existing entitled communications: reused'
+        : 'Existing entitled communications: not confirmed',
       handoff.capitalScope ? 'Capital: PREPARE_ONLY (external submit owner-gated)' : 'Capital: none in scope',
+      record.capitalContextReconciled
+        ? 'Existing entitled capital context: reused'
+        : 'Existing entitled capital context: not confirmed',
       handoff.ownerAttention.length ? `Owner attention: ${handoff.ownerAttention.join('; ')}` : '',
       `Next owner action: ${handoff.nextOwnerAction}`,
       'Atlas did not send mail, launch GTM, or submit capital.',
@@ -2239,6 +2838,9 @@ export function answerOnboardingContext(
       `Milestone: ${kickoff.milestoneStatus}`,
       `Documents missing: ${kickoff.missingDocumentCount}`,
       `Related entitled threads: ${kickoff.relatedThreadCount} (DRAFT_ONLY, no send)`,
+      kickoff.relatedThreadCount > 0
+        ? 'Existing entitled communications: reused'
+        : 'Existing entitled communications: not confirmed',
       `Communication policy: ${kickoff.communicationPolicy}`,
       kickoff.ownerAttention.length ? `Owner attention: ${kickoff.ownerAttention.join('; ')}` : '',
       `Next owner action: ${kickoff.nextOwnerAction}`,
@@ -2255,9 +2857,34 @@ export function answerOnboardingContext(
     record.projectName ? `Project: ${record.projectName}` : '',
     `Documents missing: ${record.documentGaps.filter((d) => d.status === 'MISSING').length}`,
     `Communication policy: ${record.communicationPolicy}`,
+    record.communicationContextReconciled
+      ? 'Existing entitled communications: reused'
+      : 'Existing entitled communications: not confirmed',
+    record.capitalContextReconciled
+      ? 'Existing entitled capital context: reused'
+      : 'Existing entitled capital context: not confirmed',
   ]
     .filter(Boolean)
     .join('\n');
+}
+
+export function mapsToCommunicationContextIntent(question: string): boolean {
+  const q = question.toLowerCase();
+  if (q.includes('communication context') || q.includes('onboarding comm') || q.includes('onboarding communication')) {
+    return true;
+  }
+  if (q.includes('related thread') || q.includes('related email') || q.includes('related comm')) return true;
+  if (q.includes('entitled thread') || q.includes('entitled email')) return true;
+  if (q.includes('onboarding thread') || q.includes('onboarding email')) return true;
+  return q.includes('communication') && (q.includes('thread') || q.includes('email') || q.includes('comms'));
+}
+
+export function mapsToCapitalContextIntent(question: string): boolean {
+  const q = question.toLowerCase();
+  if (q.includes('capital context') || q.includes('onboarding capital')) return true;
+  if (q.includes('related capital') || q.includes('entitled capital')) return true;
+  if (q.includes('capital packet') || q.includes('related-capital')) return true;
+  return q.includes('capital') && (q.includes('reconcile') || q.includes('reuse') || q.includes('packet') || q.includes('project'));
 }
 
 export function mapsToRealtimeDocumentsHonestyIntent(question: string): boolean {
@@ -2273,6 +2900,8 @@ export function mapsToRealtimeDocumentsHonestyIntent(question: string): boolean 
 export function mapsToOnboardingContextIntent(question: string): boolean {
   const q = question.toLowerCase();
   if (mapsToRealtimeDocumentsHonestyIntent(question)) return true;
+  if (mapsToCommunicationContextIntent(question) && q.includes('onboarding')) return true;
+  if (mapsToCapitalContextIntent(question) && q.includes('onboarding')) return true;
   return q.includes('onboarding') && ONBOARDING_CONTEXT_PHRASES.some((phrase) => q.includes(phrase));
 }
 

@@ -58,6 +58,11 @@ import {
 } from './capitalSubmissionPrepare.ts';
 import { composeMailThreadRecords, emptyMailThreadPayload } from './mailThreadContext.ts';
 import {
+  clientBusinessMemoryPayloadFromRecord,
+  getOperatingRecordForClient,
+} from './clientBusinessMemory.ts';
+import { readBusinessMemoryOverlay, resolveBusinessMemoryDir } from './businessMemoryState.ts';
+import {
   composeResearchIntelligence,
   emptyResearchIntelligencePayload,
 } from './researchIntelligence.ts';
@@ -132,6 +137,8 @@ export interface ToolGatewayContext {
    * double of that function). Do not pass a second index or raw Graph.
    */
   entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
+  /** Hub data dir for durable overlays (business memory, etc.). */
+  dataDir?: string;
   /**
    * Already-loaded entitled index rows (searchSharePointPm / desk search).
    * get_client_context copies project_operating_record_v1 from these only.
@@ -549,6 +556,13 @@ export function getClientContext(ctx: ToolGatewayContext): ClientContextToolResu
     onboarding: composeBoundClientOnboarding(ctx, binding),
     clientSupport: composeBoundClientSupport(ctx, binding),
   };
+  if (ctx.dataDir && binding.clientCode) {
+    const overlay = readBusinessMemoryOverlay(resolveBusinessMemoryDir(ctx.dataDir));
+    const memoryRecord = getOperatingRecordForClient(overlay, binding.clientCode);
+    if (memoryRecord) {
+      clientContext.businessMemory = clientBusinessMemoryPayloadFromRecord(memoryRecord);
+    }
+  }
   const honestEmpty = clientContext.honestEmpty && items.length === 0;
   const result = honestEmpty ? 'honest_empty' : 'answered';
   return {
