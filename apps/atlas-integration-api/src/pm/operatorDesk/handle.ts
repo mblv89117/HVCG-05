@@ -29,6 +29,7 @@ import {
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
   CAPITAL_SUBMISSION_POLICY_CLASS,
+  CLIENT_SUPPORT_AGENT_POLICY_CLASS,
   COMMUNICATIONS_POLICY_CLASS,
   GET_CLIENT_CONTEXT_TOOL,
   clientContextMissionKey,
@@ -45,6 +46,7 @@ import {
   isOperatorApprovalsPath,
   isOperatorCommunicationPoliciesPath,
   wantsOperatorJson,
+  type AtlasAuthorizedSearchHit,
   type OperatorDeskModel,
 } from './types.ts';
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
@@ -145,6 +147,12 @@ import {
   COMMUNICATION_POLICY_HONESTY_MISSION_KEY,
   mapsToCommunicationPolicyHonestyIntent,
 } from './communicationPolicyHonesty.ts';
+import { composeClientSupportAgent } from './clientSupportAgent.ts';
+import {
+  answerClientSupportHonesty,
+  CLIENT_SUPPORT_HONESTY_MISSION_KEY,
+  mapsToClientSupportHonestyIntent,
+} from './clientSupportHonesty.ts';
 import {
   answerHistoricalReconstructionHonesty,
   HISTORICAL_RECONSTRUCTION_MISSION_KEY,
@@ -180,6 +188,55 @@ async function loadOwnerApprovalTasks(opts: {
     return cc.ownerApprovals ?? [];
   }
   return [];
+}
+
+function alreadyVisibleSupportHits(model: OperatorDeskModel): AtlasAuthorizedSearchHit[] {
+  const fromSearch: AtlasAuthorizedSearchHit[] = model.search.hits.map((hit) => ({
+    kind: hit.kind || 'search',
+    id: hit.id,
+    title: hit.title,
+    ...(hit.href ? { href: hit.href } : {}),
+    ...(hit.source ? { source: hit.source } : {}),
+    ...(hit.clientCode ? { clientCode: hit.clientCode } : {}),
+    ...(hit.webUrl ? { webUrl: hit.webUrl } : {}),
+    why: 'already-visible entitled desk search hit',
+    basedOn: 'operator desk search',
+    provenance: hit.provenance === 'CONFIRMED' || hit.provenance === 'LIKELY' || hit.provenance === 'PROPOSED'
+      ? hit.provenance
+      : 'PROPOSED',
+    classification: hit.provenance === 'CONFIRMED' || hit.provenance === 'LIKELY' || hit.provenance === 'PROPOSED'
+      ? hit.provenance
+      : 'PROPOSED',
+    ...(hit.preview ? { preview: hit.preview } : {}),
+    ...(hit.conversationId ? { conversationId: hit.conversationId } : {}),
+    ...(hit.direction ? { direction: hit.direction } : {}),
+    ...(hit.industry ? { industry: hit.industry } : {}),
+  }));
+  const queues = model.operatingPicture.queues;
+  const pictureItems = [
+    ...queues.needsAction,
+    ...queues.waiting,
+    ...queues.overdue,
+    ...queues.blocked,
+    ...queues.decisionRequired,
+    ...queues.atRisk,
+    ...queues.ready,
+  ];
+  const fromPicture: AtlasAuthorizedSearchHit[] = pictureItems.map((item) => ({
+    kind: item.kind,
+    id: item.id,
+    title: item.title,
+    ...(item.href ? { href: item.href } : {}),
+    source: 'operator_operating_picture',
+    clientCode: item.clientCode,
+    queue: item.queue,
+    ...(item.evidence ? { evidence: item.evidence } : {}),
+    why: item.evidence || 'already-visible entitled operator picture item',
+    basedOn: 'operator operating picture',
+    provenance: 'PROPOSED',
+    classification: 'PROPOSED',
+  }));
+  return [...fromSearch, ...fromPicture];
 }
 
 export { isOperatorDeskPath };
@@ -1170,6 +1227,50 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['communication_policy_honesty'],
             policyClass: COMMUNICATIONS_POLICY_CLASS,
             missionKey: COMMUNICATION_POLICY_HONESTY_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToClientSupportHonestyIntent(question)) {
+      const entitled = entitledClientCodes(principal);
+      const supportPayload = composeClientSupportAgent(alreadyVisibleSupportHits(model));
+      const supportAnswer = answerClientSupportHonesty(question, {
+        entitledCodes: entitled,
+        entitledItems: supportPayload.items.map((item) => ({
+          supportId: item.id,
+          title: item.title,
+          clientCode: item.clientCode,
+          evidenceKind: item.evidenceKind,
+          suggestedRoute: item.suggestedRoute,
+          fromExistingSupport: true,
+        })),
+      });
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: supportAnswer,
+        workflowId: 'client-support-honesty',
+        workflowName: match.clientCode
+          ? `Client support — ${match.clientCode}`
+          : 'Client support',
+        clientCode: match.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          clientSupportAnswer: supportAnswer,
+          clientSupport: supportPayload,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['client_support_honesty'],
+            policyClass: CLIENT_SUPPORT_AGENT_POLICY_CLASS,
+            missionKey: CLIENT_SUPPORT_HONESTY_MISSION_KEY,
             autoSend: false,
           },
         },
