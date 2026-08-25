@@ -1,8 +1,9 @@
 /**
  * Related operating context on already-authorized DocumentOperatingRecord
  * items, the inverse on MeetingOperatingRecord items, the inverse
- * project → meetings, project → documents, and project → peer
- * projects links on ProjectOperatingRecord items, the inverse
+ * project → meetings, project → documents, project → peer
+ * projects, and project → threads links on ProjectOperatingRecord
+ * items, the inverse
  * mail-thread → meetings, mail-thread → documents,
  * mail-thread suggestedDraft.suggestedAttachments,
  * mail-thread suggestedDraft.suggestedProjects,
@@ -601,29 +602,37 @@ export function attachRelatedContextToMeetings(
 
 /**
  * Inverse of meeting relatedProject + document.relatedProject +
- * researchIntelligence.relatedMeetings + peer project rows: entitled
+ * researchIntelligence.relatedMeetings + peer project rows +
+ * thread.researchRelationship / document.relatedEmail: entitled
  * same-scope meetings already on authorizedSearch.meetings.items or
  * hits kind=meeting, entitled same-scope documents already on
  * authorizedSearch.documents.items or hits kind=document (reuses
  * relatedDocumentsForMeeting / RelatedMeetingDocumentRef — no new
  * document query), entitled same-scope research already on
  * authorizedSearch.researchIntelligence.items (no new research
- * query), and entitled same-scope *other* project operating records
+ * query), entitled same-scope *other* project operating records
  * already on authorizedSearch.projects.items (reuses relatedProjects /
- * RelatedDocumentProjectRef — no new project query; self skipped).
- * Isolation: sameRelatedScope + entitledClientCodes +
+ * RelatedDocumentProjectRef — no new project query; self skipped),
+ * and entitled same-scope mail-thread operating records already on
+ * authorizedSearch.threads.items (reuses relatedEmails /
+ * RelatedDocumentEmailRef — no new query). Isolation:
+ * sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit researchRelationship / relatedDocuments /
- * relatedProjects rather than guess. Unscoped never receives scoped
- * relations. Unscoped lender catalog titles never attach to a scoped
- * project. Client A never receives Client B. Self never appears on
- * relatedProjects (relatedProjects skips project.id === item.id).
- * SAS / anonymous webUrl dropped. No downloadUrl. No transcript
- * text. No TargetAmount. No invented titles / ids / ClientCodes /
- * Hub-MI / milestone rows. historicalHvs / hubMiRow copy from the
- * entitled source project only — never invent hubMiRow=true.
- * Classification / invented / hubMiRow stay as composed on the
- * source project row.
+ * relatedProjects / relatedThreads rather than guess. Unscoped
+ * never receives scoped relations. Unscoped lender catalog titles
+ * never attach to a scoped project. Client A never receives Client B.
+ * Self never appears on relatedProjects (relatedProjects skips
+ * project.id === item.id). SAS / anonymous webUrl dropped. No
+ * downloadUrl. No transcript text. No TargetAmount. No preview
+ * body / suggestedDraft / send on the thread refs. No invented
+ * titles / ids / ClientCodes / Hub-MI / milestone rows.
+ * historicalHvs / hubMiRow copy from the entitled source project
+ * only — never invent hubMiRow=true. Classification / invented /
+ * hubMiRow stay as composed on the source project row. DRAFT_ONLY /
+ * send=false / autoRespond=false / indexedPreviewOnly stay as
+ * composed on the source thread payload. Not a second
+ * communications or search product.
  */
 export function attachRelatedContextToProject(
   principal: AtlasPrincipal,
@@ -639,12 +648,16 @@ export function attachRelatedContextToProject(
   const relatedProjectsList = canonicalClientCode(item.clientCode)
     ? relatedProjects(item, search)
     : [];
+  const relatedThreads = canonicalClientCode(item.clientCode)
+    ? relatedEmails(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
     ...(researchRelationship.length ? { researchRelationship } : {}),
     ...(relatedDocuments.length ? { relatedDocuments } : {}),
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
+    ...(relatedThreads.length ? { relatedThreads } : {}),
   };
 }
 
