@@ -111,6 +111,27 @@ export type OnboardingOwnerAttention = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical MILESTONE REVIEW package. Surfaces already-known milestone state. No invented dates. */
+export type OnboardingMilestoneReview = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  milestoneCount: number;
+  completeCount: number;
+  blockedCount: number;
+  pendingCount: number;
+  items: string[];
+  nextMilestone?: string;
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 export type OnboardingRunRecord = {
   workflowId: string;
   workflowDefinitionId: string;
@@ -140,6 +161,7 @@ export type OnboardingRunRecord = {
   kickoff: OnboardingKickoff;
   blockerReview: OnboardingBlockerReview;
   ownerAttentionPackage: OnboardingOwnerAttention;
+  milestoneReview?: OnboardingMilestoneReview;
   provenance: string;
 };
 
