@@ -24,6 +24,7 @@ import {
   searchAuthorizedKnowledgeSync,
   type ToolGatewayContext,
 } from './toolGateway.ts';
+import { mapsToOnboardingContextIntent } from './clientOnboardingAutomation.ts';
 import {
   ASK_ATLAS_ATTENTION_NL_MISSION_KEY,
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
@@ -285,6 +286,7 @@ export function mapsToSearchAuthorizedKnowledge(question: string): boolean {
   if (isOwnerGatedQuestion(question)) return false;
   if (mapsToGetAttentionItems(question)) return false;
   if (mapsToGetClientContext(question)) return false;
+  if (mapsToOnboardingContextIntent(question)) return false;
   return extractSearchAuthorizedQuery(question) !== null;
 }
 

@@ -99,4 +99,12 @@ describe('Elite GlobalSearch vs nav RBAC', () => {
     assert.match(trailing, /aria-label="Ask Atlas"/);
     assert.match(trailing, /setAiOpen\(true\)/);
   });
+
+  it('Ask Atlas onboarding-status NL uses Hub runtime, not SharePoint searchPm', () => {
+    assert.match(appShell, /routeAskAtlasPrompt/);
+    const runPrompt = slice(appShell, 'onRunPrompt={async (prompt)', 'onAction={async');
+    assert.match(runPrompt, /fetchOperatorRuntime\(hubAuth, prompt\)/);
+    assert.match(runPrompt, /hub_runtime_onboarding/);
+    assert.doesNotMatch(runPrompt, /searchPm/);
+  });
 });
