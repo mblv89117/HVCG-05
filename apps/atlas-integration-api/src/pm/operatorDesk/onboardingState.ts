@@ -132,6 +132,25 @@ export type OnboardingMilestoneReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical COMPLETION package. Rollup of already-known package statuses. No send. */
+export type OnboardingCompletion = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  packageCount: number;
+  readyCount: number;
+  blockedCount: number;
+  openItems: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 export type OnboardingRunRecord = {
   workflowId: string;
   workflowDefinitionId: string;
@@ -162,6 +181,7 @@ export type OnboardingRunRecord = {
   blockerReview: OnboardingBlockerReview;
   ownerAttentionPackage: OnboardingOwnerAttention;
   milestoneReview?: OnboardingMilestoneReview;
+  completion?: OnboardingCompletion;
   provenance: string;
 };
 
