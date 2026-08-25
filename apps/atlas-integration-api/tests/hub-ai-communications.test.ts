@@ -3,6 +3,7 @@
  * + ATLAS-AI-COMMS-SUGGESTED-ATTACHMENTS-001
  * + ATLAS-AI-COMMS-SUGGESTED-PROJECTS-001
  * + ATLAS-AI-COMMS-DRAFT-ROUTING-001
+ * + ATLAS-AI-COMMS-DRAFT-ESCALATION-001
  * Smallest Hub increment: thread context on already-indexed entitled mail
  * so the owner does not need Outlook. Indexed preview only. DRAFT_ONLY.
  * Never AUTO_RESPOND / send. No invented amounts or deadlines.
@@ -13,9 +14,11 @@
  * already-entitled same-scope project operating-record refs (same
  * RelatedDocumentProjectRef / relatedProjects path). suggestedDraft.routing
  * copies the entitled canonical ClientCode plus the first entitled
- * suggestedProjects id/title. Missing / non-canonical ClientCode omits
- * them. Client A never receives Client B. No downloadUrl / contentBytes /
- * TargetAmount / Hub-MI invention. Routing a draft is NOT send.
+ * suggestedProjects id/title. suggestedDraft.escalation copies already-
+ * detected unansweredQuestions from THAT entitled thread only. Missing /
+ * non-canonical ClientCode omits them. Client A never receives Client B.
+ * No downloadUrl / contentBytes / TargetAmount / Hub-MI invention.
+ * Routing / escalating a draft is NOT send.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -1601,5 +1604,351 @@ describe('ATLAS-AI-COMMS-DRAFT-ROUTING-001 entitled draft routing target', () =>
     assertSuggestedProjectsHonesty(thread);
     assertSuggestedAttachmentsHonesty(thread);
     noInvent(thread.suggestedDraft);
+  });
+});
+
+function syn01UnansweredQuestion() {
+  return {
+    text: 'Can you confirm the next entitled document?',
+    classification: 'CONFIRMED' as const,
+    evidence: 'Can you confirm the next entitled document?',
+  };
+}
+
+function syn01ThreadRecordWithQuestion(
+  overrides: Partial<MailThreadOperatingRecord> = {},
+): MailThreadOperatingRecord {
+  const question = syn01UnansweredQuestion();
+  return syn01ThreadRecord({
+    preview: question.evidence,
+    unansweredQuestions: [question],
+    classification: 'CONFIRMED',
+    ...overrides,
+  });
+}
+
+function assertSuggestedDraftEscalationHonesty(item: MailThreadOperatingRecord): void {
+  assert.equal(item.invented, false);
+  assert.equal(item.summarySource, 'indexed_preview_only');
+  assert.equal(item.suggestedDraft.send, false);
+  assert.equal(item.suggestedDraft.autoRespond, false);
+  assert.equal(item.suggestedDraft.policyClass, 'DRAFT_ONLY');
+  assert.equal(item.suggestedDraft.status, 'draft');
+  const escalation = item.suggestedDraft.escalation;
+  if (!escalation) return;
+  assert.equal(escalation.required, true);
+  assert.equal(escalation.invented, false);
+  assert.ok(escalation.unansweredQuestions.length);
+  assert.ok(
+    escalation.classification === 'CONFIRMED' ||
+      escalation.classification === 'LIKELY' ||
+      escalation.classification === 'PROPOSED',
+  );
+  const blob = JSON.stringify(escalation);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(blob.includes('Hub-MI'), false);
+  assert.equal('mailbox' in escalation, false);
+  assert.equal('TargetAmount' in escalation, false);
+  for (const question of escalation.unansweredQuestions) {
+    assert.ok(item.preview.includes(question.evidence));
+    const match = item.unansweredQuestions.find(
+      (row) =>
+        row.text === question.text &&
+        row.evidence === question.evidence &&
+        row.classification === question.classification,
+    );
+    assert.ok(match);
+  }
+}
+
+describe('ATLAS-AI-COMMS-DRAFT-ESCALATION-001 entitled draft escalation', () => {
+  it('copies existing unansweredQuestions onto suggestedDraft.escalation', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit(), syn01ProjectHit()],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.ok(thread.unansweredQuestions.length);
+    assert.ok(thread.suggestedDraft.escalation);
+    assert.equal(thread.suggestedDraft.escalation.required, true);
+    assert.equal(thread.suggestedDraft.escalation.invented, false);
+    assert.deepEqual(thread.suggestedDraft.escalation.unansweredQuestions, thread.unansweredQuestions);
+    const question = thread.suggestedDraft.escalation.unansweredQuestions.find((row) =>
+      /confirm the next entitled document/i.test(row.text),
+    );
+    assert.ok(question);
+    assert.ok(thread.preview.includes(question.evidence));
+    assert.ok(
+      thread.suggestedDraft.escalation.classification === 'CONFIRMED' ||
+        thread.suggestedDraft.escalation.classification === 'LIKELY' ||
+        thread.suggestedDraft.escalation.classification === 'PROPOSED',
+    );
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedDraftEscalationHonesty(thread);
+    noInvent(thread.suggestedDraft);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: picture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [syn01ThreadHit(), syn01AttachmentHit(), syn01ProjectHit()],
+    });
+    const ctxThread = viaIndex.clientContext.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(ctxThread);
+    assert.deepEqual(ctxThread.suggestedDraft.escalation, thread.suggestedDraft.escalation);
+    assertDraftOnly(viaIndex.clientContext.threads);
+  });
+
+  it('omits escalation when unansweredQuestions are empty', () => {
+    const omitted = attachRelatedContextToMailThread(staff, syn01ThreadRecord(), searchWithProjects());
+    assert.equal(omitted.unansweredQuestions.length, 0);
+    assert.equal(omitted.suggestedDraft.escalation, undefined);
+    assert.equal('escalation' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+    assertSuggestedDraftEscalationHonesty(omitted);
+  });
+
+  it('still attaches routing, suggestedAttachments, and suggestedProjects beside escalation', () => {
+    const attached = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecordWithQuestion(),
+      searchWithProjects(),
+    );
+    assert.ok(attached.suggestedDraft.escalation);
+    assert.equal(attached.suggestedDraft.escalation.required, true);
+    assert.deepEqual(attached.suggestedDraft.escalation.unansweredQuestions, attached.unansweredQuestions);
+    assert.equal(attached.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.equal(attached.suggestedDraft.routing?.projectId, 'proj-syn-1');
+    assert.equal(attached.suggestedDraft.suggestedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(attached.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal('relatedProjects' in attached, false);
+    assert.equal(attached.suggestedDraft.send, false);
+    assert.equal(attached.suggestedDraft.autoRespond, false);
+    assertSuggestedDraftEscalationHonesty(attached);
+    assertSuggestedDraftRoutingHonesty(attached);
+    assertSuggestedProjectsHonesty(attached);
+    assertSuggestedAttachmentsHonesty(attached);
+  });
+
+  it('omits escalation when ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecordWithQuestion({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(omitted.suggestedDraft.escalation, undefined);
+    assert.equal('escalation' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.routing, undefined);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('omits escalation when ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecordWithQuestion({
+        id: 'mail-noncanonical',
+        clientCode: 'syn01',
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(omitted.suggestedDraft.escalation, undefined);
+    assert.equal('escalation' in omitted.suggestedDraft, false);
+    assert.equal(omitted.suggestedDraft.routing, undefined);
+    assert.equal(omitted.suggestedDraft.send, false);
+    assert.equal(omitted.suggestedDraft.autoRespond, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('never attaches Client B escalation to a Client A suggested draft', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ThreadHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit({
+            id: 'mail-pdg-1',
+            title: 'PDG01 leak follow-up',
+            href: '/clients/PDG01',
+            clientCode: 'PDG01',
+            conversationId: 'conv-pdg-1',
+            preview: 'Can you send the PDG01 leak package?',
+          }),
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.ok(thread.suggestedDraft.escalation);
+    assert.equal(
+      thread.suggestedDraft.escalation.unansweredQuestions.some((row) =>
+        /confirm the next entitled document/i.test(row.text),
+      ),
+      true,
+    );
+    const escalationBlob = JSON.stringify(thread.suggestedDraft.escalation);
+    assert.equal(escalationBlob.includes('PDG01'), false);
+    assert.equal(escalationBlob.includes('leak package'), false);
+    assert.equal(thread.suggestedDraft.routing?.clientCode, 'SYN01');
+    assert.notEqual(thread.suggestedDraft.routing?.clientCode, 'PDG01');
+    assert.equal(thread.suggestedDraft.suggestedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(thread.suggestedDraft.suggestedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+
+    const mixed = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecordWithQuestion(),
+      searchWithProjects(),
+    );
+    assert.ok(mixed.suggestedDraft.escalation);
+    assert.equal(JSON.stringify(mixed.suggestedDraft.escalation).includes('PDG01'), false);
+    assert.equal(JSON.stringify(mixed.suggestedDraft.escalation).includes('leak package'), false);
+    assert.deepEqual(mixed.suggestedDraft.escalation.unansweredQuestions, mixed.unansweredQuestions);
+    assert.equal(mixed.suggestedDraft.send, false);
+    assert.equal(mixed.suggestedDraft.autoRespond, false);
+    assertSuggestedDraftEscalationHonesty(mixed);
+  });
+
+  it('unscoped never receives scoped escalation', () => {
+    const unscoped = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecordWithQuestion({
+        id: 'mail-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(unscoped.suggestedDraft.escalation, undefined);
+    assert.equal('escalation' in unscoped.suggestedDraft, false);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.suggestedDraft.send, false);
+    assert.equal(unscoped.suggestedDraft.autoRespond, false);
+  });
+
+  it('omits escalation for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ThreadHit(), syn01AttachmentHit(), syn01ProjectHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.threads.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.threads.items.some((row) => row.suggestedDraft.escalation),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.threads);
+    assert.equal(unknownBlob.includes('confirm the next entitled document'), false);
+    assert.equal(unknown.authorizedSearch.threads.send, false);
+    assert.equal(unknown.authorizedSearch.threads.autoRespond, false);
+
+    const denied = attachRelatedContextToMailThread(
+      otherStaff,
+      syn01ThreadRecordWithQuestion(),
+      searchWithProjects(),
+    );
+    assert.equal(denied.suggestedDraft.escalation, undefined);
+    assert.equal('escalation' in denied.suggestedDraft, false);
+    assert.equal(denied.suggestedDraft.send, false);
+    assert.equal(denied.suggestedDraft.autoRespond, false);
+  });
+
+  it('never invents question text, TargetAmount, downloadUrl, Hub-MI, or send on escalation', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: picture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            ...syn01ThreadHit(),
+            downloadUrl: 'https://evil.example/download',
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01AttachmentHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'InventedBytes',
+            TargetAmount: 5000000,
+          },
+          {
+            ...syn01ProjectHit(),
+            downloadUrl: 'https://evil.example/download',
+            TargetAmount: 5000000,
+            'Hub-MI': true,
+            transcript: 'Invented transcript text',
+          },
+        ],
+      }),
+    });
+    const thread = result.authorizedSearch.threads.items.find((row) => row.conversationId === 'conv-syn-1');
+    assert.ok(thread);
+    assert.ok(thread.suggestedDraft.escalation);
+    assert.equal(
+      thread.suggestedDraft.escalation.unansweredQuestions.some((row) =>
+        /What is the TargetAmount|invented question/i.test(row.text),
+      ),
+      false,
+    );
+    assert.deepEqual(thread.suggestedDraft.escalation.unansweredQuestions, thread.unansweredQuestions);
+    const blob = JSON.stringify(result.authorizedSearch.threads);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(blob.includes('Hub-MI'), false);
+    assert.equal(thread.suggestedDraft.send, false);
+    assert.equal(thread.suggestedDraft.autoRespond, false);
+    assert.equal('relatedProjects' in thread, false);
+    assertDraftOnly(result.authorizedSearch.threads);
+    assertSuggestedDraftEscalationHonesty(thread);
+    assertSuggestedDraftRoutingHonesty(thread);
+    assertSuggestedProjectsHonesty(thread);
+    assertSuggestedAttachmentsHonesty(thread);
+    noInvent(thread.suggestedDraft);
+
+    const inventedEvidence = attachRelatedContextToMailThread(
+      staff,
+      syn01ThreadRecordWithQuestion({
+        unansweredQuestions: [
+          {
+            text: 'What is the invented TargetAmount?',
+            classification: 'CONFIRMED',
+            evidence: 'What is the invented TargetAmount?',
+          },
+        ],
+      }),
+      searchWithProjects(),
+    );
+    assert.equal(inventedEvidence.suggestedDraft.escalation, undefined);
+    assert.equal('escalation' in inventedEvidence.suggestedDraft, false);
+    assert.equal(inventedEvidence.suggestedDraft.send, false);
+    assert.equal(inventedEvidence.suggestedDraft.autoRespond, false);
   });
 });

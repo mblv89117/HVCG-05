@@ -5,8 +5,9 @@
  * ProjectOperatingRecord items, the inverse
  * mail-thread → meetings, mail-thread → documents,
  * mail-thread suggestedDraft.suggestedAttachments,
- * mail-thread suggestedDraft.suggestedProjects, and
- * mail-thread suggestedDraft.routing links on
+ * mail-thread suggestedDraft.suggestedProjects,
+ * mail-thread suggestedDraft.routing, and
+ * mail-thread suggestedDraft.escalation links on
  * MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings, capital-prepare → documents,
  * and capital-prepare → research links on CapitalSubmissionPrepareRecord
@@ -79,6 +80,8 @@ import {
   type RelatedDocumentEmailRef,
   type RelatedDocumentMeetingRef,
   type AskAtlasClassification,
+  type MailThreadDetectedItem,
+  type MailThreadSuggestedDraftEscalation,
   type MailThreadSuggestedDraftRouting,
   type RelatedDocumentProjectRef,
   type RelatedMeetingDocumentRef,
@@ -668,20 +671,24 @@ export function attachRelatedContextToProjects(
  * hubMiRow=true. suggestedDraft.routing copies the already-entitled
  * canonical ClientCode plus the first entitled suggestedProjects
  * id/title — never invent a client, project, mailbox, or TargetAmount.
- * Isolation: sameRelatedScope + entitledClientCodes +
- * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
- * non-canonical — omit researchRelationship / relatedDocuments /
+ * suggestedDraft.escalation copies already-detected unansweredQuestions
+ * from THAT entitled thread only — never invent questions, commitments,
+ * amounts, deadlines, ClientCodes, or Hub-MI. Isolation:
+ * sameRelatedScope + entitledClientCodes + mayReceiveRelatedContext.
+ * Fail-closed when ClientCode is missing / non-canonical — omit
+ * researchRelationship / relatedDocuments /
  * suggestedDraft.suggestedAttachments /
- * suggestedDraft.suggestedProjects / suggestedDraft.routing rather
- * than guess. Unscoped never receives scoped relations. Unscoped
- * lender catalog titles never attach to a scoped thread. Client A
- * never receives Client B. SAS / anonymous webUrl dropped. No
- * downloadUrl. No contentBytes. binariesInAtlas stays false. No
- * transcript text. No preview body / send on the document refs.
- * Never invent attachment / project names, ids, counts, ClientCodes,
- * Hub-MI, financing, or TargetAmount. DRAFT_ONLY / autoRespond=false /
- * send=false / indexedPreviewOnly stay as composed on the thread
- * payload. Routing a draft is NOT send and NOT AUTO_RESPOND.
+ * suggestedDraft.suggestedProjects / suggestedDraft.routing /
+ * suggestedDraft.escalation rather than guess. Unscoped never receives
+ * scoped relations. Unscoped lender catalog titles never attach to a
+ * scoped thread. Client A never receives Client B. SAS / anonymous
+ * webUrl dropped. No downloadUrl. No contentBytes. binariesInAtlas
+ * stays false. No transcript text. No preview body / send on the
+ * document refs. Never invent attachment / project names, ids, counts,
+ * ClientCodes, Hub-MI, financing, or TargetAmount. DRAFT_ONLY /
+ * autoRespond=false / send=false / indexedPreviewOnly stay as composed
+ * on the thread payload. Routing / escalating a draft is NOT send and
+ * NOT AUTO_RESPOND.
  */
 export function attachRelatedContextToMailThread(
   principal: AtlasPrincipal,
@@ -701,10 +708,12 @@ export function attachRelatedContextToMailThread(
     ? relatedProjects(item, search)
     : [];
   const routing = draftRouting(item, suggestedProjects);
+  const escalation = draftEscalation(item);
   const suggestedDraftExtras = {
     ...(suggestedAttachments.length ? { suggestedAttachments } : {}),
     ...(suggestedProjects.length ? { suggestedProjects } : {}),
     ...(routing ? { routing } : {}),
+    ...(escalation ? { escalation } : {}),
   };
   return {
     ...item,
@@ -753,6 +762,51 @@ function draftRouting(
     classification,
     invented: false,
   };
+}
+
+/**
+ * Already-detected unansweredQuestions on THIS entitled thread.
+ * Fail-closed: missing / non-canonical ClientCode or empty entitled
+ * questions omit escalation rather than guess. Evidence must stay a
+ * substring of the thread preview. Never invent question text.
+ */
+function draftEscalation(
+  item: MailThreadOperatingRecord,
+): MailThreadSuggestedDraftEscalation | undefined {
+  const clientCode = canonicalClientCode(item.clientCode);
+  if (!clientCode) return undefined;
+  const unansweredQuestions = entitledUnansweredQuestions(item);
+  if (!unansweredQuestions.length) return undefined;
+  const classification =
+    askAtlasClassification(item.classification) ||
+    askAtlasClassification(unansweredQuestions[0]?.classification) ||
+    'PROPOSED';
+  return {
+    required: true,
+    unansweredQuestions,
+    classification,
+    invented: false,
+  };
+}
+
+function entitledUnansweredQuestions(item: MailThreadOperatingRecord): MailThreadDetectedItem[] {
+  const copied: MailThreadDetectedItem[] = [];
+  const seen = new Set<string>();
+  for (const row of item.unansweredQuestions) {
+    const text = (row.text || '').trim();
+    const evidence = (row.evidence || '').trim();
+    if (!text || !evidence) continue;
+    if (!item.preview.includes(evidence)) continue;
+    const key = `${text.toLowerCase()}\n${evidence.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    copied.push({
+      text,
+      classification: row.classification,
+      evidence,
+    });
+  }
+  return copied;
 }
 
 export function attachRelatedContextToMailThreads(

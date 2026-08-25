@@ -195,9 +195,10 @@ export function mailThreadPayloadHasInventedFacts(payload: MailThreadOperatingPa
     for (const item of [...row.commitments, ...row.unansweredQuestions]) {
       if (!row.preview.includes(item.evidence)) return true;
     }
-    // suggestedAttachments / suggestedProjects / routing are copied
-    // refs, never invented names/ids/counts/ClientCodes/Hub-MI/TargetAmount.
-    // send / autoRespond stay DRAFT_ONLY even when refs are present.
+    // suggestedAttachments / suggestedProjects / routing / escalation are
+    // copied refs, never invented names/ids/counts/questions/ClientCodes/
+    // Hub-MI/TargetAmount. send / autoRespond stay DRAFT_ONLY even when
+    // refs are present.
     if (row.suggestedDraft.suggestedAttachments) {
       if (row.suggestedDraft.send || row.suggestedDraft.autoRespond) return true;
       for (const attachment of row.suggestedDraft.suggestedAttachments) {
@@ -223,6 +224,24 @@ export function mailThreadPayloadHasInventedFacts(payload: MailThreadOperatingPa
         if (!first || first.id !== routing.projectId || first.title !== routing.projectTitle) {
           return true;
         }
+      }
+    }
+    if (row.suggestedDraft.escalation) {
+      if (row.suggestedDraft.send || row.suggestedDraft.autoRespond) return true;
+      const escalation = row.suggestedDraft.escalation;
+      if (escalation.invented) return true;
+      if (escalation.required !== true) return true;
+      if (!escalation.unansweredQuestions.length) return true;
+      if (/TargetAmount|downloadUrl|Hub-MI/i.test(JSON.stringify(escalation))) return true;
+      for (const question of escalation.unansweredQuestions) {
+        if (!row.preview.includes(question.evidence)) return true;
+        const match = row.unansweredQuestions.some(
+          (existing) =>
+            existing.text === question.text &&
+            existing.evidence === question.evidence &&
+            existing.classification === question.classification,
+        );
+        if (!match) return true;
       }
     }
   }
