@@ -312,14 +312,19 @@ export interface AtlasClientContext {
    * RelatedDocumentEmailRef / relatedEmails path as research-intel /
    * onboarding / client-support). Missing / non-canonical ClientCode
    * omits researchRelationship / relatedDocuments / relatedAttachments
-   * / relatedProjects / relatedThreads (fail-closed; never guess).
-   * Unscoped lender catalog titles never attach scoped documents,
-   * attachments, projects, or threads. No downloadUrl. No contentBytes.
+   * / relatedProjects / relatedThreads / relatedCapital
+   * (fail-closed; never guess). Optional relatedCapital copies
+   * already-entitled same-scope *other* capital-prepare refs (peer
+   * rows, never self; same RelatedDocumentCapitalRef / relatedCapital
+   * path as research-intel / onboarding / client-support). Unscoped
+   * lender catalog titles never attach scoped documents, attachments,
+   * projects, threads, or capital. No downloadUrl. No contentBytes.
    * binariesInAtlas stays false. No preview body / suggestedDraft /
    * send on the thread refs. No TargetAmount. historicalHvs / hubMiRow
    * copy from the entitled source project only — never invent
    * hubMiRow=true. PREPARE_ONLY / send=false / externalSubmit=false /
-   * ownerGated=true / financingStatus UNKNOWN stay as composed.
+   * ownerGated=true / financingStatus UNKNOWN stay as composed on the
+   * host row and the relatedCapital refs.
    * DRAFT_ONLY / send=false / autoRespond=false / indexedPreviewOnly
    * stay as composed on the source thread payload.
    */
@@ -1051,6 +1056,24 @@ export interface CapitalSubmissionPrepareRecord {
    * submit. Not send.
    */
   relatedThreads?: RelatedDocumentEmailRef[];
+  /**
+   * Already-entitled same-scope *other* capital-prepare refs (peer
+   * rows, never self). Reuses RelatedDocumentCapitalRef /
+   * relatedCapital() — the same entitled same-scope inverse already
+   * live on research-intel / onboarding / client-support. Copied
+   * after authorization. Omitted when none are entitled or when
+   * ClientCode is missing / non-canonical (fail-closed; never guess).
+   * Unscoped never receives scoped capital. Unscoped lender catalog
+   * titles never attach scoped capital. Client A never receives
+   * Client B. Self never appears (relatedCapital skips row.id ===
+   * item.id). Never downloadUrl, contentBytes, TargetAmount,
+   * invented titles / ids / counts, ClientCodes, Hub-MI, lender
+   * criteria, fit, or financing status. PREPARE_ONLY / send=false /
+   * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN
+   * stay as composed on the host row and the relatedCapital refs.
+   * Not a second capital product. Not external submit. Not send.
+   */
+  relatedCapital?: RelatedDocumentCapitalRef[];
 }
 
 export interface CapitalSubmissionPreparePayload {
