@@ -12,6 +12,7 @@ import {
   composeKickoff,
   composeOperationsHandoff,
   composeOwnerAttention,
+  composeMilestoneReview,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -100,6 +101,10 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.ownerAttentionPackage.ready, false);
     assert.equal(result.record.ownerAttentionPackage.send, false);
     assert.equal(result.record.ownerAttentionPackage.outbound, false);
+    assert.equal(result.record.milestoneReview.status, 'NOT_READY');
+    assert.equal(result.record.milestoneReview.ready, false);
+    assert.equal(result.record.milestoneReview.send, false);
+    assert.equal(result.record.milestoneReview.outbound, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -432,6 +437,10 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.ownerAttentionPackage.outbound, false);
     assert.equal(first.record?.ownerAttentionPackage.capitalSubmit, false);
     assert.equal(first.record?.ownerAttentionPackage.status, 'OPEN');
+    assert.equal(first.record?.milestoneReview.send, false);
+    assert.equal(first.record?.milestoneReview.outbound, false);
+    assert.equal(first.record?.milestoneReview.capitalSubmit, false);
+    assert.equal(first.record?.milestoneReview.status, 'OPEN');
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -895,6 +904,117 @@ describe('client onboarding automation', () => {
     assert.match(answer, /DRAFT_ONLY unless explicit policy permits/);
     assert.match(answer, /did not send mail/);
     assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+  });
+
+  it('prepares milestone review from entitled run facts and answers Ask Atlas milestones', () => {
+    const prepared = composeMilestoneReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      milestones: [
+        { id: 'identity_verified', label: 'Client identity verified', status: 'complete', provenance: 'CONFIRMED' },
+        { id: 'kickoff_ready', label: 'Kickoff ready', status: 'pending', provenance: 'PROPOSED' },
+      ],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.status, 'OPEN');
+    assert.equal(prepared.ready, false);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.completeCount, 1);
+    assert.equal(prepared.milestoneCount, 2);
+    assert.equal(prepared.nextMilestone, 'Kickoff ready');
+
+    const clear = composeMilestoneReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      milestones: [
+        { id: 'identity_verified', label: 'Client identity verified', status: 'complete', provenance: 'CONFIRMED' },
+      ],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(clear.status, 'CLEAR');
+    assert.equal(clear.ready, true);
+
+    const blocked = composeMilestoneReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      milestones: [
+        { id: 'documents_complete', label: 'Documents complete', status: 'blocked', provenance: 'CONFIRMED' },
+      ],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(blocked.status, 'BLOCKED');
+    assert.equal(blocked.ready, false);
+
+    const identity = composeMilestoneReview({
+      identityResolutionRequired: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'KICKOFF_PREPARATION' as const,
+      currentStep: 'Establish onboarding operating structure',
+      nextStep: 'Advance milestones',
+      blockers: [],
+      ownerAttention: [],
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1'],
+      milestoneIds: ['m1'],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [
+        { id: 'identity_verified', label: 'Client identity verified', status: 'complete' as const, provenance: 'CONFIRMED' as const },
+        { id: 'kickoff_ready', label: 'Kickoff ready', status: 'pending' as const, provenance: 'PROPOSED' as const },
+      ],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      milestoneReview: prepared,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What are the onboarding milestones for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What are the onboarding milestones for ACCG?'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What are the onboarding milestones for ACCG?'), false);
+    const answer = answerOnboardingContext('What are the onboarding milestones for ACCG?', record);
+    assert.match(answer, /Milestone review for ACCG01: OPEN/);
+    assert.match(answer, /Kickoff ready/);
+    assert.match(answer, /did not invent dates/);
+    assert.equal(/ACCG99|submitted|AUTO_RESPOND/i.test(answer), false);
   });
 
   it('restore env', () => {

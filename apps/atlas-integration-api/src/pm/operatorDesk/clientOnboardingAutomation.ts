@@ -25,6 +25,7 @@ import {
   type OnboardingMilestoneState,
   type OnboardingOperationsHandoff,
   type OnboardingOwnerAttention,
+  type OnboardingMilestoneReview,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -389,6 +390,69 @@ export function composeOwnerAttention(record: {
   };
 }
 
+export function composeMilestoneReview(record: {
+  identityResolutionRequired?: boolean;
+  workspaceReconciled?: boolean;
+  projectId?: string;
+  projectName?: string;
+  milestones?: OnboardingMilestoneState[];
+  blockers?: string[];
+  communicationPolicy?: OnboardingMilestoneReview['communicationPolicy'];
+}): OnboardingMilestoneReview {
+  const milestones = record.milestones ?? [];
+  const completeCount = milestones.filter((m) => m.status === 'complete').length;
+  const blockedCount = milestones.filter((m) => m.status === 'blocked').length;
+  const pendingCount = milestones.filter((m) => m.status === 'pending' || m.status === 'in_progress').length;
+  const items = milestones.filter((m) => m.status !== 'complete').map((m) => `${m.label} (${m.status})`);
+  const nextMilestone =
+    milestones.find((m) => m.status === 'in_progress')?.label
+    ?? milestones.find((m) => m.status === 'pending')?.label
+    ?? milestones.find((m) => m.status === 'blocked')?.label;
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const nextOwnerAction =
+    record.identityResolutionRequired
+      ? 'Assign client scope before milestone review'
+      : blockedCount
+        ? `Clear blocked milestone: ${milestones.find((m) => m.status === 'blocked')?.label ?? 'blocked'}`
+        : nextMilestone
+          ? `Advance milestone: ${nextMilestone}`
+          : 'No open onboarding milestones';
+  const counts = {
+    milestoneCount: milestones.length,
+    completeCount,
+    blockedCount,
+    pendingCount,
+    items,
+    ...(nextMilestone ? { nextMilestone } : {}),
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    return {
+      status: record.identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
+      ready: false,
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...counts,
+      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  const status = blockedCount || blockers.length ? 'BLOCKED' : items.length ? 'OPEN' : 'CLEAR';
+  return {
+    status,
+    ready: status === 'CLEAR',
+    projectId: record.projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...counts,
+    provenance: 'CONFIRMED',
+  };
+}
+
 function computeStatus(record: Partial<OnboardingRunRecord>): OnboardingLifecycleStatus {
   if (record.identityResolutionRequired) return 'IDENTITY_RECONCILIATION';
   const missingDocs = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
@@ -468,6 +532,13 @@ export async function runClientOnboardingAutomation(opts: {
         identityResolutionRequired: true,
         workspaceReconciled: false,
         ownerAttention: ['Assign client scope to onboarding workflow'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      milestoneReview: composeMilestoneReview({
+        identityResolutionRequired: true,
+        workspaceReconciled: false,
+        milestones: milestoneTemplate(),
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
       }),
       provenance: 'onboarding_automation',
@@ -660,10 +731,20 @@ export async function runClientOnboardingAutomation(opts: {
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const milestoneReview = composeMilestoneReview({
+    identityResolutionRequired: false,
+    workspaceReconciled,
+    projectId,
+    projectName,
+    milestones,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
   if (ownerAttentionPackage.status !== 'NOT_READY') events.push('OWNER_ATTENTION');
+  if (milestoneReview.status !== 'NOT_READY') events.push('MILESTONE_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -699,6 +780,7 @@ export async function runClientOnboardingAutomation(opts: {
     kickoff,
     blockerReview,
     ownerAttentionPackage,
+    milestoneReview,
     provenance: 'onboarding_automation',
   };
 
@@ -824,6 +906,7 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'blocker',
   'owner attention',
   'attention',
+  'milestone',
 ] as const;
 
 const ONBOARDING_EXECUTE_VERB = /\b(start|run|execute|activate|begin)\b/;
@@ -893,6 +976,29 @@ export function answerOnboardingContext(
       return answerFromExistingOnboarding(extras.match ?? { kind: 'none', candidates: [] }, extras);
     }
     return 'No onboarding run found for the requested client. Activate a Client Onboarding workflow or provide a client code.';
+  }
+  if (q.includes('milestone')) {
+    const pack = record.milestoneReview ?? composeMilestoneReview({
+      identityResolutionRequired: record.identityResolutionRequired,
+      workspaceReconciled: record.workspaceReconciled,
+      projectId: record.projectId,
+      projectName: record.projectName,
+      milestones: record.milestones,
+      blockers: record.blockers,
+      communicationPolicy: record.communicationPolicy,
+    });
+    return [
+      `Milestone review for ${record.clientCode ?? 'client'}: ${pack.status}`,
+      pack.projectName ? `Project: ${pack.projectName}` : '',
+      `Milestones: ${pack.completeCount}/${pack.milestoneCount} complete`,
+      pack.nextMilestone ? `Next: ${pack.nextMilestone}` : '',
+      pack.items.length ? `Open: ${pack.items.join('; ')}` : 'No open onboarding milestones.',
+      `Communication policy: ${pack.communicationPolicy}`,
+      `Next owner action: ${pack.nextOwnerAction}`,
+      'Atlas did not invent dates, send mail, launch GTM, or submit capital.',
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
   if (q.includes('owner attention') || (q.includes('attention') && !q.includes('kickoff'))) {
     const pack = record.ownerAttentionPackage;
