@@ -1,0 +1,185 @@
+{
+  "templateKey": "business-launch",
+  "title": "Business Launch",
+  "templateType": "Project",
+  "defaultDurationDays": 45,
+  "workstreams": [
+    "Marketing launch",
+    "Growth strategy",
+    "Operational improvement",
+    "SOP development"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Foundation",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Build",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Launch",
+      "seq": 3
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Brand & offer locked",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Launch",
+      "offsetDays": 45,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Offer and ICP definition",
+      "phase": "p1",
+      "offsetDays": 5,
+      "defaultRole": "CapitalAdvisor",
+      "description": "Positioning workshop.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 4,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Financial launch budget",
+      "phase": "p1",
+      "offsetDays": 7,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Cash needs.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    },
+    {
+      "key": "t3",
+      "title": "SOP starter pack",
+      "phase": "p2",
+      "offsetDays": 20,
+      "defaultRole": "OperationsManager",
+      "description": "Core operating SOPs.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 6,
+      "isCritical": false
+    },
+    {
+      "key": "t4",
+      "title": "Launch asset checklist",
+      "phase": "p2",
+      "offsetDays": 25,
+      "defaultRole": "OperationsAssistant",
+      "description": "Site, CRM, tracking.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 4,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Go-live readiness review",
+      "phase": "p3",
+      "offsetDays": 40,
+      "defaultRole": "ProjectManager",
+      "description": "QC gate.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t6",
+      "title": "Launch + 2-week hypercare",
+      "phase": "p3",
+      "offsetDays": 45,
+      "defaultRole": "ProjectManager",
+      "description": "Daily standups.",
+      "dependsOn": [],
+      "priority": "Medium",
+      "estimatedHours": 5,
+      "isCritical": false
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Brand guidelines / assets",
+      "documentCategory": "Other",
+      "folderTarget": "18 - Presentations",
+      "dueOffsetDays": 7,
+      "isCritical": false,
+      "description": "Please provide: Brand guidelines / assets"
+    },
+    {
+      "key": "d2",
+      "title": "Formation docs",
+      "documentCategory": "Corporate",
+      "folderTarget": "01 - Corporate Documents",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Formation docs"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Launch plan",
+      "deliverableType": "Strategic Plan",
+      "draftOffsetDays": 15,
+      "finalOffsetDays": 30,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    },
+    {
+      "key": "del2",
+      "title": "SOP pack",
+      "deliverableType": "SOP",
+      "draftOffsetDays": 25,
+      "finalOffsetDays": 40,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Scope creep into unpaid marketing ops",
+      "likelihood": "Medium",
+      "impact": "Medium",
+      "mitigation": "Change request workflow"
+    }
+  ],
+  "qualityControlChecks": [
+    "Scope boundary documented"
+  ],
+  "automationTriggers": [
+    "Change request on out-of-scope"
+  ],
+  "clientResponsibilities": [
+    "Decision makers available"
+  ],
+  "internalResponsibilities": [
+    "Track scope rigorously"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

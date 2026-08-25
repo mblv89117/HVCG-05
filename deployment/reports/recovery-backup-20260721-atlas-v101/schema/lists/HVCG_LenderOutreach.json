@@ -1,0 +1,82 @@
+{
+  "title": "HVCG_LenderOutreach",
+  "description": "Capital \u2014 Lender outreach tracker",
+  "template": "genericList",
+  "domain": "Capital",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "LenderId",
+      "displayName": "LenderId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "OutreachDate",
+      "displayName": "OutreachDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Response",
+      "displayName": "Response",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "None",
+        "Interested",
+        "Pass",
+        "Underwriting",
+        "Term Sheet",
+        "Declined"
+      ]
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "NextAction",
+      "displayName": "NextAction",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

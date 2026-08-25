@@ -1,0 +1,93 @@
+{
+  "title": "HVCG_AutomationLogs",
+  "description": "Flow run logging",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Flow name + outcome"
+    },
+    {
+      "internalName": "FlowName",
+      "displayName": "FlowName",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RunId",
+      "displayName": "RunId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Started",
+        "Succeeded",
+        "Failed",
+        "SkippedDuplicate"
+      ]
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedList",
+      "displayName": "RelatedList",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RelatedItemId",
+      "displayName": "RelatedItemId",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Message",
+      "displayName": "Message",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IdempotencyKey",
+      "displayName": "IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DurationMs",
+      "displayName": "DurationMs",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

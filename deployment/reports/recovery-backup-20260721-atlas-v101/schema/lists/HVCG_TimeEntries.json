@@ -1,0 +1,75 @@
+{
+  "title": "HVCG_TimeEntries",
+  "description": "Ops \u2014 Time / utilization entries (optional actuals)",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TeamMemberEmail",
+      "displayName": "TeamMemberEmail",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "WorkDate",
+      "displayName": "WorkDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Hours",
+      "displayName": "Hours",
+      "type": "Number",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsBillable",
+      "displayName": "IsBillable",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "title": "HVCG_FundingMilestones",
-  "description": "Capital \u2014 Funding process milestones",
+  "description": "Capital — Funding process milestones",
   "template": "genericList",
   "domain": "Capital",
   "columns": [
@@ -93,6 +93,64 @@
       "indexed": false,
       "description": "",
       "default": false
+    },
+    {
+      "internalName": "RelatedLenderId",
+      "displayName": "RelatedLenderId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "Lender this milestone is associated with, if any.",
+      "lookupList": "HVCG_Lenders"
+    },
+    {
+      "internalName": "LinkedStage",
+      "displayName": "LinkedStage",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Capital stage this milestone typically completes.",
+      "choices": [
+        "NeedIdentified",
+        "InitialQualification",
+        "DocumentsRequested",
+        "DocumentsInProgress",
+        "DocumentsComplete",
+        "FinancialUnderwritingReview",
+        "StrategyDrafted",
+        "AwaitingMannyStrategyApproval",
+        "StrategyApproved",
+        "LenderVendorResearch",
+        "AwaitingMannyShortlistApproval",
+        "ReadyForSubmission",
+        "Submitted",
+        "AdditionalInformationRequested",
+        "Underwriting",
+        "TermSheetOfferReceived",
+        "OfferComparison",
+        "ClientDecision",
+        "Closing",
+        "Funded",
+        "Declined",
+        "Withdrawn",
+        "ClosedArchived"
+      ]
+    },
+    {
+      "internalName": "Blocker",
+      "displayName": "Blocker",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Why this milestone is blocked."
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Operational notes."
     }
   ]
 }

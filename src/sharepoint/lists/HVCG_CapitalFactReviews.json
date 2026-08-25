@@ -1,0 +1,132 @@
+{
+  "title": "HVCG_CapitalFactReviews",
+  "description": "AUTHORITATIVE human fact verification for Atlas Capital. Designed in Phase 3.5 — DO NOT provision until a batched owner schema window. Overlay JSON is the live acceleration store until then.",
+  "template": "genericList",
+  "domain": "Capital",
+  "provision": false,
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Fact field + opportunity id (not a client financial dump)"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Canonical ClientCode"
+    },
+    {
+      "internalName": "CapitalOpportunityId",
+      "displayName": "CapitalOpportunityId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Graph item id of HVCG_CapitalOpportunities"
+    },
+    {
+      "internalName": "FactId",
+      "displayName": "FactId",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": "Stable extracted-fact id"
+    },
+    {
+      "internalName": "FieldName",
+      "displayName": "FieldName",
+      "type": "Text",
+      "required": true,
+      "indexed": true
+    },
+    {
+      "internalName": "PreviousState",
+      "displayName": "PreviousState",
+      "type": "Choice",
+      "required": true,
+      "choices": ["UNVERIFIED", "VERIFIED", "REJECTED", "MISSING"]
+    },
+    {
+      "internalName": "NewState",
+      "displayName": "NewState",
+      "type": "Choice",
+      "required": true,
+      "choices": ["UNVERIFIED", "VERIFIED", "REJECTED", "MISSING"]
+    },
+    {
+      "internalName": "Decision",
+      "displayName": "Decision",
+      "type": "Choice",
+      "required": true,
+      "choices": ["VERIFY", "CORRECT", "REJECT"]
+    },
+    {
+      "internalName": "OriginalValue",
+      "displayName": "OriginalValue",
+      "type": "Note",
+      "required": false,
+      "description": "Extracted value before correction. Keep even after CORRECT."
+    },
+    {
+      "internalName": "FinalValue",
+      "displayName": "FinalValue",
+      "type": "Note",
+      "required": false
+    },
+    {
+      "internalName": "SourceSystem",
+      "displayName": "SourceSystem",
+      "type": "Text",
+      "required": true
+    },
+    {
+      "internalName": "SourceRecordId",
+      "displayName": "SourceRecordId",
+      "type": "Text",
+      "required": true,
+      "description": "driveId:itemId or Graph item id"
+    },
+    {
+      "internalName": "SourceField",
+      "displayName": "SourceField",
+      "type": "Text",
+      "required": false
+    },
+    {
+      "internalName": "CapturedAt",
+      "displayName": "CapturedAt",
+      "type": "DateTime",
+      "required": true
+    },
+    {
+      "internalName": "Reviewer",
+      "displayName": "Reviewer",
+      "type": "Text",
+      "required": true
+    },
+    {
+      "internalName": "ReviewedAt",
+      "displayName": "ReviewedAt",
+      "type": "DateTime",
+      "required": true
+    },
+    {
+      "internalName": "DocumentItemId",
+      "displayName": "DocumentItemId",
+      "type": "Text",
+      "required": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG_IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true
+    }
+  ]
+}

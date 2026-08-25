@@ -1,0 +1,100 @@
+{
+  "title": "HVCG_AIApprovals",
+  "description": "AI \u2014 Explicit approvals for gated AI outputs",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "JobId",
+      "displayName": "JobId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_AIJobs"
+    },
+    {
+      "internalName": "OutputId",
+      "displayName": "OutputId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_AIOutputs"
+    },
+    {
+      "internalName": "ApprovalType",
+      "displayName": "ApprovalType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "ClientEmail",
+        "Proposal",
+        "FinancialAnalysis",
+        "CapitalRecommendation",
+        "LenderRecommendation",
+        "InvestorRecommendation",
+        "LegalCompliance",
+        "Pricing",
+        "ScopeChange",
+        "ClientDeliverable",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ApprovalStatus",
+      "displayName": "ApprovalStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Pending",
+        "Approved",
+        "Rejected"
+      ],
+      "default": "Pending"
+    },
+    {
+      "internalName": "DecisionDate",
+      "displayName": "DecisionDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Comments",
+      "displayName": "Comments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+name: Atlas Release Control
+
+# Governance / release-control framework only.
+# Does not deploy Azure, Entra, SharePoint, Elite SWA, Hub, or BA.
+# Manual trigger required. Uses GitHub Environment `production` as an
+# approval/policy gate. Prefer dry-validation.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Release control mode (validation only; no production deploy)'
+        required: true
+        default: 'dry-validation'
+        type: choice
+        options:
+          - dry-validation
+      confirm:
+        description: 'Type VALIDATE-ONLY to run. This workflow never deploys production.'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  production-release-dry-validation:
+    name: production-release-dry-validation
+    if: github.event.inputs.mode == 'dry-validation' && github.event.inputs.confirm == 'VALIDATE-ONLY'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Refuse any non-validation mode
+        run: |
+          echo "Release control SHA: ${GITHUB_SHA}"
+          echo "Ref: ${GITHUB_REF}"
+          echo "Mode: ${{ github.event.inputs.mode }}"
+          echo "This job performs offline validation only."
+          echo "NO Azure / Entra / SharePoint / SWA / App Service deploy."
+      - name: SharePoint list schema unit test
+        run: python tests/unit/test_schemas.py
+      - name: Pre-deployment schema validation (offline)
+        run: python tests/validate_predeployment.py
+      - name: Record validation-only outcome
+        run: |
+          echo "ATLAS_RELEASE_CONTROL=DRY_VALIDATION_ONLY"
+          echo "PRODUCTION_DEPLOY=NOT_PERFORMED"
+          echo "Promotion of integration/atlas-canonical to main is out of scope for this workflow."

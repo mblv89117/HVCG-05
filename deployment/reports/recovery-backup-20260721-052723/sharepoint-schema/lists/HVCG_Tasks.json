@@ -1,0 +1,319 @@
+{
+  "title": "HVCG_Tasks",
+  "description": "Work tasks",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "WorkstreamId",
+      "displayName": "WorkstreamId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Workstreams"
+    },
+    {
+      "internalName": "MilestoneId",
+      "displayName": "MilestoneId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Milestones"
+    },
+    {
+      "internalName": "ParentTaskId",
+      "displayName": "ParentTaskId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Tasks"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ReviewerEmail",
+      "displayName": "ReviewerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DefaultRole",
+      "displayName": "DefaultRole",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Owner",
+        "Administrator",
+        "OperationsManager",
+        "ProjectManager",
+        "CapitalAdvisor",
+        "FinancialAnalyst",
+        "OperationsAssistant",
+        "Contractor",
+        "ExternalProfessional",
+        "ClientContact"
+      ]
+    },
+    {
+      "internalName": "Priority",
+      "displayName": "Priority",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "default": "Medium"
+    },
+    {
+      "internalName": "TaskStatus",
+      "displayName": "TaskStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Not Started",
+        "In Progress",
+        "Waiting on Client",
+        "Waiting on Internal",
+        "Blocked",
+        "In Review",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Not Started"
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "StartDate",
+      "displayName": "StartDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CompletedDate",
+      "displayName": "CompletedDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "PercentComplete",
+      "displayName": "PercentComplete",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": 0
+    },
+    {
+      "internalName": "Blockers",
+      "displayName": "Blockers",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EstimatedHours",
+      "displayName": "EstimatedHours",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ActualHours",
+      "displayName": "ActualHours",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DependsOnTaskKeys",
+      "displayName": "DependsOnTaskKeys",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Template keys or IDs"
+    },
+    {
+      "internalName": "RelatedDeliverableId",
+      "displayName": "RelatedDeliverableId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Deliverables"
+    },
+    {
+      "internalName": "IsOverdue",
+      "displayName": "IsOverdue",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "EscalationStatus",
+      "displayName": "EscalationStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "None",
+        "PM Notified",
+        "Ops Notified",
+        "Executive Notified"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "CompletionEvidence",
+      "displayName": "CompletionEvidence",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "AttachmentLinks",
+      "displayName": "AttachmentLinks",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "TemplateTaskKey",
+      "displayName": "TemplateTaskKey",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Sequence",
+      "displayName": "Sequence",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsRecurring",
+      "displayName": "IsRecurring",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "HVCG_IdempotencyKey",
+      "displayName": "HVCG IdempotencyKey",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    }
+  ]
+}

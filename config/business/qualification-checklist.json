@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001",
+  "requirementIds": ["HVCG-V2-REV-003"],
+  "humanDecisionRequired": true,
+  "autonomousClientRejectionForbidden": true,
+  "questions": [
+    "Does the request fit a core service line?",
+    "Is there a defined outcome?",
+    "Will the client pay a setup fee, retainer, or premium project fee?",
+    "Is the service advisory/support work rather than work requiring a license HVCG does not hold?",
+    "Is there meaningful upside (retainer, success fee, referral value, strategic value)?",
+    "Can the work become repeatable or automated?"
+  ],
+  "weakConditionsFlag": "DECLINE_OR_PREMIUM_PRICE_REVIEW",
+  "notes": "Flag for human review only. Never auto-decline a client."
+}

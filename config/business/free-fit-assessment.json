@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "ADR-BA-V2-002",
+  "skuCode": "SKU-FRA",
+  "name": "Free Fit & Readiness Assessment",
+  "fee": 0,
+  "purpose": "Determine whether HVCG and the prospect are a reasonable fit and identify the appropriate service/diagnostic pathway.",
+  "is": [
+    "Qualification",
+    "High-level discovery",
+    "Initial service routing",
+    "Basic need identification",
+    "Next-step recommendation"
+  ],
+  "isNot": "A substantive diagnostic engagement or free consulting",
+  "allowedCapture": [
+    "Company",
+    "Owner/contact",
+    "Industry",
+    "Approximate revenue range",
+    "Employee range",
+    "Capital need",
+    "Growth goal",
+    "Primary business issue",
+    "Urgency",
+    "Current systems",
+    "General financial readiness",
+    "General document availability",
+    "Referral source",
+    "Service-line fit",
+    "Recommended next step"
+  ],
+  "allowedOutputs": [
+    "Internal intake summary",
+    "Service-line recommendation",
+    "Diagnostic recommendation",
+    "Basic missing-information request",
+    "Qualification decision"
+  ],
+  "prohibitedSubstantiveWork": [
+    "Detailed financial statement analysis",
+    "Full lender-readiness scoring",
+    "DSCR analysis",
+    "Capital structure modeling",
+    "Detailed document review",
+    "Written strategic memorandum",
+    "Tax assessment analysis",
+    "Claim analysis",
+    "Insurance coverage analysis",
+    "Detailed procurement readiness analysis",
+    "AI workflow architecture",
+    "Financial forecasting",
+    "Formal risk assessment",
+    "Custom strategy plan",
+    "Lender package creation",
+    "Detailed recommendations requiring material advisor time"
+  ],
+  "conversionPath": [
+    "FREE_FIT_ASSESSMENT",
+    "PAID_DIAGNOSTIC",
+    "STRUCTURED_OFFER_OR_RETAINER_OR_PREMIUM_PROJECT"
+  ],
+  "diagnosticBypass": {
+    "allowed": true,
+    "requiresReason": true,
+    "note": "Authorized users may bypass diagnostic when a clearly defined qualified opportunity already exists."
+  },
+  "funnelMetrics": [
+    "Free assessments booked",
+    "Free assessments completed",
+    "Qualified",
+    "Disqualified",
+    "Paid diagnostic recommended",
+    "Paid diagnostic purchased",
+    "Diagnostic completed",
+    "Proposal generated",
+    "Engagement won",
+    "Revenue collected"
+  ],
+  "doNotFabricateHistoricalMetrics": true
+}

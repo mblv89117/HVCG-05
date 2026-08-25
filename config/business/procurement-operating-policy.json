@@ -1,0 +1,123 @@
+{
+  "version": "1.0.0",
+  "asOf": "2026-08-11",
+  "authority": "CR-HVCG-BA-V2-001 Sprint 8 BA-E",
+  "serviceLine": "SL-PROCUREMENT",
+  "offerCodes": ["OFF-PROC-READY", "OFF-GOV-SETUP"],
+  "blC1Active": true,
+  "canAutoSubmitSam": false,
+  "canAutoSubmitVendorRegistration": false,
+  "canAutoSubmitProposal": false,
+  "canAutoEmailContractingOfficer": false,
+  "canAcceptTermsAutonomously": false,
+  "pricingFromCanonicalCatalog": true,
+  "hardCodedUiPricingForbidden": true,
+  "disclaimer": "HVCG provides readiness, documentation, registration preparation, proposal support, and coordination. HVCG does not guarantee contract awards, certify legal eligibility, or act as the contracting agency.",
+  "readinessDimensions": [
+    "Entity Readiness",
+    "Registration Readiness",
+    "Licensing / Insurance",
+    "Financial Readiness",
+    "Past Performance",
+    "Capability Statement",
+    "Operational Capacity",
+    "Labor / Workforce Documentation",
+    "Proposal Readiness",
+    "Contract Administration Readiness"
+  ],
+  "readinessStatuses": [
+    "READY",
+    "READY_WITH_GAPS",
+    "REMEDIATION_REQUIRED",
+    "NOT_READY",
+    "UNKNOWN"
+  ],
+  "registrationStatuses": [
+    "NOT_STARTED",
+    "IN_PREPARATION",
+    "READY_FOR_REVIEW",
+    "APPROVED_TO_SUBMIT",
+    "SUBMISSION_GATED",
+    "SUBMITTED_EXTERNALLY",
+    "ACTIVE",
+    "RENEWAL_DUE",
+    "EXPIRED"
+  ],
+  "bidNoBidResults": [
+    "PURSUE",
+    "PURSUE_WITH_CONDITIONS",
+    "HOLD",
+    "DECLINE"
+  ],
+  "requirementKinds": [
+    "SOURCE_REQUIREMENT",
+    "HVCG_INTERPRETATION",
+    "CLIENT_RESPONSE"
+  ],
+  "contractValueKinds": [
+    "Estimated Opportunity Value",
+    "Client Bid Value",
+    "Awarded Contract Value",
+    "Recognized Client Revenue",
+    "Collected Client Revenue",
+    "HVCG Success Fee",
+    "HVCG Collected Revenue"
+  ],
+  "approvalTypes": [
+    "ProcurementReadiness",
+    "RegistrationSubmission",
+    "BidNoBid",
+    "CapabilityStatement",
+    "ProposalPricing",
+    "ProposalSubmission",
+    "ContractException",
+    "PostAwardChange"
+  ],
+  "documentVaultCategories": [
+    "Registrations",
+    "Capability Statement",
+    "Certifications",
+    "Licenses",
+    "Insurance",
+    "Financials",
+    "Past Performance",
+    "Workforce",
+    "Safety",
+    "Proposal Templates",
+    "Opportunities",
+    "Submitted Packages",
+    "Awards",
+    "Post-Award"
+  ],
+  "folderTaxonomy": "07 Procurement (maps from legacy 11 - Contracts)",
+  "agents": {
+    "procurement": "AGT-PROCURE",
+    "governmentRegistration": "AGT-GOV-REG",
+    "proposal": "AGT-PROPOSAL",
+    "documentChecklist": "AGT-DOC-CHECKLIST"
+  },
+  "agentMay": [
+    "evaluate readiness gaps",
+    "organize requirements",
+    "create checklists",
+    "draft capability-statement content from verified sources",
+    "draft compliance matrices from source requirements",
+    "summarize opportunities",
+    "prepare pursuit recommendations",
+    "prepare proposal sections",
+    "flag missing items",
+    "prepare registration checklists and draft inputs",
+    "monitor renewal dates"
+  ],
+  "agentMustNot": [
+    "submit bids",
+    "submit SAM.gov or vendor registrations",
+    "certify eligibility or ownership",
+    "invent past performance",
+    "commit final pricing",
+    "make legal compliance conclusions",
+    "accept contract terms",
+    "email contracting officers",
+    "guarantee awards"
+  ]
+}

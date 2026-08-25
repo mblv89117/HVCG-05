@@ -1,0 +1,134 @@
+{
+  "title": "HVCG_ChangeRequests",
+  "description": "Scope change requests",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Description",
+      "displayName": "Description",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "BusinessJustification",
+      "displayName": "BusinessJustification",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EstimatedEffortHours",
+      "displayName": "EstimatedEffortHours",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EstimatedFeeImpact",
+      "displayName": "EstimatedFeeImpact",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OutOfScopeFlag",
+      "displayName": "OutOfScopeFlag",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "ChangeStatus",
+      "displayName": "ChangeStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Submitted",
+        "Under Review",
+        "Approved",
+        "Rejected",
+        "Implemented",
+        "Cancelled"
+      ],
+      "default": "Submitted"
+    },
+    {
+      "internalName": "RequesterEmail",
+      "displayName": "RequesterEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ApproverEmail",
+      "displayName": "ApproverEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": true
+    }
+  ]
+}

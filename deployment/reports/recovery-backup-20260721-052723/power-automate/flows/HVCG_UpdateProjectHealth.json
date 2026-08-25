@@ -1,0 +1,53 @@
+{
+  "flowName": "HVCG_UpdateProjectHealth",
+  "displayName": "HVCG_UpdateProjectHealth",
+  "description": "Applies green/yellow/red health rules.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 06:00 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "ForEachActiveProject"
+    },
+    {
+      "id": 2,
+      "action": "ComputeHealth"
+    },
+    {
+      "id": 3,
+      "action": "UpdateProjectHealth"
+    },
+    {
+      "id": 4,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

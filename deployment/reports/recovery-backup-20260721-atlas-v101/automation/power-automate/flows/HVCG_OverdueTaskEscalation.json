@@ -1,0 +1,67 @@
+{
+  "flowName": "HVCG_OverdueTaskEscalation",
+  "displayName": "HVCG_OverdueTaskEscalation",
+  "description": "Marks overdue tasks and escalates per ladder; executive only when warranted.",
+  "trigger": {
+    "type": "Recurrence",
+    "schedule": "Daily 07:30 America/Los_Angeles"
+  },
+  "connections": [
+    "SharePoint",
+    "Outlook",
+    "Teams"
+  ],
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "onDuplicate": "SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "humanApproval": [],
+  "steps": [
+    {
+      "id": 1,
+      "action": "GetOpenPastDueTasks"
+    },
+    {
+      "id": 2,
+      "action": "SetIsOverdueTrue"
+    },
+    {
+      "id": 3,
+      "action": "NotifyOwner"
+    },
+    {
+      "id": 4,
+      "action": "EscalateToPMAfter3BusinessDays"
+    },
+    {
+      "id": 5,
+      "action": "EscalateToOpsIfCriticalBlocked"
+    },
+    {
+      "id": 6,
+      "action": "ExecutiveOnlyIfRuleMatch"
+    },
+    {
+      "id": 7,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_CLIENTS_HUB_URL",
+    "HVCG_OPS_EMAIL",
+    "HVCG_EXECUTIVE_EMAIL",
+    "HVCG_ENABLE_CLIENT_EMAILS"
+  ]
+}

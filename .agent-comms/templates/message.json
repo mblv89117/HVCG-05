@@ -1,0 +1,19 @@
+{
+  "messageId": "",
+  "threadId": "",
+  "timestamp": "",
+  "from": "",
+  "to": [],
+  "cc": [],
+  "type": "INFO",
+  "priority": "NORMAL",
+  "subject": "",
+  "body": "",
+  "relatedBranch": "",
+  "relatedFiles": [],
+  "requestedAction": "",
+  "dueBy": null,
+  "requiresAcknowledgement": true,
+  "status": "NEW",
+  "replyTo": null
+}

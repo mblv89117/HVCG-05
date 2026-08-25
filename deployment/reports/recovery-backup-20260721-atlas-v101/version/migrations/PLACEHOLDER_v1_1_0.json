@@ -1,0 +1,35 @@
+{
+  "id": "PLACEHOLDER_v1_1_0",
+  "fromVersion": "1.0.0",
+  "toVersion": "1.1.0",
+  "type": "additive",
+  "destructive": false,
+  "preservesCustomerData": true,
+  "status": "superseded",
+  "description": "Superseded by real migration pack 20260714_002_intelligence_ai_backup_v1_1_0. Use releases/migrations/20260714_002_intelligence_ai_backup_v1_1_0.json for all 1.0.0 → 1.1.0 upgrades.",
+  "steps": [
+    {
+      "action": "AssertInstalledVersion",
+      "min": "1.0.0",
+      "max": "1.0.999"
+    },
+    {
+      "action": "ApplyListDiff",
+      "diffFile": "releases/migrations/diffs/v1.0.0_to_v1.1.0.json"
+    },
+    {
+      "action": "SetInstalledVersion",
+      "version": "1.1.0"
+    }
+  ],
+  "rollback": {
+    "supported": "soft",
+    "notes": "New columns remain (SharePoint cannot safely drop columns automatically). Version flag rolls back; unused columns ignored by app.",
+    "steps": [
+      {
+        "action": "SetInstalledVersion",
+        "version": "1.0.0"
+      }
+    ]
+  }
+}

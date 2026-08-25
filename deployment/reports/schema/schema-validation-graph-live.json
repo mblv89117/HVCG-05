@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-07-21T05:44:23.381Z",
+  "mode": "graph_live_revalidate",
+  "connection": "Manuel  Barela",
+  "sites": [
+    {
+      "name": "HVCG-CommandCenter-Dev",
+      "id": "highvaluecapitalgroup.sharepoint.com,78a75bfc-6444-49d8-8991-9344c618d2d1,a6684928-a95f-4ae5-b6b0-e91003415484",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-CommandCenter-Dev",
+      "listCount": 92,
+      "clientList": "HVCG_Clients",
+      "columnCount": 75,
+      "sampleClients": [
+        {
+          "id": "1",
+          "Title": "Summit Ridge Manufacturing LLC",
+          "ClientCode": "SRM01"
+        },
+        {
+          "id": "2",
+          "Title": "Harbor View Dental Group LLC",
+          "ClientCode": "HVD01"
+        },
+        {
+          "id": "3",
+          "Title": "Cascadia Logistics Inc",
+          "ClientCode": "CLX01"
+        },
+        {
+          "id": "4",
+          "Title": "ACCG Inc.",
+          "ClientCode": "ACCG01"
+        },
+        {
+          "id": "5",
+          "Title": "Prodigy Games LLC",
+          "ClientCode": "PDG01"
+        },
+        {
+          "id": "6",
+          "Title": "Colorado Craft Beef",
+          "ClientCode": "CCB01"
+        },
+        {
+          "id": "7",
+          "Title": "That's Kava LLC",
+          "ClientCode": "KAVA01"
+        },
+        {
+          "id": "8",
+          "Title": "Christie's Place LLC",
+          "ClientCode": "CPL01"
+        },
+        {
+          "id": "9",
+          "Title": "Hart Family Dental",
+          "ClientCode": "HFD01"
+        },
+        {
+          "id": "10",
+          "Title": "Lien Partners",
+          "ClientCode": "LIEN01"
+        }
+      ]
+    },
+    {
+      "name": "HVCG-Knowledge-Dev",
+      "id": "highvaluecapitalgroup.sharepoint.com,6b7550fb-651f-459a-8606-1919e8f6ce0b,a6684928-a95f-4ae5-b6b0-e91003415484",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Knowledge-Dev",
+      "listCount": 5,
+      "columnCount": 0,
+      "sampleClients": []
+    },
+    {
+      "name": "HVCG-Clients-Dev",
+      "id": "highvaluecapitalgroup.sharepoint.com,7d5c0984-c74b-4380-8bfa-1956a2a9f288,a6684928-a95f-4ae5-b6b0-e91003415484",
+      "webUrl": "https://highvaluecapitalgroup.sharepoint.com/sites/HVCG-Clients-Dev",
+      "listCount": 4,
+      "columnCount": 0,
+      "sampleClients": []
+    }
+  ]
+}
