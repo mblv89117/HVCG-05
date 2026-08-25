@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-07-22T04:41:34Z",
+  "verdict": "GREEN",
+  "swa": "https://zealous-rock-0090c7e1e.7.azurestaticapps.net",
+  "hub": "https://app-atlas-integration-hub.azurewebsites.net",
+  "viteIntegrationApiBase": "https://app-atlas-integration-hub.azurewebsites.net",
+  "corsSwaOriginOk": true,
+  "authorizationAllowedOnPreflight": true,
+  "anonymousClient360": 401,
+  "forgedHeadersOnly": 401,
+  "authenticatedBrowserPath": "GREEN_OWNER_UAT",
+  "ownerConfirmed": true,
+  "notes": "Hosted Integration Hub is the normal Production Client 360 path."
+}

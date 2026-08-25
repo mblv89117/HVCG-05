@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-07-21T23:41:29Z",
+  "flows": [
+    {
+      "name": "HVCG_CreateProjectFromTemplate",
+      "ok": false,
+      "error": "PATCH 400 {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'WorkflowOperationParametersExtraParameter' and message 'The API operation does not contain a definition for parameter '$select'.'.\\\"}}\\\".\"}}",
+      "patched": [
+        {
+          "path": "HVCG_CreateProjectFromTemplate.Condition_NeedClientLookup.actions.Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "select": "Id,Title,ClientCode,SharePointLibraryUrl"
+        },
+        {
+          "path": "HVCG_CreateProjectFromTemplate.Get_Existing_Project",
+          "op": "GetItems",
+          "table": "HVCG_Projects",
+          "select": "Id,Title,ClientCode,HVCG_IdempotencyKey,ProjectStatus,ProjectTemplateKey"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_CreateDocumentRequests",
+      "ok": false,
+      "error": "PATCH 400 {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'WorkflowOperationParametersExtraParameter' and message 'The API operation does not contain a definition for parameter '$select'.'.\\\"}}\\\".\"}}",
+      "patched": [
+        {
+          "path": "HVCG_CreateDocumentRequests.Condition_NeedClientLookup.actions.Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "select": "Id,Title,ClientCode,SharePointLibraryUrl"
+        },
+        {
+          "path": "HVCG_CreateDocumentRequests.Apply_to_each_Doc.actions.Get_Open_Duplicates",
+          "op": "GetItems",
+          "table": "HVCG_DocumentRequests",
+          "select": "Id,Title,ClientCode,Status,DocumentType"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_ExecutiveDecisionEscalation",
+      "ok": false,
+      "error": "PATCH 400 {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'WorkflowOperationParametersExtraParameter' and message 'The API operation does not contain a definition for parameter '$select'.'.\\\"}}\\\".\"}}",
+      "patched": [
+        {
+          "path": "HVCG_ExecutiveDecisionEscalation.Condition_NeedClientLookup.actions.Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "select": "Id,Title,ClientCode,SharePointLibraryUrl"
+        },
+        {
+          "path": "HVCG_ExecutiveDecisionEscalation.Get_Existing_Decision",
+          "op": "GetItems",
+          "table": "HVCG_Decisions",
+          "select": "Id,Title,ClientCode,HVCG_IdempotencyKey,DecisionStatus"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_DeliverableApproval",
+      "ok": false,
+      "error": "PATCH 400 {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'WorkflowOperationParametersExtraParameter' and message 'The API operation does not contain a definition for parameter '$select'.'.\\\"}}\\\".\"}}",
+      "patched": [
+        {
+          "path": "HVCG_DeliverableApproval.Get_Deliverable",
+          "op": "GetItem",
+          "table": "HVCG_Deliverables",
+          "select": "Id,Title,ClientCode,DeliverableStatus,ApproverEmail,InternalReviewStatus,CompletionEvidence,RevisionRequest"
+        }
+      ]
+    },
+    {
+      "name": "HVCG_CreateClientWorkspace",
+      "ok": false,
+      "error": "PATCH 400 {\"error\":{\"code\":\"0x80060467\",\"message\":\"Flow client error returned with status code \\\"BadRequest\\\" and details \\\"{\\\"error\\\":{\\\"code\\\":\\\"InvalidOpenApiFlow\\\",\\\"message\\\":\\\"Flow save failed with code 'WorkflowOperationParametersExtraParameter' and message 'The API operation does not contain a definition for parameter '$select'.'.\\\"}}\\\".\"}}",
+      "patched": [
+        {
+          "path": "HVCG_CreateClientWorkspace.Condition_NeedClientLookup.actions.Get_Client_ByCode",
+          "op": "GetItems",
+          "table": "HVCG_Clients",
+          "select": "Id,Title,ClientCode,SharePointLibraryUrl"
+        }
+      ]
+    }
+  ]
+}

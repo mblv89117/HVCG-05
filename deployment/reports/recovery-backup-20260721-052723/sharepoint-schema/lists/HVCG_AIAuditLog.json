@@ -1,0 +1,90 @@
+{
+  "title": "HVCG_AIAuditLog",
+  "description": "AI \u2014 Immutable-style AI audit events",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "JobId",
+      "displayName": "JobId",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "ActorEmail",
+      "displayName": "ActorEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "EventType",
+      "displayName": "EventType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "JobCreated",
+        "ContextBuilt",
+        "PromptExecuted",
+        "ToolInvoked",
+        "OutputGenerated",
+        "ReviewRequested",
+        "Approved",
+        "Rejected",
+        "Failed",
+        "Retried",
+        "Escalated"
+      ]
+    },
+    {
+      "internalName": "Details",
+      "displayName": "Details",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "EventDate",
+      "displayName": "EventDate",
+      "type": "DateTime",
+      "required": true,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DataClassification",
+      "displayName": "DataClassification",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Public",
+        "Internal",
+        "Confidential",
+        "Restricted"
+      ]
+    }
+  ]
+}

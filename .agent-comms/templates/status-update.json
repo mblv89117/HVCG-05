@@ -1,0 +1,8 @@
+{
+  "type": "INFO",
+  "priority": "NORMAL",
+  "subject": "Status update",
+  "body": "Current status: ...",
+  "requestedAction": "None",
+  "requiresAcknowledgement": false
+}

@@ -1,6 +1,6 @@
 {
   "title": "HVCG_CapitalOpportunities",
-  "description": "Capital \u2014 Debt/equity/SBA/CRE/etc. capital raises",
+  "description": "Capital — Debt/equity/SBA/CRE/etc. capital raises",
   "template": "genericList",
   "domain": "Capital",
   "columns": [
@@ -200,6 +200,282 @@
         "Other"
       ],
       "default": "Direct"
+    },
+    {
+      "internalName": "Stage",
+      "displayName": "Stage",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Operational capital stage. Additive to FundingStatus; do not remove FundingStatus.",
+      "choices": [
+        "NeedIdentified",
+        "InitialQualification",
+        "DocumentsRequested",
+        "DocumentsInProgress",
+        "DocumentsComplete",
+        "FinancialUnderwritingReview",
+        "StrategyDrafted",
+        "AwaitingMannyStrategyApproval",
+        "StrategyApproved",
+        "LenderVendorResearch",
+        "AwaitingMannyShortlistApproval",
+        "ReadyForSubmission",
+        "Submitted",
+        "AdditionalInformationRequested",
+        "Underwriting",
+        "TermSheetOfferReceived",
+        "OfferComparison",
+        "ClientDecision",
+        "Closing",
+        "Funded",
+        "Declined",
+        "Withdrawn",
+        "ClosedArchived"
+      ],
+      "default": "NeedIdentified"
+    },
+    {
+      "internalName": "StageEnteredAt",
+      "displayName": "StageEnteredAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": "When the current Stage was entered. Hub uses this to compute DaysInStage."
+    },
+    {
+      "internalName": "NextAction",
+      "displayName": "NextAction",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Single next operational action."
+    },
+    {
+      "internalName": "NextActionOwner",
+      "displayName": "NextActionOwner",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "Owner of NextAction (email)."
+    },
+    {
+      "internalName": "NextActionDue",
+      "displayName": "NextActionDue",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Due date for NextAction."
+    },
+    {
+      "internalName": "Blockers",
+      "displayName": "Blockers",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Current blockers preventing stage progress."
+    },
+    {
+      "internalName": "Risk",
+      "displayName": "Risk",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Free-text operational risk notes. Not a credit rating."
+    },
+    {
+      "internalName": "SubmissionReadiness",
+      "displayName": "SubmissionReadiness",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "True when package is ready for lender submission (human-gated).",
+      "default": false
+    },
+    {
+      "internalName": "ClosingReadiness",
+      "displayName": "ClosingReadiness",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "True when closing conditions are sufficiently complete to proceed.",
+      "default": false
+    },
+    {
+      "internalName": "DaysInStage",
+      "displayName": "DaysInStage",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Cached days in current Stage. Hub-computed from StageEnteredAt. Not a SharePoint calculated column."
+    },
+    {
+      "internalName": "MannyStrategyApproval",
+      "displayName": "MannyStrategyApproval",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Manny approval of financing strategy.",
+      "choices": [
+        "NOT_REQUIRED",
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "REVISE"
+      ],
+      "default": "NOT_REQUIRED"
+    },
+    {
+      "internalName": "MannyShortlistApproval",
+      "displayName": "MannyShortlistApproval",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Manny approval of lender shortlist.",
+      "choices": [
+        "NOT_REQUIRED",
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "REVISE"
+      ],
+      "default": "NOT_REQUIRED"
+    },
+    {
+      "internalName": "ClientApproval",
+      "displayName": "ClientApproval",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Client decision / approval state.",
+      "choices": [
+        "NOT_REQUIRED",
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "REVISE"
+      ],
+      "default": "NOT_REQUIRED"
+    },
+    {
+      "internalName": "TransactionType",
+      "displayName": "TransactionType",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "Operational transaction type. CapitalType remains the legacy coarse type.",
+      "choices": [
+        "conventional_bank_loan",
+        "sba",
+        "sba_working_capital",
+        "sba_express",
+        "acquisition",
+        "commercial_real_estate",
+        "construction",
+        "working_capital_loc",
+        "equipment",
+        "ar_financing",
+        "asset_based_lending",
+        "inventory",
+        "refinance",
+        "bridge",
+        "recapitalization"
+      ]
+    },
+    {
+      "internalName": "Purpose",
+      "displayName": "Purpose",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Purpose of capital request. UseOfProceeds remains for legacy narrative."
+    },
+    {
+      "internalName": "Urgency",
+      "displayName": "Urgency",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "Operational urgency.",
+      "choices": [
+        "low",
+        "normal",
+        "high",
+        "critical"
+      ],
+      "default": "normal"
+    },
+    {
+      "internalName": "Industry",
+      "displayName": "Industry",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "Client industry (operational snapshot on the opportunity)."
+    },
+    {
+      "internalName": "NAICS",
+      "displayName": "NAICS",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": "NAICS code if known. Leave blank when unknown — do not guess."
+    },
+    {
+      "internalName": "AnnualRevenue",
+      "displayName": "AnnualRevenue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Stated annual revenue snapshot. Provenance lives on HVCG_CapitalProfiles / reviews; this is operational."
+    },
+    {
+      "internalName": "EBITDA",
+      "displayName": "EBITDA",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Stated EBITDA snapshot. Unverified until a human confirms against source documents."
+    },
+    {
+      "internalName": "YearsInBusiness",
+      "displayName": "YearsInBusiness",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": "Years in business if known."
+    },
+    {
+      "internalName": "ExistingDebt",
+      "displayName": "ExistingDebt",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Existing debt snapshot."
+    },
+    {
+      "internalName": "MonthlyDebtService",
+      "displayName": "MonthlyDebtService",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": "Monthly debt service snapshot."
+    },
+    {
+      "internalName": "Collateral",
+      "displayName": "Collateral",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "Collateral narrative snapshot."
+    },
+    {
+      "internalName": "LastMeaningfulActivityAt",
+      "displayName": "LastMeaningfulActivityAt",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": "Last meaningful operational activity (not merely a list edit)."
     }
   ]
 }

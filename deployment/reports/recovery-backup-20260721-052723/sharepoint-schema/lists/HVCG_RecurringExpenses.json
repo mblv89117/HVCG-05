@@ -1,0 +1,95 @@
+{
+  "title": "HVCG_RecurringExpenses",
+  "description": "Ops \u2014 Recurring internal expenses",
+  "template": "genericList",
+  "domain": "Ops",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Category",
+      "displayName": "Category",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Software",
+        "Contractors",
+        "Insurance",
+        "Marketing",
+        "Travel",
+        "Facilities",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Cadence",
+      "displayName": "Cadence",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "Weekly",
+        "Monthly",
+        "Quarterly",
+        "Annual"
+      ],
+      "default": "Monthly"
+    },
+    {
+      "internalName": "NextDueDate",
+      "displayName": "NextDueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "VendorId",
+      "displayName": "VendorId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Vendors"
+    },
+    {
+      "internalName": "Status",
+      "displayName": "Status",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Active",
+        "Paused",
+        "Ended"
+      ],
+      "default": "Active"
+    }
+  ]
+}

@@ -1,0 +1,207 @@
+{
+  "flowName": "HVCG_LeadQualifiedCreateOpportunity",
+  "displayName": "HVCG_LeadQualifiedCreateOpportunity",
+  "module": "OpportunityCRM",
+  "packageVersion": "1.1.0",
+  "defaultState": "Off",
+  "description": "When a lead becomes Qualified, create (or link) a Discovery-stage opportunity idempotently. Optional Teams/Outlook notify is gated and test-recipient only.",
+  "trigger": {
+    "type": "SharePointItemModified",
+    "list": "HVCG_Leads",
+    "condition": "LeadStatus changes to 'Qualified'"
+  },
+  "connections": [
+    "SharePoint",
+    "Teams",
+    "Outlook"
+  ],
+  "connectionReferences": {
+    "SharePoint": "hvcg_sharedsharepointonline",
+    "Teams": "hvcg_sharedteams",
+    "Outlook": "hvcg_sharedoffice365"
+  },
+  "idempotency": {
+    "column": "HVCG_IdempotencyKey",
+    "list": "HVCG_Opportunities",
+    "pattern": "opp-from-lead|{LeadId}",
+    "onDuplicate": "SkippedDuplicate",
+    "lookupFirst": "GetItems where HVCG_IdempotencyKey eq pattern; if found, patch Lead.ConvertedOpportunityId and exit SkippedDuplicate"
+  },
+  "logging": {
+    "list": "HVCG_AutomationLogs",
+    "onStart": true,
+    "onSuccess": true,
+    "onFailure": true
+  },
+  "outboundPolicy": {
+    "teamsEnabledByDefault": false,
+    "emailEnabledByDefault": false,
+    "featureFlag": "HVCG_CRM_ENABLE_TEAMS_NOTIFY",
+    "recipientMode": "testOnly",
+    "testRecipientEnv": "HVCG_CRM_TEST_RECIPIENT",
+    "forbidden": [
+      "Company-wide Teams channels",
+      "Client or partner email",
+      "Production environment activation without owner approval"
+    ],
+    "notes": "When feature flag is false, skip TeamsPostMessage and Outlook actions; SharePoint writes still run."
+  },
+  "humanApproval": [
+    "Owner must keep flow Off until CRM schema repair shows zero drift",
+    "Teams posts require HVCG_CRM_ENABLE_TEAMS_NOTIFY=true and test channel only"
+  ],
+  "fieldMap": {
+    "ServiceInterestToOpportunityType": {
+      "Assessment": "Assessment",
+      "Capital Advisory": "Capital Raise",
+      "Fractional CFO": "Advisory Engagement",
+      "Operational Consulting": "Advisory Engagement",
+      "Growth": "Advisory Engagement",
+      "Retainer": "Retainer",
+      "Success Fee": "Success Fee",
+      "Hybrid": "Hybrid",
+      "Other": "Other",
+      "_default": "Other"
+    }
+  },
+  "steps": [
+    {
+      "id": 1,
+      "action": "LogStart"
+    },
+    {
+      "id": 2,
+      "action": "Condition",
+      "params": {
+        "equals": [
+          "LeadStatus",
+          "Qualified"
+        ]
+      },
+      "else": [
+        {
+          "action": "LogSkipped",
+          "params": {
+            "reason": "LeadStatus not Qualified"
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "action": "FindOrCreateOpportunity",
+      "params": {
+        "list": "HVCG_Opportunities",
+        "Title": "@{Title} \u2014 Discovery",
+        "Stage": "Discovery",
+        "WinLossStatus": "Open",
+        "ForecastCategory": "Pipeline",
+        "LeadId": "@{ID}",
+        "OwnerEmail": "@{OwnerEmail}",
+        "SalesOwnerEmail": "@{OwnerEmail}",
+        "ProposalAmount": "@{EstimatedValue}",
+        "Probability": 20,
+        "OpportunityType": "MapFromServiceInterest",
+        "CapitalHandoffStatus": "NotApplicable",
+        "ReferralPartnerId": "@{ReferralPartnerId}",
+        "HVCG_IdempotencyKey": "opp-from-lead|@{ID}",
+        "CopilotSummary": "Created from qualified lead @{Title}",
+        "CopilotKeywords": "lead;qualified;discovery;@{ServiceInterest}"
+      }
+    },
+    {
+      "id": 4,
+      "action": "UpdateLead",
+      "params": {
+        "ConvertedOpportunityId": "@{OpportunityId}",
+        "LeadStatus": "Qualified"
+      }
+    },
+    {
+      "id": 5,
+      "action": "CreateOpportunityActivity",
+      "params": {
+        "list": "HVCG_OpportunityActivities",
+        "ActivityType": "StageChange",
+        "Title": "Lead qualified \u2192 opportunity created",
+        "ActivityDate": "@{utcNow}",
+        "NewStage": "Discovery",
+        "LeadId": "@{ID}",
+        "OpportunityId": "@{OpportunityId}",
+        "OwnerEmail": "@{OwnerEmail}",
+        "HVCG_IdempotencyKey": "act-lead-qualify|@{ID}|@{OpportunityId}"
+      }
+    },
+    {
+      "id": 6,
+      "action": "TeamsPostMessage",
+      "params": {
+        "when": "HVCG_CRM_ENABLE_TEAMS_NOTIFY eq true",
+        "channelEnv": "HVCG_TEAMS_CRM_CHANNEL_ID",
+        "groupEnv": "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+        "message": "Qualified lead **@{Title}** opened opportunity **@{OpportunityTitle}** (owner @{OwnerEmail})."
+      }
+    },
+    {
+      "id": 7,
+      "action": "CreateAuditEvent",
+      "params": {
+        "eventType": "LeadQualifiedOpportunityCreated"
+      }
+    },
+    {
+      "id": 8,
+      "action": "LogSuccess"
+    }
+  ],
+  "errorHandling": {
+    "notifyGroup": "HVCG-Role-Administrator",
+    "notifyEmailEnv": "HVCG_CRM_TEST_RECIPIENT",
+    "maxRetries": 3,
+    "retryDelaySeconds": 60,
+    "outlookSend": false
+  },
+  "environmentVariables": [
+    "HVCG_SITE_URL",
+    "HVCG_TEAMS_CRM_CHANNEL_ID",
+    "HVCG_TEAMS_CRM_CHANNEL_GROUP_ID",
+    "HVCG_OPS_EMAIL",
+    "HVCG_CRM_TEST_RECIPIENT",
+    "HVCG_CRM_ENABLE_TEAMS_NOTIFY"
+  ],
+  "listsTouched": {
+    "reads": [
+      "HVCG_Leads"
+    ],
+    "writes": [
+      "HVCG_Opportunities",
+      "HVCG_Leads",
+      "HVCG_OpportunityActivities",
+      "HVCG_AutomationLogs",
+      "HVCG_AuditEvents"
+    ]
+  },
+  "teamsIntegration": {
+    "purpose": "Pipeline visibility when leads become sales-ready",
+    "channel": "HVCG CRM / Pipeline (test channel only until approved)",
+    "enabledByDefault": false
+  },
+  "copilotReadiness": {
+    "writes": [
+      "CopilotSummary",
+      "CopilotKeywords on Opportunity"
+    ],
+    "lists": [
+      "HVCG_Opportunities",
+      "HVCG_OpportunityActivities"
+    ]
+  },
+  "acceptanceCriteria": [
+    "Flow Off after import",
+    "Qualify one lead \u2192 one Opportunity with HVCG_IdempotencyKey opp-from-lead|{id}",
+    "Re-qualify / re-save does not create a second Opportunity",
+    "Lead.ConvertedOpportunityId set",
+    "ActivityType StageChange row created",
+    "No Teams post unless HVCG_CRM_ENABLE_TEAMS_NOTIFY=true and test channel bound"
+  ]
+}

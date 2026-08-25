@@ -1,0 +1,97 @@
+{
+  "title": "HVCG_PortalMessages",
+  "description": "Portal \u2014 Secure messaging thread stubs (V2-ready)",
+  "template": "genericList",
+  "domain": "Portal",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Direction",
+      "displayName": "Direction",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "ClientToHVCG",
+        "HVCGToClient",
+        "System"
+      ]
+    },
+    {
+      "internalName": "Body",
+      "displayName": "Body",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SentByEmail",
+      "displayName": "SentByEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SentDate",
+      "displayName": "SentDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresStaffResponse",
+      "displayName": "RequiresStaffResponse",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "RelatedDeliverableId",
+      "displayName": "RelatedDeliverableId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Deliverables"
+    },
+    {
+      "internalName": "IsClientVisible",
+      "displayName": "IsClientVisible",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": true
+    }
+  ]
+}

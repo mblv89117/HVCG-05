@@ -1,0 +1,230 @@
+{
+  "title": "HVCG_FinancialMilestones",
+  "description": "Operational financial milestones (not GL)",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "MilestoneType",
+      "displayName": "MilestoneType",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Proposal",
+        "Setup Fee",
+        "Monthly Retainer",
+        "Success Fee Estimated",
+        "Success Fee Earned",
+        "Success Fee Collected",
+        "Expense",
+        "Budget Cap",
+        "Renewal",
+        "Other"
+      ]
+    },
+    {
+      "internalName": "Amount",
+      "displayName": "Amount",
+      "type": "Currency",
+      "required": true,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DueDate",
+      "displayName": "DueDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "PaymentStatus",
+      "displayName": "PaymentStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Not Invoiced",
+        "Invoiced",
+        "Partial",
+        "Paid",
+        "Past Due",
+        "Written Off"
+      ],
+      "default": "Not Invoiced"
+    },
+    {
+      "internalName": "Probability",
+      "displayName": "Probability",
+      "type": "Number",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "WeightedValue",
+      "displayName": "WeightedValue",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "InvoiceReference",
+      "displayName": "InvoiceReference",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "Notes",
+      "displayName": "Notes",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "IsPastDue",
+      "displayName": "IsPastDue",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "RevenueAtRisk",
+      "displayName": "RevenueAtRisk",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "WorkContinuingWithoutPayment",
+      "displayName": "WorkContinuingWithoutPayment",
+      "type": "Boolean",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "InvoiceId",
+      "displayName": "InvoiceId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Invoices"
+    },
+    {
+      "internalName": "BudgetId",
+      "displayName": "BudgetId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Budgets"
+    },
+    {
+      "internalName": "CollectionsStatus",
+      "displayName": "CollectionsStatus",
+      "type": "Choice",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "None",
+        "Reminder1",
+        "Reminder2",
+        "FinalNotice",
+        "Collections",
+        "Resolved"
+      ],
+      "default": "None"
+    },
+    {
+      "internalName": "ForecastMonth",
+      "displayName": "ForecastMonth",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": "YYYY-MM"
+    },
+    {
+      "internalName": "IsRetainer",
+      "displayName": "IsRetainer",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "IsSuccessFee",
+      "displayName": "IsSuccessFee",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": false
+    },
+    {
+      "internalName": "RecognizedAmount",
+      "displayName": "RecognizedAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "CollectedAmount",
+      "displayName": "CollectedAmount",
+      "type": "Currency",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    }
+  ]
+}

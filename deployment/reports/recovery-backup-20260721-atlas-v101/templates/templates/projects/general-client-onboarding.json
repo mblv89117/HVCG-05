@@ -1,0 +1,351 @@
+{
+  "templateKey": "general-client-onboarding",
+  "title": "General Client Onboarding",
+  "templateType": "Project",
+  "defaultDurationDays": 21,
+  "workstreams": [
+    "Client onboarding",
+    "Financial document collection",
+    "Client reporting"
+  ],
+  "phases": [
+    {
+      "key": "p1",
+      "name": "Kickoff",
+      "seq": 1
+    },
+    {
+      "key": "p2",
+      "name": "Document Collection",
+      "seq": 2
+    },
+    {
+      "key": "p3",
+      "name": "Baseline Analysis",
+      "seq": 3
+    },
+    {
+      "key": "p4",
+      "name": "Operating Cadence",
+      "seq": 4
+    }
+  ],
+  "milestones": [
+    {
+      "key": "m1",
+      "title": "Kickoff completed",
+      "offsetDays": 3,
+      "isCritical": true
+    },
+    {
+      "key": "m2",
+      "title": "Critical docs received",
+      "offsetDays": 10,
+      "isCritical": true
+    },
+    {
+      "key": "m3",
+      "title": "Onboarding complete",
+      "offsetDays": 21,
+      "isCritical": true
+    }
+  ],
+  "tasks": [
+    {
+      "key": "t1",
+      "title": "Create / verify client master record",
+      "phase": "p1",
+      "offsetDays": 0,
+      "defaultRole": "OperationsAssistant",
+      "description": "Confirm legal name, code, owners, fees.",
+      "dependsOn": [],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    },
+    {
+      "key": "t2",
+      "title": "Confirm engagement terms filed",
+      "phase": "p1",
+      "offsetDays": 0,
+      "defaultRole": "OperationsManager",
+      "description": "File engagement letter in 00 - Engagement Administration.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t3",
+      "title": "Provision SharePoint client library",
+      "phase": "p1",
+      "offsetDays": 0,
+      "defaultRole": "Administrator",
+      "description": "Run workspace flow; verify folders 00-23.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    },
+    {
+      "key": "t4",
+      "title": "Send welcome communication",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "OperationsAssistant",
+      "description": "Use welcome template; approval if substantive customization.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t5",
+      "title": "Send document-request checklist",
+      "phase": "p2",
+      "offsetDays": 1,
+      "defaultRole": "OperationsAssistant",
+      "description": "Create document requests from template set.",
+      "dependsOn": [
+        "t3"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t6",
+      "title": "Schedule kickoff meeting",
+      "phase": "p1",
+      "offsetDays": 2,
+      "defaultRole": "ProjectManager",
+      "description": "Bookings or Outlook invite.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t7",
+      "title": "Conduct kickoff meeting",
+      "phase": "p1",
+      "offsetDays": 3,
+      "defaultRole": "ProjectManager",
+      "description": "Use meeting template; capture actions.",
+      "dependsOn": [
+        "t6"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 2,
+      "isCritical": true
+    },
+    {
+      "key": "t8",
+      "title": "First internal review of received docs",
+      "phase": "p2",
+      "offsetDays": 7,
+      "defaultRole": "FinancialAnalyst",
+      "description": "Review completeness/quality.",
+      "dependsOn": [
+        "t5"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 3,
+      "isCritical": false
+    },
+    {
+      "key": "t9",
+      "title": "Create billing follow-up tasks",
+      "phase": "p1",
+      "offsetDays": 1,
+      "defaultRole": "OperationsManager",
+      "description": "Setup fee / retainer milestones.",
+      "dependsOn": [
+        "t2"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    },
+    {
+      "key": "t10",
+      "title": "Establish weekly status cadence",
+      "phase": "p4",
+      "offsetDays": 14,
+      "defaultRole": "ProjectManager",
+      "description": "Recurring internal task + client touch plan.",
+      "dependsOn": [
+        "t7"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 2,
+      "isCritical": false
+    },
+    {
+      "key": "t11",
+      "title": "Add client to executive reporting",
+      "phase": "p4",
+      "offsetDays": 5,
+      "defaultRole": "OperationsManager",
+      "description": "Ensure appears on active client views.",
+      "dependsOn": [
+        "t1"
+      ],
+      "priority": "Medium",
+      "estimatedHours": 0.5,
+      "isCritical": false
+    },
+    {
+      "key": "t12",
+      "title": "Log onboarding complete",
+      "phase": "p4",
+      "offsetDays": 21,
+      "defaultRole": "OperationsAssistant",
+      "description": "Update stage health; close onboarding checklist.",
+      "dependsOn": [
+        "t8",
+        "t9"
+      ],
+      "priority": "Critical",
+      "estimatedHours": 1,
+      "isCritical": true
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "key": "d1",
+      "title": "Signed engagement letter",
+      "documentCategory": "Engagement Administration",
+      "folderTarget": "00 - Engagement Administration",
+      "dueOffsetDays": 3,
+      "isCritical": true,
+      "description": "Please provide: Signed engagement letter"
+    },
+    {
+      "key": "d2",
+      "title": "Articles / formation docs",
+      "documentCategory": "Corporate",
+      "folderTarget": "01 - Corporate Documents",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Articles / formation docs"
+    },
+    {
+      "key": "d3",
+      "title": "Ownership cap table / OS",
+      "documentCategory": "Ownership",
+      "folderTarget": "02 - Ownership and Management",
+      "dueOffsetDays": 7,
+      "isCritical": true,
+      "description": "Please provide: Ownership cap table / OS"
+    },
+    {
+      "key": "d4",
+      "title": "Last 3 years financial statements",
+      "documentCategory": "Historical Financials",
+      "folderTarget": "03 - Historical Financials",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: Last 3 years financial statements"
+    },
+    {
+      "key": "d5",
+      "title": "YTD financials",
+      "documentCategory": "Current Financials",
+      "folderTarget": "04 - Current Financials",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: YTD financials"
+    },
+    {
+      "key": "d6",
+      "title": "Last 2 years tax returns",
+      "documentCategory": "Tax Returns",
+      "folderTarget": "05 - Tax Returns",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: Last 2 years tax returns"
+    },
+    {
+      "key": "d7",
+      "title": "Last 3 months bank statements",
+      "documentCategory": "Bank Statements",
+      "folderTarget": "06 - Bank Statements",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: Last 3 months bank statements"
+    },
+    {
+      "key": "d8",
+      "title": "Current debt schedule",
+      "documentCategory": "Debt Schedule",
+      "folderTarget": "07 - Debt Schedule",
+      "dueOffsetDays": 10,
+      "isCritical": true,
+      "description": "Please provide: Current debt schedule"
+    }
+  ],
+  "deliverables": [
+    {
+      "key": "del1",
+      "title": "Onboarding summary & open items",
+      "deliverableType": "Client Report",
+      "draftOffsetDays": 14,
+      "finalOffsetDays": 21,
+      "requiresExecutiveApproval": false,
+      "ownerRole": "FinancialAnalyst",
+      "reviewerRole": "ProjectManager",
+      "approverRole": "ProjectManager"
+    }
+  ],
+  "risks": [
+    {
+      "title": "Delayed document collection",
+      "likelihood": "High",
+      "impact": "High",
+      "mitigation": "Cadenced reminders; escalate to PM day 14"
+    },
+    {
+      "title": "Incorrect legal entity details",
+      "likelihood": "Medium",
+      "impact": "High",
+      "mitigation": "Verify formation docs before modeling"
+    }
+  ],
+  "qualityControlChecks": [
+    "Engagement letter stored",
+    "Library permissions verified",
+    "Critical docs requested",
+    "Kickoff notes filed",
+    "Billing milestones created"
+  ],
+  "automationTriggers": [
+    "On ClientStage=Active Client",
+    "On EngagementStatus=Active",
+    "HVCG_CreateClientWorkspace",
+    "HVCG_CreateDocumentRequests"
+  ],
+  "clientResponsibilities": [
+    "Provide documents by due dates",
+    "Attend kickoff",
+    "Designate primary contact"
+  ],
+  "internalResponsibilities": [
+    "Provision workspace",
+    "Drive collection",
+    "Protect sensitive data",
+    "Maintain executive hygiene"
+  ],
+  "approvalPoints": [
+    "Engagement kickoff complete",
+    "Final delivery acceptance"
+  ]
+}

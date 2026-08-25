@@ -1,0 +1,200 @@
+{
+  "title": "HVCG_Decisions",
+  "description": "Decision register",
+  "template": "genericList",
+  "columns": [
+    {
+      "internalName": "Title",
+      "displayName": "Title",
+      "type": "Text",
+      "required": true,
+      "indexed": false,
+      "description": "Decision required"
+    },
+    {
+      "internalName": "ClientId",
+      "displayName": "ClientId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "lookupList": "HVCG_Clients"
+    },
+    {
+      "internalName": "EngagementId",
+      "displayName": "EngagementId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Engagements"
+    },
+    {
+      "internalName": "ProjectId",
+      "displayName": "ProjectId",
+      "type": "Lookup",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "lookupList": "HVCG_Projects"
+    },
+    {
+      "internalName": "ClientCode",
+      "displayName": "ClientCode",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Background",
+      "displayName": "Background",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "Options",
+      "displayName": "Options",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "Recommendation",
+      "displayName": "Recommendation",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "richText": true
+    },
+    {
+      "internalName": "FinancialImpact",
+      "displayName": "FinancialImpact",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "ClientImpact",
+      "displayName": "ClientImpact",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "LegalComplianceImpact",
+      "displayName": "LegalComplianceImpact",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "OwnerEmail",
+      "displayName": "OwnerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DecisionMakerEmail",
+      "displayName": "DecisionMakerEmail",
+      "type": "Text",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "Deadline",
+      "displayName": "Deadline",
+      "type": "DateTime",
+      "required": false,
+      "indexed": true,
+      "description": ""
+    },
+    {
+      "internalName": "DecisionStatus",
+      "displayName": "DecisionStatus",
+      "type": "Choice",
+      "required": true,
+      "indexed": true,
+      "description": "",
+      "choices": [
+        "Proposed",
+        "Pending Decision",
+        "Decided",
+        "Deferred",
+        "Cancelled"
+      ],
+      "default": "Proposed"
+    },
+    {
+      "internalName": "FinalDecision",
+      "displayName": "FinalDecision",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "DecisionDate",
+      "displayName": "DecisionDate",
+      "type": "DateTime",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "SupportingDocuments",
+      "displayName": "SupportingDocuments",
+      "type": "Note",
+      "required": false,
+      "indexed": false,
+      "description": ""
+    },
+    {
+      "internalName": "RequiresExecutiveAttention",
+      "displayName": "RequiresExecutiveAttention",
+      "type": "Boolean",
+      "required": false,
+      "indexed": true,
+      "description": "",
+      "default": true
+    },
+    {
+      "internalName": "EscalationReason",
+      "displayName": "EscalationReason",
+      "type": "Choice",
+      "required": false,
+      "indexed": false,
+      "description": "",
+      "choices": [
+        "ClientRelationshipAtRisk",
+        "MateriallyBehindSchedule",
+        "CriticalDeadlineAtRisk",
+        "MajorDeliverableNeedsExecutiveApproval",
+        "PricingOrScopeException",
+        "ClientDisputesPricingOrScope",
+        "OutOfScopeWorkRequested",
+        "CapitalStrategyDecisionNeeded",
+        "LenderOrInvestorNeedsExecutive",
+        "PaymentMateriallyOverdue",
+        "SuccessFeeEarnedOrDisputed",
+        "LegalRegulatoryEthicalReputational",
+        "TeamCannotResolveBlocker",
+        "MaterialFinancialConsequence",
+        "ClientProvidedInaccurateMaterialInfo",
+        "Other"
+      ]
+    }
+  ]
+}
