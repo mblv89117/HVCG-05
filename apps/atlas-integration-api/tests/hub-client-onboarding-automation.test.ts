@@ -21,11 +21,13 @@ import {
   composeOnboardingTaskReview,
   composeOnboardingAgentAssignmentReview,
   composeOnboardingCommunicationContextReview,
+  composeOnboardingCapitalContextReview,
   composeRealtimeDocumentsHonesty,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
   mapsToCommunicationContextIntent,
+  mapsToCapitalContextIntent,
   mapsToOnboardingContextIntent,
   mapsToOnboardingExecuteIntent,
   mapsToRealtimeDocumentsHonestyIntent,
@@ -157,6 +159,14 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.communicationContextReview.autoRespond, false);
     assert.equal(result.record.communicationContextReview.outbound, false);
     assert.equal(result.record.operationsHandoff.relatedThreadCount, 0);
+    assert.equal(result.record.capitalContextReconciled, false);
+    assert.equal(result.record.capitalContextReview.capitalContextReconciled, false);
+    assert.equal(result.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(result.record.capitalContextReview.relatedCapital, []);
+    assert.equal(result.record.capitalContextReview.send, false);
+    assert.equal(result.record.capitalContextReview.autoRespond, false);
+    assert.equal(result.record.capitalContextReview.outbound, false);
+    assert.equal(result.record.capitalContextReview.capitalSubmit, false);
     assert.equal(COMMUNICATIONS_SEND, false);
     assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
     rmSync(dir, { recursive: true, force: true });
@@ -212,6 +222,9 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.communicationContextReconciled, false);
     assert.equal(result.record.communicationContextReview.relatedThreadCount, 0);
     assert.deepEqual(result.record.communicationContextReview.relatedEmails, []);
+    assert.equal(result.record.capitalContextReconciled, false);
+    assert.equal(result.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(result.record.capitalContextReview.relatedCapital, []);
     assert.deepEqual(result.record.assignedAgents, []);
     assert.equal(result.record.agentAssignmentReview.agentReconciled, false);
     assert.equal(result.record.projectId, undefined);
@@ -2372,6 +2385,8 @@ describe('client onboarding automation', () => {
     assert.equal(missingIdentity.record.communicationContextReview.relatedThreadCount, 0);
     assert.deepEqual(missingIdentity.record.communicationContextReview.relatedEmails, []);
     assert.equal(missingIdentity.events.includes('COMMUNICATION_CONTEXT_RECONCILED'), false);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.deepEqual(missingIdentity.record.capitalContextReview.relatedCapital, []);
 
     assert.equal(mapsToCommunicationContextIntent('What is the onboarding communication context for ACCG?'), true);
     assert.equal(mapsToOnboardingContextIntent('What is the onboarding communication context for ACCG?'), true);
@@ -2391,6 +2406,210 @@ describe('client onboarding automation', () => {
     assert.match(emptyAnswer, /Existing entitled communications: not confirmed/);
     assert.match(emptyAnswer, /Related entitled threads: 0/);
     assert.equal(/AUTO_RESPOND|submitted/i.test(emptyAnswer), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reconciles entitled same-scope capital by id and does not invent capital', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-capital-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const prepared = composeOnboardingCapitalContextReview({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      relatedCapital: [{ id: 'cap-accg-1', title: 'ACCG entitled capital packet' }],
+      reusedExisting: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.capitalContextReconciled, true);
+    assert.equal(prepared.reusedExisting, true);
+    assert.equal(prepared.relatedCapitalCount, 1);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.autoRespond, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
+
+    const identityPack = composeOnboardingCapitalContextReview({
+      identityResolutionRequired: true,
+      relatedCapital: [{ id: 'cap-should-not-attach', title: 'foreign' }],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identityPack.capitalContextReconciled, false);
+    assert.equal(identityPack.relatedCapitalCount, 0);
+    assert.deepEqual(identityPack.relatedCapital, []);
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => [
+        { id: 'cap-accg-1', title: 'ACCG entitled capital packet', clientCode: 'ACCG01' },
+        { id: 'cap-pdg', title: 'PDG01 foreign packet', clientCode: 'PDG01' },
+        { title: 'missing-id-must-drop', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.capitalContextReconciled, true);
+    assert.equal(reused.record.capitalContextReview.capitalContextReconciled, true);
+    assert.equal(reused.record.capitalContextReview.reusedExisting, true);
+    assert.equal(reused.record.capitalContextReview.relatedCapitalCount, 1);
+    assert.deepEqual(reused.record.capitalContextReview.relatedCapital.map((row) => row.id), ['cap-accg-1']);
+    assert.equal(reused.record.capitalContextReview.send, false);
+    assert.equal(reused.record.capitalContextReview.outbound, false);
+    assert.equal(reused.record.capitalContextReview.capitalSubmit, false);
+    assert.equal(reused.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.ok(reused.events.includes('CAPITAL_CONTEXT_RECONCILED'));
+    assert.equal(JSON.stringify(reused.record.capitalContextReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(reused.record.capitalContextReview).includes('cap-pdg'), false);
+    assert.equal(/TargetAmount|5000000|Live Oak|approved|funded/i.test(JSON.stringify(reused.record.capitalContextReview)), false);
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.capitalContextReconciled, false);
+    assert.equal(empty.record.capitalContextReview.capitalContextReconciled, false);
+    assert.equal(empty.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(empty.record.capitalContextReview.relatedCapital, []);
+    assert.equal(empty.events.includes('CAPITAL_CONTEXT_RECONCILED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => {
+        throw new Error('entitled capital search failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.capitalContextReconciled, false);
+    assert.equal(thrown.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(thrown.record.capitalContextReview.relatedCapital, []);
+    assert.equal(thrown.events.includes('CAPITAL_CONTEXT_RECONCILED'), false);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      capitalSearch: async () => [],
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.capitalContextReconciled, false);
+    assert.equal(dry.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(dry.record.capitalContextReview.relatedCapital, []);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.capitalContextReconciled, false);
+    assert.equal(absent.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(absent.record.capitalContextReview.relatedCapital, []);
+
+    const wrongClient = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      capitalSearch: async () => [
+        { id: 'cap-pdg', title: 'PDG01 foreign packet', clientCode: 'PDG01' },
+        { id: 'cap-hfd', title: 'HFD01 foreign packet', clientCode: 'HFD01' },
+      ],
+    });
+    assert.equal(wrongClient.ok, true);
+    if (!wrongClient.ok) return;
+    assert.equal(wrongClient.record.capitalContextReconciled, false);
+    assert.equal(wrongClient.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(wrongClient.record.capitalContextReview.relatedCapital, []);
+    assert.equal(JSON.stringify(wrongClient.record.capitalContextReview).includes('PDG01'), false);
+    assert.equal(JSON.stringify(wrongClient.record.capitalContextReview).includes('HFD01'), false);
+    assert.equal(wrongClient.record.capitalContextReview.send, false);
+    assert.equal(wrongClient.record.capitalContextReview.outbound, false);
+    assert.equal(wrongClient.record.capitalContextReview.capitalSubmit, false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    const missingIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      workflow: (() => {
+        const workflow = onboardingWorkflow('ACCG01');
+        workflow.scope = { organizationId: 'org-hvcg' };
+        return workflow;
+      })(),
+      capitalSearch: async () => [
+        { id: 'cap-should-not-attach', title: 'ACCG packet', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(missingIdentity.ok, true);
+    if (!missingIdentity.ok) return;
+    assert.equal(missingIdentity.record.identityResolutionRequired, true);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.equal(missingIdentity.record.capitalContextReview.relatedCapitalCount, 0);
+    assert.deepEqual(missingIdentity.record.capitalContextReview.relatedCapital, []);
+    assert.equal(missingIdentity.events.includes('CAPITAL_CONTEXT_RECONCILED'), false);
+    assert.equal(missingIdentity.record.communicationContextReconciled, false);
+
+    assert.equal(mapsToCapitalContextIntent('What is the onboarding capital context for ACCG?'), true);
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding capital context for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding capital context for ACCG?'), 'status');
+    const reusedAnswer = answerOnboardingContext(
+      'What is the onboarding capital context for ACCG?',
+      reused.record,
+    );
+    assert.match(reusedAnswer, /Capital context review for ACCG01: CLEAR/);
+    assert.match(reusedAnswer, /Existing entitled capital context: reused/);
+    assert.match(reusedAnswer, /Related entitled capital: 1/);
+    assert.equal(/cap-pdg|PDG01|AUTO_RESPOND|TargetAmount|5000000|Live Oak/i.test(reusedAnswer), false);
+    const emptyAnswer = answerOnboardingContext(
+      'What is the onboarding capital context for ACCG?',
+      empty.record,
+    );
+    assert.match(emptyAnswer, /Existing entitled capital context: not confirmed/);
+    assert.match(emptyAnswer, /Related entitled capital: 0/);
+    assert.equal(/AUTO_RESPOND|submitted|TargetAmount/i.test(emptyAnswer), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
