@@ -12,7 +12,14 @@ import {
   ENTITLED_CANONICAL_CLIENT_CODES,
   resolveEntitledClientCodeFromQuestion,
 } from './clientOnboardingAutomation.ts';
+import {
+  readAgentActivityOverlay,
+  withAgentActivityWriteLock,
+  writeAgentActivityOverlay,
+} from './activityLedger.ts';
+import { resolveAgentActivityOverlayDir } from './activityLedger.ts';
 import { COMMUNICATIONS_AUTO_RESPOND, COMMUNICATIONS_POLICY_CLASS } from './types.ts';
+import type { AgentActivityLedgerEntry } from './types.ts';
 
 export const COMMUNICATION_POLICY_CENTER_CONTRACT = 'atlas-hub-communication-policies.v1' as const;
 export const COMMUNICATION_POLICY_CENTER_MISSION_KEY = 'ATLAS-COMMUNICATION-POLICY-CENTER-001' as const;
@@ -35,6 +42,85 @@ export type CommunicationPolicyRecord = {
   recordedBy: string;
   autoSend: false;
 };
+
+export type CommunicationPolicyVersionRecord = {
+  policyId: string;
+  previousMode?: CommunicationPolicyMode;
+  newMode: CommunicationPolicyMode;
+  changedAt: string;
+  changedBy: string;
+  authorityExpansion: boolean;
+  reason?: string;
+};
+
+export type CommunicationPolicyVersionOverlay = {
+  schemaVersion: number;
+  versions: CommunicationPolicyVersionRecord[];
+};
+
+const POLICY_VERSION_SCHEMA = 1;
+
+function policyVersionPath(dir: string): string {
+  return join(dir, 'communication-policy-versions.json');
+}
+
+export function readCommunicationPolicyVersions(dir: string): CommunicationPolicyVersionOverlay {
+  const path = policyVersionPath(dir);
+  if (!existsSync(path)) return { schemaVersion: POLICY_VERSION_SCHEMA, versions: [] };
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8')) as CommunicationPolicyVersionOverlay;
+    return {
+      schemaVersion: parsed.schemaVersion ?? POLICY_VERSION_SCHEMA,
+      versions: Array.isArray(parsed.versions) ? parsed.versions : [],
+    };
+  } catch {
+    return { schemaVersion: POLICY_VERSION_SCHEMA, versions: [] };
+  }
+}
+
+function writeCommunicationPolicyVersions(dir: string, overlay: CommunicationPolicyVersionOverlay): void {
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  const path = policyVersionPath(dir);
+  const tmp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tmp, JSON.stringify(overlay, null, 2), { mode: 0o600 });
+  renameSync(tmp, path);
+}
+
+function modeRank(mode: CommunicationPolicyMode): number {
+  if (mode === 'DRAFT_ONLY') return 0;
+  if (mode === 'REQUIRE_APPROVAL') return 1;
+  return 2;
+}
+
+async function appendCommunicationPolicyActivity(opts: {
+  dataDir: string;
+  principal: AtlasPrincipal;
+  event: 'POLICY_CREATED' | 'POLICY_UPDATED';
+  record: CommunicationPolicyRecord;
+}): Promise<void> {
+  const dir = resolveAgentActivityOverlayDir(opts.dataDir);
+  const entry: AgentActivityLedgerEntry = {
+    agent: 'atlas_communication_policy',
+    missionKey: COMMUNICATION_POLICY_CENTER_MISSION_KEY,
+    trigger: opts.event,
+    timestamp: new Date().toISOString(),
+    tools: ['communication_policy_center'],
+    classification: 'CONFIRMED',
+    confidence: 'CONFIRMED',
+    result: 'answered',
+    readWriteStatus: 'READ_AUTO',
+    policyDecision: opts.record.mode,
+    writerUserId: opts.principal.userId,
+    ...(opts.record.clientCode
+      ? { affected: [{ clientCode: opts.record.clientCode, classification: 'CONFIRMED' }] }
+      : {}),
+  };
+  await withAgentActivityWriteLock(dir, () => {
+    const overlay = readAgentActivityOverlay(dir);
+    overlay.entries.push(entry);
+    writeAgentActivityOverlay(dir, overlay);
+  });
+}
 
 export type CommunicationPolicyOverlay = {
   schemaVersion?: number;
@@ -239,13 +325,14 @@ export function listCommunicationPolicies(opts: {
   };
 }
 
-export function recordCommunicationPolicy(opts: {
+export async function recordCommunicationPolicy(opts: {
   principal: AtlasPrincipal;
   dataDir: string;
   input: CommunicationPolicyWriteInput;
-}):
+}): Promise<
   | { ok: true; record: CommunicationPolicyRecord; model: CommunicationPolicyCenterModel }
-  | { ok: false; error: CommunicationPolicyWriteError } {
+  | { ok: false; error: CommunicationPolicyWriteError }
+> {
   const entitled = entitledClientCodes(opts.principal).filter((code) => isRosterClientCode(code));
   const validated = validateCommunicationPolicyWrite(opts.input, entitled);
   if (!validated.ok) return validated;
@@ -265,10 +352,31 @@ export function recordCommunicationPolicy(opts: {
 
   const dir = resolveCommunicationPolicyDir(opts.dataDir);
   const overlay = readCommunicationPolicyOverlay(dir);
+  const previous = overlay.records.find((r) => r.policyId === record.policyId);
   const idx = overlay.records.findIndex((r) => r.policyId === record.policyId);
   if (idx >= 0) overlay.records[idx] = record;
   else overlay.records.push(record);
   writeCommunicationPolicyOverlay(dir, overlay);
+
+  const versions = readCommunicationPolicyVersions(dir);
+  const authorityExpansion =
+    previous ? modeRank(record.mode) > modeRank(previous.mode) : record.mode !== 'DRAFT_ONLY';
+  versions.versions.push({
+    policyId: record.policyId,
+    ...(previous ? { previousMode: previous.mode } : {}),
+    newMode: record.mode,
+    changedAt: now,
+    changedBy: opts.principal.userId,
+    authorityExpansion,
+  });
+  writeCommunicationPolicyVersions(dir, versions);
+
+  await appendCommunicationPolicyActivity({
+    dataDir: opts.dataDir,
+    principal: opts.principal,
+    event: previous ? 'POLICY_UPDATED' : 'POLICY_CREATED',
+    record,
+  });
 
   return {
     ok: true,
@@ -280,8 +388,21 @@ export function recordCommunicationPolicy(opts: {
 export function mapsToCommunicationPolicyIntent(question: string): boolean {
   const q = question.toLowerCase();
   return (
-    (q.includes('communication policy') || q.includes('comms policy') || q.includes('auto-respond') || q.includes('auto respond')) &&
-    (q.includes('policy') || q.includes('what is') || q.includes('for'))
+    (q.includes('communication policy') ||
+      q.includes('comms policy') ||
+      q.includes('auto-respond') ||
+      q.includes('auto respond') ||
+      q.includes('draft responses') ||
+      q.includes('never send') ||
+      q.includes('always escalate') ||
+      q.includes('always show me complaints') ||
+      q.includes('routine status responses')) &&
+    (q.includes('policy') ||
+      q.includes('what is') ||
+      q.includes('for') ||
+      q.includes('draft') ||
+      q.includes('respond') ||
+      q.includes('send'))
   );
 }
 

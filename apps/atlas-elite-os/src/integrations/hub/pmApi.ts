@@ -1159,16 +1159,32 @@ export type WorkflowDraftPayload = {
   authorityExpansionRequired: boolean;
 };
 
-export async function fetchOperatorRuntime(auth: AtlasHubAuthHeaders, question: string) {
+export async function fetchOperatorRuntime(
+  auth: AtlasHubAuthHeaders,
+  question: string,
+  opts?: { clientCode?: string },
+) {
+  const params = new URLSearchParams();
+  params.set('question', question.trim());
+  if (opts?.clientCode?.trim()) params.set('clientCode', opts.clientCode.trim());
   return hubFetchJson<{
-    operatorDesk?: { askAtlas?: unknown };
+    operatorDesk?: {
+      askAtlas?: {
+        items?: Array<{
+          state: string;
+          client?: string;
+          clientCode?: string;
+          classification: string;
+          why: string;
+          basedOn: string;
+        }>;
+        honestEmpty?: boolean;
+      };
+    };
     workflowDraft?: WorkflowDraftPayload;
     workflowAnswer?: string;
     runtime?: Record<string, unknown>;
-  }>(
-    auth,
-    `/operator/runtime.json?question=${encodeURIComponent(question.trim())}`,
-  );
+  }>(auth, `/operator/runtime.json?${params.toString()}`);
 }
 
 export async function postWorkflowDraftAction(

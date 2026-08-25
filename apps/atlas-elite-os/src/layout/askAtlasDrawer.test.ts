@@ -68,4 +68,22 @@ describe('Ask Atlas drawer prompt summary', () => {
     assert.equal(routeAskAtlasPrompt('Start the weekly marketing review', { hasBearer: true }), 'hub_runtime');
     assert.equal(mapsToOnboardingStatusIntent('What Capital matters need my attention?'), false);
   });
+
+  it('filters client-scoped attention prompts away from other clients in signed cache', () => {
+    const mixed: AskAtlasDrawerItem[] = [
+      ...items,
+      {
+        state: 'Waiting',
+        client: 'ACCG Inc.',
+        clientCode: 'ACCG01',
+        classification: 'LIKELY',
+        why: 'Waiting on ACCG deliverable.',
+        basedOn: 'ACCG project evidence',
+      },
+    ];
+    const answer = summarizeAskAtlasPrompt('What needs my attention for ACCG?', mixed);
+    assert.match(answer, /ACCG01/);
+    assert.equal(answer.includes('PDG01'), false);
+    assert.equal(answer.includes('Prodigy'), false);
+  });
 });

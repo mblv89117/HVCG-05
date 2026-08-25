@@ -53,10 +53,15 @@ import {
 } from './types.ts';
 import { appendAskAtlasActivity, listVisibleAgentActivity } from './activityLedger.ts';
 import {
+  extractClientScopedAttentionQuery,
+  filterAttentionItemsForClient,
+} from './askAtlasScope.ts';
+import {
   extractClientContextQuery,
   extractSearchAuthorizedQuery,
   isOwnerGatedQuestion,
   mapsToGetClientContext,
+  mapsToGetClientScopedAttention,
   mapsToSearchAuthorizedKnowledge,
   runAtlasClientContextRuntime,
   runAtlasHubRuntime,
@@ -731,7 +736,7 @@ export async function handleOperatorDesk(opts: {
         sendJson(opts.res, status, { error: (err as Error).message, code: (err as { code?: string }).code || 'invalid_json' }, opts.origin);
         return true;
       }
-      const result = recordCommunicationPolicy({
+      const result = await recordCommunicationPolicy({
         principal,
         dataDir: opts.cfg.dataDir,
         input: body,
@@ -1098,6 +1103,8 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+    const explicitClientCode =
+      (url.searchParams.get('client') || url.searchParams.get('clientCode') || '').trim();
 
     if (mapsToHistoricalReconstructionHonestyIntent(question)) {
       const entitled = entitledClientCodes(principal);
@@ -1320,8 +1327,16 @@ export async function handleOperatorDesk(opts: {
 
     if (mapsToBusinessMemoryIntent(question)) {
       const overlay = readBusinessMemoryOverlay(resolveBusinessMemoryDir(opts.cfg.dataDir));
+      const entitled = entitledClientCodes(principal);
       const clientFromQuestion = extractClientContextQuery(question);
-      const clientCode = url.searchParams.get('client')?.trim() || clientFromQuestion || undefined;
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const clientCode =
+        url.searchParams.get('client')?.trim() ||
+        url.searchParams.get('clientCode')?.trim() ||
+        explicitClientCode ||
+        clientFromQuestion ||
+        (match.kind === 'exact' || match.kind === 'unique_prefix' ? match.clientCode : undefined) ||
+        undefined;
       const memoryAnswer = answerBusinessMemoryQuestion({
         question,
         overlay,
@@ -1844,20 +1859,55 @@ export async function handleOperatorDesk(opts: {
           entitledSearch,
           requestDocumentPreview,
         })
-      : mapsToGetClientContext(question)
-        ? await runAtlasClientContextRuntime({
-            principal,
-            picture: model.operatingPicture,
-            question,
-            deskSearch: model.search,
-            entitledSearch,
-            dataDir: opts.cfg.dataDir,
-          })
+      : mapsToGetClientContext(question) || mapsToGetClientScopedAttention(question)
+        ? await (async () => {
+            const scopedQuery = extractClientScopedAttentionQuery(question);
+            const clientCtx = await runAtlasClientContextRuntime({
+              principal,
+              picture: model.operatingPicture,
+              question,
+              clientCode: explicitClientCode || undefined,
+              clientQuery:
+                explicitClientCode ||
+                scopedQuery?.clientToken ||
+                extractClientContextQuery(question) ||
+                '',
+              deskSearch: model.search,
+              entitledSearch,
+              dataDir: opts.cfg.dataDir,
+            });
+            if (!scopedQuery?.filterState || !clientCtx.clientContext) return clientCtx;
+            const items = filterAttentionItemsForClient(
+              clientCtx.askAtlas.items,
+              clientCtx.clientContext.client.clientCode,
+              clientCtx.clientContext.client.client,
+              scopedQuery.filterState,
+            );
+            const honestEmpty = items.length === 0;
+            return {
+              ...clientCtx,
+              askAtlas: {
+                ...clientCtx.askAtlas,
+                honestEmpty,
+                items,
+                activity: {
+                  ...clientCtx.askAtlas.activity,
+                  classification: honestEmpty
+                    ? 'HONEST_EMPTY'
+                    : clientCtx.askAtlas.activity.classification,
+                  result: honestEmpty ? 'honest_empty' : 'answered',
+                  policyDecision: 'client_scoped_attention',
+                },
+              },
+            };
+          })()
         : runAtlasHubRuntime({
             principal,
             picture: model.operatingPicture,
             question,
+            explicitClientCode,
             deskSearch: model.search,
+            dataDir: opts.cfg.dataDir,
           });
     if (opts.method === 'GET') {
       try {
@@ -1951,12 +2001,15 @@ export async function handleOperatorDesk(opts: {
     const requestedQuestion = (postedQuestion || queryQuestion).trim();
     const ownerGated = requestedQuestion ? isOwnerGatedQuestion(requestedQuestion) : false;
     const fromQuestion = !ownerGated && requestedQuestion ? extractClientContextQuery(requestedQuestion) : null;
+    const scopedQuery = requestedQuestion ? extractClientScopedAttentionQuery(requestedQuestion) : null;
     const invoked = ownerGated
       ? {
           askAtlas: runAtlasHubRuntime({
             principal,
             picture: model.operatingPicture,
             question: requestedQuestion,
+            explicitClientCode: requestedClient,
+            dataDir: opts.cfg.dataDir,
           }).askAtlas,
           clientContext: undefined,
         }
@@ -1965,11 +2018,31 @@ export async function handleOperatorDesk(opts: {
           picture: model.operatingPicture,
           question: requestedQuestion,
           clientCode: requestedClient,
-          clientQuery: requestedClient || fromQuestion || '',
+          clientQuery: requestedClient || scopedQuery?.clientToken || fromQuestion || '',
           deskSearch: model.search,
           entitledSearch,
           dataDir: opts.cfg.dataDir,
         });
+    let askAtlasBody = invoked.askAtlas;
+    if (!ownerGated && scopedQuery?.filterState && invoked.clientContext) {
+      const items = filterAttentionItemsForClient(
+        invoked.askAtlas.items,
+        invoked.clientContext.client.clientCode,
+        invoked.clientContext.client.client,
+        scopedQuery.filterState,
+      );
+      const honestEmpty = items.length === 0;
+      askAtlasBody = {
+        ...invoked.askAtlas,
+        honestEmpty,
+        items,
+        activity: {
+          ...invoked.askAtlas.activity,
+          result: honestEmpty ? 'honest_empty' : 'answered',
+          policyDecision: 'client_scoped_attention',
+        },
+      };
+    }
     const tools = ownerGated
       ? []
       : invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
@@ -1977,12 +2050,12 @@ export async function handleOperatorDesk(opts: {
         : [...invoked.askAtlas.activity.tools, GET_CLIENT_CONTEXT_TOOL];
     const recoveredMissionKey = clientContextMissionKey(invoked.clientContext);
     const askAtlas = ownerGated
-      ? invoked.askAtlas
+      ? askAtlasBody
       : {
-          ...invoked.askAtlas,
+          ...askAtlasBody,
           invented: false as const,
           activity: {
-            ...invoked.askAtlas.activity,
+            ...askAtlasBody.activity,
             agent: ASK_ATLAS_RUNTIME_AGENT,
             missionKey: recoveredMissionKey,
             trigger: 'signed_operator_question' as const,

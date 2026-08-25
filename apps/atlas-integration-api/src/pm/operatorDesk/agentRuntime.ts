@@ -26,6 +26,13 @@ import {
 } from './toolGateway.ts';
 import { mapsToOnboardingContextIntent } from './clientOnboardingAutomation.ts';
 import {
+  filterAttentionItemsForClient,
+  mapsToGetClientScopedAttention,
+  resolveAskAtlasScope,
+} from './askAtlasScope.ts';
+
+export { mapsToGetClientScopedAttention, resolveAskAtlasScope } from './askAtlasScope.ts';
+import {
   ASK_ATLAS_ATTENTION_NL_MISSION_KEY,
   ASK_ATLAS_CLIENTCTX_MISSION_KEY,
   ASK_ATLAS_QUESTION,
@@ -234,6 +241,7 @@ const OWNER_GATED_QUESTION_MARKERS = [
 ];
 
 export function mapsToGetAttentionItems(question: string): boolean {
+  if (mapsToGetClientScopedAttention(question)) return false;
   return extractAttentionIntent(question) !== null;
 }
 
@@ -438,6 +446,7 @@ export function runAtlasHubRuntime(opts: {
   question?: string;
   now?: string;
   searchQuery?: string;
+  explicitClientCode?: string;
   deskSearch?: {
     q: string;
     hitCount: number;
@@ -445,8 +454,116 @@ export function runAtlasHubRuntime(opts: {
     ran: boolean;
   };
   entitledIndexHits?: ToolGatewayContext['entitledIndexHits'];
+  dataDir?: string;
 }): AtlasHubRuntimeResult {
   const question = (opts.question || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+  const scope = resolveAskAtlasScope(opts.principal, question, {
+    explicitClientCode: opts.explicitClientCode,
+  });
+
+  if (scope.kind === 'ambiguous') {
+    return {
+      askAtlas: stampRuntimeAnswer(
+        {
+          kind: 'ask_atlas_attention_v1',
+          question: ASK_ATLAS_QUESTION,
+          invented: false,
+          honestEmpty: true,
+          ranking: [...ASK_ATLAS_RANKING],
+          items: [],
+          activity: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            missionKey: ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+            trigger: 'signed_operator_question',
+            timestamp: opts.now || new Date().toISOString(),
+            tools: [],
+            classification: 'HONEST_EMPTY',
+            result: 'honest_empty',
+            readWriteStatus: 'READ_AUTO',
+            policyDecision: 'ambiguous_client_scope',
+          },
+        },
+        [],
+        ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+      ),
+      runtime: runtimeEnvelope([], ASK_ATLAS_CLIENTCTX_MISSION_KEY),
+    };
+  }
+
+  if (scope.kind === 'unresolved') {
+    return {
+      askAtlas: stampRuntimeAnswer(
+        {
+          kind: 'ask_atlas_attention_v1',
+          question: ASK_ATLAS_QUESTION,
+          invented: false,
+          honestEmpty: true,
+          ranking: [...ASK_ATLAS_RANKING],
+          items: [],
+          activity: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            missionKey: ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+            trigger: 'signed_operator_question',
+            timestamp: opts.now || new Date().toISOString(),
+            tools: [],
+            classification: 'HONEST_EMPTY',
+            result: 'honest_empty',
+            readWriteStatus: 'READ_AUTO',
+            policyDecision: 'unresolved_client_scope',
+          },
+        },
+        [],
+        ASK_ATLAS_CLIENTCTX_MISSION_KEY,
+      ),
+      runtime: runtimeEnvelope([], ASK_ATLAS_CLIENTCTX_MISSION_KEY),
+    };
+  }
+
+  if (scope.kind === 'client') {
+    const invoked = getClientContext({
+      principal: opts.principal,
+      picture: opts.picture,
+      now: opts.now,
+      clientCode: scope.clientCode,
+      clientQuery: scope.clientCode,
+      deskSearch: opts.deskSearch,
+      entitledIndexHits: opts.entitledIndexHits,
+      dataDir: opts.dataDir,
+    });
+    const items = filterAttentionItemsForClient(
+      invoked.askAtlas.items,
+      scope.clientCode,
+      invoked.clientContext.client.client,
+      scope.filterState,
+    );
+    const honestEmpty = items.length === 0;
+    const result = honestEmpty ? 'honest_empty' : 'answered';
+    const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
+      ? [...invoked.askAtlas.activity.tools]
+      : [...invoked.askAtlas.activity.tools, GET_CLIENT_CONTEXT_TOOL];
+    const missionKey = clientContextMissionKey(invoked.clientContext);
+    return {
+      askAtlas: stampRuntimeAnswer(
+        {
+          ...invoked.askAtlas,
+          invented: false,
+          honestEmpty,
+          items,
+          activity: {
+            ...invoked.askAtlas.activity,
+            classification: honestEmpty ? 'HONEST_EMPTY' : neverPromoteClassification(items[0]?.classification),
+            result,
+            policyDecision: 'client_scoped_attention',
+          },
+        },
+        toolsInvoked,
+        missionKey,
+      ),
+      runtime: runtimeEnvelope([GET_CLIENT_CONTEXT_TOOL], missionKey),
+      clientContext: invoked.clientContext,
+    };
+  }
+
   if (
     isOwnerGatedQuestion(question) ||
     (!mapsToGetAttentionItems(question) &&
