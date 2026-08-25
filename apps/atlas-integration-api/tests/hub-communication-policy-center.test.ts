@@ -255,11 +255,11 @@ describe('communication policy center', () => {
     });
   });
 
-  it('recordCommunicationPolicy refuses a sixth client even when entitled locally', () => {
+  it('recordCommunicationPolicy refuses a sixth client even when entitled locally', async () => {
     const principal = staffPrincipal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', ['FOO01', 'ACCG01']);
     const dir = mkdtempSync(join(tmpdir(), 'atlas-comms-sixth-'));
     try {
-      const result = recordCommunicationPolicy({
+      const result = await recordCommunicationPolicy({
         principal,
         dataDir: dir,
         input: { scopeKind: 'client', clientCode: 'FOO01', mode: 'DRAFT_ONLY' },
