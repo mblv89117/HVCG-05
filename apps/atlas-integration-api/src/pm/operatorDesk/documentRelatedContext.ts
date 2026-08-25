@@ -66,6 +66,55 @@ function takeBound<T>(rows: T[]): T[] {
   return rows.slice(0, DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
 }
 
+export type OnboardingCommsThreadInput = {
+  id?: string;
+  title?: string;
+  clientCode?: string;
+  conversationId?: string;
+  classification?: RelatedDocumentEmailRef['classification'];
+};
+
+/**
+ * Entitled same-scope mail-thread refs for onboarding communication-context
+ * reconcile. Reuses relatedEmails() — no second communications product.
+ * Drops rows without an id. Client A never receives Client B. Fail-closed
+ * when ClientCode is missing / non-canonical or the principal is not entitled.
+ */
+export function listRelatedEmailsForClient(
+  principal: AtlasPrincipal,
+  clientCode: string | undefined,
+  threads: OnboardingCommsThreadInput[],
+): RelatedDocumentEmailRef[] {
+  const code = canonicalClientCode(clientCode);
+  if (!code) return [];
+  if (!mayReceiveRelatedContext(principal, code)) return [];
+  const items = threads.flatMap((row) => {
+    const id = (row.id || '').trim();
+    if (!id) return [];
+    const title = (row.title || '').trim() || id;
+    const conversationId = (row.conversationId || '').trim();
+    const scoped = canonicalClientCode(row.clientCode);
+    const classification =
+      row.classification === 'CONFIRMED' ||
+      row.classification === 'LIKELY' ||
+      row.classification === 'PROPOSED' ||
+      row.classification === 'HONEST_EMPTY'
+        ? row.classification
+        : ('CONFIRMED' as const);
+    return [{
+      id,
+      title,
+      ...(scoped ? { clientCode: scoped } : {}),
+      ...(conversationId ? { conversationId } : {}),
+      classification,
+    }];
+  });
+  return relatedEmails(
+    { id: `onboarding-comms:${code}`, clientCode: code },
+    { threads: { items } } as AtlasAuthorizedSearch,
+  ).filter((row) => Boolean(row.id?.trim()));
+}
+
 function relatedEmails(
   item: RelatedScopeItem & { parentMessageId?: string },
   search: AtlasAuthorizedSearch,

@@ -166,6 +166,12 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.milestoneReview?.milestoneReconciled, false);
     assert.deepEqual(result.record.assignedAgents, []);
     assert.equal(result.record.agentAssignmentReview?.agentReconciled, false);
+    assert.equal(result.record.communicationContextReconciled, false);
+    assert.equal(result.record.communicationContextReview?.communicationContextReconciled, false);
+    assert.equal(result.record.communicationContextReview?.relatedThreadCount, 0);
+    assert.deepEqual(result.record.communicationContextReview?.relatedEmails, []);
+    assert.deepEqual(result.record.communicationContextReview?.relatedThreads, []);
+    assert.equal(result.record.operationsHandoff.relatedThreadCount, 0);
     assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(result.record.identityReview.send, false);
     assert.equal(result.record.identityReview.outbound, false);
@@ -208,6 +214,10 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.milestoneReview?.milestoneReconciled, false);
     assert.deepEqual(result.record.assignedAgents, []);
     assert.equal(result.record.agentAssignmentReview?.agentReconciled, false);
+    assert.equal(result.record.communicationContextReconciled, false);
+    assert.equal(result.record.communicationContextReview?.relatedThreadCount, 0);
+    assert.deepEqual(result.record.communicationContextReview?.relatedEmails, []);
+    assert.equal(result.record.operationsHandoff.relatedThreadCount, 0);
     assert.equal(result.events.includes('MILESTONE_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
@@ -417,6 +427,9 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(execution.record?.milestoneReconciled, false);
     assert.deepEqual(execution.record?.milestoneIds, []);
     assert.equal(execution.record?.milestoneReview?.milestoneReconciled, false);
+    assert.equal(execution.record?.communicationContextReconciled, false);
+    assert.equal(execution.record?.communicationContextReview?.relatedThreadCount, 0);
+    assert.deepEqual(execution.record?.communicationContextReview?.relatedEmails, []);
     assert.equal(execution.record?.projectId, undefined);
     assert.equal(execution.record?.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(counts.createProject, 0);
@@ -1112,6 +1125,128 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(absent.record.milestoneReview?.milestoneReconciled, false);
     assert.ok(noId.counts.createMilestone > 0);
     assert.equal(absent.events.includes('MILESTONE_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not invent communication context when search is empty, throws, or is the wrong client', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const live = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [
+        { id: 'thread-accg-1', title: 'ACCG kickoff', clientCode: 'ACCG01', conversationId: 'conv-accg-1' },
+      ],
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.communicationContextReconciled, true);
+    assert.equal(reused.record.communicationContextReview?.communicationContextReconciled, true);
+    assert.equal(reused.record.communicationContextReview?.reusedExisting, true);
+    assert.equal(reused.record.communicationContextReview?.relatedThreadCount, 1);
+    assert.deepEqual(reused.record.communicationContextReview?.relatedEmails.map((row) => row.id), ['thread-accg-1']);
+    assert.equal(reused.record.operationsHandoff.relatedThreadCount, 1);
+    assert.equal(reused.record.communicationContextReview?.send, false);
+    assert.equal(reused.record.communicationContextReview?.autoRespond, false);
+    assert.equal(reused.record.communicationContextReview?.outbound, false);
+    assert.ok(reused.events.includes('COMMUNICATION_CONTEXT_RECONCILED'));
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.communicationContextReconciled, false);
+    assert.equal(empty.record.communicationContextReview?.relatedThreadCount, 0);
+    assert.deepEqual(empty.record.communicationContextReview?.relatedEmails, []);
+    assert.equal(empty.record.operationsHandoff.relatedThreadCount, 0);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => {
+        throw new Error('thread search failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.communicationContextReconciled, false);
+    assert.deepEqual(thrown.record.communicationContextReview?.relatedThreads, []);
+    assert.equal(thrown.record.operationsHandoff.relatedThreadCount, 0);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.communicationContextReconciled, false);
+    assert.equal(dry.record.communicationContextReview?.relatedThreadCount, 0);
+    assert.deepEqual(dry.record.communicationContextReview?.relatedEmails, []);
+
+    const foreign = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [
+        { id: 'thread-pdg', title: 'PDG01 thread', clientCode: 'PDG01' },
+      ],
+    });
+    assert.equal(foreign.ok, true);
+    if (!foreign.ok) return;
+    assert.equal(foreign.record.communicationContextReconciled, false);
+    assert.deepEqual(foreign.record.communicationContextReview?.relatedEmails, []);
+    assert.equal(JSON.stringify(foreign.record.communicationContextReview).includes('PDG01'), false);
+    assert.equal(foreign.record.communicationContextReview?.send, false);
+    assert.equal(foreign.record.communicationContextReview?.autoRespond, false);
+
+    const identity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [
+        { id: 'thread-accg-1', title: 'ACCG kickoff', clientCode: 'ACCG01' },
+      ],
+    });
+    const blockedIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: mockSharePoint({ clients: [{ clientCode: 'PDG01', displayName: 'Prodigy' }] }).sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      commsSearch: async () => [
+        { id: 'thread-should-not-attach', title: 'should not attach', clientCode: 'ACCG01' },
+      ],
+    });
+    assert.equal(blockedIdentity.ok, true);
+    if (!blockedIdentity.ok) return;
+    assert.equal(blockedIdentity.record.identityResolutionRequired, true);
+    assert.equal(blockedIdentity.record.communicationContextReconciled, false);
+    assert.deepEqual(blockedIdentity.record.communicationContextReview?.relatedEmails, []);
+    assert.equal(identity.ok, true);
     rmSync(dir, { recursive: true, force: true });
   });
 
