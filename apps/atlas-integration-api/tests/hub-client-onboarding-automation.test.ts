@@ -109,8 +109,14 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.operationsHandoff.send, false);
     assert.equal(result.record.kickoff.status, 'NOT_READY');
     assert.equal(result.record.kickoff.ready, false);
+    assert.equal(result.record.kickoff.kickoffReconciled, false);
+    assert.equal(result.record.kickoff.reusedExisting, false);
+    assert.deepEqual(result.record.kickoff.relatedKickoff, []);
+    assert.equal(result.record.kickoffReconciled, false);
     assert.equal(result.record.kickoff.send, false);
+    assert.equal(result.record.kickoff.autoRespond, false);
     assert.equal(result.record.kickoff.outbound, false);
+    assert.equal(result.record.kickoff.capitalSubmit, false);
     assert.equal(result.record.ownerAttentionPackage.status, 'NOT_READY');
     assert.equal(result.record.ownerAttentionPackage.ready, false);
     assert.equal(result.record.ownerAttentionPackage.send, false);
@@ -219,6 +225,10 @@ describe('client onboarding automation', () => {
     assert.deepEqual(result.record.milestoneIds, []);
     assert.equal(result.record.milestoneReview.milestoneReconciled, false);
     assert.equal(result.events.includes('MILESTONE_CREATED'), false);
+    assert.equal(result.record.kickoffReconciled, false);
+    assert.equal(result.record.kickoff.kickoffReconciled, false);
+    assert.deepEqual(result.record.kickoff.relatedKickoff, []);
+    assert.equal(result.events.includes('KICKOFF_CREATED'), false);
     assert.equal(result.record.communicationContextReconciled, false);
     assert.equal(result.record.communicationContextReview.relatedThreadCount, 0);
     assert.deepEqual(result.record.communicationContextReview.relatedEmails, []);
@@ -519,7 +529,11 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.operationsHandoff.send, false);
     assert.equal(first.record?.operationsHandoff.capitalSubmit, false);
     assert.equal(first.record?.kickoff.status, 'PREPARED');
+    assert.equal(first.record?.kickoff.kickoffReconciled, true);
+    assert.ok((first.record?.kickoff.relatedKickoff.length ?? 0) > 0);
+    assert.equal(first.record?.kickoffReconciled, true);
     assert.equal(first.record?.kickoff.send, false);
+    assert.equal(first.record?.kickoff.autoRespond, false);
     assert.equal(first.record?.kickoff.outbound, false);
     assert.equal(first.record?.kickoff.capitalSubmit, false);
     assert.equal(first.record?.blockerReview.send, false);
@@ -727,21 +741,41 @@ describe('client onboarding automation', () => {
   it('prepares kickoff from entitled run facts and answers Ask Atlas kickoff', () => {
     const prepared = composeKickoff({
       workspaceReconciled: true,
+      clientCode: 'ACCG01',
       projectId: 'proj-1',
       projectName: 'Client Onboarding — ACCG',
       milestones: [{ id: 'kickoff_ready', label: 'Kickoff ready', status: 'pending', provenance: 'PROPOSED' }],
+      relatedKickoff: [{ id: 'kickoff-accg-1', title: 'Prepare kickoff materials', kind: 'task' }],
+      reusedExisting: true,
       ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
       communicationPolicy: 'DRAFT_ONLY',
     });
     assert.equal(prepared.status, 'PREPARED');
     assert.equal(prepared.ready, true);
+    assert.equal(prepared.kickoffReconciled, true);
+    assert.equal(prepared.reusedExisting, true);
+    assert.deepEqual(prepared.relatedKickoff.map((row) => row.id), ['kickoff-accg-1']);
     assert.equal(prepared.send, false);
+    assert.equal(prepared.autoRespond, false);
     assert.equal(prepared.outbound, false);
     assert.equal(prepared.liveGtmOutbound, false);
     assert.equal(prepared.capitalSubmit, false);
     assert.equal(prepared.milestoneStatus, 'pending');
     assert.equal(prepared.relatedThreadCount, 0);
     assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
+
+    const notConfirmed = composeKickoff({
+      workspaceReconciled: true,
+      clientCode: 'ACCG01',
+      projectId: 'proj-1',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(notConfirmed.status, 'PREPARED');
+    assert.equal(notConfirmed.ready, false);
+    assert.equal(notConfirmed.kickoffReconciled, false);
+    assert.equal(notConfirmed.reusedExisting, false);
+    assert.deepEqual(notConfirmed.relatedKickoff, []);
+    assert.match(notConfirmed.nextOwnerAction, /do not invent ids or send/);
 
     const blocked = composeKickoff({
       workspaceReconciled: true,
@@ -754,11 +788,15 @@ describe('client onboarding automation', () => {
 
     const identity = composeKickoff({
       identityResolutionRequired: true,
+      clientCode: 'ACCG01',
+      relatedKickoff: [{ id: 'kickoff-should-not-attach', title: 'foreign' }],
       blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
       communicationPolicy: 'DRAFT_ONLY',
     });
     assert.equal(identity.status, 'NOT_READY');
     assert.equal(identity.ready, false);
+    assert.equal(identity.kickoffReconciled, false);
+    assert.deepEqual(identity.relatedKickoff, []);
 
     const missingDocs = composeKickoff({
       workspaceReconciled: true,
@@ -821,6 +859,8 @@ describe('client onboarding automation', () => {
     const answer = answerOnboardingContext('What is the onboarding kickoff for ACCG?', record);
     assert.match(answer, /Kickoff for ACCG01: PREPARED/);
     assert.match(answer, /Client Onboarding — ACCG/);
+    assert.match(answer, /Existing entitled kickoff: reused/);
+    assert.match(answer, /Related entitled kickoff: 1/);
     assert.match(answer, /Related entitled threads: 0/);
     assert.match(answer, /did not send mail/);
     assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
@@ -1153,7 +1193,10 @@ describe('client onboarding automation', () => {
     });
     const kickoff = composeKickoff({
       workspaceReconciled: true,
+      clientCode: 'ACCG01',
       projectId: 'proj-1',
+      relatedKickoff: [{ id: 'kickoff-accg-1', title: 'Prepare kickoff materials', kind: 'task' }],
+      reusedExisting: true,
       communicationPolicy: 'DRAFT_ONLY',
     });
     const blockerReview = composeBlockerReview({
@@ -2610,6 +2653,222 @@ describe('client onboarding automation', () => {
     assert.match(emptyAnswer, /Existing entitled capital context: not confirmed/);
     assert.match(emptyAnswer, /Related entitled capital: 0/);
     assert.equal(/AUTO_RESPOND|submitted|TargetAmount/i.test(emptyAnswer), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reconciles entitled same-scope kickoff by id and does not invent kickoff', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.INTEGRATION_ALLOW_EPHEMERAL_KEY = '1';
+    const dir = mkdtempSync(join(tmpdir(), 'onboarding-kickoff-'));
+    process.env.INTEGRATION_DATA_DIR = dir;
+    process.env.INTEGRATION_ONBOARDING_STATE_DIR = join(dir, 'onboarding-runs');
+    const cfg = loadConfig();
+    const sharepoint = {
+      listAuthorizedClients: async () => [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      listAuthorizedProjects: async () => [
+        { id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' },
+      ],
+      listAuthorizedTasks: async () => [],
+      createTask: async (_principal: AtlasPrincipal, body: { title?: string }) => ({
+        id: `task-${body.title}`,
+        title: String(body.title),
+      }),
+    } as unknown as SharePointPmService;
+
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [
+        { id: 'kickoff-accg-1', title: 'Prepare kickoff materials', clientCode: 'ACCG01', kind: 'task' },
+        { id: 'kickoff-pdg', title: 'PDG01 kickoff', clientCode: 'PDG01', kind: 'record' },
+        { title: 'missing-id-must-drop', clientCode: 'ACCG01', kind: 'task' },
+      ],
+      kickoffCreate: async () => {
+        throw new Error('reuse-only must not create kickoff');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.kickoffReconciled, true);
+    assert.equal(reused.record.kickoff.kickoffReconciled, true);
+    assert.equal(reused.record.kickoff.reusedExisting, true);
+    assert.deepEqual(reused.record.kickoff.relatedKickoff.map((row) => row.id), ['kickoff-accg-1']);
+    assert.equal(reused.record.kickoff.send, false);
+    assert.equal(reused.record.kickoff.autoRespond, false);
+    assert.equal(reused.record.kickoff.outbound, false);
+    assert.equal(reused.record.kickoff.capitalSubmit, false);
+    assert.equal(reused.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(reused.record.capitalContextReconciled, false);
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.equal(reused.record.milestoneReconciled, false);
+    assert.ok(reused.events.includes('KICKOFF_RECONCILED'));
+    assert.equal(reused.events.includes('KICKOFF_CREATED'), false);
+    assert.equal(JSON.stringify(reused.record.kickoff).includes('PDG01'), false);
+    assert.equal(JSON.stringify(reused.record.kickoff).includes('kickoff-pdg'), false);
+    assert.equal(COMMUNICATIONS_SEND, false);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    let createdCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      kickoffCreate: async (_principal, body) => {
+        createdCalls += 1;
+        return { id: 'kickoff-created-1', title: body.title, kind: 'record' };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.kickoffReconciled, true);
+    assert.equal(created.record.kickoff.kickoffReconciled, true);
+    assert.equal(created.record.kickoff.reusedExisting, false);
+    assert.deepEqual(created.record.kickoff.relatedKickoff.map((row) => row.id), ['kickoff-created-1']);
+    assert.ok(created.events.includes('KICKOFF_CREATED'));
+    assert.ok(created.events.includes('KICKOFF_RECONCILED'));
+    assert.equal(createdCalls, 1);
+    assert.equal(created.record.kickoff.send, false);
+    assert.equal(created.record.kickoff.outbound, false);
+    assert.equal(created.record.kickoff.capitalSubmit, false);
+
+    let dryCreates = 0;
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      kickoffList: async () => [],
+      kickoffCreate: async () => {
+        dryCreates += 1;
+        throw new Error('dry-run must not create kickoff');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.kickoffReconciled, false);
+    assert.equal(dry.record.kickoff.kickoffReconciled, false);
+    assert.deepEqual(dry.record.kickoff.relatedKickoff, []);
+    assert.equal(dryCreates, 0);
+    assert.equal(dry.events.includes('KICKOFF_CREATED'), false);
+    assert.equal(dry.events.includes('KICKOFF_RECONCILED'), false);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      kickoffCreate: async () => {
+        throw new Error('sharepoint kickoff create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.kickoffReconciled, false);
+    assert.equal(thrown.record.kickoff.kickoffReconciled, false);
+    assert.deepEqual(thrown.record.kickoff.relatedKickoff, []);
+    assert.equal(thrown.events.includes('KICKOFF_CREATED'), false);
+    assert.equal(thrown.events.includes('KICKOFF_RECONCILED'), false);
+
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      kickoffCreate: async (_principal, body) => ({ title: body.title }),
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.kickoffReconciled, false);
+    assert.equal(absent.record.kickoff.kickoffReconciled, false);
+    assert.deepEqual(absent.record.kickoff.relatedKickoff, []);
+    assert.equal(absent.events.includes('KICKOFF_CREATED'), false);
+
+    const wrongClient = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [
+        { id: 'kickoff-pdg', title: 'PDG01 kickoff', clientCode: 'PDG01', kind: 'record' },
+        { id: 'kickoff-hfd', title: 'HFD01 kickoff', clientCode: 'HFD01', kind: 'task' },
+      ],
+      kickoffCreate: async () => {
+        throw new Error('wrong-client must not create kickoff');
+      },
+    });
+    assert.equal(wrongClient.ok, true);
+    if (!wrongClient.ok) return;
+    assert.equal(wrongClient.record.kickoffReconciled, false);
+    assert.deepEqual(wrongClient.record.kickoff.relatedKickoff, []);
+    assert.equal(JSON.stringify(wrongClient.record.kickoff).includes('PDG01'), false);
+    assert.equal(JSON.stringify(wrongClient.record.kickoff).includes('HFD01'), false);
+    assert.equal(wrongClient.record.kickoff.send, false);
+    assert.equal(wrongClient.record.kickoff.autoRespond, false);
+    assert.equal(wrongClient.record.kickoff.outbound, false);
+    assert.equal(wrongClient.record.kickoff.capitalSubmit, false);
+
+    const missingIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: null,
+      workflow: (() => {
+        const workflow = onboardingWorkflow('ACCG01');
+        workflow.scope = { organizationId: 'org-hvcg' };
+        return workflow;
+      })(),
+      kickoffList: async () => [
+        { id: 'kickoff-should-not-attach', title: 'ACCG kickoff', clientCode: 'ACCG01' },
+      ],
+      kickoffCreate: async () => {
+        throw new Error('identity must not create kickoff');
+      },
+    });
+    assert.equal(missingIdentity.ok, true);
+    if (!missingIdentity.ok) return;
+    assert.equal(missingIdentity.record.identityResolutionRequired, true);
+    assert.equal(missingIdentity.record.kickoffReconciled, false);
+    assert.equal(missingIdentity.record.kickoff.kickoffReconciled, false);
+    assert.deepEqual(missingIdentity.record.kickoff.relatedKickoff, []);
+    assert.equal(missingIdentity.events.includes('KICKOFF_RECONCILED'), false);
+    assert.equal(missingIdentity.events.includes('KICKOFF_CREATED'), false);
+    assert.equal(missingIdentity.record.capitalContextReconciled, false);
+    assert.equal(missingIdentity.record.communicationContextReconciled, false);
+
+    const reusedAnswer = answerOnboardingContext(
+      'What is the onboarding kickoff for ACCG?',
+      reused.record,
+    );
+    assert.match(reusedAnswer, /Kickoff for ACCG01: PREPARED/);
+    assert.match(reusedAnswer, /Existing entitled kickoff: reused/);
+    assert.match(reusedAnswer, /Related entitled kickoff: 1/);
+    assert.equal(/kickoff-pdg|PDG01|AUTO_RESPOND|invented/i.test(reusedAnswer), false);
+    const emptyAnswer = answerOnboardingContext(
+      'What is the onboarding kickoff for ACCG?',
+      thrown.record,
+    );
+    assert.match(emptyAnswer, /Existing entitled kickoff: not confirmed/);
+    assert.match(emptyAnswer, /Related entitled kickoff: 0/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(emptyAnswer), false);
+    const createdAnswer = answerOnboardingContext(
+      'What is the onboarding kickoff for ACCG?',
+      created.record,
+    );
+    assert.match(createdAnswer, /Governed onboarding kickoff: reconciled/);
+    assert.equal(/AUTO_RESPOND|submitted/i.test(createdAnswer), false);
     rmSync(dir, { recursive: true, force: true });
   });
 

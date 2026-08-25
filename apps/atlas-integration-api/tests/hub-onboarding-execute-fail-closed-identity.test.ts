@@ -177,6 +177,14 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.capitalContextReview?.relatedCapitalCount, 0);
     assert.deepEqual(result.record.capitalContextReview?.relatedCapital, []);
     assert.equal(result.record.capitalContextReview?.capitalSubmit, false);
+    assert.equal(result.record.kickoffReconciled, false);
+    assert.equal(result.record.kickoff.kickoffReconciled, false);
+    assert.equal(result.record.kickoff.reusedExisting, false);
+    assert.deepEqual(result.record.kickoff.relatedKickoff, []);
+    assert.equal(result.record.kickoff.send, false);
+    assert.equal(result.record.kickoff.autoRespond, false);
+    assert.equal(result.record.kickoff.outbound, false);
+    assert.equal(result.record.kickoff.capitalSubmit, false);
     assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(result.record.identityReview.send, false);
     assert.equal(result.record.identityReview.outbound, false);
@@ -226,7 +234,11 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.capitalContextReconciled, false);
     assert.equal(result.record.capitalContextReview?.relatedCapitalCount, 0);
     assert.deepEqual(result.record.capitalContextReview?.relatedCapital, []);
+    assert.equal(result.record.kickoffReconciled, false);
+    assert.equal(result.record.kickoff.kickoffReconciled, false);
+    assert.deepEqual(result.record.kickoff.relatedKickoff, []);
     assert.equal(result.events.includes('MILESTONE_CREATED'), false);
+    assert.equal(result.events.includes('KICKOFF_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -1377,6 +1389,150 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(blockedIdentity.record.capitalContextReconciled, false);
     assert.deepEqual(blockedIdentity.record.capitalContextReview?.relatedCapital, []);
     assert.equal(identity.ok, true);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not invent kickoff when reuse is empty, create fails, or is the wrong client', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const live = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [
+        { id: 'kickoff-accg-1', title: 'Prepare kickoff materials', clientCode: 'ACCG01', kind: 'task' },
+      ],
+      kickoffCreate: async () => {
+        throw new Error('reuse-only must not create kickoff');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.kickoffReconciled, true);
+    assert.equal(reused.record.kickoff.kickoffReconciled, true);
+    assert.equal(reused.record.kickoff.reusedExisting, true);
+    assert.deepEqual(reused.record.kickoff.relatedKickoff.map((row) => row.id), ['kickoff-accg-1']);
+    assert.equal(reused.record.kickoff.send, false);
+    assert.equal(reused.record.kickoff.autoRespond, false);
+    assert.equal(reused.record.kickoff.outbound, false);
+    assert.equal(reused.record.kickoff.capitalSubmit, false);
+    assert.equal(reused.record.capitalContextReconciled, false);
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.ok(reused.events.includes('KICKOFF_RECONCILED'));
+    assert.equal(reused.events.includes('KICKOFF_CREATED'), false);
+
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      kickoffCreate: async () => ({ id: 'kickoff-created-1', title: 'Prepare kickoff materials', kind: 'record' }),
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.kickoffReconciled, true);
+    assert.equal(created.record.kickoff.kickoffReconciled, true);
+    assert.equal(created.record.kickoff.reusedExisting, false);
+    assert.deepEqual(created.record.kickoff.relatedKickoff.map((row) => row.id), ['kickoff-created-1']);
+    assert.ok(created.events.includes('KICKOFF_CREATED'));
+    assert.ok(created.events.includes('KICKOFF_RECONCILED'));
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.kickoffReconciled, false);
+    assert.deepEqual(empty.record.kickoff.relatedKickoff, []);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      kickoffCreate: async () => {
+        throw new Error('kickoff create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.kickoffReconciled, false);
+    assert.deepEqual(thrown.record.kickoff.relatedKickoff, []);
+    assert.equal(thrown.events.includes('KICKOFF_CREATED'), false);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      kickoffList: async () => [],
+      kickoffCreate: async () => {
+        throw new Error('dry-run must not create kickoff');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.kickoffReconciled, false);
+    assert.deepEqual(dry.record.kickoff.relatedKickoff, []);
+    assert.equal(dry.events.includes('KICKOFF_CREATED'), false);
+
+    const foreign = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [
+        { id: 'kickoff-pdg', title: 'PDG01 kickoff', clientCode: 'PDG01' },
+      ],
+      kickoffCreate: async () => {
+        throw new Error('wrong-client must not create kickoff');
+      },
+    });
+    assert.equal(foreign.ok, true);
+    if (!foreign.ok) return;
+    assert.equal(foreign.record.kickoffReconciled, false);
+    assert.deepEqual(foreign.record.kickoff.relatedKickoff, []);
+    assert.equal(JSON.stringify(foreign.record.kickoff).includes('PDG01'), false);
+    assert.equal(foreign.record.kickoff.send, false);
+    assert.equal(foreign.record.kickoff.autoRespond, false);
+    assert.equal(foreign.record.kickoff.capitalSubmit, false);
+
+    const blockedIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: mockSharePoint({ clients: [{ clientCode: 'PDG01', displayName: 'Prodigy' }] }).sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [
+        { id: 'kickoff-should-not-attach', title: 'should not attach', clientCode: 'ACCG01' },
+      ],
+      kickoffCreate: async () => {
+        throw new Error('identity must not create kickoff');
+      },
+    });
+    assert.equal(blockedIdentity.ok, true);
+    if (!blockedIdentity.ok) return;
+    assert.equal(blockedIdentity.record.identityResolutionRequired, true);
+    assert.equal(blockedIdentity.record.kickoffReconciled, false);
+    assert.deepEqual(blockedIdentity.record.kickoff.relatedKickoff, []);
     rmSync(dir, { recursive: true, force: true });
   });
 
