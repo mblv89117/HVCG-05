@@ -94,6 +94,23 @@ export type OnboardingBlockerReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical OWNER ATTENTION package. Surfaces already-known owner items. No send. */
+export type OnboardingOwnerAttention = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 export type OnboardingRunRecord = {
   workflowId: string;
   workflowDefinitionId: string;
@@ -122,6 +139,7 @@ export type OnboardingRunRecord = {
   operationsHandoff: OnboardingOperationsHandoff;
   kickoff: OnboardingKickoff;
   blockerReview: OnboardingBlockerReview;
+  ownerAttentionPackage: OnboardingOwnerAttention;
   provenance: string;
 };
 
