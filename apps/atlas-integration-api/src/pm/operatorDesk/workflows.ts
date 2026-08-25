@@ -37,6 +37,7 @@ import {
   type WorkflowDefinitionRecord,
 } from './workflowDefinitions.ts';
 import { formatWorkflowPreview } from './workflowParser.ts';
+import { getOnboardingRun, readOnboardingOverlay, resolveOnboardingStateDir } from './onboardingState.ts';
 
 export const WORKFLOW_CENTER_CONTRACT = 'atlas-hub-workflows.v1' as const;
 export const WORKFLOW_CENTER_MISSION_KEY = 'ATLAS-WORKFLOW-CENTER-001' as const;
@@ -646,6 +647,7 @@ function detailFromCustomDefinition(
   overlay: ReturnType<typeof readWorkflowDefinitionOverlay>,
   control?: WorkflowControlRecord,
   principal?: AtlasPrincipal,
+  dataDir?: string,
 ): WorkflowDetail {
   const summary = summaryFromCustomDefinition(def, control);
   const versions = overlay.definitions
@@ -672,6 +674,11 @@ function detailFromCustomDefinition(
     provenance: 'LIVE' as WorkflowDataProvenance,
     summary: `Definition v${d.version} — ${d.status}`,
   }));
+
+  const onboardingRun =
+    dataDir && (def.sourceTemplateId === 'client_onboarding' || def.templateKey === 'client_onboarding')
+      ? getOnboardingRun(readOnboardingOverlay(resolveOnboardingStateDir(dataDir)), def.workflowId)
+      : null;
 
   return {
     ...summary,
@@ -721,6 +728,14 @@ function detailFromCustomDefinition(
       templateKey: def.templateKey ?? null,
       definitionVersion: def.version,
       draftNotExecutable: def.status === 'DRAFT' || def.status === 'READY_FOR_APPROVAL',
+      ...(onboardingRun
+        ? {
+            onboardingStatus: onboardingRun.status,
+            onboardingCurrentStep: onboardingRun.currentStep,
+            onboardingNextStep: onboardingRun.nextStep,
+            onboardingBlockers: onboardingRun.blockers,
+          }
+        : {}),
     },
   };
 }
@@ -843,7 +858,7 @@ export function getWorkflowDetail(opts: {
     const controlDir = resolveWorkflowControlOverlayDir(opts.dataDir);
     const controlOverlay = readWorkflowControlOverlay(controlDir);
     const control = getWorkflowControlState(controlOverlay, opts.workflowId);
-    return detailFromCustomDefinition(def, defOverlay, control, opts.principal);
+    return detailFromCustomDefinition(def, defOverlay, control, opts.principal, opts.dataDir);
   }
 
   const workflow = WORKFLOW_DEFINITIONS.find((w) => w.workflowId === opts.workflowId);
