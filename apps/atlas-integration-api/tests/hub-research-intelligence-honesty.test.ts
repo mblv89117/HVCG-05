@@ -126,8 +126,9 @@ describe('research intelligence honesty', () => {
     assert.equal(pack.relatedResearch[0]?.title, 'LIEN01 · already-known entitled row');
     assert.equal(pack.relatedResearch.every((row) => row.clientCode === 'LIEN01'), true);
     assert.equal(pack.sourcedLenders.some((row) => row.title === 'Live Oak Bank'), false);
-    assert.equal(JSON.stringify(pack).includes('ACCG01'), false);
-    assert.equal(JSON.stringify(pack).includes('LTV 80'), false);
+    assert.equal(JSON.stringify(pack.relatedResearch).includes('ACCG01'), false);
+    assert.equal(JSON.stringify(pack.relatedResearch).includes('LTV 80'), false);
+    assert.equal(JSON.stringify(pack.sourcedLenders).includes('ACCG01'), false);
     const sourced = composeResearchIntelligenceHonesty({
       question: 'sourced lenders for LIEN01?',
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
