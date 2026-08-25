@@ -193,6 +193,14 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.blockerReview.autoRespond, false);
     assert.equal(result.record.blockerReview.outbound, false);
     assert.equal(result.record.blockerReview.capitalSubmit, false);
+    assert.equal(result.record.ownerAttentionReconciled, false);
+    assert.equal(result.record.ownerAttentionPackage.ownerAttentionReconciled, false);
+    assert.equal(result.record.ownerAttentionPackage.reusedExisting, false);
+    assert.deepEqual(result.record.ownerAttentionPackage.relatedOwnerAttention, []);
+    assert.equal(result.record.ownerAttentionPackage.send, false);
+    assert.equal(result.record.ownerAttentionPackage.autoRespond, false);
+    assert.equal(result.record.ownerAttentionPackage.outbound, false);
+    assert.equal(result.record.ownerAttentionPackage.capitalSubmit, false);
     assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(result.record.identityReview.send, false);
     assert.equal(result.record.identityReview.outbound, false);
@@ -248,9 +256,13 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.blockerReconciled, false);
     assert.equal(result.record.blockerReview.blockerReconciled, false);
     assert.deepEqual(result.record.blockerReview.relatedBlockers, []);
+    assert.equal(result.record.ownerAttentionReconciled, false);
+    assert.equal(result.record.ownerAttentionPackage.ownerAttentionReconciled, false);
+    assert.deepEqual(result.record.ownerAttentionPackage.relatedOwnerAttention, []);
     assert.equal(result.events.includes('MILESTONE_CREATED'), false);
     assert.equal(result.events.includes('KICKOFF_CREATED'), false);
     assert.equal(result.events.includes('BLOCKER_CREATED'), false);
+    assert.equal(result.events.includes('OWNER_ATTENTION_CREATED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -1691,6 +1703,170 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(blockedIdentity.record.identityResolutionRequired, true);
     assert.equal(blockedIdentity.record.blockerReconciled, false);
     assert.deepEqual(blockedIdentity.record.blockerReview.relatedBlockers, []);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not invent owner attention when reuse is empty, create fails, or is the wrong client', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const live = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    const reused = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [
+        { id: 'oa-accg-1', title: 'Review owner attention', clientCode: 'ACCG01', kind: 'attention' },
+      ],
+      ownerAttentionCreate: async () => {
+        throw new Error('reuse-only must not create owner attention');
+      },
+    });
+    assert.equal(reused.ok, true);
+    if (!reused.ok) return;
+    assert.equal(reused.record.ownerAttentionReconciled, true);
+    assert.equal(reused.record.ownerAttentionPackage.ownerAttentionReconciled, true);
+    assert.equal(reused.record.ownerAttentionPackage.reusedExisting, true);
+    assert.deepEqual(reused.record.ownerAttentionPackage.relatedOwnerAttention.map((row) => row.id), ['oa-accg-1']);
+    assert.equal(reused.record.ownerAttentionPackage.send, false);
+    assert.equal(reused.record.ownerAttentionPackage.autoRespond, false);
+    assert.equal(reused.record.ownerAttentionPackage.outbound, false);
+    assert.equal(reused.record.ownerAttentionPackage.capitalSubmit, false);
+    assert.equal(reused.record.kickoffReconciled, false);
+    assert.equal(reused.record.blockerReconciled, false);
+    assert.equal(reused.record.capitalContextReconciled, false);
+    assert.equal(reused.record.communicationContextReconciled, false);
+    assert.ok(reused.events.includes('OWNER_ATTENTION_RECONCILED'));
+    assert.equal(reused.events.includes('OWNER_ATTENTION_CREATED'), false);
+
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      ownerAttentionCreate: async () => ({ id: 'oa-created-1', title: 'Review owner attention', kind: 'owner-attention' }),
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.ownerAttentionReconciled, true);
+    assert.equal(created.record.ownerAttentionPackage.ownerAttentionReconciled, true);
+    assert.equal(created.record.ownerAttentionPackage.reusedExisting, false);
+    assert.deepEqual(created.record.ownerAttentionPackage.relatedOwnerAttention.map((row) => row.id), ['oa-created-1']);
+    assert.ok(created.events.includes('OWNER_ATTENTION_CREATED'));
+    assert.ok(created.events.includes('OWNER_ATTENTION_RECONCILED'));
+    assert.equal(created.record.kickoffReconciled, false);
+    assert.equal(created.record.blockerReconciled, false);
+
+    const empty = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+    });
+    assert.equal(empty.ok, true);
+    if (!empty.ok) return;
+    assert.equal(empty.record.ownerAttentionReconciled, false);
+    assert.deepEqual(empty.record.ownerAttentionPackage.relatedOwnerAttention, []);
+
+    const thrown = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      ownerAttentionCreate: async () => {
+        throw new Error('owner attention create failed');
+      },
+    });
+    assert.equal(thrown.ok, true);
+    if (!thrown.ok) return;
+    assert.equal(thrown.record.ownerAttentionReconciled, false);
+    assert.deepEqual(thrown.record.ownerAttentionPackage.relatedOwnerAttention, []);
+    assert.equal(thrown.events.includes('OWNER_ATTENTION_CREATED'), false);
+
+    const dry = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [],
+      ownerAttentionCreate: async () => {
+        throw new Error('dry-run must not create owner attention');
+      },
+    });
+    assert.equal(dry.ok, true);
+    if (!dry.ok) return;
+    assert.equal(dry.record.ownerAttentionReconciled, false);
+    assert.deepEqual(dry.record.ownerAttentionPackage.relatedOwnerAttention, []);
+    assert.equal(dry.events.includes('OWNER_ATTENTION_CREATED'), false);
+
+    const foreign = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      kickoffList: async () => [],
+      blockerList: async () => [],
+      ownerAttentionList: async () => [
+        { id: 'oa-pdg', title: 'PDG01 owner action', clientCode: 'PDG01' },
+      ],
+      ownerAttentionCreate: async () => {
+        throw new Error('wrong-client must not create owner attention');
+      },
+    });
+    assert.equal(foreign.ok, true);
+    if (!foreign.ok) return;
+    assert.equal(foreign.record.ownerAttentionReconciled, false);
+    assert.deepEqual(foreign.record.ownerAttentionPackage.relatedOwnerAttention, []);
+    assert.equal(JSON.stringify(foreign.record.ownerAttentionPackage).includes('PDG01'), false);
+    assert.equal(foreign.record.ownerAttentionPackage.send, false);
+    assert.equal(foreign.record.ownerAttentionPackage.autoRespond, false);
+    assert.equal(foreign.record.ownerAttentionPackage.capitalSubmit, false);
+    assert.equal(foreign.record.kickoffReconciled, false);
+    assert.equal(foreign.record.blockerReconciled, false);
+
+    const blockedIdentity = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: mockSharePoint({ clients: [{ clientCode: 'PDG01', displayName: 'Prodigy' }] }).sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      ownerAttentionList: async () => [
+        { id: 'oa-should-not-attach', title: 'should not attach', clientCode: 'ACCG01' },
+      ],
+      ownerAttentionCreate: async () => {
+        throw new Error('identity must not create owner attention');
+      },
+    });
+    assert.equal(blockedIdentity.ok, true);
+    if (!blockedIdentity.ok) return;
+    assert.equal(blockedIdentity.record.identityResolutionRequired, true);
+    assert.equal(blockedIdentity.record.ownerAttentionReconciled, false);
+    assert.deepEqual(blockedIdentity.record.ownerAttentionPackage.relatedOwnerAttention, []);
+    assert.equal(blockedIdentity.record.kickoffReconciled, false);
+    assert.equal(blockedIdentity.record.blockerReconciled, false);
     rmSync(dir, { recursive: true, force: true });
   });
 

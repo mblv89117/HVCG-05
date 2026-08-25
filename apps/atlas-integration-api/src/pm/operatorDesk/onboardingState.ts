@@ -118,6 +118,13 @@ export type OnboardingBlockerReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Already-known entitled owner-attention / attention / owner-action refs. Id required. Never invented. */
+export type OnboardingRelatedOwnerAttentionRef = {
+  id: string;
+  title?: string;
+  kind?: 'owner-attention' | 'attention' | 'owner-action';
+};
+
 /** Canonical OWNER ATTENTION package. Surfaces already-known owner items. No send. */
 export type OnboardingOwnerAttention = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN';
@@ -126,9 +133,14 @@ export type OnboardingOwnerAttention = {
   projectName?: string;
   itemCount: number;
   items: string[];
+  /** True only after entitled reuse of same-scope owner-attention/attention/owner-action rows with a real id, or a create that returned an id. */
+  ownerAttentionReconciled: boolean;
+  reusedExisting: boolean;
+  relatedOwnerAttention: OnboardingRelatedOwnerAttentionRef[];
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
   nextOwnerAction: string;
   send: false;
+  autoRespond: false;
   liveGtmOutbound: false;
   capitalSubmit: false;
   outbound: false;
@@ -468,6 +480,8 @@ export type OnboardingRunRecord = {
   kickoffReconciled?: boolean;
   /** True only after entitled reuse of same-scope blocker/task/attention rows with a real id, or a create that returned an id. */
   blockerReconciled?: boolean;
+  /** True only after entitled reuse of same-scope owner-attention/attention/owner-action rows with a real id, or a create that returned an id. */
+  ownerAttentionReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
