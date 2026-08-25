@@ -132,6 +132,11 @@ import {
   mapsToCommunicationPolicyIntent,
   recordCommunicationPolicy,
 } from './communicationPolicyCenter.ts';
+import {
+  answerHistoricalReconstructionHonesty,
+  HISTORICAL_RECONSTRUCTION_MISSION_KEY,
+  mapsToHistoricalReconstructionHonestyIntent,
+} from './historicalReconstructionHonesty.ts';
 import type { TaskRecord } from '../types.ts';
 
 async function loadOwnerApprovalTasks(opts: {
@@ -930,6 +935,48 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+
+    if (mapsToHistoricalReconstructionHonestyIntent(question)) {
+      const entitled = entitledClientCodes(principal);
+      const onboardingOverlay = readOnboardingOverlay(resolveOnboardingStateDir(opts.cfg.dataDir));
+      const reconstructionAnswer = answerHistoricalReconstructionHonesty(question, {
+        entitledCodes: entitled,
+        recoveredProjects: model.operatingPicture.hvsRecoveredProjects,
+        recoveredDocuments: model.operatingPicture.hvsRecoveredDocuments,
+        overlayKeys: onboardingOverlay.records.map((row) => ({
+          clientCode: row.clientCode,
+          projectId: row.projectId,
+          projectName: row.projectName,
+        })),
+      });
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: reconstructionAnswer,
+        workflowId: 'historical-reconstruction',
+        workflowName: match.clientCode
+          ? `Historical reconstruction — ${match.clientCode}`
+          : 'Historical reconstruction',
+        clientCode: match.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: reconstructionAnswer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['historical_reconstruction_honesty'],
+            policyClass: 'READ_AUTO',
+            missionKey: HISTORICAL_RECONSTRUCTION_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
 
     if (mapsToCommunicationPolicyIntent(question)) {
       const policyModel = listCommunicationPolicies({
