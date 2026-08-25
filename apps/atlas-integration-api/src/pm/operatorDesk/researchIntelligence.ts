@@ -112,6 +112,14 @@ function catalogRecord(lender: (typeof SOURCED_LENDERS)[number]): ResearchIntell
   };
 }
 
+/**
+ * Catalog-constant lender titles only. Does not restate min/max, LTV, DSCR,
+ * FICO, or invent client assignment / approval / fit.
+ */
+export function sourcedLenderTitleRecords(): ResearchIntelligenceRecord[] {
+  return SOURCED_LENDERS.map(catalogRecord);
+}
+
 export function emptyResearchIntelligencePayload(retrievedAt = new Date().toISOString()): ResearchIntelligencePayload {
   return {
     kind: 'research_intelligence_v1',

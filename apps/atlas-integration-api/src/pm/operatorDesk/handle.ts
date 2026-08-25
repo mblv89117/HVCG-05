@@ -137,6 +137,11 @@ import {
   HISTORICAL_RECONSTRUCTION_MISSION_KEY,
   mapsToHistoricalReconstructionHonestyIntent,
 } from './historicalReconstructionHonesty.ts';
+import {
+  answerResearchIntelligenceHonesty,
+  mapsToResearchIntelligenceHonestyIntent,
+  RESEARCH_INTELLIGENCE_HONESTY_MISSION_KEY,
+} from './researchIntelligenceHonesty.ts';
 import type { TaskRecord } from '../types.ts';
 
 async function loadOwnerApprovalTasks(opts: {
@@ -970,6 +975,40 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['historical_reconstruction_honesty'],
             policyClass: 'READ_AUTO',
             missionKey: HISTORICAL_RECONSTRUCTION_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToResearchIntelligenceHonestyIntent(question)) {
+      const entitled = entitledClientCodes(principal);
+      const researchAnswer = answerResearchIntelligenceHonesty(question, {
+        entitledCodes: entitled,
+      });
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: researchAnswer,
+        workflowId: 'research-intelligence-honesty',
+        workflowName: match.clientCode
+          ? `Research intelligence — ${match.clientCode}`
+          : 'Research intelligence',
+        clientCode: match.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: researchAnswer,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['research_intelligence_honesty'],
+            policyClass: 'READ_AUTO',
+            missionKey: RESEARCH_INTELLIGENCE_HONESTY_MISSION_KEY,
             autoSend: false,
           },
         },
