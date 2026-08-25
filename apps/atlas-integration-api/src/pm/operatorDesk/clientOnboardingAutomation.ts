@@ -369,9 +369,136 @@ export async function runClientOnboardingAutomation(opts: {
   return { ok: true, record, events };
 }
 
-export function answerOnboardingContext(question: string, record: OnboardingRunRecord | null): string {
+/** Canonical entitled ClientCodes. Never invent a code outside this roster. */
+export const ENTITLED_CANONICAL_CLIENT_CODES = ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01'] as const;
+
+export type EntitledClientCodeMatch =
+  | { kind: 'exact' | 'unique_prefix'; clientCode: string; candidates: string[] }
+  | { kind: 'none' | 'ambiguous'; clientCode?: undefined; candidates: string[] };
+
+export type OnboardingExistingProject = {
+  name: string;
+  clientCode: string;
+  status?: string;
+  health?: string;
+};
+
+export type OnboardingExistingWorkflow = {
+  name: string;
+  clientCode?: string;
+  status?: string;
+  workflowType?: string;
+};
+
+function codeTokenBoundary(code: string): RegExp {
+  return new RegExp(`(?:^|[^A-Z0-9])${code}(?:[^A-Z0-9]|$)`);
+}
+
+function questionTokens(question: string): string[] {
+  return question.toUpperCase().match(/[A-Z][A-Z0-9]{1,15}/g) ?? [];
+}
+
+export function resolveEntitledClientCodeFromQuestion(
+  question: string,
+  entitledCodes: readonly string[],
+): EntitledClientCodeMatch {
+  const roster = entitledCodes.filter((code) =>
+    (ENTITLED_CANONICAL_CLIENT_CODES as readonly string[]).includes(code),
+  );
+  const upper = question.toUpperCase();
+  const exact = roster.filter((code) => codeTokenBoundary(code).test(upper));
+  if (exact.length === 1) return { kind: 'exact', clientCode: exact[0], candidates: exact };
+  if (exact.length > 1) return { kind: 'ambiguous', candidates: exact };
+
+  const tokens = questionTokens(question);
+  const prefixHits = new Set<string>();
+  for (const token of tokens) {
+    for (const code of roster) {
+      if (code.startsWith(token) && token.length < code.length) prefixHits.add(code);
+    }
+  }
+  const prefixed = [...prefixHits];
+  if (prefixed.length === 1) return { kind: 'unique_prefix', clientCode: prefixed[0], candidates: prefixed };
+  if (prefixed.length > 1) return { kind: 'ambiguous', candidates: prefixed };
+  return { kind: 'none', candidates: [] };
+}
+
+export function isOnboardingProjectTitle(name: string | undefined): boolean {
+  return ONBOARDING_PROJECT_TITLE.test(name || '');
+}
+
+export function findEntitledOnboardingProject<T extends OnboardingExistingProject>(
+  projects: T[],
+  clientCode: string,
+): T | undefined {
+  return projects.find((p) => p.clientCode === clientCode && isOnboardingProjectTitle(p.name));
+}
+
+export function findEntitledOnboardingWorkflow<T extends OnboardingExistingWorkflow>(
+  workflows: T[],
+  clientCode: string,
+): T | undefined {
+  return workflows.find(
+    (w) =>
+      w.clientCode === clientCode &&
+      (/onboard/i.test(w.name) || w.workflowType === 'client_onboarding'),
+  );
+}
+
+function formatExistingProjectStatus(project: OnboardingExistingProject): string {
+  const parts: string[] = [];
+  const status = (project.status || '').toLowerCase();
+  if (status === 'draft' || status === 'not started') parts.push('Draft');
+  else if (project.status) parts.push(project.status);
+  const health = (project.health || '').toLowerCase();
+  if (!project.health || health === 'unknown' || health === 'not assessed') parts.push('Unverified');
+  return parts.join(' | ');
+}
+
+function answerFromExistingOnboarding(
+  match: EntitledClientCodeMatch,
+  extras: {
+    existingProject?: OnboardingExistingProject;
+    existingWorkflow?: OnboardingExistingWorkflow;
+  },
+): string {
+  if (match.kind === 'ambiguous') {
+    return `Multiple entitled ClientCodes match that question (${match.candidates.join(', ')}). Which entitled code? Atlas does not invent or guess a ClientCode.`;
+  }
+  if (match.kind === 'none') {
+    return 'No entitled ClientCode matched that onboarding question. Atlas matches unique prefixes against the entitled roster only and does not invent ClientCodes.';
+  }
+  const code = match.clientCode;
+  const project = extras.existingProject;
+  const workflow = extras.existingWorkflow;
+  if (!project && !workflow) {
+    return `No onboarding run found for entitled ${code}. No entitled onboarding project or workflow was visible either. Atlas did not create a duplicate project, task, milestone, or ClientCode.`;
+  }
+  return [
+    `Onboarding for ${code}`,
+    project ? `Existing project: ${project.name}${formatExistingProjectStatus(project) ? ` (${formatExistingProjectStatus(project)})` : ''}` : '',
+    workflow ? `Existing workflow: ${workflow.name}${workflow.status ? ` (${workflow.status})` : ''}` : '',
+    'No governed onboarding automation run is recorded for this entitled project (template-created, not run_onboarding).',
+    'Atlas did not create a duplicate project, task, milestone, or ClientCode.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+export function answerOnboardingContext(
+  question: string,
+  record: OnboardingRunRecord | null,
+  extras?: {
+    match?: EntitledClientCodeMatch;
+    existingProject?: OnboardingExistingProject;
+    existingWorkflow?: OnboardingExistingWorkflow;
+  },
+): string {
   const q = question.toLowerCase();
   if (!record) {
+    if (extras?.match || extras?.existingProject || extras?.existingWorkflow) {
+      return answerFromExistingOnboarding(extras.match ?? { kind: 'none', candidates: [] }, extras);
+    }
     return 'No onboarding run found for the requested client. Activate a Client Onboarding workflow or provide a client code.';
   }
   if (q.includes('missing') || q.includes('document')) {
@@ -423,9 +550,16 @@ export function mapsToOnboardingContextIntent(question: string): boolean {
 export function findOnboardingRunForQuestion(
   question: string,
   records: OnboardingRunRecord[],
+  entitledCodes: readonly string[] = ENTITLED_CANONICAL_CLIENT_CODES,
 ): OnboardingRunRecord | null {
-  const upper = question.toUpperCase();
-  const codeMatch = records.find((r) => r.clientCode && upper.includes(r.clientCode));
-  if (codeMatch) return codeMatch;
-  return records.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))[0] ?? null;
+  const match = resolveEntitledClientCodeFromQuestion(question, entitledCodes);
+  if (match.kind === 'exact' || match.kind === 'unique_prefix') {
+    return records.find((r) => r.clientCode === match.clientCode) ?? null;
+  }
+  if (match.kind === 'ambiguous') return null;
+  const entitledRuns = records.filter(
+    (r) => r.clientCode && entitledCodes.includes(r.clientCode),
+  );
+  if (entitledRuns.length === 1) return entitledRuns[0];
+  return null;
 }
