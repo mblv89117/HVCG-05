@@ -277,11 +277,15 @@ export interface AtlasClientContext {
    * suggestedDraft.suggestedProjects copies already-entitled same-scope
    * project operating-record refs (same RelatedDocumentProjectRef /
    * relatedProjects path as research-intel / onboarding / client-support).
-   * Copied onto suggestedDraft only — not a relatedProjects inverse on
+   * Optional suggestedDraft.routing copies the already-entitled canonical
+   * ClientCode plus the first entitled suggestedProjects id/title so a
+   * draft reply can carry a routing target without Outlook and without
+   * sending. Copied onto suggestedDraft only — not a related* inverse on
    * the thread record. Missing / non-canonical ClientCode omits
    * researchRelationship / relatedDocuments /
    * suggestedDraft.suggestedAttachments /
-   * suggestedDraft.suggestedProjects (fail-closed; never guess).
+   * suggestedDraft.suggestedProjects / suggestedDraft.routing
+   * (fail-closed; never guess).
    */
   threads: MailThreadOperatingPayload;
   /**
@@ -788,6 +792,30 @@ export interface MailThreadSuggestedDraft {
    * DRAFT_ONLY / send=false / autoRespond=false stay as composed.
    */
   suggestedProjects?: RelatedDocumentProjectRef[];
+  /**
+   * Already-entitled routing target for a draft reply. clientCode is the
+   * thread's canonical ClientCode after canonicalClientCode() +
+   * mayReceiveRelatedContext. Optional projectId / projectTitle copy the
+   * first entitled suggestedProjects ref (same RelatedDocumentProjectRef
+   * / relatedProjects path) — never invented. Omitted when ClientCode is
+   * missing / non-canonical (fail-closed; never guess a client or
+   * project). Unscoped never receives scoped routing. Client A never
+   * receives Client B. No mailbox, Hub-MI, downloadUrl, contentBytes,
+   * SAS / anonymous URL, or TargetAmount. Routing a draft is NOT send
+   * and NOT AUTO_RESPOND — DRAFT_ONLY stays as composed.
+   */
+  routing?: MailThreadSuggestedDraftRouting;
+}
+
+export interface MailThreadSuggestedDraftRouting {
+  /** Canonical entitled ClientCode only. Never guessed. */
+  clientCode: string;
+  /** First entitled suggestedProjects id. Omitted when none. Never invented. */
+  projectId?: string;
+  /** Copied from that entitled project title. Never invented. */
+  projectTitle?: string;
+  classification: AskAtlasClassification;
+  invented: false;
 }
 
 export interface MailThreadOperatingRecord {
@@ -1414,11 +1442,14 @@ export interface AtlasAuthorizedSearch {
    * suggestedDraft.suggestedProjects copies already-entitled same-scope
    * project operating-record refs (same RelatedDocumentProjectRef /
    * relatedProjects path as research-intel / onboarding / client-support).
-   * Copied onto suggestedDraft only — not a relatedProjects inverse on
-   * the thread record. Missing / non-canonical ClientCode omits
+   * Optional suggestedDraft.routing copies the already-entitled canonical
+   * ClientCode plus the first entitled suggestedProjects id/title.
+   * Copied onto suggestedDraft only — not a related* inverse on the
+   * thread record. Missing / non-canonical ClientCode omits
    * researchRelationship / relatedDocuments /
    * suggestedDraft.suggestedAttachments /
-   * suggestedDraft.suggestedProjects (fail-closed; never guess).
+   * suggestedDraft.suggestedProjects / suggestedDraft.routing
+   * (fail-closed; never guess).
    * send=false / autoRespond=false / indexedPreviewOnly stay as composed.
    * No preview body / send on the refs. No downloadUrl / contentBytes.
    * binariesInAtlas stays false. No TargetAmount / Hub-MI invention.

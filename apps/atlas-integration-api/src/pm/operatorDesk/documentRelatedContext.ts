@@ -4,8 +4,9 @@
  * project → meetings and project → documents links on
  * ProjectOperatingRecord items, the inverse
  * mail-thread → meetings, mail-thread → documents,
- * mail-thread suggestedDraft.suggestedAttachments, and
- * mail-thread suggestedDraft.suggestedProjects links on
+ * mail-thread suggestedDraft.suggestedAttachments,
+ * mail-thread suggestedDraft.suggestedProjects, and
+ * mail-thread suggestedDraft.routing links on
  * MailThreadOperatingRecord items, the
  * inverse capital-prepare → meetings, capital-prepare → documents,
  * and capital-prepare → research links on CapitalSubmissionPrepareRecord
@@ -77,6 +78,8 @@ import {
   type RelatedDocumentContractRef,
   type RelatedDocumentEmailRef,
   type RelatedDocumentMeetingRef,
+  type AskAtlasClassification,
+  type MailThreadSuggestedDraftRouting,
   type RelatedDocumentProjectRef,
   type RelatedMeetingDocumentRef,
   type RelatedMeetingResearchRef,
@@ -662,20 +665,23 @@ export function attachRelatedContextToProjects(
  * inverse on the thread record. Existing project-ref fields stay as
  * composed; no invented milestone rows. historicalHvs / hubMiRow
  * copy from the entitled project record only — never invent
- * hubMiRow=true.
+ * hubMiRow=true. suggestedDraft.routing copies the already-entitled
+ * canonical ClientCode plus the first entitled suggestedProjects
+ * id/title — never invent a client, project, mailbox, or TargetAmount.
  * Isolation: sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit researchRelationship / relatedDocuments /
  * suggestedDraft.suggestedAttachments /
- * suggestedDraft.suggestedProjects rather than guess. Unscoped
- * never receives scoped relations. Unscoped lender catalog titles
- * never attach to a scoped thread. Client A never receives Client B.
- * SAS / anonymous webUrl dropped. No downloadUrl. No contentBytes.
- * binariesInAtlas stays false. No transcript text. No preview body /
- * send on the document refs. Never invent attachment / project names,
- * ids, counts, ClientCodes, Hub-MI, financing, or TargetAmount.
- * DRAFT_ONLY / autoRespond=false / send=false /
- * indexedPreviewOnly stay as composed on the thread payload.
+ * suggestedDraft.suggestedProjects / suggestedDraft.routing rather
+ * than guess. Unscoped never receives scoped relations. Unscoped
+ * lender catalog titles never attach to a scoped thread. Client A
+ * never receives Client B. SAS / anonymous webUrl dropped. No
+ * downloadUrl. No contentBytes. binariesInAtlas stays false. No
+ * transcript text. No preview body / send on the document refs.
+ * Never invent attachment / project names, ids, counts, ClientCodes,
+ * Hub-MI, financing, or TargetAmount. DRAFT_ONLY / autoRespond=false /
+ * send=false / indexedPreviewOnly stay as composed on the thread
+ * payload. Routing a draft is NOT send and NOT AUTO_RESPOND.
  */
 export function attachRelatedContextToMailThread(
   principal: AtlasPrincipal,
@@ -694,9 +700,11 @@ export function attachRelatedContextToMailThread(
   const suggestedProjects = canonicalClientCode(item.clientCode)
     ? relatedProjects(item, search)
     : [];
+  const routing = draftRouting(item, suggestedProjects);
   const suggestedDraftExtras = {
     ...(suggestedAttachments.length ? { suggestedAttachments } : {}),
     ...(suggestedProjects.length ? { suggestedProjects } : {}),
+    ...(routing ? { routing } : {}),
   };
   return {
     ...item,
@@ -711,6 +719,39 @@ export function attachRelatedContextToMailThread(
           },
         }
       : {}),
+  };
+}
+
+function askAtlasClassification(
+  value: string | undefined,
+): AskAtlasClassification | undefined {
+  if (value === 'CONFIRMED' || value === 'LIKELY' || value === 'PROPOSED') return value;
+  return undefined;
+}
+
+/**
+ * Entitled canonical ClientCode plus the first already-copied
+ * suggestedProjects id/title. Fail-closed: missing / non-canonical
+ * ClientCode omits routing rather than guess. Project fields copy
+ * from already-entitled same-scope suggestedProjects only.
+ */
+function draftRouting(
+  item: MailThreadOperatingRecord,
+  suggestedProjects: RelatedDocumentProjectRef[],
+): MailThreadSuggestedDraftRouting | undefined {
+  const clientCode = canonicalClientCode(item.clientCode);
+  if (!clientCode) return undefined;
+  const first = suggestedProjects[0];
+  const classification =
+    askAtlasClassification(item.classification) ||
+    askAtlasClassification(first?.classification) ||
+    'PROPOSED';
+  return {
+    clientCode,
+    ...(first?.id ? { projectId: first.id } : {}),
+    ...(first?.title ? { projectTitle: first.title } : {}),
+    classification,
+    invented: false,
   };
 }
 
