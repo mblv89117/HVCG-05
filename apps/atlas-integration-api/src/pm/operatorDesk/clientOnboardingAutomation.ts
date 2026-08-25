@@ -70,6 +70,18 @@ const DEFAULT_ONBOARDING_TASKS = [
   { key: 'prepare_kickoff', title: 'Prepare kickoff materials', purpose: 'Kickoff preparation' },
 ];
 
+export type OnboardingAgentAssignInput = {
+  clientCode: string;
+  projectId: string;
+  taskIds: string[];
+  agentId?: string;
+};
+
+export type OnboardingAgentAssignResult = {
+  id?: string;
+  agentId?: string;
+};
+
 export type OnboardingAutomationResult = {
   ok: true;
   record: OnboardingRunRecord;
@@ -79,6 +91,16 @@ export type OnboardingAutomationResult = {
   error: string;
   record?: OnboardingRunRecord;
 };
+
+/** Record an assignee only when an entitled project/task context exists and assign returns an id. */
+export function defaultOnboardingAgentAssign(
+  input: OnboardingAgentAssignInput,
+): OnboardingAgentAssignResult {
+  const projectId = input.projectId?.trim();
+  const agentId = input.agentId?.trim();
+  if (!projectId || !agentId) return {};
+  return { id: randomUUID(), agentId };
+}
 
 export function isOnboardingWorkflow(workflow: WorkflowDefinitionRecord): boolean {
   return (
@@ -1249,7 +1271,7 @@ function buildIdentityReconciliationRecord(opts: {
     ownerAttention: opts.ownerAttention,
     taskIds: [],
     milestoneIds: [],
-    assignedAgents: ['atlas-onboarding-agent'],
+    assignedAgents: [],
     documentGaps: [],
     communicationPolicy: 'DRAFT_ONLY',
     capitalScope,
@@ -1360,6 +1382,9 @@ export async function runClientOnboardingAutomation(opts: {
     dataDir: string,
     input: { clientCode: string; title: string; createdBy: string },
   ) => { id?: string } | Promise<{ id?: string }>;
+  agentAssign?: (
+    input: OnboardingAgentAssignInput,
+  ) => OnboardingAgentAssignResult | Promise<OnboardingAgentAssignResult>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1419,6 +1444,7 @@ export async function runClientOnboardingAutomation(opts: {
   let reusedExistingProject = false;
   const taskIds: string[] = [];
   let reusedExistingTasks = false;
+  const assignedAgents: string[] = [];
   const milestoneIds: string[] = [];
   const blockers: string[] = [];
   const ownerAttention: string[] = [];
@@ -1510,6 +1536,27 @@ export async function runClientOnboardingAutomation(opts: {
     }
   }
   if (milestoneIds.length) events.push('MILESTONE_CREATED');
+
+  const assignResponsibleAgent = opts.agentAssign ?? defaultOnboardingAgentAssign;
+  if (projectId && taskIds.length && !opts.dryRun) {
+    try {
+      const assigned = await assignResponsibleAgent({
+        clientCode,
+        projectId,
+        taskIds: [...taskIds],
+        ...(opts.workflow.responsibleAgent?.trim()
+          ? { agentId: opts.workflow.responsibleAgent.trim() }
+          : {}),
+      });
+      const agentId = assigned?.agentId?.trim();
+      if (assigned?.id && agentId) {
+        assignedAgents.push(agentId);
+        events.push('AGENTS_ASSIGNED');
+      }
+    } catch {
+      /* assign failed — do not invent an assignee or claim assignment complete */
+    }
+  }
 
   const listDocumentRequestsFn = opts.documentRequestList ?? listDocumentRequests;
   const createDocumentRequestFn = opts.documentRequestCreate ?? createDocumentRequest;
@@ -1689,7 +1736,6 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
-  const assignedAgents = ['atlas-onboarding-agent', 'atlas-hub-runtime'];
   const agentAssignmentReview = composeOnboardingAgentAssignmentReview({
     identityResolutionRequired: false,
     clientCode,
@@ -1697,7 +1743,7 @@ export async function runClientOnboardingAutomation(opts: {
     projectId,
     projectName,
     assignedAgents,
-    reusedExisting: true,
+    reusedExisting: false,
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });

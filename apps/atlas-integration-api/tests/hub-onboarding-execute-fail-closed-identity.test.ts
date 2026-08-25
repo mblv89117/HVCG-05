@@ -7,6 +7,7 @@ import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import type { WorkflowDefinitionRecord } from '../src/pm/operatorDesk/workflowDefinitions.ts';
 import {
   classifyOnboardingAskAtlasIntent,
+  defaultOnboardingAgentAssign,
   ENTITLED_CANONICAL_CLIENT_CODES,
   mapsToOnboardingExecuteIntent,
   runClientOnboardingAutomation,
@@ -150,6 +151,8 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.projectId, undefined);
     assert.deepEqual(result.record.taskIds, []);
     assert.deepEqual(result.record.milestoneIds, []);
+    assert.deepEqual(result.record.assignedAgents, []);
+    assert.equal(result.record.agentAssignmentReview?.agentReconciled, false);
     assert.equal(result.record.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(result.record.identityReview.send, false);
     assert.equal(result.record.identityReview.outbound, false);
@@ -162,6 +165,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(counts.listTasks, 0);
     assert.equal(result.events.includes('PROJECT_CREATED'), false);
     assert.equal(result.events.includes('TASKS_CREATED'), false);
+    assert.equal(result.events.includes('AGENTS_ASSIGNED'), false);
     assert.equal(result.record.taskReview?.taskReconciled, false);
     rmSync(dir, { recursive: true, force: true });
   });
@@ -185,6 +189,8 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.projectId, undefined);
     assert.deepEqual(result.record.taskIds, []);
     assert.deepEqual(result.record.milestoneIds, []);
+    assert.deepEqual(result.record.assignedAgents, []);
+    assert.equal(result.record.agentAssignmentReview?.agentReconciled, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -243,8 +249,12 @@ describe('onboarding execute fail-closed identity', () => {
     assert.ok(live.counts.createTask > 0);
     assert.ok(created.record.taskIds.every((id) => Boolean(id)));
     assert.equal(created.record.taskReview?.taskReconciled, true);
+    assert.deepEqual(created.record.assignedAgents, ['atlas-hub-runtime']);
+    assert.equal(created.record.agentAssignmentReview?.agentReconciled, true);
+    assert.equal(created.record.agentAssignmentReview?.send, false);
     assert.ok(created.events.includes('PROJECT_CREATED'));
     assert.ok(created.events.includes('TASKS_CREATED'));
+    assert.ok(created.events.includes('AGENTS_ASSIGNED'));
 
     const dry = mockSharePoint({ clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }] });
     const proposed = await runClientOnboardingAutomation({
@@ -265,9 +275,13 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.record.projectId, undefined);
     assert.deepEqual(proposed.record.taskIds, []);
     assert.deepEqual(proposed.record.milestoneIds, []);
+    assert.deepEqual(proposed.record.assignedAgents, []);
     assert.equal(proposed.record.taskReview?.status, 'OPEN');
     assert.equal(proposed.record.taskReview?.taskReconciled, false);
     assert.equal(proposed.record.taskReview?.send, false);
+    assert.equal(proposed.record.agentAssignmentReview?.status, 'OPEN');
+    assert.equal(proposed.record.agentAssignmentReview?.agentReconciled, false);
+    assert.equal(proposed.record.agentAssignmentReview?.send, false);
     assert.equal(dry.counts.createProject, 0);
     assert.equal(dry.counts.createTask, 0);
     assert.equal(dry.counts.createMilestone, 0);
@@ -275,6 +289,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.events.includes('PROJECT_CREATED'), false);
     assert.equal(proposed.events.includes('TASKS_CREATED'), false);
     assert.equal(proposed.events.includes('MILESTONE_CREATED'), false);
+    assert.equal(proposed.events.includes('AGENTS_ASSIGNED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -302,14 +317,17 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(failed.record.projectId, undefined);
     assert.deepEqual(failed.record.taskIds, []);
     assert.deepEqual(failed.record.milestoneIds, []);
+    assert.deepEqual(failed.record.assignedAgents, []);
     assert.equal(failed.record.taskReview?.status, 'OPEN');
     assert.equal(failed.record.taskReview?.taskReconciled, false);
+    assert.equal(failed.record.agentAssignmentReview?.agentReconciled, false);
     assert.equal(thrown.counts.createProject, 1);
     assert.equal(thrown.counts.createTask, 0);
     assert.equal(thrown.counts.createMilestone, 0);
     assert.equal(thrown.counts.listTasks, 0);
     assert.equal(failed.events.includes('PROJECT_CREATED'), false);
     assert.equal(failed.events.includes('TASKS_CREATED'), false);
+    assert.equal(failed.events.includes('AGENTS_ASSIGNED'), false);
 
     const noId = mockSharePoint({ clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }] });
     noId.sharepoint.createProject = (async () => {
@@ -331,12 +349,15 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(absent.record.projectId, undefined);
     assert.deepEqual(absent.record.taskIds, []);
     assert.deepEqual(absent.record.milestoneIds, []);
+    assert.deepEqual(absent.record.assignedAgents, []);
     assert.equal(absent.record.taskReview?.taskReconciled, false);
+    assert.equal(absent.record.agentAssignmentReview?.agentReconciled, false);
     assert.equal(noId.counts.createProject, 1);
     assert.equal(noId.counts.createTask, 0);
     assert.equal(noId.counts.createMilestone, 0);
     assert.equal(noId.counts.listTasks, 0);
     assert.equal(absent.events.includes('TASKS_CREATED'), false);
+    assert.equal(absent.events.includes('AGENTS_ASSIGNED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -566,6 +587,9 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.taskReview?.reusedExisting, true);
     assert.equal(result.record.taskReview?.send, false);
     assert.equal(result.record.taskReview?.outbound, false);
+    assert.deepEqual(result.record.assignedAgents, ['atlas-hub-runtime']);
+    assert.equal(result.record.agentAssignmentReview?.agentReconciled, true);
+    assert.ok(result.events.includes('AGENTS_ASSIGNED'));
     assert.equal(counts.createProject, 0);
     assert.ok(counts.listTasks > 0);
     assert.ok(counts.createTask > 0);
@@ -594,12 +618,15 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.record.documentsReconciled, false);
     assert.deepEqual(proposed.record.taskIds, ['existing-accg-task-1']);
     assert.deepEqual(proposed.record.milestoneIds, []);
+    assert.deepEqual(proposed.record.assignedAgents, []);
     assert.equal(proposed.record.taskReview?.reusedExisting, true);
     assert.equal(proposed.record.taskReview?.send, false);
+    assert.equal(proposed.record.agentAssignmentReview?.agentReconciled, false);
     assert.equal(dry.counts.createTask, 0);
     assert.equal(dry.counts.createMilestone, 0);
     assert.equal(proposed.events.includes('TASKS_CREATED'), false);
     assert.equal(proposed.events.includes('MILESTONE_CREATED'), false);
+    assert.equal(proposed.events.includes('AGENTS_ASSIGNED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -627,8 +654,11 @@ describe('onboarding execute fail-closed identity', () => {
     assert.ok(created.record.taskIds.every((id) => Boolean(id)));
     assert.equal(created.record.taskReview?.taskReconciled, true);
     assert.equal(created.record.taskReview?.reusedExisting, false);
+    assert.deepEqual(created.record.assignedAgents, ['atlas-hub-runtime']);
+    assert.equal(created.record.agentAssignmentReview?.agentReconciled, true);
     assert.ok(created.events.includes('TASKS_CREATED'));
     assert.ok(created.events.includes('MILESTONE_CREATED'));
+    assert.ok(created.events.includes('AGENTS_ASSIGNED'));
     assert.ok(live.counts.createTask > 0);
     assert.ok(live.counts.createMilestone > 0);
     assert.equal(live.counts.createProject, 0);
@@ -652,14 +682,17 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.record.projectId, undefined);
     assert.deepEqual(proposed.record.taskIds, []);
     assert.deepEqual(proposed.record.milestoneIds, []);
+    assert.deepEqual(proposed.record.assignedAgents, []);
     assert.equal(proposed.record.taskReview?.status, 'OPEN');
     assert.equal(proposed.record.taskReview?.taskReconciled, false);
     assert.equal(proposed.record.taskReview?.send, false);
+    assert.equal(proposed.record.agentAssignmentReview?.agentReconciled, false);
     assert.equal(dry.counts.createTask, 0);
     assert.equal(dry.counts.createMilestone, 0);
     assert.equal(dry.counts.listTasks, 0);
     assert.equal(proposed.events.includes('TASKS_CREATED'), false);
     assert.equal(proposed.events.includes('MILESTONE_CREATED'), false);
+    assert.equal(proposed.events.includes('AGENTS_ASSIGNED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -688,11 +721,14 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(failed.record.documentsReconciled, false);
     assert.equal(failed.record.projectId, 'existing-accg-onboarding');
     assert.deepEqual(failed.record.taskIds, []);
+    assert.deepEqual(failed.record.assignedAgents, []);
     assert.equal(failed.record.taskReview?.status, 'OPEN');
     assert.equal(failed.record.taskReview?.taskReconciled, false);
     assert.equal(failed.record.taskReview?.send, false);
+    assert.equal(failed.record.agentAssignmentReview?.agentReconciled, false);
     assert.equal(thrown.counts.createTask, 1);
     assert.equal(failed.events.includes('TASKS_CREATED'), false);
+    assert.equal(failed.events.includes('AGENTS_ASSIGNED'), false);
 
     const noId = mockSharePoint({
       clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
@@ -715,9 +751,181 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(absent.record.workspaceReconciled, true);
     assert.equal(absent.record.documentsReconciled, false);
     assert.deepEqual(absent.record.taskIds, []);
+    assert.deepEqual(absent.record.assignedAgents, []);
     assert.equal(absent.record.taskReview?.taskReconciled, false);
+    assert.equal(absent.record.agentAssignmentReview?.agentReconciled, false);
     assert.ok(noId.counts.createTask > 0);
     assert.equal(absent.events.includes('TASKS_CREATED'), false);
+    assert.equal(absent.events.includes('AGENTS_ASSIGNED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('assigns agents only when entitled project/task context exists and assign returns an id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const live = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+      tasks: [{
+        id: 'existing-accg-task-1',
+        title: 'Confirm primary client contact',
+        projectId: 'existing-accg-onboarding',
+      }],
+    });
+    let assignCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: live.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      agentAssign: (input) => {
+        assignCalls += 1;
+        assert.equal(input.projectId, 'existing-accg-onboarding');
+        assert.ok(input.taskIds.includes('existing-accg-task-1'));
+        return { id: `assign-${assignCalls}`, agentId: 'atlas-hub-runtime' };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.identityResolutionRequired, false);
+    assert.equal(created.record.workspaceReconciled, true);
+    assert.equal(created.record.documentsReconciled, false);
+    assert.equal(created.record.projectId, 'existing-accg-onboarding');
+    assert.ok(created.record.taskIds.includes('existing-accg-task-1'));
+    assert.deepEqual(created.record.assignedAgents, ['atlas-hub-runtime']);
+    assert.equal(created.record.agentAssignmentReview?.status, 'CLEAR');
+    assert.equal(created.record.agentAssignmentReview?.agentReconciled, true);
+    assert.equal(created.record.agentAssignmentReview?.reusedExisting, false);
+    assert.equal(created.record.agentAssignmentReview?.send, false);
+    assert.equal(created.record.agentAssignmentReview?.outbound, false);
+    assert.equal(created.record.communicationPolicy, 'DRAFT_ONLY');
+    assert.ok(created.events.includes('AGENTS_ASSIGNED'));
+    assert.equal(assignCalls, 1);
+    assert.deepEqual(
+      defaultOnboardingAgentAssign({
+        clientCode: 'ACCG01',
+        projectId: 'existing-accg-onboarding',
+        taskIds: ['existing-accg-task-1'],
+        agentId: 'atlas-hub-runtime',
+      }).agentId,
+      'atlas-hub-runtime',
+    );
+    assert.deepEqual(
+      defaultOnboardingAgentAssign({
+        clientCode: 'ACCG01',
+        projectId: '',
+        taskIds: [],
+        agentId: 'atlas-hub-runtime',
+      }),
+      {},
+    );
+
+    const dry = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+      tasks: [{
+        id: 'existing-accg-task-1',
+        title: 'Confirm primary client contact',
+        projectId: 'existing-accg-onboarding',
+      }],
+    });
+    let dryAssignCalls = 0;
+    const proposed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: dry.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      agentAssign: () => {
+        dryAssignCalls += 1;
+        throw new Error('dry-run must not assign agents');
+      },
+    });
+    assert.equal(proposed.ok, true);
+    if (!proposed.ok) return;
+    assert.equal(proposed.record.workspaceReconciled, true);
+    assert.equal(proposed.record.documentsReconciled, false);
+    assert.equal(proposed.record.projectId, 'existing-accg-onboarding');
+    assert.deepEqual(proposed.record.taskIds, ['existing-accg-task-1']);
+    assert.deepEqual(proposed.record.assignedAgents, []);
+    assert.equal(proposed.record.agentAssignmentReview?.status, 'OPEN');
+    assert.equal(proposed.record.agentAssignmentReview?.agentReconciled, false);
+    assert.equal(proposed.record.agentAssignmentReview?.send, false);
+    assert.equal(dryAssignCalls, 0);
+    assert.equal(proposed.events.includes('AGENTS_ASSIGNED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not invent assignees when assign fails or returns no id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const thrown = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+      tasks: [{
+        id: 'existing-accg-task-1',
+        title: 'Confirm primary client contact',
+        projectId: 'existing-accg-onboarding',
+      }],
+    });
+    let failedAssigns = 0;
+    const failed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: thrown.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      agentAssign: () => {
+        failedAssigns += 1;
+        throw new Error('agent assign failed');
+      },
+    });
+    assert.equal(failed.ok, true);
+    if (!failed.ok) return;
+    assert.equal(failed.record.identityResolutionRequired, false);
+    assert.equal(failed.record.workspaceReconciled, true);
+    assert.equal(failed.record.documentsReconciled, false);
+    assert.equal(failed.record.projectId, 'existing-accg-onboarding');
+    assert.ok(failed.record.taskIds.includes('existing-accg-task-1'));
+    assert.deepEqual(failed.record.assignedAgents, []);
+    assert.equal(failed.record.agentAssignmentReview?.status, 'OPEN');
+    assert.equal(failed.record.agentAssignmentReview?.agentReconciled, false);
+    assert.equal(failed.record.agentAssignmentReview?.send, false);
+    assert.equal(failedAssigns, 1);
+    assert.equal(failed.events.includes('AGENTS_ASSIGNED'), false);
+
+    const noId = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+      tasks: [{
+        id: 'existing-accg-task-1',
+        title: 'Confirm primary client contact',
+        projectId: 'existing-accg-onboarding',
+      }],
+    });
+    let absentAssigns = 0;
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: noId.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      agentAssign: () => {
+        absentAssigns += 1;
+        return { agentId: 'atlas-hub-runtime' };
+      },
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.identityResolutionRequired, false);
+    assert.equal(absent.record.workspaceReconciled, true);
+    assert.equal(absent.record.documentsReconciled, false);
+    assert.deepEqual(absent.record.assignedAgents, []);
+    assert.equal(absent.record.agentAssignmentReview?.agentReconciled, false);
+    assert.ok(absentAssigns > 0);
+    assert.equal(absent.events.includes('AGENTS_ASSIGNED'), false);
     rmSync(dir, { recursive: true, force: true });
   });
 

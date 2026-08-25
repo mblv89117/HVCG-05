@@ -136,6 +136,12 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.workspaceReview.capitalSubmit, false);
     assert.equal(result.record.workspaceReview.workspaceReconciled, false);
     assert.equal(result.record.workspaceReview.reusedExisting, false);
+    assert.deepEqual(result.record.assignedAgents, []);
+    assert.equal(result.record.agentAssignmentReview.status, 'OPEN');
+    assert.equal(result.record.agentAssignmentReview.ready, false);
+    assert.equal(result.record.agentAssignmentReview.agentReconciled, false);
+    assert.equal(result.record.agentAssignmentReview.send, false);
+    assert.equal(result.record.agentAssignmentReview.outbound, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -182,6 +188,8 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.identityResolutionRequired, true);
     assert.equal(result.record.workspaceReconciled, false);
     assert.equal(result.record.documentsReconciled, false);
+    assert.deepEqual(result.record.assignedAgents, []);
+    assert.equal(result.record.agentAssignmentReview.agentReconciled, false);
     assert.equal(result.record.projectId, undefined);
     const overlay = readOnboardingOverlay(resolveOnboardingStateDir(dir));
     const run = getOnboardingRun(overlay, 'client-onboarding-accg01');
