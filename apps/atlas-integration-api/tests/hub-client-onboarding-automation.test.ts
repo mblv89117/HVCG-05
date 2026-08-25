@@ -8,6 +8,7 @@ import type { WorkflowDefinitionRecord } from '../src/pm/operatorDesk/workflowDe
 import {
   answerOnboardingContext,
   classifyOnboardingAskAtlasIntent,
+  composeBlockerReview,
   composeKickoff,
   composeOperationsHandoff,
   ENTITLED_CANONICAL_CLIENT_CODES,
@@ -185,6 +186,11 @@ describe('client onboarding automation', () => {
         documentGaps: [{ label: 'W-9', status: 'MISSING' }],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     const answer = answerOnboardingContext('What documents are missing for ACCG?', record);
@@ -238,6 +244,10 @@ describe('client onboarding automation', () => {
         communicationPolicy: 'DRAFT_ONLY',
       }),
       kickoff: composeKickoff({
+        workspaceReconciled: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
         workspaceReconciled: true,
         communicationPolicy: 'DRAFT_ONLY',
       }),
@@ -402,6 +412,9 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.kickoff.send, false);
     assert.equal(first.record?.kickoff.outbound, false);
     assert.equal(first.record?.kickoff.capitalSubmit, false);
+    assert.equal(first.record?.blockerReview.send, false);
+    assert.equal(first.record?.blockerReview.outbound, false);
+    assert.equal(first.record?.blockerReview.capitalSubmit, false);
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -519,6 +532,13 @@ describe('client onboarding automation', () => {
         documentGaps: [{ label: 'W-9', status: 'MISSING' }],
         communicationPolicy: 'DRAFT_ONLY',
       }),
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        projectName: 'Client Onboarding — ACCG',
+        documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     assert.equal(mapsToOnboardingContextIntent('What is the onboarding handoff for ACCG?'), true);
@@ -625,6 +645,12 @@ describe('client onboarding automation', () => {
         communicationPolicy: 'DRAFT_ONLY',
       }),
       kickoff: prepared,
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        projectName: 'Client Onboarding — ACCG',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     assert.equal(mapsToOnboardingContextIntent('What is the onboarding kickoff for ACCG?'), true);
@@ -651,6 +677,99 @@ describe('client onboarding automation', () => {
     });
     assert.match(threadAnswer, /Related entitled threads: 2/);
     assert.match(threadAnswer, /DRAFT_ONLY, no send/);
+  });
+
+  it('prepares blocker review from entitled run facts and answers Ask Atlas blockers', () => {
+    const prepared = composeBlockerReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(prepared.status, 'CLEAR');
+    assert.equal(prepared.ready, true);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.outbound, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.itemCount, 0);
+
+    const blocked = composeBlockerReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(blocked.status, 'BLOCKED');
+    assert.equal(blocked.ready, false);
+    assert.equal(blocked.itemCount, 1);
+
+    const identity = composeBlockerReview({
+      identityResolutionRequired: true,
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+
+    const openDocs = composeBlockerReview({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(openDocs.status, 'OPEN');
+    assert.equal(openDocs.ready, false);
+    assert.equal(openDocs.missingDocumentCount, 1);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'BLOCKED' as const,
+      currentStep: 'Establish onboarding operating structure',
+      nextStep: 'Clear blockers',
+      blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+      ownerAttention: ['Review SharePoint PM availability'],
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1'],
+      milestoneIds: ['m1'],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: blocked,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What are the onboarding blockers for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What are the onboarding blockers for ACCG?'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What are the onboarding blockers for ACCG?'), false);
+    const answer = answerOnboardingContext('What are the onboarding blockers for ACCG?', record);
+    assert.match(answer, /Blocker review for ACCG01: BLOCKED/);
+    assert.match(answer, /SharePoint PM backend unavailable/);
+    assert.match(answer, /did not send mail/);
+    assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
   });
 
   it('restore env', () => {

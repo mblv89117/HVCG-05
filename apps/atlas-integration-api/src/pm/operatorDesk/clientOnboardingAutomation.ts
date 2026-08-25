@@ -20,6 +20,7 @@ import {
   ONBOARDING_AUTOMATION_MISSION_KEY,
   type OnboardingDocumentGap,
   type OnboardingLifecycleStatus,
+  type OnboardingBlockerReview,
   type OnboardingKickoff,
   type OnboardingMilestoneState,
   type OnboardingOperationsHandoff,
@@ -270,6 +271,73 @@ export function composeKickoff(record: {
   };
 }
 
+export function composeBlockerReview(record: {
+  identityResolutionRequired?: boolean;
+  workspaceReconciled?: boolean;
+  projectId?: string;
+  projectName?: string;
+  documentGaps?: OnboardingDocumentGap[];
+  blockers?: string[];
+  ownerAttention?: string[];
+  communicationPolicy?: OnboardingBlockerReview['communicationPolicy'];
+}): OnboardingBlockerReview {
+  const blockers = record.blockers ?? [];
+  const ownerAttention = record.ownerAttention ?? [];
+  const missingDocumentCount = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const items = [
+    ...blockers,
+    ...(missingDocumentCount ? [`${missingDocumentCount} missing document${missingDocumentCount === 1 ? '' : 's'}`] : []),
+    ...ownerAttention,
+  ];
+  const nextOwnerAction =
+    ownerAttention[0]
+    ?? (record.identityResolutionRequired
+      ? 'Assign client scope before blocker clearance'
+      : blockers[0]
+        ? blockers[0]
+        : missingDocumentCount
+          ? 'Reconcile missing documents before clearance (draft only)'
+          : 'No open onboarding blockers');
+  if (record.identityResolutionRequired || !record.workspaceReconciled || !record.projectId) {
+    return {
+      status: record.identityResolutionRequired ? 'NOT_READY' : blockers.length ? 'BLOCKED' : 'NOT_READY',
+      ready: false,
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      itemCount: items.length,
+      items,
+      missingDocumentCount,
+      ownerAttention,
+      communicationPolicy,
+      nextOwnerAction,
+      send: false,
+      liveGtmOutbound: false,
+      capitalSubmit: false,
+      outbound: false,
+      provenance: record.identityResolutionRequired ? 'CONFIRMED' : 'PROPOSED',
+    };
+  }
+  const status = blockers.length ? 'BLOCKED' : items.length ? 'OPEN' : 'CLEAR';
+  return {
+    status,
+    ready: status === 'CLEAR',
+    projectId: record.projectId,
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    itemCount: items.length,
+    items,
+    missingDocumentCount,
+    ownerAttention,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false,
+    liveGtmOutbound: false,
+    capitalSubmit: false,
+    outbound: false,
+    provenance: 'CONFIRMED',
+  };
+}
+
 function computeStatus(record: Partial<OnboardingRunRecord>): OnboardingLifecycleStatus {
   if (record.identityResolutionRequired) return 'IDENTITY_RECONCILIATION';
   const missingDocs = record.documentGaps?.filter((d) => d.status === 'MISSING').length ?? 0;
@@ -332,6 +400,13 @@ export async function runClientOnboardingAutomation(opts: {
         capitalScope: Boolean(opts.workflow.scope.capitalMatter),
       }),
       kickoff: composeKickoff({
+        identityResolutionRequired: true,
+        workspaceReconciled: false,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        ownerAttention: ['Assign client scope to onboarding workflow'],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
         identityResolutionRequired: true,
         workspaceReconciled: false,
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
@@ -510,8 +585,19 @@ export async function runClientOnboardingAutomation(opts: {
     ownerAttention,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const blockerReview = composeBlockerReview({
+    identityResolutionRequired: false,
+    workspaceReconciled,
+    projectId,
+    projectName,
+    documentGaps,
+    blockers,
+    ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
+  if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -545,6 +631,7 @@ export async function runClientOnboardingAutomation(opts: {
     milestones,
     operationsHandoff,
     kickoff,
+    blockerReview,
     provenance: 'onboarding_automation',
   };
 
@@ -667,6 +754,7 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'begin',
   'status',
   'handoff',
+  'blocker',
 ] as const;
 
 const ONBOARDING_EXECUTE_VERB = /\b(start|run|execute|activate|begin)\b/;
@@ -743,11 +831,17 @@ export function answerOnboardingContext(
       ? `Missing for ${record.clientCode ?? 'client'}: ${missing.map((d) => d.label).join('; ')}`
       : `No confirmed missing documents for ${record.clientCode ?? 'client'}.`;
   }
-  if (q.includes('blocked') || q.includes('waiting')) {
+  if (q.includes('blocked') || q.includes('waiting') || q.includes('blocker')) {
+    const review = record.blockerReview;
     return [
-      `Status: ${record.status}`,
-      record.blockers.length ? `Blockers: ${record.blockers.join('; ')}` : 'No blockers recorded.',
-      record.ownerAttention.length ? `Owner attention: ${record.ownerAttention.join('; ')}` : '',
+      `Blocker review for ${record.clientCode ?? 'client'}: ${review.status}`,
+      review.projectName ? `Project: ${review.projectName}` : '',
+      review.itemCount ? `Items: ${review.items.join('; ')}` : 'No open onboarding blockers.',
+      `Documents missing: ${review.missingDocumentCount}`,
+      `Communication policy: ${review.communicationPolicy}`,
+      review.ownerAttention.length ? `Owner attention: ${review.ownerAttention.join('; ')}` : '',
+      `Next owner action: ${review.nextOwnerAction}`,
+      'Atlas did not send mail, launch GTM, or submit capital.',
     ]
       .filter(Boolean)
       .join('\n');
