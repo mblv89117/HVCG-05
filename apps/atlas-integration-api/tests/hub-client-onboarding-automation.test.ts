@@ -448,6 +448,8 @@ describe('client onboarding automation', () => {
     assert.equal(prepared.capitalSubmit, false);
     assert.equal(prepared.missingDocumentCount, 1);
     assert.equal(prepared.capitalScope, true);
+    assert.equal(prepared.relatedThreadCount, 0);
+    assert.equal(prepared.communicationPolicy, 'DRAFT_ONLY');
 
     const blocked = composeOperationsHandoff({
       workspaceReconciled: true,
@@ -501,8 +503,24 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Operations handoff for ACCG01: PREPARED/);
     assert.match(answer, /Client Onboarding — ACCG/);
     assert.match(answer, /PREPARE_ONLY/);
+    assert.match(answer, /Related entitled threads: 0/);
     assert.match(answer, /did not send mail/);
     assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
+
+    const withThreads = composeOperationsHandoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      communicationPolicy: 'DRAFT_ONLY',
+      relatedThreadCount: 2,
+    });
+    assert.equal(withThreads.relatedThreadCount, 2);
+    assert.equal(withThreads.send, false);
+    const threadAnswer = answerOnboardingContext('What is the onboarding handoff for ACCG?', {
+      ...record,
+      operationsHandoff: withThreads,
+    });
+    assert.match(threadAnswer, /Related entitled threads: 2/);
+    assert.match(threadAnswer, /DRAFT_ONLY, no send/);
   });
 
   it('restore env', () => {

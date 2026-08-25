@@ -46,6 +46,7 @@ export type OnboardingOperationsHandoff = {
   blockers: string[];
   ownerAttention: string[];
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  relatedThreadCount: number;
   capitalScope: boolean;
   nextOwnerAction: string;
   send: false;
