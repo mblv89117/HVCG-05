@@ -8,6 +8,7 @@ import type { WorkflowDefinitionRecord } from '../src/pm/operatorDesk/workflowDe
 import {
   answerOnboardingContext,
   classifyOnboardingAskAtlasIntent,
+  composeOperationsHandoff,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
@@ -85,6 +86,9 @@ describe('client onboarding automation', () => {
     if (!result.ok) return;
     assert.equal(result.record.status, 'IDENTITY_RECONCILIATION');
     assert.equal(result.record.identityResolutionRequired, true);
+    assert.equal(result.record.operationsHandoff.status, 'NOT_READY');
+    assert.equal(result.record.operationsHandoff.ready, false);
+    assert.equal(result.record.operationsHandoff.send, false);
     rmSync(dir, { recursive: true, force: true });
   });
 
@@ -166,6 +170,11 @@ describe('client onboarding automation', () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     const answer = answerOnboardingContext('What documents are missing for ACCG?', record);
@@ -214,6 +223,10 @@ describe('client onboarding automation', () => {
       createdAt: now,
       updatedAt: now,
       milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
       provenance: 'test',
     };
     const pdgRun = { ...accgRun, workflowId: 'wf-pdg', clientCode: 'PDG01', clientName: 'Prodigy', updatedAt: now };
@@ -367,6 +380,10 @@ describe('client onboarding automation', () => {
     assert.equal(first.reusedWorkflow, false);
     assert.equal(first.record?.clientCode, 'ACCG01');
     assert.equal(first.record?.communicationPolicy, 'DRAFT_ONLY');
+    assert.equal(first.record?.operationsHandoff.status, 'PREPARED');
+    assert.equal(first.record?.operationsHandoff.ready, true);
+    assert.equal(first.record?.operationsHandoff.send, false);
+    assert.equal(first.record?.operationsHandoff.capitalSubmit, false);
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;
@@ -410,6 +427,82 @@ describe('client onboarding automation', () => {
     const overlay = readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(dir));
     assert.equal(overlay.definitions.length, 0);
     rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('prepares operations handoff from entitled run facts and answers Ask Atlas handoff', () => {
+    const prepared = composeOperationsHandoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1', 't2'],
+      milestoneIds: ['m1'],
+      documentGaps: [{ label: 'W-9', status: 'MISSING' }],
+      ownerAttention: ['Outbound onboarding communications remain DRAFT_ONLY unless explicit policy permits'],
+      communicationPolicy: 'DRAFT_ONLY',
+      capitalScope: true,
+    });
+    assert.equal(prepared.status, 'PREPARED');
+    assert.equal(prepared.ready, true);
+    assert.equal(prepared.send, false);
+    assert.equal(prepared.liveGtmOutbound, false);
+    assert.equal(prepared.capitalSubmit, false);
+    assert.equal(prepared.missingDocumentCount, 1);
+    assert.equal(prepared.capitalScope, true);
+
+    const blocked = composeOperationsHandoff({
+      workspaceReconciled: true,
+      projectId: 'proj-1',
+      blockers: ['SharePoint PM backend unavailable — onboarding execution deferred'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(blocked.status, 'BLOCKED');
+    assert.equal(blocked.ready, false);
+
+    const identity = composeOperationsHandoff({
+      identityResolutionRequired: true,
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'DOCUMENT_COLLECTION' as const,
+      currentStep: 'Collect documents',
+      nextStep: 'Kickoff',
+      blockers: [],
+      ownerAttention: prepared.ownerAttention,
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: ['t1', 't2'],
+      milestoneIds: ['m1'],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [{ label: 'W-9', status: 'MISSING' as const }],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: true,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: prepared,
+      provenance: 'test',
+    };
+    assert.equal(mapsToOnboardingContextIntent('What is the onboarding handoff for ACCG?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('What is the onboarding handoff for ACCG?'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('What is the onboarding handoff for ACCG?'), false);
+    const answer = answerOnboardingContext('What is the onboarding handoff for ACCG?', record);
+    assert.match(answer, /Operations handoff for ACCG01: PREPARED/);
+    assert.match(answer, /Client Onboarding — ACCG/);
+    assert.match(answer, /PREPARE_ONLY/);
+    assert.match(answer, /did not send mail/);
+    assert.equal(/ACCG99|invented|submitted|AUTO_RESPOND/i.test(answer), false);
   });
 
   it('restore env', () => {

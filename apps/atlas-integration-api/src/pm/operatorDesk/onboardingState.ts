@@ -34,6 +34,26 @@ export type OnboardingDocumentGap = {
   source?: string;
 };
 
+/** Canonical OPERATIONS HANDOFF package. Composed from already-known run facts. */
+export type OnboardingOperationsHandoff = {
+  status: 'NOT_READY' | 'PREPARED' | 'BLOCKED';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  taskCount: number;
+  milestoneCount: number;
+  missingDocumentCount: number;
+  blockers: string[];
+  ownerAttention: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  capitalScope: boolean;
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 export type OnboardingRunRecord = {
   workflowId: string;
   workflowDefinitionId: string;
@@ -59,6 +79,7 @@ export type OnboardingRunRecord = {
   updatedAt: string;
   lastExecutedAt?: string;
   milestones: OnboardingMilestoneState[];
+  operationsHandoff: OnboardingOperationsHandoff;
   provenance: string;
 };
 
