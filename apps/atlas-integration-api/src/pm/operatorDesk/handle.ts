@@ -120,12 +120,19 @@ import { executeEntitledOnboardingFromQuestion } from './askAtlasOnboardingExecu
 import { readOnboardingOverlay, resolveOnboardingStateDir, ONBOARDING_AUTOMATION_MISSION_KEY } from './onboardingState.ts';
 import {
   applyApprovalAction,
-  answerApprovalContext,
   buildApprovalCenter,
   getApprovalDetail,
   mapsToApprovalContextIntent,
 } from './approvalCenter.ts';
-import { APPROVAL_CENTER_MISSION_KEY } from './approvalState.ts';
+import {
+  readApprovalOverlay,
+  resolveApprovalStateDir,
+} from './approvalState.ts';
+import {
+  answerApprovalCenterHonesty,
+  APPROVAL_CENTER_HONESTY_MISSION_KEY,
+  mapsToApprovalCenterHonestyIntent,
+} from './approvalCenterHonesty.ts';
 import {
   answerCommunicationPolicy,
   COMMUNICATION_POLICY_CENTER_MISSION_KEY,
@@ -1094,7 +1101,8 @@ export async function handleOperatorDesk(opts: {
       return true;
     }
 
-    if (mapsToApprovalContextIntent(question)) {
+    if (mapsToApprovalCenterHonestyIntent(question) || mapsToApprovalContextIntent(question)) {
+      const entitled = entitledClientCodes(principal);
       const ownerTasks = await loadOwnerApprovalTasks({
         cfg: opts.cfg,
         repo: opts.repo,
@@ -1108,12 +1116,29 @@ export async function handleOperatorDesk(opts: {
         dataDir: opts.cfg.dataDir,
         ownerApprovalTasks: ownerTasks,
       });
-      const approvalAnswer = answerApprovalContext(question, approvalModel);
+      const overlay = readApprovalOverlay(resolveApprovalStateDir(opts.cfg.dataDir));
+      const approvalAnswer = answerApprovalCenterHonesty(question, {
+        entitledCodes: entitled,
+        entitledItems: approvalModel.items.map((item) => ({
+          approvalId: item.approvalId,
+          title: item.title,
+          clientCode: item.clientCode,
+          requestedAction: item.requestedAction,
+          source: item.source,
+          evidenceStatus: item.evidenceStatus,
+          fromOwnerApprovalTask: item.source === 'task',
+        })),
+        overlayApprovalIds: overlay.records.map((row) => row.approvalId),
+      });
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
       const askAtlas = buildConversationalAskAtlasAnswer({
         question,
         previewText: approvalAnswer,
-        workflowId: 'approval-center',
-        workflowName: 'Approval Center',
+        workflowId: 'approval-center-honesty',
+        workflowName: match.clientCode
+          ? `Approval Center — ${match.clientCode}`
+          : 'Approval Center',
+        clientCode: match.clientCode,
       });
       sendJson(
         opts.res,
@@ -1124,9 +1149,10 @@ export async function handleOperatorDesk(opts: {
           approvalCenter: approvalModel,
           runtime: {
             agent: ASK_ATLAS_RUNTIME_AGENT,
-            toolsInvoked: ['approval_center'],
+            toolsInvoked: ['approval_center_honesty'],
             policyClass: 'READ_AUTO',
-            missionKey: APPROVAL_CENTER_MISSION_KEY,
+            missionKey: APPROVAL_CENTER_HONESTY_MISSION_KEY,
+            autoSend: false,
           },
         },
         opts.origin,
