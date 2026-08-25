@@ -368,6 +368,8 @@ export type OnboardingRunRecord = {
   capitalScope: boolean;
   identityResolutionRequired: boolean;
   workspaceReconciled: boolean;
+  /** True only after entitled reuse of an existing document request set, or a create that returned an id. */
+  documentsReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;

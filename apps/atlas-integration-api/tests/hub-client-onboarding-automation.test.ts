@@ -181,6 +181,7 @@ describe('client onboarding automation', () => {
     assert.equal(result.record.status, 'IDENTITY_RECONCILIATION');
     assert.equal(result.record.identityResolutionRequired, true);
     assert.equal(result.record.workspaceReconciled, false);
+    assert.equal(result.record.documentsReconciled, false);
     assert.equal(result.record.projectId, undefined);
     const overlay = readOnboardingOverlay(resolveOnboardingStateDir(dir));
     const run = getOnboardingRun(overlay, 'client-onboarding-accg01');
@@ -501,6 +502,7 @@ describe('client onboarding automation', () => {
     assert.equal(first.record?.workspaceReview.workspaceReconciled, true);
     assert.equal(first.record?.workspaceReview.reusedExisting, true);
     assert.equal(first.record?.workspaceReview.clientCode, 'ACCG01');
+    assert.equal(first.record?.documentsReconciled, false);
     assert.equal(first.record?.dryRun, false);
     assert.equal(createProjectCalls, 1);
     const firstWorkflowId = first.workflow?.workflowId;

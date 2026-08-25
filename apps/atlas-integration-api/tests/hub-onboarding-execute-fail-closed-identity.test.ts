@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
@@ -141,6 +141,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.status, 'IDENTITY_RECONCILIATION');
     assert.equal(result.record.identityResolutionRequired, true);
     assert.equal(result.record.workspaceReconciled, false);
+    assert.equal(result.record.documentsReconciled, false);
     assert.equal(result.record.clientCode, 'ACCG01');
     assert.equal(result.record.projectId, undefined);
     assert.deepEqual(result.record.taskIds, []);
@@ -173,6 +174,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.status, 'IDENTITY_RECONCILIATION');
     assert.equal(result.record.identityResolutionRequired, true);
     assert.equal(result.record.workspaceReconciled, false);
+    assert.equal(result.record.documentsReconciled, false);
     assert.equal(result.record.projectId, undefined);
     assert.deepEqual(result.record.taskIds, []);
     assert.deepEqual(result.record.milestoneIds, []);
@@ -198,6 +200,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(result.record.identityResolutionRequired, false);
     assert.equal(result.record.workspaceReconciled, true);
     assert.equal(result.record.workspaceReview.workspaceReconciled, true);
+    assert.equal(result.record.documentsReconciled, false);
     assert.equal(result.record.clientName, 'ACCG');
     assert.equal(result.record.projectId, 'existing-accg-onboarding');
     assert.equal(result.record.projectName, 'ACCG01 - Onboarding');
@@ -226,6 +229,8 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(created.record.identityResolutionRequired, false);
     assert.equal(created.record.workspaceReconciled, true);
     assert.equal(created.record.workspaceReview.workspaceReconciled, true);
+    assert.equal(created.record.documentsReconciled, false);
+    assert.equal(created.events.includes('DOCUMENT_RECONCILED'), false);
     assert.equal(created.record.projectId, 'proj-1');
     assert.equal(live.counts.createProject, 1);
     assert.ok(live.counts.createTask > 0);
@@ -245,6 +250,8 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(proposed.record.identityResolutionRequired, false);
     assert.equal(proposed.record.workspaceReconciled, false);
     assert.equal(proposed.record.workspaceReview.workspaceReconciled, false);
+    assert.equal(proposed.record.documentsReconciled, false);
+    assert.equal(proposed.events.includes('DOCUMENT_RECONCILED'), false);
     assert.equal(proposed.record.projectId, undefined);
     assert.equal(dry.counts.createProject, 0);
     assert.equal(dry.counts.createTask, 0);
@@ -336,6 +343,7 @@ describe('onboarding execute fail-closed identity', () => {
     assert.equal(execution.record?.status, 'IDENTITY_RECONCILIATION');
     assert.equal(execution.record?.identityResolutionRequired, true);
     assert.equal(execution.record?.workspaceReconciled, false);
+    assert.equal(execution.record?.documentsReconciled, false);
     assert.equal(execution.record?.projectId, undefined);
     assert.equal(execution.record?.communicationPolicy, 'DRAFT_ONLY');
     assert.equal(counts.createProject, 0);
@@ -349,6 +357,156 @@ describe('onboarding execute fail-closed identity', () => {
       (d) => d.scope.clientCode === 'ACCG01' && d.sourceTemplateId === 'client_onboarding',
     );
     assert.equal(onboardingDefs.length, 1);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('reuses an existing entitled document request set and does not invent documents', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    writeFileSync(join(dir, 'client-document-requests.json'), `${JSON.stringify({
+      requests: [{
+        id: 'existing-accg-doc-req-1',
+        clientCode: 'ACCG01',
+        title: 'Operating agreement or formation documents',
+        status: 'requested',
+        createdAt: '2026-08-25T00:00:00.000Z',
+        createdBy: principal.userId,
+        provenance: 'hub_governed_overlay',
+        binariesInAtlas: false,
+      }],
+    }, null, 2)}\n`);
+    const { sharepoint, counts } = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    let createCalls = 0;
+    const result = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      documentRequestCreate: async () => {
+        createCalls += 1;
+        throw new Error('create must not run when an entitled document set is reused');
+      },
+    });
+    assert.equal(result.ok, true);
+    if (!result.ok) return;
+    assert.equal(result.record.identityResolutionRequired, false);
+    assert.equal(result.record.workspaceReconciled, true);
+    assert.equal(result.record.documentsReconciled, true);
+    assert.equal(result.events.includes('DOCUMENT_RECONCILED'), true);
+    assert.equal(result.events.includes('DOCUMENT_REQUIREMENTS_CREATED'), false);
+    assert.equal(createCalls, 0);
+    assert.equal(counts.createProject, 0);
+    assert.equal(result.record.documentGaps.some((gap) => gap.status === 'CONFIRMED'), true);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('sets documentsReconciled only after entitled create returns an id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const { sharepoint } = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    let createCalls = 0;
+    const created = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      documentRequestCreate: async (_dataDir, input) => {
+        createCalls += 1;
+        return { id: `doc-req-${createCalls}`, title: input.title };
+      },
+    });
+    assert.equal(created.ok, true);
+    if (!created.ok) return;
+    assert.equal(created.record.identityResolutionRequired, false);
+    assert.equal(created.record.workspaceReconciled, true);
+    assert.equal(created.record.documentsReconciled, true);
+    assert.equal(created.events.includes('DOCUMENT_RECONCILED'), true);
+    assert.equal(created.events.includes('DOCUMENT_REQUIREMENTS_CREATED'), true);
+    assert.ok(createCalls > 0);
+
+    const dry = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+    });
+    const proposed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: dry.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      dryRun: true,
+      documentRequestCreate: async () => {
+        throw new Error('dry-run must not create document requests');
+      },
+    });
+    assert.equal(proposed.ok, true);
+    if (!proposed.ok) return;
+    assert.equal(proposed.record.identityResolutionRequired, false);
+    assert.equal(proposed.record.workspaceReconciled, false);
+    assert.equal(proposed.record.documentsReconciled, false);
+    assert.equal(proposed.events.includes('DOCUMENT_RECONCILED'), false);
+    assert.equal(proposed.events.includes('DOCUMENT_REQUIREMENTS_CREATED'), false);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('does not claim documentsReconciled when entitled create fails or returns no id', async () => {
+    const dir = withTempEnv();
+    const cfg = loadConfig();
+    const thrown = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    let failedCreates = 0;
+    const failed = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: thrown.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      documentRequestCreate: async () => {
+        failedCreates += 1;
+        throw new Error('document request create failed');
+      },
+    });
+    assert.equal(failed.ok, true);
+    if (!failed.ok) return;
+    assert.equal(failed.record.identityResolutionRequired, false);
+    assert.equal(failed.record.workspaceReconciled, true);
+    assert.equal(failed.record.documentsReconciled, false);
+    assert.equal(failed.events.includes('DOCUMENT_RECONCILED'), false);
+    assert.equal(failed.events.includes('DOCUMENT_REQUIREMENTS_CREATED'), false);
+    assert.equal(failedCreates, 1);
+
+    const noId = mockSharePoint({
+      clients: [{ clientCode: 'ACCG01', displayName: 'ACCG' }],
+      projects: [{ id: 'existing-accg-onboarding', name: 'ACCG01 - Onboarding', clientCode: 'ACCG01' }],
+    });
+    let absentCreates = 0;
+    const absent = await runClientOnboardingAutomation({
+      cfg,
+      principal,
+      dataDir: dir,
+      sharepoint: noId.sharepoint,
+      workflow: onboardingWorkflow('ACCG01'),
+      documentRequestCreate: async () => {
+        absentCreates += 1;
+        return { title: 'Operating agreement or formation documents' };
+      },
+    });
+    assert.equal(absent.ok, true);
+    if (!absent.ok) return;
+    assert.equal(absent.record.identityResolutionRequired, false);
+    assert.equal(absent.record.workspaceReconciled, true);
+    assert.equal(absent.record.documentsReconciled, false);
+    assert.equal(absent.events.includes('DOCUMENT_RECONCILED'), false);
+    assert.ok(absentCreates > 0);
     rmSync(dir, { recursive: true, force: true });
   });
 

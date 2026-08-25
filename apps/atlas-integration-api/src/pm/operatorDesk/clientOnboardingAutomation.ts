@@ -8,7 +8,11 @@ import type { AtlasPrincipal } from '../../middleware/auth.ts';
 import { entitledClientCodes } from '../sharepoint/authz.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
-import { listDocumentRequests } from '../sharepoint/documentRequests.ts';
+import {
+  createDocumentRequest,
+  listDocumentRequests,
+  type DocumentRequestRecord,
+} from '../sharepoint/documentRequests.ts';
 import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fabric/status.ts';
 import { appendAskAtlasActivity } from './activityLedger.ts';
 import {
@@ -1251,6 +1255,7 @@ function buildIdentityReconciliationRecord(opts: {
     capitalScope,
     identityResolutionRequired,
     workspaceReconciled,
+    documentsReconciled: false,
     dryRun: Boolean(opts.dryRun),
     createdAt: opts.now,
     updatedAt: opts.now,
@@ -1347,6 +1352,14 @@ export async function runClientOnboardingAutomation(opts: {
   sharepoint: SharePointPmService | null;
   workflow: WorkflowDefinitionRecord;
   dryRun?: boolean;
+  documentRequestList?: (
+    dataDir: string,
+    clientCode: string,
+  ) => DocumentRequestRecord[] | Promise<DocumentRequestRecord[]>;
+  documentRequestCreate?: (
+    dataDir: string,
+    input: { clientCode: string; title: string; createdBy: string },
+  ) => { id?: string } | Promise<{ id?: string }>;
 }): Promise<OnboardingAutomationResult> {
   if (!isOnboardingWorkflow(opts.workflow)) {
     return { ok: false, error: 'not_onboarding_workflow' };
@@ -1400,6 +1413,7 @@ export async function runClientOnboardingAutomation(opts: {
   const client = entitledMatches[0];
   clientName = client.displayName || clientName;
   let workspaceReconciled = false;
+  let documentsReconciled = false;
   let projectId: string | undefined;
   let projectName: string | undefined;
   let reusedExistingProject = false;
@@ -1484,8 +1498,11 @@ export async function runClientOnboardingAutomation(opts: {
   }
   if (milestoneIds.length || opts.dryRun) events.push('MILESTONE_CREATED');
 
+  const listDocumentRequestsFn = opts.documentRequestList ?? listDocumentRequests;
+  const createDocumentRequestFn = opts.documentRequestCreate ?? createDocumentRequest;
   try {
-    const docRequests = await listDocumentRequests(opts.dataDir, clientCode);
+    const docRequests = await listDocumentRequestsFn(opts.dataDir, clientCode);
+    const reusable = docRequests.filter((row) => Boolean(row.id));
     for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
       const matched = docRequests.find((r) =>
         (r.title || '').toLowerCase().includes(reqLabel.split(' ')[0].toLowerCase()),
@@ -1496,7 +1513,35 @@ export async function runClientOnboardingAutomation(opts: {
         source: matched ? 'HVCG_DocumentRequests' : undefined,
       });
     }
-    events.push('DOCUMENT_REQUIREMENTS_CREATED', 'DOCUMENT_RECONCILED');
+    if (reusable.length > 0) {
+      documentsReconciled = true;
+      events.push('DOCUMENT_RECONCILED');
+    } else if (!opts.dryRun) {
+      try {
+        let createdWithId = false;
+        for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
+          const created = await createDocumentRequestFn(opts.dataDir, {
+            clientCode,
+            title: reqLabel,
+            createdBy: opts.principal.userId,
+          });
+          if (created?.id) {
+            createdWithId = true;
+            const gap = documentGaps.find((row) => row.label === reqLabel);
+            if (gap) {
+              gap.status = 'CONFIRMED';
+              gap.source = 'HVCG_DocumentRequests';
+            }
+          }
+        }
+        if (createdWithId) {
+          documentsReconciled = true;
+          events.push('DOCUMENT_REQUIREMENTS_CREATED', 'DOCUMENT_RECONCILED');
+        }
+      } catch {
+        /* create failed — do not invent documents or claim reconciliation */
+      }
+    }
   } catch {
     for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
       documentGaps.push({ label: reqLabel, status: 'STALE_OR_UNCERTAIN' });
@@ -1513,6 +1558,7 @@ export async function runClientOnboardingAutomation(opts: {
   const partial: Partial<OnboardingRunRecord> = {
     identityResolutionRequired: false,
     workspaceReconciled,
+    documentsReconciled,
     projectId,
     documentGaps,
     milestones,
@@ -1692,6 +1738,7 @@ export async function runClientOnboardingAutomation(opts: {
     capitalScope,
     identityResolutionRequired: false,
     workspaceReconciled,
+    documentsReconciled,
     dryRun: Boolean(opts.dryRun),
     createdAt: now,
     updatedAt: now,
