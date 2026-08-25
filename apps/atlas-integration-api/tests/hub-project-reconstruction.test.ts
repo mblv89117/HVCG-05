@@ -24,12 +24,15 @@ import {
   DOCUMENT_RELATED_CONTEXT_PAGE_SIZE,
 } from '../src/pm/operatorDesk/documentRelatedContext.ts';
 import { emptyHonestOperatingPicture } from '../src/pm/operatorDesk/model.ts';
-import type {
-  AtlasAuthorizedSearch,
-  DocumentOperatingRecord,
-  MailThreadOperatingRecord,
-  OperatorOperatingPicture,
-  ProjectOperatingRecord,
+import {
+  CAPITAL_SUBMISSION_FINANCING_STATUS,
+  CAPITAL_SUBMISSION_POLICY_CLASS,
+  type AtlasAuthorizedSearch,
+  type CapitalSubmissionPrepareRecord,
+  type DocumentOperatingRecord,
+  type MailThreadOperatingRecord,
+  type OperatorOperatingPicture,
+  type ProjectOperatingRecord,
 } from '../src/pm/operatorDesk/types.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import { MANNY_ENTRA_OID } from '../src/pm/sharepoint/manny.ts';
@@ -335,7 +338,7 @@ describe('entitled project operating record', () => {
       const text = await unsigned.text();
       const tap =
         unsigned.status === 401 &&
-        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|proj-syn|mail-att-syn/i.test(text);
+        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|relatedCapital|proj-syn|mail-att-syn|cap-syn/i.test(text);
       assert.equal(unsigned.status, 401, 'not ok 1 - unsigned /operator/search.json 401');
       const body = JSON.parse(text) as { error?: string; authorizedSearch?: AtlasAuthorizedSearch };
       assert.equal(body.error, 'unauthorized');
@@ -343,6 +346,7 @@ describe('entitled project operating record', () => {
       assert.equal('relatedProjects' in body, false);
       assert.equal('relatedThreads' in body, false);
       assert.equal('relatedAttachments' in body, false);
+      assert.equal('relatedCapital' in body, false);
       assert.equal(tap, true, 'not ok 2 - unsigned search leaks project payload');
     } finally {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
@@ -472,10 +476,53 @@ function syn01AttachmentRecord(overrides: Partial<DocumentOperatingRecord> = {})
   };
 }
 
+function syn01CapitalHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'capital_opportunity' as const,
+    id: 'cap-syn-1',
+    title: 'SYN01 entitled capital opportunity',
+    href: '/capital?opportunity=cap-syn-1',
+    source: 'HVCG_CapitalOpportunities',
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED' as const,
+    ...overrides,
+  };
+}
+
+function syn01CapitalRecord(overrides: Partial<CapitalSubmissionPrepareRecord> = {}): CapitalSubmissionPrepareRecord {
+  return {
+    id: 'cap-syn-1',
+    title: 'SYN01 entitled capital opportunity',
+    clientCode: 'SYN01',
+    classification: 'CONFIRMED',
+    provenance: 'CONFIRMED',
+    invented: false,
+    financingStatus: CAPITAL_SUBMISSION_FINANCING_STATUS,
+    financingStatusClassification: 'HONEST_EMPTY',
+    lenderCriteriaInvented: false,
+    evidence: [
+      {
+        kind: 'capital_opportunity',
+        id: 'cap-syn-1',
+        title: 'SYN01 entitled capital opportunity',
+        source: 'HVCG_CapitalOpportunities',
+        classification: 'CONFIRMED',
+      },
+    ],
+    missingRequirements: [
+      'Owner must review and approve before any external lender/investor submission.',
+    ],
+    nextAction:
+      'Owner review of this PREPARE-only package. External lender/investor submission remains owner-gated.',
+    ...overrides,
+  };
+}
+
 function emptyRelatedSearch(
   projects: ProjectOperatingRecord[],
   threads: MailThreadOperatingRecord[] = [],
   documents: DocumentOperatingRecord[] = [],
+  capital: CapitalSubmissionPrepareRecord[] = [],
 ): AtlasAuthorizedSearch {
   return {
     kind: 'atlas_authorized_search_v1',
@@ -510,7 +557,7 @@ function emptyRelatedSearch(
       externalSubmit: false,
       ownerGated: true,
       catalogCopies: [],
-      items: [],
+      items: capital,
     },
     researchIntelligence: {
       kind: 'research_intelligence_v1',
@@ -578,6 +625,30 @@ function assertProjectRelatedAttachmentsHonesty(item: ProjectOperatingRecord): v
         row.classification === 'PROPOSED' ||
         row.classification === 'HONEST_EMPTY',
     );
+  }
+}
+
+function assertProjectRelatedCapitalHonesty(item: ProjectOperatingRecord): void {
+  const blob = JSON.stringify(item.relatedCapital || []);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee/i.test(blob), false);
+  assert.equal(/Hub-MI/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(/lenderCriteria|Live Oak|5000000/i.test(blob), false);
+  assert.equal(item.invented, false);
+  for (const row of item.relatedCapital || []) {
+    assert.equal(row.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(row.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(row.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.invented, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('hubMiRow' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('fit' in row, false);
+    assert.equal(row.id === item.id, false);
   }
 }
 
@@ -1489,6 +1560,333 @@ describe('ATLAS-PROJECT-RELATED-ATTACHMENTS-001 entitled same-scope inverse', ()
     assert.equal(alone.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
     assert.equal(alone.hubMiRow, true);
     assert.equal(alone.invented, false);
+    assertProjectRelatedThreadsHonesty(alone);
+    assertProjectPeerHonesty(alone);
+  });
+});
+
+describe('ATLAS-PROJECT-RELATED-CAPITAL-001 entitled same-scope inverse', () => {
+  it('attaches same-scope PREPARE_ONLY relatedCapital on entitled project A and keeps relatedProjects / relatedThreads / relatedAttachments', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: reconstructionPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [...found.results, syn01ThreadHit(), syn01AttachmentHit(), syn01CapitalHit()],
+      }),
+    });
+    const current = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    const peer = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-done');
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(current);
+    assert.ok(peer);
+    assert.ok(thread);
+    assert.ok(capital);
+    const related = current.relatedCapital?.find((row) => row.id === 'cap-syn-1');
+    assert.ok(related);
+    assert.equal(related.title, 'SYN01 entitled capital opportunity');
+    assert.equal(related.clientCode, 'SYN01');
+    assert.equal(related.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(related.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(related.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(related.lenderCriteriaInvented, false);
+    assert.equal(related.invented, false);
+    assert.equal('TargetAmount' in related, false);
+    assert.equal('downloadUrl' in related, false);
+    assert.equal('hubMiRow' in related, false);
+    assert.ok((current.relatedCapital?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(peer.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(current.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(current.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(peer.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|attendee|TargetAmount|Hub-MI/i.test(
+        JSON.stringify(current.relatedCapital),
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(current.relatedCapital).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assertProjectRelatedCapitalHonesty(current);
+    assertProjectRelatedAttachmentsHonesty(current);
+    assertProjectRelatedThreadsHonesty(current);
+    assertProjectPeerHonesty(current);
+  });
+
+  it('never attaches Client B capital to a Client A project', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: reconstructionPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          ...found.results,
+          syn01ThreadHit(),
+          syn01AttachmentHit(),
+          syn01CapitalHit(),
+          {
+            kind: 'capital_opportunity' as const,
+            id: 'cap-pdg',
+            title: 'PDG01 leak capital',
+            href: '/capital?opportunity=cap-pdg',
+            source: 'HVCG_CapitalOpportunities',
+            clientCode: 'PDG01',
+            provenance: 'CONFIRMED' as const,
+          },
+        ],
+      }),
+    });
+    const current = result.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(current);
+    assert.equal(current.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(
+      (current.relatedCapital || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(current.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(current.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    const blob = JSON.stringify(result.authorizedSearch.projects);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('cap-pdg'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(blob.includes('CCB01'), false);
+    assert.equal(blob.includes('HFD01'), false);
+    assert.equal(blob.includes('LIEN01'), false);
+    assertProjectRelatedCapitalHonesty(current);
+
+    const mixed = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+        [
+          syn01CapitalRecord(),
+          syn01CapitalRecord({
+            id: 'cap-pdg',
+            title: 'PDG01 leak capital',
+            clientCode: 'PDG01',
+          }),
+          syn01CapitalRecord({
+            id: 'cap-lender-catalog',
+            title: 'Live Oak Bank catalog',
+            clientCode: undefined,
+          }),
+        ],
+      ),
+    );
+    assert.equal(mixed.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.equal(
+      (mixed.relatedCapital || []).some(
+        (row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.relatedCapital).includes('PDG01'), false);
+    assert.equal(JSON.stringify(mixed.relatedCapital).includes('cap-pdg'), false);
+    assert.equal(JSON.stringify(mixed.relatedCapital).includes('cap-lender-catalog'), false);
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(mixed.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(mixed.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(mixed.hubMiRow, true);
+    assert.equal(mixed.invented, false);
+    assertProjectRelatedCapitalHonesty(mixed);
+    assertProjectRelatedAttachmentsHonesty(mixed);
+    assertProjectRelatedThreadsHonesty(mixed);
+    assertProjectPeerHonesty(mixed);
+  });
+
+  it('omits relatedCapital when project ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToProject(
+      manny,
+      syn01ProjectRecord({
+        id: 'proj-unscoped',
+        clientCode: undefined,
+        hubMiRow: false,
+        operationalized: false,
+      }),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+        [syn01CapitalRecord()],
+      ),
+    );
+    assert.equal(omitted.relatedCapital, undefined);
+    assert.equal('relatedCapital' in omitted, false);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal(omitted.hubMiRow, false);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('omits relatedCapital when project ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToProject(
+      manny,
+      syn01ProjectRecord({
+        id: 'proj-noncanonical',
+        clientCode: 'syn01',
+        hubMiRow: false,
+        operationalized: false,
+      }),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+        [syn01CapitalRecord()],
+      ),
+    );
+    assert.equal(omitted.relatedCapital, undefined);
+    assert.equal('relatedCapital' in omitted, false);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal(omitted.invented, false);
+  });
+
+  it('unscoped never receives scoped relatedCapital', () => {
+    const unscoped = attachRelatedContextToProject(
+      manny,
+      syn01ProjectRecord({
+        id: 'proj-unscoped',
+        clientCode: undefined,
+        hubMiRow: false,
+        operationalized: false,
+      }),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+        [syn01CapitalRecord()],
+      ),
+    );
+    assert.equal(unscoped.relatedCapital, undefined);
+    assert.equal('relatedCapital' in unscoped, false);
+    assert.equal(unscoped.clientCode, undefined);
+    assert.equal(unscoped.hubMiRow, false);
+    assert.equal(unscoped.invented, false);
+  });
+
+  it('omits relatedCapital for unauthorized or other-client principals', async () => {
+    const found = await searchSharePointPm(projectService(), staff, 'SYN01');
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [...found.results, syn01ThreadHit(), syn01AttachmentHit(), syn01CapitalHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.projects.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.projects.items.some((row) => row.relatedCapital),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.projects);
+    assert.equal(unknownBlob.includes('proj-syn-1'), false);
+    assert.equal(unknownBlob.includes('cap-syn-1'), false);
+    assert.equal(unknownBlob.includes('relatedCapital'), false);
+    assert.equal(unknownBlob.includes('PDG01'), false);
+
+    const denied = attachRelatedContextToProject(
+      otherStaff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+        [syn01CapitalRecord()],
+      ),
+    );
+    assert.equal(denied.relatedCapital, undefined);
+    assert.equal('relatedCapital' in denied, false);
+    assert.equal(denied.relatedProjects, undefined);
+    assert.equal(denied.relatedThreads, undefined);
+    assert.equal(denied.relatedAttachments, undefined);
+    assert.equal(denied.hubMiRow, true);
+  });
+
+  it('never invents TargetAmount, downloadUrl, Hub-MI, lender criteria, or financing status on relatedCapital', () => {
+    const attached = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+        [
+          syn01CapitalRecord({
+            nextAction: 'Owner review. Do not invent TargetAmount 5000000 or Hub-MI.',
+          }),
+        ],
+      ),
+    );
+    const related = attached.relatedCapital?.find((row) => row.id === 'cap-syn-1');
+    assert.ok(related);
+    assert.equal(related.title, 'SYN01 entitled capital opportunity');
+    assert.equal(related.clientCode, 'SYN01');
+    assert.equal(related.policyClass, CAPITAL_SUBMISSION_POLICY_CLASS);
+    assert.equal(related.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+    assert.equal(related.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(related.lenderCriteriaInvented, false);
+    assert.equal(related.invented, false);
+    assert.equal('TargetAmount' in related, false);
+    assert.equal('downloadUrl' in related, false);
+    assert.equal('contentBytes' in related, false);
+    assert.equal('hubMiRow' in related, false);
+    assert.equal('fit' in related, false);
+    assert.equal(attached.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(attached.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(attached.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(attached.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(
+      /TargetAmount|downloadUrl|Hub-MI|contentBytes|5000000|Live Oak/i.test(JSON.stringify(attached.relatedCapital)),
+      false,
+    );
+    assertProjectRelatedCapitalHonesty(attached);
+    assertProjectRelatedAttachmentsHonesty(attached);
+    assertProjectRelatedThreadsHonesty(attached);
+    assertProjectPeerHonesty(attached);
+  });
+
+  it('honestly omits relatedCapital when no entitled capital exists and keeps relatedProjects / relatedThreads / relatedAttachments', () => {
+    const alone = attachRelatedContextToProject(
+      staff,
+      syn01ProjectRecord(),
+      emptyRelatedSearch(
+        [syn01ProjectRecord(), syn01PeerProjectRecord()],
+        [syn01ThreadRecord()],
+        [syn01AttachmentRecord()],
+      ),
+    );
+    assert.equal(alone.relatedCapital, undefined);
+    assert.equal('relatedCapital' in alone, false);
+    assert.equal(alone.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(alone.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(alone.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(alone.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(alone.hubMiRow, true);
+    assert.equal(alone.invented, false);
+    assertProjectRelatedAttachmentsHonesty(alone);
     assertProjectRelatedThreadsHonesty(alone);
     assertProjectPeerHonesty(alone);
   });
