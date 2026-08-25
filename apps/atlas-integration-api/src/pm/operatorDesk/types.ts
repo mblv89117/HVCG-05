@@ -251,8 +251,17 @@ export interface AtlasClientContext {
    * researchIntelligence items (same RelatedMeetingResearchRef as meetings /
    * documents / capital). Optional relatedDocuments is the inverse of
    * document.relatedProject (same RelatedMeetingDocumentRef /
-   * relatedDocumentsForMeeting path). Missing / non-canonical ClientCode
-   * omits researchRelationship / relatedDocuments (fail-closed; never guess).
+   * relatedDocumentsForMeeting path). Optional relatedProjects copies
+   * already-entitled same-scope *other* project operating-record refs
+   * (peer rows, never self; same RelatedDocumentProjectRef /
+   * relatedProjects path as research-intel / onboarding / client-support /
+   * capital prepare). Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments / relatedProjects
+   * (fail-closed; never guess). Unscoped never receives scoped peers.
+   * Client A never receives Client B. historicalHvs / hubMiRow copy
+   * from the entitled source project only — never invent hubMiRow=true.
+   * No TargetAmount. No invented titles / ids / ClientCodes / Hub-MI /
+   * milestone rows.
    */
   projects: {
     kind: 'project_operating_record_v1';
@@ -768,6 +777,25 @@ export interface ProjectOperatingRecord {
    * SAS / anonymous webUrl dropped. No invented facts.
    */
   relatedDocuments?: RelatedMeetingDocumentRef[];
+  /**
+   * Already-entitled same-scope *other* project operating-record refs
+   * (peer rows, never self). Reuses RelatedDocumentProjectRef /
+   * relatedProjects() — the same entitled same-scope inverse already
+   * live on research-intel / onboarding / client-support / capital
+   * prepare. Copied after authorization. Omitted when none are
+   * entitled or when ClientCode is missing / non-canonical
+   * (fail-closed; never guess). Unscoped never receives scoped
+   * peers. Client A never receives Client B. Self never appears
+   * (relatedProjects skips project.id === item.id).
+   * historicalHvs / hubMiRow copy from the entitled source project
+   * only — never invent hubMiRow=true. Never downloadUrl,
+   * contentBytes, transcript, attendees, invented titles / ids /
+   * counts, ClientCodes, Hub-MI, TargetAmount, lender criteria, fit,
+   * financing status, or invented milestone rows. relatedMeetings /
+   * researchRelationship / relatedDocuments stay as composed.
+   * Not a second project or search product.
+   */
+  relatedProjects?: RelatedDocumentProjectRef[];
 }
 
 export type MailThreadEvidenceClass = AskAtlasClassification | 'HONEST_EMPTY';
@@ -1543,9 +1571,18 @@ export interface AtlasAuthorizedSearch {
    * meetings / onboarding / client support / capital / documents).
    * Optional relatedDocuments is the inverse of document.relatedProject
    * (same RelatedMeetingDocumentRef / relatedDocumentsForMeeting path).
-   * Missing / non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments (fail-closed; never guess). relatedMeetings stays
-   * as composed. No downloadUrl. No invented facts.
+   * Optional relatedProjects copies already-entitled same-scope *other*
+   * project operating-record refs (peer rows, never self; same
+   * RelatedDocumentProjectRef / relatedProjects path as research-intel /
+   * onboarding / client-support / capital prepare). Missing /
+   * non-canonical ClientCode omits researchRelationship /
+   * relatedDocuments / relatedProjects (fail-closed; never guess).
+   * Unscoped never receives scoped peers. Client A never receives
+   * Client B. Self never appears. relatedMeetings stays as composed.
+   * historicalHvs / hubMiRow copy from the entitled source project
+   * only — never invent hubMiRow=true. No TargetAmount. No invented
+   * titles / ids / ClientCodes / Hub-MI / milestone rows. No
+   * downloadUrl. No invented facts.
    */
   projects: {
     kind: 'project_operating_record_v1';

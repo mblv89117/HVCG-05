@@ -229,6 +229,18 @@ describe('get_client_context project operating records', () => {
     assert.equal(historical.operationalized, false);
     assert.equal(historical.classification, 'LIKELY');
     noInvent(viaIndex.clientContext.projects);
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-done'), true);
+    assert.equal(current.relatedProjects?.some((row) => row.id === 'proj-syn-1'), false);
+    assert.equal(
+      (current.relatedProjects || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    const searchCurrent = search.authorizedSearch.projects.items.find((row) => row.id === 'proj-syn-1');
+    assert.ok(searchCurrent);
+    assert.deepEqual(current.relatedProjects, searchCurrent.relatedProjects);
+    assert.equal(/TargetAmount|downloadUrl|Hub-MI/i.test(JSON.stringify(current.relatedProjects)), false);
 
     const viaLoad = await loadClientContext({
       principal: staff,
@@ -266,6 +278,15 @@ describe('get_client_context project operating records', () => {
       false,
     );
     noInvent(result.clientContext.projects);
+    assert.equal(completed.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(completed.relatedProjects?.some((row) => row.id === 'proj-syn-done'), false);
+    assert.equal(
+      (completed.relatedProjects || []).some(
+        (row) => /pdg/i.test(row.id) || /pdg/i.test(row.title) || row.clientCode === 'PDG01',
+      ),
+      false,
+    );
+    assert.equal(/TargetAmount|downloadUrl|Hub-MI/i.test(JSON.stringify(completed.relatedProjects)), false);
   });
 
   it('does not attach current Hub-MI project rows for recovered-only or unknown clients', async () => {
@@ -349,11 +370,13 @@ describe('get_client_context project operating records', () => {
       const unsignedCtx = await fetch(`http://127.0.0.1:${port}/operator/client-context.json?client=SYN01`);
       const ctxText = await unsignedCtx.text();
       const ctxTap =
-        unsignedCtx.status === 401 && !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk/i.test(ctxText);
+        unsignedCtx.status === 401 &&
+        !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk|relatedProjects|proj-syn/i.test(ctxText);
       assert.equal(unsignedCtx.status, 401, 'not ok 1 - unsigned /operator/client-context.json 401');
       const ctxBody = JSON.parse(ctxText) as { error?: string; clientContext?: AtlasClientContext };
       assert.equal(ctxBody.error, 'unauthorized');
       assert.equal(ctxBody.clientContext, undefined);
+      assert.equal('relatedProjects' in ctxBody, false);
       assert.equal(ctxTap, true, 'not ok 2 - unsigned client-context leaks project payload');
 
       const unsignedRuntime = await fetch(
@@ -372,11 +395,13 @@ describe('get_client_context project operating records', () => {
       const unsignedSearch = await fetch(`http://127.0.0.1:${port}/operator/search.json?q=SYN01`);
       const searchText = await unsignedSearch.text();
       const searchTap =
-        unsignedSearch.status === 401 && !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk/i.test(searchText);
+        unsignedSearch.status === 401 &&
+        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|proj-syn/i.test(searchText);
       assert.equal(unsignedSearch.status, 401, 'not ok 5 - unsigned /operator/search.json 401');
       const searchBody = JSON.parse(searchText) as { error?: string; authorizedSearch?: AtlasAuthorizedSearch };
       assert.equal(searchBody.error, 'unauthorized');
       assert.equal(searchBody.authorizedSearch, undefined);
+      assert.equal('relatedProjects' in searchBody, false);
       assert.equal(searchTap, true, 'not ok 6 - unsigned search leaks project payload');
     } finally {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
