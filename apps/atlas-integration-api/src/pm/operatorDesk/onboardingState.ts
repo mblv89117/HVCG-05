@@ -235,6 +235,79 @@ export type OnboardingAgentAssignmentReview = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Already-known /health fabricSync fields. Copied only. No invented counts or filenames. */
+export type RealtimeDocumentsFabricSnapshot = {
+  lastRunAt: string | null;
+  honesty: 'never_run' | 'delta' | 'page_fallback' | 'degraded';
+  mailDeltaReady: boolean;
+  lastIndexed?: {
+    mailThreads: number;
+    meetings: number;
+    contacts: number;
+    files: number;
+    attachmentsIndexed: number;
+  };
+  notes?: string[];
+  changeNotifications?: {
+    status: string;
+    mail: string;
+    files: string;
+    calendar: string;
+  };
+  attachmentLinks?: { status: 'skipped' | 'ready'; reason: string };
+  contacts?: { status: 'skipped' | 'ready' | 'error'; reason: string };
+};
+
+/**
+ * Canonical REALTIME DOCUMENTS HONESTY package.
+ * Surfaces already-known fabricSync / changeNotifications / attachmentLinks / documentGaps.
+ * Never invents receipts, filenames, ClientCodes, or counts. Never claims LIVE files
+ * when Graph file search is skipped.
+ */
+export type OnboardingRealtimeDocumentsHonesty = {
+  status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
+  ready: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  lastRunAt: string | null;
+  lastIndexed: {
+    mailThreads: number;
+    meetings: number;
+    contacts: number;
+    files: number;
+    attachmentsIndexed: number;
+  };
+  honesty: 'never_run' | 'delta' | 'page_fallback' | 'degraded';
+  mailDeltaReady: boolean;
+  fileSearchSkipped: boolean;
+  oneDriveRecentSkipped: boolean;
+  contactsEmpty: boolean;
+  filesRealtime: false | true;
+  changeNotifications: {
+    status: string;
+    mail: string;
+    files: string;
+    calendar: string;
+  };
+  attachmentLinks: { status: 'skipped' | 'ready'; reason: string };
+  documentGaps: OnboardingDocumentGap[];
+  confirmedCount: number;
+  missingCount: number;
+  uncertainCount: number;
+  honestyNotes: string[];
+  itemCount: number;
+  items: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 /** Canonical DOCUMENT REVIEW package. Surfaces already-known documentGaps. No invented receipt. */
 export type OnboardingDocumentReview = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -312,6 +385,7 @@ export type OnboardingRunRecord = {
   projectReview?: OnboardingProjectReview;
   taskReview?: OnboardingTaskReview;
   agentAssignmentReview?: OnboardingAgentAssignmentReview;
+  realtimeDocumentsHonesty?: OnboardingRealtimeDocumentsHonesty;
   provenance: string;
 };
 

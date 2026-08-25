@@ -9,6 +9,7 @@ import { entitledClientCodes } from '../sharepoint/authz.ts';
 import { isCanonicalClientCode } from '../../entitlements/clientCode.ts';
 import type { SharePointPmService } from '../sharepoint/repository.ts';
 import { listDocumentRequests } from '../sharepoint/documentRequests.ts';
+import { inspectFabricSyncHealth, isFabricSweepEnabled } from '../sharepoint/fabric/status.ts';
 import { appendAskAtlasActivity } from './activityLedger.ts';
 import {
   ASK_ATLAS_QUESTION,
@@ -33,6 +34,8 @@ import {
   type OnboardingProjectReview,
   type OnboardingTaskReview,
   type OnboardingAgentAssignmentReview,
+  type OnboardingRealtimeDocumentsHonesty,
+  type RealtimeDocumentsFabricSnapshot,
   type OnboardingRunRecord,
   resolveOnboardingStateDir,
   upsertOnboardingRun,
@@ -912,6 +915,193 @@ export function composeOnboardingAgentAssignmentReview(record: {
   };
 }
 
+const EMPTY_LAST_INDEXED = {
+  mailThreads: 0,
+  meetings: 0,
+  contacts: 0,
+  files: 0,
+  attachmentsIndexed: 0,
+};
+
+function snapshotKnownFabric(fabric?: RealtimeDocumentsFabricSnapshot): RealtimeDocumentsFabricSnapshot {
+  const lastIndexed = fabric?.lastIndexed;
+  return {
+    lastRunAt: fabric?.lastRunAt ?? null,
+    honesty: fabric?.honesty ?? 'never_run',
+    mailDeltaReady: fabric?.mailDeltaReady === true,
+    lastIndexed: {
+      mailThreads: lastIndexed?.mailThreads ?? 0,
+      meetings: lastIndexed?.meetings ?? 0,
+      contacts: lastIndexed?.contacts ?? 0,
+      files: lastIndexed?.files ?? 0,
+      attachmentsIndexed: lastIndexed?.attachmentsIndexed ?? 0,
+    },
+    notes: Array.isArray(fabric?.notes) ? fabric.notes.filter((note) => note.trim().length > 0) : [],
+    changeNotifications: {
+      status: fabric?.changeNotifications?.status || 'skipped',
+      mail: fabric?.changeNotifications?.mail || 'skipped',
+      files: fabric?.changeNotifications?.files || 'skipped',
+      calendar: fabric?.changeNotifications?.calendar || 'skipped',
+    },
+    attachmentLinks: {
+      status: fabric?.attachmentLinks?.status === 'ready' ? 'ready' : 'skipped',
+      reason:
+        fabric?.attachmentLinks?.reason
+        || 'No indexed outlook-mail-attachment metadata to link; attachment links remain unproven.',
+    },
+    contacts: {
+      status:
+        fabric?.contacts?.status === 'ready' || fabric?.contacts?.status === 'error'
+          ? fabric.contacts.status
+          : 'skipped',
+      reason: fabric?.contacts?.reason || 'Contacts sweep has not completed; contacts remain unproven.',
+    },
+  };
+}
+
+function knownFabricFromDataDir(dataDir: string): RealtimeDocumentsFabricSnapshot {
+  return inspectFabricSyncHealth(dataDir, { sweepEnabled: isFabricSweepEnabled() });
+}
+
+export function composeRealtimeDocumentsHonesty(record: {
+  identityResolutionRequired?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  projectId?: string;
+  projectName?: string;
+  documentGaps?: OnboardingDocumentGap[];
+  blockers?: string[];
+  communicationPolicy?: OnboardingRealtimeDocumentsHonesty['communicationPolicy'];
+  fabric?: RealtimeDocumentsFabricSnapshot;
+}): OnboardingRealtimeDocumentsHonesty {
+  const fabric = snapshotKnownFabric(record.fabric);
+  const notes = fabric.notes ?? [];
+  const fileSearchSkipped = notes.some((note) => /file search skipped/i.test(note));
+  const oneDriveRecentSkipped = notes.some((note) => /onedrive recent skipped/i.test(note));
+  const contactsEmpty =
+    notes.some((note) => /contacts graph returned http 200 with an empty page/i.test(note))
+    || (fabric.contacts?.status === 'ready' && /empty page/i.test(fabric.contacts.reason || ''));
+  const lastIndexed = fabric.lastIndexed ?? EMPTY_LAST_INDEXED;
+  const filesRealtime = Boolean(
+    fabric.lastRunAt
+    && fabric.honesty !== 'never_run'
+    && !fileSearchSkipped
+    && lastIndexed.files > 0,
+  );
+  const documentGaps = record.documentGaps ?? [];
+  const confirmedCount = documentGaps.filter((gap) => gap.status === 'CONFIRMED').length;
+  const missingCount = documentGaps.filter((gap) => gap.status === 'MISSING').length;
+  const uncertainCount = documentGaps.filter((gap) =>
+    gap.status === 'STALE_OR_UNCERTAIN' || gap.status === 'LIKELY' || gap.status === 'PROPOSED',
+  ).length;
+  const honestyNotes: string[] = [];
+  if (fabric.mailDeltaReady) honestyNotes.push('mail delta ready');
+  if (fileSearchSkipped) honestyNotes.push('file search skipped');
+  if (oneDriveRecentSkipped) honestyNotes.push('OneDrive recent skipped');
+  if (contactsEmpty) honestyNotes.push('contacts empty');
+  const items: string[] = [];
+  if (!fabric.lastRunAt || fabric.honesty === 'never_run') {
+    items.push('Fabric sync has not completed a run — document freshness is unproven');
+  }
+  if (fileSearchSkipped) {
+    items.push('Graph file search skipped — Atlas does not claim LIVE files');
+  }
+  if (oneDriveRecentSkipped) {
+    items.push('OneDrive recent skipped — Atlas does not claim LIVE files');
+  }
+  if (contactsEmpty) {
+    items.push('Contacts Graph returned an empty page');
+  }
+  for (const gap of documentGaps.filter((row) => row.status !== 'CONFIRMED')) {
+    items.push(`${gap.label} (${gap.status})`);
+  }
+  const communicationPolicy = record.communicationPolicy ?? 'DRAFT_ONLY';
+  const blockers = record.blockers ?? [];
+  const clientCode = record.clientCode?.trim().toUpperCase();
+  const nextOwnerAction =
+    record.identityResolutionRequired
+      ? 'Assign entitled client scope before treating documents as current'
+      : fileSearchSkipped || oneDriveRecentSkipped
+        ? 'Do not treat Graph files as LIVE; file search / OneDrive recent remain skipped'
+        : !fabric.lastRunAt || fabric.honesty === 'never_run'
+          ? 'Do not treat documents as realtime until fabric has completed a run'
+          : missingCount
+            ? 'Reconcile already-known missing documents (draft only); do not invent receipt'
+            : uncertainCount
+              ? 'Review already-known STALE_OR_UNCERTAIN documents; do not invent receipt'
+              : filesRealtime
+                ? 'Indexed files are present — Atlas still does not invent filenames or receipts'
+                : 'Document freshness remains unproven against Graph file search';
+  const flags = {
+    lastRunAt: fabric.lastRunAt,
+    lastIndexed,
+    honesty: fabric.honesty,
+    mailDeltaReady: fabric.mailDeltaReady,
+    fileSearchSkipped,
+    oneDriveRecentSkipped,
+    contactsEmpty,
+    filesRealtime,
+    changeNotifications: fabric.changeNotifications ?? {
+      status: 'skipped',
+      mail: 'skipped',
+      files: 'skipped',
+      calendar: 'skipped',
+    },
+    attachmentLinks: fabric.attachmentLinks ?? {
+      status: 'skipped' as const,
+      reason: 'No indexed outlook-mail-attachment metadata to link; attachment links remain unproven.',
+    },
+    documentGaps,
+    confirmedCount,
+    missingCount,
+    uncertainCount,
+    honestyNotes,
+    itemCount: items.length,
+    items,
+    communicationPolicy,
+    nextOwnerAction,
+    send: false as const,
+    liveGtmOutbound: false as const,
+    capitalSubmit: false as const,
+    outbound: false as const,
+  };
+  if (record.identityResolutionRequired) {
+    return {
+      status: 'NOT_READY',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  if (blockers.length) {
+    return {
+      status: 'BLOCKED',
+      ready: false,
+      ...(clientCode ? { clientCode } : {}),
+      ...(record.clientName ? { clientName: record.clientName } : {}),
+      ...(record.projectId ? { projectId: record.projectId } : {}),
+      ...(record.projectName ? { projectName: record.projectName } : {}),
+      ...flags,
+      provenance: 'CONFIRMED',
+    };
+  }
+  const status = !filesRealtime || items.length ? 'OPEN' : 'CLEAR';
+  return {
+    status,
+    ready: status === 'CLEAR',
+    ...(clientCode ? { clientCode } : {}),
+    ...(record.clientName ? { clientName: record.clientName } : {}),
+    ...(record.projectId ? { projectId: record.projectId } : {}),
+    ...(record.projectName ? { projectName: record.projectName } : {}),
+    ...flags,
+    provenance: fileSearchSkipped || !filesRealtime ? 'STALE_OR_UNCERTAIN' : 'CONFIRMED',
+  };
+}
+
 type CompletionGate = { label: string; status: string; ready: boolean };
 
 export function composeOnboardingCompletion(record: {
@@ -1108,6 +1298,12 @@ export async function runClientOnboardingAutomation(opts: {
         identityResolutionRequired: true,
         blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
         communicationPolicy: 'DRAFT_ONLY',
+      }),
+      realtimeDocumentsHonesty: composeRealtimeDocumentsHonesty({
+        identityResolutionRequired: true,
+        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+        communicationPolicy: 'DRAFT_ONLY',
+        fabric: knownFabricFromDataDir(opts.dataDir),
       }),
       provenance: 'onboarding_automation',
     };
@@ -1385,6 +1581,17 @@ export async function runClientOnboardingAutomation(opts: {
     blockers,
     communicationPolicy: 'DRAFT_ONLY',
   });
+  const realtimeDocumentsHonesty = composeRealtimeDocumentsHonesty({
+    identityResolutionRequired: false,
+    clientCode,
+    clientName,
+    projectId,
+    projectName,
+    documentGaps,
+    blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+    fabric: knownFabricFromDataDir(opts.dataDir),
+  });
   if (operationsHandoff.status !== 'NOT_READY') events.push('OPERATIONS_HANDOFF');
   if (kickoff.status !== 'NOT_READY') events.push('KICKOFF');
   if (blockerReview.status !== 'NOT_READY') events.push('BLOCKER_REVIEW');
@@ -1397,6 +1604,7 @@ export async function runClientOnboardingAutomation(opts: {
   if (projectReview.status !== 'NOT_READY') events.push('PROJECT_REVIEW');
   if (taskReview.status !== 'NOT_READY') events.push('TASK_REVIEW');
   if (agentAssignmentReview.status !== 'NOT_READY') events.push('AGENT_ASSIGNMENT_REVIEW');
+  if (realtimeDocumentsHonesty.status !== 'NOT_READY') events.push('REALTIME_DOCUMENTS_HONESTY');
 
   const record: OnboardingRunRecord = {
     workflowId: opts.workflow.workflowId,
@@ -1440,6 +1648,7 @@ export async function runClientOnboardingAutomation(opts: {
     projectReview,
     taskReview,
     agentAssignmentReview,
+    realtimeDocumentsHonesty,
     provenance: 'onboarding_automation',
   };
 
@@ -1571,6 +1780,10 @@ const ONBOARDING_CONTEXT_PHRASES = [
   'agent assignment',
   'assigned agent',
   'agent review',
+  'realtime',
+  'real-time',
+  'freshness',
+  'current document',
   'reconcile',
   'start',
   'run',
@@ -1640,6 +1853,40 @@ function answerFromExistingOnboarding(
     .join('\n');
 }
 
+function formatRealtimeDocumentsHonesty(
+  pack: OnboardingRealtimeDocumentsHonesty,
+  scope: string,
+): string {
+  return [
+    `Document freshness for ${scope}: ${pack.status}`,
+    pack.clientCode ? `ClientCode: ${pack.clientCode}` : '',
+    pack.projectName ? `Project: ${pack.projectName}` : '',
+    `Fabric lastRunAt: ${pack.lastRunAt ?? 'never_run'}`,
+    `Fabric honesty: ${pack.honesty}`,
+    pack.mailDeltaReady ? 'Mail: delta ready' : 'Mail: delta not ready',
+    pack.fileSearchSkipped
+      ? 'File search: skipped — Atlas does not claim LIVE files'
+      : pack.filesRealtime
+        ? 'Indexed files are present — Atlas does not invent filenames'
+        : 'File search: not proven LIVE',
+    pack.oneDriveRecentSkipped ? 'OneDrive recent: skipped' : '',
+    pack.contactsEmpty ? 'Contacts: empty' : '',
+    `Change notifications mail/files/calendar: ${pack.changeNotifications.mail}/${pack.changeNotifications.files}/${pack.changeNotifications.calendar}`,
+    `Attachment links: ${pack.attachmentLinks.status}`,
+    pack.documentGaps.length
+      ? `Document gaps: ${pack.documentGaps.map((gap) => `${gap.label} (${gap.status})`).join('; ')}`
+      : 'No entitled documentGaps on this run.',
+    pack.honestyNotes.length ? `Honesty: ${pack.honestyNotes.join('; ')}` : '',
+    pack.items.length ? `Open: ${pack.items.join('; ')}` : 'No open document-freshness items.',
+    `Communication policy: ${pack.communicationPolicy}`,
+    `Next owner action: ${pack.nextOwnerAction}`,
+    'Atlas did not invent filenames, receipts, ClientCodes, or counts. Atlas did not call Graph /search/query.',
+    'Atlas did not send mail, launch GTM, or submit capital.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 export function answerOnboardingContext(
   question: string,
   record: OnboardingRunRecord | null,
@@ -1647,9 +1894,24 @@ export function answerOnboardingContext(
     match?: EntitledClientCodeMatch;
     existingProject?: OnboardingExistingProject;
     existingWorkflow?: OnboardingExistingWorkflow;
+    fabric?: RealtimeDocumentsFabricSnapshot;
   },
 ): string {
   const q = question.toLowerCase();
+  if (mapsToRealtimeDocumentsHonestyIntent(question)) {
+    const pack = record?.realtimeDocumentsHonesty ?? composeRealtimeDocumentsHonesty({
+      identityResolutionRequired: record?.identityResolutionRequired,
+      clientCode: record?.clientCode,
+      clientName: record?.clientName,
+      projectId: record?.projectId,
+      projectName: record?.projectName,
+      documentGaps: record?.documentGaps,
+      blockers: record?.blockers,
+      communicationPolicy: record?.communicationPolicy,
+      fabric: extras?.fabric,
+    });
+    return formatRealtimeDocumentsHonesty(pack, record?.clientCode ?? extras?.match?.clientCode ?? 'Hub');
+  }
   if (!record) {
     if (extras?.match || extras?.existingProject || extras?.existingWorkflow) {
       return answerFromExistingOnboarding(extras.match ?? { kind: 'none', candidates: [] }, extras);
@@ -1937,8 +2199,19 @@ export function answerOnboardingContext(
     .join('\n');
 }
 
+export function mapsToRealtimeDocumentsHonestyIntent(question: string): boolean {
+  const q = question.toLowerCase();
+  if (q.includes('realtime') || q.includes('real-time') || q.includes('freshness')) {
+    return q.includes('document') || q.includes('file') || q.includes('fabric') || q.includes('index');
+  }
+  if (/\bwhat documents are current\b/.test(q)) return true;
+  if (/\bdocuments? (are |is )?current\b/.test(q)) return true;
+  return false;
+}
+
 export function mapsToOnboardingContextIntent(question: string): boolean {
   const q = question.toLowerCase();
+  if (mapsToRealtimeDocumentsHonestyIntent(question)) return true;
   return q.includes('onboarding') && ONBOARDING_CONTEXT_PHRASES.some((phrase) => q.includes(phrase));
 }
 

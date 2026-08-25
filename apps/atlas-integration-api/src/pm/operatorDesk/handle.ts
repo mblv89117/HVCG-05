@@ -1073,6 +1073,9 @@ export async function handleOperatorDesk(opts: {
         match,
         existingProject,
         existingWorkflow,
+        fabric: inspectFabricSyncHealth(opts.cfg.dataDir, {
+          sweepEnabled: Boolean(opts.cfg.pmBackend.sharepoint) && isFabricSweepEnabled(),
+        }),
       });
       const askAtlas = buildConversationalAskAtlasAnswer({
         question,

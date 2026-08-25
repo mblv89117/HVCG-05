@@ -20,11 +20,13 @@ import {
   composeOnboardingProjectReview,
   composeOnboardingTaskReview,
   composeOnboardingAgentAssignmentReview,
+  composeRealtimeDocumentsHonesty,
   ENTITLED_CANONICAL_CLIENT_CODES,
   findOnboardingRunForQuestion,
   isOnboardingProjectTitle,
   mapsToOnboardingContextIntent,
   mapsToOnboardingExecuteIntent,
+  mapsToRealtimeDocumentsHonestyIntent,
   resolveEntitledClientCodeFromQuestion,
   runClientOnboardingAutomation,
 } from '../src/pm/operatorDesk/clientOnboardingAutomation.ts';
@@ -36,6 +38,7 @@ import {
 } from '../src/pm/operatorDesk/workflowDefinitions.ts';
 import type { SharePointPmService } from '../src/pm/sharepoint/repository.ts';
 import { getOnboardingRun, readOnboardingOverlay, resolveOnboardingStateDir } from '../src/pm/operatorDesk/onboardingState.ts';
+import { COMMUNICATIONS_AUTO_RESPOND } from '../src/pm/operatorDesk/types.ts';
 import { loadConfig } from '../src/config.ts';
 
 const principal: AtlasPrincipal = {
@@ -1789,6 +1792,190 @@ describe('client onboarding automation', () => {
     assert.match(answer, /Agent assignment review for ACCG01: OPEN/);
     assert.match(answer, /did not invent or duplicate agents|did not invent a ClientCode/);
     assert.equal(/ACCG99|submitted|AUTO_RESPOND|duplicate agents created/i.test(answer), false);
+  });
+
+  it('prepares realtime documents honesty from already-known fabric and documentGaps', () => {
+    assert.deepEqual([...ENTITLED_CANONICAL_CLIENT_CODES], ['PDG01', 'ACCG01', 'CCB01', 'HFD01', 'LIEN01']);
+    assert.equal(COMMUNICATIONS_AUTO_RESPOND, false);
+
+    const lastRunAt = '2026-08-25T11:00:00.000Z';
+    const honest = composeRealtimeDocumentsHonesty({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      documentGaps: [
+        { label: 'Operating agreement or formation documents', status: 'CONFIRMED' },
+        { label: 'Tax ID / W-9 where applicable', status: 'MISSING' },
+        { label: 'Primary contact confirmation', status: 'STALE_OR_UNCERTAIN' },
+      ],
+      communicationPolicy: 'DRAFT_ONLY',
+      fabric: {
+        lastRunAt,
+        honesty: 'delta',
+        mailDeltaReady: true,
+        lastIndexed: {
+          mailThreads: 3,
+          meetings: 1,
+          contacts: 0,
+          files: 0,
+          attachmentsIndexed: 0,
+        },
+        notes: [
+          'File search skipped: Graph search/query rejected app-only driveItem query (HTTP 400). Not claimed as LIVE files.',
+          'Manny OneDrive recent skipped: Microsoft Graph documents application permissions as not supported for /drive/recent (deprecated). Not claimed as LIVE files.',
+          'Contacts Graph returned HTTP 200 with an empty page.',
+        ],
+        changeNotifications: {
+          status: 'ready',
+          mail: 'ready',
+          files: 'skipped',
+          calendar: 'skipped',
+        },
+        attachmentLinks: {
+          status: 'skipped',
+          reason: 'No indexed outlook-mail-attachment metadata to link; attachment links remain unproven.',
+        },
+        contacts: {
+          status: 'ready',
+          reason: 'Contacts Graph returned HTTP 200 with an empty page; indexed contacts remain 0.',
+        },
+      },
+    });
+    assert.equal(honest.status, 'OPEN');
+    assert.equal(honest.ready, false);
+    assert.equal(honest.send, false);
+    assert.equal(honest.outbound, false);
+    assert.equal(honest.liveGtmOutbound, false);
+    assert.equal(honest.capitalSubmit, false);
+    assert.equal(honest.clientCode, 'ACCG01');
+    assert.equal(honest.lastRunAt, lastRunAt);
+    assert.equal(honest.honesty, 'delta');
+    assert.equal(honest.mailDeltaReady, true);
+    assert.equal(honest.fileSearchSkipped, true);
+    assert.equal(honest.oneDriveRecentSkipped, true);
+    assert.equal(honest.contactsEmpty, true);
+    assert.equal(honest.filesRealtime, false);
+    assert.equal(honest.lastIndexed.files, 0);
+    assert.equal(honest.lastIndexed.mailThreads, 3);
+    assert.equal(honest.changeNotifications.mail, 'ready');
+    assert.equal(honest.changeNotifications.files, 'skipped');
+    assert.equal(honest.changeNotifications.calendar, 'skipped');
+    assert.equal(honest.attachmentLinks.status, 'skipped');
+    assert.equal(honest.missingCount, 1);
+    assert.equal(honest.uncertainCount, 1);
+    assert.equal(honest.confirmedCount, 1);
+    assert.deepEqual(honest.honestyNotes, [
+      'mail delta ready',
+      'file search skipped',
+      'OneDrive recent skipped',
+      'contacts empty',
+    ]);
+    assert.match(honest.nextOwnerAction, /do not treat Graph files as LIVE/i);
+
+    const neverRun = composeRealtimeDocumentsHonesty({
+      identityResolutionRequired: false,
+      clientCode: 'ACCG01',
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(neverRun.status, 'OPEN');
+    assert.equal(neverRun.honesty, 'never_run');
+    assert.equal(neverRun.lastRunAt, null);
+    assert.equal(neverRun.filesRealtime, false);
+    assert.equal(neverRun.lastIndexed.files, 0);
+
+    const identity = composeRealtimeDocumentsHonesty({
+      identityResolutionRequired: true,
+      communicationPolicy: 'DRAFT_ONLY',
+    });
+    assert.equal(identity.status, 'NOT_READY');
+    assert.equal(identity.ready, false);
+    assert.match(identity.nextOwnerAction, /Assign entitled client scope/);
+
+    const now = new Date().toISOString();
+    const record = {
+      workflowId: 'wf-1',
+      workflowDefinitionId: 'def',
+      clientCode: 'ACCG01',
+      clientName: 'ACCG',
+      status: 'DOCUMENT_COLLECTION' as const,
+      currentStep: 'Collect missing onboarding documents',
+      nextStep: 'Reconcile or request missing documents (draft only)',
+      blockers: [],
+      ownerAttention: [],
+      projectId: 'proj-1',
+      projectName: 'Client Onboarding — ACCG',
+      taskIds: [],
+      milestoneIds: [],
+      assignedAgents: ['atlas-onboarding-agent'],
+      documentGaps: [
+        { label: 'Tax ID / W-9 where applicable', status: 'MISSING' as const },
+      ],
+      communicationPolicy: 'DRAFT_ONLY' as const,
+      capitalScope: false,
+      identityResolutionRequired: false,
+      workspaceReconciled: true,
+      dryRun: false,
+      createdAt: now,
+      updatedAt: now,
+      milestones: [],
+      operationsHandoff: composeOperationsHandoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      kickoff: composeKickoff({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      blockerReview: composeBlockerReview({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      ownerAttentionPackage: composeOwnerAttention({
+        workspaceReconciled: true,
+        projectId: 'proj-1',
+        communicationPolicy: 'DRAFT_ONLY',
+      }),
+      realtimeDocumentsHonesty: honest,
+      provenance: 'test',
+    };
+    assert.equal(mapsToRealtimeDocumentsHonestyIntent('Are documents realtime?'), true);
+    assert.equal(mapsToRealtimeDocumentsHonestyIntent('document freshness'), true);
+    assert.equal(mapsToRealtimeDocumentsHonestyIntent('What documents are current?'), true);
+    assert.equal(mapsToOnboardingContextIntent('Are documents realtime?'), true);
+    assert.equal(classifyOnboardingAskAtlasIntent('Are documents realtime for ACCG?'), 'status');
+    assert.equal(mapsToOnboardingExecuteIntent('Are documents realtime?'), false);
+    const answer = answerOnboardingContext('Are documents realtime?', record);
+    assert.match(answer, /Document freshness for ACCG01: OPEN/);
+    assert.match(answer, /file search: skipped/i);
+    assert.match(answer, /does not claim LIVE files/i);
+    assert.match(answer, /mail: delta ready/i);
+    assert.match(answer, /OneDrive recent: skipped/);
+    assert.match(answer, /Contacts: empty/);
+    assert.match(answer, /Change notifications mail\/files\/calendar: ready\/skipped\/skipped/);
+    assert.match(answer, /Attachment links: skipped/);
+    assert.match(answer, /Tax ID \/ W-9 where applicable \(MISSING\)/);
+    assert.match(answer, /did not invent filenames|did not call Graph \/search\/query/);
+    assert.equal(/ACCG99|AUTO_RESPOND|submitted|invented receipt/i.test(answer), false);
+
+    const hubAnswer = answerOnboardingContext('document freshness', null, {
+      fabric: {
+        lastRunAt,
+        honesty: 'delta',
+        mailDeltaReady: true,
+        lastIndexed: { mailThreads: 3, meetings: 1, contacts: 0, files: 0, attachmentsIndexed: 0 },
+        notes: ['File search skipped: Graph search/query rejected app-only driveItem query (HTTP 400).'],
+        changeNotifications: { status: 'ready', mail: 'ready', files: 'skipped', calendar: 'skipped' },
+        attachmentLinks: { status: 'skipped', reason: 'No indexed outlook-mail-attachment metadata to link; attachment links remain unproven.' },
+      },
+    });
+    assert.match(hubAnswer, /Document freshness for Hub: OPEN/);
+    assert.match(hubAnswer, /does not claim LIVE files/i);
+    assert.equal(/LIVE files are current|LIVE SharePoint/i.test(hubAnswer), false);
   });
 
   it('restore env', () => {
