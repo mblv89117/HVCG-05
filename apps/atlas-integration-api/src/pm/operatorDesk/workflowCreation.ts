@@ -31,6 +31,8 @@ import {
   WORKFLOW_CREATION_MISSION_KEY,
 } from './workflowParser.ts';
 import { applyWorkflowControl } from './workflowControls.ts';
+import { runClientOnboardingAutomation } from './clientOnboardingAutomation.ts';
+import type { SharePointPmService } from '../sharepoint/repository.ts';
 import type { WorkflowCenterModel } from './workflows.ts';
 
 export const CONVERSATIONAL_WORKFLOW_CONTRACT = 'atlas-hub-conversational-workflow.v1' as const;
@@ -241,6 +243,7 @@ export async function activateWorkflow(opts: {
   dataDir: string;
   workflowId: string;
   approveAuthority?: boolean;
+  sharepoint?: SharePointPmService | null;
 }): Promise<{ ok: true; record: WorkflowDefinitionRecord } | { ok: false; error: string }> {
   const dir = overlayDir(opts.dataDir);
   const overlay = readWorkflowDefinitionOverlay(dir);
@@ -278,6 +281,19 @@ export async function activateWorkflow(opts: {
     clientCode: activated.scope.clientCode,
     tools: activated.actions.map((a) => a.actionType),
   });
+
+  if (
+    activated.sourceTemplateId === 'client_onboarding' ||
+    activated.templateKey === 'client_onboarding'
+  ) {
+    await runClientOnboardingAutomation({
+      cfg: opts.cfg,
+      principal: opts.principal,
+      dataDir: opts.dataDir,
+      sharepoint: opts.sharepoint ?? null,
+      workflow: activated,
+    });
+  }
 
   return { ok: true, record: activated };
 }

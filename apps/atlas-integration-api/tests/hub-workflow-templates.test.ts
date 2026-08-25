@@ -13,8 +13,10 @@ import { createAuthorizedPmRepository } from '../src/pm/backend.ts';
 import { IntegrationRepository } from '../src/store/repository.ts';
 import type { AtlasPrincipal } from '../src/middleware/auth.ts';
 import {
-  assertDeployCandidateIncludesLive,
+  evaluateDeployAncestry,
   normalizeSha,
+  CANONICAL_PRODUCTION_SHA,
+  BLOCKED_STALE_DEPLOY_SHAS,
 } from '../src/deploy/deployLineageGuard.ts';
 import {
   buildTemplateCatalog,
@@ -180,18 +182,23 @@ describe('workflow templates', () => {
   });
 
   it('deployment lineage guard blocks stale overwrite', () => {
-    const live = normalizeSha('37bf7ba0c7b8cc2bc3a2cbe7ed8d4b7e1f836818');
-    const stale = normalizeSha('0cdd5f462179efc38a9aaa9444749393e5ffdf20');
+    const live = normalizeSha(CANONICAL_PRODUCTION_SHA);
+    const stale = normalizeSha(BLOCKED_STALE_DEPLOY_SHAS[0]);
     assert.ok(live && stale);
-    const block = assertDeployCandidateIncludesLive({
+    const block = evaluateDeployAncestry({
       candidateSha: stale!,
       liveSha: live!,
-      knownOverwriteRisk: true,
+      candidateIncludesCanonicalAncestry: false,
+      candidateIncludesLiveAncestry: false,
+      liveIncludesCanonicalAncestry: true,
     });
     assert.equal(block.ok, false);
-    const ok = assertDeployCandidateIncludesLive({
+    const ok = evaluateDeployAncestry({
       candidateSha: live!,
       liveSha: live!,
+      candidateIncludesCanonicalAncestry: true,
+      candidateIncludesLiveAncestry: true,
+      liveIncludesCanonicalAncestry: true,
     });
     assert.equal(ok.ok, true);
   });

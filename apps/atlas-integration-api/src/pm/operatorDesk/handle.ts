@@ -103,6 +103,13 @@ import {
   instantiateWorkflowFromTemplate,
 } from './workflowTemplateService.ts';
 import { readWorkflowDefinitionOverlay, resolveWorkflowDefinitionOverlayDir } from './workflowDefinitions.ts';
+import {
+  answerOnboardingContext,
+  findOnboardingRunForQuestion,
+  mapsToOnboardingContextIntent,
+  runClientOnboardingAutomation,
+} from './clientOnboardingAutomation.ts';
+import { readOnboardingOverlay, resolveOnboardingStateDir, ONBOARDING_AUTOMATION_MISSION_KEY } from './onboardingState.ts';
 
 export { isOperatorDeskPath };
 
@@ -561,6 +568,31 @@ export async function handleOperatorDesk(opts: {
         return true;
       }
 
+      if (action === 'run_onboarding' && body.workflowId?.trim()) {
+        const overlay = readWorkflowDefinitionOverlay(resolveWorkflowDefinitionOverlayDir(opts.cfg.dataDir));
+        const latest = overlay.records
+          .filter((r) => r.workflowId === body.workflowId!.trim())
+          .sort((a, b) => b.version - a.version)[0];
+        if (!latest) {
+          sendJson(opts.res, 404, { error: 'workflow_not_found', code: 'workflow_not_found' }, opts.origin);
+          return true;
+        }
+        const onboarding = await runClientOnboardingAutomation({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          sharepoint: opts.sharepoint,
+          workflow: latest,
+          dryRun: Boolean(body.dryRun),
+        });
+        if (!onboarding.ok) {
+          sendJson(opts.res, 400, { error: onboarding.error, code: onboarding.error }, opts.origin);
+          return true;
+        }
+        sendJson(opts.res, 200, { onboarding: onboarding.record }, opts.origin);
+        return true;
+      }
+
       if (action === 'activate' && body.workflowId?.trim()) {
         const result = await activateWorkflow({
           cfg: opts.cfg,
@@ -568,6 +600,7 @@ export async function handleOperatorDesk(opts: {
           dataDir: opts.cfg.dataDir,
           workflowId: body.workflowId.trim(),
           approveAuthority: Boolean(body.approveAuthority),
+          sharepoint: opts.sharepoint,
         });
         if (!result.ok) {
           const status = result.error === 'authority_approval_required' ? 403 : 400;
@@ -719,6 +752,36 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+
+    if (mapsToOnboardingContextIntent(question)) {
+      const onboardingOverlay = readOnboardingOverlay(resolveOnboardingStateDir(opts.cfg.dataDir));
+      const run = findOnboardingRunForQuestion(question, onboardingOverlay.records);
+      const onboardingAnswer = answerOnboardingContext(question, run);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: onboardingAnswer,
+        workflowId: run?.workflowId ?? 'onboarding-context',
+        workflowName: run ? `Onboarding — ${run.clientName ?? run.clientCode ?? 'client'}` : 'Onboarding context',
+        clientCode: run?.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          workflowAnswer: onboardingAnswer,
+          onboarding: run ?? null,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['client_onboarding_automation'],
+            policyClass: 'READ_AUTO',
+            missionKey: ONBOARDING_AUTOMATION_MISSION_KEY,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
 
     if (mapsToTemplateDiscoveryIntent(question)) {
       const discoveryAnswer = answerTemplateDiscovery(question);
