@@ -29,6 +29,7 @@ import {
   ASK_ATLAS_QUESTION,
   ASK_ATLAS_RUNTIME_AGENT,
   CAPITAL_SUBMISSION_POLICY_CLASS,
+  COMMUNICATIONS_POLICY_CLASS,
   GET_CLIENT_CONTEXT_TOOL,
   clientContextMissionKey,
   isOperatorActivityLedgerPath,
@@ -134,12 +135,16 @@ import {
   mapsToApprovalCenterHonestyIntent,
 } from './approvalCenterHonesty.ts';
 import {
-  answerCommunicationPolicy,
-  COMMUNICATION_POLICY_CENTER_MISSION_KEY,
   listCommunicationPolicies,
-  mapsToCommunicationPolicyIntent,
+  readCommunicationPolicyOverlay,
   recordCommunicationPolicy,
+  resolveCommunicationPolicyDir,
 } from './communicationPolicyCenter.ts';
+import {
+  answerCommunicationPolicyHonesty,
+  COMMUNICATION_POLICY_HONESTY_MISSION_KEY,
+  mapsToCommunicationPolicyHonestyIntent,
+} from './communicationPolicyHonesty.ts';
 import {
   answerHistoricalReconstructionHonesty,
   HISTORICAL_RECONSTRUCTION_MISSION_KEY,
@@ -1064,43 +1069,6 @@ export async function handleOperatorDesk(opts: {
       return true;
     }
 
-    if (mapsToCommunicationPolicyIntent(question)) {
-      const policyModel = listCommunicationPolicies({
-        principal,
-        dataDir: opts.cfg.dataDir,
-      });
-      const policyAnswer = answerCommunicationPolicy(
-        question,
-        policyModel,
-        entitledClientCodes(principal),
-      );
-      const askAtlas = buildConversationalAskAtlasAnswer({
-        question,
-        previewText: policyAnswer.text,
-        workflowId: 'communication-policy-center',
-        workflowName: 'Communication Policy Center',
-        clientCode: policyAnswer.clientCode,
-      });
-      sendJson(
-        opts.res,
-        200,
-        {
-          operatorDesk: { askAtlas },
-          communicationPolicyAnswer: policyAnswer.text,
-          communicationPolicies: policyModel,
-          runtime: {
-            agent: ASK_ATLAS_RUNTIME_AGENT,
-            toolsInvoked: ['communication_policy_center'],
-            policyClass: 'READ_AUTO',
-            missionKey: COMMUNICATION_POLICY_CENTER_MISSION_KEY,
-            autoSend: false,
-          },
-        },
-        opts.origin,
-      );
-      return true;
-    }
-
     if (mapsToApprovalCenterHonestyIntent(question) || mapsToApprovalContextIntent(question)) {
       const entitled = entitledClientCodes(principal);
       const ownerTasks = await loadOwnerApprovalTasks({
@@ -1152,6 +1120,56 @@ export async function handleOperatorDesk(opts: {
             toolsInvoked: ['approval_center_honesty'],
             policyClass: 'READ_AUTO',
             missionKey: APPROVAL_CENTER_HONESTY_MISSION_KEY,
+            autoSend: false,
+          },
+        },
+        opts.origin,
+      );
+      return true;
+    }
+
+    if (mapsToCommunicationPolicyHonestyIntent(question)) {
+      const entitled = entitledClientCodes(principal);
+      const policyModel = listCommunicationPolicies({
+        principal,
+        dataDir: opts.cfg.dataDir,
+      });
+      const overlay = readCommunicationPolicyOverlay(resolveCommunicationPolicyDir(opts.cfg.dataDir));
+      const policyAnswer = answerCommunicationPolicyHonesty(question, {
+        entitledCodes: entitled,
+        entitledRecords: policyModel.items.map((item) => ({
+          policyId: item.policyId,
+          scopeKind: item.scopeKind,
+          mode: item.mode,
+          clientCode: item.clientCode,
+          domain: item.domain,
+          contact: item.contact,
+          fromExistingOverlay: overlay.records.some((row) => row.policyId === item.policyId),
+        })),
+        overlayPolicyIds: overlay.records.map((row) => row.policyId),
+      });
+      const match = resolveEntitledClientCodeFromQuestion(question, entitled);
+      const askAtlas = buildConversationalAskAtlasAnswer({
+        question,
+        previewText: policyAnswer,
+        workflowId: 'communication-policy-honesty',
+        workflowName: match.clientCode
+          ? `Communication policy — ${match.clientCode}`
+          : 'Communication Policy Center',
+        clientCode: match.clientCode,
+      });
+      sendJson(
+        opts.res,
+        200,
+        {
+          operatorDesk: { askAtlas },
+          communicationPolicyAnswer: policyAnswer,
+          communicationPolicies: policyModel,
+          runtime: {
+            agent: ASK_ATLAS_RUNTIME_AGENT,
+            toolsInvoked: ['communication_policy_honesty'],
+            policyClass: COMMUNICATIONS_POLICY_CLASS,
+            missionKey: COMMUNICATION_POLICY_HONESTY_MISSION_KEY,
             autoSend: false,
           },
         },
