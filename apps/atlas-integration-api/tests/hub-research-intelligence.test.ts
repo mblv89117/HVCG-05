@@ -111,6 +111,25 @@
  * composed. PREPARE_ONLY / send=false / externalSubmit=false /
  * ownerGated=true / financingStatus UNKNOWN stay as composed. Not a
  * second project or capital product. Not external submit. Not send.
+ * + ATLAS-CAPITAL-PREPARE-RELATED-THREADS-001
+ * Optional relatedThreads on CapitalSubmissionPrepareRecord copies
+ * already-entitled same-scope mail-thread operating-record refs (same
+ * RelatedDocumentEmailRef / relatedEmails path as research-intel /
+ * onboarding / client-support). Fail-closed when ClientCode is
+ * missing / non-canonical. Unscoped never receives scoped threads.
+ * Unscoped lender catalog titles never attach scoped threads.
+ * Client A never receives Client B. Refs only — no preview body,
+ * suggestedDraft, or send. DRAFT_ONLY / send=false / autoRespond=false
+ * / indexedPreviewOnly stay as composed on the source thread payload.
+ * No downloadUrl. No contentBytes. No transcript. No attendees. No
+ * full mail body. No invented titles / ids / counts, ClientCodes,
+ * Hub-MI, TargetAmount, lender criteria, fit, or financing status.
+ * SAS / anonymous webUrl dropped. relatedProjects /
+ * relatedAttachments / relatedMeetings / relatedDocuments /
+ * researchRelationship stay as composed. PREPARE_ONLY / send=false /
+ * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN
+ * stay as composed. Not a second communications or capital product.
+ * Not external submit. Not send.
  * + ATLAS-DOCUMENT-RESEARCH-RELATIONSHIP-001
  * Inverse researchRelationship on DocumentOperatingRecord copies the
  * same already-authorized same-scope researchIntelligence items
@@ -6805,6 +6824,623 @@ describe('ATLAS-CAPITAL-PREPARE-RELATED-PROJECTS-001 entitled same-scope inverse
     assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
     assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
     assertCapitalRelatedProjectsHonesty(capital);
+  });
+});
+
+function assertCapitalRelatedThreadsHonesty(item: CapitalSubmissionPrepareRecord): void {
+  const blob = JSON.stringify(item);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee/i.test(blob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(/\bltv\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/credit box/i.test(blob), false);
+  assert.equal(/Hub-MI/i.test(blob), false);
+  assert.equal('hubMiRow' in item, false);
+  assert.equal(item.invented, false);
+  assert.equal(item.lenderCriteriaInvented, false);
+  assert.equal(item.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+  assert.equal(item.financingStatusClassification, 'HONEST_EMPTY');
+  for (const row of item.researchRelationship || []) {
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+  }
+  for (const row of item.relatedDocuments || []) {
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('hubMiRow' in row, false);
+    assert.equal('previewGetUrl' in row, false);
+    assert.equal('previewPostUrl' in row, false);
+  }
+  for (const row of item.relatedAttachments || []) {
+    assert.equal(row.binariesInAtlas, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+  }
+  const projectBlob = JSON.stringify(item.relatedProjects || []);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(projectBlob), false);
+  const threadBlob = JSON.stringify(item.relatedThreads || []);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount|suggestedDraft/i.test(threadBlob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(threadBlob), false);
+  assert.equal(threadBlob.includes('Can you confirm the next entitled document?'), false);
+  for (const row of item.relatedThreads || []) {
+    assert.equal('preview' in row, false);
+    assert.equal('suggestedDraft' in row, false);
+    assert.equal('send' in row, false);
+    assert.equal('autoRespond' in row, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('attendees' in row, false);
+    assert.equal('hubMiRow' in row, false);
+    assert.ok(
+      row.classification === 'CONFIRMED' ||
+        row.classification === 'LIKELY' ||
+        row.classification === 'PROPOSED' ||
+        row.classification === 'HONEST_EMPTY',
+    );
+  }
+}
+
+describe('ATLAS-CAPITAL-PREPARE-RELATED-THREADS-001 entitled same-scope inverse', () => {
+  function searchWithThreads(
+    threads: MailThreadOperatingRecord[] = [syn01ThreadRecord()],
+    projects: ProjectOperatingRecord[] = [syn01ProjectRecord()],
+    documents: DocumentOperatingRecord[] = [syn01DocumentRecord(), syn01AttachmentRecord()],
+    hits: AtlasAuthorizedSearchHit[] = [syn01DocumentHit(), syn01AttachmentHit()],
+    research: ResearchIntelligenceRecord[] = [syn01ClientResearchRecord()],
+  ): AtlasAuthorizedSearch {
+    return {
+      ...searchWithResearch(research),
+      documents: {
+        kind: 'document_operating_record_v1',
+        policyClass: 'READ_AUTO',
+        binariesInAtlas: false,
+        items: documents,
+      },
+      projects: {
+        kind: 'project_operating_record_v1',
+        policyClass: 'READ_AUTO',
+        invented: false,
+        currentClientsFirst: true,
+        items: projects,
+      },
+      threads: syn01ThreadsSlice(threads),
+      hits,
+    };
+  }
+
+  it('attaches same-scope relatedThreads on entitled capital and get_client_context', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    const thread = result.authorizedSearch.threads.items.find((row) => row.id === 'mail-syn-1');
+    assert.ok(capital);
+    assert.ok(thread);
+    const related = capital.relatedThreads?.find((row) => row.id === 'mail-syn-1');
+    assert.ok(related);
+    assert.equal(related.title, 'SYN01 intake follow-up');
+    assert.equal(related.conversationId, 'conv-syn-1');
+    assert.equal(related.webUrl, THREAD_SOURCE);
+    assert.ok(
+      related.classification === 'CONFIRMED' ||
+        related.classification === 'LIKELY' ||
+        related.classification === 'PROPOSED' ||
+        related.classification === 'HONEST_EMPTY',
+    );
+    assert.equal('preview' in related, false);
+    assert.equal('suggestedDraft' in related, false);
+    assert.equal('send' in related, false);
+    assert.equal('autoRespond' in related, false);
+    assert.ok((capital.relatedThreads?.length || 0) <= DOCUMENT_RELATED_CONTEXT_PAGE_SIZE);
+    assert.equal(capital.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(capital.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(capital.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|attendee|TargetAmount|suggestedDraft/i.test(
+        JSON.stringify(capital.relatedThreads),
+      ),
+      false,
+    );
+    assert.equal(JSON.stringify(capital.relatedThreads).includes('Can you confirm the next entitled document?'), false);
+    assert.equal(JSON.stringify(capital.relatedThreads).includes('PDG01'), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(result.authorizedSearch.threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assert.equal(result.authorizedSearch.threads.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.indexedPreviewOnly, true);
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(capital.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.invented, false);
+    assertCapitalRelatedThreadsHonesty(capital);
+
+    const viaIndex = getClientContext({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      clientCode: 'SYN01',
+      entitledIndexHits: [
+        syn01ClientHit(),
+        syn01MeetingHit(),
+        syn01CapitalHit(),
+        syn01DocumentHit(),
+        syn01AttachmentHit(),
+        syn01ProjectHit(),
+        syn01ThreadHit(),
+      ],
+    });
+    const ctxCapital = viaIndex.clientContext.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(ctxCapital);
+    assert.equal(ctxCapital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.deepEqual(ctxCapital.relatedThreads, capital.relatedThreads);
+    assert.deepEqual(ctxCapital.relatedProjects, capital.relatedProjects);
+    assert.deepEqual(ctxCapital.relatedAttachments, capital.relatedAttachments);
+    assert.deepEqual(ctxCapital.relatedDocuments, capital.relatedDocuments);
+    assert.deepEqual(ctxCapital.relatedMeetings, capital.relatedMeetings);
+    assert.deepEqual(ctxCapital.researchRelationship, capital.researchRelationship);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.send, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.externalSubmit, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.ownerGated, true);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(viaIndex.clientContext.threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(viaIndex.clientContext.threads.send, false);
+    assert.equal(viaIndex.clientContext.threads.autoRespond, false);
+  });
+
+  it('honestly omits relatedThreads when none are entitled', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedThreads, undefined);
+    assert.equal('relatedThreads' in capital, false);
+    assert.equal(capital.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(capital.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(capital.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assertCapitalRelatedThreadsHonesty(capital);
+  });
+
+  it('never attaches Client B / PDG01 threads to a Client A capital row', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01MeetingHit(),
+          syn01CapitalHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+          {
+            kind: 'communication' as const,
+            id: 'mail-pdg',
+            title: 'PDG01 leak thread',
+            href: '/clients/PDG01',
+            source: 'HVCG_Communications',
+            clientCode: 'PDG01',
+            conversationId: 'conv-pdg',
+            provenance: 'PROPOSED' as const,
+            preview: 'PDG01 leak preview body must not copy',
+          },
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(
+      (capital.relatedThreads || []).some((row) => /pdg/i.test(row.id) || /pdg/i.test(row.title)),
+      false,
+    );
+    const blob = JSON.stringify(result.authorizedSearch.capitalSubmissions);
+    assert.equal(blob.includes('PDG01'), false);
+    assert.equal(blob.includes('mail-pdg'), false);
+    assert.equal(blob.includes('ACCG01'), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assertCapitalRelatedThreadsHonesty(capital);
+  });
+
+  it('mixed entitled + PDG01 + unscoped lender catalog attaches only entitled same-scope threads', () => {
+    const mixed = attachRelatedContextToCapitalSubmission(
+      staff,
+      syn01CapitalRecord(),
+      searchWithThreads([
+        syn01ThreadRecord(),
+        syn01ThreadRecord({
+          id: 'mail-pdg',
+          conversationId: 'conv-pdg',
+          title: 'PDG01 leak thread',
+          clientCode: 'PDG01',
+        }),
+        syn01ThreadRecord({
+          id: 'mail-lender-catalog',
+          conversationId: 'conv-lender',
+          title: 'Live Oak Bank catalog',
+          clientCode: undefined,
+        }),
+      ]),
+    );
+    assert.equal(mixed.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(
+      (mixed.relatedThreads || []).some((row) => /pdg|live oak/i.test(row.id) || /pdg|live oak/i.test(row.title)),
+      false,
+    );
+    assert.equal(JSON.stringify(mixed.relatedThreads).includes('PDG01'), false);
+    assert.equal(JSON.stringify(mixed.relatedThreads).includes('mail-pdg'), false);
+    assert.equal(JSON.stringify(mixed.relatedThreads).includes('mail-lender-catalog'), false);
+    assert.equal(/live oak/i.test(JSON.stringify(mixed.relatedThreads)), false);
+    assert.equal(mixed.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(mixed.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(mixed.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(mixed.invented, false);
+    assert.equal(mixed.lenderCriteriaInvented, false);
+    assert.equal(mixed.financingStatus, 'UNKNOWN');
+    assertCapitalRelatedThreadsHonesty(mixed);
+  });
+
+  it('omits relatedThreads when capital ClientCode is missing rather than guessing', () => {
+    const omitted = attachRelatedContextToCapitalSubmission(
+      manny,
+      syn01CapitalRecord({
+        id: 'cap-unscoped',
+        clientCode: undefined,
+      }),
+      searchWithThreads(),
+    );
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal('relatedThreads' in omitted, false);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal(omitted.relatedDocuments, undefined);
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.lenderCriteriaInvented, false);
+    assert.equal(omitted.financingStatus, 'UNKNOWN');
+  });
+
+  it('omits relatedThreads when capital ClientCode is non-canonical rather than guessing', () => {
+    const omitted = attachRelatedContextToCapitalSubmission(
+      manny,
+      syn01CapitalRecord({
+        id: 'cap-noncanonical',
+        clientCode: 'syn01',
+      }),
+      searchWithThreads(),
+    );
+    assert.equal(omitted.relatedThreads, undefined);
+    assert.equal('relatedThreads' in omitted, false);
+    assert.equal(omitted.relatedProjects, undefined);
+    assert.equal(omitted.relatedAttachments, undefined);
+    assert.equal(omitted.relatedDocuments, undefined);
+    assert.equal(omitted.researchRelationship, undefined);
+    assert.equal(omitted.invented, false);
+    assert.equal(omitted.lenderCriteriaInvented, false);
+    assert.equal(omitted.financingStatus, 'UNKNOWN');
+  });
+
+  it('unscoped lender catalog capital never receives scoped threads', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: manny,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'lender',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          {
+            kind: 'lender' as const,
+            id: 'ln-liveoak',
+            title: 'Live Oak Bank',
+            href: '/capital?lender=ln-liveoak',
+            source: 'HVCG_Lenders',
+            provenance: 'CONFIRMED' as const,
+          },
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    assert.equal(result.authorizedSearch.capitalSubmissions.items.length, 0);
+    assert.equal(
+      result.authorizedSearch.capitalSubmissions.items.some((row) => row.relatedThreads),
+      false,
+    );
+    assert.equal(
+      result.authorizedSearch.capitalSubmissions.catalogCopies.some((row) => 'relatedThreads' in row),
+      false,
+    );
+    const catalogBlob = JSON.stringify(result.authorizedSearch.capitalSubmissions);
+    assert.equal(/relatedThreads/i.test(catalogBlob), false);
+    assert.equal(/TargetAmount/i.test(catalogBlob), false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+  });
+
+  it('omits extras for unauthorized or other-client principals', async () => {
+    const unknown = await searchAuthorizedKnowledge({
+      principal: otherStaff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01CapitalHit(), syn01ThreadHit()],
+      }),
+    });
+    assert.equal(unknown.authorizedSearch.entitled, false);
+    assert.equal(unknown.authorizedSearch.capitalSubmissions.items.length, 0);
+    assert.equal(
+      unknown.authorizedSearch.capitalSubmissions.items.some((row) => row.relatedThreads),
+      false,
+    );
+    const unknownBlob = JSON.stringify(unknown.authorizedSearch.capitalSubmissions);
+    assert.equal(unknownBlob.includes('mail-syn-1'), false);
+    assert.equal(unknownBlob.includes('cap-syn-1'), false);
+    assert.equal(unknown.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(unknown.authorizedSearch.capitalSubmissions.externalSubmit, false);
+
+    const denied = attachRelatedContextToCapitalSubmission(
+      otherStaff,
+      syn01CapitalRecord(),
+      searchWithThreads(),
+    );
+    assert.equal(denied.relatedThreads, undefined);
+    assert.equal('relatedThreads' in denied, false);
+    assert.equal(denied.relatedProjects, undefined);
+    assert.equal(denied.relatedAttachments, undefined);
+    assert.equal(denied.relatedDocuments, undefined);
+    assert.equal(denied.researchRelationship, undefined);
+    assert.equal(denied.invented, false);
+    assert.equal(denied.lenderCriteriaInvented, false);
+    assert.equal(denied.financingStatus, 'UNKNOWN');
+  });
+
+  it('leaves the empty capital payload unchanged', () => {
+    const empty = emptyCapitalSubmissionPayload();
+    assert.deepEqual(empty.items, []);
+    assert.equal('relatedThreads' in empty, false);
+    assert.equal(empty.send, false);
+    assert.equal(empty.externalSubmit, false);
+    assert.equal(empty.ownerGated, true);
+    assert.equal(empty.policyClass, 'PREPARE_ONLY');
+    const attachedEmpty = attachRelatedContextToCapitalSubmissions(
+      staff,
+      empty,
+      searchWithThreads(),
+    );
+    assert.equal(attachedEmpty, empty);
+    assert.deepEqual(attachedEmpty, empty);
+    assert.equal(attachedEmpty.items.length, 0);
+    assert.equal(attachedEmpty.send, false);
+    assert.equal(attachedEmpty.externalSubmit, false);
+  });
+
+  it('omits relatedThreads when search.threads is absent', () => {
+    const { threads: _threads, ...withoutThreads } = searchWithResearch([syn01ClientResearchRecord()]);
+    const absent = attachRelatedContextToCapitalSubmission(
+      staff,
+      syn01CapitalRecord(),
+      {
+        ...withoutThreads,
+        documents: {
+          kind: 'document_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          binariesInAtlas: false,
+          items: [syn01DocumentRecord(), syn01AttachmentRecord()],
+        },
+        projects: {
+          kind: 'project_operating_record_v1',
+          policyClass: 'READ_AUTO',
+          invented: false,
+          currentClientsFirst: true,
+          items: [syn01ProjectRecord()],
+        },
+        hits: [syn01DocumentHit(), syn01AttachmentHit()],
+      } as unknown as AtlasAuthorizedSearch,
+    );
+    assert.equal(absent.relatedThreads, undefined);
+    assert.equal('relatedThreads' in absent, false);
+    assert.equal(absent.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(absent.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(absent.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(absent.invented, false);
+    assert.equal(absent.lenderCriteriaInvented, false);
+    assert.equal(absent.financingStatus, 'UNKNOWN');
+  });
+
+  it('never invents downloadUrl, contentBytes, TargetAmount, suggestedDraft, or full mail body', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          {
+            ...syn01CapitalHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'Invented binary',
+            TargetAmount: 5000000,
+            suggestedDraft: { body: 'Invented draft', send: true },
+          },
+          {
+            ...syn01ThreadHit(),
+            downloadUrl: 'https://evil.example/download',
+            contentBytes: 'Invented binary',
+            transcript: 'Invented transcript text',
+            attendees: ['invented@example.com'],
+            TargetAmount: 5000000,
+            suggestedDraft: {
+              policyClass: 'DRAFT_ONLY',
+              send: false,
+              body: 'This suggested reply is a draft only. It has not been sent.',
+            },
+            preview: 'Can you confirm the next entitled document?',
+          },
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    const blob = JSON.stringify(result.authorizedSearch.capitalSubmissions);
+    assert.equal(/downloadUrl/i.test(blob), false);
+    assert.equal(/contentBytes/i.test(blob), false);
+    assert.equal(/transcript/i.test(blob), false);
+    assert.equal(/TargetAmount/i.test(blob), false);
+    assert.equal(/suggestedDraft/i.test(blob), false);
+    assert.equal(blob.includes('Can you confirm the next entitled document?'), false);
+    const attached = capital.relatedThreads?.find((row) => row.id === 'mail-syn-1');
+    assert.ok(attached);
+    assert.equal(attached.title, 'SYN01 intake follow-up');
+    assert.equal('preview' in attached, false);
+    assert.equal('suggestedDraft' in attached, false);
+    assert.equal('send' in attached, false);
+    assert.equal('downloadUrl' in attached, false);
+    assert.equal('contentBytes' in attached, false);
+    assert.equal(capital.relatedThreads?.length, 1);
+    assert.equal(capital.invented, false);
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assertCapitalRelatedThreadsHonesty(capital);
+  });
+
+  it('send=false / externalSubmit=false / policyClass PREPARE_ONLY stay as composed', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [syn01ClientHit(), syn01CapitalHit(), syn01ThreadHit()],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(result.authorizedSearch.threads.send, false);
+    assert.equal(result.authorizedSearch.threads.autoRespond, false);
+    assert.equal(result.authorizedSearch.threads.policyClass, 'DRAFT_ONLY');
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(capital.financingStatusClassification, 'HONEST_EMPTY');
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.invented, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.invented, false);
+    assertCapitalRelatedThreadsHonesty(capital);
+  });
+
+  it('still attaches relatedProjects, relatedAttachments, relatedMeetings, relatedDocuments, and researchRelationship next to relatedThreads', async () => {
+    const result = await searchAuthorizedKnowledge({
+      principal: staff,
+      picture: emptyHonestOperatingPicture(),
+      searchQuery: 'SYN01',
+      entitledSearch: async (query) => ({
+        query,
+        results: [
+          syn01ClientHit(),
+          syn01CapitalHit(),
+          syn01MeetingHit(),
+          syn01DocumentHit(),
+          syn01AttachmentHit(),
+          syn01ProjectHit(),
+          syn01ThreadHit(),
+        ],
+      }),
+    });
+    const capital = result.authorizedSearch.capitalSubmissions.items.find((row) => row.id === 'cap-syn-1');
+    assert.ok(capital);
+    assert.equal(capital.relatedThreads?.some((row) => row.id === 'mail-syn-1'), true);
+    assert.equal(capital.relatedProjects?.some((row) => row.id === 'proj-syn-1'), true);
+    assert.equal(capital.relatedAttachments?.some((row) => row.id === 'mail-att-syn'), true);
+    assert.equal(capital.relatedDocuments?.some((row) => row.id === 'file-syn-1'), true);
+    assert.equal(capital.relatedMeetings?.some((row) => row.id === 'meet-syn-1'), true);
+    assert.equal(
+      capital.researchRelationship?.some((row) => row.clientCode === 'SYN01'),
+      true,
+    );
+    assert.equal(JSON.stringify(capital.relatedThreads).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedProjects).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedAttachments).includes('PDG01'), false);
+    assert.equal(JSON.stringify(capital.relatedDocuments).includes('PDG01'), false);
+    assert.equal(
+      /downloadUrl|contentBytes|transcript|TargetAmount|suggestedDraft/i.test(JSON.stringify(capital.relatedThreads)),
+      false,
+    );
+    assert.equal(capital.relatedAttachments?.every((row) => row.binariesInAtlas === false), true);
+    assert.equal(capital.invented, false);
+    assert.equal(capital.lenderCriteriaInvented, false);
+    assert.equal(capital.financingStatus, 'UNKNOWN');
+    assert.equal(result.authorizedSearch.capitalSubmissions.send, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.externalSubmit, false);
+    assert.equal(result.authorizedSearch.capitalSubmissions.ownerGated, true);
+    assert.equal(result.authorizedSearch.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assertCapitalRelatedThreadsHonesty(capital);
   });
 });
 
