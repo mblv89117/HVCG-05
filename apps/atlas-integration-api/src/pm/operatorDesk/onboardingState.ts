@@ -87,6 +87,13 @@ export type OnboardingKickoff = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Already-known entitled blocker / task / attention refs. Id required. Never invented. */
+export type OnboardingRelatedBlockerRef = {
+  id: string;
+  title?: string;
+  kind?: 'blocker' | 'task' | 'attention';
+};
+
 /** Canonical BLOCKER REVIEW package. Surfaces already-known blockers. No send. */
 export type OnboardingBlockerReview = {
   status: 'NOT_READY' | 'CLEAR' | 'OPEN' | 'BLOCKED';
@@ -97,9 +104,14 @@ export type OnboardingBlockerReview = {
   items: string[];
   missingDocumentCount: number;
   ownerAttention: string[];
+  /** True only after entitled reuse of same-scope blocker/task/attention rows with a real id, or a create that returned an id. */
+  blockerReconciled: boolean;
+  reusedExisting: boolean;
+  relatedBlockers: OnboardingRelatedBlockerRef[];
   communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
   nextOwnerAction: string;
   send: false;
+  autoRespond: false;
   liveGtmOutbound: false;
   capitalSubmit: false;
   outbound: false;
@@ -454,6 +466,8 @@ export type OnboardingRunRecord = {
   capitalContextReconciled?: boolean;
   /** True only after entitled reuse of a same-scope kickoff record/task/milestone with a real id, or a create that returned an id. */
   kickoffReconciled?: boolean;
+  /** True only after entitled reuse of same-scope blocker/task/attention rows with a real id, or a create that returned an id. */
+  blockerReconciled?: boolean;
   dryRun: boolean;
   createdAt: string;
   updatedAt: string;
