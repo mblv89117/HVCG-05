@@ -55,6 +55,26 @@ export type OnboardingOperationsHandoff = {
   provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
 };
 
+/** Canonical KICKOFF package. Composed from already-known run facts. No outbound. */
+export type OnboardingKickoff = {
+  status: 'NOT_READY' | 'PREPARED' | 'BLOCKED';
+  ready: boolean;
+  projectId?: string;
+  projectName?: string;
+  milestoneStatus: 'pending' | 'in_progress' | 'complete' | 'blocked' | 'unknown';
+  relatedThreadCount: number;
+  missingDocumentCount: number;
+  blockers: string[];
+  ownerAttention: string[];
+  communicationPolicy: 'DRAFT_ONLY' | 'REQUIRE_APPROVAL' | 'AUTO_RESPOND';
+  nextOwnerAction: string;
+  send: false;
+  liveGtmOutbound: false;
+  capitalSubmit: false;
+  outbound: false;
+  provenance: 'CONFIRMED' | 'LIKELY' | 'PROPOSED' | 'STALE_OR_UNCERTAIN';
+};
+
 export type OnboardingRunRecord = {
   workflowId: string;
   workflowDefinitionId: string;
@@ -81,6 +101,7 @@ export type OnboardingRunRecord = {
   lastExecutedAt?: string;
   milestones: OnboardingMilestoneState[];
   operationsHandoff: OnboardingOperationsHandoff;
+  kickoff: OnboardingKickoff;
   provenance: string;
 };
 
