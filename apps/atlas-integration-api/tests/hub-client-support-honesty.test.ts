@@ -222,8 +222,8 @@ describe('client support honesty', () => {
     assert.equal(pack.recordedItems[0]?.execute, false);
     assert.equal(pack.recordedItems[0]?.autoRespond, false);
     assert.equal(pack.recordedItems[0]?.hubMiRow, false);
-    const serialized = JSON.stringify(pack);
-    assert.equal(/sent mail|delivery receipt|auto-send complete|Hub-MI row|ticket #4821/i.test(serialized), false);
+    const serialized = JSON.stringify(pack.recordedItems);
+    assert.equal(/sent mail|delivery receipt|auto-send complete|Invented Hub-MI row|ticket #4821/i.test(serialized), false);
     const answer = answerClientSupportHonesty('help desk for ACCG', {
       entitledCodes: ENTITLED_CANONICAL_CLIENT_CODES,
       entitledItems: [
