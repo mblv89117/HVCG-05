@@ -528,6 +528,7 @@ export async function runAtlasClientContextRuntime(opts: {
   deskSearch?: ToolGatewayContext['deskSearch'];
   entitledSearch?: (query: string) => Promise<{ query: string; results: PmSearchHit[] }>;
   entitledIndexHits?: ToolGatewayContext['entitledIndexHits'];
+  dataDir?: string;
 }): Promise<AtlasHubRuntimeResult> {
   const question = (opts.question || '').trim();
   if (question && isOwnerGatedQuestion(question)) {
@@ -545,6 +546,7 @@ export async function runAtlasClientContextRuntime(opts: {
     deskSearch: opts.deskSearch,
     entitledSearch: opts.entitledSearch,
     entitledIndexHits: opts.entitledIndexHits,
+    dataDir: opts.dataDir,
   });
   const toolsInvoked = invoked.askAtlas.activity.tools.includes(GET_CLIENT_CONTEXT_TOOL)
     ? [...invoked.askAtlas.activity.tools]

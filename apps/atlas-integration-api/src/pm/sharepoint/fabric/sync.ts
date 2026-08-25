@@ -222,6 +222,8 @@ export async function runFabricSync(opts: {
   fabric: FabricGraphClient;
   dataDir: string;
   bootstrap?: boolean;
+  /** Override default page cap for deep backfill sweeps (still bounded). */
+  maxPages?: number;
 }): Promise<FabricSyncResult> {
   if (!opts.bootstrap) {
     if (!opts.principal) {
@@ -229,6 +231,7 @@ export async function runFabricSync(opts: {
     }
     assertMannyOnly(opts.principal, 'Information fabric sync');
   }
+  const pageLimit = Math.min(Math.max(opts.maxPages ?? MAX_PAGES, 1), 32);
   const notes: string[] = [];
   let clients: ClientHint[] = [];
   try {
@@ -267,7 +270,7 @@ export async function runFabricSync(opts: {
     persistFabricProgress(opts.dataDir, cp, notes);
   }
   try {
-  for (let page = 0; page < MAX_PAGES && mailUrl; page += 1) {
+  for (let page = 0; page < pageLimit && mailUrl; page += 1) {
     if (!isAllowedFabricGraphPath(mailboxPathname(mailUrl))) {
       notes.push('Stored mail skip path was not allowlisted; restarting inbox delta.');
       mailUrl = mailDeltaUrl();
@@ -422,7 +425,7 @@ export async function runFabricSync(opts: {
   let calUrl: string | null =
     cp.calendarSkip ||
     `/v1.0/users/${MANNY_ENTRA_OID}/calendar/events?$select=id,subject,start,end,organizer,attendees,webLink,onlineMeetingUrl,bodyPreview&$top=${PAGE_SIZE}&$orderby=start/dateTime desc`;
-  for (let page = 0; page < MAX_PAGES && calUrl; page += 1) {
+  for (let page = 0; page < pageLimit && calUrl; page += 1) {
     const { status, json } = await readFabricJson(opts.fabric, calUrl, notes, 'Calendar');
     if (status !== 200) {
       notes.push(`Calendar index stopped at HTTP ${status}.`);
@@ -479,7 +482,7 @@ export async function runFabricSync(opts: {
     `/v1.0/users/${MANNY_ENTRA_OID}/contacts?$select=id,displayName,emailAddresses,companyName,jobTitle,businessPhones&$top=${PAGE_SIZE}`;
   let contactsGraphItems = 0;
   let contactsClassifySkipped = 0;
-  for (let page = 0; page < MAX_PAGES && contactUrl; page += 1) {
+  for (let page = 0; page < pageLimit && contactUrl; page += 1) {
     const { status, json } = await readFabricJson(opts.fabric, contactUrl, notes, 'Contacts');
     cp.contactsLastStatus = status;
     persistFabricProgress(opts.dataDir, cp, notes);
