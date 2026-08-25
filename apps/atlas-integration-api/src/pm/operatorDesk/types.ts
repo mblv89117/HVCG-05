@@ -273,10 +273,15 @@ export interface AtlasClientContext {
    * / relatedDocumentsForMeeting path). Optional
    * suggestedDraft.suggestedAttachments copies already-indexed same-scope
    * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef /
-   * relatedAttachments path as documents / meetings). Missing /
-   * non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments / suggestedDraft.suggestedAttachments (fail-closed;
-   * never guess).
+   * relatedAttachments path as documents / meetings). Optional
+   * suggestedDraft.suggestedProjects copies already-entitled same-scope
+   * project operating-record refs (same RelatedDocumentProjectRef /
+   * relatedProjects path as research-intel / onboarding / client-support).
+   * Copied onto suggestedDraft only — not a relatedProjects inverse on
+   * the thread record. Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments /
+   * suggestedDraft.suggestedAttachments /
+   * suggestedDraft.suggestedProjects (fail-closed; never guess).
    */
   threads: MailThreadOperatingPayload;
   /**
@@ -766,6 +771,23 @@ export interface MailThreadSuggestedDraft {
    * false. DRAFT_ONLY / send=false / autoRespond=false stay as composed.
    */
   suggestedAttachments?: RelatedDocumentAttachmentRef[];
+  /**
+   * Already-entitled same-scope project operating-record refs.
+   * Reuses RelatedDocumentProjectRef / relatedProjects() — the same
+   * entitled same-scope composer already live on research-intel /
+   * onboarding / client-support. Copied onto suggestedDraft only —
+   * not a relatedProjects inverse on the thread record. Copied after
+   * authorization when the thread has a canonical ClientCode and the
+   * principal is entitled. Omitted when none are entitled or when
+   * ClientCode is missing / non-canonical (fail-closed; never guess).
+   * Unscoped never receives scoped projects. Client A never receives
+   * Client B. historicalHvs / hubMiRow copy from the entitled project
+   * record only — never invent hubMiRow=true, titles, ids, counts,
+   * ClientCodes, Hub-MI, financing, or TargetAmount. Existing project
+   * ref fields stay as composed; no invented milestone rows.
+   * DRAFT_ONLY / send=false / autoRespond=false stay as composed.
+   */
+  suggestedProjects?: RelatedDocumentProjectRef[];
 }
 
 export interface MailThreadOperatingRecord {
@@ -1388,12 +1410,18 @@ export interface AtlasAuthorizedSearch {
    * relatedDocumentsForMeeting path). Optional
    * suggestedDraft.suggestedAttachments copies already-indexed same-scope
    * outlook-mail-attachment metadata (same RelatedDocumentAttachmentRef /
-   * relatedAttachments path as documents / meetings). Missing /
-   * non-canonical ClientCode omits researchRelationship /
-   * relatedDocuments / suggestedDraft.suggestedAttachments (fail-closed;
-   * never guess). send=false / autoRespond=false / indexedPreviewOnly
-   * stay as composed. No preview body / send on the refs. No
-   * downloadUrl / contentBytes. binariesInAtlas stays false.
+   * relatedAttachments path as documents / meetings). Optional
+   * suggestedDraft.suggestedProjects copies already-entitled same-scope
+   * project operating-record refs (same RelatedDocumentProjectRef /
+   * relatedProjects path as research-intel / onboarding / client-support).
+   * Copied onto suggestedDraft only — not a relatedProjects inverse on
+   * the thread record. Missing / non-canonical ClientCode omits
+   * researchRelationship / relatedDocuments /
+   * suggestedDraft.suggestedAttachments /
+   * suggestedDraft.suggestedProjects (fail-closed; never guess).
+   * send=false / autoRespond=false / indexedPreviewOnly stay as composed.
+   * No preview body / send on the refs. No downloadUrl / contentBytes.
+   * binariesInAtlas stays false. No TargetAmount / Hub-MI invention.
    */
   threads: MailThreadOperatingPayload;
   /**
