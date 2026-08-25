@@ -6228,10 +6228,47 @@ describe('ATLAS-CAPITAL-PREPARE-RELATED-ATTACHMENTS-001 entitled same-scope inve
 });
 
 function assertCapitalRelatedProjectsHonesty(item: CapitalSubmissionPrepareRecord): void {
-  assertCapitalRelatedAttachmentsHonesty(item);
-  const blob = JSON.stringify(item.relatedProjects || []);
-  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(blob), false);
+  const blob = JSON.stringify(item);
+  assert.equal(/TargetAmount/i.test(blob), false);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee/i.test(blob), false);
   assert.equal(/previewGetUrl|previewPostUrl/i.test(blob), false);
+  assert.equal(/\bltv\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/\bdscr\s*[:=]?\s*\d/i.test(blob), false);
+  assert.equal(/credit box/i.test(blob), false);
+  assert.equal(/Hub-MI/i.test(blob), false);
+  assert.equal('hubMiRow' in item, false);
+  assert.equal(item.invented, false);
+  assert.equal(item.lenderCriteriaInvented, false);
+  assert.equal(item.financingStatus, CAPITAL_SUBMISSION_FINANCING_STATUS);
+  assert.equal(item.financingStatusClassification, 'HONEST_EMPTY');
+  for (const row of item.researchRelationship || []) {
+    assert.equal(row.invented, false);
+    assert.equal(row.lenderCriteriaInvented, false);
+    assert.equal(row.financingStatus, RESEARCH_INTELLIGENCE_FINANCING_STATUS);
+    assert.equal(row.fit, RESEARCH_INTELLIGENCE_FIT);
+    assert.equal(row.policyClass, RESEARCH_INTELLIGENCE_POLICY_CLASS);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+  }
+  for (const row of item.relatedDocuments || []) {
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+    assert.equal('hubMiRow' in row, false);
+    assert.equal('previewGetUrl' in row, false);
+    assert.equal('previewPostUrl' in row, false);
+  }
+  for (const row of item.relatedAttachments || []) {
+    assert.equal(row.binariesInAtlas, false);
+    assert.equal('downloadUrl' in row, false);
+    assert.equal('contentBytes' in row, false);
+    assert.equal('transcript' in row, false);
+    assert.equal('TargetAmount' in row, false);
+  }
+  const projectBlob = JSON.stringify(item.relatedProjects || []);
+  assert.equal(/downloadUrl|contentBytes|transcript|attendee|TargetAmount/i.test(projectBlob), false);
+  assert.equal(/previewGetUrl|previewPostUrl/i.test(projectBlob), false);
   for (const row of item.relatedProjects || []) {
     assert.equal(row.invented, false);
     assert.equal(typeof row.historicalHvs, 'boolean');
