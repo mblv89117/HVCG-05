@@ -45,6 +45,8 @@ export {
   type GlobalSearchProps,
   type GlobalAICommandPanelProps,
   type AICommandDrawerProps,
+  type AICommandRunResult,
+  type AICommandAction,
 } from './SearchAndAI';
 export {
   AtlasDrawer,

@@ -33,8 +33,9 @@ import { useAtlasRole } from '../security/RoleProvider';
 import { microsoftConfig } from '../microsoft/config';
 import { workspaceCatalog } from '../data/workspaces';
 import { useHubAuth } from '../integrations/hub/useHubAuth';
-import { fetchOperatorDesk, searchPm } from '../integrations/hub/pmApi';
+import { fetchOperatorDesk, fetchOperatorRuntime, postWorkflowDraftAction, searchPm } from '../integrations/hub/pmApi';
 import { summarizeAskAtlasPrompt, type AskAtlasDrawerItem } from './askAtlasDrawer';
+import type { AICommandRunResult } from '@hvcg/atlas-design-system';
 
 const ATLAS_SCHEME_KEY = 'atlas.colorScheme';
 const ATLAS_FAVORITES_KEY = 'atlas.favorites';
@@ -640,10 +641,74 @@ export function AppShell() {
           navigate(path);
         }}
         onSubmit={(prompt) =>
-          push({ title: 'AI Command Center', body: `Queued: ${prompt}`, tone: 'info' })
+          push({ title: 'Ask Atlas', body: `Processing: ${prompt.slice(0, 80)}`, tone: 'info' })
         }
         title="Ask Atlas"
         subtitle="Grounded on signed operator context; owner-gated actions stay blocked."
+        onRunPrompt={async (prompt): Promise<string | AICommandRunResult> => {
+          if (!hubAuth.hasBearer) {
+            return summarizeAskAtlasPrompt(prompt, askAtlasItems, askAtlasError || 'Microsoft sign-in required');
+          }
+          try {
+            const res = await fetchOperatorRuntime(hubAuth, prompt);
+            const draft = res.workflowDraft;
+            if (draft) {
+              const actionLabels: Record<string, string> = {
+                activate: 'Activate',
+                edit: 'Edit',
+                cancel: 'Cancel',
+                approve_authority: 'Approve authority',
+              };
+              return {
+                text: res.workflowAnswer ?? `Workflow drafted.\n\n${draft.preview}`,
+                actions: draft.confirmationActions.map((id) => ({
+                  id,
+                  label: actionLabels[id] ?? id,
+                })),
+              };
+            }
+            if (res.workflowAnswer) return res.workflowAnswer;
+            return summarizeAskAtlasPrompt(prompt, askAtlasItems, null);
+          } catch (err) {
+            return summarizeAskAtlasPrompt(
+              prompt,
+              askAtlasItems,
+              err instanceof Error ? err.message : 'Ask Atlas runtime failed',
+            );
+          }
+        }}
+        onAction={async (actionId, prompt) => {
+          if (!hubAuth.hasBearer) return;
+          const draftRes = await fetchOperatorRuntime(hubAuth, prompt);
+          const workflowId = draftRes.workflowDraft?.record.workflowId;
+          if (!workflowId) return;
+          if (actionId === 'activate' || actionId === 'approve_authority') {
+            const activated = await postWorkflowDraftAction(hubAuth, {
+              action: 'activate',
+              workflowId,
+              approveAuthority: actionId === 'approve_authority',
+            });
+            push({
+              title: 'Workflow activated',
+              body: `${workflowId} is now active in Workflow Center.`,
+              tone: 'success',
+            });
+            if (activated.workflowCenter?.detail) navigate('/workflows');
+            return;
+          }
+          if (actionId === 'cancel') {
+            await postWorkflowDraftAction(hubAuth, { action: 'cancel', workflowId });
+            push({ title: 'Workflow cancelled', body: workflowId, tone: 'info' });
+            return;
+          }
+          if (actionId === 'edit') {
+            push({
+              title: 'Edit workflow',
+              body: 'Describe the change in a new Ask Atlas prompt (e.g. change time to 9 AM).',
+              tone: 'info',
+            });
+          }
+        }}
         stubResponder={(prompt) => summarizeAskAtlasPrompt(prompt, askAtlasItems, askAtlasError)}
       />
       <NotificationStack items={items} onDismiss={dismiss} />

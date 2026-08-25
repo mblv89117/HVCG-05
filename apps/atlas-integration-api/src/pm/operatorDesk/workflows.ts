@@ -28,6 +28,15 @@ import {
   resolveWorkflowControlOverlayDir,
   type WorkflowControlRecord,
 } from './workflowControls.ts';
+import {
+  CUSTOM_WORKFLOW_ID_PREFIX,
+  listVisibleDefinitions,
+  readWorkflowDefinitionOverlay,
+  resolveWorkflowDefinitionOverlayDir,
+  getLatestDefinition,
+  type WorkflowDefinitionRecord,
+} from './workflowDefinitions.ts';
+import { formatWorkflowPreview } from './workflowParser.ts';
 
 export const WORKFLOW_CENTER_CONTRACT = 'atlas-hub-workflows.v1' as const;
 export const WORKFLOW_CENTER_MISSION_KEY = 'ATLAS-WORKFLOW-CENTER-001' as const;
@@ -96,12 +105,23 @@ export type WorkflowActivityItem = {
   summary: string;
 };
 
+export type WorkflowDefinitionVersionSummary = {
+  version: number;
+  changedAt: string;
+  changedBy: string;
+  changeReason?: string;
+  changedFields: string[];
+  status: string;
+};
+
 export type WorkflowDetail = WorkflowSummary & {
   overview: {
     whyExists: string;
     source: string;
     relatedMission?: string;
     sourceEvent?: string;
+    createdFromAskAtlas?: boolean;
+    conversationalProvenance?: string;
   };
   scope: {
     clientCode?: string;
@@ -135,6 +155,10 @@ export type WorkflowDetail = WorkflowSummary & {
   activity: WorkflowActivityItem[];
   control?: WorkflowControlRecord;
   diagnostics?: Record<string, string | number | boolean | null>;
+  definitionPreview?: string;
+  versionHistory?: WorkflowDefinitionVersionSummary[];
+  approvalRequirements?: string[];
+  authorityExpansionRequired?: boolean;
 };
 
 export type WorkflowCenterModel = {
@@ -567,6 +591,127 @@ function enrichFabricWorkflow(
   };
 }
 
+function isCustomWorkflowId(workflowId: string): boolean {
+  return workflowId.startsWith(CUSTOM_WORKFLOW_ID_PREFIX);
+}
+
+function mapDefinitionStatus(
+  def: WorkflowDefinitionRecord,
+  control?: WorkflowControlRecord,
+): WorkflowStatus {
+  if (control?.state === 'disabled' || def.status === 'DISABLED') return 'DISABLED';
+  if (control?.state === 'paused' || def.status === 'PAUSED') return 'PAUSED';
+  if (def.status === 'DRAFT') return 'WAITING';
+  if (def.status === 'READY_FOR_APPROVAL') return 'REQUIRES_APPROVAL';
+  if (def.status === 'REJECTED') return 'DISABLED';
+  return 'ACTIVE';
+}
+
+function summaryFromCustomDefinition(
+  def: WorkflowDefinitionRecord,
+  control?: WorkflowControlRecord,
+): WorkflowSummary {
+  const status = mapDefinitionStatus(def, control);
+  return {
+    workflowId: def.workflowId,
+    name: def.name,
+    description: def.description.slice(0, 280),
+    workflowType: def.provenance === 'template' ? 'template' : 'conversational',
+    trigger: def.trigger.scheduleHuman ?? def.trigger.event ?? def.trigger.originalLanguage,
+    status,
+    currentStep: def.status,
+    nextStep: def.authorityExpansionRequired ? 'owner_approval' : 'awaiting_activation',
+    clientCode: def.scope.clientCode,
+    clientName: def.scope.clientName,
+    projectScope: def.scope.projectScope,
+    responsibleAgent: def.responsibleAgent ?? 'atlas-hub-runtime',
+    autonomyLevel: def.policyClass,
+    approvalRequired: def.authorityExpansionRequired || def.approvalRequirements.length > 0,
+    lastRunAt: undefined,
+    nextRunAt: def.trigger.scheduleHuman ?? def.trigger.schedule,
+    successState: 'never_run',
+    updatedAt: def.updatedAt,
+    provenance: 'LIVE',
+    ownerActionRequired: def.authorityExpansionRequired,
+    policyClass: def.policyClass,
+    href: `/workflows?workflowId=${encodeURIComponent(def.workflowId)}`,
+  };
+}
+
+function detailFromCustomDefinition(
+  def: WorkflowDefinitionRecord,
+  overlay: ReturnType<typeof readWorkflowDefinitionOverlay>,
+  control?: WorkflowControlRecord,
+  principal?: AtlasPrincipal,
+): WorkflowDetail {
+  const summary = summaryFromCustomDefinition(def, control);
+  const versions = overlay.definitions
+    .filter((d) => d.workflowId === def.workflowId)
+  const versionHistory: WorkflowDefinitionVersionSummary[] = versions
+    .flatMap((d) =>
+      d.versionHistory.map((v) => ({
+        version: v.version,
+        changedAt: v.changedAt,
+        changedBy: v.changedBy,
+        changeReason: v.changeReason,
+        changedFields: v.changedFields,
+        status: d.status,
+      })),
+    )
+    .sort((a, b) => b.version - a.version);
+
+  const workflowActivity = versions.slice(-5).map((d, idx) => ({
+    id: `${def.workflowId}:def:${d.version}:${idx}`,
+    timestamp: d.updatedAt,
+    kind: 'definition_version',
+    actor: d.createdBy,
+    result: d.status,
+    provenance: 'LIVE' as WorkflowDataProvenance,
+    summary: `Definition v${d.version} — ${d.status}`,
+  }));
+
+  return {
+    ...summary,
+    overview: {
+      whyExists: `Created from Ask Atlas conversational workflow creation (${def.provenance}).`,
+      source: 'ask_atlas_conversational',
+      relatedMission: 'ATLAS-CONVERSATIONAL-WORKFLOW-CREATION-001',
+      createdFromAskAtlas: true,
+      conversationalProvenance: def.sourceConversation.slice(0, 500),
+    },
+    scope: {
+      clientCode: def.scope.clientCode,
+      clientName: def.scope.clientName,
+      projectScope: def.scope.projectScope,
+      capitalMatter: def.scope.capitalMatter,
+      relatedSystem: def.scope.system,
+    },
+    triggerDetail: {
+      triggerType: def.trigger.type,
+      event: def.trigger.event,
+      schedule: def.trigger.schedule ?? def.trigger.scheduleHuman,
+      manual: def.trigger.manual,
+      policy: def.policyClass,
+      source: 'conversational_definition',
+    },
+    actionsAllowed: def.actions.filter((a) => a.supported).map((a) => a.actionType),
+    actionsBlocked: def.actions.filter((a) => !a.supported).map((a) => a.actionType),
+    ownerGatedActions: def.approvalRequirements,
+    history: [],
+    activity: workflowActivity,
+    control,
+    definitionPreview: formatWorkflowPreview(def),
+    versionHistory,
+    approvalRequirements: def.approvalRequirements,
+    authorityExpansionRequired: def.authorityExpansionRequired,
+    diagnostics: {
+      templateKey: def.templateKey ?? null,
+      definitionVersion: def.version,
+      draftNotExecutable: def.status === 'DRAFT' || def.status === 'READY_FOR_APPROVAL',
+    },
+  };
+}
+
 function buildSummary(
   workflow: WorkflowDefinition,
   entries: AgentActivityLedgerEntry[],
@@ -626,10 +771,23 @@ export function listWorkflowCenter(opts: {
   const controlDir = resolveWorkflowControlOverlayDir(opts.dataDir);
   const controlOverlay = readWorkflowControlOverlay(controlDir);
 
-  const workflows = WORKFLOW_DEFINITIONS.filter((w) => callerMaySeeWorkflow(w, opts.principal)).map((workflow) => {
-    const control = getWorkflowControlState(controlOverlay, workflow.workflowId);
-    return buildSummary(workflow, entries, control, opts.cfg);
-  });
+  const staticWorkflows = WORKFLOW_DEFINITIONS.filter((w) => callerMaySeeWorkflow(w, opts.principal)).map(
+    (workflow) => {
+      const control = getWorkflowControlState(controlOverlay, workflow.workflowId);
+      return buildSummary(workflow, entries, control, opts.cfg);
+    },
+  );
+
+  const defOverlayDir = resolveWorkflowDefinitionOverlayDir(opts.dataDir);
+  const defOverlay = readWorkflowDefinitionOverlay(defOverlayDir);
+  const customSummaries = listVisibleDefinitions(defOverlay, opts.principal)
+    .filter((d) => d.status !== 'REJECTED')
+    .map((def) => {
+      const control = getWorkflowControlState(controlOverlay, def.workflowId);
+      return summaryFromCustomDefinition(def, control);
+    });
+
+  const workflows = [...staticWorkflows, ...customSummaries];
 
   const counts = {
     total: workflows.length,
@@ -664,6 +822,17 @@ export function getWorkflowDetail(opts: {
   dataDir: string;
   workflowId: string;
 }): WorkflowDetail | null {
+  if (isCustomWorkflowId(opts.workflowId)) {
+    const defOverlayDir = resolveWorkflowDefinitionOverlayDir(opts.dataDir);
+    const defOverlay = readWorkflowDefinitionOverlay(defOverlayDir);
+    const def = getLatestDefinition(defOverlay, opts.workflowId, opts.principal);
+    if (!def || def.status === 'REJECTED') return null;
+    const controlDir = resolveWorkflowControlOverlayDir(opts.dataDir);
+    const controlOverlay = readWorkflowControlOverlay(controlDir);
+    const control = getWorkflowControlState(controlOverlay, opts.workflowId);
+    return detailFromCustomDefinition(def, defOverlay, control, opts.principal);
+  }
+
   const workflow = WORKFLOW_DEFINITIONS.find((w) => w.workflowId === opts.workflowId);
   if (!workflow || !callerMaySeeWorkflow(workflow, opts.principal)) return null;
 
@@ -751,6 +920,23 @@ export async function handleWorkflowControl(opts: {
   action: 'pause' | 'resume' | 'disable' | 'retry';
   reason?: string;
 }): Promise<{ ok: true; control: WorkflowControlRecord; workflow: WorkflowSummary } | { ok: false; error: string }> {
+  if (isCustomWorkflowId(opts.workflowId)) {
+    const defOverlayDir = resolveWorkflowDefinitionOverlayDir(opts.cfg.dataDir);
+    const defOverlay = readWorkflowDefinitionOverlay(defOverlayDir);
+    const def = getLatestDefinition(defOverlay, opts.workflowId, opts.principal);
+    if (!def) return { ok: false, error: 'workflow_not_found' };
+
+    const control = await applyWorkflowControl({
+      dataDir: opts.cfg.dataDir,
+      principal: opts.principal,
+      workflowId: opts.workflowId,
+      action: opts.action,
+      reason: opts.reason,
+    });
+    const summary = summaryFromCustomDefinition(def, control);
+    return { ok: true, control, workflow: summary };
+  }
+
   const workflow = WORKFLOW_DEFINITIONS.find((w) => w.workflowId === opts.workflowId);
   if (!workflow || !callerMaySeeWorkflow(workflow, opts.principal)) {
     return { ok: false, error: 'workflow_not_found' };

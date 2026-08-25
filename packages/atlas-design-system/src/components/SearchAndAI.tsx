@@ -594,6 +594,16 @@ export const DEFAULT_AI_EXAMPLES = [
   'Update CRM.',
 ];
 
+export type AICommandAction = {
+  id: string;
+  label: string;
+};
+
+export type AICommandRunResult = {
+  text: string;
+  actions?: AICommandAction[];
+};
+
 export interface GlobalAICommandPanelProps {
   examples?: string[];
   onSubmit?: (prompt: string) => void;
@@ -603,6 +613,9 @@ export interface GlobalAICommandPanelProps {
   className?: string;
   /** Dev-only stub response renderer */
   stubResponder?: (prompt: string) => string;
+  /** Signed Hub runtime — async responses and optional action buttons */
+  onRunPrompt?: (prompt: string) => Promise<string | AICommandRunResult>;
+  onAction?: (actionId: string, prompt: string) => void | Promise<void>;
   history?: string[];
   onNavigateHint?: (path: string) => void;
 }
@@ -616,20 +629,45 @@ export function GlobalAICommandPanel({
   className,
   stubResponder = (p) =>
     `Dev stub: received “${p}”. Live Copilot / client communications are disabled in Development.`,
+  onRunPrompt,
+  onAction,
   history = [],
   onNavigateHint,
 }: GlobalAICommandPanelProps) {
   const s = useAi();
   const [value, setValue] = useState('');
   const [response, setResponse] = useState<string | null>(null);
+  const [responseActions, setResponseActions] = useState<AICommandAction[]>([]);
+  const [lastPrompt, setLastPrompt] = useState('');
+  const [busy, setBusy] = useState(false);
   const [localHistory, setLocalHistory] = useState<string[]>(history);
+
+  const applyRunResult = (prompt: string, result: string | AICommandRunResult) => {
+    const parsed = typeof result === 'string' ? { text: result } : result;
+    setResponse(parsed.text);
+    setResponseActions(parsed.actions ?? []);
+    setLastPrompt(prompt);
+  };
 
   const run = (prompt: string) => {
     const trimmed = prompt.trim();
     if (!trimmed) return;
     onSubmit?.(trimmed);
     setLocalHistory((prev) => [trimmed, ...prev.filter((h) => h !== trimmed)].slice(0, 8));
-    setResponse(stubResponder(trimmed));
+    if (onRunPrompt) {
+      setBusy(true);
+      setResponseActions([]);
+      void onRunPrompt(trimmed)
+        .then((result) => applyRunResult(trimmed, result))
+        .catch((err) =>
+          setResponse(err instanceof Error ? err.message : 'Ask Atlas request failed'),
+        )
+        .finally(() => setBusy(false));
+    } else {
+      setResponse(stubResponder(trimmed));
+      setResponseActions([]);
+      setLastPrompt(trimmed);
+    }
     const lower = trimmed.toLowerCase();
     if (lower.includes('bank') && onNavigateHint) onNavigateHint('/banking');
     else if (lower.includes('document') && onNavigateHint) onNavigateHint('/documents');
@@ -686,8 +724,9 @@ export function GlobalAICommandPanel({
           icon={<SendRegular aria-hidden />}
           type="submit"
           aria-label="Submit AI command"
+          disabled={busy}
         >
-          Run
+          {busy ? 'Running…' : 'Run'}
         </Button>
       </form>
       <div className={s.voiceReady} aria-hidden>
@@ -707,16 +746,33 @@ export function GlobalAICommandPanel({
       ) : null}
       {response ? (
         <div className={s.response} role="status" aria-live="polite">
-          <Text size={300} style={{ color: '#F8FAFC' }}>
+          <Text size={300} style={{ color: '#F8FAFC', whiteSpace: 'pre-wrap' }}>
             {response}
           </Text>
           <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <Button size="small" appearance="secondary" onClick={() => onNavigateHint?.('/tasks')}>
-              Review tasks
-            </Button>
-            <Button size="small" appearance="secondary" onClick={() => onNavigateHint?.('/documents')}>
-              Open documents
-            </Button>
+            {responseActions.map((action) => (
+              <Button
+                key={action.id}
+                size="small"
+                appearance={action.id === 'activate' || action.id === 'approve_authority' ? 'primary' : 'secondary'}
+                disabled={busy}
+                onClick={() => {
+                  if (onAction) void onAction(action.id, lastPrompt);
+                }}
+              >
+                {action.label}
+              </Button>
+            ))}
+            {!responseActions.length ? (
+              <>
+                <Button size="small" appearance="secondary" onClick={() => onNavigateHint?.('/tasks')}>
+                  Review tasks
+                </Button>
+                <Button size="small" appearance="secondary" onClick={() => onNavigateHint?.('/documents')}>
+                  Open documents
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
       ) : null}

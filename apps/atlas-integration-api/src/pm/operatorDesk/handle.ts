@@ -73,6 +73,21 @@ import {
   mapsToWorkflowQuestion,
   answerWorkflowQuestion,
 } from './workflows.ts';
+import {
+  activateWorkflow,
+  answerWorkflowDiscovery,
+  buildConversationalAskAtlasAnswer,
+  cancelWorkflowDraft,
+  createWorkflowDraft,
+  editWorkflowFromInstruction,
+  mapsToConversationalWorkflowRuntime,
+} from './workflowCreation.ts';
+import {
+  mapsToWorkflowCreationIntent,
+  mapsToWorkflowEditIntent,
+  mapsToWorkflowDiscoveryIntent,
+} from './workflowParser.ts';
+import { readWorkflowDefinitionOverlay, resolveWorkflowDefinitionOverlayDir } from './workflowDefinitions.ts';
 
 export { isOperatorDeskPath };
 
@@ -373,7 +388,13 @@ export async function handleOperatorDesk(opts: {
   if (workflowsOnly) {
     const url = new URL(opts.req.url || '/', `http://${opts.req.headers.host || 'local'}`);
     if (opts.method === 'POST') {
-      let body: { action?: string; workflowId?: string; reason?: string } = {};
+      let body: {
+        action?: string;
+        workflowId?: string;
+        reason?: string;
+        instruction?: string;
+        approveAuthority?: boolean;
+      } = {};
       try {
         const chunks: Buffer[] = [];
         for await (const chunk of opts.req) chunks.push(chunk as Buffer);
@@ -383,7 +404,98 @@ export async function handleOperatorDesk(opts: {
         sendJson(opts.res, 400, { error: 'invalid_json', code: 'invalid_json' }, opts.origin);
         return true;
       }
-      const action = body.action;
+      const action = body.action?.trim();
+
+      if (action === 'create_draft' && body.instruction?.trim()) {
+        const result = await createWorkflowDraft({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          instruction: body.instruction.trim(),
+        });
+        if (!result.ok) {
+          sendJson(opts.res, 400, { error: result.error, code: result.error }, opts.origin);
+          return true;
+        }
+        const askAtlas = buildConversationalAskAtlasAnswer({
+          question: body.instruction.trim(),
+          previewText: result.payload.preview,
+          workflowId: result.payload.record.workflowId,
+          workflowName: result.payload.record.name,
+          clientCode: result.payload.record.scope.clientCode,
+        });
+        try {
+          await appendAskAtlasActivity({ dataDir: opts.cfg.dataDir, answer: askAtlas, principal });
+        } catch {
+          /* optional */
+        }
+        sendJson(
+          opts.res,
+          200,
+          { workflowDraft: result.payload, operatorDesk: { askAtlas } },
+          opts.origin,
+        );
+        return true;
+      }
+
+      if (action === 'activate' && body.workflowId?.trim()) {
+        const result = await activateWorkflow({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          workflowId: body.workflowId.trim(),
+          approveAuthority: Boolean(body.approveAuthority),
+        });
+        if (!result.ok) {
+          const status = result.error === 'authority_approval_required' ? 403 : 400;
+          sendJson(opts.res, status, { error: result.error, code: result.error }, opts.origin);
+          return true;
+        }
+        const detail = getWorkflowDetail({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          workflowId: result.record.workflowId,
+        });
+        sendJson(
+          opts.res,
+          200,
+          { workflowCenter: { activated: result.record, detail } },
+          opts.origin,
+        );
+        return true;
+      }
+
+      if (action === 'edit_draft' && body.instruction?.trim()) {
+        const result = await editWorkflowFromInstruction({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          instruction: body.instruction.trim(),
+          workflowId: body.workflowId?.trim(),
+        });
+        if (!result.ok) {
+          sendJson(opts.res, 400, { error: result.error, code: result.error }, opts.origin);
+          return true;
+        }
+        sendJson(opts.res, 200, { workflowDraft: result.payload }, opts.origin);
+        return true;
+      }
+
+      if (action === 'cancel' && body.workflowId?.trim()) {
+        const result = await cancelWorkflowDraft({
+          principal,
+          dataDir: opts.cfg.dataDir,
+          workflowId: body.workflowId.trim(),
+        });
+        if (!result.ok) {
+          sendJson(opts.res, 400, { error: result.error, code: result.error }, opts.origin);
+          return true;
+        }
+        sendJson(opts.res, 200, { workflowCenter: { cancelled: result.record } }, opts.origin);
+        return true;
+      }
+
       const workflowId = body.workflowId?.trim();
       if (!workflowId || !action || !['pause', 'resume', 'disable', 'retry'].includes(action)) {
         sendJson(opts.res, 400, { error: 'invalid_workflow_control', code: 'invalid_workflow_control' }, opts.origin);
@@ -484,6 +596,138 @@ export async function handleOperatorDesk(opts: {
 
   if (runtimeOnly) {
     const question = (url.searchParams.get('question') || ASK_ATLAS_QUESTION).trim() || ASK_ATLAS_QUESTION;
+
+    if (mapsToConversationalWorkflowRuntime(question)) {
+      const defOverlayDir = resolveWorkflowDefinitionOverlayDir(opts.cfg.dataDir);
+      const defOverlay = readWorkflowDefinitionOverlay(defOverlayDir);
+      const center = listWorkflowCenter({
+        cfg: opts.cfg,
+        principal,
+        dataDir: opts.cfg.dataDir,
+      });
+
+      if (mapsToWorkflowDiscoveryIntent(question)) {
+        const discoveryAnswer = answerWorkflowDiscovery(question, defOverlay, principal, center);
+        const askAtlas = buildConversationalAskAtlasAnswer({
+          question,
+          previewText: discoveryAnswer,
+          workflowId: 'discovery',
+          workflowName: 'Workflow discovery',
+        });
+        if (opts.method === 'GET') {
+          try {
+            await appendAskAtlasActivity({ dataDir: opts.cfg.dataDir, answer: askAtlas, principal });
+          } catch {
+            /* optional */
+          }
+        }
+        sendJson(
+          opts.res,
+          200,
+          {
+            operatorDesk: { askAtlas },
+            workflowAnswer: discoveryAnswer,
+            runtime: {
+              agent: ASK_ATLAS_RUNTIME_AGENT,
+              toolsInvoked: ['workflow_discovery'],
+              policyClass: 'READ_AUTO',
+              missionKey: 'ATLAS-CONVERSATIONAL-WORKFLOW-CREATION-001',
+            },
+          },
+          opts.origin,
+        );
+        return true;
+      }
+
+      if (mapsToWorkflowEditIntent(question)) {
+        const editResult = await editWorkflowFromInstruction({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          instruction: question,
+        });
+        if (!editResult.ok) {
+          sendJson(opts.res, 400, { error: editResult.error, code: editResult.error }, opts.origin);
+          return true;
+        }
+        const askAtlas = buildConversationalAskAtlasAnswer({
+          question,
+          previewText: editResult.payload.preview,
+          workflowId: editResult.payload.record.workflowId,
+          workflowName: editResult.payload.record.name,
+          clientCode: editResult.payload.record.scope.clientCode,
+        });
+        if (opts.method === 'GET') {
+          try {
+            await appendAskAtlasActivity({ dataDir: opts.cfg.dataDir, answer: askAtlas, principal });
+          } catch {
+            /* optional */
+          }
+        }
+        sendJson(
+          opts.res,
+          200,
+          {
+            operatorDesk: { askAtlas },
+            workflowDraft: editResult.payload,
+            workflowAnswer: editResult.payload.preview,
+            runtime: {
+              agent: ASK_ATLAS_RUNTIME_AGENT,
+              toolsInvoked: ['workflow_edit'],
+              policyClass: 'READ_AUTO',
+              missionKey: 'ATLAS-CONVERSATIONAL-WORKFLOW-CREATION-001',
+            },
+          },
+          opts.origin,
+        );
+        return true;
+      }
+
+      if (mapsToWorkflowCreationIntent(question)) {
+        const draftResult = await createWorkflowDraft({
+          cfg: opts.cfg,
+          principal,
+          dataDir: opts.cfg.dataDir,
+          instruction: question,
+        });
+        if (!draftResult.ok) {
+          sendJson(opts.res, 400, { error: draftResult.error, code: draftResult.error }, opts.origin);
+          return true;
+        }
+        const askAtlas = buildConversationalAskAtlasAnswer({
+          question,
+          previewText: draftResult.payload.preview,
+          workflowId: draftResult.payload.record.workflowId,
+          workflowName: draftResult.payload.record.name,
+          clientCode: draftResult.payload.record.scope.clientCode,
+        });
+        if (opts.method === 'GET') {
+          try {
+            await appendAskAtlasActivity({ dataDir: opts.cfg.dataDir, answer: askAtlas, principal });
+          } catch {
+            /* optional */
+          }
+        }
+        sendJson(
+          opts.res,
+          200,
+          {
+            operatorDesk: { askAtlas },
+            workflowDraft: draftResult.payload,
+            workflowAnswer: `Workflow drafted.\n\n${draftResult.payload.preview}`,
+            runtime: {
+              agent: ASK_ATLAS_RUNTIME_AGENT,
+              toolsInvoked: ['workflow_definition', 'workflow_preview'],
+              policyClass: 'READ_AUTO',
+              missionKey: 'ATLAS-CONVERSATIONAL-WORKFLOW-CREATION-001',
+            },
+          },
+          opts.origin,
+        );
+        return true;
+      }
+    }
+
     if (mapsToWorkflowQuestion(question)) {
       const center = listWorkflowCenter({
         cfg: opts.cfg,

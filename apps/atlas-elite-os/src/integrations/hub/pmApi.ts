@@ -1137,6 +1137,58 @@ export async function postWorkflowControl(
   });
 }
 
+export type WorkflowDraftPayload = {
+  contractVersion: string;
+  missionKey: string;
+  record: {
+    workflowId: string;
+    workflowDefinitionId: string;
+    version: number;
+    name: string;
+    description: string;
+    status: string;
+    scope: Record<string, unknown>;
+    trigger: Record<string, unknown>;
+    actions: Array<{ order: number; description: string; actionType: string }>;
+    policyClass: string;
+    approvalRequirements: string[];
+    authorityExpansionRequired: boolean;
+  };
+  preview: string;
+  confirmationActions: Array<'activate' | 'edit' | 'cancel' | 'approve_authority'>;
+  authorityExpansionRequired: boolean;
+};
+
+export async function fetchOperatorRuntime(auth: AtlasHubAuthHeaders, question: string) {
+  return hubFetchJson<{
+    operatorDesk?: { askAtlas?: unknown };
+    workflowDraft?: WorkflowDraftPayload;
+    workflowAnswer?: string;
+    runtime?: Record<string, unknown>;
+  }>(
+    auth,
+    `/operator/runtime.json?question=${encodeURIComponent(question.trim())}`,
+  );
+}
+
+export async function postWorkflowDraftAction(
+  auth: AtlasHubAuthHeaders,
+  body: {
+    action: 'create_draft' | 'activate' | 'edit_draft' | 'cancel';
+    instruction?: string;
+    workflowId?: string;
+    approveAuthority?: boolean;
+  },
+) {
+  return hubFetchJson<{
+    workflowDraft?: WorkflowDraftPayload;
+    workflowCenter?: { activated?: unknown; cancelled?: unknown; detail?: WorkflowDetail };
+  }>(auth, '/operator/workflows.json', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 export async function searchPm(auth: AtlasHubAuthHeaders, query: string) {
   const q = query.trim().slice(0, 120);
   if (q.length < 2) return { query: q, results: [] as PmSearchHit[], scope: 'entitled' as const };
