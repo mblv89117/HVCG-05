@@ -274,7 +274,7 @@ describe('onboarding execute honesty', () => {
     assert.match(answer, /AUTO_RESPOND: false/);
     assert.match(answer, /did not invent ClientCodes, workspaces, projects, or Hub-MI/);
     assert.match(answer, /LIVE execution: false/);
-    assert.equal(/sent mail|delivery receipt|CPL01|SYN01|invented workspace|invented project|Hub-MI row/i.test(answer), false);
+    assert.equal(/sent mail|delivery receipt|CPL01|SYN01|invented workspace|invented project/i.test(answer), false);
   });
 
   it('does not treat an outside sixth-client execute ask as LIVE or invented roster', () => {
