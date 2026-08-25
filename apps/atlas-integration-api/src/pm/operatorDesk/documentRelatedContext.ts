@@ -615,29 +615,36 @@ export function attachRelatedContextToMeetings(
  * RelatedDocumentProjectRef — no new project query; self skipped),
  * and entitled same-scope mail-thread operating records already on
  * authorizedSearch.threads.items (reuses relatedEmails /
- * RelatedDocumentEmailRef — no new query), and entitled same-scope
+ * RelatedDocumentEmailRef — no new query), entitled same-scope
  * already-indexed outlook-mail-attachment metadata already on
  * authorizedSearch.documents.items / hits kind=document (reuses
  * relatedAttachments / RelatedDocumentAttachmentRef — no new Graph /
- * search / attachment query, no contentBytes). Isolation:
+ * search / attachment query, no contentBytes), and entitled
+ * same-scope capital-prepare records already on
+ * authorizedSearch.capitalSubmissions.items (reuses relatedCapital /
+ * RelatedDocumentCapitalRef — no new query). Isolation:
  * sameRelatedScope + entitledClientCodes +
  * mayReceiveRelatedContext. Fail-closed when ClientCode is missing /
  * non-canonical — omit researchRelationship / relatedDocuments /
- * relatedProjects / relatedThreads / relatedAttachments rather than
- * guess. Unscoped never receives scoped relations. Unscoped lender
- * catalog titles never attach to a scoped project. Client A never
- * receives Client B. Self never appears on relatedProjects
- * (relatedProjects skips project.id === item.id). SAS / anonymous
- * webUrl dropped. No downloadUrl. No contentBytes. binariesInAtlas
- * stays false. No transcript text. No TargetAmount. No preview
- * body / suggestedDraft / send on the thread refs. No invented
- * titles / ids / ClientCodes / Hub-MI / milestone rows / attachment
- * names / counts. historicalHvs / hubMiRow copy from the entitled
- * source project only — never invent hubMiRow=true. Classification /
- * invented / hubMiRow stay as composed on the source project row.
- * DRAFT_ONLY / send=false / autoRespond=false / indexedPreviewOnly
- * stay as composed on the source thread payload. Not a second
- * attachment, communications, or search product.
+ * relatedProjects / relatedThreads / relatedAttachments /
+ * relatedCapital rather than guess. Unscoped never receives scoped
+ * relations. Unscoped lender catalog titles never attach to a scoped
+ * project. Client A never receives Client B. Self never appears on
+ * relatedProjects (relatedProjects skips project.id === item.id).
+ * SAS / anonymous webUrl dropped. No downloadUrl. No contentBytes.
+ * binariesInAtlas stays false. No transcript text. No TargetAmount.
+ * No preview body / suggestedDraft / send on the thread refs. No
+ * invented titles / ids / ClientCodes / Hub-MI / milestone rows /
+ * attachment names / counts / lender criteria / financing status.
+ * historicalHvs / hubMiRow copy from the entitled source project
+ * only — never invent hubMiRow=true. Classification / invented /
+ * hubMiRow stay as composed on the source project row. DRAFT_ONLY /
+ * send=false / autoRespond=false / indexedPreviewOnly stay as
+ * composed on the source thread payload. PREPARE_ONLY / send=false /
+ * externalSubmit=false / ownerGated=true / financingStatus UNKNOWN
+ * stay as composed on the relatedCapital refs. Not a second
+ * attachment, communications, capital, or search product. Not
+ * external submit. Not send.
  */
 export function attachRelatedContextToProject(
   principal: AtlasPrincipal,
@@ -659,6 +666,9 @@ export function attachRelatedContextToProject(
   const relatedAttachmentsList = canonicalClientCode(item.clientCode)
     ? relatedAttachments(item, search)
     : [];
+  const relatedCapitalList = canonicalClientCode(item.clientCode)
+    ? relatedCapital(item, search)
+    : [];
   return {
     ...item,
     ...(relatedMeetingsList.length ? { relatedMeetings: relatedMeetingsList } : {}),
@@ -667,6 +677,7 @@ export function attachRelatedContextToProject(
     ...(relatedProjectsList.length ? { relatedProjects: relatedProjectsList } : {}),
     ...(relatedThreads.length ? { relatedThreads } : {}),
     ...(relatedAttachmentsList.length ? { relatedAttachments: relatedAttachmentsList } : {}),
+    ...(relatedCapitalList.length ? { relatedCapital: relatedCapitalList } : {}),
   };
 }
 

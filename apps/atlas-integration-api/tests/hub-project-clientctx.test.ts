@@ -215,6 +215,19 @@ function syn01AttachmentHit(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function syn01CapitalHit(overrides: Record<string, unknown> = {}) {
+  return {
+    kind: 'capital_opportunity' as const,
+    id: 'cap-syn-1',
+    title: 'SYN01 entitled capital opportunity',
+    href: '/capital?opportunity=cap-syn-1',
+    source: 'HVCG_CapitalOpportunities',
+    clientCode: 'SYN01',
+    provenance: 'CONFIRMED' as const,
+    ...overrides,
+  };
+}
+
 function noInvent(projects: AtlasClientContext['projects']): void {
   const serialized = JSON.stringify(projects);
   assert.equal(serialized.includes('PDG01'), false);
@@ -228,7 +241,7 @@ describe('get_client_context project operating records', () => {
   it('attaches the same copied records as authorizedSearch.projects for a bound current entitled client', async () => {
     const now = '2026-08-24T18:00:00.000Z';
     const found = await searchSharePointPm(projectService(), staff, 'SYN01');
-    const entitledHits = [...found.results, syn01ThreadHit(), syn01AttachmentHit()];
+    const entitledHits = [...found.results, syn01ThreadHit(), syn01AttachmentHit(), syn01CapitalHit()];
     const search = await searchAuthorizedKnowledge({
       principal: staff,
       picture: reconstructionPicture(),
@@ -310,6 +323,30 @@ describe('get_client_context project operating records', () => {
       false,
     );
     assert.equal(current.relatedAttachments?.every((row) => row.binariesInAtlas === false), true);
+    assert.equal(current.relatedCapital?.some((row) => row.id === 'cap-syn-1'), true);
+    assert.deepEqual(current.relatedCapital, searchCurrent.relatedCapital);
+    assert.equal(
+      (current.relatedCapital || []).some(
+        (row) =>
+          /pdg/i.test(row.id) ||
+          /pdg/i.test(row.title) ||
+          row.clientCode === 'PDG01' ||
+          'TargetAmount' in row ||
+          'downloadUrl' in row ||
+          row.lenderCriteriaInvented !== false ||
+          row.financingStatus !== 'UNKNOWN',
+      ),
+      false,
+    );
+    assert.equal(
+      /TargetAmount|downloadUrl|Hub-MI|contentBytes|5000000/i.test(JSON.stringify(current.relatedCapital)),
+      false,
+    );
+    assert.equal(current.relatedCapital?.every((row) => row.policyClass === 'PREPARE_ONLY'), true);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.policyClass, 'PREPARE_ONLY');
+    assert.equal(viaIndex.clientContext.capitalSubmissions.send, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.externalSubmit, false);
+    assert.equal(viaIndex.clientContext.capitalSubmissions.ownerGated, true);
 
     const viaLoad = await loadClientContext({
       principal: staff,
@@ -440,7 +477,7 @@ describe('get_client_context project operating records', () => {
       const ctxText = await unsignedCtx.text();
       const ctxTap =
         unsignedCtx.status === 401 &&
-        !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|proj-syn|mail-att-syn/i.test(ctxText);
+        !/PDG01|HFD01|CCB01|clientContext|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|relatedCapital|proj-syn|mail-att-syn|cap-syn/i.test(ctxText);
       assert.equal(unsignedCtx.status, 401, 'not ok 1 - unsigned /operator/client-context.json 401');
       const ctxBody = JSON.parse(ctxText) as { error?: string; clientContext?: AtlasClientContext };
       assert.equal(ctxBody.error, 'unauthorized');
@@ -448,6 +485,7 @@ describe('get_client_context project operating records', () => {
       assert.equal('relatedProjects' in ctxBody, false);
       assert.equal('relatedThreads' in ctxBody, false);
       assert.equal('relatedAttachments' in ctxBody, false);
+      assert.equal('relatedCapital' in ctxBody, false);
       assert.equal(ctxTap, true, 'not ok 2 - unsigned client-context leaks project payload');
 
       const unsignedRuntime = await fetch(
@@ -467,7 +505,7 @@ describe('get_client_context project operating records', () => {
       const searchText = await unsignedSearch.text();
       const searchTap =
         unsignedSearch.status === 401 &&
-        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|proj-syn|mail-att-syn/i.test(searchText);
+        !/PDG01|HFD01|CCB01|authorizedSearch|operatorDesk|relatedProjects|relatedThreads|relatedAttachments|relatedCapital|proj-syn|mail-att-syn|cap-syn/i.test(searchText);
       assert.equal(unsignedSearch.status, 401, 'not ok 5 - unsigned /operator/search.json 401');
       const searchBody = JSON.parse(searchText) as { error?: string; authorizedSearch?: AtlasAuthorizedSearch };
       assert.equal(searchBody.error, 'unauthorized');
@@ -475,6 +513,7 @@ describe('get_client_context project operating records', () => {
       assert.equal('relatedProjects' in searchBody, false);
       assert.equal('relatedThreads' in searchBody, false);
       assert.equal('relatedAttachments' in searchBody, false);
+      assert.equal('relatedCapital' in searchBody, false);
       assert.equal(searchTap, true, 'not ok 6 - unsigned search leaks project payload');
     } finally {
       await new Promise<void>((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
