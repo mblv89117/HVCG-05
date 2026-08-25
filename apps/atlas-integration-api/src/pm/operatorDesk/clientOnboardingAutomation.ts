@@ -1183,6 +1183,163 @@ function computeStatus(record: Partial<OnboardingRunRecord>): OnboardingLifecycl
   return 'KICKOFF_PREPARATION';
 }
 
+/** Persist IDENTITY_RECONCILIATION without creating project, task, milestone, Hub-MI, or outbound. */
+function buildIdentityReconciliationRecord(opts: {
+  workflow: WorkflowDefinitionRecord;
+  dataDir: string;
+  now: string;
+  dryRun?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  blockers: string[];
+  ownerAttention: string[];
+}): OnboardingRunRecord {
+  const identityResolutionRequired = true;
+  const workspaceReconciled = false;
+  const capitalScope = Boolean(opts.workflow.scope.capitalMatter);
+  const milestones = milestoneTemplate();
+  const operationsHandoff = composeOperationsHandoff({
+    identityResolutionRequired,
+    workspaceReconciled,
+    blockers: opts.blockers,
+    ownerAttention: opts.ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+    capitalScope,
+  });
+  const kickoff = composeKickoff({
+    identityResolutionRequired,
+    workspaceReconciled,
+    blockers: opts.blockers,
+    ownerAttention: opts.ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
+  const blockerReview = composeBlockerReview({
+    identityResolutionRequired,
+    workspaceReconciled,
+    blockers: opts.blockers,
+    ownerAttention: opts.ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
+  const ownerAttentionPackage = composeOwnerAttention({
+    identityResolutionRequired,
+    workspaceReconciled,
+    ownerAttention: opts.ownerAttention,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
+  const milestoneReview = composeMilestoneReview({
+    identityResolutionRequired,
+    workspaceReconciled,
+    milestones,
+    blockers: opts.blockers,
+    communicationPolicy: 'DRAFT_ONLY',
+  });
+  return {
+    workflowId: opts.workflow.workflowId,
+    workflowDefinitionId: opts.workflow.workflowDefinitionId,
+    ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
+    ...(opts.clientName ? { clientName: opts.clientName } : {}),
+    status: 'IDENTITY_RECONCILIATION',
+    currentStep: 'Resolve authoritative ClientCode',
+    nextStep: 'Provide client scope before onboarding execution',
+    blockers: opts.blockers,
+    ownerAttention: opts.ownerAttention,
+    taskIds: [],
+    milestoneIds: [],
+    assignedAgents: ['atlas-onboarding-agent'],
+    documentGaps: [],
+    communicationPolicy: 'DRAFT_ONLY',
+    capitalScope,
+    identityResolutionRequired,
+    workspaceReconciled,
+    dryRun: Boolean(opts.dryRun),
+    createdAt: opts.now,
+    updatedAt: opts.now,
+    lastExecutedAt: opts.now,
+    milestones,
+    operationsHandoff,
+    kickoff,
+    blockerReview,
+    ownerAttentionPackage,
+    milestoneReview,
+    completion: composeOnboardingCompletion({
+      identityResolutionRequired,
+      workspaceReconciled,
+      operationsHandoff: { status: 'NOT_READY', ready: false },
+      kickoff: { status: 'NOT_READY', ready: false },
+      blockerReview: { status: 'NOT_READY', ready: false },
+      ownerAttentionPackage: { status: 'NOT_READY', ready: false },
+      milestoneReview: { status: 'NOT_READY', ready: false },
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    documentReview: composeOnboardingDocumentReview({
+      identityResolutionRequired,
+      workspaceReconciled,
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    identityReview: composeOnboardingIdentityReview({
+      identityResolutionRequired,
+      ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
+      ...(opts.clientName ? { clientName: opts.clientName } : {}),
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    workspaceReview: composeOnboardingWorkspaceReview({
+      identityResolutionRequired,
+      workspaceReconciled,
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    projectReview: composeOnboardingProjectReview({
+      identityResolutionRequired,
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    taskReview: composeOnboardingTaskReview({
+      identityResolutionRequired,
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    agentAssignmentReview: composeOnboardingAgentAssignmentReview({
+      identityResolutionRequired,
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+    }),
+    realtimeDocumentsHonesty: composeRealtimeDocumentsHonesty({
+      identityResolutionRequired,
+      blockers: opts.blockers,
+      communicationPolicy: 'DRAFT_ONLY',
+      fabric: knownFabricFromDataDir(opts.dataDir),
+    }),
+    provenance: 'onboarding_automation',
+  };
+}
+
+async function persistIdentityReconciliation(opts: {
+  workflow: WorkflowDefinitionRecord;
+  principal: AtlasPrincipal;
+  dataDir: string;
+  now: string;
+  dryRun?: boolean;
+  clientCode?: string;
+  clientName?: string;
+  blockers: string[];
+  ownerAttention: string[];
+}): Promise<OnboardingAutomationResult> {
+  const record = buildIdentityReconciliationRecord(opts);
+  upsertOnboardingRun(resolveOnboardingStateDir(opts.dataDir), record);
+  await appendOnboardingActivity({
+    dataDir: opts.dataDir,
+    principal: opts.principal,
+    event: 'ONBOARDING_STARTED',
+    ...(opts.clientCode ? { clientCode: opts.clientCode } : {}),
+    summary: opts.clientCode
+      ? `${opts.clientName ?? opts.clientCode}: IDENTITY_RECONCILIATION`
+      : 'Onboarding started — identity resolution required',
+  });
+  return { ok: true, record, events: ['ONBOARDING_STARTED'] };
+}
+
 export async function runClientOnboardingAutomation(opts: {
   cfg: AppConfig;
   principal: AtlasPrincipal;
@@ -1201,120 +1358,15 @@ export async function runClientOnboardingAutomation(opts: {
   const dir = resolveOnboardingStateDir(opts.dataDir);
 
   if (!clientCode) {
-    const record: OnboardingRunRecord = {
-      workflowId: opts.workflow.workflowId,
-      workflowDefinitionId: opts.workflow.workflowDefinitionId,
-      status: 'IDENTITY_RECONCILIATION',
-      currentStep: 'Resolve authoritative ClientCode',
-      nextStep: 'Provide client scope before onboarding execution',
+    return persistIdentityReconciliation({
+      workflow: opts.workflow,
+      principal: opts.principal,
+      dataDir: opts.dataDir,
+      now,
+      dryRun: opts.dryRun,
       blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
       ownerAttention: ['Assign client scope to onboarding workflow'],
-      taskIds: [],
-      milestoneIds: [],
-      assignedAgents: ['atlas-onboarding-agent'],
-      documentGaps: [],
-      communicationPolicy: 'DRAFT_ONLY',
-      capitalScope: Boolean(opts.workflow.scope.capitalMatter),
-      identityResolutionRequired: true,
-      workspaceReconciled: false,
-      dryRun: Boolean(opts.dryRun),
-      createdAt: now,
-      updatedAt: now,
-      lastExecutedAt: now,
-      milestones: milestoneTemplate(),
-      operationsHandoff: composeOperationsHandoff({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        ownerAttention: ['Assign client scope to onboarding workflow'],
-        communicationPolicy: 'DRAFT_ONLY',
-        capitalScope: Boolean(opts.workflow.scope.capitalMatter),
-      }),
-      kickoff: composeKickoff({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        ownerAttention: ['Assign client scope to onboarding workflow'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      blockerReview: composeBlockerReview({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        ownerAttention: ['Assign client scope to onboarding workflow'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      ownerAttentionPackage: composeOwnerAttention({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        ownerAttention: ['Assign client scope to onboarding workflow'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      milestoneReview: composeMilestoneReview({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        milestones: milestoneTemplate(),
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      completion: composeOnboardingCompletion({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        operationsHandoff: { status: 'NOT_READY', ready: false },
-        kickoff: { status: 'NOT_READY', ready: false },
-        blockerReview: { status: 'NOT_READY', ready: false },
-        ownerAttentionPackage: { status: 'NOT_READY', ready: false },
-        milestoneReview: { status: 'NOT_READY', ready: false },
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      documentReview: composeOnboardingDocumentReview({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      identityReview: composeOnboardingIdentityReview({
-        identityResolutionRequired: true,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      workspaceReview: composeOnboardingWorkspaceReview({
-        identityResolutionRequired: true,
-        workspaceReconciled: false,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      projectReview: composeOnboardingProjectReview({
-        identityResolutionRequired: true,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      taskReview: composeOnboardingTaskReview({
-        identityResolutionRequired: true,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      agentAssignmentReview: composeOnboardingAgentAssignmentReview({
-        identityResolutionRequired: true,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-      }),
-      realtimeDocumentsHonesty: composeRealtimeDocumentsHonesty({
-        identityResolutionRequired: true,
-        blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
-        communicationPolicy: 'DRAFT_ONLY',
-        fabric: knownFabricFromDataDir(opts.dataDir),
-      }),
-      provenance: 'onboarding_automation',
-    };
-    upsertOnboardingRun(dir, record);
-    await appendOnboardingActivity({
-      dataDir: opts.dataDir,
-      principal: opts.principal,
-      event: 'ONBOARDING_STARTED',
-      summary: 'Onboarding started — identity resolution required',
     });
-    return { ok: true, record, events };
   }
 
   if (!isCanonicalClientCode(clientCode)) {
@@ -1326,7 +1378,28 @@ export async function runClientOnboardingAutomation(opts: {
 
   const sp = opts.sharepoint;
   let clientName = opts.workflow.scope.clientName?.trim() || clientCode;
-  let workspaceReconciled = false;
+  const entitledMatches = sp
+    ? (await sp.listAuthorizedClients(opts.principal)).filter((c) => c.clientCode === clientCode)
+    : [];
+  if (!sp || entitledMatches.length !== 1) {
+    return persistIdentityReconciliation({
+      workflow: opts.workflow,
+      principal: opts.principal,
+      dataDir: opts.dataDir,
+      now,
+      dryRun: opts.dryRun,
+      clientCode,
+      clientName,
+      blockers: ['IDENTITY_RESOLUTION_REQUIRED'],
+      ownerAttention: !sp
+        ? ['Confirm SharePoint PM availability and entitled HVCG_Clients identity']
+        : ['Confirm client activation and entitlement'],
+    });
+  }
+
+  const client = entitledMatches[0];
+  clientName = client.displayName || clientName;
+  const workspaceReconciled = true;
   let projectId: string | undefined;
   let projectName: string | undefined;
   let reusedExistingProject = false;
@@ -1337,106 +1410,89 @@ export async function runClientOnboardingAutomation(opts: {
   const ownerAttention: string[] = [];
   const documentGaps: OnboardingDocumentGap[] = [];
   const milestones = milestoneTemplate();
+  milestones.find((m) => m.id === 'identity_verified')!.status = 'complete';
+  milestones.find((m) => m.id === 'identity_verified')!.provenance = 'CONFIRMED';
+  events.push('CLIENT_IDENTITY_RECONCILED');
 
-  if (sp) {
-    const clients = await sp.listAuthorizedClients(opts.principal);
-    const client = clients.find((c) => c.clientCode === clientCode);
-    if (!client) {
-      blockers.push('Client not found in entitled HVCG_Clients roster');
-      ownerAttention.push('Confirm client activation and entitlement');
-    } else {
-      clientName = client.displayName || clientName;
-      workspaceReconciled = true;
-      milestones.find((m) => m.id === 'identity_verified')!.status = 'complete';
-      milestones.find((m) => m.id === 'identity_verified')!.provenance = 'CONFIRMED';
-      events.push('CLIENT_IDENTITY_RECONCILED');
-    }
-
-    const projects = await sp.listAuthorizedProjects(opts.principal);
-    const existingProject = projects.find(
-      (p) => p.clientCode === clientCode && ONBOARDING_PROJECT_TITLE.test(p.name || ''),
-    );
-    if (existingProject) {
-      reusedExistingProject = true;
-      projectId = existingProject.id;
-      projectName = existingProject.name;
-      milestones.find((m) => m.id === 'agreement_scope_verified')!.status = 'in_progress';
-      milestones.find((m) => m.id === 'agreement_scope_verified')!.provenance = 'CONFIRMED';
-    } else if (!opts.dryRun) {
-      const created = await sp.createProject(opts.principal, {
-        name: `Client Onboarding — ${clientName}`,
-        clientCode,
-        objective: 'Governed client onboarding established by Atlas automation.',
-        status: 'active',
-        nextAction: 'Complete onboarding checklist',
-      }, `atlas-onboarding-project-${clientCode}`);
-      projectId = created.id;
-      projectName = created.name;
-      events.push('PROJECT_CREATED');
-    } else {
-      projectName = `Client Onboarding — ${clientName} (dry-run proposed)`;
-      events.push('PROJECT_CREATED');
-    }
-
-    const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);
-    for (const taskDef of DEFAULT_ONBOARDING_TASKS) {
-      const exists = existingTasks.some((t) => t.title === taskDef.title);
-      if (exists) {
-        const found = existingTasks.find((t) => t.title === taskDef.title);
-        if (found?.id) {
-          taskIds.push(found.id);
-          reusedExistingTasks = true;
-        }
-        continue;
-      }
-      if (!opts.dryRun && projectId) {
-        const task = await sp.createTask(opts.principal, {
-          title: taskDef.title,
-          description: taskDef.purpose,
-          projectId,
-          status: 'ready',
-        }, `atlas-onboarding-task-${clientCode}-${taskDef.key}`);
-        taskIds.push(task.id);
-      }
-    }
-    if (taskIds.length || opts.dryRun) events.push('TASKS_CREATED');
-
-    for (const label of DEFAULT_MILESTONES) {
-      if (!opts.dryRun && projectId) {
-        try {
-          const milestone = await sp.createMilestone(opts.principal, {
-            title: label.label,
-            projectId,
-            status: 'pending',
-          });
-          milestoneIds.push(milestone.id);
-        } catch {
-          /* milestone optional */
-        }
-      }
-    }
-    if (milestoneIds.length || opts.dryRun) events.push('MILESTONE_CREATED');
-
-    try {
-      const docRequests = await listDocumentRequests(opts.dataDir, clientCode);
-      for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
-        const matched = docRequests.find((r) =>
-          (r.title || '').toLowerCase().includes(reqLabel.split(' ')[0].toLowerCase()),
-        );
-        documentGaps.push({
-          label: reqLabel,
-          status: matched ? 'CONFIRMED' : 'MISSING',
-          source: matched ? 'HVCG_DocumentRequests' : undefined,
-        });
-      }
-      events.push('DOCUMENT_REQUIREMENTS_CREATED', 'DOCUMENT_RECONCILED');
-    } catch {
-      for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
-        documentGaps.push({ label: reqLabel, status: 'STALE_OR_UNCERTAIN' });
-      }
-    }
+  const projects = await sp.listAuthorizedProjects(opts.principal);
+  const existingProject = projects.find(
+    (p) => p.clientCode === clientCode && ONBOARDING_PROJECT_TITLE.test(p.name || ''),
+  );
+  if (existingProject) {
+    reusedExistingProject = true;
+    projectId = existingProject.id;
+    projectName = existingProject.name;
+    milestones.find((m) => m.id === 'agreement_scope_verified')!.status = 'in_progress';
+    milestones.find((m) => m.id === 'agreement_scope_verified')!.provenance = 'CONFIRMED';
+  } else if (!opts.dryRun) {
+    const created = await sp.createProject(opts.principal, {
+      name: `Client Onboarding — ${clientName}`,
+      clientCode,
+      objective: 'Governed client onboarding established by Atlas automation.',
+      status: 'active',
+      nextAction: 'Complete onboarding checklist',
+    }, `atlas-onboarding-project-${clientCode}`);
+    projectId = created.id;
+    projectName = created.name;
+    events.push('PROJECT_CREATED');
   } else {
-    blockers.push('SharePoint PM backend unavailable — onboarding execution deferred');
+    projectName = `Client Onboarding — ${clientName} (dry-run proposed)`;
+    events.push('PROJECT_CREATED');
+  }
+
+  const existingTasks = await sp.listAuthorizedTasks(opts.principal, projectId);
+  for (const taskDef of DEFAULT_ONBOARDING_TASKS) {
+    const exists = existingTasks.some((t) => t.title === taskDef.title);
+    if (exists) {
+      const found = existingTasks.find((t) => t.title === taskDef.title);
+      if (found?.id) {
+        taskIds.push(found.id);
+        reusedExistingTasks = true;
+      }
+      continue;
+    }
+    if (!opts.dryRun && projectId) {
+      const task = await sp.createTask(opts.principal, {
+        title: taskDef.title,
+        description: taskDef.purpose,
+        projectId,
+        status: 'ready',
+      }, `atlas-onboarding-task-${clientCode}-${taskDef.key}`);
+      taskIds.push(task.id);
+    }
+  }
+  if (taskIds.length || opts.dryRun) events.push('TASKS_CREATED');
+
+  for (const label of DEFAULT_MILESTONES) {
+    if (!opts.dryRun && projectId) {
+      try {
+        const milestone = await sp.createMilestone(opts.principal, {
+          title: label.label,
+          projectId,
+          status: 'pending',
+        });
+        milestoneIds.push(milestone.id);
+      } catch {
+        /* milestone optional */
+      }
+    }
+  }
+  if (milestoneIds.length || opts.dryRun) events.push('MILESTONE_CREATED');
+
+  try {
+    const docRequests = await listDocumentRequests(opts.dataDir, clientCode);
+    for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
+      const matched = docRequests.find((r) =>
+        (r.title || '').toLowerCase().includes(reqLabel.split(' ')[0].toLowerCase()),
+      );
+      documentGaps.push({
+        label: reqLabel,
+        status: matched ? 'CONFIRMED' : 'MISSING',
+        source: matched ? 'HVCG_DocumentRequests' : undefined,
+      });
+    }
+    events.push('DOCUMENT_REQUIREMENTS_CREATED', 'DOCUMENT_RECONCILED');
+  } catch {
     for (const reqLabel of DEFAULT_DOCUMENT_REQUIREMENTS) {
       documentGaps.push({ label: reqLabel, status: 'STALE_OR_UNCERTAIN' });
     }
